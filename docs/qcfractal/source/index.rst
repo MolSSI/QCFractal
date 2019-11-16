@@ -23,10 +23,10 @@ QCFratal within the QCArchive stack
 
 Within the QCArchive stack, QCFractal is responsible for:
 
-- Accepting requests for calculations, submitted from a client such as `QCPortal <http://docs.qcarchive.molssi.org/projects/qcportal/en/latest/>`_. 
-- Running these calculations on disparate compute resources through Quantum Chemistry programs and procedures supported by `QCEngine <http://docs.qcarchive.molssi.org/projects/qcengine/en/latest/>`_. 
+- Accepting requests for calculations, submitted from a client such as `QCPortal <http://docs.qcarchive.molssi.org/projects/qcportal/en/latest/>`_.
+- Running these calculations on disparate compute resources through Quantum Chemistry programs and procedures supported by `QCEngine <http://docs.qcarchive.molssi.org/projects/qcengine/en/latest/>`_.
 - Storing and organizing the results of these calculations in a database.
-- Providing access to stored results to clients such as `QCPortal <http://docs.qcarchive.molssi.org/projects/qcportal/en/latest/>`_. 
+- Providing access to stored results to clients such as `QCPortal <http://docs.qcarchive.molssi.org/projects/qcportal/en/latest/>`_.
 
 The diagram below illustrates a representative data flow:
 
@@ -151,13 +151,14 @@ Configuring and running the Server from the CLI and Config Files
 .. toctree::
    :maxdepth: 1
    :hidden:
-   :caption: Server Configuration
+   :caption: Server CLI and Configuration
 
    server_init.rst
    server_config.rst
    server_start.rst
    server_user.rst
    server_upgrade.rst
+   server_view.rst
 
 **Developer Documentation**
 
@@ -179,4 +180,3 @@ Contains in-depth developer documentation.
    glossary.rst
    dev_guidelines.rst
    changelog.rst
-

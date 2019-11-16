@@ -11,14 +11,15 @@ import numpy as np
 
 import os
 import sys
+
 sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 
 from migration_helpers import msgpack_migrations
 from qcelemental.util import msgpackext_dumps, msgpackext_loads
 
 # revision identifiers, used by Alembic.
-revision = '963822c28879'
-down_revision = '4bb79efa9855'
+revision = "963822c28879"
+down_revision = "4bb79efa9855"
 branch_labels = None
 depends_on = None
 
@@ -35,6 +36,7 @@ converters = {
     "mass_numbers": lambda arr: np.array(arr, dtype=np.int16),
     "fragments": lambda list_arr: [np.array(x, dtype=np.int32) for x in list_arr],
 }
+
 
 def transformer(old_data):
 

@@ -2,16 +2,15 @@
 Tests for QCFractals CLI
 """
 import os
-import time
 import tempfile
+import time
 
 import pytest
+import yaml
 
 import qcfractal
-
 from qcfractal import testing
 from qcfractal.cli.cli_utils import read_config_file
-import yaml
 
 # def _run_tests()
 _options = {"coverage": True, "dump_stdout": True}
@@ -25,9 +24,13 @@ def qcfractal_base_init():
     tmpdir = tempfile.TemporaryDirectory()
 
     args = [
-        "qcfractal-server", "init", "--base-folder",
-        str(tmpdir.name), "--db-own=False", "--clear-database",
-        f"--db-port={storage.config.database.port}"
+        "qcfractal-server",
+        "init",
+        "--base-folder",
+        str(tmpdir.name),
+        "--db-own=False",
+        "--clear-database",
+        f"--db-port={storage.config.database.port}",
     ]
     assert testing.run_process(args, **_options)
 
@@ -55,8 +58,17 @@ def test_cli_user_add(qcfractal_base_init):
     args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_add_1", "--permissions", "admin"]
     assert testing.run_process(args, **_options) is False
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_add_2", "--password", "foo",
-            "--permissions", "admin"]
+    args = [
+        "qcfractal-server",
+        "user",
+        qcfractal_base_init,
+        "add",
+        "test_user_add_2",
+        "--password",
+        "foo",
+        "--permissions",
+        "admin",
+    ]
     assert testing.run_process(args, **_options)
 
     args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_add_3"]
@@ -80,16 +92,23 @@ def test_cli_user_modify(qcfractal_base_init):
     args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_modify", "--permissions", "read"]
     assert testing.run_process(args, **_options)
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "modify", "test_user_modify",
-            "--permissions", "read", "write", "--reset-password"]
+    args = [
+        "qcfractal-server",
+        "user",
+        qcfractal_base_init,
+        "modify",
+        "test_user_modify",
+        "--permissions",
+        "read",
+        "write",
+        "--reset-password",
+    ]
     assert testing.run_process(args, **_options)
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "modify", "test_user_modify",
-            "--password", "foopass"]
+    args = ["qcfractal-server", "user", qcfractal_base_init, "modify", "test_user_modify", "--password", "foopass"]
     assert testing.run_process(args, **_options)
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "modify", "test_user_modify",
-            "--permissions", "read"]
+    args = ["qcfractal-server", "user", qcfractal_base_init, "modify", "test_user_modify", "--permissions", "read"]
     assert testing.run_process(args, **_options)
 
     args = ["qcfractal-server", "user", qcfractal_base_init, "modify", "badname_1234"]
@@ -108,7 +127,7 @@ def test_cli_user_remove(qcfractal_base_init):
     assert testing.run_process(args, **_options) is False
 
 
-@pytest.mark.skip(reason="Failing on Travis for unknown reasons.")
+@pytest.mark.xfail(reason="Failing on Travis for unknown reasons.")
 @pytest.mark.slow
 def test_cli_server_local_boot(qcfractal_base_init):
     port = "--port=" + str(testing.find_open_port())
@@ -135,10 +154,14 @@ def test_with_api_logging(postgres_server, log_apis):
     tmpdir = tempfile.TemporaryDirectory()
 
     args = [
-        "qcfractal-server", "init", "--base-folder",
-        str(tmpdir.name), "--db-own=False", "--clear-database",
+        "qcfractal-server",
+        "init",
+        "--base-folder",
+        str(tmpdir.name),
+        "--db-own=False",
+        "--clear-database",
         f"--db-port={postgres_server.config.database.port}",
-        f"--log-apis={log_apis}"
+        f"--log-apis={log_apis}",
     ]
     assert testing.run_process(args, **_options)
 
@@ -154,9 +177,7 @@ def test_manager_local_testing_process():
 
 @pytest.mark.slow
 def test_manager_executor_manager_boot(active_server):
-    args = [
-        "qcfractal-manager", active_server.test_uri_cli, "--adapter=pool", "--tasks-per-worker=2", "--verify=False"
-    ]
+    args = ["qcfractal-manager", active_server.test_uri_cli, "--adapter=pool", "--tasks-per-worker=2", "--verify=False"]
     assert testing.run_process(args, interupt_after=7, **_options)
 
 
@@ -171,7 +192,9 @@ def test_manager_executor_manager_boot_from_file(active_server, tmp_path):
     server:
         fractal_uri: {}
         verify: False
-    """.format(active_server.test_uri_cli.split("=")[1])
+    """.format(
+        active_server.test_uri_cli.split("=")[1]
+    )
 
     p = tmp_path / "config.yaml"
     p.write_text(yaml_file)
@@ -213,7 +236,8 @@ def load_manager_config(adapter, scheduler):
         pytest.param("parsl", "lSf", marks=[testing.using_parsl, pytest.mark.xfail]),  # Invalid combination
         pytest.param("NotAParser", "slurm", marks=pytest.mark.xfail),  # Invalid Parser
         pytest.param("pool", "NotAScheduler", marks=pytest.mark.xfail),  # Invalid Scheduler
-    ])
+    ],
+)
 def test_cli_managers(adapter, scheduler, tmp_path):
     """Test that multiple adapter/scheduler combinations at least can boot up in Managers"""
     config = load_manager_config(adapter, scheduler)
@@ -229,10 +253,10 @@ def test_cli_manager_parsl_launchers(tmp_path):
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("adapter", [
-    pytest.param("dask", marks=testing.using_dask_jobqueue),
-    pytest.param("parsl", marks=testing.using_parsl),
-])
+@pytest.mark.parametrize(
+    "adapter",
+    [pytest.param("dask", marks=testing.using_dask_jobqueue), pytest.param("parsl", marks=testing.using_parsl)],
+)
 def test_cli_managers_missing(adapter, tmp_path):
     """Test that the manager block missing correctly sets defaults"""
     config = load_manager_config(adapter, "slurm")
@@ -241,10 +265,10 @@ def test_cli_managers_missing(adapter, tmp_path):
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("adapter", [
-    pytest.param("dask", marks=testing.using_dask_jobqueue),
-    pytest.param("parsl", marks=testing.using_parsl),
-])
+@pytest.mark.parametrize(
+    "adapter",
+    [pytest.param("dask", marks=testing.using_dask_jobqueue), pytest.param("parsl", marks=testing.using_parsl)],
+)
 def test_cli_managers_none(adapter, tmp_path):
     """Test that manager block set to None correctly assigns the defaults"""
     config = load_manager_config(adapter, "slurm")
@@ -272,4 +296,3 @@ def test_cli_managers_skel(tmp_path):
     config = tmp_path / "config.yaml"
     args = ["qcfractal-manager", "--skel", config.as_posix()]
     testing.run_process(args, **_options)
-

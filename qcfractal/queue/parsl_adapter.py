@@ -7,8 +7,9 @@ import time
 import traceback
 from typing import Any, Callable, Dict, Hashable, Optional, Tuple
 
-from .base_adapter import BaseAdapter
 from qcelemental.models import FailedOperation
+
+from .base_adapter import BaseAdapter
 
 
 def _get_future(future):
@@ -17,10 +18,7 @@ def _get_future(future):
         return future.result()
     except Exception as e:
         msg = "Caught Parsl Error:\n" + traceback.format_exc()
-        ret = FailedOperation(**{"success": False,
-                                 "error": {"error_type":  e.__class__.__name__,
-                                           "error_message": msg}
-                                 })
+        ret = FailedOperation(**{"success": False, "error": {"error_type": e.__class__.__name__, "error_message": msg}})
         return ret
 
 
@@ -32,6 +30,7 @@ class ParslAdapter(BaseAdapter):
         BaseAdapter.__init__(self, client, logger, **kwargs)
 
         import parsl
+
         self.client = parsl.dataflow.dflow.DataFlowKernel(self.client)
         self._parsl_states = parsl.dataflow.states.States
         self.app_map = {}
@@ -78,25 +77,25 @@ class ParslAdapter(BaseAdapter):
         task = func(*task_spec["spec"]["args"], **task_spec["spec"]["kwargs"])
         return task_spec["id"], task
 
-    def count_running_workers(self) -> int:
+    def count_running_tasks(self) -> int:
 
         running = 0
         executor_running_task_map = {key: False for key in self.client.executors.keys()}
         for task in self.queue.values():
-            status = self.client.tasks.get(task.tid, {}).get('status', None)
+            status = self.client.tasks.get(task.tid, {}).get("status", None)
             if status == self._parsl_states.running:
-                executor_running_task_map[task['executor']] = True
+                executor_running_task_map[task["executor"]] = True
             if all(executor_running_task_map.values()):
                 # Efficiency loop break
                 break
 
         found_readable = False
         for executor_key, executor in self.client.executors.items():
-            if hasattr(executor, 'connected_workers'):
+            if hasattr(executor, "connected_workers"):
                 # Should return an int
                 running += executor.connected_workers
                 found_readable = True
-            elif hasattr(executor, 'max_threads') and executor_running_task_map[executor_key]:
+            elif hasattr(executor, "max_threads") and executor_running_task_map[executor_key]:
                 running += 1
                 found_readable = True
         if not found_readable:

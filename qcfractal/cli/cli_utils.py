@@ -7,8 +7,9 @@ import copy
 import importlib
 import json
 import signal
-import yaml
 from functools import partial
+
+import yaml
 
 
 def import_module(module, package=None):
@@ -60,8 +61,9 @@ def argparse_config_merge(parser, parsed_options, config_options, parser_default
         default_options = vars(parser.parse_args(args=parser_default))
         diff = config_options.keys() - default_options.keys()
         if diff:
-            raise argparse.ArgumentError(None,
-                                         "Unknown arguments found in configuration file: {}.".format(", ".join(diff)))
+            raise argparse.ArgumentError(
+                None, "Unknown arguments found in configuration file: {}.".format(", ".join(diff))
+            )
 
     # Add in parsed options
     for k, v in parsed_options.items():

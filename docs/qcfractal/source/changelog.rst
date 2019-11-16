@@ -15,28 +15,99 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
-X.Y.0 / 2019-MM-DD
+0.12.0 / 2019-11-06
+-------------------
+
+Highlights
+++++++++++
+
+- The ability to handle very large datasets (1M+ entries) quickly and efficiently.
+- Store and compute Wavefunction information.
+- Build, serve, and export views for Datasets that can stored in journal supplementary information or services like Zenodo.
+- A new GUI dashboard to observe the current state of the server, see statistics, and fix issues.
+
+New Features
+++++++++++++
+- (:pr:`433` and :pr:`462`) ``Dataset`` and ``ReactionDataset`` (``interface.collections``) now have a ``download``` method which
+  downloads a frozen view of the dataset. This view is used to speed up calls to ``get_values``, ``get_molecules``,
+  ``get_entries``, and ``list_values``.
+- (:pr:`440`) Wavefunctions can now be stored in the database using Result ``protocols``.
+- (:pr:`453`) The server now periodically logs manager and current state to provide data over time.
+- (:pr:`460`) Contributed values are now in their own table to speed up access of Collections.
+- (:pr:`461`) Services now update their corresponding record every iteration. An example is a torsiondrive which now updates the ``optimization_history`` field each iteration.
+
+Enhancements
+++++++++++++
+- (:pr:`429`) Enables protocols for ``OptimizationDataset`` collections.
+- (:pr:`430`) Adds additional QCPortal type hints.
+- (:pr:`433`, :pr:`443`) ``Dataset`` and ``ReactionDataset`` (``interface.collections``) are now faster for calls to calls to ``get_values``, ``get_molecules``,
+  ``get_entries``, and ``list_values`` for large datasets if the server is configured to use frozen views. See "Server-side Dataset Views" documentation. Subsets
+  may be passed to ``get_values``, ``get_molecules``, and ``get_entries``
+- (:pr:`447`) Enables the creation of plaintext (xyz and csv) output from Dataset Collections.
+- (:pr:`455`) Projection queries should now be much faster as excluded results are not pulled to the server.
+- (:pr:`458`) Collections now have a metadata field.
+- (:pr:`463`) ``FractalClient.list_collections`` by default only returns collections whose visibility flag is set to true,
+  and whose group is "default". This change was made to filter out in-progress, intermediate, and specialized collections.
+- (:pr:`464`) Molecule insert speeds are now 4-16x faster.
+
+Bug Fixes
++++++++++
+- (:pr:`424`) Fixes a ``ReactionDataset.visualize`` bug with ``groupby='D3'``.
+- (:pr:`456`, :pr:`452`) Queries that project hybrid properties should now work as expected.
+
+
+Deprecated Features
++++++++++++++++++++
+- (:pr:`426`) In ``Dataset`` and ``ReactionDataset`` (``interface.collections``),
+  the previously deprecated functions ``query``, ``get_history``, and ``list_history`` have been removed.
+
+Optional Dependency Changes
++++++++++++++++++++++++++++
+- (:pr:`454`) Users of the optional Parsl queue adapter are required to upgrade to Parsl v0.9.0, which fixes
+  issues that caused SLURM managers to crash.
+
+0.11.0 / 2019-10-01
 -------------------
 
 New Features
 ++++++++++++
 
+- (:pr:`420`) Pre-storage data handling through Elemental's ``Protocols`` feature are now present in Fractal. Although
+  only optimization protocols are implemented functionally, the database side has been upgraded to store protocol
+  settings.
+
 Enhancements
 ++++++++++++
 
-- (:pr:`385`) ``Dataset`` and ``ReactionDataset`` have three new functions for accessing data.
-  ``get_values`` returns the canonical headline value for a dataset (e.g. the interaction energy for S22) in data columns with caching. This function replaces the now-deprecated ``get_history``.
-  ``get_records`` either returns ``ResultRecord`` or a projection. For the case of ``ReactionDataset``, the results are broken down into component calculcations. The function replaces the now-deprecated ``query``.
+- (:pr:`385`, :pr:`404`, :pr:`411`) ``Dataset`` and ``ReactionDataset`` have five new functions for accessing data.
+  ``get_values`` returns the canonical headline value for a dataset (e.g. the interaction energy for S22) in data
+  columns with caching, both for result-backed values and contributed values. This function replaces the now-deprecated
+  ``get_history`` and ``get_contributed_values``. ``list_values`` returns the list of data columns available from
+  ``get_values``. This function replaces the now-deprecated ``list_history`` and ``list_contributed_values``.
+  ``get_records`` either returns ``ResultRecord`` or a projection. For the case of ``ReactionDataset``, the results are
+  broken down into component calculations. The function replaces the now-deprecated ``query``.
+  ``list_records`` returns the list of data columns available from ``get_records``.
   ``get_molecules`` returns the ``Molecule`` associated with a dataset.
-  In addition, ``get_contributed_values`` now returns a data column.
-
+- (:pr:`393`) A new feature added to ``Client`` to be able to have more custom and fast queries, the ``custom_query``
+  method.
+  Those fast queries are now used in ``torsiondrive.get_final_molecules`` and ``torsiondrive.get_final_results``. More
+  Advanced queries will be added.
 - (:pr:`394`) Adds ``tag`` and ``manager`` selector fields to ``client.query_tasks``.
   This is helpful for managing jobs in the queue and detecting failures.
+- (:pr:`400`, :pr:`401`, :pr:`410`) Adds Dockerfiles corresponding to builds on
+  `Docker Hub <https://cloud.docker.com/u/molssi/repository/list>`_.
+- (:pr:`406`) The ``Dataset`` collection's primary indices (database level) have been updated to reflect its new
+  understanding.
 
-- (:pr:`400`) Adds Dockerfiles corresponding to builds on `Docker Hub <https://cloud.docker.com/u/molssi/repository/list>`_.
 
 Bug Fixes
 +++++++++
+
+- (:pr:`396`) Fixed a bug in internal ``Dataset`` function which caused ``ComputeResponse`` to be truncated when the
+  number of calculations is larger than the query_limit.
+- (:pr:`403`) Fixed ``Dataset.get_values`` for any method which involved DFTD3.
+- (:pr:`409`) Fixed a compatibility bug in specific version of Intel-OpenMP by skipping version
+  2019.5-281.
 
 Documentation Improvements
 ++++++++++++++++++++++++++
@@ -107,7 +178,7 @@ Enhancements
 Bug Fixes
 +++++++++
 
-- (:pr:`359`) A `FutureWarning` from Pandas has been addressed before it becomes an error.
+- (:pr:`359`) A ``FutureWarning`` from Pandas has been addressed before it becomes an error.
 
 Documentation Improvements
 ++++++++++++++++++++++++++
@@ -198,7 +269,7 @@ Deprecated Features
 +++++++++++++++++++
 
 - (:pr:`291`) Queue Manager Template Generator CLI has been removed as its functionality is superseded by the
-  `qcfractal-manager` CLI.
+  ``qcfractal-manager`` CLI.
 
 
 0.7.2 / 2019-05-31
@@ -594,7 +665,7 @@ New Features
 ++++++++++++
 - (:pr:`72`) Queues are no longer required of FractalServer instances, now separate QueueManager instances can be created that push and pull tasks to the server.
 - (:pr:`80`) A `Parsl <http://parsl-project.org>`_ Queue Manager was written.
-- (:pr:`75`) CLI's have been added for the `qcfractal-server` and `qcfractal-manager` instances.
+- (:pr:`75`) CLI's have been added for the ``qcfractal-server`` and ``qcfractal-manager`` instances.
 - (:pr:`83`) The status of server tasks and services can now be queried from a FractalClient.
 - (:pr:`82`) OpenFF Workflows can now add single optimizations for fragments.
 
@@ -602,8 +673,8 @@ Enhancements
 ++++++++++++
 
 - (:pr:`74`) The documentation now has flowcharts showing task and service pathways through the code.
-- (:pr:`73`) Collection `.data` attributes are now typed and validated with pydantic.
-- (:pr:`85`) The CLI has been enhanced to cover additional features such as `queue-manager` ping time.
+- (:pr:`73`) Collection ``.data`` attributes are now typed and validated with pydantic.
+- (:pr:`85`) The CLI has been enhanced to cover additional features such as ``queue-manager`` ping time.
 - (:pr:`84`) QCEngine 0.4.0 and geomeTRIC 0.9.1 versions are now compatible with QCFractal.
 
 
@@ -637,10 +708,10 @@ Enhancements
 - (:pr:`47`) Tests can that require an activate Mongo instance are now correctly skipped.
 - (:pr:`51`) The queue now uses a fast hash index to determine uniqueness and prevent duplicate tasks.
 - (:pr:`52`) QCFractal examples are now tested via CI.
-- (:pr:`53`) The MongoSocket `get_generic_by_id` was deprecated in favor of `get_generic` where an ID can be a search field.
+- (:pr:`53`) The MongoSocket ``get_generic_by_id`` was deprecated in favor of ``get_generic`` where an ID can be a search field.
 - (:pr:`61`, :pr:`64`) TorsionDrive now tracks tasks via ID rather than hash to ensure integrity.
 - (:pr:`63`) The Database collection was renamed Dataset to more correctly illuminate its purpose.
-- (:pr:`65`) Collection can now be aquired directly from a client via the `client.get_collection` function.
+- (:pr:`65`) Collection can now be aquired directly from a client via the ``client.get_collection`` function.
 
 Bug Fixes
 +++++++++

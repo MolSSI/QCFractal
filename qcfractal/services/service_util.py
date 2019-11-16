@@ -4,22 +4,21 @@ Utilities and base functions for Services.
 
 import abc
 import datetime
-from typing import Any, Dict, List, Set, Tuple, Optional
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from pydantic import validator
+from qcelemental.models import ComputeError
 
 from ..interface.models import ObjectId, ProtoModel
 from ..interface.models.rest_models import TaskQueuePOSTBody
 from ..interface.models.task_models import PriorityEnum
 from ..procedures import get_procedure_parser
 
-from qcelemental.models import ComputeError
-
 
 class TaskManager(ProtoModel):
 
-    storage_socket: Any = None
-    logger: Any = None
+    storage_socket: Optional[Any] = None
+    logger: Optional[Any] = None
 
     required_tasks: Dict[str, str] = {}
     tag: Optional[str] = None
@@ -38,8 +37,8 @@ class TaskManager(ProtoModel):
             return True
 
         task_query = self.storage_socket.get_procedures(
-            id=list(self.required_tasks.values()), projection={"status": True,
-                                                               "error": True})
+            id=list(self.required_tasks.values()), include=["status", "error"]
+        )
 
         status_values = set(x["status"] for x in task_query["data"])
         if status_values == {"COMPLETE"}:
@@ -49,11 +48,13 @@ class TaskManager(ProtoModel):
             for x in task_query["data"]:
                 if x["status"] != "ERROR":
                     continue
+
             self.logger.error("Error in service compute as follows:")
             tasks = self.storage_socket.get_queue()["data"]
             for x in tasks:
                 if "error" not in x:
                     continue
+
                 self.logger.error(x["error"]["error_message"])
 
             raise KeyError("All tasks did not execute successfully.")
@@ -102,8 +103,8 @@ class TaskManager(ProtoModel):
 class BaseService(ProtoModel, abc.ABC):
 
     # Excluded fields
-    storage_socket: Any
-    logger: Any
+    storage_socket: Optional[Any]
+    logger: Optional[Any]
 
     # Base identification
     id: Optional[ObjectId] = None
@@ -111,6 +112,8 @@ class BaseService(ProtoModel, abc.ABC):
     service: str
     program: str
     procedure: str
+
+    # Output data
     output: Any
 
     # Links
@@ -147,8 +150,7 @@ class BaseService(ProtoModel, abc.ABC):
         self.task_manager.tag = self.task_tag
         self.task_manager.priority = self.task_priority
 
-
-    @validator('task_priority', pre=True)
+    @validator("task_priority", pre=True)
     def munge_priority(cls, v):
         if isinstance(v, str):
             v = PriorityEnum[v.upper()]
@@ -170,8 +172,9 @@ class BaseService(ProtoModel, abc.ABC):
         """
 
 
-def expand_ndimensional_grid(dimensions: Tuple[int, ...], seeds: Set[Tuple[int, ...]],
-                             complete: Set[Tuple[int, ...]]) -> List[Tuple[Tuple[int, ...], Tuple[int, ...]]]:
+def expand_ndimensional_grid(
+    dimensions: Tuple[int, ...], seeds: Set[Tuple[int, ...]], complete: Set[Tuple[int, ...]]
+) -> List[Tuple[Tuple[int, ...], Tuple[int, ...]]]:
     """
     Expands an n-dimensional key/value grid.
 

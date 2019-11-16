@@ -7,15 +7,19 @@ Helper
 import abc
 import copy
 import json
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 import pandas as pd
 
-from ..models import ObjectId, ProtoModel
+from ..models import ProtoModel
+
+if TYPE_CHECKING:  # pragma: no cover
+    from .. import FractalClient
+    from ..models import ObjectId
 
 
 class Collection(abc.ABC):
-    def __init__(self, name: str, client: 'FractalClient' = None, **kwargs: Dict[str, Any]):
+    def __init__(self, name: str, client: Optional["FractalClient"] = None, **kwargs: Any):
         """
         Initializer for the Collection objects. If no Portal is supplied or the Collection name
         is not present on the server that the Portal is connected to a blank Collection will be
@@ -36,10 +40,10 @@ class Collection(abc.ABC):
         if (self.client is not None) and not (self.client.__class__.__name__ == "FractalClient"):
             raise TypeError("Expected FractalClient as `client` kwarg, found {}.".format(type(self.client)))
 
-        if 'collection' not in kwargs:
-            kwargs['collection'] = self.__class__.__name__.lower()
+        if "collection" not in kwargs:
+            kwargs["collection"] = self.__class__.__name__.lower()
 
-        kwargs['name'] = name
+        kwargs["name"] = name
 
         # Create the data model
         self.data = self.DataModel(**kwargs)
@@ -54,12 +58,26 @@ class Collection(abc.ABC):
         Subclasses of Collection can extend this class internally to change the set of
         additional data defined by the Collection
         """
+
+        id: str = "local"
         name: str
-        collection: str = None
+
+        collection: str
         provenance: Dict[str, str] = {}
-        tagline: str = None
+
         tags: List[str] = []
-        id: str = 'local'
+        tagline: Optional[str] = None
+        description: Optional[str] = None
+
+        group: str = "default"
+        visibility: bool = True
+
+        view_url_hdf5: Optional[str] = None
+        view_url_plaintext: Optional[str] = None
+        view_metadata: Optional[Dict[str, str]] = None
+        view_available: bool = False
+
+        metadata: Dict[str, Any] = {}
 
     def __str__(self) -> str:
         """
@@ -96,13 +114,12 @@ class Collection(abc.ABC):
         if self.client is None:
             raise AttributeError("This method requires a FractalClient and no client was set")
 
-
     @property
     def name(self) -> str:
         return self.data.name
 
     @classmethod
-    def from_server(cls, client: 'FractalClient', name: str) -> 'Collection':
+    def from_server(cls, client: "FractalClient", name: str) -> "Collection":
         """Creates a new class from a server
 
         Parameters
@@ -130,7 +147,7 @@ class Collection(abc.ABC):
         return cls.from_json(tmp_data.data[0], client=client)
 
     @classmethod
-    def from_json(cls, data: Dict[str, Any], client: 'FractalClient' = None) -> 'Collection':
+    def from_json(cls, data: Dict[str, Any], client: "FractalClient" = None) -> "Collection":
         """Creates a new class from a JSON blob
 
         Parameters
@@ -154,11 +171,14 @@ class Collection(abc.ABC):
         if data["collection"] != class_name:
             raise KeyError(
                 "Attempted to create Collection from JSON with class {}, but found collection type of {}.".format(
-                    class_name, data["collection"]))
+                    class_name, data["collection"]
+                )
+            )
 
-        name = data.pop('name')
+        name = data.pop("name")
         # Allow PyDantic to handle type validation
-        return cls(name, client=client, **data)
+        ret = cls(name, client=client, **data)
+        return ret
 
     def to_json(self, filename: Optional[str] = None):
         """
@@ -176,13 +196,13 @@ class Collection(abc.ABC):
         """
         data = self.data.dict()
         if filename is not None:
-            with open(filename, 'w') as open_file:
+            with open(filename, "w") as open_file:
                 json.dump(data, open_file)
         else:
             return copy.deepcopy(data)
 
     @abc.abstractmethod
-    def _pre_save_prep(self, client: 'FractalClient'):
+    def _pre_save_prep(self, client: "FractalClient"):
         """
         Additional actions to take before saving, done as the last step before data is written.
 
@@ -197,7 +217,7 @@ class Collection(abc.ABC):
         """
 
     # Setters
-    def save(self, client: 'FractalClient' = None) -> 'ObjectId':
+    def save(self, client: Optional["FractalClient"] = None) -> "ObjectId":
         """Uploads the overall structure of the Collection (indices, options, new molecules, etc)
         to the server.
 
@@ -216,7 +236,6 @@ class Collection(abc.ABC):
         if self.data.name == "":
             raise AttributeError("Collection:save: {} must have a name!".format(class_name))
 
-
         if client is None:
             self._check_client()
             client = self.client
@@ -224,18 +243,19 @@ class Collection(abc.ABC):
         self._pre_save_prep(client)
 
         # Add the database
-        if (self.data.id == self.data.fields['id'].default):
+        if self.data.id == self.data.__fields__["id"].default:
             response = client.add_collection(self.data.dict(), overwrite=False, full_return=True)
             if response.meta.success is False:
                 raise KeyError(f"Error adding collection: \n{response.meta.error_description}")
             self.data.__dict__["id"] = response.data
         else:
-            client.add_collection(self.data.dict(), overwrite=True)
+            response = client.add_collection(self.data.dict(), overwrite=True, full_return=True)
+            if response.meta.success is False:
+                raise KeyError(f"Error updating collection: \n{response.meta.error_description}")
 
         return self.data.id
 
-
-### General helpers
+    ### General helpers
 
     @staticmethod
     def _add_molecules_by_dict(client, molecules):
@@ -252,7 +272,7 @@ class Collection(abc.ABC):
 
 
 class BaseProcedureDataset(Collection):
-    def __init__(self, name: str, client: 'FractalClient' = None, **kwargs):
+    def __init__(self, name: str, client: "FractalClient" = None, **kwargs):
         if client is None:
             raise KeyError("{self.__class__.__name__} must initialize with a client.")
 
@@ -270,10 +290,10 @@ class BaseProcedureDataset(Collection):
             pass
 
     @abc.abstractmethod
-    def _internal_compute_add(self, spec: Any, entry: Any, tag: str, priority: str) -> ObjectId:
+    def _internal_compute_add(self, spec: Any, entry: Any, tag: str, priority: str) -> "ObjectId":
         pass
 
-    def _pre_save_prep(self, client: 'FractalClient') -> None:
+    def _pre_save_prep(self, client: "FractalClient") -> None:
         pass
 
     def _get_index(self):
@@ -300,7 +320,7 @@ class BaseProcedureDataset(Collection):
         self.data.specs[lname] = spec
         self.save()
 
-    def _get_procedure_ids(self, spec: str, sieve: Optional[List[str]] = None) -> Dict[str, ObjectId]:
+    def _get_procedure_ids(self, spec: str, sieve: Optional[List[str]] = None) -> Dict[str, "ObjectId"]:
         """Aquires the
 
         Parameters
@@ -351,7 +371,7 @@ class BaseProcedureDataset(Collection):
         except KeyError:
             raise KeyError(f"Specification '{name}' not found.")
 
-    def list_specifications(self, description=True) -> Union[List[str], 'DataFrame']:
+    def list_specifications(self, description=True) -> Union[List[str], pd.DataFrame]:
         """Lists all available specifications
 
         Parameters
@@ -390,7 +410,7 @@ class BaseProcedureDataset(Collection):
         if save:
             self.save()
 
-    def get_entry(self, name: str) -> 'Record':
+    def get_entry(self, name: str) -> Any:
         """Obtains a record from the Dataset
 
         Parameters
@@ -432,11 +452,9 @@ class BaseProcedureDataset(Collection):
 
         return self.client.query_procedures(id=rec_id)[0]
 
-    def compute(self,
-                specification: str,
-                subset: Set[str] = None,
-                tag: Optional[str] = None,
-                priority: Optional[str] = None) -> int:
+    def compute(
+        self, specification: str, subset: Set[str] = None, tag: Optional[str] = None, priority: Optional[str] = None
+    ) -> int:
         """Computes a specification for all entries in the dataset.
 
         Parameters
@@ -480,7 +498,7 @@ class BaseProcedureDataset(Collection):
 
         return submitted
 
-    def query(self, specification: str, force: bool = False) -> None:
+    def query(self, specification: str, force: bool = False) -> str:
         """Queries a given specification from the server
 
         Parameters
@@ -500,9 +518,9 @@ class BaseProcedureDataset(Collection):
         query_ids = list(mapper.values())
 
         # Chunk up the queries
-        procedures = []
+        procedures: List[Dict[str, Any]] = []
         for i in range(0, len(query_ids), self.client.query_limit):
-            chunk_ids = query_ids[i:i + self.client.query_limit]
+            chunk_ids = query_ids[i : i + self.client.query_limit]
             procedures.extend(self.client.query_procedures(id=chunk_ids))
 
         proc_lookup = {x.id: x for x in procedures}
@@ -521,8 +539,13 @@ class BaseProcedureDataset(Collection):
 
         return spec.name
 
-    def status(self, specs: Union[str, List[str]] = None, collapse: bool = True,
-               status: Optional[str] = None) -> 'DataFrame':
+    def status(
+        self,
+        specs: Union[str, List[str]] = None,
+        collapse: bool = True,
+        status: Optional[str] = None,
+        detail: bool = False,
+    ) -> pd.DataFrame:
         """Returns the status of all current specifications.
 
         Parameters
@@ -531,6 +554,8 @@ class BaseProcedureDataset(Collection):
             Collapse the status into summaries per specification or not.
         status : Optional[str], optional
             If not None, only returns results that match the provided status.
+        detail : bool, optional
+            Shows a detailed description of the current status of incomplete jobs.
 
         Returns
         -------
@@ -539,24 +564,57 @@ class BaseProcedureDataset(Collection):
 
         """
 
-        # Specifications
-        if isinstance(specs, str):
-            specs = [specs]
+        # Simple no detail case
+        if detail is False:
+            # Specifications
+            if isinstance(specs, str):
+                specs = [specs]
 
-        # Query all of the specs and make sure they are valid
-        if specs is None:
-            list_specs = list(self.df.columns)
-        else:
-            list_specs = []
-            for spec in specs:
-                list_specs.append(self.query(spec))
+            # Query all of the specs and make sure they are valid
+            if specs is None:
+                list_specs = list(self.df.columns)
+            else:
+                list_specs = []
+                for spec in specs:
+                    list_specs.append(self.query(spec))
 
-        # apply status by column then by row
-        df = self.df[list_specs].apply(lambda col: col.apply(lambda entry: entry.status.value))
-        if status:
-            df = df[(df == status.upper()).all(axis=1)]
+            # apply status by column then by row
+            df = self.df[list_specs].apply(lambda col: col.apply(lambda entry: entry.status.value))
+            if status:
+                df = df[(df == status.upper()).all(axis=1)]
 
-        if collapse:
-            return df.apply(lambda x: x.value_counts())
-        else:
-            return df
+            if collapse:
+                return df.apply(lambda x: x.value_counts())
+            else:
+                return df
+
+        if status not in [None, "INCOMPLETE"]:
+            raise KeyError("Detailed status is only available for incomplete procedures.")
+
+        if not (isinstance(specs, str) or len(specs) == 1):
+            raise KeyError("Detailed status is only available for a single specification at a time.")
+
+        mapper = self._get_procedure_ids(specs)
+        reverse_map = {v: k for k, v in mapper.items()}
+        procedures = self.client.query_procedures(id=list(mapper.values()))
+
+        data = []
+
+        for proc in procedures:
+            if proc.status == "COMPLETE":
+                continue
+
+            try:
+                blob = proc.detailed_status()
+            except:
+                raise AttributeError("Detailed statuses are not available for this dataset type.")
+
+            blob["Name"] = reverse_map[proc.id]
+            data.append(blob)
+
+        df = pd.DataFrame(data)
+        df.rename(columns={x: x.replace("_", " ").title() for x in df.columns}, inplace=True)
+        if df.shape[0]:
+            df = df.set_index("Name")
+
+        return df

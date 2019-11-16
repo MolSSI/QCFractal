@@ -14,10 +14,15 @@ import time
 from collections import Mapping
 from contextlib import contextmanager
 
+import numpy as np
+import pandas as pd
 import pytest
 import qcengine as qcng
+import requests
+from qcelemental.models import Molecule
 from tornado.ioloop import IOLoop
 
+from .interface import FractalClient
 from .postgres_harness import PostgresHarness, TemporaryPostgres
 from .queue import build_queue_adapter
 from .server import FractalServer
@@ -58,14 +63,17 @@ def pytest_collection_modifyitems(config, items):
 
 def pytest_configure(config):
     import sys
+
     sys._called_from_test = True
     config.addinivalue_line("markers", "example: Mark a given test as an example which can be run")
-    config.addinivalue_line("markers", "slow: Mark a given test as slower than most other tests, needing a special "
-                                       "flag to run.")
+    config.addinivalue_line(
+        "markers", "slow: Mark a given test as slower than most other tests, needing a special " "flag to run."
+    )
 
 
 def pytest_unconfigure(config):
     import sys
+
     del sys._called_from_test
 
 
@@ -104,6 +112,7 @@ _programs["dftd3"] = "dftd3" in qcng.list_available_programs()
 def has_module(name):
     return _programs[name]
 
+
 def check_has_module(program):
     import_message = "Not detecting module {}. Install package if necessary to enable tests."
     if has_module(program) is False:
@@ -116,21 +125,21 @@ def _build_pytest_skip(program):
 
 
 # Add a number of module testing options
-using_dask = _build_pytest_skip('dask.distributed')
-using_dask_jobqueue = _build_pytest_skip('dask_jobqueue')
-using_dftd3 = _build_pytest_skip('dftd3')
-using_fireworks = _build_pytest_skip('fireworks')
-using_geometric = _build_pytest_skip('geometric')
-using_parsl = _build_pytest_skip('parsl')
-using_psi4 = _build_pytest_skip('psi4')
-using_rdkit = _build_pytest_skip('rdkit')
-using_torsiondrive = _build_pytest_skip('torsiondrive')
-using_unix = pytest.mark.skipif(os.name.lower() != 'posix',
-                                reason='Not on Unix operating system, '
-                                'assuming Bash is not present')
-
+using_dask = _build_pytest_skip("dask.distributed")
+using_dask_jobqueue = _build_pytest_skip("dask_jobqueue")
+using_dftd3 = _build_pytest_skip("dftd3")
+using_fireworks = _build_pytest_skip("fireworks")
+using_geometric = _build_pytest_skip("geometric")
+using_parsl = _build_pytest_skip("parsl")
+using_psi4 = _build_pytest_skip("psi4")
+using_rdkit = _build_pytest_skip("rdkit")
+using_torsiondrive = _build_pytest_skip("torsiondrive")
+using_unix = pytest.mark.skipif(
+    os.name.lower() != "posix", reason="Not on Unix operating system, " "assuming Bash is not present"
+)
 
 ### Generic helpers
+
 
 def recursive_dict_merge(base_dict, dict_to_merge_in):
     """Recursive merge for more complex than a simple top-level merge {**x, **y} which does not handle nested dict."""
@@ -146,7 +155,7 @@ def find_open_port():
     Use socket's built in ability to find an open port.
     """
     sock = socket.socket()
-    sock.bind(('', 0))
+    sock.bind(("", 0))
 
     host, port = sock.getsockname()
 
@@ -228,7 +237,7 @@ def terminate_process(proc):
     if proc.poll() is None:
 
         # Sigint (keyboard interupt)
-        if sys.platform.startswith('win'):
+        if sys.platform.startswith("win"):
             proc.send_signal(signal.CTRL_BREAK_EVENT)
         else:
             proc.send_signal(signal.SIGINT)
@@ -253,10 +262,10 @@ def popen(args, **kwargs):
     args = list(args)
 
     # Bin prefix
-    if sys.platform.startswith('win'):
-        bin_prefix = os.path.join(sys.prefix, 'Scripts')
+    if sys.platform.startswith("win"):
+        bin_prefix = os.path.join(sys.prefix, "Scripts")
     else:
-        bin_prefix = os.path.join(sys.prefix, 'bin')
+        bin_prefix = os.path.join(sys.prefix, "bin")
 
     # Do we prefix with Python?
     if kwargs.pop("append_prefix", True):
@@ -280,12 +289,12 @@ def popen(args, **kwargs):
     # Do we optionally dumpstdout?
     dump_stdout = kwargs.pop("dump_stdout", False)
 
-    if sys.platform.startswith('win'):
+    if sys.platform.startswith("win"):
         # Allow using CTRL_C_EVENT / CTRL_BREAK_EVENT
-        kwargs['creationflags'] = subprocess.CREATE_NEW_PROCESS_GROUP
+        kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
 
-    kwargs['stdout'] = subprocess.PIPE
-    kwargs['stderr'] = subprocess.PIPE
+    kwargs["stdout"] = subprocess.PIPE
+    kwargs["stderr"] = subprocess.PIPE
     proc = subprocess.Popen(args, **kwargs)
     try:
         yield proc
@@ -299,12 +308,12 @@ def popen(args, **kwargs):
         finally:
             output, error = proc.communicate()
             if dump_stdout:
-                print('\n' + '-' * 30)
+                print("\n" + "-" * 30)
                 print("\n|| Process command: {}".format(" ".join(args)))
-                print('\n|| Process stderr: \n{}'.format(error.decode()))
-                print('-' * 30)
-                print('\n|| Process stdout: \n{}'.format(output.decode()))
-                print('-' * 30)
+                print("\n|| Process stderr: \n{}".format(error.decode()))
+                print("-" * 30)
+                print("\n|| Process stdout: \n{}".format(output.decode()))
+                print("-" * 30)
 
 
 def run_process(args, **kwargs):
@@ -348,7 +357,7 @@ def postgres_server():
         print()
         storage = TemporaryPostgres()
         psql = storage.psql
-        print('Using Database: ', psql.config.database_uri())
+        print("Using Database: ", psql.config.database_uri())
 
     yield psql
 
@@ -379,11 +388,13 @@ def test_server(request, postgres_server):
     storage_name = "test_qcfractal_server"
     postgres_server.create_database(storage_name)
 
-    with FractalSnowflake(max_workers=0,
-                          storage_project_name="test_qcfractal_server",
-                          storage_uri=postgres_server.database_uri(),
-                          start_server=False,
-                          reset_database=True) as server:
+    with FractalSnowflake(
+        max_workers=0,
+        storage_project_name="test_qcfractal_server",
+        storage_uri=postgres_server.database_uri(),
+        start_server=False,
+        reset_database=True,
+    ) as server:
 
         # Clean and re-init the database
         yield server
@@ -445,21 +456,25 @@ def managed_compute_server(request, postgres_server):
     # Build a server with the thread in a outer context loop
     # Not all adapters play well with internal loops
     with loop_in_thread() as loop:
-        server = FractalServer(port=find_open_port(),
-                               storage_project_name=storage_name,
-                               storage_uri=postgres_server.database_uri(),
-                               loop=loop,
-                               queue_socket=adapter_client,
-                               ssl_options=False)
+        server = FractalServer(
+            port=find_open_port(),
+            storage_project_name=storage_name,
+            storage_uri=postgres_server.database_uri(),
+            loop=loop,
+            queue_socket=adapter_client,
+            ssl_options=False,
+        )
 
         # Clean and re-init the database
         reset_server_database(server)
 
         # Build Client and Manager
         from qcfractal.interface import FractalClient
+
         client = FractalClient(server)
 
         from qcfractal.queue import QueueManager
+
         manager = QueueManager(client, adapter_client)
 
         yield client, server, manager
@@ -479,11 +494,13 @@ def fractal_compute_server(postgres_server):
     storage_name = "test_qcfractal_compute_snowflake"
     postgres_server.create_database(storage_name)
 
-    with FractalSnowflake(max_workers=2,
-                          storage_project_name=storage_name,
-                          storage_uri=postgres_server.database_uri(),
-                          reset_database=True,
-                          start_server=False) as server:
+    with FractalSnowflake(
+        max_workers=2,
+        storage_project_name=storage_name,
+        storage_uri=postgres_server.database_uri(),
+        reset_database=True,
+        start_server=False,
+    ) as server:
         reset_server_database(server)
         yield server
 
@@ -495,7 +512,7 @@ def build_socket_fixture(stype, server=None):
     storage_name = "test_qcfractal_storage" + stype
 
     # IP/port/drop table is specific to build
-    if stype == 'sqlalchemy':
+    if stype == "sqlalchemy":
 
         server.create_database(storage_name)
         storage = storage_socket_factory(server.database_uri(), storage_name, db_type=stype, sql_echo=False)
@@ -525,3 +542,75 @@ def socket_fixture(request):
 def sqlalchemy_socket_fixture(request, postgres_server):
 
     yield from build_socket_fixture("sqlalchemy", postgres_server)
+
+
+def live_fractal_or_skip():
+    """
+    Ensure Fractal live connection can be made
+    First looks for a local staging server, then tries QCArchive.
+    """
+    try:
+        return FractalClient("localhost:7777", verify=False)
+    except (requests.exceptions.ConnectionError, ConnectionRefusedError):
+        print("Failed to connect to localhost")
+        try:
+            requests.get("https://api.qcarchive.molssi.org:443", json={}, timeout=5)
+            return FractalClient()
+        except (requests.exceptions.ConnectionError, ConnectionRefusedError):
+            return pytest.skip("Could not make a connection to central Fractal server")
+
+
+def df_compare(df1, df2, sort=False):
+    """ checks equality even when columns contain numpy arrays, which .equals and == struggle with """
+    if sort:
+        if isinstance(df1, pd.DataFrame):
+            df1 = df1.reindex(sorted(df1.columns), axis=1)
+        elif isinstance(df1, pd.Series):
+            df1 = df1.sort_index()
+        if isinstance(df2, pd.DataFrame):
+            df2 = df2.reindex(sorted(df2.columns), axis=1)
+        elif isinstance(df2, pd.Series):
+            df2 = df2.sort_index()
+
+    def element_equal(e1, e2):
+        if isinstance(e1, np.ndarray):
+            if not np.array_equal(e1, e2):
+                return False
+        elif isinstance(e1, Molecule):
+            if not e1.get_hash() == e2.get_hash():
+                return False
+        # Because nan != nan
+        elif isinstance(e1, float) and np.isnan(e1):
+            if not np.isnan(e2):
+                return False
+        else:
+            if not e1 == e2:
+                return False
+        return True
+
+    if isinstance(df1, pd.Series):
+        if not isinstance(df2, pd.Series):
+            return False
+        if len(df1) != len(df2):
+            return False
+        for i in range(len(df1)):
+            if not element_equal(df1[i], df2[i]):
+                return False
+        return True
+
+    for column in df1.columns:
+        if column.startswith("_"):
+            df1.drop(column, axis=1, inplace=True)
+    for column in df2.columns:
+        if column.startswith("_"):
+            df2.drop(column, axis=1, inplace=True)
+    if not all(df1.columns == df2.columns):
+        return False
+    if not all(df1.index.values == df2.index.values):
+        return False
+    for i in range(df1.shape[0]):
+        for j in range(df1.shape[1]):
+            if not element_equal(df1.iloc[i, j], df2.iloc[i, j]):
+                return False
+
+    return True

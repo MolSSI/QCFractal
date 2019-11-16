@@ -1,16 +1,21 @@
 """
 QCPortal Database ODM
 """
-from typing import Any, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
-from ..models import GridOptimizationInput, Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
-from ..models.gridoptimization import GOKeywords, ScanDimension
+from ..models import GridOptimizationInput, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
+from ..models.gridoptimization import GOKeywords
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
+
+if TYPE_CHECKING:  # pragma: no cover
+    from ..models.gridoptimization import ScanDimension
+    from ..models import Molecule
 
 
 class GOEntry(ProtoModel):
     """Data model for the `reactions` list in Dataset"""
+
     name: str
     initial_molecule: ObjectId
     go_keywords: GOKeywords
@@ -36,19 +41,23 @@ class GridOptimizationDataset(BaseProcedureDataset):
             pass
 
     def _internal_compute_add(self, spec: Any, entry: Any, tag: str, priority: str) -> ObjectId:
-        service = GridOptimizationInput(initial_molecule=entry.initial_molecule,
-                                        keywords=entry.go_keywords,
-                                        optimization_spec=spec.optimization_spec,
-                                        qc_spec=spec.qc_spec)
+        service = GridOptimizationInput(
+            initial_molecule=entry.initial_molecule,
+            keywords=entry.go_keywords,
+            optimization_spec=spec.optimization_spec,
+            qc_spec=spec.qc_spec,
+        )
 
         return self.client.add_service([service], tag=tag, priority=priority).ids[0]
 
-    def add_specification(self,
-                          name: str,
-                          optimization_spec: OptimizationSpecification,
-                          qc_spec: QCSpecification,
-                          description: str = None,
-                          overwrite=False) -> None:
+    def add_specification(
+        self,
+        name: str,
+        optimization_spec: OptimizationSpecification,
+        qc_spec: QCSpecification,
+        description: str = None,
+        overwrite=False,
+    ) -> None:
         """
         Parameters
         ----------
@@ -65,20 +74,21 @@ class GridOptimizationDataset(BaseProcedureDataset):
 
         """
 
-        spec = GOEntrySpecification(name=name,
-                                    optimization_spec=optimization_spec,
-                                    qc_spec=qc_spec,
-                                    description=description)
+        spec = GOEntrySpecification(
+            name=name, optimization_spec=optimization_spec, qc_spec=qc_spec, description=description
+        )
 
         return self._add_specification(name, spec, overwrite=overwrite)
 
-    def add_entry(self,
-                  name: str,
-                  initial_molecule: Molecule,
-                  scans: List[ScanDimension],
-                  preoptimization: bool = True,
-                  attributes: Dict[str, Any] = None,
-                  save: bool = True) -> None:
+    def add_entry(
+        self,
+        name: str,
+        initial_molecule: "Molecule",
+        scans: List["ScanDimension"],
+        preoptimization: bool = True,
+        attributes: Dict[str, Any] = None,
+        save: bool = True,
+    ) -> None:
         """
         Parameters
         ----------

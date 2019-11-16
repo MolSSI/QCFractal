@@ -10,7 +10,7 @@ __all__ = ["get_information"]
 
 versions = _version.get_versions()
 
-__info = {"version": versions['version'], "git_revision": versions['full-revisionid']}
+__info = {"version": versions["version"], "git_revision": versions["full-revisionid"]}
 
 
 def _isnotebook():
@@ -19,9 +19,9 @@ def _isnotebook():
     """
     try:
         shell = get_ipython().__class__.__name__
-        if shell in ['ZMQInteractiveShell', 'google.colab._shell']:
+        if shell in ["ZMQInteractiveShell", "google.colab._shell"]:
             return True
-        elif shell == 'TerminalInteractiveShell':
+        elif shell == "TerminalInteractiveShell":
             return False
         else:
             return False
@@ -52,8 +52,4 @@ def provenance_stamp(routine):
    generating routine's name is passed in through `routine`.
 
    """
-    return {
-        'creator': 'QCFractal',
-        'version': get_information('version'),
-        'routine': routine,
-    }
+    return {"creator": "QCFractal", "version": get_information("version"), "routine": routine}

@@ -11,13 +11,14 @@ import numpy as np
 
 import os
 import sys
+
 sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 from migration_helpers import msgpack_migrations
 from qcelemental.util import msgpackext_dumps, msgpackext_loads
 
 # revision identifiers, used by Alembic.
-revision = '84c94a48e491'
-down_revision = 'd56ac42b9a43'
+revision = "84c94a48e491"
+down_revision = "d56ac42b9a43"
 branch_labels = None
 depends_on = None
 
@@ -34,7 +35,7 @@ def transformer(old_data):
         arr = np.array(arr, dtype=float).reshape(-1, 3)
     elif old_data["driver"] == "hessian":
         arr = np.array(arr, dtype=float)
-        arr.shape = (-1, int(arr.shape[0]**0.5))
+        arr.shape = (-1, int(arr.shape[0] ** 0.5))
 
     return {"return_result_": msgpackext_dumps(arr)}
 
@@ -43,7 +44,9 @@ update_columns = {"return_result"}
 
 
 def upgrade():
-    msgpack_migrations.json_to_msgpack_table(table_name, block_size, update_columns, transformer, read_columns={"driver": sa.String})
+    msgpack_migrations.json_to_msgpack_table(
+        table_name, block_size, update_columns, transformer, read_columns={"driver": sa.String}
+    )
 
 
 def downgrade():

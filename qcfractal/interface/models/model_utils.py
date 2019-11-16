@@ -56,7 +56,7 @@ def recursive_normalizer(value: Any, **kwargs: Dict[str, Any]) -> Any:
             # Round array
             value = np.around(value, digits)
             # Flip zeros
-            value[np.abs(value) < 5**(-(digits + 1))] = 0
+            value[np.abs(value) < 5 ** (-(digits + 1))] = 0
 
     elif isinstance(value, float):
         if digits:

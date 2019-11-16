@@ -27,35 +27,35 @@ def ensure_postgres_alive(psql):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='A CLI for the QCFractalServer.')
-    parser.add_argument('--version', action='version', version=f"{qcfractal.__version__}")
+    parser = argparse.ArgumentParser(description="A CLI for the QCFractalServer.")
+    parser.add_argument("--version", action="version", version=f"{qcfractal.__version__}")
 
     subparsers = parser.add_subparsers(dest="command")
 
     ### Init subcommands
-    init = subparsers.add_parser('init', help="Initializes a QCFractal server and database information.")
-    db_init = init.add_argument_group('Database Settings')
+    init = subparsers.add_parser("init", help="Initializes a QCFractal server and database information.")
+    db_init = init.add_argument_group("Database Settings")
     for field in DatabaseSettings.field_names():
         cli_name = "--db-" + field.replace("_", "-")
         db_init.add_argument(cli_name, **DatabaseSettings.help_info(field))
 
-    server_init = init.add_argument_group('Server Settings')
+    server_init = init.add_argument_group("Server Settings")
     for field in FractalServerSettings.field_names():
         cli_name = "--" + field.replace("_", "-")
         server_init.add_argument(cli_name, **FractalServerSettings.help_info(field))
 
-    init.add_argument("--overwrite-config", action='store_true', help="Overwrites the current configuration file.")
-    init.add_argument("--clear-database",
-                      action='store_true',
-                      help="Clear the content of the given database and initialize it.")
+    init.add_argument("--overwrite-config", action="store_true", help="Overwrites the current configuration file.")
+    init.add_argument(
+        "--clear-database", action="store_true", help="Clear the content of the given database and initialize it."
+    )
     init.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     ### Start subcommands
-    start = subparsers.add_parser('start', help="Starts a QCFractal server instance.")
+    start = subparsers.add_parser("start", help="Starts a QCFractal server instance.")
     start.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     # Allow port and logfile to be altered on the fly
-    fractal_args = start.add_argument_group('Server Settings')
+    fractal_args = start.add_argument_group("Server Settings")
     for field in ["port", "logfile"]:
         cli_name = "--" + field.replace("_", "-")
         fractal_args.add_argument(cli_name, **FractalServerSettings.help_info(field))
@@ -65,46 +65,63 @@ def parse_args():
         "--start-periodics",
         default=True,
         type=_str2bool,
-        help="Expert! Can disable periodic update (services, heartbeats) if False. Useful when running behind a proxy."
+        help="Expert! Can disable periodic update (services, heartbeats) if False. Useful when running behind a proxy.",
     )
 
-    fractal_args.add_argument("--disable-ssl",
-                              default=False,
-                              type=_str2bool,
-                              help="Disables SSL if present, if False a SSL cert will be created for you.")
+    fractal_args.add_argument(
+        "--disable-ssl",
+        default=False,
+        type=_str2bool,
+        help="Disables SSL if present, if False a SSL cert will be created for you.",
+    )
     fractal_args.add_argument("--tls-cert", type=str, default=None, help="Certificate file for TLS (in PEM format)")
     fractal_args.add_argument("--tls-key", type=str, default=None, help="Private key file for TLS (in PEM format)")
 
     ### Upgrade subcommands
-    upgrade = subparsers.add_parser('upgrade', help="Upgrade QCFractal database.")
+    upgrade = subparsers.add_parser("upgrade", help="Upgrade QCFractal database.")
     upgrade.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
-    compute_args = start.add_argument_group('Local Computation Settings')
-    compute_args.add_argument("--local-manager",
-                              const=-1,
-                              default=None,
-                              action='store',
-                              nargs='?',
-                              type=int,
-                              help='Creates a local pool QueueManager attached to the server.')
+    compute_args = start.add_argument_group("Local Computation Settings")
+    compute_args.add_argument(
+        "--local-manager",
+        const=-1,
+        default=None,
+        action="store",
+        nargs="?",
+        type=int,
+        help="Creates a local pool QueueManager attached to the server.",
+    )
 
     ### Config subcommands
-    info = subparsers.add_parser('info', help="Manage users and permissions on a QCFractal server instance.")
-    info.add_argument("category", nargs="?", default="config", choices=["config", "alembic"], help="The config category to show.")
+    info = subparsers.add_parser("info", help="Manage users and permissions on a QCFractal server instance.")
+    info.add_argument(
+        "category", nargs="?", default="config", choices=["config", "alembic"], help="The config category to show."
+    )
     info.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     ### User subcommands
-    user = subparsers.add_parser('user', help="Configure a QCFractal server instance.")
+    user = subparsers.add_parser("user", help="Configure a QCFractal server instance.")
     user.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     user_subparsers = user.add_subparsers(dest="user_command")
 
     user_add = user_subparsers.add_parser("add", help="Add a user to the QCFractal server.")
     user_add.add_argument("username", default=None, type=str, help="The username to add.")
-    user_add.add_argument("--password", default=None, type=str, required=False,
-                          help="The password for the user. If None, a default one will be created and printed.")
-    user_add.add_argument("--permissions", nargs='+', default=None, type=str, required=True,
-                          help="Permissions for the user. Allowed values: read, write, queue, compute, admin.")
+    user_add.add_argument(
+        "--password",
+        default=None,
+        type=str,
+        required=False,
+        help="The password for the user. If None, a default one will be created and printed.",
+    )
+    user_add.add_argument(
+        "--permissions",
+        nargs="+",
+        default=None,
+        type=str,
+        required=True,
+        help="Permissions for the user. Allowed values: read, write, queue, compute, admin.",
+    )
 
     user_show = user_subparsers.add_parser("info", help="Show the user's current permissions.")
     user_show.add_argument("username", default=None, type=str, help="The username to show.")
@@ -112,15 +129,29 @@ def parse_args():
     user_modify = user_subparsers.add_parser("modify", help="Change a user's password or permissions.")
     user_modify.add_argument("username", default=None, type=str, help="The username to modify.")
     user_modify_password = user_modify.add_mutually_exclusive_group()
-    user_modify_password.add_argument("--password", type=str, default=None, required=False,
-                                      help="Change the user's password to the specified value.")
-    user_modify_password.add_argument("--reset-password", action='store_true',
-                                      help="Reset the user's password. A new password will be generated and printed.")
-    user_modify.add_argument("--permissions", nargs='+', default=None, type=str, required=False,
-                             help="Change the users's permissions. Allowed values: read, write, compute, queue, admin.")
+    user_modify_password.add_argument(
+        "--password", type=str, default=None, required=False, help="Change the user's password to the specified value."
+    )
+    user_modify_password.add_argument(
+        "--reset-password",
+        action="store_true",
+        help="Reset the user's password. A new password will be generated and printed.",
+    )
+    user_modify.add_argument(
+        "--permissions",
+        nargs="+",
+        default=None,
+        type=str,
+        required=False,
+        help="Change the users's permissions. Allowed values: read, write, compute, queue, admin.",
+    )
 
     user_remove = user_subparsers.add_parser("remove", help="Remove a user.")
     user_remove.add_argument("username", default=None, type=str, help="The username to remove.")
+
+    # Dsahboard
+    dashboard = subparsers.add_parser("dashboard", help="Launches a Dashboard for the server (beta).")
+    dashboard.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     ### Move args around
     args = vars(parser.parse_args())
@@ -128,7 +159,7 @@ def parse_args():
     ret = {}
     ret["database"] = {}
     ret["fractal"] = {}
-    for key, value, in args.items():
+    for key, value in args.items():
 
         # DB bucket
         if ("db_" in key) and (key.replace("db_", "") in DatabaseSettings.field_names()):
@@ -173,8 +204,10 @@ def server_init(args, config):
     if config.config_file_path.exists():
         print()
         if not overwrite_config:
-            print("QCFractal configuration file already exists, to overwrite use '--overwrite-config' "
-                  "or use the `qcfractal-server config` command line to alter settings.")
+            print(
+                "QCFractal configuration file already exists, to overwrite use '--overwrite-config' "
+                "or use the `qcfractal-server config` command line to alter settings."
+            )
             sys.exit(2)
         else:
             user_required_input = f"REMOVEALLDATA {str(config.database_path)}"
@@ -304,27 +337,27 @@ def server_start(args, config):
             name=args.get("server_name", None) or config.fractal.name,
             port=config.fractal.port,
             compress_response=config.fractal.compress_response,
-
             # Security
             security=config.fractal.security,
             allow_read=config.fractal.allow_read,
             ssl_options=ssl_options,
-
             # Database
             storage_uri=config.database_uri(safe=False, database=""),
             storage_project_name=config.database.database_name,
             query_limit=config.fractal.query_limit,
-
+            # Collection views
+            view_enabled=config.view.enable,
+            view_path=config.view_path,
             # Log options
             logfile_prefix=logfile,
             log_apis=config.fractal.log_apis,
             geo_file_path=config.geo_file_path(),
-
             # Queue options
             service_frequency=config.fractal.service_frequency,
             heartbeat_frequency=config.fractal.heartbeat_frequency,
             max_active_services=config.fractal.max_active_services,
-            queue_socket=adapter)
+            queue_socket=adapter,
+        )
 
     except Exception as e:
         print("Fatal during server startup:\n")
@@ -381,7 +414,6 @@ def server_user(args, config):
 
     storage = storage_socket_factory(config.database_uri(safe=False))
 
-    print(args)
     try:
         if args["user_command"] == "add":
             print("\n>>> Adding new user...")
@@ -389,8 +421,10 @@ def server_user(args, config):
             if success:
                 print(f"\n>>> New user successfully added, password:\n{pw}")
                 if config.fractal.security is None:
-                    print("Warning: security is disabled. To enable security, change the configuration YAML field "
-                          "fractal:security to local.")
+                    print(
+                        "Warning: security is disabled. To enable security, change the configuration YAML field "
+                        "fractal:security to local."
+                    )
             else:
                 print("\n>>> Failed to add user. Perhaps the username is already taken?")
                 sys.exit(1)
@@ -404,10 +438,9 @@ def server_user(args, config):
                 print(permissions)
         elif args["user_command"] == "modify":
             print(f"\n>>> Modifying user '{args['username']}'...")
-            success, message = storage.modify_user(args["username"],
-                                                   args["password"],
-                                                   args["reset_password"],
-                                                   args["permissions"])
+            success, message = storage.modify_user(
+                args["username"], args["password"], args["reset_password"], args["permissions"]
+            )
             if success:
                 info = "Successfully modified user\n"
                 if message is not None:
@@ -427,6 +460,25 @@ def server_user(args, config):
     except Exception as e:
         print(type(e), str(e))
         sys.exit(1)
+
+
+def server_dashboard(args, config):
+
+    print("QCFractal server dashboard.\n")
+
+    print(f"QCFractal server base folder: {config.base_folder}")
+
+    print("\n>>> Checking the PostgreSQL connection...")
+
+    psql = PostgresHarness(config, quiet=False, logger=print)
+    ensure_postgres_alive(psql)
+
+    from ..dashboard import app
+
+    print("\n>>> Starting dashboard...")
+    app.server.config["FRACTAL_CONFIG"] = config
+
+    app.run_server(debug=True)
 
 
 def main(args=None):
@@ -469,11 +521,13 @@ def main(args=None):
         server_info(args, config)
     elif command == "start":
         server_start(args, config)
-    elif command == 'upgrade':
+    elif command == "upgrade":
         server_upgrade(args, config)
-    elif command == 'user':
+    elif command == "user":
         server_user(args, config)
+    elif command == "dashboard":
+        server_dashboard(args, config)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

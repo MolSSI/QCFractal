@@ -5,20 +5,32 @@ Note: avoid circular import here by including the name of the class
 in relations and foreign keys are a string (see TaskQueueORM.base_result_obj)
 """
 
-
 import datetime
-# from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import (Column, Integer, String, DateTime, Boolean, ForeignKey,
-                        JSON, Enum, Float, Binary, Index)
-from sqlalchemy.orm import relationship
-from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum, PriorityEnum
-from sqlalchemy.ext.hybrid import hybrid_property
 
-from qcfractal.storage_sockets.models import Base, MsgpackExt
+# from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import (
+    JSON,
+    BigInteger,
+    Boolean,
+    Column,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    LargeBinary,
+    String,
+)
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import relationship
+
+from qcfractal.interface.models.task_models import ManagerStatusEnum, PriorityEnum, TaskStatusEnum
+from qcfractal.storage_sockets.models.sql_base import Base, MsgpackExt
 
 
 class AccessLogORM(Base):
-    __tablename__ = 'access_log'
+    __tablename__ = "access_log"
 
     id = Column(Integer, primary_key=True)
     access_date = Column(DateTime, default=datetime.datetime.utcnow)
@@ -42,12 +54,36 @@ class AccessLogORM(Base):
     postal_code = Column(String)
     subdivision = Column(String)
 
-    __table_args__ = (
-        Index('access_type', "access_date"),
-    )
+    __table_args__ = (Index("access_type", "access_date"),)
+
+
+class ServerStatsLogORM(Base):
+    __tablename__ = "server_stats_log"
+
+    id = Column(Integer, primary_key=True)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+
+    # Raw counts
+    collection_count = Column(Integer)
+    molecule_count = Column(Integer)
+    result_count = Column(Integer)
+    kvstore_count = Column(Integer)
+    access_count = Column(Integer)
+
+    # States
+    result_states = Column(JSON)
+
+    # Database
+    db_total_size = Column(BigInteger)
+    db_table_size = Column(BigInteger)
+    db_index_size = Column(BigInteger)
+    db_table_information = Column(JSON)
+
+    __table_args__ = (Index("ix_server_stats_log_timestamp", "timestamp"),)
+
 
 class VersionsORM(Base):
-    __tablename__ = 'versions'
+    __tablename__ = "versions"
 
     id = Column(Integer, primary_key=True)
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
@@ -58,6 +94,7 @@ class VersionsORM(Base):
 
 class KVStoreORM(Base):
     """TODO: rename to """
+
     __tablename__ = "kv_store"
 
     id = Column(Integer, primary_key=True)
@@ -71,6 +108,7 @@ class KVStoreORM(Base):
 #     value = Column(JSON, nullable=False)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 class MoleculeORM(Base):
     """
@@ -86,8 +124,8 @@ class MoleculeORM(Base):
     # Required data
     schema_name = Column(String)
     schema_version = Column(Integer, default=2)
-    symbols = Column(MsgpackExt)
-    geometry = Column(MsgpackExt)
+    symbols = Column(MsgpackExt, nullable=False)
+    geometry = Column(MsgpackExt, nullable=False)
 
     # Molecule data
     name = Column(String, default="")
@@ -122,7 +160,7 @@ class MoleculeORM(Base):
     #     return str(self.id)
 
     __table_args__ = (
-        Index('ix_molecule_hash', "molecule_hash", unique=False),  # dafault index is B-tree
+        Index("ix_molecule_hash", "molecule_hash", unique=False),  # dafault index is B-tree
         # TODO: no index on molecule_formula
     )
 
@@ -140,7 +178,9 @@ class MoleculeORM(Base):
     #     ]
     # }
 
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 class KeywordsORM(Base):
     """
@@ -157,11 +197,12 @@ class KeywordsORM(Base):
     exact_floats = Column(Boolean, default=False)
     comments = Column(String)
 
-    __table_args__ = (Index('ix_keywords_hash_index', "hash_index", unique=True), )
+    __table_args__ = (Index("ix_keywords_hash_index", "hash_index", unique=True),)
     # meta = {'indexes': [{'fields': ('hash_index', ), 'unique': True}]}
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 class TaskQueueORM(Base):
     """A queue of tasks corresponding to a procedure
@@ -174,16 +215,16 @@ class TaskQueueORM(Base):
 
     id = Column(Integer, primary_key=True)
 
-    spec = Column(MsgpackExt)
+    spec = Column(MsgpackExt, nullable=False)
 
     # others
     tag = Column(String, default=None)
-    parser = Column(String, default='')
+    parser = Column(String, default="")
     program = Column(String)
     procedure = Column(String)
     status = Column(Enum(TaskStatusEnum), default=TaskStatusEnum.waiting)
     priority = Column(Integer, default=int(PriorityEnum.NORMAL))
-    manager = Column(String, ForeignKey('queue_manager.name'), default=None)
+    manager = Column(String, ForeignKey("queue_manager.name", ondelete="SET NULL"), default=None)
     error = Column(String)  # TODO: tobe removed - should be in results
 
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
@@ -192,7 +233,11 @@ class TaskQueueORM(Base):
     # TODO: for back-compatibility with mongo, tobe removed
     @hybrid_property
     def base_result(self):
-        return dict(ref="result", id=str(self.base_result_id))
+        return self._base_result(self.base_result_id)
+
+    @staticmethod
+    def _base_result(base_result_id):
+        return dict(ref="result", id=str(base_result_id))
         # return self.base_result_id   # todo, change to this
 
     @base_result.setter
@@ -200,26 +245,28 @@ class TaskQueueORM(Base):
         """Only two valid values, dict and int"""
 
         if isinstance(val, dict):
-            self.base_result_id = int(val['id'])
+            self.base_result_id = int(val["id"])
         else:
             self.base_result_id = int(val)
 
         return val
 
     # can reference ResultORMs or any ProcedureORM
-    base_result_id = Column(Integer, ForeignKey("base_result.id", ondelete='cascade'), unique=True)
-    base_result_obj = relationship("BaseResultORM", lazy='select')  # or lazy='joined'
+    base_result_id = Column(Integer, ForeignKey("base_result.id", ondelete="cascade"), unique=True)
+    base_result_obj = relationship("BaseResultORM", lazy="select")  # or lazy='joined'
 
     # An important special case is ORDER BY in combination with LIMIT n: an
     # explicit sort will have to process all the data to identify the first n
     # rows, but if there is an index matching the ORDER BY, the first n rows
     # can be retrieved directly, without scanning the remainder at all.
 
-    __table_args__ = (Index('ix_task_queue_created_on', "created_on"),
-                      Index('ix_task_queue_keys', "status", "program", "procedure", "tag"),
-                      Index('ix_task_queue_manager', "manager"),
-                      Index('ix_task_queue_base_result_id', "base_result_id")
-                      )
+    __table_args__ = (
+        Index("ix_task_queue_created_on", "created_on"),
+        Index("ix_task_queue_keys", "status", "program", "procedure", "tag"),
+        Index("ix_task_queue_manager", "manager"),
+        Index("ix_task_queue_base_result_id", "base_result_id"),
+    )
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -235,7 +282,7 @@ class ServiceQueueORM(Base):
     hash_index = Column(String, nullable=False)
 
     procedure_id = Column(Integer, ForeignKey("base_result.id"), unique=True)
-    procedure_obj = relationship("BaseResultORM", lazy='joined')
+    procedure_obj = relationship("BaseResultORM", lazy="joined")
 
     priority = Column(Integer, default=int(PriorityEnum.NORMAL))
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
@@ -244,12 +291,13 @@ class ServiceQueueORM(Base):
     extra = Column(MsgpackExt)
 
     __table_args__ = (
-        Index('ix_service_queue_status', "status"),
-        Index('ix_service_queue_priority', "priority"),
-        Index('ix_service_queue_modified_on', "modified_on"),
-        Index('ix_service_queue_status_tag_hash', "status", "tag"),
-        Index('ix_service_queue_hash_index', "hash_index"),
+        Index("ix_service_queue_status", "status"),
+        Index("ix_service_queue_priority", "priority"),
+        Index("ix_service_queue_modified_on", "modified_on"),
+        Index("ix_service_queue_status_tag_hash", "status", "tag"),
+        Index("ix_service_queue_hash_index", "hash_index"),
     )
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -261,8 +309,30 @@ class UserORM(Base):
     id = Column(Integer, primary_key=True)
 
     username = Column(String, nullable=False, unique=True)  # indexed and unique
-    password = Column(Binary, nullable=False)
+    password = Column(LargeBinary, nullable=False)
     permissions = Column(JSON)  # Column(ARRAY(String))
+
+
+class QueueManagerLogORM(Base):
+
+    __tablename__ = "queue_manager_logs"
+
+    id = Column(Integer, primary_key=True)
+    manager_id = Column(Integer, ForeignKey("queue_manager.id"), nullable=False)
+
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+
+    completed = Column(Integer, nullable=True)
+    submitted = Column(Integer, nullable=True)
+    failures = Column(Integer, nullable=True)
+
+    total_worker_walltime = Column(Float, nullable=True)
+    total_task_walltime = Column(Float, nullable=True)
+    active_tasks = Column(Integer, nullable=True)
+    active_cores = Column(Integer, nullable=True)
+    active_memory = Column(Float, nullable=True)
+
+    __table_args__ = (Index("ix_queue_manager_log_timestamp", "timestamp"),)
 
 
 class QueueManagerORM(Base):
@@ -280,11 +350,20 @@ class QueueManagerORM(Base):
     uuid = Column(String)
     tag = Column(String)
 
-    # counts
+    # Count at current time
     completed = Column(Integer, default=0)
     submitted = Column(Integer, default=0)
     failures = Column(Integer, default=0)
     returned = Column(Integer, default=0)
+
+    total_worker_walltime = Column(Float, nullable=True)
+    total_task_walltime = Column(Float, nullable=True)
+    active_tasks = Column(Integer, nullable=True)
+    active_cores = Column(Integer, nullable=True)
+    active_memory = Column(Float, nullable=True)
+
+    # Adapter Information
+    configuration = Column(JSON, nullable=True)
 
     status = Column(Enum(ManagerStatusEnum), default=ManagerStatusEnum.inactive)
 
@@ -296,6 +375,4 @@ class QueueManagerORM(Base):
     programs = Column(JSON)
     procedures = Column(JSON)
 
-    __table_args__ = (Index('ix_queue_manager_status', "status"),
-                      Index('ix_queue_manager_modified_on', "modified_on")
-                      )
+    __table_args__ = (Index("ix_queue_manager_status", "status"), Index("ix_queue_manager_modified_on", "modified_on"))

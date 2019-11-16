@@ -10,20 +10,19 @@ import sqlalchemy as sa
 
 import os
 import sys
+
 sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 
 from migration_helpers import msgpack_migrations
 
 # revision identifiers, used by Alembic.
-revision = 'd56ac42b9a43'
-down_revision = '963822c28879'
+revision = "d56ac42b9a43"
+down_revision = "963822c28879"
 branch_labels = None
 depends_on = None
 
 table_name = "molecule"
-update_columns = {
-    "symbols", "geometry", "masses", "real", "atom_labels", "atomic_numbers", "mass_numbers", "fragments"
-}
+update_columns = {"symbols", "geometry", "masses", "real", "atom_labels", "atomic_numbers", "mass_numbers", "fragments"}
 
 nullable = update_columns.copy()
 nullable -= {"symbols", "geometry"}

@@ -10,18 +10,9 @@ import qcfractal.interface as ptl
 from qcfractal import testing
 
 _users = {
-    "read": {
-        "pw": "hello",
-        "perm": ["read"]
-    },
-    "write": {
-        "pw": "something",
-        "perm": ["read", "write"]
-    },
-    "admin": {
-        "pw": "something",
-        "perm": ["read", "write", "compute", "admin"]
-    }
+    "read": {"pw": "hello", "perm": ["read"]},
+    "write": {"pw": "something", "perm": ["read", "write"]},
+    "admin": {"pw": "something", "perm": ["read", "write", "compute", "admin"]},
 }
 
 
@@ -37,11 +28,13 @@ def sec_server(request, postgres_server):
     with testing.loop_in_thread() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
-        server = qcfractal.FractalServer(port=testing.find_open_port(),
-                                         storage_uri=postgres_server.database_uri(),
-                                         storage_project_name=storage_name,
-                                         loop=loop,
-                                         security="local")
+        server = qcfractal.FractalServer(
+            port=testing.find_open_port(),
+            storage_uri=postgres_server.database_uri(),
+            storage_project_name=storage_name,
+            loop=loop,
+            security="local",
+        )
 
         # Clean and re-init the databse
         server.storage._clear_db(storage_name)
@@ -58,13 +51,15 @@ def sec_server_allow_read(sec_server, postgres_server):
     """
     New sec server with read allowed
     """
-    yield qcfractal.FractalServer(name="qcf_server_allow_read",
-                                  port=testing.find_open_port(),
-                                  storage_project_name=sec_server.storage.get_project_name(),
-                                  storage_uri=postgres_server.database_uri(),
-                                  loop=sec_server.loop,
-                                  security="local",
-                                  allow_read=True)
+    yield qcfractal.FractalServer(
+        name="qcf_server_allow_read",
+        port=testing.find_open_port(),
+        storage_project_name=sec_server.storage.get_project_name(),
+        storage_uri=postgres_server.database_uri(),
+        loop=sec_server.loop,
+        security="local",
+        allow_read=True,
+    )
 
 
 ### Tests the compute queue stack
@@ -77,12 +72,9 @@ def test_security_auth_decline_none(sec_server):
 
 def test_security_auth_bad_ssl(sec_server):
     with pytest.raises(ConnectionError) as excinfo:
-        client = ptl.FractalClient.from_file({
-            "address": sec_server.get_address(),
-            "username": "read",
-            "password": _users["write"]["pw"],
-            "verify": True
-        })
+        client = ptl.FractalClient.from_file(
+            {"address": sec_server.get_address(), "username": "read", "password": _users["write"]["pw"], "verify": True}
+        )
 
     assert "ssl handshake" in str(excinfo.value).lower()
     assert "verify=false" in str(excinfo.value).lower()
@@ -90,12 +82,9 @@ def test_security_auth_bad_ssl(sec_server):
 
 def test_security_auth_decline_bad_user(sec_server):
     with pytest.raises(IOError) as excinfo:
-        client = ptl.FractalClient.from_file({
-            "address": sec_server.get_address(),
-            "username": "hello",
-            "password": "something",
-            "verify": False
-        })
+        client = ptl.FractalClient.from_file(
+            {"address": sec_server.get_address(), "username": "hello", "password": "something", "verify": False}
+        )
 
     assert "user not found" in str(excinfo.value).lower()
 

@@ -15,6 +15,88 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.12.0 / 2019-10-01
+-------------------
+
+New Features
+++++++++++++
+- (:pr:`433`) ``Dataset`` and ``ReactionDataset`` (``interface.collections``) now have a ``download``` method which
+  downloads a frozen view of the dataset. This view is used to speed up calls to ``get_values``, ``get_molecules``,
+  ``get_entries``, and ``list_values``.
+- (:pr:`440`) Wavefunctions can now be stored in the database using Result ``protocols``.
+
+Enhancements
+++++++++++++
+- (:pr:`429`) Enables protocols for ``OptimizationDataset`` collections.
+- (:pr:`430`) Adds additional QCPortal type hints.
+- (:pr:`433`, :pr:`443`) ``Dataset`` and ``ReactionDataset`` (``interface.collections``) are now faster for calls to calls to ``get_values``, ``get_molecules``,
+  ``get_entries``, and ``list_values`` for large datasets if the server is configured to use frozen views. See "Server-side Dataset Views" documentation. Subsets
+  may be passed to ``get_values``, ``get_molecules``, and ``get_entries``
+- (:pr:`447`) Enables the creation of plaintext (xyz and csv) output from Dataset Collections.
+- (:pr:`458`) Collections now have a metadata field.
+- (:pr:`462`) Dataset downloads now have a TQDM progress bar.
+- (:pr:`463`) ``FractalClient.list_collections`` by default only returns collections whose visibility flag is set to true,
+  and whose group is "default". This change was made to filter out in-progress, intermediate, and specialized collections.
+
+Bug Fixes
++++++++++
+- (:pr:`424`) Fixes a ``ReactionDataset.visualize`` bug with ``groupby='D3'``.
+- (:pr:`456`, :pr:`452`) Queries that project hybrid properties should now work as expected.
+
+Deprecated Features
++++++++++++++++++++
+- (:pr:`426`) In ``Dataset`` and ``ReactionDataset`` (``interface.collections``),
+  the previously deprecated functions ``query``, ``get_history``, and ``list_history`` have been removed.
+
+
+0.11.0 / 2019-10-01
+-------------------
+
+New Features
+++++++++++++
+
+- (:pr:`420`) Pre-storage data handling through Elemental's ``Protocols`` feature are now present in Fractal. Although
+  only optimization protocols are implemented functionally, the database side has been upgraded to store protocol
+  settings.
+
+Enhancements
+++++++++++++
+
+- (:pr:`385`, :pr:`404`, :pr:`411`) ``Dataset`` and ``ReactionDataset`` have five new functions for accessing data.
+  ``get_values`` returns the canonical headline value for a dataset (e.g. the interaction energy for S22) in data
+  columns with caching, both for result-backed values and contributed values. This function replaces the now-deprecated
+  ``get_history`` and ``get_contributed_values``. ``list_values`` returns the list of data columns available from
+  ``get_values``. This function replaces the now-deprecated ``list_history`` and ``list_contributed_values``.
+  ``get_records`` either returns ``ResultRecord`` or a projection. For the case of ``ReactionDataset``, the results are
+  broken down into component calculations. The function replaces the now-deprecated ``query``.
+  ``list_records`` returns the list of data columns available from ``get_records``.
+  ``get_molecules`` returns the ``Molecule`` associated with a dataset.
+- (:pr:`393`) A new feature added to ``Client`` to be able to have more custom and fast queries, the ``custom_query``
+  method.
+  Those fast queries are now used in ``torsiondrive.get_final_molecules`` and ``torsiondrive.get_final_results``. More
+  Advanced queries will be added.
+- (:pr:`394`) Adds ``tag`` and ``manager`` selector fields to ``client.query_tasks``.
+  This is helpful for managing jobs in the queue and detecting failures.
+- (:pr:`400`, :pr:`401`, :pr:`410`) Adds Dockerfiles corresponding to builds on
+  `Docker Hub <https://cloud.docker.com/u/molssi/repository/list>`_.
+- (:pr:`406`) The ``Dataset`` collection's primary indices (database level) have been updated to reflect its new
+  understanding.
+
+
+Bug Fixes
++++++++++
+
+- (:pr:`396`) Fixed a bug in internal ``Dataset`` function which caused ``ComputeResponse`` to be truncated when the
+  number of calculations is larger than the query_limit.
+- (:pr:`403`) Fixed ``Dataset.get_values`` for any method which involved DFTD3.
+- (:pr:`409`) Fixed a compatibility bug in specific version of Intel-OpenMP by skipping version
+  2019.5-281.
+
+Documentation Improvements
+++++++++++++++++++++++++++
+
+- (:pr:`399`) A Kubernetes quickstart guide has been added.
+
 0.10.0 / 2019-08-26
 -------------------
 

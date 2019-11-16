@@ -1,4 +1,5 @@
 import setuptools
+
 import versioneer
 
 short_description = "A distributed compute and database platform for quantum chemistry."
@@ -22,36 +23,39 @@ if __name__ == "__main__":
         cmdclass=versioneer.get_cmdclass(),
         packages=setuptools.find_packages(),
         install_requires=[
-            # Base requires
+            # Core dependencies
+            'numpy',
+            'msgpack >=0.6.1',
+            'tornado',
+            'requests',
+            'pyyaml >=5.1',
+            'pydantic >=1.0.0',
+
+            # Security dependencies
             'bcrypt',
             'cryptography',
-            'numpy>=1.7',
-            'msgpack>=0.6.1',
-            'pandas',
-            'pydantic>=0.30.1',
-            'msgpack>=0.6.1',
-            'pyyaml>=5.1',
-            'requests',
-            'tornado',
-            'tqdm',
 
-            # Database
-            'sqlalchemy>=1.3',
-            'psycopg2>=2.7',
+            # Storage dependencies
+            'sqlalchemy >=1.3',
             'alembic',
+            'psycopg2 >=2.7',
+
+            # QCPortal dependencies
+            'tqdm',
+            'plotly >=4.0.0',
+            'pandas',
+            'h5py',
+            'pyarrow >=0.13.0',
+#            'double-conversion >=3.0.0',
 
             # QCArchive depends
-            'qcengine>=0.9.0',
-            'qcelemental>=0.7.0',
-
-            # Testing
-            'pytest',
+            'qcengine>=0.11.0',
+            'qcelemental>=0.11.0',
         ],
         entry_points={
             "console_scripts": [
                 "qcfractal-server=qcfractal.cli.qcfractal_server:main",
                 "qcfractal-manager=qcfractal.cli.qcfractal_manager:main",
-                "qcfractal-dashboard=qcfractal.cli.qcfractal_dashboard:main",
             ],
             "pytest11": ["qcfractal_testing=qcfractal.testing"]
         },
@@ -62,11 +66,8 @@ if __name__ == "__main__":
                 'sphinx_rtd_theme',
                 'numpydoc',
             ],
-            'tests': [
-                'pytest',
-                'pytest-cov',
-            ],
-            'api_logging':[
+            'tests': ['pytest', 'pytest-cov', 'requests-mock'],
+            'api_logging': [
                 'geoip2',
             ],
         },
@@ -81,5 +82,4 @@ if __name__ == "__main__":
         ],
         zip_safe=True,
         long_description=long_description,
-        long_description_content_type="text/markdown"
-    )
+        long_description_content_type="text/markdown")

@@ -13,15 +13,17 @@ class BaseAdapter(abc.ABC):
     """A BaseAdapter for wrapping compute engines
     """
 
-    def __init__(self,
-                 client: Any,
-                 logger: Optional[logging.Logger] = None,
-                 cores_per_task: Optional[int] = None,
-                 memory_per_task: Optional[float] = None,
-                 scratch_directory: Optional[str] = None,
-                 retries: Optional[int] = 2,
-                 verbose: bool = False,
-                 **kwargs):
+    def __init__(
+        self,
+        client: Any,
+        logger: Optional[logging.Logger] = None,
+        cores_per_task: Optional[int] = None,
+        memory_per_task: Optional[float] = None,
+        scratch_directory: Optional[str] = None,
+        retries: Optional[int] = 2,
+        verbose: bool = False,
+        **kwargs,
+    ):
         """
         Parameters
         ----------
@@ -144,9 +146,7 @@ class BaseAdapter(abc.ABC):
                 task_spec = task_spec.copy()  # Copy for safety
                 task_spec["spec"]["kwargs"] = {
                     **task_spec["spec"]["kwargs"],
-                    **{
-                        "local_options": self.qcengine_local_options
-                    }
+                    **{"local_options": self.qcengine_local_options},
                 }
 
             queue_key, task = self._submit_task(task_spec)
@@ -207,7 +207,7 @@ class BaseAdapter(abc.ABC):
             True if the closing was successful.
         """
 
-    def count_running_workers(self) -> int:
+    def count_running_tasks(self) -> int:
         """
         Adapter-specific implementation to count the currently running workers, helpful for resource consumption.
         May not be implemented or possible for each adapter, nor is it required for

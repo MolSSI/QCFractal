@@ -8,18 +8,20 @@ from typing import Any, Dict, List
 
 import numpy as np
 
-from .service_util import BaseService, TaskManager
-from ..interface.models import TorsionDriveRecord
 from ..extras import find_module
-
+from ..interface.models import TorsionDriveRecord
+from .service_util import BaseService, TaskManager
 
 __all__ = ["TorsionDriveService"]
 
 __td_api = find_module("torsiondrive")
 
+
 def _check_td():
     if __td_api is None:
-        raise ModuleNotFoundError("Unable to find TorsionDriveRecord which must be installed to use the TorsionDriveService")
+        raise ModuleNotFoundError(
+            "Unable to find TorsionDriveRecord which must be installed to use the TorsionDriveService"
+        )
 
 
 class TorsionDriveService(BaseService):
@@ -61,11 +63,12 @@ class TorsionDriveService(BaseService):
             provenance={
                 "creator": "torsiondrive",
                 "version": torsiondrive.__version__,
-                "routine": "torsiondrive.td_api"
+                "routine": "torsiondrive.td_api",
             },
             final_energy_dict={},
             minimum_positions={},
-            optimization_history={})
+            optimization_history={},
+        )
 
         meta = {"output": output}
 
@@ -83,7 +86,7 @@ class TorsionDriveService(BaseService):
             init_coords=[x.geometry for x in service_input.initial_molecule],
             dihedral_ranges=output.keywords.dihedral_ranges,
             energy_decrease_thresh=output.keywords.energy_decrease_thresh,
-            energy_upper_limit=output.keywords.energy_upper_limit
+            energy_upper_limit=output.keywords.energy_upper_limit,
         )
 
         # Build dihedral template
@@ -95,15 +98,17 @@ class TorsionDriveService(BaseService):
         meta["dihedral_template"] = json.dumps(dihedral_template)
 
         # Build optimization template
-        meta["optimization_template"] = json.dumps({
-            "meta": {
-                "procedure": "optimization",
-                "keywords": output.optimization_spec.keywords,
-                "program": output.optimization_spec.program,
-                "qc_spec": output.qc_spec.dict(),
-                "tag": meta.pop("tag", None)
-            },
-        })
+        meta["optimization_template"] = json.dumps(
+            {
+                "meta": {
+                    "procedure": "optimization",
+                    "keywords": output.optimization_spec.keywords,
+                    "program": output.optimization_spec.program,
+                    "qc_spec": output.qc_spec.dict(),
+                    "tag": meta.pop("tag", None),
+                }
+            }
+        )
 
         # Move around geometric data
         meta["optimization_program"] = output.optimization_spec.program
@@ -118,7 +123,6 @@ class TorsionDriveService(BaseService):
         _check_td()
         from torsiondrive import td_api
 
-
         self.status = "RUNNING"
 
         # Check if tasks are done
@@ -132,22 +136,16 @@ class TorsionDriveService(BaseService):
         for key, task_ids in self.task_map.items():
             task_results[key] = []
 
-            # Check for history key
-            if key not in self.optimization_history:
-                self.optimization_history[key] = []
-
             for task_id in task_ids:
                 # Cycle through all tasks for this entry
                 ret = complete_tasks[task_id]
 
                 # Lookup molecules
-                mol_keys = self.storage_socket.get_molecules(id=[ret["initial_molecule"],
-                                                                 ret["final_molecule"]])["data"]
+                mol_keys = self.storage_socket.get_molecules(id=[ret["initial_molecule"], ret["final_molecule"]])[
+                    "data"
+                ]
 
                 task_results[key].append((mol_keys[0].geometry, mol_keys[1].geometry, ret["energies"][-1]))
-
-                # Update history
-                self.optimization_history[key].append(ret["id"])
 
         td_api.update_state(self.torsiondrive_state, task_results)
 
@@ -156,7 +154,9 @@ class TorsionDriveService(BaseService):
 
         # All done
         if len(next_tasks) == 0:
-            return self.finalize()
+            self.status = "COMPLETE"
+            self.update_output()
+            return True
 
         self.submit_optimization_tasks(next_tasks)
 
@@ -199,7 +199,17 @@ class TorsionDriveService(BaseService):
         self.task_manager.submit_tasks("optimization", new_tasks)
         self.task_map = task_map
 
-    def finalize(self):
+        # Update history
+        for key, task_ids in self.task_map.items():
+            if key not in self.optimization_history:
+                self.optimization_history[key] = []
+
+            for task_id in task_ids:
+                self.optimization_history[key].append(self.task_manager.required_tasks[task_id])
+
+        self.update_output()
+
+    def update_output(self):
         """
         Finishes adding data to the TorsionDriveRecord object
         """
@@ -217,10 +227,12 @@ class TorsionDriveService(BaseService):
 
         history = {json.dumps(td_api.grid_id_from_string(k)): v for k, v in self.optimization_history.items()}
 
-        self.output = self.output.copy(update={
-            "status": "COMPLETE",
-            "minimum_positions": min_positions,
-            "final_energy_dict": final_energy,
-            "optimization_history": history
-        })
+        self.output = self.output.copy(
+            update={
+                "status": self.status,
+                "minimum_positions": min_positions,
+                "final_energy_dict": final_energy,
+                "optimization_history": history,
+            }
+        )
         return True

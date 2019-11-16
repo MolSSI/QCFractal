@@ -4,10 +4,14 @@ All procedures tasks involved in on-node computation.
 
 from typing import List, Union
 
-from .procedures_util import parse_single_tasks
-from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord
-
+import qcelemental as qcel
 import qcengine as qcng
+
+from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord
+from .procedures_util import parse_single_tasks
+
+_wfn_return_names = set(qcel.models.results.WavefunctionProperties._return_results_names)
+_wfn_all_fields = set(qcel.models.results.WavefunctionProperties.__fields__.keys())
 
 
 class BaseTasks:
@@ -36,13 +40,9 @@ class BaseTasks:
                 "validation_errors": [],
                 "success": True,
                 "error_description": False,
-                "errors": errors
+                "errors": errors,
             },
-            "data": {
-                "ids": results_ids,
-                "submitted": [x.base_result.id for x in new_tasks],
-                "existing": existing_ids,
-            }
+            "data": {"ids": results_ids, "submitted": [x.base_result.id for x in new_tasks], "existing": existing_ids},
         }
 
         return results
@@ -66,7 +66,13 @@ class SingleResultTasks(BaseTasks):
     def verify_input(self, data):
         program = data.meta.program.lower()
         if program not in qcng.list_all_programs():
-            return "Program '{}' not available in QCEngine.".format(program)
+            return f"Program '{program}' not available in QCEngine."
+
+        if data.meta.dict().get("protocols", None) is not None:
+            try:
+                qcel.models.results.ResultProtocols(**data.meta.protocols)
+            except Exception as e:
+                return f"Could not validate protocols: {str(e)}"
 
         return True
 
@@ -128,21 +134,20 @@ class SingleResultTasks(BaseTasks):
                 continue
 
             # Build task object
-            task = TaskRecord(**{
-                "spec": {
-                    "function": "qcengine.compute",  # todo: add defaults in models
-                    "args": [inp.dict(), data.meta.program],
-                    "kwargs": {}  # todo: add defaults in models
-                },
-                "parser": "single",
-                "program": data.meta.program,
-                "tag": tag,
-                "priority": priority,
-                "base_result": {
-                    "ref": "result",
-                    "id": base_id
+            task = TaskRecord(
+                **{
+                    "spec": {
+                        "function": "qcengine.compute",  # todo: add defaults in models
+                        "args": [inp.dict(), data.meta.program],
+                        "kwargs": {},  # todo: add defaults in models
+                    },
+                    "parser": "single",
+                    "program": data.meta.program,
+                    "tag": tag,
+                    "priority": priority,
+                    "base_result": {"ref": "result", "id": base_id},
                 }
-            })
+            )
 
             new_tasks.append(task)
 
@@ -158,11 +163,34 @@ class SingleResultTasks(BaseTasks):
             result = ResultRecord(**result)
 
             rdata = data["result"]
-            stdout, stderr, error = self.storage.add_kvstore([rdata["stdout"], rdata["stderr"],
-                                                              rdata["error"]])["data"]
+            stdout, stderr, error = self.storage.add_kvstore([rdata["stdout"], rdata["stderr"], rdata["error"]])["data"]
             rdata["stdout"] = stdout
             rdata["stderr"] = stderr
             rdata["error"] = error
+
+            # Store Wavefunction data
+            if data["result"].get("wavefunction", False):
+                wfn = data["result"].get("wavefunction", False)
+                available = set(wfn.keys()) - {"restricted", "basis"}
+                return_map = {k: wfn[k] for k in wfn.keys() & _wfn_return_names}
+
+                rdata["wavefunction"] = {
+                    "available": list(available),
+                    "restricted": wfn["restricted"],
+                    "return_map": return_map,
+                }
+
+                # Extra fields are trimmed as we have a column *per* wavefunction structure.
+                available_keys = wfn.keys() - _wfn_return_names
+                if available_keys > _wfn_all_fields:
+                    self.logger.warning(
+                        f"Too much wavefunction data for result {data['base_result'].id}, removing extra data."
+                    )
+                    available_keys &= _wfn_all_fields
+
+                wavefunction_save = {k: wfn[k] for k in available_keys}
+                wfn_data_id = self.storage.add_wavefunction_store([wavefunction_save])["data"][0]
+                rdata["wavefunction_data_id"] = wfn_data_id
 
             result._consume_output(rdata)
             updates.append(result)
@@ -267,16 +295,20 @@ class OptimizationTasks(BaseTasks):
                 results_ids.append(None)
                 continue
 
-            doc = OptimizationRecord(
-                initial_molecule=initial_molecule.id,
-                qc_spec=qc_spec,
-                keywords=opt_keywords,
-                program=data.meta.program)
+            doc_data = {
+                "initial_molecule": initial_molecule.id,
+                "qc_spec": qc_spec,
+                "keywords": opt_keywords,
+                "program": data.meta.program,
+            }
+            if hasattr(data.meta, "protocols"):
+                doc_data["protocols"] = data.meta.protocols
+            doc = OptimizationRecord(**doc_data)
 
             inp = doc.build_schema_input(initial_molecule=initial_molecule, qc_keywords=qc_keywords)
             inp.input_specification.extras["_qcfractal_tags"] = {
                 "program": qc_spec.program,
-                "keywords": qc_spec.keywords
+                "keywords": qc_spec.keywords,
             }
 
             ret = self.storage.add_procedures([doc])
@@ -289,22 +321,21 @@ class OptimizationTasks(BaseTasks):
                 continue
 
             # Build task object
-            task = TaskRecord(**{
-                "spec": {
-                    "function": "qcengine.compute_procedure",
-                    "args": [inp.dict(), data.meta.program],
-                    "kwargs": {}
-                },
-                "parser": "optimization",
-                "program": qc_spec.program,
-                "procedure": data.meta.program,
-                "tag": tag,
-                "priority": priority,
-                "base_result": {
-                    "ref": "procedure",
-                    "id": base_id
+            task = TaskRecord(
+                **{
+                    "spec": {
+                        "function": "qcengine.compute_procedure",
+                        "args": [inp.dict(), data.meta.program],
+                        "kwargs": {},
+                    },
+                    "parser": "optimization",
+                    "program": qc_spec.program,
+                    "procedure": data.meta.program,
+                    "tag": tag,
+                    "priority": priority,
+                    "base_result": {"ref": "procedure", "id": base_id},
                 }
-            })
+            )
 
             new_tasks.append(task)
 
@@ -327,8 +358,8 @@ class OptimizationTasks(BaseTasks):
             # Add initial and final molecules
             update_dict = {}
             initial_mol, final_mol = self.storage.add_molecules(
-                [Molecule(**procedure["initial_molecule"]),
-                 Molecule(**procedure["final_molecule"])])["data"]
+                [Molecule(**procedure["initial_molecule"]), Molecule(**procedure["final_molecule"])]
+            )["data"]
             assert initial_mol == rec.initial_molecule
             update_dict["final_molecule"] = final_mol
 
@@ -345,7 +376,8 @@ class OptimizationTasks(BaseTasks):
 
             # Save stdout/stderr
             stdout, stderr, error = self.storage.add_kvstore(
-                [procedure["stdout"], procedure["stderr"], procedure["error"]])["data"]
+                [procedure["stdout"], procedure["stderr"], procedure["error"]]
+            )["data"]
             update_dict["stdout"] = stdout
             update_dict["stderr"] = stderr
             update_dict["error"] = error

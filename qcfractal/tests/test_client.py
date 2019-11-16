@@ -2,8 +2,8 @@
 Tests the interface portal adapter to the REST API
 """
 
-import pytest
 import numpy as np
+import pytest
 
 import qcfractal.interface as ptl
 from qcfractal.testing import test_server
@@ -12,6 +12,7 @@ from qcfractal.testing import test_server
 # Make PyTest aware that this module needs the server
 
 valid_encodings = ["json", "json-ext", "msgpack-ext"]
+
 
 @pytest.mark.parametrize("encoding", valid_encodings)
 def test_client_molecule(test_server, encoding):
@@ -77,6 +78,7 @@ def test_client_duplicate_keywords(test_server, encoding):
     assert len(ret3) == 3
     assert ret3[1] == ret[0]
 
+
 @pytest.mark.parametrize("encoding", valid_encodings)
 def test_empty_query(test_server, encoding):
 
@@ -93,13 +95,22 @@ def test_empty_query(test_server, encoding):
 def test_collection_portal(test_server, encoding):
 
     db_name = f"Torsion123-{encoding}"
-    db = {"collection": "torsiondrive", "name": db_name, "something": "else", "array": ["12345"]}
+    db = {
+        "collection": "torsiondrive",
+        "name": db_name,
+        "something": "else",
+        "array": ["12345"],
+        "visibility": True,
+        "view_available": False,
+        "group": "default",
+    }
 
     client = ptl.FractalClient(test_server)
     client._set_encoding(encoding)
 
     # Test add
-    _ = client.add_collection(db)
+    ret = client.add_collection(db, full_return=True)
+    print(ret)
 
     # Test get
     get_db = client.get_collection(db["collection"], db["name"], full_return=True)
@@ -109,6 +120,10 @@ def test_collection_portal(test_server, encoding):
     get_db.data[0].pop("tags", None)
     get_db.data[0].pop("tagline", None)
     get_db.data[0].pop("provenance", None)
+    get_db.data[0].pop("view_url_hdf5", None)
+    get_db.data[0].pop("view_url_plaintext", None)
+    get_db.data[0].pop("view_metadata", None)
+    get_db.data[0].pop("description", None)
 
     assert db == get_db.data[0]
 
@@ -121,13 +136,27 @@ def test_collection_portal(test_server, encoding):
         _ = client.add_collection(db, overwrite=True)
 
     # Test that we cannot use a local key
-    db['id'] = 'local'
-    db['array'] = ["6789"]
+    db["id"] = "local"
+    db["array"] = ["6789"]
     with pytest.raises(KeyError):
         _ = client.add_collection(db, overwrite=True)
 
     # Finally test that we can overwrite
-    db['id'] = db_id
+    db["id"] = db_id
     r = client.add_collection(db, overwrite=True)
     get_db = client.get_collection(db["collection"], db["name"], full_return=True)
-    assert get_db.data[0]['array'] == ["6789"]
+    assert get_db.data[0]["array"] == ["6789"]
+
+
+@pytest.mark.parametrize("encoding", valid_encodings)
+def test_custom_queries(test_server, encoding):
+    """ Test the round trip between client and server in custom queries"""
+
+    client = ptl.FractalClient(test_server)
+    client._set_encoding(encoding)
+
+    # Dummy test, not found
+    ret = client.custom_query("optimization", "final_result", {"optimization_ids": [1]}, full_return=True)
+
+    assert ret.meta.success
+    assert ret.meta.n_found == 0

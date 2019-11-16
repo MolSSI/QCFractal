@@ -2,42 +2,65 @@
 SQLAlchemy Database class to handle access to Pstgres through ORM
 """
 
-
 try:
-    from sqlalchemy import create_engine, or_, case
+    from sqlalchemy import create_engine, or_, case, func
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
-    from sqlalchemy.sql.expression import func
-    # from sqlalchemy.dialects import postgresql
+    from sqlalchemy.sql.expression import desc
 except ImportError:
     raise ImportError(
-        "SQLAlchemy_socket requires sqlalchemy, please install this python "
-        "module or try a different db_socket.")
+        "SQLAlchemy_socket requires sqlalchemy, please install this python " "module or try a different db_socket."
+    )
 
+import json
 import logging
 import secrets
+from collections.abc import Iterable
 from contextlib import contextmanager
 from datetime import datetime as dt
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import bcrypt
-from collections.abc import Iterable
-import json
 
 # pydantic classes
-from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, OptimizationRecord, ResultRecord, TaskRecord,
-                                        TaskStatusEnum, TorsionDriveRecord, prepare_basis, GridOptimizationRecord)
-# SQL ORMs
-from qcfractal.storage_sockets.models import (BaseResultORM, CollectionORM, KeywordsORM, KVStoreORM,
-                                       MoleculeORM, OptimizationProcedureORM, QueueManagerORM, ResultORM,
-                                       ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM,
-                                       GridOptimizationProcedureORM, VersionsORM, AccessLogORM, DatasetORM,
-                                       ReactionDatasetORM)
-# from sqlalchemy.dialects.postgresql import insert as postgres_insert
+from qcfractal.interface.models import (
+    GridOptimizationRecord,
+    KeywordSet,
+    Molecule,
+    ObjectId,
+    OptimizationRecord,
+    ResultRecord,
+    TaskRecord,
+    TaskStatusEnum,
+    TorsionDriveRecord,
+    prepare_basis,
+)
+from qcfractal.storage_sockets.db_queries import QUERY_CLASSES
+from qcfractal.storage_sockets.models import (
+    AccessLogORM,
+    BaseResultORM,
+    CollectionORM,
+    DatasetORM,
+    GridOptimizationProcedureORM,
+    KeywordsORM,
+    KVStoreORM,
+    MoleculeORM,
+    OptimizationProcedureORM,
+    QueueManagerLogORM,
+    QueueManagerORM,
+    ReactionDatasetORM,
+    ResultORM,
+    ServerStatsLogORM,
+    ServiceQueueORM,
+    TaskQueueORM,
+    TorsionDriveProcedureORM,
+    UserORM,
+    VersionsORM,
+    WavefunctionStoreORM,
+)
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
 from .models import Base
-
 
 _null_keys = {"basis", "keywords"}
 _id_keys = {"id", "molecule", "keywords", "procedure_id"}
@@ -47,6 +70,7 @@ _prepare_keys = {"program": _lower_func, "basis": prepare_basis, "method": _lowe
 
 def dict_from_tuple(keys, values):
     return [dict(zip(keys, row)) for row in values]
+
 
 def format_query(ORMClass, **query: Dict[str, Union[str, List[str]]]) -> Dict[str, Union[str, List[str]]]:
     """
@@ -60,9 +84,8 @@ def format_query(ORMClass, **query: Dict[str, Union[str, List[str]]]) -> Dict[st
 
         # Handle None keys
         k = k.lower()
-        if (k in _null_keys) and (v == 'null'):
+        if (k in _null_keys) and (v == "null"):
             v = None
-
 
         if k in _prepare_keys:
             f = _prepare_keys[k]
@@ -78,6 +101,7 @@ def format_query(ORMClass, **query: Dict[str, Union[str, List[str]]]) -> Dict[st
             ret.append(getattr(ORMClass, k) == v)
 
     return ret
+
 
 def get_count_fast(query):
     """
@@ -103,17 +127,14 @@ def get_procedure_class(record):
     elif isinstance(record, GridOptimizationRecord):
         procedure_class = GridOptimizationProcedureORM
     else:
-        raise TypeError('Procedure of type {} is not valid or supported yet.'
-                        .format(type(record)))
+        raise TypeError("Procedure of type {} is not valid or supported yet.".format(type(record)))
 
     return procedure_class
 
+
 def get_collection_class(collection_type):
 
-    collection_map = {
-        'dataset' : DatasetORM,
-        'reactiondataset': ReactionDatasetORM,
-    }
+    collection_map = {"dataset": DatasetORM, "reactiondataset": ReactionDatasetORM}
 
     collection_class = CollectionORM
 
@@ -128,14 +149,16 @@ class SQLAlchemySocket:
         SQLAlcehmy QCDB wrapper class.
     """
 
-    def __init__(self,
-                 uri: str,
-                 project: str = "molssidb",
-                 bypass_security: bool = False,
-                 allow_read: bool = True,
-                 logger: 'Logger' = None,
-                 sql_echo: bool = False,
-                 max_limit: int = 1000):
+    def __init__(
+        self,
+        uri: str,
+        project: str = "molssidb",
+        bypass_security: bool = False,
+        allow_read: bool = True,
+        logger: "Logger" = None,
+        sql_echo: bool = False,
+        max_limit: int = 1000,
+    ):
         """
         Constructs a new SQLAlchemy socket
 
@@ -145,7 +168,7 @@ class SQLAlchemySocket:
         if logger:
             self.logger = logger
         else:
-            self.logger = logging.getLogger('SQLAlcehmySocket')
+            self.logger = logging.getLogger("SQLAlcehmySocket")
 
         # Security
         self._bypass_security = bypass_security
@@ -169,10 +192,11 @@ class SQLAlchemySocket:
         self.engine = create_engine(
             uri,
             echo=sql_echo,  # echo for logging into python logging
-            pool_size=5  # 5 is the default, 0 means unlimited
+            pool_size=5,  # 5 is the default, 0 means unlimited
         )
-        self.logger.info('Connected SQLAlchemy to DB dialect {} with driver {}'.format(
-            self.engine.dialect.name, self.engine.driver))
+        self.logger.info(
+            "Connected SQLAlchemy to DB dialect {} with driver {}".format(self.engine.dialect.name, self.engine.driver)
+        )
 
         self.Session = sessionmaker(bind=self.engine)
 
@@ -181,6 +205,11 @@ class SQLAlchemySocket:
             Base.metadata.create_all(self.engine)
         except Exception as e:
             raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}") from None
+
+        # Advanced queries objects
+        self._query_classes = {
+            cls._class_name: cls(self.engine.url.database, max_limit=max_limit) for cls in QUERY_CLASSES
+        }
 
         # if expanded_uri["password"] is not None:
         #     # connect to mongoengine
@@ -211,7 +240,7 @@ class SQLAlchemySocket:
         self.check_lib_versions()
 
     def __str__(self) -> str:
-        return "<SQLAlchemy: address='{0:s}:{1:d}:{2:s}'>".format(str(self._url), self._port, str(self._project_name))
+        return f"<SQLAlchemySocket: address='{self.uri}`>"
 
     @contextmanager
     def session_scope(self):
@@ -249,6 +278,7 @@ class SQLAlchemySocket:
 
             # Task and services
             session.query(TaskQueueORM).delete(synchronize_session=False)
+            session.query(QueueManagerLogORM).delete(synchronize_session=False)
             session.query(QueueManagerORM).delete(synchronize_session=False)
             session.query(ServiceQueueORM).delete(synchronize_session=False)
 
@@ -260,6 +290,7 @@ class SQLAlchemySocket:
             session.query(GridOptimizationProcedureORM).delete(synchronize_session=False)
             session.query(OptimizationProcedureORM).delete(synchronize_session=False)
             session.query(ResultORM).delete(synchronize_session=False)
+            session.query(WavefunctionStoreORM).delete(synchronize_session=False)
             session.query(BaseResultORM).delete(synchronize_session=False)
 
             # Auxiliary tables
@@ -277,19 +308,103 @@ class SQLAlchemySocket:
 
         return limit if limit and limit < self._max_limit else self._max_limit
 
-    def get_query_projection(self, className, query, projection, limit, skip, exclude=None):
+    def get_query_projection(self, className, query, *, limit=None, skip=0, include=None, exclude=None):
+
+        if include and exclude:
+            raise AttributeError(
+                f"Either include or exclude can be "
+                f"used, not both at the same query. "
+                f"Given include: {include}, exclude: {exclude}"
+            )
+
+        prop, hybrids, relationships = className._get_col_types()
+
+        # build projection from include or exclude
+        _projection = []
+        if include:
+            _projection = set(include)
+        elif exclude:
+            _projection = set(className._all_col_names()) - set(exclude) - set(className.db_related_fields)
+        _projection = list(_projection)
+
+        proj = []
+        join_attrs = {}
+        callbacks = []
+
+        # prepare hybrid attributes for callback and joins
+        for key in _projection:
+            if key in prop:  # normal column
+                proj.append(getattr(className, key))
+
+            # if hybrid property, save callback, and relation if any
+            elif key in hybrids:
+                callbacks.append(key)
+
+                # if it has a relationship
+                if key + "_obj" in relationships.keys():
+
+                    # join_class_name = relationships[key + '_obj']
+                    join_attrs[key] = relationships[key + "_obj"]
+            else:
+                raise AttributeError(f"Atrribute {key} is not found in class {className}.")
+
+        for key in join_attrs:
+            _projection.remove(key)
 
         with self.session_scope() as session:
-            if projection:
-                proj = [getattr(className, i) for i in projection]
+            if _projection or join_attrs:
+
+                if join_attrs and "id" not in _projection:  # if the id is need for joins
+                    proj.append(getattr(className, "id"))
+                    _projection.append("_id")  # not to be returned to user
+
+                # query with projection, without joins
                 data = session.query(*proj).filter(*query)
+
                 n_found = get_count_fast(data)  # before iterating on the data
                 data = data.limit(self.get_limit(limit)).offset(skip)
-                rdata = [dict(zip(projection, row)) for row in data]
-                # print('----------rdata before: ', rdata)
-                # transform ids from int into str
+                rdata = [dict(zip(_projection, row)) for row in data]
+
+                # query for joins if any (relationships and hybrids)
+                if join_attrs:
+                    res_ids = [d.get("id", d.get("_id")) for d in rdata]
+                    res_ids.sort()
+                    join_data = {res_id: {} for res_id in res_ids}
+
+                    # relations data
+                    for key, relation_details in join_attrs.items():
+                        ret = (
+                            session.query(
+                                relation_details["remote_side_column"].label("id"), relation_details["join_class"]
+                            )
+                            .filter(relation_details["remote_side_column"].in_(res_ids))
+                            .order_by(relation_details["remote_side_column"])
+                            .all()
+                        )
+                        for res_id in res_ids:
+                            join_data[res_id][key] = []
+                            for res in ret:
+                                if res_id == res[0]:
+                                    join_data[res_id][key].append(res[1])
+
+                        for data in rdata:
+                            parent_id = data.get("id", data.get("_id"))
+                            data[key] = join_data[parent_id][key]
+                            data.pop("_id", None)
+
+                # call hybrid methods
+                for callback in callbacks:
+                    for res in rdata:
+                        res[callback] = getattr(className, "_" + callback)(res[callback])
+
                 id_fields = className._get_fieldnames_with_DB_ids_()
                 for d in rdata:
+                    # Expand extra json into fields
+                    if "extra" in d:
+                        d.update(d["extra"])
+                        del d["extra"]
+
+                    # transform ids from int into str
                     for key in id_fields:
                         if key in d.keys() and d[key] is not None:
                             if isinstance(d[key], Iterable):
@@ -299,15 +414,59 @@ class SQLAlchemySocket:
                 # print('--------rdata after: ', rdata)
             else:
                 data = session.query(className).filter(*query)
+
                 # from sqlalchemy.dialects import postgresql
                 # print(data.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
                 n_found = get_count_fast(data)
                 data = data.limit(self.get_limit(limit)).offset(skip).all()
-                rdata = [d.to_dict(exclude=exclude) for d in data]
+                rdata = [d.to_dict() for d in data]
 
         return rdata, n_found
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    def custom_query(self, class_name: str, query_key: str, **kwargs):
+        """
+        Run advanced or specialized queries on different classes
+
+        Parameters
+        ----------
+        class_name : str
+            REST APIs name of the class (not the actual python name),
+             e.g., torsiondrive
+        query_key : str
+            The feature or attribute to look for, like initial_molecule
+        kwargs
+            Extra arguments needed by the query, like the id of the torison drive
+
+        Returns
+        -------
+            Query results dict:
+                data: returned data by the query (variable format)
+                meta:
+                    success: True or False
+                    error_description: Error msg to show to the user
+        """
+
+        ret = {"data": [], "meta": get_metadata_template()}
+
+        try:
+            if class_name not in self._query_classes:
+                raise AttributeError(f"Class name {class_name} is not found.")
+
+            session = self.Session()
+            ret["data"] = self._query_classes[class_name].query(session, query_key, **kwargs)
+            ret["meta"]["success"] = True
+            try:
+                ret["meta"]["n_found"] = len(ret["data"])
+            except TypeError:
+                ret["meta"]["n_found"] = 1
+        except Exception as err:
+            ret["meta"]["error_description"] = str(err)
+
+        return ret
+
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def save_access(self, log_data):
 
@@ -316,8 +475,7 @@ class SQLAlchemySocket:
             session.add(log)
             session.commit()
 
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logs (KV store) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logs (KV store) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def add_kvstore(self, blobs_list: List[Any]):
         """
@@ -347,7 +505,7 @@ class SQLAlchemySocket:
                 session.add(doc)
                 session.commit()
                 blob_ids.append(str(doc.id))
-                meta['n_inserted'] += 1
+                meta["n_inserted"] += 1
 
         meta["success"] = True
 
@@ -375,7 +533,7 @@ class SQLAlchemySocket:
 
         query = format_query(KVStoreORM, id=id)
 
-        rdata, meta['n_found'] = self.get_query_projection(KVStoreORM, query, None, limit, skip)
+        rdata, meta["n_found"] = self.get_query_projection(KVStoreORM, query, limit=limit, skip=skip)
 
         meta["success"] = True
 
@@ -385,7 +543,7 @@ class SQLAlchemySocket:
 
         return {"data": data, "meta": meta}
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Molecule ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Molecule ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def get_add_molecules_mixed(self, data: List[Union[ObjectId, Molecule]]) -> List[Molecule]:
         """
@@ -464,10 +622,13 @@ class SQLAlchemySocket:
 
         results = []
         with self.session_scope() as session:
+
+            # Build out the ORMs
+            orm_molecules = []
             for dmol in molecules:
 
                 if dmol.validated is False:
-                    dmol = Molecule(**dmol.dicT(), validate=True)
+                    dmol = Molecule(**dmol.dict(), validate=True)
 
                 mol_dict = dmol.dict(exclude={"id", "validated"})
 
@@ -484,26 +645,61 @@ class SQLAlchemySocket:
                 mol_dict["identifiers"]["molecular_formula"] = mol_dict["molecular_formula"]
 
                 # search by index keywords not by all keys, much faster
+                orm_molecules.append(MoleculeORM(**mol_dict))
 
-                doc = session.query(MoleculeORM).filter_by(molecule_hash=mol_dict['molecule_hash'])
+            # Check if we have duplicates
+            hash_list = [x.molecule_hash for x in orm_molecules]
+            query = format_query(MoleculeORM, molecule_hash=hash_list)
+            indices = session.query(MoleculeORM.molecule_hash, MoleculeORM.id).filter(*query)
+            previous_id_map = {k: v for k, v in indices}
 
-                if doc.count() == 0:
-                    doc = MoleculeORM(**mol_dict)
-                    session.add(doc)
-                    # Todo: commit at the end, but list itself might have duplicates
-                    session.commit()
-                    results.append(str(doc.id))
-                    meta['n_inserted'] += 1
-                else:
+            # For a bulk add there must be no pre-existing and there must be no duplicates in the add list
+            bulk_ok = len(hash_list) == len(set(hash_list))
+            bulk_ok &= len(previous_id_map) == 0
+            # bulk_ok = False
 
-                    id = str(doc.first().id)
-                    meta['duplicates'].append(id)  # TODO
-                    # If new or duplicate, add the id to the return list
-                    results.append(id)
+            if bulk_ok:
+                # Bulk save, doesn't update fields for speed
+                session.bulk_save_objects(orm_molecules)
+                session.commit()
+
+                # Query ID's and reorder based off orm_molecule ordered list
+                query = format_query(MoleculeORM, molecule_hash=hash_list)
+                indices = session.query(MoleculeORM.molecule_hash, MoleculeORM.id).filter(*query)
+
+                id_map = {k: v for k, v in indices}
+                n_inserted = len(orm_molecules)
+
+            else:
+                # Start from old ID map
+                id_map = previous_id_map
+
+                new_molecules = []
+                n_inserted = 0
+
+                for orm_mol in orm_molecules:
+                    duplicate_id = id_map.get(orm_mol.molecule_hash, False)
+                    if duplicate_id is not False:
+                        meta["duplicates"].append(str(duplicate_id))
+                    else:
+                        new_molecules.append(orm_mol)
+                        id_map[orm_mol.molecule_hash] = "placeholder_id"
+                        n_inserted += 1
+                        session.add(orm_mol)
 
                     # We should make sure there was not a hash collision?
                     # new_mol.compare(old_mol)
                     # raise KeyError("!!! WARNING !!!: Hash collision detected")
+
+                session.commit()
+
+                for new_mol in new_molecules:
+                    id_map[new_mol.molecule_hash] = new_mol.id
+
+            results = [str(id_map[x.molecule_hash]) for x in orm_molecules]
+            assert "placeholder_id" not in results
+            meta["n_inserted"] = n_inserted
+
         meta["success"] = True
 
         ret = {"data": results, "meta": meta}
@@ -514,18 +710,11 @@ class SQLAlchemySocket:
         meta = get_metadata_template()
 
         query = format_query(MoleculeORM, id=id, molecule_hash=molecule_hash, molecular_formula=molecular_formula)
-        # query = [getattr(MoleculeORM, 'id') == id,
-        #          MoleculeORM.molecule_hash == molecule_hash,
-        #          MoleculeORM.molecular_formula == molecular_formula
-        # ]
 
         # Don't include the hash or the molecular_formula in the returned result
-        rdata, meta['n_found'] = self.get_query_projection(MoleculeORM,
-                                                           query,
-                                                           None,
-                                                           limit,
-                                                           skip,
-                                                           exclude=['molecule_hash', 'molecular_formula'])
+        rdata, meta["n_found"] = self.get_query_projection(
+            MoleculeORM, query, limit=limit, skip=skip, exclude=["molecule_hash", "molecular_formula"]
+        )
 
         meta["success"] = True
 
@@ -533,7 +722,7 @@ class SQLAlchemySocket:
 
         data = [Molecule(**d, validate=False, validated=True) for d in rdata]
 
-        return {'meta': meta, 'data': data}
+        return {"meta": meta, "data": data}
 
     def del_molecules(self, id: List[str] = None, molecule_hash: List[str] = None):
         """
@@ -553,12 +742,11 @@ class SQLAlchemySocket:
         query = format_query(MoleculeORM, id=id, molecule_hash=molecule_hash)
 
         with self.session_scope() as session:
-            ret = session.query(MoleculeORM).filter(*query)\
-                                            .delete(synchronize_session=False)
+            ret = session.query(MoleculeORM).filter(*query).delete(synchronize_session=False)
 
         return ret
 
-# ~~~~~~~~~~~~~~~~~~~~~~~ Keywords ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~~~~~~~~~~~~~~~~~~~~~~~ Keywords ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def add_keywords(self, keyword_sets: List[KeywordSet]):
         """Add one KeywordSet uniquly identified by 'program' and the 'name'.
@@ -590,15 +778,15 @@ class SQLAlchemySocket:
                 kw_dict = kw.dict(exclude={"id"})
 
                 # search by index keywords not by all keys, much faster
-                found = session.query(KeywordsORM).filter_by(hash_index=kw_dict['hash_index']).first()
+                found = session.query(KeywordsORM).filter_by(hash_index=kw_dict["hash_index"]).first()
                 if not found:
                     doc = KeywordsORM(**kw_dict)
                     session.add(doc)
                     session.commit()
                     keywords.append(str(doc.id))
-                    meta['n_inserted'] += 1
+                    meta["n_inserted"] += 1
                 else:
-                    meta['duplicates'].append(str(found.id))  # TODO
+                    meta["duplicates"].append(str(found.id))  # TODO
                     keywords.append(str(found.id))
                 meta["success"] = True
 
@@ -606,13 +794,15 @@ class SQLAlchemySocket:
 
         return ret
 
-    def get_keywords(self,
-                     id: Union[str, list] = None,
-                     hash_index: Union[str, list] = None,
-                     limit: int = None,
-                     skip: int = 0,
-                     return_json: bool = False,
-                     with_ids: bool = True) -> List[KeywordSet]:
+    def get_keywords(
+        self,
+        id: Union[str, list] = None,
+        hash_index: Union[str, list] = None,
+        limit: int = None,
+        skip: int = 0,
+        return_json: bool = False,
+        with_ids: bool = True,
+    ) -> List[KeywordSet]:
         """Search for one (unique) option based on the 'program'
         and the 'name'. No overwrite allowed.
 
@@ -646,12 +836,9 @@ class SQLAlchemySocket:
         meta = get_metadata_template()
         query = format_query(KeywordsORM, id=id, hash_index=hash_index)
 
-        rdata, meta['n_found'] = self.get_query_projection(KeywordsORM,
-                                                           query,
-                                                           None,
-                                                           limit,
-                                                           skip,
-                                                           exclude=[None if with_ids else 'id'])
+        rdata, meta["n_found"] = self.get_query_projection(
+            KeywordsORM, query, limit=limit, skip=skip, exclude=[None if with_ids else "id"]
+        )
 
         meta["success"] = True
 
@@ -724,14 +911,13 @@ class SQLAlchemySocket:
 
         count = 0
         with self.session_scope() as session:
-            count = session.query(KeywordsORM).filter_by(id=id)\
-                                              .delete(synchronize_session=False)
+            count = session.query(KeywordsORM).filter_by(id=id).delete(synchronize_session=False)
 
         return count
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
 
-### database functions
+    ### database functions
 
     def add_collection(self, data: Dict[str, Any], overwrite: bool = False):
         """Add (or update) a collection to the database.
@@ -774,11 +960,11 @@ class SQLAlchemySocket:
         collection_class = get_collection_class(collection)
 
         update_fields = {}
-        for field in collection_class.col():
+        for field in collection_class._all_col_names():
             if field in data:
                 update_fields[field] = data.pop(field)
 
-        update_fields['extra'] = data  # todo: check for sql injection
+        update_fields["extra"] = data  # todo: check for sql injection
 
         with self.session_scope() as session:
 
@@ -796,34 +982,44 @@ class SQLAlchemySocket:
                 session.commit()
 
                 col_id = str(col.id)
-                meta['success'] = True
-                meta['n_inserted'] = 1
+                meta["success"] = True
+                meta["n_inserted"] = 1
 
             except Exception as err:
                 session.rollback()
-                meta['error_description'] = str(err)
+                meta["error_description"] = str(err)
 
-        ret = {'data': col_id, 'meta': meta}
+        ret = {"data": col_id, "meta": meta}
         return ret
 
-    def get_collections(self,
-                        collection: str = None,
-                        name: str = None,
-                        return_json: bool = True,
-                        with_ids: bool = True,
-                        limit: int = None,
-                        projection: Dict[str, Any] = None,
-                        skip: int = 0) -> Dict[str, Any]:
+    def get_collections(
+        self,
+        collection: Optional[str] = None,
+        name: Optional[str] = None,
+        col_id: Optional[int] = None,
+        limit: Optional[int] = None,
+        include: Optional[List[str]] = None,
+        exclude: Optional[List[str]] = None,
+        skip: int = 0,
+    ) -> Dict[str, Any]:
         """Get collection by collection and/or name
 
         Parameters
         ----------
-        collection : str, optional
-        name : str, optional
-        return_json : bool
-        with_ids : bool
-        limit : int
-        skip : int
+        collection: Optional[str], optional
+            Type of the collection, e.g. ReactionDataset
+        name: Optional[str], optional
+            Name of the collection, e.g. S22
+        col_id: Optional[int], optional
+            Database id of the collection
+        limit: Optional[int], optional
+            Maximum number of results to return
+        include: Optional[List[str]], optional
+            Columns to return
+        exclude: Optional[List[str]], optional
+            Return all but these columns
+        skip: int, optional
+            Skip the first `skip` results
 
         Returns
         -------
@@ -838,15 +1034,12 @@ class SQLAlchemySocket:
             collection = collection.lower()
 
         collection_class = get_collection_class(collection)
-        query = format_query(collection_class, lname=name, collection=collection)
+        query = format_query(collection_class, lname=name, collection=collection, id=col_id)
 
         # try:
-        rdata, meta['n_found'] = self.get_query_projection(collection_class,
-                                                           query,
-                                                           projection,
-                                                           limit,
-                                                           skip,
-                                                           exclude=['lname'])
+        rdata, meta["n_found"] = self.get_query_projection(
+            collection_class, query, include=include, exclude=exclude, limit=limit, skip=skip
+        )
 
         meta["success"] = True
         # except Exception as err:
@@ -872,11 +1065,14 @@ class SQLAlchemySocket:
         """
 
         with self.session_scope() as session:
-            count = session.query(CollectionORM).filter_by(collection=collection.lower(), lname=name.lower())\
-                                                .delete(synchronize_session=False)
+            count = (
+                session.query(CollectionORM)
+                .filter_by(collection=collection.lower(), lname=name.lower())
+                .delete(synchronize_session=False)
+            )
         return count
 
-## ResultORMs functions
+    ## ResultORMs functions
 
     def add_results(self, record_list: List[ResultRecord]):
         """
@@ -904,22 +1100,24 @@ class SQLAlchemySocket:
         with self.session_scope() as session:
             for result in record_list:
 
-                doc = session.query(ResultORM).filter_by(program=result.program,
-                                                         driver=result.driver,
-                                                         method=result.method,
-                                                         basis=result.basis,
-                                                         keywords=result.keywords,
-                                                         molecule=result.molecule)
+                doc = session.query(ResultORM).filter_by(
+                    program=result.program,
+                    driver=result.driver,
+                    method=result.method,
+                    basis=result.basis,
+                    keywords=result.keywords,
+                    molecule=result.molecule,
+                )
 
                 if get_count_fast(doc) == 0:
                     doc = ResultORM(**result.dict(exclude={"id"}))
                     session.add(doc)
                     session.commit()  # TODO: faster if done in bulk
                     result_ids.append(str(doc.id))
-                    meta['n_inserted'] += 1
+                    meta["n_inserted"] += 1
                 else:
                     id = str(doc.first().id)
-                    meta['duplicates'].append(id)  # TODO
+                    meta["duplicates"].append(id)  # TODO
                     # If new or duplicate, add the id to the return list
                     result_ids.append(id)
         meta["success"] = True
@@ -956,7 +1154,7 @@ class SQLAlchemySocket:
 
                 result_db = session.query(ResultORM).filter_by(id=result.id).first()
 
-                data = result.dict(exclude={'id'})
+                data = result.dict(exclude={"id"})
 
                 for attr, val in data.items():
                     setattr(result_db, attr, val)
@@ -975,22 +1173,25 @@ class SQLAlchemySocket:
 
         """
 
-    def get_results(self,
-                    id: Union[str, List] = None,
-                    program: str = None,
-                    method: str = None,
-                    basis: str = None,
-                    molecule: str = None,
-                    driver: str = None,
-                    keywords: str = None,
-                    task_id: Union[str, List] = None,
-                    manager_id: Union[str, List] = None,
-                    status: str = 'COMPLETE',
-                    projection=None,
-                    limit: int = None,
-                    skip: int = 0,
-                    return_json=True,
-                    with_ids=True):
+    def get_results(
+        self,
+        id: Union[str, List] = None,
+        program: str = None,
+        method: str = None,
+        basis: str = None,
+        molecule: str = None,
+        driver: str = None,
+        keywords: str = None,
+        task_id: Union[str, List] = None,
+        manager_id: Union[str, List] = None,
+        status: str = "COMPLETE",
+        include: Optional[List[str]] = None,
+        exclude: Optional[List[str]] = None,
+        limit: int = None,
+        skip: int = 0,
+        return_json=True,
+        with_ids=True,
+    ):
         """
 
         Parameters
@@ -1010,8 +1211,10 @@ class SQLAlchemySocket:
             id or a list of ids of queue_mangers
         status : bool, default is 'COMPLETE'
             The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
-        projection : list/set/tuple of keys, default is None
+        include : list/set/tuple, default is None
             The fields to return, default to return all
+        exclude : list/set/tuple, default is None
+            The fields to not return, default to return all
         limit : int, default is None
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
@@ -1039,24 +1242,23 @@ class SQLAlchemySocket:
         if id is not None:
             status = None
 
-        query = format_query(ResultORM,
-                             id=id,
-                             program=program,
-                             method=method,
-                             basis=basis,
-                             molecule=molecule,
-                             driver=driver,
-                             keywords=keywords,
-                             manager_id=manager_id,
-                             status=status)
+        query = format_query(
+            ResultORM,
+            id=id,
+            program=program,
+            method=method,
+            basis=basis,
+            molecule=molecule,
+            driver=driver,
+            keywords=keywords,
+            manager_id=manager_id,
+            status=status,
+        )
 
-        data = []
-
-        # try:
-        data, meta['n_found'] = self.get_query_projection(ResultORM, query, projection, limit, skip)
+        data, meta["n_found"] = self.get_query_projection(
+            ResultORM, query, include=include, exclude=exclude, limit=limit, skip=skip
+        )
         meta["success"] = True
-        # except Exception as err:
-        #     meta['error_description'] = str(err)
 
         return {"data": data, "meta": meta}
 
@@ -1082,9 +1284,12 @@ class SQLAlchemySocket:
         task_id_list = [task_id] if isinstance(task_id, (int, str)) else task_id
         # try:
         with self.session_scope() as session:
-            data = session.query(BaseResultORM).filter(BaseResultORM.id == TaskQueueORM.base_result_id)\
-                            .filter(TaskQueueORM.id.in_(task_id_list))
-            meta['n_found'] = get_count_fast(data)
+            data = (
+                session.query(BaseResultORM)
+                .filter(BaseResultORM.id == TaskQueueORM.base_result_id)
+                .filter(TaskQueueORM.id.in_(task_id_list))
+            )
+            meta["n_found"] = get_count_fast(data)
             data = [d.to_dict() for d in data.all()]
             meta["success"] = True
             # except Exception as err:
@@ -1118,9 +1323,81 @@ class SQLAlchemySocket:
 
         return count
 
-### Mongo procedure/service functions
+    def add_wavefunction_store(self, blobs_list: List[Dict[str, Any]]):
+        """
+        Adds to the wavefunction key/value store table.
 
-    def add_procedures(self, record_list: List['BaseRecord']):
+        Parameters
+        ----------
+        blobs_list : List[Dict[str, Any]]
+            A list of wavefunction data blobs to add.
+
+        Returns
+        -------
+        TYPE
+            Description
+        """
+
+        meta = add_metadata_template()
+        blob_ids = []
+        with self.session_scope() as session:
+            for blob in blobs_list:
+                if blob is None:
+                    blob_ids.append(None)
+                    continue
+
+                doc = WavefunctionStoreORM(**blob)
+                session.add(doc)
+                session.commit()
+                blob_ids.append(str(doc.id))
+                meta["n_inserted"] += 1
+
+        meta["success"] = True
+
+        return {"data": blob_ids, "meta": meta}
+
+    def get_wavefunction_store(
+        self,
+        id: List[str] = None,
+        include: Optional[List[str]] = None,
+        exclude: Optional[List[str]] = None,
+        limit: int = None,
+        skip: int = 0,
+    ):
+        """
+        Pulls from the wavefunction key/value store table.
+
+        Parameters
+        ----------
+        id : List[str], optional
+            A list of ids to query
+        include : Dict[str, bool], optional
+            Description
+        limit : int, optional
+            Maximum number of results to return.
+        skip : int, optional
+            skip the `skip` results
+
+        Returns
+        -------
+        TYPE
+            Description
+        """
+
+        meta = get_metadata_template()
+
+        query = format_query(WavefunctionStoreORM, id=id)
+        rdata, meta["n_found"] = self.get_query_projection(
+            WavefunctionStoreORM, query, limit=limit, skip=skip, include=include, exclude=exclude
+        )
+
+        meta["success"] = True
+
+        return {"data": rdata, "meta": meta}
+
+    ### Mongo procedure/service functions
+
+    def add_procedures(self, record_list: List["BaseRecord"]):
         """
         Add procedures from a given dict. The dict should have all the required
         keys of a result.
@@ -1161,29 +1438,32 @@ class SQLAlchemySocket:
                     proc_db.update_relations(**data)
                     session.commit()
                     procedure_ids.append(str(proc_db.id))
-                    meta['n_inserted'] += 1
+                    meta["n_inserted"] += 1
                 else:
                     id = str(doc.first().id)
-                    meta['duplicates'].append(id)  # TODO
+                    meta["duplicates"].append(id)  # TODO
                     procedure_ids.append(id)
         meta["success"] = True
 
         ret = {"data": procedure_ids, "meta": meta}
         return ret
 
-    def get_procedures(self,
-                       id: Union[str, List] = None,
-                       procedure: str = None,
-                       program: str = None,
-                       hash_index: str = None,
-                       task_id: Union[str, List] = None,
-                       manager_id: Union[str, List] = None,
-                       status: str = 'COMPLETE',
-                       projection=None,
-                       limit: int = None,
-                       skip: int = 0,
-                       return_json=True,
-                       with_ids=True):
+    def get_procedures(
+        self,
+        id: Union[str, List] = None,
+        procedure: str = None,
+        program: str = None,
+        hash_index: str = None,
+        task_id: Union[str, List] = None,
+        manager_id: Union[str, List] = None,
+        status: str = "COMPLETE",
+        include=None,
+        exclude=None,
+        limit: int = None,
+        skip: int = 0,
+        return_json=True,
+        with_ids=True,
+    ):
         """
 
         Parameters
@@ -1195,8 +1475,10 @@ class SQLAlchemySocket:
         task_id : str or list
         status : bool, default is 'COMPLETE'
             The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
-        projection : list/set/tuple of keys, default is None
+        include : list/set/tuple of keys, default is None
             The fields to return, default to return all
+        exclude : list/set/tuple of keys, default is None
+            The fields to not return, default to return all
         limit : int, default is None
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
@@ -1220,11 +1502,11 @@ class SQLAlchemySocket:
         if id is not None or task_id is not None:
             status = None
 
-        if procedure == 'optimization':
+        if procedure == "optimization":
             className = OptimizationProcedureORM
-        elif procedure == 'torsiondrive':
+        elif procedure == "torsiondrive":
             className = TorsionDriveProcedureORM
-        elif procedure == 'gridoptimization':
+        elif procedure == "gridoptimization":
             className = GridOptimizationProcedureORM
         else:
             # raise TypeError('Unsupported procedure type {}. Id: {}, task_id: {}'
@@ -1232,30 +1514,34 @@ class SQLAlchemySocket:
             className = BaseResultORM  # all classes, including those with 'selectin'
             program = None  # make sure it's not used
             if id is None:
-                self.logger.error(f'Procedure type not specified({procedure}), and ID is not given.')
-                raise KeyError('ID is required if procedure type is not specified.')
+                self.logger.error(f"Procedure type not specified({procedure}), and ID is not given.")
+                raise KeyError("ID is required if procedure type is not specified.")
 
-        query = format_query(className,
-                             id=id,
-                             procedure=procedure,
-                             program=program,
-                             hash_index=hash_index,
-                             task_id=task_id,
-                             manager_id=manager_id,
-                             status=status)
+        query = format_query(
+            className,
+            id=id,
+            procedure=procedure,
+            program=program,
+            hash_index=hash_index,
+            task_id=task_id,
+            manager_id=manager_id,
+            status=status,
+        )
 
         data = []
         try:
             # TODO: decide a way to find the right type
 
-            data, meta['n_found'] = self.get_query_projection(className, query, projection, limit, skip)
+            data, meta["n_found"] = self.get_query_projection(
+                className, query, limit=limit, skip=skip, include=include, exclude=exclude
+            )
             meta["success"] = True
         except Exception as err:
-            meta['error_description'] = str(err)
+            meta["error_description"] = str(err)
 
         return {"data": data, "meta": meta}
 
-    def update_procedures(self, records_list: List['BaseRecord']):
+    def update_procedures(self, records_list: List["BaseRecord"]):
         """
         TODO: needs to be of specific type
         """
@@ -1268,13 +1554,14 @@ class SQLAlchemySocket:
                 # join_table = get_procedure_join(procedure)
                 # Must have ID
                 if procedure.id is None:
-                    self.logger.error("No procedure id found on update (hash_index={}), skipping.".format(
-                        procedure.hash_index))
+                    self.logger.error(
+                        "No procedure id found on update (hash_index={}), skipping.".format(procedure.hash_index)
+                    )
                     continue
 
                 proc_db = session.query(className).filter_by(id=procedure.id).first()
 
-                data = procedure.dict(exclude={'id'})
+                data = procedure.dict(exclude={"id"})
                 proc_db.update_relations(**data)
 
                 for attr, val in data.items():
@@ -1316,10 +1603,16 @@ class SQLAlchemySocket:
         """
 
         with self.session_scope() as session:
-            procedures = session.query(with_polymorphic(BaseResultORM,
-                            [OptimizationProcedureORM, TorsionDriveProcedureORM,
-                             GridOptimizationProcedureORM]))\
-                           .filter(BaseResultORM.id.in_(ids)).all()
+            procedures = (
+                session.query(
+                    with_polymorphic(
+                        BaseResultORM,
+                        [OptimizationProcedureORM, TorsionDriveProcedureORM, GridOptimizationProcedureORM],
+                    )
+                )
+                .filter(BaseResultORM.id.in_(ids))
+                .all()
+            )
             # delete through session to delete correctly from base_result
             for proc in procedures:
                 session.delete(proc)
@@ -1328,7 +1621,7 @@ class SQLAlchemySocket:
 
         return count
 
-    def add_services(self, service_list: List['BaseService']):
+    def add_services(self, service_list: List["BaseService"]):
         """
         Add services from a given dict.
 
@@ -1366,11 +1659,11 @@ class SQLAlchemySocket:
                 if doc.count() == 0:
                     doc = ServiceQueueORM(**service.dict(include=set(ServiceQueueORM.__dict__.keys())))
                     doc.extra = service.dict(exclude=set(ServiceQueueORM.__dict__.keys()))
-                    doc.priority = doc.priority.value # Must be an integer for sorting
+                    doc.priority = doc.priority.value  # Must be an integer for sorting
                     session.add(doc)
                     session.commit()  # TODO
                     procedure_ids.append(proc_id)
-                    meta['n_inserted'] += 1
+                    meta["n_inserted"] += 1
                 else:
                     procedure_ids.append(None)
                     meta["errors"].append((doc.id, "Duplicate service, but not caught by procedure."))
@@ -1380,14 +1673,16 @@ class SQLAlchemySocket:
         ret = {"data": procedure_ids, "meta": meta}
         return ret
 
-    def get_services(self,
-                     id: Union[List[str], str] = None,
-                     procedure_id: Union[List[str], str] = None,
-                     hash_index: Union[List[str], str] = None,
-                     status: str = None,
-                     limit: int = None,
-                     skip: int = 0,
-                     return_json=True):
+    def get_services(
+        self,
+        id: Union[List[str], str] = None,
+        procedure_id: Union[List[str], str] = None,
+        hash_index: Union[List[str], str] = None,
+        status: str = None,
+        limit: int = None,
+        skip: int = 0,
+        return_json=True,
+    ):
         """
 
         Parameters
@@ -1416,9 +1711,14 @@ class SQLAlchemySocket:
         query = format_query(ServiceQueueORM, id=id, hash_index=hash_index, procedure_id=procedure_id, status=status)
 
         with self.session_scope() as session:
-            data = session.query(ServiceQueueORM).filter(*query)\
-                   .order_by(ServiceQueueORM.priority.desc(), ServiceQueueORM.created_on)\
-                   .limit(limit).offset(skip).all()
+            data = (
+                session.query(ServiceQueueORM)
+                .filter(*query)
+                .order_by(ServiceQueueORM.priority.desc(), ServiceQueueORM.created_on)
+                .limit(limit)
+                .offset(skip)
+                .all()
+            )
             data = [x.to_dict() for x in data]
 
         meta["n_found"] = len(data)
@@ -1448,8 +1748,7 @@ class SQLAlchemySocket:
         updated_count = 0
         for service in records_list:
             if service.id is None:
-                self.logger.error("No service id found on update (hash_index={}), skipping.".format(
-                    service.hash_index))
+                self.logger.error("No service id found on update (hash_index={}), skipping.".format(service.hash_index))
                 continue
 
             with self.session_scope() as session:
@@ -1457,23 +1756,26 @@ class SQLAlchemySocket:
                 doc_db = session.query(ServiceQueueORM).filter_by(id=service.id).first()
 
                 data = service.dict(include=set(ServiceQueueORM.__dict__.keys()))
-                data['extra'] = service.dict(exclude=set(ServiceQueueORM.__dict__.keys()))
+                data["extra"] = service.dict(exclude=set(ServiceQueueORM.__dict__.keys()))
 
-                data['id'] = int(data['id'])
+                data["id"] = int(data["id"])
                 for attr, val in data.items():
                     setattr(doc_db, attr, val)
 
                 session.add(doc_db)
                 session.commit()
 
+            procedure = service.output
+            procedure.__dict__["id"] = service.procedure_id
+            self.update_procedures([procedure])
+
             updated_count += 1
 
         return updated_count
 
-    def update_service_status(self,
-                     status: str,
-                     id: Union[List[str], str] = None,
-                     procedure_id: Union[List[str], str] = None) -> int:
+    def update_service_status(
+        self, status: str, id: Union[List[str], str] = None, procedure_id: Union[List[str], str] = None
+    ) -> int:
 
         if (id is None) and (procedure_id is None):
             raise KeyError("id or procedure_id must not be None.")
@@ -1482,17 +1784,28 @@ class SQLAlchemySocket:
         with self.session_scope() as session:
 
             query = format_query(ServiceQueueORM, id=id, procedure_id=procedure_id)
-            ret = session.query(ServiceQueueORM).filter(*query).update({"status": status})
 
-        return ret
+            # Update the service
+            service = session.query(ServiceQueueORM).filter(*query).first()
+            service.status = status
+
+            # Update the procedure
+            if status == "waiting":
+                status = "incomplete"
+            session.query(BaseResultORM).filter(BaseResultORM.id == service.procedure_id).update({"status": status})
+
+            session.commit()
+
+        return 1
 
     def services_completed(self, records_list: List["BaseService"]) -> int:
 
         done = 0
         for service in records_list:
             if service.id is None:
-                self.logger.error("No service id found on completion (hash_index={}), skipping.".format(
-                    service.hash_index))
+                self.logger.error(
+                    "No service id found on completion (hash_index={}), skipping.".format(service.hash_index)
+                )
                 continue
 
             # in one transaction
@@ -1502,15 +1815,13 @@ class SQLAlchemySocket:
                 procedure.__dict__["id"] = service.procedure_id
                 self.update_procedures([procedure])
 
-                session.query(ServiceQueueORM)\
-                        .filter_by(id=service.id)\
-                        .delete() #synchronize_session=False)
+                session.query(ServiceQueueORM).filter_by(id=service.id).delete()  # synchronize_session=False)
 
             done += 1
 
         return done
 
-### Mongo queue handling functions
+    ### Mongo queue handling functions
 
     def queue_submit(self, data: List[TaskRecord]):
         """Submit a list of tasks to the queue.
@@ -1553,19 +1864,19 @@ class SQLAlchemySocket:
                     # if isinstance(task_dict['base_result'], dict):
                     #     task_dict['base_result'] = task_dict['base_result']['id']
                     task = TaskQueueORM(**task_dict)
-                    task.priority = task.priority.value # Must be an integer for sorting
+                    task.priority = task.priority.value  # Must be an integer for sorting
                     session.add(task)
                     session.commit()
                     results.append(str(task.id))
-                    meta['n_inserted'] += 1
+                    meta["n_inserted"] += 1
                 except IntegrityError as err:  # rare case
                     # print(str(err))
                     session.rollback()
                     # TODO: merge hooks
                     task = session.query(TaskQueueORM).filter_by(base_result_id=record.base_result.id).first()
-                    self.logger.warning('queue_submit got a duplicate task: {}'.format(task.to_dict()))
+                    self.logger.warning("queue_submit got a duplicate task: {}".format(task.to_dict()))
                     results.append(str(task.id))
-                    meta['duplicates'].append(task_num)
+                    meta["duplicates"].append(task_num)
                 # except Exception as err:
                 #     self.logger.warning('queue_submit submission error: {}'.format(str(err)))
                 #     meta["success"] = False
@@ -1577,8 +1888,9 @@ class SQLAlchemySocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def queue_get_next(self, manager, available_programs, available_procedures, limit=100, tag=None,
-                       as_json=True) -> List[TaskRecord]:
+    def queue_get_next(
+        self, manager, available_programs, available_procedures, limit=100, tag=None, as_json=True
+    ) -> List[TaskRecord]:
         """Done in a transaction"""
 
         # Figure out query, tagless has no requirements
@@ -1589,18 +1901,24 @@ class SQLAlchemySocket:
         query.append(or_(proc_filt, none_filt))
 
         with self.session_scope() as session:
-            query = session.query(TaskQueueORM).filter(*query)\
-                   .order_by(TaskQueueORM.priority.desc(), TaskQueueORM.created_on)\
-                   .limit(limit)
+            query = (
+                session.query(TaskQueueORM)
+                .filter(*query)
+                .order_by(TaskQueueORM.priority.desc(), TaskQueueORM.created_on)
+                .limit(limit)
+            )
 
             # print(query.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
             found = query.all()
 
             ids = [x.id for x in found]
-            update_fields = {'status': TaskStatusEnum.running, 'modified_on': dt.utcnow(), 'manager': manager}
+            update_fields = {"status": TaskStatusEnum.running, "modified_on": dt.utcnow(), "manager": manager}
             # Bulk update operation in SQL
-            update_count = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(ids)).update(
-                update_fields, synchronize_session=False)
+            update_count = (
+                session.query(TaskQueueORM)
+                .filter(TaskQueueORM.id.in_(ids))
+                .update(update_fields, synchronize_session=False)
+            )
 
             if as_json:
                 # avoid another trip to the DB to get the updated values, set them here
@@ -1612,19 +1930,22 @@ class SQLAlchemySocket:
 
         return found
 
-    def get_queue(self,
-                  id=None,
-                  hash_index=None,
-                  program=None,
-                  status: str = None,
-                  base_result: str = None,
-                  tag=None,
-                  manager=None,
-                  projection=None,
-                  limit: int = None,
-                  skip: int = 0,
-                  return_json=False,
-                  with_ids=True):
+    def get_queue(
+        self,
+        id=None,
+        hash_index=None,
+        program=None,
+        status: str = None,
+        base_result: str = None,
+        tag=None,
+        manager=None,
+        include=None,
+        exclude=None,
+        limit: int = None,
+        skip: int = 0,
+        return_json=False,
+        with_ids=True,
+    ):
         """
         TODO: check what query keys are needs
         Parameters
@@ -1636,8 +1957,10 @@ class SQLAlchemySocket:
             The status of the task: 'COMPLETE', 'RUNNING', 'WAITING', or 'ERROR'
         base_result: str (optional)
             base_result id
-        projection : list/set/tuple of keys, default is None
+        include : list/set/tuple of keys, default is None
             The fields to return, default to return all
+        exclude : list/set/tuple of keys, default is None
+            The fields to not return, default to return all
         limit : int, default is None
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
@@ -1657,21 +1980,25 @@ class SQLAlchemySocket:
         """
 
         meta = get_metadata_template()
-        query = format_query(TaskQueueORM,
-                             program=program,
-                             id=id,
-                             hash_index=hash_index,
-                             status=status,
-                             base_result_id=base_result,
-                             tag=tag,
-                             manager=manager)
+        query = format_query(
+            TaskQueueORM,
+            program=program,
+            id=id,
+            hash_index=hash_index,
+            status=status,
+            base_result_id=base_result,
+            tag=tag,
+            manager=manager,
+        )
 
         data = []
         try:
-            data, meta['n_found'] = self.get_query_projection(TaskQueueORM, query, projection, limit, skip)
+            data, meta["n_found"] = self.get_query_projection(
+                TaskQueueORM, query, limit=limit, skip=skip, include=include, exclude=exclude
+            )
             meta["success"] = True
         except Exception as err:
-            meta['error_description'] = str(err)
+            meta["error_description"] = str(err)
 
         data = [TaskRecord(**task) for task in data]
 
@@ -1696,8 +2023,9 @@ class SQLAlchemySocket:
         """
 
         with self.session_scope() as session:
-            found = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(id)).limit(
-                self.get_limit(limit)).offset(skip)
+            found = (
+                session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(id)).limit(self.get_limit(limit)).offset(skip)
+            )
 
             if as_json:
                 found = [TaskRecord(**task.to_dict()) for task in found]
@@ -1726,22 +2054,24 @@ class SQLAlchemySocket:
         update_fields = dict(status=TaskStatusEnum.complete, modified_on=dt.utcnow())
         with self.session_scope() as session:
             # assuming all task_ids are valid, then managers will be in order by id
-            managers = session.query(TaskQueueORM.manager)\
-                              .filter(TaskQueueORM.id.in_(task_ids))\
-                              .order_by(TaskQueueORM.id).all()
+            managers = (
+                session.query(TaskQueueORM.manager)
+                .filter(TaskQueueORM.id.in_(task_ids))
+                .order_by(TaskQueueORM.id)
+                .all()
+            )
             managers = [manager[0] if manager else manager for manager in managers]
             task_manger_map = {task_id: manager for task_id, manager in zip(sorted(task_ids), managers)}
             update_fields[BaseResultORM.manager_name] = case(task_manger_map, value=TaskQueueORM.id)
 
-            session.query(BaseResultORM)\
-                   .filter(BaseResultORM.id == TaskQueueORM.base_result_id)\
-                   .filter(TaskQueueORM.id.in_(task_ids))\
-                   .update(update_fields, synchronize_session=False)
+            session.query(BaseResultORM).filter(BaseResultORM.id == TaskQueueORM.base_result_id).filter(
+                TaskQueueORM.id.in_(task_ids)
+            ).update(update_fields, synchronize_session=False)
 
             # delete completed tasks
-            tasks_c = session.query(TaskQueueORM)\
-                             .filter(TaskQueueORM.id.in_(task_ids))\
-                             .delete(synchronize_session=False)
+            tasks_c = (
+                session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(task_ids)).delete(synchronize_session=False)
+            )
 
         return tasks_c
 
@@ -1760,14 +2090,19 @@ class SQLAlchemySocket:
             # SQL queries change the order when using "in"
             data_dict = {item[0]: item[1] for item in data}
             sorted_data = {key: data_dict[key] for key in sorted(data_dict.keys())}
-            task_objects = session.query(TaskQueueORM)\
-                                  .filter(TaskQueueORM.id.in_(sorted_data.keys()))\
-                                  .order_by(TaskQueueORM.id).all()
-            base_results = session.query(BaseResultORM)\
-                                  .filter(BaseResultORM.id == TaskQueueORM.base_result_id) \
-                                   .filter(TaskQueueORM.id.in_(sorted_data.keys()))\
-                                   .order_by(TaskQueueORM.id).all()
-
+            task_objects = (
+                session.query(TaskQueueORM)
+                .filter(TaskQueueORM.id.in_(sorted_data.keys()))
+                .order_by(TaskQueueORM.id)
+                .all()
+            )
+            base_results = (
+                session.query(BaseResultORM)
+                .filter(BaseResultORM.id == TaskQueueORM.base_result_id)
+                .filter(TaskQueueORM.id.in_(sorted_data.keys()))
+                .order_by(TaskQueueORM.id)
+                .all()
+            )
 
             for (task_id, msg), task_obj, base_result in zip(sorted_data.items(), task_objects, base_results):
 
@@ -1788,12 +2123,14 @@ class SQLAlchemySocket:
 
         return len(task_ids)
 
-    def queue_reset_status(self,
-                           id: Union[str, List[str]] = None,
-                           base_result: Union[str, List[str]] = None,
-                           manager: Optional[str] = None,
-                           reset_running: bool = False,
-                           reset_error: bool = False) -> int:
+    def queue_reset_status(
+        self,
+        id: Union[str, List[str]] = None,
+        base_result: Union[str, List[str]] = None,
+        manager: Optional[str] = None,
+        reset_running: bool = False,
+        reset_error: bool = False,
+    ) -> int:
         """
         Reset the status of the tasks that a manager owns from Running to Waiting
         If reset_error is True, then also reset errored tasks AND its results/proc
@@ -1830,11 +2167,7 @@ class SQLAlchemySocket:
         if reset_error:
             status.append(TaskStatusEnum.error)
 
-        query = format_query(TaskQueueORM,
-                             id=id,
-                             base_result_id=base_result,
-                             manager=manager,
-                             status=status)
+        query = format_query(TaskQueueORM, id=id, base_result_id=base_result, manager=manager, status=status)
 
         # Must have status + something, checking above as well(being paranoid)
         if len(query) < 2:
@@ -1843,16 +2176,15 @@ class SQLAlchemySocket:
         with self.session_scope() as session:
             # Update results and procedures if reset_error
             task_ids = session.query(TaskQueueORM.id).filter(*query)
-            session.query(BaseResultORM)\
-                      .filter(TaskQueueORM.base_result_id==BaseResultORM.id)\
-                      .filter(TaskQueueORM.id.in_(task_ids))\
-                      .update(dict(status='INCOMPLETE', modified_on=dt.utcnow()),
-                              synchronize_session=False)
+            session.query(BaseResultORM).filter(TaskQueueORM.base_result_id == BaseResultORM.id).filter(
+                TaskQueueORM.id.in_(task_ids)
+            ).update(dict(status="INCOMPLETE", modified_on=dt.utcnow()), synchronize_session=False)
 
-            updated = session.query(TaskQueueORM)\
-                             .filter(TaskQueueORM.id.in_(task_ids))\
-                             .update(dict(status=TaskStatusEnum.waiting, modified_on=dt.utcnow()),
-                                     synchronize_session=False)
+            updated = (
+                session.query(TaskQueueORM)
+                .filter(TaskQueueORM.id.in_(task_ids))
+                .update(dict(status=TaskStatusEnum.waiting, modified_on=dt.utcnow()), synchronize_session=False)
+            )
 
         return updated
 
@@ -1871,8 +2203,7 @@ class SQLAlchemySocket:
 
         task_ids = [id] if isinstance(id, (int, str)) else id
         with self.session_scope() as session:
-            count = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(task_ids))\
-                                              .delete(synchronize_session=False)
+            count = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(task_ids)).delete(synchronize_session=False)
 
         return count
 
@@ -1906,10 +2237,10 @@ class SQLAlchemySocket:
                     session.add(doc)
                     session.commit()  # TODO: faster if done in bulk
                     task_ids.append(str(doc.id))
-                    meta['n_inserted'] += 1
+                    meta["n_inserted"] += 1
                 else:
                     id = str(doc.first().id)
-                    meta['duplicates'].append(id)  # TODO
+                    meta["duplicates"].append(id)  # TODO
                     # If new or duplicate, add the id to the return list
                     task_ids.append(id)
         meta["success"] = True
@@ -1917,16 +2248,18 @@ class SQLAlchemySocket:
         ret = {"data": task_ids, "meta": meta}
         return ret
 
-### QueueManagerORMs
+    ### QueueManagerORMs
 
     def manager_update(self, name, **kwargs):
+
+        do_log = kwargs.pop("log", False)
 
         inc_count = {
             # Increment relevant data
             "submitted": QueueManagerORM.submitted + kwargs.pop("submitted", 0),
             "completed": QueueManagerORM.completed + kwargs.pop("completed", 0),
             "returned": QueueManagerORM.returned + kwargs.pop("returned", 0),
-            "failures": QueueManagerORM.failures + kwargs.pop("failures", 0)
+            "failures": QueueManagerORM.failures + kwargs.pop("failures", 0),
         }
 
         upd = {key: kwargs[key] for key in QueueManagerORM.__dict__.keys() if key in kwargs}
@@ -1943,9 +2276,30 @@ class SQLAlchemySocket:
                 session.commit()
                 num_updated = 1
 
+            if do_log:
+                # Pull again in case it was updated
+                manager = session.query(QueueManagerORM).filter_by(name=name).first()
+
+                manager_log = QueueManagerLogORM(
+                    manager_id=manager.id,
+                    completed=manager.completed,
+                    submitted=manager.submitted,
+                    failures=manager.failures,
+                    total_worker_walltime=manager.total_worker_walltime,
+                    total_task_walltime=manager.total_task_walltime,
+                    active_tasks=manager.active_tasks,
+                    active_cores=manager.active_cores,
+                    active_memory=manager.active_memory,
+                )
+
+                session.add(manager_log)
+                session.commit()
+
         return num_updated == 1
 
-    def get_managers(self, name: str = None, status: str = None, modified_before=None, limit=None, skip=0):
+    def get_managers(
+        self, name: str = None, status: str = None, modified_before=None, modified_after=None, limit=None, skip=0
+    ):
 
         meta = get_metadata_template()
         query = format_query(QueueManagerORM, name=name, status=status)
@@ -1953,7 +2307,24 @@ class SQLAlchemySocket:
         if modified_before:
             query.append(QueueManagerORM.modified_on <= modified_before)
 
-        data, meta['n_found'] = self.get_query_projection(QueueManagerORM, query, None, limit, skip, exclude=['id'])
+        if modified_after:
+            query.append(QueueManagerORM.modified_on >= modified_after)
+
+        data, meta["n_found"] = self.get_query_projection(QueueManagerORM, query, limit=limit, skip=skip)
+        meta["success"] = True
+
+        return {"data": data, "meta": meta}
+
+    def get_manager_logs(self, manager_ids: Union[List[str], str], timestamp_after=None, limit=None, skip=0):
+        meta = get_metadata_template()
+        query = format_query(QueueManagerLogORM, manager_id=manager_ids)
+
+        if timestamp_after:
+            query.append(QueueManagerLogORM.timestamp >= timestamp_after)
+
+        data, meta["n_found"] = self.get_query_projection(
+            QueueManagerLogORM, query, limit=limit, skip=skip, exclude=["id"]
+        )
         meta["success"] = True
 
         return {"data": data, "meta": meta}
@@ -1977,7 +2348,7 @@ class SQLAlchemySocket:
         manager_names = []
         with self.session_scope() as session:
             for manager in record_list:
-                doc = session.query(QueueManagerORM).filter_by(name=manager['name'])
+                doc = session.query(QueueManagerORM).filter_by(name=manager["name"])
 
                 if get_count_fast(doc) == 0:
                     doc = QueueManagerORM(**manager)
@@ -1988,10 +2359,10 @@ class SQLAlchemySocket:
                     session.add(doc)
                     session.commit()  # TODO: faster if done in bulk
                     manager_names.append(doc.name)
-                    meta['n_inserted'] += 1
+                    meta["n_inserted"] += 1
                 else:
                     name = doc.first().name
-                    meta['duplicates'].append(name)  # TODO
+                    meta["duplicates"].append(name)  # TODO
                     # If new or duplicate, add the id to the return list
                     manager_names.append(id)
         meta["success"] = True
@@ -1999,10 +2370,9 @@ class SQLAlchemySocket:
         ret = {"data": manager_names, "meta": meta}
         return ret
 
+    ### UserORMs
 
-### UserORMs
-
-    _valid_permissions = frozenset({'read', 'write', 'compute', 'queue', 'admin'})
+    _valid_permissions = frozenset({"read", "write", "compute", "queue", "admin"})
 
     @staticmethod
     def _generate_password() -> str:
@@ -2016,11 +2386,9 @@ class SQLAlchemySocket:
         """
         return secrets.token_urlsafe(32)
 
-    def add_user(self,
-                 username: str,
-                 password: Optional[str] = None,
-                 permissions: List[str] = ["read"],
-                 overwrite: bool = False) -> Tuple[bool, str]:
+    def add_user(
+        self, username: str, password: Optional[str] = None, permissions: List[str] = ["read"], overwrite: bool = False
+    ) -> Tuple[bool, str]:
         """
         Adds a new user and associated permissions.
 
@@ -2044,8 +2412,7 @@ class SQLAlchemySocket:
 
         # Make sure permissions are valid
         if not self._valid_permissions >= set(permissions):
-            raise KeyError("Permissions settings not understood: {}".format(
-                set(permissions) - self._valid_permissions))
+            raise KeyError("Permissions settings not understood: {}".format(set(permissions) - self._valid_permissions))
 
         if password is None:
             password = self._generate_password()
@@ -2074,10 +2441,7 @@ class SQLAlchemySocket:
 
         return success, password
 
-    def verify_user(self,
-                    username: str,
-                    password: str,
-                    permission: str) -> Tuple[bool, str]:
+    def verify_user(self, username: str, password: str, permission: str) -> Tuple[bool, str]:
         """
         Verifies if a user has the requested permissions or not.
 
@@ -2124,7 +2488,9 @@ class SQLAlchemySocket:
                 pwcheck = bcrypt.checkpw(password.encode("UTF-8"), data.password)
             except Exception as e:
                 self.logger.warning(f"Password check failure, error: {str(e)}")
-                self.logger.warning(f"Error likely caused by encryption salt mismatch, potentially fixed by creating a new password for user {username}.")
+                self.logger.warning(
+                    f"Error likely caused by encryption salt mismatch, potentially fixed by creating a new password for user {username}."
+                )
                 return (False, "Password decryption failure, please contact your database administrator.")
 
             if pwcheck is False:
@@ -2136,11 +2502,13 @@ class SQLAlchemySocket:
 
         return (True, "Success")
 
-    def modify_user(self,
-                    username: str,
-                    password: Optional[str] = None,
-                    reset_password: bool = False,
-                    permissions: Optional[List[str]] = None) -> Tuple[bool, str]:
+    def modify_user(
+        self,
+        username: str,
+        password: Optional[str] = None,
+        reset_password: bool = False,
+        permissions: Optional[List[str]] = None,
+    ) -> Tuple[bool, str]:
         """
         Alters a user's password, permissions, or both
 
@@ -2177,8 +2545,7 @@ class SQLAlchemySocket:
             if permissions is not None:
                 # Make sure permissions are valid
                 if not self._valid_permissions >= set(permissions):
-                    return False, "Permissions not understood: {}".format(
-                        set(permissions) - self._valid_permissions)
+                    return False, "Permissions not understood: {}".format(set(permissions) - self._valid_permissions)
                 blob["permissions"] = permissions
             if reset_password:
                 password = self._generate_password()
@@ -2193,8 +2560,7 @@ class SQLAlchemySocket:
         else:
             return False, f"Failed to modify user {username}"
 
-    def remove_user(self,
-                    username: str) -> bool:
+    def remove_user(self, username: str) -> bool:
         """Removes a user
 
         Parameters
@@ -2209,13 +2575,11 @@ class SQLAlchemySocket:
         """
 
         with self.session_scope() as session:
-            count = session.query(UserORM).filter_by(username=username)\
-                                          .delete(synchronize_session=False)
+            count = session.query(UserORM).filter_by(username=username).delete(synchronize_session=False)
 
         return count == 1
 
-    def get_user_permissions(self,
-                             username: str) -> Optional[List[str]]:
+    def get_user_permissions(self, username: str) -> Optional[List[str]]:
         """
 
         Parameters
@@ -2238,12 +2602,11 @@ class SQLAlchemySocket:
 
         return ret
 
-
     def _get_users(self):
 
         with self.session_scope() as session:
             data = session.query(UserORM).filter().all()
-            data = [x.to_dict(exclude=['id']) for x in data]
+            data = [x.to_dict(exclude=["id"]) for x in data]
 
         return data
 
@@ -2266,19 +2629,19 @@ class SQLAlchemySocket:
         user_names = []
         with self.session_scope() as session:
             for user in record_list:
-                doc = session.query(UserORM).filter_by(username=user['username'])
+                doc = session.query(UserORM).filter_by(username=user["username"])
 
                 if get_count_fast(doc) == 0:
                     doc = UserORM(**user)
-                    if (isinstance(doc.password, str)): #TODO, for mongo
-                        doc.password = doc.password.encode('ascii')
+                    if isinstance(doc.password, str):  # TODO, for mongo
+                        doc.password = doc.password.encode("ascii")
                     session.add(doc)
                     session.commit()
                     user_names.append(doc.username)
-                    meta['n_inserted'] += 1
+                    meta["n_inserted"] += 1
                 else:
                     name = doc.first().username
-                    meta['duplicates'].append(name)
+                    meta["duplicates"].append(name)
                     user_names.append(name)
         meta["success"] = True
 
@@ -2295,18 +2658,21 @@ class SQLAlchemySocket:
                 import qcelemental
                 import qcfractal
                 import qcengine
+
                 elemental_version = qcelemental.__version__
                 fractal_version = qcfractal.__version__
                 engine_version = qcengine.__version__
-                current = VersionsORM(elemental_version=elemental_version,
-                                      fractal_version=fractal_version,
-                                      engine_version=engine_version)
+                current = VersionsORM(
+                    elemental_version=elemental_version, fractal_version=fractal_version, engine_version=engine_version
+                )
                 session.add(current)
                 session.commit()
             else:
                 current = db_ver.first()
 
-        return current.to_dict(exclude=['id'])
+            ver = current.to_dict(exclude=["id"])
+
+        return ver
 
     def get_total_count(self, className, **kwargs):
 
@@ -2315,3 +2681,70 @@ class SQLAlchemySocket:
             count = get_count_fast(query)
 
         return count
+
+    def log_server_stats(self):
+
+        table_info = self.custom_query("database_stats", "table_information")["data"]
+
+        # Calculate table info
+        table_size = 0
+        index_size = 0
+        for row in table_info["rows"]:
+            table_size += row[2] - row[3] - (row[4] or 0)
+            index_size += row[3]
+
+        # Calculate result state info, turns out to be very costly for large databases
+        # state_data = self.custom_query("result", "count", groupby={'result_type', 'status'})["data"]
+        # result_states = {}
+
+        # for row in state_data:
+        #     result_states.setdefault(row["result_type"], {})
+        #     result_states[row["result_type"]][row["status"]] = row["count"]
+        result_states = {}
+
+        counts = {}
+        for table in ["collection", "molecule", "base_result", "kv_store", "access_log"]:
+            counts[table] = self.custom_query("database_stats", "table_count", table_name=table)["data"][0]
+
+        # Build out final data
+        data = {
+            "collection_count": counts["collection"],
+            "molecule_count": counts["molecule"],
+            "result_count": counts["base_result"],
+            "kvstore_count": counts["kv_store"],
+            "access_count": counts["access_log"],
+            "result_states": result_states,
+            "db_total_size": self.custom_query("database_stats", "database_size")["data"],
+            "db_table_size": table_size,
+            "db_index_size": index_size,
+            "db_table_information": table_info,
+        }
+
+        with self.session_scope() as session:
+            log = ServerStatsLogORM(**data)
+            session.add(log)
+            session.commit()
+
+        return data
+
+    def get_server_stats_log(self, before=None, after=None, limit=None, skip=0):
+
+        meta = get_metadata_template()
+        query = []
+
+        if before:
+            query.append(ServerStatsLogORM.timestamp <= before)
+
+        if after:
+            query.append(ServerStatsLogORM.timestamp >= after)
+
+        with self.session_scope() as session:
+            pose = session.query(ServerStatsLogORM).filter(*query).order_by(desc("timestamp"))
+            meta["n_found"] = get_count_fast(pose)
+
+            data = pose.limit(self.get_limit(limit)).offset(skip).all()
+            data = [d.to_dict() for d in data]
+
+        meta["success"] = True
+
+        return {"data": data, "meta": meta}

@@ -14,18 +14,21 @@ bad_id2 = "000000000000000000000001"
 
 def get_manager_name(fractal_compute_server):
 
-    manager = fractal_compute_server.storage.get_managers()['data']
+    manager = fractal_compute_server.storage.get_managers()["data"]
     if len(manager) == 0:
-        fractal_compute_server.storage.manager_update('test manager')
-        return 'test manager'
+        fractal_compute_server.storage.manager_update("test manager")
+        return "test manager"
     else:
-        return manager[0]['name']
+        return manager[0]["name"]
 
 
-@pytest.mark.parametrize("data", [
-    pytest.param(("psi4", "HF", "sto-3g"), id="psi4", marks=using_psi4),
-    pytest.param(("rdkit", "UFF", None), id="rdkit", marks=using_rdkit)
-])
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param(("psi4", "HF", "sto-3g"), id="psi4", marks=using_psi4),
+        pytest.param(("rdkit", "UFF", None), id="rdkit", marks=using_rdkit),
+    ],
+)
 def test_task_molecule_no_orientation(data, fractal_compute_server):
     """
     Molecule orientation should not change on compute
@@ -87,6 +90,7 @@ def test_task_error(fractal_compute_server):
     assert m[0]["failures"] > 0
     assert m[0]["completed"] > 0
 
+
 @testing.using_rdkit
 def test_task_client_restart(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
@@ -127,17 +131,17 @@ def test_queue_error(fractal_compute_server):
     # Pull from database, raw JSON
     db = fractal_compute_server.objects["storage_socket"]
     queue_ret = db.get_queue(status="ERROR")["data"]
-    result = db.get_results(id=compute_ret.ids)['data'][0]
+    result = db.get_results(id=compute_ret.ids)["data"][0]
 
     assert len(queue_ret) == 1
     # TODO: task.error is not used anymore
     # assert "connectivity graph" in queue_ret[0].error.error_message
-    assert result['status'] == 'ERROR'
+    assert result["status"] == "ERROR"
 
     # Force a complete mark and test
     fractal_compute_server.objects["storage_socket"].queue_mark_complete([queue_ret[0].id])
-    result = db.get_results(id=compute_ret.ids)['data'][0]
-    assert result['status'] == 'COMPLETE'
+    result = db.get_results(id=compute_ret.ids)["data"][0]
+    assert result["status"] == "COMPLETE"
 
 
 @testing.using_rdkit
@@ -219,13 +223,7 @@ def test_queue_duplicate_procedure(fractal_compute_server):
 
     geometric_options = {
         "keywords": None,
-        "qc_spec": {
-            "driver": "gradient",
-            "method": "UFF",
-            "basis": "",
-            "keywords": None,
-            "program": "rdkit"
-        },
+        "qc_spec": {"driver": "gradient", "method": "UFF", "basis": "", "keywords": None, "program": "rdkit"},
     }
 
     ret = client.add_procedure("optimization", "geometric", geometric_options, [mol_ret[0], bad_id1])
@@ -257,7 +255,7 @@ def test_queue_bad_compute_method(fractal_compute_server):
     with pytest.raises(IOError) as exc:
         ret = client.add_compute("badprogram", "UFF", "", "energy", None, [mol1], full_return=True)
 
-    assert 'not avail' in str(exc.value)
+    assert "not avail" in str(exc.value)
 
 
 def test_queue_bad_procedure_method(fractal_compute_server):
@@ -267,34 +265,28 @@ def test_queue_bad_procedure_method(fractal_compute_server):
 
     geometric_options = {
         "keywords": None,
-        "qc_spec": {
-            "driver": "gradient",
-            "method": "UFF",
-            "basis": "",
-            "keywords": None,
-            "program": "rdkit"
-        },
+        "qc_spec": {"driver": "gradient", "method": "UFF", "basis": "", "keywords": None, "program": "rdkit"},
     }
 
     # Test bad procedure
     with pytest.raises(IOError) as exc:
         ret = client.add_procedure("optimization", "badproc", geometric_options, [mol1])
 
-    assert 'not avail' in str(exc.value)
+    assert "not avail" in str(exc.value)
 
     # Test procedure class
     with pytest.raises(IOError) as exc:
         ret = client.add_procedure("badprocedure", "geometric", geometric_options, [mol1])
 
-    assert 'Unknown procedure' in str(exc.value)
+    assert "Unknown procedure" in str(exc.value)
 
     # Test bad program
     with pytest.raises(IOError) as exc:
         geometric_options["qc_spec"]["program"] = "badqc"
         ret = client.add_procedure("optimization", "geometric", geometric_options, [mol1])
 
-    assert 'not avail' in str(exc.value)
-    assert 'badqc' in str(exc.value)
+    assert "not avail" in str(exc.value)
+    assert "badqc" in str(exc.value)
 
 
 def test_queue_ordering_time(fractal_compute_server):
@@ -350,13 +342,7 @@ def test_queue_order_procedure_priority(fractal_compute_server):
 
     geometric_options = {
         "keywords": None,
-        "qc_spec": {
-            "driver": "gradient",
-            "method": "UFF",
-            "basis": "",
-            "keywords": None,
-            "program": "rdkit"
-        },
+        "qc_spec": {"driver": "gradient", "method": "UFF", "basis": "", "keywords": None, "program": "rdkit"},
     }
 
     mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 1.1")
@@ -373,12 +359,15 @@ def test_queue_order_procedure_priority(fractal_compute_server):
     assert len(fractal_compute_server.storage.queue_get_next(manager, ["rdkit"], ["geom"], limit=1)) == 0
     assert len(fractal_compute_server.storage.queue_get_next(manager, ["prog1"], ["geometric"], limit=1)) == 0
 
-    queue_id1 = fractal_compute_server.storage.queue_get_next(manager, ["rdkit"], ["geometric"],
-                                                              limit=1)[0].base_result.id
-    queue_id2 = fractal_compute_server.storage.queue_get_next(manager, ["RDKIT"], ["geometric"],
-                                                              limit=1)[0].base_result.id
-    queue_id3 = fractal_compute_server.storage.queue_get_next(manager, ["rdkit"], ["GEOMETRIC"],
-                                                              limit=1)[0].base_result.id
+    queue_id1 = fractal_compute_server.storage.queue_get_next(manager, ["rdkit"], ["geometric"], limit=1)[
+        0
+    ].base_result.id
+    queue_id2 = fractal_compute_server.storage.queue_get_next(manager, ["RDKIT"], ["geometric"], limit=1)[
+        0
+    ].base_result.id
+    queue_id3 = fractal_compute_server.storage.queue_get_next(manager, ["rdkit"], ["GEOMETRIC"], limit=1)[
+        0
+    ].base_result.id
 
     assert queue_id1 == ret2
     assert queue_id2 == ret3
@@ -404,11 +393,11 @@ def test_queue_query_tag(fractal_compute_server):
 
     tasks_tag_none = client.query_tasks()
     assert len(tasks_tag_none) == 3
+    assert {task.base_result.id for task in tasks_tag_none} == {ret1, ret2, ret3}
 
     tasks_tagged = client.query_tasks(tag=["test", "test2"])
-    assert tasks_tagged[0].base_result.id == ret2
-    assert tasks_tagged[1].base_result.id == ret3
     assert len(tasks_tagged) == 2
+    assert {task.base_result.id for task in tasks_tagged} == {ret2, ret3}
 
 
 def test_queue_query_manager(fractal_compute_server):

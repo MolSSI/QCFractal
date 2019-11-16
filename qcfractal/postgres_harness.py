@@ -1,21 +1,22 @@
 import atexit
+import os
 import shutil
 import subprocess
 import tempfile
 import time
-from typing import Any, Dict, List, Union, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import psycopg2
+from sqlalchemy import create_engine
+
+from qcfractal.storage_sockets.models import Base
 
 from .config import FractalConfig
 from .util import find_port, is_port_open
-import os
-from qcfractal.storage_sockets.models import Base
-from sqlalchemy import create_engine
 
 
 class PostgresHarness:
-    def __init__(self, config: Union[Dict[str, Any], FractalConfig], quiet: bool = True, logger: 'print' = print):
+    def __init__(self, config: Union[Dict[str, Any], FractalConfig], quiet: bool = True, logger: "print" = print):
         """A flexible connection to a PostgreSQL server
 
         Parameters
@@ -33,7 +34,7 @@ class PostgresHarness:
         self.quiet = quiet
         self._logger = logger
         self._checked = False
-        self._alembic_ini = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'alembic.ini')
+        self._alembic_ini = os.path.join(os.path.abspath(os.path.dirname(__file__)), "alembic.ini")
 
     def _run(self, commands):
         proc = subprocess.run(commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -88,7 +89,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         """
         return self.config.database_uri(safe=False, database="")
 
-    def connect(self, database: Optional[str] = None) -> 'Connection':
+    def connect(self, database: Optional[str] = None) -> "Connection":
         """Builds a psycopg2 connection object.
 
         Parameters
@@ -108,7 +109,8 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
             user=self.config.database.username,
             host=self.config.database.host,
             port=self.config.database.port,
-            password=self.config.database.password)
+            password=self.config.database.password,
+        )
 
     def is_alive(self, database: Optional[str] = None) -> bool:
         """Checks if the postgres is alive, and optionally if the database is present.
@@ -189,7 +191,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         """Create database tables using SQLAlchemy models"""
 
         uri = self.config.database_uri()
-        self.logger(f'Creating tables for database: {uri}')
+        self.logger(f"Creating tables for database: {uri}")
         engine = create_engine(uri, echo=False, pool_size=1)
 
         # actually create the tables
@@ -206,11 +208,13 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         The database data won't be deleted.
         """
 
-        ret = self._run(self.alembic_commands() + ['upgrade', 'head'])
+        ret = self._run(self.alembic_commands() + ["upgrade", "head"])
 
-        if ret['retcode'] != 0:
+        if ret["retcode"] != 0:
             self.logger(ret["stderr"])
-            raise ValueError(f"\nFailed to Upgrade the database, make sure to init the database first before being able to upgrade it.\n")
+            raise ValueError(
+                f"\nFailed to Upgrade the database, make sure to init the database first before being able to upgrade it.\n"
+            )
 
         return True
 
@@ -244,9 +248,9 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
             self.logger("Found running PostgreSQL instance with correct configuration.")
 
         else:
-            start_status = self.pg_ctl([
-                "-l", str(self.config.database_path / self.config.database.logfile),
-                "start"]) # yapf: disable
+            start_status = self.pg_ctl(
+                ["-l", str(self.config.database_path / self.config.database.logfile), "start"]
+            )  # yapf: disable
 
             if not (("server started" in start_status["stdout"]) or ("server starting" in start_status["stdout"])):
                 raise ValueError(f"Could not start the PostgreSQL server. Error below:\n\n{start_status['stderr']}")
@@ -258,14 +262,13 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
                 else:
                     time.sleep(0.1)
             else:
-                raise ValueError(f"Could not connect to the server after booting. Boot log:\n\n{start_status['stderr']}")
+                raise ValueError(
+                    f"Could not connect to the server after booting. Boot log:\n\n{start_status['stderr']}"
+                )
 
             self.logger("PostgreSQL successfully started in a background process, current_status:\n")
             if not self.quiet:
-                start_status = self._run([
-                    shutil.which("pg_ctl"),
-                    "-D", str(self.config.database_path),
-                    "status"]) # yapf: disable
+                self._run([shutil.which("pg_ctl"), "-D", str(self.config.database_path), "status"])  # yapf: disable
 
         return True
 
@@ -293,7 +296,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
             raise ValueError(f"Could not initialize the PostgreSQL server. Error below:\n\n{init_status['stderr']}")
 
         # Change any configurations
-        psql_conf_file = (self.config.database_path / "postgresql.conf")
+        psql_conf_file = self.config.database_path / "postgresql.conf"
         psql_conf = psql_conf_file.read_text()
         if self.config.database.port != 5432:
             assert "#port = 5432" in psql_conf
@@ -317,9 +320,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         self.logger("\nDatabase server successfully started!")
 
     def alembic_commands(self) -> List[str]:
-         return [shutil.which('alembic'),
-                         '-c', self._alembic_ini,
-                         '-x', 'uri='+self.config.database_uri()]
+        return [shutil.which("alembic"), "-c", self._alembic_ini, "-x", "uri=" + self.config.database_uri()]
 
     def init_database(self) -> None:
 
@@ -329,22 +330,23 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         self.create_tables()
 
         # update alembic_version table with the current version
-        self.logger(f'\nStamping Database with current version..')
+        self.logger(f"\nStamping Database with current version..")
 
-        ret = self._run(self.alembic_commands() + ['stamp', 'head'])
+        ret = self._run(self.alembic_commands() + ["stamp", "head"])
 
-        if ret['retcode'] != 0:
+        if ret["retcode"] != 0:
             self.logger(ret)
             raise ValueError("\nFailed to Stamp the database with current version.\n")
 
 
-
 class TemporaryPostgres:
-    def __init__(self,
-                 database_name: Optional[str] = None,
-                 tmpdir: Optional[str] = None,
-                 quiet: bool = True,
-                 logger: 'print' = print):
+    def __init__(
+        self,
+        database_name: Optional[str] = None,
+        tmpdir: Optional[str] = None,
+        quiet: bool = True,
+        logger: "print" = print,
+    ):
         """A PostgreSQL instance run in a temporary folder.
 
         ! Warning ! All data is lost when this object is deleted.

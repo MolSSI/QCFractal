@@ -1,19 +1,23 @@
 """
 QCPortal Database ODM
 """
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import pandas as pd
 
-from ..models import Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification, TorsionDriveInput
+from ..models import ObjectId, OptimizationSpecification, ProtoModel, QCSpecification, TorsionDriveInput
 from ..models.torsiondrive import TDKeywords
 from ..visualization import custom_plot
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
 
+if TYPE_CHECKING:  # pragma: no cover
+    from ..models import Molecule
+
 
 class TDEntry(ProtoModel):
     """Data model for the `reactions` list in Dataset"""
+
     name: str
     initial_molecules: Set[ObjectId]
     td_keywords: TDKeywords
@@ -40,19 +44,23 @@ class TorsionDriveDataset(BaseProcedureDataset):
 
     def _internal_compute_add(self, spec: Any, entry: Any, tag: str, priority: str) -> ObjectId:
 
-        service = TorsionDriveInput(initial_molecule=entry.initial_molecules,
-                                    keywords=entry.td_keywords,
-                                    optimization_spec=spec.optimization_spec,
-                                    qc_spec=spec.qc_spec)
+        service = TorsionDriveInput(
+            initial_molecule=entry.initial_molecules,
+            keywords=entry.td_keywords,
+            optimization_spec=spec.optimization_spec,
+            qc_spec=spec.qc_spec,
+        )
 
         return self.client.add_service([service], tag=tag, priority=priority).ids[0]
 
-    def add_specification(self,
-                          name: str,
-                          optimization_spec: OptimizationSpecification,
-                          qc_spec: QCSpecification,
-                          description: str = None,
-                          overwrite=False) -> None:
+    def add_specification(
+        self,
+        name: str,
+        optimization_spec: OptimizationSpecification,
+        qc_spec: QCSpecification,
+        description: Optional[str] = None,
+        overwrite: bool = False,
+    ) -> None:
         """
         Parameters
         ----------
@@ -69,23 +77,24 @@ class TorsionDriveDataset(BaseProcedureDataset):
 
         """
 
-        spec = TDEntrySpecification(name=name,
-                                    optimization_spec=optimization_spec,
-                                    qc_spec=qc_spec,
-                                    description=description)
+        spec = TDEntrySpecification(
+            name=name, optimization_spec=optimization_spec, qc_spec=qc_spec, description=description
+        )
 
         return self._add_specification(name, spec, overwrite=overwrite)
 
-    def add_entry(self,
-                  name: str,
-                  initial_molecules: List[Molecule],
-                  dihedrals: List[Tuple[int, int, int, int]],
-                  grid_spacing: List[int],
-                  dihedral_ranges: Optional[List[Tuple[int, int]]] = None,
-                  energy_decrease_thresh: Optional[float] = None,
-                  energy_upper_limit: Optional[float] = None,
-                  attributes: Dict[str, Any] = None,
-                  save: bool = True) -> None:
+    def add_entry(
+        self,
+        name: str,
+        initial_molecules: List["Molecule"],
+        dihedrals: List[Tuple[int, int, int, int]],
+        grid_spacing: List[int],
+        dihedral_ranges: Optional[List[Tuple[int, int]]] = None,
+        energy_decrease_thresh: Optional[float] = None,
+        energy_upper_limit: Optional[float] = None,
+        attributes: Dict[str, Any] = None,
+        save: bool = True,
+    ) -> None:
         """
         Parameters
         ----------
@@ -117,20 +126,24 @@ class TorsionDriveDataset(BaseProcedureDataset):
 
         # Build new objects
         molecule_ids = self.client.add_molecules(initial_molecules)
-        td_keywords = TDKeywords(dihedrals=dihedrals,
-                                 grid_spacing=grid_spacing,
-                                 dihedral_ranges=dihedral_ranges,
-                                 energy_decrease_thresh=energy_decrease_thresh,
-                                 energy_upper_limit=energy_upper_limit)
+        td_keywords = TDKeywords(
+            dihedrals=dihedrals,
+            grid_spacing=grid_spacing,
+            dihedral_ranges=dihedral_ranges,
+            energy_decrease_thresh=energy_decrease_thresh,
+            energy_upper_limit=energy_upper_limit,
+        )
 
         entry = TDEntry(name=name, initial_molecules=molecule_ids, td_keywords=td_keywords, attributes=attributes)
 
         self._add_entry(name, entry, save)
 
-    def counts(self,
-               entries: Union[str, List[str]],
-               specs: Optional[Union[str, List[str]]] = None,
-               count_gradients=False) -> 'DataFrame':
+    def counts(
+        self,
+        entries: Union[str, List[str]],
+        specs: Optional[Union[str, List[str]]] = None,
+        count_gradients: bool = False,
+    ) -> pd.DataFrame:
         """Counts the number of optimization or gradient evaluations associated with the
         TorsionDrives.
 
@@ -200,14 +213,16 @@ class TorsionDriveDataset(BaseProcedureDataset):
         # ret = pd.DataFrame([ret[x].astype(int) for x in ret.columns]).transpose()
         return ret
 
-    def visualize(self,
-                  entries: Union[str, List[str]],
-                  specs: Union[str, List[str]],
-                  relative: bool = True,
-                  units: str = "kcal / mol",
-                  digits: int = 3,
-                  use_measured_angle: bool = False,
-                  return_figure: Optional[bool] = None) -> 'plotly.Figure':
+    def visualize(
+        self,
+        entries: Union[str, List[str]],
+        specs: Union[str, List[str]],
+        relative: bool = True,
+        units: str = "kcal / mol",
+        digits: int = 3,
+        use_measured_angle: bool = False,
+        return_figure: Optional[bool] = None,
+    ) -> "plotly.Figure":
         """
         Parameters
         ----------
@@ -255,11 +270,13 @@ class TorsionDriveDataset(BaseProcedureDataset):
             for index in entries:
 
                 # Plot the figure using the torsiondrives plotting function
-                fig = self.df.loc[index, spec].visualize(relative=relative,
-                                                         units=units,
-                                                         digits=digits,
-                                                         use_measured_angle=use_measured_angle,
-                                                         return_figure=True)
+                fig = self.df.loc[index, spec].visualize(
+                    relative=relative,
+                    units=units,
+                    digits=digits,
+                    use_measured_angle=use_measured_angle,
+                    return_figure=True,
+                )
 
                 ranges.append(fig.layout.xaxis.range)
                 trace = fig.data[0]  # Pull out the underlying scatterplot
@@ -282,89 +299,15 @@ class TorsionDriveDataset(BaseProcedureDataset):
 
         custom_layout = {
             "title": title,
-            "yaxis": {
-                "title": ylabel,
-                "zeroline": True
-            },
+            "yaxis": {"title": ylabel, "zeroline": True},
             "xaxis": {
                 "title": "Dihedral Angle [degrees]",
                 "zeroline": False,
-                "range": [min(x[0] for x in ranges), max(x[1] for x in ranges)]
-            }
+                "range": [min(x[0] for x in ranges), max(x[1] for x in ranges)],
+            },
         }
 
         return custom_plot(traces, custom_layout, return_figure=return_figure)
-
-    def status(self,
-               specs: Union[str, List[str]] = None,
-               collapse: bool = True,
-               status: Optional[str] = None,
-               detail: bool = False) -> 'DataFrame':
-        """Returns the status of all current specifications.
-
-        Parameters
-        ----------
-        specs : Union[str, List[str]], optional
-            Description
-        collapse : bool, optional
-            Collapse the status into summaries per specification or not.
-        status : Optional[str], optional
-            If not None, only returns results that match the provided status.
-        detail : bool, optional
-            Shows a detailed description of the current status of incomplete jobs.
-
-        Returns
-        -------
-        DataFrame
-            A DataFrame of all known statuses
-        """
-
-        if detail is False:
-            return super().status(specs, collapse=collapse, status=status)
-
-        if status not in [None, 'INCOMPLETE']:
-            raise KeyError("Detailed status is only available for incomplete procedures.")
-
-        if not (isinstance(specs, str) or len(specs) == 1):
-            raise KeyError("Detailed status is only available for a single specification at a time.")
-
-        mapper = self._get_procedure_ids(specs)
-        reverse_map = {v: k for k, v in mapper.items()}
-        services = self.client.query_services(procedure_id=list(mapper.values()))
-
-        data = []
-
-        for service in services:
-            row = {}
-            row["Name"] = reverse_map[service["procedure_id"]]
-            row["Status"] = service["status"]
-
-            tpoints = 1
-            for x in service["output"]["keywords"]["grid_spacing"]:
-                tpoints *= int(360 / x)
-
-            row["Total Points"] = tpoints
-            row["Computed Points"] = len(service["optimization_history"])
-            row["Percent Complete"] = round(row["Computed Points"] / row["Total Points"] * 100, 2)
-
-            tasks = service["task_manager"]["required_tasks"]
-            row["# Current Tasks"] = len(tasks)
-            procs = self.client.query_procedures(id=list(tasks.values()))
-
-            row["Complete"] = sum(x.status == "COMPLETE" for x in procs)
-            row["Incomplete"] = sum(x.status == "INCOMPLETE" for x in procs)
-            row["Error"] = sum(x.status == "ERROR" for x in procs)
-
-            data.append(row)
-
-        df = pd.DataFrame(data)
-        df = df[[
-            "Name", "Status", "Computed Points", "Total Points", "Percent Complete", "# Current Tasks", "Complete",
-            "Incomplete", "Error"
-        ]]
-        df = df.set_index("Name")
-
-        return df
 
 
 register_collection(TorsionDriveDataset)
