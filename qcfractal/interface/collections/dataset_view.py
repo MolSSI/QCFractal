@@ -211,19 +211,18 @@ class HDF5View(DatasetView):
         return pd.Series(mols, index=indexes)
 
     def get_index(self, subset: Optional[List[str]] = None) -> pd.DataFrame:
-        # TODO: make this fast for subsets
         if self._index is None:
             with self._read_file() as f:
                 entry_group = f["entry"]
                 self._index = pd.DataFrame({"index": entry_group["entry"][()]})
                 self._index["_h5idx"] = range(len(self._index))
+                self._index.set_index("index", inplace=True)
         if subset is None:
-            return self._index
+            return self._index.reset_index()
         else:
-            return self._index.set_index("index").loc[subset].reset_index()
+            return self._index.loc[subset].reset_index()
 
     def get_entries(self, subset: Optional[List[str]] = None) -> pd.DataFrame:
-        # TODO: make this fast for subsets
         if self._entries is None:
             with self._read_file() as f:
                 entry_group = f["entry"]
@@ -236,10 +235,11 @@ class HDF5View(DatasetView):
                         f"Unknown entry class ({entry_group.attrs['model']}) while " f"reading HDF5 entries."
                     )
                 self._entries = pd.DataFrame({field: entry_group[field][()] for field in fields})
+                self._entries.set_index("name", inplace=True)
         if subset is None:
-            return self._entries
+            return self._entries.reset_index()
         else:
-            return self._entries.reset_index().set_index("name").loc[subset].reset_index()
+            return self._entries.loc[subset].reset_index()
 
     def write(self, ds: Dataset):
         import h5py
