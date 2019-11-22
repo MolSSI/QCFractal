@@ -1,6 +1,7 @@
 """
 QCPortal Database ODM
 """
+import gzip
 import tempfile
 import warnings
 from pathlib import Path
@@ -183,7 +184,6 @@ class Dataset(Collection):
             local_path = self._view_tempfile.name
 
         r = requests.get(self.data.view_url_hdf5, stream=True)
-
         pbar = None
         if progress_bar:
             try:
@@ -205,6 +205,17 @@ class Dataset(Collection):
             local_checksum = HDF5View(local_path).hash()
             if remote_checksum != local_checksum:
                 raise ValueError(f"Checksum verification failed. Expected: {remote_checksum}, Got: {local_checksum}")
+
+        with open(local_path, "rb") as f:
+            magic = f.read(2)
+            gzipped = magic == b"\x1f\x8b"
+        if gzipped:
+            extract_tempfile = tempfile.NamedTemporaryFile()  # keep temp file alive until self is destroyed
+            with gzip.open(local_path, "rb") as fgz:
+                with open(extract_tempfile.name, "wb") as f:
+                    f.write(fgz.read())
+            self._view_tempfile = extract_tempfile
+            local_path = self._view_tempfile.name
 
         self.set_view(local_path)
 
