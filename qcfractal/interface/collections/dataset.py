@@ -198,14 +198,6 @@ class Dataset(Collection):
                 if pbar is not None:
                     pbar.update(chunk_size)
 
-        if verify:
-            remote_checksum = self.data.view_metadata["blake2b_checksum"]
-            from . import HDF5View
-
-            local_checksum = HDF5View(local_path).hash()
-            if remote_checksum != local_checksum:
-                raise ValueError(f"Checksum verification failed. Expected: {remote_checksum}, Got: {local_checksum}")
-
         with open(local_path, "rb") as f:
             magic = f.read(2)
             gzipped = magic == b"\x1f\x8b"
@@ -216,6 +208,14 @@ class Dataset(Collection):
                     f.write(fgz.read())
             self._view_tempfile = extract_tempfile
             local_path = self._view_tempfile.name
+
+        if verify:
+            remote_checksum = self.data.view_metadata["blake2b_checksum"]
+            from . import HDF5View
+
+            local_checksum = HDF5View(local_path).hash()
+            if remote_checksum != local_checksum:
+                raise ValueError(f"Checksum verification failed. Expected: {remote_checksum}, Got: {local_checksum}")
 
         self.set_view(local_path)
 

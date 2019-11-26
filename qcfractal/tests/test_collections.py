@@ -1081,7 +1081,7 @@ def test_view_download_remote(s22_fixture):
 
     dsgz.data.__dict__["view_url_hdf5"] = "https://github.com/mattwelborn/QCArchiveViews/raw/master/S22/latest.hdf5.gz"
     dsgz.data.__dict__["view_metadata"] = {
-        "blake2b_checksum": "1c531140d746c415c0c0de604bcbc5f803dced7dfd311d4590563b6ed16f86ec0766e9c76f4f093e11222de5a1286ef1df11119c11eb37f08bfb4855c7b99167"
+        "blake2b_checksum": "f9d537a982f63af0c500753b0e4779604252b9289fa26b6d83b657bf6e1039f1af2e44bbc819001fb857f1602280892b48422b8649cea786cdec3d2eb73412a9"
     }
     dsgz.download()  # 90 kb
 

@@ -484,7 +484,7 @@ class FractalClient(object):
         aslist: bool = False,
         group: Optional[str] = "default",
         show_hidden: bool = False,
-        tag: Optional[Union[str, List[str]]] = None
+        tag: Optional[Union[str, List[str]]] = None,
     ) -> pd.DataFrame:
         """Lists the available collections currently on the server.
 
@@ -531,7 +531,7 @@ class FractalClient(object):
             if isinstance(tag, str):
                 tag = [tag]
             tag = {t.lower() for t in tag}
-            df = df[df.apply(lambda x: len({t.lower() for t in x['tags']} & tag) > 0, axis=1)]
+            df = df[df.apply(lambda x: len({t.lower() for t in x["tags"]} & tag) > 0, axis=1)]
 
         df.drop(["visibility", "group", "tags"], axis=1, inplace=True)
         if not aslist:

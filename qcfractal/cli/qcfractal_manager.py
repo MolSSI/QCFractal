@@ -100,8 +100,7 @@ class CommonManagerSettings(AutodocBaseSettings):
         "otherwise, defaults are all used for any logger.",
     )
     nodes_per_job: int = Field(
-        1,
-        description="The number of nodes to request per job. Only used by the Parsl adapter at present"
+        1, description="The number of nodes to request per job. Only used by the Parsl adapter at present"
     )
 
     class Config(SettingsCommonConfig):
@@ -447,9 +446,8 @@ class ParslProviderSettings(SettingsBlocker):
     """
 
     def __init__(self, **kwargs):
-        if 'max_blocks' in kwargs:
-            raise ValueError('``max_blocks`` is set based on ``common.max_workers`` '
-                             'and ``common.nodes_per_job``')
+        if "max_blocks" in kwargs:
+            raise ValueError("``max_blocks`` is set based on ``common.max_workers`` " "and ``common.nodes_per_job``")
         super().__init__(**kwargs)
 
     partition: str = Field(
@@ -721,7 +719,7 @@ def main(args=None):
 
         # Error if the number of nodes per jobs is more than 1
         if settings.common.nodes_per_job > 1:
-            raise ValueError('Pool adapters only run on a single local node')
+            raise ValueError("Pool adapters only run on a single local node")
         queue_client = ProcessPoolExecutor(max_workers=settings.common.tasks_per_worker)
 
     elif settings.common.adapter == "dask":
@@ -737,7 +735,7 @@ def main(args=None):
 
         # Error if the number of nodes per jobs is more than 1
         if settings.common.nodes_per_job > 1:
-            raise NotImplementedError('Support for >1 node per job is not yet supported by QCFractal + Dask')
+            raise NotImplementedError("Support for >1 node per job is not yet supported by QCFractal + Dask")
             # TODO (wardlt): Implement multinode jobs in Dask
 
         _cluster_loaders = {
@@ -820,8 +818,14 @@ def main(args=None):
             raise ValueError(f"Parsl does not know how to handle cluster of type {settings.cluster.scheduler}.")
 
         # Headers
-        _provider_headers = {"slurm": "#SBATCH", "pbs": "#PBS", "moab": "#PBS",
-                             "sge": "#$$", "lsf": None, "cobalt": "#COBALT"}
+        _provider_headers = {
+            "slurm": "#SBATCH",
+            "pbs": "#PBS",
+            "moab": "#PBS",
+            "sge": "#$$",
+            "lsf": None,
+            "cobalt": "#COBALT",
+        }
 
         # Import the parsl things we need
         try:
@@ -851,7 +855,7 @@ def main(args=None):
 
         # Determine the maximum number of blocks
         if settings.common.max_workers % settings.common.nodes_per_job != 0:
-            raise ValueError(f'Maximum number of workers needs to be a multiple of the number of nodes per job.')
+            raise ValueError(f"Maximum number of workers needs to be a multiple of the number of nodes per job.")
         max_blocks = settings.common.max_workers // settings.common.nodes_per_job
 
         # Create one construct to quickly merge dicts with a final check
