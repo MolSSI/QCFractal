@@ -113,7 +113,6 @@ class RecordBase(ProtoModel, abc.ABC):
     def check_program(cls, v):
         return v.lower()
 
-
     def __init__(self, **data):
 
         # Set datetime defaults if not automatically available
