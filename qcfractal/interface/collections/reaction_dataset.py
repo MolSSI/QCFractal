@@ -832,8 +832,7 @@ class ReactionDataset(Dataset):
         max_frag = len(mol.fragments)
         if max_nbody == 0:
             max_nbody = max_frag
-
-        if max_nbody < 2:
+        if max_frag < 2:
             raise AttributeError("Dataset:build_ie_fragments: Molecule must have at least two fragments.")
 
         # Build some info
