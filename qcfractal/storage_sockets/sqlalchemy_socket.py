@@ -306,7 +306,7 @@ class SQLAlchemySocket:
          SQLAlchemySocket.max_limit then the max_limit will be returned instead.
         """
 
-        return limit if limit and limit < self._max_limit else self._max_limit
+        return limit if limit is not None and limit < self._max_limit else self._max_limit
 
     def get_query_projection(self, className, query, *, limit=None, skip=0, include=None, exclude=None):
 
