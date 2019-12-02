@@ -612,6 +612,10 @@ def test_results_get_total(storage_results):
     assert 6 == len(storage_results.get_results()["data"])
 
 
+def test_results_get_0(storage_results):
+    assert 0 == len(storage_results.get_results(limit=0)["data"])
+
+
 def test_get_results_by_ids(storage_results):
     results = storage_results.get_results()["data"]
     ids = [x["id"] for x in results]
