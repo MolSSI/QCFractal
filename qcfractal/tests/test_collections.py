@@ -1151,6 +1151,12 @@ def test_reactiondataset_dftd3_dataset_plaintextview_write(reactiondataset_dftd3
     ds.to_file(tmpdir / "test.tar.gz", "plaintext")
 
 
+@pytest.mark.slow
+def test_s22_dataset_get_molecules_subset(s22_fixture):
+    _, ds = s22_fixture
+    ds.get_molecules(subset="Adenine-Thymine Complex WC")
+
+
 ### Non-dataset tests
 
 

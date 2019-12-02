@@ -134,7 +134,7 @@ class ReactionDataset(Dataset):
             stoich = [stoich]
 
         index = self.get_entries(subset=subset, force=force)
-        matched_rows = index[np.in1d(self._entry_index()["stoichiometry"], stoich)]
+        matched_rows = index[np.in1d(index["stoichiometry"], stoich)]
 
         if subset:
             matched_rows = matched_rows[np.in1d(matched_rows["name"], subset)]
