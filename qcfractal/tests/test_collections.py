@@ -1219,11 +1219,11 @@ def test_torsiondrive_dataset(fractal_compute_server):
     hooh1 = ptl.data.get_molecule("hooh.json")
     hooh2 = hooh1.copy(update={"geometry": hooh1.geometry + np.array([0, 0, 0.2])})
 
-    ds.add_entry("hooh1", [hooh1], [[0, 1, 2, 3]], [90], attributes={"something": "hooh1"})
-    ds.add_entry("hooh2", [hooh2], [[0, 1, 2, 3]], [90], attributes={"something": "hooh2"})
+    ds.add_entry("hooh1", [hooh1], [[0, 1, 2, 3]], [60], attributes={"something": "hooh1"})
+    ds.add_entry("hooh2", [hooh2], [[0, 1, 2, 3]], [60], attributes={"something": "hooh2"})
 
     optimization_spec = {"program": "geometric", "keywords": {"coordsys": "tric"}}
-    qc_spec = {"driver": "gradient", "method": "UFF", "basis": "", "keywords": None, "program": "rdkit"}
+    qc_spec = {"driver": "gradient", "method": "UFF", "basis": None, "keywords": None, "program": "rdkit"}
 
     ds.add_specification("Spec1", optimization_spec, qc_spec, description="This is a really cool spec")
 
@@ -1238,9 +1238,9 @@ def test_torsiondrive_dataset(fractal_compute_server):
     # Check status
     status_detail = ds.status("Spec1", detail=True)
     assert status_detail.loc["hooh2", "Complete Tasks"] == 1
-    assert status_detail.loc["hooh2", "Total Points"] == 4
+    assert status_detail.loc["hooh2", "Total Points"] == 6
 
-    fractal_compute_server.await_services(max_iter=5)
+    fractal_compute_server.await_services(max_iter=7)
 
     ds = client.get_collection("torsiondrivedataset", "testing")
     ds.query("spec1")
@@ -1259,7 +1259,7 @@ def test_torsiondrive_dataset(fractal_compute_server):
     # We effectively computed the same thing twice with two duplicate specs
     for row in ["hooh1", "hooh2"]:
         for spec in ["Spec1", "spec2"]:
-            assert pytest.approx(ds.df.loc[row, spec].get_final_energies(90), 1.0e-5) == 0.00015655375994799847
+            assert pytest.approx(ds.df.loc[row, spec].get_final_energies(60), 1.0e-5) == 0.0007991272305133664
 
     assert ds.status().loc["COMPLETE", "Spec1"] == 2
     assert ds.status(collapse=False).loc["hooh1", "Spec1"] == "COMPLETE"
