@@ -228,7 +228,9 @@ class TorsionDriveRecord(RecordBase):
 
             # Grab procedures
             needed_ids = [x for v in self.optimization_history.values() for x in v]
-            objects = self.client.query_procedures(id=needed_ids)
+            objects = []
+            for i in range(0, len(needed_ids), self.client.query_limit):
+                objects.extend(self.client.query_procedures(id=needed_ids[i : i + self.client.query_limit]))
             procedures = {v.id: v for v in objects}
 
             # Move procedures into the correct order
