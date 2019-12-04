@@ -123,7 +123,7 @@ class BaseAdapter(abc.ABC):
         if self.retries is not None:
             local_options["retries"] = self.retries
         if self.nodes_per_task is not None:
-            local_options["nodes_per_task"] = self.nodes_per_task
+            local_options["nnodes"] = self.nodes_per_task
         return local_options
 
     def submit_tasks(self, tasks: List[Dict[str, Any]]) -> List[str]:
