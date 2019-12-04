@@ -100,7 +100,12 @@ class CommonManagerSettings(AutodocBaseSettings):
         "otherwise, defaults are all used for any logger.",
     )
     nodes_per_job: int = Field(
-        1, description="The number of nodes to request per job. Only used by the Parsl adapter at present"
+        1, description="The number of nodes to request per job. Only used by the Parsl adapter at present",
+        gt=0
+    )
+    nodes_per_task: int = Field(
+        1, description="The number of nodes to use for each tasks. Only relevant for node-parallel executables.",
+        gt=0
     )
 
     class Config(SettingsCommonConfig):
@@ -924,6 +929,7 @@ def main(args=None):
         update_frequency=settings.manager.update_frequency,
         cores_per_task=cores_per_task,
         memory_per_task=memory_per_task,
+        nodes_per_task=settings.common.nodes_per_task,
         scratch_directory=settings.common.scratch_directory,
         retries=settings.common.retries,
         verbose=settings.common.verbose,

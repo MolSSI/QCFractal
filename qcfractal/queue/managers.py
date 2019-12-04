@@ -94,6 +94,7 @@ class QueueManager:
         stale_update_limit: Optional[int] = 10,
         cores_per_task: Optional[int] = None,
         memory_per_task: Optional[float] = None,
+        nodes_per_task: Optional[int] = None,
         scratch_directory: Optional[str] = None,
         retries: Optional[int] = 2,
         configuration: Optional[Dict[str, Any]] = None,
@@ -133,6 +134,8 @@ class QueueManager:
         memory_per_task : Optional[float], optional
             How much memory, in GiB, per computation task to allocate for QCEngine
             None indicates "use however much you can consume"
+        nodes_per_task : Optional[int], optional
+            How many nodes to use per task. Used only for node-parallel tasks
         scratch_directory : Optional[str], optional
             Scratch directory location to do QCEngine compute
             None indicates "wherever the system default is"'
@@ -156,6 +159,7 @@ class QueueManager:
         self.client = client
         self.cores_per_task = cores_per_task
         self.memory_per_task = memory_per_task
+        self.nodes_per_task = nodes_per_task or 1
         self.scratch_directory = scratch_directory
         self.retries = retries
         self.configuration = configuration
@@ -164,6 +168,7 @@ class QueueManager:
             logger=self.logger,
             cores_per_task=self.cores_per_task,
             memory_per_task=self.memory_per_task,
+            nodes_per_task=self.nodes_per_task,
             scratch_directory=self.scratch_directory,
             retries=self.retries,
             verbose=verbose,
@@ -196,6 +201,15 @@ class QueueManager:
         self.available_programs = qcng.list_available_programs()
         self.available_procedures = qcng.list_available_procedures()
 
+        # Display a warning if there are non-node-parallel programs and >1 node_per_task
+        if self.nodes_per_task > 1:
+            for name in self.available_programs:
+                program = qcng.get_program(name)
+                if not program.node_parallel:
+                    self.logger.warning("Program {} is not node parallel,"
+                                        " but manager will use >1 node per task".format(name))
+
+        # Print out configuration
         self.logger.info("QueueManager:")
         self.logger.info("    Version:         {}\n".format(get_information("version")))
 
@@ -213,6 +227,7 @@ class QueueManager:
             self.logger.info("        Version:     {}".format(qcng.__version__))
             self.logger.info("        Task Cores:  {}".format(self.cores_per_task))
             self.logger.info("        Task Mem:    {}".format(self.memory_per_task))
+            self.logger.info("        Task Nodes:  {}".format(self.nodes_per_task))
             self.logger.info("        Scratch Dir: {}".format(self.scratch_directory))
             self.logger.info("        Programs:    {}".format(self.available_programs))
             self.logger.info("        Procedures:  {}\n".format(self.available_procedures))

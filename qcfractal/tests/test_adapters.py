@@ -3,6 +3,7 @@ Explicit tests for queue manipulation.
 """
 
 import tempfile
+import logging
 
 import pytest
 
@@ -145,3 +146,22 @@ def test_adapter_raised_error(managed_compute_server):
     error = ret[0].get_error()
     assert "Error" in error.error_message
     server.objects["storage_socket"].queue_mark_complete([queue_id])
+
+
+@testing.using_rdkit
+def test_node_parallel(adapter_client_fixture, caplog):
+    # Make sure to grab the warnings
+    caplog.set_level(logging.WARNING)
+
+    # Set up the queue manager
+    manager = QueueManager(
+        None,
+        adapter_client_fixture,
+        nodes_per_task=2
+    )
+
+    # Initializer should warn users about non-node-parallel codes
+    assert "Program rdkit is not node parallel" in caplog.text
+
+    # Check that ``nnodes`` is set in local properties
+    assert manager.queue_adapter.qcengine_local_options.get('nodes_per_task') == 2

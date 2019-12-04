@@ -22,6 +22,7 @@ class BaseAdapter(abc.ABC):
         scratch_directory: Optional[str] = None,
         retries: Optional[int] = 2,
         verbose: bool = False,
+        nodes_per_task: int = 1,
         **kwargs,
     ):
         """
@@ -50,6 +51,8 @@ class BaseAdapter(abc.ABC):
             Number of retries that QCEngine will attempt for RandomErrors detected when running
             its computations. After this many attempts (or on any other type of error), the
             error will be raised.
+        nodes_per_task : int, optional, Default:  1
+            Number of nodes to allocate per task. Default is to use a single node per task
         verbose: bool, Default: True
             Increase verbosity of the logger
         """
@@ -60,6 +63,7 @@ class BaseAdapter(abc.ABC):
         self.function_map = {}
         self.cores_per_task = cores_per_task
         self.memory_per_task = memory_per_task
+        self.nodes_per_task = nodes_per_task
         self.scratch_directory = scratch_directory
         self.retries = retries
         self.verbose = verbose
@@ -118,6 +122,8 @@ class BaseAdapter(abc.ABC):
             local_options["scratch_directory"] = self.scratch_directory
         if self.retries is not None:
             local_options["retries"] = self.retries
+        if self.nodes_per_task is not None:
+            local_options["nodes_per_task"] = self.nodes_per_task
         return local_options
 
     def submit_tasks(self, tasks: List[Dict[str, Any]]) -> List[str]:
