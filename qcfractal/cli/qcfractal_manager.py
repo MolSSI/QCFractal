@@ -861,6 +861,8 @@ def main(args=None):
         # Determine the maximum number of blocks
         # TODO (wardlt): Assumes that user does not set aside a compute node for the adapter
         max_nodes = settings.common.max_workers * settings.common.nodes_per_task
+        if settings.common.nodes_per_job > max_nodes:
+            raise ValueError("Number of nodes per job is more than the maximum number of nodes used by manager")
         if max_nodes % settings.common.nodes_per_job != 0:
             raise ValueError("Maximum number of nodes (maximum number of workers times nodes per task) "
                              "needs to be a multiple of the number of nodes per job")
