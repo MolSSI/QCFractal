@@ -13,6 +13,8 @@ from qcfractal import testing
 from qcfractal.cli.cli_utils import read_config_file
 
 # def _run_tests()
+from qcfractal.cli.qcfractal_manager import ManagerSettings
+
 _options = {"coverage": True, "dump_stdout": True}
 _pwd = os.path.dirname(os.path.abspath(__file__))
 
@@ -212,7 +214,7 @@ def cli_manager_runs(config_data, tmp_path):
 
 
 @pytest.mark.slow
-def load_manager_config(adapter, scheduler):
+def load_manager_config(adapter, scheduler) -> dict:
     config = read_config_file(os.path.join(_pwd, "manager_boot_template.yaml"))
     config["common"]["adapter"] = adapter
     config["cluster"]["scheduler"] = scheduler
@@ -296,3 +298,11 @@ def test_cli_managers_skel(tmp_path):
     config = tmp_path / "config.yaml"
     args = ["qcfractal-manager", "--skel", config.as_posix()]
     testing.run_process(args, **_options)
+
+
+def test_nodeparallel_tasks(tmp_path):
+    """Make sure that it boots up properly"""
+    config = load_manager_config("parsl", "cobalt")
+    config['common']['nodes_per_task'] = 2
+    config['common']['nodes_per_job'] = 2
+    cli_manager_runs(config, tmp_path)

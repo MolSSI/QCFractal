@@ -124,6 +124,7 @@ Setting up and running Fractal's Queue Managers on your system.
 
 * :doc:`managers`
 * :doc:`managers_config_api`
+* :doc:`managers_hpc`
 * :doc:`managers_samples`
 * :doc:`managers_faq`
 
