@@ -718,7 +718,7 @@ def main(args=None):
         )
 
     # Figure out per-task data
-    node_parallel_tasks = settings.common.nodes_per_task == 1  # Whether tasks are node-parallel
+    node_parallel_tasks = settings.common.nodes_per_task > 1  # Whether tasks are node-parallel
     if node_parallel_tasks:
         cores_per_task = settings.common.cores_per_worker // settings.common.tasks_per_worker
         memory_per_task = settings.common.memory_per_worker / settings.common.tasks_per_worker
@@ -918,6 +918,7 @@ def main(args=None):
             # Tasks run on the same node as the worker, so "max_workers" is the total number of Tasks per Job
             # TODO (wardlt): Remove assumption that there is only one Parsl worker running all tasks
             tasks_per_job = settings.common.nodes_per_job // settings.common.nodes_per_task
+            logger.info(f'Preparing a HTEx to use node-parallel tasks with {tasks_per_job} workers')
             parsl_executor_construct = {
                 "label": "QCFractal_Parsl_{}_Executor".format(settings.cluster.scheduler.title()),
                 "cores_per_worker": 1e-6,  # Used to enable oversubscription over more tasks per core on batch node
