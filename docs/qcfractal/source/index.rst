@@ -83,8 +83,6 @@ Index
 * :doc:`setup_quickstart`
 * :doc:`setup_server`
 * :doc:`setup_compute`
-* :doc:`community`
-* :doc:`roadmap`
 
 .. toctree::
    :maxdepth: 1
@@ -96,8 +94,6 @@ Index
    setup_quickstart.rst
    setup_server.rst
    setup_compute.rst
-   community.rst
-   roadmap.rst
 
 **Records Documentation**
 
