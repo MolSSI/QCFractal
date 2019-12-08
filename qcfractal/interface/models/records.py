@@ -16,10 +16,7 @@ from .common_models import DriverEnum, ObjectId, ProtoModel, QCSpecification
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 
 if TYPE_CHECKING:  # pragma: no cover
-    from qcelemental.models import (
-        OptimizationInput,
-        ResultInput,
-    )
+    from qcelemental.models import OptimizationInput, ResultInput
 
     from .common_models import KeywordSet, Molecule
 
