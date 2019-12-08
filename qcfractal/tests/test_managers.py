@@ -145,7 +145,9 @@ def test_queue_manager_shutdown(compute_adapter_fixture):
     # Pull job to manager and shutdown
     manager.update()
     assert len(manager.list_current_tasks()) == 1
-    assert manager.shutdown()["nshutdown"] == 1
+
+    shutdown = manager.shutdown()
+    assert shutdown["nshutdown"] == 1, shutdown["info"]
 
     sman = server.list_managers(name=manager.name())
     assert len(sman) == 1
@@ -156,6 +158,7 @@ def test_queue_manager_shutdown(compute_adapter_fixture):
     manager.await_results()
     ret = client.query_results()
     assert len(ret) == 1
+    assert ret[0].status == "COMPLETE"
 
 
 @testing.using_rdkit

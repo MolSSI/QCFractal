@@ -1,5 +1,5 @@
-Setup Server
-=============
+Server Setup
+============
 
 A  ``qcfractal-server`` instance contains a record of all results, task queue,
 and collection information and provides an interface to all FractalClients

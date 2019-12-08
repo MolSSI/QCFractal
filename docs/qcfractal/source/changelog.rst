@@ -15,6 +15,41 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.12.2 / 2019-12-07
+-------------------
+
+Enhancements
+++++++++++++
+- (:pr:`477`) Removes 0.12.x xfails when connecting to the server.
+- (:pr:`481`) Expands Parsl Manager Adapter to include ALCF requirements.
+- (:pr:`483`) Dataset Views are now much faster to load in HDF5.
+- (:pr:`488`) Allows gzipped dataset views.
+- (:pr:`490`) Computes checksums on gzipped dataset views.
+
+Bug Fixes
++++++++++
+- (:pr:`486`) Fixes pydantic ``__repr__`` issues after update.
+- (:pr:`492`) Fixes error where ``ReactionDataset`` didn't allow a minimum number of n-body expansion to be added.
+- (:pr:`493`) Fixes an issue with ``ReactionDataset.get_molecules`` when a subset is present.
+- (:pr:`494`) Fixes an issue where queries with ``limit=0`` erroneously returned all results.
+- (:pr:`496`) TorsionDrive tests now avoid 90 degree angles with RDKit to avoid some linear issues in the forcefield and make them more stable.
+- (:pr:`497`) ``TorsionDrive.get_history`` now works for extremely large (1000+) optimizations in the procedure.
+
+0.12.1 / 2019-11-08
+-------------------
+
+Enhancements
+++++++++++++
+- (:pr:`472`) Update to GitHub ISSUE templates.
+- (:pr:`473`) Server ``/information`` endpoint now contains the number of records for molecules, results, procedures, and collections.
+- (:pr:`474`) Dataset Views can now be of arbitrary shape.
+- (:pr:`475`) Changes the default formatting of the codebase to Black.
+
+
+Bug Fixes
++++++++++
+- (:pr:`470`) Dataset fix for non-energy units.
+
 0.12.0 / 2019-11-06
 -------------------
 
