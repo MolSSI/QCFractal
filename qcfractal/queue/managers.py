@@ -380,21 +380,29 @@ class QueueManager:
         payload = self._payload_template()
         payload["data"]["operation"] = "shutdown"
         try:
-            response = self.client._automodel_request("queue_manager", "put", payload, timeout=2)
+            response = self.client._automodel_request("queue_manager", "put", payload, timeout=5)
+            response["success"] = True
+
+            shutdown_string = "Shutdown was successful, {} tasks returned to master queue."
+
         except IOError:
             # TODO something as we didnt successfully add the data
             self.logger.warning("Shutdown was not successful. This may delay queued tasks.")
-            return {"nshutdown": 0}
+            response = {"nshutdown": 0, "success": False}
+            shutdown_string = "Shutdown was not successful, {} tasks not returned."
+
 
         nshutdown = response["nshutdown"]
-        shutdown_string = "Shutdown was successful, {} tasks returned to master queue."
         if self.n_stale_jobs:
             shutdown_string = shutdown_string.format(
                 f"{min(0, nshutdown-self.n_stale_jobs)} active and {nshutdown} stale"
             )
         else:
             shutdown_string = shutdown_string.format(nshutdown)
+
         self.logger.info(shutdown_string)
+
+        response["info"] = shutdown_string
         return response
 
     def add_exit_callback(self, callback: Callable, *args: List[Any], **kwargs: Dict[Any, Any]) -> None:
