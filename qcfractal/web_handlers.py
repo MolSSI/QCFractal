@@ -33,7 +33,8 @@ class APIHandler(tornado.web.RequestHandler):
 
         self.content_type = "Not Provided"
         try:
-            self.content_type = self.request.headers["Content-Type"]
+            # default to "application/json"
+            self.content_type = self.request.headers.get("Content-Type", "application/json")
             self.encoding = _valid_encodings[self.content_type]
         except KeyError:
             raise tornado.web.HTTPError(
