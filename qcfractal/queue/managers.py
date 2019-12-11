@@ -391,7 +391,6 @@ class QueueManager:
             response = {"nshutdown": 0, "success": False}
             shutdown_string = "Shutdown was not successful, {} tasks not returned."
 
-
         nshutdown = response["nshutdown"]
         if self.n_stale_jobs:
             shutdown_string = shutdown_string.format(

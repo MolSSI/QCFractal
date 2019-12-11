@@ -33,7 +33,8 @@ class APIHandler(tornado.web.RequestHandler):
 
         self.content_type = "Not Provided"
         try:
-            self.content_type = self.request.headers["Content-Type"]
+            # default to "application/json"
+            self.content_type = self.request.headers.get("Content-Type", "application/json")
             self.encoding = _valid_encodings[self.content_type]
         except KeyError:
             raise tornado.web.HTTPError(
@@ -60,7 +61,10 @@ class APIHandler(tornado.web.RequestHandler):
             else:
                 blob = self.request.body
 
-            self.data = deserialize(blob, self.encoding)
+            if blob:
+                self.data = deserialize(blob, self.encoding)
+            else:
+                self.data = None
         except:
             raise tornado.web.HTTPError(status_code=401, reason="Could not deserialize body.")
 

@@ -348,7 +348,7 @@ def postgres_server():
 
     storage = None
     psql = PostgresHarness({"database": {"port": 5432}})
-    # psql = PostgresHarness({"database": {"port": 5432, "username": 'qcarchive', "password": 'mypass'}})
+    # psql = PostgresHarness({"database": {"port": 5432, "username": "qcarchive", "password": "mypass"}})
     if not psql.is_alive():
         print()
         print(
