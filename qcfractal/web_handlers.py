@@ -60,7 +60,10 @@ class APIHandler(tornado.web.RequestHandler):
             else:
                 blob = self.request.body
 
-            self.data = deserialize(blob, self.encoding)
+            if blob:
+                self.data = deserialize(blob, self.encoding)
+            else:
+                self.data = None
         except:
             raise tornado.web.HTTPError(status_code=401, reason="Could not deserialize body.")
 
