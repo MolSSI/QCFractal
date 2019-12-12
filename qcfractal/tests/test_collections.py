@@ -1206,6 +1206,7 @@ def test_missing_collection(fractal_compute_server):
         client.get_collection("reactiondataset", "_waffles_")
 
 
+@pytest.mark.xfail(reason="See MolSSI/QCFractal#427")
 @pytest.mark.slow
 @testing.using_torsiondrive
 @testing.using_geometric
