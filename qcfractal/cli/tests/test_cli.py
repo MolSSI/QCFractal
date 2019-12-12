@@ -300,6 +300,7 @@ def test_cli_managers_skel(tmp_path):
     testing.run_process(args, **_options)
 
 
+@testing.using_parsl
 def test_nodeparallel_tasks(tmp_path):
     """Make sure that it boots up properly"""
     config = load_manager_config("parsl", "cobalt")

@@ -720,19 +720,19 @@ def main(args=None):
     # Figure out per-task data
     node_parallel_tasks = settings.common.nodes_per_task > 1  # Whether tasks are node-parallel
     if node_parallel_tasks:
-        cores_per_task = settings.common.cores_per_worker // settings.common.tasks_per_worker
-        memory_per_task = settings.common.memory_per_worker / settings.common.tasks_per_worker
-        if settings.common.tasks_per_worker > 1:
-            raise ValueError('>1 task per node and >1 node per tasks are mutually-exclusive')
-        if cores_per_task < 1:
-            raise ValueError("Cores per task must be larger than one!")
-    else:
         supported_adapters = ['parsl']
         if settings.common.adapter not in supported_adapters:
             raise ValueError('Node-parallel jobs are only supported with {} adapters'.format(supported_adapters))
         # Node-parallel tasks use all cores on a worker
         cores_per_task = settings.common.cores_per_worker
         memory_per_task = settings.common.memory_per_worker
+        if settings.common.tasks_per_worker > 1:
+            raise ValueError('>1 task per node and >1 node per tasks are mutually-exclusive')
+    else:
+        cores_per_task = settings.common.cores_per_worker // settings.common.tasks_per_worker
+        memory_per_task = settings.common.memory_per_worker / settings.common.tasks_per_worker
+    if cores_per_task < 1:
+        raise ValueError("Cores per task must be larger than one!")
 
     if settings.common.adapter == "pool":
         from concurrent.futures import ProcessPoolExecutor
