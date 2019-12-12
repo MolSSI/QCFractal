@@ -876,7 +876,7 @@ class Dataset(Collection):
             # Munge the column names based on the groupby parameter
             col_names = {}
             for k, v in stat.iteritems():
-                record = self._column_metadata[k]
+                record = self._column_metadata[k].copy()
                 if groupby == "d3":
                     record["method"] = record["method"].upper().split("-D3")[0]
 
