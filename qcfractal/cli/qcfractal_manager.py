@@ -938,7 +938,8 @@ def main(args=None):
                 **settings.parsl.executor.dict(skip_defaults=True),
             }
 
-        queue_client = Config(executors=[HighThroughputExecutor(**parsl_executor_construct)])
+        queue_client = Config(retries=settings.common.retries,
+                              executors=[HighThroughputExecutor(**parsl_executor_construct)])
 
     else:
         raise KeyError(
