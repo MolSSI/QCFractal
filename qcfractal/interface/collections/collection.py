@@ -266,7 +266,10 @@ class Collection(abc.ABC):
             flat_map_keys.append(k)
             flat_map_mols.append(v)
 
-        mol_ret = client.add_molecules(flat_map_mols)
+        CHUNK_SIZE = client.query_limit
+        mol_ret = []
+        for i in range(0, len(flat_map_mols), CHUNK_SIZE):
+            mol_ret.extend(client.add_molecules(flat_map_mols[i : i + CHUNK_SIZE]))
 
         return {k: v for k, v in zip(flat_map_keys, mol_ret)}
 
