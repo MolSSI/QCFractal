@@ -5,6 +5,7 @@ import os
 import tempfile
 import time
 
+from typing import Dict, Any
 import pytest
 import yaml
 
@@ -214,7 +215,7 @@ def cli_manager_runs(config_data, tmp_path):
 
 
 @pytest.mark.slow
-def load_manager_config(adapter, scheduler) -> dict:
+def load_manager_config(adapter, scheduler) -> Dict[str, Any]:
     config = read_config_file(os.path.join(_pwd, "manager_boot_template.yaml"))
     config["common"]["adapter"] = adapter
     config["cluster"]["scheduler"] = scheduler

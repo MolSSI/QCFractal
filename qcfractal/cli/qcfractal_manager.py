@@ -915,20 +915,24 @@ def main(args=None):
 
         # The executor for Parsl is different for node parallel tasks and shared-memory tasks
         if node_parallel_tasks:
-            # Tasks run on the same node as the worker, so "max_workers" is the total number of Tasks per Job
+            # Tasks are launched from a single worker on the login node
             # TODO (wardlt): Remove assumption that there is only one Parsl worker running all tasks
             tasks_per_job = settings.common.nodes_per_job // settings.common.nodes_per_task
             logger.info(f'Preparing a HTEx to use node-parallel tasks with {tasks_per_job} workers')
             parsl_executor_construct = {
                 "label": "QCFractal_Parsl_{}_Executor".format(settings.cluster.scheduler.title()),
-                "cores_per_worker": 1e-6,  # Used to enable oversubscription over more tasks per core on batch node
+                # Parsl will create one worker process per MPI task. Normally, Parsl prevents having
+                #  more processes than cores. However, as each worker will spend most of its time
+                #  waiting for the MPI task to complete, we can safely oversubscribe (e.g., more worker
+                #  processes than cores), which requires setting "cores_per_worker" to <1
+                "cores_per_worker": 1e-6,
                 "max_workers": tasks_per_job,
                 "provider": provider,
                 "address": address_by_hostname(),
                 **settings.parsl.executor.dict(skip_defaults=True),
             }
         else:
-            # Tasks are launched from a single worker on the login node
+
             parsl_executor_construct = {
                 "label": "QCFractal_Parsl_{}_Executor".format(settings.cluster.scheduler.title()),
                 "cores_per_worker": cores_per_task,

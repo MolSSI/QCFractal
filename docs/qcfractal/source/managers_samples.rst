@@ -203,7 +203,7 @@ This example also uses Parsl and sets a scratch directory.
 Single Job with Multiple Nodes and Single-Node Tasks with Parsl Adapter
 -----------------------------------------------------------------------
 
-Many supercomputing clusters prefer or require more than one node per Job request.
+Leadership platforms prefer or require more than one node per Job request.
 The following command will request a Job with 256 nodes and place one Worker on each node.
 
 .. code-block:: yaml
@@ -211,7 +211,7 @@ The following command will request a Job with 256 nodes and place one Worker on 
         adapter: parsl
         tasks_per_worker: 1
         cores_per_worker: 64  # Number of cores per compute node
-        max_workers: 256  # Maximum number of workres deployed to compute nodes
+        max_workers: 256  # Maximum number of workers deployed to compute nodes
         nodes_per_job: 256
 
     cluster:
@@ -228,7 +228,7 @@ The following command will request a Job with 256 nodes and place one Worker on 
             queue: default
             launcher:  # Defines the MPI launching function
                 launcher_class: AprunLauncher
-                overrides: -d 64
+                overrides: -d 64  # Option for XC40 machines, allows workers to access 64 threads
             init_blocks: 0
             min_blocks: 0
             account: CSC249ADCD08
@@ -282,6 +282,9 @@ The configuration that describes how to launch the tasks must be written at a ``
 file. See `QCEngine docs<https://qcengine.readthedocs.io/en/stable/environment.html>`_
 for possible locations to place the ``qcengine.yaml`` file and full descriptions of the
 configuration option.
+One key option for the ``qcengine.yaml`` file is the description of how to launch MPI
+tasks, ``mpiexec_command``. For example, many systems use ``mpirun``
+(e.g., `OpenMPI <https://www.open-mpi.org/doc/v4.0/man1/mpirun.1.php>`_).
 An example configuration a Cray supercomputer is:
 
 .. code-block:: yaml
@@ -289,7 +292,7 @@ An example configuration a Cray supercomputer is:
       hostname_pattern: "*"
       scratch_directory: ./scratch  # Must be on the global filesystem
       is_batch_node: True  # Indicates that `aprun` must be used for all QC code invocations
-      mpirun_command: "aprun -n {total_ranks} -N {ranks_per_node} -C -cc depth --env CRAY_OMP_CHECK_AFFINITY=TRUE --env OMP_NUM_THREADS=4 --env MKL_NUM_THREADS=4
+      mpiexec_command: "aprun -n {total_ranks} -N {ranks_per_node} -C -cc depth --env CRAY_OMP_CHECK_AFFINITY=TRUE --env OMP_NUM_THREADS=4 --env MKL_NUM_THREADS=4
       -d 4 -j 1"
       jobs_per_node: 1
       ncores: 64
