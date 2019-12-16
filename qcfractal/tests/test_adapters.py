@@ -164,4 +164,4 @@ def test_node_parallel(adapter_client_fixture, caplog):
     assert "Program rdkit is not node parallel" in caplog.text
 
     # Check that ``nnodes`` is set in local properties
-    assert manager.queue_adapter.qcengine_local_options.get('nodes_per_task') == 2
+    assert manager.queue_adapter.qcengine_local_options.get('nnodes') == 2
