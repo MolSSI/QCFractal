@@ -60,10 +60,14 @@ class CommonManagerSettings(AutodocBaseSettings):
     )
     cores_per_worker: int = Field(
         qcng.config.get_global("ncores"),
-        description="Number of cores to be consumed by the Worker and distributed over the tasks_per_worker. These "
-        "cores are divided evenly, so it is recommended that quotient of cores_per_worker/tasks_per_worker "
-        "be a whole number else the core distribution is left up to the logic of the adapter. The default "
-        "value is read from the number of detected cores on the system you are executing on.",
+        description="""
+        Number of cores to be consumed by the Worker and distributed over the tasks_per_worker. These 
+        cores are divided evenly, so it is recommended that quotient of cores_per_worker/tasks_per_worker 
+        be a whole number else the core distribution is left up to the logic of the adapter. The default
+        value is read from the number of detected cores on the system you are executing on.
+        
+        In the case of node-parallel tasks, this number means the number of cores per node.
+        """,
         gt=0,
     )
     memory_per_worker: float = Field(
@@ -100,7 +104,12 @@ class CommonManagerSettings(AutodocBaseSettings):
         "otherwise, defaults are all used for any logger.",
     )
     nodes_per_job: int = Field(
-        1, description="The number of nodes to request per job. Only used by the Parsl adapter at present"
+        1, description="The number of nodes to request per job. Only used by the Parsl adapter at present",
+        gt=0
+    )
+    nodes_per_task: int = Field(
+        1, description="The number of nodes to use for each tasks. Only relevant for node-parallel executables.",
+        gt=0
     )
 
     class Config(SettingsCommonConfig):
@@ -709,8 +718,19 @@ def main(args=None):
         )
 
     # Figure out per-task data
-    cores_per_task = settings.common.cores_per_worker // settings.common.tasks_per_worker
-    memory_per_task = settings.common.memory_per_worker / settings.common.tasks_per_worker
+    node_parallel_tasks = settings.common.nodes_per_task > 1  # Whether tasks are node-parallel
+    if node_parallel_tasks:
+        supported_adapters = ['parsl']
+        if settings.common.adapter not in supported_adapters:
+            raise ValueError('Node-parallel jobs are only supported with {} adapters'.format(supported_adapters))
+        # Node-parallel tasks use all cores on a worker
+        cores_per_task = settings.common.cores_per_worker
+        memory_per_task = settings.common.memory_per_worker
+        if settings.common.tasks_per_worker > 1:
+            raise ValueError('>1 task per node and >1 node per tasks are mutually-exclusive')
+    else:
+        cores_per_task = settings.common.cores_per_worker // settings.common.tasks_per_worker
+        memory_per_task = settings.common.memory_per_worker / settings.common.tasks_per_worker
     if cores_per_task < 1:
         raise ValueError("Cores per task must be larger than one!")
 
@@ -854,9 +874,16 @@ def main(args=None):
         # Setup the providers
 
         # Determine the maximum number of blocks
-        if settings.common.max_workers % settings.common.nodes_per_job != 0:
-            raise ValueError(f"Maximum number of workers needs to be a multiple of the number of nodes per job.")
-        max_blocks = settings.common.max_workers // settings.common.nodes_per_job
+        # TODO (wardlt): Math assumes that user does not set aside a compute node for the adapter
+        max_nodes = settings.common.max_workers * settings.common.nodes_per_task
+        if settings.common.nodes_per_job > max_nodes:
+            raise ValueError("Number of nodes per job is more than the maximum number of nodes used by manager")
+        if max_nodes % settings.common.nodes_per_job != 0:
+            raise ValueError("Maximum number of nodes (maximum number of workers times nodes per task) "
+                             "needs to be a multiple of the number of nodes per job")
+        if settings.common.nodes_per_job % settings.common.nodes_per_task != 0:
+            raise ValueError("Number of nodes per job needs to be a multiple of the number of nodes per task")
+        max_blocks = max_nodes // settings.common.nodes_per_job
 
         # Create one construct to quickly merge dicts with a final check
         common_parsl_provider_construct = {
@@ -886,16 +913,37 @@ def main(args=None):
         else:
             provider = provider_class(**common_parsl_provider_construct)
 
-        parsl_executor_construct = {
-            "label": "QCFractal_Parsl_{}_Executor".format(settings.cluster.scheduler.title()),
-            "cores_per_worker": cores_per_task,
-            "max_workers": settings.common.tasks_per_worker,
-            "provider": provider,
-            "address": address_by_hostname(),
-            **settings.parsl.executor.dict(skip_defaults=True),
-        }
+        # The executor for Parsl is different for node parallel tasks and shared-memory tasks
+        if node_parallel_tasks:
+            # Tasks are launched from a single worker on the login node
+            # TODO (wardlt): Remove assumption that there is only one Parsl worker running all tasks
+            tasks_per_job = settings.common.nodes_per_job // settings.common.nodes_per_task
+            logger.info(f'Preparing a HTEx to use node-parallel tasks with {tasks_per_job} workers')
+            parsl_executor_construct = {
+                "label": "QCFractal_Parsl_{}_Executor".format(settings.cluster.scheduler.title()),
+                # Parsl will create one worker process per MPI task. Normally, Parsl prevents having
+                #  more processes than cores. However, as each worker will spend most of its time
+                #  waiting for the MPI task to complete, we can safely oversubscribe (e.g., more worker
+                #  processes than cores), which requires setting "cores_per_worker" to <1
+                "cores_per_worker": 1e-6,
+                "max_workers": tasks_per_job,
+                "provider": provider,
+                "address": address_by_hostname(),
+                **settings.parsl.executor.dict(skip_defaults=True),
+            }
+        else:
 
-        queue_client = Config(executors=[HighThroughputExecutor(**parsl_executor_construct)])
+            parsl_executor_construct = {
+                "label": "QCFractal_Parsl_{}_Executor".format(settings.cluster.scheduler.title()),
+                "cores_per_worker": cores_per_task,
+                "max_workers": settings.common.tasks_per_worker,
+                "provider": provider,
+                "address": address_by_hostname(),
+                **settings.parsl.executor.dict(skip_defaults=True),
+            }
+
+        queue_client = Config(retries=settings.common.retries,
+                              executors=[HighThroughputExecutor(**parsl_executor_construct)])
 
     else:
         raise KeyError(
@@ -915,6 +963,7 @@ def main(args=None):
     else:
         max_queued_tasks = settings.manager.max_queued_tasks
 
+    # The queue manager is configured differently for node-parallel and single-node tasks
     manager = qcfractal.queue.QueueManager(
         client,
         queue_client,
@@ -924,6 +973,7 @@ def main(args=None):
         update_frequency=settings.manager.update_frequency,
         cores_per_task=cores_per_task,
         memory_per_task=memory_per_task,
+        nodes_per_task=settings.common.nodes_per_task,
         scratch_directory=settings.common.scratch_directory,
         retries=settings.common.retries,
         verbose=settings.common.verbose,
