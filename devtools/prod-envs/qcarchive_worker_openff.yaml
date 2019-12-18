@@ -1,4 +1,4 @@
-name: qcf-manager-openff
+name: qcarchive-worker-openff
 channels:
   - defaults
   - conda-forge

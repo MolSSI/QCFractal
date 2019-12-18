@@ -1,4 +1,4 @@
-name: qcf-snowflake
+name: qcfractal-snowflake
 channels:
   - defaults
   - conda-forge
@@ -18,3 +18,7 @@ dependencies:
 
     # Testing
   - pytest
+
+    # Viz
+  - jupyter
+  - nglview

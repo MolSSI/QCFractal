@@ -1,7 +1,7 @@
 FROM continuumio/miniconda3
 SHELL ["/bin/bash", "-c"]
 RUN conda install anaconda-client
-RUN conda env create -n qcfractal qcarchive/qcfractal
+RUN conda env create -n qcfractal qcarchive/qcfractal-snowflake
 RUN groupadd -g 999 qcfractal && \
     useradd -m -r -u 999 -g qcfractal qcfractal
 USER qcfractal

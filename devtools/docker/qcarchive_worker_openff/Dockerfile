@@ -1,7 +1,10 @@
 FROM continuumio/miniconda3
-RUN conda install -c psi4 -c conda-forge "psi4 >=1.3.0" dftd3 gcp "qcengine >=0.13.0" qcfractal rdkit geometric pytest
+SHELL ["/bin/bash", "-c"]
+RUN conda install anaconda-client
+RUN conda env create -n qcfractal qcarchive/qcarchive-worker-openff
 RUN groupadd -g 999 qcfractal && \
     useradd -m -r -u 999 -g qcfractal qcfractal
 USER qcfractal
 ENV PATH /opt/local/conda/envs/base/bin/:$PATH
+RUN echo "source activate qcfractal" > ~/.bashrc
 ENTRYPOINT qcfractal-manager --config-file /etc/qcfractal-manager/manager.yaml
