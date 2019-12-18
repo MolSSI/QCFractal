@@ -3,8 +3,9 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  - python
+  - python <=3.7
   - qcfractal
+  - qcfractal-dashboard
   - qcengine >=0.13.0
 
     # Testing
