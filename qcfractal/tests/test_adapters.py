@@ -154,14 +154,10 @@ def test_node_parallel(adapter_client_fixture, caplog):
     caplog.set_level(logging.WARNING)
 
     # Set up the queue manager
-    manager = QueueManager(
-        None,
-        adapter_client_fixture,
-        nodes_per_task=2
-    )
+    manager = QueueManager(None, adapter_client_fixture, nodes_per_task=2)
 
     # Initializer should warn users about non-node-parallel codes
     assert "Program rdkit is not node parallel" in caplog.text
 
     # Check that ``nnodes`` is set in local properties
-    assert manager.queue_adapter.qcengine_local_options.get('nnodes') == 2
+    assert manager.queue_adapter.qcengine_local_options.get("nnodes") == 2

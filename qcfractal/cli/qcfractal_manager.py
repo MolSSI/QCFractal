@@ -104,12 +104,10 @@ class CommonManagerSettings(AutodocBaseSettings):
         "otherwise, defaults are all used for any logger.",
     )
     nodes_per_job: int = Field(
-        1, description="The number of nodes to request per job. Only used by the Parsl adapter at present",
-        gt=0
+        1, description="The number of nodes to request per job. Only used by the Parsl adapter at present", gt=0
     )
     nodes_per_task: int = Field(
-        1, description="The number of nodes to use for each tasks. Only relevant for node-parallel executables.",
-        gt=0
+        1, description="The number of nodes to use for each tasks. Only relevant for node-parallel executables.", gt=0
     )
 
     class Config(SettingsCommonConfig):
@@ -720,14 +718,14 @@ def main(args=None):
     # Figure out per-task data
     node_parallel_tasks = settings.common.nodes_per_task > 1  # Whether tasks are node-parallel
     if node_parallel_tasks:
-        supported_adapters = ['parsl']
+        supported_adapters = ["parsl"]
         if settings.common.adapter not in supported_adapters:
-            raise ValueError('Node-parallel jobs are only supported with {} adapters'.format(supported_adapters))
+            raise ValueError("Node-parallel jobs are only supported with {} adapters".format(supported_adapters))
         # Node-parallel tasks use all cores on a worker
         cores_per_task = settings.common.cores_per_worker
         memory_per_task = settings.common.memory_per_worker
         if settings.common.tasks_per_worker > 1:
-            raise ValueError('>1 task per node and >1 node per tasks are mutually-exclusive')
+            raise ValueError(">1 task per node and >1 node per tasks are mutually-exclusive")
     else:
         cores_per_task = settings.common.cores_per_worker // settings.common.tasks_per_worker
         memory_per_task = settings.common.memory_per_worker / settings.common.tasks_per_worker
@@ -879,8 +877,10 @@ def main(args=None):
         if settings.common.nodes_per_job > max_nodes:
             raise ValueError("Number of nodes per job is more than the maximum number of nodes used by manager")
         if max_nodes % settings.common.nodes_per_job != 0:
-            raise ValueError("Maximum number of nodes (maximum number of workers times nodes per task) "
-                             "needs to be a multiple of the number of nodes per job")
+            raise ValueError(
+                "Maximum number of nodes (maximum number of workers times nodes per task) "
+                "needs to be a multiple of the number of nodes per job"
+            )
         if settings.common.nodes_per_job % settings.common.nodes_per_task != 0:
             raise ValueError("Number of nodes per job needs to be a multiple of the number of nodes per task")
         max_blocks = max_nodes // settings.common.nodes_per_job
@@ -918,7 +918,7 @@ def main(args=None):
             # Tasks are launched from a single worker on the login node
             # TODO (wardlt): Remove assumption that there is only one Parsl worker running all tasks
             tasks_per_job = settings.common.nodes_per_job // settings.common.nodes_per_task
-            logger.info(f'Preparing a HTEx to use node-parallel tasks with {tasks_per_job} workers')
+            logger.info(f"Preparing a HTEx to use node-parallel tasks with {tasks_per_job} workers")
             parsl_executor_construct = {
                 "label": "QCFractal_Parsl_{}_Executor".format(settings.cluster.scheduler.title()),
                 # Parsl will create one worker process per MPI task. Normally, Parsl prevents having
@@ -942,8 +942,9 @@ def main(args=None):
                 **settings.parsl.executor.dict(skip_defaults=True),
             }
 
-        queue_client = Config(retries=settings.common.retries,
-                              executors=[HighThroughputExecutor(**parsl_executor_construct)])
+        queue_client = Config(
+            retries=settings.common.retries, executors=[HighThroughputExecutor(**parsl_executor_construct)]
+        )
 
     else:
         raise KeyError(
