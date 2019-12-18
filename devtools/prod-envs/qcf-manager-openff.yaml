@@ -5,14 +5,16 @@ channels:
 dependencies:
   - python
   - qcfractal
-  - qcportal
 
     # Compute engines
-  - psi4::psi4
+  - psi4::psi4 >=1.3.0
+  - psi4::dftd3
+  - psi4::gcp
   - rdkit
+  - qcengine >=0.13.0
     
     # Procedures
   - geometric
 
-    # Distributed managers
-  - dask-jobqueue
+    # Testing
+  - pytest

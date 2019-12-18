@@ -1,0 +1,11 @@
+name: qcfractal
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python
+  - qcfractal
+  - qcengine >=0.13.0
+
+    # Testing
+  - pytest
