@@ -7,4 +7,4 @@ RUN groupadd -g 999 qcfractal && \
 USER qcfractal
 ENV PATH /opt/local/conda/envs/base/bin/:$PATH
 RUN echo "source activate qcfractal" > ~/.bashrc
-ENTRYPOINT qcfractal-manager --config-file /etc/qcfractal-manager/manager.yaml
+ENTRYPOINT /opt/conda/envs/qcfractal/bin/qcfractal-manager --config-file /etc/qcfractal-manager/manager.yaml
