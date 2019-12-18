@@ -206,8 +206,9 @@ class QueueManager:
             for name in self.available_programs:
                 program = qcng.get_program(name)
                 if not program.node_parallel:
-                    self.logger.warning("Program {} is not node parallel,"
-                                        " but manager will use >1 node per task".format(name))
+                    self.logger.warning(
+                        "Program {} is not node parallel," " but manager will use >1 node per task".format(name)
+                    )
 
         # Print out configuration
         self.logger.info("QueueManager:")

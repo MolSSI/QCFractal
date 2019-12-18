@@ -305,6 +305,6 @@ def test_cli_managers_skel(tmp_path):
 def test_nodeparallel_tasks(tmp_path):
     """Make sure that it boots up properly"""
     config = load_manager_config("parsl", "cobalt")
-    config['common']['nodes_per_task'] = 2
-    config['common']['nodes_per_job'] = 2
+    config["common"]["nodes_per_task"] = 2
+    config["common"]["nodes_per_job"] = 2
     cli_manager_runs(config, tmp_path)
