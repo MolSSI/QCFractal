@@ -1279,7 +1279,9 @@ def test_optimization_dataset(fractal_compute_server):
 
     opt_spec = {"program": "geometric"}
     qc_spec = {"driver": "gradient", "method": "UFF", "program": "rdkit"}
+
     ds.add_specification("test", opt_spec, qc_spec, protocols={"trajectory": "final"})
+    ds.add_specification("test2", opt_spec, qc_spec, protocols={"trajectory": "initial_and_final"})
 
     hooh1 = ptl.data.get_molecule("hooh.json")
     hooh2 = hooh1.copy(update={"geometry": hooh1.geometry + np.array([0, 0, 0.2])})
@@ -1289,10 +1291,14 @@ def test_optimization_dataset(fractal_compute_server):
     ds.add_entry("hooh2", hooh2)
 
     ds.compute("test")
+    ds.compute("test2", subset=["hooh1"])
     fractal_compute_server.await_results()
 
     ds.query("test")
-    assert ds.status().loc["COMPLETE", "test"] == 3
+    ds.query("test2")
+    status = ds.status()
+    assert status.loc["COMPLETE", "test"] == 3
+    assert status.loc["COMPLETE", "test2"] == 3
 
     assert ds.counts().loc["hooh1", "test"] == 1
 
