@@ -25,7 +25,12 @@ def test_adapter_client_count(adapter_client_fixture):
     assert queue.count_running_tasks() == 1
 
     queue.await_results()
-    time.sleep(0.3)
+    for x in range(100):
+        if queue.count_running_tasks() == 0:
+            break
+
+        time.sleep(0.01)
+
     assert queue.count_running_tasks() == 0
 
 
