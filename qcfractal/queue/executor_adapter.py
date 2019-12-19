@@ -36,7 +36,7 @@ class ExecutorAdapter(BaseAdapter):
 
     def count_running_tasks(self) -> int:
         # This is always "running", even if there are no tasks since its running locally
-        return self.client._queue_count - len(self.client._pending_work_items)
+        return min(self.client._max_workers, len(self.client._pending_work_items))
 
     def acquire_complete(self) -> Dict[str, Any]:
         ret = {}

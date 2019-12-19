@@ -2,6 +2,7 @@
 Explicit tests for queue manipulation.
 """
 
+import time
 import logging
 import tempfile
 
@@ -9,7 +10,23 @@ import pytest
 
 import qcfractal.interface as ptl
 from qcfractal import QueueManager, testing
+from qcfractal.queue import build_queue_adapter
 from qcfractal.testing import adapter_client_fixture, managed_compute_server, reset_server_database
+
+
+def test_adapter_client_count(adapter_client_fixture):
+
+    queue = build_queue_adapter(adapter_client_fixture)
+    task = {"spec": {"function": "time.sleep", "args": [0.1], "kwargs": {}}, "id": "timer"}
+
+    assert queue.count_running_tasks() == 0
+
+    queue._submit_task(task)
+    assert queue.count_running_tasks() == 1
+
+    queue.await_results()
+    time.sleep(0.3)
+    assert queue.count_running_tasks() == 0
 
 
 @testing.using_rdkit
