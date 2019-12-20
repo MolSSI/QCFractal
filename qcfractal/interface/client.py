@@ -627,11 +627,7 @@ class FractalClient(object):
         payload = {"meta": {"overwrite": overwrite}, "data": collection}
         return self._automodel_request("collection", "post", payload, full_return=full_return)
 
-    def delete_collection(
-            self,
-            collection_type: str,
-            name: str
-    ) -> None:
+    def delete_collection(self, collection_type: str, name: str) -> None:
         """Deletes a given collection from the server.
 
         Parameters
@@ -643,8 +639,7 @@ class FractalClient(object):
 
         Returns
         -------
-        Collection
-            A Collection object if the given collection was found otherwise returns `None`.
+        None
         """
         collection = self.get_collection(collection_type, name)
         self._automodel_request(f"collection/{collection.data.id}", "delete", payload={"meta": {}}, full_return=True)
