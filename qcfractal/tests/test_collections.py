@@ -1449,3 +1449,16 @@ def test_list_collection_tags(fractal_compute_server):
     assert "test_list_collection_tags_2" in names
     assert "test_list_collection_tags_3" in names
     assert "test_list_collection_tags_4" in names
+
+
+def test_delete_collection(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+
+    ds = ptl.collections.Dataset("test_delete_collection", client=client)
+    ds.save()
+
+    client.delete_collection("dataset", ds.name)
+    assert ds.name.lower() not in client.list_collections(collection_type="dataset").reset_index().name.str.lower()
+
+    with pytest.raises(IOError):
+        client.delete_collection("dataset", ds.name)

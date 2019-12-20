@@ -222,6 +222,8 @@ class FractalClient(object):
                 r = requests.post(addr, **kwargs)
             elif method == "put":
                 r = requests.put(addr, **kwargs)
+            elif method == "delete":
+                r = requests.delete(addr, **kwargs)
             else:
                 raise KeyError("Method not understood: '{}'".format(method))
         except requests.exceptions.SSLError:
@@ -621,6 +623,28 @@ class FractalClient(object):
 
         payload = {"meta": {"overwrite": overwrite}, "data": collection}
         return self._automodel_request("collection", "post", payload, full_return=full_return)
+
+    def delete_collection(
+            self,
+            collection_type: str,
+            name: str
+    ) -> None:
+        """Deletes a given collection from the server.
+
+        Parameters
+        ----------
+        collection_type : str
+            The collection type to be deleted
+        name : str
+            The name of the collection to be deleted
+
+        Returns
+        -------
+        Collection
+            A Collection object if the given collection was found otherwise returns `None`.
+        """
+        collection = self.get_collection(collection_type, name)
+        self._automodel_request(f"collection/{collection.data.id}", "delete", payload={"meta": {}})
 
     ### Results section
 
