@@ -396,15 +396,16 @@ class CollectionHandler(APIHandler):
         self.logger.info("POST: Collections - {} inserted.".format(response.meta.n_inserted))
         self.write(response)
 
-    def delete(self, collection_id=None):
+    def delete(self, collection_id, _):
         self.authenticate("write")
+
         body_model, response_model = rest_model(f"collection/{collection_id}", "delete")
         ret = self.storage.del_collection(col_id=collection_id)
         if ret == 0:
             self.logger.info(f"DELETE: Collections - Attempted to delete non-existent collection {collection_id}.")
             raise tornado.web.HTTPError(status_code=404, reason=f"Collection {collection_id} does not exist.")
         else:
-            self.write(response_model(meta={"success": True}))
+            self.write(response_model(meta={"success": True, "errors": [], "error_description": False}))
             self.logger.info(f"DELETE: Collections - Deleted collection {collection_id}.")
 
 
