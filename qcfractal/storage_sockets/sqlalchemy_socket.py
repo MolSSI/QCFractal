@@ -1073,16 +1073,16 @@ class SQLAlchemySocket:
                 "Either col_id ({col_id}) must be specified, or collection ({collection}) and name ({name}) must be specified."
             )
 
-        filter = {}
+        filter_spec = {}
         if collection is not None:
-            filter["collection"] = collection.lower()
+            filter_spec["collection"] = collection.lower()
         if name is not None:
-            filter["lname"] = name.lower()
+            filter_spec["lname"] = name.lower()
         if col_id is not None:
-            filter["id"] = col_id
+            filter_spec["id"] = col_id
 
         with self.session_scope() as session:
-            count = session.query(CollectionORM).filter_by(**filter).delete(synchronize_session=False)
+            count = session.query(CollectionORM).filter_by(**filter_spec).delete(synchronize_session=False)
         return count
 
     ## ResultORMs functions
