@@ -109,6 +109,11 @@ class CommonManagerSettings(AutodocBaseSettings):
     nodes_per_task: int = Field(
         1, description="The number of nodes to use for each tasks. Only relevant for node-parallel executables.", gt=0
     )
+    cores_per_rank: int = Field(
+        1,
+        description="The number of cores per MPI rank for MPI-parallel applications. Only relevant for node-parallel"
+        " codes and the most relevant to codes that with hybrid MPI+OpenMP parallelism (e.g., NWChem).",
+    )
 
     class Config(SettingsCommonConfig):
         pass
@@ -978,6 +983,7 @@ def main(args=None):
         scratch_directory=settings.common.scratch_directory,
         retries=settings.common.retries,
         verbose=settings.common.verbose,
+        cores_per_rank=settings.common.cores_per_rank,
         configuration=settings,
     )
 

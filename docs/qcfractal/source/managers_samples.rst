@@ -240,23 +240,25 @@ for information on how to configure the Launcher and Provider classes for your c
 
 
 Single Job with Multiple, Node-Parallel Tasks with Parsl Adapter
----------------------------------------------------------------
+----------------------------------------------------------------
 
 Running MPI-parallel tasks requires a similar configuration to the multiple nodes per job
 for the manager and also some extra work in defining the qcengine environment.
-The only difference between the multi-node manager and worker is that the ``nodes_per_job``
-is set to more than one and Parsl uses ``SimpleLauncher`` to deploy a Parsl executor onto
+The key difference that sets apart managers for node-parallel applications is that
+that ``nodes_per_job`` is set to more than one and
+Parsl uses ``SimpleLauncher`` to deploy a Parsl executor onto
 the batch/login node once a job is allocated.
 
 .. code-block:: yaml
     common:
         adapter: parsl
         tasks_per_worker: 1
-        cores_per_worker: 16  # Number of cores used each compute node
+        cores_per_worker: 16  # Number of cores used on each compute node
         max_workers: 128
         memory_per_worker: 180  # Summary for the amount per compute node
         nodes_per_job: 128
-        nodes_per_task: 2
+        nodes_per_task: 2  # Number of nodes to use for each task
+        cores_per_rank: 1  # Number of cores to each of each MPI rank
 
     cluster:
         node_exclusivity: true
@@ -292,7 +294,12 @@ An example configuration a Cray supercomputer is:
       hostname_pattern: "*"
       scratch_directory: ./scratch  # Must be on the global filesystem
       is_batch_node: True  # Indicates that `aprun` must be used for all QC code invocations
-      mpiexec_command: "aprun -n {total_ranks} -N {ranks_per_node} -C -cc depth --env CRAY_OMP_CHECK_AFFINITY=TRUE --env OMP_NUM_THREADS=4 --env MKL_NUM_THREADS=4
-      -d 4 -j 1"
+      mpiexec_command: "aprun -n {total_ranks} -N {ranks_per_node} -C -cc depth --env CRAY_OMP_CHECK_AFFINITY=TRUE --env OMP_NUM_THREADS={cores_per_rank} --env MKL_NUM_THREADS={cores_per_rank}
+      -d {cores_per_rank} -j 1"
       jobs_per_node: 1
       ncores: 64
+
+Note that there are several variables in the ``mpiexec_command`` that describe how to insert parallel configurations into the
+command: ``total_ranks``, ``ranks_per_node``, and ``cores_per_rank``.
+Each of these values are computed based on the number of cores per node, the number of nodes per application
+and the number of cores per MPI rank, which are all defined in the Manager settings file.

@@ -307,4 +307,5 @@ def test_nodeparallel_tasks(tmp_path):
     config = load_manager_config("parsl", "cobalt")
     config["common"]["nodes_per_task"] = 2
     config["common"]["nodes_per_job"] = 2
+    config["common"]["cores_per_rank"] = 2
     cli_manager_runs(config, tmp_path)

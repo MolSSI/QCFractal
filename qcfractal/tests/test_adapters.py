@@ -161,3 +161,11 @@ def test_node_parallel(adapter_client_fixture, caplog):
 
     # Check that ``nnodes`` is set in local properties
     assert manager.queue_adapter.qcengine_local_options.get("nnodes") == 2
+
+
+@testing.using_rdkit
+def test_cores_per_rank(adapter_client_fixture, caplog):
+    manager = QueueManager(None, adapter_client_fixture, nodes_per_task=2, cores_per_rank=2)
+
+    # Check that ``cores_per_rank`` is set in local properties
+    assert manager.queue_adapter.qcengine_local_options.get("cores_per_rank") == 2
