@@ -279,7 +279,7 @@ def popen(args, **kwargs):
 
         else:
             src_dir = os.path.dirname(os.path.abspath(__file__))
-            coverage_flags = [coverage_dir, "run", "--append", "--source=" + src_dir]
+            coverage_flags = [coverage_dir, "run", "--parallel-mode", "--source=" + src_dir]
 
             # If python script, skip the python bin
             if args[0].endswith("python"):
