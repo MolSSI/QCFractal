@@ -222,6 +222,8 @@ class FractalClient(object):
                 r = requests.post(addr, **kwargs)
             elif method == "put":
                 r = requests.put(addr, **kwargs)
+            elif method == "delete":
+                r = requests.delete(addr, **kwargs)
             else:
                 raise KeyError("Method not understood: '{}'".format(method))
         except requests.exceptions.SSLError:
@@ -522,18 +524,21 @@ class FractalClient(object):
             if item["collection"] in repl_name_map:
                 item["collection"] = repl_name_map[item["collection"]]
 
-        df = pd.DataFrame.from_dict(response)
-        if not show_hidden:
-            df = df[df["visibility"]]
-        if group is not None:
-            df = df[df["group"].str.lower() == group.lower()]
-        if tag is not None:
-            if isinstance(tag, str):
-                tag = [tag]
-            tag = {t.lower() for t in tag}
-            df = df[df.apply(lambda x: len({t.lower() for t in x["tags"]} & tag) > 0, axis=1)]
+        if len(response) == 0:
+            df = pd.DataFrame(columns=["name", "collection", "tagline"])
+        else:
+            df = pd.DataFrame.from_dict(response)
+            if not show_hidden:
+                df = df[df["visibility"]]
+            if group is not None:
+                df = df[df["group"].str.lower() == group.lower()]
+            if tag is not None:
+                if isinstance(tag, str):
+                    tag = [tag]
+                tag = {t.lower() for t in tag}
+                df = df[df.apply(lambda x: len({t.lower() for t in x["tags"]} & tag) > 0, axis=1)]
 
-        df.drop(["visibility", "group", "tags"], axis=1, inplace=True)
+            df.drop(["visibility", "group", "tags"], axis=1, inplace=True)
         if not aslist:
             df.set_index(["collection", "name"], inplace=True)
             df.sort_index(inplace=True)
@@ -621,6 +626,23 @@ class FractalClient(object):
 
         payload = {"meta": {"overwrite": overwrite}, "data": collection}
         return self._automodel_request("collection", "post", payload, full_return=full_return)
+
+    def delete_collection(self, collection_type: str, name: str) -> None:
+        """Deletes a given collection from the server.
+
+        Parameters
+        ----------
+        collection_type : str
+            The collection type to be deleted
+        name : str
+            The name of the collection to be deleted
+
+        Returns
+        -------
+        None
+        """
+        collection = self.get_collection(collection_type, name)
+        self._automodel_request(f"collection/{collection.data.id}", "delete", payload={"meta": {}}, full_return=True)
 
     ### Results section
 

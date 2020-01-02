@@ -1449,3 +1449,24 @@ def test_list_collection_tags(fractal_compute_server):
     assert "test_list_collection_tags_2" in names
     assert "test_list_collection_tags_3" in names
     assert "test_list_collection_tags_4" in names
+
+
+def test_delete_collection(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+    client.list_collections()
+
+    ds = ptl.collections.Dataset("test_delete_collection", client=client)
+    ds.save()
+
+    dsid = ds.data.id
+
+    client.delete_collection("dataset", ds.name)
+    assert ds.name.lower() not in client.list_collections(collection_type="dataset", aslist=True)
+
+    # Fails at get_collection
+    with pytest.raises(KeyError):
+        client.delete_collection("dataset", ds.name)
+
+    # Test DELETE failure specifically
+    with pytest.raises(IOError):
+        client._automodel_request(f"collection/{dsid}", "delete", payload={"meta": {}}, full_return=True)
