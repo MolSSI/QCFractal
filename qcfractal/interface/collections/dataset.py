@@ -277,9 +277,6 @@ class Dataset(Collection):
             raise ValueError("New molecules, keywords, or records detected, run save before submitting new tasks.")
 
     def _canonical_pre_save(self, client: "FractalClient") -> None:
-        self._ensure_contributed_values()
-        if self.data.records is None:
-            self._get_data_records_from_db()
         for k in list(self._new_keywords.keys()):
             ret = client.add_keywords([self._new_keywords[k]])
             assert len(ret) == 1, "KeywordSet added incorrectly"
@@ -294,6 +291,8 @@ class Dataset(Collection):
         mol_ret = self._add_molecules_by_dict(client, self._new_molecules)
 
         # Update internal molecule UUID's to servers UUID's
+        if len(self._new_records) > 0:
+            self._get_data_records_from_db()
         for record in self._new_records:
             molecule_hash = record.pop("molecule_hash")
             new_record = MoleculeEntry(molecule_id=mol_ret[molecule_hash], **record)
