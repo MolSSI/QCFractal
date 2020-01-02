@@ -581,8 +581,15 @@ class BaseProcedureDataset(Collection):
                 for spec in specs:
                     list_specs.append(self.query(spec))
 
+            def get_status(item):
+                try:
+                    return item.status.value
+                except AttributeError:
+                    return None
+
             # apply status by column then by row
-            df = self.df[list_specs].apply(lambda col: col.apply(lambda entry: entry.status.value))
+            df = self.df[list_specs].apply(lambda col: col.apply(get_status))
+
             if status:
                 df = df[(df == status.upper()).all(axis=1)]
 
