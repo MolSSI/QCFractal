@@ -95,6 +95,7 @@ class QueueManager:
         cores_per_task: Optional[int] = None,
         memory_per_task: Optional[float] = None,
         nodes_per_task: Optional[int] = None,
+        cores_per_rank: Optional[int] = 1,
         scratch_directory: Optional[str] = None,
         retries: Optional[int] = 2,
         configuration: Optional[Dict[str, Any]] = None,
@@ -136,6 +137,8 @@ class QueueManager:
             None indicates "use however much you can consume"
         nodes_per_task : Optional[int], optional
             How many nodes to use per task. Used only for node-parallel tasks
+        cores_per_rank: Optional[int], optional
+            How many CPUs per rank of an MPI application. Used only for node-parallel tasks
         scratch_directory : Optional[str], optional
             Scratch directory location to do QCEngine compute
             None indicates "wherever the system default is"'
@@ -162,6 +165,7 @@ class QueueManager:
         self.nodes_per_task = nodes_per_task or 1
         self.scratch_directory = scratch_directory
         self.retries = retries
+        self.cores_per_rank = cores_per_rank
         self.configuration = configuration
         self.queue_adapter = build_queue_adapter(
             queue_client,
@@ -170,6 +174,7 @@ class QueueManager:
             memory_per_task=self.memory_per_task,
             nodes_per_task=self.nodes_per_task,
             scratch_directory=self.scratch_directory,
+            cores_per_rank=self.cores_per_rank,
             retries=self.retries,
             verbose=verbose,
         )
@@ -225,13 +230,14 @@ class QueueManager:
 
         if self.verbose:
             self.logger.info("    QCEngine:")
-            self.logger.info("        Version:     {}".format(qcng.__version__))
-            self.logger.info("        Task Cores:  {}".format(self.cores_per_task))
-            self.logger.info("        Task Mem:    {}".format(self.memory_per_task))
-            self.logger.info("        Task Nodes:  {}".format(self.nodes_per_task))
-            self.logger.info("        Scratch Dir: {}".format(self.scratch_directory))
-            self.logger.info("        Programs:    {}".format(self.available_programs))
-            self.logger.info("        Procedures:  {}\n".format(self.available_procedures))
+            self.logger.info("        Version:        {}".format(qcng.__version__))
+            self.logger.info("        Task Cores:     {}".format(self.cores_per_task))
+            self.logger.info("        Task Mem:       {}".format(self.memory_per_task))
+            self.logger.info("        Task Nodes:     {}".format(self.nodes_per_task))
+            self.logger.info("        Cores per Rank: {}".format(self.cores_per_rank))
+            self.logger.info("        Scratch Dir:    {}".format(self.scratch_directory))
+            self.logger.info("        Programs:       {}".format(self.available_programs))
+            self.logger.info("        Procedures:     {}\n".format(self.available_procedures))
 
         # DGAS Note: Note super happy about how this if/else turned out. Looking for alternatives.
         if self.connected():

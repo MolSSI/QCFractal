@@ -20,6 +20,7 @@ class BaseAdapter(abc.ABC):
         cores_per_task: Optional[int] = None,
         memory_per_task: Optional[float] = None,
         scratch_directory: Optional[str] = None,
+        cores_per_rank: Optional[int] = 1,
         retries: Optional[int] = 2,
         verbose: bool = False,
         nodes_per_task: int = 1,
@@ -53,6 +54,8 @@ class BaseAdapter(abc.ABC):
             error will be raised.
         nodes_per_task : int, optional, Default:  1
             Number of nodes to allocate per task. Default is to use a single node per task
+        cores_per_rank: Optional[int], optional
+            How many CPUs per rank of an MPI application. Used only for node-parallel tasks
         verbose: bool, Default: True
             Increase verbosity of the logger
         """
@@ -65,6 +68,7 @@ class BaseAdapter(abc.ABC):
         self.memory_per_task = memory_per_task
         self.nodes_per_task = nodes_per_task
         self.scratch_directory = scratch_directory
+        self.cores_per_rank = cores_per_rank
         self.retries = retries
         self.verbose = verbose
         if self.verbose:
@@ -124,6 +128,8 @@ class BaseAdapter(abc.ABC):
             local_options["retries"] = self.retries
         if self.nodes_per_task is not None:
             local_options["nnodes"] = self.nodes_per_task
+        if self.cores_per_rank is not None:
+            local_options["cores_per_rank"] = self.cores_per_rank
         return local_options
 
     def submit_tasks(self, tasks: List[Dict[str, Any]]) -> List[str]:
