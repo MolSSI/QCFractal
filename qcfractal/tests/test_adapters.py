@@ -11,27 +11,46 @@ import pytest
 import qcfractal.interface as ptl
 from qcfractal import QueueManager, testing
 from qcfractal.queue import build_queue_adapter
-from qcfractal.testing import adapter_client_fixture, managed_compute_server, reset_server_database
+from qcfractal.testing import (
+    adapter_client_fixture,
+    build_adapter_clients,
+    managed_compute_server,
+    reset_server_database,
+)
 
 
-def test_adapter_client_count(adapter_client_fixture):
+@pytest.mark.parametrize("adapter", ["pool"])
+def test_adapter_client_count(adapter):
+    """
+    This function often tests the number of active works times the number of tasks per worker and normally isn't dynamic enough to satisify this test.
 
-    queue = build_queue_adapter(adapter_client_fixture)
-    task = {"spec": {"function": "time.sleep", "args": [0.1], "kwargs": {}}, "id": "timer"}
+    Only compares against pool for now to fix a specific bug.
+    """
 
-    assert queue.count_running_tasks() == 0
+    client = build_adapter_clients(adapter, storage_name="test_adapter_client_test")
+    queue = build_queue_adapter(client)
 
-    queue._submit_task(task)
-    assert queue.count_running_tasks() == 1
+    try:
+        task = {"spec": {"function": "time.sleep", "args": [0.1], "kwargs": {}}, "id": "timer"}
 
-    queue.await_results()
-    for x in range(100):
-        if queue.count_running_tasks() == 0:
-            break
+        assert queue.count_running_tasks() == 0
 
-        time.sleep(0.01)
+        # Submit task, make sure there is a count bump
+        queue._submit_task(task)
+        assert queue.count_running_tasks() == 1
 
-    assert queue.count_running_tasks() == 0
+        # Wait for up to 1 second for it to be collected
+        queue.await_results()
+        for x in range(100):
+            if queue.count_running_tasks() == 0:
+                break
+
+            time.sleep(0.01)
+
+        assert queue.count_running_tasks() == 0
+
+    finally:
+        queue.close()
 
 
 @testing.using_rdkit

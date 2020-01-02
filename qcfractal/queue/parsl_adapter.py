@@ -98,6 +98,7 @@ class ParslAdapter(BaseAdapter):
             elif hasattr(executor, "max_threads") and executor_running_task_map[executor_key]:
                 running += 1
                 found_readable = True
+
         if not found_readable:
             raise NotImplementedError("Cannot accurately estimate consumption from executors")
 
