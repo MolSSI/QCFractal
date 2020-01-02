@@ -4,8 +4,8 @@ Tests for QCFractals CLI
 import os
 import tempfile
 import time
+from typing import Any, Dict
 
-from typing import Dict, Any
 import pytest
 import yaml
 

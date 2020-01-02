@@ -519,7 +519,7 @@ class RemoteView(DatasetView):
         return self._deserialize(response.data.values, response.meta.msgpacked_cols), response.data.units
 
     def list_values(self) -> pd.DataFrame:
-        payload = {"meta": {}, "data": {}}
+        payload: Dict[str, Dict[str, Any]] = {"meta": {}, "data": {}}
         response = self._client._automodel_request(f"collection/{self._id}/list", "get", payload, full_return=True)
         self._check_response_meta(response.meta)
         return self._deserialize(response.data, response.meta.msgpacked_cols)

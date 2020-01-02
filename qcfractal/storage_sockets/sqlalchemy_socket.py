@@ -18,7 +18,7 @@ import secrets
 from collections.abc import Iterable
 from contextlib import contextmanager
 from datetime import datetime as dt
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import bcrypt
 
@@ -61,6 +61,9 @@ from qcfractal.storage_sockets.models import (
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
 from .models import Base
+
+if TYPE_CHECKING:
+    from ..services.service_util import BaseService
 
 _null_keys = {"basis", "keywords"}
 _id_keys = {"id", "molecule", "keywords", "procedure_id"}

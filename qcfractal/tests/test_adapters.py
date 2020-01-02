@@ -2,8 +2,8 @@
 Explicit tests for queue manipulation.
 """
 
-import tempfile
 import logging
+import tempfile
 
 import pytest
 
