@@ -465,6 +465,17 @@ class CollectionPOSTResponse(ProtoModel):
 
 register_model("collection", "POST", CollectionPOSTBody, CollectionPOSTResponse)
 
+
+class CollectionDELETEBody(ProtoModel):
+    meta: EmptyMeta
+
+
+class CollectionDELETEResponse(ProtoModel):
+    meta: ResponseMeta
+
+
+register_model("collection/[0-9]+", "DELETE", CollectionDELETEBody, CollectionDELETEResponse)
+
 ### Collection views
 
 

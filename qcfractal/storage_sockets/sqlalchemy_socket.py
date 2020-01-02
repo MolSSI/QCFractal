@@ -1047,29 +1047,42 @@ class SQLAlchemySocket:
 
         return {"data": rdata, "meta": meta}
 
-    def del_collection(self, collection: str, name: str) -> bool:
+    def del_collection(
+        self, collection: Optional[str] = None, name: Optional[str] = None, col_id: Optional[int] = None
+    ) -> bool:
         """
         Remove a collection from the database from its keys.
 
         Parameters
         ----------
-        collection: str
+        collection: Optional[str], optional
             CollectionORM type
-        name : str
+        name : Optional[str], optional
             CollectionORM name
-
+        col_id: Optional[int], optional
+            Database id of the collection
         Returns
         -------
         int
             Number of documents deleted
         """
 
-        with self.session_scope() as session:
-            count = (
-                session.query(CollectionORM)
-                .filter_by(collection=collection.lower(), lname=name.lower())
-                .delete(synchronize_session=False)
+        # Assuming here that we don't want to allow deletion of all collections, all datasets, etc.
+        if not (col_id is not None or (collection is not None and name is not None)):
+            raise ValueError(
+                "Either col_id ({col_id}) must be specified, or collection ({collection}) and name ({name}) must be specified."
             )
+
+        filter_spec = {}
+        if collection is not None:
+            filter_spec["collection"] = collection.lower()
+        if name is not None:
+            filter_spec["lname"] = name.lower()
+        if col_id is not None:
+            filter_spec["id"] = col_id
+
+        with self.session_scope() as session:
+            count = session.query(CollectionORM).filter_by(**filter_spec).delete(synchronize_session=False)
         return count
 
     ## ResultORMs functions
