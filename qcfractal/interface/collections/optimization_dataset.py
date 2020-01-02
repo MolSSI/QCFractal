@@ -182,9 +182,9 @@ class OptimizationDataset(BaseProcedureDataset):
             specs = new_specs
 
         def count_gradients(opt):
-            if opt.status != "COMPLETE":
+            if (not hasattr(opt, 'status')) or opt.status != "COMPLETE":
                 return None
-            return len(opt.trajectory)
+            return len(opt.energies)
 
         # Loop over the data and apply the count function
         ret = []

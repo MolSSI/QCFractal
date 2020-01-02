@@ -1296,11 +1296,15 @@ def test_optimization_dataset(fractal_compute_server):
 
     ds.query("test")
     ds.query("test2")
+
     status = ds.status()
     assert status.loc["COMPLETE", "test"] == 3
-    assert status.loc["COMPLETE", "test2"] == 3
+    assert status.loc["COMPLETE", "test2"] == 1
 
-    assert ds.counts().loc["hooh1", "test"] == 1
+    counts = ds.counts()
+    assert counts.loc["hooh1" ,"test"] == 9
+    assert np.isnan(counts.loc["hooh2", "test2"])
+    assert len(ds.df.loc["hooh1", "test"].trajectory) == 1
 
     final_energy = 0.00011456853977485626
     for idx, row in ds.df["test"].items():

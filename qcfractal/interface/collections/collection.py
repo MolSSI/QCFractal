@@ -584,7 +584,7 @@ class BaseProcedureDataset(Collection):
             def get_status(item):
                 try:
                     return item.status.value
-                except:
+                except AttributeError:
                     return None
 
             # apply status by column then by row
