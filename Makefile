@@ -15,7 +15,7 @@ format:
 
 .PHONY: lint
 lint:
-	$(isort) --check-only
+#	$(isort) --check-only
 	$(black) --check
 
 .PHONY: check-dist
