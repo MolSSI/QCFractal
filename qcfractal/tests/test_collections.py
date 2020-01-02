@@ -1302,7 +1302,7 @@ def test_optimization_dataset(fractal_compute_server):
     assert status.loc["COMPLETE", "test2"] == 1
 
     counts = ds.counts()
-    assert counts.loc["hooh1" ,"test"] == 9
+    assert counts.loc["hooh1", "test"] == 9
     assert np.isnan(counts.loc["hooh2", "test2"])
     assert len(ds.df.loc["hooh1", "test"].trajectory) == 1
 
