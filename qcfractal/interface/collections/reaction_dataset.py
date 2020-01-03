@@ -270,8 +270,8 @@ class ReactionDataset(Dataset):
             method=method, basis=basis, keywords=keywords, program=program, stoich=stoich, name=name
         )
 
-        stoich_complex = queries.pop("stoichiometry")
-        stoich_monomer = "".join([x for x in stoich if not x.isdigit()]) + "1"
+        stoich_complex = queries.pop("stoichiometry").values[0]
+        stoich_monomer = "".join([x for x in stoich_complex if not x.isdigit()]) + "1"
 
         def _query_apply_coeffients(stoich, query):
 
