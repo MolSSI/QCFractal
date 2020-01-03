@@ -542,8 +542,13 @@ class Dataset(Collection):
         history = history.reset_index()
         history.drop("index", axis=1, inplace=True)
 
+        # Drop duplicates due to stoich in some instances, this could be handled with multiple merges
+        # Simpler to do it this way.
+        history.drop_duplicates(inplace=True)
+
         # Find the returned subset
         ret = history.copy()
+
         # Add name column
         ret["name"] = ret.apply(
             lambda row: self._canonical_name(

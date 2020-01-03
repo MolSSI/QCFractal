@@ -45,6 +45,8 @@ def handle_dataset_fixture_params(client, ds_type, ds, fractal_compute_server, r
                 ds.download(verify=True)
     elif request.param == "remote_view":
         ds._disable_view = False
+        if ds._view is None:
+            raise ValueError("Remote view is not available.")
         assert isinstance(ds._view, ptl.collections.RemoteView)
     else:
         raise ValueError(f"Unknown dataset fixture parameter: {request.param}.")
@@ -557,7 +559,7 @@ def test_contributed_dataset_values_subset(contributed_dataset_fixture, use_cach
         assert df_compare(df1, df2, sort=True)
 
 
-@pytest.fixture(scope="module", params=["download_view", "no_view", "remote_view"])
+@pytest.fixture(scope="module", params=["no_view", "remote_view", "download_view"])
 def reactiondataset_dftd3_fixture_fixture(fractal_compute_server, tmp_path_factory, request):
     ds_name = "He_DFTD3"
     client = ptl.FractalClient(fractal_compute_server)
@@ -568,23 +570,31 @@ def reactiondataset_dftd3_fixture_fixture(fractal_compute_server, tmp_path_facto
         testing.check_has_module("psi4")
         testing.check_has_module("dftd3")
 
-        ds = ptl.collections.ReactionDataset(ds_name, client, ds_type="ie")
+        ds = ptl.collections.ReactionDataset(ds_name, client, ds_type="ie", default_units="hartree")
 
         # Add two helium dimers to the DB at 4 and 8 bohr
-        HeDimer = ptl.Molecule.from_data([[2, 0, 0, -4.123], [2, 0, 0, 4.123]], dtype="numpy", units="bohr", frags=[1])
+        HeDimer = ptl.Molecule.from_data([[2, 0, 0, -1.412], [2, 0, 0, 1.412]], dtype="numpy", units="bohr", frags=[1])
         ds.add_ie_rxn("HeDimer", HeDimer, attributes={"r": 4})
         ds.set_default_program("psi4")
-        ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={}), default=True)
+        ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={"e_convergence": 1.0e-10}), default=True)
 
         ds.save()
 
         ncomp1 = ds.compute("B3LYP-D3", "6-31g")
         assert len(ncomp1.ids) == 4
-        assert len(ncomp1.submitted) == 4
+        assert len(ncomp1.submitted) == 4  # Dimer/monomer, dft/dftd3
+
+        ncomp1 = ds.compute("B3LYP-D3", "6-31g", stoich="cp")
+        assert len(ncomp1.ids) == 4
+        assert len(ncomp1.submitted) == 2  # monomer, dft/dftd3
 
         ncomp2 = ds.compute("B3LYP-D3(BJ)", "6-31g")
         assert len(ncomp2.ids) == 4
-        assert len(ncomp2.submitted) == 2
+        assert len(ncomp2.submitted) == 2  # dimer/monomer, dftd3
+
+        ncomp1 = ds.compute("B3LYP-D3(BJ)", "6-31g", stoich="cp")
+        assert len(ncomp1.ids) == 4
+        assert len(ncomp1.submitted) == 1  # monomer, dftd3
 
         fractal_compute_server.await_results()
 
@@ -615,7 +625,7 @@ def test_reactiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
 
     # Bad stoichiometry
     with pytest.raises(KeyError):
-        ds.get_records("B3LYP", "6-31g", stoich="cp")
+        ds.get_records("B3LYP", "6-31g", stoich="cp5")
 
     # Wrong method
     with pytest.raises(KeyError):
@@ -629,14 +639,20 @@ def test_reactiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
     ds._clear_cache()
 
     bench = {
-        "B3LYP/6-31g": pytest.approx(-0.002135, 1.0e-3),
-        "B3LYP-D3/6-31g": pytest.approx(-0.005818, 1.0e-3),
-        "B3LYP-D3(BJ)/6-31g": pytest.approx(-0.005636, 1.0e-3),
+        "B3LYP/6-31g": pytest.approx(0.01822563, abs=1.0e-5),
+        "cp-B3LYP/6-31g": pytest.approx(0.01867427, abs=1.0e-5),
+        "B3LYP-D3/6-31g": pytest.approx(0.01815022, abs=1.0e-5),
+        "cp-B3LYP-D3/6-31g": pytest.approx(0.01859886, abs=1.0e-5),
+        "B3LYP-D3(BJ)/6-31g": pytest.approx(0.01814335, abs=1.0e-5),
+        "cp-B3LYP-D3(BJ)/6-31g": pytest.approx(0.01859199, abs=1.0e-5),
     }
 
     with check_requests_monitor(client, "result", request_made=request_made):
         ret = ds.get_values("B3LYP", "6-31G")
     assert ret.loc["HeDimer", "B3LYP/6-31g"] == bench["B3LYP/6-31g"]
+
+    ret = ds.get_values("B3LYP", "6-31G", stoich="cp")
+    assert ret.loc["HeDimer", "cp-B3LYP/6-31g"] == bench["cp-B3LYP/6-31g"]
 
     ret = ds.get_values("B3LYP-D3", "6-31G")
     assert ret.loc["HeDimer", "B3LYP-D3/6-31g"] == bench["B3LYP-D3/6-31g"]
@@ -644,7 +660,8 @@ def test_reactiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
     ret = ds.get_values("B3LYP-D3(BJ)", "6-31G")
     assert ret.loc["HeDimer", "B3LYP-D3(BJ)/6-31g"] == bench["B3LYP-D3(BJ)/6-31g"]
 
-    # Should be in ds.df now as wells
+    # Should be in ds.df now as well
+    ds.get_values(stoich="cp")
     for key, value in bench.items():
         assert value == ds.df.loc["HeDimer", key]
 
@@ -720,7 +737,7 @@ def test_reactiondataset_dftd3_values_subset(reactiondataset_dftd3_fixture_fixtu
 def test_dataset_dftd3(reactiondataset_dftd3_fixture_fixture):
     client, rxn_ds = reactiondataset_dftd3_fixture_fixture
 
-    if not rxn_ds._use_view:
+    if not rxn_ds._use_view():
         ds_name = "He_DFTD3"
         ds = ptl.collections.Dataset(ds_name, client)
 

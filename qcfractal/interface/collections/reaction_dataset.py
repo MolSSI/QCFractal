@@ -270,8 +270,11 @@ class ReactionDataset(Dataset):
             method=method, basis=basis, keywords=keywords, program=program, stoich=stoich, name=name
         )
 
-        stoich_complex = queries.pop("stoichiometry")
-        stoich_monomer = "".join([x for x in stoich if not x.isdigit()]) + "1"
+        if len(queries) == 0:
+            return pd.DataFrame(index=self.get_index(subset))
+
+        stoich_complex = queries.pop("stoichiometry").values[0]
+        stoich_monomer = "".join([x for x in stoich_complex if not x.isdigit()]) + "1"
 
         def _query_apply_coeffients(stoich, query):
 
@@ -535,10 +538,6 @@ class ReactionDataset(Dataset):
 
         # Figure out molecules that we need
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
-            if ("-D3" in method.upper()) and stoich.lower() != "default":
-                raise KeyError(
-                    "Please only run -D3 as default at the moment, running with CP could lead to extra computations."
-                )
 
             monomer_stoich = "".join([x for x in stoich if not x.isdigit()]) + "1"
             tmp_monomer = entry_index[entry_index["stoichiometry"] == monomer_stoich].copy()
