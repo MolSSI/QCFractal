@@ -219,16 +219,34 @@ class BaseAdapter(abc.ABC):
             True if the closing was successful.
         """
 
-    def count_running_tasks(self) -> int:
+    def count_active_tasks(self) -> int:
         """
-        Adapter-specific implementation to count the currently running workers, helpful for resource consumption.
+        Adapter-specific implementation to count the currently active tasks, helpful for resource consumption.
         May not be implemented or possible for each adapter, nor is it required for
         operation. As such, this it is not required to be implemented as an abstract method.
 
         Returns
         -------
         int
-            Number of running workers
+            Number of active tasks
+
+        Raises
+        ------
+        NotImplementedError
+        """
+        raise NotImplementedError("This adapter has not implemented this method yet")
+
+    def count_active_task_slots(self) -> int:
+        """
+        Adapter-specific implementation to count the currently available task slots and ignores if they have an active task or not.
+
+        May not be implemented or possible for each adapter, nor is it required for
+        operation. As such, this it is not required to be implemented as an abstract method.
+
+        Returns
+        -------
+        int
+            Number of active task slots
 
         Raises
         ------

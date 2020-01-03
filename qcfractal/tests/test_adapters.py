@@ -2,9 +2,9 @@
 Explicit tests for queue manipulation.
 """
 
-import time
 import logging
 import tempfile
+import time
 
 import pytest
 
@@ -20,7 +20,7 @@ from qcfractal.testing import (
 
 
 @pytest.mark.parametrize("adapter", ["pool"])
-def test_adapter_client_count(adapter):
+def test_adapter_client_active_tasks(adapter):
     """
     This function often tests the number of active works times the number of tasks per worker and normally isn't dynamic enough to satisify this test.
 
@@ -33,24 +33,33 @@ def test_adapter_client_count(adapter):
     try:
         task = {"spec": {"function": "time.sleep", "args": [0.1], "kwargs": {}}, "id": "timer"}
 
-        assert queue.count_running_tasks() == 0
+        assert queue.count_active_tasks() == 0
 
         # Submit task, make sure there is a count bump
         queue._submit_task(task)
-        assert queue.count_running_tasks() == 1
+        assert queue.count_active_tasks() == 1
 
         # Wait for up to 1 second for it to be collected
         queue.await_results()
         for x in range(100):
-            if queue.count_running_tasks() == 0:
+            if queue.count_active_tasks() == 0:
                 break
 
             time.sleep(0.01)
 
-        assert queue.count_running_tasks() == 0
+        assert queue.count_active_tasks() == 0
 
     finally:
         queue.close()
+
+
+def test_adapter_client_active_task_slots(adapter_client_fixture):
+
+    queue = build_queue_adapter(adapter_client_fixture)
+    try:
+        assert queue.count_active_task_slots() == 2
+    except NotImplementedError:
+        pytest.xfail("Active task slot counting is not yet available.")
 
 
 @testing.using_rdkit

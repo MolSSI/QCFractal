@@ -77,7 +77,7 @@ class ParslAdapter(BaseAdapter):
         task = func(*task_spec["spec"]["args"], **task_spec["spec"]["kwargs"])
         return task_spec["id"], task
 
-    def count_running_tasks(self) -> int:
+    def count_active_task_slots(self) -> int:
 
         running = 0
         executor_running_task_map = {key: False for key in self.client.executors.keys()}
@@ -91,6 +91,7 @@ class ParslAdapter(BaseAdapter):
 
         found_readable = False
         for executor_key, executor in self.client.executors.items():
+            print(dir(executor))
             if hasattr(executor, "connected_workers"):
                 # Should return an int
                 running += executor.connected_workers
