@@ -274,5 +274,5 @@ def test_node_parallel(compute_adapter_fixture):
     client, server, adapter = compute_adapter_fixture
 
     manager = queue.QueueManager(client, adapter, nodes_per_task=2, cores_per_rank=2)
-    assert manager.queue_adapter.qcengine_local_options['nnodes'] == 2
-    assert manager.queue_adapter.qcengine_local_options['cores_per_rank'] == 2
+    assert manager.queue_adapter.qcengine_local_options["nnodes"] == 2
+    assert manager.queue_adapter.qcengine_local_options["cores_per_rank"] == 2

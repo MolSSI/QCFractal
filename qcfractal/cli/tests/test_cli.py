@@ -4,17 +4,14 @@ Tests for QCFractals CLI
 import os
 import tempfile
 import time
+from typing import Any, Dict
 
-from typing import Dict, Any
 import pytest
 import yaml
 
 import qcfractal
 from qcfractal import testing
 from qcfractal.cli.cli_utils import read_config_file
-
-# def _run_tests()
-from qcfractal.cli.qcfractal_manager import ManagerSettings
 
 _options = {"coverage": True, "dump_stdout": True}
 _pwd = os.path.dirname(os.path.abspath(__file__))

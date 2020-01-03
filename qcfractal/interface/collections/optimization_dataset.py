@@ -182,7 +182,7 @@ class OptimizationDataset(BaseProcedureDataset):
             specs = new_specs
 
         def count_gradients(opt):
-            if (not hasattr(opt, 'status')) or opt.status != "COMPLETE":
+            if (not hasattr(opt, "status")) or opt.status != "COMPLETE":
                 return None
             return len(opt.energies)
 
