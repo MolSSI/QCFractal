@@ -19,40 +19,6 @@ from qcfractal.testing import (
 )
 
 
-@pytest.mark.parametrize("adapter", ["pool"])
-def test_adapter_client_active_tasks(adapter):
-    """
-    This function often tests the number of active works times the number of tasks per worker and normally isn't dynamic enough to satisify this test.
-
-    Only compares against pool for now to fix a specific bug.
-    """
-
-    client = build_adapter_clients(adapter, storage_name="test_adapter_client_test")
-    queue = build_queue_adapter(client)
-
-    try:
-        task = {"spec": {"function": "time.sleep", "args": [0.1], "kwargs": {}}, "id": "timer"}
-
-        assert queue.count_active_tasks() == 0
-
-        # Submit task, make sure there is a count bump
-        queue._submit_task(task)
-        assert queue.count_active_tasks() == 1
-
-        # Wait for up to 1 second for it to be collected
-        queue.await_results()
-        for x in range(100):
-            if queue.count_active_tasks() == 0:
-                break
-
-            time.sleep(0.01)
-
-        assert queue.count_active_tasks() == 0
-
-    finally:
-        queue.close()
-
-
 def test_adapter_client_active_task_slots(adapter_client_fixture):
 
     queue = build_queue_adapter(adapter_client_fixture)

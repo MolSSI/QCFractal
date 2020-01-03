@@ -34,9 +34,6 @@ class ExecutorAdapter(BaseAdapter):
         task = self.client.submit(func, *task_spec["spec"]["args"], **task_spec["spec"]["kwargs"])
         return task_spec["id"], task
 
-    def count_active_tasks(self) -> int:
-        return self.client._queue_count - len(self.client._pending_work_items)
-
     def count_active_task_slots(self) -> int:
         return self.client._max_workers
 
