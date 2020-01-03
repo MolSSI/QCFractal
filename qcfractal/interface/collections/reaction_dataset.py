@@ -270,6 +270,9 @@ class ReactionDataset(Dataset):
             method=method, basis=basis, keywords=keywords, program=program, stoich=stoich, name=name
         )
 
+        if len(queries) == 0:
+            return pd.DataFrame(index=self.get_index(subset))
+
         stoich_complex = queries.pop("stoichiometry").values[0]
         stoich_monomer = "".join([x for x in stoich_complex if not x.isdigit()]) + "1"
 

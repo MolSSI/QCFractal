@@ -559,7 +559,7 @@ def test_contributed_dataset_values_subset(contributed_dataset_fixture, use_cach
         assert df_compare(df1, df2, sort=True)
 
 
-@pytest.fixture(scope="module", params=["download_view", "no_view", "remote_view"])
+@pytest.fixture(scope="module", params=["no_view", "remote_view", "download_view"])
 def reactiondataset_dftd3_fixture_fixture(fractal_compute_server, tmp_path_factory, request):
     ds_name = "He_DFTD3"
     client = ptl.FractalClient(fractal_compute_server)
