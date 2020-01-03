@@ -19,7 +19,7 @@ def list_managers(status=None, modified_after=None):
         "completed",
         "submitted",
         "failures",
-        "returned",
+        # "returned",
         "created_on",
         "modified_on",
         "programs",
@@ -49,9 +49,9 @@ def manager_graph(status=None, modified_after=None):
         data["running"] = data["submitted"] - data["completed"]
 
         bar_iter = [
-            ("error", DEFAULT_PLOTLY_COLORS[3]),
-            ("running", DEFAULT_PLOTLY_COLORS[2]),
             ("completed", DEFAULT_PLOTLY_COLORS[0]),
+            ("running", DEFAULT_PLOTLY_COLORS[2]),
+            ("error", DEFAULT_PLOTLY_COLORS[3]),
         ]
 
         data.sort_values("completed", inplace=True, ascending=False)
@@ -61,8 +61,8 @@ def manager_graph(status=None, modified_after=None):
     return go.Figure(
         data=bars,
         layout={
-            # "yaxis_type": "log",
-            "barmode": "stack",
+            "yaxis_type": "log",
+            "barmode": "group",
             "yaxis": {"title": "Tasks"},
             "xaxis": {"title": "Cluster"},
             "margin": _default_margin,
@@ -98,7 +98,7 @@ def task_graph():
     fig = go.Figure(
         data=bars,
         layout={
-            "barmode": "stack",
+            "barmode": "group",
             "yaxis_type": "log",
             "yaxis": {"title": "Tasks"},
             "xaxis": {"title": "Tag"},
