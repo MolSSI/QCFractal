@@ -91,7 +91,6 @@ class ParslAdapter(BaseAdapter):
 
         found_readable = False
         for executor_key, executor in self.client.executors.items():
-            print(dir(executor))
             if hasattr(executor, "connected_workers"):
                 # Should return an int
                 running += executor.connected_workers

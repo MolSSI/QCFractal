@@ -32,7 +32,6 @@ class QueueStatistics(BaseModel):
     total_worker_walltime: float = 0.0
     total_task_walltime: float = 0.0
     maximum_possible_walltime: float = 0.0  # maximum_workers * time_delta, experimental
-    active_tasks: int = 0
     active_task_slots: int = 0
 
     # Static Quantities
@@ -296,7 +295,7 @@ class QueueManager:
             # Statistics
             "total_worker_walltime": self.statistics.total_worker_walltime,
             "total_task_walltime": self.statistics.total_task_walltime,
-            "active_tasks": self.statistics.active_tasks,
+            "active_tasks": self.statistics.active_task_slots,
             "active_cores": self.statistics.active_cores,
             "active_memory": self.statistics.active_memory,
         }
