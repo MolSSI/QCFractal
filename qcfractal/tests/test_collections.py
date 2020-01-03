@@ -720,7 +720,7 @@ def test_reactiondataset_dftd3_values_subset(reactiondataset_dftd3_fixture_fixtu
 def test_dataset_dftd3(reactiondataset_dftd3_fixture_fixture):
     client, rxn_ds = reactiondataset_dftd3_fixture_fixture
 
-    if not rxn_ds._use_view:
+    if not rxn_ds._use_view():
         ds_name = "He_DFTD3"
         ds = ptl.collections.Dataset(ds_name, client)
 
