@@ -1497,3 +1497,14 @@ def test_delete_collection(fractal_compute_server):
     # Test DELETE failure specifically
     with pytest.raises(IOError):
         client._automodel_request(f"collection/{dsid}", "delete", payload={"meta": {}}, full_return=True)
+
+
+def test_update_metadata(gradient_dataset_fixture):
+    _, ds = gradient_dataset_fixture
+    assert ds.data.records is None
+    assert ds.data.contributed_values is None
+
+    ds.data.__dict__["description"] = "modified description"
+    ds.save()
+    assert ds.data.records is None
+    assert ds.data.contributed_values is None
