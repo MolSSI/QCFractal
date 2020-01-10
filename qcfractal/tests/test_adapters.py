@@ -4,12 +4,28 @@ Explicit tests for queue manipulation.
 
 import logging
 import tempfile
+import time
 
 import pytest
 
 import qcfractal.interface as ptl
 from qcfractal import QueueManager, testing
-from qcfractal.testing import adapter_client_fixture, managed_compute_server, reset_server_database
+from qcfractal.queue import build_queue_adapter
+from qcfractal.testing import (
+    adapter_client_fixture,
+    build_adapter_clients,
+    managed_compute_server,
+    reset_server_database,
+)
+
+
+def test_adapter_client_active_task_slots(adapter_client_fixture):
+
+    queue = build_queue_adapter(adapter_client_fixture)
+    try:
+        assert queue.count_active_task_slots() == 2
+    except NotImplementedError:
+        pytest.xfail("Active task slot counting is not yet available.")
 
 
 @testing.using_rdkit

@@ -10,9 +10,9 @@ import time
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Union
 
-import qcengine as qcng
 from pydantic import BaseModel, validator
 
+import qcengine as qcng
 from qcfractal.extras import get_information
 
 from ..interface.data import get_molecule
@@ -32,9 +32,7 @@ class QueueStatistics(BaseModel):
     total_worker_walltime: float = 0.0
     total_task_walltime: float = 0.0
     maximum_possible_walltime: float = 0.0  # maximum_workers * time_delta, experimental
-    active_tasks: int = 0
-    active_cores: int = 0
-    active_memory: float = 0.0
+    active_task_slots: int = 0
 
     # Static Quantities
     max_concurrent_tasks: int = 0
@@ -48,13 +46,21 @@ class QueueStatistics(BaseModel):
         super().__init__(**kwargs)
 
     @property
-    def total_completed_tasks(self):
+    def total_completed_tasks(self) -> int:
         return self.total_successful_tasks + self.total_failed_tasks
 
     @property
-    def theoretical_max_consumption(self):
+    def theoretical_max_consumption(self) -> float:
         """In Core Hours"""
         return self.max_concurrent_tasks * self.cores_per_task * (time.time() - self.last_update_time) / 3600
+
+    @property
+    def active_cores(self) -> int:
+        return self.active_task_slots * self.cores_per_task
+
+    @property
+    def active_memory(self) -> float:
+        return self.active_task_slots * self.memory_per_task
 
     @validator("cores_per_task", pre=True)
     def cores_per_tasks_none(cls, v):
@@ -289,7 +295,7 @@ class QueueManager:
             # Statistics
             "total_worker_walltime": self.statistics.total_worker_walltime,
             "total_task_walltime": self.statistics.total_task_walltime,
-            "active_tasks": self.statistics.active_tasks,
+            "active_tasks": self.statistics.active_task_slots,
             "active_cores": self.statistics.active_cores,
             "active_memory": self.statistics.active_memory,
         }
@@ -539,14 +545,12 @@ class QueueManager:
         last_time = self.statistics.last_update_time
         now = self.statistics.last_update_time = time.time()
         time_delta_seconds = now - last_time
+
         try:
-            self.statistics.active_tasks = self.queue_adapter.count_running_tasks()
+            self.statistics.active_task_slots = self.queue_adapter.count_active_task_slots()
             log_efficiency = True
         except NotImplementedError:
             log_efficiency = False
-
-        self.statistics.active_cores = self.statistics.active_tasks * self.statistics.cores_per_task
-        self.statistics.active_memory = self.statistics.active_tasks * self.statistics.memory_per_task
 
         timedelta_worker_walltime = time_delta_seconds * self.statistics.active_cores / 3600
         timedelta_maximum_walltime = (

@@ -1,7 +1,8 @@
-import dash_bootstrap_components as dbc
 import pandas as pd
 import plotly.graph_objs as go
 from plotly.colors import DEFAULT_PLOTLY_COLORS
+
+import dash_bootstrap_components as dbc
 
 from .connection import get_socket
 

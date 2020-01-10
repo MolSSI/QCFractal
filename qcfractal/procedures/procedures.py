@@ -5,6 +5,7 @@ All procedures tasks involved in on-node computation.
 from typing import List, Union
 
 import qcelemental as qcel
+
 import qcengine as qcng
 
 from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord
