@@ -390,7 +390,10 @@ class CollectionHandler(APIHandler):
             self.logger.info("POST: Collections - Access attempted on subresource.")
             return
 
-        ret = self.storage.add_collection(body.data.dict(), overwrite=body.meta.overwrite)
+        data = body.data.dict()
+        for field in body.meta.ignore:
+            data.pop(field)
+        ret = self.storage.add_collection(data, overwrite=body.meta.overwrite)
         response = response_model(**ret)
 
         self.logger.info("POST: Collections - {} inserted.".format(response.meta.n_inserted))

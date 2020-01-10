@@ -600,7 +600,7 @@ class FractalClient(object):
             raise KeyError("Collection '{}:{}' not found.".format(collection_type, name))
 
     def add_collection(
-        self, collection: Dict[str, Any], overwrite: bool = False, full_return: bool = False
+        self, collection: Dict[str, Any], overwrite: bool = False, full_return: bool = False, ignore: Optional[List[str]] = None
     ) -> Union["CollectionGETResponse", List["ObjectId"]]:
         """Adds a new Collection to the server.
 
@@ -625,6 +625,8 @@ class FractalClient(object):
             raise KeyError("Attempting to overwrite collection, but no server ID found (cannot use 'local').")
 
         payload = {"meta": {"overwrite": overwrite}, "data": collection}
+        if ignore is not None:
+            payload["meta"]["ignore"] = ignore
         return self._automodel_request("collection", "post", payload, full_return=full_return)
 
     def delete_collection(self, collection_type: str, name: str) -> None:

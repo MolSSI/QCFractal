@@ -1321,3 +1321,53 @@ def test_collections_include_exclude(storage_socket):
     storage_socket.del_collection(collection=collection, name=name)
     storage_socket.del_collection(collection=collection, name=name2)
     storage_socket.del_molecules(mol_insert["data"])
+
+
+def test_collections_metadata_update(storage_socket):
+
+    collection = "Dataset"
+    name = "Dataset_tcmu"
+
+    # Add two waters
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
+    mol_insert = storage_socket.add_molecules([water, water2])
+
+    db = {
+        "collection": collection,
+        "name": name,
+        "visibility": True,
+        "view_available": False,
+        "group": "default",
+        "records": [
+            {"name": "He1", "molecule_id": mol_insert["data"][0], "comment": None, "local_results": {}},
+            {"name": "He2", "molecule_id": mol_insert["data"][1], "comment": None, "local_results": {}},
+        ],
+    }
+
+    db2 = {
+        "collection": collection,
+        "name": name,
+        "group": "not default"
+    }
+
+    ret = storage_socket.add_collection(db)
+    assert ret["meta"]["n_inserted"] == 1
+
+    include = {"records", "name"}
+    ret = storage_socket.get_collections(collection=collection, name=name, include=include)
+    assert ret["meta"]["success"] is True
+    assert len(ret["data"]) == 1
+    assert set(ret["data"][0].keys()) == include
+    assert len(ret["data"][0]["records"]) == 2
+
+    ret = storage_socket.add_collection(db2, overwrite=True)
+    ret = storage_socket.get_collections(collection=collection, name=name, include=include)
+    assert ret["meta"]["success"] is True
+    assert len(ret["data"]) == 1
+    assert set(ret["data"][0].keys()) == include
+    assert len(ret["data"][0]["records"]) == 2
+
+    # cleanup
+    storage_socket.del_collection(collection=collection, name=name)
+    storage_socket.del_molecules(mol_insert["data"])

@@ -202,7 +202,7 @@ class Collection(abc.ABC):
             return copy.deepcopy(data)
 
     @abc.abstractmethod
-    def _pre_save_prep(self, client: "FractalClient"):
+    def _pre_save_prep(self, client: "FractalClient") -> Optional[List[str]]:
         """
         Additional actions to take before saving, done as the last step before data is written.
 
@@ -240,16 +240,16 @@ class Collection(abc.ABC):
             self._check_client()
             client = self.client
 
-        self._pre_save_prep(client)
+        ignore = self._pre_save_prep(client)
 
         # Add the database
         if self.data.id == self.data.__fields__["id"].default:
-            response = client.add_collection(self.data.dict(), overwrite=False, full_return=True)
+            response = client.add_collection(self.data.dict(), overwrite=False, full_return=True, ignore=ignore)
             if response.meta.success is False:
                 raise KeyError(f"Error adding collection: \n{response.meta.error_description}")
             self.data.__dict__["id"] = response.data
         else:
-            response = client.add_collection(self.data.dict(), overwrite=True, full_return=True)
+            response = client.add_collection(self.data.dict(), overwrite=True, full_return=True, ignore=ignore)
             if response.meta.success is False:
                 raise KeyError(f"Error updating collection: \n{response.meta.error_description}")
 

@@ -283,7 +283,7 @@ class Dataset(Collection):
             del self._new_keywords[k]
         self._updated_state = False
 
-    def _pre_save_prep(self, client: "FractalClient") -> None:
+    def _pre_save_prep(self, client: "FractalClient") -> Optional[List[str]]:
         self._canonical_pre_save(client)
 
         # Preps any new molecules introduced to the Dataset before storing data.
@@ -299,6 +299,9 @@ class Dataset(Collection):
 
         self._new_records = []
         self._new_molecules = {}
+
+        if self.data.records is None:
+            return ["records"]
 
     def get_entries(self, subset: Optional[List[str]] = None, force: bool = False) -> pd.DataFrame:
         """
@@ -1118,7 +1121,7 @@ class Dataset(Collection):
         """
         self._check_client()
         self._check_state()
-
+        self._ensure_records()
         ret = []
         plan = composition_planner(**query)
         if raise_on_plan and (len(plan) > 1):
@@ -1200,6 +1203,7 @@ class Dataset(Collection):
 
         self._check_client()
         self._check_state()
+        self._ensure_records()
 
         umols = list(set(molecules))
 

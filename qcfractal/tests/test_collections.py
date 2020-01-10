@@ -1508,3 +1508,32 @@ def test_update_metadata(gradient_dataset_fixture):
     ds.save()
     assert ds.data.records is None
     assert ds.data.contributed_values is None
+
+
+def test_update_metadata_2(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+    client.list_collections()
+
+    ds = ptl.collections.Dataset("test_update_metadata_2", client=client)
+    ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
+    ds.save()
+    assert len(ds.data.records) == 1
+
+    ds = client.get_collection("Dataset", "test_update_metadata_2")
+    ds.get_entries()
+    assert len(ds.data.records) == 1
+
+    ds = client.get_collection("Dataset", "test_update_metadata_2")
+    assert ds.data.records is None
+    assert ds.data.contributed_values is None
+
+    ds.data.__dict__["description"] = "modified description"
+    ds.save()
+    assert ds.data.records is None
+    assert ds.data.contributed_values is None
+
+    ds.get_entries()
+    assert len(ds.data.records) == 1
+
+
+

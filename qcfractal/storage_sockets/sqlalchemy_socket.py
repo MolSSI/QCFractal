@@ -968,7 +968,6 @@ class SQLAlchemySocket:
                 update_fields[field] = data.pop(field)
 
         update_fields["extra"] = data  # todo: check for sql injection
-
         with self.session_scope() as session:
 
             try:

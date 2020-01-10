@@ -426,6 +426,7 @@ class CollectionPOSTBody(ProtoModel):
             description="The existing Collection in the database will be updated if this is True, otherwise will "
             "remain unmodified if it already exists.",
         )
+        ignore: List[str] = Field([], description="When updating a collection, do not update these fields.")
 
     class Data(ProtoModel):
         id: str = Field(
