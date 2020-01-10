@@ -87,8 +87,7 @@ class ReactionDataset(Dataset):
         )
 
     def _entry_index(self, subset: Optional[List[str]] = None) -> None:
-        if self.data.records is None:
-            self._get_data_records_from_db()
+        self._ensure_records()
         # Unroll the index
         tmp_index = []
         for rxn in self.data.records:

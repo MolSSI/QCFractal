@@ -261,8 +261,7 @@ class Dataset(Collection):
 
     def _entry_index(self, subset: Optional[List[str]] = None) -> pd.DataFrame:
         # TODO: make this fast for subsets
-        if self.data.records is None:
-            self._get_data_records_from_db()
+        self._ensure_records()
 
         ret = pd.DataFrame(
             [[entry.name, entry.molecule_id] for entry in self.data.records], columns=["name", "molecule_id"]
@@ -292,7 +291,7 @@ class Dataset(Collection):
 
         # Update internal molecule UUID's to servers UUID's
         if len(self._new_records) > 0:
-            self._get_data_records_from_db()
+            self._ensure_records()
         for record in self._new_records:
             molecule_hash = record.pop("molecule_hash")
             new_record = MoleculeEntry(molecule_id=mol_ret[molecule_hash], **record)
@@ -1382,6 +1381,10 @@ class Dataset(Collection):
 
     def _ensure_contributed_values(self) -> None:
         if self.data.contributed_values is None:
+            self._get_data_records_from_db()
+
+    def _ensure_records(self) -> None:
+        if self.data.records is None:
             self._get_data_records_from_db()
 
     def _list_contributed_values(self) -> pd.DataFrame:
