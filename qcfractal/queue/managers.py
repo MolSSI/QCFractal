@@ -86,7 +86,7 @@ class QueueManager:
         queue_client: "BaseAdapter",
         logger: Optional[logging.Logger] = None,
         max_tasks: int = 200,
-        queue_tag: str = None,
+        queue_tag: Optional[Union[str, List[str]]] = None,
         manager_name: str = "unlabeled",
         update_frequency: Union[int, float] = 2,
         verbose: bool = True,

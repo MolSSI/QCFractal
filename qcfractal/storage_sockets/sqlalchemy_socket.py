@@ -7,6 +7,7 @@ try:
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
     from sqlalchemy.sql.expression import desc
+    from sqlalchemy.sql.expression import case as expression_case
 except ImportError:
     raise ImportError(
         "SQLAlchemy_socket requires sqlalchemy, please install this python " "module or try a different db_socket."
@@ -1916,13 +1917,17 @@ class SQLAlchemySocket:
         none_filt = TaskQueueORM.procedure == None  # lgtm [py/test-equals-none]
         query.append(or_(proc_filt, none_filt))
 
+        order_by = []
+        if tag is not None:
+            if isinstance(tag, str):
+                tag = [tag]
+            task_order = expression_case([(TaskQueueORM.tag == t, num) for num, t in enumerate(tag)])
+            order_by.append(task_order)
+
+        order_by.extend([TaskQueueORM.priority.desc(), TaskQueueORM.created_on])
+
         with self.session_scope() as session:
-            query = (
-                session.query(TaskQueueORM)
-                .filter(*query)
-                .order_by(TaskQueueORM.priority.desc(), TaskQueueORM.created_on)
-                .limit(limit)
-            )
+            query = session.query(TaskQueueORM).filter(*query).order_by(*order_by).limit(limit)
 
             # print(query.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
             found = query.all()

@@ -79,6 +79,71 @@ def test_queue_manager_single_tags(compute_adapter_fixture):
         assert isinstance(manager["configuration"], dict)
 
 
+@testing.using_rdkit
+def test_queue_manager_multiple_tags(compute_adapter_fixture):
+    client, server, adapter = compute_adapter_fixture
+    reset_server_database(server)
+
+    config = {"Hello": "World"}
+    base_molecule = ptl.data.get_molecule("butane.json")
+
+    # Add compute
+    molecules = [base_molecule.copy(update={"geometry": base_molecule.geometry + 0.1 * i}) for i in range(6)]
+    tags = ["tag2", "tag1", "tag1", "tag2", "tag1", "tag3"]
+    tasks = [
+        client.add_compute("rdkit", "UFF", "", "energy", None, [mol], tag=tag).ids[0]
+        for mol, tag in zip(molecules, tags)
+    ]
+
+    manager = queue.QueueManager(client, adapter, queue_tag=["tag1", "tag2"], configuration=config, max_tasks=2)
+
+    # Check that tasks are pulled in the correct order
+    manager.await_results()
+    ret = client.query_results(tasks)
+    ref_status = {
+        tasks[0]: "INCOMPLETE",
+        tasks[1]: "COMPLETE",
+        tasks[2]: "COMPLETE",
+        tasks[3]: "INCOMPLETE",
+        tasks[4]: "INCOMPLETE",
+        tasks[5]: "INCOMPLETE",
+    }
+    for result in ret:
+        assert result.status == ref_status[result.id]
+
+    manager.await_results()
+    ret = client.query_results(tasks)
+    ref_status = {
+        tasks[0]: "COMPLETE",
+        tasks[1]: "COMPLETE",
+        tasks[2]: "COMPLETE",
+        tasks[3]: "INCOMPLETE",
+        tasks[4]: "COMPLETE",
+        tasks[5]: "INCOMPLETE",
+    }
+    for result in ret:
+        assert result.status == ref_status[result.id]
+
+    manager.await_results()
+    ret = client.query_results(tasks)
+    ref_status = {
+        tasks[0]: "COMPLETE",
+        tasks[1]: "COMPLETE",
+        tasks[2]: "COMPLETE",
+        tasks[3]: "COMPLETE",
+        tasks[4]: "COMPLETE",
+        tasks[5]: "INCOMPLETE",
+    }
+    for result in ret:
+        assert result.status == ref_status[result.id]
+
+    # Check that tag list is correctly validated to not include None
+    # This could be implemented, but would require greater sophistication
+    # in SQLAlchemySocket.queue_get_next()
+    with pytest.raises(TypeError):
+        queue.QueueManager(client, adapter, queue_tag=["tag1", None])
+
+
 @pytest.mark.slow
 @testing.using_rdkit
 def test_queue_manager_log_statistics(compute_adapter_fixture, caplog):
