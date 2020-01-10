@@ -41,6 +41,7 @@ dependencies:
   - plotly >=4.0.0
   - pyarrow >=0.13.0
   - tqdm
+  - pint <=0.9
 
   # Test depends
   - codecov
