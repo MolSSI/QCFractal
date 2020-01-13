@@ -359,15 +359,9 @@ def test_queue_order_procedure_priority(fractal_compute_server):
     assert len(fractal_compute_server.storage.queue_get_next(manager, ["rdkit"], ["geom"], limit=1)) == 0
     assert len(fractal_compute_server.storage.queue_get_next(manager, ["prog1"], ["geometric"], limit=1)) == 0
 
-    queue_id1 = fractal_compute_server.storage.queue_get_next(manager, ["rdkit"], ["geometric"], limit=1)[
-        0
-    ].base_result
-    queue_id2 = fractal_compute_server.storage.queue_get_next(manager, ["RDKIT"], ["geometric"], limit=1)[
-        0
-    ].base_result
-    queue_id3 = fractal_compute_server.storage.queue_get_next(manager, ["rdkit"], ["GEOMETRIC"], limit=1)[
-        0
-    ].base_result
+    queue_id1 = fractal_compute_server.storage.queue_get_next(manager, ["rdkit"], ["geometric"], limit=1)[0].base_result
+    queue_id2 = fractal_compute_server.storage.queue_get_next(manager, ["RDKIT"], ["geometric"], limit=1)[0].base_result
+    queue_id3 = fractal_compute_server.storage.queue_get_next(manager, ["rdkit"], ["GEOMETRIC"], limit=1)[0].base_result
 
     assert queue_id1 == ret2
     assert queue_id2 == ret3

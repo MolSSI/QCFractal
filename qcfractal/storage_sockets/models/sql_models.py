@@ -239,7 +239,6 @@ class TaskQueueORM(Base):
     def base_result(self, val):
         self.base_result_id = int(val)
 
-
     # can reference ResultORMs or any ProcedureORM
     base_result_id = Column(Integer, ForeignKey("base_result.id", ondelete="cascade"), unique=True)
     base_result_obj = relationship("BaseResultORM", lazy="select")  # or lazy='joined'

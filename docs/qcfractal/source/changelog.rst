@@ -25,6 +25,7 @@ Enhancements
 - (:pr:`483`) Dataset Views are now much faster to load in HDF5.
 - (:pr:`488`) Allows gzipped dataset views.
 - (:pr:`490`) Computes checksums on gzipped dataset views.
+- (:pr:`542`) ``TaskRecord.base_result`` is now an ``ObjectId``, and no more a ``DBRef``. So, code that uses ``my_task.base_result.id`` should change to simply be ``my_task.base_result``.
 
 Bug Fixes
 +++++++++
