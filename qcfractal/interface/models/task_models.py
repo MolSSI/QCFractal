@@ -87,7 +87,7 @@ class TaskRecord(ProtoModel):
         "explicitly reference this tag. If no Tag is specified, any Queue Manager can pull this Task.",
     )
     # Link back to the base Result
-    base_result: Union[DBRef, int] = Field(
+    base_result: ObjectId = Field(
         ..., description="Reference to the output Result from this Task as it exists within the database."
     )
     error: Optional[ComputeError] = Field(
