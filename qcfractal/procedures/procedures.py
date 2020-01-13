@@ -43,7 +43,7 @@ class BaseTasks:
                 "error_description": False,
                 "errors": errors,
             },
-            "data": {"ids": results_ids, "submitted": [x.base_result.id for x in new_tasks], "existing": existing_ids},
+            "data": {"ids": results_ids, "submitted": [x.base_result for x in new_tasks], "existing": existing_ids},
         }
 
         return results
@@ -146,7 +146,7 @@ class SingleResultTasks(BaseTasks):
                     "program": data.meta.program,
                     "tag": tag,
                     "priority": priority,
-                    "base_result": {"ref": "result", "id": base_id},
+                    "base_result": base_id,
                 }
             )
 
@@ -160,7 +160,7 @@ class SingleResultTasks(BaseTasks):
         completed_tasks = []
         updates = []
         for data in result_outputs:
-            result = self.storage.get_results(id=data["base_result"].id)["data"][0]
+            result = self.storage.get_results(id=data["base_result"])["data"][0]
             result = ResultRecord(**result)
 
             rdata = data["result"]
@@ -185,7 +185,7 @@ class SingleResultTasks(BaseTasks):
                 available_keys = wfn.keys() - _wfn_return_names
                 if available_keys > _wfn_all_fields:
                     self.logger.warning(
-                        f"Too much wavefunction data for result {data['base_result'].id}, removing extra data."
+                        f"Too much wavefunction data for result {data['base_result']}, removing extra data."
                     )
                     available_keys &= _wfn_all_fields
 
@@ -334,7 +334,7 @@ class OptimizationTasks(BaseTasks):
                     "procedure": data.meta.program,
                     "tag": tag,
                     "priority": priority,
-                    "base_result": {"ref": "procedure", "id": base_id},
+                    "base_result": base_id,
                 }
             )
 
@@ -351,7 +351,7 @@ class OptimizationTasks(BaseTasks):
         completed_tasks = []
         updates = []
         for output in opt_outputs:
-            rec = self.storage.get_procedures(id=output["base_result"].id)["data"][0]
+            rec = self.storage.get_procedures(id=output["base_result"])["data"][0]
             rec = OptimizationRecord(**rec)
 
             procedure = output["result"]

@@ -1890,7 +1890,7 @@ class SQLAlchemySocket:
                     # print(str(err))
                     session.rollback()
                     # TODO: merge hooks
-                    task = session.query(TaskQueueORM).filter_by(base_result_id=record.base_result.id).first()
+                    task = session.query(TaskQueueORM).filter_by(base_result_id=record.base_result).first()
                     self.logger.warning("queue_submit got a duplicate task: {}".format(task.to_dict()))
                     results.append(str(task.id))
                     meta["duplicates"].append(task_num)
@@ -2247,7 +2247,7 @@ class SQLAlchemySocket:
         task_ids = []
         with self.session_scope() as session:
             for task in record_list:
-                doc = session.query(TaskQueueORM).filter_by(base_result_id=task.base_result.id)
+                doc = session.query(TaskQueueORM).filter_by(base_result_id=task.base_result_id)
 
                 if get_count_fast(doc) == 0:
                     doc = TaskQueueORM(**task.dict(exclude={"id"}))
