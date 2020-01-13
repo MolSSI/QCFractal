@@ -1245,8 +1245,10 @@ class Dataset(Collection):
                         f"This has been corrected."
                     )
                 self._column_metadata[column]["units"] = value
-            except ValueError as e:
-                # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow
+            except (ValueError, TypeError) as e:
+                # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow.
+                # In pint <=0.9, DimensionalityError is a ValueError.
+                # In pint >=0.10, DimensionalityError is TypeError.
                 if e.__class__.__name__ == "DimensionalityError":
                     pass
                 else:
@@ -1481,8 +1483,10 @@ class Dataset(Collection):
             try:
                 new_data[column_name] *= constants.conversion_factor(units[column_name], self.units)
                 metadata["units"] = self.units
-            except ValueError as e:
-                # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow
+            except (ValueError, TypeError) as e:
+                # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow.
+                # In pint <=0.9, DimensionalityError is a ValueError.
+                # In pint >=0.10, DimensionalityError is TypeError.
                 if e.__class__.__name__ == "DimensionalityError":
                     metadata["units"] = units[column_name]
                 else:

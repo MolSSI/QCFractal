@@ -9,7 +9,7 @@ import os
 import signal
 from enum import Enum
 from math import ceil
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import tornado.log
 import yaml
@@ -156,13 +156,14 @@ class QueueManagerSettings(AutodocBaseSettings):
         description="Name of this scheduler to present to the Fractal Server. Descriptive names help the server "
         "identify the manager resource and assists with debugging.",
     )
-    queue_tag: Optional[str] = Field(
+    queue_tag: Optional[Union[str, List[str]]] = Field(
         None,
         description="Only pull tasks from the Fractal Server with this tag. If not set (None/null), then pull untagged "
         "tasks, which should be the majority of tasks. This option should only be used when you want to "
         "pull very specific tasks which you know have been tagged as such on the server. If the server has "
         "no tasks with this tag, no tasks will be pulled (and no error is raised because this is intended "
-        "behavior).",
+        "behavior). If multiple tags are provided, tasks will be pulled (but not necessarily executed) in order of the "
+        "tags.",
     )
     log_file_prefix: Optional[str] = Field(
         None,
