@@ -177,7 +177,11 @@ def parse_args():
 
     # Restore
     restore = subparsers.add_parser("restore", help="Restores the database from a backup file.")
+    restore.add_argument("filename", default=None, type=str, help="The filename to restore from.")
     restore.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+    restore.add_argument(
+        "--force", action="store_true", help="If True, do not ask if the user wishes to delete the current database."
+    )
 
     ### Move args around
     args = vars(parser.parse_args())
@@ -492,9 +496,41 @@ def server_backup(args, config):
 
 
 def server_restore(args, config):
-    standard_command_startup("restore", config)
+    psql = standard_command_startup("restore", config)
+
+    print("!WARNING! This will erase old data. Make sure to to run 'qcfractal-server backup' before this option.")
+
+    if args["force"] is False:
+        user_required_input = f"REMOVEALLDATA {str(config.database_path)}"
+        print(f"!WARNING! If you are sure you wish to proceed please type '{user_required_input}' below.")
+
+        inp = input("  > ")
+        print()
+        if inp != user_required_input:
+            print(f"Input does not match '{user_required_input}', exiting.")
+            sys.exit(1)
 
     print("\n>>> Starting restore, this may take several hours for large database (100+ GB)...")
+
+    db_name = config.database.database_name
+    db_backup_name = db_name + "_backup"
+
+    print("Renaming old database for backup...")
+    cmd = psql.command(f"ALTER DATABASE {db_name} RENAME TO {db_backup_name};", check=False)
+    if cmd["retcode"] != 0:
+        print(cmd["stderr"])
+        raise ValueError("Could not rename the old database, stopping.")
+
+    print("Restoring database...")
+    try:
+        psql.restore_database(args["filename"])
+    except:
+        print("Could not restore the database from file, reverting to the old database.")
+        cmd = psql.command(f"DROP DATABASE {db_name};", check=False)
+        psql.command(f"ALTER DATABASE {db_backup_name} RENAME TO {db_name};")
+        exit()
+
+    print("Restore complete!")
 
 
 def main(args=None):

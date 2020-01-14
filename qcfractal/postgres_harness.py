@@ -131,7 +131,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         except psycopg2._psycopg.OperationalError:
             return False
 
-    def command(self, cmd: str) -> Any:
+    def command(self, cmd: str, check: bool = True) -> Any:
         """Runs psql commands and returns their output while connected to the correct postgres instance.
 
         Parameters
@@ -145,7 +145,12 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
 
         self.logger(f"pqsl command: {cmd}")
         psql_cmd = [shutil.which("psql"), "-p", str(self.config.database.port), "-c"]
-        return self._run(psql_cmd + [cmd])
+
+        cmd = self._run(psql_cmd + [cmd])
+        if check:
+            if cmd["retcode"] != 0:
+                raise ValueError("psql operation did not complete.")
+        return cmd
 
     def pg_ctl(self, cmds: List[str]) -> Any:
         """Runs pg_ctl commands and returns their output while connected to the correct postgres instance.
@@ -340,8 +345,6 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
 
     def backup_database(self, filename: Optional[str] = None) -> None:
 
-        # sudo -u dgasmith /home/dgasmith/miniconda3/envs/qcfprod/bin/pg_dump -Fc qcarchivedb
-        # > database_name.bak
         # Reasonable check here
         self._check_psql()
 
@@ -364,6 +367,29 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         if ret["retcode"] != 0:
             self.logger(ret)
             raise ValueError("\nFailed to backup the database.\n")
+
+    def restore_database(self, filename) -> None:
+
+        # Reasonable check here
+        self._check_psql()
+
+        self.create_database(self.config.database.database_name)
+
+        # fmt: off
+        cmds = [
+            shutil.which("pg_restore"),
+            f"--port={self.config.database.port}",
+            f"--dbname={self.config.database.database_name}",
+            filename
+        ]
+        # fmt: on
+
+        self.logger(f"pg_backup command: {'  '.join(cmds)}")
+        ret = self._run(cmds)
+
+        if ret["retcode"] != 0:
+            self.logger(ret["stderr"])
+            raise ValueError("\nFailed to restore the database.\n")
 
 
 class TemporaryPostgres:
