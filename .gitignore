@@ -97,3 +97,6 @@ runinfo/
 
 #vscode
 **/.vscode/
+
+# QCFractal backup files
+*.bak

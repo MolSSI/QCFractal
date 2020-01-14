@@ -25,6 +25,7 @@ def ensure_postgres_alive(psql):
             print(str(e))
             sys.exit(1)
 
+
 def standard_command_startup(name, config, check=True):
     print(f"QCFractal server {name}.\n")
     print(f"QCFractal server base folder: {config.base_folder}")
@@ -33,6 +34,9 @@ def standard_command_startup(name, config, check=True):
         print("\n>>> Checking the PostgreSQL connection...")
         psql = PostgresHarness(config, quiet=False, logger=print)
         ensure_postgres_alive(psql)
+
+    return psql
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="A CLI for the QCFractalServer.")
@@ -163,11 +167,16 @@ def parse_args():
 
     # Backup
     backup = subparsers.add_parser("backup", help="Creates a postgres backup file of the current database.")
+    backup.add_argument(
+        "--filename",
+        default=None,
+        type=str,
+        help="The filename to dump the backup to, defaults to 'database_name.bak'.",
+    )
     backup.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     # Restore
     restore = subparsers.add_parser("restore", help="Restores the database from a backup file.")
-    restore.add_argument("filename", default=None, type=str, help="The filename of the backup file.")
     restore.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     ### Move args around
@@ -398,7 +407,7 @@ def server_start(args, config):
 
 
 def server_upgrade(args, config):
-    standard_command_startup("upgrade", config)
+    psql = standard_command_startup("upgrade", config)
 
     print("\n>>> Upgrading the Database...")
 
@@ -474,9 +483,13 @@ def server_dashboard(args, config):
 
 
 def server_backup(args, config):
-    standard_command_startup("backup", config)
+    psql = standard_command_startup("backup", config)
 
     print("\n>>> Starting backup, this may take several hours for large databases (100+ GB)...")
+    psql.backup_database(filename=args["filename"])
+
+    print("Backup complete!")
+
 
 def server_restore(args, config):
     standard_command_startup("restore", config)

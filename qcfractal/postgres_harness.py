@@ -338,6 +338,33 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
             self.logger(ret)
             raise ValueError("\nFailed to Stamp the database with current version.\n")
 
+    def backup_database(self, filename: Optional[str] = None) -> None:
+
+        # sudo -u dgasmith /home/dgasmith/miniconda3/envs/qcfprod/bin/pg_dump -Fc qcarchivedb
+        # > database_name.bak
+        # Reasonable check here
+        self._check_psql()
+
+        if filename is None:
+            filename = os.path.realpath(f"{self.config.database.database_name}.bak")
+
+        # fmt: off
+        cmds = [
+            shutil.which("pg_dump"),
+            "-p", str(self.config.database.port),
+            "-d", self.config.database.database_name,
+            "-Fc", # Custom postgres format, fast
+            "--file", filename
+        ]
+        # fmt: on
+
+        self.logger(f"pg_backup command: {'  '.join(cmds)}")
+        ret = self._run(cmds)
+
+        if ret["retcode"] != 0:
+            self.logger(ret)
+            raise ValueError("\nFailed to backup the database.\n")
+
 
 class TemporaryPostgres:
     def __init__(
