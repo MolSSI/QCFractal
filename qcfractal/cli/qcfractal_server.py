@@ -25,6 +25,14 @@ def ensure_postgres_alive(psql):
             print(str(e))
             sys.exit(1)
 
+def standard_command_startup(name, config, check=True):
+    print(f"QCFractal server {name}.\n")
+    print(f"QCFractal server base folder: {config.base_folder}")
+
+    if check:
+        print("\n>>> Checking the PostgreSQL connection...")
+        psql = PostgresHarness(config, quiet=False, logger=print)
+        ensure_postgres_alive(psql)
 
 def parse_args():
     parser = argparse.ArgumentParser(description="A CLI for the QCFractalServer.")
@@ -149,9 +157,18 @@ def parse_args():
     user_remove = user_subparsers.add_parser("remove", help="Remove a user.")
     user_remove.add_argument("username", default=None, type=str, help="The username to remove.")
 
-    # Dsahboard
+    # Dashboard
     dashboard = subparsers.add_parser("dashboard", help="Launches a Dashboard for the server (beta).")
     dashboard.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+
+    # Backup
+    backup = subparsers.add_parser("backup", help="Creates a postgres backup file of the current database.")
+    backup.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+
+    # Restore
+    restore = subparsers.add_parser("restore", help="Restores the database from a backup file.")
+    restore.add_argument("filename", default=None, type=str, help="The filename of the backup file.")
+    restore.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     ### Move args around
     args = vars(parser.parse_args())
@@ -381,16 +398,7 @@ def server_start(args, config):
 
 
 def server_upgrade(args, config):
-    # alembic upgrade head
-
-    print("Upgrading QCFractal server.\n")
-
-    print(f"QCFractal server base folder: {config.base_folder}")
-
-    print("\n>>> Checking the PostgreSQL connection...")
-    psql = PostgresHarness(config, quiet=False, logger=print)
-
-    ensure_postgres_alive(psql)
+    standard_command_startup("upgrade", config)
 
     print("\n>>> Upgrading the Database...")
 
@@ -402,15 +410,7 @@ def server_upgrade(args, config):
 
 
 def server_user(args, config):
-
-    print("QCFractal server user function.\n")
-
-    print(f"QCFractal server base folder: {config.base_folder}")
-
-    print("\n>>> Checking the PostgreSQL connection...")
-
-    psql = PostgresHarness(config, quiet=False, logger=print)
-    ensure_postgres_alive(psql)
+    standard_command_startup("user function", config)
 
     storage = storage_socket_factory(config.database_uri(safe=False))
 
@@ -463,15 +463,7 @@ def server_user(args, config):
 
 
 def server_dashboard(args, config):
-
-    print("QCFractal server dashboard.\n")
-
-    print(f"QCFractal server base folder: {config.base_folder}")
-
-    print("\n>>> Checking the PostgreSQL connection...")
-
-    psql = PostgresHarness(config, quiet=False, logger=print)
-    ensure_postgres_alive(psql)
+    standard_command_startup("dashboard", config)
 
     from ..dashboard import app
 
@@ -479,6 +471,17 @@ def server_dashboard(args, config):
     app.server.config["FRACTAL_CONFIG"] = config
 
     app.run_server(debug=True)
+
+
+def server_backup(args, config):
+    standard_command_startup("backup", config)
+
+    print("\n>>> Starting backup, this may take several hours for large databases (100+ GB)...")
+
+def server_restore(args, config):
+    standard_command_startup("restore", config)
+
+    print("\n>>> Starting restore, this may take several hours for large database (100+ GB)...")
 
 
 def main(args=None):
@@ -527,6 +530,10 @@ def main(args=None):
         server_user(args, config)
     elif command == "dashboard":
         server_dashboard(args, config)
+    elif command == "backup":
+        server_backup(args, config)
+    elif command == "restore":
+        server_restore(args, config)
 
 
 if __name__ == "__main__":
