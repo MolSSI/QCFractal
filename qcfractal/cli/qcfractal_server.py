@@ -396,6 +396,7 @@ def server_upgrade(args, config):
 
     try:
         psql.upgrade()
+        psql.update_db_version()
     except ValueError as e:
         print(str(e))
         sys.exit(1)

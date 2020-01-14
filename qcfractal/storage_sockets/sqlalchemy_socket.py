@@ -66,6 +66,9 @@ from .models import Base
 if TYPE_CHECKING:
     from ..services.service_util import BaseService
 
+# for version checking
+import qcelemental, qcfractal, qcengine
+
 _null_keys = {"basis", "keywords"}
 _id_keys = {"id", "molecule", "keywords", "procedure_id"}
 _lower_func = lambda x: x.lower()
@@ -204,9 +207,20 @@ class SQLAlchemySocket:
 
         self.Session = sessionmaker(bind=self.engine)
 
+        # check version compatibility
+        db_ver = self.check_lib_versions()
+        self.logger.info(f"DB versions: {db_ver}")
+        if db_ver and qcfractal.__version__ != db_ver["fractal_version"]:
+            raise TypeError(
+                f"You are running QCFractal version {qcfractal.__version__} "
+                f'with an older DB version ({db_ver["fractal_version"]}). '
+                f'Please run "qcfractal-server upgrade" first before starting the server.'
+            )
+
         # actually create the tables
         try:
             Base.metadata.create_all(self.engine)
+            self.check_lib_versions()  # update version if new DB
         except Exception as e:
             raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}") from None
 
@@ -240,8 +254,6 @@ class SQLAlchemySocket:
 
         self._project_name = project
         self._max_limit = max_limit
-
-        self.check_lib_versions()
 
     def __str__(self) -> str:
         return f"<SQLAlchemySocket: address='{self.uri}`>"
@@ -2672,14 +2684,15 @@ class SQLAlchemySocket:
     def check_lib_versions(self):
         """Check the stored versions of elemental and fractal"""
 
+        # check if versions table exist
+        if not self.engine.dialect.has_table(self.engine, "versions"):
+            return None
+
         with self.session_scope() as session:
             db_ver = session.query(VersionsORM).order_by(VersionsORM.created_on.desc())
-            if db_ver.count() == 0:
-                # FIXME: get versions from the right place
-                import qcelemental
-                import qcfractal
-                import qcengine
 
+            # Table exists but empty
+            if db_ver.count() == 0:
                 elemental_version = qcelemental.__version__
                 fractal_version = qcfractal.__version__
                 engine_version = qcengine.__version__

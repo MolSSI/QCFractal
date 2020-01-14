@@ -8,8 +8,9 @@ from typing import Any, Dict, List, Optional, Union
 
 import psycopg2
 from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-from qcfractal.storage_sockets.models import Base
+from qcfractal.storage_sockets.models import Base, VersionsORM
 
 from .config import FractalConfig
 from .util import find_port, is_port_open
@@ -199,6 +200,33 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
             Base.metadata.create_all(engine)
         except Exception as e:
             raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}")
+
+        return True
+
+    def update_db_version(self):
+        """Update current version of QCFractal in the DB"""
+
+        uri = self.config.database_uri()
+
+        engine = create_engine(uri, echo=False, pool_size=1)
+        session = sessionmaker(bind=engine)()
+        try:
+            import qcfractal, qcelemental, qcengine
+
+            elemental_version = qcelemental.__version__
+            fractal_version = qcfractal.__version__
+            engine_version = qcengine.__version__
+
+            self.logger(f"Updating current version of QCFractal in DB: {uri} \n" f"to version {qcfractal.__version__}")
+            current_ver = VersionsORM(
+                elemental_version=elemental_version, fractal_version=fractal_version, engine_version=engine_version
+            )
+            session.add(current_ver)
+            session.commit()
+        except Exception as e:
+            raise ValueError(f"Failed to Update DB version.\n {str(e)}")
+        finally:
+            session.close()
 
         return True
 
