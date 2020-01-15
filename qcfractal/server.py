@@ -269,7 +269,7 @@ class FractalServer:
             "version": get_information("version"),
             "query_limit": self.storage.get_limit(1.0e9),
             "client_lower_version_limit": "0.12.1",  # Must be XX.YY.ZZ
-            "client_upper_version_limit": "0.12.99",  # Must be XX.YY.ZZ
+            "client_upper_version_limit": "0.13.99",  # Must be XX.YY.ZZ
         }
         self.update_public_information()
 
