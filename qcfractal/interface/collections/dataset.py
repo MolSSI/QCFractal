@@ -1559,7 +1559,7 @@ class Dataset(Collection):
             Either a DataFrame of indexed ResultRecords or a single ResultRecord if a single subset string was provided.
         """
         name, _, history = self._default_parameters(program, method, basis, keywords)
-        if name not in set(self.list_records().reset_index()["name"].unique()):
+        if len(self.list_records(**history)) == 0:
             raise KeyError(f"Requested query ({name}) did not match a known record.")
 
         indexer = self._molecule_indexer(subset=subset, force=True)

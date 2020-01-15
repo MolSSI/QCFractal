@@ -324,6 +324,16 @@ def test_gradient_dataset_values_subset(gradient_dataset_fixture, use_cache):
         assert df_compare(df1, df2, sort=True)
 
 
+def test_gradient_dataset_records_args(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    assert len(ds.get_records(method="hf", keywords="scf_default", basis="sto-3g")) == 2
+    assert (
+        len(ds.get_records(method="hf", keywords="scf_default")) == 4
+    )  # TODO: we might want a multi-keyword dataset fixture here
+    assert len(ds.get_records(method="hf")) == 4
+
+
 @pytest.fixture(scope="module", params=["download_view", "no_view", "remote_view"])
 def contributed_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
     """ Fixture for testing rich contributed datasets with many properties and molecules of different sizes"""
