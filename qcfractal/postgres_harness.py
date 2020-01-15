@@ -132,7 +132,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         except psycopg2._psycopg.OperationalError:
             return False
 
-    def command(self, cmd: str) -> Any:
+    def command(self, cmd: str, check: bool = True) -> Any:
         """Runs psql commands and returns their output while connected to the correct postgres instance.
 
         Parameters
@@ -144,9 +144,17 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         """
         self._check_psql()
 
+        if isinstance(cmd, str):
+            cmd = [cmd]
+
         self.logger(f"pqsl command: {cmd}")
         psql_cmd = [shutil.which("psql"), "-p", str(self.config.database.port), "-c"]
-        return self._run(psql_cmd + [cmd])
+
+        cmd = self._run(psql_cmd + cmd)
+        if check:
+            if cmd["retcode"] != 0:
+                raise ValueError("psql operation did not complete.")
+        return cmd
 
     def pg_ctl(self, cmds: List[str]) -> Any:
         """Runs pg_ctl commands and returns their output while connected to the correct postgres instance.
@@ -365,6 +373,65 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         if ret["retcode"] != 0:
             self.logger(ret)
             raise ValueError("\nFailed to Stamp the database with current version.\n")
+
+    def backup_database(self, filename: Optional[str] = None) -> None:
+
+        # Reasonable check here
+        self._check_psql()
+
+        if filename is None:
+            filename = f"{self.config.database.database_name}.bak"
+
+        filename = os.path.realpath(filename)
+
+        # fmt: off
+        cmds = [
+            shutil.which("pg_dump"),
+            "-p", str(self.config.database.port),
+            "-d", self.config.database.database_name,
+            "-Fc", # Custom postgres format, fast
+            "--file", filename
+        ]
+        # fmt: on
+
+        self.logger(f"pg_backup command: {'  '.join(cmds)}")
+        ret = self._run(cmds)
+
+        if ret["retcode"] != 0:
+            self.logger(ret)
+            raise ValueError("\nFailed to backup the database.\n")
+
+    def restore_database(self, filename) -> None:
+
+        # Reasonable check here
+        self._check_psql()
+
+        self.create_database(self.config.database.database_name)
+
+        # fmt: off
+        cmds = [
+            shutil.which("pg_restore"),
+            f"--port={self.config.database.port}",
+            f"--dbname={self.config.database.database_name}",
+            filename
+        ]
+        # fmt: on
+
+        self.logger(f"pg_backup command: {'  '.join(cmds)}")
+        ret = self._run(cmds)
+
+        if ret["retcode"] != 0:
+            self.logger(ret["stderr"])
+            raise ValueError("\nFailed to restore the database.\n")
+
+    def database_size(self) -> str:
+        """
+        Returns a pretty formatted string of the database size.
+        """
+
+        return self.command(
+            [f"SELECT pg_size_pretty( pg_database_size('{self.config.database.database_name}') );", "-t", "-A"]
+        )
 
 
 class TemporaryPostgres:
