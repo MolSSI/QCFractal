@@ -3,7 +3,7 @@ Changelog
 
 .. Use headers commented below commented as templates
 
-.. X.Y.0 / 2019-MM-DD
+.. X.Y.0 / 2020-MM-DD
 .. -------------------
 ..
 .. New Features
@@ -14,6 +14,37 @@ Changelog
 ..
 .. Bug Fixes
 .. +++++++++
+
+
+0.13.0 / 2020-01-15
+-------------------
+
+New Features
+++++++++++++
+- (:pr:`541`) Managers can now accept multiple tags. Tasks are pulled first in order of tag, then priority, then creation time.
+- (:pr:`544`) Adds backup/restore commands to the QCFractal CLI to allow for easier backup and restore options.
+
+Enhancements
+++++++++++++
+- (:pr:`507`) Automatically adds collection molecules in chunks if more than the current limit needs to be submitted.
+- (:pr:`515`) Conda environments now correspond to docker images in all deployed cases.
+- (:pr:`524`) The ``delete_collection`` function was added to ``qcportal.FractalClient``.
+- (:pr:`530`) Adds the ability to specify cores per rank for node-parallel tasks in QCEngine.
+- (:pr:`507`) Adds a formatting and lint check to CI during pull requests.
+- (:pr:`535`) Allows dftd3 to be computed for all stoichiometries rather than just defaults.
+- (:pr:`542`) Important: TaskRecord.base_result is now an ObjectId (int or str), and no more a ``DBRef``. So, code that uses ``my_task.base_result.id`` should change to simply use ``my_task.base_result``.
+
+Bug Fixes
++++++++++
+- (:pr:`506`) Fixes repeated visualize calls where previously the visualize call would corrupt local state.
+- (:pr:`521`) Fixes an issue where ProcessPoolExecutor returned the incorrect number of currently running tasks.
+- (:pr:`522`) Fixes a bug where ``ProcedureDataset.status()`` failed for specifications where only a subset was computed.
+- (:pr:`525`) This PR fixes ENTRYPOINT of the qcarchive_worker_openff worker. (Conda and Docker are not friends.)
+- (:pr:`532`) Fixes a testing subprocess routine when coverage is enabled for coverage 5.0 breaking changes.
+- (:pr:`543`) Fixes a bug where ``qcfractal-server`` "start" before an "upgrade" prevented the "upgrade" command from correctly running.
+- (:pr:`545`) Fixed an issue in Dataset.get_records() that could occur when the optional arguments keywords and basis were not provided.
+
+
 
 0.12.2 / 2019-12-07
 -------------------

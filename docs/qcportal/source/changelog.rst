@@ -15,6 +15,28 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+
+0.13.0 / 2020-01-15
+-------------------
+
+New Features
+++++++++++++
+
+Enhancements
+++++++++++++
+- (:pr:`507`) Automatically adds collection molecules in chunks if more than the current limit needs to be submitted.
+- (:pr:`515`) Conda environments now correspond to docker images in all deployed cases.
+- (:pr:`524`) The ``delete_collection`` function was added to ``qcportal.FractalClient``.
+- (:pr:`535`) Allows dftd3 to be computed for all stoichiometries rather than just defaults.
+
+Bug Fixes
++++++++++
+- (:pr:`506`) Fixes repeated visualize calls where previously the visualize call would corrupt local state.
+- (:pr:`522`) Fixes a bug where ``ProcedureDataset.status()`` failed for specifications where only a subset was computed.
+- (:pr:`525`) This PR fixes ENTRYPOINT of the qcarchive_worker_openff worker. (Conda and Docker are not friends.)
+- (:pr:`543`) Fixes a bug where ``qcfractal-server`` "start" before an "upgrade" prevented the "upgrade" command from correctly running.
+- (:pr:`545`) Fixed an issue in Dataset.get_records() that could occur when the optional arguments keywords and basis were not provided.
+
 0.12.2 / 2019-12-07
 -------------------
 
