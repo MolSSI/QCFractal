@@ -2,6 +2,7 @@
 A command line interface to the qcfractal server.
 """
 
+import os
 import argparse
 import shutil
 import sys
@@ -25,6 +26,14 @@ def ensure_postgres_alive(psql):
             print(str(e))
             sys.exit(1)
 
+
+def human_sizeof_byte(num, suffix='B'):
+    # SO: https://stackoverflow.com/questions/1094841/reusable-library-to-get-human-readable-version-of-file-size
+    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        if abs(num) < 1024.0:
+            return "%3.1f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f%s%s" % (num, 'Yi', suffix)
 
 def standard_command_startup(name, config, check=True):
     print(f"QCFractal server {name}.\n")
@@ -179,9 +188,9 @@ def parse_args():
     restore = subparsers.add_parser("restore", help="Restores the database from a backup file.")
     restore.add_argument("filename", default=None, type=str, help="The filename to restore from.")
     restore.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-    restore.add_argument(
-        "--force", action="store_true", help="If True, do not ask if the user wishes to delete the current database."
-    )
+    # restore.add_argument(
+    #     "--force", action="store_true", help="If True, do not ask if the user wishes to delete the current database."
+    # )
 
     ### Move args around
     args = vars(parser.parse_args())
@@ -490,6 +499,9 @@ def server_backup(args, config):
     psql = standard_command_startup("backup", config)
 
     print("\n>>> Starting backup, this may take several hours for large databases (100+ GB)...")
+
+    db_size = psql.database_size()
+    print(f"Current database size: {db_size['stdout']}")
     psql.backup_database(filename=args["filename"])
 
     print("Backup complete!")
@@ -500,17 +512,24 @@ def server_restore(args, config):
 
     print("!WARNING! This will erase old data. Make sure to to run 'qcfractal-server backup' before this option.")
 
-    if args["force"] is False:
-        user_required_input = f"REMOVEALLDATA {str(config.database_path)}"
-        print(f"!WARNING! If you are sure you wish to proceed please type '{user_required_input}' below.")
+    user_required_input = f"REMOVEALLDATA {str(config.database_path)}"
+    print(f"!WARNING! If you are sure you wish to proceed please type '{user_required_input}' below.")
 
-        inp = input("  > ")
-        print()
-        if inp != user_required_input:
-            print(f"Input does not match '{user_required_input}', exiting.")
-            sys.exit(1)
+    inp = input("  > ")
+    print()
+    if inp != user_required_input:
+        print(f"Input does not match '{user_required_input}', exiting.")
+        sys.exit(1)
 
-    print("\n>>> Starting restore, this may take several hours for large database (100+ GB)...")
+    if not os.path.isfile(args["filename"]):
+        print(f"Provided filename {args['filename']} does not exist.")
+        sys.exit(1)
+
+    restore_size = os.path.getsize(args["filename"])
+    human_rsize = human_sizeof_byte(restore_size)
+
+    print("\n>>> Starting restore, this may take several hours for large databases (100+ GB)...")
+    print(f"Current restore size: {human_rsize}")
 
     db_name = config.database.database_name
     db_backup_name = db_name + "_backup"
@@ -524,11 +543,12 @@ def server_restore(args, config):
     print("Restoring database...")
     try:
         psql.restore_database(args["filename"])
-    except:
+        psql.command(f"DROP DATABASE {db_backup_name};", check=False)
+    except ValueError:
         print("Could not restore the database from file, reverting to the old database.")
-        cmd = psql.command(f"DROP DATABASE {db_name};", check=False)
+        psql.command(f"DROP DATABASE {db_name};", check=False)
         psql.command(f"ALTER DATABASE {db_backup_name} RENAME TO {db_name};")
-        exit()
+        sys.exit(1)
 
     print("Restore complete!")
 

@@ -143,10 +143,13 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         """
         self._check_psql()
 
+        if isinstance(cmd, str):
+            cmd = [cmd]
+
         self.logger(f"pqsl command: {cmd}")
         psql_cmd = [shutil.which("psql"), "-p", str(self.config.database.port), "-c"]
 
-        cmd = self._run(psql_cmd + [cmd])
+        cmd = self._run(psql_cmd + cmd)
         if check:
             if cmd["retcode"] != 0:
                 raise ValueError("psql operation did not complete.")
@@ -390,6 +393,15 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         if ret["retcode"] != 0:
             self.logger(ret["stderr"])
             raise ValueError("\nFailed to restore the database.\n")
+
+    def database_size(self) -> str:
+        """
+        Returns a pretty formatted string of the database size.
+        """
+
+        return self.command([
+            f"SELECT pg_size_pretty( pg_database_size('{self.config.database.database_name}') );",
+            "-t", "-A"])
 
 
 class TemporaryPostgres:
