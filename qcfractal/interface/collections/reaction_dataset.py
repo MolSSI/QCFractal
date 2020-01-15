@@ -465,7 +465,7 @@ class ReactionDataset(Dataset):
         ret = []
         for s in stoich:
             name, _, history = self._default_parameters(program, method, basis, keywords, stoich=s)
-            if name not in set(self.list_records(stoichiometry=s).reset_index()["name"].unique()):
+            if len(self.list_records(**history)) == 0:
                 raise KeyError(f"Requested query ({name}) did not match a known record.")
             history.pop("stoichiometry")
             indexer, names = self._molecule_indexer(stoich=s, subset=subset, force=True)
