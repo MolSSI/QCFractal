@@ -27,13 +27,14 @@ def ensure_postgres_alive(psql):
             sys.exit(1)
 
 
-def human_sizeof_byte(num, suffix='B'):
+def human_sizeof_byte(num, suffix="B"):
     # SO: https://stackoverflow.com/questions/1094841/reusable-library-to-get-human-readable-version-of-file-size
-    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+    for unit in ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
         if abs(num) < 1024.0:
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
-    return "%.1f%s%s" % (num, 'Yi', suffix)
+    return "%.1f%s%s" % (num, "Yi", suffix)
+
 
 def standard_command_startup(name, config, check=True):
     print(f"QCFractal server {name}.\n")
@@ -502,7 +503,18 @@ def server_backup(args, config):
 
     db_size = psql.database_size()
     print(f"Current database size: {db_size['stdout']}")
-    psql.backup_database(filename=args["filename"])
+
+    filename = args["filename"]
+    if filename is None:
+        filename = f"{config.database.database_name}.bak"
+        print(f"No filename provided, defaulting to filename: {filename}")
+
+    filename = os.path.realpath(filename)
+
+    filename_temporary = filename + ".in_progress"
+    psql.backup_database(filename=filename_temporary)
+
+    shutil.move(filename_temporary, filename)
 
     print("Backup complete!")
 

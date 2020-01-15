@@ -352,7 +352,9 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         self._check_psql()
 
         if filename is None:
-            filename = os.path.realpath(f"{self.config.database.database_name}.bak")
+            filename = f"{self.config.database.database_name}.bak"
+
+        filename = os.path.realpath(filename)
 
         # fmt: off
         cmds = [
@@ -399,9 +401,9 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         Returns a pretty formatted string of the database size.
         """
 
-        return self.command([
-            f"SELECT pg_size_pretty( pg_database_size('{self.config.database.database_name}') );",
-            "-t", "-A"])
+        return self.command(
+            [f"SELECT pg_size_pretty( pg_database_size('{self.config.database.database_name}') );", "-t", "-A"]
+        )
 
 
 class TemporaryPostgres:
