@@ -131,6 +131,7 @@ Setting up and running Fractal's Queue Managers on your system.
 
    managers.rst
    managers_config_api.rst
+   managers_hpc.rst
    managers_samples.rst
    managers_faq.rst
    managers_detailed.rst

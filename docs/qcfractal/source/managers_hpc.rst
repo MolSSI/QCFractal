@@ -1,5 +1,5 @@
-Queue Managers for High-Performance Computing
-=============================================
+Configuration for High-Performance Computing
+============================================
 
 High-performance computing (HPC) clusters are designed to complete highly-parallel tasks in a short time.
 Properly leveraging such clusters requires utilizing large numbers of compute nodes at the same time,
@@ -17,15 +17,15 @@ Many Nodes per Job, Single Node per Application
 The recommended configuration for a QCFractal manager to use multi-node Jobs with
 tasks limited to a single node is launch many workers for a single Job.
 
-The Parsl adapter deploys a single ``manager'' per Job and uses the HPC systems's
+The Parsl adapter deploys a single ''manager'' per Job and uses the HPC system's
 MPI task launcher to deploy the Parsl executors on to the compute nodes.
 Each "executor" will run a single Python process per QCEngine worker and can run
 more than one worker per node.
 The ``manager`` will run on the login or batch node (depending on the cluster's configuration)
 once the Job is started and will communicate to the workers using Parsl's ØMQ messaging protocol.
-The QCFractal QueueManager will only need to Parsl manager and not any of the workers.
+The QCFractal QueueManager will connect to the Parsl manager for each Job.
 
-See the `example page <manager_samples.html>`_ for details on how to configure Parsl for your system.
+See the `example page <managers_samples.html>`_ for details on how to configure Parsl for your system.
 The configuration setting ``common.nodes_per_job`` defines the ability to make multi-node allocation
 requests to a scheduler via an Adapter.
 
@@ -44,4 +44,4 @@ equal to the number of nodes per Job divided by the number of nodes per Task.
 The worker will call the MPI launch system to place quantum-chemistry calculations on
 the compute nodes of the clusters.
 
-See the `example page <manager_samples.html>`_ for details on how to configure Parsl for your system.
+See the `example page <managers_samples.html>`_ for details on how to configure Parsl for your system.
