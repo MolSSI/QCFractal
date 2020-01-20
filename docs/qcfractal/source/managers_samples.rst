@@ -204,9 +204,10 @@ Single Job with Multiple Nodes and Single-Node Tasks with Parsl Adapter
 -----------------------------------------------------------------------
 
 Leadership platforms prefer or require more than one node per Job request.
-The following command will request a Job with 256 nodes and place one Worker on each node.
+The following configuration will request a Job with 256 nodes and place one Worker on each node.
 
 .. code-block:: yaml
+
     common:
         adapter: parsl
         tasks_per_worker: 1
@@ -250,6 +251,7 @@ Parsl uses ``SimpleLauncher`` to deploy a Parsl executor onto
 the batch/login node once a job is allocated.
 
 .. code-block:: yaml
+
     common:
         adapter: parsl
         tasks_per_worker: 1
@@ -281,7 +283,7 @@ the batch/login node once a job is allocated.
             walltime: "0:30:00"
 
 The configuration that describes how to launch the tasks must be written at a ``qcengine.yaml``
-file. See `QCEngine docs<https://qcengine.readthedocs.io/en/stable/environment.html>`_
+file. See `QCEngine docs <https://qcengine.readthedocs.io/en/stable/environment.html>`_
 for possible locations to place the ``qcengine.yaml`` file and full descriptions of the
 configuration option.
 One key option for the ``qcengine.yaml`` file is the description of how to launch MPI
@@ -290,6 +292,7 @@ tasks, ``mpiexec_command``. For example, many systems use ``mpirun``
 An example configuration a Cray supercomputer is:
 
 .. code-block:: yaml
+
     all:
       hostname_pattern: "*"
       scratch_directory: ./scratch  # Must be on the global filesystem
