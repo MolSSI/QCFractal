@@ -3,6 +3,7 @@ A command line script to copy a sample of the production DB into staging or
 development DB.
 
 """
+import sys
 
 from qcfractal.interface.models import GridOptimizationRecord, OptimizationRecord, ResultRecord, TorsionDriveRecord
 from qcfractal.storage_sockets import storage_socket_factory
@@ -22,9 +23,9 @@ from qcfractal.storage_sockets.models import (
 
 # production_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/test_qcarchivedb"
 production_uri = "postgresql+psycopg2://postgres:@localhost:11711/qcarchivedb"
-#production_uri = "postgresql+psycopg2://read_only_qcarchive:@localhost:11711/qcarchivedb"
-staging_uri = "postgresql+psycopg2://daniel:@localhost:5432/staging_qcarchivedb"
-SAMPLE_SIZE = 0.00001  # 0.1 is 10%
+# production_uri = "postgresql+psycopg2://read_only_qcarchive:@localhost:11711/qcarchivedb"
+staging_uri = "postgresql+psycopg2://daniel:@localhost:5432/qcfractal_default"
+SAMPLE_SIZE = 0.00003  # 0.1 is 10%
 MAX_LIMIT = 100000
 VERBOSE = False
 
@@ -46,6 +47,7 @@ def get_number_to_copy(total_size, sample_size):
         return max(to_copy, 10)
     else:
         return 1  # avoid zero because zero means no limit in storage
+
 
 def copy_alchemy_objects(data):
 
@@ -142,17 +144,45 @@ def copy_users(staging_storage, prod_storage):
 def copy_managers(staging_storage, prod_storage, mang_list):
     """Copy ALL managers from prod to staging"""
 
-    prod_mangers = []
-    for mang in mang_list:
-        prod_mangers.extend(prod_storage.get_managers(name=mang)["data"])
+    #    prod_mangers = []
+    #    for mang in mang_list:
+    #        prod_mangers.extend(prod_storage.get_managers(name=mang)["data"])
+    #
+    #    print("-----Total # of Managers to copy is: ", len(prod_mangers))
+    #
+    #    sql_insered = staging_storage._copy_managers(prod_mangers)["data"]
+    #    if VERBOSE:
+    #        print("Inserted in SQL:", len(sql_insered))
+    #
+    #    print("---- Done copying Queue Manager\n\n")
+    print(f"Copying Managers: {len(mang_list)}")
+    if len(mang_list) == 0:
+        return
 
-    print("-----Total # of Managers to copy is: ", len(prod_mangers))
+    with prod_storage.session_scope() as session:
+        managers = session.query(QueueManagerORM).filter(QueueManagerORM.name.in_(mang_list)).all()
+        managers = copy_alchemy_objects(managers)
 
-    sql_insered = staging_storage._copy_managers(prod_mangers)["data"]
-    if VERBOSE:
-        print("Inserted in SQL:", len(sql_insered))
+    query_list = [x.name for x in managers]
+    with staging_storage.session_scope() as session:
+        old_managers = session.query(QueueManagerORM).filter(QueueManagerORM.name.in_(query_list)).all()
+        old_managers = copy_alchemy_objects(old_managers)
 
-    print("---- Done copying Queue Manager\n\n")
+    known_old = {x.name for x in old_managers}
+    managers = [x for x in managers if (x.name not in known_old)]
+
+    with prod_storage.session_scope() as session:
+        ids = list(set([x.id for x in managers]))
+        manager_logs = session.query(QueueManagerLogORM).filter(QueueManagerLogORM.manager_id.in_(ids)).all()
+        manager_logs = copy_alchemy_objects(manager_logs)
+
+    print(f"----- Totals: Managers ({len(managers)}), Manager Logs ({len(manager_logs)})")
+
+    with staging_storage.session_scope() as session:
+
+        session.bulk_save_objects(managers)
+        session.bulk_save_objects(manager_logs)
+        session.commit()
 
 
 def copy_collections(staging_storage, production_storage, SAMPLE_SIZE=0, names=[]):
@@ -172,7 +202,7 @@ def copy_collections(staging_storage, production_storage, SAMPLE_SIZE=0, names=[
         if col["collection"] == "dataset" and "records" in col:
             for rec in col["records"]:
                 mol_ids.append(rec["molecule_id"])
-    results = production_storage.get_results(molecule=mol_ids, projection=["id", "manager_name"])["data"]
+    results = production_storage.get_results(molecule=mol_ids, include=["id", "manager_name"])["data"]
     res_ids = {res["id"] for res in results}
     managers = {
         "".join(res["manager_name"]) for res in results
@@ -213,7 +243,7 @@ def copy_results(staging_storage, production_storage, SAMPLE_SIZE=0, results_ids
 
     print("Copying {} results".format(count_to_copy))
 
-    mols, keywords, kvstore = [], [], []
+    mols, keywords, kvstore, managers = [], [], [], []
     for result in prod_results:
         if result["molecule"]:
             mols.append(result["molecule"])
@@ -225,7 +255,10 @@ def copy_results(staging_storage, production_storage, SAMPLE_SIZE=0, results_ids
             kvstore.append(result["stderr"])
         if result["error"]:
             kvstore.append(result["error"])
+        if result["manager_name"]:
+            managers.append(result["manager_name"])
 
+    copy_managers(staging_storage, production_storage, managers)
     mols_map = copy_molecules(staging_storage, production_storage, mols)
     keywords_map = copy_keywords(staging_storage, production_storage, keywords)
     kvstore_map = copy_kv_store(staging_storage, production_storage, kvstore)
@@ -240,6 +273,12 @@ def copy_results(staging_storage, production_storage, SAMPLE_SIZE=0, results_ids
             result["stderr"] = kvstore_map[result["stderr"]]
         if result["error"]:
             result["error"] = kvstore_map[result["error"]]
+
+        result.pop("extras")
+        if result["protocols"] is None:
+            result.pop("protocols")
+        if result["manager_name"] is None:
+            result.pop("manager_name")
 
     results_py = [ResultRecord(**res) for res in prod_results]
     staging_ids = staging_storage.add_results(results_py)["data"]
@@ -284,6 +323,8 @@ def copy_optimization_procedure(staging_storage, production_storage, SAMPLE_SIZE
             kvstore.append(rec["stderr"])
         if rec["error"]:
             kvstore.append(rec["error"])
+
+        rec.pop("manager_name")
 
     mols_map = copy_molecules(staging_storage, production_storage, mols)
     results_map = copy_results(staging_storage, production_storage, results_ids=results)
@@ -570,17 +611,24 @@ def main():
 
     staging_storage, production_storage = connect_to_DBs(staging_uri, production_uri, MAX_LIMIT)
 
-    del_staging = input("Are you sure you want to delete the DB in the URI:\n{}? yes or no\n".format(staging_uri))
-    if del_staging.lower() == "yes":
-        staging_storage._clear_db("")
-    else:
-        print("Exit without creating the DB.")
-        return
+    do_check = True
+    if len(sys.argv):
+        if sys.argv[1] == "--force":
+            do_check = False
+
+    if do_check:
+
+        del_staging = input("Are you sure you want to delete the DB in the URI:\n{}? yes or no\n".format(staging_uri))
+        if del_staging.lower() != "yes":
+            print("Exit without creating the DB.")
+            return
+
+    staging_storage._clear_db("")
 
     # Copy metadata
     # with production_storage.session_scope() as session:
-    #    alembic = session.execute("select * from alembic_version")
-    #    version = alembic.first()[0]
+    #   alembic = session.execute("select * from alembic_version")
+    #   version = alembic.first()[0]
 
     # copy all users, small tables, no need for sampling
     copy_users(staging_storage, production_storage)
@@ -589,7 +637,11 @@ def main():
     copy_log_tables(staging_storage, production_storage)
 
     print("\n---------------- Managers -----------------")
-    copy_manager_tables(staging_storage, production_storage)
+    copy_managers(
+        staging_storage,
+        production_storage,
+        ["PacificResearchPlatform-openff-qca-c8f64bd97-bdtks-14c98355-37f1-416f-ac8e-b733bd06012d"],
+    )
 
     # copy sample of results and procedures
     print("\n---------------- Results -----------------")
@@ -610,8 +662,9 @@ def main():
     print("\n---------------- Collections -----------------------")
     copy_collections(staging_storage, production_storage, SAMPLE_SIZE=0.1)
 
-    print("\n---------------- Alembic -----------------------")
-    copy_alembic(staging_storage, production_storage)
+    # This is now minted
+    # print("\n---------------- Alembic -----------------------")
+    # copy_alembic(staging_storage, production_storage)
 
 
 if __name__ == "__main__":
