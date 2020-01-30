@@ -700,7 +700,7 @@ class Dataset(Collection):
         DataFrame
             A DataFrame of the queried parameters
         """
-        au_units = {"energy": "hartree", "gradient": "hartree/bohr", "hessian": "hartree/bohr**2","properties","hartree"}
+        au_units = {"energy": "hartree", "gradient": "hartree/bohr", "hessian": "hartree/bohr**2","properties":"hartree"}
 
         # So that datasets with no records do not require a default program and default keywords
         if len(self.list_records()) == 0:
