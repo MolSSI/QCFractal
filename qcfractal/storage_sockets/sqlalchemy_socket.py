@@ -727,6 +727,7 @@ class SQLAlchemySocket:
             """Converts a chemical formula to alphabetical order, matching behavior in qcel"""
             import re
             from collections import defaultdict
+
             matches = re.findall("[A-Z][^A-Z]*", string)
             count = defaultdict(int)
             for match in matches:
@@ -744,6 +745,7 @@ class SQLAlchemySocket:
                 if c > 1:
                     ret.append(str(c))
             return "".join(ret)
+
         if isinstance(molecular_formula, str):
             molecular_formula = canonicalize_formula(molecular_formula)
         elif isinstance(molecular_formula, list):
