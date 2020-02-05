@@ -723,33 +723,14 @@ class SQLAlchemySocket:
         return ret
 
     def get_molecules(self, id=None, molecule_hash=None, molecular_formula=None, limit: int = None, skip: int = 0):
-        def canonicalize_formula(string: str) -> str:
-            """Converts a chemical formula to alphabetical order, matching behavior in qcel"""
-            import re
-            from collections import defaultdict
-
-            matches = re.findall("[A-Z][^A-Z]*", string)
-            count = defaultdict(int)
-            for match in matches:
-                match_n = re.match("(\D+)(\d*)", match)
-                assert match_n
-                if match_n.group(2) == "":
-                    n = 1
-                else:
-                    n = int(match_n.group(2))
-                count[match_n.group(1)] += n
-            ret = []
-            for k in sorted(count.keys()):
-                c = count[k]
-                ret.append(k)
-                if c > 1:
-                    ret.append(str(c))
-            return "".join(ret)
-
-        if isinstance(molecular_formula, str):
-            molecular_formula = canonicalize_formula(molecular_formula)
-        elif isinstance(molecular_formula, list):
-            molecular_formula = [canonicalize_formula(form) for form in molecular_formula]
+        try:
+            if isinstance(molecular_formula, str):
+                molecular_formula = qcelemental.molutil.order_molecular_formula(molecular_formula)
+            elif isinstance(molecular_formula, list):
+                molecular_formula = [qcelemental.molutil.order_molecular_formula(form) for form in molecular_formula]
+        except ValueError:
+            # Probably, the user provided an invalid chemical formula
+            pass
 
         meta = get_metadata_template()
 
