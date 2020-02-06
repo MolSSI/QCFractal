@@ -734,9 +734,13 @@ class SQLAlchemySocket:
 
         meta["success"] = True
 
-        # ret["meta"]["errors"].extend(errors)
-
-        data = [Molecule(**d, validate=False, validated=True) for d in rdata]
+        # This is required for sparse molecules as we don't know which values are spase
+        # We are lucky that None is the default and doesn't mean anything in Molecule
+        # This strategy does not work for other objects
+        data = []
+        for mol_dict in rdata:
+            mol_dict = {k:v for k, v in mol_dict.items() if v is not None}
+            data.append(Molecule(**mol_dict, validate=False, validated=True))
 
         return {"meta": meta, "data": data}
 
