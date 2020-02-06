@@ -739,7 +739,7 @@ class SQLAlchemySocket:
         # This strategy does not work for other objects
         data = []
         for mol_dict in rdata:
-            mol_dict = {k:v for k, v in mol_dict.items() if v is not None}
+            mol_dict = {k: v for k, v in mol_dict.items() if v is not None}
             data.append(Molecule(**mol_dict, validate=False, validated=True))
 
         return {"meta": meta, "data": data}
