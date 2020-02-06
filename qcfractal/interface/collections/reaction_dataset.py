@@ -291,7 +291,7 @@ class ReactionDataset(Dataset):
 
             # Multiply by coefficients and sum
             df["return_result"] *= df["coefficient"]
-            df = df.groupby(["name"])["return_result"].sum(skipna=False)
+            df = df.groupby(["name"])["return_result"].sum()
             df[null_mask] = np.nan
             return df
 
