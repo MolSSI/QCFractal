@@ -20,7 +20,7 @@ dependencies:
   - msgpack-python >=0.6.1
   - numpy
   - pyyaml >=5.1
-  - pydantic >=1.0.0
+  - pydantic >=1.4.0
   - requests
   - tornado
 
