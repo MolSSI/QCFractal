@@ -165,6 +165,7 @@ class SQLAlchemySocket:
         logger: "Logger" = None,
         sql_echo: bool = False,
         max_limit: int = 1000,
+        skip_version_check: bool = False,
     ):
         """
         Constructs a new SQLAlchemy socket
@@ -210,7 +211,7 @@ class SQLAlchemySocket:
         # check version compatibility
         db_ver = self.check_lib_versions()
         self.logger.info(f"DB versions: {db_ver}")
-        if db_ver and qcfractal.__version__ != db_ver["fractal_version"]:
+        if (not skip_version_check) and (db_ver and qcfractal.__version__ != db_ver["fractal_version"]):
             raise TypeError(
                 f"You are running QCFractal version {qcfractal.__version__} "
                 f'with an older DB version ({db_ver["fractal_version"]}). '

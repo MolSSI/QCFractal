@@ -34,6 +34,7 @@ def sec_server(request, postgres_server):
             storage_project_name=storage_name,
             loop=loop,
             security="local",
+            skip_storage_version_check=True,
         )
 
         # Clean and re-init the databse
