@@ -351,7 +351,7 @@ def test_add_task_queue(storage_socket, session, molecules_H4O2):
     session.add(result)
     session.commit()
 
-    task = TaskQueueORM(base_result_obj=result)
+    task = TaskQueueORM(base_result_obj=result, spec={"something": True})
     session.add(task)
     session.commit()
 
