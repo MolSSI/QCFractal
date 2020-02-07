@@ -402,6 +402,7 @@ class OptimizationQueries(QueryBase):
         for rec in query_result:
             self._remove_excluded_keys(rec)
             key = rec.pop("opt_id")
+            rec = {k: v for k, v in rec.items() if v is not None}
             ret[key] = Molecule(**rec)
 
         return ret
@@ -432,6 +433,7 @@ class OptimizationQueries(QueryBase):
         for rec in query_result:
             self._remove_excluded_keys(rec)
             key = rec.pop("opt_id")
+            rec = {k: v for k, v in rec.items() if v is not None}
             ret[key] = Molecule(**rec)
 
         return ret

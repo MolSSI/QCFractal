@@ -102,7 +102,7 @@ def test_torsiondrive_initial_final_molecule(torsiondrive_fixture, fractal_compu
     mol = r["data"][0]
 
     # Msgpack field
-    assert isinstance(msgpackext_loads(mol["mass_numbers"]), np.ndarray)  # TODO
+    assert isinstance(msgpackext_loads(mol["geometry"]), np.ndarray)  # TODO
 
     # Sample fields in the molecule dict
     assert all(x in mol.keys() for x in ["schema_name", "symbols", "geometry", "molecular_charge"])
