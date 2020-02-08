@@ -74,17 +74,11 @@ class GridOptimizationService(BaseService):
         meta["constraint_template"] = json.dumps(constraint_template)
 
         # Build optimization template
-        meta["optimization_template"] = json.dumps(
-            {
-                "meta": {
-                    "procedure": "optimization",
-                    "keywords": output.optimization_spec.keywords,
-                    "program": output.optimization_spec.program,
-                    "qc_spec": output.qc_spec.dict(),
-                    "tag": meta.pop("tag", None),
-                }
-            }
-        )
+        opt_template = {
+            "meta": {"procedure": "optimization", "qc_spec": output.qc_spec.dict(), "tag": meta.pop("tag", None)}
+        }
+        opt_template["meta"].update(output.optimization_spec.dict())
+        meta["optimization_template"] = json.dumps(opt_template)
 
         # Move around geometric data
         meta["optimization_program"] = output.optimization_spec.program
