@@ -329,7 +329,7 @@ class ResultRecord(RecordBase):
         if missing:
 
             # Translate a return value
-            proj = {self.wavefunction["return_map"].get(x, x): True for x in missing}
+            proj = [self.wavefunction["return_map"].get(x, x) for x in missing]
 
             self.cache["wavefunction"].update(
                 self.client.custom_query(

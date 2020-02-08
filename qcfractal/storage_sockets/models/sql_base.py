@@ -18,10 +18,16 @@ class MsgpackExt(TypeDecorator):
     impl = BYTEA
 
     def process_bind_param(self, value, dialect):
-        return msgpackext_dumps(value)
+        if value is None:
+            return value
+        else:
+            return msgpackext_dumps(value)
 
     def process_result_value(self, value, dialect):
-        return msgpackext_loads(value)
+        if value is None:
+            return value
+        else:
+            return msgpackext_loads(value)
 
 
 @as_declarative()

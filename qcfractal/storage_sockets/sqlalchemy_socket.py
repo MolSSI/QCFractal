@@ -165,6 +165,7 @@ class SQLAlchemySocket:
         logger: "Logger" = None,
         sql_echo: bool = False,
         max_limit: int = 1000,
+        skip_version_check: bool = False,
     ):
         """
         Constructs a new SQLAlchemy socket
@@ -210,7 +211,7 @@ class SQLAlchemySocket:
         # check version compatibility
         db_ver = self.check_lib_versions()
         self.logger.info(f"DB versions: {db_ver}")
-        if db_ver and qcfractal.__version__ != db_ver["fractal_version"]:
+        if (not skip_version_check) and (db_ver and qcfractal.__version__ != db_ver["fractal_version"]):
             raise TypeError(
                 f"You are running QCFractal version {qcfractal.__version__} "
                 f'with an older DB version ({db_ver["fractal_version"]}). '
@@ -734,9 +735,13 @@ class SQLAlchemySocket:
 
         meta["success"] = True
 
-        # ret["meta"]["errors"].extend(errors)
-
-        data = [Molecule(**d, validate=False, validated=True) for d in rdata]
+        # This is required for sparse molecules as we don't know which values are spase
+        # We are lucky that None is the default and doesn't mean anything in Molecule
+        # This strategy does not work for other objects
+        data = []
+        for mol_dict in rdata:
+            mol_dict = {k: v for k, v in mol_dict.items() if v is not None}
+            data.append(Molecule(**mol_dict, validate=False, validated=True))
 
         return {"meta": meta, "data": data}
 

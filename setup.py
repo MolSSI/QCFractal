@@ -29,7 +29,7 @@ if __name__ == "__main__":
             "tornado",
             "requests",
             "pyyaml >=5.1",
-            "pydantic >=1.0.0",
+            "pydantic >=1.4.0",
             # Security dependencies
             "bcrypt",
             "cryptography",

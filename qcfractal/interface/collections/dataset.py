@@ -442,7 +442,7 @@ class Dataset(Collection):
         # Sort
         sort_index = ["native"] + list(self.data.history_keys[:-1])
         if "stoichiometry" in ret.columns:
-            sort_index += ["stoichiometry"]
+            sort_index += ["stoichiometry", "name"]
         ret.set_index(sort_index, inplace=True)
         ret.sort_index(inplace=True)
         ret.reset_index(inplace=True)

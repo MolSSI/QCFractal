@@ -117,6 +117,8 @@ class FractalServer:
         # Service options
         max_active_services: int = 20,
         service_frequency: float = 60,
+        # Testing functions
+        skip_storage_version_check=True,
     ):
         """QCFractal initialization
 
@@ -244,6 +246,7 @@ class FractalServer:
             bypass_security=storage_bypass_security,
             allow_read=allow_read,
             max_limit=query_limit,
+            skip_version_check=skip_storage_version_check,
         )
 
         if view_enabled:
