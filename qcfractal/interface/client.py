@@ -386,7 +386,8 @@ class FractalClient(object):
         molecule_hash : QueryStr, optional
             Queries the Molecule ``molecule_hash`` field.
         molecular_formula : QueryStr, optional
-            Queries the Molecule ``molecular_formula`` field.
+            Queries the Molecule ``molecular_formula`` field. Molecular formulas are case-sensitive.
+            Molecular formulas are not order-sensitive (e.g. "H2O == OH2 != Oh2").
         limit : Optional[int], optional
             The maximum number of Molecules to query
         skip : int, optional

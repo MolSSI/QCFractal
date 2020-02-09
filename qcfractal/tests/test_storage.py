@@ -1193,18 +1193,56 @@ def test_mol_pagination(storage_socket):
 
     inserted = storage_socket.add_molecules(molecules)
 
-    assert inserted["meta"]["n_inserted"] == total
+    try:
+        assert inserted["meta"]["n_inserted"] == total
 
-    ret = storage_socket.get_molecules(skip=1)
-    assert len(ret["data"]) == total - 1
-    assert ret["meta"]["n_found"] == total
+        ret = storage_socket.get_molecules(skip=1)
+        assert len(ret["data"]) == total - 1
+        assert ret["meta"]["n_found"] == total
 
-    ret = storage_socket.get_molecules(skip=total + 1)
-    assert len(ret["data"]) == 0
-    assert ret["meta"]["n_found"] == total
+        ret = storage_socket.get_molecules(skip=total + 1)
+        assert len(ret["data"]) == 0
+        assert ret["meta"]["n_found"] == total
 
-    # cleanup
-    storage_socket.del_molecules(inserted["data"])
+    finally:
+        # cleanup
+        storage_socket.del_molecules(inserted["data"])
+
+
+def test_mol_formula(storage_socket):
+    """
+        Test Molecule pagination
+    """
+
+    assert len(storage_socket.get_molecules()["data"]) == 0
+    mol_names = [
+        "water_dimer_minima.psimol",
+    ]
+    total = len(mol_names)
+    molecules = []
+    for mol_name in mol_names:
+        mol = ptl.data.get_molecule(mol_name)
+        molecules.append(mol)
+
+    inserted = storage_socket.add_molecules(molecules)
+    try:
+        assert inserted["meta"]["n_inserted"] == total
+
+        ret = storage_socket.get_molecules(molecular_formula="H4O2")
+        assert len(ret["data"]) == 1
+        assert ret["meta"]["n_found"] == 1
+
+        ret = storage_socket.get_molecules(molecular_formula="O2H4")
+        assert len(ret["data"]) == 1
+        assert ret["meta"]["n_found"] == 1
+
+        ret = storage_socket.get_molecules(molecular_formula="H4o2")
+        assert len(ret["data"]) == 0
+        assert ret["meta"]["n_found"] == 0
+
+    finally:
+        # cleanup
+        storage_socket.del_molecules(inserted["data"])
 
 
 def test_reset_task_blocks(storage_socket):

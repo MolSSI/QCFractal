@@ -723,6 +723,14 @@ class SQLAlchemySocket:
         return ret
 
     def get_molecules(self, id=None, molecule_hash=None, molecular_formula=None, limit: int = None, skip: int = 0):
+        try:
+            if isinstance(molecular_formula, str):
+                molecular_formula = qcelemental.molutil.order_molecular_formula(molecular_formula)
+            elif isinstance(molecular_formula, list):
+                molecular_formula = [qcelemental.molutil.order_molecular_formula(form) for form in molecular_formula]
+        except ValueError:
+            # Probably, the user provided an invalid chemical formula
+            pass
 
         meta = get_metadata_template()
 
