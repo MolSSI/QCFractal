@@ -501,7 +501,7 @@ class BaseProcedureDataset(Collection):
 
         return submitted
 
-    def query(self, specification: str, force: bool = False) -> str:
+    def query(self, specification: str, force: bool = False) -> pd.Series:
         """Queries a given specification from the server
 
         Parameters
@@ -510,6 +510,11 @@ class BaseProcedureDataset(Collection):
             The specification name to query
         force : bool, optional
             Force a fresh query if the specification already exists.
+
+        Returns
+        -------
+        pd.Series
+            Records collected from the server
         """
         # Try to get the specification, will throw if not found.
         spec = self.get_specification(specification)
@@ -540,7 +545,7 @@ class BaseProcedureDataset(Collection):
 
         self.df[spec.name] = df[spec.name]
 
-        return spec.name
+        return df[spec.name]
 
     def status(
         self,
