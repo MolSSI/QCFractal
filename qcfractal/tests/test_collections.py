@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from typing import List
 
 import numpy as np
+import pandas as pd
 import pytest
 import qcelemental as qcel
 from qcelemental.models import Molecule, ProtoModel
@@ -1294,6 +1295,31 @@ def test_torsiondrive_dataset(fractal_compute_server):
 
     assert ds.counts("hooh1").loc["hooh1", "Spec1"] > 5
     assert ds.counts("hooh1", specs="spec1", count_gradients=True).loc["hooh1", "Spec1"] > 30
+
+
+def test_dataset_list_keywords(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+
+    kw1 = ptl.models.KeywordSet(values={"foo": True})
+    kw2 = ptl.models.KeywordSet(values={"foo": False})
+    kw3 = ptl.models.KeywordSet(values={"foo": 13})
+    ds = ptl.collections.Dataset("test_dataset_list_keywords", client)
+
+    ds.add_keywords(alias="p1_k1", program="p1", keyword=kw1)
+    ds.add_keywords(alias="p1_k2", program="p1", keyword=kw2, default=True)
+    ds.add_keywords(alias="p2_k3", program="p2", keyword=kw3)
+    ds.add_keywords(alias="p3_k1", program="p3", keyword=kw1, default=True)
+    ds.save()
+
+    res = ds.list_keywords().reset_index().drop("id", axis=1)
+    ref = pd.DataFrame(
+        {
+            "program": ["p1", "p1", "p2", "p3"],
+            "keywords": ["p1_k1", "p1_k2", "p2_k3", "p3_k1"],
+            "default": [False, True, False, True],
+        }
+    )
+    assert df_compare(res, ref), res
 
 
 @testing.using_geometric

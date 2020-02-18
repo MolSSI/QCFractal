@@ -1313,6 +1313,24 @@ class Dataset(Collection):
             self.data.default_keywords[program] = alias
         return True
 
+    def list_keywords(self) -> pd.DataFrame:
+        """Lists keyword aliases for each program in the dataset.
+
+        Returns
+        -------
+        pd.DataFrame
+            A dataframe containing programs, keyword aliases, KeywordSet ids, and whether those keywords are the
+            default for a program. Indexed on program.
+        """
+        data = []
+        for program, kwaliases in self.data.alias_keywords.items():
+            prog_default_kw = self.data.default_keywords.get(program, None)
+            for kwalias, kwid in kwaliases.items():
+                data.append(
+                    {"program": program, "keywords": kwalias, "id": kwid, "default": prog_default_kw == kwalias,}
+                )
+        return pd.DataFrame(data).set_index("program")
+
     def get_keywords(self, alias: str, program: str, return_id: bool = False) -> Union["KeywordSet", str]:
         """Pulls the keywords alias from the server for inspection.
 
