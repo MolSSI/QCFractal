@@ -28,8 +28,10 @@ if __name__ == "__main__":
             "msgpack >=0.6.1",
             "tornado",
             "requests",
+            "rmg>=3.0.0"
             "pyyaml >=5.1",
             "pydantic >=1.4.0",
+            "zmats",
             # Security dependencies
             "bcrypt",
             "cryptography",

@@ -2,6 +2,7 @@ name: qcarchive
 channels:
   - defaults
   - conda-forge
+  - rmg
 dependencies:
   - python
 
@@ -11,7 +12,9 @@ dependencies:
   - pyyaml >=5.1
   - pydantic >=1.4.0
   - requests
+  - rmg >= 3.0.0
   - tornado
+  - zmats
 
   # Security dependencies
   - bcrypt
