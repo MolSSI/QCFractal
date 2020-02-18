@@ -15,6 +15,25 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.13.1 / 2020-02-18
+-------------------
+
+New Features
+++++++++++++
+- (:pr:`566`) A ``list_keywords`` function was added to ``Dataset``.
+
+Enhancements
+++++++++++++
+- (:pr:`547`, :pr:`553`) Miscellaneous documentation edits and improvements.
+- (:pr:`556`) Molecule queries filtered on molecular formula no longer depend on the order of elements.
+- (:pr:`565`) ``query`` method for ``Datasets`` now returns collected records.
+
+Bug Fixes
++++++++++
+- (:pr:`559`) Fixed an issue where Docker images did not have qcfractal in their PATH.
+- (:pr:`561`) Fixed a bug that caused errors with pandas v1.0.
+- (:pr:`564`) Fixes a bug where optimization protocols were not respected during torsiondrives and grid optimizations.
+
 
 0.13.0 / 2020-01-15
 -------------------
