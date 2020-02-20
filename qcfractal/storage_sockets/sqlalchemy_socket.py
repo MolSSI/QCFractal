@@ -165,6 +165,7 @@ class SQLAlchemySocket:
         logger: "Logger" = None,
         sql_echo: bool = False,
         max_limit: int = 1000,
+        skip_version_check: bool = False,
     ):
         """
         Constructs a new SQLAlchemy socket
@@ -210,7 +211,7 @@ class SQLAlchemySocket:
         # check version compatibility
         db_ver = self.check_lib_versions()
         self.logger.info(f"DB versions: {db_ver}")
-        if db_ver and qcfractal.__version__ != db_ver["fractal_version"]:
+        if (not skip_version_check) and (db_ver and qcfractal.__version__ != db_ver["fractal_version"]):
             raise TypeError(
                 f"You are running QCFractal version {qcfractal.__version__} "
                 f'with an older DB version ({db_ver["fractal_version"]}). '
@@ -722,6 +723,14 @@ class SQLAlchemySocket:
         return ret
 
     def get_molecules(self, id=None, molecule_hash=None, molecular_formula=None, limit: int = None, skip: int = 0):
+        try:
+            if isinstance(molecular_formula, str):
+                molecular_formula = qcelemental.molutil.order_molecular_formula(molecular_formula)
+            elif isinstance(molecular_formula, list):
+                molecular_formula = [qcelemental.molutil.order_molecular_formula(form) for form in molecular_formula]
+        except ValueError:
+            # Probably, the user provided an invalid chemical formula
+            pass
 
         meta = get_metadata_template()
 
@@ -734,9 +743,13 @@ class SQLAlchemySocket:
 
         meta["success"] = True
 
-        # ret["meta"]["errors"].extend(errors)
-
-        data = [Molecule(**d, validate=False, validated=True) for d in rdata]
+        # This is required for sparse molecules as we don't know which values are spase
+        # We are lucky that None is the default and doesn't mean anything in Molecule
+        # This strategy does not work for other objects
+        data = []
+        for mol_dict in rdata:
+            mol_dict = {k: v for k, v in mol_dict.items() if v is not None}
+            data.append(Molecule(**mol_dict, validate=False, validated=True))
 
         return {"meta": meta, "data": data}
 
@@ -1126,6 +1139,7 @@ class SQLAlchemySocket:
         meta = add_metadata_template()
 
         result_ids = []
+        results_list = []
         with self.session_scope() as session:
             for result in record_list:
 
@@ -1140,8 +1154,9 @@ class SQLAlchemySocket:
 
                 if get_count_fast(doc) == 0:
                     doc = ResultORM(**result.dict(exclude={"id"}))
-                    session.add(doc)
-                    session.commit()  # TODO: faster if done in bulk
+                    results_list.append(doc)
+                    # session.add(doc)
+                    # session.commit()  # TODO: faster if done in bulk
                     result_ids.append(str(doc.id))
                     meta["n_inserted"] += 1
                 else:
@@ -1149,6 +1164,9 @@ class SQLAlchemySocket:
                     meta["duplicates"].append(id)  # TODO
                     # If new or duplicate, add the id to the return list
                     result_ids.append(id)
+
+            session.bulk_save_objects(results_list)
+            session.commit()
         meta["success"] = True
 
         ret = {"data": result_ids, "meta": meta}
@@ -1174,22 +1192,24 @@ class SQLAlchemySocket:
 
         # try:
         updated_count = 0
+        result_list = []
+
         for result in record_list:
 
             if result.id is None:
                 self.logger.error("Attempted update without ID, skipping")
                 continue
-            with self.session_scope() as session:
 
-                result_db = session.query(ResultORM).filter_by(id=result.id).first()
+                # result_db = session.query(ResultORM).filter_by(id=result.id).first()
+            # data = result.dict()
+            result_list.append(ResultORM(**result.dict())
+            updated_count += 1
 
-                data = result.dict(exclude={"id"})
-
-                for attr, val in data.items():
-                    setattr(result_db, attr, val)
-
-                session.commit()
-                updated_count += 1
+                # for attr, val in data.items():
+                #     setattr(result_db, attr, val)
+        with self.session_scope() as session:
+                session.bulk_save_objects(result_list)
+                
 
         return updated_count
 
