@@ -1165,7 +1165,7 @@ class SQLAlchemySocket:
                     # If new or duplicate, add the id to the return list
                     result_ids.append(id)
 
-            session.bulk_save_objects(results_list)
+            session.bulk_save_objects(results_list,return_defaults=True)
             session.commit()
         meta["success"] = True
 
@@ -1202,7 +1202,7 @@ class SQLAlchemySocket:
 
                 # result_db = session.query(ResultORM).filter_by(id=result.id).first()
             # data = result.dict()
-            result_list.append(ResultORM(**result.dict())
+            result_list.append(ResultORM(**result.dict()))
             updated_count += 1
 
                 # for attr, val in data.items():
