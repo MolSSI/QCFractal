@@ -982,6 +982,25 @@ def test_s22_list_select(s22_fixture):
     assert names == set(df.columns.str.lower())
 
 
+@testing.using_psi4
+@testing.using_dftd3
+def test_rds_rxn(fractal_compute_server):
+    client = fractal_compute_server.client()
+    ds = ptl.collections.ReactionDataset("rds_rxn", client, "rxn")
+    HeDimer1 = ptl.Molecule.from_data([[2, 0, 0, -1.412], [2, 0, 0, 1.412]], dtype="numpy", units="bohr", frags=[1])
+    HeDimer2 = ptl.Molecule.from_data([[2, 3, 3, -1.412], [2, 3, 3, 1.412]], dtype="numpy", units="bohr", frags=[1])
+
+    ds.add_rxn("HeDimer1", stoichiometry={"default": [(HeDimer1, 0.0)]})
+    ds.add_rxn("HeDimer2", stoichiometry={"default": [(HeDimer2, 1.0), (HeDimer1, -1.0)]})
+    ds.set_default_program("psi4")
+    ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={"e_convergence": 1.0e-10}), default=True)
+
+    ds.save()
+
+    ds.compute("B3LYP-D3", "6-31g")
+    ds.get_values(method="B3LYP-D3", basis="6-31g")
+
+
 def assert_list_get_values(ds):
     """ Tests that the output of list_values can be used as input to get_values"""
     columns = ds.list_values().reset_index()
