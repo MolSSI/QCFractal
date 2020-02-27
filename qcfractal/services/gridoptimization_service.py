@@ -223,7 +223,9 @@ class GridOptimizationService(BaseService):
                 else:
                     constraints[con_num]["value"] = scan.steps[idx] + self.starting_molecule.measure(scan.indices)
 
-            packet["meta"]["keywords"]["constraints"] = {"set": constraints}
+            packet["meta"]["keywords"].setdefault("constraints", {})
+            packet["meta"]["keywords"]["constraints"].setdefault("set", [])
+            packet["meta"]["keywords"]["constraints"]["set"].extend(constraints)
 
             # Build new molecule
             packet["data"] = [mol]
