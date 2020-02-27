@@ -1140,9 +1140,6 @@ class SQLAlchemySocket:
 
         result_ids = []
 
-        query_ids = [res.id for res in record_list]
-        repeated = len (query_ids) != len (set(query_ids))
-
         results_list = []
         with self.session_scope() as session:
             for result in record_list:
@@ -1159,9 +1156,7 @@ class SQLAlchemySocket:
                 if get_count_fast(doc) == 0:
                     doc = ResultORM(**result.dict(exclude={"id"}))
                     # results_list.append(doc)
-                    session.add(doc)
-                    if repeated:
-                        session.commit()
+                    results_list.append(doc)
                     # session.commit()  # TODO: faster if done in bulk
                     result_ids.append(str(doc.id))
                     meta["n_inserted"] += 1
@@ -1170,8 +1165,9 @@ class SQLAlchemySocket:
                     meta["duplicates"].append(id)  # TODO
                     # If new or duplicate, add the id to the return list
                     result_ids.append(id)
-            if not repeated:
-                session.commit()
+
+            session.add_all(results_list)
+            session.commit()
         meta["success"] = True
 
         ret = {"data": result_ids, "meta": meta}
@@ -1199,7 +1195,7 @@ class SQLAlchemySocket:
 
         with self.session_scope() as session : 
 
-            found = session.query(ResultORM).filter_by(id._in(query_ids)).all()
+            found = session.query(ResultORM).filter_by(id.in_(query_ids)).all()
             found_dict = {record.id: record for record in found}
 
             # try:
@@ -1226,7 +1222,7 @@ class SQLAlchemySocket:
                 session.commit()
 
         return updated_count
-        
+
     def get_results_count(self):
         """
         TODO: just return the count, used for big queries
