@@ -1139,6 +1139,11 @@ class SQLAlchemySocket:
         meta = add_metadata_template()
 
         result_ids = []
+
+        query_ids = [res.id for res in record_list]
+        repeated = len (query_ids) != len (set(query_ids))
+
+        results_list = []
         with self.session_scope() as session:
             for result in record_list:
 
@@ -1153,8 +1158,11 @@ class SQLAlchemySocket:
 
                 if get_count_fast(doc) == 0:
                     doc = ResultORM(**result.dict(exclude={"id"}))
+                    # results_list.append(doc)
                     session.add(doc)
-                    session.commit()  # TODO: faster if done in bulk
+                    if repeated:
+                        session.commit()
+                    # session.commit()  # TODO: faster if done in bulk
                     result_ids.append(str(doc.id))
                     meta["n_inserted"] += 1
                 else:
@@ -1162,6 +1170,8 @@ class SQLAlchemySocket:
                     meta["duplicates"].append(id)  # TODO
                     # If new or duplicate, add the id to the return list
                     result_ids.append(id)
+            if not repeated:
+                session.commit()
         meta["success"] = True
 
         ret = {"data": result_ids, "meta": meta}
@@ -1184,28 +1194,39 @@ class SQLAlchemySocket:
         -------
             number of records updated
         """
+        query_ids = [res.id for res in record_list]
+        duplicates = len (query_ids) != len (set(query_ids))
 
-        # try:
-        updated_count = 0
-        for result in record_list:
+        with self.session_scope() as session : 
 
-            if result.id is None:
-                self.logger.error("Attempted update without ID, skipping")
-                continue
-            with self.session_scope() as session:
+            found = session.query(ResultORM).filter_by(id._in(query_ids)).all()
+            found_dict = {record.id: record for record in found}
 
-                result_db = session.query(ResultORM).filter_by(id=result.id).first()
+            # try:
+            updated_count = 0
+            for result in record_list:
 
-                data = result.dict(exclude={"id"})
+                if result.id is None:
+                    self.logger.error("Attempted update without ID, skipping")
+                    continue
 
-                for attr, val in data.items():
-                    setattr(result_db, attr, val)
 
+                    # result_db = session.query(ResultORM).filter_by(id=result.id).first()
+
+                    data = result.dict(exclude={"id"})
+                    found_db = found_dict[result.id]
+
+                    for attr, val in data.items():
+                        setattr(found_db, attr, val)
+
+                    if duplicates:
+                        session.commit()
+                    updated_count += 1
+            if not duplicates:
                 session.commit()
-                updated_count += 1
 
         return updated_count
-
+        
     def get_results_count(self):
         """
         TODO: just return the count, used for big queries
