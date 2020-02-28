@@ -1138,11 +1138,12 @@ class SQLAlchemySocket:
 
         meta = add_metadata_template()
 
-        result_ids = []
+        result_ids = ["placeholder"] * len(record_list)
 
         results_list = []
+        results_idx = []
         with self.session_scope() as session:
-            for result in record_list:
+            for i, result in enumerate(record_list):
 
                 doc = session.query(ResultORM).filter_by(
                     program=result.program,
@@ -1157,17 +1158,22 @@ class SQLAlchemySocket:
                     doc = ResultORM(**result.dict(exclude={"id"}))
                     # results_list.append(doc)
                     results_list.append(doc)
+                    results_idx.append(i)
                     # session.commit()  # TODO: faster if done in bulk
-                    result_ids.append(str(doc.id))
+                    # result_ids.append("placeholder")
                     meta["n_inserted"] += 1
                 else:
                     id = str(doc.first().id)
                     meta["duplicates"].append(id)  # TODO
                     # If new or duplicate, add the id to the return list
-                    result_ids.append(id)
+                    result_ids[i] = id
 
             session.add_all(results_list)
             session.commit()
+            for i, res in enumerate(results_list):
+                result_ids[results_idx[i]] = str(res.id)
+
+
         meta["success"] = True
 
         ret = {"data": result_ids, "meta": meta}
@@ -1194,9 +1200,9 @@ class SQLAlchemySocket:
         duplicates = len (query_ids) != len (set(query_ids))
 
         with self.session_scope() as session : 
-
-            found = session.query(ResultORM).filter_by(id.in_(query_ids)).all()
-            found_dict = {record.id: record for record in found}
+            
+            found = session.query(ResultORM).filter(ResultORM.id.in_(query_ids)).all()
+            found_dict = {str(record.id): record for record in found}
 
             # try:
             updated_count = 0

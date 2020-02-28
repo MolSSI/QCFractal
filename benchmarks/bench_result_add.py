@@ -60,13 +60,28 @@ if run_tests:
     assert ret[0] == ret[2]
 
 
-print("Running timings...\n")
+print("Running timings for add and update...\n")
 for trial in mol_trials:
     results = [create_unique_result() for x in range(trial)]
 
+
     t = time.time()
     ret = storage.add_results(results)["data"]
+
     ttime = (time.time() - t) * 1000
     time_per_mol = ttime / trial
 
-    print(f"{trial:6d} {ttime:9.3f} {time_per_mol:6.3f}")
+    print(f"add   : {trial:6d} {ttime:9.3f} {time_per_mol:6.3f}")
+
+    for r, rid in zip(results, ret):
+        r.__dict__["id"] = rid
+
+    t = time.time()
+    ret = storage.update_results(results)
+    ttime = (time.time() - t) * 1000
+    time_per_mol = ttime / trial
+    trial = len(results)
+
+    print(f"update: {trial:6d} {ttime:9.3f} {time_per_mol:6.3f}")
+    print()
+
