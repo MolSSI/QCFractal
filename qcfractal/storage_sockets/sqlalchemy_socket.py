@@ -1209,15 +1209,15 @@ class SQLAlchemySocket:
 
                     # result_db = session.query(ResultORM).filter_by(id=result.id).first()
 
-                    data = result.dict(exclude={"id"})
-                    found_db = found_dict[result.id]
+                data = result.dict(exclude={"id"})
+                found_db = found_dict[result.id]
 
-                    for attr, val in data.items():
-                        setattr(found_db, attr, val)
+                for attr, val in data.items():
+                    setattr(found_db, attr, val)
 
-                    if duplicates:
-                        session.commit()
-                    updated_count += 1
+                if duplicates:
+                    session.commit()
+                updated_count += 1
             if not duplicates:
                 session.commit()
 
