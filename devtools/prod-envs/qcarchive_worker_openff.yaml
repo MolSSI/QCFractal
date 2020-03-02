@@ -18,3 +18,6 @@ dependencies:
 
     # Testing
   - pytest
+
+    # Temporary pins
+  - pint !=0.11

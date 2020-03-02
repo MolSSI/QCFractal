@@ -47,6 +47,9 @@ dependencies:
   - pytest
   - pytest-cov
   - requests-mock
+  
+  # Temportary pins
+  - pint !=0.11
 """
 qca_ecosystem_template = ["qcengine >=0.11.0", "qcelemental >=0.13.1"]
 

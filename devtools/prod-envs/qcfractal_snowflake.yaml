@@ -22,3 +22,6 @@ dependencies:
     # Viz
   - jupyter
   - nglview
+
+  # Temporary pins
+  - pint !=0.11
