@@ -313,10 +313,18 @@ class ReactionDataset(Dataset):
             units: Dict[str, str] = {}
             for query in new_queries:
                 qname = query.pop("name")
-                data_complex = _query_apply_coeffients(stoich_complex, query)
-                data_monomer = _query_apply_coeffients(stoich_monomer, query)
-
-                data = data_complex - data_monomer
+                if self.data.ds_type == _ReactionTypeEnum.ie:
+                    # This implements 1-body counterpoise correction
+                    # TODO: this will need to contain the logic for VMFC or other method-of-increments strategies
+                    data_complex = _query_apply_coeffients(stoich_complex, query)
+                    data_monomer = _query_apply_coeffients(stoich_monomer, query)
+                    data = data_complex - data_monomer
+                elif self.data.ds_type == _ReactionTypeEnum.rxn:
+                    data = _query_apply_coeffients(stoich_complex, query)
+                else:
+                    raise ValueError(
+                        f"ReactionDataset ds_type is not a member of _ReactionTypeEnum. (Got {self.data.ds_type}.)"
+                    )
 
                 new_data[qname] = data * constants.conversion_factor("hartree", self.units)
                 query["name"] = qname
