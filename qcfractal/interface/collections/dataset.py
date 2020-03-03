@@ -873,7 +873,7 @@ class Dataset(Collection):
                 q["stoich"] = q.pop("stoichiometry")
             values = self.get_values(**q)
 
-            if (not show_incomplete) and values.isnull().any():
+            if (not show_incomplete) and values.isnull().any().any():
                 continue
 
             # Create the statistics
