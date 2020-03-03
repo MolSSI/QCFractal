@@ -37,9 +37,6 @@ dependencies:
   - pytest-cov
   - requests-mock
 
-  # Temportary pins
-  - pint !=0.11
-
 #   Environment specific includes
   - rdkit
 

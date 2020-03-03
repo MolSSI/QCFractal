@@ -47,8 +47,6 @@ if __name__ == "__main__":
             # QCArchive depends
             "qcengine>=0.11.0",
             "qcelemental>=0.13.1",
-            # Temporary pins
-            "pint!=0.11"
         ],
         entry_points={
             "console_scripts": [
