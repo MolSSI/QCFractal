@@ -1235,6 +1235,11 @@ class SQLAlchemySocket:
             updated_count = 0
             for result in record_list:
 
+                if result.id is None:
+                    self.logger.error("Attempted update without ID, skipping")
+                    continue
+
+
                     # result_db = session.query(ResultORM).filter_by(id=result.id).first()
 
                 data = result.dict(exclude={"id"})
