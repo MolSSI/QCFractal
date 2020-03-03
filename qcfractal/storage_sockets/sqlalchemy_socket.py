@@ -3,7 +3,7 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 """
 
 try:
-    from sqlalchemy import create_engine, or_, case, func
+    from sqlalchemy import create_engine, or_, case, func, tuple_
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
     from sqlalchemy.sql.expression import desc
@@ -1141,37 +1141,64 @@ class SQLAlchemySocket:
         result_ids = ["placeholder"] * len(record_list)
 
         results_list = []
-        results_idx = []
+        existing_res = {}
+        group_items = []
+        result_ids = ["placeholder"] * len(record_list)
+        new_record_idx = []
+        items = []
+        for i,res in enumerate(record_list):
+            
+            res = record_list[i]
+            items.append((res.program, res.driver, res.method, res.basis, res.keywords, res.molecule))
+            if (i+1) % 200 == 0:
+                items = []
+                group_items.append(items)
+        if items != []:
+            group_items.append(items)
+
+
         with self.session_scope() as session:
+            docs = []
+            for items in group_items:
+                docs.extend(session.query(ResultORM).filter(
+                    tuple_(ResultORM.program, ResultORM.driver,
+                    ResultORM.method, ResultORM.basis, ResultORM.keywords,
+                    ResultORM.molecule).in_ (items)).all() )
+            
+            num_existing = len(docs)
+            for doc in docs:
+                existing_res[(res.program, res.driver, res.method, res.basis, res.keywords, res.molecule)] = doc.id
+
             for i, result in enumerate(record_list):
+                idx = res.program, res.driver, res.method, res.basis, res.keywords, res.molecule
+                # doc = session.query(ResultORM).filter_by(
+                #     program=result.program,
+                #     driver=result.driver,
+                #     method=result.method,
+                #     basis=result.basis,
+                #     keywords=result.keywords,
+                #     molecule=result.molecule,
+                # )
 
-                doc = session.query(ResultORM).filter_by(
-                    program=result.program,
-                    driver=result.driver,
-                    method=result.method,
-                    basis=result.basis,
-                    keywords=result.keywords,
-                    molecule=result.molecule,
-                )
-
-                if get_count_fast(doc) == 0:
+                if existing_res.get(idx) == None:
                     doc = ResultORM(**result.dict(exclude={"id"}))
                     # results_list.append(doc)
                     results_list.append(doc)
-                    results_idx.append(i)
+                    new_record_idx.append(i)
                     # session.commit()  # TODO: faster if done in bulk
                     # result_ids.append("placeholder")
                     meta["n_inserted"] += 1
                 else:
-                    id = str(doc.first().id)
-                    meta["duplicates"].append(id)  # TODO
+                    id_ = str(existing_res.get(idx).id)
+                    meta["duplicates"].append(id_)  # TODO
                     # If new or duplicate, add the id to the return list
-                    result_ids[i] = id
+                    result_ids[i] = id_
 
             session.add_all(results_list)
             session.commit()
             for i, res in enumerate(results_list):
-                result_ids[results_idx[i]] = str(res.id)
+                # print (type(new_records[i]))
+                result_ids[new_record_idx[i]] = str(res.id)
 
 
         meta["success"] = True
@@ -1207,11 +1234,6 @@ class SQLAlchemySocket:
             # try:
             updated_count = 0
             for result in record_list:
-
-                if result.id is None:
-                    self.logger.error("Attempted update without ID, skipping")
-                    continue
-
 
                     # result_db = session.query(ResultORM).filter_by(id=result.id).first()
 

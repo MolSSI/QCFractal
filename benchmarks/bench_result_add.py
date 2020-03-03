@@ -40,7 +40,7 @@ if run_tests:
     test_res3 = create_unique_result()
 
     # Sequential
-    ret = storage.add_molecules([test_res1, test_res2, test_res3])["data"]
+    ret = storage.add_results([test_res1, test_res2, test_res3])["data"]
     assert ret[0] != ret[1]
     assert ret[1] != ret[2]
 
@@ -83,5 +83,4 @@ for trial in mol_trials:
     trial = len(results)
 
     print(f"update: {trial:6d} {ttime:9.3f} {time_per_mol:6.3f}")
-    print()
 
