@@ -37,9 +37,6 @@ dependencies:
   - pytest-cov
   - requests-mock
 
-  # Temportary pins
-  - pint !=0.11
-
 #   QCArchive includes
   - qcengine >=0.11.0
   - qcelemental >=0.13.1
