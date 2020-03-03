@@ -785,6 +785,7 @@ class Dataset(Collection):
         return_figure=None,
         digits=3,
         kind="bar",
+        show_incomplete: bool = False
     ) -> "plotly.Figure":
 
         # Validate query dimensions
@@ -871,6 +872,9 @@ class Dataset(Collection):
             if "stoichiometry" in q:
                 q["stoich"] = q.pop("stoichiometry")
             values = self.get_values(**q)
+
+            if (not show_incomplete) and values.isnull().any():
+                continue
 
             # Create the statistics
             stat = self.statistics(metric, values, bench=bench)

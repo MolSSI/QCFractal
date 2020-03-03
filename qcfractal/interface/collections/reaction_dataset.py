@@ -356,6 +356,7 @@ class ReactionDataset(Dataset):
         bench: Optional[str] = None,
         kind: str = "bar",
         return_figure: Optional[bool] = None,
+        show_incomplete: bool = False
     ) -> "plotly.Figure":
         """
         Parameters
@@ -380,7 +381,8 @@ class ReactionDataset(Dataset):
             The kind of chart to produce, either 'bar' or 'violin'
         return_figure : Optional[bool], optional
             If True, return the raw plotly figure. If False, returns a hosted iPlot. If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
-
+        show_incomplete: bool, optional
+            Display statistics method/basis set combinations where results are incomplete
         Returns
         -------
         plotly.Figure
@@ -390,7 +392,7 @@ class ReactionDataset(Dataset):
         query = {"method": method, "basis": basis, "keywords": keywords, "program": program, "stoichiometry": stoich}
         query = {k: v for k, v in query.items() if v is not None}
 
-        return self._visualize(metric, bench, query=query, groupby=groupby, return_figure=return_figure, kind=kind)
+        return self._visualize(metric, bench, query=query, groupby=groupby, return_figure=return_figure, kind=kind, show_incomplete=show_incomplete)
 
     def get_molecules(
         self,
