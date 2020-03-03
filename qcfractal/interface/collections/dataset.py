@@ -785,7 +785,7 @@ class Dataset(Collection):
         return_figure=None,
         digits=3,
         kind="bar",
-        show_incomplete: bool = False
+        show_incomplete: bool = False,
     ) -> "plotly.Figure":
 
         # Validate query dimensions

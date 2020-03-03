@@ -356,7 +356,7 @@ class ReactionDataset(Dataset):
         bench: Optional[str] = None,
         kind: str = "bar",
         return_figure: Optional[bool] = None,
-        show_incomplete: bool = False
+        show_incomplete: bool = False,
     ) -> "plotly.Figure":
         """
         Parameters
@@ -392,7 +392,15 @@ class ReactionDataset(Dataset):
         query = {"method": method, "basis": basis, "keywords": keywords, "program": program, "stoichiometry": stoich}
         query = {k: v for k, v in query.items() if v is not None}
 
-        return self._visualize(metric, bench, query=query, groupby=groupby, return_figure=return_figure, kind=kind, show_incomplete=show_incomplete)
+        return self._visualize(
+            metric,
+            bench,
+            query=query,
+            groupby=groupby,
+            return_figure=return_figure,
+            kind=kind,
+            show_incomplete=show_incomplete,
+        )
 
     def get_molecules(
         self,
