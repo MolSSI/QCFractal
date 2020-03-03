@@ -1143,7 +1143,6 @@ class SQLAlchemySocket:
         results_list = []
         existing_res = {}
         group_items = []
-        result_ids = ["placeholder"] * len(record_list)
         new_record_idx = []
         items = []
         for i,res in enumerate(record_list):
@@ -1167,10 +1166,10 @@ class SQLAlchemySocket:
             
             num_existing = len(docs)
             for doc in docs:
-                existing_res[(res.program, res.driver, res.method, res.basis, res.keywords, res.molecule)] = doc.id
+                existing_res[(doc.program, doc.driver, doc.method, doc.basis, doc.keywords, doc.molecule)] = doc.id
 
             for i, result in enumerate(record_list):
-                idx = res.program, res.driver, res.method, res.basis, res.keywords, res.molecule
+                idx = result.program, result.driver, result.method, result.basis, result.keywords, result.molecule
                 # doc = session.query(ResultORM).filter_by(
                 #     program=result.program,
                 #     driver=result.driver,
