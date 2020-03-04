@@ -67,12 +67,14 @@ for trial in mol_trials:
 
     t = time.time()
     ret = storage.add_results(results)["data"]
+    meta = storage.add_results(results)["meta"]
+    print (meta["n_inserted"])
 
     ttime = (time.time() - t) * 1000
     time_per_mol = ttime / trial
 
     print(f"add   : {trial:6d} {ttime:9.3f} {time_per_mol:6.3f}")
-
+    
     for r, rid in zip(results, ret):
         r.__dict__["id"] = rid
 
@@ -83,4 +85,5 @@ for trial in mol_trials:
     trial = len(results)
 
     print(f"update: {trial:6d} {ttime:9.3f} {time_per_mol:6.3f}")
+    print()
 

@@ -3,7 +3,7 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 """
 
 try:
-    from sqlalchemy import create_engine, or_, case, func, tuple_
+    from sqlalchemy import create_engine, or_, case, func, and_
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
     from sqlalchemy.sql.expression import desc
@@ -1141,34 +1141,25 @@ class SQLAlchemySocket:
 
         results_list = []
         existing_res = {}
-        group_items = []
         new_record_idx = []
-        items = []
-        for i, res in enumerate(record_list):
-            
-            res = record_list[i]
-            items.append((res.program, res.driver, res.method, res.basis, res.keywords, res.molecule))
-            if (i+1) % 200 == 0:
-                group_items.append(items)
-                items = []
-        if items != []:
-            group_items.append(items)
+        conds = []
+
+        conds= [and_(ResultORM.program == res.program, ResultORM.driver == res.driver,
+                            ResultORM.method == res.method, ResultORM.basis == res.basis,
+                            ResultORM.keywords == res.keywords, ResultORM.molecule == res.molecule
+                            )
+               for res in results_list]
 
 
         with self.session_scope() as session:
-            docs = []
-            for items in group_items:
-                docs.extend(session.query(ResultORM).filter(
-                    tuple_(ResultORM.program, ResultORM.driver,
-                    ResultORM.method, ResultORM.basis, ResultORM.keywords,
-                    ResultORM.molecule).in_ (items)).all() )
-            
-            num_existing = len(docs)
-            for doc in docs:
-                existing_res[(doc.program, doc.driver, doc.method, doc.basis, doc.keywords, doc.molecule)] = doc.id
+            docs = session.query(ResultORM).filter(or_(*conds)).all()
 
+            num_existing = len(docs)
+            existing_res = { (doc.program, doc.driver, doc.method, doc.basis,
+                                 doc.keywords, str(doc.molecule)): doc.id
+                            for doc in docs}
             for i, result in enumerate(record_list):
-                idx = result.program, result.driver, result.method, result.basis, result.keywords, result.molecule
+                idx = result.program, result.driver.value, result.method, result.basis, result.keywords, result.molecule
                 # doc = session.query(ResultORM).filter_by(
                 #     program=result.program,
                 #     driver=result.driver,
@@ -1187,7 +1178,7 @@ class SQLAlchemySocket:
                     # result_ids.append("placeholder")
                     meta["n_inserted"] += 1
                 else:
-                    id_ = str(existing_res.get(idx).id)
+                    id_ = str(existing_res.get(idx))
                     meta["duplicates"].append(id_)  # TODO
                     # If new or duplicate, add the id to the return list
                     result_ids[i] = id_
