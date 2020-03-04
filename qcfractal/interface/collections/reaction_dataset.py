@@ -383,6 +383,7 @@ class ReactionDataset(Dataset):
             If True, return the raw plotly figure. If False, returns a hosted iPlot. If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
         show_incomplete: bool, optional
             Display statistics method/basis set combinations where results are incomplete
+
         Returns
         -------
         plotly.Figure
