@@ -1156,7 +1156,7 @@ class SQLAlchemySocket:
 
             num_existing = len(docs)
             existing_res = { (doc.program, doc.driver, doc.method, doc.basis,
-                                 doc.keywords, str(doc.molecule)): doc.id
+                                 str(doc.keywords), str(doc.molecule)): doc.id
                             for doc in docs}
             for i, result in enumerate(record_list):
                 idx = result.program, result.driver.value, result.method, result.basis, result.keywords, result.molecule
@@ -1178,6 +1178,7 @@ class SQLAlchemySocket:
                     # result_ids.append("placeholder")
                     meta["n_inserted"] += 1
                 else:
+                    print ("reached here")
                     id_ = str(existing_res.get(idx))
                     meta["duplicates"].append(id_)  # TODO
                     # If new or duplicate, add the id to the return list

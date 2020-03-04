@@ -1,6 +1,8 @@
 import time
 from qcfractal.interface.models.records import ResultRecord
+from qcfractal.interface.models import KeywordSet
 import qcfractal
+import qcfractal.interface as ptl
 import numpy as np
 import qcelemental as qcel
 
@@ -58,8 +60,7 @@ if run_tests:
     assert len(ret) == 3
     assert ret[0] != ret[1]
     assert ret[0] == ret[2]
-
-
+    
 print("Running timings for add and update...\n")
 for trial in mol_trials:
     results = [create_unique_result() for x in range(trial)]
