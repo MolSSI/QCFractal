@@ -1135,7 +1135,6 @@ class SQLAlchemySocket:
             Dict with keys: data, meta
             Data is the ids of the inserted/updated/existing docs
         """
-
         meta = add_metadata_template()
 
         result_ids = ["placeholder"] * len(record_list)
@@ -1145,13 +1144,13 @@ class SQLAlchemySocket:
         group_items = []
         new_record_idx = []
         items = []
-        for i,res in enumerate(record_list):
+        for i, res in enumerate(record_list):
             
             res = record_list[i]
             items.append((res.program, res.driver, res.method, res.basis, res.keywords, res.molecule))
             if (i+1) % 200 == 0:
-                items = []
                 group_items.append(items)
+                items = []
         if items != []:
             group_items.append(items)
 
@@ -1192,7 +1191,7 @@ class SQLAlchemySocket:
                     meta["duplicates"].append(id_)  # TODO
                     # If new or duplicate, add the id to the return list
                     result_ids[i] = id_
-
+            
             session.add_all(results_list)
             session.commit()
             for i, res in enumerate(results_list):
