@@ -67,8 +67,6 @@ for trial in mol_trials:
 
     t = time.time()
     ret = storage.add_results(results)["data"]
-    meta = storage.add_results(results)["meta"]
-    print (meta["n_inserted"])
 
     ttime = (time.time() - t) * 1000
     time_per_mol = ttime / trial
