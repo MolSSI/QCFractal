@@ -1144,20 +1144,26 @@ class SQLAlchemySocket:
         new_record_idx = []
         conds = []
 
-        conds= [and_(ResultORM.program == res.program, ResultORM.driver == res.driver,
-                            ResultORM.method == res.method, ResultORM.basis == res.basis,
-                            ResultORM.keywords == res.keywords, ResultORM.molecule == res.molecule
-                            )
-               for res in results_list]
-
+        conds = [
+            and_(
+                ResultORM.program == res.program,
+                ResultORM.driver == res.driver,
+                ResultORM.method == res.method,
+                ResultORM.basis == res.basis,
+                ResultORM.keywords == res.keywords,
+                ResultORM.molecule == res.molecule,
+            )
+            for res in results_list
+        ]
 
         with self.session_scope() as session:
             docs = session.query(ResultORM).filter(or_(*conds)).all()
 
             num_existing = len(docs)
-            existing_res = { (doc.program, doc.driver, doc.method, doc.basis,
-                                 str(doc.keywords), str(doc.molecule)): doc.id
-                            for doc in docs}
+            existing_res = {
+                (doc.program, doc.driver, doc.method, doc.basis, str(doc.keywords), str(doc.molecule)): doc.id
+                for doc in docs
+            }
             for i, result in enumerate(record_list):
                 idx = result.program, result.driver.value, result.method, result.basis, result.keywords, result.molecule
                 # doc = session.query(ResultORM).filter_by(
@@ -1178,18 +1184,17 @@ class SQLAlchemySocket:
                     # result_ids.append("placeholder")
                     meta["n_inserted"] += 1
                 else:
-                    print ("reached here")
+                    print("reached here")
                     id_ = str(existing_res.get(idx))
                     meta["duplicates"].append(id_)  # TODO
                     # If new or duplicate, add the id to the return list
                     result_ids[i] = id_
-            
+
             session.add_all(results_list)
             session.commit()
             for i, res in enumerate(results_list):
                 # print (type(new_records[i]))
                 result_ids[new_record_idx[i]] = str(res.id)
-
 
         meta["success"] = True
 
@@ -1214,10 +1219,10 @@ class SQLAlchemySocket:
             number of records updated
         """
         query_ids = [res.id for res in record_list]
-        duplicates = len (query_ids) != len (set(query_ids))
+        duplicates = len(query_ids) != len(set(query_ids))
 
-        with self.session_scope() as session : 
-            
+        with self.session_scope() as session:
+
             found = session.query(ResultORM).filter(ResultORM.id.in_(query_ids)).all()
             found_dict = {str(record.id): record for record in found}
 
@@ -1228,7 +1233,6 @@ class SQLAlchemySocket:
                 if result.id is None:
                     self.logger.error("Attempted update without ID, skipping")
                     continue
-
 
                     # result_db = session.query(ResultORM).filter_by(id=result.id).first()
 
