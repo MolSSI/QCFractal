@@ -785,6 +785,7 @@ class Dataset(Collection):
         return_figure=None,
         digits=3,
         kind="bar",
+        show_incomplete: bool = False,
     ) -> "plotly.Figure":
 
         # Validate query dimensions
@@ -872,6 +873,9 @@ class Dataset(Collection):
                 q["stoich"] = q.pop("stoichiometry")
             values = self.get_values(**q)
 
+            if not show_incomplete:
+                values = values.dropna(axis=1, how="any")
+
             # Create the statistics
             stat = self.statistics(metric, values, bench=bench)
             stat = stat.round(digits)
@@ -925,6 +929,7 @@ class Dataset(Collection):
         bench: Optional[str] = None,
         kind: str = "bar",
         return_figure: Optional[bool] = None,
+        show_incomplete: bool = False,
     ) -> "plotly.Figure":
         """
         Parameters
@@ -948,6 +953,8 @@ class Dataset(Collection):
         return_figure : Optional[bool], optional
             If True, return the raw plotly figure. If False, returns a hosted iPlot.
             If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
+        show_incomplete: bool, optional
+            Display statistics method/basis set combinations where results are incomplete
 
         Returns
         -------

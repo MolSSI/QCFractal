@@ -356,6 +356,7 @@ class ReactionDataset(Dataset):
         bench: Optional[str] = None,
         kind: str = "bar",
         return_figure: Optional[bool] = None,
+        show_incomplete: bool = False,
     ) -> "plotly.Figure":
         """
         Parameters
@@ -380,6 +381,8 @@ class ReactionDataset(Dataset):
             The kind of chart to produce, either 'bar' or 'violin'
         return_figure : Optional[bool], optional
             If True, return the raw plotly figure. If False, returns a hosted iPlot. If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
+        show_incomplete: bool, optional
+            Display statistics method/basis set combinations where results are incomplete
 
         Returns
         -------
@@ -390,7 +393,15 @@ class ReactionDataset(Dataset):
         query = {"method": method, "basis": basis, "keywords": keywords, "program": program, "stoichiometry": stoich}
         query = {k: v for k, v in query.items() if v is not None}
 
-        return self._visualize(metric, bench, query=query, groupby=groupby, return_figure=return_figure, kind=kind)
+        return self._visualize(
+            metric,
+            bench,
+            query=query,
+            groupby=groupby,
+            return_figure=return_figure,
+            kind=kind,
+            show_incomplete=show_incomplete,
+        )
 
     def get_molecules(
         self,
@@ -473,8 +484,6 @@ class ReactionDataset(Dataset):
         ret = []
         for s in stoich:
             name, _, history = self._default_parameters(program, method, basis, keywords, stoich=s)
-            if len(self.list_records(**history)) == 0:
-                raise KeyError(f"Requested query ({name}) did not match a known record.")
             history.pop("stoichiometry")
             indexer, names = self._molecule_indexer(stoich=s, subset=subset, force=True)
             df = self._get_records(

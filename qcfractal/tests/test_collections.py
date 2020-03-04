@@ -638,10 +638,6 @@ def test_reactiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
     with pytest.raises(KeyError):
         ds.get_records("B3LYP", "6-31g", stoich="cp5")
 
-    # Wrong method
-    with pytest.raises(KeyError):
-        ds.get_records("Fake Method", "6-31g", stoich="cp")
-
 
 def test_reactiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
     client, ds = reactiondataset_dftd3_fixture_fixture
