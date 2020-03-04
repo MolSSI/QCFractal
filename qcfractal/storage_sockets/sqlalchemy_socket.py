@@ -1159,7 +1159,6 @@ class SQLAlchemySocket:
         with self.session_scope() as session:
             docs = session.query(ResultORM).filter(or_(*conds)).all()
 
-            num_existing = len(docs)
             existing_res = {
                 (doc.program, doc.driver, doc.method, doc.basis, str(doc.keywords), str(doc.molecule)): doc.id
                 for doc in docs
@@ -1175,7 +1174,7 @@ class SQLAlchemySocket:
                 #     molecule=result.molecule,
                 # )
 
-                if existing_res.get(idx) == None:
+                if existing_res.get(idx) is None:
                     doc = ResultORM(**result.dict(exclude={"id"}))
                     # results_list.append(doc)
                     results_list.append(doc)
