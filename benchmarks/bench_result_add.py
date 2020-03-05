@@ -11,7 +11,7 @@ db_name = "molecule_tests"
 storage = qcfractal.storage_socket_factory(f"postgresql://localhost:5432/{db_name}")
 storage._delete_DB_data(db_name)
 
-run_tests = False
+run_tests = True
 mol_trials = [1, 5, 10, 25, 50, 100, 500, 1000]
 # _size = 20
 
@@ -47,8 +47,8 @@ if run_tests:
     assert ret[1] != ret[2]
 
     # Duplicates
-    test_mol1 = create_unique_result()
-    ret = storage.add_results([test_res1, test_res2, test_res3])["data"]
+    test_res1 = create_unique_result()
+    ret = storage.add_results([test_res1, test_res1, test_res1])["data"]
     assert len(ret) == 3
     assert ret[0] == ret[1]
     assert ret[1] == ret[2]
