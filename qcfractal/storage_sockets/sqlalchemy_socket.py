@@ -1141,7 +1141,7 @@ class SQLAlchemySocket:
 
         results_list = []
         existing_res = {}
-        new_record_idx = []
+        new_record_idx, duplicates_idx = [], []
         conds = []
 
         conds = [
@@ -1164,7 +1164,11 @@ class SQLAlchemySocket:
                 for doc in docs
             }
             for i, result in enumerate(record_list):
-                idx = result.program, result.driver.value, result.method, result.basis, result.keywords, result.molecule
+                # necessary since result will be used to search through found items
+                if result.basis == "":
+                    result.basis = None
+                idx = result.program, result.driver.value, result.method, result.basis, str(result.keywords), result.molecule
+
                 # doc = session.query(ResultORM).filter_by(
                 #     program=result.program,
                 #     driver=result.driver,
@@ -1185,24 +1189,18 @@ class SQLAlchemySocket:
                     meta["n_inserted"] += 1
                 else:
                     doc = existing_res.get(idx)
+                    duplicates_idx.append(i)
                     meta["duplicates"].append(doc)  # TODO
                     # If new or duplicate, add the id to the return list
-                    result_ids[i] = str(doc.id)
 
             session.add_all(results_list)
             session.commit()
-            meta["duplicates"] = [str(doc.id) for doc in meta["duplicates"]] 
-            j, k = 0, 0
-            for i, _ in enumerate(result_ids):
-                if result_ids[i] == "None":
-                    result_ids[i] = meta["duplicates"][k]
-                    k += 1
-                elif result_ids[i] == "placeholder":
-                    result_ids[i] = str(results_list[j].id)
-                    j += 1
-            # for i, res in enumerate(results_list):
-            #     # print (type(new_records[i]))
-            #     result_ids[new_record_idx[i]] = str(res.id)
+            meta["duplicates"] = [str(doc.id) for doc in meta["duplicates"]]
+
+            for i,idx in enumerate(new_record_idx):
+                result_ids[idx] = str(results_list[i].id)
+            for i, idx in enumerate(duplicates_idx):
+                result_ids[idx] = meta["duplicates"][i]
 
         meta["success"] = True
 
