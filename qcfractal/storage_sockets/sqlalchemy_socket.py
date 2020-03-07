@@ -1167,7 +1167,14 @@ class SQLAlchemySocket:
                 # necessary since result will be used to search through found items
                 if result.basis == "":
                     result.basis = None
-                idx = result.program, result.driver.value, result.method, result.basis, str(result.keywords), result.molecule
+                idx = (
+                    result.program,
+                    result.driver.value,
+                    result.method,
+                    result.basis,
+                    str(result.keywords),
+                    result.molecule,
+                )
 
                 # doc = session.query(ResultORM).filter_by(
                 #     program=result.program,
@@ -1197,7 +1204,7 @@ class SQLAlchemySocket:
             session.commit()
             meta["duplicates"] = [str(doc.id) for doc in meta["duplicates"]]
 
-            for i,idx in enumerate(new_record_idx):
+            for i, idx in enumerate(new_record_idx):
                 result_ids[idx] = str(results_list[i].id)
             for i, idx in enumerate(duplicates_idx):
                 result_ids[idx] = meta["duplicates"][i]
