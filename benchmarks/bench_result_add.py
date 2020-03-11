@@ -33,13 +33,6 @@ def create_unique_result():
 
     return result
 
-mol1 = build_unique_mol()
-ret_mol = storage.add_molecules([mol1])["data"]
-result1 = ResultRecord(version='1', driver='energy',program='games',molecule=ret_mol[0], method='test', basis="")
-result2 = ResultRecord(version='1', driver='energy',program='games',molecule=ret_mol[0], method='test', basis=None)
-ret = storage.add_results([result1])["meta"]
-ret = storage.add_results([result2])["meta"]
-print ("number of inserted {}".format(ret["n_inserted"]))
 
 if run_tests:
     print("Running tests...\n")
@@ -73,6 +66,8 @@ if run_tests:
     ret1 = storage.add_results([test_res1, test_res2, test_res3])["data"]
     ret2 = storage.add_results([test_res1, test_res2, test_res3])["data"]
     assert ret1[0] == ret2[0]
+    assert ret1[1] == ret2[1]
+    assert ret1[2] == ret2[2]
     
 print("Running timings for add and update...\n")
 for trial in mol_trials:

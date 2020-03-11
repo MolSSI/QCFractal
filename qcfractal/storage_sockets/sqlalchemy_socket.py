@@ -1157,7 +1157,10 @@ class SQLAlchemySocket:
         ]
 
         with self.session_scope() as session:
-            docs = session.query(ResultORM).filter(or_(*conds)).all()
+            docs = session.query(ResultORM.program,
+                                 ResultORM.driver, ResultORM.method, 
+                                 ResultORM.basis, ResultORM.keywords, ResultORM.molecule,
+                                 ResultORM.id).filter(or_(*conds)).all()
 
             existing_res = {
                 (doc.program, doc.driver, doc.method, doc.basis, str(doc.keywords), str(doc.molecule)): doc
