@@ -1376,8 +1376,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-        TYPE
-            Description
+        Dict with keys: blob_id and meta
+            blob_ids are the ids of inserted wavefuction data blobs
         """
 
         meta = add_metadata_template()
@@ -1413,8 +1413,11 @@ class SQLAlchemySocket:
         ----------
         id : List[str], optional
             A list of ids to query
-        include : Dict[str, bool], optional
-            Description
+        include : list/set/tuple of str, default is None
+            The fields to return, default to return all
+        exclude : list/set/tuple of str, default is None
+            The fields to not return, default to return all
+        exclude : Dict
         limit : int, optional
             Maximum number of results to return.
         skip : int, optional
@@ -1422,8 +1425,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-        TYPE
-            Description
+        Dict with keys: rdata and meta
+            rdata is the found wavefunction items
         """
 
         meta = get_metadata_template()
@@ -1446,7 +1449,7 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        data : list of dict
+        recod_list : list of dict
             Each dict must have:
             procedure, program, keywords, qc_meta, hash_index
             In addition, it should have the other attributes that it needs
@@ -1665,12 +1668,12 @@ class SQLAlchemySocket:
 
     def add_services(self, service_list: List["BaseService"]):
         """
-        Add services from a given dict.
+        Add services from a given list of dict.
 
         Parameters
         ----------
-        data : list of dict
-
+        services_list : list of dict
+            List of services to be added
         Returns
         -------
             Dict with keys: data, meta
@@ -1729,10 +1732,12 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        id / hash_index : List of str or str
-            service id / hash_index that ran the results
-        projection : list/set/tuple of keys, default is None
-            The fields to return, default to return all
+        id / hash_index : List of str or str, default is None
+            service id 
+        procedure_id : lList of str or str, default is None
+            procedure_id for the specific procedure 
+        status : str, default is None
+            status of the record queried for
         limit : int, default is None
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
@@ -1779,12 +1784,13 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        id
-        updates
+        records_list: List of dict
+            List of Service items to be updated using their id
 
         Returns
         -------
-            if operation is succesful
+        int
+            number of updated services
         """
 
         updated_count = 0
@@ -1998,7 +2004,9 @@ class SQLAlchemySocket:
         ----------
         id : list
             Ids of the tasks
-        Hash_index
+        Hash_index: list, default is None,
+            hash_index of service, not used
+        program, list of str or str, default is None
         status : bool, default is None (find all)
             The status of the task: 'COMPLETE', 'RUNNING', 'WAITING', or 'ERROR'
         base_result: str (optional)
@@ -2013,7 +2021,7 @@ class SQLAlchemySocket:
             the self._max_limit will be returned instead
             (This is to avoid overloading the server)
         skip : int, default is None 0
-            skip the first 'skip' resaults. Used to paginate
+            skip the first 'skip' results. Used to paginate
         return_json : bool, deafult is True
             Return the results as a list of json inseated of objects
         with_ids : bool, default is True
@@ -2060,6 +2068,8 @@ class SQLAlchemySocket:
         limit : int (optional)
             max number of returned tasks. If limit > max_limit, max_limit
             will be returned instead (safe query)
+        skip : int, default is None 0
+            skip the first 'skip' results. Used to paginate
         as_json : bool
             Return tasks as JSON
 
@@ -2090,8 +2100,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-        int
-            Updated count
+        list of objects
+            TaskRecord objects marked as COMPLETE
         """
 
         if not task_ids:
@@ -2132,7 +2142,7 @@ class SQLAlchemySocket:
 
         task_ids = []
         with self.session_scope() as session:
-            # Make sure retuened results are in the same order as the task ids
+            # Make sure returned results are in the same order as the task ids
             # SQL queries change the order when using "in"
             data_dict = {item[0]: item[1] for item in data}
             sorted_data = {key: data_dict[key] for key in sorted(data_dict.keys())}
