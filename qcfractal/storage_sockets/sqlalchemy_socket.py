@@ -1170,21 +1170,19 @@ class SQLAlchemySocket:
                 .filter(or_(*conds))
                 .all()
             )
-
             existing_res = {
-                (doc.program, doc.driver, doc.method, doc.basis, str(doc.keywords), str(doc.molecule)): doc
-                for doc in docs
+                (doc.program, doc.driver, doc.method, doc.basis, doc.keywords, str(doc.molecule)): doc for doc in docs
             }
             for i, result in enumerate(record_list):
                 # necessary since result will be used to search through found items
-                if result.basis == "":
-                    result.basis = None
+                # if result.basis == "":
+                #     result.basis = None
                 idx = (
                     result.program,
                     result.driver.value,
                     result.method,
-                    result.basis,
-                    str(result.keywords),
+                    result.basis if result.basis else None,
+                    int(result.keywords) if result.keywords else None,
                     result.molecule,
                 )
 

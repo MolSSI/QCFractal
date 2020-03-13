@@ -26,6 +26,7 @@ def build_unique_mol():
 
 
 def create_unique_result():
+
     mol = build_unique_mol()
     ret = storage.add_molecules([mol])["data"]
     result = ResultRecord(version='1', driver='energy', program='games', molecule=ret[0],
