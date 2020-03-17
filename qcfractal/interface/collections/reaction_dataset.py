@@ -160,7 +160,8 @@ class ReactionDataset(Dataset):
     def _validate_stoich(self, stoich: Union[List[str], str], subset=None, force: bool = False) -> None:
         if isinstance(stoich, str):
             stoich = [stoich]
-
+        if isinstance(subset, str):
+            subset = [subset]
         valid_stoich = self.valid_stoich(subset=subset, force=force)
         for s in stoich:
             if s.lower() not in valid_stoich:
@@ -428,6 +429,9 @@ class ReactionDataset(Dataset):
 
         self._check_client()
         self._check_state()
+        if isinstance(subset, str):
+            subset = [subset]
+
         self._validate_stoich(stoich, subset=subset, force=force)
 
         indexer, names = self._molecule_indexer(stoich=stoich, subset=subset, force=force)
