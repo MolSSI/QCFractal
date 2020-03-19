@@ -1253,11 +1253,11 @@ class SQLAlchemySocket:
             id or a list of ids of queue_mangers
         status : bool, default is 'COMPLETE'
             The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
-        include : list/set/tuple, default is None
+        include : list/set/tuple, optional
             The fields to return, default to return all
-        exclude : list/set/tuple, default is None
+        exclude : list/set/tuple, optional
             The fields to not return, default to return all
-        limit : int, default is None
+        limit : int, optional
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
             the self._max_limit will be returned instead
@@ -1425,7 +1425,7 @@ class SQLAlchemySocket:
         Returns
         -------
         Dict[str, Any]
-            dictionary with keys data and meta, where data is the found wavefunction items
+            Dictionary with keys data and meta, where data is the found wavefunction items
         """
 
         meta = get_metadata_template()
@@ -1448,7 +1448,7 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        record_list : list of dict
+        record_list : List["BaseRecord"]
             Each dict must have:
             procedure, program, keywords, qc_meta, hash_index
             In addition, it should have the other attributes that it needs
@@ -1519,11 +1519,11 @@ class SQLAlchemySocket:
         task_id : str or list
         status : bool, default is 'COMPLETE'
             The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
-        include : list/set/tuple of keys, default is None
+        include : list/set/tuple of keys, optiona
             The fields to return, default to return all
-        exclude : list/set/tuple of keys, default is None
+        exclude : list/set/tuple of keys, optional
             The fields to not return, default to return all
-        limit : int, default is None
+        limit : int, optional
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
             the self._max_limit will be returned instead
@@ -1731,13 +1731,13 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        id / hash_index : List[str] or str, default is None
+        id / hash_index : List[str] or str, optional
             service id
-        procedure_id : List[str] or str, default is None
+        procedure_id : List[str] or str, optional
             procedure_id for the specific procedure
-        status : str, default is None
+        status : str, optional
             status of the record queried for
-        limit : int, default is None
+        limit : int, optional
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
             the self._max_limit will be returned instead
@@ -2021,23 +2021,23 @@ class SQLAlchemySocket:
         ----------
         id : list
             Ids of the tasks
-        Hash_index: list, default is None,
+        Hash_index: list, optional,
             hash_index of service, not used
-        program, list of str or str, default is None
-        status : bool, default is None (find all)
+        program, list of str or str, optional
+        status : bool, optional (find all)
             The status of the task: 'COMPLETE', 'RUNNING', 'WAITING', or 'ERROR'
         base_result: str (optional)
             base_result id
-        include : list/set/tuple of keys, default is None
+        include : list/set/tuple of keys, optional
             The fields to return, default to return all
-        exclude : list/set/tuple of keys, default is None
+        exclude : list/set/tuple of keys, optional
             The fields to not return, default to return all
-        limit : int, default is None
+        limit : int, optional
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
             the self._max_limit will be returned instead
             (This is to avoid overloading the server)
-        skip : int, default is None 0
+        skip : int, default is 0
             skip the first 'skip' results. Used to paginate
         return_json : bool, deafult is True
             Return the results as a list of json inseated of objects
@@ -2085,7 +2085,7 @@ class SQLAlchemySocket:
         limit : int (optional)
             max number of returned tasks. If limit > max_limit, max_limit
             will be returned instead (safe query)
-        skip : int, default is None 0
+        skip : int, default is 0
             skip the first 'skip' results. Used to paginate
         as_json : bool
             Return tasks as JSON
