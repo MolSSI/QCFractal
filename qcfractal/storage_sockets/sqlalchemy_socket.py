@@ -1405,7 +1405,7 @@ class SQLAlchemySocket:
         exclude: Optional[List[str]] = None,
         limit: int = None,
         skip: int = 0,
-    ):
+    ) -> Dict[str, Any]:
         """
         Pulls from the wavefunction key/value store table.
 
@@ -1413,15 +1413,14 @@ class SQLAlchemySocket:
         ----------
         id : List[str], optional
             A list of ids to query
-        include : list/set/tuple of str, default is None
+        include : Optional[List[str]], optional
             The fields to return, default to return all
-        exclude : list/set/tuple of str, default is None
+        exclude : Optional[List[str]], optional
             The fields to not return, default to return all
-        exclude : Dict
         limit : int, optional
             Maximum number of results to return.
         skip : int, optional
-            skip the `skip` results
+            Skips a number of results in the query, used for pagination
 
         Returns
         -------
@@ -1733,9 +1732,9 @@ class SQLAlchemySocket:
         Parameters
         ----------
         id / hash_index : List[str] or str, default is None
-            service id 
+            service id
         procedure_id : List[str] or str, default is None
-            procedure_id for the specific procedure 
+            procedure_id for the specific procedure
         status : str, default is None
             status of the record queried for
         limit : int, default is None
@@ -1826,7 +1825,7 @@ class SQLAlchemySocket:
     ) -> int:
         """
         Update the status of the existing services in the database.
-        
+
         Raises an exception if any of the ids are invalid.
         Parameters
         ----------
@@ -1836,7 +1835,7 @@ class SQLAlchemySocket:
             ids of all the services requested to be updated, by default None
         procedure_id : Union[List[str], str], optional
             procedure_ids for the specific procedures, by default None
-        
+
         Returns
         -------
         int
@@ -2154,12 +2153,12 @@ class SQLAlchemySocket:
         """
         update the given tasks as errored
         Mark the corresponding result/procedure as Errored
-        
+
         Parameters
         ----------
         data : List[Tuple[int, str]]
             List of task ids and their error messages desired to be assigned to them.
-        
+
         Returns
         -------
         int
