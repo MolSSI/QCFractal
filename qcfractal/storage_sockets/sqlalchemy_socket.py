@@ -1376,8 +1376,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-        Dict with keys: blob_id and meta
-            blob_ids are the ids of inserted wavefuction data blobs
+        Dict[str, Any]
+            Dict with keys data and meta, where data represent the blob_ids of inserted wavefuction data blobs.
         """
 
         meta = add_metadata_template()
@@ -1425,8 +1425,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-        Dict with keys: rdata and meta
-            rdata is the found wavefunction items
+        Dict[str, Any]
+            dictionary with keys data and meta, where data is the found wavefunction items
         """
 
         meta = get_metadata_template()
@@ -1449,7 +1449,7 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        recod_list : list of dict
+        record_list : list of dict
             Each dict must have:
             procedure, program, keywords, qc_meta, hash_index
             In addition, it should have the other attributes that it needs
@@ -1459,8 +1459,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-            Dict with keys: data, meta
-            Data is the ids of the inserted/updated/existing docs
+        Dict[str, Any]
+            Dictionary with keys data and meta, data is the ids of the inserted/updated/existing docs
         """
 
         meta = add_metadata_template()
@@ -1538,8 +1538,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-        Dict with keys: data, meta
-            Data is the objects found
+        Dict[str, Any]
+            Dict with keys: data and meta. Data is the objects found
         """
 
         meta = get_metadata_template()
@@ -1638,7 +1638,7 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        ids : list of str
+        ids : List[str]
             The Ids of the results to be deleted
 
         Returns
@@ -1672,12 +1672,12 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        services_list : list of dict
+        services_list : List[Dict[str, Any]]
             List of services to be added
         Returns
         -------
-            Dict with keys: data, meta
-            Data is the hash_index of the inserted/existing docs
+        Dict[str, Any]
+            Dict with keys: data, meta. Data is the hash_index of the inserted/existing docs
         """
 
         meta = add_metadata_template()
@@ -1732,9 +1732,9 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        id / hash_index : List of str or str, default is None
+        id / hash_index : List[str] or str, default is None
             service id 
-        procedure_id : lList of str or str, default is None
+        procedure_id : List[str] or str, default is None
             procedure_id for the specific procedure 
         status : str, default is None
             status of the record queried for
@@ -1750,8 +1750,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-        Dict with keys: data, meta
-            Data is the objects found
+        Dict[str, Any]
+            Dict with keys: data, meta. Data is the objects found
         """
 
         meta = get_metadata_template()
@@ -1784,7 +1784,7 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        records_list: List of dict
+        records_list: List[Dict[str, Any]]
             List of Service items to be updated using their id
 
         Returns
@@ -1824,6 +1824,24 @@ class SQLAlchemySocket:
     def update_service_status(
         self, status: str, id: Union[List[str], str] = None, procedure_id: Union[List[str], str] = None
     ) -> int:
+        """
+        Update the status of the existing services in the database.
+        
+        Raises an exception if any of the ids are invalid.
+        Parameters
+        ----------
+        status : str
+            The input status string ready to replace the previous status
+        id : Union[List[str], str], optional
+            ids of all the services requested to be updated, by default None
+        procedure_id : Union[List[str], str], optional
+            procedure_ids for the specific procedures, by default None
+        
+        Returns
+        -------
+        int
+            1 indicating that the status update was successful
+        """
 
         if (id is None) and (procedure_id is None):
             raise KeyError("id or procedure_id must not be None.")
@@ -2029,8 +2047,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-        Dict with keys: data, meta
-            Data is the objects found
+        Dict[str, Any]
+            Dict with keys: data, meta. Data is the objects found
         """
 
         meta = get_metadata_template()
@@ -2063,7 +2081,7 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        id : list of str
+        id : List[str]
             List of the task Ids in the DB
         limit : int (optional)
             max number of returned tasks. If limit > max_limit, max_limit
@@ -2075,7 +2093,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-        list of the found tasks
+        List[TaskRecord]
+            list of the found tasks
         """
 
         with self.session_scope() as session:
@@ -2095,13 +2114,13 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        task_ids : list
+        task_ids : List[str]
             IDs of the tasks to mark as COMPLETE
 
         Returns
         -------
-        list of objects
-            TaskRecord objects marked as COMPLETE
+        int
+            number of TaskRecord objects marked as COMPLETE, and deleted from the database consequtively.
         """
 
         if not task_ids:
@@ -2132,9 +2151,19 @@ class SQLAlchemySocket:
         return tasks_c
 
     def queue_mark_error(self, data: List[Tuple[int, str]]):
-        """update the given tasks as errored
+        """
+        update the given tasks as errored
         Mark the corresponding result/procedure as Errored
-
+        
+        Parameters
+        ----------
+        data : List[Tuple[int, str]]
+            List of task ids and their error messages desired to be assigned to them.
+        
+        Returns
+        -------
+        int
+            Number of tasks updated as errored.
         """
 
         if not data:
@@ -2210,6 +2239,7 @@ class SQLAlchemySocket:
         int
             Updated count
         """
+
         if not (reset_running or reset_error):
             # nothing to do
             return 0
@@ -2245,11 +2275,12 @@ class SQLAlchemySocket:
         return updated
 
     def del_tasks(self, id: Union[str, list]):
-        """Delete a task from the queue. Use with cautious
+        """
+        Delete a task from the queue. Use with cautious
 
         Parameters
         ----------
-        id : str or list
+        id : str or List
             Ids of the tasks to delete
         Returns
         -------
@@ -2269,12 +2300,13 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        record_list : list of TaskRecords
+        record_list : List[TaskRecords]
+            List of task records to be copied
 
         Returns
         -------
-            Dict with keys: data, meta
-            Data is the ids of the inserted/updated/existing docs
+        Dict[str, Any]
+            Dict with keys: data, meta. Data is the ids of the inserted/updated/existing docs
         """
 
         meta = add_metadata_template()
@@ -2391,12 +2423,12 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        record_list : list of dict of managers data
-
+        record_list : List[Dict[str, Any]]
+            list of dict of managers data
         Returns
         -------
-            Dict with keys: data, meta
-            Data is the ids of the inserted/updated/existing docs
+        Dict[str, Any]
+            Dict with keys: data, meta. Data is the ids of the inserted/updated/existing docs
         """
 
         meta = add_metadata_template()
@@ -2456,13 +2488,13 @@ class SQLAlchemySocket:
             New user's username
         password : str, optional
             The user's password. If None, a new password will be generated.
-        permissions : list of str, optional
+        permissions : List[str], optional
             The associated permissions of a user ['read', 'write', 'compute', 'queue', 'admin']
         overwrite: bool, optional
             Overwrite the user if it already exists.
         Returns
         -------
-        tuple
+        Tuple[bool, str]
             A tuple of (success flag, password)
         """
 
@@ -2514,7 +2546,7 @@ class SQLAlchemySocket:
 
         Returns
         -------
-        tuple
+        Tuple[bool, str]
             A tuple of (success flag, failure string)
 
         Examples
@@ -2578,12 +2610,12 @@ class SQLAlchemySocket:
             The user's new password. If None, the password will not be updated. Excludes reset_password.
         reset_password: bool, optional
             Reset the user's password to a new autogenerated one.
-        permissions : list of str, optional
+        permissions : List[str], optional
             The associated permissions of a user ['read', 'write', 'compute', 'queue', 'admin']
 
         Returns
         -------
-        tuple
+        Tuple[bool, str]
             A tuple of (success flag, message)
         """
 
@@ -2676,8 +2708,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-            Dict with keys: data, meta
-            Data is the ids of the inserted/updated/existing docs
+        Dict[str, Any]
+            Dict with keys: data, meta. Data is the ids of the inserted/updated/existing docs
         """
 
         meta = add_metadata_template()
