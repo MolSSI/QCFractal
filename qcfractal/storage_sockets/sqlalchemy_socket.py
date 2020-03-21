@@ -1181,7 +1181,7 @@ class SQLAlchemySocket:
                     result.program,
                     result.driver.value,
                     result.method,
-                    result.basis if result.basis else None,
+                    result.basis,
                     int(result.keywords) if result.keywords else None,
                     result.molecule,
                 )
