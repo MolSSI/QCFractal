@@ -458,7 +458,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-            Query results dict:
+            Dict[str,Any]:
+                Query result dictionary with keys:
                 data: returned data by the query (variable format)
                 meta:
                     success: True or False
@@ -505,9 +506,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-        TYPE
-
-            Description
+        Dict[str, Any]
+            Dictionary with keys data and meta, data is the ids of added blobs
         """
 
         meta = add_metadata_template()
@@ -536,14 +536,14 @@ class SQLAlchemySocket:
         ----------
         id : List[str]
             A list of ids to query
-        limit : int, optional
+        limit : Optional[int], optional
             Maximum number of results to return.
-        skip : int, optional
+        skip : Optional[int], optional
             skip the `skip` results
         Returns
         -------
-        TYPE
-            Description
+        Dict[str, Any]
+            Dictionary with keys data and meta, data is a key-value dictionary of found key-value stored items.
         """
 
         meta = get_metadata_template()
@@ -626,8 +626,8 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        data : dict of molecule-like JSON objects
-            A {key: molecule} dictionary of molecules to input.
+        molecules : List[Molecule]
+            A List of molecule objects to add.
 
         Returns
         -------
@@ -759,7 +759,9 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        values : str or list of strs
+        id : str or List[str], optional
+            ids of molecules, can use the hash parameter instead
+        molecule_hash : str or List[str]
             The hash of a molecule.
 
         Returns
@@ -782,12 +784,12 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-         data
+        keywords_set : List[KeywordSet]
             A list of KeywordSets to be inserted.
 
         Returns
         -------
-            A dict with keys: 'data' and 'meta'
+        Dict[str, Any]
             (see add_metadata_template())
             The 'data' part is a list of ids of the inserted options
             data['duplicates'] has the duplicate entries
@@ -837,11 +839,11 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        id : list or str
+        id : List[str] or str
             Ids of the keywords
-        hash_index : list or str
+        hash_index : List[str] or str
             hash index of keywords
-        limit : int, optional
+        limit : Optional[int], optional
             Maximum number of results to return.
             If this number is greater than the SQLAlchemySocket.max_limit then
             the max_limit will be returned instead.
@@ -953,7 +955,8 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        data : dict, which should inlcude at least:
+        data : Dict[str, Any]
+            should inlcude at least(keys):
             collection : str (immutable)
             name : str (immutable)
 
@@ -962,6 +965,7 @@ class SQLAlchemySocket:
 
         Returns
         -------
+        Dict[str, Any]
         A dict with keys: 'data' and 'meta'
             (see add_metadata_template())
             The 'data' part is the id of the inserted document or none
@@ -1052,7 +1056,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-        A dict with keys: 'data' and 'meta'
+        Dict[str, Any]
+            A dict with keys: 'data' and 'meta'
             The data is a list of the collections found
         """
 
@@ -1123,8 +1128,8 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        data : list of dict
-            Each dict must have:
+        data : List[ResultRecord]
+            Each dict in the list must have:
             program, driver, method, basis, options, molecule
             Where molecule is the molecule id in the DB
             In addition, it should have the other attributes that it needs
@@ -1132,6 +1137,7 @@ class SQLAlchemySocket:
 
         Returns
         -------
+        Dict[str, Any]
             Dict with keys: data, meta
             Data is the ids of the inserted/updated/existing docs
         """
@@ -1238,7 +1244,7 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        id : str or list
+        id : str or List[str]
         program : str
         method : str
         basis : str
@@ -1247,31 +1253,36 @@ class SQLAlchemySocket:
         driver : str
         keywords : str
             The id of the option in the DB
-        task_id: str or list
+        task_id: str or List[str]
             id or a list of ids of tasks
-        manager_id: str or list
+        manager_id: str or List[str]
             id or a list of ids of queue_mangers
-        status : bool, default is 'COMPLETE'
+        status : bool, optional 
             The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
-        include : list/set/tuple, optional
+            Default is 'COMPLETE'
+        include : Optional[List[str]], optional
             The fields to return, default to return all
-        exclude : list/set/tuple, optional
+        exclude : Optional[List[str]], optional
             The fields to not return, default to return all
-        limit : int, optional
+        limit : Optional[int], optional
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
             the self._max_limit will be returned instead
             (This is to avoid overloading the server)
-        skip : int, default is 0
+        skip : int, optional
             skip the first 'skip' results. Used to paginate
-        return_json : bool, default is True
+            Default is 0
+        return_json : bool, optional 
             Return the results as a list of json inseated of objects
-        with_ids : bool, default is True
+            default is True
+        with_ids : bool, optional
             Include the ids in the returned objects/dicts
+            default is True
 
         Returns
         -------
-        Dict with keys: data, meta
+        Dict[str, Any]
+            Dict with keys: data, meta
             Data is the objects found
         """
 
@@ -1309,14 +1320,16 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        task_id : str or list
+        task_id : str or List[str]
 
-        return_json : bool, default is True
+        return_json : bool, optional
             Return the results as a list of json inseated of objects
+            Default is True
 
         Returns
         -------
-        Dict with keys: data, meta
+        Dict[str, Any]
+            Dict with keys: data, meta
             Data is the objects found
         """
 
@@ -1346,7 +1359,7 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        ids : list of str
+        ids : List[str]
             The Ids of the results to be deleted
 
         Returns
@@ -1419,8 +1432,10 @@ class SQLAlchemySocket:
             The fields to not return, default to return all
         limit : int, optional
             Maximum number of results to return.
+            Default is set to 0
         skip : int, optional
             Skips a number of results in the query, used for pagination
+            Default is set to 0
 
         Returns
         -------
@@ -1453,8 +1468,6 @@ class SQLAlchemySocket:
             procedure, program, keywords, qc_meta, hash_index
             In addition, it should have the other attributes that it needs
             to store
-        update_existing : bool (default False)
-            Update existing results
 
         Returns
         -------
@@ -1512,28 +1525,32 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        id : str or list
+        id : str or List[str]
         procedure : str
         program : str
         hash_index : str
-        task_id : str or list
-        status : bool, default is 'COMPLETE'
+        task_id : str or List[str]
+        status : bool, optional
             The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
-        include : list/set/tuple of keys, optiona
+            Default is 'COMPLETE'
+        include : Optional[List[str]], optional
             The fields to return, default to return all
-        exclude : list/set/tuple of keys, optional
+        exclude : Optional[List[str]], optional
             The fields to not return, default to return all
-        limit : int, optional
+        limit : Optional[int], optional
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
             the self._max_limit will be returned instead
             (This is to avoid overloading the server)
-        skip : int, default is 0
+        skip : int, optional
             skip the first 'skip' resaults. Used to paginate
-        return_json : bool, deafult is True
+            Default is 0
+        return_json : bool, optional
             Return the results as a list of json inseated of objects
-        with_ids : bool, default is True
+            Default is True
+        with_ids : bool, optional
             Include the ids in the returned objects/dicts
+            Default is True
 
         Returns
         -------
@@ -1737,13 +1754,14 @@ class SQLAlchemySocket:
             procedure_id for the specific procedure
         status : str, optional
             status of the record queried for
-        limit : int, optional
+        limit : Optional[int], optional
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
             the self._max_limit will be returned instead
             (This is to avoid overloading the server)
-        skip : int, default is 0
+        skip : int, optional
             skip the first 'skip' resaults. Used to paginate
+            Default is 0
         return_json : bool, deafult is True
             Return the results as a list of json instead of objects
 
@@ -1831,9 +1849,9 @@ class SQLAlchemySocket:
         ----------
         status : str
             The input status string ready to replace the previous status
-        id : Union[List[str], str], optional
+        id : Optional[Union[List[str], str]], optional
             ids of all the services requested to be updated, by default None
-        procedure_id : Union[List[str], str], optional
+        procedure_id : Optional[Union[List[str], str]], optional
             procedure_ids for the specific procedures, by default None
 
         Returns
@@ -1864,7 +1882,19 @@ class SQLAlchemySocket:
         return 1
 
     def services_completed(self, records_list: List["BaseService"]) -> int:
-
+        """
+        Delete the services which are completed from the database. 
+        
+        Parameters
+        ----------
+        records_list : List["BaseService"]
+            List of Service objects which are completed.
+        
+        Returns
+        -------
+        int
+            Number of deleted active services from database.
+        """
         done = 0
         for service in records_list:
             if service.id is None:
@@ -1900,7 +1930,7 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        data : list of tasks (dict)
+        data : List[TaskRecord]
             A task is a dict, with the following fields:
             - hash_index: idx, not used anymore
             - spec: dynamic field (dict-like), can have any structure
@@ -1912,7 +1942,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-        dict (data and meta)
+        Dict[str, Any]
+            Dictionary with keys data and meta.
             'data' is a list of the IDs of the tasks IN ORDER, including
             duplicates. An errored task has 'None' in its ID
             meta['duplicates'] has the duplicate tasks
@@ -2019,30 +2050,30 @@ class SQLAlchemySocket:
         TODO: check what query keys are needs
         Parameters
         ----------
-        id : list
+        id : Optional[List[str]], optional
             Ids of the tasks
-        Hash_index: list, optional,
+        Hash_index: Optional[List[str]], optional,
             hash_index of service, not used
         program, list of str or str, optional
-        status : bool, optional (find all)
+        status : Optional[bool], optional (find all)
             The status of the task: 'COMPLETE', 'RUNNING', 'WAITING', or 'ERROR'
-        base_result: str (optional)
+        base_result: Optional[str], optional
             base_result id
-        include : list/set/tuple of keys, optional
+        include : Optional[List[str]], optional
             The fields to return, default to return all
-        exclude : list/set/tuple of keys, optional
+        exclude : Optional[List[str]], optional
             The fields to not return, default to return all
-        limit : int, optional
+        limit : Optional[int], optional
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
             the self._max_limit will be returned instead
             (This is to avoid overloading the server)
-        skip : int, default is 0
-            skip the first 'skip' results. Used to paginate
-        return_json : bool, deafult is True
-            Return the results as a list of json inseated of objects
-        with_ids : bool, default is True
-            Include the ids in the returned objects/dicts
+        skip : int, optional
+            skip the first 'skip' results. Used to paginate, default is 0
+        return_json : bool, optional
+            Return the results as a list of json inseated of objects, deafult is True
+        with_ids : bool, optional 
+            Include the ids in the returned objects/dicts, default is True
 
         Returns
         -------
@@ -2082,18 +2113,18 @@ class SQLAlchemySocket:
         ----------
         id : List[str]
             List of the task Ids in the DB
-        limit : int (optional)
+        limit : Optional[int], optional
             max number of returned tasks. If limit > max_limit, max_limit
             will be returned instead (safe query)
-        skip : int, default is 0
-            skip the first 'skip' results. Used to paginate
-        as_json : bool
-            Return tasks as JSON
+        skip : int, optional
+            skip the first 'skip' results. Used to paginate, default is 0
+        as_json : bool, optioanl
+            Return tasks as JSON, default is True
 
         Returns
         -------
         List[TaskRecord]
-            list of the found tasks
+            List of the found tasks
         """
 
         with self.session_scope() as session:
@@ -2221,9 +2252,9 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        id : Union[str, List[str]], optional
+        id : Optional[Union[str, List[str]]], optional
             The id of the task to modify
-        base_result : Union[str, List[str]], optional
+        base_result : Optional[Union[str, List[str]]], optional
             The id of the base result to modify
         manager : Optional[str], optional
             The manager name to reset the status of
@@ -2485,9 +2516,9 @@ class SQLAlchemySocket:
         ----------
         username : str
             New user's username
-        password : str, optional
+        password : Optional[str], optional
             The user's password. If None, a new password will be generated.
-        permissions : List[str], optional
+        permissions : Optional[List[str]], optional
             The associated permissions of a user ['read', 'write', 'compute', 'queue', 'admin']
         overwrite: bool, optional
             Overwrite the user if it already exists.
@@ -2605,11 +2636,11 @@ class SQLAlchemySocket:
         ----------
         username : str
             The username
-        password : str, optional
+        password : Optional[str], optional
             The user's new password. If None, the password will not be updated. Excludes reset_password.
         reset_password: bool, optional
-            Reset the user's password to a new autogenerated one.
-        permissions : List[str], optional
+            Reset the user's password to a new autogenerated one. The default is False.
+        permissions : Optional[List[str]], optional
             The associated permissions of a user ['read', 'write', 'compute', 'queue', 'admin']
 
         Returns
@@ -2703,7 +2734,8 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        record_list : list of dict of managers data
+        record_list : Dict[str, Any]
+            List of dict of managers data
 
         Returns
         -------
