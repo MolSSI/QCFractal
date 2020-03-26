@@ -67,7 +67,7 @@ if run_tests:
     assert ret1[1] == ret2[1]
     assert ret1[2] == ret2[2]
 
-    print("Running timings for add and update...\n")
+    print("Running timings for add...\n")
     for trial in mol_trials:
         tasks = [create_unique_task() for x in range(trial)]
 
@@ -83,4 +83,4 @@ if run_tests:
         for r, rid in zip(tasks, ret):
             r.__dict__["id"] = rid
 
-        print()
+    print()
