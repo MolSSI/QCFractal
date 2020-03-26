@@ -1897,33 +1897,67 @@ class SQLAlchemySocket:
 
         meta = add_metadata_template()
 
-        results = []
+        results = ["placeholder"] * len(data)
+
         with self.session_scope() as session:
+
+            all_base_results = [record.base_result for record in data]
+            query_res = (
+                session.query(TaskQueueORM.id, TaskQueueORM.base_result_id)
+                .filter(TaskQueueORM.base_result_id.in_(all_base_results))
+                .all()
+            )
+
+            # existing_base_results = map(lambda x: str(x), found_base_results)
+            found_dict = {str(base_result_id): str(task_id) for task_id, base_result_id in query_res}
+            new_tasks, new_idx = [], []
             for task_num, record in enumerate(data):
-                try:
-                    task_dict = record.dict(exclude={"id"})
-                    # # for compatibility with mongoengine
-                    # if isinstance(task_dict['base_result'], dict):
-                    #     task_dict['base_result'] = task_dict['base_result']['id']
-                    task = TaskQueueORM(**task_dict)
-                    task.priority = task.priority.value  # Must be an integer for sorting
-                    session.add(task)
-                    session.commit()
-                    results.append(str(task.id))
-                    meta["n_inserted"] += 1
-                except IntegrityError as err:  # rare case
-                    # print(str(err))
-                    session.rollback()
-                    # TODO: merge hooks
-                    task = session.query(TaskQueueORM).filter_by(base_result_id=record.base_result).first()
-                    self.logger.warning("queue_submit got a duplicate task: {}".format(task.to_dict()))
-                    results.append(str(task.id))
+
+                if found_dict.get(record.base_result):
+                    results[task_num] = found_dict.get(record.base_result)
                     meta["duplicates"].append(task_num)
-                # except Exception as err:
-                #     self.logger.warning('queue_submit submission error: {}'.format(str(err)))
-                #     meta["success"] = False
-                #     meta["errors"].append(str(err))
-                #     results.append(None)
+
+                else:
+                    task_dict = record.dict(exclude={"id"})
+                    task = TaskQueueORM(**task_dict)
+                    new_idx.append(task_num)
+                    task.priority = task.priority.value
+                    new_tasks.append(task)
+
+            session.add_all(new_tasks)
+            session.commit()
+
+            meta["n_inserted"] += len(new_tasks)
+            for i, task_idx in enumerate(new_idx):
+                results[task_idx] = str(new_tasks[i].id)
+
+        # results = []
+        # with self.session_scope() as session:
+        #     for task_num, record in enumerate(data):
+        #         try:
+        #             task_dict = record.dict(exclude={"id"})
+        #             # # for compatibility with mongoengine
+        #             # if isinstance(task_dict['base_result'], dict):
+        #             #     task_dict['base_result'] = task_dict['base_result']['id']
+        #             task = TaskQueueORM(**task_dict)
+        #             task.priority = task.priority.value  # Must be an integer for sorting
+        #             session.add(task)
+        #             session.commit()
+        #             results.append(str(task.id))
+        #             meta["n_inserted"] += 1
+        #         except IntegrityError as err:  # rare case
+        #             # print(str(err))
+        #             session.rollback()
+        #             # TODO: merge hooks
+        #             task = session.query(TaskQueueORM).filter_by(base_result_id=record.base_result).first()
+        #             self.logger.warning("queue_submit got a duplicate task: {}".format(task.to_dict()))
+        #             results.append(str(task.id))
+        #             meta["duplicates"].append(task_num)
+        #         # except Exception as err:
+        #         #     self.logger.warning('queue_submit submission error: {}'.format(str(err)))
+        #         #     meta["success"] = False
+        #         #     meta["errors"].append(str(err))
+        #         #     results.append(None)
 
         meta["success"] = True
 
