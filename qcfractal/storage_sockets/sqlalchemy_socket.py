@@ -1145,7 +1145,7 @@ class SQLAlchemySocket:
         conds = []
 
         conds = [
-            and_(
+            (
                 ResultORM.program == res.program,
                 ResultORM.driver == res.driver,
                 ResultORM.method == res.method,
