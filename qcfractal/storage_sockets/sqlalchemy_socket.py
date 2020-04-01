@@ -1136,14 +1136,14 @@ class SQLAlchemySocket:
             Data is the ids of the inserted/updated/existing docs
         """
         meta = add_metadata_template()
-
+        # putting the placeholder for all the ids, since some can be duplicate, and some will only have ids after add operation.
         result_ids = ["placeholder"] * len(record_list)
 
         results_list = []
         existing_res = {}
         new_record_idx, duplicates_idx = [], []
         conds = []
-
+        # creating condition for a multi-value select
         conds = [
             (
                 ResultORM.program == res.program,
@@ -1170,13 +1170,12 @@ class SQLAlchemySocket:
                 .filter(or_(*conds))
                 .all()
             )
+            # adding all the found items to a dictionary
             existing_res = {
                 (doc.program, doc.driver, doc.method, doc.basis, doc.keywords, str(doc.molecule)): doc for doc in docs
             }
             for i, result in enumerate(record_list):
-                # necessary since result will be used to search through found items
-                # if result.basis == "":
-                #     result.basis = None
+                # constructing an index from record_list to compare against found items(existing_res)
                 idx = (
                     result.program,
                     result.driver.value,
@@ -1185,38 +1184,30 @@ class SQLAlchemySocket:
                     int(result.keywords) if result.keywords else None,
                     result.molecule,
                 )
-
-                # doc = session.query(ResultORM).filter_by(
-                #     program=result.program,
-                #     driver=result.driver,
-                #     method=result.method,
-                #     basis=result.basis,
-                #     keywords=result.keywords,
-                #     molecule=result.molecule,
-                # )
-
                 if existing_res.get(idx) is None:
+                    # if no found items, construct an object
                     doc = ResultORM(**result.dict(exclude={"id"}))
                     existing_res[idx] = doc
-                    # results_list.append(doc)
+                    # add the object to the list which goes for adding and commiting to database.
                     results_list.append(doc)
+                    # identifying the index of new items in the returned result ids, for future update.
                     new_record_idx.append(i)
-                    # session.commit()  # TODO: faster if done in bulk
-                    # result_ids.append("placeholder")
                     meta["n_inserted"] += 1
                 else:
                     doc = existing_res.get(idx)
+                    # identifying the index of duplicate items
                     duplicates_idx.append(i)
-                    meta["duplicates"].append(doc)  # TODO
-                    # If new or duplicate, add the id to the return list
+                    meta["duplicates"].append(doc)
 
             session.add_all(results_list)
             session.commit()
             meta["duplicates"] = [str(doc.id) for doc in meta["duplicates"]]
 
             for i, idx in enumerate(new_record_idx):
+                # setting the new records returned id from commit operation
                 result_ids[idx] = str(results_list[i].id)
             for i, idx in enumerate(duplicates_idx):
+                # setting the duplicate items, either found in the database or provided more than once in the input
                 result_ids[idx] = meta["duplicates"][i]
 
         meta["success"] = True
@@ -1242,14 +1233,15 @@ class SQLAlchemySocket:
             number of records updated
         """
         query_ids = [res.id for res in record_list]
+        # find duplicates among ids
         duplicates = len(query_ids) != len(set(query_ids))
 
         with self.session_scope() as session:
 
             found = session.query(ResultORM).filter(ResultORM.id.in_(query_ids)).all()
+            # found items are stored in a dictionary
             found_dict = {str(record.id): record for record in found}
 
-            # try:
             updated_count = 0
             for result in record_list:
 
@@ -1257,17 +1249,19 @@ class SQLAlchemySocket:
                     self.logger.error("Attempted update without ID, skipping")
                     continue
 
-                    # result_db = session.query(ResultORM).filter_by(id=result.id).first()
-
                 data = result.dict(exclude={"id"})
+                # retrieve the found item
                 found_db = found_dict[result.id]
 
+                # updating the found item with input attribute values.
                 for attr, val in data.items():
                     setattr(found_db, attr, val)
 
+                # if any duplicate ids are found in the input, commit should be called each iteration
                 if duplicates:
                     session.commit()
                 updated_count += 1
+            # if no duplicates found, only commit at the end of the loop.
             if not duplicates:
                 session.commit()
 
