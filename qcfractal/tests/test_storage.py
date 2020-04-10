@@ -447,6 +447,7 @@ def test_results_add(storage_socket):
             "hash_index": 2,
         }
     )
+
     ids = []
     ret = storage_socket.add_results([page1, page2])
     assert ret["meta"]["n_inserted"] == 2
