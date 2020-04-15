@@ -1280,7 +1280,17 @@ def test_torsiondrive_dataset(fractal_compute_server):
     fractal_compute_server.await_services(max_iter=1)
 
     # Check status
+    status_basic = ds.status()
+    assert status_basic.loc("COMPLETE", "Spec1") == 1
+    status_spec = ds.status("Spec1")
+    assert status_basic.loc("COMPLETE", "Spec1") == 1
+
     status_detail = ds.status("Spec1", detail=True)
+    assert status_detail.loc["hooh2", "Complete Tasks"] == 1
+    assert status_detail.loc["hooh2", "Total Points"] == 6
+
+    # List of length 1 with detail=True
+    status_detail = ds.status(["Spec1"], detail=True)
     assert status_detail.loc["hooh2", "Complete Tasks"] == 1
     assert status_detail.loc["hooh2", "Total Points"] == 6
 
@@ -1368,6 +1378,10 @@ def test_optimization_dataset(fractal_compute_server):
     status = ds.status()
     assert status.loc["COMPLETE", "test"] == 3
     assert status.loc["COMPLETE", "test2"] == 1
+
+    status_spec = ds.status("test")
+    assert status_spec.loc("COMPLETE", "test") == 3
+    assert status_spec.loc("COMPLETE", "test2") == 1
 
     counts = ds.counts()
     assert counts.loc["hooh1", "test"] == 9
