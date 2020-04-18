@@ -1,4 +1,4 @@
-Setup Compute
+Manager Setup
 =============
 
 Once a QCFractal server is running, compute can be attached to it by spinning

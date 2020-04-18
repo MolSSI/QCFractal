@@ -1,6 +1,7 @@
 """
 QCPortal Database ODM
 """
+import gzip
 import tempfile
 import warnings
 from pathlib import Path
@@ -183,7 +184,6 @@ class Dataset(Collection):
             local_path = self._view_tempfile.name
 
         r = requests.get(self.data.view_url_hdf5, stream=True)
-
         pbar = None
         if progress_bar:
             try:
@@ -197,6 +197,17 @@ class Dataset(Collection):
                 fd.write(chunk)
                 if pbar is not None:
                     pbar.update(chunk_size)
+
+        with open(local_path, "rb") as f:
+            magic = f.read(2)
+            gzipped = magic == b"\x1f\x8b"
+        if gzipped:
+            extract_tempfile = tempfile.NamedTemporaryFile()  # keep temp file alive until self is destroyed
+            with gzip.open(local_path, "rb") as fgz:
+                with open(extract_tempfile.name, "wb") as f:
+                    f.write(fgz.read())
+            self._view_tempfile = extract_tempfile
+            local_path = self._view_tempfile.name
 
         if verify:
             remote_checksum = self.data.view_metadata["blake2b_checksum"]
@@ -431,7 +442,7 @@ class Dataset(Collection):
         # Sort
         sort_index = ["native"] + list(self.data.history_keys[:-1])
         if "stoichiometry" in ret.columns:
-            sort_index += ["stoichiometry"]
+            sort_index += ["stoichiometry", "name"]
         ret.set_index(sort_index, inplace=True)
         ret.sort_index(inplace=True)
         ret.reset_index(inplace=True)
@@ -531,8 +542,13 @@ class Dataset(Collection):
         history = history.reset_index()
         history.drop("index", axis=1, inplace=True)
 
+        # Drop duplicates due to stoich in some instances, this could be handled with multiple merges
+        # Simpler to do it this way.
+        history.drop_duplicates(inplace=True)
+
         # Find the returned subset
         ret = history.copy()
+
         # Add name column
         ret["name"] = ret.apply(
             lambda row: self._canonical_name(
@@ -769,6 +785,7 @@ class Dataset(Collection):
         return_figure=None,
         digits=3,
         kind="bar",
+        show_incomplete: bool = False,
     ) -> "plotly.Figure":
 
         # Validate query dimensions
@@ -856,6 +873,9 @@ class Dataset(Collection):
                 q["stoich"] = q.pop("stoichiometry")
             values = self.get_values(**q)
 
+            if not show_incomplete:
+                values = values.dropna(axis=1, how="any")
+
             # Create the statistics
             stat = self.statistics(metric, values, bench=bench)
             stat = stat.round(digits)
@@ -865,7 +885,7 @@ class Dataset(Collection):
             # Munge the column names based on the groupby parameter
             col_names = {}
             for k, v in stat.iteritems():
-                record = self._column_metadata[k]
+                record = self._column_metadata[k].copy()
                 if groupby == "d3":
                     record["method"] = record["method"].upper().split("-D3")[0]
 
@@ -909,6 +929,7 @@ class Dataset(Collection):
         bench: Optional[str] = None,
         kind: str = "bar",
         return_figure: Optional[bool] = None,
+        show_incomplete: bool = False,
     ) -> "plotly.Figure":
         """
         Parameters
@@ -932,6 +953,8 @@ class Dataset(Collection):
         return_figure : Optional[bool], optional
             If True, return the raw plotly figure. If False, returns a hosted iPlot.
             If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
+        show_incomplete: bool, optional
+            Display statistics method/basis set combinations where results are incomplete
 
         Returns
         -------
@@ -1229,8 +1252,10 @@ class Dataset(Collection):
                         f"This has been corrected."
                     )
                 self._column_metadata[column]["units"] = value
-            except ValueError as e:
-                # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow
+            except (ValueError, TypeError) as e:
+                # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow.
+                # In pint <=0.9, DimensionalityError is a ValueError.
+                # In pint >=0.10, DimensionalityError is TypeError.
                 if e.__class__.__name__ == "DimensionalityError":
                     pass
                 else:
@@ -1294,6 +1319,24 @@ class Dataset(Collection):
         if default:
             self.data.default_keywords[program] = alias
         return True
+
+    def list_keywords(self) -> pd.DataFrame:
+        """Lists keyword aliases for each program in the dataset.
+
+        Returns
+        -------
+        pd.DataFrame
+            A dataframe containing programs, keyword aliases, KeywordSet ids, and whether those keywords are the
+            default for a program. Indexed on program.
+        """
+        data = []
+        for program, kwaliases in self.data.alias_keywords.items():
+            prog_default_kw = self.data.default_keywords.get(program, None)
+            for kwalias, kwid in kwaliases.items():
+                data.append(
+                    {"program": program, "keywords": kwalias, "id": kwid, "default": prog_default_kw == kwalias,}
+                )
+        return pd.DataFrame(data).set_index("program")
 
     def get_keywords(self, alias: str, program: str, return_id: bool = False) -> Union["KeywordSet", str]:
         """Pulls the keywords alias from the server for inspection.
@@ -1465,8 +1508,10 @@ class Dataset(Collection):
             try:
                 new_data[column_name] *= constants.conversion_factor(units[column_name], self.units)
                 metadata["units"] = self.units
-            except ValueError as e:
-                # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow
+            except (ValueError, TypeError) as e:
+                # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow.
+                # In pint <=0.9, DimensionalityError is a ValueError.
+                # In pint >=0.10, DimensionalityError is TypeError.
                 if e.__class__.__name__ == "DimensionalityError":
                     metadata["units"] = units[column_name]
                 else:
@@ -1539,7 +1584,7 @@ class Dataset(Collection):
             Either a DataFrame of indexed ResultRecords or a single ResultRecord if a single subset string was provided.
         """
         name, _, history = self._default_parameters(program, method, basis, keywords)
-        if name not in set(self.list_records().reset_index()["name"].unique()):
+        if len(self.list_records(**history)) == 0:
             raise KeyError(f"Requested query ({name}) did not match a known record.")
 
         indexer = self._molecule_indexer(subset=subset, force=True)

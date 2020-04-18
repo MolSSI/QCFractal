@@ -465,6 +465,17 @@ class CollectionPOSTResponse(ProtoModel):
 
 register_model("collection", "POST", CollectionPOSTBody, CollectionPOSTResponse)
 
+
+class CollectionDELETEBody(ProtoModel):
+    meta: EmptyMeta
+
+
+class CollectionDELETEResponse(ProtoModel):
+    meta: ResponseMeta
+
+
+register_model("collection/[0-9]+", "DELETE", CollectionDELETEBody, CollectionDELETEResponse)
+
 ### Collection views
 
 
@@ -982,7 +993,12 @@ class QueueManagerMeta(ProtoModel):
         description="A list of procedures which the QueueManager has access to. Affects which Tasks "
         "the Manager can pull.",
     )
-    tag: Optional[str] = Field(None, description="Optional queue tag to pull Tasks from.")
+    tag: QueryStr = Field(
+        None,
+        description="Optional queue tag to pull Tasks from. If None, tasks are pulled from all tags. "
+        "If a list of tags is provided, tasks are pulled in order of tags. (This does not "
+        "guarantee tasks will be executed in that order, however.)",
+    )
 
     # Statistics
     total_worker_walltime: Optional[float] = Field(None, description="The total worker walltime in core-hours.")

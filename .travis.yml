@@ -84,7 +84,7 @@ before_script:
   - psql --version
 
 script:
-  - pytest -v -rsx --runslow --cov=qcfractal qcfractal/
+  - pytest -v -rsx --runslow --cov=qcfractal qcfractal/ --tb=short
 
 notifications:
   email: false

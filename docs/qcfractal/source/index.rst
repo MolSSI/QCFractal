@@ -83,8 +83,6 @@ Index
 * :doc:`setup_quickstart`
 * :doc:`setup_server`
 * :doc:`setup_compute`
-* :doc:`community`
-* :doc:`roadmap`
 
 .. toctree::
    :maxdepth: 1
@@ -96,8 +94,6 @@ Index
    setup_quickstart.rst
    setup_server.rst
    setup_compute.rst
-   community.rst
-   roadmap.rst
 
 **Records Documentation**
 
@@ -124,6 +120,7 @@ Setting up and running Fractal's Queue Managers on your system.
 
 * :doc:`managers`
 * :doc:`managers_config_api`
+* :doc:`managers_hpc`
 * :doc:`managers_samples`
 * :doc:`managers_faq`
 
@@ -134,6 +131,7 @@ Setting up and running Fractal's Queue Managers on your system.
 
    managers.rst
    managers_config_api.rst
+   managers_hpc.rst
    managers_samples.rst
    managers_faq.rst
    managers_detailed.rst

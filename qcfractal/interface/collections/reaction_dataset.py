@@ -134,7 +134,7 @@ class ReactionDataset(Dataset):
             stoich = [stoich]
 
         index = self.get_entries(subset=subset, force=force)
-        matched_rows = index[np.in1d(self._entry_index()["stoichiometry"], stoich)]
+        matched_rows = index[np.in1d(index["stoichiometry"], stoich)]
 
         if subset:
             matched_rows = matched_rows[np.in1d(matched_rows["name"], subset)]
@@ -160,7 +160,8 @@ class ReactionDataset(Dataset):
     def _validate_stoich(self, stoich: Union[List[str], str], subset=None, force: bool = False) -> None:
         if isinstance(stoich, str):
             stoich = [stoich]
-
+        if isinstance(subset, str):
+            subset = [subset]
         valid_stoich = self.valid_stoich(subset=subset, force=force)
         for s in stoich:
             if s.lower() not in valid_stoich:
@@ -270,8 +271,11 @@ class ReactionDataset(Dataset):
             method=method, basis=basis, keywords=keywords, program=program, stoich=stoich, name=name
         )
 
-        stoich_complex = queries.pop("stoichiometry")
-        stoich_monomer = "".join([x for x in stoich if not x.isdigit()]) + "1"
+        if len(queries) == 0:
+            return pd.DataFrame(index=self.get_index(subset))
+
+        stoich_complex = queries.pop("stoichiometry").values[0]
+        stoich_monomer = "".join([x for x in stoich_complex if not x.isdigit()]) + "1"
 
         def _query_apply_coeffients(stoich, query):
 
@@ -288,7 +292,7 @@ class ReactionDataset(Dataset):
 
             # Multiply by coefficients and sum
             df["return_result"] *= df["coefficient"]
-            df = df.groupby(["name"])["return_result"].sum(skipna=False)
+            df = df.groupby(["name"])["return_result"].sum()
             df[null_mask] = np.nan
             return df
 
@@ -310,10 +314,18 @@ class ReactionDataset(Dataset):
             units: Dict[str, str] = {}
             for query in new_queries:
                 qname = query.pop("name")
-                data_complex = _query_apply_coeffients(stoich_complex, query)
-                data_monomer = _query_apply_coeffients(stoich_monomer, query)
-
-                data = data_complex - data_monomer
+                if self.data.ds_type == _ReactionTypeEnum.ie:
+                    # This implements 1-body counterpoise correction
+                    # TODO: this will need to contain the logic for VMFC or other method-of-increments strategies
+                    data_complex = _query_apply_coeffients(stoich_complex, query)
+                    data_monomer = _query_apply_coeffients(stoich_monomer, query)
+                    data = data_complex - data_monomer
+                elif self.data.ds_type == _ReactionTypeEnum.rxn:
+                    data = _query_apply_coeffients(stoich_complex, query)
+                else:
+                    raise ValueError(
+                        f"ReactionDataset ds_type is not a member of _ReactionTypeEnum. (Got {self.data.ds_type}.)"
+                    )
 
                 new_data[qname] = data * constants.conversion_factor("hartree", self.units)
                 query["name"] = qname
@@ -345,6 +357,7 @@ class ReactionDataset(Dataset):
         bench: Optional[str] = None,
         kind: str = "bar",
         return_figure: Optional[bool] = None,
+        show_incomplete: bool = False,
     ) -> "plotly.Figure":
         """
         Parameters
@@ -369,6 +382,8 @@ class ReactionDataset(Dataset):
             The kind of chart to produce, either 'bar' or 'violin'
         return_figure : Optional[bool], optional
             If True, return the raw plotly figure. If False, returns a hosted iPlot. If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
+        show_incomplete: bool, optional
+            Display statistics method/basis set combinations where results are incomplete
 
         Returns
         -------
@@ -379,7 +394,15 @@ class ReactionDataset(Dataset):
         query = {"method": method, "basis": basis, "keywords": keywords, "program": program, "stoichiometry": stoich}
         query = {k: v for k, v in query.items() if v is not None}
 
-        return self._visualize(metric, bench, query=query, groupby=groupby, return_figure=return_figure, kind=kind)
+        return self._visualize(
+            metric,
+            bench,
+            query=query,
+            groupby=groupby,
+            return_figure=return_figure,
+            kind=kind,
+            show_incomplete=show_incomplete,
+        )
 
     def get_molecules(
         self,
@@ -406,6 +429,9 @@ class ReactionDataset(Dataset):
 
         self._check_client()
         self._check_state()
+        if isinstance(subset, str):
+            subset = [subset]
+
         self._validate_stoich(stoich, subset=subset, force=force)
 
         indexer, names = self._molecule_indexer(stoich=stoich, subset=subset, force=force)
@@ -462,8 +488,6 @@ class ReactionDataset(Dataset):
         ret = []
         for s in stoich:
             name, _, history = self._default_parameters(program, method, basis, keywords, stoich=s)
-            if name not in set(self.list_records(stoichiometry=s).reset_index()["name"].unique()):
-                raise KeyError(f"Requested query ({name}) did not match a known record.")
             history.pop("stoichiometry")
             indexer, names = self._molecule_indexer(stoich=s, subset=subset, force=True)
             df = self._get_records(
@@ -535,10 +559,6 @@ class ReactionDataset(Dataset):
 
         # Figure out molecules that we need
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
-            if ("-D3" in method.upper()) and stoich.lower() != "default":
-                raise KeyError(
-                    "Please only run -D3 as default at the moment, running with CP could lead to extra computations."
-                )
 
             monomer_stoich = "".join([x for x in stoich if not x.isdigit()]) + "1"
             tmp_monomer = entry_index[entry_index["stoichiometry"] == monomer_stoich].copy()
@@ -832,8 +852,7 @@ class ReactionDataset(Dataset):
         max_frag = len(mol.fragments)
         if max_nbody == 0:
             max_nbody = max_frag
-
-        if max_nbody < 2:
+        if max_frag < 2:
             raise AttributeError("Dataset:build_ie_fragments: Molecule must have at least two fragments.")
 
         # Build some info

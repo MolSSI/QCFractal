@@ -3,7 +3,7 @@ Changelog
 
 .. Use headers commented below commented as templates
 
-.. X.Y.0 / 2019-MM-DD
+.. X.Y.0 / 2020-MM-DD
 .. -------------------
 ..
 .. New Features
@@ -14,6 +14,92 @@ Changelog
 ..
 .. Bug Fixes
 .. +++++++++
+
+0.13.1 / 2020-02-18
+-------------------
+
+New Features
+++++++++++++
+- (:pr:`566`) A ``list_keywords`` function was added to ``Dataset``.
+
+Enhancements
+++++++++++++
+- (:pr:`547`, :pr:`553`) Miscellaneous documentation edits and improvements.
+- (:pr:`556`) Molecule queries filtered on molecular formula no longer depend on the order of elements.
+- (:pr:`565`) ``query`` method for ``Datasets`` now returns collected records.
+
+Bug Fixes
++++++++++
+- (:pr:`559`) Fixed an issue where Docker images did not have qcfractal in their PATH.
+- (:pr:`561`) Fixed a bug that caused errors with pandas v1.0.
+- (:pr:`564`) Fixes a bug where optimization protocols were not respected during torsiondrives and grid optimizations.
+
+
+0.13.0 / 2020-01-15
+-------------------
+
+New Features
+++++++++++++
+- (:pr:`541`) Managers can now accept multiple tags. Tasks are pulled first in order of tag, then priority, then creation time.
+- (:pr:`544`) Adds backup/restore commands to the QCFractal CLI to allow for easier backup and restore options.
+
+Enhancements
+++++++++++++
+- (:pr:`507`) Automatically adds collection molecules in chunks if more than the current limit needs to be submitted.
+- (:pr:`515`) Conda environments now correspond to docker images in all deployed cases.
+- (:pr:`524`) The ``delete_collection`` function was added to ``qcportal.FractalClient``.
+- (:pr:`530`) Adds the ability to specify cores per rank for node-parallel tasks in QCEngine.
+- (:pr:`507`) Adds a formatting and lint check to CI during pull requests.
+- (:pr:`535`) Allows dftd3 to be computed for all stoichiometries rather than just defaults.
+- (:pr:`542`) Important: TaskRecord.base_result is now an ObjectId (int or str), and no more a ``DBRef``. So, code that uses ``my_task.base_result.id`` should change to simply use ``my_task.base_result``.
+
+Bug Fixes
++++++++++
+- (:pr:`506`) Fixes repeated visualize calls where previously the visualize call would corrupt local state.
+- (:pr:`521`) Fixes an issue where ProcessPoolExecutor returned the incorrect number of currently running tasks.
+- (:pr:`522`) Fixes a bug where ``ProcedureDataset.status()`` failed for specifications where only a subset was computed.
+- (:pr:`525`) This PR fixes ENTRYPOINT of the qcarchive_worker_openff worker. (Conda and Docker are not friends.)
+- (:pr:`532`) Fixes a testing subprocess routine when coverage is enabled for coverage 5.0 breaking changes.
+- (:pr:`543`) Fixes a bug where ``qcfractal-server`` "start" before an "upgrade" prevented the "upgrade" command from correctly running.
+- (:pr:`545`) Fixed an issue in Dataset.get_records() that could occur when the optional arguments keywords and basis were not provided.
+
+
+
+0.12.2 / 2019-12-07
+-------------------
+
+Enhancements
+++++++++++++
+- (:pr:`477`) Removes 0.12.x xfails when connecting to the server.
+- (:pr:`481`) Expands Parsl Manager Adapter to include ALCF requirements.
+- (:pr:`483`) Dataset Views are now much faster to load in HDF5.
+- (:pr:`488`) Allows gzipped dataset views.
+- (:pr:`490`) Computes checksums on gzipped dataset views.
+- (:pr:`542`) ``TaskRecord.base_result`` is now an ``ObjectId``, and no more a ``DBRef``. So, code that uses ``my_task.base_result.id`` should change to simply be ``my_task.base_result``.
+
+Bug Fixes
++++++++++
+- (:pr:`486`) Fixes pydantic ``__repr__`` issues after update.
+- (:pr:`492`) Fixes error where ``ReactionDataset`` didn't allow a minimum number of n-body expansion to be added.
+- (:pr:`493`) Fixes an issue with ``ReactionDataset.get_molecules`` when a subset is present.
+- (:pr:`494`) Fixes an issue where queries with ``limit=0`` erroneously returned all results.
+- (:pr:`496`) TorsionDrive tests now avoid 90 degree angles with RDKit to avoid some linear issues in the forcefield and make them more stable.
+- (:pr:`497`) ``TorsionDrive.get_history`` now works for extremely large (1000+) optimizations in the procedure.
+
+0.12.1 / 2019-11-08
+-------------------
+
+Enhancements
+++++++++++++
+- (:pr:`472`) Update to GitHub ISSUE templates.
+- (:pr:`473`) Server ``/information`` endpoint now contains the number of records for molecules, results, procedures, and collections.
+- (:pr:`474`) Dataset Views can now be of arbitrary shape.
+- (:pr:`475`) Changes the default formatting of the codebase to Black.
+
+
+Bug Fixes
++++++++++
+- (:pr:`470`) Dataset fix for non-energy units.
 
 0.12.0 / 2019-11-06
 -------------------

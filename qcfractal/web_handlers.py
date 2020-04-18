@@ -33,7 +33,8 @@ class APIHandler(tornado.web.RequestHandler):
 
         self.content_type = "Not Provided"
         try:
-            self.content_type = self.request.headers["Content-Type"]
+            # default to "application/json"
+            self.content_type = self.request.headers.get("Content-Type", "application/json")
             self.encoding = _valid_encodings[self.content_type]
         except KeyError:
             raise tornado.web.HTTPError(
@@ -60,7 +61,10 @@ class APIHandler(tornado.web.RequestHandler):
             else:
                 blob = self.request.body
 
-            self.data = deserialize(blob, self.encoding)
+            if blob:
+                self.data = deserialize(blob, self.encoding)
+            else:
+                self.data = None
         except:
             raise tornado.web.HTTPError(status_code=401, reason="Could not deserialize body.")
 
@@ -391,6 +395,18 @@ class CollectionHandler(APIHandler):
 
         self.logger.info("POST: Collections - {} inserted.".format(response.meta.n_inserted))
         self.write(response)
+
+    def delete(self, collection_id, _):
+        self.authenticate("write")
+
+        body_model, response_model = rest_model(f"collection/{collection_id}", "delete")
+        ret = self.storage.del_collection(col_id=collection_id)
+        if ret == 0:
+            self.logger.info(f"DELETE: Collections - Attempted to delete non-existent collection {collection_id}.")
+            raise tornado.web.HTTPError(status_code=404, reason=f"Collection {collection_id} does not exist.")
+        else:
+            self.write(response_model(meta={"success": True, "errors": [], "error_description": False}))
+            self.logger.info(f"DELETE: Collections - Deleted collection {collection_id}.")
 
 
 class ResultHandler(APIHandler):

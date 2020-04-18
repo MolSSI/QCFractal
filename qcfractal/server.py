@@ -117,6 +117,8 @@ class FractalServer:
         # Service options
         max_active_services: int = 20,
         service_frequency: float = 60,
+        # Testing functions
+        skip_storage_version_check=True,
     ):
         """QCFractal initialization
 
@@ -244,6 +246,7 @@ class FractalServer:
             bypass_security=storage_bypass_security,
             allow_read=allow_read,
             max_limit=query_limit,
+            skip_version_check=skip_storage_version_check,
         )
 
         if view_enabled:
@@ -268,8 +271,8 @@ class FractalServer:
             "heartbeat_frequency": self.heartbeat_frequency,
             "version": get_information("version"),
             "query_limit": self.storage.get_limit(1.0e9),
-            "client_lower_version_limit": "0.12.0",  # Must be XX.YY.ZZ
-            "client_upper_version_limit": "0.12.99",  # Must be XX.YY.ZZ
+            "client_lower_version_limit": "0.12.1",  # Must be XX.YY.ZZ
+            "client_upper_version_limit": "0.13.99",  # Must be XX.YY.ZZ
         }
         self.update_public_information()
 

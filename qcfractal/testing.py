@@ -279,7 +279,7 @@ def popen(args, **kwargs):
 
         else:
             src_dir = os.path.dirname(os.path.abspath(__file__))
-            coverage_flags = [coverage_dir, "run", "--append", "--source=" + src_dir]
+            coverage_flags = [coverage_dir, "run", "--parallel-mode", "--source=" + src_dir]
 
             # If python script, skip the python bin
             if args[0].endswith("python"):
@@ -348,7 +348,7 @@ def postgres_server():
 
     storage = None
     psql = PostgresHarness({"database": {"port": 5432}})
-    # psql = PostgresHarness({"database": {"port": 5432, "username": 'qcarchive', "password": 'mypass'}})
+    # psql = PostgresHarness({"database": {"port": 5432, "username": "qcarchive", "password": "mypass"}})
     if not psql.is_alive():
         print()
         print(
@@ -463,6 +463,7 @@ def managed_compute_server(request, postgres_server):
             loop=loop,
             queue_socket=adapter_client,
             ssl_options=False,
+            skip_storage_version_check=True,
         )
 
         # Clean and re-init the database
@@ -552,7 +553,7 @@ def live_fractal_or_skip():
     try:
         return FractalClient("localhost:7777", verify=False)
     except (requests.exceptions.ConnectionError, ConnectionRefusedError):
-        print("Failed to connect to localhost")
+        print("Failed to connect to localhost, trying MolSSI QCArchive.")
         try:
             requests.get("https://api.qcarchive.molssi.org:443", json={}, timeout=5)
             return FractalClient()

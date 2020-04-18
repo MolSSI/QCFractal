@@ -7,12 +7,13 @@ from contextlib import contextmanager
 from typing import List
 
 import numpy as np
+import pandas as pd
 import pytest
 import qcelemental as qcel
 from qcelemental.models import Molecule, ProtoModel
-from qcengine.testing import is_program_new_enough
 
 import qcfractal.interface as ptl
+from qcengine.testing import is_program_new_enough
 from qcfractal import testing
 from qcfractal.testing import df_compare, fractal_compute_server, live_fractal_or_skip
 
@@ -45,6 +46,8 @@ def handle_dataset_fixture_params(client, ds_type, ds, fractal_compute_server, r
                 ds.download(verify=True)
     elif request.param == "remote_view":
         ds._disable_view = False
+        if ds._view is None:
+            raise ValueError("Remote view is not available.")
         assert isinstance(ds._view, ptl.collections.RemoteView)
     else:
         raise ValueError(f"Unknown dataset fixture parameter: {request.param}.")
@@ -322,6 +325,16 @@ def test_gradient_dataset_values_subset(gradient_dataset_fixture, use_cache):
         assert df_compare(df1, df2, sort=True)
 
 
+def test_gradient_dataset_records_args(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    assert len(ds.get_records(method="hf", keywords="scf_default", basis="sto-3g")) == 2
+    assert (
+        len(ds.get_records(method="hf", keywords="scf_default")) == 4
+    )  # TODO: we might want a multi-keyword dataset fixture here
+    assert len(ds.get_records(method="hf")) == 4
+
+
 @pytest.fixture(scope="module", params=["download_view", "no_view", "remote_view"])
 def contributed_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
     """ Fixture for testing rich contributed datasets with many properties and molecules of different sizes"""
@@ -557,7 +570,7 @@ def test_contributed_dataset_values_subset(contributed_dataset_fixture, use_cach
         assert df_compare(df1, df2, sort=True)
 
 
-@pytest.fixture(scope="module", params=["download_view", "no_view", "remote_view"])
+@pytest.fixture(scope="module", params=["no_view", "remote_view", "download_view"])
 def reactiondataset_dftd3_fixture_fixture(fractal_compute_server, tmp_path_factory, request):
     ds_name = "He_DFTD3"
     client = ptl.FractalClient(fractal_compute_server)
@@ -568,23 +581,31 @@ def reactiondataset_dftd3_fixture_fixture(fractal_compute_server, tmp_path_facto
         testing.check_has_module("psi4")
         testing.check_has_module("dftd3")
 
-        ds = ptl.collections.ReactionDataset(ds_name, client, ds_type="ie")
+        ds = ptl.collections.ReactionDataset(ds_name, client, ds_type="ie", default_units="hartree")
 
         # Add two helium dimers to the DB at 4 and 8 bohr
-        HeDimer = ptl.Molecule.from_data([[2, 0, 0, -4.123], [2, 0, 0, 4.123]], dtype="numpy", units="bohr", frags=[1])
+        HeDimer = ptl.Molecule.from_data([[2, 0, 0, -1.412], [2, 0, 0, 1.412]], dtype="numpy", units="bohr", frags=[1])
         ds.add_ie_rxn("HeDimer", HeDimer, attributes={"r": 4})
         ds.set_default_program("psi4")
-        ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={}), default=True)
+        ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={"e_convergence": 1.0e-10}), default=True)
 
         ds.save()
 
         ncomp1 = ds.compute("B3LYP-D3", "6-31g")
         assert len(ncomp1.ids) == 4
-        assert len(ncomp1.submitted) == 4
+        assert len(ncomp1.submitted) == 4  # Dimer/monomer, dft/dftd3
+
+        ncomp1 = ds.compute("B3LYP-D3", "6-31g", stoich="cp")
+        assert len(ncomp1.ids) == 4
+        assert len(ncomp1.submitted) == 2  # monomer, dft/dftd3
 
         ncomp2 = ds.compute("B3LYP-D3(BJ)", "6-31g")
         assert len(ncomp2.ids) == 4
-        assert len(ncomp2.submitted) == 2
+        assert len(ncomp2.submitted) == 2  # dimer/monomer, dftd3
+
+        ncomp1 = ds.compute("B3LYP-D3(BJ)", "6-31g", stoich="cp")
+        assert len(ncomp1.ids) == 4
+        assert len(ncomp1.submitted) == 1  # monomer, dftd3
 
         fractal_compute_server.await_results()
 
@@ -615,11 +636,7 @@ def test_reactiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
 
     # Bad stoichiometry
     with pytest.raises(KeyError):
-        ds.get_records("B3LYP", "6-31g", stoich="cp")
-
-    # Wrong method
-    with pytest.raises(KeyError):
-        ds.get_records("Fake Method", "6-31g", stoich="cp")
+        ds.get_records("B3LYP", "6-31g", stoich="cp5")
 
 
 def test_reactiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
@@ -629,14 +646,20 @@ def test_reactiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
     ds._clear_cache()
 
     bench = {
-        "B3LYP/6-31g": pytest.approx(-0.002135, 1.0e-3),
-        "B3LYP-D3/6-31g": pytest.approx(-0.005818, 1.0e-3),
-        "B3LYP-D3(BJ)/6-31g": pytest.approx(-0.005636, 1.0e-3),
+        "B3LYP/6-31g": pytest.approx(0.01822563, abs=1.0e-5),
+        "cp-B3LYP/6-31g": pytest.approx(0.01867427, abs=1.0e-5),
+        "B3LYP-D3/6-31g": pytest.approx(0.01815022, abs=1.0e-5),
+        "cp-B3LYP-D3/6-31g": pytest.approx(0.01859886, abs=1.0e-5),
+        "B3LYP-D3(BJ)/6-31g": pytest.approx(0.01814335, abs=1.0e-5),
+        "cp-B3LYP-D3(BJ)/6-31g": pytest.approx(0.01859199, abs=1.0e-5),
     }
 
     with check_requests_monitor(client, "result", request_made=request_made):
         ret = ds.get_values("B3LYP", "6-31G")
     assert ret.loc["HeDimer", "B3LYP/6-31g"] == bench["B3LYP/6-31g"]
+
+    ret = ds.get_values("B3LYP", "6-31G", stoich="cp")
+    assert ret.loc["HeDimer", "cp-B3LYP/6-31g"] == bench["cp-B3LYP/6-31g"]
 
     ret = ds.get_values("B3LYP-D3", "6-31G")
     assert ret.loc["HeDimer", "B3LYP-D3/6-31g"] == bench["B3LYP-D3/6-31g"]
@@ -644,7 +667,8 @@ def test_reactiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
     ret = ds.get_values("B3LYP-D3(BJ)", "6-31G")
     assert ret.loc["HeDimer", "B3LYP-D3(BJ)/6-31g"] == bench["B3LYP-D3(BJ)/6-31g"]
 
-    # Should be in ds.df now as wells
+    # Should be in ds.df now as well
+    ds.get_values(stoich="cp")
     for key, value in bench.items():
         assert value == ds.df.loc["HeDimer", key]
 
@@ -720,7 +744,7 @@ def test_reactiondataset_dftd3_values_subset(reactiondataset_dftd3_fixture_fixtu
 def test_dataset_dftd3(reactiondataset_dftd3_fixture_fixture):
     client, rxn_ds = reactiondataset_dftd3_fixture_fixture
 
-    if not rxn_ds._use_view:
+    if not rxn_ds._use_view():
         ds_name = "He_DFTD3"
         ds = ptl.collections.Dataset(ds_name, client)
 
@@ -954,6 +978,25 @@ def test_s22_list_select(s22_fixture):
     assert names == set(df.columns.str.lower())
 
 
+@testing.using_psi4
+@testing.using_dftd3
+def test_rds_rxn(fractal_compute_server):
+    client = fractal_compute_server.client()
+    ds = ptl.collections.ReactionDataset("rds_rxn", client, "rxn")
+    HeDimer1 = ptl.Molecule.from_data([[2, 0, 0, -1.412], [2, 0, 0, 1.412]], dtype="numpy", units="bohr", frags=[1])
+    HeDimer2 = ptl.Molecule.from_data([[2, 3, 3, -1.412], [2, 3, 3, 1.412]], dtype="numpy", units="bohr", frags=[1])
+
+    ds.add_rxn("HeDimer1", stoichiometry={"default": [(HeDimer1, 0.0)]})
+    ds.add_rxn("HeDimer2", stoichiometry={"default": [(HeDimer2, 1.0), (HeDimer1, -1.0)]})
+    ds.set_default_program("psi4")
+    ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={"e_convergence": 1.0e-10}), default=True)
+
+    ds.save()
+
+    ds.compute("B3LYP-D3", "6-31g")
+    ds.get_values(method="B3LYP-D3", basis="6-31g")
+
+
 def assert_list_get_values(ds):
     """ Tests that the output of list_values can be used as input to get_values"""
     columns = ds.list_values().reset_index()
@@ -1069,13 +1112,23 @@ def test_s22_view_identical(s22_fixture):
 
 @pytest.mark.slow
 def test_view_download_remote(s22_fixture):
-    client, ds = s22_fixture
+    _, ds = s22_fixture
 
     ds.data.__dict__["view_url_hdf5"] = "https://github.com/mattwelborn/QCArchiveViews/raw/master/S22/latest.hdf5"
     ds.data.__dict__["view_metadata"] = {
         "blake2b_checksum": "f9d537a982f63af0c500753b0e4779604252b9289fa26b6d83b657bf6e1039f1af2e44bbc819001fb857f1602280892b48422b8649cea786cdec3d2eb73412a9"
     }
-    ds.download()  # 700 kb
+    ds.download()  # 800 kb
+
+    _, dsgz = s22_fixture
+
+    dsgz.data.__dict__["view_url_hdf5"] = "https://github.com/mattwelborn/QCArchiveViews/raw/master/S22/latest.hdf5.gz"
+    dsgz.data.__dict__["view_metadata"] = {
+        "blake2b_checksum": "f9d537a982f63af0c500753b0e4779604252b9289fa26b6d83b657bf6e1039f1af2e44bbc819001fb857f1602280892b48422b8649cea786cdec3d2eb73412a9"
+    }
+    dsgz.download()  # 90 kb
+
+    assert ds._view.hash() == dsgz._view.hash()
 
 
 def test_view_download_mock(gradient_dataset_fixture, tmp_path_factory):
@@ -1141,6 +1194,12 @@ def test_reactiondataset_dftd3_dataset_plaintextview_write(reactiondataset_dftd3
     ds.to_file(tmpdir / "test.tar.gz", "plaintext")
 
 
+@pytest.mark.slow
+def test_s22_dataset_get_molecules_subset(s22_fixture):
+    _, ds = s22_fixture
+    ds.get_molecules(subset="Adenine-Thymine Complex WC")
+
+
 ### Non-dataset tests
 
 
@@ -1191,6 +1250,7 @@ def test_missing_collection(fractal_compute_server):
 
 
 @pytest.mark.slow
+@pytest.mark.xfail(reason="Flaky on Travis CI, see #427.")
 @testing.using_torsiondrive
 @testing.using_geometric
 @testing.using_rdkit
@@ -1203,11 +1263,11 @@ def test_torsiondrive_dataset(fractal_compute_server):
     hooh1 = ptl.data.get_molecule("hooh.json")
     hooh2 = hooh1.copy(update={"geometry": hooh1.geometry + np.array([0, 0, 0.2])})
 
-    ds.add_entry("hooh1", [hooh1], [[0, 1, 2, 3]], [90], attributes={"something": "hooh1"})
-    ds.add_entry("hooh2", [hooh2], [[0, 1, 2, 3]], [90], attributes={"something": "hooh2"})
+    ds.add_entry("hooh1", [hooh1], [[0, 1, 2, 3]], [60], attributes={"something": "hooh1"})
+    ds.add_entry("hooh2", [hooh2], [[0, 1, 2, 3]], [60], attributes={"something": "hooh2"})
 
     optimization_spec = {"program": "geometric", "keywords": {"coordsys": "tric"}}
-    qc_spec = {"driver": "gradient", "method": "UFF", "basis": "", "keywords": None, "program": "rdkit"}
+    qc_spec = {"driver": "gradient", "method": "UFF", "basis": None, "keywords": None, "program": "rdkit"}
 
     ds.add_specification("Spec1", optimization_spec, qc_spec, description="This is a really cool spec")
 
@@ -1220,11 +1280,21 @@ def test_torsiondrive_dataset(fractal_compute_server):
     fractal_compute_server.await_services(max_iter=1)
 
     # Check status
+    status_basic = ds.status()
+    assert status_basic.loc("COMPLETE", "Spec1") == 1
+    status_spec = ds.status("Spec1")
+    assert status_basic.loc("COMPLETE", "Spec1") == 1
+
     status_detail = ds.status("Spec1", detail=True)
     assert status_detail.loc["hooh2", "Complete Tasks"] == 1
-    assert status_detail.loc["hooh2", "Total Points"] == 4
+    assert status_detail.loc["hooh2", "Total Points"] == 6
 
-    fractal_compute_server.await_services(max_iter=5)
+    # List of length 1 with detail=True
+    status_detail = ds.status(["Spec1"], detail=True)
+    assert status_detail.loc["hooh2", "Complete Tasks"] == 1
+    assert status_detail.loc["hooh2", "Total Points"] == 6
+
+    fractal_compute_server.await_services(max_iter=7)
 
     ds = client.get_collection("torsiondrivedataset", "testing")
     ds.query("spec1")
@@ -1243,13 +1313,38 @@ def test_torsiondrive_dataset(fractal_compute_server):
     # We effectively computed the same thing twice with two duplicate specs
     for row in ["hooh1", "hooh2"]:
         for spec in ["Spec1", "spec2"]:
-            assert pytest.approx(ds.df.loc[row, spec].get_final_energies(90), 1.0e-5) == 0.00015655375994799847
+            assert pytest.approx(ds.df.loc[row, spec].get_final_energies(60), 1.0e-5) == 0.0007991272305133664
 
     assert ds.status().loc["COMPLETE", "Spec1"] == 2
     assert ds.status(collapse=False).loc["hooh1", "Spec1"] == "COMPLETE"
 
     assert ds.counts("hooh1").loc["hooh1", "Spec1"] > 5
     assert ds.counts("hooh1", specs="spec1", count_gradients=True).loc["hooh1", "Spec1"] > 30
+
+
+def test_dataset_list_keywords(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+
+    kw1 = ptl.models.KeywordSet(values={"foo": True})
+    kw2 = ptl.models.KeywordSet(values={"foo": False})
+    kw3 = ptl.models.KeywordSet(values={"foo": 13})
+    ds = ptl.collections.Dataset("test_dataset_list_keywords", client)
+
+    ds.add_keywords(alias="p1_k1", program="p1", keyword=kw1)
+    ds.add_keywords(alias="p1_k2", program="p1", keyword=kw2, default=True)
+    ds.add_keywords(alias="p2_k3", program="p2", keyword=kw3)
+    ds.add_keywords(alias="p3_k1", program="p3", keyword=kw1, default=True)
+    ds.save()
+
+    res = ds.list_keywords().reset_index().drop("id", axis=1)
+    ref = pd.DataFrame(
+        {
+            "program": ["p1", "p1", "p2", "p3"],
+            "keywords": ["p1_k1", "p1_k2", "p2_k3", "p3_k1"],
+            "default": [False, True, False, True],
+        }
+    )
+    assert df_compare(res, ref), res
 
 
 @testing.using_geometric
@@ -1262,7 +1357,9 @@ def test_optimization_dataset(fractal_compute_server):
 
     opt_spec = {"program": "geometric"}
     qc_spec = {"driver": "gradient", "method": "UFF", "program": "rdkit"}
+
     ds.add_specification("test", opt_spec, qc_spec, protocols={"trajectory": "final"})
+    ds.add_specification("test2", opt_spec, qc_spec, protocols={"trajectory": "initial_and_final"})
 
     hooh1 = ptl.data.get_molecule("hooh.json")
     hooh2 = hooh1.copy(update={"geometry": hooh1.geometry + np.array([0, 0, 0.2])})
@@ -1272,12 +1369,24 @@ def test_optimization_dataset(fractal_compute_server):
     ds.add_entry("hooh2", hooh2)
 
     ds.compute("test")
+    ds.compute("test2", subset=["hooh1"])
     fractal_compute_server.await_results()
 
     ds.query("test")
-    assert ds.status().loc["COMPLETE", "test"] == 3
+    ds.query("test2")
 
-    assert ds.counts().loc["hooh1", "test"] == 1
+    status = ds.status()
+    assert status.loc["COMPLETE", "test"] == 3
+    assert status.loc["COMPLETE", "test2"] == 1
+
+    status_spec = ds.status("test")
+    assert status_spec.loc("COMPLETE", "test") == 3
+    assert status_spec.loc("COMPLETE", "test2") == 1
+
+    counts = ds.counts()
+    assert counts.loc["hooh1", "test"] == 9
+    assert np.isnan(counts.loc["hooh2", "test2"])
+    assert len(ds.df.loc["hooh1", "test"].trajectory) == 1
 
     final_energy = 0.00011456853977485626
     for idx, row in ds.df["test"].items():
@@ -1399,3 +1508,57 @@ def test_collection_metadata(fractal_compute_server):
     ds.save()
 
     assert client.get_collection("dataset", ds.name).data.metadata["data_points"] == 133_885
+
+
+def test_list_collection_tags(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+
+    ptl.collections.Dataset("test_list_collection_tags_1", client=client, tags=[]).save()
+    ptl.collections.Dataset("test_list_collection_tags_2", client=client, tags=["t1"]).save()
+    ptl.collections.Dataset("test_list_collection_tags_3", client=client, tags=["t2"]).save()
+    ptl.collections.Dataset("test_list_collection_tags_4", client=client, tags=["t1", "t2"]).save()
+
+    names = list(client.list_collections().reset_index().name)
+    assert "test_list_collection_tags_1" in names
+    assert "test_list_collection_tags_2" in names
+    assert "test_list_collection_tags_3" in names
+    assert "test_list_collection_tags_4" in names
+
+    names = list(client.list_collections(tag="t1").reset_index().name)
+    assert "test_list_collection_tags_1" not in names
+    assert "test_list_collection_tags_2" in names
+    assert "test_list_collection_tags_3" not in names
+    assert "test_list_collection_tags_4" in names
+
+    names = list(client.list_collections(tag=["t1"]).reset_index().name)
+    assert "test_list_collection_tags_1" not in names
+    assert "test_list_collection_tags_2" in names
+    assert "test_list_collection_tags_3" not in names
+    assert "test_list_collection_tags_4" in names
+
+    names = list(client.list_collections(tag=["t1", "t2"]).reset_index().name)
+    assert "test_list_collection_tags_1" not in names
+    assert "test_list_collection_tags_2" in names
+    assert "test_list_collection_tags_3" in names
+    assert "test_list_collection_tags_4" in names
+
+
+def test_delete_collection(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+    client.list_collections()
+
+    ds = ptl.collections.Dataset("test_delete_collection", client=client)
+    ds.save()
+
+    dsid = ds.data.id
+
+    client.delete_collection("dataset", ds.name)
+    assert ds.name.lower() not in client.list_collections(collection_type="dataset", aslist=True)
+
+    # Fails at get_collection
+    with pytest.raises(KeyError):
+        client.delete_collection("dataset", ds.name)
+
+    # Test DELETE failure specifically
+    with pytest.raises(IOError):
+        client._automodel_request(f"collection/{dsid}", "delete", payload={"meta": {}}, full_return=True)

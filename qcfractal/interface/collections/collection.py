@@ -266,7 +266,10 @@ class Collection(abc.ABC):
             flat_map_keys.append(k)
             flat_map_mols.append(v)
 
-        mol_ret = client.add_molecules(flat_map_mols)
+        CHUNK_SIZE = client.query_limit
+        mol_ret = []
+        for i in range(0, len(flat_map_mols), CHUNK_SIZE):
+            mol_ret.extend(client.add_molecules(flat_map_mols[i : i + CHUNK_SIZE]))
 
         return {k: v for k, v in zip(flat_map_keys, mol_ret)}
 
@@ -498,7 +501,7 @@ class BaseProcedureDataset(Collection):
 
         return submitted
 
-    def query(self, specification: str, force: bool = False) -> str:
+    def query(self, specification: str, force: bool = False) -> pd.Series:
         """Queries a given specification from the server
 
         Parameters
@@ -507,6 +510,11 @@ class BaseProcedureDataset(Collection):
             The specification name to query
         force : bool, optional
             Force a fresh query if the specification already exists.
+
+        Returns
+        -------
+        pd.Series
+            Records collected from the server
         """
         # Try to get the specification, will throw if not found.
         spec = self.get_specification(specification)
@@ -537,7 +545,7 @@ class BaseProcedureDataset(Collection):
 
         self.df[spec.name] = df[spec.name]
 
-        return spec.name
+        return df[spec.name]
 
     def status(
         self,
@@ -566,20 +574,28 @@ class BaseProcedureDataset(Collection):
 
         # Simple no detail case
         if detail is False:
-            # Specifications
+            # detail = False can handle multiple specifications
+            # If specs is None, then use all (via list_specifications)
             if isinstance(specs, str):
                 specs = [specs]
+            elif specs is None:
+                specs = self.list_specifications(description=False)
 
             # Query all of the specs and make sure they are valid
-            if specs is None:
-                list_specs = list(self.df.columns)
-            else:
-                list_specs = []
-                for spec in specs:
-                    list_specs.append(self.query(spec))
+            # Specs may not be loaded to self.df yet. This can be accomplished
+            #     with self.query, which stores the info in self.df
+            for spec in specs:
+                self.query(spec)
+
+            def get_status(item):
+                try:
+                    return item.status.value
+                except AttributeError:
+                    return None
 
             # apply status by column then by row
-            df = self.df[list_specs].apply(lambda col: col.apply(lambda entry: entry.status.value))
+            df = self.df[specs].apply(lambda col: col.apply(get_status))
+
             if status:
                 df = df[(df == status.upper()).all(axis=1)]
 
@@ -591,8 +607,15 @@ class BaseProcedureDataset(Collection):
         if status not in [None, "INCOMPLETE"]:
             raise KeyError("Detailed status is only available for incomplete procedures.")
 
+        # Can only do detailed status for a single spec
+        # If specs is a string, ok. If it is a list, then it should have length = 1
         if not (isinstance(specs, str) or len(specs) == 1):
             raise KeyError("Detailed status is only available for a single specification at a time.")
+
+        # If specs is a list (of length = 1, checked above), then make it a string
+        # (_get_procedure_ids expects a string)
+        if not isinstance(specs, str):
+            specs = specs[0]
 
         mapper = self._get_procedure_ids(specs)
         reverse_map = {v: k for k, v in mapper.items()}

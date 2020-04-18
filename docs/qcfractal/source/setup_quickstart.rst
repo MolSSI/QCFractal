@@ -1,5 +1,5 @@
-Setup Quickstart
-================
+Setup Overview
+==============
 
 QCFractal comprises two components:
 

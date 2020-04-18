@@ -8,8 +8,9 @@ from typing import Any, Dict, List, Optional, Union
 
 import psycopg2
 from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-from qcfractal.storage_sockets.models import Base
+from qcfractal.storage_sockets.models import Base, VersionsORM
 
 from .config import FractalConfig
 from .util import find_port, is_port_open
@@ -131,7 +132,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         except psycopg2._psycopg.OperationalError:
             return False
 
-    def command(self, cmd: str) -> Any:
+    def command(self, cmd: str, check: bool = True) -> Any:
         """Runs psql commands and returns their output while connected to the correct postgres instance.
 
         Parameters
@@ -143,9 +144,17 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         """
         self._check_psql()
 
+        if isinstance(cmd, str):
+            cmd = [cmd]
+
         self.logger(f"pqsl command: {cmd}")
         psql_cmd = [shutil.which("psql"), "-p", str(self.config.database.port), "-c"]
-        return self._run(psql_cmd + [cmd])
+
+        cmd = self._run(psql_cmd + cmd)
+        if check:
+            if cmd["retcode"] != 0:
+                raise ValueError("psql operation did not complete.")
+        return cmd
 
     def pg_ctl(self, cmds: List[str]) -> Any:
         """Runs pg_ctl commands and returns their output while connected to the correct postgres instance.
@@ -199,6 +208,33 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
             Base.metadata.create_all(engine)
         except Exception as e:
             raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}")
+
+        return True
+
+    def update_db_version(self):
+        """Update current version of QCFractal in the DB"""
+
+        uri = self.config.database_uri()
+
+        engine = create_engine(uri, echo=False, pool_size=1)
+        session = sessionmaker(bind=engine)()
+        try:
+            import qcfractal, qcelemental, qcengine
+
+            elemental_version = qcelemental.__version__
+            fractal_version = qcfractal.__version__
+            engine_version = qcengine.__version__
+
+            self.logger(f"Updating current version of QCFractal in DB: {uri} \n" f"to version {qcfractal.__version__}")
+            current_ver = VersionsORM(
+                elemental_version=elemental_version, fractal_version=fractal_version, engine_version=engine_version
+            )
+            session.add(current_ver)
+            session.commit()
+        except Exception as e:
+            raise ValueError(f"Failed to Update DB version.\n {str(e)}")
+        finally:
+            session.close()
 
         return True
 
@@ -337,6 +373,65 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         if ret["retcode"] != 0:
             self.logger(ret)
             raise ValueError("\nFailed to Stamp the database with current version.\n")
+
+    def backup_database(self, filename: Optional[str] = None) -> None:
+
+        # Reasonable check here
+        self._check_psql()
+
+        if filename is None:
+            filename = f"{self.config.database.database_name}.bak"
+
+        filename = os.path.realpath(filename)
+
+        # fmt: off
+        cmds = [
+            shutil.which("pg_dump"),
+            "-p", str(self.config.database.port),
+            "-d", self.config.database.database_name,
+            "-Fc", # Custom postgres format, fast
+            "--file", filename
+        ]
+        # fmt: on
+
+        self.logger(f"pg_backup command: {'  '.join(cmds)}")
+        ret = self._run(cmds)
+
+        if ret["retcode"] != 0:
+            self.logger(ret)
+            raise ValueError("\nFailed to backup the database.\n")
+
+    def restore_database(self, filename) -> None:
+
+        # Reasonable check here
+        self._check_psql()
+
+        self.create_database(self.config.database.database_name)
+
+        # fmt: off
+        cmds = [
+            shutil.which("pg_restore"),
+            f"--port={self.config.database.port}",
+            f"--dbname={self.config.database.database_name}",
+            filename
+        ]
+        # fmt: on
+
+        self.logger(f"pg_backup command: {'  '.join(cmds)}")
+        ret = self._run(cmds)
+
+        if ret["retcode"] != 0:
+            self.logger(ret["stderr"])
+            raise ValueError("\nFailed to restore the database.\n")
+
+    def database_size(self) -> str:
+        """
+        Returns a pretty formatted string of the database size.
+        """
+
+        return self.command(
+            [f"SELECT pg_size_pretty( pg_database_size('{self.config.database.database_name}') );", "-t", "-A"]
+        )
 
 
 class TemporaryPostgres:

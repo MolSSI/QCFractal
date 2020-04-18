@@ -233,23 +233,11 @@ class TaskQueueORM(Base):
     # TODO: for back-compatibility with mongo, tobe removed
     @hybrid_property
     def base_result(self):
-        return self._base_result(self.base_result_id)
-
-    @staticmethod
-    def _base_result(base_result_id):
-        return dict(ref="result", id=str(base_result_id))
-        # return self.base_result_id   # todo, change to this
+        return self.base_result_id
 
     @base_result.setter
     def base_result(self, val):
-        """Only two valid values, dict and int"""
-
-        if isinstance(val, dict):
-            self.base_result_id = int(val["id"])
-        else:
-            self.base_result_id = int(val)
-
-        return val
+        self.base_result_id = int(val)
 
     # can reference ResultORMs or any ProcedureORM
     base_result_id = Column(Integer, ForeignKey("base_result.id", ondelete="cascade"), unique=True)

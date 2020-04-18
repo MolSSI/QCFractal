@@ -16,10 +16,7 @@ from .common_models import DriverEnum, ObjectId, ProtoModel, QCSpecification
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 
 if TYPE_CHECKING:  # pragma: no cover
-    from qcelemental.models import (
-        OptimizationInput,
-        ResultInput,
-    )
+    from qcelemental.models import OptimizationInput, ResultInput
 
     from .common_models import KeywordSet, Molecule
 
@@ -125,11 +122,9 @@ class RecordBase(ProtoModel, abc.ABC):
         if self.Config.build_hash_index and (self.hash_index is None):
             self.__dict__["hash_index"] = self.get_hash_index()
 
-    def __str__(self) -> str:
-        return f"{self.__class__.__name__}(id='{self.id}' status='{self.status}')"
+    def __repr_args__(self):
 
-    def __repr__(self) -> str:
-        return f"<{self}>"
+        return [("id", f"{self.id}"), ("status", f"{self.status}")]
 
     ### Serialization helpers
 
@@ -334,7 +329,7 @@ class ResultRecord(RecordBase):
         if missing:
 
             # Translate a return value
-            proj = {self.wavefunction["return_map"].get(x, x): True for x in missing}
+            proj = [self.wavefunction["return_map"].get(x, x) for x in missing]
 
             self.cache["wavefunction"].update(
                 self.client.custom_query(

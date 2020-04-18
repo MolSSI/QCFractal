@@ -198,3 +198,111 @@ This example also uses Parsl and sets a scratch directory.
      provider:
       partition: normal_q
       cmd_timeout: 30
+
+
+Single Job with Multiple Nodes and Single-Node Tasks with Parsl Adapter
+-----------------------------------------------------------------------
+
+Leadership platforms prefer or require more than one node per Job request.
+The following configuration will request a Job with 256 nodes and place one Worker on each node.
+
+.. code-block:: yaml
+
+    common:
+        adapter: parsl
+        tasks_per_worker: 1
+        cores_per_worker: 64  # Number of cores per compute node
+        max_workers: 256  # Maximum number of workers deployed to compute nodes
+        nodes_per_job: 256
+
+    cluster:
+        node_exclusivity: true
+        task_startup_commands:
+            - module load miniconda-3/latest  # You will need to load the Python environment on startup
+            - source activate qcfractal
+            - export KMP_AFFINITY=disable  # KNL-related issue. Needed for multithreaded apps
+            - export PATH=~/software/psi4/bin:$PATH  # Points to psi4 compiled for compute nodes
+        scheduler: cobalt  # Varies depending on supercomputing center
+
+    parsl:
+        provider:
+            queue: default
+            launcher:  # Defines the MPI launching function
+                launcher_class: AprunLauncher
+                overrides: -d 64  # Option for XC40 machines, allows workers to access 64 threads
+            init_blocks: 0
+            min_blocks: 0
+            account: CSC249ADCD08
+            cmd_timeout: 60
+            walltime: "3:00:00"
+
+Consult the `Parsl configuration docs <https://parsl.readthedocs.io/en/stable/userguide/configuring.html>`_
+for information on how to configure the Launcher and Provider classes for your cluster.
+
+
+Single Job with Multiple, Node-Parallel Tasks with Parsl Adapter
+----------------------------------------------------------------
+
+Running MPI-parallel tasks requires a similar configuration to the multiple nodes per job
+for the manager and also some extra work in defining the qcengine environment.
+The key difference that sets apart managers for node-parallel applications is that
+that ``nodes_per_job`` is set to more than one and
+Parsl uses ``SimpleLauncher`` to deploy a Parsl executor onto
+the batch/login node once a job is allocated.
+
+.. code-block:: yaml
+
+    common:
+        adapter: parsl
+        tasks_per_worker: 1
+        cores_per_worker: 16  # Number of cores used on each compute node
+        max_workers: 128
+        memory_per_worker: 180  # Summary for the amount per compute node
+        nodes_per_job: 128
+        nodes_per_task: 2  # Number of nodes to use for each task
+        cores_per_rank: 1  # Number of cores to each of each MPI rank
+
+    cluster:
+        node_exclusivity: true
+        task_startup_commands:
+            - module load miniconda-3/latest
+            - source activate qcfractal
+            - export PATH="/soft/applications/nwchem/6.8/bin/:$PATH"
+            - which nwchem
+        scheduler: cobalt
+
+    parsl:
+        provider:
+            queue: default
+            launcher:
+                launcher_class: SimpleLauncher
+            init_blocks: 0
+            min_blocks: 0
+            account: CSC249ADCD08
+            cmd_timeout: 60
+            walltime: "0:30:00"
+
+The configuration that describes how to launch the tasks must be written at a ``qcengine.yaml``
+file. See `QCEngine docs <https://qcengine.readthedocs.io/en/stable/environment.html>`_
+for possible locations to place the ``qcengine.yaml`` file and full descriptions of the
+configuration option.
+One key option for the ``qcengine.yaml`` file is the description of how to launch MPI
+tasks, ``mpiexec_command``. For example, many systems use ``mpirun``
+(e.g., `OpenMPI <https://www.open-mpi.org/doc/v4.0/man1/mpirun.1.php>`_).
+An example configuration a Cray supercomputer is:
+
+.. code-block:: yaml
+
+    all:
+      hostname_pattern: "*"
+      scratch_directory: ./scratch  # Must be on the global filesystem
+      is_batch_node: True  # Indicates that `aprun` must be used for all QC code invocations
+      mpiexec_command: "aprun -n {total_ranks} -N {ranks_per_node} -C -cc depth --env CRAY_OMP_CHECK_AFFINITY=TRUE --env OMP_NUM_THREADS={cores_per_rank} --env MKL_NUM_THREADS={cores_per_rank}
+      -d {cores_per_rank} -j 1"
+      jobs_per_node: 1
+      ncores: 64
+
+Note that there are several variables in the ``mpiexec_command`` that describe how to insert parallel configurations into the
+command: ``total_ranks``, ``ranks_per_node``, and ``cores_per_rank``.
+Each of these values are computed based on the number of cores per node, the number of nodes per application
+and the number of cores per MPI rank, which are all defined in the Manager settings file.

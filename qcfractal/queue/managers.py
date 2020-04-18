@@ -10,9 +10,9 @@ import time
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Union
 
-import qcengine as qcng
 from pydantic import BaseModel, validator
 
+import qcengine as qcng
 from qcfractal.extras import get_information
 
 from ..interface.data import get_molecule
@@ -32,9 +32,7 @@ class QueueStatistics(BaseModel):
     total_worker_walltime: float = 0.0
     total_task_walltime: float = 0.0
     maximum_possible_walltime: float = 0.0  # maximum_workers * time_delta, experimental
-    active_tasks: int = 0
-    active_cores: int = 0
-    active_memory: float = 0.0
+    active_task_slots: int = 0
 
     # Static Quantities
     max_concurrent_tasks: int = 0
@@ -48,13 +46,21 @@ class QueueStatistics(BaseModel):
         super().__init__(**kwargs)
 
     @property
-    def total_completed_tasks(self):
+    def total_completed_tasks(self) -> int:
         return self.total_successful_tasks + self.total_failed_tasks
 
     @property
-    def theoretical_max_consumption(self):
+    def theoretical_max_consumption(self) -> float:
         """In Core Hours"""
         return self.max_concurrent_tasks * self.cores_per_task * (time.time() - self.last_update_time) / 3600
+
+    @property
+    def active_cores(self) -> int:
+        return self.active_task_slots * self.cores_per_task
+
+    @property
+    def active_memory(self) -> float:
+        return self.active_task_slots * self.memory_per_task
 
     @validator("cores_per_task", pre=True)
     def cores_per_tasks_none(cls, v):
@@ -86,7 +92,7 @@ class QueueManager:
         queue_client: "BaseAdapter",
         logger: Optional[logging.Logger] = None,
         max_tasks: int = 200,
-        queue_tag: str = None,
+        queue_tag: Optional[Union[str, List[str]]] = None,
         manager_name: str = "unlabeled",
         update_frequency: Union[int, float] = 2,
         verbose: bool = True,
@@ -95,6 +101,8 @@ class QueueManager:
         stale_update_limit: Optional[int] = 10,
         cores_per_task: Optional[int] = None,
         memory_per_task: Optional[float] = None,
+        nodes_per_task: Optional[int] = None,
+        cores_per_rank: Optional[int] = 1,
         scratch_directory: Optional[str] = None,
         retries: Optional[int] = 2,
         configuration: Optional[Dict[str, Any]] = None,
@@ -137,6 +145,10 @@ class QueueManager:
         memory_per_task : Optional[float], optional
             How much memory, in GiB, per computation task to allocate for QCEngine
             None indicates "use however much you can consume"
+        nodes_per_task : Optional[int], optional
+            How many nodes to use per task. Used only for node-parallel tasks
+        cores_per_rank: Optional[int], optional
+            How many CPUs per rank of an MPI application. Used only for node-parallel tasks
         scratch_directory : Optional[str], optional
             Scratch directory location to do QCEngine compute
             None indicates "wherever the system default is"'
@@ -160,15 +172,19 @@ class QueueManager:
         self.client = client
         self.cores_per_task = cores_per_task
         self.memory_per_task = memory_per_task
+        self.nodes_per_task = nodes_per_task or 1
         self.scratch_directory = scratch_directory
         self.retries = retries
+        self.cores_per_rank = cores_per_rank
         self.configuration = configuration
         self.queue_adapter = build_queue_adapter(
             queue_client,
             logger=self.logger,
             cores_per_task=self.cores_per_task,
             memory_per_task=self.memory_per_task,
+            nodes_per_task=self.nodes_per_task,
             scratch_directory=self.scratch_directory,
+            cores_per_rank=self.cores_per_rank,
             retries=self.retries,
             verbose=verbose,
         )
@@ -201,6 +217,16 @@ class QueueManager:
         self.available_programs = qcng.list_available_programs()
         self.available_procedures = qcng.list_available_procedures()
 
+        # Display a warning if there are non-node-parallel programs and >1 node_per_task
+        if self.nodes_per_task > 1:
+            for name in self.available_programs:
+                program = qcng.get_program(name)
+                if not program.node_parallel:
+                    self.logger.warning(
+                        "Program {} is not node parallel," " but manager will use >1 node per task".format(name)
+                    )
+
+        # Print out configuration
         self.logger.info("QueueManager:")
         self.logger.info("    Version:         {}\n".format(get_information("version")))
 
@@ -215,12 +241,14 @@ class QueueManager:
 
         if self.verbose:
             self.logger.info("    QCEngine:")
-            self.logger.info("        Version:     {}".format(qcng.__version__))
-            self.logger.info("        Task Cores:  {}".format(self.cores_per_task))
-            self.logger.info("        Task Mem:    {}".format(self.memory_per_task))
-            self.logger.info("        Scratch Dir: {}".format(self.scratch_directory))
-            self.logger.info("        Programs:    {}".format(self.available_programs))
-            self.logger.info("        Procedures:  {}\n".format(self.available_procedures))
+            self.logger.info("        Version:        {}".format(qcng.__version__))
+            self.logger.info("        Task Cores:     {}".format(self.cores_per_task))
+            self.logger.info("        Task Mem:       {}".format(self.memory_per_task))
+            self.logger.info("        Task Nodes:     {}".format(self.nodes_per_task))
+            self.logger.info("        Cores per Rank: {}".format(self.cores_per_rank))
+            self.logger.info("        Scratch Dir:    {}".format(self.scratch_directory))
+            self.logger.info("        Programs:       {}".format(self.available_programs))
+            self.logger.info("        Procedures:     {}\n".format(self.available_procedures))
 
         # DGAS Note: Note super happy about how this if/else turned out. Looking for alternatives.
         if self.connected():
@@ -272,7 +300,7 @@ class QueueManager:
             # Statistics
             "total_worker_walltime": self.statistics.total_worker_walltime,
             "total_task_walltime": self.statistics.total_task_walltime,
-            "active_tasks": self.statistics.active_tasks,
+            "active_tasks": self.statistics.active_task_slots,
             "active_cores": self.statistics.active_cores,
             "active_memory": self.statistics.active_memory,
         }
@@ -385,21 +413,28 @@ class QueueManager:
         payload = self._payload_template()
         payload["data"]["operation"] = "shutdown"
         try:
-            response = self.client._automodel_request("queue_manager", "put", payload, timeout=2)
+            response = self.client._automodel_request("queue_manager", "put", payload, timeout=5)
+            response["success"] = True
+
+            shutdown_string = "Shutdown was successful, {} tasks returned to master queue."
+
         except IOError:
             # TODO something as we didnt successfully add the data
             self.logger.warning("Shutdown was not successful. This may delay queued tasks.")
-            return {"nshutdown": 0}
+            response = {"nshutdown": 0, "success": False}
+            shutdown_string = "Shutdown was not successful, {} tasks not returned."
 
         nshutdown = response["nshutdown"]
-        shutdown_string = "Shutdown was successful, {} tasks returned to master queue."
         if self.n_stale_jobs:
             shutdown_string = shutdown_string.format(
                 f"{min(0, nshutdown-self.n_stale_jobs)} active and {nshutdown} stale"
             )
         else:
             shutdown_string = shutdown_string.format(nshutdown)
+
         self.logger.info(shutdown_string)
+
+        response["info"] = shutdown_string
         return response
 
     def add_exit_callback(self, callback: Callable, *args: List[Any], **kwargs: Dict[Any, Any]) -> None:
@@ -515,14 +550,12 @@ class QueueManager:
         last_time = self.statistics.last_update_time
         now = self.statistics.last_update_time = time.time()
         time_delta_seconds = now - last_time
+
         try:
-            self.statistics.active_tasks = self.queue_adapter.count_running_tasks()
+            self.statistics.active_task_slots = self.queue_adapter.count_active_task_slots()
             log_efficiency = True
         except NotImplementedError:
             log_efficiency = False
-
-        self.statistics.active_cores = self.statistics.active_tasks * self.statistics.cores_per_task
-        self.statistics.active_memory = self.statistics.active_tasks * self.statistics.memory_per_task
 
         timedelta_worker_walltime = time_delta_seconds * self.statistics.active_cores / 3600
         timedelta_maximum_walltime = (

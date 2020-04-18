@@ -7,6 +7,7 @@ try:
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
     from sqlalchemy.sql.expression import desc
+    from sqlalchemy.sql.expression import case as expression_case
 except ImportError:
     raise ImportError(
         "SQLAlchemy_socket requires sqlalchemy, please install this python " "module or try a different db_socket."
@@ -18,7 +19,7 @@ import secrets
 from collections.abc import Iterable
 from contextlib import contextmanager
 from datetime import datetime as dt
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import bcrypt
 
@@ -61,6 +62,12 @@ from qcfractal.storage_sockets.models import (
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
 from .models import Base
+
+if TYPE_CHECKING:
+    from ..services.service_util import BaseService
+
+# for version checking
+import qcelemental, qcfractal, qcengine
 
 _null_keys = {"basis", "keywords"}
 _id_keys = {"id", "molecule", "keywords", "procedure_id"}
@@ -158,6 +165,7 @@ class SQLAlchemySocket:
         logger: "Logger" = None,
         sql_echo: bool = False,
         max_limit: int = 1000,
+        skip_version_check: bool = False,
     ):
         """
         Constructs a new SQLAlchemy socket
@@ -200,9 +208,20 @@ class SQLAlchemySocket:
 
         self.Session = sessionmaker(bind=self.engine)
 
+        # check version compatibility
+        db_ver = self.check_lib_versions()
+        self.logger.info(f"DB versions: {db_ver}")
+        if (not skip_version_check) and (db_ver and qcfractal.__version__ != db_ver["fractal_version"]):
+            raise TypeError(
+                f"You are running QCFractal version {qcfractal.__version__} "
+                f'with an older DB version ({db_ver["fractal_version"]}). '
+                f'Please run "qcfractal-server upgrade" first before starting the server.'
+            )
+
         # actually create the tables
         try:
             Base.metadata.create_all(self.engine)
+            self.check_lib_versions()  # update version if new DB
         except Exception as e:
             raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}") from None
 
@@ -236,8 +255,6 @@ class SQLAlchemySocket:
 
         self._project_name = project
         self._max_limit = max_limit
-
-        self.check_lib_versions()
 
     def __str__(self) -> str:
         return f"<SQLAlchemySocket: address='{self.uri}`>"
@@ -306,7 +323,7 @@ class SQLAlchemySocket:
          SQLAlchemySocket.max_limit then the max_limit will be returned instead.
         """
 
-        return limit if limit and limit < self._max_limit else self._max_limit
+        return limit if limit is not None and limit < self._max_limit else self._max_limit
 
     def get_query_projection(self, className, query, *, limit=None, skip=0, include=None, exclude=None):
 
@@ -706,6 +723,14 @@ class SQLAlchemySocket:
         return ret
 
     def get_molecules(self, id=None, molecule_hash=None, molecular_formula=None, limit: int = None, skip: int = 0):
+        try:
+            if isinstance(molecular_formula, str):
+                molecular_formula = qcelemental.molutil.order_molecular_formula(molecular_formula)
+            elif isinstance(molecular_formula, list):
+                molecular_formula = [qcelemental.molutil.order_molecular_formula(form) for form in molecular_formula]
+        except ValueError:
+            # Probably, the user provided an invalid chemical formula
+            pass
 
         meta = get_metadata_template()
 
@@ -718,9 +743,13 @@ class SQLAlchemySocket:
 
         meta["success"] = True
 
-        # ret["meta"]["errors"].extend(errors)
-
-        data = [Molecule(**d, validate=False, validated=True) for d in rdata]
+        # This is required for sparse molecules as we don't know which values are spase
+        # We are lucky that None is the default and doesn't mean anything in Molecule
+        # This strategy does not work for other objects
+        data = []
+        for mol_dict in rdata:
+            mol_dict = {k: v for k, v in mol_dict.items() if v is not None}
+            data.append(Molecule(**mol_dict, validate=False, validated=True))
 
         return {"meta": meta, "data": data}
 
@@ -1047,29 +1076,42 @@ class SQLAlchemySocket:
 
         return {"data": rdata, "meta": meta}
 
-    def del_collection(self, collection: str, name: str) -> bool:
+    def del_collection(
+        self, collection: Optional[str] = None, name: Optional[str] = None, col_id: Optional[int] = None
+    ) -> bool:
         """
         Remove a collection from the database from its keys.
 
         Parameters
         ----------
-        collection: str
+        collection: Optional[str], optional
             CollectionORM type
-        name : str
+        name : Optional[str], optional
             CollectionORM name
-
+        col_id: Optional[int], optional
+            Database id of the collection
         Returns
         -------
         int
             Number of documents deleted
         """
 
-        with self.session_scope() as session:
-            count = (
-                session.query(CollectionORM)
-                .filter_by(collection=collection.lower(), lname=name.lower())
-                .delete(synchronize_session=False)
+        # Assuming here that we don't want to allow deletion of all collections, all datasets, etc.
+        if not (col_id is not None or (collection is not None and name is not None)):
+            raise ValueError(
+                "Either col_id ({col_id}) must be specified, or collection ({collection}) and name ({name}) must be specified."
             )
+
+        filter_spec = {}
+        if collection is not None:
+            filter_spec["collection"] = collection.lower()
+        if name is not None:
+            filter_spec["lname"] = name.lower()
+        if col_id is not None:
+            filter_spec["id"] = col_id
+
+        with self.session_scope() as session:
+            count = session.query(CollectionORM).filter_by(**filter_spec).delete(synchronize_session=False)
         return count
 
     ## ResultORMs functions
@@ -1093,33 +1135,81 @@ class SQLAlchemySocket:
             Dict with keys: data, meta
             Data is the ids of the inserted/updated/existing docs
         """
-
         meta = add_metadata_template()
+        # putting the placeholder for all the ids, since some can be duplicate, and some will only have ids after add operation.
+        result_ids = ["placeholder"] * len(record_list)
 
-        result_ids = []
+        results_list = []
+        existing_res = {}
+        new_record_idx, duplicates_idx = [], []
+        conds = []
+        # creating condition for a multi-value select
+        conds = [
+            (
+                ResultORM.program == res.program,
+                ResultORM.driver == res.driver,
+                ResultORM.method == res.method,
+                ResultORM.basis == res.basis,
+                ResultORM.keywords == res.keywords,
+                ResultORM.molecule == res.molecule,
+            )
+            for res in results_list
+        ]
+
         with self.session_scope() as session:
-            for result in record_list:
-
-                doc = session.query(ResultORM).filter_by(
-                    program=result.program,
-                    driver=result.driver,
-                    method=result.method,
-                    basis=result.basis,
-                    keywords=result.keywords,
-                    molecule=result.molecule,
+            docs = (
+                session.query(
+                    ResultORM.program,
+                    ResultORM.driver,
+                    ResultORM.method,
+                    ResultORM.basis,
+                    ResultORM.keywords,
+                    ResultORM.molecule,
+                    ResultORM.id,
                 )
-
-                if get_count_fast(doc) == 0:
+                .filter(or_(*conds))
+                .all()
+            )
+            # adding all the found items to a dictionary
+            existing_res = {
+                (doc.program, doc.driver, doc.method, doc.basis, doc.keywords, str(doc.molecule)): doc for doc in docs
+            }
+            for i, result in enumerate(record_list):
+                # constructing an index from record_list to compare against found items(existing_res)
+                idx = (
+                    result.program,
+                    result.driver.value,
+                    result.method,
+                    result.basis,
+                    int(result.keywords) if result.keywords else None,
+                    result.molecule,
+                )
+                if existing_res.get(idx) is None:
+                    # if no found items, construct an object
                     doc = ResultORM(**result.dict(exclude={"id"}))
-                    session.add(doc)
-                    session.commit()  # TODO: faster if done in bulk
-                    result_ids.append(str(doc.id))
+                    existing_res[idx] = doc
+                    # add the object to the list which goes for adding and commiting to database.
+                    results_list.append(doc)
+                    # identifying the index of new items in the returned result ids, for future update.
+                    new_record_idx.append(i)
                     meta["n_inserted"] += 1
                 else:
-                    id = str(doc.first().id)
-                    meta["duplicates"].append(id)  # TODO
-                    # If new or duplicate, add the id to the return list
-                    result_ids.append(id)
+                    doc = existing_res.get(idx)
+                    # identifying the index of duplicate items
+                    duplicates_idx.append(i)
+                    meta["duplicates"].append(doc)
+
+            session.add_all(results_list)
+            session.commit()
+            meta["duplicates"] = [str(doc.id) for doc in meta["duplicates"]]
+
+            for i, idx in enumerate(new_record_idx):
+                # setting the new records returned id from commit operation
+                result_ids[idx] = str(results_list[i].id)
+            for i, idx in enumerate(duplicates_idx):
+                # setting the duplicate items, either found in the database or provided more than once in the input
+                result_ids[idx] = meta["duplicates"][i]
+
         meta["success"] = True
 
         ret = {"data": result_ids, "meta": meta}
@@ -1142,25 +1232,38 @@ class SQLAlchemySocket:
         -------
             number of records updated
         """
+        query_ids = [res.id for res in record_list]
+        # find duplicates among ids
+        duplicates = len(query_ids) != len(set(query_ids))
 
-        # try:
-        updated_count = 0
-        for result in record_list:
+        with self.session_scope() as session:
 
-            if result.id is None:
-                self.logger.error("Attempted update without ID, skipping")
-                continue
-            with self.session_scope() as session:
+            found = session.query(ResultORM).filter(ResultORM.id.in_(query_ids)).all()
+            # found items are stored in a dictionary
+            found_dict = {str(record.id): record for record in found}
 
-                result_db = session.query(ResultORM).filter_by(id=result.id).first()
+            updated_count = 0
+            for result in record_list:
+
+                if result.id is None:
+                    self.logger.error("Attempted update without ID, skipping")
+                    continue
 
                 data = result.dict(exclude={"id"})
+                # retrieve the found item
+                found_db = found_dict[result.id]
 
+                # updating the found item with input attribute values.
                 for attr, val in data.items():
-                    setattr(result_db, attr, val)
+                    setattr(found_db, attr, val)
 
-                session.commit()
+                # if any duplicate ids are found in the input, commit should be called each iteration
+                if duplicates:
+                    session.commit()
                 updated_count += 1
+            # if no duplicates found, only commit at the end of the loop.
+            if not duplicates:
+                session.commit()
 
         return updated_count
 
@@ -1873,7 +1976,7 @@ class SQLAlchemySocket:
                     # print(str(err))
                     session.rollback()
                     # TODO: merge hooks
-                    task = session.query(TaskQueueORM).filter_by(base_result_id=record.base_result.id).first()
+                    task = session.query(TaskQueueORM).filter_by(base_result_id=record.base_result).first()
                     self.logger.warning("queue_submit got a duplicate task: {}".format(task.to_dict()))
                     results.append(str(task.id))
                     meta["duplicates"].append(task_num)
@@ -1900,13 +2003,17 @@ class SQLAlchemySocket:
         none_filt = TaskQueueORM.procedure == None  # lgtm [py/test-equals-none]
         query.append(or_(proc_filt, none_filt))
 
+        order_by = []
+        if tag is not None:
+            if isinstance(tag, str):
+                tag = [tag]
+            task_order = expression_case([(TaskQueueORM.tag == t, num) for num, t in enumerate(tag)])
+            order_by.append(task_order)
+
+        order_by.extend([TaskQueueORM.priority.desc(), TaskQueueORM.created_on])
+
         with self.session_scope() as session:
-            query = (
-                session.query(TaskQueueORM)
-                .filter(*query)
-                .order_by(TaskQueueORM.priority.desc(), TaskQueueORM.created_on)
-                .limit(limit)
-            )
+            query = session.query(TaskQueueORM).filter(*query).order_by(*order_by).limit(limit)
 
             # print(query.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
             found = query.all()
@@ -2226,7 +2333,7 @@ class SQLAlchemySocket:
         task_ids = []
         with self.session_scope() as session:
             for task in record_list:
-                doc = session.query(TaskQueueORM).filter_by(base_result_id=task.base_result.id)
+                doc = session.query(TaskQueueORM).filter_by(base_result_id=task.base_result_id)
 
                 if get_count_fast(doc) == 0:
                     doc = TaskQueueORM(**task.dict(exclude={"id"}))
@@ -2651,14 +2758,15 @@ class SQLAlchemySocket:
     def check_lib_versions(self):
         """Check the stored versions of elemental and fractal"""
 
+        # check if versions table exist
+        if not self.engine.dialect.has_table(self.engine, "versions"):
+            return None
+
         with self.session_scope() as session:
             db_ver = session.query(VersionsORM).order_by(VersionsORM.created_on.desc())
-            if db_ver.count() == 0:
-                # FIXME: get versions from the right place
-                import qcelemental
-                import qcfractal
-                import qcengine
 
+            # Table exists but empty
+            if db_ver.count() == 0:
                 elemental_version = qcelemental.__version__
                 fractal_version = qcfractal.__version__
                 engine_version = qcengine.__version__

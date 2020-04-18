@@ -222,6 +222,8 @@ class FractalClient(object):
                 r = requests.post(addr, **kwargs)
             elif method == "put":
                 r = requests.put(addr, **kwargs)
+            elif method == "delete":
+                r = requests.delete(addr, **kwargs)
             else:
                 raise KeyError("Method not understood: '{}'".format(method))
         except requests.exceptions.SSLError:
@@ -384,7 +386,8 @@ class FractalClient(object):
         molecule_hash : QueryStr, optional
             Queries the Molecule ``molecule_hash`` field.
         molecular_formula : QueryStr, optional
-            Queries the Molecule ``molecular_formula`` field.
+            Queries the Molecule ``molecular_formula`` field. Molecular formulas are case-sensitive.
+            Molecular formulas are not order-sensitive (e.g. "H2O == OH2 != Oh2").
         limit : Optional[int], optional
             The maximum number of Molecules to query
         skip : int, optional
@@ -484,6 +487,7 @@ class FractalClient(object):
         aslist: bool = False,
         group: Optional[str] = "default",
         show_hidden: bool = False,
+        tag: Optional[Union[str, List[str]]] = None,
     ) -> pd.DataFrame:
         """Lists the available collections currently on the server.
 
@@ -496,9 +500,11 @@ class FractalClient(object):
             Returns a canonical list rather than a dataframe.
         group: Optional[str], optional
             Show only collections belonging to a specified group.
-            To explicitly return all datasets, set group=None
+            To explicitly return all collections, set group=None
         show_hidden: bool, optional
-            Show datasets whose visibility flag is set to False. Default: False.
+            Show collections whose visibility flag is set to False. Default: False.
+        tag: Optional[Union[str, List[str]]], optional
+            Show collections whose tags match one of the passed tags. By default, collections are not filtered on tag.
         Returns
         -------
         DataFrame
@@ -509,7 +515,7 @@ class FractalClient(object):
         if collection_type is not None:
             query = {"collection": collection_type.lower()}
 
-        payload = {"meta": {"include": ["name", "collection", "tagline", "visibility", "group"]}, "data": query}
+        payload = {"meta": {"include": ["name", "collection", "tagline", "visibility", "group", "tags"]}, "data": query}
         response: List[Dict[str, Any]] = self._automodel_request("collection", "get", payload, full_return=False)
 
         # Rename collection names
@@ -519,12 +525,21 @@ class FractalClient(object):
             if item["collection"] in repl_name_map:
                 item["collection"] = repl_name_map[item["collection"]]
 
-        df = pd.DataFrame.from_dict(response)
-        if not show_hidden:
-            df = df[df["visibility"]]
-        if group is not None:
-            df = df[df["group"].str.lower() == group.lower()]
-        df.drop(["visibility", "group"], axis=1, inplace=True)
+        if len(response) == 0:
+            df = pd.DataFrame(columns=["name", "collection", "tagline"])
+        else:
+            df = pd.DataFrame.from_dict(response)
+            if not show_hidden:
+                df = df[df["visibility"]]
+            if group is not None:
+                df = df[df["group"].str.lower() == group.lower()]
+            if tag is not None:
+                if isinstance(tag, str):
+                    tag = [tag]
+                tag = {t.lower() for t in tag}
+                df = df[df.apply(lambda x: len({t.lower() for t in x["tags"]} & tag) > 0, axis=1)]
+
+            df.drop(["visibility", "group", "tags"], axis=1, inplace=True)
         if not aslist:
             df.set_index(["collection", "name"], inplace=True)
             df.sort_index(inplace=True)
@@ -612,6 +627,23 @@ class FractalClient(object):
 
         payload = {"meta": {"overwrite": overwrite}, "data": collection}
         return self._automodel_request("collection", "post", payload, full_return=full_return)
+
+    def delete_collection(self, collection_type: str, name: str) -> None:
+        """Deletes a given collection from the server.
+
+        Parameters
+        ----------
+        collection_type : str
+            The collection type to be deleted
+        name : str
+            The name of the collection to be deleted
+
+        Returns
+        -------
+        None
+        """
+        collection = self.get_collection(collection_type, name)
+        self._automodel_request(f"collection/{collection.data.id}", "delete", payload={"meta": {}}, full_return=True)
 
     ### Results section
 

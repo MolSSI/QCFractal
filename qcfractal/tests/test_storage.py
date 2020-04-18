@@ -447,6 +447,7 @@ def test_results_add(storage_socket):
             "hash_index": 2,
         }
     )
+
     ids = []
     ret = storage_socket.add_results([page1, page2])
     assert ret["meta"]["n_inserted"] == 2
@@ -612,6 +613,10 @@ def test_results_get_total(storage_results):
     assert 6 == len(storage_results.get_results()["data"])
 
 
+def test_results_get_0(storage_results):
+    assert 0 == len(storage_results.get_results(limit=0)["data"])
+
+
 def test_get_results_by_ids(storage_results):
     results = storage_results.get_results()["data"]
     ids = [x["id"] for x in results]
@@ -680,7 +685,7 @@ def test_queue_submit_sql(storage_results):
             "tag": None,
             "program": "p1",
             "parser": "",
-            "base_result": dict(ref="result", id=result1["id"]),
+            "base_result": result1["id"],
         }
     )
 
@@ -712,12 +717,12 @@ def test_storage_queue_roundtrip(storage_results, status):
         "program": "P1",
         "procedure": "P1",
         "parser": "",
-        "base_result": dict(ref="result", id=None),
+        "base_result": None,
     }
 
-    task_template["base_result"]["id"] = results[0]["id"]
+    task_template["base_result"] = results[0]["id"]
     task1 = ptl.models.TaskRecord(**task_template)
-    task_template["base_result"]["id"] = results[1]["id"]
+    task_template["base_result"] = results[1]["id"]
     task2 = ptl.models.TaskRecord(**task_template)
 
     # Submit a task
@@ -767,20 +772,23 @@ def test_queue_submit_many_order(storage_results):
         "parser": "",
     }
 
-    task1 = ptl.models.TaskRecord(**task_template, base_result=dict(ref="result", id=results[3]["id"]))
-    task2 = ptl.models.TaskRecord(**task_template, base_result=dict(ref="result", id=results[4]["id"]))
-    task3 = ptl.models.TaskRecord(**task_template, base_result=dict(ref="result", id=results[5]["id"]))
+    task1 = ptl.models.TaskRecord(**task_template, base_result=results[3]["id"])
+    task2 = ptl.models.TaskRecord(**task_template, base_result=results[4]["id"])
+    task3 = ptl.models.TaskRecord(**task_template, base_result=results[5]["id"])
 
     # Submit tasks
     ret = storage_results.queue_submit([task1, task2, task3])
     assert len(ret["data"]) == 3
     assert ret["meta"]["n_inserted"] == 3
 
-    # Get task
+    # Add a manager
+    storage_results.manager_update("test_manager")
+
+    # Get tasks for manager 'test_manager'
     r = storage_results.queue_get_next("test_manager", ["p1"], ["p1"], limit=1)
     assert len(r) == 1
     # will get the first submitted result first
-    assert r[0].base_result.id == str(results[3]["id"])
+    assert r[0].base_result == results[3]["id"]
 
     # Todo: test more scenarios
 
@@ -1186,18 +1194,56 @@ def test_mol_pagination(storage_socket):
 
     inserted = storage_socket.add_molecules(molecules)
 
-    assert inserted["meta"]["n_inserted"] == total
+    try:
+        assert inserted["meta"]["n_inserted"] == total
 
-    ret = storage_socket.get_molecules(skip=1)
-    assert len(ret["data"]) == total - 1
-    assert ret["meta"]["n_found"] == total
+        ret = storage_socket.get_molecules(skip=1)
+        assert len(ret["data"]) == total - 1
+        assert ret["meta"]["n_found"] == total
 
-    ret = storage_socket.get_molecules(skip=total + 1)
-    assert len(ret["data"]) == 0
-    assert ret["meta"]["n_found"] == total
+        ret = storage_socket.get_molecules(skip=total + 1)
+        assert len(ret["data"]) == 0
+        assert ret["meta"]["n_found"] == total
 
-    # cleanup
-    storage_socket.del_molecules(inserted["data"])
+    finally:
+        # cleanup
+        storage_socket.del_molecules(inserted["data"])
+
+
+def test_mol_formula(storage_socket):
+    """
+        Test Molecule pagination
+    """
+
+    assert len(storage_socket.get_molecules()["data"]) == 0
+    mol_names = [
+        "water_dimer_minima.psimol",
+    ]
+    total = len(mol_names)
+    molecules = []
+    for mol_name in mol_names:
+        mol = ptl.data.get_molecule(mol_name)
+        molecules.append(mol)
+
+    inserted = storage_socket.add_molecules(molecules)
+    try:
+        assert inserted["meta"]["n_inserted"] == total
+
+        ret = storage_socket.get_molecules(molecular_formula="H4O2")
+        assert len(ret["data"]) == 1
+        assert ret["meta"]["n_found"] == 1
+
+        ret = storage_socket.get_molecules(molecular_formula="O2H4")
+        assert len(ret["data"]) == 1
+        assert ret["meta"]["n_found"] == 1
+
+        ret = storage_socket.get_molecules(molecular_formula="H4o2")
+        assert len(ret["data"]) == 0
+        assert ret["meta"]["n_found"] == 0
+
+    finally:
+        # cleanup
+        storage_socket.del_molecules(inserted["data"])
 
 
 def test_reset_task_blocks(storage_socket):

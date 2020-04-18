@@ -2,13 +2,30 @@
 Explicit tests for queue manipulation.
 """
 
+import logging
 import tempfile
+import time
 
 import pytest
 
 import qcfractal.interface as ptl
 from qcfractal import QueueManager, testing
-from qcfractal.testing import adapter_client_fixture, managed_compute_server, reset_server_database
+from qcfractal.queue import build_queue_adapter
+from qcfractal.testing import (
+    adapter_client_fixture,
+    build_adapter_clients,
+    managed_compute_server,
+    reset_server_database,
+)
+
+
+def test_adapter_client_active_task_slots(adapter_client_fixture):
+
+    queue = build_queue_adapter(adapter_client_fixture)
+    try:
+        assert queue.count_active_task_slots() == 2
+    except NotImplementedError:
+        pytest.xfail("Active task slot counting is not yet available.")
 
 
 @testing.using_rdkit
@@ -145,3 +162,26 @@ def test_adapter_raised_error(managed_compute_server):
     error = ret[0].get_error()
     assert "Error" in error.error_message
     server.objects["storage_socket"].queue_mark_complete([queue_id])
+
+
+@testing.using_rdkit
+def test_node_parallel(adapter_client_fixture, caplog):
+    # Make sure to grab the warnings
+    caplog.set_level(logging.WARNING)
+
+    # Set up the queue manager
+    manager = QueueManager(None, adapter_client_fixture, nodes_per_task=2)
+
+    # Initializer should warn users about non-node-parallel codes
+    assert "Program rdkit is not node parallel" in caplog.text
+
+    # Check that ``nnodes`` is set in local properties
+    assert manager.queue_adapter.qcengine_local_options.get("nnodes") == 2
+
+
+@testing.using_rdkit
+def test_cores_per_rank(adapter_client_fixture, caplog):
+    manager = QueueManager(None, adapter_client_fixture, nodes_per_task=2, cores_per_rank=2)
+
+    # Check that ``cores_per_rank`` is set in local properties
+    assert manager.queue_adapter.qcengine_local_options.get("cores_per_rank") == 2

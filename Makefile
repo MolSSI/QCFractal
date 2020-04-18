@@ -9,13 +9,13 @@ install:
 
 .PHONY: format
 format:
-	$(autoflake)
-	$(isort)
+#	$(autoflake)
+#	$(isort)
 	$(black)
 
 .PHONY: lint
 lint:
-	$(isort) --check-only
+#	$(isort) --check-only
 	$(black) --check
 
 .PHONY: check-dist
