@@ -2024,27 +2024,27 @@ class SQLAlchemySocket:
                 if new_limit == 0:
                     break
                 query = session.query(TaskQueueORM).filter(*q).order_by(*order_by).limit(new_limit)
-                from sqlalchemy.dialects import postgresql
-                print(query.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
+                # from sqlalchemy.dialects import postgresql
+                # print(query.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
                 new_items = query.all()
                 found.extend(new_items)
                 new_limit = limit - len(new_items)
                 ids.extend([x.id for x in new_items])
             update_fields = {"status": TaskStatusEnum.running, "modified_on": dt.utcnow(), "manager": manager}
             # # Bulk update operation in SQL
-            # update_count = (
-            #     session.query(TaskQueueORM)
-            #     .filter(TaskQueueORM.id.in_(ids))
-            #     .update(update_fields, synchronize_session=False)
-            # )
+            update_count = (
+                session.query(TaskQueueORM)
+                .filter(TaskQueueORM.id.in_(ids))
+                .update(update_fields, synchronize_session=False)
+            )
 
             if as_json:
                 # avoid another trip to the DB to get the updated values, set them here
                 found = [TaskRecord(**task.to_dict(exclude=update_fields.keys()), **update_fields) for task in found]
             session.commit()
 
-        # if update_count != len(found):
-        #     self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
+        if update_count != len(found):
+            self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
 
         return found
 
