@@ -247,12 +247,11 @@ class TaskQueueORM(Base):
     # explicit sort will have to process all the data to identify the first n
     # rows, but if there is an index matching the ORDER BY, the first n rows
     # can be retrieved directly, without scanning the remainder at all.
-
     __table_args__ = (
         Index("ix_task_queue_created_on", "created_on"),
         Index("ix_task_queue_keys", "status", "program", "procedure", "tag"),
         Index("ix_task_queue_manager", "manager"),
-        Index("ix_task_queue_base_result_id", "base_result_id"),
+        Index("ix_task_queue_base_result_id", "base_result_id")
     )
 
 

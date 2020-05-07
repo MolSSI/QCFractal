@@ -292,7 +292,6 @@ class SQLAlchemySocket:
         with self.session_scope() as session:
             # Metadata
             session.query(VersionsORM).delete(synchronize_session=False)
-
             # Task and services
             session.query(TaskQueueORM).delete(synchronize_session=False)
             session.query(QueueManagerLogORM).delete(synchronize_session=False)
@@ -1994,43 +1993,58 @@ class SQLAlchemySocket:
         """Done in a transaction"""
 
         # Figure out query, tagless has no requirements
-        query = format_query(TaskQueueORM, status=TaskStatusEnum.waiting, program=available_programs, tag=tag)
+
 
         proc_filt = TaskQueueORM.procedure.in_([p.lower() for p in available_procedures])
         none_filt = TaskQueueORM.procedure == None  # lgtm [py/test-equals-none]
-        query.append(or_(proc_filt, none_filt))
 
         order_by = []
         if tag is not None:
             if isinstance(tag, str):
                 tag = [tag]
-            task_order = expression_case([(TaskQueueORM.tag == t, num) for num, t in enumerate(tag)])
-            order_by.append(task_order)
+            # task_order = expression_case([(TaskQueueORM.tag == t, num) for num, t in enumerate(tag)])
+            # order_by.append(task_order)
 
         order_by.extend([TaskQueueORM.priority.desc(), TaskQueueORM.created_on])
-
+        queries = []
+        if tag is not None:
+            for t in tag:
+                query = format_query(TaskQueueORM, status=TaskStatusEnum.waiting, program=available_programs, tag=t)
+                query.append(or_(proc_filt, none_filt))
+                queries.append(query)
+        else:
+            query = format_query(TaskQueueORM, status=TaskStatusEnum.waiting, program=available_programs)
+            query.append((or_(proc_filt, none_filt)))
+            queries.append(query)
+        new_limit = limit
+        ids = []
+        found = []
         with self.session_scope() as session:
-            query = session.query(TaskQueueORM).filter(*query).order_by(*order_by).limit(limit)
-
-            # print(query.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
-            found = query.all()
-
-            ids = [x.id for x in found]
+            for q in queries:
+                if new_limit == 0:
+                    break
+                query = session.query(TaskQueueORM).filter(*q).order_by(*order_by).limit(new_limit)
+                from sqlalchemy.dialects import postgresql
+                print(query.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
+                new_items = query.all()
+                found.extend(new_items)
+                new_limit = limit - len(new_items)
+                ids.extend([x.id for x in new_items])
             update_fields = {"status": TaskStatusEnum.running, "modified_on": dt.utcnow(), "manager": manager}
-            # Bulk update operation in SQL
-            update_count = (
-                session.query(TaskQueueORM)
-                .filter(TaskQueueORM.id.in_(ids))
-                .update(update_fields, synchronize_session=False)
-            )
+            # # Bulk update operation in SQL
+            # update_count = (
+            #     session.query(TaskQueueORM)
+            #     .filter(TaskQueueORM.id.in_(ids))
+            #     .update(update_fields, synchronize_session=False)
+            # )
 
             if as_json:
                 # avoid another trip to the DB to get the updated values, set them here
                 found = [TaskRecord(**task.to_dict(exclude=update_fields.keys()), **update_fields) for task in found]
             session.commit()
 
-        if update_count != len(found):
-            self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
+        # if update_count != len(found):
+        #     self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
 
         return found
 
