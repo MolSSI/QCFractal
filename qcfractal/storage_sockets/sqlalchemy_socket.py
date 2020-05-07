@@ -1963,9 +1963,6 @@ class SQLAlchemySocket:
             for task_num, record in enumerate(data):
                 try:
                     task_dict = record.dict(exclude={"id"})
-                    # # for compatibility with mongoengine
-                    # if isinstance(task_dict['base_result'], dict):
-                    #     task_dict['base_result'] = task_dict['base_result']['id']
                     task = TaskQueueORM(**task_dict)
                     task.priority = task.priority.value  # Must be an integer for sorting
                     session.add(task)

@@ -1379,9 +1379,9 @@ def test_optimization_dataset(fractal_compute_server):
     assert status.loc["COMPLETE", "test"] == 3
     assert status.loc["COMPLETE", "test2"] == 1
 
-    status_spec = ds.status("test")
-    assert status_spec.loc("COMPLETE", "test") == 3
-    assert status_spec.loc("COMPLETE", "test2") == 1
+    status_spec = ds.status(["test", "test2"])
+    assert status_spec.loc["COMPLETE", "test"] == 3
+    assert status_spec.loc["COMPLETE", "test2"] == 1
 
     counts = ds.counts()
     assert counts.loc["hooh1", "test"] == 9
