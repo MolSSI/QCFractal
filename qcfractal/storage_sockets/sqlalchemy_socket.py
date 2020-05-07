@@ -1994,7 +1994,6 @@ class SQLAlchemySocket:
 
         # Figure out query, tagless has no requirements
 
-
         proc_filt = TaskQueueORM.procedure.in_([p.lower() for p in available_procedures])
         none_filt = TaskQueueORM.procedure == None  # lgtm [py/test-equals-none]
 

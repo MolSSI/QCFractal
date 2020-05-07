@@ -113,7 +113,7 @@ def test_queue_manager_multiple_tags(compute_adapter_fixture):
     manager.await_results()
     ret = client.query_results(tasks)
     for result in ret:
-        print (f"here you go: {(result.id, result.status)}")
+        print(f"here you go: {(result.id, result.status)}")
     ref_status = {
         tasks[0]: "COMPLETE",
         tasks[1]: "COMPLETE",
