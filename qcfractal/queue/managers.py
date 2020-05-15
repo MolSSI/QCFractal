@@ -783,7 +783,9 @@ class QueueManager:
                     j = ntasks
                 self.queue_adapter.submit_tasks(tasks[i:j])
                 time.sleep(self.update_frequency)
-                self.logger.info("Submitted {}/{} tasks. Waiting {} seconds.\n".format(j, ntasks, self.update_frequency))
+                self.logger.info(
+                    "Submitted {}/{} tasks. Waiting {} seconds.\n".format(j, ntasks, self.update_frequency)
+                )
         elif self.throttle_task_request < 0:
             self.queue_adapter.submit_tasks(tasks)
         else:

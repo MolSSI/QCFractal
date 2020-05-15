@@ -182,7 +182,7 @@ class QueueManagerSettings(AutodocBaseSettings):
     throttle_task_request: int = Field(
         -1,
         description="Maximum number of jobs that will be requested every update. Setting to -1 disables throttling, and setting to 0 prevents any work from being received",
-        gt=-2
+        gt=-2,
     )
     test: bool = Field(
         False,
