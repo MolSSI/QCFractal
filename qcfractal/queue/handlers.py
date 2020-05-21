@@ -15,7 +15,7 @@ from ..web_handlers import APIHandler
 
 class TaskQueueHandler(APIHandler):
     """
-    Takes in a data packet the contains the molecule_hash, modelchem and options objects.
+    Handles task management (querying/adding/modifying tasks)
     """
 
     _required_auth = "compute"
@@ -45,7 +45,7 @@ class TaskQueueHandler(APIHandler):
         self.write(response)
 
     def get(self):
-        """Posts new services to the service queue.
+        """Gets task information from the task queue
         """
 
         body_model, response_model = rest_model("task_queue", "get")
@@ -58,7 +58,7 @@ class TaskQueueHandler(APIHandler):
         self.write(response)
 
     def put(self):
-        """Posts new services to the service queue.
+        """Modifies tasks in the task queue
         """
 
         body_model, response_model = rest_model("task_queue", "put")
@@ -81,7 +81,7 @@ class TaskQueueHandler(APIHandler):
 
 class ServiceQueueHandler(APIHandler):
     """
-    Takes in a data packet the contains the molecule_hash, modelchem and options objects.
+    Handles service management (querying/add/modifying)
     """
 
     _required_auth = "compute"
@@ -120,7 +120,7 @@ class ServiceQueueHandler(APIHandler):
         self.write(response)
 
     def get(self):
-        """Gets services from the service queue.
+        """Gets information about services from the service queue.
         """
 
         body_model, response_model = rest_model("service_queue", "get")
@@ -133,7 +133,7 @@ class ServiceQueueHandler(APIHandler):
         self.write(response)
 
     def put(self):
-        """Posts new services to the service queue.
+        """Modifies services in the service queue
         """
 
         body_model, response_model = rest_model("service_queue", "put")
@@ -156,8 +156,9 @@ class ServiceQueueHandler(APIHandler):
 
 class QueueManagerHandler(APIHandler):
     """
-    Takes in a data packet the contains the molecule_hash, modelchem and options objects.
-    Manages the external queue.
+    Manages the task queue.
+
+    Used by compute managers for getting tasks, posting completed tasks, etc.
     """
 
     _required_auth = "queue"
@@ -240,7 +241,7 @@ class QueueManagerHandler(APIHandler):
         return len(completed), len(error_data)
 
     def get(self):
-        """Pulls new tasks from the Servers queue
+        """Pulls new tasks from the task queue
         """
 
         body_model, response_model = rest_model("queue_manager", "get")
@@ -273,7 +274,7 @@ class QueueManagerHandler(APIHandler):
         self.storage.manager_update(name, submitted=len(new_tasks), **body.meta.dict())
 
     def post(self):
-        """Posts complete tasks to the Servers queue
+        """Posts complete tasks to the task queue
         """
 
         body_model, response_model = rest_model("queue_manager", "post")
@@ -345,3 +346,31 @@ class QueueManagerHandler(APIHandler):
         self.write(response)
 
         # Update manager logs
+        # TODO: ????
+
+
+class ComputeManagerHandler(APIHandler):
+    """
+    Handles management/status querying of managers
+    """
+
+    _required_auth = "admin"
+
+    def get(self):
+        """Gets manager information from the task queue
+        """
+
+        body_model, response_model = rest_model("manager_info", "get")
+        body = self.parse_bodymodel(body_model)
+
+        self.logger.info("GET: ComputeManagerHandler")
+        managers = self.storage.get_managers(**{**body.data.dict(), **body.meta.dict()})
+
+        # remove passwords?
+        # TODO: Are passwords stored anywhere else? Other kinds of passwords?
+        for m in managers["data"]:
+            if "configuration" in m and isinstance(m["configuration"], dict) and "server" in m["configuration"]:
+                m["configuration"]["server"].pop("password", None)
+
+        response = response_model(**managers)
+        self.write(response)
