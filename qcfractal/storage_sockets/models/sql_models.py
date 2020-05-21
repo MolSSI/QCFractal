@@ -253,7 +253,7 @@ class TaskQueueORM(Base):
         Index("ix_task_queue_keys", "status", "program", "procedure", "tag"),
         Index("ix_task_queue_manager", "manager"),
         Index("ix_task_queue_base_result_id", "base_result_id"),
-        Index("ix_task_waiting_sort", text("priority desc,  created_on"))
+        Index("ix_task_waiting_sort", text("priority desc,  created_on")),
     )
 
 
