@@ -67,7 +67,7 @@ def test_queue_manager_single_tags(compute_adapter_fixture):
     assert len(ret) == 1
 
     # Check the logs to make sure
-    managers = server.storage.get_managers()["data"]
+    managers = client.query_managers()
     assert len(managers) == 2
 
     test_results = {"stuff": 0, "other": 1}
