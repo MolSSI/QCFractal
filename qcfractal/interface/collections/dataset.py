@@ -1288,6 +1288,32 @@ class Dataset(Collection):
         self.data.__dict__["default_benchmark"] = benchmark
         return True
 
+    def set_default_driver(self, driver: str) -> bool:
+        """
+        Sets the default driver.
+
+        Parameters
+        ----------
+        driver : str
+            The driver to default to.
+        """
+
+        self.data.__dict__["default_driver"] = driver
+        return True
+
+    def set_default_units(self, units: str) -> bool:
+        """
+        Sets the default units.
+
+        Parameters
+        ----------
+        units : str
+            The benchmark to default to.
+        """
+
+        self.data.__dict__["default_units"] = units
+        return True
+
     def add_keywords(self, alias: str, program: str, keyword: "KeywordSet", default: bool = False) -> bool:
         """
         Adds an option alias to the dataset. Not that keywords are not present
