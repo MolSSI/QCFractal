@@ -115,6 +115,24 @@ class WavefunctionStoreORM(Base):
     # Extras
     extras = Column(MsgpackExt, nullable=True)
 
+class QCSpecORM(Base):
+    """
+        Holds the five parameters associated with a procedure result
+    """
+    __tablename__ = "qc_spec"
+
+    id = Column(Integer, primary_key=True)
+    program = Column(String(100), nullable=False)
+    basis = Column(String(100))
+    method = Column(String(100), nullable=False)
+    driver = Column(String(100), Enum(DriverEnum), nullable=False)
+
+    keywords = Column(Integer, ForeignKey("keywords.id"))
+    keywords_obj = relationship(KeywordsORM, lazy='select', cascade='all')
+
+    __table_args__ = (
+        UniqueConstraint("program", "driver", "method", "basis", "keywords", name="uix_spec"),
+    )
 
 class ResultORM(BaseResultORM):
     """
@@ -181,7 +199,8 @@ class ProcedureMixin:
 
     program = Column(String(100), nullable=False)
     keywords = Column(JSON)
-    qc_spec = Column(JSON)
+
+    # qc_spec = Column(JSON)
 
 
 # ================== Types of ProcedureORMs ================== #
@@ -222,6 +241,10 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
         kwargs.setdefault("version", 1)
         self.procedure = "optimization"
         super().__init__(**kwargs)
+
+    # QC Specification
+    qc_spec = Column(Integer, ForeignKey("qc_spec.id"))
+    qc_spec_obj = relationship(QCSpecORM, lazy="select", foreign_keys=qc_spec)
 
     schema_version = Column(Integer, default=1)
     initial_molecule = Column(Integer, ForeignKey("molecule.id"))
@@ -317,6 +340,10 @@ class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
     initial_molecule_obj = relationship(MoleculeORM, lazy="select", foreign_keys=initial_molecule)
 
     optimization_spec = Column(JSON)
+
+    # QC Specification
+    qc_spec = Column(Integer, ForeignKey("qc_spec.id"))
+    qc_spec_obj = relationship(QCSpecORM, lazy="select", foreign_keys=qc_spec)
 
     # Output data
     starting_molecule = Column(Integer, ForeignKey("molecule.id"))
@@ -434,6 +461,10 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
     initial_molecule_obj = relationship(
         MoleculeORM, secondary=torsion_init_mol_association, uselist=True, lazy="noload"
     )
+
+    # QC Specification
+    qc_spec = Column(Integer, ForeignKey("qc_spec.id"))
+    qc_spec_obj = relationship(QCSpecORM, lazy="select", foreign_keys=qc_spec)
 
     optimization_spec = Column(JSON)
 

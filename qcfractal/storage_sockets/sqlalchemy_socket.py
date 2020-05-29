@@ -35,6 +35,7 @@ from qcfractal.interface.models import (
     TaskStatusEnum,
     TorsionDriveRecord,
     prepare_basis,
+    QCSpecification
 )
 from qcfractal.storage_sockets.db_queries import QUERY_CLASSES
 from qcfractal.storage_sockets.models import (
@@ -58,6 +59,7 @@ from qcfractal.storage_sockets.models import (
     UserORM,
     VersionsORM,
     WavefunctionStoreORM,
+    QCSpecORM
 )
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
@@ -292,7 +294,6 @@ class SQLAlchemySocket:
         with self.session_scope() as session:
             # Metadata
             session.query(VersionsORM).delete(synchronize_session=False)
-
             # Task and services
             session.query(TaskQueueORM).delete(synchronize_session=False)
             session.query(QueueManagerLogORM).delete(synchronize_session=False)
@@ -349,7 +350,7 @@ class SQLAlchemySocket:
         callbacks = []
 
         # prepare hybrid attributes for callback and joins
-        for key in _projection:
+        for key in _projection: 
             if key in prop:  # normal column
                 proj.append(getattr(className, key))
 
@@ -359,7 +360,6 @@ class SQLAlchemySocket:
 
                 # if it has a relationship
                 if key + "_obj" in relationships.keys():
-
                     # join_class_name = relationships[key + '_obj']
                     join_attrs[key] = relationships[key + "_obj"]
             else:
@@ -1520,22 +1520,25 @@ class SQLAlchemySocket:
             Dict with keys: data, meta
             Data is the ids of the inserted/updated/existing docs
         """
-
         meta = add_metadata_template()
 
         if not record_list:
             return {"data": [], "meta": meta}
 
-        procedure_class = get_procedure_class(record_list[0])
+        specs = [record.qc_spec for record in record_list]
+        spec_ids = self._add_specs(specs)["data"]
 
+        procedure_class = get_procedure_class(record_list[0])
         procedure_ids = []
+
         with self.session_scope() as session:
-            for procedure in record_list:
+            for idx, procedure in enumerate(record_list):
+
                 doc = session.query(procedure_class).filter_by(hash_index=procedure.hash_index)
 
                 if get_count_fast(doc) == 0:
-                    data = procedure.dict(exclude={"id"})
-                    proc_db = procedure_class(**data)
+                    data = procedure.dict(exclude={"id" , "qc_spec"})
+                    proc_db = procedure_class(**data, qc_spec=spec_ids[idx])
                     session.add(proc_db)
                     session.commit()
                     proc_db.update_relations(**data)
@@ -1652,7 +1655,7 @@ class SQLAlchemySocket:
         updated_count = 0
         with self.session_scope() as session:
             for procedure in records_list:
-
+                new_spec_id = None
                 className = get_procedure_class(procedure)
                 # join_table = get_procedure_join(procedure)
                 # Must have ID
@@ -1663,9 +1666,18 @@ class SQLAlchemySocket:
                     continue
 
                 proc_db = session.query(className).filter_by(id=procedure.id).first()
+                cur_spec = proc_db.qc_spec_obj
+                new_spec = procedure.qc_spec
 
-                data = procedure.dict(exclude={"id"})
+                if (cur_spec.basis, cur_spec.method, cur_spec.program, cur_spec.driver, cur_spec.keywords) != \
+                    (new_spec.basis, new_spec.method, new_spec.program, new_spec.driver, new_spec.keywords):
+                    new_spec_id = self._add_specs([new_spec])["data"][0]
+
+                data = procedure.dict(exclude={"id", "qc_spec"})
                 proc_db.update_relations(**data)
+
+                if new_spec_id:
+                    setattr(proc_db, 'qc_spec', int(new_spec_id))
 
                 for attr, val in data.items():
                     setattr(proc_db, attr, val)
@@ -1963,9 +1975,6 @@ class SQLAlchemySocket:
             for task_num, record in enumerate(data):
                 try:
                     task_dict = record.dict(exclude={"id"})
-                    # # for compatibility with mongoengine
-                    # if isinstance(task_dict['base_result'], dict):
-                    #     task_dict['base_result'] = task_dict['base_result']['id']
                     task = TaskQueueORM(**task_dict)
                     task.priority = task.priority.value  # Must be an integer for sorting
                     session.add(task)
@@ -1997,30 +2006,44 @@ class SQLAlchemySocket:
         """Done in a transaction"""
 
         # Figure out query, tagless has no requirements
-        query = format_query(TaskQueueORM, status=TaskStatusEnum.waiting, program=available_programs, tag=tag)
 
         proc_filt = TaskQueueORM.procedure.in_([p.lower() for p in available_procedures])
         none_filt = TaskQueueORM.procedure == None  # lgtm [py/test-equals-none]
-        query.append(or_(proc_filt, none_filt))
 
         order_by = []
         if tag is not None:
             if isinstance(tag, str):
                 tag = [tag]
-            task_order = expression_case([(TaskQueueORM.tag == t, num) for num, t in enumerate(tag)])
-            order_by.append(task_order)
+            # task_order = expression_case([(TaskQueueORM.tag == t, num) for num, t in enumerate(tag)])
+            # order_by.append(task_order)
 
         order_by.extend([TaskQueueORM.priority.desc(), TaskQueueORM.created_on])
-
+        queries = []
+        if tag is not None:
+            for t in tag:
+                query = format_query(TaskQueueORM, status=TaskStatusEnum.waiting, program=available_programs, tag=t)
+                query.append(or_(proc_filt, none_filt))
+                queries.append(query)
+        else:
+            query = format_query(TaskQueueORM, status=TaskStatusEnum.waiting, program=available_programs)
+            query.append((or_(proc_filt, none_filt)))
+            queries.append(query)
+        new_limit = limit
+        ids = []
+        found = []
         with self.session_scope() as session:
-            query = session.query(TaskQueueORM).filter(*query).order_by(*order_by).limit(limit)
-
-            # print(query.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
-            found = query.all()
-
-            ids = [x.id for x in found]
+            for q in queries:
+                if new_limit == 0:
+                    break
+                query = session.query(TaskQueueORM).filter(*q).order_by(*order_by).limit(new_limit)
+                # from sqlalchemy.dialects import postgresql
+                # print(query.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
+                new_items = query.all()
+                found.extend(new_items)
+                new_limit = limit - len(new_items)
+                ids.extend([x.id for x in new_items])
             update_fields = {"status": TaskStatusEnum.running, "modified_on": dt.utcnow(), "manager": manager}
-            # Bulk update operation in SQL
+            # # Bulk update operation in SQL
             update_count = (
                 session.query(TaskQueueORM)
                 .filter(TaskQueueORM.id.in_(ids))
@@ -2717,6 +2740,124 @@ class SQLAlchemySocket:
 
         return data
 
+    def _add_specs(self, spec_list:List["QCSpecification"]):
+
+        """
+         Add a specification to the database
+
+        Parameters
+        ----------
+        spec_list : List[QCSpecifcation]
+            List of QCSpecification objects
+
+        Returns
+        -------
+            Dict with keys: data, meta
+            Data is the ids of the inserted/updated/existing docs
+        """
+        meta = add_metadata_template()
+        # putting the placeholder for all the ids, since some can be duplicate, and some will only have ids after add operation.
+        spec_ids = ["placeholder"] * len(spec_list)
+
+        new_specs = []
+        existing_spec = {}
+        new_record_idx, duplicates_idx = [], []
+        conds = []
+        # creating condition for a multi-value select
+        conds = [
+            (
+                or_(
+                QCSpecORM.program == spec.program,
+                QCSpecORM.driver == spec.driver,
+                QCSpecORM.method == spec.method,
+                QCSpecORM.basis == spec.basis,
+                QCSpecORM.keywords == spec.keywords
+                )
+            )
+            for spec in spec_list
+        ]
+        with self.session_scope() as session:
+            docs = (
+                session.query(
+                    QCSpecORM.program,
+                    QCSpecORM.driver,
+                    QCSpecORM.method,
+                    QCSpecORM.basis,
+                    QCSpecORM.keywords,
+                    QCSpecORM.id,
+                )
+                .filter(*conds)
+                .all()
+            )
+            # adding all the found items to a dictionary
+            existing_spec = {
+                (doc.program, doc.driver, doc.method, doc.basis, doc.keywords): doc for doc in docs
+            }
+            for i, spec in enumerate(spec_list):
+                # constructing an index from record_list to compare against found items(existing_res)
+                idx = (
+                    spec.program,
+                    spec.driver.value,
+                    spec.method,
+                    spec.basis,
+                    int(spec.keywords) if spec.keywords else None,
+                )
+                if existing_spec.get(idx) is None:
+                    # if no found items, construct an object
+                    doc = QCSpecORM(**spec.dict(exclude={"id"}))
+                    existing_spec[idx] = doc
+                    # add the object to the list which goes for adding and commiting to database.
+                    new_specs.append(doc)
+                    # identifying the index of new items in the returned result ids, for future update.
+                    new_record_idx.append(i)
+                    meta["n_inserted"] += 1
+                else:
+                    doc = existing_spec.get(idx)
+                    # identifying the index of duplicate items
+                    duplicates_idx.append(i)
+                    meta["duplicates"].append(doc)
+
+            session.add_all(new_specs)
+            session.commit()
+            meta["duplicates"] = [str(doc.id) for doc in meta["duplicates"]]
+
+            for i, idx in enumerate(new_record_idx):
+                # setting the new records returned id from commit operation
+                spec_ids[idx] = str(new_specs[i].id)
+            for i, idx in enumerate(duplicates_idx):
+                # setting the duplicate items, either found in the database or provided more than once in the input
+                spec_ids[idx] = meta["duplicates"][i]
+
+        meta["success"] = True
+
+        ret = {"data": spec_ids, "meta": meta}
+        return ret
+
+    def get_spec_by_id(self, spec_ids=None):
+        """
+        Get QCSpecification objects based on their id
+
+        Parameters
+        ----------
+        spec_ids : [type], optional
+            List of ids(of rows in qc_spec table), by default None
+
+        Returns
+        -------
+        [Optional[List[QCSpecORM]]] = None
+            List of found QCSpecificaiton objects
+        """
+
+        meta = get_metadata_template()
+
+        if spec_ids == None:
+            return None
+
+        with self.session_scope() as session:
+            objs = session.query(QCSpecORM).filter(QCSpecORM.id.in_(spec_ids)).all()
+        
+        return objs
+
     def _copy_users(self, record_list: Dict):
         """
         copy the given users as-is to the DB. Used for data migration
@@ -2753,6 +2894,7 @@ class SQLAlchemySocket:
         meta["success"] = True
 
         ret = {"data": user_names, "meta": meta}
+
         return ret
 
     def check_lib_versions(self):
@@ -2782,13 +2924,13 @@ class SQLAlchemySocket:
 
         return ver
 
-    def get_total_count(self, className, **kwargs):
+    # def get_total_count(self, className, **kwargs):
 
-        with self.session_scope() as session:
-            query = session.query(className).filter(**kwargs)
-            count = get_count_fast(query)
+    #     with self.session_scope() as session:
+    #         query = session.query(className).filter(**kwargs)
+    #         count = get_count_fast(query)
 
-        return count
+    #     return count
 
     def log_server_stats(self):
 

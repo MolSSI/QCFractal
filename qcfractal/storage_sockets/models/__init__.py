@@ -4,6 +4,7 @@ from .collections_models import CollectionORM, DatasetORM, ReactionDatasetORM
 
 # Results and procedures ORMs
 from .results_models import (
+    QCSpecORM,
     BaseResultORM,
     GridOptimizationProcedureORM,
     OptimizationHistory,
