@@ -291,7 +291,7 @@ class FractalServer:
             (r"/task_queue", TaskQueueHandler, self.objects),
             (r"/service_queue", ServiceQueueHandler, self.objects),
             (r"/queue_manager", QueueManagerHandler, self.objects),
-            (r"/manager_info", ComputeManagerHandler, self.objects),
+            (r"/manager", ComputeManagerHandler, self.objects),
         ]
 
         # Build the app

@@ -360,7 +360,7 @@ class ComputeManagerHandler(APIHandler):
         """Gets manager information from the task queue
         """
 
-        body_model, response_model = rest_model("manager_info", "get")
+        body_model, response_model = rest_model("manager", "get")
         body = self.parse_bodymodel(body_model)
 
         self.logger.info("GET: ComputeManagerHandler")

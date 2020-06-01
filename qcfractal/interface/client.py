@@ -1189,7 +1189,7 @@ class FractalClient(object):
             "meta": {"limit": limit, "skip": skip},
             "data": {"name": name, "status": status},
         }
-        return self._automodel_request("manager_info", "get", payload, full_return=full_return)
+        return self._automodel_request("manager", "get", payload, full_return=full_return)
 
     # -------------------------------------------------------------------------
     # ------------------   Advanced Queries -----------------------------------

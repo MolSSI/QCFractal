@@ -1168,4 +1168,4 @@ class ManagerInfoGETResponse(ProtoModel):
     data: List[Dict[str, Any]] = Field(..., description="Information about the requested managers")
 
 
-register_model(r"manager_info", "GET", ManagerInfoGETBody, ManagerInfoGETResponse)
+register_model(r"manager", "GET", ManagerInfoGETBody, ManagerInfoGETResponse)
