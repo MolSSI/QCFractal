@@ -24,6 +24,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import text
 
 from qcfractal.interface.models.task_models import ManagerStatusEnum, PriorityEnum, TaskStatusEnum
 from qcfractal.storage_sockets.models.sql_base import Base, MsgpackExt
@@ -247,12 +248,12 @@ class TaskQueueORM(Base):
     # explicit sort will have to process all the data to identify the first n
     # rows, but if there is an index matching the ORDER BY, the first n rows
     # can be retrieved directly, without scanning the remainder at all.
-
     __table_args__ = (
         Index("ix_task_queue_created_on", "created_on"),
         Index("ix_task_queue_keys", "status", "program", "procedure", "tag"),
         Index("ix_task_queue_manager", "manager"),
         Index("ix_task_queue_base_result_id", "base_result_id"),
+        Index("ix_task_waiting_sort", text("priority desc,  created_on")),
     )
 
 
