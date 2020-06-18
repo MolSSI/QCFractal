@@ -115,10 +115,12 @@ class WavefunctionStoreORM(Base):
     # Extras
     extras = Column(MsgpackExt, nullable=True)
 
+
 class QCSpecORM(Base):
     """
         Holds the five parameters associated with a procedure result
     """
+
     __tablename__ = "qc_spec"
 
     id = Column(Integer, primary_key=True)
@@ -128,11 +130,10 @@ class QCSpecORM(Base):
     driver = Column(String(100), Enum(DriverEnum), nullable=False)
 
     keywords = Column(Integer, ForeignKey("keywords.id"))
-    keywords_obj = relationship(KeywordsORM, lazy='select', cascade='all')
+    keywords_obj = relationship(KeywordsORM, lazy="select", cascade="all")
 
-    __table_args__ = (
-        UniqueConstraint("program", "driver", "method", "basis", "keywords", name="uix_spec"),
-    )
+    __table_args__ = (UniqueConstraint("program", "driver", "method", "basis", "keywords", name="uix_spec"),)
+
 
 class ResultORM(BaseResultORM):
     """

@@ -22,6 +22,7 @@ from qcfractal.storage_sockets.models import (
     TaskQueueORM,
     TorsionDriveProcedureORM,
     Trajectory,
+    QCSpecORM,
 )
 from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
 
@@ -141,11 +142,17 @@ def test_services(storage_socket, session):
 
     assert session.query(OptimizationProcedureORM).count() == 0
 
+    proc_spec = {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"}
+
+    qc_spec = QCSpecORM(**proc_spec)
+    session.add(qc_spec)
+    session.commit()
+
     proc_data = {
         "initial_molecule": None,
         "keywords": None,
         "program": "p7",
-        "qc_spec": {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"},
+        "qc_spec": qc_spec.id,
         "status": "COMPLETE",
     }
 
@@ -243,12 +250,17 @@ def test_optimization_procedure(storage_socket, session, molecules_H4O2):
 
     assert session.query(OptimizationProcedureORM).count() == 0
     # assert Keywords.objects().count() == 0
+    proc_spec = {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"}
+
+    qc_spec = QCSpecORM(**proc_spec)
+    session.add(qc_spec)
+    session.commit()
 
     data1 = {
         "initial_molecule": molecules_H4O2[0],
         "keywords": None,
         "program": "p7",
-        "qc_spec": {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"},
+        "qc_spec": qc_spec.id,
         "status": "COMPLETE",
     }
 
@@ -296,12 +308,17 @@ def test_torsiondrive_procedure(storage_socket, session):
 
     # molecules = MoleculeORM.objects(molecular_formula='H4O2')
     # assert molecules.count() == 2
+    proc_spec = {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"}
+
+    qc_spec = QCSpecORM(**proc_spec)
+    session.add(qc_spec)
+    session.commit()
 
     data1 = {
         # "molecule": molecules[0],
         "keywords": None,
         "program": "p9",
-        "qc_spec": {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"},
+        "qc_spec": qc_spec.id,
         "status": "COMPLETE",
     }
 

@@ -35,7 +35,7 @@ from qcfractal.interface.models import (
     TaskStatusEnum,
     TorsionDriveRecord,
     prepare_basis,
-    QCSpecification
+    QCSpecification,
 )
 from qcfractal.storage_sockets.db_queries import QUERY_CLASSES
 from qcfractal.storage_sockets.models import (
@@ -59,7 +59,7 @@ from qcfractal.storage_sockets.models import (
     UserORM,
     VersionsORM,
     WavefunctionStoreORM,
-    QCSpecORM
+    QCSpecORM,
 )
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
@@ -357,7 +357,7 @@ class SQLAlchemySocket:
             elif key in hybrids:
                 callbacks.append(key)
 
-            # if it has a relationship
+                # if it has a relationship
                 if key + "_obj" in relationships.keys():
                     # join_class_name = relationships[key + '_obj']
                     join_attrs[key] = relationships[key + "_obj"]
@@ -1537,7 +1537,7 @@ class SQLAlchemySocket:
                 doc = session.query(procedure_class).filter_by(hash_index=procedure.hash_index)
 
                 if get_count_fast(doc) == 0:
-                    data = procedure.dict(exclude={"id" , "qc_spec"})
+                    data = procedure.dict(exclude={"id", "qc_spec"})
                     proc_db = procedure_class(**data, qc_spec=spec_ids[idx])
                     session.add(proc_db)
                     session.commit()
@@ -1645,16 +1645,25 @@ class SQLAlchemySocket:
         except Exception as err:
             meta["error_description"] = str(err)
 
-        #check if qc_spec is part of the returned dictionary
-        if len(data) != 0 and data[0].get('qc_spec'):
+        # check if qc_spec is part of the returned dictionary
+        if len(data) != 0 and data[0].get("qc_spec"):
             with self.session_scope() as session:
                 for dat in data:
-                    qc_spec = session.query(QCSpecORM.basis, QCSpecORM.method, QCSpecORM.driver,
-                                            QCSpecORM.program, QCSpecORM.keywords).\
-                                            filter(QCSpecORM.id == dat['qc_spec'][0]).first()
+                    qc_spec = (
+                        session.query(
+                            QCSpecORM.basis, QCSpecORM.method, QCSpecORM.driver, QCSpecORM.program, QCSpecORM.keywords
+                        )
+                        .filter(QCSpecORM.id == dat["qc_spec"][0])
+                        .first()
+                    )
                     # return the qc_spec fields instead of the id
-                    dat['qc_spec'] = dict(basis=qc_spec.basis, method=qc_spec.method, program=qc_spec.program,
-                                        driver=qc_spec.driver, keywords=qc_spec.keywords)
+                    dat["qc_spec"] = dict(
+                        basis=qc_spec.basis,
+                        method=qc_spec.method,
+                        program=qc_spec.program,
+                        driver=qc_spec.driver,
+                        keywords=qc_spec.keywords,
+                    )
 
         return {"data": data, "meta": meta}
 
@@ -1680,10 +1689,15 @@ class SQLAlchemySocket:
                 # getting the new and old specification, to check if the QCSpec needs to be updated
                 cur_spec = proc_db.qc_spec_obj
                 new_spec = procedure.qc_spec
-                
+
                 # if the new spec is different, add a new row to the qc_spec table.
-                if (cur_spec.basis, cur_spec.method, cur_spec.program, cur_spec.driver, cur_spec.keywords) != \
-                    (new_spec.basis, new_spec.method, new_spec.program, new_spec.driver, new_spec.keywords):
+                if (cur_spec.basis, cur_spec.method, cur_spec.program, cur_spec.driver, cur_spec.keywords) != (
+                    new_spec.basis,
+                    new_spec.method,
+                    new_spec.program,
+                    new_spec.driver,
+                    new_spec.keywords,
+                ):
                     new_spec_id = self._add_specs([new_spec])["data"][0]
 
                 data = procedure.dict(exclude={"id", "qc_spec"})
@@ -1691,7 +1705,7 @@ class SQLAlchemySocket:
 
                 # set the new spec_id if the flag is set
                 if new_spec_id:
-                    setattr(proc_db, 'qc_spec', int(new_spec_id))
+                    setattr(proc_db, "qc_spec", int(new_spec_id))
 
                 for attr, val in data.items():
                     setattr(proc_db, attr, val)
@@ -2754,7 +2768,7 @@ class SQLAlchemySocket:
 
         return data
 
-    def _add_specs(self, spec_list:List["QCSpecification"]):
+    def _add_specs(self, spec_list: List["QCSpecification"]):
 
         """
          Add a specification to the database
@@ -2781,11 +2795,11 @@ class SQLAlchemySocket:
         conds = [
             (
                 or_(
-                QCSpecORM.program == spec.program,
-                QCSpecORM.driver == spec.driver,
-                QCSpecORM.method == spec.method,
-                QCSpecORM.basis == spec.basis,
-                QCSpecORM.keywords == spec.keywords
+                    QCSpecORM.program == spec.program,
+                    QCSpecORM.driver == spec.driver,
+                    QCSpecORM.method == spec.method,
+                    QCSpecORM.basis == spec.basis,
+                    QCSpecORM.keywords == spec.keywords,
                 )
             )
             for spec in spec_list
@@ -2804,9 +2818,7 @@ class SQLAlchemySocket:
                 .all()
             )
             # adding all the found items to a dictionary
-            existing_spec = {
-                (doc.program, doc.driver, doc.method, doc.basis, doc.keywords): doc for doc in docs
-            }
+            existing_spec = {(doc.program, doc.driver, doc.method, doc.basis, doc.keywords): doc for doc in docs}
             for i, spec in enumerate(spec_list):
                 # constructing an index from record_list to compare against found items(existing_res)
                 idx = (
@@ -2869,7 +2881,7 @@ class SQLAlchemySocket:
 
         with self.session_scope() as session:
             objs = session.query(QCSpecORM).filter(QCSpecORM.id.in_(spec_ids)).all()
-        
+
         return objs
 
     def _copy_users(self, record_list: Dict):
