@@ -348,9 +348,8 @@ class SQLAlchemySocket:
         proj = []
         join_attrs = {}
         callbacks = []
-
         # prepare hybrid attributes for callback and joins
-        for key in _projection: 
+        for key in _projection:
             if key in prop:  # normal column
                 proj.append(getattr(className, key))
 
@@ -358,10 +357,11 @@ class SQLAlchemySocket:
             elif key in hybrids:
                 callbacks.append(key)
 
-                # if it has a relationship
+            # if it has a relationship
                 if key + "_obj" in relationships.keys():
                     # join_class_name = relationships[key + '_obj']
                     join_attrs[key] = relationships[key + "_obj"]
+
             else:
                 raise AttributeError(f"Atrribute {key} is not found in class {className}.")
 
@@ -1645,6 +1645,17 @@ class SQLAlchemySocket:
         except Exception as err:
             meta["error_description"] = str(err)
 
+        #check if qc_spec is part of the returned dictionary
+        if len(data) != 0 and data[0].get('qc_spec'):
+            with self.session_scope() as session:
+                for dat in data:
+                    qc_spec = session.query(QCSpecORM.basis, QCSpecORM.method, QCSpecORM.driver,
+                                            QCSpecORM.program, QCSpecORM.keywords).\
+                                            filter(QCSpecORM.id == dat['qc_spec'][0]).first()
+                    # return the qc_spec fields instead of the id
+                    dat['qc_spec'] = dict(basis=qc_spec.basis, method=qc_spec.method, program=qc_spec.program,
+                                        driver=qc_spec.driver, keywords=qc_spec.keywords)
+
         return {"data": data, "meta": meta}
 
     def update_procedures(self, records_list: List["BaseRecord"]):
@@ -1666,9 +1677,11 @@ class SQLAlchemySocket:
                     continue
 
                 proc_db = session.query(className).filter_by(id=procedure.id).first()
+                # getting the new and old specification, to check if the QCSpec needs to be updated
                 cur_spec = proc_db.qc_spec_obj
                 new_spec = procedure.qc_spec
-
+                
+                # if the new spec is different, add a new row to the qc_spec table.
                 if (cur_spec.basis, cur_spec.method, cur_spec.program, cur_spec.driver, cur_spec.keywords) != \
                     (new_spec.basis, new_spec.method, new_spec.program, new_spec.driver, new_spec.keywords):
                     new_spec_id = self._add_specs([new_spec])["data"][0]
@@ -1676,6 +1689,7 @@ class SQLAlchemySocket:
                 data = procedure.dict(exclude={"id", "qc_spec"})
                 proc_db.update_relations(**data)
 
+                # set the new spec_id if the flag is set
                 if new_spec_id:
                     setattr(proc_db, 'qc_spec', int(new_spec_id))
 
