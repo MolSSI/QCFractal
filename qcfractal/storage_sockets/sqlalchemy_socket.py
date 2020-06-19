@@ -3,7 +3,7 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 """
 
 try:
-    from sqlalchemy import create_engine, or_, case, func
+    from sqlalchemy import create_engine, or_, and_, case, func
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
     from sqlalchemy.sql.expression import desc
@@ -2794,7 +2794,7 @@ class SQLAlchemySocket:
         # creating condition for a multi-value select
         conds = [
             (
-                or_(
+                and_(
                     QCSpecORM.program == spec.program,
                     QCSpecORM.driver == spec.driver,
                     QCSpecORM.method == spec.method,
@@ -2814,7 +2814,7 @@ class SQLAlchemySocket:
                     QCSpecORM.keywords,
                     QCSpecORM.id,
                 )
-                .filter(*conds)
+                .filter(or_(*conds))
                 .all()
             )
             # adding all the found items to a dictionary
