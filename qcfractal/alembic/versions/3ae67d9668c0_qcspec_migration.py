@@ -1,7 +1,7 @@
 """QCSpec Table Creation and Data Migration
 
 Revision ID: 3ae67d9668c0
-Revises: 4b27843a188a
+Revises: fb5bd88ae2f3
 Create Date: 2020-05-29 08:58:57.323949
 
 """
@@ -20,7 +20,7 @@ from qcfractal.interface.models import KeywordSet
 
 # revision identifiers, used by Alembic.
 revision = "3ae67d9668c0"
-down_revision = "4b27843a188a"
+down_revision = "fb5bd88ae2f3"
 branch_labels = None
 depends_on = None
 
