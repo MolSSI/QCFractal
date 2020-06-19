@@ -67,7 +67,7 @@ def test_queue_manager_single_tags(compute_adapter_fixture):
     assert len(ret) == 1
 
     # Check the logs to make sure
-    managers = server.storage.get_managers()["data"]
+    managers = client.query_managers()
     assert len(managers) == 2
 
     test_results = {"stuff": 0, "other": 1}
@@ -110,9 +110,10 @@ def test_queue_manager_multiple_tags(compute_adapter_fixture):
     }
     for result in ret:
         assert result.status == ref_status[result.id]
-
     manager.await_results()
     ret = client.query_results(tasks)
+    for result in ret:
+        print(f"here you go: {(result.id, result.status)}")
     ref_status = {
         tasks[0]: "COMPLETE",
         tasks[1]: "COMPLETE",
