@@ -92,7 +92,9 @@ class FractalSnowflake(FractalServer):
             self._storage_uri = storage_uri
 
             if reset_database:
-                socket = storage_socket_factory(self._storage_uri, project_name=storage_project_name)
+                socket = storage_socket_factory(
+                    self._storage_uri, project_name=storage_project_name, skip_version_check=True
+                )
                 socket._clear_db(socket._project_name)
                 del socket
 

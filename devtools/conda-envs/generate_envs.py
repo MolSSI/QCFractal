@@ -20,7 +20,7 @@ dependencies:
   - msgpack-python >=0.6.1
   - numpy
   - pyyaml >=5.1
-  - pydantic >=1.0.0
+  - pydantic >=1.4.0
   - requests
   - tornado
 
@@ -48,7 +48,7 @@ dependencies:
   - pytest-cov
   - requests-mock
 """
-qca_ecosystem_template = ["qcengine >=0.11.0", "qcelemental >=0.9.0"]
+qca_ecosystem_template = ["qcengine >=0.11.0", "qcelemental >=0.13.1"]
 
 pip_depends_template = []
 

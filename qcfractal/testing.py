@@ -463,6 +463,7 @@ def managed_compute_server(request, postgres_server):
             loop=loop,
             queue_socket=adapter_client,
             ssl_options=False,
+            skip_storage_version_check=True,
         )
 
         # Clean and re-init the database

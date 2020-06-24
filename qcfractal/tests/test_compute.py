@@ -118,7 +118,7 @@ def test_queue_error(fractal_compute_server):
 
     client = ptl.FractalClient(fractal_compute_server)
 
-    hooh = ptl.data.get_molecule("hooh.json").copy(update={"connectivity": None})
+    hooh = ptl.data.get_molecule("hooh.json").copy(update={"connectivity_": None})
     compute_ret = client.add_compute("rdkit", "UFF", "", "energy", None, hooh)
 
     # Pull out a special iteration on the queue manager

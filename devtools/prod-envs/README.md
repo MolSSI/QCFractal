@@ -4,7 +4,7 @@ Production Environments
 This file contains production environments for the QCArchive ecosystem. These environments are for a mix
 of general compute and specific to an individual organization.
 
-Once environments can be upload, they can be created from anywhere using the following line:
+Once environments are uploaded, they can be created from anywhere using the following line:
 ```bash
 conda env create qcarchive/env -n env_name
 ```

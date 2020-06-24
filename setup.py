@@ -29,7 +29,7 @@ if __name__ == "__main__":
             "tornado",
             "requests",
             "pyyaml >=5.1",
-            "pydantic >=1.0.0",
+            "pydantic >=1.4.0",
             # Security dependencies
             "bcrypt",
             "cryptography",
@@ -46,7 +46,7 @@ if __name__ == "__main__":
             #            'double-conversion >=3.0.0',
             # QCArchive depends
             "qcengine>=0.11.0",
-            "qcelemental>=0.11.0",
+            "qcelemental>=0.13.1",
         ],
         entry_points={
             "console_scripts": [

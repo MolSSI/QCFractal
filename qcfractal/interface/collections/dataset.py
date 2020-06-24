@@ -442,7 +442,7 @@ class Dataset(Collection):
         # Sort
         sort_index = ["native"] + list(self.data.history_keys[:-1])
         if "stoichiometry" in ret.columns:
-            sort_index += ["stoichiometry"]
+            sort_index += ["stoichiometry", "name"]
         ret.set_index(sort_index, inplace=True)
         ret.sort_index(inplace=True)
         ret.reset_index(inplace=True)
@@ -785,6 +785,7 @@ class Dataset(Collection):
         return_figure=None,
         digits=3,
         kind="bar",
+        show_incomplete: bool = False,
     ) -> "plotly.Figure":
 
         # Validate query dimensions
@@ -872,6 +873,9 @@ class Dataset(Collection):
                 q["stoich"] = q.pop("stoichiometry")
             values = self.get_values(**q)
 
+            if not show_incomplete:
+                values = values.dropna(axis=1, how="any")
+
             # Create the statistics
             stat = self.statistics(metric, values, bench=bench)
             stat = stat.round(digits)
@@ -925,6 +929,7 @@ class Dataset(Collection):
         bench: Optional[str] = None,
         kind: str = "bar",
         return_figure: Optional[bool] = None,
+        show_incomplete: bool = False,
     ) -> "plotly.Figure":
         """
         Parameters
@@ -948,6 +953,8 @@ class Dataset(Collection):
         return_figure : Optional[bool], optional
             If True, return the raw plotly figure. If False, returns a hosted iPlot.
             If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
+        show_incomplete: bool, optional
+            Display statistics method/basis set combinations where results are incomplete
 
         Returns
         -------
@@ -1324,6 +1331,24 @@ class Dataset(Collection):
         if default:
             self.data.default_keywords[program] = alias
         return True
+
+    def list_keywords(self) -> pd.DataFrame:
+        """Lists keyword aliases for each program in the dataset.
+
+        Returns
+        -------
+        pd.DataFrame
+            A dataframe containing programs, keyword aliases, KeywordSet ids, and whether those keywords are the
+            default for a program. Indexed on program.
+        """
+        data = []
+        for program, kwaliases in self.data.alias_keywords.items():
+            prog_default_kw = self.data.default_keywords.get(program, None)
+            for kwalias, kwid in kwaliases.items():
+                data.append(
+                    {"program": program, "keywords": kwalias, "id": kwid, "default": prog_default_kw == kwalias,}
+                )
+        return pd.DataFrame(data).set_index("program")
 
     def get_keywords(self, alias: str, program: str, return_id: bool = False) -> Union["KeywordSet", str]:
         """Pulls the keywords alias from the server for inspection.

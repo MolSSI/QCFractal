@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from typing import List
 
 import numpy as np
+import pandas as pd
 import pytest
 import qcelemental as qcel
 from qcelemental.models import Molecule, ProtoModel
@@ -637,10 +638,6 @@ def test_reactiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
     with pytest.raises(KeyError):
         ds.get_records("B3LYP", "6-31g", stoich="cp5")
 
-    # Wrong method
-    with pytest.raises(KeyError):
-        ds.get_records("Fake Method", "6-31g", stoich="cp")
-
 
 def test_reactiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
     client, ds = reactiondataset_dftd3_fixture_fixture
@@ -981,6 +978,25 @@ def test_s22_list_select(s22_fixture):
     assert names == set(df.columns.str.lower())
 
 
+@testing.using_psi4
+@testing.using_dftd3
+def test_rds_rxn(fractal_compute_server):
+    client = fractal_compute_server.client()
+    ds = ptl.collections.ReactionDataset("rds_rxn", client, "rxn")
+    HeDimer1 = ptl.Molecule.from_data([[2, 0, 0, -1.412], [2, 0, 0, 1.412]], dtype="numpy", units="bohr", frags=[1])
+    HeDimer2 = ptl.Molecule.from_data([[2, 3, 3, -1.412], [2, 3, 3, 1.412]], dtype="numpy", units="bohr", frags=[1])
+
+    ds.add_rxn("HeDimer1", stoichiometry={"default": [(HeDimer1, 0.0)]})
+    ds.add_rxn("HeDimer2", stoichiometry={"default": [(HeDimer2, 1.0), (HeDimer1, -1.0)]})
+    ds.set_default_program("psi4")
+    ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={"e_convergence": 1.0e-10}), default=True)
+
+    ds.save()
+
+    ds.compute("B3LYP-D3", "6-31g")
+    ds.get_values(method="B3LYP-D3", basis="6-31g")
+
+
 def assert_list_get_values(ds):
     """ Tests that the output of list_values can be used as input to get_values"""
     columns = ds.list_values().reset_index()
@@ -1264,7 +1280,17 @@ def test_torsiondrive_dataset(fractal_compute_server):
     fractal_compute_server.await_services(max_iter=1)
 
     # Check status
+    status_basic = ds.status()
+    assert status_basic.loc("COMPLETE", "Spec1") == 1
+    status_spec = ds.status("Spec1")
+    assert status_basic.loc("COMPLETE", "Spec1") == 1
+
     status_detail = ds.status("Spec1", detail=True)
+    assert status_detail.loc["hooh2", "Complete Tasks"] == 1
+    assert status_detail.loc["hooh2", "Total Points"] == 6
+
+    # List of length 1 with detail=True
+    status_detail = ds.status(["Spec1"], detail=True)
     assert status_detail.loc["hooh2", "Complete Tasks"] == 1
     assert status_detail.loc["hooh2", "Total Points"] == 6
 
@@ -1294,6 +1320,31 @@ def test_torsiondrive_dataset(fractal_compute_server):
 
     assert ds.counts("hooh1").loc["hooh1", "Spec1"] > 5
     assert ds.counts("hooh1", specs="spec1", count_gradients=True).loc["hooh1", "Spec1"] > 30
+
+
+def test_dataset_list_keywords(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+
+    kw1 = ptl.models.KeywordSet(values={"foo": True})
+    kw2 = ptl.models.KeywordSet(values={"foo": False})
+    kw3 = ptl.models.KeywordSet(values={"foo": 13})
+    ds = ptl.collections.Dataset("test_dataset_list_keywords", client)
+
+    ds.add_keywords(alias="p1_k1", program="p1", keyword=kw1)
+    ds.add_keywords(alias="p1_k2", program="p1", keyword=kw2, default=True)
+    ds.add_keywords(alias="p2_k3", program="p2", keyword=kw3)
+    ds.add_keywords(alias="p3_k1", program="p3", keyword=kw1, default=True)
+    ds.save()
+
+    res = ds.list_keywords().reset_index().drop("id", axis=1)
+    ref = pd.DataFrame(
+        {
+            "program": ["p1", "p1", "p2", "p3"],
+            "keywords": ["p1_k1", "p1_k2", "p2_k3", "p3_k1"],
+            "default": [False, True, False, True],
+        }
+    )
+    assert df_compare(res, ref), res
 
 
 @testing.using_geometric
@@ -1327,6 +1378,10 @@ def test_optimization_dataset(fractal_compute_server):
     status = ds.status()
     assert status.loc["COMPLETE", "test"] == 3
     assert status.loc["COMPLETE", "test2"] == 1
+
+    status_spec = ds.status(["test", "test2"])
+    assert status_spec.loc["COMPLETE", "test"] == 3
+    assert status_spec.loc["COMPLETE", "test2"] == 1
 
     counts = ds.counts()
     assert counts.loc["hooh1", "test"] == 9

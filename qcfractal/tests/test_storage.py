@@ -447,6 +447,7 @@ def test_results_add(storage_socket):
             "hash_index": 2,
         }
     )
+
     ids = []
     ret = storage_socket.add_results([page1, page2])
     assert ret["meta"]["n_inserted"] == 2
@@ -698,6 +699,24 @@ def test_queue_submit_sql(storage_results):
     assert len(ret["data"]) == 1
     assert ret["meta"]["n_inserted"] == 0
     assert len(ret["meta"]["duplicates"]) == 1
+
+    result2 = storage_results.get_results()["data"][1]
+
+    task2 = ptl.models.TaskRecord(
+        **{
+            "spec": {"function": "qcengine.compute_procedure", "args": [{"json_blob": "data"}], "kwargs": {}},
+            "tag": None,
+            "program": "p1",
+            "parser": "",
+            "base_result": result2["id"],
+        }
+    )
+
+    # submit repeated tasks
+    ret = storage_results.queue_submit([task2, task2])
+    assert len(ret["data"]) == 2
+    assert ret["meta"]["n_inserted"] == 1
+    assert ret["data"][0] == ret["data"][1]
 
 
 # ----------------------------------------------------------
@@ -1193,18 +1212,56 @@ def test_mol_pagination(storage_socket):
 
     inserted = storage_socket.add_molecules(molecules)
 
-    assert inserted["meta"]["n_inserted"] == total
+    try:
+        assert inserted["meta"]["n_inserted"] == total
 
-    ret = storage_socket.get_molecules(skip=1)
-    assert len(ret["data"]) == total - 1
-    assert ret["meta"]["n_found"] == total
+        ret = storage_socket.get_molecules(skip=1)
+        assert len(ret["data"]) == total - 1
+        assert ret["meta"]["n_found"] == total
 
-    ret = storage_socket.get_molecules(skip=total + 1)
-    assert len(ret["data"]) == 0
-    assert ret["meta"]["n_found"] == total
+        ret = storage_socket.get_molecules(skip=total + 1)
+        assert len(ret["data"]) == 0
+        assert ret["meta"]["n_found"] == total
 
-    # cleanup
-    storage_socket.del_molecules(inserted["data"])
+    finally:
+        # cleanup
+        storage_socket.del_molecules(inserted["data"])
+
+
+def test_mol_formula(storage_socket):
+    """
+        Test Molecule pagination
+    """
+
+    assert len(storage_socket.get_molecules()["data"]) == 0
+    mol_names = [
+        "water_dimer_minima.psimol",
+    ]
+    total = len(mol_names)
+    molecules = []
+    for mol_name in mol_names:
+        mol = ptl.data.get_molecule(mol_name)
+        molecules.append(mol)
+
+    inserted = storage_socket.add_molecules(molecules)
+    try:
+        assert inserted["meta"]["n_inserted"] == total
+
+        ret = storage_socket.get_molecules(molecular_formula="H4O2")
+        assert len(ret["data"]) == 1
+        assert ret["meta"]["n_found"] == 1
+
+        ret = storage_socket.get_molecules(molecular_formula="O2H4")
+        assert len(ret["data"]) == 1
+        assert ret["meta"]["n_found"] == 1
+
+        ret = storage_socket.get_molecules(molecular_formula="H4o2")
+        assert len(ret["data"]) == 0
+        assert ret["meta"]["n_found"] == 0
+
+    finally:
+        # cleanup
+        storage_socket.del_molecules(inserted["data"])
 
 
 def test_reset_task_blocks(storage_socket):

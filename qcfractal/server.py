@@ -18,7 +18,7 @@ import tornado.web
 
 from .extras import get_information
 from .interface import FractalClient
-from .queue import QueueManager, QueueManagerHandler, ServiceQueueHandler, TaskQueueHandler
+from .queue import QueueManager, QueueManagerHandler, ServiceQueueHandler, TaskQueueHandler, ComputeManagerHandler
 from .services import construct_service
 from .storage_sockets import ViewHandler, storage_socket_factory
 from .storage_sockets.api_logger import API_AccessLogger
@@ -117,6 +117,8 @@ class FractalServer:
         # Service options
         max_active_services: int = 20,
         service_frequency: float = 60,
+        # Testing functions
+        skip_storage_version_check=True,
     ):
         """QCFractal initialization
 
@@ -244,6 +246,7 @@ class FractalServer:
             bypass_security=storage_bypass_security,
             allow_read=allow_read,
             max_limit=query_limit,
+            skip_version_check=skip_storage_version_check,
         )
 
         if view_enabled:
@@ -288,6 +291,7 @@ class FractalServer:
             (r"/task_queue", TaskQueueHandler, self.objects),
             (r"/service_queue", ServiceQueueHandler, self.objects),
             (r"/queue_manager", QueueManagerHandler, self.objects),
+            (r"/manager", ComputeManagerHandler, self.objects),
         ]
 
         # Build the app

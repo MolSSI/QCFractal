@@ -29,7 +29,11 @@ def torsiondrive_fixture(fractal_compute_server):
     torsiondrive_options = {
         "initial_molecule": mol_ret[0],
         "keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [90]},
-        "optimization_spec": {"program": "geometric", "keywords": {"coordsys": "tric"}},
+        "optimization_spec": {
+            "program": "geometric",
+            "keywords": {"coordsys": "tric"},
+            "protocols": {"trajectory": "initial_and_final"},
+        },
         "qc_spec": {"driver": "gradient", "method": "UFF", "basis": "", "keywords": None, "program": "rdkit"},
     }  # yapf: disable
 
@@ -144,6 +148,10 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
     assert pytest.approx(0.000753492556057886, abs=1e-6) == result.get_final_energies(180)
 
     assert hasattr(result.get_final_molecules()[(-90,)], "symbols")
+
+    opt = result.get_history(0)[0]
+    assert opt.protocols.trajectory == "initial_and_final"
+    assert len(opt.trajectory) == 2
 
 
 @pytest.mark.slow

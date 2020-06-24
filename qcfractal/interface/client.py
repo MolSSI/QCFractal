@@ -386,7 +386,8 @@ class FractalClient(object):
         molecule_hash : QueryStr, optional
             Queries the Molecule ``molecule_hash`` field.
         molecular_formula : QueryStr, optional
-            Queries the Molecule ``molecular_formula`` field.
+            Queries the Molecule ``molecular_formula`` field. Molecular formulas are case-sensitive.
+            Molecular formulas are not order-sensitive (e.g. "H2O == OH2 != Oh2").
         limit : Optional[int], optional
             The maximum number of Molecules to query
         skip : int, optional
@@ -1155,6 +1156,40 @@ class FractalClient(object):
         payload = {"meta": {"operation": operation}, "data": {"id": id, "procedure_id": procedure_id}}
 
         return self._automodel_request("service_queue", "put", payload, full_return=full_return)
+
+    def query_managers(
+        self,
+        name: Optional["QueryStr"] = None,
+        status: Optional["QueryStr"] = "ACTIVE",
+        limit: Optional[int] = None,
+        skip: int = 0,
+        full_return: bool = False,
+    ) -> Dict[str, Any]:
+        """Obtains information about compute managers attached to this Fractal instance
+
+        Parameters
+        ----------
+        name : QueryStr, optional
+            Queries the managers name.
+        status : QueryStr, optional
+            Queries the manager's ``status`` field. Default is to search for only ACTIVE managers
+        limit : Optional[int], optional
+            The maximum number of managers to query
+        skip : int, optional
+            The number of managers to skip in the query, used during pagination
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        List[Dict[str, Any]]
+            A dictionary of each match that contains all the information for each manager
+        """
+        payload = {
+            "meta": {"limit": limit, "skip": skip},
+            "data": {"name": name, "status": status},
+        }
+        return self._automodel_request("manager", "get", payload, full_return=full_return)
 
     # -------------------------------------------------------------------------
     # ------------------   Advanced Queries -----------------------------------
