@@ -24,9 +24,6 @@ def test_storage_repr(storage_socket):
 
     assert isinstance(repr(storage_socket), str)
 
-    qc_spec1 = ptl.models.QCSpecification(driver="")
-    storage_socket._
-
 
 def test_molecules_add(storage_socket):
 
