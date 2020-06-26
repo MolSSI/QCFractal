@@ -24,6 +24,9 @@ def test_storage_repr(storage_socket):
 
     assert isinstance(repr(storage_socket), str)
 
+    qc_spec1 = ptl.models.QCSpecification(driver="")
+    storage_socket._
+
 
 def test_molecules_add(storage_socket):
 
@@ -468,6 +471,37 @@ def test_results_add(storage_socket):
     assert ret == 3
     ret = storage_socket.del_molecules(id=mol_insert["data"])
     assert ret == 2
+
+
+# this test function is designed for a private member function, please do not use it in any other context.
+def test_add_specs(storage_socket):
+
+    kw1 = ptl.models.KeywordSet(**{"comments": "a", "values": {}})
+    kwid1 = storage_socket.add_keywords([kw1])["data"][0]
+
+    spec1 = ptl.models.QCSpecification(driver="gradient", method="HF", basis="sto-3g", keywords=kwid1, program="psi4")
+    spec2 = ptl.models.QCSpecification(driver="gradient", method="pm6", basis="sto-3g", keywords=kwid1, program="psi4")
+    ret = storage_socket._add_specs([spec1, spec2])
+
+    assert ret["meta"]["n_inserted"] == 2
+    assert len(ret["data"]) == 2
+    assert len(ret["meta"]["duplicates"]) == 0
+
+    spec3 = ptl.models.QCSpecification(driver="gradient", method="HF", basis="sto-3g", keywords=None, program="psi4")
+    ret = storage_socket._add_specs([spec1, spec2, spec3])
+
+    assert ret["meta"]["n_inserted"] == 1
+    assert len(ret["data"]) == 3
+    assert len(ret["meta"]["duplicates"]) == 2
+
+    spec4 = ptl.models.QCSpecification(driver="gradient", method="HF", basis="dzvp", keywords=None, program="psi4")
+    spec5 = ptl.models.QCSpecification(driver="gradient", method="uff", basis="dzvp", keywords=None, program="psi4")
+    ret = storage_socket._add_specs([spec4, spec4, spec5])
+
+    assert ret["meta"]["n_inserted"] == 2
+    assert len(ret["data"]) == 3
+    assert len(ret["meta"]["duplicates"]) == 1
+    assert ret["data"][0] == ret["data"][1]
 
 
 ### Build out a set of query tests

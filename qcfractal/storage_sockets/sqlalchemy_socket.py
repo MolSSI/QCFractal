@@ -1525,6 +1525,7 @@ class SQLAlchemySocket:
         if not record_list:
             return {"data": [], "meta": meta}
 
+        # Specifications have to be added to a seperate table and their ids be retrieved.
         specs = [record.qc_spec for record in record_list]
         spec_ids = self._add_specs(specs)["data"]
 
@@ -1537,7 +1538,9 @@ class SQLAlchemySocket:
                 doc = session.query(procedure_class).filter_by(hash_index=procedure.hash_index)
 
                 if get_count_fast(doc) == 0:
+                    # qc_spec dictionary is not needed, we have all the needed specification ids
                     data = procedure.dict(exclude={"id", "qc_spec"})
+                    # use the spec_ids retrieved
                     proc_db = procedure_class(**data, qc_spec=spec_ids[idx])
                     session.add(proc_db)
                     session.commit()
@@ -1648,6 +1651,7 @@ class SQLAlchemySocket:
         # check if qc_spec is part of the returned dictionary
         if len(data) != 0 and data[0].get("qc_spec"):
             with self.session_scope() as session:
+                # if qc_spec is requested in return dict, retrieve the spec from db.
                 for dat in data:
                     qc_spec = (
                         session.query(
