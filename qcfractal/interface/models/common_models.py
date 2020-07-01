@@ -71,7 +71,7 @@ class QCSpecification(ProtoModel):
         description="The Id of the :class:`KeywordSet` registered in the database to run this calculation with. This "
         "Id must exist in the database.",
     )
-    protocols: ResultProtocols = Field(ResultProtocols(), description=str(ResultProtocols.__base_doc__))
+    protocols: Optional[ResultProtocols] = Field(ResultProtocols(), description=str(ResultProtocols.__base_doc__))
     program: str = Field(
         ...,
         description="The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs"
@@ -131,7 +131,7 @@ class OptimizationSpecification(ProtoModel):
         "Note that unlike :class:`QCSpecification` this is a dictionary of keywords, not the Id for a "
         ":class:`KeywordSet`. ",
     )
-    protocols: OptimizationProtocols = Field(
+    protocols: Optional[OptimizationProtocols] = Field(
         OptimizationProtocols(), description=str(OptimizationProtocols.__base_doc__)
     )
 
