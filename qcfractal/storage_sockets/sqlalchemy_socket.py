@@ -315,6 +315,8 @@ class SQLAlchemySocket:
             session.query(KVStoreORM).delete(synchronize_session=False)
             session.query(MoleculeORM).delete(synchronize_session=False)
 
+            session.query(QCSpecORM).delete(synchronize_session=False)
+
     def get_project_name(self) -> str:
         return self._project_name
 
@@ -1651,23 +1653,22 @@ class SQLAlchemySocket:
         # check if qc_spec is part of the returned dictionary
         if len(data) != 0 and data[0].get("qc_spec"):
             with self.session_scope() as session:
+                spec_ids = [dat["qc_spec"] for dat in data]
                 # if qc_spec is requested in return dict, retrieve the spec from db.
-                for dat in data:
-                    qc_spec = (
-                        session.query(
-                            QCSpecORM.basis, QCSpecORM.method, QCSpecORM.driver, QCSpecORM.program, QCSpecORM.keywords
-                        )
-                        .filter(QCSpecORM.id == dat["qc_spec"][0])
-                        .first()
+                qc_spec = session.query(QCSpecORM).filter(QCSpecORM.id.in_(spec_ids)).all()
+                id_to_spec = {
+                    spec.id: dict(
+                        basis=spec.basis,
+                        method=spec.method,
+                        program=spec.program,
+                        driver=spec.driver,
+                        keywords=spec.keywords,
                     )
-                    # return the qc_spec fields instead of the id
-                    dat["qc_spec"] = dict(
-                        basis=qc_spec.basis,
-                        method=qc_spec.method,
-                        program=qc_spec.program,
-                        driver=qc_spec.driver,
-                        keywords=qc_spec.keywords,
-                    )
+                    for spec in qc_spec
+                }
+            for dat in data:
+                # return the qc_spec fields instead of the id
+                dat["qc_spec"] = id_to_spec[int(dat["qc_spec"])]
 
         return {"data": data, "meta": meta}
 
