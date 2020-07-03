@@ -397,14 +397,23 @@ class OptimizationHistory(Base):
 
     # optimization_obj = relationship(OptimizationProcedureORM, lazy="joined")
 
+class TorsionInitMol(Base):
+    """
+    Association table for many to many relation
+    """
+    __tablename__ = "torsion_init_mol_association"
+
+    id = Column("id", Integer, primary_key=True)
+    torsion_id = Column("torsion_id", Integer, ForeignKey("torsiondrive_procedure.id", ondelete="cascade"))
+    molecule_id = Column("molecule_id", Integer, ForeignKey("molecule.id", ondelete="cascade"))
 
 # association table for many to many relation
-torsion_init_mol_association = Table(
-    "torsion_init_mol_association",
-    Base.metadata,
-    Column("torsion_id", Integer, ForeignKey("torsiondrive_procedure.id", ondelete="CASCADE")),
-    Column("molecule_id", Integer, ForeignKey("molecule.id", ondelete="CASCADE")),
-)
+# torsion_init_mol_association = Table(
+#     "torsion_init_mol_association",
+#     Base.metadata,
+#     Column("torsion_id", Integer, ForeignKey("torsiondrive_procedure.id", ondelete="CASCADE")),
+#     Column("molecule_id", Integer, ForeignKey("molecule.id", ondelete="CASCADE")),
+# )
 
 
 class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
@@ -426,13 +435,13 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
 
     # ids of the many to many relation
     initial_molecule = column_property(
-        select([func.array_agg(torsion_init_mol_association.c.molecule_id)]).where(
-            torsion_init_mol_association.c.torsion_id == id
+        select([func.array_agg(TorsionInitMol.molecule_id)]).where(
+            TorsionInitMol.torsion_id == id
         )
     )
     # actual objects relation M2M, never loaded here
     initial_molecule_obj = relationship(
-        MoleculeORM, secondary=torsion_init_mol_association, uselist=True, lazy="noload"
+        MoleculeORM, secondary=TorsionInitMol.__table__, uselist=True, lazy="noload"
     )
 
     optimization_spec = Column(JSON)
@@ -499,7 +508,7 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
 
         # update torsion molecule relation
         self._update_many_to_many(
-            torsion_init_mol_association, "torsion_id", "molecule_id", self.id, initial_molecule, self.initial_molecule
+            TorsionInitMol.__table__, "torsion_id", "molecule_id", self.id, initial_molecule, self.initial_molecule
         )
 
         self.optimization_history_obj = []
