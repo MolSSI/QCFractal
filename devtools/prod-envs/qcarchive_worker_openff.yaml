@@ -8,7 +8,7 @@ dependencies:
   - qcfractal
 
     # Compute engines
-  - psi4 >=1.3.0
+  - psi4 >1.4a2.dev700,<1.4a2
   - dftd3
   - gcp
   - rdkit
