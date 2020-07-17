@@ -1144,28 +1144,27 @@ class SQLAlchemySocket:
         results_list = []
         existing_res = {}
         new_record_idx, duplicates_idx = [], []
-        conds = []
+        # extracting the specs to add to qc_spec table first
+        specs = [QCSpecification(program=res.program, method=res.method, basis=res.basis,
+                                 driver=res.driver, keywords=res.keywords) for res in record_list ]
+        ret = self._add_specs(specs)
+        # seperating duplicate specs and all specs
+        all_spec_ids, dup_spec_ids = ret["data"], ret["meta"]["duplicates"]
+        # extracting the molecules
+        res_molecules = [res.molecule for res in record_list]
         # creating condition for a multi-value select
         conds = [
-            (
-                ResultORM.program == res.program,
-                ResultORM.driver == res.driver,
-                ResultORM.method == res.method,
-                ResultORM.basis == res.basis,
-                ResultORM.keywords == res.keywords,
-                ResultORM.molecule == res.molecule,
+            and_(
+                ResultORM.qc_spec == item[0],
+                ResultORM.molecule == item[1]
             )
-            for res in results_list
+            for item in zip(all_spec_ids, res_molecules)
+            if item[0] in dup_spec_ids # if a given item has new spec, it is already a new result object, without querying the result table.
         ]
-
         with self.session_scope() as session:
             docs = (
                 session.query(
-                    ResultORM.program,
-                    ResultORM.driver,
-                    ResultORM.method,
-                    ResultORM.basis,
-                    ResultORM.keywords,
+                    ResultORM.qc_spec,
                     ResultORM.molecule,
                     ResultORM.id,
                 )
@@ -1174,21 +1173,18 @@ class SQLAlchemySocket:
             )
             # adding all the found items to a dictionary
             existing_res = {
-                (doc.program, doc.driver, doc.method, doc.basis, doc.keywords, str(doc.molecule)): doc for doc in docs
+                (str(doc.qc_spec), str(doc.molecule)): doc for doc in docs
             }
             for i, result in enumerate(record_list):
                 # constructing an index from record_list to compare against found items(existing_res)
                 idx = (
-                    result.program,
-                    result.driver.value,
-                    result.method,
-                    result.basis,
-                    int(result.keywords) if result.keywords else None,
+                    all_spec_ids[i],
                     result.molecule,
                 )
                 if existing_res.get(idx) is None:
                     # if no found items, construct an object
-                    doc = ResultORM(**result.dict(exclude={"id"}))
+                    doc = ResultORM(**result.dict(exclude={"id","program","method","basis","driver","keywords"}))
+                    doc.qc_spec = all_spec_ids[i]
                     existing_res[idx] = doc
                     # add the object to the list which goes for adding and commiting to database.
                     results_list.append(doc)

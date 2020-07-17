@@ -145,17 +145,13 @@ class ResultORM(BaseResultORM):
     id = Column(Integer, ForeignKey("base_result.id", ondelete="CASCADE"), primary_key=True)
 
     # uniquely identifying a result
-    program = Column(String(100), nullable=False)  # example "rdkit", is it the same as program in keywords?
-    driver = Column(String(100), Enum(DriverEnum), nullable=False)
-    method = Column(String(100), nullable=False)  # example "uff"
-    basis = Column(String(100))
     molecule = Column(Integer, ForeignKey("molecule.id"))
     molecule_obj = relationship(MoleculeORM, lazy="select")
 
     # This is a special case where KeywordsORM are denormalized intentionally as they are part of the
     # lookup for a single result and querying a result will not often request the keywords (LazyReference)
-    keywords = Column(Integer, ForeignKey("keywords.id"))
-    keywords_obj = relationship(KeywordsORM, lazy="select")
+    qc_spec = Column(Integer, ForeignKey("qc_spec.id"))
+    qc_spec_obj = relationship(QCSpecORM, lazy="select", foreign_keys=qc_spec)
 
     # Primary Result output
     return_result = Column(MsgpackExt)
@@ -172,16 +168,16 @@ class ResultORM(BaseResultORM):
         single_parent=True,
     )
 
-    __table_args__ = (
-        # TODO: optimize indexes
-        # A multicolumn GIN index can be used with query conditions that involve any subset of
-        # the index's columns. Unlike B-tree or GiST, index search effectiveness is the same
-        # regardless of which index column(s) the query conditions use.
-        # Index('ix_result_combined', "program", "driver", "method", "basis",
-        #       "keywords", postgresql_using='gin'),  # gin index
-        # Index('ix_results_molecule', 'molecule'),  # b-tree index
-        UniqueConstraint("program", "driver", "method", "basis", "keywords", "molecule", name="uix_results_keys"),
-    )
+    # __table_args__ = (
+    #     # TODO: optimize indexes
+    #     # A multicolumn GIN index can be used with query conditions that involve any subset of
+    #     # the index's columns. Unlike B-tree or GiST, index search effectiveness is the same
+    #     # regardless of which index column(s) the query conditions use.
+    #     # Index('ix_result_combined', "program", "driver", "method", "basis",
+    #     #       "keywords", postgresql_using='gin'),  # gin index
+    #     # Index('ix_results_molecule', 'molecule'),  # b-tree index
+    #     UniqueConstraint("program", "driver", "method", "basis", "keywords", "molecule", name="uix_results_keys"),
+    # )
 
     __mapper_args__ = {
         "polymorphic_identity": "result",
