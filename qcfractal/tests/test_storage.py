@@ -447,6 +447,7 @@ def test_results_add(storage_socket):
             "hash_index": 2,
         }
     )
+
     ids = []
     ret = storage_socket.add_results([page1, page2])
     assert ret["meta"]["n_inserted"] == 2
@@ -698,6 +699,24 @@ def test_queue_submit_sql(storage_results):
     assert len(ret["data"]) == 1
     assert ret["meta"]["n_inserted"] == 0
     assert len(ret["meta"]["duplicates"]) == 1
+
+    result2 = storage_results.get_results()["data"][1]
+
+    task2 = ptl.models.TaskRecord(
+        **{
+            "spec": {"function": "qcengine.compute_procedure", "args": [{"json_blob": "data"}], "kwargs": {}},
+            "tag": None,
+            "program": "p1",
+            "parser": "",
+            "base_result": result2["id"],
+        }
+    )
+
+    # submit repeated tasks
+    ret = storage_results.queue_submit([task2, task2])
+    assert len(ret["data"]) == 2
+    assert ret["meta"]["n_inserted"] == 1
+    assert ret["data"][0] == ret["data"][1]
 
 
 # ----------------------------------------------------------

@@ -292,7 +292,6 @@ class SQLAlchemySocket:
         with self.session_scope() as session:
             # Metadata
             session.query(VersionsORM).delete(synchronize_session=False)
-
             # Task and services
             session.query(TaskQueueORM).delete(synchronize_session=False)
             session.query(QueueManagerLogORM).delete(synchronize_session=False)
@@ -1135,33 +1134,81 @@ class SQLAlchemySocket:
             Dict with keys: data, meta
             Data is the ids of the inserted/updated/existing docs
         """
-
         meta = add_metadata_template()
+        # putting the placeholder for all the ids, since some can be duplicate, and some will only have ids after add operation.
+        result_ids = ["placeholder"] * len(record_list)
 
-        result_ids = []
+        results_list = []
+        existing_res = {}
+        new_record_idx, duplicates_idx = [], []
+        conds = []
+        # creating condition for a multi-value select
+        conds = [
+            (
+                ResultORM.program == res.program,
+                ResultORM.driver == res.driver,
+                ResultORM.method == res.method,
+                ResultORM.basis == res.basis,
+                ResultORM.keywords == res.keywords,
+                ResultORM.molecule == res.molecule,
+            )
+            for res in results_list
+        ]
+
         with self.session_scope() as session:
-            for result in record_list:
-
-                doc = session.query(ResultORM).filter_by(
-                    program=result.program,
-                    driver=result.driver,
-                    method=result.method,
-                    basis=result.basis,
-                    keywords=result.keywords,
-                    molecule=result.molecule,
+            docs = (
+                session.query(
+                    ResultORM.program,
+                    ResultORM.driver,
+                    ResultORM.method,
+                    ResultORM.basis,
+                    ResultORM.keywords,
+                    ResultORM.molecule,
+                    ResultORM.id,
                 )
-
-                if get_count_fast(doc) == 0:
+                .filter(or_(*conds))
+                .all()
+            )
+            # adding all the found items to a dictionary
+            existing_res = {
+                (doc.program, doc.driver, doc.method, doc.basis, doc.keywords, str(doc.molecule)): doc for doc in docs
+            }
+            for i, result in enumerate(record_list):
+                # constructing an index from record_list to compare against found items(existing_res)
+                idx = (
+                    result.program,
+                    result.driver.value,
+                    result.method,
+                    result.basis,
+                    int(result.keywords) if result.keywords else None,
+                    result.molecule,
+                )
+                if existing_res.get(idx) is None:
+                    # if no found items, construct an object
                     doc = ResultORM(**result.dict(exclude={"id"}))
-                    session.add(doc)
-                    session.commit()  # TODO: faster if done in bulk
-                    result_ids.append(str(doc.id))
+                    existing_res[idx] = doc
+                    # add the object to the list which goes for adding and commiting to database.
+                    results_list.append(doc)
+                    # identifying the index of new items in the returned result ids, for future update.
+                    new_record_idx.append(i)
                     meta["n_inserted"] += 1
                 else:
-                    id = str(doc.first().id)
-                    meta["duplicates"].append(id)  # TODO
-                    # If new or duplicate, add the id to the return list
-                    result_ids.append(id)
+                    doc = existing_res.get(idx)
+                    # identifying the index of duplicate items
+                    duplicates_idx.append(i)
+                    meta["duplicates"].append(doc)
+
+            session.add_all(results_list)
+            session.commit()
+            meta["duplicates"] = [str(doc.id) for doc in meta["duplicates"]]
+
+            for i, idx in enumerate(new_record_idx):
+                # setting the new records returned id from commit operation
+                result_ids[idx] = str(results_list[i].id)
+            for i, idx in enumerate(duplicates_idx):
+                # setting the duplicate items, either found in the database or provided more than once in the input
+                result_ids[idx] = meta["duplicates"][i]
+
         meta["success"] = True
 
         ret = {"data": result_ids, "meta": meta}
@@ -1184,25 +1231,38 @@ class SQLAlchemySocket:
         -------
             number of records updated
         """
+        query_ids = [res.id for res in record_list]
+        # find duplicates among ids
+        duplicates = len(query_ids) != len(set(query_ids))
 
-        # try:
-        updated_count = 0
-        for result in record_list:
+        with self.session_scope() as session:
 
-            if result.id is None:
-                self.logger.error("Attempted update without ID, skipping")
-                continue
-            with self.session_scope() as session:
+            found = session.query(ResultORM).filter(ResultORM.id.in_(query_ids)).all()
+            # found items are stored in a dictionary
+            found_dict = {str(record.id): record for record in found}
 
-                result_db = session.query(ResultORM).filter_by(id=result.id).first()
+            updated_count = 0
+            for result in record_list:
+
+                if result.id is None:
+                    self.logger.error("Attempted update without ID, skipping")
+                    continue
 
                 data = result.dict(exclude={"id"})
+                # retrieve the found item
+                found_db = found_dict[result.id]
 
+                # updating the found item with input attribute values.
                 for attr, val in data.items():
-                    setattr(result_db, attr, val)
+                    setattr(found_db, attr, val)
 
-                session.commit()
+                # if any duplicate ids are found in the input, commit should be called each iteration
+                if duplicates:
+                    session.commit()
                 updated_count += 1
+            # if no duplicates found, only commit at the end of the loop.
+            if not duplicates:
+                session.commit()
 
         return updated_count
 
@@ -1897,33 +1957,53 @@ class SQLAlchemySocket:
 
         meta = add_metadata_template()
 
-        results = []
+        results = ["placeholder"] * len(data)
+
         with self.session_scope() as session:
+            # preserving all the base results for later check
+            all_base_results = [record.base_result for record in data]
+            query_res = (
+                session.query(TaskQueueORM.id, TaskQueueORM.base_result_id)
+                .filter(TaskQueueORM.base_result_id.in_(all_base_results))
+                .all()
+            )
+
+            # constructing a dict of found tasks and their ids
+            found_dict = {str(base_result_id): str(task_id) for task_id, base_result_id in query_res}
+            new_tasks, new_idx = [], []
+            duplicate_idx = []
             for task_num, record in enumerate(data):
-                try:
-                    task_dict = record.dict(exclude={"id"})
-                    # # for compatibility with mongoengine
-                    # if isinstance(task_dict['base_result'], dict):
-                    #     task_dict['base_result'] = task_dict['base_result']['id']
-                    task = TaskQueueORM(**task_dict)
-                    task.priority = task.priority.value  # Must be an integer for sorting
-                    session.add(task)
-                    session.commit()
-                    results.append(str(task.id))
-                    meta["n_inserted"] += 1
-                except IntegrityError as err:  # rare case
-                    # print(str(err))
-                    session.rollback()
-                    # TODO: merge hooks
-                    task = session.query(TaskQueueORM).filter_by(base_result_id=record.base_result).first()
-                    self.logger.warning("queue_submit got a duplicate task: {}".format(task.to_dict()))
-                    results.append(str(task.id))
+
+                if found_dict.get(record.base_result):
+                    # if found, get id from found_dict
+                    # Note: found_dict may return a task object because the duplicate id is of an object in the input.
+                    results[task_num] = found_dict.get(record.base_result)
+                    # add index of duplicates
+                    duplicate_idx.append(task_num)
                     meta["duplicates"].append(task_num)
-                # except Exception as err:
-                #     self.logger.warning('queue_submit submission error: {}'.format(str(err)))
-                #     meta["success"] = False
-                #     meta["errors"].append(str(err))
-                #     results.append(None)
+
+                else:
+                    task_dict = record.dict(exclude={"id"})
+                    task = TaskQueueORM(**task_dict)
+                    new_idx.append(task_num)
+                    task.priority = task.priority.value
+                    # append all the new tasks that should be added
+                    new_tasks.append(task)
+                    # add the (yet to be) inserted object id to dictionary
+                    found_dict[record.base_result] = task
+
+            session.add_all(new_tasks)
+            session.commit()
+
+            meta["n_inserted"] += len(new_tasks)
+            # setting the id for new inserted objects, cannot be done before commiting as new objects do not have ids
+            for i, task_idx in enumerate(new_idx):
+                results[task_idx] = str(new_tasks[i].id)
+
+            # finding the duplicate items in input, for which ids are found only after insertion
+            for i in duplicate_idx:
+                if not isinstance(results[i], str):
+                    results[i] = str(results[i].id)
 
         meta["success"] = True
 
@@ -1936,30 +2016,44 @@ class SQLAlchemySocket:
         """Done in a transaction"""
 
         # Figure out query, tagless has no requirements
-        query = format_query(TaskQueueORM, status=TaskStatusEnum.waiting, program=available_programs, tag=tag)
 
         proc_filt = TaskQueueORM.procedure.in_([p.lower() for p in available_procedures])
         none_filt = TaskQueueORM.procedure == None  # lgtm [py/test-equals-none]
-        query.append(or_(proc_filt, none_filt))
 
         order_by = []
         if tag is not None:
             if isinstance(tag, str):
                 tag = [tag]
-            task_order = expression_case([(TaskQueueORM.tag == t, num) for num, t in enumerate(tag)])
-            order_by.append(task_order)
+            # task_order = expression_case([(TaskQueueORM.tag == t, num) for num, t in enumerate(tag)])
+            # order_by.append(task_order)
 
         order_by.extend([TaskQueueORM.priority.desc(), TaskQueueORM.created_on])
-
+        queries = []
+        if tag is not None:
+            for t in tag:
+                query = format_query(TaskQueueORM, status=TaskStatusEnum.waiting, program=available_programs, tag=t)
+                query.append(or_(proc_filt, none_filt))
+                queries.append(query)
+        else:
+            query = format_query(TaskQueueORM, status=TaskStatusEnum.waiting, program=available_programs)
+            query.append((or_(proc_filt, none_filt)))
+            queries.append(query)
+        new_limit = limit
+        ids = []
+        found = []
         with self.session_scope() as session:
-            query = session.query(TaskQueueORM).filter(*query).order_by(*order_by).limit(limit)
-
-            # print(query.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
-            found = query.all()
-
-            ids = [x.id for x in found]
+            for q in queries:
+                if new_limit == 0:
+                    break
+                query = session.query(TaskQueueORM).filter(*q).order_by(*order_by).limit(new_limit)
+                # from sqlalchemy.dialects import postgresql
+                # print(query.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
+                new_items = query.all()
+                found.extend(new_items)
+                new_limit = limit - len(new_items)
+                ids.extend([x.id for x in new_items])
             update_fields = {"status": TaskStatusEnum.running, "modified_on": dt.utcnow(), "manager": manager}
-            # Bulk update operation in SQL
+            # # Bulk update operation in SQL
             update_count = (
                 session.query(TaskQueueORM)
                 .filter(TaskQueueORM.id.in_(ids))
