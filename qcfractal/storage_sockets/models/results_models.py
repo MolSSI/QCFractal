@@ -397,15 +397,18 @@ class OptimizationHistory(Base):
 
     # optimization_obj = relationship(OptimizationProcedureORM, lazy="joined")
 
+
 class TorsionInitMol(Base):
     """
     Association table for many to many relation
     """
+
     __tablename__ = "torsion_init_mol_association"
 
     id = Column("id", Integer, primary_key=True)
     torsion_id = Column("torsion_id", Integer, ForeignKey("torsiondrive_procedure.id", ondelete="cascade"))
     molecule_id = Column("molecule_id", Integer, ForeignKey("molecule.id", ondelete="cascade"))
+
 
 # association table for many to many relation
 # torsion_init_mol_association = Table(
@@ -435,14 +438,10 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
 
     # ids of the many to many relation
     initial_molecule = column_property(
-        select([func.array_agg(TorsionInitMol.molecule_id)]).where(
-            TorsionInitMol.torsion_id == id
-        )
+        select([func.array_agg(TorsionInitMol.molecule_id)]).where(TorsionInitMol.torsion_id == id)
     )
     # actual objects relation M2M, never loaded here
-    initial_molecule_obj = relationship(
-        MoleculeORM, secondary=TorsionInitMol.__table__, uselist=True, lazy="noload"
-    )
+    initial_molecule_obj = relationship(MoleculeORM, secondary=TorsionInitMol.__table__, uselist=True, lazy="noload")
 
     optimization_spec = Column(JSON)
 
