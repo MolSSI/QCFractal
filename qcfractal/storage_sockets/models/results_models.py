@@ -130,7 +130,7 @@ class QCSpecORM(Base):
     driver = Column(String(100), Enum(DriverEnum), nullable=False)
 
     keywords = Column(Integer, ForeignKey("keywords.id"))
-    keywords_obj = relationship(KeywordsORM, lazy="select", cascade="all")
+    keywords_obj = relationship(KeywordsORM, lazy="select")
 
     __table_args__ = (UniqueConstraint("program", "driver", "method", "basis", "keywords", name="uix_spec"),)
 

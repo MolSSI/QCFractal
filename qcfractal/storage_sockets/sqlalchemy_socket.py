@@ -1343,22 +1343,49 @@ class SQLAlchemySocket:
         if id is not None:
             status = None
 
-        query = format_query(
-            ResultORM,
-            id=id,
-            program=program,
-            method=method,
-            basis=basis,
-            molecule=molecule,
-            driver=driver,
-            keywords=keywords,
-            manager_id=manager_id,
-            status=status,
-        )
+        if (program, method, basis, driver, keywords) == (None, None, None, None, None):
+            query = format_query(
+                ResultORM,
+                id=id,
+                molecule=molecule,
+                manager_id=manager_id,
+                status=status
+            )
+
+        else:
+            spec_query = format_query(QCSpecORM, program=program, method=method,
+                                                        basis=basis, driver=driver, keywords=keywords)
+
+            spec_data, meta["n_found"] = self.get_query_projection(
+                QCSpecORM, spec_query)
+            spec_dict = {spec['id']: spec for spec in spec_data}
+            spec_ids = list(spec_dict.keys())
+
+            if len(spec_ids) == 0:
+                meta["n_found"] = 0
+                meta["success"] = True
+                return {"data": [], "meta": meta}
+
+            query = format_query(
+                ResultORM,
+                id=id,
+                molecule=molecule,
+                qc_spec = spec_ids,
+                manager_id=manager_id,
+                status=status,
+            )
 
         data, meta["n_found"] = self.get_query_projection(
             ResultORM, query, include=include, exclude=exclude, limit=limit, skip=skip
         )
+        if include or exclude:
+            spec_include= [col for col in ['program', 'driver', 'basis', 'method', 'keywords'] if col in include and col not in exclude]
+        else:
+            spec_include = ['program', 'driver', 'basis', 'method', 'keywords'] 
+        for dat in data:
+            for col in spec_include:
+                # this has a major flaw, qc_spec may be excluded or not include!
+                dat[col] = spec_dict[dat['qc_spec']][col]
         meta["success"] = True
 
         return {"data": data, "meta": meta}

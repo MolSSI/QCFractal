@@ -18,6 +18,7 @@ from qcfractal.storage_sockets.models import (
     OptimizationHistory,
     OptimizationProcedureORM,
     ResultORM,
+    QCSpecORM,
     ServiceQueueORM,
     TaskQueueORM,
     TorsionDriveProcedureORM,
@@ -202,45 +203,69 @@ def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
     assert len(molecules_H4O2) == 2
     assert len(kw_fixtures) == 1
 
-    page1 = {
-        "molecule": molecules_H4O2[0],
+    spec1 = {
         "method": "m1",
-        "basis": "b1",
-        "keywords": None,
+        "basis":  "b1",
         "program": "p1",
         "driver": "energy",
+        "keywords": None
+    }
+
+    page1 = {
+        "molecule": molecules_H4O2[0],
         "status": "COMPLETE",
     }
 
-    page2 = {
-        "molecule": molecules_H4O2[1],
+    spec2 = {
         "method": "m2",
         "basis": "b1",
         "keywords": kw_fixtures[0],
         "program": "p1",
-        "driver": "energy",
+        "driver": "energy"
+    }
+
+    page2 = {
+        "molecule": molecules_H4O2[1],
         "status": "COMPLETE",
     }
 
-    result = ResultORM(**page1)
+    qc_spec1 = QCSpecORM(**spec1)
+    session.add(qc_spec1)
+    session.commit()
+
+    result = ResultORM(**page1, qc_spec=qc_spec1.id)
     session.add(result)
     session.commit()
 
     # IMPORTANT: To be able to access lazy loading children use joinedload
-    ret = session.query(ResultORM).options(joinedload("molecule_obj")).filter_by(method="m1").first()
+    ret = session.query(ResultORM).options(joinedload("molecule_obj")) \
+                                  .join(QCSpecORM) \
+                                  .filter(QCSpecORM.method == "m1").first()
     assert ret.molecule_obj.molecular_formula == "H4O2"
     # Accessing the keywords_obj will issue a DB access
-    assert ret.keywords_obj == None
+    assert ret.qc_spec_obj.keywords_obj == None
 
-    result2 = ResultORM(**page2)
+    qc_spec2 = QCSpecORM(**spec2)
+    session.add(qc_spec2)
+    session.commit()
+
+    result2 = ResultORM(**page2, qc_spec=qc_spec2.id)
     session.add(result2)
     session.commit()
-    ret = session.query(ResultORM).options(joinedload("molecule_obj")).filter_by(method="m2").first()
+
+    q = session.query(ResultORM).options(joinedload("molecule_obj"))\
+                                  .join(QCSpecORM)\
+                                  .filter(QCSpecORM.method == "m2")
+
+    ret = session.query(ResultORM).options(joinedload("molecule_obj"))\
+                                  .join(QCSpecORM)\
+                                  .filter(QCSpecORM.method == "m2").first()
     assert ret.molecule_obj.molecular_formula == "H4O2"
-    assert ret.method == "m2"
+    assert ret.qc_spec_obj.method == "m2"
 
     # clean up
     session_delete_all(session, ResultORM)
+    session_delete_all(session, QCSpecORM)
 
 
 def test_optimization_procedure(storage_socket, session, molecules_H4O2):
@@ -266,11 +291,7 @@ def test_optimization_procedure(storage_socket, session, molecules_H4O2):
 
     result1 = {
         "molecule": molecules_H4O2[0],
-        "method": "m1",
-        "basis": "b1",
-        "keywords": None,
-        "program": "p1",
-        "driver": "energy",
+        "qc_spec": qc_spec.id,
         "status": "COMPLETE",
     }
 
@@ -296,6 +317,7 @@ def test_optimization_procedure(storage_socket, session, molecules_H4O2):
     # clean up
     session_delete_all(session, ResultORM)
     session_delete_all(session, OptimizationProcedureORM)
+    session_delete_all(session, QCSpecORM)
 
 
 def test_torsiondrive_procedure(storage_socket, session):
@@ -344,6 +366,7 @@ def test_torsiondrive_procedure(storage_socket, session):
     # clean up
     session_delete_all(session, OptimizationProcedureORM)
     session_delete_all(session, TorsionDriveProcedureORM)
+    session_delete_all(session, QCSpecORM)
 
 
 def test_add_task_queue(storage_socket, session, molecules_H4O2):
@@ -355,13 +378,21 @@ def test_add_task_queue(storage_socket, session, molecules_H4O2):
     assert session.query(TaskQueueORM).count() == 0
     # TaskQueueORM.objects().delete()
 
-    page1 = {
-        "molecule": molecules_H4O2[0],
+    spec1 = {
         "method": "m1",
         "basis": "b1",
         "keywords": None,
+        "driver":"energy",
         "program": "p1",
-        "driver": "energy",
+    }
+
+    qc_spec1 = QCSpecORM(**spec1)
+    session.add(qc_spec1)
+    session.commit()
+
+    page1 = {
+        "molecule": molecules_H4O2[0],
+        "qc_spec": qc_spec1.id
     }
     # add a task that reference results
     result = ResultORM(**page1)
@@ -382,6 +413,7 @@ def test_add_task_queue(storage_socket, session, molecules_H4O2):
     # cleanup
     session_delete_all(session, TaskQueueORM)
     session_delete_all(session, ResultORM)
+    session_delete_all(session, QCSpecORM)
 
 
 def test_results_pagination(storage_socket, session, molecules_H4O2, kw_fixtures):
@@ -391,13 +423,16 @@ def test_results_pagination(storage_socket, session, molecules_H4O2, kw_fixtures
 
     assert session.query(ResultORM).count() == 0
 
-    result_template = {
-        "molecule": molecules_H4O2[0],
+    spec_template = {
         "method": "m1",
         "basis": "b1",
         "keywords": kw_fixtures[0],
         "program": "p1",
         "driver": "energy",
+    }
+
+    result_template = {
+        "molecule": molecules_H4O2[0],
     }
 
     # Save ~ 1 msec/doc in ME, 0.5 msec/doc in SQL
@@ -410,14 +445,20 @@ def test_results_pagination(storage_socket, session, molecules_H4O2, kw_fixtures
     skip = 50
 
     for i in range(first_half):
-        result_template["basis"] = str(i)
-        r = ResultORM(**result_template)
+        spec_template["basis"] = str(i)
+        qc_spec = QCSpecORM(**spec_template)
+        session.add(qc_spec)
+        session.commit()
+        r = ResultORM(**result_template, qc_spec=qc_spec.id)
         session.add(r)
 
-    result_template["method"] = "m2"
+    spec_template["method"] = "m2"
     for i in range(first_half, total_results):
-        result_template["basis"] = str(i)
-        r = ResultORM(**result_template)
+        spec_template["basis"] = str(i)
+        qc_spec = QCSpecORM(**spec_template)
+        session.add(qc_spec)
+        session.commit()
+        r = ResultORM(**result_template, qc_spec=qc_spec.id)
         session.add(r)
 
     session.commit()  # must commit outside the loop, 10 times faster
@@ -429,8 +470,8 @@ def test_results_pagination(storage_socket, session, molecules_H4O2, kw_fixtures
     # ----------------------------------------
     t1 = time()
 
-    ret1 = session.query(ResultORM).filter_by(method="m1")
-    ret2 = session.query(ResultORM).filter_by(method="m2").limit(limit)  # .offset(skip)
+    ret1 = session.query(ResultORM).join(QCSpecORM).filter(QCSpecORM.method == "m1")
+    ret2 = session.query(ResultORM).join(QCSpecORM).filter(QCSpecORM.method == "m2").limit(limit)  # .offset(skip)
 
     data1 = [d.to_dict() for d in ret1]
     data2 = [d.to_dict() for d in ret2]
@@ -454,3 +495,4 @@ def test_results_pagination(storage_socket, session, molecules_H4O2, kw_fixtures
 
     # cleanup
     session_delete_all(session, ResultORM)
+    session_delete_all(session, QCSpecORM)
