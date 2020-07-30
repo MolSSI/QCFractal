@@ -306,9 +306,9 @@ class OptimizationQueries(QueryBase):
             """
             select * from base_result
             join (
-                select opt_id, result.* from result
+                select opt_id, result.*, qc.program, qc.driver, qc.basis, qc.method, qc.keywords from result
                 join opt_result_association as traj
-                on result.id = traj.result_id
+                on result.id = traj.result_id join qc_spec as qc on result.qc_spec = qc.id
                 where traj.opt_id in :optimization_ids
             ) result
             on base_result.id = result.id
@@ -326,6 +326,8 @@ class OptimizationQueries(QueryBase):
         ret = {}
         for rec in query_result:
             self._remove_excluded_keys(rec)
+            # dropping the qc_spec id, since it is not part of a ResultRecord
+            _ = rec.pop("qc_spec")
             key = rec.pop("opt_id")
             if key not in ret:
                 ret[key] = []
@@ -339,12 +341,12 @@ class OptimizationQueries(QueryBase):
 
         if optimization_ids is None:
             self._raise_missing_attribute("final_result", "List of optimizations ids")
-
+        
         sql_statement = text(
             """
             select * from base_result
             join (
-                select opt_id, result.* from result
+                select opt_id, result.*, qc.program, qc.driver, qc.basis, qc.method, qc.keywords from result
                 join (
                     select opt.opt_id, opt.result_id, max_pos from opt_result_association as opt
                     inner join (
@@ -354,7 +356,7 @@ class OptimizationQueries(QueryBase):
                         ) opt2
                     on opt.opt_id = opt2.opt_id and opt.position = opt2.max_pos
                 ) traj
-                on result.id = traj.result_id
+                on result.id = traj.result_id join qc_spec as qc on result.qc_spec = qc.id
             ) result
             on base_result.id = result.id
         """
@@ -371,6 +373,8 @@ class OptimizationQueries(QueryBase):
         ret = {}
         for rec in query_result:
             self._remove_excluded_keys(rec)
+            # dropping the qc_spec id, since it is not part of a ResultRecord
+            _ = rec.pop("qc_spec")
             key = rec.pop("opt_id")
             ret[key] = ResultRecord(**rec)
 

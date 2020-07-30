@@ -328,7 +328,7 @@ class SQLAlchemySocket:
 
         return limit if limit is not None and limit < self._max_limit else self._max_limit
 
-    def get_query_projection(self, className, query, *, limit=None, skip=0, include=None, exclude=None):
+    def get_query_projection(self, className, query, *, limit=None, skip=0, include=None, exclude=None, join_class=None, secondary_query=[]):
 
         if include and exclude:
             raise AttributeError(
@@ -339,12 +339,17 @@ class SQLAlchemySocket:
 
         prop, hybrids, relationships = className._get_col_types()
 
+        join_prop = []
+        if join_class:
+            join_prop = join_class._get_col_types()[0]
         # build projection from include or exclude
         _projection = []
         if include:
             _projection = set(include)
         elif exclude:
-            _projection = set(className._all_col_names()) - set(exclude) - set(className.db_related_fields)
+            _projection = set(className._all_col_names())- set(exclude) - set(className.db_related_fields)
+            if join_class:
+                _projection = _projection.union(set(join_class._get_col_types())) - set(exclude) - set(join_class.db_related_fields)
         _projection = list(_projection)
 
         proj = []
@@ -354,21 +359,21 @@ class SQLAlchemySocket:
         for key in _projection:
             if key in prop:  # normal column
                 proj.append(getattr(className, key))
-
+            
+            elif key in join_prop:
+                proj.append(getattr(join_class, key))
             # if hybrid property, save callback, and relation if any
             elif key in hybrids:
                 callbacks.append(key)
 
-                # if it has a relationship
-                if key + "_obj" in relationships.keys():
-                    # join_class_name = relationships[key + '_obj']
+                if key + "_obj" in relationships.keys():   
                     join_attrs[key] = relationships[key + "_obj"]
-
             else:
                 raise AttributeError(f"Atrribute {key} is not found in class {className}.")
 
         for key in join_attrs:
-            _projection.remove(key)
+            if key in _projection:
+                _projection.remove(key)
 
         with self.session_scope() as session:
             if _projection or join_attrs:
@@ -378,7 +383,11 @@ class SQLAlchemySocket:
                     _projection.append("_id")  # not to be returned to user
 
                 # query with projection, without joins
-                data = session.query(*proj).filter(*query)
+                if join_class is None:
+                    data = session.query(*proj).filter(*query)
+
+                else:
+                    data = session.query(*proj).join(join_class).filter(*query, *secondary_query)
 
                 n_found = get_count_fast(data)  # before iterating on the data
                 data = data.limit(self.get_limit(limit)).offset(skip)
@@ -392,6 +401,7 @@ class SQLAlchemySocket:
 
                     # relations data
                     for key, relation_details in join_attrs.items():
+                        # Including the join conditions (if give in input)
                         ret = (
                             session.query(
                                 relation_details["remote_side_column"].label("id"), relation_details["join_class"]
@@ -410,7 +420,6 @@ class SQLAlchemySocket:
                             parent_id = data.get("id", data.get("_id"))
                             data[key] = join_data[parent_id][key]
                             data.pop("_id", None)
-
                 # call hybrid methods
                 for callback in callbacks:
                     for res in rdata:
@@ -425,20 +434,31 @@ class SQLAlchemySocket:
 
                     # transform ids from int into str
                     for key in id_fields:
-                        if key in d.keys() and d[key] is not None:
+                        # do not transform relation objects, they are wanted by the user
+                        # CHECK THIS YO
+                        if key in join_attrs.keys() and d[key] is not None:
+                            d[key] = [ item.to_dict() for item in d[key] ]
+                        elif key in d.keys() and d[key] is not None:
                             if isinstance(d[key], Iterable):
                                 d[key] = [str(i) for i in d[key]]
                             else:
                                 d[key] = str(d[key])
                 # print('--------rdata after: ', rdata)
             else:
-                data = session.query(className).filter(*query)
+                if join_class is None:
+                    data = session.query(className).filter(*query)
+                
+                else:
+                    data = session.query(className, join_class).join(join_class).filter(*query, *secondary_query)
 
                 # from sqlalchemy.dialects import postgresql
                 # print(data.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
                 n_found = get_count_fast(data)
                 data = data.limit(self.get_limit(limit)).offset(skip).all()
-                rdata = [d.to_dict() for d in data]
+                if join_class is None:
+                    rdata = [d.to_dict() for d in data]
+                else:
+                    rdata = [(d.to_dict(), j.to_dict()) for d, j in data]
 
         return rdata, n_found
 
@@ -1338,54 +1358,52 @@ class SQLAlchemySocket:
             return self._get_results_by_task_id(task_id)
 
         meta = get_metadata_template()
-
         # Ignore status if Id is present
         if id is not None:
             status = None
 
-        if (program, method, basis, driver, keywords) == (None, None, None, None, None):
-            query = format_query(
-                ResultORM,
-                id=id,
-                molecule=molecule,
-                manager_id=manager_id,
-                status=status
-            )
 
-        else:
-            spec_query = format_query(QCSpecORM, program=program, method=method,
-                                                        basis=basis, driver=driver, keywords=keywords)
+        # if (program, method, basis, driver, keywords) == (None, None, None, None, None):
+        #     query = format_query(
+        #         ResultORM,
+        #         id=id,
+        #         molecule=molecule,
+        #         include = ['qc_spec'],
+        #         manager_id=manager_id,
+        #         status=status
+        #     )
 
-            spec_data, meta["n_found"] = self.get_query_projection(
-                QCSpecORM, spec_query)
-            spec_dict = {spec['id']: spec for spec in spec_data}
-            spec_ids = list(spec_dict.keys())
+        # else:
+        spec_query = format_query(QCSpecORM, program=program, method=method,
+                                                    basis=basis, driver=driver, keywords=keywords)
 
-            if len(spec_ids) == 0:
-                meta["n_found"] = 0
-                meta["success"] = True
-                return {"data": [], "meta": meta}
+            # spec_data, meta["n_found"] = self.get_query_projection(
+            #     QCSpecORM, spec_query)
+            # spec_dict = {spec['id']: spec for spec in spec_data}
+            # spec_ids = list(spec_dict.keys())
 
-            query = format_query(
-                ResultORM,
-                id=id,
-                molecule=molecule,
-                qc_spec = spec_ids,
-                manager_id=manager_id,
-                status=status,
-            )
+            # if len(spec_ids) == 0:
+            #     meta["n_found"] = 0
+            #     meta["success"] = True
+            #     return {"data": [], "meta": meta}
 
-        data, meta["n_found"] = self.get_query_projection(
-            ResultORM, query, include=include, exclude=exclude, limit=limit, skip=skip
+        query = format_query(
+            ResultORM,
+            id=id,
+            molecule=molecule,
+            manager_id=manager_id,
+            status=status
         )
-        if include or exclude:
-            spec_include= [col for col in ['program', 'driver', 'basis', 'method', 'keywords'] if col in include and col not in exclude]
-        else:
-            spec_include = ['program', 'driver', 'basis', 'method', 'keywords'] 
-        for dat in data:
-            for col in spec_include:
-                # this has a major flaw, qc_spec may be excluded or not include!
-                dat[col] = spec_dict[dat['qc_spec']][col]
+        data, meta["n_found"] = self.get_query_projection(
+            ResultORM, query, include=include, exclude=exclude, limit=limit, skip=skip, join_class=QCSpecORM, secondary_query=spec_query)
+
+        if include is None and exclude is None:
+            for res, spec in data:
+                _ = spec.pop('id')
+                _ = res.pop('qc_spec')
+
+            data = [{**res, **spec} for res, spec in data]
+
         meta["success"] = True
 
         return {"data": data, "meta": meta}
