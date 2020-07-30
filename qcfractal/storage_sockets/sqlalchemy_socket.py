@@ -328,7 +328,9 @@ class SQLAlchemySocket:
 
         return limit if limit is not None and limit < self._max_limit else self._max_limit
 
-    def get_query_projection(self, className, query, *, limit=None, skip=0, include=None, exclude=None, join_class=None, secondary_query=[]):
+    def get_query_projection(
+        self, className, query, *, limit=None, skip=0, include=None, exclude=None, join_class=None, secondary_query=[]
+    ):
 
         if include and exclude:
             raise AttributeError(
@@ -347,9 +349,13 @@ class SQLAlchemySocket:
         if include:
             _projection = set(include)
         elif exclude:
-            _projection = set(className._all_col_names())- set(exclude) - set(className.db_related_fields)
+            _projection = set(className._all_col_names()) - set(exclude) - set(className.db_related_fields)
             if join_class:
-                _projection = _projection.union(set(join_class._get_col_types())) - set(exclude) - set(join_class.db_related_fields)
+                _projection = (
+                    _projection.union(set(join_class._get_col_types()))
+                    - set(exclude)
+                    - set(join_class.db_related_fields)
+                )
         _projection = list(_projection)
 
         proj = []
@@ -359,14 +365,14 @@ class SQLAlchemySocket:
         for key in _projection:
             if key in prop:  # normal column
                 proj.append(getattr(className, key))
-            
+
             elif key in join_prop:
                 proj.append(getattr(join_class, key))
             # if hybrid property, save callback, and relation if any
             elif key in hybrids:
                 callbacks.append(key)
 
-                if key + "_obj" in relationships.keys():   
+                if key + "_obj" in relationships.keys():
                     join_attrs[key] = relationships[key + "_obj"]
             else:
                 raise AttributeError(f"Atrribute {key} is not found in class {className}.")
@@ -437,7 +443,7 @@ class SQLAlchemySocket:
                         # do not transform relation objects, they are wanted by the user
                         # CHECK THIS YO
                         if key in join_attrs.keys() and d[key] is not None:
-                            d[key] = [ item.to_dict() for item in d[key] ]
+                            d[key] = [item.to_dict() for item in d[key]]
                         elif key in d.keys() and d[key] is not None:
                             if isinstance(d[key], Iterable):
                                 d[key] = [str(i) for i in d[key]]
@@ -447,7 +453,7 @@ class SQLAlchemySocket:
             else:
                 if join_class is None:
                     data = session.query(className).filter(*query)
-                
+
                 else:
                     data = session.query(className, join_class).join(join_class).filter(*query, *secondary_query)
 
@@ -1165,8 +1171,12 @@ class SQLAlchemySocket:
         existing_res = {}
         new_record_idx, duplicates_idx = [], []
         # extracting the specs to add to qc_spec table first
-        specs = [QCSpecification(program=res.program, method=res.method, basis=res.basis,
-                                 driver=res.driver, keywords=res.keywords) for res in record_list ]
+        specs = [
+            QCSpecification(
+                program=res.program, method=res.method, basis=res.basis, driver=res.driver, keywords=res.keywords
+            )
+            for res in record_list
+        ]
         ret = self._add_specs(specs)
         # seperating duplicate specs and all specs
         all_spec_ids, dup_spec_ids = ret["data"], ret["meta"]["duplicates"]
@@ -1174,27 +1184,15 @@ class SQLAlchemySocket:
         res_molecules = [res.molecule for res in record_list]
         # creating condition for a multi-value select
         conds = [
-            and_(
-                ResultORM.qc_spec == item[0],
-                ResultORM.molecule == item[1]
-            )
+            and_(ResultORM.qc_spec == item[0], ResultORM.molecule == item[1])
             for item in zip(all_spec_ids, res_molecules)
-            if item[0] in dup_spec_ids # if a given item has new spec, it is already a new result object, without querying the result table.
+            if item[0]
+            in dup_spec_ids  # if a given item has new spec, it is already a new result object, without querying the result table.
         ]
         with self.session_scope() as session:
-            docs = (
-                session.query(
-                    ResultORM.qc_spec,
-                    ResultORM.molecule,
-                    ResultORM.id,
-                )
-                .filter(or_(*conds))
-                .all()
-            )
+            docs = session.query(ResultORM.qc_spec, ResultORM.molecule, ResultORM.id,).filter(or_(*conds)).all()
             # adding all the found items to a dictionary
-            existing_res = {
-                (str(doc.qc_spec), str(doc.molecule)): doc for doc in docs
-            }
+            existing_res = {(str(doc.qc_spec), str(doc.molecule)): doc for doc in docs}
             for i, result in enumerate(record_list):
                 # constructing an index from record_list to compare against found items(existing_res)
                 idx = (
@@ -1203,7 +1201,7 @@ class SQLAlchemySocket:
                 )
                 if existing_res.get(idx) is None:
                     # if no found items, construct an object
-                    doc = ResultORM(**result.dict(exclude={"id","program","method","basis","driver","keywords"}))
+                    doc = ResultORM(**result.dict(exclude={"id", "program", "method", "basis", "driver", "keywords"}))
                     doc.qc_spec = all_spec_ids[i]
                     existing_res[idx] = doc
                     # add the object to the list which goes for adding and commiting to database.
@@ -1272,12 +1270,26 @@ class SQLAlchemySocket:
                 found_db = found_dict[result.id]
                 found_spec = found_db.qc_spec_obj
 
-                if (result.program, result.method, result.basis, result.driver, result.keywords) != \
-                   (found_spec.program, found_spec.method, found_spec.basis, found_spec.driver, found_spec.keywords):
+                if (result.program, result.method, result.basis, result.driver, result.keywords) != (
+                    found_spec.program,
+                    found_spec.method,
+                    found_spec.basis,
+                    found_spec.driver,
+                    found_spec.keywords,
+                ):
 
-                    new_spec_id = self._add_specs([QCSpecification(program=result.program, method=result.method, driver=result.driver,
-                                                basis=result.basis, keywords=result.keywords)])["data"][0]
-                    
+                    new_spec_id = self._add_specs(
+                        [
+                            QCSpecification(
+                                program=result.program,
+                                method=result.method,
+                                driver=result.driver,
+                                basis=result.basis,
+                                keywords=result.keywords,
+                            )
+                        ]
+                    )["data"][0]
+
                     setattr(found_db, "qc_spec", int(new_spec_id))
                 # updating the found item with input attribute values.
                 for attr, val in data.items():
@@ -1370,7 +1382,6 @@ class SQLAlchemySocket:
         if id is not None:
             status = None
 
-
         # if (program, method, basis, driver, keywords) == (None, None, None, None, None):
         #     query = format_query(
         #         ResultORM,
@@ -1382,33 +1393,36 @@ class SQLAlchemySocket:
         #     )
 
         # else:
-        spec_query = format_query(QCSpecORM, program=program, method=method,
-                                                    basis=basis, driver=driver, keywords=keywords)
-
-            # spec_data, meta["n_found"] = self.get_query_projection(
-            #     QCSpecORM, spec_query)
-            # spec_dict = {spec['id']: spec for spec in spec_data}
-            # spec_ids = list(spec_dict.keys())
-
-            # if len(spec_ids) == 0:
-            #     meta["n_found"] = 0
-            #     meta["success"] = True
-            #     return {"data": [], "meta": meta}
-
-        query = format_query(
-            ResultORM,
-            id=id,
-            molecule=molecule,
-            manager_id=manager_id,
-            status=status
+        spec_query = format_query(
+            QCSpecORM, program=program, method=method, basis=basis, driver=driver, keywords=keywords
         )
+
+        # spec_data, meta["n_found"] = self.get_query_projection(
+        #     QCSpecORM, spec_query)
+        # spec_dict = {spec['id']: spec for spec in spec_data}
+        # spec_ids = list(spec_dict.keys())
+
+        # if len(spec_ids) == 0:
+        #     meta["n_found"] = 0
+        #     meta["success"] = True
+        #     return {"data": [], "meta": meta}
+
+        query = format_query(ResultORM, id=id, molecule=molecule, manager_id=manager_id, status=status)
         data, meta["n_found"] = self.get_query_projection(
-            ResultORM, query, include=include, exclude=exclude, limit=limit, skip=skip, join_class=QCSpecORM, secondary_query=spec_query)
+            ResultORM,
+            query,
+            include=include,
+            exclude=exclude,
+            limit=limit,
+            skip=skip,
+            join_class=QCSpecORM,
+            secondary_query=spec_query,
+        )
 
         if include is None and exclude is None:
             for res, spec in data:
-                _ = spec.pop('id')
-                _ = res.pop('qc_spec')
+                _ = spec.pop("id")
+                _ = res.pop("qc_spec")
 
             data = [{**res, **spec} for res, spec in data]
 

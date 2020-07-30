@@ -203,26 +203,14 @@ def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
     assert len(molecules_H4O2) == 2
     assert len(kw_fixtures) == 1
 
-    spec1 = {
-        "method": "m1",
-        "basis":  "b1",
-        "program": "p1",
-        "driver": "energy",
-        "keywords": None
-    }
+    spec1 = {"method": "m1", "basis": "b1", "program": "p1", "driver": "energy", "keywords": None}
 
     page1 = {
         "molecule": molecules_H4O2[0],
         "status": "COMPLETE",
     }
 
-    spec2 = {
-        "method": "m2",
-        "basis": "b1",
-        "keywords": kw_fixtures[0],
-        "program": "p1",
-        "driver": "energy"
-    }
+    spec2 = {"method": "m2", "basis": "b1", "keywords": kw_fixtures[0], "program": "p1", "driver": "energy"}
 
     page2 = {
         "molecule": molecules_H4O2[1],
@@ -238,9 +226,13 @@ def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
     session.commit()
 
     # IMPORTANT: To be able to access lazy loading children use joinedload
-    ret = session.query(ResultORM).options(joinedload("molecule_obj")) \
-                                  .join(QCSpecORM) \
-                                  .filter(QCSpecORM.method == "m1").first()
+    ret = (
+        session.query(ResultORM)
+        .options(joinedload("molecule_obj"))
+        .join(QCSpecORM)
+        .filter(QCSpecORM.method == "m1")
+        .first()
+    )
     assert ret.molecule_obj.molecular_formula == "H4O2"
     # Accessing the keywords_obj will issue a DB access
     assert ret.qc_spec_obj.keywords_obj == None
@@ -253,13 +245,15 @@ def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
     session.add(result2)
     session.commit()
 
-    q = session.query(ResultORM).options(joinedload("molecule_obj"))\
-                                  .join(QCSpecORM)\
-                                  .filter(QCSpecORM.method == "m2")
+    q = session.query(ResultORM).options(joinedload("molecule_obj")).join(QCSpecORM).filter(QCSpecORM.method == "m2")
 
-    ret = session.query(ResultORM).options(joinedload("molecule_obj"))\
-                                  .join(QCSpecORM)\
-                                  .filter(QCSpecORM.method == "m2").first()
+    ret = (
+        session.query(ResultORM)
+        .options(joinedload("molecule_obj"))
+        .join(QCSpecORM)
+        .filter(QCSpecORM.method == "m2")
+        .first()
+    )
     assert ret.molecule_obj.molecular_formula == "H4O2"
     assert ret.qc_spec_obj.method == "m2"
 
@@ -382,7 +376,7 @@ def test_add_task_queue(storage_socket, session, molecules_H4O2):
         "method": "m1",
         "basis": "b1",
         "keywords": None,
-        "driver":"energy",
+        "driver": "energy",
         "program": "p1",
     }
 
@@ -390,10 +384,7 @@ def test_add_task_queue(storage_socket, session, molecules_H4O2):
     session.add(qc_spec1)
     session.commit()
 
-    page1 = {
-        "molecule": molecules_H4O2[0],
-        "qc_spec": qc_spec1.id
-    }
+    page1 = {"molecule": molecules_H4O2[0], "qc_spec": qc_spec1.id}
     # add a task that reference results
     result = ResultORM(**page1)
     session.add(result)

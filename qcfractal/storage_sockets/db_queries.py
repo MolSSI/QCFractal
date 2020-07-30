@@ -341,7 +341,7 @@ class OptimizationQueries(QueryBase):
 
         if optimization_ids is None:
             self._raise_missing_attribute("final_result", "List of optimizations ids")
-        
+
         sql_statement = text(
             """
             select * from base_result
