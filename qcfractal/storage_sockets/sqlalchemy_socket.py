@@ -1267,10 +1267,18 @@ class SQLAlchemySocket:
                     self.logger.error("Attempted update without ID, skipping")
                     continue
 
-                data = result.dict(exclude={"id"})
+                data = result.dict(exclude={"id", "program", "method", "driver", "basis", "keywords"})
                 # retrieve the found item
                 found_db = found_dict[result.id]
+                found_spec = found_db.qc_spec_obj
 
+                if (result.program, result.method, result.basis, result.driver, result.keywords) != \
+                   (found_spec.program, found_spec.method, found_spec.basis, found_spec.driver, found_spec.keywords):
+
+                    new_spec_id = self._add_specs([QCSpecification(program=result.program, method=result.method, driver=result.driver,
+                                                basis=result.basis, keywords=result.keywords)])["data"][0]
+                    
+                    setattr(found_db, "qc_spec", int(new_spec_id))
                 # updating the found item with input attribute values.
                 for attr, val in data.items():
                     setattr(found_db, attr, val)
