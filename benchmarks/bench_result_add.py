@@ -5,6 +5,7 @@ import qcfractal
 import qcfractal.interface as ptl
 import numpy as np
 import qcelemental as qcel
+import random
 
 print("Building and clearing the database...\n")
 db_name = "molecule_tests"
@@ -29,8 +30,12 @@ def create_unique_result():
 
     mol = build_unique_mol()
     ret = storage.add_molecules([mol])["data"]
-    result = ResultRecord(version='1', driver='energy', program='games', molecule=ret[0],
-                          method='test', basis='6-31g')
+    methods = ["M" + str(i + 1) for i in range(7)]
+    programs = ["p" + str(i + 1) for i in range(7)]
+    program = random.choice(programs)
+    method = random.choice(methods)
+    result = ResultRecord(version='1', driver='energy', program=program, molecule=ret[0],
+                          method=method, basis='6-31g')
 
     return result
 
@@ -95,3 +100,8 @@ for trial in mol_trials:
     print(f"update: {trial:6d} {ttime:9.3f} {time_per_mol:6.3f}")
     print()
 
+t = time.time()
+_ = storage.get_results(method="M1", program="p3")
+ttime = (time.time() - t) * 1000
+print (f"get: {ttime:9.3f}")
+print ()
