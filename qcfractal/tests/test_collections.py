@@ -496,6 +496,7 @@ def test_dataset_compute_response(fractal_compute_server):
     assert len(response.ids) == 2
 
 
+@testing.using_psi4
 def test_dataset_protocols(fractal_compute_server):
     """ Tests using protocols with dataset compute."""
     client = ptl.FractalClient(fractal_compute_server)
