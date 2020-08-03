@@ -1220,7 +1220,9 @@ class Dataset(Collection):
 
             for i in range(0, len(umols), self.client.query_limit):
                 chunk_mols = umols[i : i + self.client.query_limit]
-                ret = self.client.add_compute(**compute_set, molecule=chunk_mols, tag=tag, priority=priority, protocols=protocols)
+                ret = self.client.add_compute(
+                    **compute_set, molecule=chunk_mols, tag=tag, priority=priority, protocols=protocols
+                )
 
                 ids.extend(ret.ids)
                 submitted.extend(ret.submitted)
