@@ -503,7 +503,7 @@ def test_dataset_protocols(fractal_compute_server):
     # Build basis dataset
     ds = ptl.collections.Dataset("protocol_dataset", client, default_program="psi4", default_driver="energy")
 
-    ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1.2"))
+    ds.add_entry("He1", ptl.Molecule.from_data("He 0 0 0\n--\nHe 0 0 2.2"))
     ds.save()
 
     # compute the wavefunction
