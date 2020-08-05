@@ -496,6 +496,31 @@ def test_dataset_compute_response(fractal_compute_server):
     assert len(response.ids) == 2
 
 
+@testing.using_psi4
+def test_dataset_protocols(fractal_compute_server):
+    """ Tests using protocols with dataset compute."""
+    client = ptl.FractalClient(fractal_compute_server)
+
+    # Build basis dataset
+    ds = ptl.collections.Dataset("protocol_dataset", client, default_program="psi4", default_driver="energy")
+
+    ds.add_entry("He1", ptl.Molecule.from_data("He 0 0 0\n--\nHe 0 0 2.2"))
+    ds.save()
+
+    # compute the wavefunction
+    response = ds.compute(method="hf", basis="sto-3g", protocols={"wavefunction": "orbitals_and_eigenvalues"})
+
+    # await the result and check for orbitals
+    fractal_compute_server.await_results()
+
+    result = client.query_results(id=response.ids)[0]
+    orbitals = result.get_wavefunction("orbitals_a")
+    assert orbitals.shape == (2, 2)
+
+    basis = result.get_wavefunction("basis")
+    assert basis.name.lower() == "sto-3g"
+
+
 def test_reactiondataset_check_state(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
     ds = ptl.collections.ReactionDataset("check_state", client, ds_type="ie", default_program="rdkit")

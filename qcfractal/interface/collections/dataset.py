@@ -1194,6 +1194,7 @@ class Dataset(Collection):
         molecules: Union[List[str], pd.Series],
         tag: Optional[str] = None,
         priority: Optional[str] = None,
+        protocols: Optional[Dict[str, Any]] = None,
     ) -> ComputeResponse:
         """
         Internal compute function
@@ -1219,7 +1220,9 @@ class Dataset(Collection):
 
             for i in range(0, len(umols), self.client.query_limit):
                 chunk_mols = umols[i : i + self.client.query_limit]
-                ret = self.client.add_compute(**compute_set, molecule=chunk_mols, tag=tag, priority=priority)
+                ret = self.client.add_compute(
+                    **compute_set, molecule=chunk_mols, tag=tag, priority=priority, protocols=protocols
+                )
 
                 ids.extend(ret.ids)
                 submitted.extend(ret.submitted)
@@ -1626,6 +1629,7 @@ class Dataset(Collection):
         program: Optional[str] = None,
         tag: Optional[str] = None,
         priority: Optional[str] = None,
+        protocols: Optional[Dict[str, Any]] = None,
     ) -> ComputeResponse:
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
@@ -1644,6 +1648,9 @@ class Dataset(Collection):
             The queue tag to use when submitting compute requests.
         priority : Optional[str], optional
             The priority of the jobs low, medium, or high.
+        protocols: Optional[Dict[str, Any]], optional
+            Protocols for store more or less data per field. Current valid
+            protocols: {'wavefunction'}
 
         Returns
         -------
@@ -1658,7 +1665,7 @@ class Dataset(Collection):
 
         molecule_idx = [e.molecule_id for e in self.data.records]
 
-        ret = self._compute(compute_keys, molecule_idx, tag, priority)
+        ret = self._compute(compute_keys, molecule_idx, tag, priority, protocols)
         self.save()
 
         return ret
