@@ -34,7 +34,7 @@ def upgrade():
         sa.MetaData(),
         sa.Column("id", sa.Integer, sa.ForeignKey("base_result.id", ondelete="CASCADE"), primary_key=True),
         sa.Column("program", sa.String(100), nullable=False),
-        sa.Column("driver", sa.String(100), nullable=False),  # Old column.
+        sa.Column("driver", sa.String(100), nullable=False),  # Old columns.
         sa.Column("basis", sa.String(100)),
         sa.Column("method", sa.String(100), nullable=False),
         sa.Column("keywords", sa.Integer, sa.ForeignKey("keywords.id")),
@@ -54,9 +54,7 @@ def upgrade():
         .distinct()
         .all()
     )
-    # from sqlalchemy.dialects import postgresql
-    # query = session.query(KeywordsORM.id).filter(KeywordsORM.values.cast(JSONB) == cast('{"args": "unknown"}',JSONB))
-    # print (query.statement.compile(dialect=postgresql.dialect()))
+    # retrieve the dummy {"args":"unknown"} keywords record
     kw_dummy = (
         session.query(KeywordsORM.id).filter(KeywordsORM.values.cast(JSONB) == cast({"args": "unknown"}, JSONB)).first()
     )
@@ -135,6 +133,7 @@ def downgrade():
     bind = op.get_bind()
     session = Session(bind=bind)
 
+    # current state of the result table in db
     result_table = sa.Table(
         "result",
         sa.MetaData(),
@@ -150,11 +149,13 @@ def downgrade():
     unique_spec_ids = session.query(result_table.c.qc_spec).distinct().all()
 
     for spec_id in unique_spec_ids:
+        # For each unique spec id, retrieve the full specification
         spec = (
             session.query(QCSpecORM.program, QCSpecORM.driver, QCSpecORM.basis, QCSpecORM.method, QCSpecORM.keywords)
             .filter(QCSpecORM.id == spec_id)
             .first()
         )
+        # Set the specificaiton found back to the corresponding rows.
         update_cnt = (
             session.query(result_table)
             .filter(result_table.c.qc_spec == spec_id)
@@ -172,6 +173,7 @@ def downgrade():
 
     op.drop_column("result", "qc_spec")
 
+    # When creating columns, we had to give default values for not null columns, dropping it now.
     op.alter_column("result", "program", server_default=None)
     op.alter_column("result", "driver", server_default=None)
     op.alter_column("result", "method", server_default=None)

@@ -350,6 +350,8 @@ class SQLAlchemySocket:
             _projection = set(include)
         elif exclude:
             _projection = set(className._all_col_names()) - set(exclude) - set(className.db_related_fields)
+            # join_class column needs to be aggreggated, and also exclude needs to be subtracted
+            # exclude may have columns in joined class
             if join_class:
                 _projection = (
                     _projection.union(set(join_class._get_col_types()))
@@ -392,6 +394,7 @@ class SQLAlchemySocket:
                 if join_class is None:
                     data = session.query(*proj).filter(*query)
 
+                # if there was any join, use secondary query conds and the join class
                 else:
                     data = session.query(*proj).join(join_class).filter(*query, *secondary_query)
 
@@ -440,8 +443,6 @@ class SQLAlchemySocket:
 
                     # transform ids from int into str
                     for key in id_fields:
-                        # do not transform relation objects, they are wanted by the user
-                        # CHECK THIS YO
                         if key in join_attrs.keys() and d[key] is not None:
                             d[key] = [item.to_dict() for item in d[key]]
                         elif key in d.keys() and d[key] is not None:
@@ -454,6 +455,7 @@ class SQLAlchemySocket:
                 if join_class is None:
                     data = session.query(className).filter(*query)
 
+                # use secondary_query conds and join class, if provided
                 else:
                     data = session.query(className, join_class).join(join_class).filter(*query, *secondary_query)
 
@@ -463,6 +465,7 @@ class SQLAlchemySocket:
                 data = data.limit(self.get_limit(limit)).offset(skip).all()
                 if join_class is None:
                     rdata = [d.to_dict() for d in data]
+                # join class has a seperate dict
                 else:
                     rdata = [(d.to_dict(), j.to_dict()) for d, j in data]
 
@@ -1270,6 +1273,7 @@ class SQLAlchemySocket:
                 found_db = found_dict[result.id]
                 found_spec = found_db.qc_spec_obj
 
+                # if the new result record spec different, add the spec to database and update qc_spec id.
                 if (result.program, result.method, result.basis, result.driver, result.keywords) != (
                     found_spec.program,
                     found_spec.method,
@@ -1290,6 +1294,7 @@ class SQLAlchemySocket:
                         ]
                     )["data"][0]
 
+                    # updating the specification id
                     setattr(found_db, "qc_spec", int(new_spec_id))
                 # updating the found item with input attribute values.
                 for attr, val in data.items():
@@ -1382,32 +1387,13 @@ class SQLAlchemySocket:
         if id is not None:
             status = None
 
-        # if (program, method, basis, driver, keywords) == (None, None, None, None, None):
-        #     query = format_query(
-        #         ResultORM,
-        #         id=id,
-        #         molecule=molecule,
-        #         include = ['qc_spec'],
-        #         manager_id=manager_id,
-        #         status=status
-        #     )
-
-        # else:
+        # query expression for the joined class(secondary query)
         spec_query = format_query(
             QCSpecORM, program=program, method=method, basis=basis, driver=driver, keywords=keywords
         )
-
-        # spec_data, meta["n_found"] = self.get_query_projection(
-        #     QCSpecORM, spec_query)
-        # spec_dict = {spec['id']: spec for spec in spec_data}
-        # spec_ids = list(spec_dict.keys())
-
-        # if len(spec_ids) == 0:
-        #     meta["n_found"] = 0
-        #     meta["success"] = True
-        #     return {"data": [], "meta": meta}
-
+        # main class query expressions
         query = format_query(ResultORM, id=id, molecule=molecule, manager_id=manager_id, status=status)
+        # qc_spec needs to be joined with query conds derived at spec_query
         data, meta["n_found"] = self.get_query_projection(
             ResultORM,
             query,
@@ -1418,12 +1404,12 @@ class SQLAlchemySocket:
             join_class=QCSpecORM,
             secondary_query=spec_query,
         )
-
+        # Specification id is not required, removing it
         if include is None and exclude is None:
             for res, spec in data:
                 _ = spec.pop("id")
                 _ = res.pop("qc_spec")
-
+            # all remaining columns placed in one dictionary
             data = [{**res, **spec} for res, spec in data]
 
         meta["success"] = True
