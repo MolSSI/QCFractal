@@ -1149,3 +1149,23 @@ register_model(r"optimization/final_result", "GET", OptimizationFinalResultBody,
 register_model(r"optimization/all_results", "GET", OptimizationAllResultBody, ListResultResponse)
 register_model(r"optimization/initial_molecule", "GET", OptimizationAllResultBody, ListMoleculeResponse)
 register_model(r"optimization/final_molecule", "GET", OptimizationAllResultBody, ListMoleculeResponse)
+
+
+class ManagerInfoGETBody(ProtoModel):
+    class Data(ProtoModel):
+        name: QueryStr = Field(None, description="Name(s) of managers to query for.")
+        status: QueryStr = Field(
+            None,
+            description="Managers will be searched based on status. See :class:`ManagerStatusEnum` for valid statuses.",
+        )
+
+    meta: QueryMeta = Field(QueryMeta(), description=common_docs[QueryMeta])
+    data: Data = Field(..., description="The keys with data to search the database on for Managers.")
+
+
+class ManagerInfoGETResponse(ProtoModel):
+    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
+    data: List[Dict[str, Any]] = Field(..., description="Information about the requested managers")
+
+
+register_model(r"manager", "GET", ManagerInfoGETBody, ManagerInfoGETResponse)

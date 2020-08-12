@@ -271,7 +271,9 @@ class ResultRecord(RecordBase):
         description="The Id of the :class:`KeywordSet` which was passed into the quantum chemistry program that "
         "performed this calculation.",
     )
-    protocols: qcel.models.results.ResultProtocols = Field(qcel.models.results.ResultProtocols(), description="")
+    protocols: Optional[qcel.models.results.ResultProtocols] = Field(
+        qcel.models.results.ResultProtocols(), description=""
+    )
 
     # Output data
     return_result: Union[float, qcel.models.types.Array[float], Dict[str, Any]] = Field(
@@ -460,7 +462,7 @@ class OptimizationRecord(RecordBase):
         description="The keyword options which were passed into the Optimization program. "
         "Note: These are a dictionary and not a :class:`KeywordSet` object.",
     )
-    protocols: qcel.models.procedures.OptimizationProtocols = Field(
+    protocols: Optional[qcel.models.procedures.OptimizationProtocols] = Field(
         qcel.models.procedures.OptimizationProtocols(), description=""
     )
 
