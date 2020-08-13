@@ -17,8 +17,19 @@ depends_on = None
 
 
 def upgrade():
-    op.execute("alter table torsion_init_mol_association add column id serial primary key;")
+
+    op.execute(
+        "DELETE FROM torsion_init_mol_association a USING \
+    (SELECT MIN(ctid) as ctid, torsion_id, molecule_id \
+        FROM torsion_init_mol_association \
+        GROUP BY torsion_id, molecule_id HAVING COUNT(*) > 1 \
+      ) b \
+      WHERE a.torsion_id = b.torsion_id and a.molecule_id = b.molecule_id \
+      AND a.ctid <> b.ctid"
+    )
+
+    op.execute("alter table add primary key (torsion_id, molecule_id)")
 
 
 def downgrade():
-    op.execute("alter table torsion_init_mol_association drop column id;")
+    op.execute("alter table drop constraint torsion_init_mol_association_pkey")

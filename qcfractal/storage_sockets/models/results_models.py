@@ -405,9 +405,10 @@ class TorsionInitMol(Base):
 
     __tablename__ = "torsion_init_mol_association"
 
-    id = Column("id", Integer, primary_key=True)
-    torsion_id = Column("torsion_id", Integer, ForeignKey("torsiondrive_procedure.id", ondelete="cascade"))
-    molecule_id = Column("molecule_id", Integer, ForeignKey("molecule.id", ondelete="cascade"))
+    torsion_id = Column(
+        "torsion_id", Integer, ForeignKey("torsiondrive_procedure.id", ondelete="cascade"), primary_key=True
+    )
+    molecule_id = Column("molecule_id", Integer, ForeignKey("molecule.id", ondelete="cascade"), primary_key=True)
 
 
 # association table for many to many relation
