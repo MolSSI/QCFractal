@@ -700,7 +700,7 @@ class Dataset(Collection):
         DataFrame
             A DataFrame of the queried parameters
         """
-        au_units = {"energy": "hartree", "gradient": "hartree/bohr", "hessian": "hartree/bohr**2"}
+        au_units = {"energy": "hartree", "gradient": "hartree/bohr", "hessian": "hartree/bohr**2","properties":"hartree"}
 
         # So that datasets with no records do not require a default program and default keywords
         if len(self.list_records()) == 0:
@@ -1286,6 +1286,18 @@ class Dataset(Collection):
         """
 
         self.data.__dict__["default_benchmark"] = benchmark
+        return True
+
+    def set_default_driver(self,driver: str) -> bool:
+        """
+        Sets the default driver value.
+
+        Parameters
+        ----------
+        driver: str
+            The driver for the collection computation.
+        """
+        self.data.__dict__["default_driver"] = driver
         return True
 
     def add_keywords(self, alias: str, program: str, keyword: "KeywordSet", default: bool = False) -> bool:
