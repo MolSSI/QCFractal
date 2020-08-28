@@ -18,6 +18,7 @@ depends_on = None
 
 def upgrade():
 
+    # Removes (harmless) duplicate rows
     op.execute(
         "DELETE FROM torsion_init_mol_association a USING \
     (SELECT MIN(ctid) as ctid, torsion_id, molecule_id \
@@ -28,8 +29,8 @@ def upgrade():
       AND a.ctid <> b.ctid"
     )
 
-    op.execute("alter table add primary key (torsion_id, molecule_id)")
+    op.execute("alter table torsion_init_mol_association add primary key (torsion_id, molecule_id)")
 
 
 def downgrade():
-    op.execute("alter table drop constraint torsion_init_mol_association_pkey")
+    op.execute("alter table torsion_init_mol_association drop constraint torsion_init_mol_association_pkey")
