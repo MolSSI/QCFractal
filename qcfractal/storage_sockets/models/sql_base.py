@@ -136,7 +136,9 @@ class Base:
                     )
                 )
             if to_add:
-                session.execute(table.insert().values([(parent_id_val, my_id) for my_id in to_add]))
+                session.execute(
+                    table.insert().values([{parent_id_name: parent_id_val, child_id_name: my_id} for my_id in to_add])
+                )
 
     def __str__(self):
         if hasattr(self, "id"):
