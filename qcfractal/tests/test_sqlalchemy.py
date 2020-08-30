@@ -81,7 +81,8 @@ def test_logs(storage_socket, session):
     session.add(log)
     session.commit()
 
-    assert session.query(KVStoreORM).count() == 1
+    q = session.query(KVStoreORM).one()
+    assert q.value == "New log"
 
     session_delete_all(session, KVStoreORM)
 

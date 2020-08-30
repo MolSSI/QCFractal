@@ -1,6 +1,7 @@
 """
 Common models for QCPortal/Fractal
 """
+import json
 from enum import Enum
 from typing import Any, Dict, Optional
 
@@ -52,6 +53,71 @@ class DriverEnum(str, Enum):
     gradient = "gradient"
     hessian = "hessian"
     properties = "properties"
+
+
+class CompressionEnum(str, Enum):
+    """
+    How data is compressed (compression method only, ie gzip, bzip2)
+    """
+
+    none = "none"
+    gzip = "gzip"
+    bzip2 = "bzip2"
+    lzma = "lzma"
+
+
+class KVStore(ProtoModel):
+    """
+    Storage of outputs and error messages, with optional compression
+    """
+
+    id: int = Field(
+        None, description="Id of the object on the database. This is assigned automatically by the database."
+    )
+
+    compression: CompressionEnum = Field(CompressionEnum.none, description="Compression method (such as gzip)")
+    compression_level: int = Field(0, description="Level of compression (typically 0-9)")
+    data: bytes = Field(..., description="Stuff")
+
+    @validator("compression", pre=True)
+    def _set_compression(cls, compression):
+        """Sets the compression type to CompressionEnum.none if compression is None
+
+        Needed as older entries in the database have null for compression/compression_level
+        """
+        if compression is None:
+            return CompressionEnum.none
+        else:
+            return compression
+
+    @validator("compression_level", pre=True)
+    def _set_compression_level(cls, compression_level):
+        """Sets the compression_level to zero if compression is None
+
+        Needed as older entries in the database have null for compression/compression_level
+        """
+        if compression_level is None:
+            return 0
+        else:
+            return compression_level
+
+    def get_string(self):
+        """
+        Returns the string representing the output
+        """
+        if self.compression == CompressionEnum.none:
+            return self.data.decode()
+        else:
+            raise NotImplementedError("Compression")
+
+    def get_json(self):
+        """
+        Returns a dict if the data stored is a JSON string
+
+        (errors are stored as JSON. stdout/stderr are just strings)
+        """
+        s = self.get_string()
+        return json.loads(s)
 
 
 class QCSpecification(ProtoModel):
