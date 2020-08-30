@@ -560,6 +560,9 @@ class SQLAlchemySocket:
         for d in rdata:
             val = d.pop("value")
             if d["data"] is None:
+                # val may be a dict/JSON
+                if isinstance(val, dict):
+                    val = json.dumps(val)
                 d["data"] = val.encode('utf-8') # Convert string held in value to bytes
             data[d["id"]] = KVStore(**d)
 

@@ -175,7 +175,6 @@ class KVStoreHandler(APIHandler):
         body = self.parse_bodymodel(body_model)
 
         ret = self.storage.get_kvstore(body.data.id)
-        ret = [x.get_string() for x in ret]
         ret = response_model(**ret)
 
         self.logger.info("GET: KVStore - {} pulls.".format(len(ret.data)))

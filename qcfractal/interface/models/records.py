@@ -204,7 +204,13 @@ class RecordBase(ProtoModel, abc.ABC):
             return None
 
         if field_name not in self.cache:
-            self.cache[field_name] = self.client.query_kvstore([oid])[oid]
+            # Decompress here, rather than later
+            # that way, it is decompressed in the cache
+            kv = self.client.query_kvstore([oid])[oid]
+            if field_name == "error":
+                self.cache[field_name] = kv.get_json()
+            else:
+                self.cache[field_name] = kv.get_string()
 
         return self.cache[field_name]
 
