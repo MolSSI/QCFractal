@@ -2334,7 +2334,7 @@ class SQLAlchemySocket:
                 base_result.manager_name = task_obj.manager
                 base_result.modified_on = dt.utcnow()
 
-                err = KVStore(data=str(msg))
+                err = KVStore(data=msg)
                 err_id = self.add_kvstore([err])["data"][0]
                 base_result.error = err_id
 

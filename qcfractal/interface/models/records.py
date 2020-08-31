@@ -207,6 +207,7 @@ class RecordBase(ProtoModel, abc.ABC):
             # Decompress here, rather than later
             # that way, it is decompressed in the cache
             kv = self.client.query_kvstore([oid])[oid]
+
             if field_name == "error":
                 self.cache[field_name] = kv.get_json()
             else:

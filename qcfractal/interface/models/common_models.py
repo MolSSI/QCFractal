@@ -85,6 +85,19 @@ class KVStore(ProtoModel):
     compression_level: int = Field(0, description="Level of compression (typically 0-9)")
     data: bytes = Field(..., description="Stuff")
 
+    @validator("data", pre=True)
+    def _set_data(cls, data):
+        """Handles special data types
+
+        Strings are converted to byte arrays, and dicts are converted via json.dumps
+        """
+        if isinstance(data, dict):
+            return json.dumps(data).encode()
+        elif isinstance(data, str):
+            return data.encode()
+        else:
+            return data
+
     @validator("compression", pre=True)
     def _set_compression(cls, compression):
         """Sets the compression type to CompressionEnum.none if compression is None

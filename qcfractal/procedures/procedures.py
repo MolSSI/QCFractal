@@ -166,7 +166,7 @@ class SingleResultTasks(BaseTasks):
             rdata = data["result"]
 
             outputs = [rdata["stdout"], rdata["stderr"], rdata["error"]]
-            kvstores = [KVStore(data=x.encode()) for x in outputs]
+            kvstores = [KVStore(data=x) if x is not None else None for x in outputs]
             stdout, stderr, error = self.storage.add_kvstore(kvstores)["data"]
             rdata["stdout"] = stdout
             rdata["stderr"] = stderr
@@ -380,7 +380,7 @@ class OptimizationTasks(BaseTasks):
 
             # Save stdout/stderr
             outputs = [procedure["stdout"], procedure["stderr"], procedure["error"]]
-            kvstores = [KVStore(data=x.encode()) for x in outputs]
+            kvstores = [KVStore(data=x) if x is not None else None for x in outputs]
             stdout, stderr, error = self.storage.add_kvstore(kvstores)["data"]
             update_dict["stdout"] = stdout
             update_dict["stderr"] = stderr
