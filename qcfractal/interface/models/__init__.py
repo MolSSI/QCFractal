@@ -7,6 +7,7 @@ from .common_models import (
     AutodocBaseSettings,
     Citation,
     KeywordSet,
+    CompressionEnum,
     KVStore,
     Molecule,
     ObjectId,

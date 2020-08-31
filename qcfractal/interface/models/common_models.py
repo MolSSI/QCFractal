@@ -2,6 +2,12 @@
 Common models for QCPortal/Fractal
 """
 import json
+
+# For compression
+import lzma
+import bz2
+import gzip
+
 from enum import Enum
 from typing import Any, Dict, Optional
 
@@ -101,14 +107,51 @@ class KVStore(ProtoModel):
         else:
             return compression_level
 
+    @classmethod
+    def compress(cls, s: str, compression_type: CompressionEnum = CompressionEnum.none, compression_level: Optional[int] = None):
+        '''Compresses a string given a compression scheme and level
+
+        Returns an object of type `cls`
+
+        If compression_level is None, but a compression_type is specified, an appropriate default level is chosen
+        '''
+
+        data = s.encode()
+
+        if compression_type is CompressionEnum.none:
+            compression_level = 0
+        elif compression_type is CompressionEnum.gzip:
+            compression_level = 6
+            data = gzip.compress(data, compresslevel=compression_level)
+        elif compression_type is CompressionEnum.bzip2:
+            compression_level = 6
+            data = bz2.compress(data, compresslevel=compression_level)
+        elif compression_type is CompressionEnum.lzma:
+            compression_level = 6
+            data = lzma.compress(data, preset=compression_level)
+        else:
+            # Shouldn't ever happen, unless we change CompressionEnum but not the rest of this function
+            raise TypeError("Unknown compression type??")
+
+        return cls(data=data, compression=compression_type, compression_level=compression_level)
+
+
     def get_string(self):
         """
         Returns the string representing the output
         """
-        if self.compression == CompressionEnum.none:
+        if self.compression is CompressionEnum.none:
             return self.data.decode()
+        elif self.compression is CompressionEnum.gzip:
+            return gzip.decompress(self.data).decode()
+        elif self.compression is CompressionEnum.bzip2:
+            return bz2.decompress(self.data).decode()
+        elif self.compression is CompressionEnum.lzma:
+            return lzma.decompress(self.data).decode()
         else:
-            raise NotImplementedError("Compression")
+            # Shouldn't ever happen, unless we change CompressionEnum but not the rest of this function
+            raise TypeError("Unknown compression type??")
+
 
     def get_json(self):
         """
