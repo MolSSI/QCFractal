@@ -76,9 +76,9 @@ def parse_args():
     start = subparsers.add_parser("start", help="Starts a QCFractal server instance.")
     start.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
-    # Allow port and logfile to be altered on the fly
+    # Allow some config settings to be altered via the command line
     fractal_args = start.add_argument_group("Server Settings")
-    for field in ["port", "logfile"]:
+    for field in ["port", "logfile", "loglevel"]:
         cli_name = "--" + field.replace("_", "-")
         fractal_args.add_argument(cli_name, **FractalServerSettings.help_info(field))
 
@@ -359,6 +359,9 @@ def server_start(args, config):
     else:
         logfile = str(config.base_path / config.fractal.logfile)
 
+    print("\n>>> Logging to " + logfile)
+    print(">>> Loglevel: " + config.fractal.loglevel.upper())
+
     print("\n>>> Checking the PostgreSQL connection...")
     psql = PostgresHarness(config, quiet=False, logger=print)
 
@@ -386,6 +389,7 @@ def server_start(args, config):
             view_path=config.view_path,
             # Log options
             logfile_prefix=logfile,
+            loglevel=config.fractal.loglevel,
             log_apis=config.fractal.log_apis,
             geo_file_path=config.geo_file_path(),
             # Queue options

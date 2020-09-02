@@ -96,7 +96,7 @@ class FractalServerSettings(ConfigSettings):
     port: int = Field(7777, description="The QCFractal default port.")
 
     compress_response: bool = Field(
-        True, description="Compress REST responses or not, should be True unless behind a " "proxy."
+        True, description="Compress REST responses or not, should be True unless behind a proxy."
     )
     allow_read: bool = Field(True, description="Always allows read access to record tables.")
     security: str = Field(
@@ -109,6 +109,7 @@ class FractalServerSettings(ConfigSettings):
 
     query_limit: int = Field(1000, description="The maximum number of records to return per query.")
     logfile: Optional[str] = Field("qcfractal_server.log", description="The logfile to write server logs.")
+    loglevel: str = Field("info", description="Level of logging to enable (debug, info, warning, error, critical)")
     service_frequency: int = Field(60, description="The frequency to update the QCFractal services.")
     max_active_services: int = Field(20, description="The maximum number of concurrent active services.")
     heartbeat_frequency: int = Field(1800, description="The frequency (in seconds) to check the heartbeat of workers.")

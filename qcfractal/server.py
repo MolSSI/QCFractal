@@ -34,9 +34,6 @@ from .web_handlers import (
     WavefunctionStoreHandler,
 )
 
-myFormatter = logging.Formatter("[%(asctime)s] %(message)s", datefmt="%m/%d/%Y %I:%M:%S %p")
-
-
 def _build_ssl():
     from cryptography import x509
     from cryptography.x509.oid import NameOID
@@ -109,6 +106,7 @@ class FractalServer:
         view_path: Optional[str] = None,
         # Log options
         logfile_prefix: str = None,
+        loglevel: str = "info",
         log_apis: bool = False,
         geo_file_path: str = None,
         # Queue options
@@ -148,6 +146,8 @@ class FractalServer:
             The maximum number of entries a query will return.
         logfile_prefix : str, optional
             The logfile to use for logging.
+        loglevel : str, optional
+            The level of logging to output
         queue_socket : BaseAdapter, optional
             An optional Adapter to provide for server to have limited local compute.
             Should only be used for testing and interactive sessions.
@@ -177,6 +177,7 @@ class FractalServer:
 
         tornado.log.enable_pretty_logging()
         self.logger = logging.getLogger("tornado.application")
+        self.logger.setLevel(loglevel.upper())
 
         # Create API Access logger class if enables
         if log_apis:
