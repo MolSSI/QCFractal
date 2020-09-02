@@ -171,10 +171,6 @@ def parse_args():
     user_remove = user_subparsers.add_parser("remove", help="Remove a user.")
     user_remove.add_argument("username", default=None, type=str, help="The username to remove.")
 
-    # Dashboard
-    dashboard = subparsers.add_parser("dashboard", help="Launches a Dashboard for the server (beta).")
-    dashboard.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-
     # Backup
     backup = subparsers.add_parser("backup", help="Creates a postgres backup file of the current database.")
     backup.add_argument(
@@ -486,17 +482,6 @@ def server_user(args, config):
         sys.exit(1)
 
 
-def server_dashboard(args, config):
-    standard_command_startup("dashboard", config)
-
-    from ..dashboard import app
-
-    print("\n>>> Starting dashboard...")
-    app.server.config["FRACTAL_CONFIG"] = config
-
-    app.run_server(debug=True)
-
-
 def server_backup(args, config):
     psql = standard_command_startup("backup", config)
 
@@ -610,8 +595,6 @@ def main(args=None):
         server_upgrade(args, config)
     elif command == "user":
         server_user(args, config)
-    elif command == "dashboard":
-        server_dashboard(args, config)
     elif command == "backup":
         server_backup(args, config)
     elif command == "restore":
