@@ -100,3 +100,6 @@ runinfo/
 
 # QCFractal backup files
 *.bak
+
+# Mac cruft
+.DS_Store
