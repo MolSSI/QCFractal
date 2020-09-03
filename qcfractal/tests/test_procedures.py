@@ -33,10 +33,10 @@ def test_compute_queue_stack(fractal_compute_server):
     compute_args = {"driver": "energy", "method": "HF", "basis": "sto-3g", "keywords": kw_id, "program": "psi4"}
 
     # Ask the server to compute a new computation
-    r = client.add_compute("psi4", "HF", "sto-3g", "energy", kw_id, [hydrogen_mol_id, helium])
+    r = client.add_compute("psi4", "HF", "sto-3g", "energy", kw_id, [helium, hydrogen_mol_id])
     assert len(r.ids) == 2
 
-    r2 = client.add_compute(**compute_args, molecule=[hydrogen_mol_id, helium])
+    r2 = client.add_compute(**compute_args, molecule=[helium, hydrogen_mol_id])
     assert len(r2.ids) == 2
     assert len(r2.submitted) == 0
     assert set(r2.ids) == set(r.ids)

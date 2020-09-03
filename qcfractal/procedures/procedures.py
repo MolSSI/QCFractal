@@ -139,16 +139,16 @@ class SingleResultTasks(BaseTasks):
         # Retrieve the records that were new
         new_result_records = self.storage.get_results(id=new_task_ids,
                                                       status='INCOMPLETE')['data']
-        molecules = self.storage.get_molecules(
-            id=[r['molecule'] for r in new_result_records]
-        )['data']
+        mol_ids = [r['molecule'] for r in new_result_records]
+        molecules = self.storage.get_molecules(id=mol_ids)['data']
+        molecules = dict((m.id, m) for m in molecules)
 
         # Create the task records for the queue
         new_tasks = []
-        for base_id, record_data, mol in zip(new_task_ids, new_result_records, molecules):
+        for base_id, record_data in zip(new_task_ids, new_result_records):
             # Build the input for the task
             record = ResultRecord(**record_data)
-            inp = record.build_schema_input(mol, keywords)
+            inp = record.build_schema_input(molecules[record.molecule], keywords)
 
             # Make the task record
             task = TaskRecord(
