@@ -10,13 +10,14 @@ import qcengine as qcng
 
 from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord
 from .procedures_util import parse_single_tasks
+from ..storage_sockets.sqlalchemy_socket import SQLAlchemySocket
 
 _wfn_return_names = set(qcel.models.results.WavefunctionProperties._return_results_names)
 _wfn_all_fields = set(qcel.models.results.WavefunctionProperties.__fields__.keys())
 
 
 class BaseTasks:
-    def __init__(self, storage, logger):
+    def __init__(self, storage: SQLAlchemySocket, logger):
         self.storage = storage
         self.logger = logger
 
@@ -112,29 +113,44 @@ class SingleResultTasks(BaseTasks):
         priority = meta.pop("priority", None)
 
         # Construct full tasks
-        new_tasks = []
+        records = []
         results_ids = []
-        existing_ids = []
         for mol in molecule_list:
             if mol is None:
                 results_ids.append(None)
                 continue
 
+            # Make the record
             record = ResultRecord(**meta.copy(), molecule=mol.id)
             inp = record.build_schema_input(mol, keywords)
             inp.extras["_qcfractal_tags"] = {"program": record.program, "keywords": record.keywords}
 
-            ret = self.storage.add_results([record])
+            # Append it to the list of records to be submitted
+            records.append(record)
 
-            base_id = ret["data"][0]
-            results_ids.append(base_id)
+        # Add all of the tasks
+        ret = self.storage.add_results(records)
+        results_ids.extend(ret["data"])
 
-            # Task is complete
-            if len(ret["meta"]["duplicates"]):
-                existing_ids.append(base_id)
-                continue
+        # Separate out new tasks from existing tasks
+        existing_ids = ret["meta"]["duplicates"]
+        new_task_ids = [i for i in ret["data"] if i not in existing_ids]
 
-            # Build task object
+        # Retrieve the records that were new
+        new_result_records = self.storage.get_results(id=new_task_ids,
+                                                      status='INCOMPLETE')['data']
+        molecules = self.storage.get_molecules(
+            id=[r['molecule'] for r in new_result_records]
+        )['data']
+
+        # Create the task records for the queue
+        new_tasks = []
+        for base_id, record_data, mol in zip(new_task_ids, new_result_records, molecules):
+            # Build the input for the task
+            record = ResultRecord(**record_data)
+            inp = record.build_schema_input(mol, keywords)
+
+            # Make the task record
             task = TaskRecord(
                 **{
                     "spec": {
@@ -149,7 +165,6 @@ class SingleResultTasks(BaseTasks):
                     "base_result": base_id,
                 }
             )
-
             new_tasks.append(task)
 
         return new_tasks, results_ids, existing_ids, []
