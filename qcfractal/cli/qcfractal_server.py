@@ -322,8 +322,8 @@ def server_start(args, config):
     # check if db not current, ask for upgrade
 
     print("Starting a QCFractal server.\n")
-
     print(f"QCFractal server base folder: {config.base_folder}")
+
     # Build an optional adapter
     if args["local_manager"]:
         ncores = args["local_manager"]
@@ -582,10 +582,15 @@ def main(args=None):
             sys.exit(1)
 
         file_dict = FractalConfig(**yaml.load(config.config_file_path.read_text(), Loader=yaml.FullLoader)).dict()
-        config_dict = config.dict(skip_defaults=True)
+        config_dict = config.dict(exclude_unset=True)
 
         # Only fractal options can be changed by user input parameters
         file_dict["fractal"] = {**file_dict.pop("fractal"), **config_dict.pop("fractal")}
+
+        # base_folder is global (outside of fractal, database, etc).
+        # Should be included here, just for debugging and printing purposes (as its only purpose
+        # was to read the config_file above)
+        file_dict["base_folder"] = config.base_folder
 
         config = FractalConfig(**file_dict)
 
