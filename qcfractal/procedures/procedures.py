@@ -107,6 +107,12 @@ class SingleResultTasks(BaseTasks):
         else:
             keywords = None
 
+        # Make a lookup table for molecule id to position in the initial list
+        #  Will be used in ensure the ``result_ids`` output matches the order
+        #  of the input molecules (e.g., result_ids[0] is for molecule_list[0])
+        input_order_lookup = dict(
+            (mol.id, i) for i, mol in enumerate(molecule_list) if mol is not None)
+
         # Grab the tag if available
         meta = data.meta.dict()
         tag = meta.pop("tag", None)
@@ -114,10 +120,9 @@ class SingleResultTasks(BaseTasks):
 
         # Construct full tasks
         records = []
-        results_ids = []
+        results_ids = [None] * len(molecule_list)
         for mol in molecule_list:
             if mol is None:
-                results_ids.append(None)
                 continue
 
             # Make the record
@@ -130,7 +135,11 @@ class SingleResultTasks(BaseTasks):
 
         # Add all of the tasks
         ret = self.storage.add_results(records)
-        results_ids.extend(ret["data"])
+
+        # Match result record to the input order of the molecules
+        result_records = self.storage.get_results(id=ret['data'], status=None)['data']
+        for result in result_records:
+            results_ids[input_order_lookup[result['molecule']]] = result['id']
 
         # Separate out new tasks from existing tasks
         existing_ids = ret["meta"]["duplicates"]
@@ -166,6 +175,9 @@ class SingleResultTasks(BaseTasks):
                 }
             )
             new_tasks.append(task)
+
+            # Set the result ID in the output list
+            results_ids[input_order_lookup[record.molecule]] = base_id
 
         return new_tasks, results_ids, existing_ids, []
 
