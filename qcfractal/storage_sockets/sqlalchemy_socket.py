@@ -3,7 +3,7 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 """
 
 try:
-    from sqlalchemy import create_engine, or_, case, func
+    from sqlalchemy import create_engine, and_, or_, case, func
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
     from sqlalchemy.sql.expression import desc
@@ -1138,19 +1138,21 @@ class SQLAlchemySocket:
         -------
         Dict[str, Any]
             Dict with keys: data, meta
-            Data is the ids of the inserted/updated/existing docs
+            Data is the ids of the inserted/updated/existing docs, in the same order as the
+            input record_list
         """
+
         meta = add_metadata_template()
-        # putting the placeholder for all the ids, since some can be duplicate, and some will only have ids after add operation.
-        result_ids = ["placeholder"] * len(record_list)
 
         results_list = []
-        existing_res = {}
+
+        # Stores indices referring to elements in record_list
         new_record_idx, duplicates_idx = [], []
-        conds = []
+
         # creating condition for a multi-value select
+        # This can be used to query for multiple results in a single query
         conds = [
-            (
+            and_(
                 ResultORM.program == res.program,
                 ResultORM.driver == res.driver,
                 ResultORM.method == res.method,
@@ -1158,7 +1160,7 @@ class SQLAlchemySocket:
                 ResultORM.keywords == res.keywords,
                 ResultORM.molecule == res.molecule,
             )
-            for res in results_list
+            for res in record_list
         ]
 
         with self.session_scope() as session:
@@ -1175,12 +1177,15 @@ class SQLAlchemySocket:
                 .filter(or_(*conds))
                 .all()
             )
+
             # adding all the found items to a dictionary
-            existing_res = {
+            existing_results = {
                 (doc.program, doc.driver, doc.method, doc.basis, doc.keywords, str(doc.molecule)): doc for doc in docs
             }
+
+            # Loop over all (input) records, keeping track each record's index in the list
             for i, result in enumerate(record_list):
-                # constructing an index from record_list to compare against found items(existing_res)
+                # constructing an index from the record compare against items existing_results
                 idx = (
                     result.program,
                     result.driver.value,
@@ -1189,31 +1194,59 @@ class SQLAlchemySocket:
                     int(result.keywords) if result.keywords else None,
                     result.molecule,
                 )
-                if existing_res.get(idx) is None:
-                    # if no found items, construct an object
+
+                if idx not in existing_results:
+                    # Does not exist in the database. Construct a new ResultORM
                     doc = ResultORM(**result.dict(exclude={"id"}))
-                    existing_res[idx] = doc
-                    # add the object to the list which goes for adding and commiting to database.
+
+                    # Store in existing_results in case later records are duplicates
+                    existing_results[idx] = doc
+
+                    # add the object to the list for later adding and committing to database.
                     results_list.append(doc)
-                    # identifying the index of new items in the returned result ids, for future update.
+
+                    # Store the index of this record (in record_list) as a new_record
                     new_record_idx.append(i)
                     meta["n_inserted"] += 1
                 else:
-                    doc = existing_res.get(idx)
-                    # identifying the index of duplicate items
+                    # This result already exists in the database
+                    doc = existing_results[idx]
+
+                    # Store the index of this record (in record_list) as a new_record
                     duplicates_idx.append(i)
+
+                    # Store the entire object. Since this may be a duplicate of a record
+                    # added in a previous iteration of the loop, and the data hasn't been added/committed
+                    # to the database, the id may not be known here
                     meta["duplicates"].append(doc)
 
             session.add_all(results_list)
             session.commit()
+
+            # At this point, all ids should be known. So store only the ids in the returned metadata
             meta["duplicates"] = [str(doc.id) for doc in meta["duplicates"]]
 
-            for i, idx in enumerate(new_record_idx):
-                # setting the new records returned id from commit operation
-                result_ids[idx] = str(results_list[i].id)
-            for i, idx in enumerate(duplicates_idx):
-                # setting the duplicate items, either found in the database or provided more than once in the input
-                result_ids[idx] = meta["duplicates"][i]
+            # Construct the ID list to return (in the same order as the input data)
+            # Use a placeholder for all, and we will fill later
+            result_ids = [None] * len(record_list)
+
+            # At this point:
+            #     results_list: ORM objects for all newly-added results
+            #     new_record_idx: indices (referring to record_list) of newly-added results
+            #     duplicates_idx: indices (referring to record_list) of results that already existed
+            #
+            # results_list and new_record_idx are in the same order
+            # (ie, the index stored at new_record_idx[0] refers to some element of record_list. That
+            # newly-added ResultORM is located at results_list[0])
+            #
+            # Similarly, duplicates_idx and meta["duplicates"] are in the same order
+
+            for idx, new_result in zip(new_record_idx, results_list):
+                result_ids[idx] = str(new_result.id)
+
+            # meta["duplicates"] only holds ids at this point
+            for idx, existing_result_id in zip(duplicates_idx, meta["duplicates"]):
+                result_ids[idx] = existing_result_id
 
         meta["success"] = True
 
