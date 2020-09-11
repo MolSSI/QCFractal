@@ -2,6 +2,7 @@
 All procedures tasks involved in on-node computation.
 """
 
+import abc
 from typing import List, Union
 
 import qcelemental as qcel
@@ -15,12 +16,15 @@ _wfn_return_names = set(qcel.models.results.WavefunctionProperties._return_resul
 _wfn_all_fields = set(qcel.models.results.WavefunctionProperties.__fields__.keys())
 
 
-class BaseTasks:
+class BaseTasks(abc.ABC):
     def __init__(self, storage, logger):
         self.storage = storage
         self.logger = logger
 
     def submit_tasks(self, data):
+        """
+        Creates results/procedures and tasks in the database
+        """
 
         new_tasks, results_ids, existing_ids, errors = self.parse_input(data)
 
@@ -87,14 +91,17 @@ class BaseTasks:
         rdata["stderr"] = stderr_id
         rdata["error"] = error_id
 
+    @abc.abstractmethod
     def verify_input(self, data):
-        raise TypeError("verify_input not defined")
+        pass
 
+    @abc.abstractmethod
     def parse_input(self, data):
-        raise TypeError("parse_input not defined")
+        pass
 
+    @abc.abstractmethod
     def parse_output(self, data):
-        raise TypeError("parse_output not defined")
+        pass
 
 
 class SingleResultTasks(BaseTasks):
