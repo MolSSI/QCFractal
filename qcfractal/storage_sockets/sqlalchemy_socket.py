@@ -1145,6 +1145,7 @@ class SQLAlchemySocket:
         meta = add_metadata_template()
 
         results_list = []
+        duplicates_list = []
 
         # Stores indices referring to elements in record_list
         new_record_idx, duplicates_idx = [], []
@@ -1218,13 +1219,13 @@ class SQLAlchemySocket:
                     # Store the entire object. Since this may be a duplicate of a record
                     # added in a previous iteration of the loop, and the data hasn't been added/committed
                     # to the database, the id may not be known here
-                    meta["duplicates"].append(doc)
+                    duplicates_list.append(doc)
 
             session.add_all(results_list)
             session.commit()
 
             # At this point, all ids should be known. So store only the ids in the returned metadata
-            meta["duplicates"] = [str(doc.id) for doc in meta["duplicates"]]
+            meta["duplicates"] = [str(doc.id) for doc in duplicates_list]
 
             # Construct the ID list to return (in the same order as the input data)
             # Use a placeholder for all, and we will fill later
@@ -1247,6 +1248,8 @@ class SQLAlchemySocket:
             # meta["duplicates"] only holds ids at this point
             for idx, existing_result_id in zip(duplicates_idx, meta["duplicates"]):
                 result_ids[idx] = existing_result_id
+
+        assert None not in result_ids
 
         meta["success"] = True
 
