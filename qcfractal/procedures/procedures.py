@@ -26,7 +26,7 @@ class BaseTasks(abc.ABC):
         Creates results/procedures and tasks in the database
         """
 
-        new_tasks, results_ids, existing_ids, errors = self.parse_input(data)
+        new_tasks, results_ids, existing_ids = self.parse_input(data)
 
         self.storage.queue_submit(new_tasks)
 
@@ -45,7 +45,7 @@ class BaseTasks(abc.ABC):
                 "validation_errors": [],
                 "success": True,
                 "error_description": False,
-                "errors": errors,
+                "errors": [],
             },
             "data": {"ids": results_ids, "submitted": [x.base_result for x in new_tasks], "existing": existing_ids},
         }
@@ -198,7 +198,7 @@ class SingleResultTasks(BaseTasks):
 
             new_tasks.append(task)
 
-        return new_tasks, results_ids, existing_ids, []
+        return new_tasks, results_ids, existing_ids
 
     def parse_output(self, result_outputs):
 
@@ -385,7 +385,7 @@ class OptimizationTasks(BaseTasks):
 
             new_tasks.append(task)
 
-        return new_tasks, results_ids, existing_ids, []
+        return new_tasks, results_ids, existing_ids
 
     def parse_output(self, opt_outputs):
         """Save the results of the procedure.
