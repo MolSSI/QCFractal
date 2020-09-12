@@ -3,14 +3,14 @@ All procedures tasks involved in on-node computation.
 """
 
 import abc
-from typing import List, Union
+from typing import List, Union, Dict, Any, Optional
 
 import qcelemental as qcel
 
 import qcengine as qcng
 
 from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord, KVStore
-from .procedures_util import parse_single_tasks
+from .procedures_util import parse_single_tasks, form_qcspec_schema
 
 _wfn_return_names = set(qcel.models.results.WavefunctionProperties._return_results_names)
 _wfn_all_fields = set(qcel.models.results.WavefunctionProperties.__fields__.keys())
@@ -100,7 +100,7 @@ class BaseTasks(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def parse_output(self, data):
+    def handle_completed_output(self, data):
         pass
 
 
@@ -152,7 +152,8 @@ class SingleResultTasks(BaseTasks):
         else:
             keywords = None
 
-        # Grab the tag if available
+        # Grab the tag and priority if available
+        # These are not used in the ResultRecord, so we can pop them
         meta = data.meta.dict()
         tag = meta.pop("tag", None)
         priority = meta.pop("priority", None)
@@ -167,7 +168,7 @@ class SingleResultTasks(BaseTasks):
                 continue
 
             record = ResultRecord(**meta.copy(), molecule=mol.id)
-            inp = record.build_schema_input(mol, keywords)
+            inp = self._build_schema_input(record, mol, keywords)
             inp.extras["_qcfractal_tags"] = {"program": record.program, "keywords": record.keywords}
 
             ret = self.storage.add_results([record])
@@ -200,23 +201,37 @@ class SingleResultTasks(BaseTasks):
 
         return new_tasks, results_ids, existing_ids
 
-    def parse_output(self, result_outputs):
+    def handle_completed_output(self, result_outputs):
 
         # Add new runs to database
         completed_tasks = []
         updates = []
-        for data in result_outputs:
-            result = self.storage.get_results(id=data["base_result"])["data"][0]
-            result = ResultRecord(**result)
 
-            rdata = data["result"]
+        for output in result_outputs:
+            # Find the existing result information in the database
+            base_id = output["base_result"]
+            existing_result = self.storage.get_results(id=base_id)
+            if existing_result["meta"]["n_found"] != 1:
+                raise KeyError(f"Could not find existing base result {base_id}")
+
+            # Get the actual result data from the dictionary
+            existing_result = existing_result["data"][0]
+
+            # Some consistency checks:
+            # Is this marked as incomplete?
+            # TODO: Check manager, although that information isn't sent to us right now
+            if existing_result["status"] != "INCOMPLETE":
+                self.logger.warning(f"Skipping returned results for base_id={base_id}, as it is not marked incomplete")
+                continue
+
+            rdata = output["result"]
 
             # Adds the results to the database and sets the ids inside the dictionary
             self.retrieve_outputs(rdata)
 
             # Store Wavefunction data
-            if data["result"].get("wavefunction", False):
-                wfn = data["result"].get("wavefunction", False)
+            if rdata.get("wavefunction", False):
+                wfn = rdata.get("wavefunction", False)
                 available = set(wfn.keys()) - {"restricted", "basis"}
                 return_map = {k: wfn[k] for k in wfn.keys() & _wfn_return_names}
 
@@ -230,7 +245,7 @@ class SingleResultTasks(BaseTasks):
                 available_keys = wfn.keys() - _wfn_return_names
                 if available_keys > _wfn_all_fields:
                     self.logger.warning(
-                        f"Too much wavefunction data for result {data['base_result']}, removing extra data."
+                        f"Too much wavefunction data for result {base_id}, removing extra data."
                     )
                     available_keys &= _wfn_all_fields
 
@@ -238,17 +253,77 @@ class SingleResultTasks(BaseTasks):
                 wfn_data_id = self.storage.add_wavefunction_store([wavefunction_save])["data"][0]
                 rdata["wavefunction_data_id"] = wfn_data_id
 
-            result._consume_output(rdata)
-            updates.append(result)
-            completed_tasks.append(data["task_id"])
+            # Create an updated ResultRecord based on the existing record and the new results
+            # Double check to make sure everything is consistent
+            assert existing_result["method"] == rdata["model"]["method"]
+            # TODO: MORE CHECKS
 
-        # TODO: sometimes it should be update, and others its add
+            # Result specific
+            existing_result["extras"] = rdata["extras"]
+            existing_result["return_result"] = rdata["return_result"]
+            existing_result["properties"] = rdata["properties"]
+
+            # Wavefunction data
+            existing_result["wavefunction"] = rdata.get("wavefunction", None)
+            existing_result["wavefunction_data_id"] = rdata.get("wavefunction_data_id", None)
+
+            # Standard blocks
+            existing_result["provenance"] = rdata["provenance"]
+            existing_result["error"] = rdata["error"]
+            existing_result["stdout"] = rdata["stdout"]
+            existing_result["stderr"] = rdata["stderr"]
+            existing_result["status"] = "COMPLETE"
+
+            result = ResultRecord(**existing_result)
+
+            # Add to the list to be updated
+            updates.append(result)
+            completed_tasks.append(output["task_id"])
+
         self.storage.update_results(updates)
 
         return completed_tasks, [], []
 
 
-# ----------------------------------------------------------------------------
+    @staticmethod
+    def _build_schema_input(
+        record: ResultRecord, molecule: "Molecule", keywords: Optional["KeywordSet"] = None) -> "ResultInput":
+        """
+        Creates an input schema for a single calculation
+        """
+
+        # Check for programmer sanity. Since we are building this input
+        # right after creating the ResultRecord, these should never fail.
+        # But would be very hard to debug
+        assert record.molecule == molecule.id
+        if record.keywords:
+            assert record.keywords == keywords.id
+
+        # Now start creating the "model" parameter for ResultInput
+        model = {"method": record.method}
+
+        if record.basis:
+            model["basis"] = record.basis
+
+        if not record.keywords:
+            keywords = {}
+        else:
+            keywords = keywords.values
+
+        if not record.protocols:
+            protocols = {}
+        else:
+            protocols = record.protocols
+
+        return qcel.models.AtomicInput(
+            id=record.id,
+            driver=record.driver.name,
+            model=model,
+            molecule=molecule,
+            keywords=keywords,
+            extras=record.extras,
+            protocols=protocols,
+        )
 
 
 class OptimizationTasks(BaseTasks):
@@ -351,7 +426,7 @@ class OptimizationTasks(BaseTasks):
                 doc_data["protocols"] = data.meta.protocols
             doc = OptimizationRecord(**doc_data)
 
-            inp = doc.build_schema_input(initial_molecule=initial_molecule, qc_keywords=qc_keywords)
+            inp = self._build_schema_input(doc, initial_molecule, qc_keywords)
             inp.input_specification.extras["_qcfractal_tags"] = {
                 "program": qc_spec.program,
                 "keywords": qc_spec.keywords,
@@ -387,7 +462,7 @@ class OptimizationTasks(BaseTasks):
 
         return new_tasks, results_ids, existing_ids
 
-    def parse_output(self, opt_outputs):
+    def handle_completed_output(self, opt_outputs):
         """Save the results of the procedure.
         It must make sure to save the results in the results table
         including the task_id in the TaskQueue table
@@ -440,6 +515,33 @@ class OptimizationTasks(BaseTasks):
         self.storage.update_procedures(updates)
 
         return completed_tasks, [], []
+
+    @staticmethod
+    def _build_schema_input(
+            record : OptimizationRecord, initial_molecule: "Molecule", qc_keywords: Optional["KeywordSet"] = None
+    ) -> "OptimizationInput":
+        """
+        Creates a OptimizationInput schema.
+        """
+
+        assert record.initial_molecule == initial_molecule.id
+        if record.qc_spec.keywords:
+            assert record.qc_spec.keywords == qc_keywords.id
+
+        qcinput_spec = form_qcspec_schema(record.qc_spec, keywords=qc_keywords)
+        qcinput_spec.pop("program", None)
+
+        model = qcel.models.OptimizationInput(
+            id=record.id,
+            initial_molecule=initial_molecule,
+            keywords=record.keywords,
+            extras=record.extras,
+            hash_index=record.hash_index,
+            input_specification=qcinput_spec,
+            protocols=record.protocols,
+        )
+        return model
+
 
 
 # ----------------------------------------------------------------------------

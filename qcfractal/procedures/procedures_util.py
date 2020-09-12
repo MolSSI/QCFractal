@@ -4,9 +4,11 @@ Utility functions for on-node procedures.
 
 import json
 
+from typing import Optional, Dict, Any
+
 from qcelemental.models import ResultInput
 
-from ..interface.models import Molecule, KVStore
+from ..interface.models import Molecule, KVStore, QCSpecification
 
 
 def unpack_single_task_spec(storage, meta, molecules):
@@ -119,3 +121,22 @@ def parse_single_tasks(storage, results):
             v["status"] = "ERROR"
 
     return results
+
+def form_qcspec_schema(qc_spec : QCSpecification, keywords: Optional["KeywordSet"] = None) -> Dict[str, Any]:
+    if qc_spec.keywords:
+        assert keywords.id == qc_spec.keywords
+
+    ret = {
+        "driver": str(qc_spec.driver.name),
+        "program": qc_spec.program,
+        "model": {"method": qc_spec.method},
+    }  # yapf: disable
+    if qc_spec.basis:
+        ret["model"]["basis"] = qc_spec.basis
+
+    if keywords:
+        ret["keywords"] = keywords.values
+    else:
+        ret["keywords"] = {}
+
+    return ret

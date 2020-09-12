@@ -225,7 +225,7 @@ class QueueManagerHandler(APIHandler):
         completed = []
         for k, v in new_results.items():
             procedure_parser = get_procedure_parser(k, storage_socket, logger)
-            com, err, hks = procedure_parser.parse_output(v)
+            com, err, hks = procedure_parser.handle_completed_output(v)
             completed.extend(com)
             error_data.extend(err)
 
