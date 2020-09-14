@@ -83,7 +83,7 @@ class KVStore(ProtoModel):
 
     compression: CompressionEnum = Field(CompressionEnum.none, description="Compression method (such as gzip)")
     compression_level: int = Field(0, description="Level of compression (typically 0-9)")
-    data: bytes = Field(..., description="Stuff")
+    data: bytes = Field(..., description="Compressed raw data of output/errors, etc")
 
     @validator("data", pre=True)
     def _set_data(cls, data):
