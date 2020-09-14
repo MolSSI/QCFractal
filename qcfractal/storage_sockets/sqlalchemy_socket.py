@@ -556,14 +556,17 @@ class SQLAlchemySocket:
 
         data = {}
         # TODO - after migrating everything, remove the 'value' column in the table
-        # THe pydantic model expects a byte array and only a byte array
         for d in rdata:
             val = d.pop("value")
             if d["data"] is None:
-                # val may be a dict/JSON
-                if isinstance(val, dict):
-                    val = json.dumps(val)
-                d["data"] = val.encode('utf-8') # Convert string held in value to bytes
+                # Set the data field to be the string or dictionary
+                d["data"] = val
+
+                # Remove these and let the model handle the defaults
+                d.pop("compression")
+                d.pop("compression_level")
+
+            # The KVStore constructor can handle conversion of strings and dictionaries
             data[d["id"]] = KVStore(**d)
 
         return {"data": data, "meta": meta}

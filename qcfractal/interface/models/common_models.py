@@ -86,14 +86,28 @@ class KVStore(ProtoModel):
     data: bytes = Field(..., description="Compressed raw data of output/errors, etc")
 
     @validator("data", pre=True)
-    def _set_data(cls, data):
+    def _set_data(cls, data, values):
         """Handles special data types
 
-        Strings are converted to byte arrays, and dicts are converted via json.dumps
+        Strings are converted to byte arrays, and dicts are converted via json.dumps. If a string or
+        dictionary is given, then compression & compression level must be none/0 (the defaults)
+
+        Will chack that compression and compression level are None/0. Since this validator
+        runs after all the others, that is safe.
+
+        (According to pydantic docs, validators are run in the order of field definition)
         """
         if isinstance(data, dict):
+            if values['compression'] != CompressionEnum.none:
+                raise ValueError("Compression is set, but input is a dictionary")
+            if values['compression_level'] != 0:
+                raise ValueError("Compression level is set, but input is a dictionary")
             return json.dumps(data).encode()
         elif isinstance(data, str):
+            if values['compression'] != CompressionEnum.none:
+                raise ValueError("Compression is set, but input is a string")
+            if values['compression_level'] != 0:
+                raise ValueError("Compression level is set, but input is a string")
             return data.encode()
         else:
             return data
@@ -121,7 +135,7 @@ class KVStore(ProtoModel):
             return compression_level
 
     @classmethod
-    def compress(cls, s: str, compression_type: CompressionEnum = CompressionEnum.none, compression_level: Optional[int] = None):
+    def compress(cls, input_str: str, compression_type: CompressionEnum = CompressionEnum.none, compression_level: Optional[int] = None):
         '''Compresses a string given a compression scheme and level
 
         Returns an object of type `cls`
@@ -129,18 +143,32 @@ class KVStore(ProtoModel):
         If compression_level is None, but a compression_type is specified, an appropriate default level is chosen
         '''
 
-        data = s.encode()
+        data = input_str.encode()
 
+        # No compression
         if compression_type is CompressionEnum.none:
             compression_level = 0
+
+        # gzip compression
         elif compression_type is CompressionEnum.gzip:
-            compression_level = 6
+            if compression_level is None:
+                compression_level = 6
             data = gzip.compress(data, compresslevel=compression_level)
+
+        # bzip2 compression
         elif compression_type is CompressionEnum.bzip2:
-            compression_level = 6
+            if compression_level is None:
+                compression_level = 6
             data = bz2.compress(data, compresslevel=compression_level)
+
+        # LZMA compression
+        # By default, use level = 1 for larger files (>15MB or so)
         elif compression_type is CompressionEnum.lzma:
-            compression_level = 6
+            if compression_level is None:
+                if len(data) > 15*1048576:
+                    compression_level = 1
+                else:
+                    compression_level = 6
             data = lzma.compress(data, preset=compression_level)
         else:
             # Shouldn't ever happen, unless we change CompressionEnum but not the rest of this function
