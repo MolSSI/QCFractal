@@ -1165,24 +1165,24 @@ class SQLAlchemySocket:
         ]
 
         with self.session_scope() as session:
-            docs = (
-                session.query(
+            # Query for all existing
+            # TODO: RACE CONDITION: Records could be inserted between this query and inserting later
+
+            existing_results = {}
+
+            for cond in conds:
+                doc = session.query(
                     ResultORM.program,
                     ResultORM.driver,
                     ResultORM.method,
                     ResultORM.basis,
                     ResultORM.keywords,
                     ResultORM.molecule,
-                    ResultORM.id,
-                )
-                .filter(or_(*conds))
-                .all()
-            )
+                    ResultORM.id
+                ).filter(cond).one_or_none()
 
-            # adding all the found items to a dictionary
-            existing_results = {
-                (doc.program, doc.driver, doc.method, doc.basis, doc.keywords, str(doc.molecule)): doc for doc in docs
-            }
+                if doc is not None:
+                    existing_results[(doc.program, doc.driver, doc.method, doc.basis, doc.keywords, str(doc.molecule))] = doc
 
             # Loop over all (input) records, keeping track each record's index in the list
             for i, result in enumerate(record_list):
