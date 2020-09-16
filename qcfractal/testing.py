@@ -164,8 +164,7 @@ def find_open_port():
 
 @contextmanager
 def preserve_cwd():
-    """Always returns to CWD on exit
-    """
+    """Always returns to CWD on exit"""
     cwd = os.getcwd()
     try:
         yield cwd
@@ -366,8 +365,7 @@ def postgres_server():
 
 
 def reset_server_database(server):
-    """Resets the server database for testing.
-    """
+    """Resets the server database for testing."""
     if "QCFRACTAL_RESET_TESTING_DB" in os.environ:
         server.storage._clear_db(server.storage._project_name)
 

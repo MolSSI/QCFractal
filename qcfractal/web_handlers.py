@@ -135,9 +135,7 @@ class InformationHandler(APIHandler):
     _required_auth = "read"
 
     def get(self):
-        """
-
-        """
+        """"""
 
         self.logger.info("GET: Information")
 

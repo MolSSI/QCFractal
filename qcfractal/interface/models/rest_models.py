@@ -274,9 +274,7 @@ class KVStoreGETBody(ProtoModel):
         id: QueryObjectId = Field(None, description="Id of the Key/Value Storage object to get.")
 
     meta: EmptyMeta = Field({}, description=common_docs[EmptyMeta])
-    data: Data = Field(
-        ..., description="Data of the KV Get field: consists of Id of the Key/Value object to fetch."
-    )
+    data: Data = Field(..., description="Data of the KV Get field: consists of Id of the Key/Value object to fetch.")
 
 
 class KVStoreGETResponse(ProtoModel):

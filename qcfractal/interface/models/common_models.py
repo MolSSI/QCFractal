@@ -98,15 +98,15 @@ class KVStore(ProtoModel):
         (According to pydantic docs, validators are run in the order of field definition)
         """
         if isinstance(data, dict):
-            if values['compression'] != CompressionEnum.none:
+            if values["compression"] != CompressionEnum.none:
                 raise ValueError("Compression is set, but input is a dictionary")
-            if values['compression_level'] != 0:
+            if values["compression_level"] != 0:
                 raise ValueError("Compression level is set, but input is a dictionary")
             return json.dumps(data).encode()
         elif isinstance(data, str):
-            if values['compression'] != CompressionEnum.none:
+            if values["compression"] != CompressionEnum.none:
                 raise ValueError("Compression is set, but input is a string")
-            if values['compression_level'] != 0:
+            if values["compression_level"] != 0:
                 raise ValueError("Compression level is set, but input is a string")
             return data.encode()
         else:
@@ -135,13 +135,18 @@ class KVStore(ProtoModel):
             return compression_level
 
     @classmethod
-    def compress(cls, input_str: str, compression_type: CompressionEnum = CompressionEnum.none, compression_level: Optional[int] = None):
-        '''Compresses a string given a compression scheme and level
+    def compress(
+        cls,
+        input_str: str,
+        compression_type: CompressionEnum = CompressionEnum.none,
+        compression_level: Optional[int] = None,
+    ):
+        """Compresses a string given a compression scheme and level
 
         Returns an object of type `cls`
 
         If compression_level is None, but a compression_type is specified, an appropriate default level is chosen
-        '''
+        """
 
         data = input_str.encode()
 
@@ -165,7 +170,7 @@ class KVStore(ProtoModel):
         # By default, use level = 1 for larger files (>15MB or so)
         elif compression_type is CompressionEnum.lzma:
             if compression_level is None:
-                if len(data) > 15*1048576:
+                if len(data) > 15 * 1048576:
                     compression_level = 1
                 else:
                     compression_level = 6
@@ -175,7 +180,6 @@ class KVStore(ProtoModel):
             raise TypeError("Unknown compression type??")
 
         return cls(data=data, compression=compression_type, compression_level=compression_level)
-
 
     def get_string(self):
         """
@@ -192,7 +196,6 @@ class KVStore(ProtoModel):
         else:
             # Shouldn't ever happen, unless we change CompressionEnum but not the rest of this function
             raise TypeError("Unknown compression type??")
-
 
     def get_json(self):
         """

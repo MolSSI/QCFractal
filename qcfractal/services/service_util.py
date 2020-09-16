@@ -179,7 +179,7 @@ def expand_ndimensional_grid(
     Expands an n-dimensional key/value grid.
 
     Example
-	-------
+    -------
     >>> expand_ndimensional_grid((3, 3), {(1, 1)}, set())
     [((1, 1), (0, 1)), ((1, 1), (2, 1)), ((1, 1), (1, 0)), ((1, 1), (1, 2))]
     """

@@ -198,8 +198,7 @@ def test_queue_manager_log_statistics(compute_adapter_fixture, caplog):
 
 @testing.using_rdkit
 def test_queue_manager_shutdown(compute_adapter_fixture):
-    """Tests to ensure tasks are returned to queue when the manager shuts down
-    """
+    """Tests to ensure tasks are returned to queue when the manager shuts down"""
     client, server, adapter = compute_adapter_fixture
     reset_server_database(server)
 
@@ -284,8 +283,7 @@ def test_queue_manager_server_delay(compute_adapter_fixture):
 
 
 def test_queue_manager_heartbeat(compute_adapter_fixture):
-    """Tests to ensure tasks are returned to queue when the manager shuts down
-    """
+    """Tests to ensure tasks are returned to queue when the manager shuts down"""
 
     client, server, adapter = compute_adapter_fixture
 

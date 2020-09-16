@@ -108,7 +108,7 @@ class KVStoreORM(Base):
 
 class MoleculeORM(Base):
     """
-        The molecule DB collection is managed by pymongo, so far
+    The molecule DB collection is managed by pymongo, so far
     """
 
     __tablename__ = "molecule"
@@ -180,7 +180,7 @@ class MoleculeORM(Base):
 
 class KeywordsORM(Base):
     """
-        KeywordsORM are unique for a specific program and name
+    KeywordsORM are unique for a specific program and name
     """
 
     __tablename__ = "keywords"
@@ -203,8 +203,8 @@ class KeywordsORM(Base):
 class TaskQueueORM(Base):
     """A queue of tasks corresponding to a procedure
 
-       Notes: don't sort query results without having the index sorted
-              will impact the performance
+    Notes: don't sort query results without having the index sorted
+           will impact the performance
     """
 
     __tablename__ = "task_queue"
@@ -320,8 +320,7 @@ class QueueManagerLogORM(Base):
 
 
 class QueueManagerORM(Base):
-    """
-    """
+    """"""
 
     __tablename__ = "queue_manager"
 

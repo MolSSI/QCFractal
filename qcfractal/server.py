@@ -495,8 +495,7 @@ class FractalServer:
     ## Updates
 
     def update_services(self) -> int:
-        """Runs through all active services and examines their current status.
-        """
+        """Runs through all active services and examines their current status."""
 
         # Grab current services
         current_services = self.storage.get_services(status="RUNNING")["data"]

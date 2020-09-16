@@ -301,8 +301,7 @@ class ResultRecord(RecordBase):
 
     @validator("method")
     def check_method(cls, v):
-        """Methods should have a lower string to match the database.
-        """
+        """Methods should have a lower string to match the database."""
         return v.lower()
 
     @validator("basis")

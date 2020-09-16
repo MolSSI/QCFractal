@@ -60,8 +60,8 @@ class BaseTasks:
 
 class SingleResultTasks(BaseTasks):
     """A task generator for a single Result.
-     Unique by: driver, method, basis, option (the name in the options table),
-     and program.
+    Unique by: driver, method, basis, option (the name in the options table),
+    and program.
     """
 
     def verify_input(self, data):
