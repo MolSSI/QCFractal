@@ -154,7 +154,7 @@ def get_collection_class(collection_type):
 
 class SQLAlchemySocket:
     """
-        SQLAlcehmy QCDB wrapper class.
+    SQLAlcehmy QCDB wrapper class.
     """
 
     def __init__(
@@ -319,8 +319,8 @@ class SQLAlchemySocket:
 
     def get_limit(self, limit: Optional[int]) -> int:
         """Get the allowed limit on results to return in queries based on the
-         given `limit`. If this number is greater than the
-         SQLAlchemySocket.max_limit then the max_limit will be returned instead.
+        given `limit`. If this number is greater than the
+        SQLAlchemySocket.max_limit then the max_limit will be returned instead.
         """
 
         return limit if limit is not None and limit < self._max_limit else self._max_limit
@@ -1183,18 +1183,24 @@ class SQLAlchemySocket:
             existing_results = {}
 
             for cond in conds:
-                doc = session.query(
-                    ResultORM.program,
-                    ResultORM.driver,
-                    ResultORM.method,
-                    ResultORM.basis,
-                    ResultORM.keywords,
-                    ResultORM.molecule,
-                    ResultORM.id
-                ).filter(cond).one_or_none()
+                doc = (
+                    session.query(
+                        ResultORM.program,
+                        ResultORM.driver,
+                        ResultORM.method,
+                        ResultORM.basis,
+                        ResultORM.keywords,
+                        ResultORM.molecule,
+                        ResultORM.id,
+                    )
+                    .filter(cond)
+                    .one_or_none()
+                )
 
                 if doc is not None:
-                    existing_results[(doc.program, doc.driver, doc.method, doc.basis, doc.keywords, str(doc.molecule))] = doc
+                    existing_results[
+                        (doc.program, doc.driver, doc.method, doc.basis, doc.keywords, str(doc.molecule))
+                    ] = doc
 
             # Loop over all (input) records, keeping track each record's index in the list
             for i, result in enumerate(record_list):
@@ -1365,7 +1371,7 @@ class SQLAlchemySocket:
             id or a list of ids of tasks
         manager_id: str or List[str]
             id or a list of ids of queue_mangers
-        status : bool, optional 
+        status : bool, optional
             The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
             Default is 'COMPLETE'
         include : Optional[List[str]], optional
@@ -1380,7 +1386,7 @@ class SQLAlchemySocket:
         skip : int, optional
             skip the first 'skip' results. Used to paginate
             Default is 0
-        return_json : bool, optional 
+        return_json : bool, optional
             Return the results as a list of json inseated of objects
             default is True
         with_ids : bool, optional
@@ -1991,13 +1997,13 @@ class SQLAlchemySocket:
 
     def services_completed(self, records_list: List["BaseService"]) -> int:
         """
-        Delete the services which are completed from the database. 
-        
+        Delete the services which are completed from the database.
+
         Parameters
         ----------
         records_list : List["BaseService"]
             List of Service objects which are completed.
-        
+
         Returns
         -------
         int
@@ -2214,7 +2220,7 @@ class SQLAlchemySocket:
             skip the first 'skip' results. Used to paginate, default is 0
         return_json : bool, optional
             Return the results as a list of json inseated of objects, deafult is True
-        with_ids : bool, optional 
+        with_ids : bool, optional
             Include the ids in the returned objects/dicts, default is True
 
         Returns

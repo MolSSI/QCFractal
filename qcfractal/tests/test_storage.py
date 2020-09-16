@@ -1087,7 +1087,7 @@ def test_project_name(storage_socket):
 
 def test_results_pagination(storage_socket):
     """
-        Test results pagination
+    Test results pagination
     """
 
     # results = storage_socket.get_results()['data']
@@ -1158,7 +1158,7 @@ def test_results_pagination(storage_socket):
 
 def test_procedure_pagination(storage_socket):
     """
-        Test procedure pagination
+    Test procedure pagination
     """
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
@@ -1197,7 +1197,7 @@ def test_procedure_pagination(storage_socket):
 
 def test_mol_pagination(storage_socket):
     """
-        Test Molecule pagination
+    Test Molecule pagination
     """
 
     assert len(storage_socket.get_molecules()["data"]) == 0
@@ -1234,7 +1234,7 @@ def test_mol_pagination(storage_socket):
 
 def test_mol_formula(storage_socket):
     """
-        Test Molecule pagination
+    Test Molecule pagination
     """
 
     assert len(storage_socket.get_molecules()["data"]) == 0
@@ -1270,7 +1270,7 @@ def test_mol_formula(storage_socket):
 
 def test_reset_task_blocks(storage_socket):
     """
-        Ensures queue_reset_status must have some search variables so that it does not reset everything.
+    Ensures queue_reset_status must have some search variables so that it does not reset everything.
     """
 
     with pytest.raises(ValueError):

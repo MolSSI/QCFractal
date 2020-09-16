@@ -21,8 +21,7 @@ class TaskQueueHandler(APIHandler):
     _required_auth = "compute"
 
     def post(self):
-        """Posts new tasks to the task queue.
-        """
+        """Posts new tasks to the task queue."""
 
         body_model, response_model = rest_model("task_queue", "post")
         body = self.parse_bodymodel(body_model)
@@ -45,8 +44,7 @@ class TaskQueueHandler(APIHandler):
         self.write(response)
 
     def get(self):
-        """Gets task information from the task queue
-        """
+        """Gets task information from the task queue"""
 
         body_model, response_model = rest_model("task_queue", "get")
         body = self.parse_bodymodel(body_model)
@@ -58,8 +56,7 @@ class TaskQueueHandler(APIHandler):
         self.write(response)
 
     def put(self):
-        """Modifies tasks in the task queue
-        """
+        """Modifies tasks in the task queue"""
 
         body_model, response_model = rest_model("task_queue", "put")
         body = self.parse_bodymodel(body_model)
@@ -87,8 +84,7 @@ class ServiceQueueHandler(APIHandler):
     _required_auth = "compute"
 
     def post(self):
-        """Posts new services to the service queue.
-        """
+        """Posts new services to the service queue."""
 
         body_model, response_model = rest_model("service_queue", "post")
         body = self.parse_bodymodel(body_model)
@@ -120,8 +116,7 @@ class ServiceQueueHandler(APIHandler):
         self.write(response)
 
     def get(self):
-        """Gets information about services from the service queue.
-        """
+        """Gets information about services from the service queue."""
 
         body_model, response_model = rest_model("service_queue", "get")
         body = self.parse_bodymodel(body_model)
@@ -133,8 +128,7 @@ class ServiceQueueHandler(APIHandler):
         self.write(response)
 
     def put(self):
-        """Modifies services in the service queue
-        """
+        """Modifies services in the service queue"""
 
         body_model, response_model = rest_model("service_queue", "put")
         body = self.parse_bodymodel(body_model)
@@ -241,8 +235,7 @@ class QueueManagerHandler(APIHandler):
         return len(completed), len(error_data)
 
     def get(self):
-        """Pulls new tasks from the task queue
-        """
+        """Pulls new tasks from the task queue"""
 
         body_model, response_model = rest_model("queue_manager", "get")
         body = self.parse_bodymodel(body_model)
@@ -274,8 +267,7 @@ class QueueManagerHandler(APIHandler):
         self.storage.manager_update(name, submitted=len(new_tasks), **body.meta.dict())
 
     def post(self):
-        """Posts complete tasks to the task queue
-        """
+        """Posts complete tasks to the task queue"""
 
         body_model, response_model = rest_model("queue_manager", "post")
         body = self.parse_bodymodel(body_model)
@@ -357,8 +349,7 @@ class ComputeManagerHandler(APIHandler):
     _required_auth = "admin"
 
     def get(self):
-        """Gets manager information from the task queue
-        """
+        """Gets manager information from the task queue"""
 
         body_model, response_model = rest_model("manager", "get")
         body = self.parse_bodymodel(body_model)

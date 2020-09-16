@@ -1337,7 +1337,12 @@ class Dataset(Collection):
             prog_default_kw = self.data.default_keywords.get(program, None)
             for kwalias, kwid in kwaliases.items():
                 data.append(
-                    {"program": program, "keywords": kwalias, "id": kwid, "default": prog_default_kw == kwalias,}
+                    {
+                        "program": program,
+                        "keywords": kwalias,
+                        "id": kwid,
+                        "default": prog_default_kw == kwalias,
+                    }
                 )
         return pd.DataFrame(data).set_index("program")
 

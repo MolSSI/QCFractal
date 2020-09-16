@@ -27,7 +27,7 @@ from qcfractal.storage_sockets.models.sql_models import KeywordsORM, KVStoreORM,
 
 class BaseResultORM(Base):
     """
-        Abstract Base class for ResultORMs and ProcedureORMs
+    Abstract Base class for ResultORMs and ProcedureORMs
     """
 
     __tablename__ = "base_result"
@@ -118,7 +118,7 @@ class WavefunctionStoreORM(Base):
 
 class ResultORM(BaseResultORM):
     """
-        Hold the result of an atomic single calculation
+    Hold the result of an atomic single calculation
     """
 
     __tablename__ = "result"
@@ -176,7 +176,7 @@ class ResultORM(BaseResultORM):
 
 class ProcedureMixin:
     """
-        A procedure mixin to be used by specific procedure types
+    A procedure mixin to be used by specific procedure types
     """
 
     program = Column(String(100), nullable=False)
@@ -211,7 +211,7 @@ class Trajectory(Base):
 
 class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
     """
-        An Optimization  procedure
+    An Optimization  procedure
     """
 
     __tablename__ = "optimization_procedure"
@@ -422,7 +422,7 @@ class TorsionInitMol(Base):
 
 class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
     """
-        A torsion drive  procedure
+    A torsion drive  procedure
     """
 
     __tablename__ = "torsiondrive_procedure"

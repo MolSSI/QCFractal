@@ -296,7 +296,7 @@ class OptimizationQueries(QueryBase):
 
     def _get_all_results(self, optimization_ids: List[Union[int, str]] = None):
         """Returns all the results objects (trajectory) of each optmization
-        Returns list(list) """
+        Returns list(list)"""
 
         if optimization_ids is None:
             self._raise_missing_attribute("all_results", "List of optimizations ids")
