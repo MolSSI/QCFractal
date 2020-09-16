@@ -74,7 +74,7 @@ def kw_fixtures(storage_socket):
 
 
 @pytest.mark.parametrize("compression", ptl.models.CompressionEnum)
-@pytest.mark.parametrize("compression_level", [None, 0, 5])
+@pytest.mark.parametrize("compression_level", [None, 1, 5])
 def test_kvstore(session, compression, compression_level):
 
     assert session.query(KVStoreORM).count() == 0
