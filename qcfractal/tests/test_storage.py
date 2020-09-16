@@ -775,6 +775,10 @@ def test_storage_queue_roundtrip(storage_results, status):
     res = storage_results.get_results(id=results[0]["id"])["data"][0]
     assert res["status"] == status
     assert res["manager_name"] == "test_manager"
+    if status == "ERROR":
+        err_id = res["error"]
+        err = storage_results.get_kvstore(err_id)
+        assert err["data"][err_id].get_string() == "Error msg"
 
 
 def test_queue_submit_many_order(storage_results):

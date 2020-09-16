@@ -34,6 +34,7 @@ from qcfractal.interface.models import (
     TaskRecord,
     TaskStatusEnum,
     TorsionDriveRecord,
+    KVStore,
     prepare_basis,
 )
 from qcfractal.storage_sockets.db_queries import QUERY_CLASSES
@@ -494,14 +495,14 @@ class SQLAlchemySocket:
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logs (KV store) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def add_kvstore(self, blobs_list: List[Any]):
+    def add_kvstore(self, outputs: List[KVStore]):
         """
         Adds to the key/value store table.
 
         Parameters
         ----------
-        blobs_list : List[Any]
-            A list of data blobs to add.
+        outputs : List[Any]
+            A list of KVStore objects add.
 
         Returns
         -------
@@ -510,24 +511,24 @@ class SQLAlchemySocket:
         """
 
         meta = add_metadata_template()
-        blob_ids = []
+        output_ids = []
         with self.session_scope() as session:
-            for blob in blobs_list:
-                if blob is None:
-                    blob_ids.append(None)
+            for output in outputs:
+                if output is None:
+                    output_ids.append(None)
                     continue
 
-                doc = KVStoreORM(value=blob)
-                session.add(doc)
+                entry = KVStoreORM(**output.dict())
+                session.add(entry)
                 session.commit()
-                blob_ids.append(str(doc.id))
+                output_ids.append(str(entry.id))
                 meta["n_inserted"] += 1
 
         meta["success"] = True
 
-        return {"data": blob_ids, "meta": meta}
+        return {"data": output_ids, "meta": meta}
 
-    def get_kvstore(self, id: List[str] = None, limit: int = None, skip: int = 0):
+    def get_kvstore(self, id: List[ObjectId] = None, limit: int = None, skip: int = 0):
         """
         Pulls from the key/value store table.
 
@@ -553,9 +554,20 @@ class SQLAlchemySocket:
 
         meta["success"] = True
 
-        # meta['error_description'] = str(err)
+        data = {}
+        # TODO - after migrating everything, remove the 'value' column in the table
+        for d in rdata:
+            val = d.pop("value")
+            if d["data"] is None:
+                # Set the data field to be the string or dictionary
+                d["data"] = val
 
-        data = {d["id"]: d["value"] for d in rdata}
+                # Remove these and let the model handle the defaults
+                d.pop("compression")
+                d.pop("compression_level")
+
+            # The KVStore constructor can handle conversion of strings and dictionaries
+            data[d["id"]] = KVStore(**d)
 
         return {"data": data, "meta": meta}
 
@@ -2360,9 +2372,10 @@ class SQLAlchemySocket:
                 base_result.status = TaskStatusEnum.error
                 base_result.manager_name = task_obj.manager
                 base_result.modified_on = dt.utcnow()
-                base_result.error_obj = KVStoreORM(value=msg)
 
-                # session.add(task_obj)
+                err = KVStore(data=msg)
+                err_id = self.add_kvstore([err])["data"][0]
+                base_result.error = err_id
 
             session.commit()
 

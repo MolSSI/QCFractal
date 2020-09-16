@@ -6,7 +6,7 @@ import json
 
 from qcelemental.models import ResultInput
 
-from ..interface.models import Molecule
+from ..interface.models import Molecule, KVStore
 
 
 def unpack_single_task_spec(storage, meta, molecules):
@@ -99,7 +99,9 @@ def parse_single_tasks(storage, results):
     """
 
     for k, v in results.items():
-        stdout, stderr, error = storage.add_kvstore([v["stdout"], v["stderr"], v["error"]])["data"]
+        outputs = [v["stdout"], v["stderr"], v["error"]]
+        kvstores = [KVStore(data=x) if x is not None else None for x in outputs]
+        stdout, stderr, error = storage.add_kvstore(kvstores)["data"]
         v["stdout"] = stdout
         v["stderr"] = stderr
         v["error"] = error

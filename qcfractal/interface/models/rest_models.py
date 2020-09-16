@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from pydantic import Field, constr, root_validator, validator
 from qcelemental.util import get_base_docs
 
-from .common_models import KeywordSet, Molecule, ObjectId, ProtoModel
+from .common_models import KeywordSet, Molecule, ObjectId, ProtoModel, KVStore
 from .gridoptimization import GridOptimizationInput
 from .records import ResultRecord
 from .task_models import PriorityEnum, TaskRecord
@@ -275,13 +275,13 @@ class KVStoreGETBody(ProtoModel):
 
     meta: EmptyMeta = Field({}, description=common_docs[EmptyMeta])
     data: Data = Field(
-        ..., description="Data of the KV Get field: consists of a dict for Id of the Key/Value object to fetch."
+        ..., description="Data of the KV Get field: consists of Id of the Key/Value object to fetch."
     )
 
 
 class KVStoreGETResponse(ProtoModel):
     meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
-    data: Dict[str, Any] = Field(..., description="The entries of Key/Value object requested.")
+    data: Dict[str, KVStore] = Field(..., description="The entries of Key/Value object requested.")
 
 
 register_model("kvstore", "GET", KVStoreGETBody, KVStoreGETResponse)

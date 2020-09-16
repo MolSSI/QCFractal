@@ -8,7 +8,7 @@ import qcelemental as qcel
 
 import qcengine as qcng
 
-from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord
+from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord, KVStore
 from .procedures_util import parse_single_tasks
 
 _wfn_return_names = set(qcel.models.results.WavefunctionProperties._return_results_names)
@@ -164,7 +164,10 @@ class SingleResultTasks(BaseTasks):
             result = ResultRecord(**result)
 
             rdata = data["result"]
-            stdout, stderr, error = self.storage.add_kvstore([rdata["stdout"], rdata["stderr"], rdata["error"]])["data"]
+
+            outputs = [rdata["stdout"], rdata["stderr"], rdata["error"]]
+            kvstores = [KVStore(data=x) if x is not None else None for x in outputs]
+            stdout, stderr, error = self.storage.add_kvstore(kvstores)["data"]
             rdata["stdout"] = stdout
             rdata["stderr"] = stderr
             rdata["error"] = error
@@ -376,9 +379,9 @@ class OptimizationTasks(BaseTasks):
             update_dict["energies"] = procedure["energies"]
 
             # Save stdout/stderr
-            stdout, stderr, error = self.storage.add_kvstore(
-                [procedure["stdout"], procedure["stderr"], procedure["error"]]
-            )["data"]
+            outputs = [procedure["stdout"], procedure["stderr"], procedure["error"]]
+            kvstores = [KVStore(data=x) if x is not None else None for x in outputs]
+            stdout, stderr, error = self.storage.add_kvstore(kvstores)["data"]
             update_dict["stdout"] = stdout
             update_dict["stderr"] = stderr
             update_dict["error"] = error

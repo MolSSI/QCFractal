@@ -73,17 +73,54 @@ def kw_fixtures(storage_socket):
     assert r == 1
 
 
-def test_logs(storage_socket, session):
+@pytest.mark.parametrize("compression", ptl.models.CompressionEnum)
+@pytest.mark.parametrize("compression_level", [None, 1, 5])
+def test_kvstore(session, compression, compression_level):
 
     assert session.query(KVStoreORM).count() == 0
 
-    log = KVStoreORM(value="New log")
+    input_str = "This is some input "*10
+    kv = ptl.models.KVStore.compress(input_str, compression, compression_level)
+    log = KVStoreORM(**kv.dict())
     session.add(log)
     session.commit()
 
-    assert session.query(KVStoreORM).count() == 1
+    q = session.query(KVStoreORM).one()
+
+    # TODO - remove the exclude once all data is migrated in DB
+    # (there will be no "value" in the ORM anymore
+    kv2 = ptl.models.KVStore(**q.to_dict(exclude=["value"]))
+    assert kv2.get_string() == input_str
+    assert kv2.compression is compression
 
     session_delete_all(session, KVStoreORM)
+
+
+def test_old_kvstore(storage_socket, session):
+    '''
+    Tests retrieving old data from KVStore
+    TODO: Remove once entire migration is complete
+    '''
+
+    assert session.query(KVStoreORM).count() == 0
+
+    input_str = "This is some input "*10
+
+    # Manually create the ORM, setting only the 'value' member
+    # (This replicates what an existing database would have)
+    log = KVStoreORM(value=input_str)
+    session.add(log)
+    session.commit()
+
+    # Now query through the interface
+    q = storage_socket.get_kvstore([log.id])['data'][str(log.id)]
+    assert q.data.decode() == input_str
+    assert q.compression is ptl.models.CompressionEnum.none
+    assert q.compression_level == 0
+
+    session_delete_all(session, KVStoreORM)
+
+
 
 
 def test_molecule_sql(storage_socket, session):

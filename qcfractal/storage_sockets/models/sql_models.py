@@ -27,6 +27,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
 
 from qcfractal.interface.models.task_models import ManagerStatusEnum, PriorityEnum, TaskStatusEnum
+from qcfractal.interface.models.common_models import CompressionEnum
 from qcfractal.storage_sockets.models.sql_base import Base, MsgpackExt
 
 
@@ -99,16 +100,10 @@ class KVStoreORM(Base):
     __tablename__ = "kv_store"
 
     id = Column(Integer, primary_key=True)
-    value = Column(JSON, nullable=False)
-
-
-# class ErrorORM(Base):
-#     __tablename__ = "error"
-#
-#     id = Column(Integer, primary_key=True)
-#     value = Column(JSON, nullable=False)
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    compression = Column(Enum(CompressionEnum), nullable=True)
+    compression_level = Column(Integer, nullable=True)
+    value = Column(JSON, nullable=True)
+    data = Column(LargeBinary, nullable=True)
 
 
 class MoleculeORM(Base):

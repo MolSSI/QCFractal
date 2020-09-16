@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+import re
 from typing import Any, Dict, List, Optional, Union
 
 import psycopg2
@@ -289,7 +290,11 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
             )  # yapf: disable
 
             if not (("server started" in start_status["stdout"]) or ("server starting" in start_status["stdout"])):
-                raise ValueError(f"Could not start the PostgreSQL server. Error below:\n\n{start_status['stderr']}")
+                with open(str(self.config.database_path / self.config.database.logfile)) as log_f:
+                    log_contents = log_f.read()
+                raise ValueError(
+                    f"Could not start the PostgreSQL server. Error below:\n\n{start_status['stderr']}\n\nLog contents:\n\n{log_contents}"
+                )
 
             # Check that we are alive
             for x in range(10):
@@ -309,9 +314,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         return True
 
     def shutdown(self) -> Any:
-        """Shutsdown the current postgres instance.
-
-        """
+        """Shutsdown the current postgres instance."""
 
         self._check_psql()
 
@@ -319,8 +322,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         return ret
 
     def initialize_postgres(self) -> None:
-        """Initializes and starts the current postgres instance.
-        """
+        """Initializes and starts the current postgres instance."""
 
         self._check_psql()
 
@@ -337,6 +339,15 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         if self.config.database.port != 5432:
             assert "#port = 5432" in psql_conf
             psql_conf = psql_conf.replace("#port = 5432", f"port = {self.config.database.port}")
+
+            # Change the location of the socket file
+            # Some OSs/Linux distributions will use a directory not writeable by a normal user
+            psql_conf = re.sub(
+                r"#?unix_socket_directories =.*",
+                f"unix_socket_directories = '{self.config.database_path}'",
+                psql_conf,
+                re.M,
+            )
 
             psql_conf_file.write_text(psql_conf)
 
