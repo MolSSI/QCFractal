@@ -612,6 +612,8 @@ class SQLAlchemySocket:
         id_mols_list = tmp["data"]
         meta["errors"].extend(tmp["meta"]["errors"])
 
+        # TODO - duplicate ids get removed on the line below. Some
+        # code may depend on this behavior, so careful changing it
         inv_id_mols = {v: k for k, v in id_mols.items()}
 
         for mol in id_mols_list:

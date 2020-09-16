@@ -9,8 +9,9 @@ import qcelemental as qcel
 
 import qcengine as qcng
 
-from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord, KVStore
-from .procedures_util import parse_single_tasks, form_qcspec_schema
+from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord, KVStore, KeywordSet
+from ..interface.models.task_models import PriorityEnum
+from .procedures_util import parse_single_tasks, form_qcinputspec_schema
 
 _wfn_return_names = set(qcel.models.results.WavefunctionProperties._return_results_names)
 _wfn_all_fields = set(qcel.models.results.WavefunctionProperties.__fields__.keys())
@@ -26,9 +27,8 @@ class BaseTasks(abc.ABC):
         Creates results/procedures and tasks in the database
         """
 
-        new_tasks, results_ids, existing_ids = self.parse_input(data)
-
-        self.storage.queue_submit(new_tasks)
+        results_ids, existing_ids = self.parse_input(data)
+        submitted_ids = [x for x in results_ids if x not in existing_ids and x is not None]
 
         n_inserted = 0
         missing = []
@@ -47,7 +47,7 @@ class BaseTasks(abc.ABC):
                 "error_description": False,
                 "errors": [],
             },
-            "data": {"ids": results_ids, "submitted": [x.base_result for x in new_tasks], "existing": existing_ids},
+            "data": {"ids": results_ids, "submitted": submitted_ids, "existing": existing_ids},
         }
 
         return results
@@ -105,9 +105,9 @@ class BaseTasks(abc.ABC):
 
 
 class SingleResultTasks(BaseTasks):
-    """A task generator for a single Result.
-    Unique by: driver, method, basis, option (the name in the options table),
-    and program.
+    """A task generator for a single QC computation task.
+
+    This is a single quantum calculation, unique by program, driver, method, basis, keywords, molecule.
     """
 
     def verify_input(self, data):
@@ -143,67 +143,159 @@ class SingleResultTasks(BaseTasks):
 
         """
 
-        # Unpack all molecules
-        molecule_list = self.storage.get_add_molecules_mixed(data.data)["data"]
+        # Get the qcspec from the input metadata dictionary
+        qc_spec_dict = data.meta.dict()
 
-        if data.meta.keywords:
-            keywords = self.storage.get_add_keywords_mixed([data.meta.keywords])["data"][0]
-
-        else:
-            keywords = None
+        # We should only have gotten here if procedure is 'single'
+        procedure = qc_spec_dict.pop("procedure")
+        assert procedure.lower() == 'single'
 
         # Grab the tag and priority if available
         # These are not used in the ResultRecord, so we can pop them
-        meta = data.meta.dict()
-        tag = meta.pop("tag", None)
-        priority = meta.pop("priority", None)
+        tag = qc_spec_dict.pop("tag")
+        priority = qc_spec_dict.pop("priority")
 
-        # Construct full tasks
+        # Handle keywords, which may be None
+        if data.meta.keywords is not None:
+            # QCSpec will only hold the ID
+            keywords = self.storage.get_add_keywords_mixed([data.meta.keywords])["data"][0]
+            if keywords is None:
+                raise KeyError("Could not find requested KeywordsSet from id key.")
+            qc_spec_dict["keywords"] = keywords.id
+        else:
+            keywords = None
+            qc_spec_dict["keywords"] = None
+
+        # Will also validate the qc_spec
+        # TODO - do this after migrating results to QCSpecification?
+        # qc_spec = QCSpecification(**qc_spec_dict)
+
+        # Add all the molecules to the database
+        # TODO: WARNING WARNING if get_add_molecules_mixed is modified to handle duplicates
+        #       correctly, you must change some pieces later in this function
+        input_molecules = data.data
+        molecule_list = self.storage.get_add_molecules_mixed(input_molecules)["data"]
+
+        # Keep molecule IDs that are not None
+        # Molecule IDs may be None if they are duplicates (ie, the same molecule was listed twice
+        # in data.data) or an id specified in data.data was invalid
+        valid_molecule_idx = [idx for idx, mol in enumerate(molecule_list) if mol is not None]
+        valid_molecules = [x for x in molecule_list if x is not None]
+
+        # Create ResultRecords for everything
+        all_result_records = []
+        for mol in valid_molecules:
+            record = ResultRecord(**qc_spec_dict.copy(), molecule=mol.id)
+            all_result_records.append(record)
+
+        # Add all results in a single function call
+        # NOTE: Because get_add_molecules_mixed returns None for duplicate
+        # molecules (or when specifying incorrect ids),
+        # all_result_records should never contain duplicates
+        ret = self.storage.add_results(all_result_records)
+
+        # Get all the result IDs (may be new or existing)
+        # These will be in the order we sent to add_results
+        all_result_ids = ret["data"]
+        existing_ids = ret["meta"]["duplicates"]
+
+        # Assign ids to the result records
+        for idx in range(len(all_result_records)):
+            r = all_result_records[idx].copy(update={'id': all_result_ids[idx]})
+            all_result_records[idx] = r
+
+        # Now generate all the tasks, but only for results that don't exist already
+        new_task_records = [x for x in all_result_records if x.id not in existing_ids]
+        #self.create_tasks(all_result_records, valid_molecules, [keywords]*len(all_result_records), tag=tag, priority=priority)
+        self.create_tasks(all_result_records, tag=tag, priority=priority)
+
+        # Keep the returned result id list in the same order as the input molecule list
+        # If a molecule was None, then the corresponding result ID will be None
+        # (since the entry in valid_molecule_idx will be missing). Ditto for molecules specified
+        # more than once in the argument to this function
+        results_ids = [None] *  len(molecule_list)
+        for idx, result_id in zip(valid_molecule_idx, all_result_ids):
+            results_ids[idx] = result_id
+
+        return results_ids, existing_ids
+
+    def create_tasks(self, records: List[ResultRecord], molecules: Optional[List[Molecule]] = None, keywords: Optional[List[KeywordSet]] = None,
+                    tag: Optional[str] = None, priority: Optional[PriorityEnum] = None):
+        """
+        Creates TaskRecord objects based on a record and molecules/keywords
+
+        If molecules are not given, then they are loaded from the database (with the id given in the result record)
+        The same applies to the keywords.
+
+        Parameters
+        ----------
+        records: List[ResultRecord]
+            Records for which to create the TaskRecord object
+        molecules: Optional[List[Molecule]]
+            Molecules to be applied to the records. If given, must be the same length as records, and
+            must be in the same order. They must have been added to the database already and have an id.
+        keywords: Optional[KeywordSet]
+            QC Keywords to use in the calculation. If given, must be the same length as records, and
+            be in the same order. They must have been added to the database already and have an id.
+
+        Returns
+        -------
+        List[TaskRecord]
+            TaskRecords that can be added to the database
+        """
+
+        # Find the molecule keywords specified in the records
+        rec_mol_ids = [x.molecule for x in records]
+
+        # If not specified when calling this function, load them from the database
+        # TODO: there can be issues with duplicate molecules. So we have to go one by one
+        if molecules is None:
+            molecules = [self.storage.get_molecules(x)["data"][0] for x in rec_mol_ids]
+
+        # Check id to make sure the molecules match the ids in the records
+        mol_ids = [x.id for x in molecules]
+        if rec_mol_ids != mol_ids:
+            raise ValueError(f"Given molecule ids {str(mol_ids)} do not match those in records: {str(rec_mol_ids)}")
+
+        # Do the same as above but with with keywords
+        rec_kw_ids = [x.keywords for x in records]
+        if keywords is None:
+            keywords = [self.storage.get_keywords(x)["data"][0] if x is not None else None for x in rec_kw_ids]
+
+        kw_ids = [x.id if x is not None else None for x in keywords]
+        if rec_kw_ids != kw_ids:
+            raise ValueError(f"Given keyword ids {str(kw_ids)} do not match those in records: {str(rec_kw_ids)}")
+
+        # Create QCSchema inputs and tasks for everything, too
         new_tasks = []
-        results_ids = []
-        existing_ids = []
-        for mol in molecule_list:
-            if mol is None:
-                results_ids.append(None)
-                continue
 
-            record = ResultRecord(**meta.copy(), molecule=mol.id)
-            inp = self._build_schema_input(record, mol, keywords)
-            inp.extras["_qcfractal_tags"] = {"program": record.program, "keywords": record.keywords}
-
-            ret = self.storage.add_results([record])
-
-            base_id = ret["data"][0]
-            results_ids.append(base_id)
-
-            # Task is complete
-            if len(ret["meta"]["duplicates"]):
-                existing_ids.append(base_id)
-                continue
+        for rec, mol, kw in zip(records, molecules, keywords):
+            inp = self._build_schema_input(rec, mol, kw)
+            inp.extras["_qcfractal_tags"] = {"program": rec.program, "keywords": rec.keywords}
 
             # Build task object
             task = TaskRecord(
                 **{
                     "spec": {
                         "function": "qcengine.compute",  # todo: add defaults in models
-                        "args": [inp.dict(), data.meta.program],
+                        "args": [inp.dict(), rec.program],
                         "kwargs": {},  # todo: add defaults in models
                     },
                     "parser": "single",
-                    "program": data.meta.program,
+                    "program": rec.program,
                     "tag": tag,
                     "priority": priority,
-                    "base_result": base_id,
+                    "base_result": rec.id,
                 }
             )
 
             new_tasks.append(task)
 
-        return new_tasks, results_ids, existing_ids
+        self.storage.queue_submit(new_tasks)
+
 
     def handle_completed_output(self, result_outputs):
 
-        # Add new runs to database
         completed_tasks = []
         updates = []
 
@@ -214,7 +306,7 @@ class SingleResultTasks(BaseTasks):
             if existing_result["meta"]["n_found"] != 1:
                 raise KeyError(f"Could not find existing base result {base_id}")
 
-            # Get the actual result data from the dictionary
+            # Get the original result data from the dictionary
             existing_result = existing_result["data"][0]
 
             # Some consistency checks:
@@ -226,7 +318,8 @@ class SingleResultTasks(BaseTasks):
 
             rdata = output["result"]
 
-            # Adds the results to the database and sets the ids inside the dictionary
+            # Adds the results to the database and sets the appropriate fields
+            # inside the dictionary
             self.retrieve_outputs(rdata)
 
             # Store Wavefunction data
@@ -256,7 +349,9 @@ class SingleResultTasks(BaseTasks):
             # Create an updated ResultRecord based on the existing record and the new results
             # Double check to make sure everything is consistent
             assert existing_result["method"] == rdata["model"]["method"]
-            # TODO: MORE CHECKS
+            assert existing_result["basis"] == rdata["model"]["basis"]
+            assert existing_result["driver"] == rdata["driver"]
+            assert existing_result["molecule"] == rdata["molecule"]['id']
 
             # Result specific
             existing_result["extras"] = rdata["extras"]
@@ -282,7 +377,7 @@ class SingleResultTasks(BaseTasks):
 
         self.storage.update_results(updates)
 
-        return completed_tasks, [], []
+        return completed_tasks
 
 
     @staticmethod
@@ -387,80 +482,157 @@ class OptimizationTasks(BaseTasks):
 
         """
 
-        # Unpack all molecules
-        intitial_molecule_list = self.storage.get_add_molecules_mixed(data.data)["data"]
+        # Get the optimization specification from the input meta dictionary
+        opt_spec = data.meta
 
-        # Unpack keywords
-        if data.meta.keywords is None:
-            opt_keywords = {}
-        else:
-            opt_keywords = data.meta.keywords
-        opt_keywords["program"] = data.meta.qc_spec["program"]
+        # We should only have gotten here if procedure is 'optimization'
+        assert opt_spec.procedure.lower() == 'optimization'
 
-        qc_spec = QCSpecification(**data.meta.qc_spec)
-        if qc_spec.keywords:
-            qc_keywords = self.storage.get_add_keywords_mixed([qc_spec.keywords])["data"][0]
+        # Grab the tag and priority if available
+        tag = opt_spec.tag
+        priority = opt_spec.priority
+
+        # Handle (optimization) keywords, which may be None
+        # TODO: These are not stored in the keywords table (yet)
+        opt_keywords = {} if opt_spec.keywords is None else opt_spec.keywords
+
+        # Set the program used for gradient evaluations. This is stored in the input qcspec
+        # but the QCInputSpecification does not have a place for program. So instead
+        # we move it to the optimization keywords
+        opt_keywords["program"] = opt_spec.qc_spec["program"]
+
+        # Pull out the QCSpecification from the input
+        qc_spec_dict = data.meta.qc_spec
+
+        # Handle qc specification keywords, which may be None
+        qc_keywords = qc_spec_dict.get("keywords", None)
+        if qc_keywords is not None:
+            # The keywords passed in may contain the entire KeywordSet.
+            # But the QCSpec will only hold the ID
+            qc_keywords = self.storage.get_add_keywords_mixed([qc_keywords])["data"][0]
             if qc_keywords is None:
                 raise KeyError("Could not find requested KeywordsSet from id key.")
-        else:
-            qc_keywords = None
+            qc_spec_dict["keywords"] = qc_keywords.id
 
-        tag = data.meta.tag
-        priority = data.meta.priority
+        # Now that keywords are fixed we can do this
+        qc_spec = QCSpecification(**qc_spec_dict)
 
-        new_tasks = []
-        results_ids = []
-        existing_ids = []
-        for initial_molecule in intitial_molecule_list:
-            if initial_molecule is None:
-                results_ids.append(None)
-                continue
+        # Add all the initial molecules to the database
+        # TODO: WARNING WARNING if get_add_molecules_mixed is modified to handle duplicates
+        #       correctly, you must change some pieces later in this function
+        molecule_list = self.storage.get_add_molecules_mixed(data.data)["data"]
 
-            doc_data = {
-                "initial_molecule": initial_molecule.id,
+        # Keep molecule IDs that are not None
+        # Molecule IDs may be None if they are duplicates (ie, the same molecule was listed twice
+        # in data.data) or an id specified in data.data was invalid
+        valid_molecule_idx = [idx for idx, mol in enumerate(molecule_list) if mol is not None]
+        valid_molecules = [x for x in molecule_list if x is not None]
+
+        # Create all OptimizationRecords
+        all_opt_records = []
+        for mol in valid_molecules:
+            # TODO fix handling of protocols (perhaps after hardening rest models)
+            opt_data = {
+                "initial_molecule": mol.id,
                 "qc_spec": qc_spec,
                 "keywords": opt_keywords,
-                "program": data.meta.program,
+                "program": opt_spec.program
             }
-            if hasattr(data.meta, "protocols"):
-                doc_data["protocols"] = data.meta.protocols
-            doc = OptimizationRecord(**doc_data)
+            if hasattr(opt_spec, "protocols"):
+                opt_data["protocols"] = data.meta.protocols
 
-            inp = self._build_schema_input(doc, initial_molecule, qc_keywords)
+            opt_rec = OptimizationRecord(**opt_data)
+            all_opt_records.append(opt_rec)
+
+        # Add all the procedures in a single function call
+        # NOTE: Because get_add_molecules_mixed returns None for duplicate
+        # molecules (or when specifying incorrect ids),
+        # all_opt_records should never contain duplicates
+        ret = self.storage.add_procedures(all_opt_records)
+
+        # Get all procedure IDs (may be new or existing)
+        # These will be in the order we sent to add_results
+        all_opt_ids = ret["data"]
+        existing_ids = ret["meta"]["duplicates"]
+
+        # Assing ids to the optimization records
+        for idx in range(len(all_opt_records)):
+            r = all_opt_records[idx].copy(update={'id': all_opt_ids[idx]})
+            all_opt_records[idx] = r
+
+        # Now generate all the tasks, but only for results that don't exist already
+        new_task_records = [x for x in all_opt_records if x.id not in existing_ids]
+        #self.create_tasks(all_opt_records, valid_molecules, [qc_keywords]*len(all_opt_records), tag=tag, priority=priority)
+        self.create_tasks(all_opt_records, tag=tag, priority=priority)
+
+        # Keep the returned result id list in the same order as the input molecule list
+        # If a molecule was None, then the corresponding result ID will be None
+        # (since the entry in valid_molecule_idx will be missing). Ditto for molecules specified
+        # more than once in the argument to this function
+        opt_ids = [None] *  len(molecule_list)
+        for idx, result_id in zip(valid_molecule_idx, all_opt_ids):
+            opt_ids[idx] = result_id
+
+        return opt_ids, existing_ids
+
+
+    def create_tasks(self, records: List[OptimizationRecord], molecules: Optional[List[Molecule]] = None,
+                     qc_keywords: Optional[List[KeywordSet]] = None,
+                     tag: Optional[str] = None, priority: Optional[PriorityEnum] = None):
+
+
+        # Find the molecule keywords specified in the records
+        rec_mol_ids = [x.initial_molecule for x in records]
+
+        # If not specified when calling this function, load them from the database
+        # TODO: there can be issues with duplicate molecules. So we have to go one by one
+        if molecules is None:
+            molecules = [self.storage.get_molecules(x)["data"][0] for x in rec_mol_ids]
+
+        # Check id to make sure the molecules match the ids in the records
+        mol_ids = [x.id for x in molecules]
+        if rec_mol_ids != mol_ids:
+            raise ValueError(f"Given molecule ids {str(mol_ids)} do not match those in records: {str(rec_mol_ids)}")
+
+        # Do the same as above but with with qc specification keywords
+        rec_qc_kw_ids = [x.qc_spec.keywords for x in records]
+        if qc_keywords is None:
+            qc_keywords = [self.storage.get_keywords(x)["data"][0] if x is not None else None for x in rec_qc_kw_ids]
+
+        qc_kw_ids = [x.id if x is not None else None for x in qc_keywords]
+        if rec_qc_kw_ids != qc_kw_ids:
+            raise ValueError(f"Given keyword ids {str(qc_kw_ids)} do not match those in records: {str(rec_qc_kw_ids)}")
+
+        new_tasks = []
+        for rec, mol, kw in zip(records, molecules, qc_keywords):
+            inp = self._build_schema_input(rec, mol, kw)
             inp.input_specification.extras["_qcfractal_tags"] = {
-                "program": qc_spec.program,
-                "keywords": qc_spec.keywords,
+                "program": rec.qc_spec.program,
+                "keywords": rec.qc_spec.keywords, # Just the id?
             }
-
-            ret = self.storage.add_procedures([doc])
-            base_id = ret["data"][0]
-            results_ids.append(base_id)
-
-            # Task is complete
-            if len(ret["meta"]["duplicates"]):
-                existing_ids.append(base_id)
-                continue
 
             # Build task object
             task = TaskRecord(
                 **{
                     "spec": {
                         "function": "qcengine.compute_procedure",
-                        "args": [inp.dict(), data.meta.program],
+                        "args": [inp.dict(), rec.program],
                         "kwargs": {},
                     },
                     "parser": "optimization",
-                    "program": qc_spec.program,
-                    "procedure": data.meta.program,
+
+                    # TODO This is pretty whacked. Fix column names at some point
+                    "program": rec.qc_spec.program,
+                    "procedure": rec.program,
                     "tag": tag,
                     "priority": priority,
-                    "base_result": base_id,
+                    "base_result": rec.id
                 }
             )
 
             new_tasks.append(task)
 
-        return new_tasks, results_ids, existing_ids
+        self.storage.queue_submit(new_tasks)
 
     def handle_completed_output(self, opt_outputs):
         """Save the results of the procedure.
@@ -514,7 +686,7 @@ class OptimizationTasks(BaseTasks):
 
         self.storage.update_procedures(updates)
 
-        return completed_tasks, [], []
+        return completed_tasks
 
     @staticmethod
     def _build_schema_input(
@@ -528,8 +700,7 @@ class OptimizationTasks(BaseTasks):
         if record.qc_spec.keywords:
             assert record.qc_spec.keywords == qc_keywords.id
 
-        qcinput_spec = form_qcspec_schema(record.qc_spec, keywords=qc_keywords)
-        qcinput_spec.pop("program", None)
+        qcinput_spec = form_qcinputspec_schema(record.qc_spec, keywords=qc_keywords)
 
         model = qcel.models.OptimizationInput(
             id=record.id,
