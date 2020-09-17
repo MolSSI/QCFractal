@@ -17,6 +17,7 @@ from qcfractal.extras import get_information
 
 from ..interface.data import get_molecule
 from .adapters import build_queue_adapter
+from .compress import compress_results
 
 __all__ = ["QueueManager"]
 
@@ -540,6 +541,9 @@ class QueueManager:
         self._update_stale_jobs(allow_shutdown=allow_shutdown)
 
         results = self.queue_adapter.acquire_complete()
+
+        # Compress the outputs
+        results = compress_results(results)
 
         # Stats fetching for running tasks, as close to the time we got the jobs as we can
         last_time = self.statistics.last_update_time

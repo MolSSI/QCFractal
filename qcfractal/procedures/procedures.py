@@ -48,6 +48,45 @@ class BaseTasks:
 
         return results
 
+    def retrieve_outputs(self, rdata):
+        """
+        Retrieves (possibly compressed) outputs from an AtomicResult (that has been converted to a dictionary)
+
+        This function modifies the rdata dictionary in-place
+        """
+
+        # Get the compressed outputs if they exist
+        stdout = rdata["extras"].pop("_qcfractal_compressed_stdout", None)
+        stderr = rdata["extras"].pop("_qcfractal_compressed_stderr", None)
+        error = rdata["extras"].pop("_qcfractal_compressed_error", None)
+
+        # Create KVStore objects from these
+        if stdout is not None:
+            stdout = KVStore(**stdout)
+        if stderr is not None:
+            stderr = KVStore(**stderr)
+        if error is not None:
+            error = KVStore(**error)
+
+        # This shouldn't happen, but if they aren't compressed, check for
+        # uncompressed
+        if stdout is None and rdata.get("stdout", None) is not None:
+            self.logger.warning(f"Found uncompressed stdout for result id {rdata['id']}")
+            stdout = KVStore(data=rdata["stdout"])
+        if stderr is None and rdata.get("stderr", None) is not None:
+            self.logger.warning(f"Found uncompressed stderr for result id {rdata['id']}")
+            stderr = KVStore(data=rdata["stderr"])
+        if error is None and rdata.get("error", None) is not None:
+            self.logger.warning(f"Found uncompressed error for result id {rdata['id']}")
+            error = KVStore(data=rdata["error"])
+
+        # Now add to the database and set the ids in the diction
+        outputs = [stdout, stderr, error]
+        stdout_id, stderr_id, error_id = self.storage.add_kvstore(outputs)["data"]
+        rdata["stdout"] = stdout_id
+        rdata["stderr"] = stderr_id
+        rdata["error"] = error_id
+
     def verify_input(self, data):
         raise TypeError("verify_input not defined")
 
@@ -165,12 +204,8 @@ class SingleResultTasks(BaseTasks):
 
             rdata = data["result"]
 
-            outputs = [rdata["stdout"], rdata["stderr"], rdata["error"]]
-            kvstores = [KVStore(data=x) if x is not None else None for x in outputs]
-            stdout, stderr, error = self.storage.add_kvstore(kvstores)["data"]
-            rdata["stdout"] = stdout
-            rdata["stderr"] = stderr
-            rdata["error"] = error
+            # Adds the results to the database and sets the ids inside the dictionary
+            self.retrieve_outputs(rdata)
 
             # Store Wavefunction data
             if data["result"].get("wavefunction", False):
@@ -359,8 +394,15 @@ class OptimizationTasks(BaseTasks):
 
             procedure = output["result"]
 
+            # Adds the results to the database and sets the ids inside the dictionary
+            self.retrieve_outputs(procedure)
+
             # Add initial and final molecules
             update_dict = {}
+            update_dict["stdout"] = procedure.get("stdout", None)
+            update_dict["stderr"] = procedure.get("stderr", None)
+            update_dict["error"] = procedure.get("error", None)
+
             initial_mol, final_mol = self.storage.add_molecules(
                 [Molecule(**procedure["initial_molecule"]), Molecule(**procedure["final_molecule"])]
             )["data"]
@@ -369,6 +411,11 @@ class OptimizationTasks(BaseTasks):
 
             # Parse trajectory computations and add task_id
             traj_dict = {k: v for k, v in enumerate(procedure["trajectory"])}
+
+            # Add results for the trajectory to the database
+            for k, v in traj_dict.items():
+                self.retrieve_outputs(v)
+
             results = parse_single_tasks(self.storage, traj_dict)
             for k, v in results.items():
                 v["task_id"] = output["task_id"]
@@ -377,14 +424,6 @@ class OptimizationTasks(BaseTasks):
             ret = self.storage.add_results(list(results.values()))
             update_dict["trajectory"] = ret["data"]
             update_dict["energies"] = procedure["energies"]
-
-            # Save stdout/stderr
-            outputs = [procedure["stdout"], procedure["stderr"], procedure["error"]]
-            kvstores = [KVStore(data=x) if x is not None else None for x in outputs]
-            stdout, stderr, error = self.storage.add_kvstore(kvstores)["data"]
-            update_dict["stdout"] = stdout
-            update_dict["stderr"] = stderr
-            update_dict["error"] = error
             update_dict["provenance"] = procedure["provenance"]
 
             rec = OptimizationRecord(**{**rec.dict(), **update_dict})
