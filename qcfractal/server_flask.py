@@ -36,6 +36,7 @@ from qcelemental.util import deserialize, serialize
 
 from .interface.models.rest_models import rest_model
 from .storage_sockets.storage_utils import add_metadata_template
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 app = Flask(__name__)
@@ -121,18 +122,22 @@ def post_molecule():
 
 @app.route('/register', methods=['POST'])
 def register():
-    email = request.form['email']
-    test = User.query.filter_by(email=email).first()
-    if test:
-        return jsonify(message='That email already exists.'), 409
+    if request.is_json:
+        email = request.json['email']
+        password = request.json['password']
     else:
-        first_name = request.form['first_name']
-        last_name = request.form['last_name']
+        email = request.form['email']
         password = request.form['password']
-        user = User(first_name=first_name, last_name=last_name, email=email, password=password)
-        db.session.add(user)
-        db.session.commit()
-        return jsonify(message="User created successfully."), 201
+
+    hashed_password = generate_password_hash(password, method='sha256')
+
+    success, pw = storage.add_user(email, password=hashed_password, permissions=["read"])
+    if success:
+        print(f"\n>>> New user successfully added, password:\n{pw}")
+        return jsonify({'message' : 'New user created!'}), 201
+    else:
+        print("\n>>> Failed to add user. Perhaps the username is already taken?")
+        return jsonify({'message' : 'Failed to add user.'}), 500
 
 
 @app.route('/login', methods=['POST'])
