@@ -88,6 +88,21 @@ def get_information():
 @app.route('/molecule', methods=['GET'])
 @jwt_required
 def get_molecule():
+    """
+    Request:
+        "meta" - Overall options to the Molecule pull request
+            - "index" - What kind of index used to find the data ("id", "molecule_hash", "molecular_formula")
+        "data" - A dictionary of {key : index} requests
+
+    Returns:
+        "meta" - Metadata associated with the query
+            - "errors" - A list of errors in (index, error_id) format.
+            - "n_found" - The number of molecule found.
+            - "success" - If the query was successful or not.
+            - "error_description" - A string based description of the error or False
+            - "missing" - A list of keys that were not found.
+        "data" - A dictionary of {key : molecule JSON} results
+    """
     content_type = request.headers.get("Content-Type", "application/json")
     encoding = _valid_encodings[content_type]
 
@@ -106,6 +121,21 @@ def get_molecule():
 @app.route('/molecule', methods=['POST'])
 @jwt_required
 def post_molecule():
+    """
+    Request:
+        "meta" - Overall options to the Molecule pull request
+            - No current options
+        "data" - A dictionary of {key : molecule JSON} requests
+
+    Returns:
+        "meta" - Metadata associated with the query
+            - "errors" - A list of errors in (index, error_id) format.
+            - "n_inserted" - The number of molecule inserted.
+            - "success" - If the query was successful or not.
+            - "error_description" - A string based description of the error or False
+            - "duplicates" - A list of keys that were already inserted.
+        "data" - A dictionary of {key : id} results
+    """
     content_type = request.headers.get("Content-Type", "application/json")
     encoding = _valid_encodings[content_type]
 
@@ -156,17 +186,46 @@ def login():
         return jsonify(message="Bad email or password"), 401
 
 
-@app.route('/retrieve_password/<string:email>', methods=['GET'])
-def retrieve_password(email: str):
-    user = User.query.filter_by(email=email).first()
-    if user:
-        msg = Message("your planetary API password is " + user.password,
-                      sender="admin@planetary-api.com",
-                      recipients=[email])
-        mail.send(msg)
-        return jsonify(message="Password sent to " + email)
-    else:
-        return jsonify(message="That email doesn't exist"), 401
+@app.route('/kvstore', methods=['GET'])
+@jwt_required
+def get_kvstore():
+    """
+    Request:
+        "data" - A list of key requests
+    Returns:
+        "meta" - Metadata associated with the query
+            - "errors" - A list of errors in (index, error_id) format.
+            - "n_found" - The number of molecule found.
+            - "success" - If the query was successful or not.
+            - "error_description" - A string based description of the error or False
+            - "missing" - A list of keys that were not found.
+        "data" - A dictionary of {key : value} dictionary of the results
+    """
+    content_type = request.headers.get("Content-Type", "application/json")
+    encoding = _valid_encodings[content_type]
+
+    body_model, response_model = rest_model("kvstore", "get")
+    body = parse_bodymodel(body_model)
+
+    ret = storage.get_kvstore(body.data.id)
+    ret = response_model(**ret)
+
+    if not isinstance(ret, (str, bytes)):
+        data = serialize(ret, encoding)
+
+    return data
+
+# @app.route('/retrieve_password/<string:email>', methods=['GET'])
+# def retrieve_password(email: str):
+#     user = User.query.filter_by(email=email).first()
+#     if user:
+#         msg = Message("your planetary API password is " + user.password,
+#                       sender="admin@planetary-api.com",
+#                       recipients=[email])
+#         mail.send(msg)
+#         return jsonify(message="Password sent to " + email)
+#     else:
+#         return jsonify(message="That email doesn't exist"), 401
 
 
 if __name__ == '__main__':
