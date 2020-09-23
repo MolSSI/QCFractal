@@ -129,9 +129,7 @@ def register():
         email = request.form['email']
         password = request.form['password']
 
-    hashed_password = generate_password_hash(password, method='sha256')
-
-    success, pw = storage.add_user(email, password=hashed_password, permissions=["read"])
+    success, pw = storage.add_user(email, password=password, permissions=["read"])
     if success:
         print(f"\n>>> New user successfully added, password:\n{pw}")
         return jsonify({'message' : 'New user created!'}), 201
@@ -149,8 +147,8 @@ def login():
         email = request.form['email']
         password = request.form['password']
 
-    test = User.query.filter_by(email=email, password=password).first()
-    if test:
+    success = storage.verify_user(email, password, "read")[0]
+    if success:
         access_token = create_access_token(identity=email)
         return jsonify(message="Login succeeded!", access_token=access_token)
     else:
