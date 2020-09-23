@@ -24,7 +24,7 @@ from tornado.ioloop import IOLoop
 
 from .interface import FractalClient
 from .postgres_harness import PostgresHarness, TemporaryPostgres
-from .queue import build_queue_adapter
+from .qc_queue import build_queue_adapter
 from .server import FractalServer
 from .snowflake import FractalSnowflake
 from .storage_sockets import storage_socket_factory
