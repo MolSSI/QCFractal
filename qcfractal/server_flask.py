@@ -269,11 +269,6 @@ def handle_collection(collection_id: int, view_function: str):
             meta["error_description"] = "GET request for view with no collection ID not understood."
             response = response_model(meta=meta, data=None)
 
-        if not isinstance(response, (str, bytes)):
-            data = serialize(response, encoding)
-
-        return data
-
     elif request.method == 'POST':
         body_model, response_model = rest_model("collection", "post")
         body = parse_bodymodel(body_model)
@@ -292,11 +287,6 @@ def handle_collection(collection_id: int, view_function: str):
         ret = storage.add_collection(body.data.dict(), overwrite=body.meta.overwrite)
         response = response_model(**ret)
 
-        if not isinstance(response, (str, bytes)):
-            data = serialize(response, encoding)
-
-        return data
-
     elif request.method == 'DELETE':
         body_model, response_model = rest_model(f"collection/{collection_id}", "delete")
         ret = storage.del_collection(col_id=collection_id)
@@ -305,10 +295,10 @@ def handle_collection(collection_id: int, view_function: str):
         else:
             response = response_model(meta={"success": True, "errors": [], "error_description": False})
 
-        if not isinstance(response, (str, bytes)):
-            data = serialize(response, encoding)
+    if not isinstance(response, (str, bytes)):
+        data = serialize(response, encoding)
 
-        return data
+    return data
 
 # @app.route('/retrieve_password/<string:email>', methods=['GET'])
 # def retrieve_password(email: str):
