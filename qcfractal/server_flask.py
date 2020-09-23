@@ -208,10 +208,10 @@ def get_kvstore():
     body = parse_bodymodel(body_model)
 
     ret = storage.get_kvstore(body.data.id)
-    ret = response_model(**ret)
+    response = response_model(**ret)
 
-    if not isinstance(ret, (str, bytes)):
-        data = serialize(ret, encoding)
+    if not isinstance(response, (str, bytes)):
+        data = serialize(response, encoding)
 
     return data
 
@@ -318,6 +318,26 @@ def get_result(query_type: str):
     except KeyError as e:
         return jsonify(message=KeyError), 500
 
+    response = response_model(**ret)
+
+    if not isinstance(response, (str, bytes)):
+        data = serialize(response, encoding)
+
+    return data
+
+
+@app.route('/wavefunctionstore', methods=['GET'])
+@jwt_required
+def get_wave_function():
+    content_type = request.headers.get("Content-Type", "application/json")
+    encoding = _valid_encodings[content_type]
+
+    body_model, response_model = rest_model("wavefunctionstore", "get")
+    body = parse_bodymodel(body_model)
+
+    ret = storage.get_wavefunction_store(body.data.id, include=body.meta.include)
+    if len(ret["data"]):
+        ret["data"] = ret["data"][0]
     response = response_model(**ret)
 
     if not isinstance(response, (str, bytes)):
