@@ -300,6 +300,32 @@ def handle_collection(collection_id: int, view_function: str):
 
     return data
 
+
+@app.route('/result/<string:query_type>', methods=['GET'])
+@jwt_required
+def get_result(query_type: str):
+    content_type = request.headers.get("Content-Type", "application/json")
+    encoding = _valid_encodings[content_type]
+
+    body_model, response_model = rest_model("procedure", query_type)
+    body = parse_bodymodel(body_model)
+
+    try:
+        if query_type == "get":
+            ret = storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
+        else:  # all other queries, like 'best_opt_results'
+            ret = self.storage.custom_query("procedure", query_type, **{**body.data.dict(), **body.meta.dict()})
+    except KeyError as e:
+        return jsonify(message=KeyError), 500
+
+    response = response_model(**ret)
+
+    if not isinstance(response, (str, bytes)):
+        data = serialize(response, encoding)
+
+    return data
+
+
 # @app.route('/retrieve_password/<string:email>', methods=['GET'])
 # def retrieve_password(email: str):
 #     user = User.query.filter_by(email=email).first()
