@@ -86,6 +86,7 @@ def get_information():
 
 
 @app.route('/molecule', methods=['GET'])
+@jwt_required
 def get_molecule():
     content_type = request.headers.get("Content-Type", "application/json")
     encoding = _valid_encodings[content_type]
