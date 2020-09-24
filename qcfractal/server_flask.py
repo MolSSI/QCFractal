@@ -1,14 +1,16 @@
-from flask import Flask, jsonify, request
-import os
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token
-from flask_mail import Mail, Message
-
 import asyncio
 import datetime
 import logging
 import ssl
 import time
 import traceback
+import json
+import os
+from flask import Flask, jsonify, request
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, verify_jwt_in_request, get_jwt_claims
+from flask_mail import Mail, Message
+from functools import wraps
+
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional, Union
 
@@ -29,7 +31,6 @@ from .web_handlers import (
     ResultHandler,
     WavefunctionStoreHandler,
 )
-import json
 
 from pydantic import ValidationError
 from qcelemental.util import deserialize, serialize
@@ -38,7 +39,6 @@ from .interface.models.rest_models import rest_model
 from .storage_sockets.storage_utils import add_metadata_template
 from werkzeug.security import generate_password_hash, check_password_hash
 from .procedures import check_procedure_available, get_procedure_parser
-
 
 
 app = Flask(__name__)
@@ -76,7 +76,8 @@ def parse_bodymodel(args, model):
 
 def token_required(f):
     @wraps(f)
-    def decorated(*args, **kwargs):
+    def decorated(user, *args, **kwargs):
+        # print(user)
         token = None
 
         if 'x-access-token' in request.headers:
@@ -86,24 +87,59 @@ def token_required(f):
             return jsonify({'message' : 'Token is missing!'}), 401
 
         try:
-            data = jwt.decode(token, app.config['SECRET_KEY'])
-            endpoint = request.endpoint
-            method = request.method
-            permissions = storage.get_permissions(data['role'])
-            allowed_endpoints = permissions.get(method)
-            if not allowed_endpoints or not any(endpoint in s for s in allowed_endpoints):
-                return jsonify({'message': 'Unauthorized Access!'}), 403
-            current_user = {
-              "email": data["email"],
-              "role": data["role"],
-              "groups": data["groups"]
-            }
-        except:
+            data = jwt.decode(token, app.config['JWT_SECRET_KEY'])
+            # endpoint = request.endpoint
+            # method = request.method
+            # permissions = storage.get_permissions(data['role'])
+            # permissions = json.loads(permissions)
+            # allowed_endpoints = permissions.get(method)
+            # if not allowed_endpoints or not any(endpoint in s for s in allowed_endpoints):
+            #     return jsonify({'message': 'Unauthorized Access!'}), 403
+
+            # current_user = {
+            #   "email": data["email"],
+            #   "role": data["role"],
+            #   "groups": data["groups"]
+            # }
+            current_user = ""
+        except Exception as e:
+            print(e)
             return jsonify({'message' : 'Token is invalid!'}), 401
 
         return f(current_user, *args, **kwargs)
 
     return decorated
+
+
+def admin_required(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        verify_jwt_in_request()
+        claims = get_jwt_claims()
+
+        try:
+            endpoint = request.endpoint
+            method = request.method
+            permissions = json.loads(storage.get_permissions(data['role']))
+            allowed_endpoints = permissions.get(method)
+            if not allowed_endpoints or not any(endpoint in s for s in allowed_endpoints):
+                return jsonify({'message': 'Unauthorized Access!'}), 403
+
+            current_user = {
+              "email": data["email"],
+              "role": data["role"],
+              "groups": data["groups"]
+            }
+            current_user = ""
+        except Exception as e:
+            print(e)
+            return jsonify({'message': 'Token is invalid!'}), 401
+
+        if claims['roles'] != 'admin':
+            return jsonify(msg='Admins only!'), 403
+        else:
+            return fn(*args, **kwargs)
+    return wrapper
 
 
 @app.route('/register', methods=['POST'])
@@ -124,6 +160,13 @@ def register():
         return jsonify({'message' : 'Failed to add user.'}), 500
 
 
+@jwt.user_claims_loader
+def add_claims_to_access_token(email):
+    # success, role, groups = storage.verify_user(email, password, "read")[0]
+    print(email)
+    return {"roles": "roles",
+            "groups": ["g","r","o","u","p","s"]}
+
 @app.route('/login', methods=['POST'])
 def login():
     if request.is_json:
@@ -135,14 +178,15 @@ def login():
 
     success = storage.verify_user(email, password, "read")[0]
     if success:
-        access_token = create_access_token(email=email)
+        access_token = create_access_token(identity=email)
         return jsonify(message="Login succeeded!", access_token=access_token)
     else:
         return jsonify(message="Bad email or password"), 401
 
 
 @app.route('/information', methods=['GET'])
-def get_information():
+@admin_required
+def get_information(current_user):
     public_information = {
             "name": "self.name",
             "heartbeat_frequency": "self.heartbeat_frequency",
