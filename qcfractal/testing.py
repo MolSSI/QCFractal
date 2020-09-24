@@ -344,8 +344,8 @@ def postgres_server():
         pytest.skip("Postgres is not installed on this server and no active postgres could be found.")
 
     storage = None
-    psql = PostgresHarness({"database": {"port": 5432}})
-    # psql = PostgresHarness({"database": {"port": 5432, "username": "qcarchive", "password": "mypass"}})
+    #psql = PostgresHarness({"database": {"port": 5432}})
+    psql = PostgresHarness({"database": {"port": 5432, "username": "", "password": ""}})
     if not psql.is_alive():
         print()
         print(
@@ -470,7 +470,7 @@ def managed_compute_server(request, postgres_server):
 
         client = FractalClient(server)
 
-        from qcfractal.queue import QueueManager
+        from qcfractal.qc_queue import QueueManager
 
         manager = QueueManager(client, adapter_client)
 

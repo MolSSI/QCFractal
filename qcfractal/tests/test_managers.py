@@ -12,7 +12,7 @@ from concurrent.futures import ProcessPoolExecutor
 import pytest
 
 import qcfractal.interface as ptl
-from qcfractal import FractalServer, queue, testing
+from qcfractal import FractalServer, qc_queue as queue, testing
 from qcfractal.testing import reset_server_database, test_server
 
 CLIENT_USERNAME = "test_compute_adapter"

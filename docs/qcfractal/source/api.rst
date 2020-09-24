@@ -4,6 +4,6 @@ QCFractal API
 
 .. automodapi:: qcfractal
 
-.. automodapi:: qcfractal.queue
+.. automodapi:: qcfractal.qc_queue
 
 .. automodapi:: qcfractal.services
