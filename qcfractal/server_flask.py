@@ -469,6 +469,83 @@ def put_task_queue():
     return data
 
 
+@app.route('/service_queue', methods=['GET'])
+@jwt_required
+def get_service_queue():
+    body_model, response_model = rest_model("service_queue", "get")
+    body = parse_bodymodel(body_model)
+
+    ret = storage.get_services(**{**body.data.dict(), **body.meta.dict()})
+    response = response_model(**ret)
+
+    if not isinstance(response, (str, bytes)):
+        data = serialize(response, encoding)
+
+    return data
+
+
+@app.route('/service_queue', methods=['POST'])
+@jwt_required
+def post_service_queue():
+    """Posts new services to the service queue."""
+
+    body_model, response_model = rest_model("service_queue", "post")
+    body = parse_bodymodel(body_model)
+
+    new_services = []
+    for service_input in body.data:
+        # Get molecules with ids
+        if isinstance(service_input.initial_molecule, list):
+            molecules = storage.get_add_molecules_mixed(service_input.initial_molecule)["data"]
+            if len(molecules) != len(service_input.initial_molecule):
+                return jsonify(message=KeyError), 500
+        else:
+            molecules = storage.get_add_molecules_mixed([service_input.initial_molecule])["data"][0]
+
+        # Update the input and build a service object
+        service_input = service_input.copy(update={"initial_molecule": molecules})
+        new_services.append(
+            initialize_service(
+                storage, logger, service_input, tag=body.meta.tag, priority=body.meta.priority
+            )
+        )
+
+    ret = storage.add_services(new_services)
+    ret["data"] = {"ids": ret["data"], "existing": ret["meta"]["duplicates"]}
+    ret["data"]["submitted"] = list(set(ret["data"]["ids"]) - set(ret["meta"]["duplicates"]))
+    response = response_model(**ret)
+
+    if not isinstance(response, (str, bytes)):
+        data = serialize(response, encoding)
+
+    return data
+
+
+@app.route('/service_queue', methods=['PUT'])
+@jwt_required
+def put_service_queue():
+    """Modifies services in the service queue"""
+
+    body_model, response_model = rest_model("service_queue", "put")
+    body = parse_bodymodel(body_model)
+
+    if (body.data.id is None) and (body.data.procedure_id is None):
+        return jsonify(message="Id or ProcedureId must be specified."), 400
+
+    if body.meta.operation == "restart":
+        updates = storage.update_service_status("running", **body.data.dict())
+        data = {"n_updated": updates}
+    else:
+        return jsonify(message="Operation '{operation}' is not valid."), 400
+
+    response = response_model(data=data, meta={"errors": [], "success": True, "error_description": False})
+
+    if not isinstance(response, (str, bytes)):
+        data = serialize(response, encoding)
+
+    return data
+
+
 # @app.route('/retrieve_password/<string:email>', methods=['GET'])
 # def retrieve_password(email: str):
 #     user = User.query.filter_by(email=email).first()
