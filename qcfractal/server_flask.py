@@ -51,7 +51,7 @@ mail = Mail(app)
 
 storage = storage_socket_factory(
     "postgresql://localhost:5432",
-    project_name="qcfractal_default",
+    project_name="test_qcfractal_compute_snowflake",
     bypass_security=False,
     allow_read=False,
     max_limit=1000,
@@ -72,6 +72,41 @@ def parse_bodymodel(args, model):
         return jsonify(message=ValidationError), 500
 
 
+@app.route('/register', methods=['POST'])
+def register():
+    if request.is_json:
+        email = request.json['email']
+        password = request.json['password']
+    else:
+        email = request.form['email']
+        password = request.form['password']
+
+    success, pw = storage.add_user(email, password=password, permissions=["read"])
+    if success:
+        print(f"\n>>> New user successfully added, password:\n{pw}")
+        return jsonify({'message' : 'New user created!'}), 201
+    else:
+        print("\n>>> Failed to add user. Perhaps the username is already taken?")
+        return jsonify({'message' : 'Failed to add user.'}), 500
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    if request.is_json:
+        email = request.json['email']
+        password = request.json['password']
+    else:
+        email = request.form['email']
+        password = request.form['password']
+
+    success = storage.verify_user(email, password, "read")[0]
+    if success:
+        access_token = create_access_token(identity=email)
+        return jsonify(message="Login succeeded!", access_token=access_token)
+    else:
+        return jsonify(message="Bad email or password"), 401
+
+
 @app.route('/information', methods=['GET'])
 def get_information():
     public_information = {
@@ -86,7 +121,7 @@ def get_information():
 
 
 @app.route('/molecule', methods=['GET'])
-@jwt_required
+# @jwt_required
 def get_molecule():
     """
     Request:
@@ -151,41 +186,6 @@ def post_molecule():
     return data
 
 
-@app.route('/register', methods=['POST'])
-def register():
-    if request.is_json:
-        email = request.json['email']
-        password = request.json['password']
-    else:
-        email = request.form['email']
-        password = request.form['password']
-
-    success, pw = storage.add_user(email, password=password, permissions=["read"])
-    if success:
-        print(f"\n>>> New user successfully added, password:\n{pw}")
-        return jsonify({'message' : 'New user created!'}), 201
-    else:
-        print("\n>>> Failed to add user. Perhaps the username is already taken?")
-        return jsonify({'message' : 'Failed to add user.'}), 500
-
-
-@app.route('/login', methods=['POST'])
-def login():
-    if request.is_json:
-        email = request.json['email']
-        password = request.json['password']
-    else:
-        email = request.form['email']
-        password = request.form['password']
-
-    success = storage.verify_user(email, password, "read")[0]
-    if success:
-        access_token = create_access_token(identity=email)
-        return jsonify(message="Login succeeded!", access_token=access_token)
-    else:
-        return jsonify(message="Bad email or password"), 401
-
-
 @app.route('/kvstore', methods=['GET'])
 @jwt_required
 def get_kvstore():
@@ -216,84 +216,98 @@ def get_kvstore():
     return data
 
 
-@app.route('/collection/<int:collection_id>/<string:view_function>', methods=['GET','POST','DELETE'])
+@app.route('/collection/<int:collection_id>/<string:view_function>', methods=['GET'])
 @jwt_required
-def handle_collection(collection_id: int, view_function: str):
-
-    if request.method == 'GET':
-        # List collections
-        if (collection_id is None) and (view_function is None):
-            body_model, response_model = rest_model("collection", "get")
-            body = parse_bodymodel(body_model)
-
-            cols = storage.get_collections(
-                **body.data.dict(), include=body.meta.include, exclude=body.meta.exclude
-            )
-            response = response_model(**cols)
-
-        # Get specific collection
-        elif (collection_id is not None) and (view_function is None):
-            body_model, response_model = rest_model("collection", "get")
-
-            body = parse_bodymodel(body_model)
-            cols = storage.get_collections(
-                **body.data.dict(), col_id=int(collection_id), include=body.meta.include, exclude=body.meta.exclude
-            )
-            response = response_model(**cols)
-
-        # View-backed function on collection
-        elif (collection_id is not None) and (view_function is not None):
-            body_model, response_model = rest_model(f"collection/{collection_id}/{view_function}", "get")
-            body = parse_bodymodel(body_model)
-            if view_handler is None:
-                meta = {
-                    "success": False,
-                    "error_description": "Server does not support collection views.",
-                    "errors": [],
-                    "msgpacked_cols": [],
-                }
-                response = response_model(meta=meta, data=None)
-                if not isinstance(response, (str, bytes)):
-                    data = serialize(response, encoding)
-
-                return data
-
-            result = view_handler.handle_request(collection_id, view_function, body.data.dict())
-            response = response_model(**result)
-
-        # Unreachable?
-        else:
-            body_model, response_model = rest_model("collection", "get")
-            meta = add_metadata_template()
-            meta["success"] = False
-            meta["error_description"] = "GET request for view with no collection ID not understood."
-            response = response_model(meta=meta, data=None)
-
-    elif request.method == 'POST':
-        body_model, response_model = rest_model("collection", "post")
+def get_collection(collection_id: int, view_function: str):
+    # List collections
+    if (collection_id is None) and (view_function is None):
+        body_model, response_model = rest_model("collection", "get")
         body = parse_bodymodel(body_model)
 
-        # POST requests not supported for anything other than "/collection"
-        if collection_id is not None or view_function is not None:
-            meta = add_metadata_template()
-            meta["success"] = False
-            meta["error_description"] = "POST requests not supported for sub-resources of /collection"
+        cols = storage.get_collections(
+            **body.data.dict(), include=body.meta.include, exclude=body.meta.exclude
+        )
+        response = response_model(**cols)
+
+    # Get specific collection
+    elif (collection_id is not None) and (view_function is None):
+        body_model, response_model = rest_model("collection", "get")
+
+        body = parse_bodymodel(body_model)
+        cols = storage.get_collections(
+            **body.data.dict(), col_id=int(collection_id), include=body.meta.include, exclude=body.meta.exclude
+        )
+        response = response_model(**cols)
+
+    # View-backed function on collection
+    elif (collection_id is not None) and (view_function is not None):
+        body_model, response_model = rest_model(f"collection/{collection_id}/{view_function}", "get")
+        body = parse_bodymodel(body_model)
+        if view_handler is None:
+            meta = {
+                "success": False,
+                "error_description": "Server does not support collection views.",
+                "errors": [],
+                "msgpacked_cols": [],
+            }
             response = response_model(meta=meta, data=None)
             if not isinstance(response, (str, bytes)):
                 data = serialize(response, encoding)
 
             return data
 
-        ret = storage.add_collection(body.data.dict(), overwrite=body.meta.overwrite)
-        response = response_model(**ret)
+        result = view_handler.handle_request(collection_id, view_function, body.data.dict())
+        response = response_model(**result)
 
-    elif request.method == 'DELETE':
-        body_model, response_model = rest_model(f"collection/{collection_id}", "delete")
-        ret = storage.del_collection(col_id=collection_id)
-        if ret == 0:
-            return jsonify(message="Collection does not exist."), 404
-        else:
-            response = response_model(meta={"success": True, "errors": [], "error_description": False})
+    # Unreachable?
+    else:
+        body_model, response_model = rest_model("collection", "get")
+        meta = add_metadata_template()
+        meta["success"] = False
+        meta["error_description"] = "GET request for view with no collection ID not understood."
+        response = response_model(meta=meta, data=None)
+
+    if not isinstance(response, (str, bytes)):
+        data = serialize(response, encoding)
+
+    return data
+
+
+@app.route('/collection/<int:collection_id>/<string:view_function>', methods=['POST'])
+@jwt_required
+def post_collection(collection_id: int, view_function: str):
+    body_model, response_model = rest_model("collection", "post")
+    body = parse_bodymodel(body_model)
+
+    # POST requests not supported for anything other than "/collection"
+    if collection_id is not None or view_function is not None:
+        meta = add_metadata_template()
+        meta["success"] = False
+        meta["error_description"] = "POST requests not supported for sub-resources of /collection"
+        response = response_model(meta=meta, data=None)
+        if not isinstance(response, (str, bytes)):
+            data = serialize(response, encoding)
+
+        return data
+
+    ret = storage.add_collection(body.data.dict(), overwrite=body.meta.overwrite)
+    response = response_model(**ret)
+
+    if not isinstance(response, (str, bytes)):
+        data = serialize(response, encoding)
+
+    return data
+
+
+@app.route('/collection/<int:collection_id>/<string:view_function>', methods=['DELETE'])
+@jwt_required
+def handle_collection(collection_id: int, view_function: str):
+    body_model, response_model = rest_model(f"collection/{collection_id}", "delete")
+    ret = storage.del_collection(col_id=collection_id)
+    if ret == 0:
+        return jsonify(message="Collection does not exist."), 404
+    else:
+        response = response_model(meta={"success": True, "errors": [], "error_description": False})
 
     if not isinstance(response, (str, bytes)):
         data = serialize(response, encoding)
@@ -338,6 +352,28 @@ def get_wave_function():
     ret = storage.get_wavefunction_store(body.data.id, include=body.meta.include)
     if len(ret["data"]):
         ret["data"] = ret["data"][0]
+    response = response_model(**ret)
+
+    if not isinstance(response, (str, bytes)):
+        data = serialize(response, encoding)
+
+    return data
+
+
+@app.route('/procedure/<string:query_type>', methods=['GET'])
+@jwt_required
+def get_procedure(query_type: str):
+    body_model, response_model = rest_model("procedure", query_type)
+    body = parse_bodymodel(body_model)
+
+    try:
+        if query_type == "get":
+            ret = storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
+        else:  # all other queries, like 'best_opt_results'
+            ret = storage.custom_query("procedure", query_type, **{**body.data.dict(), **body.meta.dict()})
+    except KeyError as e:
+        return jsonify(message=KeyError), 500
+
     response = response_model(**ret)
 
     if not isinstance(response, (str, bytes)):
