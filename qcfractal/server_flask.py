@@ -37,6 +37,8 @@ from qcelemental.util import deserialize, serialize
 from .interface.models.rest_models import rest_model
 from .storage_sockets.storage_utils import add_metadata_template
 from werkzeug.security import generate_password_hash, check_password_hash
+from .procedures import check_procedure_available, get_procedure_parser
+
 
 
 app = Flask(__name__)
@@ -403,6 +405,68 @@ def get_optimization(query_type: str):
 
     return data
 
+
+@app.route('/task_queue', methods=['GET'])
+@jwt_required
+def get_task_queue():
+    body_model, response_model = rest_model("task_queue", "get")
+    body = parse_bodymodel(body_model)
+
+    tasks = storage.get_queue(**{**body.data.dict(), **body.meta.dict()})
+    response = response_model(**tasks)
+
+    if not isinstance(response, (str, bytes)):
+        data = serialize(response, encoding)
+
+    return data
+
+
+@app.route('/task_queue', methods=['POST'])
+@jwt_required
+def post_task_queue():
+    body_model, response_model = rest_model("task_queue", "post")
+    body = parse_bodymodel(body_model)
+
+    # Format and submit tasks
+    if not check_procedure_available(body.meta.procedure):
+        return jsonify(message="Unknown procedure {}.".format(body.meta.procedure)), 500
+
+    procedure_parser = get_procedure_parser(body.meta.procedure, storage, logger)
+
+    # Verify the procedure
+    verify = procedure_parser.verify_input(body)
+    if verify is not True:
+        return jsonify(message="Verify error"), 400
+
+    payload = procedure_parser.submit_tasks(body)
+    response = response_model(**payload)
+
+    if not isinstance(response, (str, bytes)):
+        data = serialize(response, encoding)
+
+    return data
+
+
+@app.route('/task_queue', methods=['PUT'])
+@jwt_required
+def put_task_queue():
+    body_model, response_model = rest_model("task_queue", "put")
+    body = parse_bodymodel(body_model)
+
+    if (body.data.id is None) and (body.data.base_result is None):
+        return jsonify(message="Id or ResultId must be specified."), 400
+    if body.meta.operation == "restart":
+        tasks_updated = storage.queue_reset_status(**body.data.dict(), reset_error=True)
+        data = {"n_updated": tasks_updated}
+    else:
+        return jsonify(message="Operation '{operation}' is not valid."), 400
+
+    response = response_model(data=data, meta={"errors": [], "success": True, "error_description": False})
+
+    if not isinstance(response, (str, bytes)):
+        data = serialize(response, encoding)
+
+    return data
 
 
 # @app.route('/retrieve_password/<string:email>', methods=['GET'])
