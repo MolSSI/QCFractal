@@ -382,6 +382,29 @@ def get_procedure(query_type: str):
     return data
 
 
+@app.route('/optimization/<string:query_type>', methods=['GET'])
+@jwt_required
+def get_optimization(query_type: str):
+    body_model, response_model = rest_model(f"optimization/{query_type}", "get")
+    body = parse_bodymodel(body_model)
+
+    try:
+        if query_type == "get":
+            ret = storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
+        else:  # all other queries, like 'best_opt_results'
+            ret = storage.custom_query("optimization", query_type, **{**body.data.dict(), **body.meta.dict()})
+    except KeyError as e:
+        return jsonify(message=KeyError), 500
+
+    response = response_model(**ret)
+
+    if not isinstance(response, (str, bytes)):
+        data = serialize(response, encoding)
+
+    return data
+
+
+
 # @app.route('/retrieve_password/<string:email>', methods=['GET'])
 # def retrieve_password(email: str):
 #     user = User.query.filter_by(email=email).first()
