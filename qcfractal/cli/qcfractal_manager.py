@@ -72,11 +72,11 @@ class CommonManagerSettings(AutodocBaseSettings):
     cores_per_worker: int = Field(
         qcng.config.get_global("ncores"),
         description="""
-        Number of cores to be consumed by the Worker and distributed over the tasks_per_worker. These 
-        cores are divided evenly, so it is recommended that quotient of cores_per_worker/tasks_per_worker 
+        Number of cores to be consumed by the Worker and distributed over the tasks_per_worker. These
+        cores are divided evenly, so it is recommended that quotient of cores_per_worker/tasks_per_worker
         be a whole number else the core distribution is left up to the logic of the adapter. The default
         value is read from the number of detected cores on the system you are executing on.
-        
+
         In the case of node-parallel tasks, this number means the number of cores per node.
         """,
         gt=0,
@@ -984,7 +984,7 @@ def main(args=None):
         max_queued_tasks = settings.manager.max_queued_tasks
 
     # The queue manager is configured differently for node-parallel and single-node tasks
-    manager = qcfractal.queue.QueueManager(
+    manager = qcfractal.qc_queue.QueueManager(
         client,
         queue_client,
         max_tasks=max_queued_tasks,

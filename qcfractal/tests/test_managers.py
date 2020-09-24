@@ -12,7 +12,7 @@ from multiprocessing import Pool
 import pytest
 
 import qcfractal.interface as ptl
-from qcfractal import FractalServer, queue, testing
+from qcfractal import FractalServer, qc_queue as queue, testing
 from qcfractal.testing import reset_server_database, test_server
 from qcfractal.cli.qcfractal_manager import _initialize_signals_process_pool
 
