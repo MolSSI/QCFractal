@@ -153,7 +153,9 @@ class OptimizationTasks(BaseTasks):
             all_opt_records[idx] = r
 
         # Now generate all the tasks, but only for results that don't exist already
-        self.create_tasks(all_opt_records, valid_molecules, [qc_keywords]*len(all_opt_records), tag=tag, priority=priority)
+        self.create_tasks(
+            all_opt_records, valid_molecules, [qc_keywords] * len(all_opt_records), tag=tag, priority=priority
+        )
 
         # Keep the returned result id list in the same order as the input molecule list
         # If a molecule was None, then the corresponding result ID will be None
@@ -224,7 +226,7 @@ class OptimizationTasks(BaseTasks):
 
             new_tasks.append(task)
 
-        self.storage.queue_submit(new_tasks)
+        return self.storage.queue_submit(new_tasks)
 
     def handle_completed_output(self, opt_outputs):
         """Save the results of the procedure.

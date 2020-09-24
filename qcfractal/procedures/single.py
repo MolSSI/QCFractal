@@ -116,7 +116,9 @@ class SingleResultTasks(BaseTasks):
             all_result_records[idx] = r
 
         # Now generate all the tasks, but only for results that don't exist already
-        self.create_tasks(all_result_records, valid_molecules, [keywords]*len(all_result_records), tag=tag, priority=priority)
+        self.create_tasks(
+            all_result_records, valid_molecules, [keywords] * len(all_result_records), tag=tag, priority=priority
+        )
 
         # Keep the returned result id list in the same order as the input molecule list
         # If a molecule was None, then the corresponding result ID will be None
@@ -206,7 +208,7 @@ class SingleResultTasks(BaseTasks):
 
             new_tasks.append(task)
 
-        self.storage.queue_submit(new_tasks)
+        return self.storage.queue_submit(new_tasks)
 
     def handle_completed_output(self, result_outputs):
 

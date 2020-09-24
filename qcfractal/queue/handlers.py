@@ -8,6 +8,9 @@ import traceback
 import tornado.web
 
 from ..interface.models.rest_models import rest_model
+from ..interface.models.task_models import PriorityEnum
+from ..interface.models.records import RecordStatusEnum
+from ..interface.models.model_builder import build_procedure
 from ..procedures import check_procedure_available, get_procedure_parser
 from ..services import initialize_service
 from ..web_handlers import APIHandler
@@ -65,7 +68,46 @@ class TaskQueueHandler(APIHandler):
             raise tornado.web.HTTPError(status_code=400, reason="Id or ResultId must be specified.")
 
         if body.meta.operation == "restart":
-            tasks_updated = self.storage.queue_reset_status(**body.data.dict(), reset_error=True)
+            d = body.data.dict()
+            d.pop("new_tag", None)
+            d.pop("new_priority", None)
+            tasks_updated = self.storage.queue_reset_status(**d, reset_error=True)
+            data = {"n_updated": tasks_updated}
+        elif body.meta.operation == "regenerate":
+            tasks_updated = 0
+            result_data = self.storage.get_procedures(id=body.data.base_result)["data"]
+
+            new_tag = body.data.new_tag
+            if body.data.new_priority is None:
+                new_priority = PriorityEnum.NORMAL
+            else:
+                new_priority = PriorityEnum(int(body.data.new_priority))
+
+            for r in result_data:
+                model = build_procedure(r)
+
+                # Only regenerate the task if it is not complete
+                # This will not do anything if the task already exists
+                if model.status != RecordStatusEnum.complete:
+                    procedure_parser = get_procedure_parser(model.procedure, self.storage, self.logger)
+
+                    task_info = procedure_parser.create_tasks([model], tag=new_tag, priority=new_priority)
+                    n_inserted = task_info["meta"]["n_inserted"]
+                    tasks_updated += n_inserted
+
+                    # If we inserted a new task, then also reset base result statuses
+                    # (ie, if it was running, then it obviously isn't since we made a new task)
+                    if n_inserted > 0:
+                        self.storage.reset_base_result_status(id=body.data.base_result)
+
+                data = {"n_updated": tasks_updated}
+        elif body.meta.operation == "modify":
+            tasks_updated = self.storage.queue_modify_tasks(
+                id=body.data.id,
+                base_result=body.data.base_result,
+                new_tag=body.data.new_tag,
+                new_priority=body.data.new_priority,
+            )
             data = {"n_updated": tasks_updated}
         else:
             raise tornado.web.HTTPError(status_code=400, reason=f"Operation '{operation}' is not valid.")

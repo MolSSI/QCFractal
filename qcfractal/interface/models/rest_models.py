@@ -836,6 +836,14 @@ class TaskQueuePUTBody(ProtoModel):
             "search condition, there is no reason to set anything else as this will be unique in the "
             "database, if it exists. See also :class:`ResultRecord`.",
         )
+        new_tag: Optional[str] = Field(
+            None,
+            description="Change the tag of an existing or regenerated task to be this value",
+        )
+        new_priority: Union[str, int, None] = Field(
+            None,
+            description="Change the priority of an existing or regenerated task to this value",
+        )
 
     class Meta(ProtoModel):
         operation: str = Field(..., description="The specific action you are taking as part of this update.")
