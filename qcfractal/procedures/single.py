@@ -288,6 +288,7 @@ class SingleResultTasks(BaseTasks):
             completed_tasks.append(output["task_id"])
 
         self.storage.update_results(updates)
+        self.storage.queue_mark_complete(completed_tasks)
 
         return completed_tasks
 

@@ -221,15 +221,13 @@ class QueueManagerHandler(APIHandler):
                 )
             )
 
-        # Run output parsers
+        # Run output parsers and handle completed tasks
         completed = []
         for k, v in new_results.items():
             procedure_parser = get_procedure_parser(k, storage_socket, logger)
             com = procedure_parser.handle_completed_output(v)
             completed.extend(com)
 
-        # Handle complete tasks
-        storage_socket.queue_mark_complete(completed)
         storage_socket.queue_mark_error(error_data)
         return len(completed), len(error_data)
 
