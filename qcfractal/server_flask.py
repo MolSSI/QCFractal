@@ -546,6 +546,195 @@ def put_service_queue():
     return data
 
 
+def _get_name_from_metadata(meta):
+    """
+    Form the canonical name string.
+    """
+    ret = meta.cluster + "-" + meta.hostname + "-" + meta.uuid
+    return ret
+
+def insert_complete_tasks(storage_socket, results, logger):
+    # Pivot data so that we group all results in categories
+    new_results = collections.defaultdict(list)
+
+    queue = storage_socket.get_queue(id=list(results.keys()))["data"]
+    queue = {v.id: v for v in queue}
+
+    error_data = []
+
+    task_success = 0
+    task_failures = 0
+    task_totals = len(results.items())
+    for key, result in results.items():
+        try:
+            # Successful task
+            if result["success"] is False:
+                if "error" not in result:
+                    error = {"error_type": "not_supplied", "error_message": "No error message found on task."}
+                else:
+                    error = result["error"]
+
+                logger.warning(
+                    "Computation key {key} did not complete successfully:\n"
+                    "error_type: {error_type}\nerror_message: {error_message}".format(key=str(key), **error)
+                )
+
+                error_data.append((key, error))
+                task_failures += 1
+
+            # Failed task
+            elif key not in queue:
+                logger.warning(f"Computation key {key} completed successfully, but not found in queue.")
+                error_data.append((key, "Internal Error: Queue key not found."))
+                task_failures += 1
+
+            # Success!
+            else:
+                parser = queue[key].parser
+                new_results[parser].append(
+                    {"result": result, "task_id": key, "base_result": queue[key].base_result}
+                )
+                task_success += 1
+
+        except Exception:
+            msg = "Internal FractalServer Error:\n" + traceback.format_exc()
+            logger.warning("update: ERROR\n{}".format(msg))
+            error_data.append((key, msg))
+            task_failures += 1
+
+    if task_totals:
+        logger.info(
+            "QueueManager: Found {} complete tasks ({} successful, {} failed).".format(
+                task_totals, task_success, task_failures
+            )
+        )
+
+    # Run output parsers
+    completed = []
+    for k, v in new_results.items():
+        procedure_parser = get_procedure_parser(k, storage_socket, logger)
+        com, err, hks = procedure_parser.parse_output(v)
+        completed.extend(com)
+        error_data.extend(err)
+
+    # Handle complete tasks
+    storage_socket.queue_mark_complete(completed)
+    storage_socket.queue_mark_error(error_data)
+    return len(completed), len(error_data)
+
+
+@app.route('/queue_manager', methods=['GET'])
+@jwt_required
+def get_queue_manager():
+    """Pulls new tasks from the task queue"""
+
+    body_model, response_model = rest_model("queue_manager", "get")
+    body = parse_bodymodel(body_model)
+
+    # Figure out metadata and kwargs
+    name = _get_name_from_metadata(body.meta)
+
+    # Grab new tasks and write out
+    new_tasks = storage.queue_get_next(
+        name, body.meta.programs, body.meta.procedures, limit=body.data.limit, tag=body.meta.tag
+    )
+    response = response_model(
+        **{
+            "meta": {
+                "n_found": len(new_tasks),
+                "success": True,
+                "errors": [],
+                "error_description": "",
+                "missing": [],
+            },
+            "data": new_tasks,
+        }
+    )
+    # Update manager logs
+    storage.manager_update(name, submitted=len(new_tasks), **body.meta.dict())
+    if not isinstance(response, (str, bytes)):
+        data = serialize(response, encoding)
+
+    return data
+
+
+@app.route('/queue_manager', methods=['POST'])
+@jwt_required
+def post_queue_manager():
+    """Posts complete tasks to the task queue"""
+
+    body_model, response_model = rest_model("queue_manager", "post")
+    body = parse_bodymodel(body_model)
+
+    name = _get_name_from_metadata(body.meta)
+    # logger.info("QueueManager: Received completed task packet from {}.".format(name))
+    success, error = insert_complete_tasks(storage, body.data, logger)
+
+    completed = success + error
+
+    response = response_model(
+        **{
+            "meta": {
+                "n_inserted": completed,
+                "duplicates": [],
+                "validation_errors": [],
+                "success": True,
+                "errors": [],
+                "error_description": "",
+            },
+            "data": True,
+        }
+    )
+
+    if not isinstance(response, (str, bytes)):
+        data = serialize(response, encoding)
+
+    return data
+
+
+@app.route('/queue_manager', methods=['PUT'])
+@jwt_required
+def put_queue_manager():
+    """
+    Various manager manipulation operations
+    """
+
+    ret = True
+
+    body_model, response_model = rest_model("queue_manager", "put")
+    body = parse_bodymodel(body_model)
+
+    name = _get_name_from_metadata(body.meta)
+    op = body.data.operation
+    if op == "startup":
+        storage.manager_update(
+            name, status="ACTIVE", configuration=body.data.configuration, **body.meta.dict(), log=True
+        )
+        # logger.info("QueueManager: New active manager {} detected.".format(name))
+
+    elif op == "shutdown":
+        nshutdown = storage.queue_reset_status(manager=name, reset_running=True)
+        storage.manager_update(name, returned=nshutdown, status="INACTIVE", **body.meta.dict(), log=True)
+
+        # logger.info("QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(name, nshutdown))
+
+        ret = {"nshutdown": nshutdown}
+
+    elif op == "heartbeat":
+        storage.manager_update(name, status="ACTIVE", **body.meta.dict(), log=True)
+        # logger.debug("QueueManager: Heartbeat of manager {} detected.".format(name))
+
+    else:
+        msg = "Operation '{}' not understood.".format(op)
+        return jsonify(message=msg), 400
+
+    response = response_model(**{"meta": {}, "data": ret})
+    if not isinstance(response, (str, bytes)):
+        data = serialize(response, encoding)
+
+    return data
+
+
 # @app.route('/retrieve_password/<string:email>', methods=['GET'])
 # def retrieve_password(email: str):
 #     user = User.query.filter_by(email=email).first()
