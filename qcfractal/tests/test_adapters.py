@@ -10,7 +10,7 @@ import pytest
 
 import qcfractal.interface as ptl
 from qcfractal import QueueManager, testing
-from qcfractal.queue import build_queue_adapter
+from qcfractal.qc_queue import build_queue_adapter
 from qcfractal.testing import (
     adapter_client_fixture,
     build_adapter_clients,
