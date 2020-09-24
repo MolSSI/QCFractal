@@ -735,6 +735,30 @@ def put_queue_manager():
     return data
 
 
+@app.route('/manager', methods=['GET'])
+@jwt_required
+def get_manager():
+    """Gets manager information from the task queue"""
+
+    body_model, response_model = rest_model("manager", "get")
+    body = parse_bodymodel(body_model)
+
+    # logger.info("GET: ComputeManagerHandler")
+    managers = storage.get_managers(**{**body.data.dict(), **body.meta.dict()})
+
+    # remove passwords?
+    # TODO: Are passwords stored anywhere else? Other kinds of passwords?
+    for m in managers["data"]:
+        if "configuration" in m and isinstance(m["configuration"], dict) and "server" in m["configuration"]:
+            m["configuration"]["server"].pop("password", None)
+
+    response = response_model(**managers)
+    if not isinstance(response, (str, bytes)):
+        data = serialize(response, encoding)
+
+    return data
+
+
 # @app.route('/retrieve_password/<string:email>', methods=['GET'])
 # def retrieve_password(email: str):
 #     user = User.query.filter_by(email=email).first()
