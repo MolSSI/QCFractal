@@ -122,7 +122,8 @@ def parse_single_tasks(storage, results):
 
     return results
 
-def form_qcinputspec_schema(qc_spec : QCSpecification, keywords: Optional["KeywordSet"] = None) -> Dict[str, Any]:
+
+def form_qcinputspec_schema(qc_spec: QCSpecification, keywords: Optional["KeywordSet"] = None) -> Dict[str, Any]:
     if qc_spec.keywords:
         assert keywords.id == qc_spec.keywords
 
