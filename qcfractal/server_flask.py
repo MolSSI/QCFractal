@@ -74,6 +74,38 @@ def parse_bodymodel(args, model):
         return jsonify(message=ValidationError), 500
 
 
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+
+        if 'x-access-token' in request.headers:
+            token = request.headers['x-access-token']
+
+        if not token:
+            return jsonify({'message' : 'Token is missing!'}), 401
+
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'])
+            endpoint = request.endpoint
+            method = request.method
+            permissions = storage.get_permissions(data['role'])
+            allowed_endpoints = permissions.get(method)
+            if not allowed_endpoints or not any(endpoint in s for s in allowed_endpoints):
+                return jsonify({'message': 'Unauthorized Access!'}), 403
+            current_user = {
+              "email": data["email"],
+              "role": data["role"],
+              "groups": data["groups"]
+            }
+        except:
+            return jsonify({'message' : 'Token is invalid!'}), 401
+
+        return f(current_user, *args, **kwargs)
+
+    return decorated
+
+
 @app.route('/register', methods=['POST'])
 def register():
     if request.is_json:
@@ -103,7 +135,7 @@ def login():
 
     success = storage.verify_user(email, password, "read")[0]
     if success:
-        access_token = create_access_token(identity=email)
+        access_token = create_access_token(email=email)
         return jsonify(message="Login succeeded!", access_token=access_token)
     else:
         return jsonify(message="Bad email or password"), 401
@@ -123,7 +155,6 @@ def get_information():
 
 
 @app.route('/molecule', methods=['GET'])
-# @jwt_required
 def get_molecule():
     """
     Request:
@@ -156,8 +187,8 @@ def get_molecule():
 
 
 @app.route('/molecule', methods=['POST'])
-@jwt_required
-def post_molecule():
+@token_required
+def post_molecule(current_user):
     """
     Request:
         "meta" - Overall options to the Molecule pull request
@@ -189,8 +220,8 @@ def post_molecule():
 
 
 @app.route('/kvstore', methods=['GET'])
-@jwt_required
-def get_kvstore():
+@token_required
+def get_kvstore(current_user):
     """
     Request:
         "data" - A list of key requests
@@ -219,8 +250,8 @@ def get_kvstore():
 
 
 @app.route('/collection/<int:collection_id>/<string:view_function>', methods=['GET'])
-@jwt_required
-def get_collection(collection_id: int, view_function: str):
+@token_required
+def get_collection(current_usercollection_id: int, view_function: str):
     # List collections
     if (collection_id is None) and (view_function is None):
         body_model, response_model = rest_model("collection", "get")
@@ -276,8 +307,8 @@ def get_collection(collection_id: int, view_function: str):
 
 
 @app.route('/collection/<int:collection_id>/<string:view_function>', methods=['POST'])
-@jwt_required
-def post_collection(collection_id: int, view_function: str):
+@token_required
+def post_collection(current_usercollection_id: int, view_function: str):
     body_model, response_model = rest_model("collection", "post")
     body = parse_bodymodel(body_model)
 
@@ -302,8 +333,8 @@ def post_collection(collection_id: int, view_function: str):
 
 
 @app.route('/collection/<int:collection_id>/<string:view_function>', methods=['DELETE'])
-@jwt_required
-def handle_collection(collection_id: int, view_function: str):
+@token_required
+def handle_collection(current_usercollection_id: int, view_function: str):
     body_model, response_model = rest_model(f"collection/{collection_id}", "delete")
     ret = storage.del_collection(col_id=collection_id)
     if ret == 0:
@@ -318,8 +349,8 @@ def handle_collection(collection_id: int, view_function: str):
 
 
 @app.route('/result/<string:query_type>', methods=['GET'])
-@jwt_required
-def get_result(query_type: str):
+@token_required
+def get_result(current_userquery_type: str):
     content_type = request.headers.get("Content-Type", "application/json")
     encoding = _valid_encodings[content_type]
 
@@ -343,8 +374,8 @@ def get_result(query_type: str):
 
 
 @app.route('/wavefunctionstore', methods=['GET'])
-@jwt_required
-def get_wave_function():
+@token_required
+def get_wave_function(current_user):
     content_type = request.headers.get("Content-Type", "application/json")
     encoding = _valid_encodings[content_type]
 
@@ -363,8 +394,8 @@ def get_wave_function():
 
 
 @app.route('/procedure/<string:query_type>', methods=['GET'])
-@jwt_required
-def get_procedure(query_type: str):
+@token_required
+def get_procedure(current_userquery_type: str):
     body_model, response_model = rest_model("procedure", query_type)
     body = parse_bodymodel(body_model)
 
@@ -385,8 +416,8 @@ def get_procedure(query_type: str):
 
 
 @app.route('/optimization/<string:query_type>', methods=['GET'])
-@jwt_required
-def get_optimization(query_type: str):
+@token_required
+def get_optimization(current_userquery_type: str):
     body_model, response_model = rest_model(f"optimization/{query_type}", "get")
     body = parse_bodymodel(body_model)
 
@@ -407,8 +438,8 @@ def get_optimization(query_type: str):
 
 
 @app.route('/task_queue', methods=['GET'])
-@jwt_required
-def get_task_queue():
+@token_required
+def get_task_queue(current_user):
     body_model, response_model = rest_model("task_queue", "get")
     body = parse_bodymodel(body_model)
 
@@ -422,8 +453,8 @@ def get_task_queue():
 
 
 @app.route('/task_queue', methods=['POST'])
-@jwt_required
-def post_task_queue():
+@token_required
+def post_task_queue(current_user):
     body_model, response_model = rest_model("task_queue", "post")
     body = parse_bodymodel(body_model)
 
@@ -448,8 +479,8 @@ def post_task_queue():
 
 
 @app.route('/task_queue', methods=['PUT'])
-@jwt_required
-def put_task_queue():
+@token_required
+def put_task_queue(current_user):
     body_model, response_model = rest_model("task_queue", "put")
     body = parse_bodymodel(body_model)
 
@@ -470,8 +501,8 @@ def put_task_queue():
 
 
 @app.route('/service_queue', methods=['GET'])
-@jwt_required
-def get_service_queue():
+@token_required
+def get_service_queue(current_user):
     body_model, response_model = rest_model("service_queue", "get")
     body = parse_bodymodel(body_model)
 
@@ -485,8 +516,8 @@ def get_service_queue():
 
 
 @app.route('/service_queue', methods=['POST'])
-@jwt_required
-def post_service_queue():
+@token_required
+def post_service_queue(current_user):
     """Posts new services to the service queue."""
 
     body_model, response_model = rest_model("service_queue", "post")
@@ -522,8 +553,8 @@ def post_service_queue():
 
 
 @app.route('/service_queue', methods=['PUT'])
-@jwt_required
-def put_service_queue():
+@token_required
+def put_service_queue(current_user):
     """Modifies services in the service queue"""
 
     body_model, response_model = rest_model("service_queue", "put")
@@ -624,8 +655,8 @@ def insert_complete_tasks(storage_socket, results, logger):
 
 
 @app.route('/queue_manager', methods=['GET'])
-@jwt_required
-def get_queue_manager():
+@token_required
+def get_queue_manager(current_user):
     """Pulls new tasks from the task queue"""
 
     body_model, response_model = rest_model("queue_manager", "get")
@@ -659,8 +690,8 @@ def get_queue_manager():
 
 
 @app.route('/queue_manager', methods=['POST'])
-@jwt_required
-def post_queue_manager():
+@token_required
+def post_queue_manager(current_user):
     """Posts complete tasks to the task queue"""
 
     body_model, response_model = rest_model("queue_manager", "post")
@@ -693,8 +724,8 @@ def post_queue_manager():
 
 
 @app.route('/queue_manager', methods=['PUT'])
-@jwt_required
-def put_queue_manager():
+@token_required
+def put_queue_manager(current_user):
     """
     Various manager manipulation operations
     """
@@ -736,8 +767,8 @@ def put_queue_manager():
 
 
 @app.route('/manager', methods=['GET'])
-@jwt_required
-def get_manager():
+@token_required
+def get_manager(current_user):
     """Gets manager information from the task queue"""
 
     body_model, response_model = rest_model("manager", "get")
