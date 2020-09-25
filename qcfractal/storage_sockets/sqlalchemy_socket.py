@@ -2834,7 +2834,7 @@ class SQLAlchemySocket:
 
         return success, password
 
-    def verify_user(self, username: str, password: str, permission: str) -> Tuple[bool, str]:
+    def verify_user(self, username: str, password: str) -> Tuple[bool, str, Any]:
         """
         Verifies if a user has the requested permissions or not.
 
@@ -2849,34 +2849,14 @@ class SQLAlchemySocket:
         permission : str
             The associated permissions of a user ['read', 'write', 'compute', 'queue', 'admin']
 
-        Returns
-        -------
-        Tuple[bool, str]
-            A tuple of (success flag, failure string)
-
-        Examples
-        --------
-
-        >>> db.add_user("george", "shortpw")
-
-        >>> db.verify_user("george", "shortpw", "read")[0]
-        True
-
-        >>> db.verify_user("george", "shortpw", "admin")[0]
-        False
-
         """
-
-        if self._bypass_security or (self._allow_read and (permission == "read")):
-            return (True, "Success")
 
         with self.session_scope() as session:
             data = session.query(UserORM).filter_by(username=username).first()
 
             if data is None:
-                return (False, "User not found.")
+                return (False, "User not found.", {})
 
-            # Completely general failure
             try:
                 pwcheck = bcrypt.checkpw(password.encode("UTF-8"), data.password)
             except Exception as e:
@@ -2887,13 +2867,9 @@ class SQLAlchemySocket:
                 return (False, "Password decryption failure, please contact your database administrator.")
 
             if pwcheck is False:
-                return (False, "Incorrect password.")
+                return (False, "Incorrect password.", {})
 
-            # Admin has access to everything
-            if (permission.lower() not in data.permissions) and ("admin" not in data.permissions):
-                return (False, "User has insufficient permissions.")
-
-        return (True, "Success")
+            return (True, "Success", data.role_obj.permissions)
 
     def modify_user(
         self,
