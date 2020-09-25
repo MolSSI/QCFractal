@@ -76,37 +76,6 @@ def parse_bodymodel(args, model):
         return jsonify(message=ValidationError), 500
 
 
-def admin_required(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        verify_jwt_in_request()
-        claims = get_jwt_claims()
-
-        try:
-            endpoint = request.endpoint
-            method = request.method
-            permissions = json.loads(storage.get_permissions(data['role']))
-            allowed_endpoints = permissions.get(method)
-            if not allowed_endpoints or not any(endpoint in s for s in allowed_endpoints):
-                return jsonify({'message': 'Unauthorized Access!'}), 403
-
-            current_user = {
-              "email": data["email"],
-              "role": data["role"],
-              "groups": data["groups"]
-            }
-            current_user = ""
-        except Exception as e:
-            print(e)
-            return jsonify({'message': 'Token is invalid!'}), 401
-
-        if claims['roles'] != 'admin':
-            return jsonify(msg='Admins only!'), 403
-        else:
-            return fn(*args, **kwargs)
-    return wrapper
-
-
 @app.route('/register', methods=['POST'])
 def register():
     if request.is_json:
@@ -127,7 +96,7 @@ def register():
 
 @jwt.user_claims_loader
 def add_claims_to_access_token(email):
-    # success, role, groups = storage.verify_user(email, password, "read")[0]
+    # permissions, groups = storage.get_user_permissions(email, password, "read")[0]
     return {"permissions": {"GET":["testing"]},
             "groups": ["g", "r", "o", "u", "p", "s"]}
 
@@ -181,11 +150,9 @@ def login():
 
 
 @app.route('/information', methods=['GET'])
-# @admin_required
 @jwt_required
 def get_information():
     current_user = get_current_user()
-    print(current_user)
     public_information = {
             "name": "self.name",
             "heartbeat_frequency": "self.heartbeat_frequency",
