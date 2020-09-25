@@ -271,10 +271,21 @@ class UserORM(Base):
     __tablename__ = "user"
 
     id = Column(Integer, primary_key=True)
+    role_id = Column(Integer, ForeignKey("role.id"), nullable=True)
+    role_obj = relationship("RoleORM", lazy="select")  # or lazy='joined'
 
     username = Column(String, nullable=False, unique=True)  # indexed and unique
     password = Column(LargeBinary, nullable=False)
     permissions = Column(JSON)  # Column(ARRAY(String))
+
+class RoleORM(Base):
+
+    __tablename__ = "role"
+
+    id = Column(Integer, primary_key=True)
+
+    rolename = Column(String, nullable=False, unique=True)  # indexed and unique
+    permissions = Column(JSON)
 
 
 class QueueManagerLogORM(Base):
