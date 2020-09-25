@@ -55,7 +55,7 @@ mail = Mail(app)
 
 storage = storage_socket_factory(
     "postgresql://localhost:5432",
-    project_name="test_qcfractal_compute_snowflake",
+    project_name="test_qcfractal_compute_snowflake1",
     bypass_security=False,
     allow_read=False,
     max_limit=1000,
@@ -85,7 +85,7 @@ def register():
         email = request.form['email']
         password = request.form['password']
 
-    success, pw = storage.add_user(email, password=password, permissions=["read"])
+    success, pw = storage.add_user(email, password=password, permissions=["read"], role_id=2)
     if success:
         print(f"\n>>> New user successfully added, password:\n{pw}")
         return jsonify({'message' : 'New user created!'}), 201
@@ -96,16 +96,13 @@ def register():
 
 @jwt.user_claims_loader
 def add_claims_to_access_token(email):
-    # permissions, groups = storage.get_user_permissions(email, password, "read")[0]
-    return {"permissions": {"GET":["testing"]},
-            "groups": ["g", "r", "o", "u", "p", "s"]}
+    permissions = storage.get_user_permissions(email)
+    return {"permissions": permissions}
 
 
 @jwt.user_loader_callback_loader
 def user_loader_callback(identity):
     claims = get_jwt_claims()
-    print("user_loader_callback")
-    print(claims)
     try:
         # host_url = request.host_url
         resource = urlparse(request.url).path.split("/")[1]
@@ -119,8 +116,7 @@ def user_loader_callback(identity):
         return None
 
     return {"identity": identity,
-    "permissions": claims.get('permissions'),
-    "groups": claims.get('groups')
+    "permissions": claims.get('permissions')
     }
 
 @jwt.user_loader_error_loader

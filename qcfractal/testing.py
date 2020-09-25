@@ -488,7 +488,7 @@ def fractal_compute_server(postgres_server):
     """
 
     # Storage name
-    storage_name = "test_qcfractal_compute_snowflake"
+    storage_name = "test_qcfractal_compute_snowflake1"
     postgres_server.create_database(storage_name)
 
     with FractalSnowflake(
