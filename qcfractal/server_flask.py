@@ -9,7 +9,19 @@ import os
 
 from urllib.parse import urlparse
 from flask import Flask, jsonify, request
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, verify_jwt_in_request, get_jwt_claims, get_current_user
+from flask_jwt_extended import (
+    JWTManager,
+    jwt_required,
+    create_access_token,
+    get_jwt_claims,
+    decode_token,
+    get_raw_jwt,
+    get_current_user,
+    jwt_refresh_token_required,
+    create_refresh_token,
+    get_jwt_identity
+)
+
 from flask_mail import Mail, Message
 from functools import wraps
 
@@ -45,7 +57,8 @@ from .procedures import check_procedure_available, get_procedure_parser
 
 app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['JWT_SECRET_KEY'] = 'super-secret'  # change this IRL
+app.config['JWT_SECRET_KEY'] = 'super-secret'
+app.config['JWT_REFRESH_TOKEN_EXPIRES'] = 86400
 app.config['MAIL_SERVER'] = 'smtp.mailtrap.io'
 app.config['MAIL_USERNAME'] = os.environ['MAIL_USERNAME']
 app.config['MAIL_PASSWORD'] = os.environ['MAIL_PASSWORD']
@@ -102,22 +115,30 @@ def add_claims_to_access_token(email):
 
 @jwt.user_loader_callback_loader
 def user_loader_callback(identity):
-    claims = get_jwt_claims()
     try:
-        # host_url = request.host_url
-        resource = urlparse(request.url).path.split("/")[1]
-        method = request.method
-        permissions = claims.get('permissions')
-        allowed_resources = permissions.get(request.method)
-        if not allowed_resources or not any(resource in s for s in allowed_resources):
-            return None
+        claims = get_jwt_claims()
+        print(claims)
+        token = get_raw_jwt()
+        if token['type'] != "refresh":
+            # host_url = request.host_url
+            resource = urlparse(request.url).path.split("/")[1]
+            print(resource)
+            method = request.method
+            print(method)
+            permissions = claims.get('permissions')
+            print(permissions)
+            allowed_resources = permissions.get(request.method)
+            print(allowed_resources)
+            if (not allowed_resources or
+                not any(resource in s for s in allowed_resources)):
+                return None
+        return {"identity": identity,
+        "permissions": claims.get('permissions')
+        }
     except Exception as e:
         print(e)
         return None
 
-    return {"identity": identity,
-    "permissions": claims.get('permissions')
-    }
 
 @jwt.user_loader_error_loader
 def custom_user_loader_error(identity):
@@ -126,6 +147,16 @@ def custom_user_loader_error(identity):
         "msg": "User {} is not authorized to access '{}' resource.".format(identity, resource)
     }
     return jsonify(ret), 403
+
+
+@app.route('/refresh', methods=['POST'])
+@jwt_refresh_token_required
+def refresh():
+    email = get_jwt_identity()
+    ret = {
+        'access_token': create_access_token(identity=email)
+    }
+    return jsonify(ret), 200
 
 
 @app.route('/login', methods=['POST'])
@@ -140,7 +171,9 @@ def login():
     success = storage.verify_user(email, password, "read")[0]
     if success:
         access_token = create_access_token(identity=email)
-        return jsonify(message="Login succeeded!", access_token=access_token)
+        refresh_token = create_refresh_token(identity=email)
+        return jsonify(message="Login succeeded!", access_token=access_token,
+                       refresh_token=refresh_token)
     else:
         return jsonify(message="Bad email or password"), 401
 
@@ -161,6 +194,7 @@ def get_information():
 
 
 @app.route('/molecule', methods=['GET'])
+@jwt_required
 def get_molecule():
     """
     Request:
