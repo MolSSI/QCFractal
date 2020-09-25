@@ -82,9 +82,8 @@ def register():
         email = request.form['email']
         password = request.form['password']
 
-    success, pw = storage.add_user(email, password=password, permissions=["read"], role_id=2)
+    success = storage.add_user(email, password=password, rolename="admin")
     if success:
-        print(f"\n>>> New user successfully added, password:\n{pw}")
         return jsonify({'message' : 'New user created!'}), 201
     else:
         print("\n>>> Failed to add user. Perhaps the username is already taken?")
@@ -200,6 +199,7 @@ def get_molecule():
 
 
 @app.route('/molecule', methods=['POST'])
+@jwt_required
 def post_molecule(current_user):
     """
     Request:
@@ -342,6 +342,7 @@ def post_collection(current_usercollection_id: int, view_function: str):
 
 
 @app.route('/collection/<int:collection_id>/<string:view_function>', methods=['DELETE'])
+@jwt_required
 def handle_collection(current_usercollection_id: int, view_function: str):
     body_model, response_model = rest_model(f"collection/{collection_id}", "delete")
     ret = storage.del_collection(col_id=collection_id)
@@ -456,6 +457,7 @@ def get_task_queue(current_user):
 
 
 @app.route('/task_queue', methods=['POST'])
+@jwt_required
 def post_task_queue(current_user):
     body_model, response_model = rest_model("task_queue", "post")
     body = parse_bodymodel(body_model)
@@ -481,6 +483,7 @@ def post_task_queue(current_user):
 
 
 @app.route('/task_queue', methods=['PUT'])
+@jwt_required
 def put_task_queue(current_user):
     body_model, response_model = rest_model("task_queue", "put")
     body = parse_bodymodel(body_model)
@@ -516,6 +519,7 @@ def get_service_queue(current_user):
 
 
 @app.route('/service_queue', methods=['POST'])
+@jwt_required
 def post_service_queue(current_user):
     """Posts new services to the service queue."""
 
@@ -552,6 +556,7 @@ def post_service_queue(current_user):
 
 
 @app.route('/service_queue', methods=['PUT'])
+@jwt_required
 def put_service_queue(current_user):
     """Modifies services in the service queue"""
 
@@ -687,6 +692,7 @@ def get_queue_manager(current_user):
 
 
 @app.route('/queue_manager', methods=['POST'])
+@jwt_required
 def post_queue_manager(current_user):
     """Posts complete tasks to the task queue"""
 
