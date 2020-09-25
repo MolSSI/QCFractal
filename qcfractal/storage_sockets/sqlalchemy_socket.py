@@ -2789,7 +2789,7 @@ class SQLAlchemySocket:
         return secrets.token_urlsafe(32)
 
     def add_user(
-        self, username: str, password: Optional[str] = None, permissions: List[str] = ["read"], overwrite: bool = False
+        self, username: str, password: Optional[str] = None, permissions: List[str] = ["read"], overwrite: bool = False, role_id: int = None
     ) -> Tuple[bool, str]:
         """
         Adds a new user and associated permissions.
@@ -2821,7 +2821,7 @@ class SQLAlchemySocket:
 
         hashed = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
 
-        blob = {"username": username, "password": hashed, "permissions": permissions}
+        blob = {"username": username, "password": hashed, "permissions": permissions, "role_id": role_id}
 
         success = False
         with self.session_scope() as session:
@@ -2998,7 +2998,7 @@ class SQLAlchemySocket:
         with self.session_scope() as session:
             data = session.query(UserORM).filter_by(username=username).first()
             try:
-                ret = data.permissions
+                ret = data.role_obj.permissions
             except AttributeError:
                 ret = None
 
