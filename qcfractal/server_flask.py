@@ -21,34 +21,18 @@ from flask_jwt_extended import (
     create_refresh_token,
     get_jwt_identity
 )
-
 from flask_mail import Mail, Message
 from functools import wraps
-
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional, Union
-
 from .extras import get_information
 from .interface import FractalClient
 from .qc_queue import QueueManager, QueueManagerHandler, ServiceQueueHandler, TaskQueueHandler, ComputeManagerHandler
 from .services import construct_service
 from .storage_sockets import ViewHandler, storage_socket_factory
 from .storage_sockets.api_logger import API_AccessLogger
-from .web_handlers import (
-    CollectionHandler,
-    InformationHandler,
-    KeywordHandler,
-    KVStoreHandler,
-    MoleculeHandler,
-    OptimizationHandler,
-    ProcedureHandler,
-    ResultHandler,
-    WavefunctionStoreHandler,
-)
-
 from pydantic import ValidationError
 from qcelemental.util import deserialize, serialize
-
 from .interface.models.rest_models import rest_model
 from .storage_sockets.storage_utils import add_metadata_template
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -107,28 +91,17 @@ def register():
         return jsonify({'message' : 'Failed to add user.'}), 500
 
 
-@jwt.user_claims_loader
-def add_claims_to_access_token(email):
-    permissions = storage.get_user_permissions(email)
-    return {"permissions": permissions}
-
-
 @jwt.user_loader_callback_loader
 def user_loader_callback(identity):
     try:
         claims = get_jwt_claims()
-        print(claims)
         token = get_raw_jwt()
         if token['type'] != "refresh":
             # host_url = request.host_url
             resource = urlparse(request.url).path.split("/")[1]
-            print(resource)
             method = request.method
-            print(method)
             permissions = claims.get('permissions')
-            print(permissions)
             allowed_resources = permissions.get(request.method)
-            print(allowed_resources)
             if (not allowed_resources or
                 not any(resource in s for s in allowed_resources)):
                 return None
@@ -168,14 +141,14 @@ def login():
         email = request.form['email']
         password = request.form['password']
 
-    success = storage.verify_user(email, password, "read")[0]
+    success, error_message, permissions = storage.verify_user(email, password)
     if success:
-        access_token = create_access_token(identity=email)
+        access_token = create_access_token(identity=email, user_claims={"permissions": permissions})
         refresh_token = create_refresh_token(identity=email)
         return jsonify(message="Login succeeded!", access_token=access_token,
                        refresh_token=refresh_token)
     else:
-        return jsonify(message="Bad email or password"), 401
+        return jsonify(message=error_message), 401
 
 
 @app.route('/information', methods=['GET'])
