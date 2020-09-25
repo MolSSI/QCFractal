@@ -27,5 +27,6 @@ from .sql_models import (
     ServiceQueueORM,
     TaskQueueORM,
     UserORM,
+    RoleORM,
     VersionsORM,
 )

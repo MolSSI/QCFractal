@@ -60,6 +60,7 @@ from qcfractal.storage_sockets.models import (
     TaskQueueORM,
     TorsionDriveProcedureORM,
     UserORM,
+    RoleORM,
     VersionsORM,
     WavefunctionStoreORM,
 )
@@ -2780,12 +2781,13 @@ class SQLAlchemySocket:
         return secrets.token_urlsafe(32)
 
     def add_user(
-        self, username: str, password: Optional[str] = None, permissions: List[str] = ["read"], overwrite: bool = False, role_id: int = None
-    ) -> Tuple[bool, str]:
+        self,
+        username: str,
+        password: Optional[str] = None,
+        rolename: str = None
+    ) -> bool:
         """
-        Adds a new user and associated permissions.
-
-        Passwords are stored using bcrypt.
+        Adds a new user. Passwords are stored using bcrypt.
 
         Parameters
         ----------
@@ -2793,52 +2795,41 @@ class SQLAlchemySocket:
             New user's username
         password : Optional[str], optional
             The user's password. If None, a new password will be generated.
-        permissions : Optional[List[str]], optional
-            The associated permissions of a user ['read', 'write', 'compute', 'queue', 'admin']
-        overwrite: bool, optional
-            Overwrite the user if it already exists.
         Returns
         -------
-        Tuple[bool, str]
-            A tuple of (success flag, password)
+        bool :
+            A Boolean of success flag
         """
-
-        # Make sure permissions are valid
-        if not self._valid_permissions >= set(permissions):
-            raise KeyError("Permissions settings not understood: {}".format(set(permissions) - self._valid_permissions))
 
         if password is None:
             password = self._generate_password()
 
-        hashed = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
-
-        blob = {"username": username, "password": hashed, "permissions": permissions, "role_id": role_id}
-
         success = False
         with self.session_scope() as session:
-            if overwrite:
-                count = session.query(UserORM).filter_by(username=username).update(blob)
-                # doc.upsert_one(**blob)
-                success = count == 1
+            role = session.query(RoleORM).filter_by(rolename=rolename).first()
 
-            else:
-                try:
-                    user = UserORM(**blob)
-                    session.add(user)
-                    session.commit()
-                    success = True
-                except IntegrityError as err:
-                    self.logger.warning(str(err))
-                    success = False
-                    session.rollback()
+            if role is None:
+                return False, f"Role {rolename} not found."
 
-        return success, password
+            hashed = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
+            blob = {"username": username, "password": hashed, "role_id": role.id}
+
+            try:
+                user = UserORM(**blob)
+                session.add(user)
+                session.commit()
+                success = True
+            except IntegrityError as err:
+                self.logger.warning(str(err))
+                success = False
+                session.rollback()
+
+        return success
 
     def verify_user(self, username: str, password: str) -> Tuple[bool, str, Any]:
         """
-        Verifies if a user has the requested permissions or not.
-
-        Passwords are stored and verified using bcrypt.
+        Verifies if a user has the requested permissions or not. Passwords are
+        stored and verified using bcrypt.
 
         Parameters
         ----------
