@@ -3,7 +3,7 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 """
 
 try:
-    from sqlalchemy import create_engine, and_, or_, case, func
+    from sqlalchemy import create_engine, and_, or_, case, func, exc
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
     from sqlalchemy.sql.expression import desc
@@ -3008,6 +3008,109 @@ class SQLAlchemySocket:
 
         ret = {"data": user_names, "meta": meta}
         return ret
+
+    ### RoleORMs
+
+    def get_roles(self):
+        """
+        get all roles
+        """
+        with self.session_scope() as session:
+            data = session.query(RoleORM).filter().all()
+            data = [x.to_dict(exclude=["id"]) for x in data]
+        return data
+
+
+    def get_role(self, rolename: str):
+        """
+        """
+        if rolename is None:
+            return False, f"Role {rolename} not found."
+
+        with self.session_scope() as session:
+            data = session.query(RoleORM).filter_by(rolename=rolename).first()
+
+            if data is None:
+                return False, f"Role {rolename} not found."
+            role = data.to_dict(exclude=["id"])
+        return True, role
+
+
+    def create_role(self, rolename: str, permissions: Dict):
+        """
+        Adds a new role.
+
+        Parameters
+        ----------
+        rolename : str
+        permissions : Dict
+
+        Returns
+        -------
+        bool :
+            A Boolean of success flag
+        """
+
+        with self.session_scope() as session:
+            blob = {"rolename": rolename, "permissions": permissions}
+
+            try:
+                role = RoleORM(**blob)
+                session.add(role)
+                session.commit()
+                return True, ""
+            except IntegrityError as err:
+                self.logger.warning(str(err))
+                session.rollback()
+                return False, str(err.orig.args)
+
+
+    def update_role(self, rolename: str, permissions: Dict):
+        """
+        Update role's permissions.
+
+        Parameters
+        ----------
+        rolename : str
+        permissions : Dict
+
+        Returns
+        -------
+        bool :
+            A Boolean of success flag
+        """
+
+        with self.session_scope() as session:
+            role = session.query(RoleORM).filter_by(rolename=rolename).first()
+
+            if role is None:
+                return False, f"Role {rolename} not found."
+
+            count = session.query(RoleORM).filter_by(rolename=rolename).update({"permissions": permissions})
+            success = count == 1
+
+        return success
+
+
+    def delete_role(self, rolename: str):
+        """
+        Delete role.
+
+        Parameters
+        ----------
+        rolename : str
+
+        Returns
+        -------
+        bool :
+            A Boolean of success flag
+        """
+        with self.session_scope() as session:
+            count = session.query(RoleORM).filter_by(rolename=rolename).delete()
+            success = count == 1
+
+        return success
+
 
     def check_lib_versions(self):
         """Check the stored versions of elemental and fractal"""
