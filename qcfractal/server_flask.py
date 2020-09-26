@@ -12,6 +12,7 @@ from flask import Flask, jsonify, request
 from flask_jwt_extended import (
     JWTManager,
     jwt_required,
+    fresh_jwt_required,
     create_access_token,
     get_jwt_claims,
     decode_token,
@@ -95,18 +96,21 @@ def user_loader_callback(identity):
     try:
         claims = get_jwt_claims()
         token = get_raw_jwt()
-        if token['type'] != "refresh":
-            # host_url = request.host_url
-            resource = urlparse(request.url).path.split("/")[1]
-            method = request.method
-            permissions = claims.get('permissions')
+        # host_url = request.host_url
+        resource = urlparse(request.url).path.split("/")[1]
+        method = request.method
+        permissions = claims.get('permissions')
+        if '*' in permissions.keys():
+            allowed_resources = permissions.get('*')
+        else:
             allowed_resources = permissions.get(request.method)
-            if (not allowed_resources or
-                not any(resource in s for s in allowed_resources)):
-                return None
-        return {"identity": identity,
-        "permissions": claims.get('permissions')
-        }
+        if (token['type'] == "refresh" or
+            allowed_resources == '*' or
+            (not allowed_resources and any(resource in s for s in allowed_resources))):
+            return {"identity": identity, "permissions": claims.get('permissions')}
+        else:
+            return None
+
     except Exception as e:
         print(e)
         return None
@@ -145,7 +149,24 @@ def login():
         access_token = create_access_token(identity=email, user_claims={"permissions": permissions})
         refresh_token = create_refresh_token(identity=email)
         return jsonify(message="Login succeeded!", access_token=access_token,
-                       refresh_token=refresh_token)
+                       refresh_token=refresh_token), 200
+    else:
+        return jsonify(message=error_message), 401
+
+
+@app.route('/fresh-login', methods=['POST'])
+def fresh_login():
+    if request.is_json:
+        email = request.json['email']
+        password = request.json['password']
+    else:
+        email = request.form['email']
+        password = request.form['password']
+
+    success, error_message, permissions = storage.verify_user(email, password)
+    if success:
+        access_token = create_access_token(identity=email, user_claims={"permissions": permissions}, fresh=True)
+        return jsonify(message="Fresh login succeeded!", access_token=access_token), 200
     else:
         return jsonify(message=error_message), 401
 
@@ -261,7 +282,7 @@ def get_kvstore(current_user):
 
 
 @app.route('/collection/<int:collection_id>/<string:view_function>', methods=['GET'])
-def get_collection(current_usercollection_id: int, view_function: str):
+def get_collection(collection_id: int, view_function: str):
     # List collections
     if (collection_id is None) and (view_function is None):
         body_model, response_model = rest_model("collection", "get")
@@ -317,7 +338,7 @@ def get_collection(current_usercollection_id: int, view_function: str):
 
 
 @app.route('/collection/<int:collection_id>/<string:view_function>', methods=['POST'])
-def post_collection(current_usercollection_id: int, view_function: str):
+def post_collection(collection_id: int, view_function: str):
     body_model, response_model = rest_model("collection", "post")
     body = parse_bodymodel(body_model)
 
@@ -343,7 +364,7 @@ def post_collection(current_usercollection_id: int, view_function: str):
 
 @app.route('/collection/<int:collection_id>/<string:view_function>', methods=['DELETE'])
 @jwt_required
-def handle_collection(current_usercollection_id: int, view_function: str):
+def handle_collection(collection_id: int, view_function: str):
     body_model, response_model = rest_model(f"collection/{collection_id}", "delete")
     ret = storage.del_collection(col_id=collection_id)
     if ret == 0:
@@ -788,6 +809,59 @@ def get_manager(current_user):
         data = serialize(response, encoding)
 
     return data
+
+
+@app.route('/role', methods=['GET'])
+@jwt_required
+def get_roles():
+    roles = storage.get_roles()
+    return jsonify(roles), 200
+
+
+@app.route('/role/<string:rolename>', methods=['GET'])
+@jwt_required
+def get_role(rolename: str):
+
+    success, role = storage.get_role(rolename)
+    return jsonify(role), 200
+
+
+@app.route('/role', methods=['GET', 'POST'])
+@jwt_required
+def create_role():
+    rolename = request.json['rolename']
+    permissions = request.json['permissions']
+
+    success, error_message = storage.create_role(rolename, permissions)
+    if success:
+        return jsonify({'message': 'New role created!'}), 201
+    else:
+        return jsonify({'message': error_message}), 400
+
+
+@app.route('/role', methods=['PUT'])
+@fresh_jwt_required
+def update_role():
+    rolename = request.json['rolename']
+    permissions = request.json['permissions']
+
+    success = storage.update_role(rolename, permissions)
+    if success:
+        return jsonify({'message': 'Role was updated!'}), 200
+    else:
+        return jsonify({'message': 'Failed to update role'}), 400
+
+
+@app.route('/role', methods=['DELETE'])
+@fresh_jwt_required
+def delete_role():
+    rolename = request.json['rolename']
+
+    success = storage.delete_role(rolename)
+    if success:
+        return jsonify({'message': 'Role was deleted!.'}), 200
+    else:
+        return jsonify({'message': 'Filed to delete role!.'}), 400
 
 
 # @app.route('/retrieve_password/<string:email>', methods=['GET'])
