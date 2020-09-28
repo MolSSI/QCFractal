@@ -1,5 +1,4 @@
 import asyncio
-import datetime
 import logging
 import ssl
 import time
@@ -7,6 +6,7 @@ import traceback
 import json
 import os
 
+from datetime import datetime
 from urllib.parse import urlparse
 from flask import Flask, jsonify, request
 from flask_jwt_extended import (
@@ -38,6 +38,7 @@ from .interface.models.rest_models import rest_model
 from .storage_sockets.storage_utils import add_metadata_template
 from werkzeug.security import generate_password_hash, check_password_hash
 from .procedures import check_procedure_available, get_procedure_parser
+from policyuniverse.policy import Policy
 
 
 app = Flask(__name__)
@@ -83,30 +84,30 @@ def register():
         email = request.form['email']
         password = request.form['password']
 
-    success = storage.add_user(email, password=password, rolename="admin")
+    success = storage.add_user(email, password=password, rolename="user")
     if success:
-        return jsonify({'message' : 'New user created!'}), 201
+        return jsonify({'message': 'New user created!'}), 201
     else:
         print("\n>>> Failed to add user. Perhaps the username is already taken?")
-        return jsonify({'message' : 'Failed to add user.'}), 500
+        return jsonify({'message': 'Failed to add user.'}), 500
 
 
 @jwt.user_loader_callback_loader
 def user_loader_callback(identity):
     try:
-        claims = get_jwt_claims()
-        token = get_raw_jwt()
         # host_url = request.host_url
+        claims = get_jwt_claims()
         resource = urlparse(request.url).path.split("/")[1]
         method = request.method
-        permissions = claims.get('permissions')
-        if '*' in permissions.keys():
-            allowed_resources = permissions.get('*')
-        else:
-            allowed_resources = permissions.get(request.method)
-        if (token['type'] == "refresh" or
-            allowed_resources == '*' or
-            (not allowed_resources and any(resource in s for s in allowed_resources))):
+        context = {
+            "Principal": identity,
+            "Action": request.method,
+            "Resource": urlparse(request.url).path.split("/")[1],
+            "IpAddress": request.remote_addr,
+            "AccessTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+        }
+        policy = Policy(claims.get('permissions'))
+        if policy.evaluate(context):
             return {"identity": identity, "permissions": claims.get('permissions')}
         else:
             return None
@@ -176,13 +177,13 @@ def fresh_login():
 def get_information():
     current_user = get_current_user()
     public_information = {
-            "name": "self.name",
-            "heartbeat_frequency": "self.heartbeat_frequency",
-            "version": "version",
-            "query_limit": "self.storage.get_limit(1.0e9)",
-            "client_lower_version_limit": "0.12.1",
-            "client_upper_version_limit": "0.13.99",
-            }
+        "name": "self.name",
+        "heartbeat_frequency": "self.heartbeat_frequency",
+        "version": "version",
+        "query_limit": "self.storage.get_limit(1.0e9)",
+        "client_lower_version_limit": "0.12.1",
+        "client_upper_version_limit": "0.13.99",
+    }
     return jsonify(public_information)
 
 
@@ -607,6 +608,7 @@ def _get_name_from_metadata(meta):
     """
     ret = meta.cluster + "-" + meta.hostname + "-" + meta.uuid
     return ret
+
 
 def insert_complete_tasks(storage_socket, results, logger):
     # Pivot data so that we group all results in categories
