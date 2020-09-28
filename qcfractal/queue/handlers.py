@@ -86,7 +86,7 @@ class TaskQueueHandler(APIHandler):
             for r in result_data:
                 model = build_procedure(r)
 
-                # Only regenerate the task if it is not complete
+                # Only regenerate the task if the base record is not complete
                 # This will not do anything if the task already exists
                 if model.status != RecordStatusEnum.complete:
                     procedure_parser = get_procedure_parser(model.procedure, self.storage, self.logger)
