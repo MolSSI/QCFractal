@@ -8,7 +8,7 @@ import traceback
 import tornado.web
 
 from ..interface.models.rest_models import rest_model
-from ..interface.models.task_models import PriorityEnum
+from ..interface.models.task_models import PriorityEnum, TaskStatusEnum
 from ..interface.models.records import RecordStatusEnum
 from ..interface.models.model_builder import build_procedure
 from ..procedures import check_procedure_available, get_procedure_parser
@@ -199,7 +199,8 @@ class QueueManagerHandler(APIHandler):
 
     _required_auth = "queue"
 
-    def _get_name_from_metadata(self, meta):
+    @staticmethod
+    def _get_name_from_metadata(meta):
         """
         Form the canonical name string.
         """
@@ -207,11 +208,20 @@ class QueueManagerHandler(APIHandler):
         return ret
 
     @staticmethod
-    def insert_complete_tasks(storage_socket, results, logger):
+    def insert_complete_tasks(storage_socket, body, logger):
+
+        results = body.data
+        meta = body.meta
+        task_ids = list(results.keys())
+
+        manager_name = QueueManagerHandler._get_name_from_metadata(meta)
+        logger.info("QueueManager: Received completed task packet from {}.".format(manager_name))
+        logger.info("QueueManager:     Task ids: " + " ".join(task_ids))
+
         # Pivot data so that we group all results in categories
         new_results = collections.defaultdict(list)
 
-        queue = storage_socket.get_queue(id=list(results.keys()))["data"]
+        queue = storage_socket.get_queue(id=task_ids)["data"]
         queue = {v.id: v for v in queue}
 
         error_data = []
@@ -219,9 +229,33 @@ class QueueManagerHandler(APIHandler):
         task_success = 0
         task_failures = 0
         task_totals = len(results.items())
-        for key, result in results.items():
+
+        for task_id, result in results.items():
             try:
-                # Successful task
+                #################################################################
+                # Perform some checks for consistency
+                #################################################################
+                existing_task_data = queue.get(task_id, None)
+
+                # Does the task exist?
+                if existing_task_data is None:
+                    logger.warning(f"Task id {task_id} does not exist in the queue.")
+                    error_data.append((task_id, "Internal Error: Queue key not found."))
+                    task_failures += 1
+
+                # Is the task in the running state
+                if existing_task_data.status != TaskStatusEnum.running:
+                    logger.warning(f"Task id {task_id} is not in the running state.")
+                    error_data.append((task_id, "Internal Error: Task not in running state."))
+                    task_failures += 1
+
+                # Was the manager that sent the data the one that was assigned?
+                if existing_task_data.manager != manager_name:
+                    logger.warning(f"Task id {task_id} belongs to {existing_task_data.manager}, not this manager")
+                    error_data.append((task_id, "Internal Error: Task does not belong to this manager."))
+                    task_failures += 1
+
+                # Failed task
                 if result["success"] is False:
                     if "error" not in result:
                         error = {"error_type": "not_supplied", "error_message": "No error message found on task."}
@@ -230,30 +264,24 @@ class QueueManagerHandler(APIHandler):
 
                     logger.warning(
                         "Computation key {key} did not complete successfully:\n"
-                        "error_type: {error_type}\nerror_message: {error_message}".format(key=str(key), **error)
+                        "error_type: {error_type}\nerror_message: {error_message}".format(key=str(task_id), **error)
                     )
 
-                    error_data.append((key, error))
-                    task_failures += 1
-
-                # Failed task
-                elif key not in queue:
-                    logger.warning(f"Computation key {key} completed successfully, but not found in queue.")
-                    error_data.append((key, "Internal Error: Queue key not found."))
+                    error_data.append((task_id, error))
                     task_failures += 1
 
                 # Success!
                 else:
-                    parser = queue[key].parser
+                    parser = queue[task_id].parser
                     new_results[parser].append(
-                        {"result": result, "task_id": key, "base_result": queue[key].base_result}
+                        {"result": result, "task_id": task_id, "base_result": queue[task_id].base_result}
                     )
                     task_success += 1
 
             except Exception:
                 msg = "Internal FractalServer Error:\n" + traceback.format_exc()
                 logger.warning("update: ERROR\n{}".format(msg))
-                error_data.append((key, msg))
+                error_data.append((task_id, msg))
                 task_failures += 1
 
         if task_totals:
@@ -311,9 +339,7 @@ class QueueManagerHandler(APIHandler):
         body_model, response_model = rest_model("queue_manager", "post")
         body = self.parse_bodymodel(body_model)
 
-        name = self._get_name_from_metadata(body.meta)
-        self.logger.info("QueueManager: Received completed task packet from {}.".format(name))
-        success, error = self.insert_complete_tasks(self.storage, body.data, self.logger)
+        success, error = self.insert_complete_tasks(self.storage, body, self.logger)
 
         completed = success + error
 
