@@ -215,8 +215,8 @@ class QueueManagerHandler(APIHandler):
         task_ids = list(results.keys())
 
         manager_name = QueueManagerHandler._get_name_from_metadata(meta)
-        logger.info("QueueManager: Received completed task packet from {}.".format(manager_name))
-        logger.info("QueueManager:     Task ids: " + " ".join(task_ids))
+        logger.info("QueueManager: Received completed tasks from {}.".format(manager_name))
+        logger.info("              Task ids: " + " ".join(task_ids))
 
         # Pivot data so that we group all results in categories
         new_results = collections.defaultdict(list)
@@ -237,33 +237,33 @@ class QueueManagerHandler(APIHandler):
                 #################################################################
                 existing_task_data = queue.get(task_id, None)
 
+                # For the first three checks, don't add an error to error_data
+                # We don't want to modify the queue in these cases
+
                 # Does the task exist?
                 if existing_task_data is None:
-                    logger.warning(f"Task id {task_id} does not exist in the queue.")
-                    error_data.append((task_id, "Internal Error: Queue key not found."))
+                    logger.warning(f"Task id {task_id} does not exist in the task queue.")
                     task_failures += 1
 
                 # Is the task in the running state
-                if existing_task_data.status != TaskStatusEnum.running:
+                elif existing_task_data.status != TaskStatusEnum.running:
                     logger.warning(f"Task id {task_id} is not in the running state.")
-                    error_data.append((task_id, "Internal Error: Task not in running state."))
                     task_failures += 1
 
                 # Was the manager that sent the data the one that was assigned?
-                if existing_task_data.manager != manager_name:
+                elif existing_task_data.manager != manager_name:
                     logger.warning(f"Task id {task_id} belongs to {existing_task_data.manager}, not this manager")
-                    error_data.append((task_id, "Internal Error: Task does not belong to this manager."))
                     task_failures += 1
 
                 # Failed task
-                if result["success"] is False:
+                elif result["success"] is False:
                     if "error" not in result:
                         error = {"error_type": "not_supplied", "error_message": "No error message found on task."}
                     else:
                         error = result["error"]
 
-                    logger.warning(
-                        "Computation key {key} did not complete successfully:\n"
+                    logger.debug(
+                        "Task id {key} did not complete successfully:\n"
                         "error_type: {error_type}\nerror_message: {error_message}".format(key=str(task_id), **error)
                     )
 

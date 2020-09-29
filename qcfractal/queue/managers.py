@@ -454,7 +454,7 @@ class QueueManager:
         # Update with data
         payload["data"] = payload_data
         try:
-            self.client._automodel_request("queue_manager", "post", payload)
+            self.client._automodel_request("queue_manager", "post", payload, full_return=True)
         except IOError:
 
             # Trapped behavior elsewhere
@@ -484,6 +484,7 @@ class QueueManager:
             try:
                 self._post_update(results)
                 self.logger.info(f"Successfully pushed jobs from {attempts+1} updates ago")
+                self.logger.info(f"Tasks pushed: " + str(list(results.keys())))
                 clear_indices.append(index)
             except IOError:
 
@@ -492,7 +493,7 @@ class QueueManager:
                 # Case: Still within the retry limit
                 if self.server_error_retries is None or self.server_error_retries > attempts:
                     self._stale_payload_tracking[index][-1] = attempts
-                    self.logger.warning(f"Could not post jobs from {attempts} ago, will retry on next update.")
+                    self.logger.warning(f"Could not post jobs from {attempts} updates ago, will retry on next update.")
 
                 # Case: Over limit
                 else:
@@ -542,7 +543,7 @@ class QueueManager:
 
         results = self.queue_adapter.acquire_complete()
 
-        # Compress the outputs
+        # Compress the stdout/stderr/error outputs
         results = compress_results(results)
 
         # Stats fetching for running tasks, as close to the time we got the jobs as we can
@@ -569,19 +570,23 @@ class QueueManager:
         n_result = len(results)
         task_cpu_hours = 0
         error_payload = []
-        jobs_pushed = f"Pushed {n_result} complete tasks to the server "
+
         if n_result:
+            # For logging
+            failure_messages = {}
+
             try:
                 self._post_update(results, allow_shutdown=allow_shutdown)
+                task_status = {k: "sent" for k in results.keys()}
             except IOError:
                 if self.server_error_retries is None or self.server_error_retries > 0:
                     self.logger.warning("Post complete tasks was not successful. Attempting again on next update.")
                     self._stale_payload_tracking.append([results, 0])
-                    jobs_pushed = f"Tried to push {n_result} complete tasks to the server "
+                    task_status = {k: "deferred" for k in results.keys()}
                 else:
                     self.logger.warning("Post complete tasks was not successful. Data may be lost.")
                     self.n_stale_jobs += len(results)
-                    jobs_pushed = f"Failed to push {n_result} complete tasks to the server "
+                    task_status = {k: "unknown_error" for k in results.keys()}
 
             self.active -= n_result
             for key, result in results.items():
@@ -590,10 +595,12 @@ class QueueManager:
                     n_success += 1
                     if hasattr(result.provenance, "wall_time"):
                         wall_time_seconds = float(result.provenance.wall_time)
+
+                    task_status[key] += " / success"
                 else:
-                    error_payload.append(
-                        f"Job {key} failed: {result.error.error_type} - " f"Msg: {result.error.error_message}"
-                    )
+                    task_status[key] += f" / failed: {result.error.error_type}"
+                    failure_messages[key] = result.error
+
                     # Try to get the wall time in the most fault-tolerant way
                     try:
                         wall_time_seconds = float(result.input_data.get("provenance", {}).get("wall_time", 0))
@@ -611,11 +618,17 @@ class QueueManager:
                 task_cpu_hours += wall_time_seconds * self.statistics.cores_per_task / 3600
             n_fail = n_result - n_success
 
-        self.logger.info(jobs_pushed + f"({n_success} success / {n_fail} fail).")
-        if n_fail:
-            self.logger.warning("The following tasks failed with the errors:")
-            for error in error_payload:
-                self.logger.warning(error)
+            # Now print out all the info
+            self.logger.info(f"Processed {len(results)} tasks: {n_success} succeeded / {n_fail} failed).")
+            self.logger.info(f"Task ids, submission status, calculation status below")
+            for task_id, status_msg in task_status.items():
+                self.logger.info(f"    Task {task_id} : {status_msg}")
+            if n_fail:
+                self.logger.info("The following tasks failed with the errors:")
+                for task_id, error_info in failure_messages.items():
+                    self.logger.info(f"Error message for task id {task_id}")
+                    self.logger.info("    Error type: " + str(error_info.error_type))
+                    self.logger.info("    Backtrace: \n" + str(error_info.error_message))
 
         open_slots = max(0, self.max_tasks - self.active)
 
