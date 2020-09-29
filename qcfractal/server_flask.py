@@ -32,13 +32,13 @@ from .qc_queue import QueueManager, QueueManagerHandler, ServiceQueueHandler, Ta
 from .services import construct_service
 from .storage_sockets import ViewHandler, storage_socket_factory
 from .storage_sockets.api_logger import API_AccessLogger
+from .storage_sockets.storage_utils import add_metadata_template
 from pydantic import ValidationError
 from qcelemental.util import deserialize, serialize
 from .interface.models.rest_models import rest_model
-from .storage_sockets.storage_utils import add_metadata_template
 from werkzeug.security import generate_password_hash, check_password_hash
 from .procedures import check_procedure_available, get_procedure_parser
-from policyuniverse.policy import Policy
+from .policyuniverse import Policy
 
 
 app = Flask(__name__)
