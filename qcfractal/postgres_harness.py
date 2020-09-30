@@ -200,7 +200,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
     def create_tables(self):
         """Create database tables using SQLAlchemy models"""
 
-        uri = self.config.database_uri()
+        uri = self.config.database_uri(safe=False)
         self.logger(f"Creating tables for database: {uri}")
         engine = create_engine(uri, echo=False, pool_size=1)
 
@@ -215,7 +215,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
     def update_db_version(self):
         """Update current version of QCFractal in the DB"""
 
-        uri = self.config.database_uri()
+        uri = self.config.database_uri(safe=False)
 
         engine = create_engine(uri, echo=False, pool_size=1)
         session = sessionmaker(bind=engine)()
@@ -367,7 +367,8 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         self.logger("\nDatabase server successfully started!")
 
     def alembic_commands(self) -> List[str]:
-        return [shutil.which("alembic"), "-c", self._alembic_ini, "-x", "uri=" + self.config.database_uri()]
+        db_uri = self.config.database_uri(safe=False)
+        return [shutil.which("alembic"), "-c", self._alembic_ini, "-x", "uri=" + db_uri]
 
     def init_database(self) -> None:
 
