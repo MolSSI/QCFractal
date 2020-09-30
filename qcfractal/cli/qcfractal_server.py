@@ -54,7 +54,7 @@ def parse_args():
 
     subparsers = parser.add_subparsers(dest="command")
 
-    ### Init subcommands
+    # Init subcommands
     init = subparsers.add_parser("init", help="Initializes a QCFractal server and database information.")
     db_init = init.add_argument_group("Database Settings")
     for field in DatabaseSettings.field_names():
@@ -72,7 +72,7 @@ def parse_args():
     )
     init.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
-    ### Start subcommands
+    # Start subcommands
     start = subparsers.add_parser("start", help="Starts a QCFractal server instance.")
     start.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
@@ -99,7 +99,7 @@ def parse_args():
     fractal_args.add_argument("--tls-cert", type=str, default=None, help="Certificate file for TLS (in PEM format)")
     fractal_args.add_argument("--tls-key", type=str, default=None, help="Private key file for TLS (in PEM format)")
 
-    ### Upgrade subcommands
+    # Upgrade subcommands
     upgrade = subparsers.add_parser("upgrade", help="Upgrade QCFractal database.")
     upgrade.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
@@ -114,14 +114,14 @@ def parse_args():
         help="Creates a local pool QueueManager attached to the server.",
     )
 
-    ### Config subcommands
+    # Config subcommands
     info = subparsers.add_parser("info", help="Manage users and permissions on a QCFractal server instance.")
     info.add_argument(
         "category", nargs="?", default="config", choices=["config", "alembic"], help="The config category to show."
     )
     info.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
-    ### User subcommands
+    # User subcommands
     user = subparsers.add_parser("user", help="Configure a QCFractal server instance.")
     user.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
@@ -189,7 +189,7 @@ def parse_args():
     #     "--force", action="store_true", help="If True, do not ask if the user wishes to delete the current database."
     # )
 
-    ### Move args around
+    # Move args around
     args = vars(parser.parse_args())
 
     ret = {}
@@ -410,7 +410,7 @@ def server_start(args, config):
     print(f"Server: {str(server)}")
 
     # Register closing
-    install_signal_handlers(server.loop, server.stop)
+    # install_signal_handlers(server.loop, server.stop)
 
     # Blocks until keyboard interupt
     print("\n>>> Starting the QCFractal server...")
@@ -443,7 +443,8 @@ def server_user(args, config):
     try:
         if args["user_command"] == "add":
             print("\n>>> Adding new user...")
-            success, pw = storage.add_user(args["username"], password=args["password"], permissions=args["permissions"])
+            success, pw = storage.add_user(args["username"], password=args["password"],
+                                           permissions=args["permissions"])
             if success:
                 print(f"\n>>> New user successfully added, password:\n{pw}")
                 if config.fractal.security is None:

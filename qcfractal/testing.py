@@ -344,8 +344,8 @@ def postgres_server():
         pytest.skip("Postgres is not installed on this server and no active postgres could be found.")
 
     storage = None
-    #psql = PostgresHarness({"database": {"port": 5432}})
-    psql = PostgresHarness({"database": {"port": 5432, "username": "", "password": ""}})
+    psql = PostgresHarness({"database": {"port": 5432}})
+    # psql = PostgresHarness({"database": {"port": 5432, "username": "qcarchive", "password": "mypass"}})
     if not psql.is_alive():
         print()
         print(
@@ -489,7 +489,7 @@ def fractal_compute_server(postgres_server):
     """
 
     # Storage name
-    storage_name = "test_qcfractal_compute_snowflake1"
+    storage_name = "test_qcfractal_compute_snowflake"
     postgres_server.create_database(storage_name)
 
     with FractalSnowflake(
