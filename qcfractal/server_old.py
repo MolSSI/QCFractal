@@ -1,34 +1,38 @@
+"""
+The FractalServer class
+"""
+
 import asyncio
+import datetime
 import logging
 import ssl
 import time
 import traceback
-import json
-import os
-import tornado.ioloop
-import threading
-
-from datetime import datetime, timedelta
-from urllib.parse import urlparse
-from flask import Flask, jsonify, request, copy_current_request_context
-from flask_jwt_extended import JWTManager
-from functools import wraps
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional, Union
+
+import tornado.ioloop
+import tornado.log
+import tornado.options
+import tornado.web
+
 from .extras import get_information
 from .interface import FractalClient
 from .qc_queue import QueueManager, QueueManagerHandler, ServiceQueueHandler, TaskQueueHandler, ComputeManagerHandler
 from .services import construct_service
 from .storage_sockets import ViewHandler, storage_socket_factory
 from .storage_sockets.api_logger import API_AccessLogger
-from .storage_sockets.storage_utils import add_metadata_template
-from pydantic import ValidationError
-from qcelemental.util import deserialize, serialize
-from .interface.models.rest_models import rest_model
-from werkzeug.security import generate_password_hash, check_password_hash
-from .procedures import check_procedure_available, get_procedure_parser
-from .policyuniverse import Policy
-from .flask_handlers import APIHandler
+from .web_handlers import (
+    CollectionHandler,
+    InformationHandler,
+    KeywordHandler,
+    KVStoreHandler,
+    MoleculeHandler,
+    OptimizationHandler,
+    ProcedureHandler,
+    ResultHandler,
+    WavefunctionStoreHandler,
+)
 
 
 def _build_ssl():
@@ -55,7 +59,7 @@ def _build_ssl():
     # Basic data
     name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, hostname)])
     basic_contraints = x509.BasicConstraints(ca=True, path_length=0)
-    now = datetime.utcnow()
+    now = datetime.datetime.utcnow()
 
     # Build cert
     cert = (
@@ -65,7 +69,7 @@ def _build_ssl():
         .public_key(key.public_key())
         .serial_number(int(random.random() * sys.maxsize))
         .not_valid_before(now)
-        .not_valid_after(now + timedelta(days=10 * 365))
+        .not_valid_after(now + datetime.timedelta(days=10 * 365))
         .add_extension(basic_contraints, False)
         .add_extension(alt_names, False)
         .sign(key, hashes.SHA256(), default_backend())
@@ -82,12 +86,12 @@ def _build_ssl():
     return cert_pem, key_pem
 
 
-class FractalServer(APIHandler):
+class FractalServer:
     def __init__(
         self,
         # Server info options
         name: str = "QCFractal Server",
-        port: int = 5000,
+        port: int = 7777,
         loop: "IOLoop" = None,
         compress_response: bool = True,
         # Security
@@ -155,6 +159,7 @@ class FractalServer(APIHandler):
         service_frequency : float, optional
             The time (in seconds) before checking and updating services.
         """
+
         # Save local options
         self.name = name
         self.port = port
@@ -167,7 +172,12 @@ class FractalServer(APIHandler):
         self.service_frequency = service_frequency
         self.heartbeat_frequency = heartbeat_frequency
 
-        self.logger = logging.getLogger("flask.application")
+        # Setup logging.
+        if logfile_prefix is not None:
+            tornado.options.options["log_file_prefix"] = logfile_prefix
+
+        tornado.log.enable_pretty_logging()
+        self.logger = logging.getLogger("tornado.application")
         self.logger.setLevel(loglevel.upper())
 
         # Create API Access logger class if enables
@@ -246,6 +256,9 @@ class FractalServer(APIHandler):
         else:
             self.view_handler = None
 
+        # Pull the current loop if we need it
+        self.loop = loop or tornado.ioloop.IOLoop.current()
+
         # Build up the application
         self.objects = {
             "storage_socket": self.storage,
@@ -260,13 +273,37 @@ class FractalServer(APIHandler):
             "heartbeat_frequency": self.heartbeat_frequency,
             "version": get_information("version"),
             "query_limit": self.storage.get_limit(1.0e9),
-            "client_lower_version_limit": "0.14.0",  # Must be XX.YY.ZZ
-            "client_upper_version_limit": "0.15.99",  # Must be XX.YY.ZZ
+            "client_lower_version_limit": "0.12.1",  # Must be XX.YY.ZZ
+            "client_upper_version_limit": "0.13.99",  # Must be XX.YY.ZZ
         }
         self.update_public_information()
 
+        endpoints = [
+            # Generic web handlers
+            (r"/information", InformationHandler, self.objects),
+            (r"/kvstore", KVStoreHandler, self.objects),
+            (r"/molecule", MoleculeHandler, self.objects),
+            (r"/keyword", KeywordHandler, self.objects),
+            (r"/collection(?:/([0-9]+)(?:/(value|entry|list|molecule))?)?", CollectionHandler, self.objects),
+            (r"/result", ResultHandler, self.objects),
+            (r"/wavefunctionstore", WavefunctionStoreHandler, self.objects),
+            (r"/procedure/?", ProcedureHandler, self.objects),
+            (r"/optimization/(.*)/?", OptimizationHandler, self.objects),
+            # Queue Schedulers
+            (r"/task_queue", TaskQueueHandler, self.objects),
+            (r"/service_queue", ServiceQueueHandler, self.objects),
+            (r"/queue_manager", QueueManagerHandler, self.objects),
+            (r"/manager", ComputeManagerHandler, self.objects),
+        ]
+
         # Build the app
         app_settings = {"compress_response": compress_response}
+        self.app = tornado.web.Application(endpoints, **app_settings)
+        self.endpoints = set([v[0].replace("/", "", 1) for v in endpoints])
+
+        self.http_server = tornado.httpserver.HTTPServer(self.app, ssl_options=ssl_ctx)
+
+        self.http_server.listen(self.port)
 
         # Add periodic callback holders
         self.periodic = {}
@@ -308,105 +345,6 @@ class FractalServer(APIHandler):
             # Build the queue manager, will not run until loop starts
             self.futures["queue_manager_future"] = self._run_in_thread(_build_manager)
 
-        # create flask app
-        self.app = Flask(__name__)
-        self.app.app_context().push()
-        # config
-        self.app.config['JWT_SECRET_KEY'] = 'super-secret'
-        self.app.config['JWT_REFRESH_TOKEN_EXPIRES'] = 86400
-        jwt = JWTManager(self.app)
-
-        # Routes
-        self.app.add_url_rule('/information', view_func=self.get_information, methods=['GET'])
-        self.app.add_url_rule('/register', view_func=self.register, methods=['POST'])
-        self.app.add_url_rule('/login', view_func=self.login, methods=['POST'])
-        self.app.add_url_rule('/refresh', view_func=self.refresh, methods=['POST'])
-        self.app.add_url_rule('/fresh-login', view_func=self.fresh_login, methods=['POST'])
-        self.app.add_url_rule('/molecule', view_func=self.get_molecule, methods=['GET'])
-        self.app.add_url_rule('/molecule', view_func=self.post_molecule, methods=['POST'])
-        self.app.add_url_rule('/kvstore', view_func=self.get_kvstore, methods=['GET'])
-        self.app.add_url_rule('/kvstore', view_func=self.get_kvstore, methods=['GET'])
-        self.app.add_url_rule('/collection/<int:collection_id>/<string:view_function>',
-                              view_func=self.get_collection, methods=['GET'])
-        self.app.add_url_rule('/collection/<int:collection_id>/<string:view_function>',
-                              view_func=self.post_collection, methods=['POST'])
-        self.app.add_url_rule('/collection/<int:collection_id>/<string:view_function>',
-                              view_func=self.delete_collection, methods=['DELETE'])
-        self.app.add_url_rule('/result/<string:query_type>',
-                              view_func=self.get_result, methods=['GET'])
-        self.app.add_url_rule('/wavefunctionstore',
-                              view_func=self.get_wave_function, methods=['GET'])
-        self.app.add_url_rule('/procedure/<string:query_type>',
-                              view_func=self.get_procedure, methods=['GET'])
-        self.app.add_url_rule('/optimization/<string:query_type>',
-                              view_func=self.get_optimization, methods=['GET'])
-        self.app.add_url_rule('/task_queue',
-                              view_func=self.get_task_queue, methods=['GET'])
-        self.app.add_url_rule('/task_queue',
-                              view_func=self.post_task_queue, methods=['POST'])
-        self.app.add_url_rule('/task_queue',
-                              view_func=self.put_task_queue, methods=['PUT'])
-        self.app.add_url_rule('/service_queue',
-                              view_func=self.get_service_queue, methods=['GET'])
-        self.app.add_url_rule('/service_queue',
-                              view_func=self.post_service_queue, methods=['POST'])
-        self.app.add_url_rule('/service_queue',
-                              view_func=self.put_service_queue, methods=['PUT'])
-        self.app.add_url_rule('/queue_manager',
-                              view_func=self.post_queue_manager, methods=['Post'])
-        self.app.add_url_rule('/queue_manager',
-                              view_func=self.put_queue_manager, methods=['PUT'])
-        self.app.add_url_rule('/manager',
-                              view_func=self.get_manager, methods=['GET'])
-        self.app.add_url_rule('/role', view_func=self.get_roles, methods=['GET'])
-        self.app.add_url_rule('/role/<string:rolename>',
-                              view_func=self.get_role, methods=['GET'])
-        self.app.add_url_rule('/role', view_func=self.create_role, methods=['POST'])
-        self.app.add_url_rule('/role', view_func=self.update_role, methods=['PUT'])
-        self.app.add_url_rule('/role', view_func=self.delete_role, methods=['DELETE'])
-
-        # JWT
-        @jwt.user_loader_callback_loader
-        def user_loader_callback(identity):
-            try:
-                # host_url = request.host_url
-                claims = get_jwt_claims()
-                resource = urlparse(request.url).path.split("/")[1]
-                method = request.method
-                context = {
-                    "Principal": identity,
-                    "Action": request.method,
-                    "Resource": urlparse(request.url).path.split("/")[1],
-                    "IpAddress": request.remote_addr,
-                    "AccessTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-                }
-                policy = Policy(claims.get('permissions'))
-                if policy.evaluate(context):
-                    return {"identity": identity, "permissions": claims.get('permissions')}
-                else:
-                    return None
-
-            except Exception as e:
-                print(e)
-                return None
-
-        @jwt.user_loader_error_loader
-        def custom_user_loader_error(identity):
-            resource = urlparse(request.url).path.split("/")[1]
-            ret = {
-                "msg": "User {} is not authorized to access '{}' resource.".format(identity, resource)
-            }
-            return jsonify(ret), 403
-
-    _valid_encodings = {
-        "application/json": "json",
-        "application/json-ext": "json-ext",
-        "application/msgpack-ext": "msgpack-ext",
-    }
-
-    def start_flask(self):
-        self.app.run(port=self.port)
-
     def __repr__(self):
 
         return f"FractalServer(name='{self.name}' uri='{self._address}')"
@@ -421,7 +359,8 @@ class FractalServer(APIHandler):
         fut = self.loop.run_in_executor(self.executor, func)
         return fut
 
-    # Start/stop functionality
+    ## Start/stop functionality
+
     def start(self, start_loop: bool = True, start_periodics: bool = True) -> None:
         """
         Starts up the IOLoop and periodic calls.
@@ -474,7 +413,7 @@ class FractalServer(APIHandler):
         self.logger.info("FractalServer successfully started.\n")
         if start_loop:
             self.loop_active = True
-            self.app.run(port=self.port)
+            self.loop.start()
 
     def stop(self, stop_loop: bool = True) -> None:
         """
@@ -505,16 +444,15 @@ class FractalServer(APIHandler):
         if self.executor is not None:
             self.executor.shutdown()
 
-        # # Final: shutdown flask server
-        # @copy_current_request_context
-        # def flask_shutdown():
-        #     func = request.environ.get('werkzeug.server.shutdown')
-        #     if func is None:
-        #         raise RuntimeError('Not running with the Werkzeug Server')
-        #     func()
-        #     print(request.url)
+        # Shutdown IOLoop if needed
+        if (asyncio.get_event_loop().is_running()) and stop_loop:
+            self.loop.stop()
+        self.loop_active = False
 
-        # threading.Thread(target=flask_shutdown).start()
+        # Final shutdown
+        if stop_loop:
+            self.loop.close(all_fds=True)
+        self.logger.info("FractalServer stopping gracefully. Stopped IOLoop.\n")
 
     def add_exit_callback(self, callback, *args, **kwargs):
         """Adds additional callbacks to perform when closing down the server.
@@ -531,7 +469,8 @@ class FractalServer(APIHandler):
         """
         self.exit_callbacks.append((callback, args, kwargs))
 
-    # Helpers
+    ## Helpers
+
     def get_address(self, endpoint: Optional[str] = None) -> str:
         """Obtains the full URI for a given function on the FractalServer.
 
@@ -555,7 +494,8 @@ class FractalServer(APIHandler):
         else:
             return self._address
 
-    # Updates
+    ## Updates
+
     def update_services(self) -> int:
         """Runs through all active services and examines their current status."""
 
@@ -577,12 +517,6 @@ class FractalServer(APIHandler):
         completed_services = []
         for data in current_services:
 
-            # TODO HACK: remove task_id from 'output'. This is contained in services
-            # created in previous versions. Doing this now, but should do a db migration
-            # at some point
-            if "output" in data:
-                data["output"].pop("task_id", None)
-
             # Attempt to iteration and get message
             try:
                 service = construct_service(self.storage, self.logger, data)
@@ -591,7 +525,7 @@ class FractalServer(APIHandler):
                 error_message = "FractalServer Service Build and Iterate Error:\n{}".format(traceback.format_exc())
                 self.logger.error(error_message)
                 service.status = "ERROR"
-                service.error = ComputeError(error_type="iteration_error", error_message=error_message)
+                service.error = {"error_type": "iteration_error", "error_message": error_message}
                 finished = False
 
             self.storage.update_services([service])
@@ -608,8 +542,6 @@ class FractalServer(APIHandler):
 
         if len(completed_services):
             self.logger.info(f"Completed {len(completed_services)} services.")
-
-        self.logger.debug(f"Done updating services.")
 
         # Add new procedures and services
         self.storage.services_completed(completed_services)
@@ -644,7 +576,7 @@ class FractalServer(APIHandler):
         Checks the heartbeats and kills off managers that have not been heard from.
         """
 
-        dt = datetime.utcnow() - timedelta(seconds=self.heartbeat_frequency)
+        dt = datetime.datetime.utcnow() - datetime.timedelta(seconds=self.heartbeat_frequency)
         ret = self.storage.get_managers(status="ACTIVE", modified_before=dt)
 
         for blob in ret["data"]:
@@ -683,7 +615,7 @@ class FractalServer(APIHandler):
 
         return FractalClient(self)
 
-    # Functions only available if using a local queue_adapter
+    ### Functions only available if using a local queue_adapter
 
     def _check_manager(self, func_name: str) -> None:
         if self.queue_socket is None:
@@ -776,13 +708,3 @@ class FractalServer(APIHandler):
         self._check_manager("list_current_tasks")
 
         return self.objects["queue_manager"].list_current_tasks()
-
-
-if __name__ == '__main__':
-    try:
-        server = FractalServer()
-        server.start()
-    except Exception as e:
-        print("Fatal during server startup:\n")
-        print(str(e))
-        print("\nFailed to start the server, shutting down.")
