@@ -6,7 +6,7 @@ import pytest
 
 import qcfractal.interface as ptl
 from qcfractal import testing
-from qcfractal.testing import fractal_compute_server, reset_server_database, using_psi4, using_rdkit
+from qcfractal.testing import fractal_compute_server, test_server, reset_server_database, using_psi4, using_rdkit
 
 bad_id1 = "000000000000000000000000"
 bad_id2 = "000000000000000000000001"
@@ -110,6 +110,94 @@ def test_task_client_restart(fractal_compute_server):
 
     tasks = client.query_tasks(base_result=ret.submitted)[0]
     assert tasks.status == "WAITING"
+
+
+@testing.using_rdkit
+@testing.using_geometric
+def test_task_regenerate(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+
+    # Add a single computation and a geometry optimization
+    # Both of these have invalid methods
+    mol = ptl.models.Molecule(**{"geometry": [1, 2, 3], "symbols": ["Ne"]})
+    geometric_options = {
+        "keywords": None,
+        "qc_spec": {"driver": "gradient", "method": "cookiemonster", "basis": "", "keywords": None, "program": "rdkit"},
+    }
+
+    ret1 = client.add_compute("rdkit", "cookiemonster", "", "energy", None, [mol])
+    ret2 = client.add_procedure("optimization", "geometric", geometric_options, [mol])
+    fractal_compute_server.await_results()
+
+    base_ids = [ret1.submitted[0], ret2.submitted[0]]
+    old_tasks = client.query_tasks(base_result=base_ids)
+
+    # Regenerate, but old one exists. Should be a no-op
+    upd = client.modify_tasks("regenerate", base_result=base_ids)
+    assert upd.n_updated == 0
+    new_tasks = client.query_tasks(base_result=base_ids)
+
+    for old_task, new_task in zip(old_tasks, new_tasks):
+        assert old_task.status == "ERROR"
+        assert old_task.id == new_task.id
+        assert old_task.base_result == new_task.base_result
+        assert old_task.modified_on == new_task.modified_on
+        assert old_task.created_on == new_task.created_on
+
+    # Manually delete the old task
+    db = fractal_compute_server.objects["storage_socket"]
+    db.del_tasks([x.id for x in old_tasks])
+
+    # Actually deleted?
+    del_task = client.query_tasks(base_result=base_ids)
+    assert len(del_task) == 0
+
+    # Now regenerate
+    upd = client.modify_tasks("regenerate", base_result=base_ids)
+    new_tasks = client.query_tasks(base_result=base_ids)
+    assert upd.n_updated == 2
+    for old_task, new_task in zip(old_tasks, new_tasks):
+        assert new_task.status == "WAITING"
+        assert old_task.id != new_task.id  # Task ids must now be different
+        assert old_task.base_result == new_task.base_result
+        assert old_task.modified_on < new_task.modified_on  # New task must be newer
+        assert old_task.created_on < new_task.created_on  # New task must be newer
+
+    assert old_tasks[0].spec.args[0]["molecule"]["id"] == new_tasks[0].spec.args[0]["molecule"]["id"]
+    assert (
+        old_tasks[0].spec.args[0]["molecule"]["identifiers"]["molecule_hash"]
+        == new_tasks[0].spec.args[0]["molecule"]["identifiers"]["molecule_hash"]
+    )
+    assert old_tasks[1].spec.args[0]["initial_molecule"]["id"] == new_tasks[1].spec.args[0]["initial_molecule"]["id"]
+    assert (
+        old_tasks[1].spec.args[0]["initial_molecule"]["identifiers"]["molecule_hash"]
+        == new_tasks[1].spec.args[0]["initial_molecule"]["identifiers"]["molecule_hash"]
+    )
+
+    # The status of the result should be reset to incomplete
+    res = client.query_procedures(base_ids)
+    assert all(x.status == "INCOMPLETE" for x in res)
+
+
+def test_task_modify(test_server):
+    client = ptl.FractalClient(test_server)
+
+    # Add a single computation
+    mol = ptl.models.Molecule(**{"geometry": [0, 0, 1], "symbols": ["He"]})
+    ret1 = client.add_compute("rdkit", "cookiemonster", "", "energy", None, [mol], tag="test_tag_1", priority=1)
+    base_id = ret1.submitted[0]
+    old_task = client.query_tasks(base_result=base_id)[0]
+
+    assert old_task.priority == 1
+    assert old_task.tag == "test_tag_1"
+
+    # Modify the priority and tag
+    upd = client.modify_tasks("modify", base_result=base_id, new_tag="test_tag_2", new_priority=0)
+    assert upd.n_updated == 1
+    new_task = client.query_tasks(base_result=base_id)[0]
+
+    assert new_task.tag == "test_tag_2"
+    assert new_task.priority == 0
 
 
 @testing.using_rdkit

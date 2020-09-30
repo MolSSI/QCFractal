@@ -359,68 +359,6 @@ class ResultRecord(RecordBase):
         else:
             return ret
 
-    ## QCSchema constructors
-
-    def build_schema_input(
-        self, molecule: "Molecule", keywords: Optional["KeywordSet"] = None, checks: bool = True
-    ) -> "ResultInput":
-        """
-        Creates a OptimizationInput schema.
-        """
-
-        if checks:
-            assert self.molecule == molecule.id
-            if self.keywords:
-                assert self.keywords == keywords.id
-
-        model = {"method": self.method}
-        if self.basis:
-            model["basis"] = self.basis
-
-        if not self.keywords:
-            keywords = {}
-        else:
-            keywords = keywords.values
-
-        if not self.protocols:
-            protocols = {}
-        else:
-            protocols = self.protocols
-
-        model = qcel.models.ResultInput(
-            id=self.id,
-            driver=self.driver.name,
-            model=model,
-            molecule=molecule,
-            keywords=keywords,
-            extras=self.extras,
-            protocols=protocols,
-        )
-        return model
-
-    def _consume_output(self, data: Dict[str, Any], checks: bool = True):
-        assert self.method == data["model"]["method"]
-        values = self.__dict__
-
-        # Result specific
-        values["extras"] = data["extras"]
-        values["extras"].pop("_qcfractal_tags", None)
-        values["return_result"] = data["return_result"]
-        values["properties"] = data["properties"]
-
-        # Wavefunction data
-        values["wavefunction"] = data.get("wavefunction", None)
-        values["wavefunction_data_id"] = data.get("wavefunction_data_id", None)
-
-        # Standard blocks
-        values["provenance"] = data["provenance"]
-        values["error"] = data["error"]
-        values["stdout"] = data["stdout"]
-        values["stderr"] = data["stderr"]
-        values["status"] = "COMPLETE"
-
-    ## QCSchema constructors
-
     def get_molecule(self) -> "Molecule":
         """
         Pulls the Result's Molecule from the connected database.
@@ -494,34 +432,6 @@ class OptimizationRecord(RecordBase):
         if v is not None:
             v = recursive_normalizer(v)
         return v
-
-    ## QCSchema constructors
-
-    def build_schema_input(
-        self, initial_molecule: "Molecule", qc_keywords: Optional["KeywordSet"] = None, checks: bool = True
-    ) -> "OptimizationInput":
-        """
-        Creates a OptimizationInput schema.
-        """
-
-        if checks:
-            assert self.initial_molecule == initial_molecule.id
-            if self.qc_spec.keywords:
-                assert self.qc_spec.keywords == qc_keywords.id
-
-        qcinput_spec = self.qc_spec.form_schema_object(keywords=qc_keywords, checks=checks)
-        qcinput_spec.pop("program", None)
-
-        model = qcel.models.OptimizationInput(
-            id=self.id,
-            initial_molecule=initial_molecule,
-            keywords=self.keywords,
-            extras=self.extras,
-            hash_index=self.hash_index,
-            input_specification=qcinput_spec,
-            protocols=self.protocols,
-        )
-        return model
 
     ## Standard function
 

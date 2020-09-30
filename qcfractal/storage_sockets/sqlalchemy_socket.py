@@ -37,6 +37,8 @@ from qcfractal.interface.models import (
     KVStore,
     prepare_basis,
 )
+from qcfractal.interface.models.records import RecordStatusEnum
+
 from qcfractal.storage_sockets.db_queries import QUERY_CLASSES
 from qcfractal.storage_sockets.models import (
     AccessLogORM,
@@ -612,6 +614,8 @@ class SQLAlchemySocket:
         id_mols_list = tmp["data"]
         meta["errors"].extend(tmp["meta"]["errors"])
 
+        # TODO - duplicate ids get removed on the line below. Some
+        # code may depend on this behavior, so careful changing it
         inv_id_mols = {v: k for k, v in id_mols.items()}
 
         for mol in id_mols_list:
@@ -2039,9 +2043,6 @@ class SQLAlchemySocket:
         (with result.status='INCOMPLETE' as the default)
         The default task.status is 'WAITING'
 
-        Duplicate tasks sould be a rare case.
-        Hooks are merged if the task already exists
-
         Parameters
         ----------
         data : List[TaskRecord]
@@ -2443,12 +2444,102 @@ class SQLAlchemySocket:
             task_ids = session.query(TaskQueueORM.id).filter(*query)
             session.query(BaseResultORM).filter(TaskQueueORM.base_result_id == BaseResultORM.id).filter(
                 TaskQueueORM.id.in_(task_ids)
-            ).update(dict(status="INCOMPLETE", modified_on=dt.utcnow()), synchronize_session=False)
+            ).update(dict(status=RecordStatusEnum.incomplete, modified_on=dt.utcnow()), synchronize_session=False)
 
             updated = (
                 session.query(TaskQueueORM)
                 .filter(TaskQueueORM.id.in_(task_ids))
                 .update(dict(status=TaskStatusEnum.waiting, modified_on=dt.utcnow()), synchronize_session=False)
+            )
+
+        return updated
+
+    def reset_base_result_status(
+        self,
+        id: Union[str, List[str]] = None,
+    ) -> int:
+        """
+        Reset the status of a base result to "incomplete". Will only work if the
+        status is not complete.
+
+        This should be rarely called. Handle with care!
+
+        Parameters
+        ----------
+        id : Optional[Union[str, List[str]]], optional
+            The id of the base result to modify
+
+        Returns
+        -------
+        int
+            Number of base results modified
+        """
+
+        query = format_query(BaseResultORM, id=id)
+        update_dict = {"status": RecordStatusEnum.incomplete, "modified_on": dt.utcnow()}
+
+        with self.session_scope() as session:
+            updated = (
+                session.query(BaseResultORM)
+                .filter(*query)
+                .filter(BaseResultORM.status != RecordStatusEnum.complete)
+                .update(update_dict, synchronize_session=False)
+            )
+
+        return updated
+
+    def queue_modify_tasks(
+        self,
+        id: Union[str, List[str]] = None,
+        base_result: Union[str, List[str]] = None,
+        new_tag: Optional[str] = None,
+        new_priority: Optional[int] = None,
+    ):
+        """
+        Modifies the tag and priority of tasks.
+
+        This will only modify if the status is not running
+
+        Parameters
+        ----------
+        id : Optional[Union[str, List[str]]], optional
+            The id of the task to modify
+        base_result : Optional[Union[str, List[str]]], optional
+            The id of the base result to modify
+        new_tag : Optional[str], optional
+            New tag to assign to the given tasks
+        new_priority: int, optional
+            New priority to assign to the given tasks
+
+        Returns
+        -------
+        int
+            Updated count
+        """
+
+        if new_tag is None and new_priority is None:
+            # nothing to do
+            return 0
+
+        if sum(x is not None for x in [id, base_result]) == 0:
+            raise ValueError("All query fields are None, modify_task must specify queries.")
+
+        query = format_query(TaskQueueORM, id=id, base_result_id=base_result)
+
+        update_dict = {}
+        if new_tag is not None:
+            update_dict["tag"] = new_tag
+        if new_priority is not None:
+            update_dict["priority"] = new_priority
+
+        update_dict["modified_on"] = dt.utcnow()
+
+        with self.session_scope() as session:
+            updated = (
+                session.query(TaskQueueORM)
+                .filter(*query)
+                .filter(TaskQueueORM.status != TaskStatusEnum.running)
+                .update(update_dict, synchronize_session=False)
             )
 
         return updated
