@@ -15,6 +15,32 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+
+0.14.0 / 2020-09-30
+-------------------
+
+New Features
+++++++++++++
+
+- (:pr:`597`) Add ability to query managers
+- (:pr:`612`) Enabled compression of KVStore (generally, outputs)
+- (:pr:`617`) Ability to control level of logging via the command line
+- (:pr:`620`) Add ability to regenerate and modify tasks
+
+
+Enhancements
+++++++++++++
+
+- (:pr:`592` and :pr:`615`) Improved performance of task retrieval of managers
+- (:pr:`620`) Improve performance of task submission, and add additional logging
+
+Bug Fixes
++++++++++
+
+- (:pr:`603`) Fix error when running older computations missing 'protocols'
+- (:pr:`617`) Fix printing of base folder with the CLI
+
+
 0.13.1 / 2020-02-18
 -------------------
 
