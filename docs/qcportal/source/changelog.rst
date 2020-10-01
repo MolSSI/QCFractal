@@ -15,6 +15,23 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.14.0 / 2020-09-30
+-------------------
+
+This release focused on core QCFractal issues and therefore QCPortal was not
+modified much, other than a few minor bugfixes.
+
+New Features
+++++++++++++
+
+- (:pr:`597`) Add ability to query managers
+- (:pr:`612`) Adds KVStore compression, which is reflected in a change to ``get_kvstore``
+
+Bug Fixes
++++++++++
+- (:pr:`586`) Fixed an issue with status() with collections
+
+
 0.13.1 / 2020-02-18
 -------------------
 
