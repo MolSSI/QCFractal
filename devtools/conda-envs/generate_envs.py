@@ -15,6 +15,7 @@ channels:
   - conda-forge
 dependencies:
   - python
+  - pip
 
   # Core dependencies
   - msgpack-python >=0.6.1
