@@ -1,9 +1,6 @@
 # After changing this file, check it on:
 #   http://lint.travis-ci.org/
 
-
-# Run jobs on container-based infrastructure, can be overridden per job
-sudo: false
 dist: xenial
 
 services:
@@ -13,17 +10,22 @@ services:
 language: generic
 os: linux
 
-matrix:
+jobs:
   include:
-
-    - env:
-      - NAME="BASE 3.6"
-      - PYTHON_VER=3.6
-      - ENVIRON=BASE
 
     - env:
       - NAME="BASE 3.7"
       - PYTHON_VER=3.7
+      - ENVIRON=BASE
+
+    - env:
+      - NAME="BASE 3.8"
+      - PYTHON_VER=3.8
+      - ENVIRON=BASE
+
+    - env:
+      - NAME="BASE 3.9"
+      - PYTHON_VER=3.9
       - ENVIRON=BASE
 
     - env:
