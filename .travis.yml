@@ -29,8 +29,8 @@ jobs:
       - ENVIRON=ADAPTERS
 
     - env:
-      - NAME="OpenFF 3.8"
-      - PYTHON_VER=3.8
+      - NAME="OpenFF 3.7"
+      - PYTHON_VER=3.7
       - ENVIRON=OPENFF
 
     - env: &dev_head
