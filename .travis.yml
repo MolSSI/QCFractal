@@ -24,23 +24,38 @@ jobs:
       - ENVIRON=BASE
 
     - env:
-      - NAME="Adapters 3.8"
-      - PYTHON_VER=3.8
-      - ENVIRON=ADAPTERS
+      - NAME="Adapters/Parsl 3.7"
+      - PYTHON_VER=3.7
+      - ENVIRON=ADAPTER_PARSL
 
     - env:
-      - NAME="OpenFF 3.7"
+      - NAME="Adapters/Dask 3.7"
       - PYTHON_VER=3.7
-      - ENVIRON=OPENFF
+      - ENVIRON=ADAPTER_DASK
 
-    - env: &dev_head
-      - NAME="Development 3.8"
-      - PYTHON_VER=3.8
-      - ENVIRON=DEV_HEAD
+    - env:
+      - NAME="Adapters/Dask Distributed 3.7"
+      - PYTHON_VER=3.7
+      - ENVIRON=ADAPTER_DASK_DISTRIBUTED
 
-  allow_failures:
-    - os: linux
-      env: *dev_head
+    - env:
+      - NAME="Adapters/Fireworks 3.7"
+      - PYTHON_VER=3.7
+      - ENVIRON=ADAPTER_FIREWORKS
+
+    #- env:
+    #  - NAME="OpenFF 3.7"
+    #  - PYTHON_VER=3.7
+    #  - ENVIRON=OPENFF
+
+    #- env: &dev_head
+    #  - NAME="Development 3.8"
+    #  - PYTHON_VER=3.8
+    #  - ENVIRON=DEV_HEAD
+
+  #allow_failures:
+  #  - os: linux
+  #    env: *dev_head
 
 before_install:
   # Additional info about the build
@@ -56,19 +71,7 @@ before_install:
 install:
     # Create test environment for package
   - echo $ENVIRON
-  - |
-    if [ $ENVIRON == "ADAPTERS" ]; then
-      python devtools/scripts/conda_env.py -n=test -p=$PYTHON_VER devtools/conda-envs/adapters.yaml
-    elif [ $ENVIRON == "OPENFF" ]; then
-      python devtools/scripts/conda_env.py -n=test -p=$PYTHON_VER devtools/conda-envs/openff.yaml
-    elif [ $ENVIRON == "DEV_HEAD" ]; then
-      python devtools/scripts/conda_env.py -n=test -p=$PYTHON_VER devtools/conda-envs/dev_head.yaml
-    elif [ $ENVIRON == "BASE" ]; then
-      python devtools/scripts/conda_env.py -n=test -p=$PYTHON_VER devtools/conda-envs/base.yaml
-    else
-      echo "ERROR: No match for ENVIRON ($ENVIRON)."
-      exit 1
-    fi
+  - python devtools/scripts/conda_env.py -n=test -p=$PYTHON_VER devtools/conda-envs/${ENVIRON,,}.yaml"
   - source activate test
 
     # Build and install package
