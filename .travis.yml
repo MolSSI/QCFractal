@@ -71,7 +71,7 @@ before_install:
 install:
     # Create test environment for package
   - echo $ENVIRON
-  - python devtools/scripts/conda_env.py -n=test -p=$PYTHON_VER devtools/conda-envs/${ENVIRON,,}.yaml"
+  - python devtools/scripts/conda_env.py -n=test -p=$PYTHON_VER devtools/conda-envs/${ENVIRON,,}.yaml
   - source activate test
 
     # Build and install package
