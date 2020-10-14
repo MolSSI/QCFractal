@@ -2120,11 +2120,13 @@ class SQLAlchemySocket:
         return ret
 
     def queue_get_next(
-        self, manager, available_programs, available_procedures, limit=100, tag=None, as_json=True
+        self, manager, available_programs, available_procedures, limit=100, tag=None
     ) -> List[TaskRecord]:
-        """Done in a transaction"""
+        """Obtain tasks for a manager
 
-        # Figure out query, tagless has no requirements
+        Given tags and available programs/procedures on the manager, obtain
+        waiting tasks to run.
+        """
 
         proc_filt = TaskQueueORM.procedure.in_([p.lower() for p in available_procedures])
         none_filt = TaskQueueORM.procedure == None  # lgtm [py/test-equals-none]
@@ -2133,8 +2135,6 @@ class SQLAlchemySocket:
         if tag is not None:
             if isinstance(tag, str):
                 tag = [tag]
-            # task_order = expression_case([(TaskQueueORM.tag == t, num) for num, t in enumerate(tag)])
-            # order_by.append(task_order)
 
         order_by.extend([TaskQueueORM.priority.desc(), TaskQueueORM.created_on])
         queries = []
@@ -2147,35 +2147,57 @@ class SQLAlchemySocket:
             query = format_query(TaskQueueORM, status=TaskStatusEnum.waiting, program=available_programs)
             query.append((or_(proc_filt, none_filt)))
             queries.append(query)
+
         new_limit = limit
-        ids = []
         found = []
+        update_count = 0
+
+        update_fields = {"status": TaskStatusEnum.running, "modified_on": dt.utcnow(), "manager": manager}
         with self.session_scope() as session:
             for q in queries:
+
+                # Have we found all we needed to find
                 if new_limit == 0:
                     break
-                query = session.query(TaskQueueORM).filter(*q).order_by(*order_by).limit(new_limit)
-                # from sqlalchemy.dialects import postgresql
-                # print(query.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
-                new_items = query.all()
-                found.extend(new_items)
-                new_limit = limit - len(new_items)
-                ids.extend([x.id for x in new_items])
-            update_fields = {"status": TaskStatusEnum.running, "modified_on": dt.utcnow(), "manager": manager}
-            # # Bulk update operation in SQL
-            update_count = (
-                session.query(TaskQueueORM)
-                .filter(TaskQueueORM.id.in_(ids))
-                .update(update_fields, synchronize_session=False)
-            )
 
-            if as_json:
-                # avoid another trip to the DB to get the updated values, set them here
-                found = [TaskRecord(**task.to_dict(exclude=update_fields.keys()), **update_fields) for task in found]
+                # with_for_update locks the rows. skip_locked=True makes it skip already-locked rows
+                # (possibly from another process)
+                query = (
+                    session.query(TaskQueueORM)
+                    .filter(*q)
+                    .order_by(*order_by)
+                    .limit(new_limit)
+                    .with_for_update(skip_locked=True)
+                )
+
+                new_items = query.all()
+
+                # Store in dict form for returning. We will add the updated fields later
+                found.extend([task.to_dict(exclude=update_fields.keys()) for task in new_items])
+                new_ids = [x.id for x in new_items]
+
+                # Update all the task records to reflect this manager claiming them
+                update_count += (
+                    session.query(TaskQueueORM)
+                    .filter(TaskQueueORM.id.in_(new_ids))
+                    .update(update_fields, synchronize_session=False)
+                )
+
+                new_limit = limit - len(new_items)
+
+                # I would assume this is always true. If it isn't,
+                # that would be really bad, and lead to an infinite loop
+                assert new_limit >= 0
+
+                # After commiting, the row locks are released
+                session.commit()
+
+            # avoid another trip to the DB to get the updated values, set them here
+            found = [TaskRecord(**task, **update_fields) for task in found]
             session.commit()
 
         if update_count != len(found):
-            self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
+            self.logger.warning("QUEUE: Number of found tasks does not match the number of updated tasks.")
 
         return found
 
