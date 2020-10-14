@@ -10,26 +10,47 @@ services:
 language: generic
 os: linux
 
-# This specifies the python version in travis. However,
-# we don't actually use this python (we use conda). This
-# is a workaround for the fact we can't use multiple env
-# blocks to build a job matrix
-python:
-  - 3.7
-  - 3.8
-
-env:
-  - ENVIRON=BASE
-  - ENVIRON=ADAPTER_PARSL
-  - ENVIRON=ADAPTER_DASK
-  - ENVIRON=ADAPTER_FIREWORKS
-  - ENVIRON=OPENFF
-  - ENVIRON=DEV_HEAD
-
 jobs:
-  allow_failures:
-    - os: linux
-      env: *dev_head
+  include:
+
+    - env:
+      - NAME="BASE 3.7"
+      - PYTHON_VER=3.7
+      - ENVIRON=BASE
+
+    - env:
+      - NAME="BASE 3.8"
+      - PYTHON_VER=3.8
+      - ENVIRON=BASE
+
+    - env:
+      - NAME="Adapters/Parsl 3.7"
+      - PYTHON_VER=3.7
+      - ENVIRON=ADAPTER_PARSL
+
+    - env:
+      - NAME="Adapters/Dask 3.7"
+      - PYTHON_VER=3.7
+      - ENVIRON=ADAPTER_DASK
+
+    - env:
+      - NAME="Adapters/Fireworks 3.7"
+      - PYTHON_VER=3.7
+      - ENVIRON=ADAPTER_FIREWORKS
+
+    - env:
+      - NAME="OpenFF 3.7"
+      - PYTHON_VER=3.7
+      - ENVIRON=OPENFF
+
+    #- env: &dev_head
+    #  - NAME="Development 3.8"
+    #  - PYTHON_VER=3.8
+    #  - ENVIRON=DEV_HEAD
+
+  #allow_failures:
+  #  - os: linux
+  #    env: *dev_head
 
 before_install:
   # Additional info about the build
@@ -43,8 +64,8 @@ before_install:
   - python -V
 
 install:
-  - PYTHON_VER=${TRAVIS_PYTHON_VERSION}
-  - echo ${ENVIRON} ${PYTHON_VER}
+    # Create test environment for package
+  - echo $ENVIRON
   - python devtools/scripts/conda_env.py -n=test -p=$PYTHON_VER devtools/conda-envs/${ENVIRON,,}.yaml
   - source activate test
 
