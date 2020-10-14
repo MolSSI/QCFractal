@@ -40,6 +40,9 @@ dependencies:
 
 #   Environment specific includes
   - rdkit
+  - ipyparallel
+  - ipykernel
+  - parsl >=0.9.0
 
 #   QCArchive includes
   - qcengine >=0.11.0

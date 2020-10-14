@@ -34,19 +34,14 @@ jobs:
       - ENVIRON=ADAPTER_DASK
 
     - env:
-      - NAME="Adapters/Dask Distributed 3.7"
-      - PYTHON_VER=3.7
-      - ENVIRON=ADAPTER_DASK_DISTRIBUTED
-
-    - env:
       - NAME="Adapters/Fireworks 3.7"
       - PYTHON_VER=3.7
       - ENVIRON=ADAPTER_FIREWORKS
 
-    #- env:
-    #  - NAME="OpenFF 3.7"
-    #  - PYTHON_VER=3.7
-    #  - ENVIRON=OPENFF
+    - env:
+      - NAME="OpenFF 3.7"
+      - PYTHON_VER=3.7
+      - ENVIRON=OPENFF
 
     #- env: &dev_head
     #  - NAME="Development 3.8"
