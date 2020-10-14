@@ -159,7 +159,7 @@ class FractalClient(object):
                 )
             client_version = _version_list(__version__)[:2]
             if not server_version_min_client <= client_version <= server_version_max_client:
-                client_ver_str = ".".join([str(i) for i in server_version_min_client])
+                client_ver_str = ".".join([str(i) for i in client_version])
                 server_version_min_str = ".".join([str(i) for i in server_version_min_client])
                 server_version_max_str = ".".join([str(i) for i in server_version_max_client])
                 raise IOError(
