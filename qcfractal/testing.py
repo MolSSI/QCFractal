@@ -85,8 +85,6 @@ def _plugin_import(plug):
         return True
 
 
-_import_message = "Not detecting module {}. Install package if necessary and add to envvar PYTHONPATH"
-
 _adapter_testing = ["pool", "dask", "fireworks", "parsl"]
 
 # Figure out what is imported

@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, List, NoReturn, Optional,
 
 import numpy as np
 import pandas as pd
+import h5py
 from qcelemental.util.serialization import deserialize, serialize
 
 from ..models import Molecule, ObjectId
@@ -19,7 +20,6 @@ from .dataset import Dataset, MoleculeEntry
 from .reaction_dataset import ReactionDataset, ReactionEntry
 
 if TYPE_CHECKING:  # pragma: no cover
-    import h5py
     from .. import FractalClient
     from ..models.rest_models import CollectionSubresourceGETResponseMeta
 
@@ -155,7 +155,6 @@ class HDF5View(DatasetView):
         queries: List[Dict[str, Union[str, bool]]]
             List of queries. Fields actually used are native, name, driver
         """
-        import h5py
 
         units = {}
         entries = self.get_index(subset)
@@ -242,8 +241,6 @@ class HDF5View(DatasetView):
             return self._entries.loc[subset].reset_index()
 
     def write(self, ds: Dataset):
-        import h5py
-
         # For data checksums
         dataset_kwargs = {"chunks": True, "fletcher32": True}
         ds.get_entries(force=True)
@@ -443,14 +440,10 @@ class HDF5View(DatasetView):
 
     @contextmanager
     def _read_file(self) -> Iterator["h5py.File"]:
-        import h5py
-
         yield h5py.File(self._path, "r")
 
     @contextmanager
     def _write_file(self) -> Iterator["h5py.File"]:
-        import h5py
-
         yield h5py.File(self._path, "w")
 
     # Methods for serializing to strings for storage in HDF5 metadata fields ("attrs")
