@@ -14,7 +14,7 @@ from sqlalchemy.orm import sessionmaker
 from qcfractal.storage_sockets.models import Base, VersionsORM
 
 from .config import FractalConfig
-from .util import find_port, is_port_open
+from .port_util import find_port, is_port_open
 
 
 class PostgresHarness:

@@ -17,7 +17,7 @@ from .interface import FractalClient
 from .postgres_harness import TemporaryPostgres
 from .server import FractalServer
 from .storage_sockets import storage_socket_factory
-from .util import find_port, is_port_open
+from .port_util import find_port, is_port_open
 
 
 def _background_process(args, **kwargs):

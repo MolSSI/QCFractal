@@ -1,5 +1,5 @@
 """
-Utility functions for QCFractal.
+Utility functions for handling network ports
 """
 
 import socket
