@@ -189,7 +189,7 @@ class Dataset(Collection):
             try:
                 file_length = int(r.headers.get("content-length"))
                 pbar = tqdm(total=file_length, initial=0, unit="B", unit_scale=True)
-            except:
+            except Exception:
                 warnings.warn("Failed to create download progress bar", RuntimeWarning)
 
         with open(local_path, "wb") as fd:

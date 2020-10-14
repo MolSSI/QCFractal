@@ -10,7 +10,6 @@ from sqlalchemy import (
     Index,
     Integer,
     String,
-    Table,
     UniqueConstraint,
     func,
     select,
@@ -198,15 +197,6 @@ class Trajectory(Base):
     # Index('opt_id', 'result_id', unique=True)
 
     # trajectory_obj = relationship(ResultORM, lazy="noload")
-
-
-# # association table for many to many relation
-# opt_result_association = Table('opt_result_association', Base.metadata,
-#     Column('opt_id', Integer, ForeignKey('optimization_procedure.id', ondelete="CASCADE")),
-#     Column('result_id', Integer, ForeignKey('result.id', ondelete="CASCADE")),
-#     Column('position', Integer)
-#     # PrimaryKeyConstraint('opt_id', 'result_id')
-# )
 
 
 class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
@@ -409,15 +399,6 @@ class TorsionInitMol(Base):
         "torsion_id", Integer, ForeignKey("torsiondrive_procedure.id", ondelete="cascade"), primary_key=True
     )
     molecule_id = Column("molecule_id", Integer, ForeignKey("molecule.id", ondelete="cascade"), primary_key=True)
-
-
-# association table for many to many relation
-# torsion_init_mol_association = Table(
-#     "torsion_init_mol_association",
-#     Base.metadata,
-#     Column("torsion_id", Integer, ForeignKey("torsiondrive_procedure.id", ondelete="CASCADE")),
-#     Column("molecule_id", Integer, ForeignKey("molecule.id", ondelete="CASCADE")),
-# )
 
 
 class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):

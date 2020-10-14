@@ -8,7 +8,7 @@ from typing import Optional, Dict, Any
 
 from qcelemental.models import ResultInput
 
-from ..interface.models import Molecule, KVStore, QCSpecification
+from ..interface.models import Molecule, QCSpecification
 
 
 def unpack_single_task_spec(storage, meta, molecules):
