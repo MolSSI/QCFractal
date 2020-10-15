@@ -29,8 +29,18 @@ jobs:
       - ENVIRON=ADAPTER_PARSL
 
     - env:
+      - NAME="Adapters/Parsl 3.8"
+      - PYTHON_VER=3.8
+      - ENVIRON=ADAPTER_PARSL
+
+    - env:
       - NAME="Adapters/Dask 3.7"
       - PYTHON_VER=3.7
+      - ENVIRON=ADAPTER_DASK
+
+    - env:
+      - NAME="Adapters/Dask 3.8"
+      - PYTHON_VER=3.8
       - ENVIRON=ADAPTER_DASK
 
     - env:
@@ -39,18 +49,37 @@ jobs:
       - ENVIRON=ADAPTER_FIREWORKS
 
     - env:
+      - NAME="Adapters/Fireworks 3.8"
+      - PYTHON_VER=3.8
+      - ENVIRON=ADAPTER_FIREWORKS
+
+    - env:
       - NAME="OpenFF 3.7"
       - PYTHON_VER=3.7
       - ENVIRON=OPENFF
 
-    #- env: &dev_head
-    #  - NAME="Development 3.8"
-    #  - PYTHON_VER=3.8
-    #  - ENVIRON=DEV_HEAD
+    - env: &openff38
+      - NAME="OpenFF 3.8"
+      - PYTHON_VER=3.8
+      - ENVIRON=OPENFF
 
-  #allow_failures:
-  #  - os: linux
-  #    env: *dev_head
+    - env: &dev_head37
+      - NAME="Development 3.7"
+      - PYTHON_VER=3.7
+      - ENVIRON=DEV_HEAD
+
+    - env: &dev_head38
+      - NAME="Development 3.8"
+      - PYTHON_VER=3.8
+      - ENVIRON=DEV_HEAD
+
+  allow_failures:
+    - os: linux
+      env: *openff38
+    - os: linux
+      env: *dev_head37
+    - os: linux
+      env: *dev_head38
 
 before_install:
   # Additional info about the build
