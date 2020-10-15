@@ -38,12 +38,9 @@ dependencies:
   - pytest-cov
   - requests-mock
 
-#   Environment specific includes
-  - rdkit
-
 #   QCArchive includes
-  - qcengine >=0.11.0
-  - qcelemental >=0.13.1
+  - qcengine >=0.17.0
+  - qcelemental >=0.17.0
 
 #   Pip includes
   - pip:
