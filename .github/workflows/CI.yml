@@ -43,15 +43,18 @@ jobs:
           conda list
 
       - name: Install package
+        shell: bash -l {0}
         run: |
           python setup.py develop --no-deps
 
       - name: Key component versions
+        shell: bash -l {0}
         run: |
           mongod --version           # do we even use mongo anymore?
           psql --version
 
       - name: Run tests
+        shell: bash -l {0}
         run: |
           pytest -v -rsx --runslow --cov=qcfractal qcfractal/ --tb=short --cov-report=xml
 
