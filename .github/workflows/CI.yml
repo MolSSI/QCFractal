@@ -20,7 +20,7 @@ jobs:
         python-version: [3.7, 3.8]
         environ: [base, adapter_parsl, adapter_dask, adapter_fireworks, openff, dev_head]
         
-        steps:
+    steps:
       - uses: actions/checkout@v2
       - name: Additional info about the build
         run: |
