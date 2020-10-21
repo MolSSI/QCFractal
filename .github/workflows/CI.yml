@@ -18,8 +18,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: ["3.7", "3.8"]
         environ: [base, adapter_parsl, adapter_dask, adapter_fireworks, openff, dev_head]
+        exclude:
+          - python-version: "3.7"
+            environ: dev_head
+          - python-version: "3.8"
+            environ: dev_head
+          - python-version: "3.8"
+            environ: openff
         
     steps:
       - uses: actions/checkout@v2
@@ -30,7 +37,7 @@ jobs:
           ulimit -a
 
       - name: Configure conda
-        uses: goanpeca/setup-miniconda@v1
+        uses: conda-incubator/setup-miniconda@v1
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: qcarchive
@@ -51,7 +58,7 @@ jobs:
       - name: Key component versions
         shell: bash -l {0}
         run: |
-          mongod --version           # do we even use mongo anymore?
+          mongod --version           # TODO: needed for fireworks; must spin up server
           psql --version
 
       - name: Run tests
@@ -59,6 +66,7 @@ jobs:
         run: |
           pytest -v -rsx --runslow --cov=qcfractal qcfractal/ --tb=short --cov-report=xml
 
+      # TODO: verify this works as we expect
       - name: Code coverage
         uses: codecov/codecov-action@v1
         with:
