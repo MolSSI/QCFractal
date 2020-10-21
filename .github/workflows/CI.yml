@@ -1,0 +1,62 @@
+name: Continuous Integration
+
+# adapted from openff-evaluator/.github/workflows/continuous_integration.yaml
+
+on:
+  push:
+    paths:
+      - 'qcfractal/**'
+      - '.github/**'
+      - 'devtools/**'
+      - 'setup.py'
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8]
+        environ: [base, adapter_parsl, adapter_dask, adapter_fireworks, openff, dev_head]
+        
+        steps:
+      - uses: actions/checkout@v2
+      - name: Additional info about the build
+        run: |
+          uname -a
+          df -h
+          ulimit -a
+
+      - name: Configure conda
+        uses: goanpeca/setup-miniconda@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+          activate-environment: qcarchive
+          environment-file: devtools/conda-envs/${{ matrix.environ}.yaml
+          auto-activate-base: false
+
+      - name: Environment Information
+        shell: bash -l {0}
+        run: |
+          conda info
+          conda list
+
+      - name: Install package
+        run: |
+          python setup.py develop --no-deps
+
+      - name: Key component versions
+        run: |
+          mongod --version           # do we even use mongo anymore?
+          psql --version
+
+      - name: Run tests
+        run: |
+          pytest -v -rsx --runslow --cov=qcfractal qcfractal/ --tb=short --cov-report=xml
+
+      - name: Code coverage
+        uses: codecov/codecov-action@v1
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: true
