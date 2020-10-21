@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: qcarchive
-          environment-file: devtools/conda-envs/${{ matrix.environ}.yaml
+          environment-file: devtools/conda-envs/${{ matrix.environ }}.yaml
           auto-activate-base: false
 
       - name: Environment Information
