@@ -27,6 +27,8 @@ jobs:
             environ: dev_head
           - python-version: "3.8"
             environ: openff
+          - python-version: "3.8"
+            environ: adapter_parsl
         
     steps:
       - uses: actions/checkout@v2
