@@ -50,6 +50,10 @@ jobs:
           conda info
           conda list
 
+      - name: Start MongoDB
+        if: ${{ matrix.environ == 'adapter_fireworks' }}
+        uses: supercharge/mongodb-github-action@1.3.0
+
       - name: Install package
         shell: bash -l {0}
         run: |
@@ -58,7 +62,7 @@ jobs:
       - name: Key component versions
         shell: bash -l {0}
         run: |
-          mongod --version           # TODO: needed for fireworks; must spin up server
+          mongod --version
           psql --version
 
       - name: Run tests
