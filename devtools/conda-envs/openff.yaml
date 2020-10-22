@@ -5,7 +5,6 @@ channels:
   - psi4/label/dev
   - conda-forge
 dependencies:
-  - python
   - pip
 
   # Core dependencies

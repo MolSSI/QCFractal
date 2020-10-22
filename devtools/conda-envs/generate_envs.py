@@ -14,7 +14,6 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  - python
   - pip
 
   # Core dependencies
