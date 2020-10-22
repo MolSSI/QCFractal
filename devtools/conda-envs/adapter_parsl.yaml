@@ -37,6 +37,12 @@ dependencies:
   - pytest-cov
   - requests-mock
 
+#   Environment specific includes
+  - rdkit
+  - ipyparallel
+  - ipykernel
+  - parsl >=0.9.0
+
 #   QCArchive includes
   - qcengine >=0.17.0
   - qcelemental >=0.17.0
