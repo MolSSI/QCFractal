@@ -4,11 +4,11 @@ name: Continuous Integration
 
 on:
   push:
-    paths:
-      - 'qcfractal/**'
-      - '.github/**'
-      - 'devtools/**'
-      - 'setup.py'
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
   schedule:
     - cron: '0 0 * * *'
 
