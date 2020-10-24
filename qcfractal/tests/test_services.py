@@ -296,7 +296,7 @@ def test_service_iterate_error(torsiondrive_fixture):
     assert "Service Build" in status[0]["error"]["error_message"]
 
     # Test that the error is propagated to the procedure
-    proc_status = client.query_procedures(ret_ids)
+    proc_status = client.query_procedures(ret.ids)
     assert len(proc_status) == 1
     assert proc_status[0].status == "ERROR"
     assert "Service Build" in proc_status[0].get_error().error_message
