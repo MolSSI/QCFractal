@@ -295,6 +295,12 @@ def test_service_iterate_error(torsiondrive_fixture):
     assert status[0]["status"] == "ERROR"
     assert "Service Build" in status[0]["error"]["error_message"]
 
+    # Test that the error is propagated to the procedure
+    proc_status = client.query_procedures(ret.ids)
+    assert len(proc_status) == 1
+    assert proc_status[0].status == "ERROR"
+    assert "Service Build" in proc_status[0].get_error().error_message
+
 
 def test_service_torsiondrive_compute_error(torsiondrive_fixture):
     """Ensure errors are caught and logged when computing serivces"""
@@ -336,6 +342,9 @@ def test_service_torsiondrive_get_final_results(torsiondrive_fixture):
 
     final_result_records = result.get_final_results()
     assert set(final_result_records.keys()) == {(-90,), (-0,), (90,), (180,)}
+
+    stdout = result.get_stdout()
+    assert "All optimizations converged at lowest energy" in stdout
 
 
 @using_geometric
