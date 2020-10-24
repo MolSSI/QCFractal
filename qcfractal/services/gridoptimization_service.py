@@ -27,9 +27,6 @@ class GridOptimizationService(BaseService):
     # Output
     output: GridOptimizationRecord
 
-    # Storage of the stdout of the torsiondrive package
-    stdout: str = ""
-
     # Temporaries
     grid_optimizations: Dict[str, str] = {}
     seeds: Set[tuple] = set()
