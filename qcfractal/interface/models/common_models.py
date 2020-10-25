@@ -9,7 +9,7 @@ import bz2
 import gzip
 
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 from pydantic import Field, validator
 from qcelemental.models import AutodocBaseSettings, Molecule, ProtoModel, Provenance
@@ -137,7 +137,7 @@ class KVStore(ProtoModel):
     @classmethod
     def compress(
         cls,
-        input_str: str,
+        input_data: Union[Dict[str, str], str],
         compression_type: CompressionEnum = CompressionEnum.none,
         compression_level: Optional[int] = None,
     ):
@@ -148,7 +148,10 @@ class KVStore(ProtoModel):
         If compression_level is None, but a compression_type is specified, an appropriate default level is chosen
         """
 
-        data = input_str.encode()
+        if isinstance(input_data, dict):
+            input_data = json.dumps(input_data)
+
+        data = input_data.encode()
 
         # No compression
         if compression_type is CompressionEnum.none:
