@@ -35,6 +35,7 @@ from qcfractal.interface.models import (
     TaskStatusEnum,
     TorsionDriveRecord,
     KVStore,
+    CompressionEnum,
     prepare_basis,
 )
 from qcfractal.interface.models.records import RecordStatusEnum
@@ -2340,14 +2341,14 @@ class SQLAlchemySocket:
 
         return tasks_c
 
-    def queue_mark_error(self, data: List[Tuple[int, str]]):
+    def queue_mark_error(self, data: List[Tuple[int, Dict[str, str]]]):
         """
         update the given tasks as errored
         Mark the corresponding result/procedure as Errored
 
         Parameters
         ----------
-        data : List[Tuple[int, str]]
+        data : List[Tuple[int, Dict[str, str]]]
             List of task ids and their error messages desired to be assigned to them.
 
         Returns
@@ -2379,7 +2380,7 @@ class SQLAlchemySocket:
                 .all()
             )
 
-            for (task_id, msg), task_obj, base_result in zip(sorted_data.items(), task_objects, base_results):
+            for (task_id, error_dict), task_obj, base_result in zip(sorted_data.items(), task_objects, base_results):
 
                 task_ids.append(task_id)
                 # update task
@@ -2391,7 +2392,8 @@ class SQLAlchemySocket:
                 base_result.manager_name = task_obj.manager
                 base_result.modified_on = dt.utcnow()
 
-                err = KVStore(data=msg)
+                # Compress error dicts here. Should be fast, since errors are small
+                err = KVStore.compress(error_dict, CompressionEnum.lzma, 1)
                 err_id = self.add_kvstore([err])["data"][0]
                 base_result.error = err_id
 
