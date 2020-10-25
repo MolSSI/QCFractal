@@ -280,8 +280,9 @@ class QueueManagerHandler(APIHandler):
 
             except Exception:
                 msg = "Internal FractalServer Error:\n" + traceback.format_exc()
-                logger.warning("update: ERROR\n{}".format(msg))
-                error_data.append((task_id, msg))
+                error = {"error_type": "internal_fractal_error", "error_message": msg}
+                logger.error("update: ERROR\n{}".format(msg))
+                error_data.append((task_id, error))
                 task_failures += 1
 
         if task_totals:
