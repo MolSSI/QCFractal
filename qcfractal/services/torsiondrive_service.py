@@ -143,11 +143,14 @@ class TorsionDriveService(BaseService):
                 ret = complete_tasks[task_id]
 
                 # Lookup molecules
-                mol_keys = self.storage_socket.get_molecules(id=[ret["initial_molecule"], ret["final_molecule"]])[
-                    "data"
-                ]
+                initial_id = ret["initial_molecule"]
+                final_id = ret["final_molecule"]
 
-                task_results[key].append((mol_keys[0].geometry, mol_keys[1].geometry, ret["energies"][-1]))
+                mol_ids = [initial_id, final_id]
+                mol_data = self.storage_socket.get_molecules(id=mol_ids)["data"]
+                mol_map = {x.id: x.geometry for x in mol_data}
+
+                task_results[key].append((mol_map[initial_id], mol_map[final_id], ret["energies"][-1]))
 
         # The torsiondrive package uses print, so capture that using
         # contextlib
