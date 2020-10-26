@@ -266,7 +266,6 @@ class OptimizationTasks(BaseTasks):
 
             results = parse_single_tasks(self.storage, traj_dict)
             for k, v in results.items():
-                v["task_id"] = output["task_id"]
                 results[k] = ResultRecord(**v)
 
             ret = self.storage.add_results(list(results.values()))
