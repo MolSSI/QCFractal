@@ -2171,9 +2171,6 @@ class SQLAlchemySocket:
                 )
 
                 new_items = query.all()
-
-                # Store in dict form for returning. We will add the updated fields later
-                found.extend([task.to_dict(exclude=update_fields.keys()) for task in new_items])
                 new_ids = [x.id for x in new_items]
 
                 # Update all the task records to reflect this manager claiming them
@@ -2183,18 +2180,21 @@ class SQLAlchemySocket:
                     .update(update_fields, synchronize_session=False)
                 )
 
+                # After commiting, the row locks are released
+                session.commit()
+
+                # How many more do we have to query
                 new_limit = limit - len(new_items)
 
                 # I would assume this is always true. If it isn't,
                 # that would be really bad, and lead to an infinite loop
                 assert new_limit >= 0
 
-                # After commiting, the row locks are released
-                session.commit()
+                # Store in dict form for returning. We will add the updated fields later
+                found.extend([task.to_dict(exclude=update_fields.keys()) for task in new_items])
 
             # avoid another trip to the DB to get the updated values, set them here
             found = [TaskRecord(**task, **update_fields) for task in found]
-            session.commit()
 
         if update_count != len(found):
             self.logger.warning("QUEUE: Number of found tasks does not match the number of updated tasks.")
