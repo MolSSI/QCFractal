@@ -81,9 +81,6 @@ class TaskRecord(ProtoModel):
     base_result: ObjectId = Field(
         ..., description="Reference to the output Result from this Task as it exists within the database."
     )
-    error: Optional[ComputeError] = Field(
-        None, description="The error thrown when trying to execute this task, if one was thrown at all."
-    )
 
     # Modified data
     modified_on: datetime.datetime = Field(None, description="The last time this task was updated in the Database.")
