@@ -221,12 +221,12 @@ class TaskQueueORM(Base):
     status = Column(Enum(TaskStatusEnum), default=TaskStatusEnum.waiting)
     priority = Column(Integer, default=int(PriorityEnum.NORMAL))
     manager = Column(String, ForeignKey("queue_manager.name", ondelete="SET NULL"), default=None)
-    error = Column(String)  # TODO: tobe removed - should be in results
 
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
     modified_on = Column(DateTime, default=datetime.datetime.utcnow)
 
     # TODO: for back-compatibility with mongo, tobe removed
+    # (requries modifying pydantic model)
     @hybrid_property
     def base_result(self):
         return self.base_result_id
