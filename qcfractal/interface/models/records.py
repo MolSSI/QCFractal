@@ -88,9 +88,6 @@ class RecordBase(ProtoModel, abc.ABC):
     )
 
     # Compute status
-    task_id: Optional[ObjectId] = Field(  # TODO: not used in SQL
-        None, description="Id of the compute task tracked by Fractal in its TaskTable."
-    )
     manager_name: Optional[str] = Field(None, description="Name of the Queue Manager which generated this record.")
     status: RecordStatusEnum = Field(RecordStatusEnum.incomplete, description=str(RecordStatusEnum.__doc__))
     modified_on: datetime.datetime = Field(None, description="Last time the data this record points to was modified.")

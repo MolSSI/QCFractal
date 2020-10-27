@@ -33,7 +33,6 @@ class BaseResultORM(Base):
 
     # for SQL
     result_type = Column(String)  # for inheritance
-    task_id = Column(String)  # TODO: not used, for back compatibility
 
     # Base identification
     id = Column(Integer, primary_key=True)
