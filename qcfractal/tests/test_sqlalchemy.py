@@ -176,8 +176,13 @@ def test_services(storage_socket, session):
 
     assert session.query(OptimizationProcedureORM).count() == 0
 
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    ret = storage_socket.add_molecules([water])
+    assert ret["meta"]["success"] is True
+    assert ret["meta"]["n_inserted"] == 1
+
     proc_data = {
-        "initial_molecule": None,
+        "initial_molecule": ret["data"][0],
         "keywords": None,
         "program": "p7",
         "qc_spec": {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"},
@@ -327,13 +332,13 @@ def test_torsiondrive_procedure(storage_socket, session):
     """
 
     assert session.query(TorsionDriveProcedureORM).count() == 0
-    # assert Keywords.objects().count() == 0
 
-    # molecules = MoleculeORM.objects(molecular_formula='H4O2')
-    # assert molecules.count() == 2
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    ret = storage_socket.add_molecules([water])
+    assert ret["meta"]["success"] is True
+    assert ret["meta"]["n_inserted"] == 1
 
     data1 = {
-        # "molecule": molecules[0],
         "keywords": None,
         "program": "p9",
         "qc_spec": {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"},
@@ -346,6 +351,7 @@ def test_torsiondrive_procedure(storage_socket, session):
 
     # Add optimization_history
 
+    data1["initial_molecule"] = ret["data"][0]
     opt_proc = OptimizationProcedureORM(**data1)
     opt_proc2 = OptimizationProcedureORM(**data1)
     session.add_all([opt_proc, opt_proc2])
@@ -361,7 +367,7 @@ def test_torsiondrive_procedure(storage_socket, session):
 
     # clean up
     session_delete_all(session, OptimizationProcedureORM)
-    session_delete_all(session, TorsionDriveProcedureORM)
+    # session_delete_all(session, TorsionDriveProcedureORM)
 
 
 def test_add_task_queue(storage_socket, session, molecules_H4O2):
