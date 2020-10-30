@@ -40,10 +40,9 @@ class BaseResultORM(Base):
     manager_name = Column(String, ForeignKey("queue_manager.name", ondelete="SET NULL"), nullable=True)
 
     hash_index = Column(String)  # TODO
-    procedure = Column(String(100))  # TODO: may remove
-    # program = Column(String(100))  # moved to subclasses
+    procedure = Column(String(100), nullable=False)  # TODO: may remove
     version = Column(Integer)
-    protocols = Column(JSONB)
+    protocols = Column(JSONB, nullable=False)
 
     # Extra fields
     extras = Column(MsgpackExt)
