@@ -78,7 +78,7 @@ def parse_args():
 
     # Allow some config settings to be altered via the command line
     fractal_args = start.add_argument_group("Server Settings")
-    for field in ["port", "logfile", "loglevel"]:
+    for field in ["port", "logfile", "loglevel", "cprofile"]:
         cli_name = "--" + field.replace("_", "-")
         fractal_args.add_argument(cli_name, **FractalServerSettings.help_info(field))
 
@@ -572,6 +572,16 @@ def main(args=None):
 
     config = FractalConfig(**config_args)
 
+    # If desired, enable profiling
+    if config.fractal.cprofile is not None:
+        print("!" * 80)
+        print(f"! Enabling profiling via cProfile. Outputting data file to {config.fractal.cprofile}")
+        print("!" * 80)
+        import cProfile
+
+        pr = cProfile.Profile()
+        pr.enable()
+
     # Merge files
     if command != "init":
         if not config.base_path.exists():
@@ -608,6 +618,14 @@ def main(args=None):
         server_backup(args, config)
     elif command == "restore":
         server_restore(args, config)
+
+    # Everything finished. If profiling is enabled, write out the
+    # data file
+    if config.fractal.cprofile is not None:
+        print(f"! Writing profiling data to {config.fractal.cprofile}")
+        print("! Read using the Stats class of the pstats package")
+        pr.disable()
+        pr.dump_stats(config.fractal.cprofile)
 
 
 if __name__ == "__main__":
