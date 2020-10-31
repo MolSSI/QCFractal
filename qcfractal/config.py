@@ -110,6 +110,9 @@ class FractalServerSettings(ConfigSettings):
     query_limit: int = Field(1000, description="The maximum number of records to return per query.")
     logfile: Optional[str] = Field("qcfractal_server.log", description="The logfile to write server logs.")
     loglevel: str = Field("info", description="Level of logging to enable (debug, info, warning, error, critical)")
+    cprofile: Optional[str] = Field(
+        None, description="Enable profiling via cProfile, and output cprofile data to this path"
+    )
     service_frequency: int = Field(60, description="The frequency to update the QCFractal services.")
     max_active_services: int = Field(20, description="The maximum number of concurrent active services.")
     heartbeat_frequency: int = Field(1800, description="The frequency (in seconds) to check the heartbeat of workers.")
