@@ -1315,7 +1315,7 @@ class Dataset(Collection):
             self.data.alias_keywords[program] = {}
 
         if alias in self.data.alias_keywords[program]:
-            raise KeyError("Alias '{}' already set for program {}.".format(alias, keyword.program))
+            raise KeyError("Alias '{}' already set for program {}.".format(alias, program))
 
         self._new_keywords[(program, alias)] = keyword
 
