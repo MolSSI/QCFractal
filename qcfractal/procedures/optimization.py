@@ -201,10 +201,6 @@ class OptimizationTasks(BaseTasks):
         new_tasks = []
         for rec, mol, kw in zip(records, molecules, qc_keywords):
             inp = self._build_schema_input(rec, mol, kw)
-            inp.input_specification.extras["_qcfractal_tags"] = {
-                "program": rec.qc_spec.program,
-                "keywords": rec.qc_spec.keywords,  # Just the id?
-            }
 
             # Build task object
             task = TaskRecord(
@@ -264,7 +260,7 @@ class OptimizationTasks(BaseTasks):
             for k, v in traj_dict.items():
                 self.retrieve_outputs(v)
 
-            results = parse_single_tasks(self.storage, traj_dict)
+            results = parse_single_tasks(self.storage, traj_dict, rec.qc_spec)
             for k, v in results.items():
                 results[k] = ResultRecord(**v)
 
