@@ -40,10 +40,9 @@ class BaseResultORM(Base):
     manager_name = Column(String, ForeignKey("queue_manager.name", ondelete="SET NULL"), nullable=True)
 
     hash_index = Column(String)  # TODO
-    procedure = Column(String(100))  # TODO: may remove
-    # program = Column(String(100))  # moved to subclasses
+    procedure = Column(String(100), nullable=False)  # TODO: may remove
     version = Column(Integer)
-    protocols = Column(JSONB)
+    protocols = Column(JSONB, nullable=False)
 
     # Extra fields
     extras = Column(MsgpackExt)
@@ -128,7 +127,7 @@ class ResultORM(BaseResultORM):
     driver = Column(String(100), Enum(DriverEnum), nullable=False)
     method = Column(String(100), nullable=False)  # example "uff"
     basis = Column(String(100))
-    molecule = Column(Integer, ForeignKey("molecule.id"))
+    molecule = Column(Integer, ForeignKey("molecule.id"), nullable=False)
     molecule_obj = relationship(MoleculeORM, lazy="select")
 
     # This is a special case where KeywordsORM are denormalized intentionally as they are part of the
@@ -213,7 +212,7 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
         super().__init__(**kwargs)
 
     schema_version = Column(Integer, default=1)
-    initial_molecule = Column(Integer, ForeignKey("molecule.id"))
+    initial_molecule = Column(Integer, ForeignKey("molecule.id"), nullable=False)
     initial_molecule_obj = relationship(MoleculeORM, lazy="select", foreign_keys=initial_molecule)
 
     # # Results
@@ -302,7 +301,7 @@ class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
         super().__init__(**kwargs)
 
     # Input data
-    initial_molecule = Column(Integer, ForeignKey("molecule.id"))
+    initial_molecule = Column(Integer, ForeignKey("molecule.id"), nullable=False)
     initial_molecule_obj = relationship(MoleculeORM, lazy="select", foreign_keys=initial_molecule)
 
     optimization_spec = Column(JSON)
