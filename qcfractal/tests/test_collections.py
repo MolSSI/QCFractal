@@ -1275,7 +1275,6 @@ def test_missing_collection(fractal_compute_server):
 
 
 @pytest.mark.slow
-@pytest.mark.xfail(reason="Flaky on Travis CI, see #427.")
 @testing.using_torsiondrive
 @testing.using_geometric
 @testing.using_rdkit
