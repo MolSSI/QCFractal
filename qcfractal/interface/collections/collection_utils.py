@@ -44,12 +44,12 @@ def register_collection(collection: "Collection") -> None:
 
 
 def collection_factory(data: Dict[str, Any], client: "FractalClient" = None) -> "Collection":
-    """Creates a new Collection class from a JSON blob.
+    """Creates a new Collection instance from a dict representation.
 
     Parameters
     ----------
     data : Dict[str, Any]
-        The JSON blob to create a new class from.
+        A dict to create a new Collection instance from.
     client : FractalClient, optional
         A FractalClient connected to a server
 
@@ -65,7 +65,7 @@ def collection_factory(data: Dict[str, Any], client: "FractalClient" = None) -> 
     if data["collection"].lower() not in __registered_collections:
         raise KeyError("Attempted to create Collection of unknown type '{}'.".format(data["collection"]))
 
-    return __registered_collections[data["collection"].lower()].from_json(data, client=client)
+    return __registered_collections[data["collection"].lower()].from_dict(data, client=client)
 
 
 def collections_name_map() -> Dict[str, str]:

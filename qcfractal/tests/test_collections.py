@@ -857,7 +857,7 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
     assert pytest.approx(0.0406367, 1.0e-5) == ds.statistics("MURE", "SCF/sto-3g")
     assert pytest.approx(0.002447793, 1.0e-5) == ds.statistics("MURE", "SCF/sto-3g", floor=10)
 
-    assert isinstance(ds.to_json(), dict)
+    assert isinstance(ds.to_dict(), dict)
     assert ds.list_records(keywords=None).shape[0] == 1
 
     ds.units = "eV"
