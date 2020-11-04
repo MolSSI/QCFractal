@@ -1275,7 +1275,6 @@ def test_missing_collection(fractal_compute_server):
 
 
 @pytest.mark.slow
-@pytest.mark.xfail(reason="Flaky on Travis CI, see #427.")
 @testing.using_torsiondrive
 @testing.using_geometric
 @testing.using_rdkit
@@ -1298,17 +1297,18 @@ def test_torsiondrive_dataset(fractal_compute_server):
 
     ncompute = ds.compute("spec1")
     assert ncompute == 2
-    assert ds.status("spec1")["Spec1"].sum() == 2  # Might have completed from previous run.
+    assert ds.status("Spec1")["Spec1"].sum() == 2
 
     ds.save()
 
     fractal_compute_server.await_services(max_iter=1)
 
     # Check status
+    ds.query("Spec1", force=True)
     status_basic = ds.status()
-    assert status_basic.loc("COMPLETE", "Spec1") == 1
+    assert status_basic.loc["RUNNING", "Spec1"] == 2
     status_spec = ds.status("Spec1")
-    assert status_basic.loc("COMPLETE", "Spec1") == 1
+    assert status_basic.loc["RUNNING", "Spec1"] == 2
 
     status_detail = ds.status("Spec1", detail=True)
     assert status_detail.loc["hooh2", "Complete Tasks"] == 1
