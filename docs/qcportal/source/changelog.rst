@@ -15,6 +15,19 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.15.0 / 2020-11-11
+-------------------
+
+Similar to the previous release, this this release focused on core QCFractal issues. The previous
+release should be compatible with newer QCFractal instances.
+
+Bug Fixes
++++++++++
+
+- (:pr:`626`) Fix printing of client version during version check failure
+- (:pr:`638`) Fix incorrect error in datasets
+
+
 0.14.0 / 2020-09-30
 -------------------
 
