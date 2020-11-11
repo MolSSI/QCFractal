@@ -15,6 +15,37 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.15.0 / 2020-11-11
+-------------------
+
+This release is focused on bugfixes, and laying some foundation for larger changes to come.
+
+New features
+++++++++++++
+
+- (:pr:`636`) Add ability to profile fractal instances
+- (:pr:`642`) Add (experimental!) qcexport code to devtools
+
+Enhancements
+++++++++++++
+
+- (:pr:`629`) (Standard) Output of torsion drive service is now captured and stored in the procedure record
+- (:pr:`631`) Compress errors on server
+
+Bug Fixes
++++++++++
+
+- (:pr:`624`) Lock task queue rows to prevent multiple managers requesting the same task
+- (:pr:`626`) Fix printing of client version during version check failure
+- (:pr:`632`) Fix ordering of initial/final molecule in torsion drives
+- (:pr:`637`) Fix inability to shutdown ProcessPoolExecutor workers
+- (:pr:`638`) Fix incorrect error in datasets
+- (:pr:`641`) Fix exception in web handler that was polluting log files
+
+Miscellaneous
++++++++++++++
+- (:pr:`633`, :pr:`634`, :pr:`635`, :pr:`639`) Miscellaneous cleanup and removal of unused database columns
+
 
 0.14.0 / 2020-09-30
 -------------------
