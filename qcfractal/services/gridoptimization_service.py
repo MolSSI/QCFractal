@@ -49,8 +49,11 @@ class GridOptimizationService(BaseService):
     def initialize_from_api(cls, storage_socket, logger, service_input, tag=None, priority=None):
 
         # Build the record
+        # TODO: This removes the task_id which may exist on old records, but does not exist
+        # in newer GridOptimizationRecords.
+        # If a proper migration is ever done,
         output = GridOptimizationRecord(
-            **service_input.dict(exclude={"initial_molecule"}),
+            **service_input.dict(exclude={"initial_molecule", "task_id"}),
             initial_molecule=service_input.initial_molecule.id,
             starting_molecule=service_input.initial_molecule.id,
             provenance={
