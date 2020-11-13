@@ -10,6 +10,7 @@ import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional, Union
+from qcelemental.models import ComputeError
 
 import tornado.ioloop
 import tornado.log
@@ -531,7 +532,7 @@ class FractalServer:
                 error_message = "FractalServer Service Build and Iterate Error:\n{}".format(traceback.format_exc())
                 self.logger.error(error_message)
                 service.status = "ERROR"
-                service.error = {"error_type": "iteration_error", "error_message": error_message}
+                service.error = ComputeError(error_type="iteration_error", error_message=error_message)
                 finished = False
 
             self.storage.update_services([service])
@@ -548,6 +549,8 @@ class FractalServer:
 
         if len(completed_services):
             self.logger.info(f"Completed {len(completed_services)} services.")
+
+        self.logger.debug(f"Done updating services.")
 
         # Add new procedures and services
         self.storage.services_completed(completed_services)

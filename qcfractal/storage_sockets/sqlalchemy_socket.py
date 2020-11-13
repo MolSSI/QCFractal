@@ -1958,7 +1958,7 @@ class SQLAlchemySocket:
                 stdout_id = self.add_kvstore([stdout])["data"][0]
                 procedure.__dict__["stdout"] = stdout_id
             if service.error:
-                error = KVStore(data=service.error)
+                error = KVStore(data=service.error.dict())
                 error_id = self.add_kvstore([error])["data"][0]
                 procedure.__dict__["error"] = error_id
 
