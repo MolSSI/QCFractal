@@ -550,6 +550,8 @@ class FractalServer:
         if len(completed_services):
             self.logger.info(f"Completed {len(completed_services)} services.")
 
+        self.logger.debug(f"Done updating services.")
+
         # Add new procedures and services
         self.storage.services_completed(completed_services)
 
