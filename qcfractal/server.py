@@ -517,6 +517,12 @@ class FractalServer:
         completed_services = []
         for data in current_services:
 
+            # TODO HACK: remove task_id from 'output'. This is contained in services
+            # created in previous versions. Doing this now, but should do a db migration
+            # at some point
+            if "output" in data:
+                data["output"].pop("task_id", None)
+
             # Attempt to iteration and get message
             try:
                 service = construct_service(self.storage, self.logger, data)
