@@ -25,6 +25,42 @@ def test_storage_repr(storage_socket):
     assert isinstance(repr(storage_socket), str)
 
 
+def test_kvstore(storage_socket):
+
+    test_data = "This is some output data" * 100
+    test_kv = ptl.models.KVStore.compress(test_data)
+
+    # Add 5 times. There is no unique constraint on the data itself
+    ret1 = storage_socket.add_kvstore([test_kv] * 5)["data"]
+    assert len(ret1) == 5
+
+    added_ids = list(ret1)
+    test_ids = added_ids[1:4]
+    res = storage_socket.get_kvstore(test_ids)["data"]
+    assert set(test_ids) == set(res)
+
+    # Now remove some kvstore objects
+    rm_ids = [added_ids[0], added_ids[4]]
+    n_del = storage_socket.delete_kvstore(rm_ids)
+    assert n_del == 2
+
+    # We didn't delete the others I hope
+    res = storage_socket.get_kvstore(test_ids)["data"]
+    assert set(test_ids) == set(res)
+    assert "This is some output data" in res[test_ids[1]].get_string()
+    assert "This is some output data" in res[test_ids[2]].get_string()
+
+    # DB actually only has the remaining data
+    res = storage_socket.get_kvstore(added_ids)["data"]
+    res = set(res)
+    assert set(test_ids) == res
+    assert set(rm_ids).isdisjoint(res)
+
+    # Cleanup adds
+    ret = storage_socket.delete_kvstore(test_ids)
+    assert ret == 3
+
+
 def test_molecules_add(storage_socket):
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")

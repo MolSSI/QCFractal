@@ -8,6 +8,8 @@ try:
     from sqlalchemy.orm import sessionmaker, with_polymorphic
     from sqlalchemy.sql.expression import desc
     from sqlalchemy.sql.expression import case as expression_case
+    from sqlalchemy.dialects.postgresql import insert as pg_insert
+    from sqlalchemy import delete as sql_delete
 except ImportError:
     raise ImportError(
         "SQLAlchemy_socket requires sqlalchemy, please install this python " "module or try a different db_socket."
@@ -521,6 +523,25 @@ class SQLAlchemySocket:
         meta["success"] = True
 
         return {"data": output_ids, "meta": meta}
+
+    def delete_kvstore(self, ids: List[ObjectId]) -> int:
+        """
+        Removes kv_store data on its id.
+
+        Parameters
+        ----------
+        ids : List[ObjectID]
+            ids of the kvstore objects
+
+        Returns
+        -------
+        int
+           number of deleted kvstore objects
+        """
+
+        with self.session_scope() as session:
+            count = session.query(KVStoreORM).filter(KVStoreORM.id.in_(ids)).delete(synchronize_session=False)
+        return count
 
     def get_kvstore(self, id: List[ObjectId] = None, limit: int = None, skip: int = 0):
         """
