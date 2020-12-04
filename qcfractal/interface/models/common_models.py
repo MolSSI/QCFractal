@@ -140,12 +140,15 @@ class KVStore(ProtoModel):
         input_data: Union[Dict[str, str], str],
         compression_type: CompressionEnum = CompressionEnum.none,
         compression_level: Optional[int] = None,
+        id=None,
     ):
         """Compresses a string given a compression scheme and level
 
         Returns an object of type `cls`
 
         If compression_level is None, but a compression_type is specified, an appropriate default level is chosen
+
+        If id is specified, the internal id is set to that value
         """
 
         if isinstance(input_data, dict):
@@ -182,7 +185,7 @@ class KVStore(ProtoModel):
             # Shouldn't ever happen, unless we change CompressionEnum but not the rest of this function
             raise TypeError("Unknown compression type??")
 
-        return cls(data=data, compression=compression_type, compression_level=compression_level)
+        return cls(data=data, compression=compression_type, compression_level=compression_level, id=id)
 
     def get_string(self):
         """
