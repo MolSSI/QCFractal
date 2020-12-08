@@ -19,7 +19,7 @@ import secrets
 from collections.abc import Iterable
 from contextlib import contextmanager
 from datetime import datetime as dt
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import bcrypt
 
@@ -42,6 +42,7 @@ from qcfractal.interface.models.records import RecordStatusEnum
 
 from qcfractal.storage_sockets.db_queries import QUERY_CLASSES
 from qcfractal.storage_sockets.models import (
+    Base,
     AccessLogORM,
     BaseResultORM,
     CollectionORM,
@@ -65,22 +66,12 @@ from qcfractal.storage_sockets.models import (
 )
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
-from .models import Base
-
-if TYPE_CHECKING:
-    from ..services.service_util import BaseService
-
 # for version checking
 import qcelemental, qcfractal, qcengine
 
 _null_keys = {"basis", "keywords"}
-_id_keys = {"id", "molecule", "keywords", "procedure_id"}
 _lower_func = lambda x: x.lower()
 _prepare_keys = {"program": _lower_func, "basis": prepare_basis, "method": _lower_func, "procedure": _lower_func}
-
-
-def dict_from_tuple(keys, values):
-    return [dict(zip(keys, row)) for row in values]
 
 
 def format_query(ORMClass, **query: Dict[str, Union[str, List[str]]]) -> Dict[str, Union[str, List[str]]]:
