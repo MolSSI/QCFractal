@@ -13,6 +13,7 @@ import sqlalchemy
 
 import qcfractal.interface as ptl
 from qcfractal.interface.models.task_models import TaskStatusEnum
+from qcfractal.interface.models import CompressionEnum
 from qcfractal.services.services import TorsionDriveService
 from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
 
@@ -25,40 +26,100 @@ def test_storage_repr(storage_socket):
     assert isinstance(repr(storage_socket), str)
 
 
-def test_kvstore(storage_socket):
+def test_storage_kvstore(storage_socket):
+
+    test_data = "This is some output data" * 100
+    test_kv = ptl.models.KVStore.compress(test_data)
+
+    # Add 3 times. There is no unique constraint on the data itself
+    meta, ret1 = storage_socket.add_kvstore([test_kv] * 3)
+    assert meta.success
+    assert len(ret1) == 3
+    assert meta.n_inserted == 3
+    assert meta.inserted_idx == [0, 1, 2]
+
+    # Add three more times, via upsert
+    meta, ret2 = storage_socket.upsert_kvstore([test_kv] * 3)
+    assert meta.success
+    assert len(ret1) == 3
+    assert meta.n_inserted == 3
+    assert meta.inserted_idx == [0, 1, 2]
+
+    added_ids = [x.id for x in ret1 + ret2]
+
+    # Take a subset of the ids for testing
+    test_ids = added_ids[1:4]
+
+    # Try getting them from the KVStore
+    # TODO - once get_kvstore is rewritten, it should always return in order
+    res = storage_socket.get_kvstore(test_ids)["data"]
+    assert set(test_ids) == set(int(x) for x in res.keys())
+
+    # Now remove some kvstore objects (and also try to delete a non-existant object, and also include a duplicate)
+    # Also try to delete a non-existent object, and also have duplicate objects to be deleted
+    rm_ids = [added_ids[0], 12349876, added_ids[4], added_ids[0], added_ids[5]]
+    del_meta = storage_socket.delete_kvstore(rm_ids)
+    assert del_meta.success
+    assert del_meta.n_deleted == 4
+    assert del_meta.deleted_idx == [0, 2, 3, 4]  # indices in the rm_ids list
+    assert del_meta.n_missing == 1
+    assert del_meta.missing_idx == [1]
+
+    # We didn't delete the others I hope
+    res = storage_socket.get_kvstore(added_ids)["data"]
+    assert set(test_ids) == set(int(x) for x in res.keys())
+    assert "This is some output data" in res[str(test_ids[1])].get_string()
+    assert "This is some output data" in res[str(test_ids[2])].get_string()
+
+    # Cleanup adds
+    del_meta = storage_socket.delete_kvstore(test_ids)
+    assert del_meta.success
+    assert del_meta.n_deleted == 3
+    assert del_meta.deleted_idx == [0, 1, 2]
+
+
+def test_storage_kvstore_update(storage_socket):
 
     test_data = "This is some output data" * 100
     test_kv = ptl.models.KVStore.compress(test_data)
 
     # Add 5 times. There is no unique constraint on the data itself
-    ret1 = storage_socket.add_kvstore([test_kv] * 5)["data"]
-    assert len(ret1) == 5
+    meta, ret1 = storage_socket.upsert_kvstore([test_kv] * 5)
+    assert meta.success
+    assert meta.n_inserted == 5
 
-    added_ids = list(ret1)
-    test_ids = added_ids[1:4]
-    res = storage_socket.get_kvstore(test_ids)["data"]
-    assert set(test_ids) == set(res)
+    added_ids = [x.id for x in ret1]
 
-    # Now remove some kvstore objects
-    rm_ids = [added_ids[0], added_ids[4]]
-    n_del = storage_socket.delete_kvstore(rm_ids)
-    assert n_del == 2
+    # Test modifying existing data
+    # If we set id to something not in the db, then it should be marked as an error
+    test_mod_ids = [added_ids[1], 99999999]
+    new_test_data = "New output data" * 50
 
-    # We didn't delete the others I hope
-    res = storage_socket.get_kvstore(test_ids)["data"]
-    assert set(test_ids) == set(res)
-    assert "This is some output data" in res[test_ids[1]].get_string()
-    assert "This is some output data" in res[test_ids[2]].get_string()
+    # Also change compression type/level to make sure that is updated as well
+    test_kv1 = ptl.models.KVStore.compress(new_test_data, CompressionEnum.bzip2, 4, id=test_mod_ids[0])
+    test_kv2 = ptl.models.KVStore.compress(new_test_data, CompressionEnum.gzip, 2, id=test_mod_ids[1])
+    assert test_kv1.id == test_mod_ids[0]
+    assert test_kv2.id == test_mod_ids[1]
 
-    # DB actually only has the remaining data
-    res = storage_socket.get_kvstore(added_ids)["data"]
-    res = set(res)
-    assert set(test_ids) == res
-    assert set(rm_ids).isdisjoint(res)
+    # Now upsert the new data. This should modify one, with the other being an error
+    meta, ret2 = storage_socket.upsert_kvstore([test_kv1, test_kv2])
+    assert meta.success is False
+    assert len(ret2) == 2
+    assert ret2[1] is None  # id set, but does not exist
+    assert meta.n_inserted == 0
+    assert meta.n_updated == 1
+    assert meta.updated_idx == [0]
+    assert meta.error_idx == [1]
+    assert ret2[0].id == test_mod_ids[0]
+    assert ret2[0].compression == CompressionEnum.bzip2
+    assert ret2[0].compression_level == 4
+    assert ret2[0].get_string() == new_test_data
 
-    # Cleanup adds
-    ret = storage_socket.delete_kvstore(test_ids)
-    assert ret == 3
+    added_ids += [x.id for x in ret2 if x is not None]
+    added_ids = list(set(added_ids))
+    del_meta = storage_socket.delete_kvstore(added_ids)
+    assert del_meta.success
+    assert del_meta.n_deleted == 5
 
 
 def test_molecules_add(storage_socket):

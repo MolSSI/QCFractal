@@ -227,7 +227,6 @@ class SingleResultTasks(BaseTasks):
 
             # Some consistency checks:
             # Is this marked as incomplete?
-            # TODO: Check manager, although that information isn't sent to us right now
             if existing_result["status"] != "INCOMPLETE":
                 self.logger.warning(f"Skipping returned results for base_id={base_id}, as it is not marked incomplete")
                 continue

@@ -66,7 +66,18 @@ from qcfractal.storage_sockets.models import (
     VersionsORM,
     WavefunctionStoreORM,
 )
-from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
+
+from qcfractal.storage_sockets.storage_utils import (
+    add_metadata_template,
+    get_metadata_template,
+    find_indices,
+    to_pydantic_models,
+)
+from qcfractal.storage_sockets.sqlalchemy_common import _upsert_general
+from qcfractal.storage_sockets.storage_meta import UpsertMetadata, InsertMetadata, DeleteMetadata
+
+# For type checking
+from typing import Any, Dict, List, Optional, Tuple, Union, Iterable
 
 # for version checking
 import qcelemental, qcfractal, qcengine
@@ -491,57 +502,106 @@ class SQLAlchemySocket:
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logs (KV store) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def add_kvstore(self, outputs: List[KVStore]):
+    def upsert_kvstore(self, data: List[KVStore]) -> Tuple[UpsertMetadata, List[KVStore]]:
         """
-        Adds to the key/value store table.
+        Updates/Inserts KVStore objects
+
+        If the id given in the KVStore object exists, the existing KVStore record
+        will be updated. Otherwise, a new record will be added.
+
+        If the id is given but not found, that record will not be added and an error will be returned
+        for that record.
 
         Parameters
         ----------
-        outputs : List[Any]
-            A list of KVStore objects add.
+        data: List[KVStore]
+            KVStore information to upsert
 
         Returns
         -------
-        Dict[str, Any]
-            Dictionary with keys data and meta, data is the ids of added blobs
+        Tuple[UpsertMetadata, List[Union[KVStore, None]]
+            Metadata showing what was inserted/updated, and a list of ORM objects. These
+            ORM objects reflect updated or automatically-generated database fields (for example, ids).
+            If an error occurs, the corresponding entry in the list will be None.
         """
 
-        meta = add_metadata_template()
-        output_ids = []
-        with self.session_scope() as session:
-            for output in outputs:
-                if output is None:
-                    output_ids.append(None)
-                    continue
+        # Convert pydantic models to ORM
+        kvs = [KVStoreORM(**x.dict()) for x in data]
 
-                entry = KVStoreORM(**output.dict())
+        # Update these columns on existing records
+        update_cols = ["compression", "compression_level", "data", "value"]
+
+        with self.session_scope() as session:
+            meta, kvs = _upsert_general(session, kvs, ["id"], update_cols)
+
+            # Convert back to pydantic models
+            ret = to_pydantic_models(kvs)
+
+        return meta, ret
+
+    def add_kvstore(self, data: List[KVStore]) -> Tuple[InsertMetadata, List[KVStore]]:
+        """
+        Inserts KVStore objects
+
+        Duplicates are not handled, and records are always inserted. The id field in the KVStore
+        object is ignored.
+
+        Parameters
+        ----------
+        data: List[KVStore]
+            KVStore information to insert
+
+        Returns
+        -------
+        Tuple[InsertMetadata, List[Union[KVStore, None]]
+            Metadata showing what was inserted and a list of ORM objects. These
+            ORM objects reflect updated or automatically-generated database fields (for example, ids).
+            If an error occurs, the corresponding entry in the list will be None.
+        """
+
+        # Convert pydantic models to ORM, ignoring existing ids
+        kvs = [KVStoreORM(**x.dict(exclude={'id'})) for x in data]
+        inserted_idx = []
+
+        with self.session_scope() as session:
+            for idx, entry in enumerate(kvs):
                 session.add(entry)
-                session.commit()
-                output_ids.append(str(entry.id))
-                meta["n_inserted"] += 1
+                inserted_idx.append(idx)
+            session.commit()
 
-        meta["success"] = True
+            # Convert back to pydantic models
+            ret = to_pydantic_models(kvs)
 
-        return {"data": output_ids, "meta": meta}
+        meta = InsertMetadata(inserted_idx=inserted_idx)
+        return meta, ret
 
-    def delete_kvstore(self, ids: List[ObjectId]) -> int:
+    def delete_kvstore(self, ids: List[int]) -> DeleteMetadata:
         """
-        Removes kv_store data on its id.
+        Removes kvstore data from the database
 
         Parameters
         ----------
-        ids : List[ObjectID]
-            ids of the kvstore objects
+        ids : List[int]
+            ids of the kvstore objects to delete
 
         Returns
         -------
-        int
-           number of deleted kvstore objects
+        DeleteMetadata
+            Information about what was deleted and what was missing
         """
 
+        del_ids = set(int(x) for x in ids)
+        stmt = sql_delete(KVStoreORM).where(KVStoreORM.id.in_(del_ids)).returning(KVStoreORM.id)
         with self.session_scope() as session:
-            count = session.query(KVStoreORM).filter(KVStoreORM.id.in_(ids)).delete(synchronize_session=False)
-        return count
+            res = session.execute(stmt).fetchall()
+            res = [x[0] for x in res]  # Convert rows of tuples (of one element) to just a plain list
+
+        # These are the ids that were deleted. Convert to indices
+        deleted = find_indices(res, ids)
+
+        original_idx = set(range(len(ids)))  # original indices of the input ids {0, 1, ..., len(ids)-1}
+        missing_idx = sorted(set(original_idx) - set(deleted))
+        return DeleteMetadata(deleted_idx=deleted, missing_idx=missing_idx)
 
     def get_kvstore(self, id: List[ObjectId] = None, limit: int = None, skip: int = 0):
         """
@@ -1967,12 +2027,12 @@ class SQLAlchemySocket:
             # Copy the stdout/error from the service itself to its procedure
             if service.stdout:
                 stdout = KVStore(data=service.stdout)
-                stdout_id = self.add_kvstore([stdout])["data"][0]
-                procedure.__dict__["stdout"] = stdout_id
+                _, stdout_add = self.add_kvstore([stdout])
+                procedure.__dict__["stdout"] = stdout_add[0].id
             if service.error:
                 error = KVStore(data=service.error.dict())
-                error_id = self.add_kvstore([error])["data"][0]
-                procedure.__dict__["error"] = error_id
+                _, error_add = self.add_kvstore([error])
+                procedure.__dict__["error"] = error_add[0].id
 
             self.update_procedures([procedure])
 
@@ -2428,8 +2488,8 @@ class SQLAlchemySocket:
 
                 # Compress error dicts here. Should be fast, since errors are small
                 err = KVStore.compress(error_dict, CompressionEnum.lzma, 1)
-                err_id = self.add_kvstore([err])["data"][0]
-                base_result.error = err_id
+                _, err_kv = self.add_kvstore([err])
+                base_result.error = err_kv[0].id
 
             session.commit()
 

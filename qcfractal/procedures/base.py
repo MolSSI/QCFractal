@@ -73,12 +73,16 @@ class BaseTasks(abc.ABC):
             self.logger.warning(f"Found uncompressed error for result id {rdata['id']}")
             error = KVStore(data=rdata["error"])
 
-        # Now add to the database and set the ids in the diction
-        outputs = [stdout, stderr, error]
-        stdout_id, stderr_id, error_id = self.storage.add_kvstore(outputs)["data"]
-        rdata["stdout"] = stdout_id
-        rdata["stderr"] = stderr_id
-        rdata["error"] = error_id
+        # Now add to the database and set the ids in the dictionary
+        if stdout is not None:
+            _, stdout_add = self.storage.add_kvstore([stdout])
+            rdata["stdout"] = stdout_add[0].id
+        if stderr is not None:
+            _, stderr_add = self.storage.add_kvstore([stderr])
+            rdata["stderr"] = stderr_add[0].id
+        if error is not None:
+            _, error_add = self.storage.add_kvstore([error])
+            rdata["error"] = error_add[0].id
 
     @abc.abstractmethod
     def verify_input(self, data):
