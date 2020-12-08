@@ -1,5 +1,5 @@
 from qcelemental.util import msgpackext_dumps, msgpackext_loads
-from sqlalchemy import and_, inspect
+from sqlalchemy import and_, inspect, Integer
 from sqlalchemy.dialects.postgresql import BYTEA
 from sqlalchemy.ext.associationproxy import ASSOCIATION_PROXY
 from sqlalchemy.ext.declarative import as_declarative
@@ -74,6 +74,36 @@ class Base:
                 id_fields.append(key)
 
         return id_fields
+
+    @classmethod
+    def get_autoincrement_pkey(cls):
+        """
+        Returns the name of the primary key column with an autoincrement/serial id. If there
+        isn't one, None is returned
+        """
+
+        if hasattr(cls, "__autoincrement_pkey"):
+            return cls.__autoincrement_pkey
+
+        pk_cols = inspect(cls).primary_key
+
+        # Composite primary key? Don't think we use those
+        assert len(pk_cols) <= 1
+
+        if len(pk_cols) == 0:
+            cls.__autoincrement_pkey = None
+
+        pk_col = pk_cols[0]
+
+        # To be autoincrement/serial, the column must be an integer type (or derived from that),
+        # and the autoincrement must be set to 'auto' (default) or explicitly set to True
+        if issubclass(type(pk_col.type), Integer) and pk_col.autoincrement in ["auto", True]:
+            cls.__autoincrement_pkey = pk_col.name
+        else:
+            # Found a primary key, but is not autoincrement and integer
+            cls.__autoincrement_pkey = None
+
+        return cls.__autoincrement_pkey
 
     @classmethod
     def _get_col_types(cls):
