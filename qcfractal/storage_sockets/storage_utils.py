@@ -3,6 +3,7 @@ Contains a number of utility functions for storage sockets.
 """
 
 import json
+from typing import Union, List, Sequence
 
 # Constants
 _get_metadata = json.dumps({"errors": [], "n_found": 0, "success": False, "missing": [], "error_description": False})
@@ -31,3 +32,7 @@ def add_metadata_template():
     Returns a copy of the metadata for database save/updates.
     """
     return json.loads(_add_metadata)
+
+
+def to_pydantic_models(orms: Sequence[Union["Base", None]]) -> List[Union["ProtoModel", None]]:
+    return [x.to_pydantic_model() if x is not None else None for x in orms]

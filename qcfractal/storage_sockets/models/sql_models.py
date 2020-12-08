@@ -28,6 +28,7 @@ from sqlalchemy.sql import text
 
 from qcfractal.interface.models.task_models import ManagerStatusEnum, PriorityEnum, TaskStatusEnum
 from qcfractal.interface.models.common_models import CompressionEnum
+from qcfractal.interface.models import KVStore
 from qcfractal.storage_sockets.models.sql_base import Base, MsgpackExt
 
 
@@ -104,6 +105,28 @@ class KVStoreORM(Base):
     compression_level = Column(Integer, nullable=True)
     value = Column(JSON, nullable=True)
     data = Column(LargeBinary, nullable=True)
+
+    def to_pydantic_model(self):
+        """
+        Converts KVStoreORM to KVStore, handling some edge cases
+        """
+
+        d = self.to_dict()
+        val = d.pop("value")
+
+        # If "data" isn't populated, then this is the old-style of storage
+        # where "value" is used, and stores a string or dict/JSON
+        # If that is so, we move that to "data" in the pydantic model
+        if d["data"] is None:
+            # Set the data field to be the string or dictionary
+            d["data"] = val
+
+            # Remove these and let the model handle the defaults
+            d.pop("compression")
+            d.pop("compression_level")
+
+        # The KVStore constructor can handle conversion of strings and dictionaries
+        return KVStore(**d)
 
 
 class MoleculeORM(Base):
