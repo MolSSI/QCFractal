@@ -28,7 +28,7 @@ from sqlalchemy.sql import text
 
 from qcfractal.interface.models.task_models import ManagerStatusEnum, PriorityEnum, TaskStatusEnum
 from qcfractal.interface.models.common_models import CompressionEnum
-from qcfractal.interface.models import KVStore
+from qcfractal.interface.models import KVStore, KeywordSet
 from qcfractal.storage_sockets.models.sql_base import Base, MsgpackExt
 
 
@@ -218,6 +218,13 @@ class KeywordsORM(Base):
 
     __table_args__ = (Index("ix_keywords_hash_index", "hash_index", unique=True),)
     # meta = {'indexes': [{'fields': ('hash_index', ), 'unique': True}]}
+
+    def to_pydantic_model(self):
+        """
+        Converts KeywordsORM to KeywordSet
+        """
+
+        return KeywordSet(**self.to_dict())
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

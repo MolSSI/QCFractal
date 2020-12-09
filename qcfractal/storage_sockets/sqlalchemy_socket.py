@@ -73,7 +73,7 @@ from qcfractal.storage_sockets.storage_utils import (
     find_indices,
     to_pydantic_models,
 )
-from qcfractal.storage_sockets.sqlalchemy_common import _upsert_general
+from qcfractal.storage_sockets.sqlalchemy_common import _upsert_general, _insert_general
 from qcfractal.storage_sockets.storage_meta import UpsertMetadata, InsertMetadata, DeleteMetadata
 
 # For type checking
@@ -560,7 +560,7 @@ class SQLAlchemySocket:
         """
 
         # Convert pydantic models to ORM, ignoring existing ids
-        kvs = [KVStoreORM(**x.dict(exclude={'id'})) for x in data]
+        kvs = [KVStoreORM(**x.dict(exclude={"id"})) for x in data]
         inserted_idx = []
 
         with self.session_scope() as session:
@@ -868,7 +868,8 @@ class SQLAlchemySocket:
     # ~~~~~~~~~~~~~~~~~~~~~~~ Keywords ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def add_keywords(self, keyword_sets: List[KeywordSet]):
-        """Add one KeywordSet uniquly identified by 'program' and the 'name'.
+        """Adds keywords entries to the database
+
 
         Parameters
         ----------
@@ -888,30 +889,26 @@ class SQLAlchemySocket:
 
         """
 
-        meta = add_metadata_template()
+        # Convert pydantic models to ORM, ignoring existing ids
+        kws = [KeywordsORM(**x.dict(exclude={"id"})) for x in keyword_sets]
 
-        keywords = []
+        # Search the keywords table for the corresponding value of the hashed keyword data
+        search_cols = ["hash_index"]
         with self.session_scope() as session:
-            for kw in keyword_sets:
+            meta, kws = _insert_general(session, kws, search_cols)
 
-                kw_dict = kw.dict(exclude={"id"})
+            # Convert back to pydantic models
+            ret = to_pydantic_models(kws)
 
-                # search by index keywords not by all keys, much faster
-                found = session.query(KeywordsORM).filter_by(hash_index=kw_dict["hash_index"]).first()
-                if not found:
-                    doc = KeywordsORM(**kw_dict)
-                    session.add(doc)
-                    session.commit()
-                    keywords.append(str(doc.id))
-                    meta["n_inserted"] += 1
-                else:
-                    meta["duplicates"].append(str(found.id))  # TODO
-                    keywords.append(str(found.id))
-                meta["success"] = True
+        # TODO fix all calls to add_keywords to use the new format
+        meta2 = add_metadata_template()
+        meta2["n_inserted"] = meta.n_inserted
+        meta2["errors"] = meta.errors
+        meta2["success"] = meta.success
+        meta2["duplicates"] = [ret[idx].id for idx in meta.existing_idx]
+        kws = [x.id for x in ret]
 
-        ret = {"data": keywords, "meta": meta}
-
-        return ret
+        return {"data": kws, "meta": meta2}
 
     def get_keywords(
         self,
