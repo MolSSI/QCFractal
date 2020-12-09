@@ -215,6 +215,12 @@ class SingleResultTasks(BaseTasks):
         completed_tasks = []
         updates = []
 
+        # kvstore objects to be removed
+        # We always add, and then delete old, in order to make this more atomic
+        # ie, if we update the existing kvstore, then something goes wrong, the record
+        # will have updated outputs/errors, but everything else will be in an inconsistent state
+        old_kvstore = []
+
         for output in result_outputs:
             # Find the existing result information in the database
             base_id = output["base_result"]
@@ -233,9 +239,13 @@ class SingleResultTasks(BaseTasks):
 
             rdata = output["result"]
 
-            # Adds the results to the database and sets the appropriate fields
-            # inside the dictionary
+            # Retrieve stdout,stderr,error from the record (may exist in extras due to compression)
+            # and add them to the database
+            # Also updates the fields in 'rdata' to reflect the new ids
             self.retrieve_outputs(rdata)
+
+            # Mark the old outputs/errors as ready for deletion
+            old_kvstore.extend([existing_result["stdout"], existing_result["stderr"], existing_result["error"]])
 
             # Store Wavefunction data
             if rdata.get("wavefunction", False):
@@ -290,6 +300,10 @@ class SingleResultTasks(BaseTasks):
 
         self.storage.update_results(updates)
         self.storage.queue_mark_complete(completed_tasks)
+
+        # Delete the old kvstore. Force these to be ints, and remove any Nones
+        old_kvstore = [int(x) for x in old_kvstore if x is not None]
+        self.storage.delete_kvstore(old_kvstore)
 
         return completed_tasks
 

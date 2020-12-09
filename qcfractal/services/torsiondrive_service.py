@@ -60,8 +60,7 @@ class TorsionDriveService(BaseService):
 
         # Build the record
         # TODO: This removes the task_id which may exist on old records, but does not exist
-        # in newer TorsionDriveRecords.
-        # If a proper migration is ever done,
+        # in newer TorsionDriveRecords if a proper migration is ever done,
         output = TorsionDriveRecord(
             **service_input.dict(exclude={"initial_molecule", "task_id"}),
             initial_molecule=[x.id for x in service_input.initial_molecule],

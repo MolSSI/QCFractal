@@ -8,7 +8,7 @@ from typing import Optional, Dict, Any
 
 from qcelemental.models import ResultInput
 
-from ..interface.models import Molecule, QCSpecification
+from ..interface.models import QCSpecification
 
 
 def unpack_single_task_spec(storage, meta, molecules):
@@ -79,54 +79,6 @@ def unpack_single_task_spec(storage, meta, molecules):
         tasks.append(ResultInput(**data))
 
     return tasks, []
-
-
-def parse_single_tasks(storage, results, qc_spec):
-    """Summary
-
-    Parameters
-    ----------
-    storage : DBSocket
-        A live connection to the current database.
-    results : dict
-        A (key, result) dictionary of the single return results.
-
-    Returns
-    -------
-
-    Examples
-    --------
-
-    """
-
-    for k, v in results.items():
-        # Flatten data back out
-        v["method"] = v["model"]["method"]
-        v["basis"] = v["model"]["basis"]
-        del v["model"]
-
-        # Molecule should be by ID
-        v["molecule"] = storage.add_molecules([Molecule(**v["molecule"])])["data"][0]
-
-        v["keywords"] = qc_spec.keywords
-        v["program"] = qc_spec.program
-
-        # Old tags that may still exist if the task was created with previous versions.
-        # It is harmless if they do, but may as well do a consistency check
-        if "_qcfractal_tags" in v["extras"]:
-            assert int(v["extras"]["_qcfractal_tags"]["keywords"]) == int(qc_spec.keywords)
-            assert v["extras"]["_qcfractal_tags"]["program"] == qc_spec.program
-            del v["extras"]["_qcfractal_tags"]
-
-        del v["schema_name"]
-        del v["schema_version"]
-
-        if v.pop("success"):
-            v["status"] = "COMPLETE"
-        else:
-            v["status"] = "ERROR"
-
-    return results
 
 
 def form_qcinputspec_schema(qc_spec: QCSpecification, keywords: Optional["KeywordSet"] = None) -> Dict[str, Any]:

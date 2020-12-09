@@ -10,7 +10,7 @@ import qcengine as qcng
 from .base import BaseTasks
 from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord, KeywordSet
 from ..interface.models.task_models import PriorityEnum
-from .procedures_util import parse_single_tasks, form_qcinputspec_schema
+from .procedures_util import form_qcinputspec_schema
 
 
 class OptimizationTasks(BaseTasks):
@@ -232,20 +232,32 @@ class OptimizationTasks(BaseTasks):
 
         completed_tasks = []
         updates = []
+
+        # kvstore objects to be removed
+        # We always add, and then delete old, in order to make this more atomic
+        # ie, if we update the existing kvstore, then something goes wrong, the record
+        # will have updated outputs/errors, but everything else will be in an inconsistent state
+        old_kvstore = []
+
         for output in opt_outputs:
             rec = self.storage.get_procedures(id=output["base_result"])["data"][0]
             rec = OptimizationRecord(**rec)
 
             procedure = output["result"]
 
-            # Adds the results to the database and sets the ids inside the dictionary
-            self.retrieve_outputs(procedure)
-
-            # Add initial and final molecules
+            # Fields to be updated
             update_dict = {}
-            update_dict["stdout"] = procedure.get("stdout", None)
-            update_dict["stderr"] = procedure.get("stderr", None)
-            update_dict["error"] = procedure.get("error", None)
+
+            # Retrieve stdout,stderr,error from the record (may exist in extras due to compression)
+            # and add them to the database
+            # Also updates the fields in 'procedure' to reflect the new ids
+            self.retrieve_outputs(procedure)
+            update_dict["stdout"] = procedure.get("stdout")
+            update_dict["stderr"] = procedure.get("stderr")
+            update_dict["error"] = procedure.get("error")
+
+            # Mark the old outputs/errors as ready for deletion
+            old_kvstore.extend([rec.stdout, rec.stderr, rec.error])
 
             initial_mol, final_mol = self.storage.add_molecules(
                 [Molecule(**procedure["initial_molecule"]), Molecule(**procedure["final_molecule"])]
@@ -256,11 +268,7 @@ class OptimizationTasks(BaseTasks):
             # Parse trajectory computations and add task_id
             traj_dict = {k: v for k, v in enumerate(procedure["trajectory"])}
 
-            # Add results for the trajectory to the database
-            for k, v in traj_dict.items():
-                self.retrieve_outputs(v)
-
-            results = parse_single_tasks(self.storage, traj_dict, rec.qc_spec)
+            results = self._parse_single_trajectory(traj_dict, rec.qc_spec)
             for k, v in results.items():
                 results[k] = ResultRecord(**v)
 
@@ -276,7 +284,46 @@ class OptimizationTasks(BaseTasks):
         self.storage.update_procedures(updates)
         self.storage.queue_mark_complete(completed_tasks)
 
+        # Delete the old kvstore. Force these to be ints, and remove any Nones
+        old_kvstore = [int(x) for x in old_kvstore if x is not None]
+        self.storage.delete_kvstore(old_kvstore)
+
         return completed_tasks
+
+    def _parse_single_trajectory(self, results, qc_spec):
+        """Parses the output of a single trajectory (ie, gradient) calculation"""
+
+        for k, v in results.items():
+            # Handle the outputs (adds to the database and updates v)
+            self.retrieve_outputs(v)
+
+            # Convert data from QCSchema back to our structure
+            v["method"] = v["model"]["method"]
+            v["basis"] = v["model"]["basis"]
+            del v["model"]
+
+            # Molecule should be by ID
+            v["molecule"] = self.storage.add_molecules([Molecule(**v["molecule"])])["data"][0]
+
+            v["keywords"] = qc_spec.keywords
+            v["program"] = qc_spec.program
+
+            # Old tags that may still exist if the task was created with previous versions.
+            # It is harmless if they do, but may as well do a consistency check
+            if "_qcfractal_tags" in v["extras"]:
+                assert int(v["extras"]["_qcfractal_tags"]["keywords"]) == int(qc_spec.keywords)
+                assert v["extras"]["_qcfractal_tags"]["program"] == qc_spec.program
+                del v["extras"]["_qcfractal_tags"]
+
+            del v["schema_name"]
+            del v["schema_version"]
+
+            if v.pop("success"):
+                v["status"] = "COMPLETE"
+            else:
+                v["status"] = "ERROR"
+
+        return results
 
     @staticmethod
     def _build_schema_input(

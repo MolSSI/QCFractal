@@ -50,8 +50,7 @@ class GridOptimizationService(BaseService):
 
         # Build the record
         # TODO: This removes the task_id which may exist on old records, but does not exist
-        # in newer GridOptimizationRecords.
-        # If a proper migration is ever done,
+        # in newer GridOptimizationRecords if a proper migration is ever done,
         output = GridOptimizationRecord(
             **service_input.dict(exclude={"initial_molecule", "task_id"}),
             initial_molecule=service_input.initial_molecule.id,

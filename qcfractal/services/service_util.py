@@ -113,7 +113,7 @@ class BaseService(ProtoModel, abc.ABC):
     program: str
     procedure: str
 
-    # Output data
+    # Corresponding procedure class
     output: Any
 
     # Links

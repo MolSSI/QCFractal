@@ -1999,6 +1999,7 @@ class SQLAlchemySocket:
         """
 
         updated_count = 0
+
         for service in records_list:
             if service.id is None:
                 self.logger.error("No service id found on update (hash_index={}), skipping.".format(service.hash_index))
@@ -2018,19 +2019,26 @@ class SQLAlchemySocket:
                 session.add(doc_db)
                 session.commit()
 
-            procedure = service.output
-            procedure.__dict__["id"] = service.procedure_id
+            # Get the existing procedure object
+            existing_proc = self.get_procedures(id=[service.procedure_id])
+            assert len(existing_proc["data"]) == 1
+            existing_proc = existing_proc["data"][0]
 
-            # Copy the stdout/error from the service itself to its procedure
+            update_fields = {"id": service.procedure_id}
+
+            # Upsert to kvstore, using the existing stdout/error fields
+            print(existing_proc)
             if service.stdout:
-                stdout = KVStore(data=service.stdout)
-                _, stdout_add = self.add_kvstore([stdout])
-                procedure.__dict__["stdout"] = stdout_add[0].id
+                stdout = KVStore.compress(service.stdout, CompressionEnum.gzip, 3, id=existing_proc["stdout"])
+                _, stdout_add = self.upsert_kvstore([stdout])
+                update_fields["stdout"] = stdout_add[0].id
             if service.error:
-                error = KVStore(data=service.error.dict())
-                _, error_add = self.add_kvstore([error])
-                procedure.__dict__["error"] = error_add[0].id
+                error = KVStore.compress(service.error.dict(), CompressionEnum.gzip, 3, id=existing_proc["error"])
+                _, error_add = self.upsert_kvstore([error])
+                update_fields["error"] = error_add[0].id
 
+            # Copy the procedure from the service, updating a few fields
+            procedure = service.output.copy(update=update_fields)
             self.update_procedures([procedure])
 
             updated_count += 1
@@ -2484,8 +2492,9 @@ class SQLAlchemySocket:
                 base_result.modified_on = dt.utcnow()
 
                 # Compress error dicts here. Should be fast, since errors are small
-                err = KVStore.compress(error_dict, CompressionEnum.lzma, 1)
-                _, err_kv = self.add_kvstore([err])
+                # Use existing base_result.error kvstore object when available
+                err = KVStore.compress(error_dict, CompressionEnum.lzma, 1, id=base_result.error)
+                _, err_kv = self.upsert_kvstore([err])
                 base_result.error = err_kv[0].id
 
             session.commit()
