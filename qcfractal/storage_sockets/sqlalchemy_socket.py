@@ -1798,7 +1798,6 @@ class SQLAlchemySocket:
         updated_count = 0
         with self.session_scope() as session:
             for procedure in records_list:
-
                 className = get_procedure_class(procedure)
                 # join_table = get_procedure_join(procedure)
                 # Must have ID
@@ -2027,7 +2026,6 @@ class SQLAlchemySocket:
             update_fields = {"id": service.procedure_id}
 
             # Upsert to kvstore, using the existing stdout/error fields
-            print(existing_proc)
             if service.stdout:
                 stdout = KVStore.compress(service.stdout, CompressionEnum.gzip, 3, id=existing_proc["stdout"])
                 _, stdout_add = self.upsert_kvstore([stdout])
@@ -2102,24 +2100,14 @@ class SQLAlchemySocket:
         int
             Number of deleted active services from database.
         """
-        done = 0
-        for service in records_list:
-            if service.id is None:
-                self.logger.error(
-                    "No service id found on completion (hash_index={}), skipping.".format(service.hash_index)
-                )
-                continue
+        # Force service to update its procedure tableone final time
+        self.update_services(records_list)
 
-            # in one transaction
-            with self.session_scope() as session:
+        service_ids = [x.id for x in records_list]
+        with self.session_scope() as session:
+            session.query(ServiceQueueORM).filter(ServiceQueueORM.id.in_(service_ids))
 
-                procedure = service.output
-                procedure.__dict__["id"] = service.procedure_id
-                self.update_procedures([procedure])
-
-                session.query(ServiceQueueORM).filter_by(id=service.id).delete()  # synchronize_session=False)
-
-            done += 1
+        done = len(records_list)
 
         return done
 
