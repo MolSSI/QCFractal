@@ -23,7 +23,6 @@ _valid_encodings = {
     "application/msgpack-ext": "msgpack-ext",
 }
 
-
 class APIHandler():
     def register(self):
         if request.is_json:
@@ -63,6 +62,15 @@ class APIHandler():
 
             # Then, you make it an object member manually:
             self.home = home_func
+
+    def parse_bodymodel(self, model):
+
+        try:
+            return model(**self.data)
+        # TODO: refactor
+        except Exception as e:
+            # return "Invalid REST", 400
+            raise Exception(e)
 
     def get_information(self):
         current_user = get_current_user()
@@ -120,8 +128,7 @@ class APIHandler():
         encoding = _valid_encodings[content_type]
 
         body_model, response_model = rest_model("molecule", "get")
-        body = parse_bodymodel(request.json, body_model)
-
+        body = self.parse_bodymodel(body_model)
         molecules = self.storage.get_molecules(**{**body.data.dict(), **body.meta.dict()})
         ret = response_model(**molecules)
 
@@ -151,7 +158,7 @@ class APIHandler():
         encoding = _valid_encodings[content_type]
 
         body_model, response_model = rest_model("molecule", "post")
-        body = parse_bodymodel(request.json, body_model)
+        body = self.parse_bodymodel(body_model)
 
         ret = self.storage.add_molecules(body.data)
         response = response_model(**ret)
@@ -178,7 +185,7 @@ class APIHandler():
         encoding = _valid_encodings[content_type]
 
         body_model, response_model = rest_model("kvstore", "get")
-        body = parse_bodymodel(body_model)
+        body = self.parse_bodymodel(body_model)
 
         ret = self.storage.get_kvstore(body.data.id)
         response = response_model(**ret)
@@ -192,7 +199,7 @@ class APIHandler():
         # List collections
         if (collection_id is None) and (view_function is None):
             body_model, response_model = rest_model("collection", "get")
-            body = parse_bodymodel(body_model)
+            body = self.parse_bodymodel(body_model)
 
             cols = self.storage.get_collections(
                 **body.data.dict(), include=body.meta.include, exclude=body.meta.exclude
@@ -203,7 +210,7 @@ class APIHandler():
         elif (collection_id is not None) and (view_function is None):
             body_model, response_model = rest_model("collection", "get")
 
-            body = parse_bodymodel(body_model)
+            body = self.parse_bodymodel(body_model)
             cols = self.storage.get_collections(
                 **body.data.dict(), col_id=int(collection_id), include=body.meta.include, exclude=body.meta.exclude
             )
@@ -212,7 +219,7 @@ class APIHandler():
         # View-backed function on collection
         elif (collection_id is not None) and (view_function is not None):
             body_model, response_model = rest_model(f"collection/{collection_id}/{view_function}", "get")
-            body = parse_bodymodel(body_model)
+            body = self.parse_bodymodel(body_model)
             if view_handler is None:
                 meta = {
                     "success": False,
@@ -245,7 +252,7 @@ class APIHandler():
     @jwt_required
     def post_collection(self, collection_id: int, view_function: str):
         body_model, response_model = rest_model("collection", "post")
-        body = parse_bodymodel(body_model)
+        body = self.parse_bodymodel(body_model)
 
         # POST requests not supported for anything other than "/collection"
         if collection_id is not None or view_function is not None:
@@ -285,7 +292,7 @@ class APIHandler():
         encoding = _valid_encodings[content_type]
 
         body_model, response_model = rest_model("procedure", query_type)
-        body = parse_bodymodel(body_model)
+        body = self.parse_bodymodel(body_model)
 
         try:
             if query_type == "get":
@@ -307,7 +314,7 @@ class APIHandler():
         encoding = _valid_encodings[content_type]
 
         body_model, response_model = rest_model("wavefunctionstore", "get")
-        body = parse_bodymodel(body_model)
+        body = self.parse_bodymodel(body_model)
 
         ret = self.storage.get_wavefunction_store(body.data.id, include=body.meta.include)
         if len(ret["data"]):
@@ -321,7 +328,7 @@ class APIHandler():
 
     def get_procedure(self, query_type: str):
         body_model, response_model = rest_model("procedure", query_type)
-        body = parse_bodymodel(body_model)
+        body = self.parse_bodymodel(body_model)
 
         try:
             if query_type == "get":
@@ -340,7 +347,7 @@ class APIHandler():
 
     def get_optimization(self, query_type: str):
         body_model, response_model = rest_model(f"optimization/{query_type}", "get")
-        body = parse_bodymodel(body_model)
+        body = self.parse_bodymodel(body_model)
 
         try:
             if query_type == "get":
@@ -359,7 +366,7 @@ class APIHandler():
 
     def get_task_queue(self):
         body_model, response_model = rest_model("task_queue", "get")
-        body = parse_bodymodel(body_model)
+        body = self.parse_bodymodel(body_model)
 
         tasks = self.storage.get_queue(**{**body.data.dict(), **body.meta.dict()})
         response = response_model(**tasks)
@@ -372,7 +379,7 @@ class APIHandler():
     @jwt_required
     def post_task_queue(self):
         body_model, response_model = rest_model("task_queue", "post")
-        body = parse_bodymodel(body_model)
+        body = self.parse_bodymodel(body_model)
 
         # Format and submit tasks
         if not check_procedure_available(body.meta.procedure):
@@ -396,7 +403,7 @@ class APIHandler():
     @jwt_required
     def put_task_queue(self):
         body_model, response_model = rest_model("task_queue", "put")
-        body = parse_bodymodel(body_model)
+        body = self.parse_bodymodel(body_model)
 
         if (body.data.id is None) and (body.data.base_result is None):
             return jsonify(message="Id or ResultId must be specified."), 400
@@ -415,7 +422,7 @@ class APIHandler():
 
     def get_service_queue(self):
         body_model, response_model = rest_model("service_queue", "get")
-        body = parse_bodymodel(body_model)
+        body = self.parse_bodymodel(body_model)
 
         ret = self.storage.get_services(**{**body.data.dict(), **body.meta.dict()})
         response = response_model(**ret)
@@ -430,7 +437,7 @@ class APIHandler():
         """Posts new services to the service queue."""
 
         body_model, response_model = rest_model("service_queue", "post")
-        body = parse_bodymodel(body_model)
+        body = self.parse_bodymodel(body_model)
 
         new_services = []
         for service_input in body.data:
@@ -465,7 +472,7 @@ class APIHandler():
         """Modifies services in the service queue"""
 
         body_model, response_model = rest_model("service_queue", "put")
-        body = parse_bodymodel(body_model)
+        body = self.parse_bodymodel(body_model)
 
         if (body.data.id is None) and (body.data.procedure_id is None):
             return jsonify(message="Id or ProcedureId must be specified."), 400
@@ -563,7 +570,7 @@ class APIHandler():
             """Pulls new tasks from the task queue"""
 
             body_model, response_model = rest_model("queue_manager", "get")
-            body = parse_bodymodel(body_model)
+            body = self.parse_bodymodel(body_model)
 
             # Figure out metadata and kwargs
             name = _get_name_from_metadata(body.meta)
@@ -596,7 +603,7 @@ class APIHandler():
         """Posts complete tasks to the task queue"""
 
         body_model, response_model = rest_model("queue_manager", "post")
-        body = parse_bodymodel(body_model)
+        body = self.parse_bodymodel(body_model)
 
         name = _get_name_from_metadata(body.meta)
         # logger.info("QueueManager: Received completed task packet from {}.".format(name))
@@ -631,7 +638,7 @@ class APIHandler():
         ret = True
 
         body_model, response_model = rest_model("queue_manager", "put")
-        body = parse_bodymodel(body_model)
+        body = self.parse_bodymodel(body_model)
 
         name = _get_name_from_metadata(body.meta)
         op = body.data.operation
@@ -667,7 +674,7 @@ class APIHandler():
         """Gets manager information from the task queue"""
 
         body_model, response_model = rest_model("manager", "get")
-        body = parse_bodymodel(body_model)
+        body = self.parse_bodymodel(body_model)
 
         # logger.info("GET: ComputeManagerHandler")
         managers = self.storage.get_managers(**{**body.data.dict(), **body.meta.dict()})
