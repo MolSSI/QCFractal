@@ -64,7 +64,6 @@ class APIHandler():
             # Then, you make it an object member manually:
             self.home = home_func
 
-    @jwt_required
     def get_information(self):
         current_user = get_current_user()
         public_information = {
