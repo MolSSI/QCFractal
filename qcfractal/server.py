@@ -29,6 +29,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from .procedures import check_procedure_available, get_procedure_parser
 from .policyuniverse import Policy
 from .flask_handlers import APIHandler
+from flask_jwt_extended import (
+    get_jwt_claims
+)
 
 
 def _build_ssl():
@@ -404,7 +407,9 @@ class FractalServer(APIHandler):
         "application/msgpack-ext": "msgpack-ext",
     }
 
-    def start_flask(self):
+    def _start_flask(self, port):
+        self.ctx = self.app.app_context()
+        self.ctx.push()
         self.app.run(port=self.port)
 
     def __repr__(self):
@@ -422,7 +427,7 @@ class FractalServer(APIHandler):
         return fut
 
     # Start/stop functionality
-    def start(self, start_loop: bool = True, start_periodics: bool = True) -> None:
+    def start_old(self, start_loop: bool = True, start_periodics: bool = True) -> None:
         """
         Starts up the IOLoop and periodic calls.
 
@@ -476,7 +481,65 @@ class FractalServer(APIHandler):
             self.loop_active = True
             self.app.run(port=self.port)
 
+    def start(self, start_loop: bool = True, start_periodics: bool = False) -> None:
+        """
+        Starts up the IOLoop and periodic calls.
+
+        Parameters
+        ----------
+        start_loop : bool, optional
+            If False, does not start the IOLoop
+        start_periodics : bool, optional
+            If False, does not start the server periodic updates such as
+            Service iterations and Manager heartbeat checking.
+        """
+        if "queue_manager_future" in self.futures:
+
+            def start_manager():
+                self._check_manager("manager_build")
+                self.objects["queue_manager"].start()
+
+            # Call this after the loop has started
+            self._run_in_thread(start_manager)
+
+        # Add services callback
+        if start_periodics:
+            nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, self.service_frequency * 1000)
+            nanny_services.start()
+            self.periodic["update_services"] = nanny_services
+
+            # Check Manager heartbeats, 5x heartbeat frequency
+            heartbeats = tornado.ioloop.PeriodicCallback(
+                self.check_manager_heartbeats, self.heartbeat_frequency * 1000 * 0.2
+            )
+            heartbeats.start()
+            self.periodic["heartbeats"] = heartbeats
+
+            # Log can take some time, update in thread
+            def run_log_update_in_thread():
+                self._run_in_thread(self.update_server_log)
+
+            server_log = tornado.ioloop.PeriodicCallback(run_log_update_in_thread, self.heartbeat_frequency * 1000)
+
+            server_log.start()
+            self.periodic["server_log"] = server_log
+
+        # Build callbacks which are always required
+        # public_info = tornado.ioloop.PeriodicCallback(self.update_public_information, self.heartbeat_frequency * 1000)
+        # public_info.start()
+        # self.periodic["public_info"] = public_info
+
+        # Soft quit with a keyboard interrupt
+        self.logger.info("FractalServer successfully started.\n")
+        if start_loop:
+            self.loop_active = True
+            # self.app.run(port=self.port)
+            self._start_flask(port=self.port)
+
     def stop(self, stop_loop: bool = True) -> None:
+        self.app.do_teardown_appcontext()
+
+    def stop_old(self, stop_loop: bool = True) -> None:
         """
         Shuts down the IOLoop and periodic updates.
 
