@@ -248,9 +248,9 @@ class Statement(object):
 
     def evaluate(self, context):
         if (self._evaluate_resource(context) and
-            self._evaluate_action(context) and
-            self._evaluate_principal(context) and
-                self._evaluate_condition(context)):
+            self._evaluate_action(context)):
+            # self._evaluate_principal(context) and
+            # self._evaluate_condition(context)):
             return self.effect == "Allow"
         else:
             return None

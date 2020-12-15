@@ -379,9 +379,9 @@ class FractalServer(APIHandler):
                 context = {
                     "Principal": identity,
                     "Action": request.method,
-                    "Resource": urlparse(request.url).path.split("/")[1],
-                    "IpAddress": request.remote_addr,
-                    "AccessTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+                    "Resource": urlparse(request.url).path.split("/")[1]
+                    # "IpAddress": request.remote_addr,
+                    # "AccessTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
                 }
                 policy = Policy(claims.get('permissions'))
                 if policy.evaluate(context):
