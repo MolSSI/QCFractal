@@ -24,6 +24,29 @@ _valid_encodings = {
 }
 
 class APIHandler():
+
+    def __init__(self, **objects):
+
+        self.content_type = "Not Provided"
+        try:
+            # default to "application/json"
+            self.content_type = self.request.headers.get("Content-Type", "application/json")
+            self.encoding = _valid_encodings[self.content_type]
+        except KeyError:
+            raise tornado.web.HTTPError(
+                status_code=401, reason=f"Did not understand 'Content-Type': {self.content_type}"
+            )
+
+        # Always reply in the format sent
+        self.set_header("Content-Type", self.content_type) ### TODO: remove
+
+        self.objects = objects
+        self.storage = self.objects["storage_socket"]
+        self.logger = objects["logger"]
+        self.api_logger = objects["api_logger"]
+        self.view_handler = objects["view_handler"]
+        self.username = None
+
     def register(self):
         if request.is_json:
             email = request.json['email']
@@ -566,7 +589,7 @@ class APIHandler():
         storage_socket.queue_mark_error(error_data)
         return len(completed), len(error_data)
 
-        def get_queue_manager(sefl):
+    def get_queue_manager(self):
             """Pulls new tasks from the task queue"""
 
             body_model, response_model = rest_model("queue_manager", "get")
@@ -670,6 +693,7 @@ class APIHandler():
 
         return data
 
+    @jwt_required
     def get_manager(self):
         """Gets manager information from the task queue"""
 
@@ -703,11 +727,11 @@ class APIHandler():
         return jsonify(role), 200
 
     @jwt_required
-    def create_role(self):
+    def add_role(self):
         rolename = request.json['rolename']
         permissions = request.json['permissions']
 
-        success, error_message = self.storage.create_role(rolename, permissions)
+        success, error_message = self.storage.add_role(rolename, permissions)
         if success:
             return jsonify({'message': 'New role created!'}), 201
         else:

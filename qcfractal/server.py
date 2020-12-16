@@ -311,6 +311,7 @@ class FractalServer(APIHandler):
             # Build the queue manager, will not run until loop starts
             self.futures["queue_manager_future"] = self._run_in_thread(_build_manager)
 
+
         # create flask app
         self.app = Flask(__name__)
         self.app.app_context().push()
@@ -361,10 +362,12 @@ class FractalServer(APIHandler):
                               view_func=self.put_queue_manager, methods=['PUT'])
         self.app.add_url_rule('/manager',
                               view_func=self.get_manager, methods=['GET'])
+
+        # private
         self.app.add_url_rule('/role', view_func=self.get_roles, methods=['GET'])
         self.app.add_url_rule('/role/<string:rolename>',
                               view_func=self.get_role, methods=['GET'])
-        self.app.add_url_rule('/role', view_func=self.create_role, methods=['POST'])
+        self.app.add_url_rule('/role', view_func=self.add_role, methods=['POST'])
         self.app.add_url_rule('/role', view_func=self.update_role, methods=['PUT'])
         self.app.add_url_rule('/role', view_func=self.delete_role, methods=['DELETE'])
 

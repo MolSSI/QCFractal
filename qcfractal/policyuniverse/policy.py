@@ -42,13 +42,13 @@ class Policy(object):
             principals = principals.union(statement.principals)
         return principals
 
-    @property
-    def condition_entries(self):
-        condition_entries = set()
-        for statement in self.statements:
-            condition_entries = condition_entries.union(
-                statement.condition_entries)
-        return condition_entries
+    # @property
+    # def condition_entries(self):
+    #     condition_entries = set()
+    #     for statement in self.statements:
+    #         condition_entries = condition_entries.union(
+    #             statement.condition_entries)
+    #     return condition_entries
 
     def whos_allowed(self):
         allowed = set()
@@ -58,17 +58,23 @@ class Policy(object):
         return allowed
 
     def evaluate(self, context):
+        print('context: ', context)
+        print('statements: ', self.statements)
+
         try:
             allow = False
             for statement in self.statements:
-                if statement.evaluate(context) == False:
+                print('statement: ', statement.statement)
+                passed = statement.evaluate(context)
+                print('passed: ', passed)
+                if passed == True:  # has access according to this statement
+                   allow = True
+                elif passed == False :  # denied, end and return false
                     return False
-                elif statement.evaluate(context) == True:
-                    allow = True
-                    continue
-                else:
+                elif passed == None:  # statement has no effect
                     continue
 
             return allow
-        except Exception:
+        except Exception as err:
+            print('----------Err In evaluate policy: ', str(err))
             return False
