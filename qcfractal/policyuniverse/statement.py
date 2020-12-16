@@ -19,19 +19,19 @@
 .. moduleauthor::  Patrick Kelley <patrickbarrettkelley@gmail.com> @patrickbkelley
 
 """
-import re
+# import re
 from collections import namedtuple
-from netaddr import IPNetwork, IPAddress
-from time import strptime
+# from netaddr import IPNetwork, IPAddress
+# from time import strptime
 
 PrincipalTuple = namedtuple("Principal", "category value")
-ConditionTuple = namedtuple("Condition", "category value")
+# ConditionTuple = namedtuple("Condition", "category value")
 
 
 class Statement(object):
     def __init__(self, statement):
         self.statement = statement
-        self.condition_entries = self._condition_entries()
+        # self.condition_entries = self._condition_entries()
         self.principals = self._principals()
         self.actions = self._actions()
 
@@ -125,126 +125,126 @@ class Statement(object):
         else:
             structure.add(value)
 
-    def _condition_entries(self):
-        """Extracts any ARNs, Account Numbers, UserIDs, Usernames, CIDRs, VPCs, and VPC Endpoints from a condition block.
+    # def _condition_entries(self):
+    #     """Extracts any ARNs, Account Numbers, UserIDs, Usernames, CIDRs, VPCs, and VPC Endpoints from a condition block.
+    #
+    #     Ignores any negated condition operators like StringNotLike.
+    #     Ignores weak condition keys like referer, date, etc.
+    #
+    #     Reason: A condition is meant to limit the principal in a statement.  Often, resource policies use a wildcard principal
+    #     and rely exclusively on the Condition block to limit access.
+    #
+    #     We would want to alert if the Condition had no limitations (like a non-existent Condition block), or very weak limitations.  Any negation
+    #     would be weak, and largely equivelant to having no condition block whatsoever.
+    #
+    #     The alerting code that relies on this data must ensure the condition has at least one of the following:
+    #     - A limiting ARN
+    #     - Account Identifier
+    #     - AWS Organization Principal Org ID
+    #     - User ID
+    #     - Source IP / CIDR
+    #     - VPC
+    #     - VPC Endpoint
+    #
+    #     https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html
+    #     """
+    #     conditions = list()
+    #     condition = self.statement.get("Condition")
+    #     if not condition:
+    #         return conditions
+    #
+    #     key_mapping = {
+    #         "username": "username",
+    #         "groupname": "groupname",
+    #         "sourceip": "cidr",
+    #         "accesstime": "access"
+    #     }
+    #
+    #     relevant_condition_operators = [
+    #         re.compile(
+    #             "((ForAllValues|ForAnyValue):)?ARN(Equals|Like)(IfExists)?",
+    #             re.IGNORECASE,
+    #         ),
+    #         re.compile(
+    #             "((ForAllValues|ForAnyValue):)?String(Equals|Like)(IgnoreCase)?(IfExists)?",
+    #             re.IGNORECASE,
+    #         ),
+    #         re.compile(
+    #             "((ForAllValues|ForAnyValue):)?DateLessThan(IgnoreCase)?(IfExists)?",
+    #             re.IGNORECASE,
+    #         ),
+    #         re.compile(
+    #             "((ForAllValues|ForAnyValue):)?IpAddress(IfExists)?", re.IGNORECASE
+    #         )
+    #     ]
+    #
+    #     for condition_operator in condition.keys():
+    #         if any(
+    #             regex.match(condition_operator)
+    #             for regex in relevant_condition_operators
+    #         ):
+    #             for key, value in condition[condition_operator].items():
+    #                 # ForAllValues and ForAnyValue must be paired with a list.
+    #                 # Otherwise, skip over entries.
+    #                 if not isinstance(
+    #                     value, list
+    #                 ) and condition_operator.lower().startswith("for"):
+    #                     continue
+    #
+    #                 if key.lower() in key_mapping:
+    #                     if isinstance(value, list):
+    #                         for v in value:
+    #                             conditions.append(
+    #                                 ConditionTuple(
+    #                                     value=v, category=key_mapping[key.lower(
+    #                                     )]
+    #                                 )
+    #                             )
+    #                     else:
+    #                         conditions.append(
+    #                             ConditionTuple(
+    #                                 value=value, category=key_mapping[key.lower(
+    #                                 )]
+    #                             )
+    #                         )
+    #     return conditions
 
-        Ignores any negated condition operators like StringNotLike.
-        Ignores weak condition keys like referer, date, etc.
+    # @property
+    # def condition_arns(self):
+    #     return self._condition_field("arn")
 
-        Reason: A condition is meant to limit the principal in a statement.  Often, resource policies use a wildcard principal
-        and rely exclusively on the Condition block to limit access.
-
-        We would want to alert if the Condition had no limitations (like a non-existent Condition block), or very weak limitations.  Any negation
-        would be weak, and largely equivelant to having no condition block whatsoever.
-
-        The alerting code that relies on this data must ensure the condition has at least one of the following:
-        - A limiting ARN
-        - Account Identifier
-        - AWS Organization Principal Org ID
-        - User ID
-        - Source IP / CIDR
-        - VPC
-        - VPC Endpoint
-
-        https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html
-        """
-        conditions = list()
-        condition = self.statement.get("Condition")
-        if not condition:
-            return conditions
-
-        key_mapping = {
-            "username": "username",
-            "groupname": "groupname",
-            "sourceip": "cidr",
-            "accesstime": "access"
-        }
-
-        relevant_condition_operators = [
-            re.compile(
-                "((ForAllValues|ForAnyValue):)?ARN(Equals|Like)(IfExists)?",
-                re.IGNORECASE,
-            ),
-            re.compile(
-                "((ForAllValues|ForAnyValue):)?String(Equals|Like)(IgnoreCase)?(IfExists)?",
-                re.IGNORECASE,
-            ),
-            re.compile(
-                "((ForAllValues|ForAnyValue):)?DateLessThan(IgnoreCase)?(IfExists)?",
-                re.IGNORECASE,
-            ),
-            re.compile(
-                "((ForAllValues|ForAnyValue):)?IpAddress(IfExists)?", re.IGNORECASE
-            )
-        ]
-
-        for condition_operator in condition.keys():
-            if any(
-                regex.match(condition_operator)
-                for regex in relevant_condition_operators
-            ):
-                for key, value in condition[condition_operator].items():
-                    # ForAllValues and ForAnyValue must be paired with a list.
-                    # Otherwise, skip over entries.
-                    if not isinstance(
-                        value, list
-                    ) and condition_operator.lower().startswith("for"):
-                        continue
-
-                    if key.lower() in key_mapping:
-                        if isinstance(value, list):
-                            for v in value:
-                                conditions.append(
-                                    ConditionTuple(
-                                        value=v, category=key_mapping[key.lower(
-                                        )]
-                                    )
-                                )
-                        else:
-                            conditions.append(
-                                ConditionTuple(
-                                    value=value, category=key_mapping[key.lower(
-                                    )]
-                                )
-                            )
-        return conditions
-
-    @property
-    def condition_arns(self):
-        return self._condition_field("arn")
-
-    @property
-    def condition_accounts(self):
-        return self._condition_field("account")
-
-    @property
-    def condition_orgids(self):
-        return self._condition_field("org-id")
-
-    @property
-    def condition_userids(self):
-        return self._condition_field("userid")
-
-    @property
-    def condition_cidrs(self):
-        return self._condition_field("cidr")
-
-    @property
-    def condition_accesses(self):
-        return self._condition_field("access")
-
-    @property
-    def condition_vpcs(self):
-        return self._condition_field("vpc")
-
-    @property
-    def condition_vpces(self):
-        return self._condition_field("vpce")
-
-    def _condition_field(self, field):
-        return set(
-            [entry.value for entry in self.condition_entries if entry.category == field]
-        )
+    # @property
+    # def condition_accounts(self):
+    #     return self._condition_field("account")
+    #
+    # @property
+    # def condition_orgids(self):
+    #     return self._condition_field("org-id")
+    #
+    # @property
+    # def condition_userids(self):
+    #     return self._condition_field("userid")
+    #
+    # @property
+    # def condition_cidrs(self):
+    #     return self._condition_field("cidr")
+    #
+    # @property
+    # def condition_accesses(self):
+    #     return self._condition_field("access")
+    #
+    # @property
+    # def condition_vpcs(self):
+    #     return self._condition_field("vpc")
+    #
+    # @property
+    # def condition_vpces(self):
+    #     return self._condition_field("vpce")
+    #
+    # def _condition_field(self, field):
+    #     return set(
+    #         [entry.value for entry in self.condition_entries if entry.category == field]
+    #     )
 
     def evaluate(self, context):
         if (self._evaluate_resource(context) and
@@ -264,31 +264,31 @@ class Statement(object):
     def _evaluate_principal(self, context):
         return '*' in self.principals or context['Principal'] in self.principals
 
-    def _evaluate_condition(self, context):
-        return self._evaluate_condition_cidr(context) and self._evaluate_condition_accesses(context)
-
-    def _evaluate_condition_cidr(self, context):
-        if not self.condition_cidrs:
-            return True
-
-        allow = False
-        for condition_cidr in self.condition_cidrs:
-            if IPAddress(context['IpAddress']) in IPNetwork(condition_cidr):
-                allow = True
-                continue
-        return allow
-
-    def _evaluate_condition_accesses(self, context):
-        if not self.condition_accesses:
-            return True
-
-        allow = False
-        for condition_access in self.condition_accesses:
-            access_time = strptime(
-                context['AccessTime'], '%Y-%m-%dT%H:%M:%S')
-            condition_access_time = strptime(
-                condition_access, '%Y-%m-%dT%H:%M:%S')
-            if access_time < condition_access_time:
-                allow = True
-                continue
-        return allow
+    # def _evaluate_condition(self, context):
+    #     return self._evaluate_condition_cidr(context) and self._evaluate_condition_accesses(context)
+    #
+    # def _evaluate_condition_cidr(self, context):
+    #     if not self.condition_cidrs:
+    #         return True
+    #
+    #     allow = False
+    #     for condition_cidr in self.condition_cidrs:
+    #         if IPAddress(context['IpAddress']) in IPNetwork(condition_cidr):
+    #             allow = True
+    #             continue
+    #     return allow
+    #
+    # def _evaluate_condition_accesses(self, context):
+    #     if not self.condition_accesses:
+    #         return True
+    #
+    #     allow = False
+    #     for condition_access in self.condition_accesses:
+    #         access_time = strptime(
+    #             context['AccessTime'], '%Y-%m-%dT%H:%M:%S')
+    #         condition_access_time = strptime(
+    #             condition_access, '%Y-%m-%dT%H:%M:%S')
+    #         if access_time < condition_access_time:
+    #             allow = True
+    #             continue
+    #     return allow
