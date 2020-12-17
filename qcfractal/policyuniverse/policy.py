@@ -1,26 +1,10 @@
-#     Copyright 2017 Netflix, Inc.
-#
-#     Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#     You may obtain a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#     Unless required by applicable law or agreed to in writing, software
-#     distributed under the License is distributed on an "AS IS" BASIS,
-#     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#     See the License for the specific language governing permissions and
-#     limitations under the License.
 """
-.. module: policyuniverse.policy
-    :platform: Unix
-
-.. version:: $$VERSION$$
-.. moduleauthor::  Patrick Kelley <patrickbarrettkelley@gmail.com> @patrickbkelley
+    Credit: https://github.com/Netflix-Skunkworks/policyuniverse
+    Patrick Kelley <patrick@netflix.com>
 
 """
+
 from .statement import Statement
-from collections import defaultdict
 import logging
 
 
@@ -44,14 +28,6 @@ class Policy(object):
         for statement in self.statements:
             principals = principals.union(statement.principals)
         return principals
-
-    # @property
-    # def condition_entries(self):
-    #     condition_entries = set()
-    #     for statement in self.statements:
-    #         condition_entries = condition_entries.union(
-    #             statement.condition_entries)
-    #     return condition_entries
 
     def whos_allowed(self):
         allowed = set()
