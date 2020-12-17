@@ -276,7 +276,7 @@ class UserORM(Base):
 
     username = Column(String, nullable=False, unique=True)  # indexed and unique
     password = Column(LargeBinary, nullable=False)
-    # permissions = Column(JSON)  # Column(ARRAY(String))
+
 
 class RoleORM(Base):
 
