@@ -9,10 +9,10 @@ import tornado.ioloop
 import threading
 
 from datetime import datetime, timedelta
-from urllib.parse import urlparse
-from flask import Flask, jsonify, request, copy_current_request_context
-from flask_jwt_extended import JWTManager
-from functools import wraps
+# from urllib.parse import urlparse
+# from flask import Flask, jsonify, request, copy_current_request_context
+# from flask_jwt_extended import JWTManager
+# from functools import wraps
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional, Union
 from .extras import get_information
@@ -21,18 +21,16 @@ from .qc_queue import QueueManager, QueueManagerHandler, ServiceQueueHandler, Ta
 from .services import construct_service
 from .storage_sockets import ViewHandler, storage_socket_factory
 from .storage_sockets.api_logger import API_AccessLogger
-from .storage_sockets.storage_utils import add_metadata_template
-from pydantic import ValidationError
-from qcelemental.util import deserialize, serialize
-from .interface.models.rest_models import rest_model
-from werkzeug.security import generate_password_hash, check_password_hash
-from .procedures import check_procedure_available, get_procedure_parser
-from .policyuniverse import Policy
-from .flask_handlers import APIHandler
-from flask_jwt_extended import (
-    get_jwt_claims
-)
+# from .storage_sockets.storage_utils import add_metadata_template
+# from pydantic import ValidationError
+# from qcelemental.util import deserialize, serialize
+# from .interface.models.rest_models import rest_model
+# from werkzeug.security import generate_password_hash, check_password_hash
+# from .procedures import check_procedure_available, get_procedure_parser
+# from .policyuniverse import Policy
+# from flask_jwt_extended import   get_jwt_claims
 
+from .app import create_app
 
 def _build_ssl():
     from cryptography import x509
@@ -85,7 +83,7 @@ def _build_ssl():
     return cert_pem, key_pem
 
 
-class FractalServer(APIHandler):
+class FractalServer():
     def __init__(
         self,
         # Server info options
@@ -106,7 +104,7 @@ class FractalServer(APIHandler):
         view_path: Optional[str] = None,
         # Log options
         logfile_prefix: str = None,
-        loglevel: str = "info",
+        loglevel: str = "debug",
         log_apis: bool = False,
         geo_file_path: str = None,
         # Queue options
@@ -313,104 +311,63 @@ class FractalServer(APIHandler):
 
 
         # create flask app
-        self.app = Flask(__name__)
+        self.app = create_app('default', **self.objects)
         self.app.app_context().push()
-        # config
-        self.app.config['JWT_SECRET_KEY'] = 'super-secret'
-        self.app.config['JWT_REFRESH_TOKEN_EXPIRES'] = 86400
-        jwt = JWTManager(self.app)
+
 
         # Routes
-        self.app.add_url_rule('/information', view_func=self.get_information, methods=['GET'])
-        self.app.add_url_rule('/register', view_func=self.register, methods=['POST'])
-        self.app.add_url_rule('/login', view_func=self.login, methods=['POST'])
-        self.app.add_url_rule('/refresh', view_func=self.refresh, methods=['POST'])
-        self.app.add_url_rule('/fresh-login', view_func=self.fresh_login, methods=['POST'])
-        self.app.add_url_rule('/molecule', view_func=self.get_molecule, methods=['GET'])
-        self.app.add_url_rule('/molecule', view_func=self.post_molecule, methods=['POST'])
-        self.app.add_url_rule('/kvstore', view_func=self.get_kvstore, methods=['GET'])
-        self.app.add_url_rule('/kvstore', view_func=self.get_kvstore, methods=['GET'])
-        self.app.add_url_rule('/collection/<int:collection_id>/<string:view_function>',
-                              view_func=self.get_collection, methods=['GET'])
-        self.app.add_url_rule('/collection/<int:collection_id>/<string:view_function>',
-                              view_func=self.post_collection, methods=['POST'])
-        self.app.add_url_rule('/collection/<int:collection_id>/<string:view_function>',
-                              view_func=self.delete_collection, methods=['DELETE'])
-        self.app.add_url_rule('/result/<string:query_type>',
-                              view_func=self.get_result, methods=['GET'])
-        self.app.add_url_rule('/wavefunctionstore',
-                              view_func=self.get_wave_function, methods=['GET'])
-        self.app.add_url_rule('/procedure/<string:query_type>',
-                              view_func=self.get_procedure, methods=['GET'])
-        self.app.add_url_rule('/optimization/<string:query_type>',
-                              view_func=self.get_optimization, methods=['GET'])
-        self.app.add_url_rule('/task_queue',
-                              view_func=self.get_task_queue, methods=['GET'])
-        self.app.add_url_rule('/task_queue',
-                              view_func=self.post_task_queue, methods=['POST'])
-        self.app.add_url_rule('/task_queue',
-                              view_func=self.put_task_queue, methods=['PUT'])
-        self.app.add_url_rule('/service_queue',
-                              view_func=self.get_service_queue, methods=['GET'])
-        self.app.add_url_rule('/service_queue',
-                              view_func=self.post_service_queue, methods=['POST'])
-        self.app.add_url_rule('/service_queue',
-                              view_func=self.put_service_queue, methods=['PUT'])
-        self.app.add_url_rule('/queue_manager',
-                              view_func=self.post_queue_manager, methods=['Post'])
-        self.app.add_url_rule('/queue_manager',
-                              view_func=self.put_queue_manager, methods=['PUT'])
-        self.app.add_url_rule('/manager',
-                              view_func=self.get_manager, methods=['GET'])
+        # self.app.add_url_rule('/information', view_func=self.get_information, methods=['GET'])
+        # self.app.add_url_rule('/register', view_func=self.register, methods=['POST'])
+        # self.app.add_url_rule('/login', view_func=self.login, methods=['POST'])
+        # self.app.add_url_rule('/refresh', view_func=self.refresh, methods=['POST'])
+        # self.app.add_url_rule('/fresh-login', view_func=self.fresh_login, methods=['POST'])
+        # self.app.add_url_rule('/molecule', view_func=self.get_molecule, methods=['GET'])
+        # self.app.add_url_rule('/molecule', view_func=self.post_molecule, methods=['POST'])
+        # self.app.add_url_rule('/kvstore', view_func=self.get_kvstore, methods=['GET'])
+        # self.app.add_url_rule('/collection/<int:collection_id>/<string:view_function>',
+        #                       view_func=self.get_collection, methods=['GET'])
+        # self.app.add_url_rule('/collection/<int:collection_id>/<string:view_function>',
+        #                       view_func=self.post_collection, methods=['POST'])
+        # self.app.add_url_rule('/collection/<int:collection_id>/<string:view_function>',
+        #                       view_func=self.delete_collection, methods=['DELETE'])
+        # self.app.add_url_rule('/result/<string:query_type>',
+        #                       view_func=self.get_result, methods=['GET'])
+        # self.app.add_url_rule('/wavefunctionstore',
+        #                       view_func=self.get_wave_function, methods=['GET'])
+        # self.app.add_url_rule('/procedure/<string:query_type>',
+        #                       view_func=self.get_procedure, methods=['GET'])
+        # self.app.add_url_rule('/optimization/<string:query_type>',
+        #                       view_func=self.get_optimization, methods=['GET'])
+        # self.app.add_url_rule('/task_queue',
+        #                       view_func=self.get_task_queue, methods=['GET'])
+        # self.app.add_url_rule('/task_queue',
+        #                       view_func=self.post_task_queue, methods=['POST'])
+        # self.app.add_url_rule('/task_queue',
+        #                       view_func=self.put_task_queue, methods=['PUT'])
+        # self.app.add_url_rule('/service_queue',
+        #                       view_func=self.get_service_queue, methods=['GET'])
+        # self.app.add_url_rule('/service_queue',
+        #                       view_func=self.post_service_queue, methods=['POST'])
+        # self.app.add_url_rule('/service_queue',
+        #                       view_func=self.put_service_queue, methods=['PUT'])
+        # self.app.add_url_rule('/queue_manager',
+        #                       view_func=self.post_queue_manager, methods=['Post'])
+        # self.app.add_url_rule('/queue_manager',
+        #                       view_func=self.put_queue_manager, methods=['PUT'])
+        # self.app.add_url_rule('/manager',
+        #                       view_func=self.get_manager, methods=['GET'])
 
         # private
-        self.app.add_url_rule('/role', view_func=self.get_roles, methods=['GET'])
-        self.app.add_url_rule('/role/<string:rolename>',
-                              view_func=self.get_role, methods=['GET'])
-        self.app.add_url_rule('/role', view_func=self.add_role, methods=['POST'])
-        self.app.add_url_rule('/role', view_func=self.update_role, methods=['PUT'])
-        self.app.add_url_rule('/role', view_func=self.delete_role, methods=['DELETE'])
+        # self.app.add_url_rule('/role', view_func=self.get_roles, methods=['GET'])
+        # self.app.add_url_rule('/role/<string:rolename>',
+                              # view_func=self.get_role, methods=['GET'])
+        # self.app.add_url_rule('/role', view_func=self.add_role, methods=['POST'])
+        # self.app.add_url_rule('/role', view_func=self.update_role, methods=['PUT'])
+        # self.app.add_url_rule('/role', view_func=self.delete_role, methods=['DELETE'])
 
-        # JWT
-        @jwt.user_loader_callback_loader
-        def user_loader_callback(identity):
-            try:
-                # host_url = request.host_url
-                claims = get_jwt_claims()
-                resource = urlparse(request.url).path.split("/")[1]
-                method = request.method
-                context = {
-                    "Principal": identity,
-                    "Action": request.method,
-                    "Resource": urlparse(request.url).path.split("/")[1]
-                    # "IpAddress": request.remote_addr,
-                    # "AccessTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-                }
-                policy = Policy(claims.get('permissions'))
-                if policy.evaluate(context):
-                    return {"identity": identity, "permissions": claims.get('permissions')}
-                else:
-                    return None
 
-            except Exception as e:
-                print(e)
-                return None
 
-        @jwt.user_loader_error_loader
-        def custom_user_loader_error(identity):
-            resource = urlparse(request.url).path.split("/")[1]
-            ret = {
-                "msg": "User {} is not authorized to access '{}' resource.".format(identity, resource)
-            }
-            return jsonify(ret), 403
-
-    _valid_encodings = {
-        "application/json": "json",
-        "application/json-ext": "json-ext",
-        "application/msgpack-ext": "msgpack-ext",
-    }
-
-    def _start_flask(self, port):
+    def _start_flask(self):
         self.ctx = self.app.app_context()
         self.ctx.push()
         self.app.run(port=self.port)
@@ -537,7 +494,7 @@ class FractalServer(APIHandler):
         if start_loop:
             self.loop_active = True
             # self.app.run(port=self.port)
-            self._start_flask(port=self.port)
+            self._start_flask()
 
     def stop(self, stop_loop: bool = True) -> None:
         self.app.do_teardown_appcontext()
@@ -723,6 +680,7 @@ class FractalServer(APIHandler):
                 )
             )
 
+    #TODO: why is this method here? where it's used?
     def list_managers(self, status: Optional[str] = None, name: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Provides a list of managers associated with the server both active and inactive.

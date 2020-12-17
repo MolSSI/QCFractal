@@ -21,7 +21,10 @@
 """
 from .statement import Statement
 from collections import defaultdict
+import logging
 
+
+logger = logging.getLogger(__name__)
 
 class Policy(object):
     def __init__(self, policy):
@@ -58,15 +61,15 @@ class Policy(object):
         return allowed
 
     def evaluate(self, context):
-        print('context: ', context)
-        print('statements: ', self.statements)
+        logger.debug('context: ', context)
+        logger.debug('statements: ', self.statements)
 
         try:
             allow = False
             for statement in self.statements:
-                print('statement: ', statement.statement)
+                logger.debug('statement: ', statement.statement)
                 passed = statement.evaluate(context)
-                print('passed: ', passed)
+                logger.debug('passed: ', passed)
                 if passed == True:  # has access according to this statement
                    allow = True
                 elif passed == False :  # denied, end and return false
@@ -76,5 +79,5 @@ class Policy(object):
 
             return allow
         except Exception as err:
-            print('----------Err In evaluate policy: ', str(err))
+            logger.debug('------------- Error in evaluate policy:\n ', str(err))
             return False
