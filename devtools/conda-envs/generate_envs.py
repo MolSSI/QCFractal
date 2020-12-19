@@ -23,6 +23,10 @@ dependencies:
   - pydantic >=1.4.0
   - requests
   - tornado
+  - flask
+  - flask_jwt_extended"
+  - netaddr
+  - apscheduler
 
   # Security dependencies
   - bcrypt
@@ -47,6 +51,7 @@ dependencies:
   - pytest
   - pytest-cov
   - requests-mock
+  - requests_mock_flask
 """
 qca_ecosystem_template = ["qcengine >=0.17.0", "qcelemental >=0.17.0"]
 
