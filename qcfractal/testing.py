@@ -29,6 +29,11 @@ from .server import FractalServer
 from .snowflake import FractalSnowflake
 from .storage_sockets import storage_socket_factory
 
+## For mock flask responses
+from requests_mock_flask import add_flask_app_to_mock
+import requests_mock
+# import responses
+
 ### Addon testing capabilities
 
 
@@ -344,8 +349,8 @@ def postgres_server():
         pytest.skip("Postgres is not installed on this server and no active postgres could be found.")
 
     storage = None
-    psql = PostgresHarness({"database": {"port": 5432}})
-    # psql = PostgresHarness({"database": {"port": 5432, "username": "qcarchive", "password": "mypass"}})
+    # psql = PostgresHarness({"database": {"port": 5432}})
+    psql = PostgresHarness({"database": {"port": 5432, "username": "qcarchive", "password": "mypass"}})
     if not psql.is_alive():
         print()
         print(
@@ -390,10 +395,24 @@ def test_server(request, postgres_server):
         storage_uri=postgres_server.database_uri(),
         start_server=False,
         reset_database=True,
+        flask_config='testing',
     ) as server:
 
+
         # Clean and re-init the database
-        yield server
+
+        # with responses.RequestsMock(assert_all_requests_are_fired=False) as resp_m:
+        with requests_mock.Mocker() as resp_m:
+            add_flask_app_to_mock(
+                mock_obj=resp_m,
+                flask_app=server.app,
+                base_url=server.get_address(),
+            )
+            server.app.config.storage.add_user('user@molssi.org', password='password', rolename="admin")
+            ret = requests.post(server.get_address() + "login",
+                                  json={"email": "user@molssi.org", "password": "password"})
+            server.app.config.auth_token = ret.json()["access_token"]
+            yield server
 
 
 def build_adapter_clients(mtype, storage_name="test_qcfractal_compute_server"):
