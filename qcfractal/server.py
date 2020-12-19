@@ -7,7 +7,7 @@ import json
 import os
 import tornado.ioloop
 import threading
-
+import atexit
 from datetime import datetime, timedelta
 # from urllib.parse import urlparse
 # from flask import Flask, jsonify, request, copy_current_request_context
@@ -29,8 +29,11 @@ from .storage_sockets.api_logger import API_AccessLogger
 # from .procedures import check_procedure_available, get_procedure_parser
 # from .policyuniverse import Policy
 # from flask_jwt_extended import   get_jwt_claims
-
+from apscheduler.schedulers.background import BackgroundScheduler
 from .app import create_app
+
+logger = logging.getLogger(__name__)
+
 
 def _build_ssl():
     from cryptography import x509
@@ -115,6 +118,8 @@ class FractalServer():
         service_frequency: float = 60,
         # Testing functions
         skip_storage_version_check=True,
+        # Flask
+        flask_config: str = 'default',
     ):
         """QCFractal initialization
 
@@ -168,8 +173,7 @@ class FractalServer():
         self.service_frequency = service_frequency
         self.heartbeat_frequency = heartbeat_frequency
 
-        self.logger = logging.getLogger("flask.application")
-        self.logger.setLevel(loglevel.upper())
+        self.logger = self._setup_logging(logfile_prefix, loglevel)
 
         # Create API Access logger class if enables
         if log_apis:
@@ -185,6 +189,7 @@ class FractalServer():
         else:
             raise KeyError("Security option '{}' not recognized.".format(security))
 
+        self.security = security
         # Handle SSL
         ssl_ctx = None
         self.client_verify = True
@@ -288,159 +293,39 @@ class FractalServer():
         self.executor = ThreadPoolExecutor(max_workers=2)
         self.futures = {}
 
+        # Background jobs with graceful shutdown of tasks (daemon=False)
+        self.scheduler = BackgroundScheduler() #daemon=False)
+
         # Queue manager if direct build
         self.queue_socket = queue_socket
-        if self.queue_socket is not None:
-            if security == "local":
-                raise ValueError("Cannot yet use local security with a internal QueueManager")
-
-            def _build_manager():
-                client = FractalClient(self, username="qcfractal_server")
-                self.objects["queue_manager"] = QueueManager(
-                    client,
-                    self.queue_socket,
-                    logger=self.logger,
-                    manager_name="FractalServer",
-                    cores_per_task=1,
-                    memory_per_task=1,
-                    verbose=False,
-                )
-
-            # Build the queue manager, will not run until loop starts
-            self.futures["queue_manager_future"] = self._run_in_thread(_build_manager)
-
 
         # create flask app
-        self.app = create_app('default', **self.objects)
-        self.app.app_context().push()
+        self.app = create_app(flask_config, **self.objects)
+        # self.app.app_context().push()
 
 
-        # Routes
-        # self.app.add_url_rule('/information', view_func=self.get_information, methods=['GET'])
-        # self.app.add_url_rule('/register', view_func=self.register, methods=['POST'])
-        # self.app.add_url_rule('/login', view_func=self.login, methods=['POST'])
-        # self.app.add_url_rule('/refresh', view_func=self.refresh, methods=['POST'])
-        # self.app.add_url_rule('/fresh-login', view_func=self.fresh_login, methods=['POST'])
-        # self.app.add_url_rule('/molecule', view_func=self.get_molecule, methods=['GET'])
-        # self.app.add_url_rule('/molecule', view_func=self.post_molecule, methods=['POST'])
-        # self.app.add_url_rule('/kvstore', view_func=self.get_kvstore, methods=['GET'])
-        # self.app.add_url_rule('/collection/<int:collection_id>/<string:view_function>',
-        #                       view_func=self.get_collection, methods=['GET'])
-        # self.app.add_url_rule('/collection/<int:collection_id>/<string:view_function>',
-        #                       view_func=self.post_collection, methods=['POST'])
-        # self.app.add_url_rule('/collection/<int:collection_id>/<string:view_function>',
-        #                       view_func=self.delete_collection, methods=['DELETE'])
-        # self.app.add_url_rule('/result/<string:query_type>',
-        #                       view_func=self.get_result, methods=['GET'])
-        # self.app.add_url_rule('/wavefunctionstore',
-        #                       view_func=self.get_wave_function, methods=['GET'])
-        # self.app.add_url_rule('/procedure/<string:query_type>',
-        #                       view_func=self.get_procedure, methods=['GET'])
-        # self.app.add_url_rule('/optimization/<string:query_type>',
-        #                       view_func=self.get_optimization, methods=['GET'])
-        # self.app.add_url_rule('/task_queue',
-        #                       view_func=self.get_task_queue, methods=['GET'])
-        # self.app.add_url_rule('/task_queue',
-        #                       view_func=self.post_task_queue, methods=['POST'])
-        # self.app.add_url_rule('/task_queue',
-        #                       view_func=self.put_task_queue, methods=['PUT'])
-        # self.app.add_url_rule('/service_queue',
-        #                       view_func=self.get_service_queue, methods=['GET'])
-        # self.app.add_url_rule('/service_queue',
-        #                       view_func=self.post_service_queue, methods=['POST'])
-        # self.app.add_url_rule('/service_queue',
-        #                       view_func=self.put_service_queue, methods=['PUT'])
-        # self.app.add_url_rule('/queue_manager',
-        #                       view_func=self.post_queue_manager, methods=['Post'])
-        # self.app.add_url_rule('/queue_manager',
-        #                       view_func=self.put_queue_manager, methods=['PUT'])
-        # self.app.add_url_rule('/manager',
-        #                       view_func=self.get_manager, methods=['GET'])
+    def _start_flask(self, start_loop : bool = False):
+        # self.ctx = self.app.app_context()
+        # self.ctx.push()
+        if start_loop:
+            self.app.run(port=self.port) #, debug=False)
 
-        # private
-        # self.app.add_url_rule('/role', view_func=self.get_roles, methods=['GET'])
-        # self.app.add_url_rule('/role/<string:rolename>',
-                              # view_func=self.get_role, methods=['GET'])
-        # self.app.add_url_rule('/role', view_func=self.add_role, methods=['POST'])
-        # self.app.add_url_rule('/role', view_func=self.update_role, methods=['PUT'])
-        # self.app.add_url_rule('/role', view_func=self.delete_role, methods=['DELETE'])
-
-
-
-    def _start_flask(self):
-        self.ctx = self.app.app_context()
-        self.ctx.push()
-        self.app.run(port=self.port)
 
     def __repr__(self):
 
         return f"FractalServer(name='{self.name}' uri='{self._address}')"
 
-    def _run_in_thread(self, func, timeout=5):
-        """
-        Runs a function in a background thread
-        """
-        if self.executor is None:
-            raise AttributeError("No Executor was created, but run_in_thread was called.")
-
-        fut = self.loop.run_in_executor(self.executor, func)
-        return fut
+    # def _run_in_thread(self, func, timeout=5):
+    #     """
+    #     Runs a function in a background thread
+    #     """
+    #     if self.executor is None:
+    #         raise AttributeError("No Executor was created, but run_in_thread was called.")
+    #
+    #     fut = self.loop.run_in_executor(self.executor, func)
+    #     return fut
 
     # Start/stop functionality
-    def start_old(self, start_loop: bool = True, start_periodics: bool = True) -> None:
-        """
-        Starts up the IOLoop and periodic calls.
-
-        Parameters
-        ----------
-        start_loop : bool, optional
-            If False, does not start the IOLoop
-        start_periodics : bool, optional
-            If False, does not start the server periodic updates such as
-            Service iterations and Manager heartbeat checking.
-        """
-        if "queue_manager_future" in self.futures:
-
-            def start_manager():
-                self._check_manager("manager_build")
-                self.objects["queue_manager"].start()
-
-            # Call this after the loop has started
-            self._run_in_thread(start_manager)
-
-        # Add services callback
-        if start_periodics:
-            nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, self.service_frequency * 1000)
-            nanny_services.start()
-            self.periodic["update_services"] = nanny_services
-
-            # Check Manager heartbeats, 5x heartbeat frequency
-            heartbeats = tornado.ioloop.PeriodicCallback(
-                self.check_manager_heartbeats, self.heartbeat_frequency * 1000 * 0.2
-            )
-            heartbeats.start()
-            self.periodic["heartbeats"] = heartbeats
-
-            # Log can take some time, update in thread
-            def run_log_update_in_thread():
-                self._run_in_thread(self.update_server_log)
-
-            server_log = tornado.ioloop.PeriodicCallback(run_log_update_in_thread, self.heartbeat_frequency * 1000)
-
-            server_log.start()
-            self.periodic["server_log"] = server_log
-
-        # Build callbacks which are always required
-        public_info = tornado.ioloop.PeriodicCallback(self.update_public_information, self.heartbeat_frequency * 1000)
-        public_info.start()
-        self.periodic["public_info"] = public_info
-
-        # Soft quit with a keyboard interrupt
-        self.logger.info("FractalServer successfully started.\n")
-        if start_loop:
-            self.loop_active = True
-            self.app.run(port=self.port)
-
     def start(self, start_loop: bool = True, start_periodics: bool = False) -> None:
         """
         Starts up the IOLoop and periodic calls.
@@ -453,51 +338,136 @@ class FractalServer():
             If False, does not start the server periodic updates such as
             Service iterations and Manager heartbeat checking.
         """
+
+        # TODO
+        # Soft quit with a keyboard interrupt
+        self._start_flask(start_loop)
+        self.logger.info("FractalServer successfully started.\n")
+        if start_loop:
+            self.loop_active = True
+            self.scheduler.start()
+
+        if self.queue_socket is not None:
+            if self.security == "local":
+                raise ValueError("Cannot yet use local security with a internal QueueManager")
+
+            def _build_manager():
+                self.logger.info('------------ Build manager Job')
+                client = FractalClient(self, username="qcfractal_server")
+                self.objects["queue_manager"] = QueueManager(
+                    client,
+                    self.queue_socket,
+                    logger=self.logger,
+                    manager_name="FractalServer",
+                    cores_per_task=1,
+                    memory_per_task=1,
+                    verbose=False,
+                )
+
+            # Build the queue manager, will not run until loop starts
+            # self.futures["queue_manager_future"] = self._run_in_thread(_build_manager)
+            self.logger.info('------- Adding _build_manager')
+            self.futures["queue_manager_future"]  = \
+                self.scheduler.add_job(_build_manager, 'date')
+
+
         if "queue_manager_future" in self.futures:
+            self.scheduler.add_job(self.futures["queue_manager_future"], 'date', id='manager')
 
             def start_manager():
+                self.logger.info("Start manager Job")
                 self._check_manager("manager_build")
                 self.objects["queue_manager"].start()
 
             # Call this after the loop has started
-            self._run_in_thread(start_manager)
+            # self._run_in_thread(start_manager)
+            self.scheduler.add_job(start_manager, 'date')
 
         # Add services callback
         if start_periodics:
-            nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, self.service_frequency * 1000)
-            nanny_services.start()
+            self.logger.info('---------- start_periodics')
+            # nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, self.service_frequency * 1000)
+            # nanny_services.start()
+            nanny_services = self.scheduler.add_job(self.update_services, 'interval',
+                                                    minutes=self.service_frequency)
             self.periodic["update_services"] = nanny_services
 
+
             # Check Manager heartbeats, 5x heartbeat frequency
-            heartbeats = tornado.ioloop.PeriodicCallback(
-                self.check_manager_heartbeats, self.heartbeat_frequency * 1000 * 0.2
-            )
-            heartbeats.start()
+            # heartbeats = tornado.ioloop.PeriodicCallback(
+            #     self.check_manager_heartbeats, self.heartbeat_frequency * 1000 * 0.2
+            # )
+            # heartbeats.start()
+            heartbeats = self.scheduler.add_job(self.check_manager_heartbeats, 'interval',
+                                                minutes=.2) #self.heartbeat_frequency * 0.2)
             self.periodic["heartbeats"] = heartbeats
 
             # Log can take some time, update in thread
-            def run_log_update_in_thread():
-                self._run_in_thread(self.update_server_log)
+            # def run_log_update_in_thread():
+                # self._run_in_thread(self.update_server_log)
 
-            server_log = tornado.ioloop.PeriodicCallback(run_log_update_in_thread, self.heartbeat_frequency * 1000)
+            # server_log = tornado.ioloop.PeriodicCallback(run_log_update_in_thread, self.heartbeat_frequency * 1000)
+            # server_log.start()
 
-            server_log.start()
+            server_log = self.scheduler.add_job(self.update_server_log, 'interval',
+                                                minutes=self.heartbeat_frequency * 1000)
             self.periodic["server_log"] = server_log
 
         # Build callbacks which are always required
         # public_info = tornado.ioloop.PeriodicCallback(self.update_public_information, self.heartbeat_frequency * 1000)
         # public_info.start()
-        # self.periodic["public_info"] = public_info
+        public_info = self.scheduler.add_job(self.update_public_information, 'interval',
+                                             minutes=.1) #self.heartbeat_frequency * 1000)
+        self.periodic["public_info"] = public_info
 
-        # Soft quit with a keyboard interrupt
-        self.logger.info("FractalServer successfully started.\n")
-        if start_loop:
-            self.loop_active = True
-            # self.app.run(port=self.port)
-            self._start_flask()
+        # todo
+        atexit.register(self.stop)
+
 
     def stop(self, stop_loop: bool = True) -> None:
-        self.app.do_teardown_appcontext()
+        """
+        Shuts down the IOLoop and periodic updates.
+
+        Parameters
+        ----------
+        stop_loop : bool, optional
+            If False, does not shut down the IOLoop. Useful if the IOLoop is externally managed.
+        """
+
+        # # Shut down queue manager
+        # if "queue_manager" in self.objects:
+        #     self._run_in_thread(self.objects["queue_manager"].stop)
+        #
+        # # Close down periodics
+        # for cb in self.periodic.values():
+        #     cb.stop()
+        #
+        # # Call exit callbacks
+        # for func, args, kwargs in self.exit_callbacks:
+        #     func(*args, **kwargs)
+        #
+        # # Shutdown executor and futures
+        # for k, v in self.futures.items():
+        #     v.cancel()
+        #
+        # if self.executor is not None:
+        #     self.executor.shutdown()
+
+        # # Final: shutdown flask server
+        # @copy_current_request_context
+        # def flask_shutdown():
+        #     func = request.environ.get('werkzeug.server.shutdown')
+        #     if func is None:
+        #         raise RuntimeError('Not running with the Werkzeug Server')
+        #     func()
+        #     print(request.url)
+
+        # threading.Thread(target=flask_shutdown).start()
+
+        self.logger.info('Stoping Server and all periodics..')
+        if stop_loop:
+            self.scheduler.shutdown(wait=False)
+            self.app.do_teardown_appcontext()
 
     def stop_old(self, stop_loop: bool = True) -> None:
         """
@@ -538,6 +508,25 @@ class FractalServer():
         #     print(request.url)
 
         # threading.Thread(target=flask_shutdown).start()
+
+    def _setup_logging(self, logfile_prefix, loglevel):
+
+        # Root logger
+        logger = logging.getLogger()
+
+        log_formatter = logging.Formatter('%(asctime)s - %(name)s:%(lineno)d - %(levelname)s - %(message)s')
+
+        file_handler = logging.FileHandler(logfile_prefix)
+        file_handler.setFormatter(log_formatter)
+        logger.addHandler(file_handler)
+
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(log_formatter)
+        logger.addHandler(console_handler)
+
+        logger.setLevel(loglevel.upper())
+
+        return logging.getLogger(__name__)
 
     def add_exit_callback(self, callback, *args, **kwargs):
         """Adds additional callbacks to perform when closing down the server.
@@ -650,6 +639,8 @@ class FractalServer():
         """
         Updates the public information data
         """
+
+        self.logger.info('------ Updating public info')
         data = self.storage.get_server_stats_log(limit=1)["data"]
 
         counts = {"collection": 0, "molecule": 0, "result": 0, "kvstore": 0}
@@ -666,7 +657,7 @@ class FractalServer():
         """
         Checks the heartbeats and kills off managers that have not been heard from.
         """
-
+        self.logger.info('**************** Check manager heartbeat')
         dt = datetime.utcnow() - timedelta(seconds=self.heartbeat_frequency)
         ret = self.storage.get_managers(status="ACTIVE", modified_before=dt)
 
