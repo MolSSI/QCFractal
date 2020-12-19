@@ -26,7 +26,10 @@ class DevelopmentConfig(Config):
 
 
 class TestingConfig(Config):
+    # Testing=True disables error catching during request handling, so that you get better error
+    # reports when performing test requests against the application.
     TESTING = True
+
     DEBUG = False
 
 

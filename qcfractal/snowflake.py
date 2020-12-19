@@ -59,6 +59,7 @@ class FractalSnowflake(FractalServer):
         logging: Union[bool, str] = False,
         start_server: bool = True,
         reset_database: bool = False,
+        flask_config: str = 'default'
     ):
         """A temporary FractalServer that can be used to run complex workflows or try new computations.
 
@@ -105,14 +106,15 @@ class FractalSnowflake(FractalServer):
         if max_workers:
             self.queue_socket = Pool(processes=max_workers, initializer=_initialize_signals_process_pool)
 
+        # TODO:
         # Add the loop to a background thread and init the server
-        self.aioloop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.aioloop)
-        IOLoop.clear_instance()
-        IOLoop.clear_current()
-        loop = IOLoop()
-        self.loop = loop
-        self.loop_thread = ThreadPoolExecutor(max_workers=2)
+        # self.aioloop = asyncio.new_event_loop()
+        # asyncio.set_event_loop(self.aioloop)
+        # IOLoop.clear_instance()
+        # IOLoop.clear_current()
+        # loop = IOLoop()
+        # self.loop = loop
+        # self.loop_thread = ThreadPoolExecutor(max_workers=2)
 
         if logging is False:
             self.logfile = tempfile.NamedTemporaryFile()
@@ -131,7 +133,8 @@ class FractalSnowflake(FractalServer):
         super().__init__(
             name="QCFractal Snowflake Instance",
             port=find_port(),
-            loop=self.loop,
+            # loop=self.loop,
+            loop=None,
             storage_uri=self._storage_uri,
             storage_project_name=storage_project_name,
             ssl_options=False,
@@ -142,6 +145,7 @@ class FractalSnowflake(FractalServer):
             query_limit=int(1.0e6),
             view_enabled=True,
             view_path=self._view_tempdir.name,
+            flask_config=flask_config,
         )
 
         if self._storage:
@@ -153,8 +157,9 @@ class FractalSnowflake(FractalServer):
 
         if start_server:
             self.start(start_loop=False)
+        # self.start(start_loop=False)
 
-        self.loop_future = self.loop_thread.submit(self.loop.start)
+        # self.loop_future = self.loop_thread.submit(self.loop.start)
 
         self._active = True
 
@@ -184,10 +189,10 @@ class FractalSnowflake(FractalServer):
             return
 
         super().stop(stop_loop=False)
-        self.loop.add_callback(self.loop.stop)
-        self.loop_future.result()
-
-        self.loop_thread.shutdown()
+        # self.loop.add_callback(self.loop.stop)
+        # self.loop_future.result()
+        #
+        # self.loop_thread.shutdown()
 
         if self._storage is not None:
             self._storage.stop()

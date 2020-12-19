@@ -21,7 +21,35 @@ from qcfractal.testing import (
     using_torsiondrive,
 )
 
+def get_header(test_server):
+    return {"Authorization": "Bearer "+test_server.app.config.auth_token}
+
 meta_set = {"errors", "n_inserted", "success", "duplicates", "error_description", "validation_errors"}
+
+def test_server_up(test_server):
+    info_addr = test_server.get_address() + "information"  # Targets and endpoint in the FractalServer
+
+    # client = test_server.app.test_client()
+    # r = client.get(info_addr, json={}, headers={'auth_token': 'xyz'})
+
+    # with test_server.app.app_context():
+
+    r = requests.get(info_addr, json={})
+    print(r.status_code)
+    print(r.reason)
+    print(r.json())
+    assert r.status_code == 200, r.reason
+
+def test_server_logged(test_server):
+
+    addr = test_server.get_address() + "manager"  # Targets and endpoint in the FractalServer
+
+    body = { "meta": "", "data": ""}
+    r = requests.get(addr, json=body)
+    assert r.status_code == 401
+
+    r = requests.get(addr, json=body, headers=get_header(test_server))
+    assert r.status_code == 200
 
 
 def test_server_information(test_server):
@@ -48,7 +76,7 @@ def test_storage_socket(test_server):
     # Cast collection type to lower since the server-side does it anyways
     storage["collection"] = storage["collection"].lower()
 
-    r = requests.post(storage_api_addr, json={"meta": {}, "data": storage})
+    r = requests.post(storage_api_addr, json={"meta": {}, "data": storage}, headers=get_header(test_server))
     assert r.status_code == 200, r.reason
 
     pdata = r.json()
@@ -58,7 +86,7 @@ def test_storage_socket(test_server):
     r = requests.get(
         storage_api_addr, json={"meta": {}, "data": {"collection": storage["collection"], "name": storage["name"]}}
     )
-    print(r.content)
+    # print(r.content)
     assert r.status_code == 200, r.reason
 
     pdata = r.json()
@@ -75,7 +103,8 @@ def test_storage_socket(test_server):
     assert pdata["data"][0] == storage
 
     # Test collection id sub-resource
-    r = requests.get(f"{storage_api_addr}/{col_id}", json={"meta": {}, "data": {}}).json()
+    r = requests.get(f"{storage_api_addr}/{col_id}", json={"meta": {}, "data": {}})
+    r = r.json()
     assert r["meta"]["success"] is True
     assert len(r["data"]) == 1
     assert r["data"][0]["id"] == col_id
@@ -116,7 +145,7 @@ def test_bad_collection_post(test_server):
         test_server.get_address() + "collection/1234/list",
         test_server.get_address() + "collection/1234/molecule",
     ]:
-        r = requests.post(storage_api_addr, json={"meta": {}, "data": storage})
+        r = requests.post(storage_api_addr, json={"meta": {}, "data": storage}, headers=get_header(test_server))
         assert r.status_code == 200, r.reason
         assert r.json()["meta"]["success"] is False
 
