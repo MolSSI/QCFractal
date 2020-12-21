@@ -32,9 +32,9 @@ VERBOSE = False
 
 def connect_to_DBs(staging_uri, production_uri, max_limit):
 
-    staging_storage = storage_socket_factory(staging_uri, db_type="sqlalchemy", max_limit=max_limit)
+    staging_storage = storage_socket_factory(staging_uri, max_limit=max_limit)
 
-    production_storage = storage_socket_factory(production_uri, db_type="sqlalchemy", max_limit=max_limit)
+    production_storage = storage_socket_factory(production_uri, max_limit=max_limit)
 
     print("DB limit: ", max_limit)
 

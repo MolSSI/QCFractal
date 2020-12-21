@@ -264,6 +264,7 @@ class SQLAlchemySocket:
         # Add User Roles if doesn't exist
         self._add_default_roles()
 
+
     def __str__(self) -> str:
         return f"<SQLAlchemySocket: address='{self.uri}`>"
 
@@ -2838,7 +2839,7 @@ class SQLAlchemySocket:
                 self.logger.warning(str(err))
                 session.rollback()
 
-        return success
+        return success, password
 
     def verify_user(self, username: str, password: str) -> Tuple[bool, str, Any]:
         """
@@ -3119,8 +3120,10 @@ class SQLAlchemySocket:
             try:
                 session.add_all([RoleORM(**user1), RoleORM(**user2)])
                 session.commit()
+                return True
             except Exception:
                 session.rollback()
+                return False
 
 
 
