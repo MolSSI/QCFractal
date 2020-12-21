@@ -233,7 +233,7 @@ class FractalClient(object):
             raise ConnectionRefusedError(_connection_error_msg.format(self.address)) from None
 
         if (r.status_code != 200) and (not noraise):
-            raise IOError("Server communication failure. Reason: {}".format(r.reason))
+            raise IOError("Server communication failure. Code: {}, Reason: {}".format(r.status_code, r.reason))
 
         return r
 
@@ -273,6 +273,9 @@ class FractalClient(object):
 
         r = self._request(rest, name, data=payload.serialize(self.encoding), timeout=timeout)
         encoding = r.headers["Content-Type"].split("/")[1]
+        print(f'>>>>> rest: {rest}, name: {name}')
+        print(f'payload: {payload}, self.encoding: {self.encoding}')
+        print(f'>>>>>> encoding: {encoding}, r.content: {r.content}')
         response = response_model.parse_raw(r.content, encoding=encoding)
 
         if full_return:
