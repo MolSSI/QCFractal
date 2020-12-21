@@ -408,10 +408,11 @@ def test_server(request, postgres_server):
                 flask_app=server.app,
                 base_url=server.get_address(),
             )
-            server.app.config.storage.add_user('user@molssi.org', password='password', rolename="admin")
-            ret = requests.post(server.get_address() + "login",
-                                  json={"email": "user@molssi.org", "password": "password"})
-            server.app.config.headers = {"Authorization": "Bearer "+ret.json()["access_token"]}
+            os.environ['JWT_DISABLED'] = "1"
+            # server.app.config.storage.add_user('user@molssi.org', password='password', rolename="admin")
+            # ret = requests.post(server.get_address() + "login",
+            #                       json={"email": "user@molssi.org", "password": "password"})
+            # server.app.config.headers = {"Authorization": "Bearer "+ret.json()["access_token"]}
             yield server
 
 
@@ -526,52 +527,45 @@ def fractal_compute_server(postgres_server):
                 flask_app=server.app,
                 base_url=server.get_address(),
             )
-            server.app.config.storage.add_user('user@molssi.org', password='password', rolename="admin")
-            ret = requests.post(server.get_address() + "login",
-                                  json={"email": "user@molssi.org", "password": "password"})
-            server.app.config.headers = {"Authorization": "Bearer "+ret.json()["access_token"]}
+            os.environ['JWT_DISABLED'] = "1"
+            # server.app.config.storage.add_user('user@molssi.org', password='password', rolename="admin")
+            # ret = requests.post(server.get_address() + "login",
+            #                       json={"email": "user@molssi.org", "password": "password"})
+            # server.app.config.headers = {"Authorization": "Bearer "+ret.json()["access_token"]}
 
 
         yield server
 
 
-def build_socket_fixture(stype, server=None):
+def build_socket_fixture(server=None):
     print("")
 
     # Check mongo
-    storage_name = "test_qcfractal_storage" + stype
+    storage_name = "test_qcfractal_storage"
 
-    # IP/port/drop table is specific to build
-    if stype == "sqlalchemy":
+    server.create_database(storage_name)
+    storage = storage_socket_factory(server.database_uri(), storage_name, sql_echo=False)
 
-        server.create_database(storage_name)
-        storage = storage_socket_factory(server.database_uri(), storage_name, db_type=stype, sql_echo=False)
-
-        # Clean and re-init the database
-        storage._clear_db(storage_name)
-    else:
-        raise KeyError("Storage type {} not understood".format(stype))
+    # Clean and re-init the database
+    storage._clear_db(storage_name)
+    storage._add_default_roles()
 
     yield storage
 
-    if stype == "sqlalchemy":
-        # todo: drop db
-        # storage._clear_db(storage_name)
-        pass
-    else:
-        raise KeyError("Storage type {} not understood".format(stype))
+   # storage._clear_db(storage_name)
 
 
-@pytest.fixture(scope="module", params=["sqlalchemy"])
-def socket_fixture(request):
 
-    yield from build_socket_fixture(request.param)
+# @pytest.fixture(scope="module", params=["sqlalchemy"])
+# def socket_fixture(request):
+#
+#     yield from build_socket_fixture(request.param)
 
 
 @pytest.fixture(scope="module")
 def sqlalchemy_socket_fixture(request, postgres_server):
 
-    yield from build_socket_fixture("sqlalchemy", postgres_server)
+    yield from build_socket_fixture(postgres_server)
 
 
 def live_fractal_or_skip():

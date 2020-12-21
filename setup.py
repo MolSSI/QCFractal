@@ -69,9 +69,9 @@ if __name__ == "__main__":
                 "numpydoc",
             ],
             "lint": ["black", "isort"],
-            "tests": ["pytest", "pytest-cov", "requests-mock", "requests_mock_flask"],
+            "tests": ["pytest", "pytest-cov", "requests-mock", "responses", "requests_mock_flask"],
         },
-        tests_require=["pytest", "pytest-cov", "requests-mock", "requests_mock_flask"],
+        tests_require=["pytest", "pytest-cov", "requests-mock", "responses", "requests_mock_flask"],
         classifiers=[
             "Development Status :: 4 - Beta",
             "Intended Audience :: Science/Research",

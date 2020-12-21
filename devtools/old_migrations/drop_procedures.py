@@ -8,7 +8,7 @@ from qcfractal.storage_sockets.sql_models import (ProcedureMap, OptimizationProc
 sql_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb"
 
 
-sql_storage = storage_socket_factory(sql_uri, 'qcarchivedb', db_type='sqlalchemy')
+sql_storage = storage_socket_factory(sql_uri, 'qcarchivedb')
 
 with sql_storage.engine.connect() as con:
 
