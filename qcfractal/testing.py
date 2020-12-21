@@ -32,7 +32,7 @@ from .storage_sockets import storage_socket_factory
 ## For mock flask responses
 from requests_mock_flask import add_flask_app_to_mock
 import requests_mock
-# import responses
+import responses
 
 ### Addon testing capabilities
 
@@ -401,8 +401,8 @@ def test_server(request, postgres_server):
 
         # Clean and re-init the database
 
-        # with responses.RequestsMock(assert_all_requests_are_fired=False) as resp_m:
-        with requests_mock.Mocker() as resp_m:
+        with responses.RequestsMock(assert_all_requests_are_fired=False) as resp_m:
+        # with requests_mock.Mocker() as resp_m:
             add_flask_app_to_mock(
                 mock_obj=resp_m,
                 flask_app=server.app,
@@ -411,7 +411,7 @@ def test_server(request, postgres_server):
             server.app.config.storage.add_user('user@molssi.org', password='password', rolename="admin")
             ret = requests.post(server.get_address() + "login",
                                   json={"email": "user@molssi.org", "password": "password"})
-            server.app.config.auth_token = ret.json()["access_token"]
+            server.app.config.headers = {"Authorization": "Bearer "+ret.json()["access_token"]}
             yield server
 
 
@@ -519,6 +519,20 @@ def fractal_compute_server(postgres_server):
         start_server=False,
     ) as server:
         reset_server_database(server)
+
+        with responses.RequestsMock(assert_all_requests_are_fired=False) as resp_m:
+        # with requests_mock.Mocker() as resp_m:
+            add_flask_app_to_mock(
+                mock_obj=resp_m,
+                flask_app=server.app,
+                base_url=server.get_address(),
+            )
+            server.app.config.storage.add_user('user@molssi.org', password='password', rolename="admin")
+            ret = requests.post(server.get_address() + "login",
+                                  json={"email": "user@molssi.org", "password": "password"})
+            server.app.config.headers = {"Authorization": "Bearer "+ret.json()["access_token"]}
+
+
         yield server
 
 

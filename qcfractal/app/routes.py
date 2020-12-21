@@ -212,7 +212,7 @@ def login():
 def get_information():
     # current_user = get_current_user()
 
-    return jsonify(current_app.config.public_information)
+    return PydanticResponse(current_app.config.public_information)
 
 @jwt_refresh_token_required
 @main.route('/refresh', methods=['POST'])
@@ -433,7 +433,6 @@ def get_result():
     logger.info("GET: Results - {} pulls.".format(len(response.data)))
 
     return PydanticResponse(response)
-
 
 
 @main.route('/wavefunctionstore', methods=['GET'])
