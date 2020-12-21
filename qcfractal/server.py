@@ -110,8 +110,8 @@ class FractalServer():
         loglevel: str = "debug",
         log_apis: bool = False,
         geo_file_path: str = None,
-        # Queue options
-        queue_socket: "BaseAdapter" = None,
+        # Queue options TODO: call it manager_??
+        queue_socket: "BaseAdapter" = None,  # or ProcessPollExecutor
         heartbeat_frequency: float = 1800,
         # Service options
         max_active_services: int = 20,
