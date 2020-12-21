@@ -43,10 +43,10 @@ def test_server_logged(test_server):
     addr = test_server.get_address() + "manager"  # Targets and endpoint in the FractalServer
 
     body = { "meta": "", "data": ""}
-    r = requests.get(addr, json=body)
-    assert r.status_code == 401
+    # r = requests.get(addr, json=body)
+    # assert r.status_code == 401
 
-    r = requests.get(addr, json=body, headers=test_server.app.config.headers)
+    r = requests.get(addr, json=body) #, headers=test_server.app.config.headers)
     assert r.status_code == 200
 
 
@@ -74,7 +74,7 @@ def test_storage_socket(test_server):
     # Cast collection type to lower since the server-side does it anyways
     storage["collection"] = storage["collection"].lower()
 
-    r = requests.post(storage_api_addr, json={"meta": {}, "data": storage}, headers=test_server.app.config.headers)
+    r = requests.post(storage_api_addr, json={"meta": {}, "data": storage})
     assert r.status_code == 200, r.reason
 
     pdata = r.json()
@@ -143,8 +143,7 @@ def test_bad_collection_post(test_server):
         test_server.get_address() + "collection/1234/list",
         test_server.get_address() + "collection/1234/molecule",
     ]:
-        r = requests.post(storage_api_addr, json={"meta": {}, "data": storage},
-                          headers=test_server.app.config.headers)
+        r = requests.post(storage_api_addr, json={"meta": {}, "data": storage})
         assert r.status_code == 200, r.reason
         assert r.json()["meta"]["success"] is False
 
