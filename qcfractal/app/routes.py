@@ -14,7 +14,6 @@ from flask import jsonify, request, make_response
 import traceback
 import collections
 from flask_jwt_extended import (
-    jwt_required,
     fresh_jwt_required,
     create_access_token,
     get_jwt_claims,
@@ -35,6 +34,16 @@ from werkzeug.exceptions import HTTPException, BadRequest, NotFound, \
 
 
 logger = logging.getLogger(__name__)
+
+# Use this work around to enable and disable JWT auth
+import os
+if not os.environ.get('JWT_DISABLED'):
+    logger.info("JWT authorization is disabled.")
+    def jwt_required(fn):
+        return fn
+else:
+    from flask_jwt_extended import jwt_required
+
 
 main = Blueprint('main', __name__)
 
