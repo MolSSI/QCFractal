@@ -408,7 +408,6 @@ def test_server(request, postgres_server):
                 flask_app=server.app,
                 base_url=server.get_address(),
             )
-            os.environ['JWT_DISABLED'] = "1"
             # server.app.config.storage.add_user('user@molssi.org', password='password', rolename="admin")
             # ret = requests.post(server.get_address() + "login",
             #                       json={"email": "user@molssi.org", "password": "password"})
@@ -528,7 +527,6 @@ def fractal_compute_server(postgres_server):
                 flask_app=server.app,
                 base_url=server.get_address(),
             )
-            os.environ['JWT_DISABLED'] = "1"
             # server.app.config.storage.add_user('user@molssi.org', password='password', rolename="admin")
             # ret = requests.post(server.get_address() + "login",
             #                       json={"email": "user@molssi.org", "password": "password"})
