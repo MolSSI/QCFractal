@@ -33,14 +33,11 @@ def test_server_up(test_server):
     # with test_server.app.app_context():
 
     r = requests.get(info_addr, json={})
-    print(r.status_code)
-    print(r.reason)
-    print(r.json())
     assert r.status_code == 200, r.reason
 
-def test_server_logged(test_server):
+def test_server_full_read(test_server):
 
-    addr = test_server.get_address() + "manager"  # Targets and endpoint in the FractalServer
+    addr = test_server.get_address() + "manager"
 
     body = { "meta": "", "data": ""}
     # r = requests.get(addr, json=body)
