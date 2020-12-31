@@ -190,6 +190,12 @@ def after_request_func(response):
 
     return response
 
+@main.errorhandler(Exception)
+def handle_python_errors(error):
+    response = jsonify(str(error))
+    response.status_code = 400
+    return response
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                            Routes
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -343,6 +349,33 @@ def get_kvstore():
     return PydanticResponse(response)
 
 
+@main.route('/keyword', methods=['GET'])
+@check_access
+def get_keyword():
+    body_model, response_model = rest_model("keyword", "get")
+    body = parse_bodymodel(body_model)
+
+    ret = current_app.config.storage.get_keywords(**{**body.data.dict(), **body.meta.dict()}, with_ids=False)
+    response = response_model(**ret)
+
+    current_app.config.logger.info("GET: Keywords - {} pulls.".format(len(response.data)))
+    return PydanticResponse(response)
+
+
+@main.route('/keyword', methods=['POST'])
+@check_access
+def post_keyword():
+
+    body_model, response_model = rest_model("keyword", "post")
+    body = parse_bodymodel(body_model)
+
+    ret = current_app.config.storage.add_keywords(body.data)
+    response = response_model(**ret)
+
+    current_app.config.logger.info("POST: Keywords - {} inserted.".format(response.meta.n_inserted))
+    return PydanticResponse(response)
+
+
 @main.route('/collection', methods=['GET'])
 @main.route('/collection/<int:collection_id>', methods=['GET'])
 @main.route('/collection/<int:collection_id>/<string:view_function>', methods=['GET'])
@@ -385,10 +418,7 @@ def get_collection(collection_id: int=None, view_function: str=None):
                 "msgpacked_cols": [],
             }
             response = response_model(meta=meta, data=None)
-            if not isinstance(response, (str, bytes)):
-                data = serialize(response, encoding)
-
-            return data
+            return PydanticResponse(response)
 
         result = current_app.config.view_handler.handle_request(collection_id, view_function, body.data.dict())
         response = response_model(**result)
@@ -476,9 +506,10 @@ def get_wave_function():
     return PydanticResponse(response)
 
 
+@main.route('/procedure', methods=['GET'])
 @main.route('/procedure/<string:query_type>', methods=['GET'])
 @check_access
-def get_procedure(query_type: str):
+def get_procedure(query_type: str = 'get'):
     body_model, response_model = rest_model("procedure", query_type)
     body = parse_bodymodel(body_model)
 
