@@ -94,9 +94,9 @@ class FractalServer():
         port: int = 5000,
         loop: "IOLoop" = None,
         compress_response: bool = True,
-        # Security
+        # Security/Auth
         security: Optional[str] = None,
-        allow_read: bool = False,
+        allow_read: bool = True,  # changed default to True to match security default
         ssl_options: Union[bool, Dict[str, str]] = True,
         # Database options
         storage_uri: str = "postgresql://localhost:5432",
@@ -183,9 +183,11 @@ class FractalServer():
 
         # Build security layers
         if security is None:
-            storage_bypass_security = True
+            # storage_bypass_security = True
+            JWT_ENABLED = False
         elif security == "local":
-            storage_bypass_security = False
+            # storage_bypass_security = False
+            JWT_ENABLED = True
         else:
             raise KeyError("Security option '{}' not recognized.".format(security))
 
@@ -241,8 +243,9 @@ class FractalServer():
         self.storage = storage_socket_factory(
             storage_uri,
             project_name=storage_project_name,
-            bypass_security=storage_bypass_security,
-            allow_read=allow_read,
+            # authentication and authorization is Flask responsibility
+            # bypass_security=storage_bypass_security,
+            # allow_read=allow_read,
             max_limit=query_limit,
             skip_version_check=skip_storage_version_check,
         )
@@ -252,12 +255,14 @@ class FractalServer():
         else:
             self.view_handler = None
 
-        # Build up the application
+        # Objects to pass to Flask config
         self.objects = {
-            "storage_socket": self.storage,
+            "storage": self.storage,
             "logger": self.logger,
             "api_logger": self.api_logger,
             "view_handler": self.view_handler,
+            "ALLOW_READ": allow_read if JWT_ENABLED else True, # always True if no security needed
+            "JWT_ENABLED": JWT_ENABLED,
         }
 
         # Public information
@@ -516,9 +521,10 @@ class FractalServer():
 
         log_formatter = logging.Formatter('%(asctime)s - %(name)s:%(lineno)d - %(levelname)s - %(message)s')
 
-        file_handler = logging.FileHandler(logfile_prefix)
-        file_handler.setFormatter(log_formatter)
-        logger.addHandler(file_handler)
+        if logfile_prefix:
+            file_handler = logging.FileHandler(logfile_prefix)
+            file_handler.setFormatter(log_formatter)
+            logger.addHandler(file_handler)
 
         console_handler = logging.StreamHandler()
         console_handler.setFormatter(log_formatter)
