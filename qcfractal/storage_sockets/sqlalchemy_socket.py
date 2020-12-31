@@ -2788,7 +2788,7 @@ class SQLAlchemySocket:
         self,
         username: str,
         password: Optional[str] = None,
-        rolename: str = 'user'
+        rolename: str = 'read'
     ) -> bool:
         """
         Adds a new user. Passwords are stored using bcrypt.
@@ -3090,14 +3090,13 @@ class SQLAlchemySocket:
         """
         Add default roles to the DB IF they don't exists
 
-        Default roles are Admin, user (readonly)
+        Default roles are Admin, read (readonly)
 
         """
 
-        user_permissions = {"Statement": [
+        read_permissions = {"Statement": [
             {"Effect": "Allow", "Action": "GET", "Resource": "*"},
-            {"Effect": "Deny", "Action": "*", "Resource": "user"},
-            {"Effect": "Deny", "Action": "*", "Resource": "manager"},
+            {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager", "role"]},
         ]}
 
         admin_permissions = {"Statement": [
@@ -3105,7 +3104,7 @@ class SQLAlchemySocket:
         ]}
 
         with self.session_scope() as session:
-            user1 = {"rolename": 'user', "permissions": user_permissions}
+            user1 = {"rolename": 'read', "permissions": read_permissions}
             user2 = {"rolename": 'admin', "permissions": admin_permissions}
 
             try:

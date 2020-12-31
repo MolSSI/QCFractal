@@ -21,15 +21,17 @@ def create_app(config_name='default', **objects):
 #     cors.init_app(app)
     jwt.init_app(app)
 
-    ### Add Fractal config, like storage
+    ### Add Fractal config, like storage, logger, etc
     app.config.objects = objects  # TODO: check if needed
 
-    app.config.storage = objects["storage_socket"]
+
+    app.config.storage = objects["storage"]
     app.config.logger = objects["logger"]
     app.config.api_logger = objects["api_logger"]
     app.config.view_handler = objects["view_handler"]
     app.config.public_information = objects["public_information"]
-#     self.username = None
+    app.config.JWT_ENABLED = objects["JWT_ENABLED"]
+    app.config.ALLOW_READ = objects['ALLOW_READ']
 
 
     # TODO: not tested

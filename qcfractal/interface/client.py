@@ -273,9 +273,6 @@ class FractalClient(object):
 
         r = self._request(rest, name, data=payload.serialize(self.encoding), timeout=timeout)
         encoding = r.headers["Content-Type"].split("/")[1]
-        print(f'>>>>> rest: {rest}, name: {name}')
-        print(f'payload: {payload}, self.encoding: {self.encoding}')
-        print(f'>>>>>> encoding: {encoding}, r.content: {r.content}')
         response = response_model.parse_raw(r.content, encoding=encoding)
 
         if full_return:

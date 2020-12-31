@@ -144,6 +144,7 @@ class FractalSnowflake(FractalServer):
             view_enabled=True,
             view_path=self._view_tempdir.name,
             flask_config=flask_config,
+            security=None,
         )
 
         if self._storage:

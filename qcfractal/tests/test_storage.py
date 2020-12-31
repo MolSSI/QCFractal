@@ -838,7 +838,7 @@ def test_user_duplicates(storage_socket):
 
 def test_modify_user(storage_socket):
 
-    r, pw = storage_socket.add_user("george", "oldpw", rolename='user')
+    r, pw = storage_socket.add_user("george", "oldpw", rolename='read')
     assert r is True
 
     # unknown user
