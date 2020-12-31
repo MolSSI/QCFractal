@@ -112,9 +112,7 @@ def parse_bodymodel(model):
     """Parse request body using pydantic models"""
 
     try:
-        return model(**request.get_json())
-        #TODO
-        # return model(**request.data)
+        return model(**request.data)
     except Exception as e:
         logger.error("Invalid request body:\n" + str(e))
         raise BadRequest("Invalid body: " + str(e))
@@ -199,13 +197,13 @@ def after_request_func(response):
 @main.route('/register', methods=['POST'])
 def register():
     if request.is_json:
-        email = request.json['email']
+        username = request.json['username']
         password = request.json['password']
     else:
-        email = request.form['email']
+        username = request.form['username']
         password = request.form['password']
 
-    success = current_app.config.storage.add_user(email, password=password, rolename="user")
+    success = current_app.config.storage.add_user(username, password=password, rolename="user")
     if success:
         return jsonify({'message': 'New user created!'}), 201
     else:
@@ -216,16 +214,16 @@ def register():
 @main.route('/login', methods=['POST'])
 def login():
     if request.is_json:
-        email = request.json['email']
+        username = request.json['username']
         password = request.json['password']
     else:
-        email = request.form['email']
+        username = request.form['username']
         password = request.form['password']
 
-    success, error_message, permissions = current_app.config.storage.verify_user(email, password)
+    success, error_message, permissions = current_app.config.storage.verify_user(username, password)
     if success:
-        access_token = create_access_token(identity=email, user_claims={"permissions": permissions})
-        refresh_token = create_refresh_token(identity=email)
+        access_token = create_access_token(identity=username, user_claims={"permissions": permissions})
+        refresh_token = create_refresh_token(identity=username)
         return jsonify(message="Login succeeded!", access_token=access_token,
                        refresh_token=refresh_token), 200
     else:
@@ -241,9 +239,9 @@ def get_information():
 @main.route('/refresh', methods=['POST'])
 @jwt_refresh_token_required
 def refresh():
-    email = get_jwt_identity()
+    username = get_jwt_identity()
     ret = {
-        'access_token': create_access_token(identity=email)
+        'access_token': create_access_token(identity=username)
     }
     return jsonify(ret), 200
 
@@ -251,15 +249,15 @@ def refresh():
 @main.route('/fresh-login', methods=['POST'])
 def fresh_login():
     if request.is_json:
-        email = request.json['email']
+        username = request.json['username']
         password = request.json['password']
     else:
-        email = request.form['email']
+        username = request.form['username']
         password = request.form['password']
 
-    success, error_message, permissions = current_app.config.storage.verify_user(email, password)
+    success, error_message, permissions = current_app.config.storage.verify_user(username, password)
     if success:
-        access_token = create_access_token(identity=email, user_claims={"permissions": permissions}, fresh=True)
+        access_token = create_access_token(identity=username, user_claims={"permissions": permissions}, fresh=True)
         return jsonify(message="Fresh login succeeded!", access_token=access_token), 200
     else:
         return Unauthorized(error_message)
