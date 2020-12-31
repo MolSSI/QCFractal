@@ -124,7 +124,7 @@ class FractalClient(object):
             requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
         if (username is not None) or (password is not None):
-            self._headers["Authorization"] = json.dumps({"username": username, "password": password})
+            self._headers["Authorization"] = self._get_JWT_token(username, password)
 
         from . import __version__  # Import here to avoid circular import
         from . import _isportal
@@ -199,6 +199,16 @@ class FractalClient(object):
     def _set_encoding(self, encoding: str) -> None:
         self.encoding = encoding
         self._headers["Content-Type"] = f"application/{self.encoding}"
+
+    def _get_JWT_token(self, username, password):
+
+        ret = requests.post(self.address + "login",
+                            json={"username": username, "password": password})
+        print(f'----- client login: {ret}')
+        if ret.status_code == 200:
+            return "Bearer "+ret.json()["access_token"]
+        else:
+            return ""
 
     def _request(
         self,
