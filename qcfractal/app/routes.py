@@ -17,37 +17,27 @@ from flask_jwt_extended import (
     fresh_jwt_required,
     create_access_token,
     get_jwt_claims,
-    get_current_user,
     jwt_refresh_token_required,
     create_refresh_token,
-    get_jwt_identity
+    get_jwt_identity,
+    verify_jwt_in_request,
 )
 from urllib.parse import urlparse
 from ..policyuniverse import Policy
-import flask
 from flask import Blueprint, current_app, session, Response
 from . import jwt
 import logging
 import json
+from functools import wraps
+
 from werkzeug.exceptions import HTTPException, BadRequest, NotFound, \
     Forbidden, Unauthorized
 
 
 logger = logging.getLogger(__name__)
 
-# Use this work around to enable and disable JWT auth
-import os
-if not os.environ.get('JWT_DISABLED'):
-    logger.info("JWT authorization is disabled.")
-    def jwt_required(fn):
-        return fn
-else:
-    from flask_jwt_extended import jwt_required
-
-
 main = Blueprint('main', __name__)
 
-encoding = "json"  # TODO: select from request
 
 _valid_encodings = {
     "application/json": "json",
@@ -59,7 +49,67 @@ _valid_encodings = {
 _logging_param_counts = {'id'}
 
 
+def check_access(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        """
+            Call the route (fn) if allowed to access the url using the given
+            permissions in the JWT token in the request headers
+
+            1- If no security (JWT_ENABLED=False), always allow
+            2- If JWT_ENABLED:
+                if read allowed (allow_read=True), use the default read permissions
+                otherwise, check against the logged-in user permissions
+                from the headers' JWT token
+        """
+
+        logger.debug(f'JWT_ENABLED: {current_app.config.JWT_ENABLED}')
+        logger.debug(f'ALLOW_READ: {current_app.config.ALLOW_READ}')
+
+        # if no auth required, always allowed
+        if not current_app.config.JWT_ENABLED:
+            return fn(*args, **kwargs)
+
+        # if read is allowed without login, load read permissions from DB
+        # otherwise, check logged-in permissions
+        if current_app.config.ALLOW_READ:
+            _, permissions = current_app.config.storage.get_role('read')
+            permissions = permissions['permissions']
+        else:
+            # read JWT token from request headers
+            verify_jwt_in_request()
+            claims = get_jwt_claims()
+            permissions = claims.get('permissions', None)
+
+        try:
+            # host_url = request.host_url
+            identity = get_jwt_identity()
+            resource = urlparse(request.url).path.split("/")[1]
+            context = {
+                "Principal": identity,
+                "Action": request.method,
+                "Resource": resource
+                # "IpAddress": request.remote_addr,
+                # "AccessTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+            }
+            logger.info(f'Permissions: {permissions}')
+            logger.info(f'Context: {context}')
+            policy = Policy(permissions)
+            if policy.evaluate(context):
+                return fn(*args, **kwargs)
+            else:
+                return Forbidden(f"User {identity} is not authorized to access '{resource}' resource.")
+
+        except Exception as e:
+            logger.info("Error in evaluating JWT permissions: \n" + str(e) )
+            # logger.info(f"Permissions: {permissions}")
+            return BadRequest("Error in evaluating JWT permissions")
+
+    return wrapper
+
+
 def parse_bodymodel(model):
+    """Parse request body using pydantic models"""
 
     try:
         return model(**request.get_json())
@@ -108,7 +158,6 @@ def before_request_func():
         raise BadRequest("Could not deserialize body.")
 
 
-
 @main.after_request
 def after_request_func(response):
 
@@ -123,7 +172,6 @@ def after_request_func(response):
     if request.data is None:
         return
 
-    # print('-------', current_app.config.api_logger, request.path)
     if current_app.config.api_logger and request.method == "GET" and request.path not in exclude_uris:
 
         extra_params = request.data.copy()
@@ -142,44 +190,11 @@ def after_request_func(response):
 
         # logger.info('Done saving API access to the database')
 
-
     return response
 
-
-@jwt.user_loader_callback_loader
-def user_loader_callback(identity):
-    try:
-        # host_url = request.host_url
-        claims = get_jwt_claims()
-        context = {
-            "Principal": identity,
-            "Action": request.method,
-            "Resource": urlparse(request.url).path.split("/")[1]
-            # "IpAddress": request.remote_addr,
-            # "AccessTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-        }
-        policy = Policy(claims.get('permissions'))
-        if policy.evaluate(context):
-            return {"identity": identity, "permissions": claims.get('permissions')}
-        else:
-            return None
-
-    except Exception as e:
-        logger.info("Error in evaluating JWT permissions: \n" + str(e))
-        return None
-
-
-@jwt.user_loader_error_loader
-def custom_user_loader_error(identity):
-    resource = urlparse(request.url).path.split("/")[1]
-    # ret = {
-    #     "msg": "User {} is not authorized to access '{}' resource.".format(identity, resource)
-    # }
-    # return jsonify(ret), 403
-    msg = f"User {identity} is not authorized to access '{resource}' resource."
-
-    return Forbidden(msg)
-
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#                            Routes
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 @main.route('/register', methods=['POST'])
 def register():
@@ -219,12 +234,12 @@ def login():
 
 @main.route('/information', methods=['GET'])
 def get_information():
-    # current_user = get_current_user()
 
     return PydanticResponse(current_app.config.public_information)
 
-@jwt_refresh_token_required
+
 @main.route('/refresh', methods=['POST'])
+@jwt_refresh_token_required
 def refresh():
     email = get_jwt_identity()
     ret = {
@@ -251,6 +266,7 @@ def fresh_login():
 
 
 @main.route('/molecule', methods=['GET'])
+@check_access
 def get_molecule():
     """
     Request:
@@ -277,7 +293,7 @@ def get_molecule():
 
 
 @main.route('/molecule', methods=['POST'])
-@jwt_required
+@check_access
 def post_molecule():
     """
     Request:
@@ -305,6 +321,7 @@ def post_molecule():
 
 
 @main.route('/kvstore', methods=['GET'])
+@check_access
 def get_kvstore():
     """
     Request:
@@ -331,6 +348,7 @@ def get_kvstore():
 @main.route('/collection', methods=['GET'])
 @main.route('/collection/<int:collection_id>', methods=['GET'])
 @main.route('/collection/<int:collection_id>/<string:view_function>', methods=['GET'])
+@check_access
 def get_collection(collection_id: int=None, view_function: str=None):
     # List collections
 
@@ -391,7 +409,7 @@ def get_collection(collection_id: int=None, view_function: str=None):
 @main.route('/collection', methods=['POST'])
 @main.route('/collection/<int:collection_id>', methods=['POST'])
 @main.route('/collection/<int:collection_id>/<string:view_function>', methods=['POST'])
-@jwt_required
+@check_access
 def post_collection(collection_id: int=None, view_function: str=None):
 
     view_function_vals = ('value', 'entry', 'list', 'molecule')
@@ -418,7 +436,7 @@ def post_collection(collection_id: int=None, view_function: str=None):
 
 @main.route('/collection', methods=['DELETE'])
 @main.route('/collection/<int:collection_id>', methods=['DELETE'])
-@jwt_required
+@check_access
 def delete_collection(collection_id: int, view_function: str):
     body_model, response_model = rest_model(f"collection/{collection_id}", "delete")
     ret = current_app.config.storage.del_collection(col_id=collection_id)
@@ -431,6 +449,7 @@ def delete_collection(collection_id: int, view_function: str):
 
 
 @main.route('/result', methods=['GET'])
+@check_access
 def get_result():
 
     body_model, response_model = rest_model("result", "get")
@@ -445,6 +464,7 @@ def get_result():
 
 
 @main.route('/wavefunctionstore', methods=['GET'])
+@check_access
 def get_wave_function():
 
     body_model, response_model = rest_model("wavefunctionstore", "get")
@@ -459,6 +479,7 @@ def get_wave_function():
 
 
 @main.route('/procedure/<string:query_type>', methods=['GET'])
+@check_access
 def get_procedure(query_type: str):
     body_model, response_model = rest_model("procedure", query_type)
     body = parse_bodymodel(body_model)
@@ -477,6 +498,7 @@ def get_procedure(query_type: str):
 
 
 @main.route('/optimization/<string:query_type>', methods=['GET'])
+@check_access
 def get_optimization(query_type: str):
     body_model, response_model = rest_model(f"optimization/{query_type}", "get")
     body = parse_bodymodel(body_model)
@@ -495,7 +517,7 @@ def get_optimization(query_type: str):
 
 
 @main.route('/task_queue', methods=['GET'])
-# @jwt_required  #TODO: required?
+@check_access
 def get_task_queue():
     body_model, response_model = rest_model("task_queue", "get")
     body = parse_bodymodel(body_model)
@@ -507,7 +529,7 @@ def get_task_queue():
 
 
 @main.route('/task_queue', methods=['POST'])
-@jwt_required
+@check_access
 def post_task_queue():
     body_model, response_model = rest_model("task_queue", "post")
     body = parse_bodymodel(body_model)
@@ -532,7 +554,7 @@ def post_task_queue():
 
 
 @main.route('/task_queue', methods=['PUT'])
-@jwt_required
+@check_access
 def put_task_queue():
     body_model, response_model = rest_model("task_queue", "put")
     body = parse_bodymodel(body_model)
@@ -551,6 +573,7 @@ def put_task_queue():
 
 
 @main.route('/service_queue', methods=['GET'])
+@check_access
 def get_service_queue():
     body_model, response_model = rest_model("service_queue", "get")
     body = parse_bodymodel(body_model)
@@ -562,7 +585,7 @@ def get_service_queue():
 
 
 @main.route('/service_queue', methods=['POST'])
-@jwt_required
+@check_access
 def post_service_queue():
     """Posts new services to the service queue."""
 
@@ -597,7 +620,7 @@ def post_service_queue():
 
 
 @main.route('/service_queue', methods=['PUT'])
-@jwt_required
+@check_access
 def put_service_queue():
     """Modifies services in the service queue"""
 
@@ -697,6 +720,7 @@ def insert_complete_tasks(storage_socket, results, logger):
 
 
 @main.route('/queue_manager', methods=['GET'])
+@check_access
 def get_queue_manager():
         """Pulls new tasks from the task queue"""
 
@@ -729,7 +753,7 @@ def get_queue_manager():
 
 
 @main.route('/queue_manager', methods=['POST'])
-@jwt_required
+@check_access
 def post_queue_manager():
     """Posts complete tasks to the task queue"""
 
@@ -761,7 +785,7 @@ def post_queue_manager():
 
 
 @main.route('/queue_manager', methods=['PUT'])
-@jwt_required
+@check_access
 def put_queue_manager():
     """
     Various manager manipulation operations
@@ -802,7 +826,7 @@ def put_queue_manager():
 
 
 @main.route('/manager', methods=['GET'])
-@jwt_required
+@check_access
 def get_manager():
     """Gets manager information from the task queue"""
 
@@ -824,14 +848,14 @@ def get_manager():
 
 
 @main.route('/role', methods=['GET'])
-@jwt_required
+@check_access
 def get_roles():
     roles = current_app.config.storage.get_roles()
     return jsonify(roles), 200
 
 
 @main.route('/role/<string:rolename>', methods=['GET'])
-@jwt_required
+@check_access
 def get_role(rolename: str):
 
     success, role = current_app.config.storage.get_role(rolename)
@@ -839,7 +863,7 @@ def get_role(rolename: str):
 
 
 @main.route('/role/<string:rolename>', methods=['POST'])
-@jwt_required
+@check_access
 def add_role():
     rolename = request.json['rolename']
     permissions = request.json['permissions']
@@ -852,8 +876,7 @@ def add_role():
 
 
 @main.route('/role', methods=['PUT'])
-# @fresh_jwt_required
-@jwt_required
+@check_access
 def update_role():
     rolename = request.json['rolename']
     permissions = request.json['permissions']
@@ -866,8 +889,7 @@ def update_role():
 
 
 @main.route('/role', methods=['DELETE'])
-# @fresh_jwt_required
-@jwt_required
+@check_access
 def delete_role():
     rolename = request.json['rolename']
 
