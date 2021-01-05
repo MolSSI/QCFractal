@@ -92,8 +92,9 @@ class FractalServer():
         # Server info options
         name: str = "QCFractal Server",
         port: int = 5000,
-        loop: "IOLoop" = None,
-        compress_response: bool = True,
+        loop: "IOLoop" = None,              # TODO: tobe removed, not used anymore
+        compress_response: bool = True,     # TODO: tobe removed, not used anymore
+
         # Security/Auth
         security: Optional[str] = None,
         allow_read: bool = True,  # changed default to True to match security default
