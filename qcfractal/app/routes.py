@@ -95,15 +95,15 @@ def check_access(fn):
             logger.info(f'Permissions: {permissions}')
             logger.info(f'Context: {context}')
             policy = Policy(permissions)
-            if policy.evaluate(context):
-                return fn(*args, **kwargs)
-            else:
+            if not policy.evaluate(context):
                 return Forbidden(f"User {identity} is not authorized to access '{resource}' resource.")
 
         except Exception as e:
             logger.info("Error in evaluating JWT permissions: \n" + str(e) )
             # logger.info(f"Permissions: {permissions}")
             return BadRequest("Error in evaluating JWT permissions")
+
+        return fn(*args, **kwargs)
 
     return wrapper
 
@@ -152,8 +152,8 @@ def before_request_func():
             request.data = deserialize(blob, session['encoding'])
         else:
             request.data = None
-    except:
-        raise BadRequest("Could not deserialize body.")
+    except Exception as e:
+        raise BadRequest(f"Could not deserialize body. {e}")
 
 
 @main.after_request
@@ -190,10 +190,16 @@ def after_request_func(response):
 
     return response
 
-@main.errorhandler(Exception)
+@main.errorhandler(KeyError)
 def handle_python_errors(error):
-    response = jsonify(str(error))
-    response.status_code = 400
+    return jsonify(message=str(error)), 400
+    # return BadRequest(str(error))
+
+
+@main.errorhandler(BadRequest)
+def handle_invalid_usage(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
     return response
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -211,10 +217,10 @@ def register():
 
     success = current_app.config.storage.add_user(username, password=password, rolename="user")
     if success:
-        return jsonify({'message': 'New user created!'}), 201
+        return jsonify(message='New user created!'), 201
     else:
         logger.info("\n>>> Failed to add user. Perhaps the username is already taken?")
-        return jsonify({'message': 'Failed to add user.'}), 500
+        return jsonify(message='Failed to add user.'), 500
 
 
 @main.route('/login', methods=['POST'])
@@ -513,13 +519,13 @@ def get_procedure(query_type: str = 'get'):
     body_model, response_model = rest_model("procedure", query_type)
     body = parse_bodymodel(body_model)
 
-    try:
-        if query_type == "get":
-            ret = current_app.config.storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
-        else:  # all other queries, like 'best_opt_results'
-            ret = current_app.config.storage.custom_query("procedure", query_type, **{**body.data.dict(), **body.meta.dict()})
-    except KeyError as e:
-        return jsonify(message=KeyError), 500
+    # try:
+    if query_type == "get":
+        ret = current_app.config.storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
+    else:  # all other queries, like 'best_opt_results'
+        ret = current_app.config.storage.custom_query("procedure", query_type, **{**body.data.dict(), **body.meta.dict()})
+    # except KeyError as e:
+    #     return jsonify(message=str(e)), 500
 
     response = response_model(**ret)
 
@@ -532,13 +538,13 @@ def get_optimization(query_type: str):
     body_model, response_model = rest_model(f"optimization/{query_type}", "get")
     body = parse_bodymodel(body_model)
 
-    try:
-        if query_type == "get":
-            ret = current_app.config.storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
-        else:  # all other queries, like 'best_opt_results'
-            ret = current_app.config.storage.custom_query("optimization", query_type, **{**body.data.dict(), **body.meta.dict()})
-    except KeyError as e:
-        return jsonify(message=KeyError), 500
+    # try:
+    if query_type == "get":
+        ret = current_app.config.storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
+    else:  # all other queries, like 'best_opt_results'
+        ret = current_app.config.storage.custom_query("optimization", query_type, **{**body.data.dict(), **body.meta.dict()})
+    # except KeyError as e:
+    #     return jsonify(message=str(e)), 500
 
     response = response_model(**ret)
 
@@ -565,7 +571,7 @@ def post_task_queue():
 
     # Format and submit tasks
     if not check_procedure_available(body.meta.procedure):
-        return jsonify(message="Unknown procedure {}.".format(body.meta.procedure)), 500
+        return jsonify(message="Unknown procedure {}.".format(body.meta.procedure)), 400
 
     procedure_parser = get_procedure_parser(body.meta.procedure,
                                             current_app.config.storage,
@@ -627,7 +633,7 @@ def post_service_queue():
         if isinstance(service_input.initial_molecule, list):
             molecules = current_app.config.storage.get_add_molecules_mixed(service_input.initial_molecule)["data"]
             if len(molecules) != len(service_input.initial_molecule):
-                return jsonify(message=KeyError), 500
+                raise KeyError("We should catch this error.")
         else:
             molecules = current_app.config.storage.get_add_molecules_mixed([service_input.initial_molecule])["data"][0]
 
