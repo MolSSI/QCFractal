@@ -22,6 +22,7 @@ from flask_jwt_extended import (
     create_refresh_token,
     get_jwt_identity,
     verify_jwt_in_request,
+    verify_jwt_in_request_optional,
 )
 from urllib.parse import urlparse
 from ..policyuniverse import Policy
@@ -31,7 +32,7 @@ import logging
 import json
 from functools import wraps
 import datetime
-from werkzeug.exceptions import HTTPException, BadRequest, NotFound, Forbidden, Unauthorized
+from werkzeug.exceptions import BadRequest, NotFound, Forbidden, Unauthorized
 
 
 logger = logging.getLogger(__name__)
@@ -47,7 +48,7 @@ _valid_encodings = {
 
 # TODO: not implemented yet
 _logging_param_counts = {"id"}
-
+_read_permissions = {}
 
 def check_access(fn):
     @wraps(fn)
@@ -70,20 +71,27 @@ def check_access(fn):
         if not current_app.config.JWT_ENABLED:
             return fn(*args, **kwargs)
 
-        # if read is allowed without login, load read permissions from DB
+        # load read permissions from DB if not read
+        global _read_permissions
+        if not _read_permissions:
+            _, _read_permissions = current_app.config.storage.get_role("read")
+            _read_permissions = _read_permissions["permissions"]
+
+        # if read is allowed without login, use read_permissions
         # otherwise, check logged-in permissions
         if current_app.config.ALLOW_READ:
-            _, permissions = current_app.config.storage.get_role("read")
-            permissions = permissions["permissions"]
+            # don't raise exception if no JWT is found
+            verify_jwt_in_request_optional()
         else:
             # read JWT token from request headers
             verify_jwt_in_request()
-            claims = get_jwt_claims()
-            permissions = claims.get("permissions", None)
+
+        claims = get_jwt_claims()
+        permissions = claims.get("permissions", {})
 
         try:
             # host_url = request.host_url
-            identity = get_jwt_identity()
+            identity = get_jwt_identity() or 'anonymous'
             resource = urlparse(request.url).path.split("/")[1]
             context = {
                 "Principal": identity,
@@ -96,11 +104,11 @@ def check_access(fn):
             logger.info(f"Context: {context}")
             policy = Policy(permissions)
             if not policy.evaluate(context):
-                return Forbidden(f"User {identity} is not authorized to access '{resource}' resource.")
+                if not Policy(_read_permissions).evaluate(context):
+                    return Forbidden(f"User {identity} is not authorized to access '{resource}' resource.")
 
         except Exception as e:
             logger.info("Error in evaluating JWT permissions: \n" + str(e))
-            # logger.info(f"Permissions: {permissions}")
             return BadRequest("Error in evaluating JWT permissions")
 
         return fn(*args, **kwargs)
