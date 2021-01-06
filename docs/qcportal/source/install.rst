@@ -10,7 +10,7 @@ You can install qcportal using `conda <https://www.anaconda.com/download/>`_:
 
 .. code-block:: console
 
-    >>> conda install qcportal -c conda-forge
+   >>> conda install qcportal -c conda-forge
 
 This installs QCPortal and its dependencies. The qcportal package is maintained on the
 `conda-forge channel <https://conda-forge.github.io/>`_.
@@ -53,6 +53,6 @@ Then, run the following command:
 Developing from Source
 ----------------------
 
-The QCPortal package is part of the QCFractal package and is the ``qcfractal.interface`` folder. If you are a developer
-and want to make contributions Portal, you can access the source code from
-`github <https://github.com/molssi/qcfractal>`_ and the aforementioned folder.
+The QCPortal package is part of the QCFractal package residing in ``qcfractal.interface`` folder. 
+If you are a developer and want to make contributions to QCPortal, you can access the source code
+`here <https://github.com/MolSSI/QCFractal/tree/master/qcfractal/interface>`_.

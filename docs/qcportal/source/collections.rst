@@ -1,14 +1,14 @@
 Overview
 ========
 
-Collections are an organizational objects that keep track of collections of
-results, compute new results, and provide helper functions for analysis and visualization.
+Collections are organizational objects that keep track of or compute new results, 
+and provide helper functions for analysis and visualization.
 
 
 Collections querying
 ---------------------
 
-Once a :class:`FractalClient <qcportal.FractalClient>` has been created, the client can query a list of all
+Once a :class:`FractalClient <qcportal.FractalClient>` has been created, it can query a list of all
 collections currently held on the server.
 
 .. code-block:: python

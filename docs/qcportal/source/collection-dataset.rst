@@ -65,11 +65,11 @@ Note that this requires `write permissions <http://docs.qcarchive.molssi.org/pro
 Computing
 ---------
 
-Methods can be computed to the :class:`Dataset <qcportal.collections.Dataset>` and computed using the
+Computations on the molecules within the :class:`Datasets <qcportal.collections.Dataset>` can be performed using the
 :meth:`compute <qcportal.collections.Dataset.compute>` command.
-This command causes a calculation to be requested for every molecule in the :class:`Dataset <qcportal.collections.Dataset>`.
-Any calculations that have previously been done will be automatically added without recomputation.
-Note that this requires `compute permissions <http://docs.qcarchive.molssi.org/projects/qcfractal/en/stable/server_user.html#user-permissions>`_.
+If the results of the requested computation already exist in the :class:`Dataset <qcportal.collections.Dataset>`, 
+they will be reused to avoid recomputation. Note that for perfoming computations,
+`compute permissions <http://docs.qcarchive.molssi.org/projects/qcfractal/en/stable/server_user.html#user-permissions>`_ is required.
 
 .. code-block:: python
 

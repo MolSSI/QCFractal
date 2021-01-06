@@ -1,14 +1,19 @@
 Optimization Dataset
 ====================
-The :class:`OptimizationDataset <qcportal.collections.OptimizationDataset>` collection represents geometry optimizations
-performed on a series of :class:`Molecules <qcportal.models.Molecule>`.
-:class:`OptimizationDataset <qcportal.collections.OptimizationDataset>` use specifications to manage parameters of the
-:class:`geometry optimizer <qcportal.models.OptimizationSpecification>` and underlying
-:class:`gradient calculation <qcportal.models.QCSpecification>`.
+The :class:`OptimizationDataset <qcportal.collections.OptimizationDataset>` collection 
+represents the results of geometry optimizations calculations performed on 
+a series of :class:`Molecules <qcportal.models.Molecule>`. The
+:class:`OptimizationDataset <qcportal.collections.OptimizationDataset>` 
+uses metadata specifications via 
+:class:`Optimization Specification <qcportal.models.OptimizationSpecification>` and 
+:class:`QCSpecification <qcportal.models.QCSpecification>` classes to manage 
+parameters of the geometry optimizer and the underlying gradient 
+calculation, respectively.
 
-Existing :class:`OptimizationDataset <qcportal.collections.OptimizationDataset>` can be listed with
+The existing :class:`OptimizationDataset <qcportal.collections.OptimizationDataset>` 
+collections can be listed or selectively returned through
 :meth:`FractalClient.list_collections("OptimizationDataset") <qcportal.FractalClient.list_collections>`
-and obtained with :meth:`FractalClient.get_collection("OptimizationDataset", name) <qcportal.FractalClient.get_collection>`.
+and :meth:`FractalClient.get_collection("OptimizationDataset", name) <qcportal.FractalClient.get_collection>`, respectively.
 
 Querying
 --------
