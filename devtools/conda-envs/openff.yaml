@@ -41,6 +41,7 @@ dependencies:
 
 #   Environment specific includes
   - psi4>1.4a2.dev700,<1.4a2
+  - gau2grid=2.0.3
   - rdkit
   - geometric >=0.9.3
   - torsiondrive
