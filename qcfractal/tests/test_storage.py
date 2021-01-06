@@ -838,7 +838,7 @@ def test_user_duplicates(storage_socket):
 
 def test_modify_user(storage_socket):
 
-    r, pw = storage_socket.add_user("george", "oldpw", rolename='read')
+    r, pw = storage_socket.add_user("george", "oldpw", rolename="read")
     assert r is True
 
     # unknown user
@@ -852,7 +852,7 @@ def test_modify_user(storage_socket):
     assert storage_socket.verify_user("george", "newpw")[0] is True
 
     # update role...
-    r, msg = storage_socket.modify_user("george", rolename='admin')
+    r, msg = storage_socket.modify_user("george", rolename="admin")
     assert r is True
     # ... should update the permissions without changing the password
     assert storage_socket.verify_user("george", "newpw")[0] is True

@@ -5,6 +5,7 @@ Routes handlers for Flask
 from qcelemental.util import deserialize, serialize
 from ..storage_sockets.storage_utils import add_metadata_template
 from ..interface.models.rest_models import rest_model
+
 # from ..interface.models.task_models import PriorityEnum, TaskStatusEnum
 # from ..interface.models.records import RecordStatusEnum
 # from ..interface.models.model_builder import build_procedure
@@ -30,13 +31,12 @@ import logging
 import json
 from functools import wraps
 import datetime
-from werkzeug.exceptions import HTTPException, BadRequest, NotFound, \
-    Forbidden, Unauthorized
+from werkzeug.exceptions import HTTPException, BadRequest, NotFound, Forbidden, Unauthorized
 
 
 logger = logging.getLogger(__name__)
 
-main = Blueprint('main', __name__)
+main = Blueprint("main", __name__)
 
 
 _valid_encodings = {
@@ -45,26 +45,26 @@ _valid_encodings = {
     "application/msgpack-ext": "msgpack-ext",
 }
 
-#TODO: not implemented yet
-_logging_param_counts = {'id'}
+# TODO: not implemented yet
+_logging_param_counts = {"id"}
 
 
 def check_access(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         """
-            Call the route (fn) if allowed to access the url using the given
-            permissions in the JWT token in the request headers
+        Call the route (fn) if allowed to access the url using the given
+        permissions in the JWT token in the request headers
 
-            1- If no security (JWT_ENABLED=False), always allow
-            2- If JWT_ENABLED:
-                if read allowed (allow_read=True), use the default read permissions
-                otherwise, check against the logged-in user permissions
-                from the headers' JWT token
+        1- If no security (JWT_ENABLED=False), always allow
+        2- If JWT_ENABLED:
+            if read allowed (allow_read=True), use the default read permissions
+            otherwise, check against the logged-in user permissions
+            from the headers' JWT token
         """
 
-        logger.debug(f'JWT_ENABLED: {current_app.config.JWT_ENABLED}')
-        logger.debug(f'ALLOW_READ: {current_app.config.ALLOW_READ}')
+        logger.debug(f"JWT_ENABLED: {current_app.config.JWT_ENABLED}")
+        logger.debug(f"ALLOW_READ: {current_app.config.ALLOW_READ}")
 
         # if no auth required, always allowed
         if not current_app.config.JWT_ENABLED:
@@ -73,13 +73,13 @@ def check_access(fn):
         # if read is allowed without login, load read permissions from DB
         # otherwise, check logged-in permissions
         if current_app.config.ALLOW_READ:
-            _, permissions = current_app.config.storage.get_role('read')
-            permissions = permissions['permissions']
+            _, permissions = current_app.config.storage.get_role("read")
+            permissions = permissions["permissions"]
         else:
             # read JWT token from request headers
             verify_jwt_in_request()
             claims = get_jwt_claims()
-            permissions = claims.get('permissions', None)
+            permissions = claims.get("permissions", None)
 
         try:
             # host_url = request.host_url
@@ -92,14 +92,14 @@ def check_access(fn):
                 # "IpAddress": request.remote_addr,
                 # "AccessTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
             }
-            logger.info(f'Permissions: {permissions}')
-            logger.info(f'Context: {context}')
+            logger.info(f"Permissions: {permissions}")
+            logger.info(f"Context: {context}")
             policy = Policy(permissions)
             if not policy.evaluate(context):
                 return Forbidden(f"User {identity} is not authorized to access '{resource}' resource.")
 
         except Exception as e:
-            logger.info("Error in evaluating JWT permissions: \n" + str(e) )
+            logger.info("Error in evaluating JWT permissions: \n" + str(e))
             # logger.info(f"Permissions: {permissions}")
             return BadRequest("Error in evaluating JWT permissions")
 
@@ -125,7 +125,7 @@ class PydanticResponse(Response):
     def __init__(self, response, **kwargs):
 
         if not isinstance(response, (str, bytes)):
-            response = serialize(response, session['encoding'])
+            response = serialize(response, session["encoding"])
 
         return super(PydanticResponse, self).__init__(response, **kwargs)
 
@@ -136,20 +136,20 @@ def before_request_func():
     # session['content_type'] = "Not Provided"
     try:
         # default to "application/json"
-        session['content_type'] = request.headers.get("Content-Type", "application/json")
-        session['encoding'] = _valid_encodings[session['content_type']]
+        session["content_type"] = request.headers.get("Content-Type", "application/json")
+        session["encoding"] = _valid_encodings[session["content_type"]]
     except KeyError:
         raise BadRequest(f"Did not understand 'Content-Type': {session['content_type']}")
 
     # TODO: check if needed in Flask
     try:
-        if (session['encoding'] == "json") and isinstance(request.data, bytes):
+        if (session["encoding"] == "json") and isinstance(request.data, bytes):
             blob = request.data.decode()
         else:
             blob = request.data
 
-        if blob: #TODO:
-            request.data = deserialize(blob, session['encoding'])
+        if blob:  # TODO:
+            request.data = deserialize(blob, session["encoding"])
         else:
             request.data = None
     except Exception as e:
@@ -159,9 +159,9 @@ def before_request_func():
 @main.after_request
 def after_request_func(response):
 
-     # Always reply in the format sent
+    # Always reply in the format sent
 
-    response.headers['Content-Type'] = session['content_type']
+    response.headers["Content-Type"] = session["content_type"]
 
     exclude_uris = ["/task_queue", "/service_queue", "/queue_manager"]
 
@@ -190,6 +190,7 @@ def after_request_func(response):
 
     return response
 
+
 @main.errorhandler(KeyError)
 def handle_python_errors(error):
     return jsonify(msg=str(error)), 400
@@ -200,74 +201,74 @@ def handle_python_errors(error):
 def handle_invalid_usage(error):
     return jsonify(msg=str(error)), error.code
 
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                            Routes
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-@main.route('/register', methods=['POST'])
+
+@main.route("/register", methods=["POST"])
 def register():
     if request.is_json:
-        username = request.json['username']
-        password = request.json['password']
+        username = request.json["username"]
+        password = request.json["password"]
     else:
-        username = request.form['username']
-        password = request.form['password']
+        username = request.form["username"]
+        password = request.form["password"]
 
     success = current_app.config.storage.add_user(username, password=password, rolename="user")
     if success:
-        return jsonify(msg='New user created!'), 201
+        return jsonify(msg="New user created!"), 201
     else:
         logger.info("\n>>> Failed to add user. Perhaps the username is already taken?")
-        return jsonify(msg='Failed to add user.'), 500
+        return jsonify(msg="Failed to add user."), 500
 
 
-@main.route('/login', methods=['POST'])
+@main.route("/login", methods=["POST"])
 def login():
     if request.is_json:
-        username = request.json['username']
-        password = request.json['password']
+        username = request.json["username"]
+        password = request.json["password"]
     else:
-        username = request.form['username']
-        password = request.form['password']
+        username = request.form["username"]
+        password = request.form["password"]
 
     success, error_message, permissions = current_app.config.storage.verify_user(username, password)
     if success:
-        access_token = create_access_token(identity=username,
-                                           user_claims={"permissions": permissions})
-                                           # expires_delta=datetime.timedelta(days=3))
+        access_token = create_access_token(identity=username, user_claims={"permissions": permissions})
+        # expires_delta=datetime.timedelta(days=3))
         refresh_token = create_refresh_token(identity=username)
-        return jsonify(msg="Login succeeded!", access_token=access_token,
-                       refresh_token=refresh_token), 200
+        return jsonify(msg="Login succeeded!", access_token=access_token, refresh_token=refresh_token), 200
     else:
         return Unauthorized(error_message)
 
 
-@main.route('/information', methods=['GET'])
+@main.route("/information", methods=["GET"])
 def get_information():
 
     return PydanticResponse(current_app.config.public_information)
 
 
-@main.route('/refresh', methods=['POST'])
+@main.route("/refresh", methods=["POST"])
 @jwt_refresh_token_required
 def refresh():
     username = get_jwt_identity()
     ret = {
-        'access_token': create_access_token(
-            identity=username,
-            user_claims={"permissions": current_app.config.storage.get_user_permissions(username)})
+        "access_token": create_access_token(
+            identity=username, user_claims={"permissions": current_app.config.storage.get_user_permissions(username)}
+        )
     }
     return jsonify(ret), 200
 
 
-@main.route('/fresh-login', methods=['POST'])
+@main.route("/fresh-login", methods=["POST"])
 def fresh_login():
     if request.is_json:
-        username = request.json['username']
-        password = request.json['password']
+        username = request.json["username"]
+        password = request.json["password"]
     else:
-        username = request.form['username']
-        password = request.form['password']
+        username = request.form["username"]
+        password = request.form["password"]
 
     success, error_message, permissions = current_app.config.storage.verify_user(username, password)
     if success:
@@ -277,7 +278,7 @@ def fresh_login():
         return Unauthorized(error_message)
 
 
-@main.route('/molecule', methods=['GET'])
+@main.route("/molecule", methods=["GET"])
 @check_access
 def get_molecule():
     """
@@ -304,7 +305,7 @@ def get_molecule():
     return PydanticResponse(response)
 
 
-@main.route('/molecule', methods=['POST'])
+@main.route("/molecule", methods=["POST"])
 @check_access
 def post_molecule():
     """
@@ -332,7 +333,7 @@ def post_molecule():
     return PydanticResponse(response)
 
 
-@main.route('/kvstore', methods=['GET'])
+@main.route("/kvstore", methods=["GET"])
 @check_access
 def get_kvstore():
     """
@@ -357,7 +358,7 @@ def get_kvstore():
     return PydanticResponse(response)
 
 
-@main.route('/keyword', methods=['GET'])
+@main.route("/keyword", methods=["GET"])
 @check_access
 def get_keyword():
     body_model, response_model = rest_model("keyword", "get")
@@ -370,7 +371,7 @@ def get_keyword():
     return PydanticResponse(response)
 
 
-@main.route('/keyword', methods=['POST'])
+@main.route("/keyword", methods=["POST"])
 @check_access
 def post_keyword():
 
@@ -384,14 +385,14 @@ def post_keyword():
     return PydanticResponse(response)
 
 
-@main.route('/collection', methods=['GET'])
-@main.route('/collection/<int:collection_id>', methods=['GET'])
-@main.route('/collection/<int:collection_id>/<string:view_function>', methods=['GET'])
+@main.route("/collection", methods=["GET"])
+@main.route("/collection/<int:collection_id>", methods=["GET"])
+@main.route("/collection/<int:collection_id>/<string:view_function>", methods=["GET"])
 @check_access
-def get_collection(collection_id: int=None, view_function: str=None):
+def get_collection(collection_id: int = None, view_function: str = None):
     # List collections
 
-    view_function_vals = ('value', 'entry', 'list', 'molecule')
+    view_function_vals = ("value", "entry", "list", "molecule")
     if view_function is not None and view_function not in view_function_vals:
         raise NotFound(f"URL Not Found. view_function must be in : {view_function_vals}")
 
@@ -442,13 +443,13 @@ def get_collection(collection_id: int=None, view_function: str=None):
     return PydanticResponse(response)
 
 
-@main.route('/collection', methods=['POST'])
-@main.route('/collection/<int:collection_id>', methods=['POST'])
-@main.route('/collection/<int:collection_id>/<string:view_function>', methods=['POST'])
+@main.route("/collection", methods=["POST"])
+@main.route("/collection/<int:collection_id>", methods=["POST"])
+@main.route("/collection/<int:collection_id>/<string:view_function>", methods=["POST"])
 @check_access
-def post_collection(collection_id: int=None, view_function: str=None):
+def post_collection(collection_id: int = None, view_function: str = None):
 
-    view_function_vals = ('value', 'entry', 'list', 'molecule')
+    view_function_vals = ("value", "entry", "list", "molecule")
     if view_function is not None and view_function not in view_function_vals:
         raise NotFound(f"URL Not Found. view_function must be in : {view_function_vals}")
 
@@ -470,8 +471,8 @@ def post_collection(collection_id: int=None, view_function: str=None):
     return PydanticResponse(response)
 
 
-@main.route('/collection', methods=['DELETE'])
-@main.route('/collection/<int:collection_id>', methods=['DELETE'])
+@main.route("/collection", methods=["DELETE"])
+@main.route("/collection/<int:collection_id>", methods=["DELETE"])
 @check_access
 def delete_collection(collection_id: int, view_function: str):
     body_model, response_model = rest_model(f"collection/{collection_id}", "delete")
@@ -484,7 +485,7 @@ def delete_collection(collection_id: int, view_function: str):
     return PydanticResponse(response)
 
 
-@main.route('/result', methods=['GET'])
+@main.route("/result", methods=["GET"])
 @check_access
 def get_result():
 
@@ -499,7 +500,7 @@ def get_result():
     return PydanticResponse(response)
 
 
-@main.route('/wavefunctionstore', methods=['GET'])
+@main.route("/wavefunctionstore", methods=["GET"])
 @check_access
 def get_wave_function():
 
@@ -514,10 +515,10 @@ def get_wave_function():
     return PydanticResponse(response)
 
 
-@main.route('/procedure', methods=['GET'])
-@main.route('/procedure/<string:query_type>', methods=['GET'])
+@main.route("/procedure", methods=["GET"])
+@main.route("/procedure/<string:query_type>", methods=["GET"])
 @check_access
-def get_procedure(query_type: str = 'get'):
+def get_procedure(query_type: str = "get"):
     body_model, response_model = rest_model("procedure", query_type)
     body = parse_bodymodel(body_model)
 
@@ -525,7 +526,9 @@ def get_procedure(query_type: str = 'get'):
     if query_type == "get":
         ret = current_app.config.storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
     else:  # all other queries, like 'best_opt_results'
-        ret = current_app.config.storage.custom_query("procedure", query_type, **{**body.data.dict(), **body.meta.dict()})
+        ret = current_app.config.storage.custom_query(
+            "procedure", query_type, **{**body.data.dict(), **body.meta.dict()}
+        )
     # except KeyError as e:
     #     return jsonify(msg=str(e)), 500
 
@@ -534,7 +537,7 @@ def get_procedure(query_type: str = 'get'):
     return PydanticResponse(response)
 
 
-@main.route('/optimization/<string:query_type>', methods=['GET'])
+@main.route("/optimization/<string:query_type>", methods=["GET"])
 @check_access
 def get_optimization(query_type: str):
     body_model, response_model = rest_model(f"optimization/{query_type}", "get")
@@ -544,7 +547,9 @@ def get_optimization(query_type: str):
     if query_type == "get":
         ret = current_app.config.storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
     else:  # all other queries, like 'best_opt_results'
-        ret = current_app.config.storage.custom_query("optimization", query_type, **{**body.data.dict(), **body.meta.dict()})
+        ret = current_app.config.storage.custom_query(
+            "optimization", query_type, **{**body.data.dict(), **body.meta.dict()}
+        )
     # except KeyError as e:
     #     return jsonify(msg=str(e)), 500
 
@@ -553,7 +558,7 @@ def get_optimization(query_type: str):
     return PydanticResponse(response)
 
 
-@main.route('/task_queue', methods=['GET'])
+@main.route("/task_queue", methods=["GET"])
 @check_access
 def get_task_queue():
     body_model, response_model = rest_model("task_queue", "get")
@@ -565,7 +570,7 @@ def get_task_queue():
     return PydanticResponse(response)
 
 
-@main.route('/task_queue', methods=['POST'])
+@main.route("/task_queue", methods=["POST"])
 @check_access
 def post_task_queue():
     body_model, response_model = rest_model("task_queue", "post")
@@ -575,9 +580,7 @@ def post_task_queue():
     if not check_procedure_available(body.meta.procedure):
         return jsonify(msg="Unknown procedure {}.".format(body.meta.procedure)), 400
 
-    procedure_parser = get_procedure_parser(body.meta.procedure,
-                                            current_app.config.storage,
-                                            current_app.config.logger)
+    procedure_parser = get_procedure_parser(body.meta.procedure, current_app.config.storage, current_app.config.logger)
 
     # Verify the procedure
     verify = procedure_parser.verify_input(body)
@@ -590,7 +593,7 @@ def post_task_queue():
     return PydanticResponse(response)
 
 
-@main.route('/task_queue', methods=['PUT'])
+@main.route("/task_queue", methods=["PUT"])
 @check_access
 def put_task_queue():
     body_model, response_model = rest_model("task_queue", "put")
@@ -609,7 +612,7 @@ def put_task_queue():
     return PydanticResponse(response)
 
 
-@main.route('/service_queue', methods=['GET'])
+@main.route("/service_queue", methods=["GET"])
 @check_access
 def get_service_queue():
     body_model, response_model = rest_model("service_queue", "get")
@@ -621,7 +624,7 @@ def get_service_queue():
     return PydanticResponse(response)
 
 
-@main.route('/service_queue', methods=['POST'])
+@main.route("/service_queue", methods=["POST"])
 @check_access
 def post_service_queue():
     """Posts new services to the service queue."""
@@ -643,8 +646,11 @@ def post_service_queue():
         service_input = service_input.copy(update={"initial_molecule": molecules})
         new_services.append(
             initialize_service(
-                current_app.config.storage, current_app.config.logger, service_input,
-                tag=body.meta.tag, priority=body.meta.priority
+                current_app.config.storage,
+                current_app.config.logger,
+                service_input,
+                tag=body.meta.tag,
+                priority=body.meta.priority,
             )
         )
 
@@ -656,7 +662,7 @@ def post_service_queue():
     return PydanticResponse(response)
 
 
-@main.route('/service_queue', methods=['PUT'])
+@main.route("/service_queue", methods=["PUT"])
 @check_access
 def put_service_queue():
     """Modifies services in the service queue"""
@@ -724,9 +730,7 @@ def insert_complete_tasks(storage_socket, results, logger):
             # Success!
             else:
                 parser = queue[key].parser
-                new_results[parser].append(
-                    {"result": result, "task_id": key, "base_result": queue[key].base_result}
-                )
+                new_results[parser].append({"result": result, "task_id": key, "base_result": queue[key].base_result})
                 task_success += 1
 
         except Exception:
@@ -756,40 +760,40 @@ def insert_complete_tasks(storage_socket, results, logger):
     return len(completed), len(error_data)
 
 
-@main.route('/queue_manager', methods=['GET'])
+@main.route("/queue_manager", methods=["GET"])
 @check_access
 def get_queue_manager():
-        """Pulls new tasks from the task queue"""
+    """Pulls new tasks from the task queue"""
 
-        body_model, response_model = rest_model("queue_manager", "get")
-        body = parse_bodymodel(body_model)
+    body_model, response_model = rest_model("queue_manager", "get")
+    body = parse_bodymodel(body_model)
 
-        # Figure out metadata and kwargs
-        name = _get_name_from_metadata(body.meta)
+    # Figure out metadata and kwargs
+    name = _get_name_from_metadata(body.meta)
 
-        # Grab new tasks and write out
-        new_tasks = current_app.config.storage.queue_get_next(
-            name, body.meta.programs, body.meta.procedures, limit=body.data.limit, tag=body.meta.tag
-        )
-        response = response_model(
-            **{
-                "meta": {
-                    "n_found": len(new_tasks),
-                    "success": True,
-                    "errors": [],
-                    "error_description": "",
-                    "missing": [],
-                },
-                "data": new_tasks,
-            }
-        )
-        # Update manager logs
-        current_app.config.storage.manager_update(name, submitted=len(new_tasks), **body.meta.dict())
+    # Grab new tasks and write out
+    new_tasks = current_app.config.storage.queue_get_next(
+        name, body.meta.programs, body.meta.procedures, limit=body.data.limit, tag=body.meta.tag
+    )
+    response = response_model(
+        **{
+            "meta": {
+                "n_found": len(new_tasks),
+                "success": True,
+                "errors": [],
+                "error_description": "",
+                "missing": [],
+            },
+            "data": new_tasks,
+        }
+    )
+    # Update manager logs
+    current_app.config.storage.manager_update(name, submitted=len(new_tasks), **body.meta.dict())
 
-        return PydanticResponse(response)
+    return PydanticResponse(response)
 
 
-@main.route('/queue_manager', methods=['POST'])
+@main.route("/queue_manager", methods=["POST"])
 @check_access
 def post_queue_manager():
     """Posts complete tasks to the task queue"""
@@ -799,8 +803,7 @@ def post_queue_manager():
 
     name = _get_name_from_metadata(body.meta)
     # logger.info("QueueManager: Received completed task packet from {}.".format(name))
-    success, error = insert_complete_tasks(current_app.config.storage, body.data,
-                                           current_app.config.logger)
+    success, error = insert_complete_tasks(current_app.config.storage, body.data, current_app.config.logger)
 
     completed = success + error
 
@@ -821,7 +824,7 @@ def post_queue_manager():
     return PydanticResponse(response)
 
 
-@main.route('/queue_manager', methods=['PUT'])
+@main.route("/queue_manager", methods=["PUT"])
 @check_access
 def put_queue_manager():
     """
@@ -843,7 +846,9 @@ def put_queue_manager():
 
     elif op == "shutdown":
         nshutdown = current_app.config.storage.queue_reset_status(manager=name, reset_running=True)
-        current_app.config.storage.manager_update(name, returned=nshutdown, status="INACTIVE", **body.meta.dict(), log=True)
+        current_app.config.storage.manager_update(
+            name, returned=nshutdown, status="INACTIVE", **body.meta.dict(), log=True
+        )
 
         # logger.info("QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(name, nshutdown))
 
@@ -862,7 +867,7 @@ def put_queue_manager():
     return PydanticResponse(response)
 
 
-@main.route('/manager', methods=['GET'])
+@main.route("/manager", methods=["GET"])
 @check_access
 def get_manager():
     """Gets manager information from the task queue"""
@@ -884,14 +889,14 @@ def get_manager():
     return PydanticResponse(response)
 
 
-@main.route('/role', methods=['GET'])
+@main.route("/role", methods=["GET"])
 @check_access
 def get_roles():
     roles = current_app.config.storage.get_roles()
     return jsonify(roles), 200
 
 
-@main.route('/role/<string:rolename>', methods=['GET'])
+@main.route("/role/<string:rolename>", methods=["GET"])
 @check_access
 def get_role(rolename: str):
 
@@ -899,39 +904,39 @@ def get_role(rolename: str):
     return jsonify(role), 200
 
 
-@main.route('/role/<string:rolename>', methods=['POST'])
+@main.route("/role/<string:rolename>", methods=["POST"])
 @check_access
 def add_role():
-    rolename = request.json['rolename']
-    permissions = request.json['permissions']
+    rolename = request.json["rolename"]
+    permissions = request.json["permissions"]
 
     success, error_message = current_app.config.storage.add_role(rolename, permissions)
     if success:
-        return jsonify({'msg': 'New role created!'}), 201
+        return jsonify({"msg": "New role created!"}), 201
     else:
-        return jsonify({'msg': error_message}), 400
+        return jsonify({"msg": error_message}), 400
 
 
-@main.route('/role', methods=['PUT'])
+@main.route("/role", methods=["PUT"])
 @check_access
 def update_role():
-    rolename = request.json['rolename']
-    permissions = request.json['permissions']
+    rolename = request.json["rolename"]
+    permissions = request.json["permissions"]
 
     success = current_app.config.storage.update_role(rolename, permissions)
     if success:
-        return jsonify({'msg': 'Role was updated!'}), 200
+        return jsonify({"msg": "Role was updated!"}), 200
     else:
-        return jsonify({'msg': 'Failed to update role'}), 400
+        return jsonify({"msg": "Failed to update role"}), 400
 
 
-@main.route('/role', methods=['DELETE'])
+@main.route("/role", methods=["DELETE"])
 @check_access
 def delete_role():
-    rolename = request.json['rolename']
+    rolename = request.json["rolename"]
 
     success = current_app.config.storage.delete_role(rolename)
     if success:
-        return jsonify({'msg': 'Role was deleted!.'}), 200
+        return jsonify({"msg": "Role was deleted!."}), 200
     else:
-        return jsonify({'msg': 'Filed to delete role!.'}), 400
+        return jsonify({"msg": "Filed to delete role!."}), 400

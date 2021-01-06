@@ -229,6 +229,7 @@ def test_statement_effect():
     statement = Statement(statement01)
     assert statement.effect == "Allow"
 
+
 def test_statement_not_principal():
     statement = Statement(statement01)
     assert statement.uses_not_principal()

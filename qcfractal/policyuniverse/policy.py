@@ -10,6 +10,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class Policy(object):
     def __init__(self, policy):
         self.policy = policy
@@ -37,23 +38,23 @@ class Policy(object):
         return allowed
 
     def evaluate(self, context):
-        logger.debug('context: ', context)
-        logger.debug('statements: ', self.statements)
+        logger.debug("context: ", context)
+        logger.debug("statements: ", self.statements)
 
         try:
             allow = False
             for statement in self.statements:
-                logger.debug('statement: ', statement.statement)
+                logger.debug("statement: ", statement.statement)
                 passed = statement.evaluate(context)
-                logger.debug('passed: ', passed)
+                logger.debug("passed: ", passed)
                 if passed == True:  # has access according to this statement
-                   allow = True
-                elif passed == False :  # denied, end and return false
+                    allow = True
+                elif passed == False:  # denied, end and return false
                     return False
                 elif passed == None:  # statement has no effect
                     continue
 
             return allow
         except Exception as err:
-            logger.debug('------------- Error in evaluate policy:\n ', str(err))
+            logger.debug("------------- Error in evaluate policy:\n ", str(err))
             return False
