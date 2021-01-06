@@ -441,8 +441,7 @@ def server_user(args, config):
     try:
         if args["user_command"] == "add":
             print("\n>>> Adding new user...")
-            success, pw = storage.add_user(args["username"], password=args["password"],
-                                           permissions=args["permissions"])
+            success, pw = storage.add_user(args["username"], password=args["password"], permissions=args["permissions"])
             if success:
                 print(f"\n>>> New user successfully added, password:\n{pw}")
                 if config.fractal.security is None:

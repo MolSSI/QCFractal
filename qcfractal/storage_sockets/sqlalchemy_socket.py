@@ -264,7 +264,6 @@ class SQLAlchemySocket:
         # Add User Roles if doesn't exist
         self._add_default_roles()
 
-
     def __str__(self) -> str:
         return f"<SQLAlchemySocket: address='{self.uri}`>"
 
@@ -2793,12 +2792,7 @@ class SQLAlchemySocket:
         """
         return secrets.token_urlsafe(32)
 
-    def add_user(
-        self,
-        username: str,
-        password: Optional[str] = None,
-        rolename: str = 'read'
-    ) -> bool:
+    def add_user(self, username: str, password: Optional[str] = None, rolename: str = "read") -> bool:
         """
         Adds a new user. Passwords are stored using bcrypt.
 
@@ -3043,10 +3037,8 @@ class SQLAlchemySocket:
             data = [x.to_dict(exclude=["id"]) for x in data]
         return data
 
-
     def get_role(self, rolename: str):
-        """
-        """
+        """"""
         if rolename is None:
             return False, f"Role {rolename} not found."
 
@@ -3058,7 +3050,6 @@ class SQLAlchemySocket:
                 return False, f"Role {rolename} not found."
             role = data.to_dict(exclude=["id"])
         return True, role
-
 
     def add_role(self, rolename: str, permissions: Dict):
         """
@@ -3103,18 +3094,22 @@ class SQLAlchemySocket:
 
         """
 
-        read_permissions = {"Statement": [
-            {"Effect": "Allow", "Action": "GET", "Resource": "*"},
-            {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager", "role"]},
-        ]}
+        read_permissions = {
+            "Statement": [
+                {"Effect": "Allow", "Action": "GET", "Resource": "*"},
+                {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager", "role"]},
+            ]
+        }
 
-        admin_permissions = {"Statement": [
-            {"Effect": "Allow", "Action": "*", "Resource": "*"},
-        ]}
+        admin_permissions = {
+            "Statement": [
+                {"Effect": "Allow", "Action": "*", "Resource": "*"},
+            ]
+        }
 
         with self.session_scope() as session:
-            user1 = {"rolename": 'read', "permissions": read_permissions}
-            user2 = {"rolename": 'admin', "permissions": admin_permissions}
+            user1 = {"rolename": "read", "permissions": read_permissions}
+            user2 = {"rolename": "admin", "permissions": admin_permissions}
 
             try:
                 session.add_all([RoleORM(**user1), RoleORM(**user2)])
@@ -3123,8 +3118,6 @@ class SQLAlchemySocket:
             except Exception:
                 session.rollback()
                 return False
-
-
 
     def update_role(self, rolename: str, permissions: Dict):
         """
@@ -3152,7 +3145,6 @@ class SQLAlchemySocket:
 
         return success
 
-
     def delete_role(self, rolename: str):
         """
         Delete role.
@@ -3170,7 +3162,6 @@ class SQLAlchemySocket:
             success = session.query(RoleORM).filter_by(rolename=rolename.lower()).delete()
 
         return success
-
 
     def check_lib_versions(self):
         """Check the stored versions of elemental and fractal"""

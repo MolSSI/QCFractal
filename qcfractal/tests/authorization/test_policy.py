@@ -98,10 +98,8 @@ policy06 = dict(
 )
 
 
-
 def test_principals():
-    assert Policy(policy04).principals == \
-           set(["arn:aws:iam::012345678910:root", "arn:aws:iam::*:role/Hello"])
+    assert Policy(policy04).principals == set(["arn:aws:iam::012345678910:root", "arn:aws:iam::*:role/Hello"])
 
 
 def test_whos_allowed():
@@ -110,9 +108,7 @@ def test_whos_allowed():
 
     allowed = Policy(policy04).whos_allowed()
     assert len(allowed) == 2
-    principal_allowed = set(
-        [item for item in allowed if item.category == "principal"]
-    )
+    principal_allowed = set([item for item in allowed if item.category == "principal"])
     assert len(principal_allowed) == 2
 
     allowed = Policy(policy06).whos_allowed()
