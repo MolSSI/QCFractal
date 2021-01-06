@@ -124,7 +124,7 @@ class FractalClient(object):
             requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
         if (username is not None) or (password is not None):
-            self._headers["Authorization"] = self._get_JWT_token(username, password)
+            self._get_JWT_token(username, password)
 
         from . import __version__  # Import here to avoid circular import
         from . import _isportal
@@ -200,15 +200,26 @@ class FractalClient(object):
         self.encoding = encoding
         self._headers["Content-Type"] = f"application/{self.encoding}"
 
-    def _get_JWT_token(self, username, password):
+    def _get_JWT_token(self, username: str, password: str) -> None:
 
         ret = requests.post(self.address + "login",
                             json={"username": username, "password": password})
-        print(f'----- client login: {ret}')
         if ret.status_code == 200:
-            return "Bearer "+ret.json()["access_token"]
+            self.refresh_token = ret.json()["refresh_token"]
+            self._headers["Authorization"] = f'Bearer {ret.json()["access_token"]}'
         else:
-            return ""
+            raise ConnectionRefusedError("Authentication failed, wrong username or password.")
+
+    def _refresh_JWT_token(self) -> None:
+
+        ret = requests.post(self.address + "refresh", json={},
+                            headers={'Authorization': f'Bearer {self.refresh_token}'})
+
+        if ret.status_code == 200:
+            self._headers["Authorization"] = f'Bearer {ret.json()["access_token"]}'
+        else:  # shouldn't happen unless user is blacklisted
+            return ConnectionRefusedError("Unable to refresh JWT authorization token! "
+                                          "This is a server issue!!")
 
     def _request(
         self,
@@ -218,6 +229,7 @@ class FractalClient(object):
         data: Optional[str] = None,
         noraise: bool = False,
         timeout: Optional[int] = None,
+        retry: Optional[bool] = True
     ) -> requests.Response:
 
         addr = self.address + service
@@ -242,8 +254,17 @@ class FractalClient(object):
         except requests.exceptions.ConnectionError:
             raise ConnectionRefusedError(_connection_error_msg.format(self.address)) from None
 
+        # If JWT token expired, automatically renew it and retry once
+        if retry and (r.status_code == 401) and "Token has expired" in r.json()['msg']:
+            self._refresh_JWT_token()
+            return self._request(method, service, data=data, noraise=noraise, timeout=timeout, retry=False)
+
         if (r.status_code != 200) and (not noraise):
-            raise IOError("Server communication failure. Code: {}, Reason: {}".format(r.status_code, r.reason))
+            try:
+                msg = r.json()['msg']
+            except:
+                msg = r.reason
+            raise IOError("Server communication failure. Code: {}, Reason: {}".format(r.status_code, msg))
 
         return r
 

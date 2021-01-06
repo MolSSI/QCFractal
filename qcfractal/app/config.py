@@ -5,7 +5,8 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 class Config:
 
     JWT_SECRET_KEY = 'super-secret'
-    JWT_REFRESH_TOKEN_EXPIRES = 86400
+    JWT_ACCESS_TOKEN_EXPIRES = 60*60*24*7
+    JWT_REFRESH_TOKEN_EXPIRES = 60*60*24*30
 
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess string'
 
@@ -29,8 +30,8 @@ class TestingConfig(Config):
     # Testing=True disables error catching during request handling, so that you get better error
     # reports when performing test requests against the application.
     TESTING = True
-
     DEBUG = False
+    JWT_ACCESS_TOKEN_EXPIRES = 2  # seconds
 
 
 class ProductionConfig(Config):

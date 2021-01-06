@@ -29,7 +29,7 @@ from . import jwt
 import logging
 import json
 from functools import wraps
-
+import datetime
 from werkzeug.exceptions import HTTPException, BadRequest, NotFound, \
     Forbidden, Unauthorized
 
@@ -192,15 +192,13 @@ def after_request_func(response):
 
 @main.errorhandler(KeyError)
 def handle_python_errors(error):
-    return jsonify(message=str(error)), 400
+    return jsonify(msg=str(error)), 400
     # return BadRequest(str(error))
 
 
 @main.errorhandler(BadRequest)
 def handle_invalid_usage(error):
-    response = jsonify(error.to_dict())
-    response.status_code = error.status_code
-    return response
+    return jsonify(msg=str(error)), error.code
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #                            Routes
@@ -217,10 +215,10 @@ def register():
 
     success = current_app.config.storage.add_user(username, password=password, rolename="user")
     if success:
-        return jsonify(message='New user created!'), 201
+        return jsonify(msg='New user created!'), 201
     else:
         logger.info("\n>>> Failed to add user. Perhaps the username is already taken?")
-        return jsonify(message='Failed to add user.'), 500
+        return jsonify(msg='Failed to add user.'), 500
 
 
 @main.route('/login', methods=['POST'])
@@ -234,9 +232,11 @@ def login():
 
     success, error_message, permissions = current_app.config.storage.verify_user(username, password)
     if success:
-        access_token = create_access_token(identity=username, user_claims={"permissions": permissions})
+        access_token = create_access_token(identity=username,
+                                           user_claims={"permissions": permissions})
+                                           # expires_delta=datetime.timedelta(days=3))
         refresh_token = create_refresh_token(identity=username)
-        return jsonify(message="Login succeeded!", access_token=access_token,
+        return jsonify(msg="Login succeeded!", access_token=access_token,
                        refresh_token=refresh_token), 200
     else:
         return Unauthorized(error_message)
@@ -253,7 +253,9 @@ def get_information():
 def refresh():
     username = get_jwt_identity()
     ret = {
-        'access_token': create_access_token(identity=username)
+        'access_token': create_access_token(
+            identity=username,
+            user_claims={"permissions": current_app.config.storage.get_user_permissions(username)})
     }
     return jsonify(ret), 200
 
@@ -270,7 +272,7 @@ def fresh_login():
     success, error_message, permissions = current_app.config.storage.verify_user(username, password)
     if success:
         access_token = create_access_token(identity=username, user_claims={"permissions": permissions}, fresh=True)
-        return jsonify(message="Fresh login succeeded!", access_token=access_token), 200
+        return jsonify(msg="Fresh login succeeded!", access_token=access_token), 200
     else:
         return Unauthorized(error_message)
 
@@ -475,7 +477,7 @@ def delete_collection(collection_id: int, view_function: str):
     body_model, response_model = rest_model(f"collection/{collection_id}", "delete")
     ret = current_app.config.storage.del_collection(col_id=collection_id)
     if ret == 0:
-        return jsonify(message="Collection does not exist."), 404
+        return jsonify(msg="Collection does not exist."), 404
     else:
         response = response_model(meta={"success": True, "errors": [], "error_description": False})
 
@@ -525,7 +527,7 @@ def get_procedure(query_type: str = 'get'):
     else:  # all other queries, like 'best_opt_results'
         ret = current_app.config.storage.custom_query("procedure", query_type, **{**body.data.dict(), **body.meta.dict()})
     # except KeyError as e:
-    #     return jsonify(message=str(e)), 500
+    #     return jsonify(msg=str(e)), 500
 
     response = response_model(**ret)
 
@@ -544,7 +546,7 @@ def get_optimization(query_type: str):
     else:  # all other queries, like 'best_opt_results'
         ret = current_app.config.storage.custom_query("optimization", query_type, **{**body.data.dict(), **body.meta.dict()})
     # except KeyError as e:
-    #     return jsonify(message=str(e)), 500
+    #     return jsonify(msg=str(e)), 500
 
     response = response_model(**ret)
 
@@ -571,7 +573,7 @@ def post_task_queue():
 
     # Format and submit tasks
     if not check_procedure_available(body.meta.procedure):
-        return jsonify(message="Unknown procedure {}.".format(body.meta.procedure)), 400
+        return jsonify(msg="Unknown procedure {}.".format(body.meta.procedure)), 400
 
     procedure_parser = get_procedure_parser(body.meta.procedure,
                                             current_app.config.storage,
@@ -580,7 +582,7 @@ def post_task_queue():
     # Verify the procedure
     verify = procedure_parser.verify_input(body)
     if verify is not True:
-        return jsonify(message="Verify error"), 400
+        return jsonify(msg="Verify error"), 400
 
     payload = procedure_parser.submit_tasks(body)
     response = response_model(**payload)
@@ -595,12 +597,12 @@ def put_task_queue():
     body = parse_bodymodel(body_model)
 
     if (body.data.id is None) and (body.data.base_result is None):
-        return jsonify(message="Id or ResultId must be specified."), 400
+        return jsonify(msg="Id or ResultId must be specified."), 400
     if body.meta.operation == "restart":
         tasks_updated = current_app.config.storage.queue_reset_status(**body.data.dict(), reset_error=True)
         data = {"n_updated": tasks_updated}
     else:
-        return jsonify(message="Operation '{operation}' is not valid."), 400
+        return jsonify(msg="Operation '{operation}' is not valid."), 400
 
     response = response_model(data=data, meta={"errors": [], "success": True, "error_description": False})
 
@@ -663,13 +665,13 @@ def put_service_queue():
     body = parse_bodymodel(body_model)
 
     if (body.data.id is None) and (body.data.procedure_id is None):
-        return jsonify(message="Id or ProcedureId must be specified."), 400
+        return jsonify(msg="Id or ProcedureId must be specified."), 400
 
     if body.meta.operation == "restart":
         updates = current_app.config.storage.update_service_status("running", **body.data.dict())
         data = {"n_updated": updates}
     else:
-        return jsonify(message="Operation '{operation}' is not valid."), 400
+        return jsonify(msg="Operation '{operation}' is not valid."), 400
 
     response = response_model(data=data, meta={"errors": [], "success": True, "error_description": False})
 
@@ -853,7 +855,7 @@ def put_queue_manager():
 
     else:
         msg = "Operation '{}' not understood.".format(op)
-        return jsonify(message=msg), 400
+        return jsonify(msg=msg), 400
 
     response = response_model(**{"meta": {}, "data": ret})
 
@@ -905,9 +907,9 @@ def add_role():
 
     success, error_message = current_app.config.storage.add_role(rolename, permissions)
     if success:
-        return jsonify({'message': 'New role created!'}), 201
+        return jsonify({'msg': 'New role created!'}), 201
     else:
-        return jsonify({'message': error_message}), 400
+        return jsonify({'msg': error_message}), 400
 
 
 @main.route('/role', methods=['PUT'])
@@ -918,9 +920,9 @@ def update_role():
 
     success = current_app.config.storage.update_role(rolename, permissions)
     if success:
-        return jsonify({'message': 'Role was updated!'}), 200
+        return jsonify({'msg': 'Role was updated!'}), 200
     else:
-        return jsonify({'message': 'Failed to update role'}), 400
+        return jsonify({'msg': 'Failed to update role'}), 400
 
 
 @main.route('/role', methods=['DELETE'])
@@ -930,6 +932,6 @@ def delete_role():
 
     success = current_app.config.storage.delete_role(rolename)
     if success:
-        return jsonify({'message': 'Role was deleted!.'}), 200
+        return jsonify({'msg': 'Role was deleted!.'}), 200
     else:
-        return jsonify({'message': 'Filed to delete role!.'}), 400
+        return jsonify({'msg': 'Filed to delete role!.'}), 400
