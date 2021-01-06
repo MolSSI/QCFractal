@@ -8,6 +8,7 @@ import requests
 import qcfractal
 import qcfractal.interface as ptl
 from qcfractal import testing
+
 ## For mock flask responses
 from requests_mock_flask import add_flask_app_to_mock
 import requests_mock
@@ -15,25 +16,29 @@ import responses
 
 
 _users = {
-    "read": {"pw": "hello", "rolename": 'read'},
-    "write": {"pw": "something", "rolename": 'write'},
-    "admin": {"pw": "something", "rolename": 'admin'},
+    "read": {"pw": "hello", "rolename": "read"},
+    "write": {"pw": "something", "rolename": "write"},
+    "admin": {"pw": "something", "rolename": "admin"},
 }
 
 _roles = {
-        'read' : {"Statement": [
-                                {"Effect": "Allow", "Action": "GET", "Resource": "*"},
-                                {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager"]},
-                ]},
-        'write' : {"Statement": [
-                                {"Effect": "Allow", "Action": "GET", "Resource": "*"},
-                                {"Effect": "Allow", "Action": "POST", "Resource":
-                                    ["molecule", "manager"]},
-                ]},
-
-        'admim': {"Statement": [
-                                {"Effect": "Allow", "Action": "*", "Resource": "*"},
-        ]}
+    "read": {
+        "Statement": [
+            {"Effect": "Allow", "Action": "GET", "Resource": "*"},
+            {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager"]},
+        ]
+    },
+    "write": {
+        "Statement": [
+            {"Effect": "Allow", "Action": "GET", "Resource": "*"},
+            {"Effect": "Allow", "Action": "POST", "Resource": ["molecule", "manager"]},
+        ]
+    },
+    "admim": {
+        "Statement": [
+            {"Effect": "Allow", "Action": "*", "Resource": "*"},
+        ]
+    },
 }
 
 
@@ -50,21 +55,20 @@ def sec_server(request, postgres_server):
 
     # Build server, manually handle IOLoop (no start/stop needed)
     server = qcfractal.FractalServer(
-            port=testing.find_open_port(),
-            storage_uri=postgres_server.database_uri(),
-            storage_project_name=storage_name,
-            security="local",
-            allow_read=False,
-            skip_storage_version_check=True,
-            flask_config='testing',
+        port=testing.find_open_port(),
+        storage_uri=postgres_server.database_uri(),
+        storage_project_name=storage_name,
+        security="local",
+        allow_read=False,
+        skip_storage_version_check=True,
+        flask_config="testing",
     )
 
     # Clean and re-init the database
     server.storage._clear_db(storage_name)
 
-
     with responses.RequestsMock(assert_all_requests_are_fired=False) as resp_m:
-    # with requests_mock.Mocker() as resp_m:
+        # with requests_mock.Mocker() as resp_m:
         add_flask_app_to_mock(
             mock_obj=resp_m,
             flask_app=server.app,
@@ -95,7 +99,7 @@ def sec_server_allow_read(sec_server, postgres_server):
     )
 
     with responses.RequestsMock(assert_all_requests_are_fired=False) as resp_m:
-    # with requests_mock.Mocker() as resp_m:
+        # with requests_mock.Mocker() as resp_m:
         add_flask_app_to_mock(
             mock_obj=resp_m,
             flask_app=server.app,
@@ -103,7 +107,6 @@ def sec_server_allow_read(sec_server, postgres_server):
         )
 
         yield server
-
 
 
 ### Tests the compute queue stack
@@ -115,12 +118,17 @@ def test_security_auth_decline_none(sec_server):
 
 
 # TODO: fixme: ssl error not raised
-@pytest.mark.skip('SSL check not working!')
+@pytest.mark.skip("SSL check not working!")
 def test_security_auth_bad_ssl(sec_server):
     with pytest.raises(ConnectionError) as excinfo:
         client = ptl.FractalClient.from_file(
-                {"address": sec_server.get_address(), "username": "write", "password": _users["write"]["pw"], "verify": True}
-            )
+            {
+                "address": sec_server.get_address(),
+                "username": "write",
+                "password": _users["write"]["pw"],
+                "verify": True,
+            }
+        )
         client.query_molecules(id=[])
 
     assert "ssl handshake" in str(excinfo.value).lower()
@@ -130,8 +138,8 @@ def test_security_auth_bad_ssl(sec_server):
 def test_security_auth_decline_bad_user(sec_server):
     with pytest.raises(IOError) as excinfo:
         client = ptl.FractalClient.from_file(
-                {"address": sec_server.get_address(), "username": "hello", "password": "something", "verify": False}
-            )
+            {"address": sec_server.get_address(), "username": "hello", "password": "something", "verify": False}
+        )
         r = client.query_molecules(id=[])
     assert "authentication failed" in str(excinfo.value).lower()
 
@@ -147,20 +155,20 @@ def test_security_auth_accept(sec_server):
 def test_security_auth_refresh(sec_server):
 
     client = ptl.FractalClient(sec_server, username="write", password=_users["write"]["pw"])
-    client._set_encoding('json')
+    client._set_encoding("json")
 
     client.add_molecules([])
 
     assert client.refresh_token
 
     import time
+
     time.sleep(3)
 
-    r = requests.post(client.address + 'molecule', json={'data':[], 'meta': {}},
-                      headers=client._headers)
+    r = requests.post(client.address + "molecule", json={"data": [], "meta": {}}, headers=client._headers)
 
     assert r.status_code == 401
-    assert "Token has expired" in r.json()['msg']
+    assert "Token has expired" in r.json()["msg"]
 
     # will automatically refresh JWT and get new access_token
     client.add_molecules([])

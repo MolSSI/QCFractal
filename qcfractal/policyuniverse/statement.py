@@ -91,22 +91,19 @@ class Statement(object):
             structure.add(value)
 
     def evaluate(self, context):
-        if (self._evaluate_resource(context) and
-            self._evaluate_action(context) and
-            self._evaluate_principal(context)):
+        if self._evaluate_resource(context) and self._evaluate_action(context) and self._evaluate_principal(context):
             return self.effect == "Allow"
         else:
             return None
 
     def _evaluate_resource(self, context):
-        return '*' in self.resources or context['Resource'] in self.resources
+        return "*" in self.resources or context["Resource"] in self.resources
 
     def _evaluate_action(self, context):
-        return '*' in self.actions or context['Action'] in self.actions
+        return "*" in self.actions or context["Action"] in self.actions
 
     def _evaluate_principal(self, context):
         if len(self.principals) == 0:
             return True
         else:
-            return '*' in self.principals or context['Principal'] in self.principals
-
+            return "*" in self.principals or context["Principal"] in self.principals

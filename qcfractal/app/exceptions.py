@@ -3,7 +3,7 @@ from flask import jsonify, json
 from werkzeug.exceptions import HTTPException, BadRequest
 
 
-#TODO: not called
+# TODO: not called
 @main.errorhandler(BadRequest)
 # @main.errorhandler(KeyError)
 def handle_invalid_usage(error):
