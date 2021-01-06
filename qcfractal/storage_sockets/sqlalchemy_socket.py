@@ -2952,7 +2952,7 @@ class SQLAlchemySocket:
 
         return count == 1
 
-    def get_user_permissions(self, username: str) -> Optional[List[str]]:
+    def get_user_permissions(self, username: str) -> Dict:
         """
 
         Parameters
@@ -2962,8 +2962,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-        Optional[List[str]]
-            List of user permissions, or None if user is not found.
+        permissions (dict)
+            Dict of user permissions, or None if user is not found.
         """
 
         with self.session_scope() as session:
