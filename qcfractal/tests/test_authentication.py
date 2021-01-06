@@ -56,6 +56,7 @@ def sec_server(request, postgres_server):
             security="local",
             allow_read=False,
             skip_storage_version_check=True,
+            flask_config='testing',
     )
 
     # Clean and re-init the database
@@ -110,7 +111,7 @@ def test_security_auth_decline_none(sec_server):
     with pytest.raises(IOError) as excinfo:
         client = ptl.FractalClient(sec_server)
         client.query_molecules(id=[])
-    assert "unauthorized" in str(excinfo.value).lower()
+    assert "missing authorization header" in str(excinfo.value).lower()
 
 
 # TODO: fixme: ssl error not raised
@@ -132,7 +133,7 @@ def test_security_auth_decline_bad_user(sec_server):
                 {"address": sec_server.get_address(), "username": "hello", "password": "something", "verify": False}
             )
         r = client.query_molecules(id=[])
-    assert "unauthorized" in str(excinfo.value).lower()
+    assert "authentication failed" in str(excinfo.value).lower()
 
 
 def test_security_auth_accept(sec_server):
@@ -141,6 +142,28 @@ def test_security_auth_accept(sec_server):
 
     r = client.add_molecules([])
     r = client.query_molecules(id=[])
+
+
+def test_security_auth_refresh(sec_server):
+
+    client = ptl.FractalClient(sec_server, username="write", password=_users["write"]["pw"])
+    client._set_encoding('json')
+
+    client.add_molecules([])
+
+    assert client.refresh_token
+
+    import time
+    time.sleep(3)
+
+    r = requests.post(client.address + 'molecule', json={'data':[], 'meta': {}},
+                      headers=client._headers)
+
+    assert r.status_code == 401
+    assert "Token has expired" in r.json()['msg']
+
+    # will automatically refresh JWT and get new access_token
+    client.add_molecules([])
 
 
 def test_security_auth_password_gen(sec_server):
