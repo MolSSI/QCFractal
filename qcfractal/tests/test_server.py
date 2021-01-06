@@ -24,6 +24,7 @@ from qcfractal.testing import (
 
 meta_set = {"errors", "n_inserted", "success", "duplicates", "error_description", "validation_errors"}
 
+
 def test_server_up(test_server):
     info_addr = test_server.get_address() + "information"  # Targets and endpoint in the FractalServer
 
@@ -35,15 +36,16 @@ def test_server_up(test_server):
     r = requests.get(info_addr, json={})
     assert r.status_code == 200, r.reason
 
+
 def test_server_full_read(test_server):
 
     addr = test_server.get_address() + "manager"
 
-    body = { "meta": "", "data": ""}
+    body = {"meta": "", "data": ""}
     # r = requests.get(addr, json=body)
     # assert r.status_code == 401
 
-    r = requests.get(addr, json=body) #, headers=test_server.app.config.headers)
+    r = requests.get(addr, json=body)  # , headers=test_server.app.config.headers)
     assert r.status_code == 200
 
 

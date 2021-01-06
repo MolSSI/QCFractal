@@ -59,7 +59,7 @@ class FractalSnowflake(FractalServer):
         logging: Union[bool, str] = False,
         start_server: bool = True,
         reset_database: bool = False,
-        flask_config: str = 'default'
+        flask_config: str = "default",
     ):
         """A temporary FractalServer that can be used to run complex workflows or try new computations.
 

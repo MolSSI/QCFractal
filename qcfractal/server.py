@@ -9,6 +9,7 @@ import tornado.ioloop
 import threading
 import atexit
 from datetime import datetime, timedelta
+
 # from urllib.parse import urlparse
 # from flask import Flask, jsonify, request, copy_current_request_context
 # from flask_jwt_extended import JWTManager
@@ -21,6 +22,7 @@ from .qc_queue import QueueManager, QueueManagerHandler, ServiceQueueHandler, Ta
 from .services import construct_service
 from .storage_sockets import ViewHandler, storage_socket_factory
 from .storage_sockets.api_logger import API_AccessLogger
+
 # from .storage_sockets.storage_utils import add_metadata_template
 # from pydantic import ValidationError
 # from qcelemental.util import deserialize, serialize
@@ -86,15 +88,14 @@ def _build_ssl():
     return cert_pem, key_pem
 
 
-class FractalServer():
+class FractalServer:
     def __init__(
         self,
         # Server info options
         name: str = "QCFractal Server",
         port: int = 5000,
-        loop: "IOLoop" = None,              # TODO: tobe removed, not used anymore
-        compress_response: bool = True,     # TODO: tobe removed, not used anymore
-
+        loop: "IOLoop" = None,  # TODO: tobe removed, not used anymore
+        compress_response: bool = True,  # TODO: tobe removed, not used anymore
         # Security/Auth
         security: Optional[str] = None,
         allow_read: bool = True,  # changed default to True to match security default
@@ -120,7 +121,7 @@ class FractalServer():
         # Testing functions
         skip_storage_version_check=True,
         # Flask
-        flask_config: str = 'default',
+        flask_config: str = "default",
     ):
         """QCFractal initialization
 
@@ -262,7 +263,7 @@ class FractalServer():
             "logger": self.logger,
             "api_logger": self.api_logger,
             "view_handler": self.view_handler,
-            "ALLOW_READ": allow_read if JWT_ENABLED else True, # always True if no security needed
+            "ALLOW_READ": allow_read if JWT_ENABLED else True,  # always True if no security needed
             "JWT_ENABLED": JWT_ENABLED,
         }
 
@@ -300,7 +301,7 @@ class FractalServer():
         self.futures = {}
 
         # Background jobs with graceful shutdown of tasks (daemon=False)
-        self.scheduler = BackgroundScheduler() #daemon=False)
+        self.scheduler = BackgroundScheduler()  # daemon=False)
 
         # Queue manager if direct build
         self.queue_socket = queue_socket
@@ -309,13 +310,11 @@ class FractalServer():
         self.app = create_app(flask_config, **self.objects)
         # self.app.app_context().push()
 
-
-    def _start_flask(self, start_loop : bool = False):
+    def _start_flask(self, start_loop: bool = False):
         # self.ctx = self.app.app_context()
         # self.ctx.push()
         if start_loop:
-            self.app.run(port=self.port) #, debug=False)
-
+            self.app.run(port=self.port)  # , debug=False)
 
     def __repr__(self):
 
@@ -358,7 +357,7 @@ class FractalServer():
                 raise ValueError("Cannot yet use local security with a internal QueueManager")
 
             def _build_manager():
-                self.logger.info('------------ Build manager Job')
+                self.logger.info("------------ Build manager Job")
                 client = FractalClient(self, username="qcfractal_server")
                 self.objects["queue_manager"] = QueueManager(
                     client,
@@ -372,13 +371,11 @@ class FractalServer():
 
             # Build the queue manager, will not run until loop starts
             # self.futures["queue_manager_future"] = self._run_in_thread(_build_manager)
-            self.logger.info('------- Adding _build_manager')
-            self.futures["queue_manager_future"]  = \
-                self.scheduler.add_job(_build_manager, 'date')
-
+            self.logger.info("------- Adding _build_manager")
+            self.futures["queue_manager_future"] = self.scheduler.add_job(_build_manager, "date")
 
         if "queue_manager_future" in self.futures:
-            self.scheduler.add_job(self.futures["queue_manager_future"], 'date', id='manager')
+            self.scheduler.add_job(self.futures["queue_manager_future"], "date", id="manager")
 
             def start_manager():
                 self.logger.info("Start manager Job")
@@ -387,48 +384,48 @@ class FractalServer():
 
             # Call this after the loop has started
             # self._run_in_thread(start_manager)
-            self.scheduler.add_job(start_manager, 'date')
+            self.scheduler.add_job(start_manager, "date")
 
         # Add services callback
         if start_periodics:
-            self.logger.info('---------- start_periodics')
+            self.logger.info("---------- start_periodics")
             # nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, self.service_frequency * 1000)
             # nanny_services.start()
-            nanny_services = self.scheduler.add_job(self.update_services, 'interval',
-                                                    minutes=self.service_frequency)
+            nanny_services = self.scheduler.add_job(self.update_services, "interval", minutes=self.service_frequency)
             self.periodic["update_services"] = nanny_services
-
 
             # Check Manager heartbeats, 5x heartbeat frequency
             # heartbeats = tornado.ioloop.PeriodicCallback(
             #     self.check_manager_heartbeats, self.heartbeat_frequency * 1000 * 0.2
             # )
             # heartbeats.start()
-            heartbeats = self.scheduler.add_job(self.check_manager_heartbeats, 'interval',
-                                                minutes=.2) #self.heartbeat_frequency * 0.2)
+            heartbeats = self.scheduler.add_job(
+                self.check_manager_heartbeats, "interval", minutes=0.2
+            )  # self.heartbeat_frequency * 0.2)
             self.periodic["heartbeats"] = heartbeats
 
             # Log can take some time, update in thread
             # def run_log_update_in_thread():
-                # self._run_in_thread(self.update_server_log)
+            # self._run_in_thread(self.update_server_log)
 
             # server_log = tornado.ioloop.PeriodicCallback(run_log_update_in_thread, self.heartbeat_frequency * 1000)
             # server_log.start()
 
-            server_log = self.scheduler.add_job(self.update_server_log, 'interval',
-                                                minutes=self.heartbeat_frequency * 1000)
+            server_log = self.scheduler.add_job(
+                self.update_server_log, "interval", minutes=self.heartbeat_frequency * 1000
+            )
             self.periodic["server_log"] = server_log
 
         # Build callbacks which are always required
         # public_info = tornado.ioloop.PeriodicCallback(self.update_public_information, self.heartbeat_frequency * 1000)
         # public_info.start()
-        public_info = self.scheduler.add_job(self.update_public_information, 'interval',
-                                             minutes=.1) #self.heartbeat_frequency * 1000)
+        public_info = self.scheduler.add_job(
+            self.update_public_information, "interval", minutes=0.1
+        )  # self.heartbeat_frequency * 1000)
         self.periodic["public_info"] = public_info
 
         # todo
         atexit.register(self.stop)
-
 
     def stop(self, stop_loop: bool = True) -> None:
         """
@@ -470,7 +467,7 @@ class FractalServer():
 
         # threading.Thread(target=flask_shutdown).start()
 
-        self.logger.info('Stoping Server and all periodics..')
+        self.logger.info("Stoping Server and all periodics..")
         if stop_loop:
             self.scheduler.shutdown(wait=False)
             self.app.do_teardown_appcontext()
@@ -520,7 +517,7 @@ class FractalServer():
         # Root logger
         logger = logging.getLogger()
 
-        log_formatter = logging.Formatter('%(asctime)s - %(name)s:%(lineno)d - %(levelname)s - %(message)s')
+        log_formatter = logging.Formatter("%(asctime)s - %(name)s:%(lineno)d - %(levelname)s - %(message)s")
 
         if logfile_prefix:
             file_handler = logging.FileHandler(logfile_prefix)
@@ -647,7 +644,7 @@ class FractalServer():
         Updates the public information data
         """
 
-        self.logger.info('------ Updating public info')
+        self.logger.info("------ Updating public info")
         data = self.storage.get_server_stats_log(limit=1)["data"]
 
         counts = {"collection": 0, "molecule": 0, "result": 0, "kvstore": 0}
@@ -664,7 +661,7 @@ class FractalServer():
         """
         Checks the heartbeats and kills off managers that have not been heard from.
         """
-        self.logger.info('**************** Check manager heartbeat')
+        self.logger.info("**************** Check manager heartbeat")
         dt = datetime.utcnow() - timedelta(seconds=self.heartbeat_frequency)
         ret = self.storage.get_managers(status="ACTIVE", modified_before=dt)
 
@@ -678,7 +675,7 @@ class FractalServer():
                 )
             )
 
-    #TODO: why is this method here? where it's used?
+    # TODO: why is this method here? where it's used?
     def list_managers(self, status: Optional[str] = None, name: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Provides a list of managers associated with the server both active and inactive.
@@ -800,7 +797,7 @@ class FractalServer():
         return self.objects["queue_manager"].list_current_tasks()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         server = FractalServer()
         server.start()

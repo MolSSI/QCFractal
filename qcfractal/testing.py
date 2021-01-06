@@ -395,14 +395,13 @@ def test_server(request, postgres_server):
         storage_uri=postgres_server.database_uri(),
         start_server=False,
         reset_database=True,
-        flask_config='testing',
+        flask_config="testing",
     ) as server:
-
 
         # Clean and re-init the database
 
         with responses.RequestsMock(assert_all_requests_are_fired=False) as resp_m:
-        # with requests_mock.Mocker() as resp_m:
+            # with requests_mock.Mocker() as resp_m:
             add_flask_app_to_mock(
                 mock_obj=resp_m,
                 flask_app=server.app,
@@ -521,7 +520,7 @@ def fractal_compute_server(postgres_server):
         reset_server_database(server)
 
         with responses.RequestsMock(assert_all_requests_are_fired=False) as resp_m:
-        # with requests_mock.Mocker() as resp_m:
+            # with requests_mock.Mocker() as resp_m:
             add_flask_app_to_mock(
                 mock_obj=resp_m,
                 flask_app=server.app,
@@ -531,7 +530,6 @@ def fractal_compute_server(postgres_server):
             # ret = requests.post(server.get_address() + "login",
             #                       json={"email": "user@molssi.org", "password": "password"})
             # server.app.config.headers = {"Authorization": "Bearer "+ret.json()["access_token"]}
-
 
         yield server
 
@@ -551,8 +549,8 @@ def build_socket_fixture(server=None):
 
     yield storage
 
-   # storage._clear_db(storage_name)
 
+# storage._clear_db(storage_name)
 
 
 # @pytest.fixture(scope="module", params=["sqlalchemy"])
