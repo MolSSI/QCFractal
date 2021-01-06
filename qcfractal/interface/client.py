@@ -202,8 +202,7 @@ class FractalClient(object):
 
     def _get_JWT_token(self, username: str, password: str) -> None:
 
-        ret = requests.post(self.address + "login",
-                            json={"username": username, "password": password})
+        ret = requests.post(self.address + "login", json={"username": username, "password": password})
         if ret.status_code == 200:
             self.refresh_token = ret.json()["refresh_token"]
             self._headers["Authorization"] = f'Bearer {ret.json()["access_token"]}'
@@ -212,14 +211,14 @@ class FractalClient(object):
 
     def _refresh_JWT_token(self) -> None:
 
-        ret = requests.post(self.address + "refresh", json={},
-                            headers={'Authorization': f'Bearer {self.refresh_token}'})
+        ret = requests.post(
+            self.address + "refresh", json={}, headers={"Authorization": f"Bearer {self.refresh_token}"}
+        )
 
         if ret.status_code == 200:
             self._headers["Authorization"] = f'Bearer {ret.json()["access_token"]}'
         else:  # shouldn't happen unless user is blacklisted
-            return ConnectionRefusedError("Unable to refresh JWT authorization token! "
-                                          "This is a server issue!!")
+            return ConnectionRefusedError("Unable to refresh JWT authorization token! " "This is a server issue!!")
 
     def _request(
         self,
@@ -229,7 +228,7 @@ class FractalClient(object):
         data: Optional[str] = None,
         noraise: bool = False,
         timeout: Optional[int] = None,
-        retry: Optional[bool] = True
+        retry: Optional[bool] = True,
     ) -> requests.Response:
 
         addr = self.address + service
@@ -255,13 +254,13 @@ class FractalClient(object):
             raise ConnectionRefusedError(_connection_error_msg.format(self.address)) from None
 
         # If JWT token expired, automatically renew it and retry once
-        if retry and (r.status_code == 401) and "Token has expired" in r.json()['msg']:
+        if retry and (r.status_code == 401) and "Token has expired" in r.json()["msg"]:
             self._refresh_JWT_token()
             return self._request(method, service, data=data, noraise=noraise, timeout=timeout, retry=False)
 
         if (r.status_code != 200) and (not noraise):
             try:
-                msg = r.json()['msg']
+                msg = r.json()["msg"]
             except:
                 msg = r.reason
             raise IOError("Server communication failure. Code: {}, Reason: {}".format(r.status_code, msg))
