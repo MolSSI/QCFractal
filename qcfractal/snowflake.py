@@ -158,7 +158,6 @@ class FractalSnowflake(FractalServer):
 
         if start_server:
             self.start(start_loop=False)
-        # self.start(start_loop=False)
 
         # self.loop_future = self.loop_thread.submit(self.loop.start)
 
