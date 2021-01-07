@@ -303,18 +303,38 @@ class FractalServer:
         # Background jobs with graceful shutdown of tasks (daemon=False)
         self.scheduler = BackgroundScheduler()  # daemon=False)
 
-        # Queue manager if direct build
-        self.queue_socket = queue_socket
-
         # create flask app
         self.app = create_app(flask_config, **self.objects)
         # self.app.app_context().push()
 
+        # Queue manager if direct build
+        self.queue_socket = queue_socket
+        if self.queue_socket is not None:
+            if security == "local":
+                raise ValueError("Cannot yet use local security with a internal QueueManager")
+
+            def _build_manager():
+                self.logger.info("------------ Build manager Job")
+                client = FractalClient(self, username="qcfractal_server")
+                self.objects["queue_manager"] = QueueManager(
+                    client,
+                    self.queue_socket,
+                    logger=self.logger,
+                    manager_name="FractalServer",
+                    cores_per_task=1,
+                    memory_per_task=1,
+                    verbose=False,
+                )
+
+            # Build the queue manager, will not actually start until server starts
+            self.logger.info("------- Adding _build_manager")
+            self.futures["queue_manager_future"] = self.executor.submit(_build_manager)
+
+
     def _start_flask(self, start_loop: bool = False):
         # self.ctx = self.app.app_context()
         # self.ctx.push()
-        if start_loop:
-            self.app.run(port=self.port)  # , debug=False)
+        pass
 
     def __repr__(self):
 
@@ -344,47 +364,26 @@ class FractalServer:
             Service iterations and Manager heartbeat checking.
         """
 
-        # TODO
-        # Soft quit with a keyboard interrupt
-        self._start_flask(start_loop)
-        self.logger.info("FractalServer successfully started.\n")
-        if start_loop:
-            self.loop_active = True
-            self.scheduler.start()
-
-        if self.queue_socket is not None:
-            if self.security == "local":
-                raise ValueError("Cannot yet use local security with a internal QueueManager")
-
-            def _build_manager():
-                self.logger.info("------------ Build manager Job")
-                client = FractalClient(self, username="qcfractal_server")
-                self.objects["queue_manager"] = QueueManager(
-                    client,
-                    self.queue_socket,
-                    logger=self.logger,
-                    manager_name="FractalServer",
-                    cores_per_task=1,
-                    memory_per_task=1,
-                    verbose=False,
-                )
-
-            # Build the queue manager, will not run until loop starts
-            # self.futures["queue_manager_future"] = self._run_in_thread(_build_manager)
-            self.logger.info("------- Adding _build_manager")
-            self.futures["queue_manager_future"] = self.scheduler.add_job(_build_manager, "date")
-
         if "queue_manager_future" in self.futures:
-            self.scheduler.add_job(self.futures["queue_manager_future"], "date", id="manager")
 
             def start_manager():
                 self.logger.info("Start manager Job")
                 self._check_manager("manager_build")
                 self.objects["queue_manager"].start()
 
-            # Call this after the loop has started
-            # self._run_in_thread(start_manager)
-            self.scheduler.add_job(start_manager, "date")
+            # Call this after the loop has started # TODO
+            self.executor.submit(start_manager)
+
+        # TODO
+        # Soft quit with a keyboard interrupt
+        # self._start_flask(start_loop)
+
+        self.logger.info("FractalServer successfully started.\n")
+        if start_loop:
+            self.loop_active = True
+            self.app.run(port=self.port, ssl_context="adhoc") #"=('cert.pem', 'key.pem'))
+            # self.app.run(port=self.port)  # , debug=False)
+            self.scheduler.start()
 
         # Add services callback
         if start_periodics:

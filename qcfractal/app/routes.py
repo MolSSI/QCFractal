@@ -146,8 +146,8 @@ def before_request_func():
         # default to "application/json"
         session["content_type"] = request.headers.get("Content-Type", "application/json")
         session["encoding"] = _valid_encodings[session["content_type"]]
-    except KeyError:
-        raise BadRequest(f"Did not understand 'Content-Type': {session['content_type']}")
+    except KeyError as e:
+        raise BadRequest(f"Did not understand 'Content-Type'. {e}")
 
     # TODO: check if needed in Flask
     try:
@@ -168,7 +168,6 @@ def before_request_func():
 def after_request_func(response):
 
     # Always reply in the format sent
-
     response.headers["Content-Type"] = session["content_type"]
 
     exclude_uris = ["/task_queue", "/service_queue", "/queue_manager"]
@@ -176,7 +175,7 @@ def after_request_func(response):
     # No associated data, so skip all of this
     # (maybe caused by not using portal or not using the REST API correctly?)
     if request.data is None:
-        return
+        return response
 
     if current_app.config.api_logger and request.method == "GET" and request.path not in exclude_uris:
 
