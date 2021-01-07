@@ -7,8 +7,8 @@ There are currently two types of :class:`ReactionDatasets <qcportal.collections.
 - ``rxn`` for datasets based on canonical chemical reactions :math:`A + B \rightarrow C`
 - ``ie`` for interaction energy datasets :math:`M_{complex} \rightarrow M_{monomer_1} + M_{monomer_2}`
 
-Querying
---------
+Querying the Data
+-----------------
 
 The result specifications in a :class:`ReactionDataset <qcportal.collections.ReactionDataset>`
 such as *method*, *basis set*, *program*, *keyword*, and *driver* may be listed with
@@ -26,8 +26,8 @@ can be retrieved with :meth:`get_records <qcportal.collections.ReactionDataset.g
 For examples of querying :class:`ReactionDatasets <qcportal.collections.ReactionDataset>`,
 see the `QCArchive examples <https://qcarchivetutorials.readthedocs.io/en/latest/basic_examples/reaction_datasets.html>`_.
 
-Visualizing
------------
+Statistics and Visualization
+----------------------------
 
 Statistical analysis on the :class:`ReactionDatasets <qcportal.collections.ReactionDataset>` 
 can be performed via :meth:`statistics <qcportal.collections.ReactionDataset.statistics>` command
@@ -37,8 +37,8 @@ in :class:`ReactionDatasets <qcportal.collections.ReactionDataset>`, see
 the `QCArchive examples <https://qcarchivetutorials.readthedocs.io/en/latest/basic_examples/reaction_datasets.html>`_.
 
 
-Creating
---------
+Creating the Datasets
+---------------------
 
 The :class:`Dataset <qcportal.collections.Dataset>` constructor can be adopted to create an empty dataset
 object using a dataset name and type (``dtype``) as arguments.
@@ -133,8 +133,8 @@ index of each atomic/molecular species and their corresponding number of moles
     }
 
 
-Computing
----------
+Computational Tasks
+-------------------
 
 Computations on the :class:`ReactionDatasets <qcportal.collections.ReactionDataset>`
 are performed in the same manner as mentioned in :ref:`Dataset Documentation <dataset-computing>`

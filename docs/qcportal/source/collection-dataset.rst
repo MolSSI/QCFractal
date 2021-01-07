@@ -1,5 +1,5 @@
-Dataset
-=======
+Exploring the Dataset
+=====================
 
 The :class:`Dataset <qcportal.collections.Dataset>` collection represents a table whose rows correspond to
 :class:`Molecules <qcportal.models.Molecule>`, and whose columns correspond to properties.
@@ -11,8 +11,8 @@ Existing :class:`Datasets <qcportal.collections.Dataset>` can be listed with
 :meth:`FractalClient.list_collections("Dataset") <qcportal.FractalClient.list_collections>`
 and obtained with :meth:`FractalClient.get_collection("Dataset", name) <qcportal.FractalClient.get_collection>`.
 
-Querying
---------
+Querying the Data
+-----------------
 
 Available result specifications (method, basis set, program, keyword, driver combinations) in a
 :class:`Dataset <qcportal.collections.Dataset>` may be listed with the :meth:`list_values <qcportal.collections.Dataset.list_values>`
@@ -33,8 +33,8 @@ and plotted using the :meth:`visualize <qcportal.collections.Dataset.visualize>`
 For examples of visualizing :class:`Datasets <qcportal.collections.Dataset>`,
 see the `QCArchive examples <https://qcarchivetutorials.readthedocs.io/en/latest/basic_examples/getting_started.html>`_.
 
-Creating
---------
+Creating the Datasets
+---------------------
 
 Construct an empty :class:`Dataset <qcportal.collections.Dataset>`:
 
@@ -62,8 +62,8 @@ Note that this requires `write permissions <http://docs.qcarchive.molssi.org/pro
 
 .. _dataset-computing:
 
-Computing
----------
+Computational Tasks
+-------------------
 
 Computations on the molecules within the :class:`Datasets <qcportal.collections.Dataset>` can be performed using the
 :meth:`compute <qcportal.collections.Dataset.compute>` command.

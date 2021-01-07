@@ -15,8 +15,8 @@ collections can be listed or selectively returned through
 :meth:`FractalClient.list_collections("OptimizationDataset") <qcportal.FractalClient.list_collections>`
 and :meth:`FractalClient.get_collection("OptimizationDataset", name) <qcportal.FractalClient.get_collection>`, respectively.
 
-Querying
---------
+Querying the Data
+-----------------
 
 All available optimization specifications can be listed via 
 
@@ -46,15 +46,15 @@ can be obtained using:
     >>> ds.get_record(name="CCO-0", specification="default")
 
 
-Visualizing
------------
+Statistics and Visualization
+----------------------------
 
 The trajectory of energy change during the course of geometry optimization
 can be plotted by adopting :class:`qcportal.models.OptimizationRecord.show_history()`
 function.
 
-Creating
---------
+Creating the Datasets
+---------------------
 
 A new collection object for :class:`OptimizationDataset <qcportal.collections.OptimizationDataset>`
 can be created using
@@ -98,8 +98,8 @@ onto the server should be postponed until after all molecules are added:
 
     >>> ds.save()
 
-Computing
----------
+Computational Tasks
+-------------------
 
 In order to run a geometry optimization calculation based on
 a particular set of parameter specification (default set in this case),

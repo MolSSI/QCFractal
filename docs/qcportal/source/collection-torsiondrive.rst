@@ -14,14 +14,14 @@ each TorsionDrive computation is recorded as metadata.
 For additional details about :class:`TorsionDriveDatasets <qcfractal.interface.collections.TorsionDriveDataset>`
 see `here <https://qcarchivetutorials.readthedocs.io/en/latest/basic_examples/torsiondrive_datasets.html>`_.
 
-Querying
---------
+Querying the Data
+-----------------
 
-Visualizing
------------
+Statistics and Visualization
+----------------------------
 
-Creating
---------
+Creating the Datasets
+---------------------
 
 A empty instance of the :class:`TorsionDriveDataset <qcfractal.interface.collections.TorsionDriveDataset>` 
 object (here, named ``My Torsions``) can be constructed as
@@ -32,8 +32,8 @@ object (here, named ``My Torsions``) can be constructed as
     >>> ds = ptl.collections.TorsionDriveDataset("My Torsions")
 
 
-Computing
----------
+Computational Tasks
+-------------------
 
 API
 ---
