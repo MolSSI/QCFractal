@@ -1,13 +1,14 @@
 Overview
 ========
 
-A :term:`Record` is the stored values of a completed computation. Each ``Record`` type corresponds to a specific operation that QCArchive has formatted.
+:term:`Records` are the stored values of a completed computation.
+Each ``record`` type corresponds to a specific operation formatted by QCArchive.
+Several ``record`` examples include:
 
-Several examples are:
+- :doc:`Result <record-result>` - data from a single (often quantum chemical) energy, gradient, Hesssian, or property computation,
+- :doc:`Optimization <record-optimization>` - data resulted from a geometry optimization at a given level of theory,
+- ``GridOptimization`` - results of a chain of geometry optimizations where starting structures at each step depends on previous structures, or
+- ``TorsionDrive`` - the outcome of a special type of ``GridOptimization`` specifically for torsion scans that is able to find global minimum structures
+  on the potential energy surfaces.
 
-- :doc:`Result <record-result>` - A single quantum chemistry (or quantum chemistry-like) energy, gradient, Hesssian, or property computation.
-- :doc:`Optimization <record-optimization>` - A geometry optimization at a given level of theory.
-- ``GridOptimization`` - Chains of geometry optimizations where starting structures depend on previous structures.
-- ``TorsionDrive`` - A special type of GridOptimization specifically for torsion scans that is able to overcome local minimum structures to find globally optimal ones.
-
-In general records are indexed based off a hash and are often found and queried through a Collection rather than directly.
+In general, ``records`` are indexed by hashes and therefore, can be easily queried within a dataset ``Collection``.

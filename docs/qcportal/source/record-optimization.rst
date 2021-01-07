@@ -1,7 +1,7 @@
 Optimization
 ============
 
-The record of a geometry optimization.
+The ``record`` of a geometry optimization.
 
 .. toctree::
    :maxdepth: 1

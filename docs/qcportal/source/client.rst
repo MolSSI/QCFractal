@@ -2,10 +2,7 @@ Portal Client
 =============
 
 The ``FractalClient`` is the primary entry point to a ``FractalServer`` instance.
-
-We can initialize a ``FractalClient`` by pointing it to a server instance. If
-you would like to start your own server see the setting up a server (NYI)
-section.
+We can initialize a ``FractalClient`` by pointing it to a server instance.
 
 .. code-block:: python
 
@@ -14,18 +11,22 @@ section.
     >>> client
     FractalClient(server='http://localhost:8888/', username='None')
 
-The ``FractalClient`` handles all communication to the ``FractalServer`` from
-the Python API layer. This includes adding new molecules, computations,
-collections, and querying for records. A ``FractalClient`` constructed without
-arguments will automatically connect to the MolSSI QCArchive server.
+The ``FractalClient`` handles all communications between ``FractalServer``
+and the Python API layer. The ``FractalClient`` fascilitates the addition of
+new molecules to the datasets, performing computations, interacting with collections,
+and querying the records. A ``FractalClient`` object instance created by 
+the default constructor (without any arguments) will automatically 
+attempt to connect to the MolSSI QCArchive server.
 
-The ``FractalClient`` can also be initialized from a file which is useful so
-that addresses and username do not have to be retyped for everytime and
-reduces the chance that a username and password could accidentally be added to
-a version control system. Creation from file uses the classmethod
-``FractalClient.from_file()``, by default the client searches for a
-``qcportal_config.yaml`` file in either the current working directory or from
-the canonical ``~/.qca`` folder.
+The ``FractalClient`` can also be initialized using a YAML configuration file. This 
+approach is useful because server address and username do not have to be retyped
+everytime the user initializes a server object. It will also reduces the chance 
+that a username and password could accidentally be added to
+a version control system and be exposed to the public. 
+The above strategy adopts the classmethod ``FractalClient.from_file()`` 
+which by default, searches for the YAML configuration file named
+``qcportal_config.yaml`` under either the current working directory 
+or the canonical ``~/.qca`` folder.
 
 
 
