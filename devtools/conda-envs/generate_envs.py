@@ -39,7 +39,7 @@ dependencies:
   - h5py
   - pandas
   - plotly >=4.0.0
-  - pyarrow >=0.13.0
+  - pyarrow >=0.15.0
   - tqdm
 
   # Test depends

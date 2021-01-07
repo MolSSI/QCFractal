@@ -42,7 +42,7 @@ if __name__ == "__main__":
             "plotly >=4.0.0",
             "pandas",
             "h5py",
-            "pyarrow >=0.13.0",
+            "pyarrow >=0.15.0",
             #            'double-conversion >=3.0.0',
             # QCArchive depends
             "qcengine>=0.11.0",
