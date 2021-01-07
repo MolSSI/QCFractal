@@ -11,9 +11,6 @@ class Config:
 
     SECRET_KEY = os.environ.get("SECRET_KEY") or "hard to guess string"
 
-    # TODO: not used
-    SSL_REDIRECT = False
-
     # TODO, not used
     DB_LOGGING = True
 
@@ -35,6 +32,7 @@ class TestingConfig(Config):
 
 
 class ProductionConfig(Config):
+    DEBUG = False
     @classmethod
     def init_app(cls, app):
         Config.init_app(app)
