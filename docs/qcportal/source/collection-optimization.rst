@@ -1,7 +1,7 @@
 Optimization Dataset
 ====================
 The :class:`OptimizationDataset <qcportal.collections.OptimizationDataset>` collection 
-represents the results of geometry optimizations calculations performed on 
+represents the results of geometry optimization calculations performed on 
 a series of :class:`Molecules <qcportal.models.Molecule>`. The
 :class:`OptimizationDataset <qcportal.collections.OptimizationDataset>` 
 uses metadata specifications via 
@@ -18,13 +18,13 @@ and :meth:`FractalClient.get_collection("OptimizationDataset", name) <qcportal.F
 Querying the Data
 -----------------
 
-All available optimization specifications can be listed via 
+All available optimization data specifications can be listed via 
 
 .. code-block:: python
 
     >>> ds.list_specifications()
 
-function. In order to show the status of optimization calculations
+function. In order to show the status of the optimization calculations
 for a given set of specifications, one can use:
 
 .. code-block:: python
@@ -63,7 +63,8 @@ can be created using
 
     >>> ds = ptl.collections.OptimizationDataset(name = "QM8-T", client=client)
 
-Provide a specification:
+Specific set of parameters for geometry optimization can be defined and 
+added to the dataset as follows:
 
 .. code-block:: python
 
@@ -102,7 +103,7 @@ Computational Tasks
 -------------------
 
 In order to run a geometry optimization calculation based on
-a particular set of parameter specification (default set in this case),
+a particular set of parameters (the default set in this case),
 one can adopt the
 
 .. code-block:: python

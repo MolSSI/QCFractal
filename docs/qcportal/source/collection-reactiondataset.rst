@@ -2,10 +2,10 @@ Reaction Dataset
 ================
 
 :class:`ReactionDatasets <qcportal.collections.ReactionDataset>` are useful for chemical reaction-based computations.
-There are currently two types of :class:`ReactionDatasets <qcportal.collections.ReactionDataset>`:
+Currently, there are two types of :class:`ReactionDatasets <qcportal.collections.ReactionDataset>`:
 
-- ``rxn`` for datasets based on canonical chemical reactions :math:`A + B \rightarrow C`
-- ``ie`` for interaction energy datasets :math:`M_{complex} \rightarrow M_{monomer_1} + M_{monomer_2}`
+- canonical chemical reaction datasets, ``rxn``: :math:`A + B \rightarrow C`,
+- interaction energy datasets, ``ie``: :math:`M_{complex} \rightarrow M_{monomer_1} + M_{monomer_2}`.
 
 Querying the Data
 -----------------
@@ -33,9 +33,8 @@ Statistical analysis on the :class:`ReactionDatasets <qcportal.collections.React
 can be performed via :meth:`statistics <qcportal.collections.ReactionDataset.statistics>` command
 which can be complemented by the :meth:`visualize <qcportal.collections.ReactionDataset.visualize>` 
 command in order to plot the data. For examples pertinent to data visualization 
-in :class:`ReactionDatasets <qcportal.collections.ReactionDataset>`, see 
+in :class:`ReactionDatasets <qcportal.collections.ReactionDataset>` see 
 the `QCArchive examples <https://qcarchivetutorials.readthedocs.io/en/latest/basic_examples/reaction_datasets.html>`_.
-
 
 Creating the Datasets
 ---------------------

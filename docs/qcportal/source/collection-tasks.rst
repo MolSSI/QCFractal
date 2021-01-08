@@ -20,7 +20,7 @@ Finding Errors and Restarting Jobs
 **********************************
 
 During each task's lifetime, errors might occur and the jobs
-end up in the ``ERROR`` state.
+may end up in the ``ERROR`` state.
 
 .. code-block:: python
 
@@ -70,5 +70,5 @@ and can be removed from a
         # {('energy', 'psi4', 'b3lyp', 'def2-svp', 'scf_default'),
         # ('energy', 'psi4', 'hf', 'sto-3g', 'scf_default')}
 
-For further examples on how to interact with collections hosted on 
+For further examples on how to interact with dataset collections hosted on 
 QCArchive see the `QCArchive examples <https://qcarchive.molssi.org/examples/>`_.

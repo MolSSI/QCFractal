@@ -1,15 +1,15 @@
-Exploring the Dataset
-=====================
+Exploring the Datasets
+======================
 
 The :class:`Dataset <qcportal.collections.Dataset>` collection represents a table whose rows correspond to
-:class:`Molecules <qcportal.models.Molecule>`, and whose columns correspond to properties.
+:class:`Molecules <qcportal.models.Molecule>` and whose columns correspond to properties.
 Columns may either result from QCFractal-based calculations or be contributed from outside sources.
-For example, the QM9 dataset on QCArchive contains small organic molecules with up to 9 heavy atoms, and includes
+For example, the QM9 dataset in QCArchive contains small organic molecules with up to 9 heavy atoms, and includes
 the original reported PBE0 energies, as well as energies calculated with a variety of other density functionals and basis sets.
 
-Existing :class:`Datasets <qcportal.collections.Dataset>` can be listed with
+The existing :class:`Datasets <qcportal.collections.Dataset>` can be listed with
 :meth:`FractalClient.list_collections("Dataset") <qcportal.FractalClient.list_collections>`
-and obtained with :meth:`FractalClient.get_collection("Dataset", name) <qcportal.FractalClient.get_collection>`.
+and obtained using :meth:`FractalClient.get_collection("Dataset", name) <qcportal.FractalClient.get_collection>`.
 
 Querying the Data
 -----------------
@@ -20,14 +20,14 @@ method. Values are queried with the :meth:`get_values <qcportal.collections.Data
 using QCFractal, the underlying :class:`Records <qcportal.models.ResultRecord>`
 are retrieved with :meth:`get_records <qcportal.collections.Dataset.get_records>`.
 
-For examples of querying :class:`Datasets <qcportal.collections.Dataset>`,
+For further details about how to query :class:`Datasets <qcportal.collections.Dataset>`
 see the `QCArchive examples <https://qcarchivetutorials.readthedocs.io/en/latest/basic_examples/getting_started.html>`_.
 
 Statistics and Visualization
 ----------------------------
 
-Statistics on :class:`Datasets <qcportal.collections.Dataset>` may be computed using the
-:meth:`statistics <qcportal.collections.Dataset.statistics>` command,
+Statistical operations on :class:`Datasets <qcportal.collections.Dataset>` may be performed using
+:meth:`statistics <qcportal.collections.Dataset.statistics>` command
 and plotted using the :meth:`visualize <qcportal.collections.Dataset.visualize>` command.
 
 For examples of visualizing :class:`Datasets <qcportal.collections.Dataset>`,
@@ -52,7 +52,8 @@ The primary index of a :class:`Dataset <qcportal.collections.Dataset>` is a list
 
     >>> ds.add_entry(name, molecule)
 
-Once all :class:`Molecules <qcportal.models.Molecule>` have been added, commit the changes on the server with :meth:`save <qcportal.collections.Dataset.save>`.
+Once all :class:`Molecules <qcportal.models.Molecule>` are added,
+the changes can be committed to the server with :meth:`save <qcportal.collections.Dataset.save>` method.
 Note that this requires `write permissions <http://docs.qcarchive.molssi.org/projects/qcfractal/en/stable/server_user.html#user-permissions>`_.
 
 .. code-block:: python
@@ -87,10 +88,11 @@ they will be reused to avoid recomputation. Note that for perfoming computations
 
 .. note::
 
-    You can set a default program and keyword set for a :class:`Dataset <qcportal.collections.Dataset>`.
-    These defaults will be used in :meth:`compute <qcportal.collections.Dataset.compute>`,
+    A default quantum chemical program and a set of computational 
+    keywords can be specified for a :class:`Dataset <qcportal.collections.Dataset>`.
+    These default values will be used in the :meth:`compute <qcportal.collections.Dataset.compute>`,
     :meth:`get_values <qcportal.collections.Dataset.get_values>`, and
-    :meth:`get_records <qcportal.collections.Dataset.get_records>`.
+    :meth:`get_records <qcportal.collections.Dataset.get_records>` methods.
 
     .. code-block:: python
 

@@ -1,8 +1,8 @@
 Portal Client
 =============
 
-The ``FractalClient`` is the primary entry point to a ``FractalServer`` instance.
-We can initialize a ``FractalClient`` by pointing it to a server instance.
+The ``FractalClient`` is the primary entry point to a ``FractalServer`` instance
+which can be initialized by pointing to a server instance:
 
 .. code-block:: python
 
@@ -20,9 +20,9 @@ attempt to connect to the MolSSI QCArchive server.
 
 The ``FractalClient`` can also be initialized using a YAML configuration file. This 
 approach is useful because server address and username do not have to be retyped
-everytime the user initializes a server object. It will also reduces the chance 
-that a username and password could accidentally be added to
-a version control system and be exposed to the public. 
+everytime the user initializes a server object. It will also reduce the chance 
+for the username and password to be accidentally added to
+a version control system and exposed to the public. 
 The above strategy adopts the classmethod ``FractalClient.from_file()`` 
 which by default, searches for the YAML configuration file named
 ``qcportal_config.yaml`` under either the current working directory 

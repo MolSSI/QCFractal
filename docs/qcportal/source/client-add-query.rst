@@ -5,11 +5,11 @@ Unlike the ``Compute`` object, the ``Molecule``, ``KeywordSet``, ``Collection``,
 objects are always added/queried directly to the server instances as these structures
 are not acted upon by the server itself.
 
-Adding Objects
---------------
+Adding Objects to the Server
+----------------------------
 
 A list of objects can be added to the server via ``client.add_*`` commands
-which returns the :term:`ObjectId` of the object instance.
+which return the :term:`ObjectId` of the object instance.
 
 .. code-block:: python
 
@@ -31,21 +31,21 @@ in the input list.
 
 .. note::
 
-    The :term:`ObjectId` can change between object instances and 
-    is unique to a particular database.
+    The :term:`ObjectId` can change between object instances but 
+    it is unique within a particular database.
 
-Querying Objects
-----------------
+Querying Objects from the Server
+--------------------------------
 
-Each objects has a set of fields that can be queried to obtain the objects in
+Each server object has a set of fields that can be queried to obtain the object instances in
 addition to their :term:`ObjectId`. All queries will return a list of objects.
 
-Molecules
----------
+Interacting with Molecules on the Server
+----------------------------------------
 
-As an example, we can use a molecule that comes with QCPortal and adds it to
-the database as shown. Please note that the Molecule ID (a :term:`ObjectId`)
-shown below will not be the same as your result and is unique to every
+As an example, we can use a molecule that comes with QCPortal and add it to
+the database. Please note that the Molecule ID (a :term:`ObjectId`)
+shown below will not be the same as your result and will be unique for each
 database.
 
 .. code-block:: python
