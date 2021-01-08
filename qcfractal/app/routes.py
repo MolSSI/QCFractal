@@ -5,10 +5,9 @@ Routes handlers for Flask
 from qcelemental.util import deserialize, serialize
 from ..storage_sockets.storage_utils import add_metadata_template
 from ..interface.models.rest_models import rest_model
-
-# from ..interface.models.task_models import PriorityEnum, TaskStatusEnum
-# from ..interface.models.records import RecordStatusEnum
-# from ..interface.models.model_builder import build_procedure
+from ..interface.models.task_models import PriorityEnum, TaskStatusEnum
+from ..interface.models.records import RecordStatusEnum
+from ..interface.models.model_builder import build_procedure
 from ..procedures import check_procedure_available, get_procedure_parser
 from ..services import initialize_service
 from flask import jsonify, request, make_response
@@ -27,7 +26,6 @@ from flask_jwt_extended import (
 from urllib.parse import urlparse
 from ..policyuniverse import Policy
 from flask import Blueprint, current_app, session, Response
-from . import jwt
 import logging
 import json
 from functools import wraps
@@ -603,18 +601,62 @@ def post_task_queue():
 @main.route("/task_queue", methods=["PUT"])
 @check_access
 def put_task_queue():
+    """Modifies tasks in the task queue"""
+
     body_model, response_model = rest_model("task_queue", "put")
     body = parse_bodymodel(body_model)
 
     if (body.data.id is None) and (body.data.base_result is None):
         return jsonify(msg="Id or ResultId must be specified."), 400
+
     if body.meta.operation == "restart":
-        tasks_updated = current_app.config.storage.queue_reset_status(**body.data.dict(), reset_error=True)
+        d = body.data.dict()
+        d.pop("new_tag", None)
+        d.pop("new_priority", None)
+        tasks_updated = current_app.config.storage.queue_reset_status(**d, reset_error=True)
+        data = {"n_updated": tasks_updated}
+    elif body.meta.operation == "regenerate":
+        tasks_updated = 0
+        result_data = current_app.config.storage.get_procedures(id=body.data.base_result)["data"]
+
+        new_tag = body.data.new_tag
+        if body.data.new_priority is None:
+            new_priority = PriorityEnum.NORMAL
+        else:
+            new_priority = PriorityEnum(int(body.data.new_priority))
+
+        for r in result_data:
+            model = build_procedure(r)
+
+            # Only regenerate the task if the base record is not complete
+            # This will not do anything if the task already exists
+            if model.status != RecordStatusEnum.complete:
+                procedure_parser = get_procedure_parser(model.procedure, current_app.config.storage, current_app.config.logger)
+
+                task_info = procedure_parser.create_tasks([model], tag=new_tag, priority=new_priority)
+                n_inserted = task_info["meta"]["n_inserted"]
+                tasks_updated += n_inserted
+
+                # If we inserted a new task, then also reset base result statuses
+                # (ie, if it was running, then it obviously isn't since we made a new task)
+                if n_inserted > 0:
+                    current_app.config.storage.reset_base_result_status(id=body.data.base_result)
+
+            data = {"n_updated": tasks_updated}
+    elif body.meta.operation == "modify":
+        tasks_updated = current_app.config.storage.queue_modify_tasks(
+            id=body.data.id,
+            base_result=body.data.base_result,
+            new_tag=body.data.new_tag,
+            new_priority=body.data.new_priority,
+        )
         data = {"n_updated": tasks_updated}
     else:
-        return jsonify(msg="Operation '{operation}' is not valid."), 400
+        return jsonify(msg=f"Operation '{body.meta.operation}' is not valid."), 400
 
     response = response_model(data=data, meta={"errors": [], "success": True, "error_description": False})
+
+    current_app.config.logger.info(f"PUT: TaskQueue - Operation: {body.meta.operation} - {tasks_updated}.")
 
     return PydanticResponse(response)
 
@@ -698,73 +740,99 @@ def _get_name_from_metadata(meta):
     ret = meta.cluster + "-" + meta.hostname + "-" + meta.uuid
     return ret
 
+def _insert_complete_tasks(storage_socket, body, logger):
 
-def insert_complete_tasks(storage_socket, results, logger):
-    # Pivot data so that we group all results in categories
-    new_results = collections.defaultdict(list)
+        results = body.data
+        meta = body.meta
+        task_ids = list(results.keys())
 
-    queue = storage_socket.get_queue(id=list(results.keys()))["data"]
-    queue = {v.id: v for v in queue}
+        manager_name = _get_name_from_metadata(meta)
+        logger.info("QueueManager: Received completed tasks from {}.".format(manager_name))
+        logger.info("              Task ids: " + " ".join(task_ids))
 
-    error_data = []
+        # Pivot data so that we group all results in categories
+        new_results = collections.defaultdict(list)
 
-    task_success = 0
-    task_failures = 0
-    task_totals = len(results.items())
-    for key, result in results.items():
-        try:
-            # Successful task
-            if result["success"] is False:
-                if "error" not in result:
-                    error = {"error_type": "not_supplied", "error_message": "No error message found on task."}
+        queue = storage_socket.get_queue(id=task_ids)["data"]
+        queue = {v.id: v for v in queue}
+
+        error_data = []
+
+        task_success = 0
+        task_failures = 0
+        task_totals = len(results.items())
+
+        for task_id, result in results.items():
+            try:
+                #################################################################
+                # Perform some checks for consistency
+                #################################################################
+                existing_task_data = queue.get(task_id, None)
+
+                # For the first three checks, don't add an error to error_data
+                # We don't want to modify the queue in these cases
+
+                # Does the task exist?
+                if existing_task_data is None:
+                    logger.warning(f"Task id {task_id} does not exist in the task queue.")
+                    task_failures += 1
+
+                # Is the task in the running state
+                elif existing_task_data.status != TaskStatusEnum.running:
+                    logger.warning(f"Task id {task_id} is not in the running state.")
+                    task_failures += 1
+
+                # Was the manager that sent the data the one that was assigned?
+                elif existing_task_data.manager != manager_name:
+                    logger.warning(f"Task id {task_id} belongs to {existing_task_data.manager}, not this manager")
+                    task_failures += 1
+
+                # Failed task
+                elif result["success"] is False:
+                    if "error" not in result:
+                        error = {"error_type": "not_supplied", "error_message": "No error message found on task."}
+                    else:
+                        error = result["error"]
+
+                    logger.debug(
+                        "Task id {key} did not complete successfully:\n"
+                        "error_type: {error_type}\nerror_message: {error_message}".format(key=str(task_id), **error)
+                    )
+
+                    error_data.append((task_id, error))
+                    task_failures += 1
+
+                # Success!
                 else:
-                    error = result["error"]
+                    parser = queue[task_id].parser
+                    new_results[parser].append(
+                        {"result": result, "task_id": task_id, "base_result": queue[task_id].base_result}
+                    )
+                    task_success += 1
 
-                logger.warning(
-                    "Computation key {key} did not complete successfully:\n"
-                    "error_type: {error_type}\nerror_message: {error_message}".format(key=str(key), **error)
+            except Exception:
+                msg = "Internal FractalServer Error:\n" + traceback.format_exc()
+                error = {"error_type": "internal_fractal_error", "error_message": msg}
+                logger.error("update: ERROR\n{}".format(msg))
+                error_data.append((task_id, error))
+                task_failures += 1
+
+        if task_totals:
+            logger.info(
+                "QueueManager: Found {} complete tasks ({} successful, {} failed).".format(
+                    task_totals, task_success, task_failures
                 )
-
-                error_data.append((key, error))
-                task_failures += 1
-
-            # Failed task
-            elif key not in queue:
-                logger.warning(f"Computation key {key} completed successfully, but not found in queue.")
-                error_data.append((key, "Internal Error: Queue key not found."))
-                task_failures += 1
-
-            # Success!
-            else:
-                parser = queue[key].parser
-                new_results[parser].append({"result": result, "task_id": key, "base_result": queue[key].base_result})
-                task_success += 1
-
-        except Exception:
-            msg = "Internal FractalServer Error:\n" + traceback.format_exc()
-            logger.warning("update: ERROR\n{}".format(msg))
-            error_data.append((key, msg))
-            task_failures += 1
-
-    if task_totals:
-        logger.info(
-            "QueueManager: Found {} complete tasks ({} successful, {} failed).".format(
-                task_totals, task_success, task_failures
             )
-        )
 
-    # Run output parsers
-    completed = []
-    for k, v in new_results.items():
-        procedure_parser = get_procedure_parser(k, storage_socket, logger)
-        com, err, hks = procedure_parser.parse_output(v)
-        completed.extend(com)
-        error_data.extend(err)
+        # Run output parsers and handle completed tasks
+        completed = []
+        for k, v in new_results.items():
+            procedure_parser = get_procedure_parser(k, storage_socket, logger)
+            com = procedure_parser.handle_completed_output(v)
+            completed.extend(com)
 
-    # Handle complete tasks
-    storage_socket.queue_mark_complete(completed)
-    storage_socket.queue_mark_error(error_data)
-    return len(completed), len(error_data)
+        storage_socket.queue_mark_error(error_data)
+        return len(completed), len(error_data)
 
 
 @main.route("/queue_manager", methods=["GET"])
@@ -808,9 +876,7 @@ def post_queue_manager():
     body_model, response_model = rest_model("queue_manager", "post")
     body = parse_bodymodel(body_model)
 
-    name = _get_name_from_metadata(body.meta)
-    # logger.info("QueueManager: Received completed task packet from {}.".format(name))
-    success, error = insert_complete_tasks(current_app.config.storage, body.data, current_app.config.logger)
+    success, error = _insert_complete_tasks(current_app.config.storage, body, current_app.config.logger)
 
     completed = success + error
 
@@ -827,6 +893,11 @@ def post_queue_manager():
             "data": True,
         }
     )
+
+    # Update manager logs
+    name = _get_name_from_metadata(body.meta)
+    current_app.config.storage.manager_update(name, completed=completed, failures=error)
+
 
     return PydanticResponse(response)
 
