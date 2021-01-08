@@ -478,6 +478,7 @@ def managed_compute_server(request, postgres_server):
             queue_socket=adapter_client,
             ssl_options=False,
             skip_storage_version_check=True,
+            flask_config="testing"
         )
 
         # Clean and re-init the database
@@ -515,6 +516,7 @@ def fractal_compute_server(postgres_server):
         storage_uri=postgres_server.database_uri(),
         reset_database=True,
         start_server=False,
+        flask_config="testing"
     ) as server:
         reset_server_database(server)
 

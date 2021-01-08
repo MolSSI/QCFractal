@@ -195,49 +195,50 @@ class FractalServer:
 
         self.security = security
         # Handle SSL
-        ssl_ctx = None
+        self.ssl_options = ssl_options
+        # ssl_ctx = None
         self.client_verify = True
-        if ssl_options is True:
-            self.logger.warning("No SSL files passed in, generating self-signed SSL certificate.")
-            self.logger.warning("Clients must use `verify=False` when connecting.\n")
-
-            cert, key = _build_ssl()
-
-            # Add quick names
-            ssl_name = name.lower().replace(" ", "_")
-            cert_name = ssl_name + "_ssl.crt"
-            key_name = ssl_name + "_ssl.key"
-
-            ssl_options = {"crt": cert_name, "key": key_name}
-
-            with open(cert_name, "wb") as handle:
-                handle.write(cert)
-
-            with open(key_name, "wb") as handle:
-                handle.write(key)
-
-            ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-            ssl_ctx.load_cert_chain(ssl_options["crt"], ssl_options["key"])
-
-            # Destroy keyfiles upon close
-            import atexit
-            import os
-
-            atexit.register(os.remove, cert_name)
-            atexit.register(os.remove, key_name)
-            self.client_verify = False
-
-        elif ssl_options is False:
-            ssl_ctx = None
-
-        elif isinstance(ssl_options, dict):
-            if ("crt" not in ssl_options) or ("key" not in ssl_options):
-                raise KeyError("'crt' (SSL Certificate) and 'key' (SSL Key) fields are required for `ssl_options`.")
-
-            ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-            ssl_ctx.load_cert_chain(ssl_options["crt"], ssl_options["key"])
-        else:
-            raise KeyError("ssl_options not understood")
+        # if ssl_options is True:
+        #     self.logger.warning("No SSL files passed in, generating self-signed SSL certificate.")
+        #     self.logger.warning("Clients must use `verify=False` when connecting.\n")
+        #
+        #     cert, key = _build_ssl()
+        #
+        #     # Add quick names
+        #     ssl_name = name.lower().replace(" ", "_")
+        #     cert_name = ssl_name + "_ssl.crt"
+        #     key_name = ssl_name + "_ssl.key"
+        #
+        #     ssl_options = {"crt": cert_name, "key": key_name}
+        #
+        #     with open(cert_name, "wb") as handle:
+        #         handle.write(cert)
+        #
+        #     with open(key_name, "wb") as handle:
+        #         handle.write(key)
+        #
+        #     ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        #     ssl_ctx.load_cert_chain(ssl_options["crt"], ssl_options["key"])
+        #
+        #     # Destroy keyfiles upon close
+        #     import atexit
+        #     import os
+        #
+        #     atexit.register(os.remove, cert_name)
+        #     atexit.register(os.remove, key_name)
+        #     self.client_verify = False
+        #
+        # elif ssl_options is False:
+        #     ssl_ctx = None
+        #
+        # elif isinstance(ssl_options, dict):
+        #     if ("crt" not in ssl_options) or ("key" not in ssl_options):
+        #         raise KeyError("'crt' (SSL Certificate) and 'key' (SSL Key) fields are required for `ssl_options`.")
+        #
+        #     ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        #     ssl_ctx.load_cert_chain(ssl_options["crt"], ssl_options["key"])
+        # else:
+        #     raise KeyError("ssl_options not understood")
 
         # Setup the database connection
         self.storage_database = storage_project_name
@@ -314,8 +315,13 @@ class FractalServer:
                 raise ValueError("Cannot yet use local security with a internal QueueManager")
 
             def _build_manager():
-                self.logger.info("------------ Build manager Job")
-                client = FractalClient(self, username="qcfractal_server")
+                self.logger.info("------------ Running Build manager Job")
+                try:
+                    client = FractalClient(self)
+                    self.logger.info('client: ', client)
+                except Exception as e:
+                    self.logger.info(f"------------ exception in client {str(e)}")
+
                 self.objects["queue_manager"] = QueueManager(
                     client,
                     self.queue_socket,
@@ -325,30 +331,21 @@ class FractalServer:
                     memory_per_task=1,
                     verbose=False,
                 )
+                self.logger.info("------- Done creating manager (not started yet)")
 
             # Build the queue manager, will not actually start until server starts
-            self.logger.info("------- Adding _build_manager")
+            self.logger.info("------- Adding _build_manager to executor")
             self.futures["queue_manager_future"] = self.executor.submit(_build_manager)
 
 
-    def _start_flask(self, start_loop: bool = False):
+    def _start_flask(self):
         # self.ctx = self.app.app_context()
         # self.ctx.push()
-        pass
+        self.app.run(port=self.port, ssl_context='adhoc' if self.ssl_options else None)
 
     def __repr__(self):
 
         return f"FractalServer(name='{self.name}' uri='{self._address}')"
-
-    # def _run_in_thread(self, func, timeout=5):
-    #     """
-    #     Runs a function in a background thread
-    #     """
-    #     if self.executor is None:
-    #         raise AttributeError("No Executor was created, but run_in_thread was called.")
-    #
-    #     fut = self.loop.run_in_executor(self.executor, func)
-    #     return fut
 
     # Start/stop functionality
     def start(self, start_loop: bool = True, start_periodics: bool = False) -> None:
@@ -376,36 +373,27 @@ class FractalServer:
 
         # TODO
         # Soft quit with a keyboard interrupt
-        # self._start_flask(start_loop)
 
-        self.logger.info("FractalServer successfully started.\n")
         if start_loop:
             self.loop_active = True
-            self.app.run(port=self.port, ssl_context="adhoc") #"=('cert.pem', 'key.pem'))
-            # self.app.run(port=self.port)  # , debug=False)
             self.scheduler.start()
 
         # Add services callback
         if start_periodics:
-            self.logger.info("---------- start_periodics")
-            # nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, self.service_frequency * 1000)
-            # nanny_services.start()
-            nanny_services = self.scheduler.add_job(self.update_services, "interval", minutes=self.service_frequency)
+            self.logger.info("Starting periodics")
+
+            nanny_services = self.scheduler.add_job(self.update_services, "interval", minutes=self.service_frequency * 1000)
             self.periodic["update_services"] = nanny_services
 
             # Check Manager heartbeats, 5x heartbeat frequency
-            # heartbeats = tornado.ioloop.PeriodicCallback(
-            #     self.check_manager_heartbeats, self.heartbeat_frequency * 1000 * 0.2
-            # )
-            # heartbeats.start()
             heartbeats = self.scheduler.add_job(
-                self.check_manager_heartbeats, "interval", minutes=0.2
-            )  # self.heartbeat_frequency * 0.2)
+                self.check_manager_heartbeats, "interval", minutes=self.heartbeat_frequency * 1000 * 0.2
+            )
             self.periodic["heartbeats"] = heartbeats
 
             # Log can take some time, update in thread
             # def run_log_update_in_thread():
-            # self._run_in_thread(self.update_server_log)
+            #   self._run_in_thread(self.update_server_log)
 
             # server_log = tornado.ioloop.PeriodicCallback(run_log_update_in_thread, self.heartbeat_frequency * 1000)
             # server_log.start()
@@ -416,15 +404,13 @@ class FractalServer:
             self.periodic["server_log"] = server_log
 
         # Build callbacks which are always required
-        # public_info = tornado.ioloop.PeriodicCallback(self.update_public_information, self.heartbeat_frequency * 1000)
-        # public_info.start()
         public_info = self.scheduler.add_job(
-            self.update_public_information, "interval", minutes=0.1
-        )  # self.heartbeat_frequency * 1000)
+            self.update_public_information, "interval", minutes=self.heartbeat_frequency * 1000)
         self.periodic["public_info"] = public_info
 
-        # todo
         atexit.register(self.stop)
+        self.logger.info("FractalServer successfully started.\n")
+        self._start_flask()
 
     def stop(self, stop_loop: bool = True) -> None:
         """
@@ -436,58 +422,13 @@ class FractalServer:
             If False, does not shut down the IOLoop. Useful if the IOLoop is externally managed.
         """
 
-        # # Shut down queue manager
-        # if "queue_manager" in self.objects:
-        #     self._run_in_thread(self.objects["queue_manager"].stop)
-        #
+        # Shut down queue manager
+        if "queue_manager" in self.objects:
+            self.executor(self.objects["queue_manager"].stop)
+
         # # Close down periodics
         # for cb in self.periodic.values():
         #     cb.stop()
-        #
-        # # Call exit callbacks
-        # for func, args, kwargs in self.exit_callbacks:
-        #     func(*args, **kwargs)
-        #
-        # # Shutdown executor and futures
-        # for k, v in self.futures.items():
-        #     v.cancel()
-        #
-        # if self.executor is not None:
-        #     self.executor.shutdown()
-
-        # # Final: shutdown flask server
-        # @copy_current_request_context
-        # def flask_shutdown():
-        #     func = request.environ.get('werkzeug.server.shutdown')
-        #     if func is None:
-        #         raise RuntimeError('Not running with the Werkzeug Server')
-        #     func()
-        #     print(request.url)
-
-        # threading.Thread(target=flask_shutdown).start()
-
-        self.logger.info("Stoping Server and all periodics..")
-        if stop_loop:
-            self.scheduler.shutdown(wait=False)
-            self.app.do_teardown_appcontext()
-
-    def stop_old(self, stop_loop: bool = True) -> None:
-        """
-        Shuts down the IOLoop and periodic updates.
-
-        Parameters
-        ----------
-        stop_loop : bool, optional
-            If False, does not shut down the IOLoop. Useful if the IOLoop is externally managed.
-        """
-
-        # Shut down queue manager
-        if "queue_manager" in self.objects:
-            self._run_in_thread(self.objects["queue_manager"].stop)
-
-        # Close down periodics
-        for cb in self.periodic.values():
-            cb.stop()
 
         # Call exit callbacks
         for func, args, kwargs in self.exit_callbacks:
@@ -510,6 +451,12 @@ class FractalServer:
         #     print(request.url)
 
         # threading.Thread(target=flask_shutdown).start()
+
+        self.logger.info("Stoping Server and all periodics..")
+        if stop_loop:
+            self.scheduler.shutdown(wait=False)
+
+        self.app.do_teardown_appcontext()
 
     def _setup_logging(self, logfile_prefix, loglevel):
 
