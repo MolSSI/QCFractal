@@ -224,83 +224,99 @@ class QueueManagerHandler(APIHandler):
         queue = storage_socket.get_queue(id=task_ids)["data"]
         queue = {v.id: v for v in queue}
 
-        error_data = []
-
         task_success = 0
         task_failures = 0
         task_totals = len(results.items())
 
         for task_id, result in results.items():
+            existing_task_data = queue.get(task_id, None)
+
+            # Does the task exist?
+            if existing_task_data is None:
+                logger.warning(f"Task id {task_id} does not exist in the task queue.")
+                task_failures += 1
+                continue
+
             try:
                 #################################################################
                 # Perform some checks for consistency
                 #################################################################
-                existing_task_data = queue.get(task_id, None)
-
-                # For the first three checks, don't add an error to error_data
-                # We don't want to modify the queue in these cases
-
-                # Does the task exist?
-                if existing_task_data is None:
-                    logger.warning(f"Task id {task_id} does not exist in the task queue.")
-                    task_failures += 1
+                # Information passed to handle_completed_output for the various output parsers
+                task_info = {
+                    "result": result,
+                    "task_id": task_id,
+                    "base_result_id": existing_task_data.base_result,
+                    "manager_name": manager_name,
+                }
 
                 # Is the task in the running state
-                elif existing_task_data.status != TaskStatusEnum.running:
+                # If so, do not attempt to modify the task queue. Just move on
+                if existing_task_data.status != TaskStatusEnum.running:
                     logger.warning(f"Task id {task_id} is not in the running state.")
                     task_failures += 1
 
                 # Was the manager that sent the data the one that was assigned?
+                # If so, do not attempt to modify the task queue. Just move on
                 elif existing_task_data.manager != manager_name:
                     logger.warning(f"Task id {task_id} belongs to {existing_task_data.manager}, not this manager")
                     task_failures += 1
 
-                # Failed task
-                elif result["success"] is False:
-                    if "error" not in result:
-                        error = {"error_type": "not_supplied", "error_message": "No error message found on task."}
-                    else:
-                        error = result["error"]
-
-                    logger.debug(
-                        "Task id {key} did not complete successfully:\n"
-                        "error_type: {error_type}\nerror_message: {error_message}".format(key=str(task_id), **error)
-                    )
-
-                    error_data.append((task_id, error))
+                # Failed task returning FailedOperation
+                # TODO - better detection of FailedOperation. Right now, the easiest way to detect
+                #        FailedOperation is to see if 'input_data' is part of it. Other results don't have that
+                elif result["success"] is False and "input_data" in result:
+                    new_results["failed_operation"].append(task_info)
                     task_failures += 1
 
-                # Success!
+                elif result["success"] is not True:
+                    # QCEngine should always return either FailedOperation, or some result with success == True
+                    logger.warning(f"Task id {task_id} returned success != True, but is not a FailedOperation")
+                    task_failures += 1
+
+                # Manager returned a full, successful result
                 else:
                     parser = queue[task_id].parser
-                    new_results[parser].append(
-                        {"result": result, "task_id": task_id, "base_result": queue[task_id].base_result}
-                    )
+                    new_results[parser].append(task_info)
                     task_success += 1
 
             except Exception:
                 msg = "Internal FractalServer Error:\n" + traceback.format_exc()
                 error = {"error_type": "internal_fractal_error", "error_message": msg}
+                failed_op = {"error": error, "success": False}
+
+                fail_info = {
+                    "result": failed_op,
+                    "task_id": task_id,
+                    "base_result_id": existing_task_data.base_result,
+                    "manager_name": manager_name,
+                }
+
+                new_results["failed_operation"].append(fail_info)
                 logger.error("update: ERROR\n{}".format(msg))
-                error_data.append((task_id, error))
                 task_failures += 1
 
-        if task_totals:
-            logger.info(
-                "QueueManager: Found {} complete tasks ({} successful, {} failed).".format(
-                    task_totals, task_success, task_failures
-                )
+        logger.info(
+            "QueueManager: Found {} complete tasks ({} successful, {} failed).".format(
+                task_totals, task_success, task_failures
             )
+        )
 
         # Run output parsers and handle completed tasks
-        completed = []
+        proc_success = 0
+        proc_failure = 0
         for k, v in new_results.items():
             procedure_parser = get_procedure_parser(k, storage_socket, logger)
-            com = procedure_parser.handle_completed_output(v)
-            completed.extend(com)
+            p_success, p_failure = procedure_parser.handle_completed_output(v)
+            proc_success += len(p_success)
+            proc_failure += len(p_failure)
 
-        storage_socket.queue_mark_error(error_data)
-        return len(completed), len(error_data)
+        assert proc_success == task_success
+
+        # Can't do the same for failures, since some don't make it to parsers
+        # (ie, missing task, task not in running state, incorrect manager)
+        # assert proc_failure == task_failures
+
+        return task_success, task_failures
 
     def get(self):
         """Pulls new tasks from the task queue"""

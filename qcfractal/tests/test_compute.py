@@ -228,8 +228,8 @@ def test_queue_error(fractal_compute_server):
 
     # Force a complete mark and test
     fractal_compute_server.objects["storage_socket"].queue_mark_complete([queue_ret[0].id])
-    result = db.get_results(id=compute_ret.ids)["data"][0]
-    assert result["status"] == "COMPLETE"
+    queue_ret = db.get_queue(status="COMPLETE")["data"]
+    assert len(queue_ret) == 0
 
 
 @testing.using_rdkit

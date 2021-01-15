@@ -6,9 +6,14 @@ from typing import Union, List
 
 from .single import SingleResultTasks
 from .optimization import OptimizationTasks
+from .failure import FailedOperationHandler
 
 supported_procedures = Union[SingleResultTasks, OptimizationTasks]
-__procedure_map = {"single": SingleResultTasks, "optimization": OptimizationTasks}
+__procedure_map = {
+    "single": SingleResultTasks,
+    "optimization": OptimizationTasks,
+    "failed_operation": FailedOperationHandler,
+}
 
 
 def check_procedure_available(procedure: str) -> List[str]:

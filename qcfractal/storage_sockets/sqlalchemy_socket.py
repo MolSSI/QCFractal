@@ -2339,23 +2339,7 @@ class SQLAlchemySocket:
         if not task_ids:
             return 0
 
-        update_fields = dict(status=TaskStatusEnum.complete, modified_on=dt.utcnow())
         with self.session_scope() as session:
-            # assuming all task_ids are valid, then managers will be in order by id
-            managers = (
-                session.query(TaskQueueORM.manager)
-                .filter(TaskQueueORM.id.in_(task_ids))
-                .order_by(TaskQueueORM.id)
-                .all()
-            )
-            managers = [manager[0] if manager else manager for manager in managers]
-            task_manger_map = {task_id: manager for task_id, manager in zip(sorted(task_ids), managers)}
-            update_fields[BaseResultORM.manager_name] = case(task_manger_map, value=TaskQueueORM.id)
-
-            session.query(BaseResultORM).filter(BaseResultORM.id == TaskQueueORM.base_result_id).filter(
-                TaskQueueORM.id.in_(task_ids)
-            ).update(update_fields, synchronize_session=False)
-
             # delete completed tasks
             tasks_c = (
                 session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(task_ids)).delete(synchronize_session=False)
@@ -2363,15 +2347,14 @@ class SQLAlchemySocket:
 
         return tasks_c
 
-    def queue_mark_error(self, data: List[Tuple[int, Dict[str, str]]]):
+    def queue_mark_error(self, task_ids: List[str]) -> int:
         """
         update the given tasks as errored
-        Mark the corresponding result/procedure as Errored
 
         Parameters
         ----------
-        data : List[Tuple[int, Dict[str, str]]]
-            List of task ids and their error messages desired to be assigned to them.
+        task_ids : List[str]
+            IDs of the tasks to mark as ERROR
 
         Returns
         -------
@@ -2379,45 +2362,16 @@ class SQLAlchemySocket:
             Number of tasks updated as errored.
         """
 
-        if not data:
+        if not task_ids:
             return 0
 
-        task_ids = []
+        updated_ids = []
         with self.session_scope() as session:
-            # Make sure returned results are in the same order as the task ids
-            # SQL queries change the order when using "in"
-            data_dict = {item[0]: item[1] for item in data}
-            sorted_data = {key: data_dict[key] for key in sorted(data_dict.keys())}
-            task_objects = (
-                session.query(TaskQueueORM)
-                .filter(TaskQueueORM.id.in_(sorted_data.keys()))
-                .order_by(TaskQueueORM.id)
-                .all()
-            )
-            base_results = (
-                session.query(BaseResultORM)
-                .filter(BaseResultORM.id == TaskQueueORM.base_result_id)
-                .filter(TaskQueueORM.id.in_(sorted_data.keys()))
-                .order_by(TaskQueueORM.id)
-                .all()
-            )
+            task_objects = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(task_ids)).all()
 
-            for (task_id, error_dict), task_obj, base_result in zip(sorted_data.items(), task_objects, base_results):
-
-                task_ids.append(task_id)
-                # update task
+            for task_obj in task_objects:
                 task_obj.status = TaskStatusEnum.error
                 task_obj.modified_on = dt.utcnow()
-
-                # update result
-                base_result.status = TaskStatusEnum.error
-                base_result.manager_name = task_obj.manager
-                base_result.modified_on = dt.utcnow()
-
-                # Compress error dicts here. Should be fast, since errors are small
-                err = KVStore.compress(error_dict, CompressionEnum.lzma, 1)
-                err_id = self.add_kvstore([err])["data"][0]
-                base_result.error = err_id
 
             session.commit()
 

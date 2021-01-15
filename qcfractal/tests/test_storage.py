@@ -758,9 +758,14 @@ def test_storage_queue_roundtrip(storage_results, status):
     queue_id2 = storage_results.queue_get_next("test_manager2", ["p1"], ["p1"], limit=1)[0].id
 
     if status == "ERROR":
-        err1 = {"error_type": "test_error", "error_message": "Error msg"}
-        err2 = {"error_type": "test_error", "error_message": "Error msg2"}
-        r = storage_results.queue_mark_error([(queue_id, err1), (queue_id2, err2)])
+        r = storage_results.queue_mark_error([queue_id, queue_id2])
+
+        # tasks should still be there
+        found = storage_results.queue_get_by_id([queue_id, queue_id2])
+        assert len(found) == 2
+        assert found[0].status == "ERROR"
+        assert found[1].status == "ERROR"
+
     elif status == "COMPLETE":
         r = storage_results.queue_mark_complete([queue_id2, queue_id])
         # Check queue is empty
@@ -772,17 +777,6 @@ def test_storage_queue_roundtrip(storage_results, status):
         assert len(found) == 0
 
     assert r == 2
-
-    # Check results
-    res = storage_results.get_results(id=results[0]["id"])["data"][0]
-    assert res["status"] == status
-    assert res["manager_name"] == "test_manager"
-    if status == "ERROR":
-        err_id = res["error"]
-        err = storage_results.get_kvstore(err_id)
-        js = err["data"][err_id].get_json()
-        assert js["error_message"] == "Error msg"
-        assert js["error_type"] == "test_error"
 
 
 def test_queue_submit_many_order(storage_results):
