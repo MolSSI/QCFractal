@@ -375,14 +375,22 @@ def reset_server_database(server):
     server.storage._delete_DB_data(server.storage._project_name)
 
     # Force a heartbeat after database clean if a manager is present.
+
     if server.queue_socket:
-        server.await_results()
+        try:
+            server.await_results()
+        except:
+              pass
 
 
 @pytest.fixture(scope="module")
 def test_server(request, postgres_server):
     """
     Builds a server instance with the event loop running in a thread.
+
+    No security - no Auth, read allowed
+    No manager
+    Flask mock, no real flask
     """
 
     # Storage name
@@ -390,7 +398,7 @@ def test_server(request, postgres_server):
     postgres_server.create_database(storage_name)
 
     with FractalSnowflake(
-        max_workers=0,
+        max_workers=0, # no managers
         storage_project_name="test_qcfractal_server",
         storage_uri=postgres_server.database_uri(),
         start_server=False,
@@ -407,10 +415,6 @@ def test_server(request, postgres_server):
                 flask_app=server.app,
                 base_url=server.get_address(),
             )
-            # server.app.config.storage.add_user('user@molssi.org', password='password', rolename="admin")
-            # ret = requests.post(server.get_address() + "login",
-            #                       json={"email": "user@molssi.org", "password": "password"})
-            # server.app.config.headers = {"Authorization": "Bearer "+ret.json()["access_token"]}
             yield server
 
 
@@ -504,6 +508,10 @@ def managed_compute_server(request, postgres_server):
 def fractal_compute_server(postgres_server):
     """
     A FractalServer with a local Pool manager.
+
+    No security - no Auth, read allowed
+    With ProcessPool manager
+    Flask mock, no real flask
     """
 
     # Storage name
@@ -518,6 +526,7 @@ def fractal_compute_server(postgres_server):
         start_server=False,
         flask_config="testing"
     ) as server:
+
         reset_server_database(server)
 
         with responses.RequestsMock(assert_all_requests_are_fired=False) as resp_m:
@@ -527,12 +536,10 @@ def fractal_compute_server(postgres_server):
                 flask_app=server.app,
                 base_url=server.get_address(),
             )
-            # server.app.config.storage.add_user('user@molssi.org', password='password', rolename="admin")
-            # ret = requests.post(server.get_address() + "login",
-            #                       json={"email": "user@molssi.org", "password": "password"})
-            # server.app.config.headers = {"Authorization": "Bearer "+ret.json()["access_token"]}
 
-        yield server
+            server.start_manager()
+
+            yield server
 
 
 def build_socket_fixture(server=None):

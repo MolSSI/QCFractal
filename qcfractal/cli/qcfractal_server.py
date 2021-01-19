@@ -375,7 +375,7 @@ def server_start(args, config):
         server = qcfractal.FractalServer(
             name=args.get("server_name", None) or config.fractal.name,
             port=config.fractal.port,
-            compress_response=config.fractal.compress_response,
+            # compress_response=config.fractal.compress_response,
             # Security
             security=config.fractal.security,
             allow_read=config.fractal.allow_read,
@@ -418,6 +418,8 @@ def server_start(args, config):
         print("Periodics are disabled.")
 
     server.start(start_periodics=args["start_periodics"])
+    # check and start manager if set in config
+    server.start_manager()
 
 
 def server_upgrade(args, config):

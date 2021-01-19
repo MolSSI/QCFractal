@@ -131,8 +131,6 @@ class FractalSnowflake(FractalServer):
         super().__init__(
             name="QCFractal Snowflake Instance",
             port=find_port(),
-            # loop=self.loop,
-            loop=None,
             storage_uri=self._storage_uri,
             storage_project_name=storage_project_name,
             ssl_options=False,
@@ -155,14 +153,15 @@ class FractalSnowflake(FractalServer):
             )
 
         if start_server:
-            self.start(start_loop=False)
+            self.start() #start_flask=False)
+            self.start_manager()
 
         # self.loop_future = self.loop_thread.submit(self.loop.start)
 
         self._active = True
 
         # We need to call before threadings cleanup
-        atexit.register(self.stop)
+        atexit.register(self.stop) 
 
     def __del__(self):
         """
@@ -186,7 +185,7 @@ class FractalSnowflake(FractalServer):
         if not self._active:
             return
 
-        super().stop(stop_loop=False)
+        super().stop() # stop_loop=False)
         # self.loop.add_callback(self.loop.stop)
         # self.loop_future.result()
         #

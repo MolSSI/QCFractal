@@ -29,8 +29,6 @@ from .storage_sockets.api_logger import API_AccessLogger
 # from .interface.models.rest_models import rest_model
 # from werkzeug.security import generate_password_hash, check_password_hash
 # from .procedures import check_procedure_available, get_procedure_parser
-# from .policyuniverse import Policy
-# from flask_jwt_extended import   get_jwt_claims
 from apscheduler.schedulers.background import BackgroundScheduler
 from .app import create_app
 
@@ -94,8 +92,6 @@ class FractalServer:
         # Server info options
         name: str = "QCFractal Server",
         port: int = 5000,
-        loop: "IOLoop" = None,  # TODO: tobe removed, not used anymore
-        compress_response: bool = True,  # TODO: tobe removed, not used anymore
         # Security/Auth
         security: Optional[str] = None,
         allow_read: bool = True,  # changed default to True to match security default
@@ -131,11 +127,6 @@ class FractalServer:
             The name of the server itself, provided when users query information
         port : int, optional
             The port the server will listen on.
-        loop : IOLoop, optional
-            Provide an IOLoop to use for the server
-        compress_response : bool, optional
-            Automatic compression of responses, turn on unless behind a proxy that
-            provides this capability.
         security : Optional[str], optional
             The security options for the server {None, "local"}. The local security
             option uses the database to cache users.
@@ -184,6 +175,7 @@ class FractalServer:
             self.api_logger = None
 
         # Build security layers
+        self.security = security
         if security is None:
             # storage_bypass_security = True
             JWT_ENABLED = False
@@ -280,7 +272,6 @@ class FractalServer:
         self.update_public_information()
 
         # Build the app
-        app_settings = {"compress_response": compress_response}
 
         # Add periodic callback holders
         self.periodic = {}
@@ -295,10 +286,9 @@ class FractalServer:
         self.logger.info("    Database URI:  {}".format(storage_uri))
         self.logger.info("    Database Name: {}".format(storage_project_name))
         self.logger.info("    Query Limit:   {}\n".format(self.storage.get_limit(1.0e9)))
-        self.loop_active = False
 
         # Create a executor for background processes
-        self.executor = ThreadPoolExecutor(max_workers=2)
+        self.executor = ThreadPoolExecutor(max_workers=4)
         self.futures = {}
 
         # Background jobs with graceful shutdown of tasks (daemon=False)
@@ -306,36 +296,46 @@ class FractalServer:
 
         # create flask app
         self.app = create_app(flask_config, **self.objects)
-        # self.app.app_context().push()
 
         # Queue manager if direct build
         self.queue_socket = queue_socket
-        if self.queue_socket is not None:
-            if security == "local":
-                raise ValueError("Cannot yet use local security with a internal QueueManager")
+        
+        
+    def start_manager(self):
+        """Can run only after the server has started"""
+        
+        if self.queue_socket is None:
+            return
 
-            def _build_manager():
-                self.logger.info("------------ Running Build manager Job")
-                try:
-                    client = FractalClient(self)
-                    self.logger.info('client: ', client)
-                except Exception as e:
-                    self.logger.info(f"------------ exception in client {str(e)}")
+        if self.security == "local":
+            raise ValueError("Cannot yet use local security with a internal QueueManager")
 
-                self.objects["queue_manager"] = QueueManager(
-                    client,
-                    self.queue_socket,
-                    logger=self.logger,
-                    manager_name="FractalServer",
-                    cores_per_task=1,
-                    memory_per_task=1,
-                    verbose=False,
-                )
-                self.logger.info("------- Done creating manager (not started yet)")
+        def _build_start_manager():
+            self.logger.info("------------ Running Build manager Job")
+            try:
+                client = FractalClient(self)
+            except Exception as e:
+                self.logger.info(f"------------ exception in client {str(e)}")
 
-            # Build the queue manager, will not actually start until server starts
-            self.logger.info("------- Adding _build_manager to executor")
-            self.futures["queue_manager_future"] = self.executor.submit(_build_manager)
+            # TODO: this object isn't passed to flask
+            self.objects["queue_manager"] = QueueManager(
+                client,
+                self.queue_socket,
+                logger=self.logger,
+                manager_name="FractalServer",
+                cores_per_task=1,
+                memory_per_task=1,
+                verbose=False,
+            )
+            self.logger.info("------- Done creating manager (not started yet)")
+
+            self.logger.info("Starting manager Job")
+            self._check_manager("manager_build")
+            self.objects["queue_manager"].start()
+
+        # Build the queue manager, will not actually start until server starts
+        self.logger.info("------- Adding _build_start_manager to executor")
+        self.futures["queue_manager_future"] = self.executor.submit(_build_start_manager)
 
 
     def _start_flask(self):
@@ -348,7 +348,7 @@ class FractalServer:
         return f"FractalServer(name='{self.name}' uri='{self._address}')"
 
     # Start/stop functionality
-    def start(self, start_loop: bool = True, start_periodics: bool = False) -> None:
+    def start(self, start_flask: bool = True, start_periodics: bool = False) -> None:
         """
         Starts up the IOLoop and periodic calls.
 
@@ -361,22 +361,16 @@ class FractalServer:
             Service iterations and Manager heartbeat checking.
         """
 
-        if "queue_manager_future" in self.futures:
-
-            def start_manager():
-                self.logger.info("Start manager Job")
-                self._check_manager("manager_build")
-                self.objects["queue_manager"].start()
-
-            # Call this after the loop has started # TODO
-            self.executor.submit(start_manager)
 
         # TODO
-        # Soft quit with a keyboard interrupt
+        # old: Soft quit with a keyboard interrupt
 
-        if start_loop:
-            self.loop_active = True
-            self.scheduler.start()
+
+        if start_flask:
+            # start flask in a thead
+            self.executor.submit(self._start_flask)
+
+        self.scheduler.start()
 
         # Add services callback
         if start_periodics:
@@ -410,9 +404,9 @@ class FractalServer:
 
         atexit.register(self.stop)
         self.logger.info("FractalServer successfully started.\n")
-        self._start_flask()
+        # self._start_flask()
 
-    def stop(self, stop_loop: bool = True) -> None:
+    def stop(self, stop_flask: bool = True) -> None:
         """
         Shuts down the IOLoop and periodic updates.
 
@@ -422,9 +416,11 @@ class FractalServer:
             If False, does not shut down the IOLoop. Useful if the IOLoop is externally managed.
         """
 
+        self.logger.info("Stopping Server and all periodics......")
+
         # Shut down queue manager
         if "queue_manager" in self.objects:
-            self.executor(self.objects["queue_manager"].stop)
+            self.executor.submit(self.objects["queue_manager"].stop)
 
         # # Close down periodics
         # for cb in self.periodic.values():
@@ -452,11 +448,13 @@ class FractalServer:
 
         # threading.Thread(target=flask_shutdown).start()
 
-        self.logger.info("Stoping Server and all periodics..")
-        if stop_loop:
+        if self.scheduler.running:
             self.scheduler.shutdown(wait=False)
+        if stop_flask:
+            self.app.do_teardown_appcontext()
 
-        self.app.do_teardown_appcontext()
+        self.logger.info("FractalServer stopping gracefully.\n")
+
 
     def _setup_logging(self, logfile_prefix, loglevel):
 
@@ -678,9 +676,9 @@ class FractalServer:
         """
         self._check_manager("update_tasks")
 
-        if self.loop_active:
+        if self.executor:
             # Drop this in a thread so that we are not blocking each other
-            self._run_in_thread(self.objects["queue_manager"].update)
+            self.executor.submit(self.objects["queue_manager"].update)
         else:
             self.objects["queue_manager"].update()
 

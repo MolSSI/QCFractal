@@ -414,9 +414,9 @@ class QueueManager:
 
             shutdown_string = "Shutdown was successful, {} tasks returned to master queue."
 
-        except IOError:
+        except IOError as e:
             # TODO something as we didnt successfully add the data
-            self.logger.warning("Shutdown was not successful. This may delay queued tasks.")
+            self.logger.warning(f"Shutdown was not successful. This may delay queued tasks. Error: {e}")
             response = {"nshutdown": 0, "success": False}
             shutdown_string = "Shutdown was not successful, {} tasks not returned."
 

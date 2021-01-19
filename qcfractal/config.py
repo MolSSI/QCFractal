@@ -95,6 +95,7 @@ class FractalServerSettings(ConfigSettings):
     name: str = Field("QCFractal Server", description="The QCFractal server default name.")
     port: int = Field(7777, description="The QCFractal default port.")
 
+    # TODO: to be removed, handled by Ngnix
     compress_response: bool = Field(
         True, description="Compress REST responses or not, should be True unless behind a proxy."
     )
