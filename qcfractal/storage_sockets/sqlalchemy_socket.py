@@ -60,7 +60,6 @@ from qcfractal.storage_sockets.models import (
     TaskQueueORM,
     TorsionDriveProcedureORM,
     UserORM,
-    RoleORM,
     VersionsORM,
     WavefunctionStoreORM,
 )
@@ -142,18 +141,6 @@ def get_procedure_class(record):
         raise TypeError("Procedure of type {} is not valid or supported yet.".format(type(record)))
 
     return procedure_class
-
-
-def get_collection_class(collection_type):
-
-    collection_map = {"dataset": DatasetORM, "reactiondataset": ReactionDatasetORM}
-
-    collection_class = CollectionORM
-
-    if collection_type in collection_map:
-        collection_class = collection_map[collection_type]
-
-    return collection_class
 
 
 class SQLAlchemySocket:
@@ -260,6 +247,25 @@ class SQLAlchemySocket:
 
         self._project_name = project
         self._max_limit = max_limit
+
+        # Create/initialize the subsockets
+        from qcfractal.storage_sockets.subsockets.server_logs import ServerLogSocket
+        from qcfractal.storage_sockets.subsockets.output_store import OutputStoreSocket
+        from qcfractal.storage_sockets.subsockets.keywords import KeywordsSocket
+        from qcfractal.storage_sockets.subsockets.molecule import MoleculeSocket
+        from qcfractal.storage_sockets.subsockets.collection import CollectionSocket
+        from qcfractal.storage_sockets.subsockets.result import ResultSocket
+        from qcfractal.storage_sockets.subsockets.wavefunction import WavefunctionSocket
+        from qcfractal.storage_sockets.subsockets.manager import ManagerSocket
+
+        self.server_log = ServerLogSocket(self)
+        self.output_store = OutputStoreSocket(self)
+        self.keywords = KeywordsSocket(self)
+        self.molecule = MoleculeSocket(self)
+        self.collection = CollectionSocket(self)
+        self.result = ResultSocket(self)
+        self.wavefunction = WavefunctionSocket(self)
+        self.manager = ManagerSocket(self)
 
         # Add User Roles if doesn't exist
         self._add_default_roles()
@@ -494,356 +500,40 @@ class SQLAlchemySocket:
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def save_access(self, log_data):
+        return self.server_log.save_access(log_data)
 
-        with self.session_scope() as session:
-            log = AccessLogORM(**log_data)
-            session.add(log)
-            session.commit()
+    def log_server_stats(self):
+        return self.server_log.update()
+
+    def get_server_stats_log(self, before=None, after=None, limit=None, skip=0):
+        return self.server_log.get(before, after, limit, skip)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logs (KV store) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def add_kvstore(self, outputs: List[KVStore]):
-        """
-        Adds to the key/value store table.
-
-        Parameters
-        ----------
-        outputs : List[Any]
-            A list of KVStore objects add.
-
-        Returns
-        -------
-        Dict[str, Any]
-            Dictionary with keys data and meta, data is the ids of added blobs
-        """
-
-        meta = add_metadata_template()
-        output_ids = []
-        with self.session_scope() as session:
-            for output in outputs:
-                if output is None:
-                    output_ids.append(None)
-                    continue
-
-                entry = KVStoreORM(**output.dict())
-                session.add(entry)
-                session.commit()
-                output_ids.append(str(entry.id))
-                meta["n_inserted"] += 1
-
-        meta["success"] = True
-
-        return {"data": output_ids, "meta": meta}
+        return self.output_store.add(outputs)
 
     def get_kvstore(self, id: List[ObjectId] = None, limit: int = None, skip: int = 0):
-        """
-        Pulls from the key/value store table.
-
-        Parameters
-        ----------
-        id : List[str]
-            A list of ids to query
-        limit : Optional[int], optional
-            Maximum number of results to return.
-        skip : Optional[int], optional
-            skip the `skip` results
-        Returns
-        -------
-        Dict[str, Any]
-            Dictionary with keys data and meta, data is a key-value dictionary of found key-value stored items.
-        """
-
-        meta = get_metadata_template()
-
-        query = format_query(KVStoreORM, id=id)
-
-        rdata, meta["n_found"] = self.get_query_projection(KVStoreORM, query, limit=limit, skip=skip)
-
-        meta["success"] = True
-
-        data = {}
-        # TODO - after migrating everything, remove the 'value' column in the table
-        for d in rdata:
-            val = d.pop("value")
-            if d["data"] is None:
-                # Set the data field to be the string or dictionary
-                d["data"] = val
-
-                # Remove these and let the model handle the defaults
-                d.pop("compression")
-                d.pop("compression_level")
-
-            # The KVStore constructor can handle conversion of strings and dictionaries
-            data[d["id"]] = KVStore(**d)
-
-        return {"data": data, "meta": meta}
+        return self.output_store.get(id, limit, skip)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Molecule ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def get_add_molecules_mixed(self, data: List[Union[ObjectId, Molecule]]) -> List[Molecule]:
-        """
-        Get or add the given molecules (if they don't exit).
-        MoleculeORMs are given in a mixed format, either as a dict of mol data
-        or as existing mol id
-
-        TODO: to be split into get by_id and get_by_data
-        """
-
-        meta = get_metadata_template()
-
-        ordered_mol_dict = {indx: mol for indx, mol in enumerate(data)}
-        new_molecules = {}
-        id_mols = {}
-        for idx, mol in ordered_mol_dict.items():
-            if isinstance(mol, (int, str)):
-                id_mols[idx] = mol
-            elif isinstance(mol, Molecule):
-                new_molecules[idx] = mol
-            else:
-                meta["errors"].append((idx, "Data type not understood"))
-
-        ret_mols = {}
-
-        # Add all new molecules
-        flat_mols = []
-        flat_mol_keys = []
-        for k, v in new_molecules.items():
-            flat_mol_keys.append(k)
-            flat_mols.append(v)
-        flat_mols = self.add_molecules(flat_mols)["data"]
-
-        id_mols.update({k: v for k, v in zip(flat_mol_keys, flat_mols)})
-
-        # Get molecules by index and translate back to dict
-        tmp = self.get_molecules(list(id_mols.values()))
-        id_mols_list = tmp["data"]
-        meta["errors"].extend(tmp["meta"]["errors"])
-
-        # TODO - duplicate ids get removed on the line below. Some
-        # code may depend on this behavior, so careful changing it
-        inv_id_mols = {v: k for k, v in id_mols.items()}
-
-        for mol in id_mols_list:
-            ret_mols[inv_id_mols[mol.id]] = mol
-
-        meta["success"] = True
-        meta["n_found"] = len(ret_mols)
-        meta["missing"] = list(ordered_mol_dict.keys() - ret_mols.keys())
-
-        # Rewind to flat last
-        ret = []
-        for ind in range(len(ordered_mol_dict)):
-            if ind in ret_mols:
-                ret.append(ret_mols[ind])
-            else:
-                ret.append(None)
-
-        return {"meta": meta, "data": ret}
+        return self.molecule.get_add_mixed(data)
 
     def add_molecules(self, molecules: List[Molecule]):
-        """
-        Adds molecules to the database.
-
-        Parameters
-        ----------
-        molecules : List[Molecule]
-            A List of molecule objects to add.
-
-        Returns
-        -------
-        bool
-            Whether the operation was successful.
-        """
-
-        meta = add_metadata_template()
-
-        results = []
-        with self.session_scope() as session:
-
-            # Build out the ORMs
-            orm_molecules = []
-            for dmol in molecules:
-
-                if dmol.validated is False:
-                    dmol = Molecule(**dmol.dict(), validate=True)
-
-                mol_dict = dmol.dict(exclude={"id", "validated"})
-
-                # TODO: can set them as defaults in the sql_models, not here
-                mol_dict["fix_com"] = True
-                mol_dict["fix_orientation"] = True
-
-                # Build fresh indices
-                mol_dict["molecule_hash"] = dmol.get_hash()
-                mol_dict["molecular_formula"] = dmol.get_molecular_formula()
-
-                mol_dict["identifiers"] = {}
-                mol_dict["identifiers"]["molecule_hash"] = mol_dict["molecule_hash"]
-                mol_dict["identifiers"]["molecular_formula"] = mol_dict["molecular_formula"]
-
-                # search by index keywords not by all keys, much faster
-                orm_molecules.append(MoleculeORM(**mol_dict))
-
-            # Check if we have duplicates
-            hash_list = [x.molecule_hash for x in orm_molecules]
-            query = format_query(MoleculeORM, molecule_hash=hash_list)
-            indices = session.query(MoleculeORM.molecule_hash, MoleculeORM.id).filter(*query)
-            previous_id_map = {k: v for k, v in indices}
-
-            # For a bulk add there must be no pre-existing and there must be no duplicates in the add list
-            bulk_ok = len(hash_list) == len(set(hash_list))
-            bulk_ok &= len(previous_id_map) == 0
-            # bulk_ok = False
-
-            if bulk_ok:
-                # Bulk save, doesn't update fields for speed
-                session.bulk_save_objects(orm_molecules)
-                session.commit()
-
-                # Query ID's and reorder based off orm_molecule ordered list
-                query = format_query(MoleculeORM, molecule_hash=hash_list)
-                indices = session.query(MoleculeORM.molecule_hash, MoleculeORM.id).filter(*query)
-
-                id_map = {k: v for k, v in indices}
-                n_inserted = len(orm_molecules)
-
-            else:
-                # Start from old ID map
-                id_map = previous_id_map
-
-                new_molecules = []
-                n_inserted = 0
-
-                for orm_mol in orm_molecules:
-                    duplicate_id = id_map.get(orm_mol.molecule_hash, False)
-                    if duplicate_id is not False:
-                        meta["duplicates"].append(str(duplicate_id))
-                    else:
-                        new_molecules.append(orm_mol)
-                        id_map[orm_mol.molecule_hash] = "placeholder_id"
-                        n_inserted += 1
-                        session.add(orm_mol)
-
-                    # We should make sure there was not a hash collision?
-                    # new_mol.compare(old_mol)
-                    # raise KeyError("!!! WARNING !!!: Hash collision detected")
-
-                session.commit()
-
-                for new_mol in new_molecules:
-                    id_map[new_mol.molecule_hash] = new_mol.id
-
-            results = [str(id_map[x.molecule_hash]) for x in orm_molecules]
-            assert "placeholder_id" not in results
-            meta["n_inserted"] = n_inserted
-
-        meta["success"] = True
-
-        ret = {"data": results, "meta": meta}
-        return ret
+        return self.molecule.add(molecules)
 
     def get_molecules(self, id=None, molecule_hash=None, molecular_formula=None, limit: int = None, skip: int = 0):
-        try:
-            if isinstance(molecular_formula, str):
-                molecular_formula = qcelemental.molutil.order_molecular_formula(molecular_formula)
-            elif isinstance(molecular_formula, list):
-                molecular_formula = [qcelemental.molutil.order_molecular_formula(form) for form in molecular_formula]
-        except ValueError:
-            # Probably, the user provided an invalid chemical formula
-            pass
-
-        meta = get_metadata_template()
-
-        query = format_query(MoleculeORM, id=id, molecule_hash=molecule_hash, molecular_formula=molecular_formula)
-
-        # Don't include the hash or the molecular_formula in the returned result
-        rdata, meta["n_found"] = self.get_query_projection(
-            MoleculeORM, query, limit=limit, skip=skip, exclude=["molecule_hash", "molecular_formula"]
-        )
-
-        meta["success"] = True
-
-        # This is required for sparse molecules as we don't know which values are spase
-        # We are lucky that None is the default and doesn't mean anything in Molecule
-        # This strategy does not work for other objects
-        data = []
-        for mol_dict in rdata:
-            mol_dict = {k: v for k, v in mol_dict.items() if v is not None}
-            data.append(Molecule(**mol_dict, validate=False, validated=True))
-
-        return {"meta": meta, "data": data}
+        return self.molecule.get(id, molecule_hash, molecular_formula, limit, skip)
 
     def del_molecules(self, id: List[str] = None, molecule_hash: List[str] = None):
-        """
-        Removes a molecule from the database from its hash.
-
-        Parameters
-        ----------
-        id : str or List[str], optional
-            ids of molecules, can use the hash parameter instead
-        molecule_hash : str or List[str]
-            The hash of a molecule.
-
-        Returns
-        -------
-        bool
-            Number of deleted molecules.
-        """
-
-        query = format_query(MoleculeORM, id=id, molecule_hash=molecule_hash)
-
-        with self.session_scope() as session:
-            ret = session.query(MoleculeORM).filter(*query).delete(synchronize_session=False)
-
-        return ret
+        return self.molecule.delete(id, molecule_hash)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~ Keywords ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def add_keywords(self, keyword_sets: List[KeywordSet]):
-        """Add one KeywordSet uniquly identified by 'program' and the 'name'.
-
-        Parameters
-        ----------
-        keywords_set : List[KeywordSet]
-            A list of KeywordSets to be inserted.
-
-        Returns
-        -------
-        Dict[str, Any]
-            (see add_metadata_template())
-            The 'data' part is a list of ids of the inserted options
-            data['duplicates'] has the duplicate entries
-
-        Notes
-        ------
-            Duplicates are not considered errors.
-
-        """
-
-        meta = add_metadata_template()
-
-        keywords = []
-        with self.session_scope() as session:
-            for kw in keyword_sets:
-
-                kw_dict = kw.dict(exclude={"id"})
-
-                # search by index keywords not by all keys, much faster
-                found = session.query(KeywordsORM).filter_by(hash_index=kw_dict["hash_index"]).first()
-                if not found:
-                    doc = KeywordsORM(**kw_dict)
-                    session.add(doc)
-                    session.commit()
-                    keywords.append(str(doc.id))
-                    meta["n_inserted"] += 1
-                else:
-                    meta["duplicates"].append(str(found.id))  # TODO
-                    keywords.append(str(found.id))
-                meta["success"] = True
-
-        ret = {"data": keywords, "meta": meta}
-
-        return ret
+        return self.keywords.add(keyword_sets)
 
     def get_keywords(
         self,
@@ -854,196 +544,18 @@ class SQLAlchemySocket:
         return_json: bool = False,
         with_ids: bool = True,
     ) -> List[KeywordSet]:
-        """Search for one (unique) option based on the 'program'
-        and the 'name'. No overwrite allowed.
-
-        Parameters
-        ----------
-        id : List[str] or str
-            Ids of the keywords
-        hash_index : List[str] or str
-            hash index of keywords
-        limit : Optional[int], optional
-            Maximum number of results to return.
-            If this number is greater than the SQLAlchemySocket.max_limit then
-            the max_limit will be returned instead.
-            Default is to return the socket's max_limit (when limit=None or 0)
-        skip : int, optional
-        return_json : bool, optional
-            Return the results as a json object
-            Default is True
-        with_ids : bool, optional
-            Include the DB ids in the returned object (names 'id')
-            Default is True
-
-
-        Returns
-        -------
-            A dict with keys: 'data' and 'meta'
-            (see get_metadata_template())
-            The 'data' part is an object of the result or None if not found
-        """
-
-        meta = get_metadata_template()
-        query = format_query(KeywordsORM, id=id, hash_index=hash_index)
-
-        rdata, meta["n_found"] = self.get_query_projection(
-            KeywordsORM, query, limit=limit, skip=skip, exclude=[None if with_ids else "id"]
-        )
-
-        meta["success"] = True
-
-        # meta['error_description'] = str(err)
-
-        if not return_json:
-            data = [KeywordSet(**d) for d in rdata]
-        else:
-            data = rdata
-
-        return {"data": data, "meta": meta}
+        return self.keywords.get(id, hash_index, limit, skip, return_json, with_ids)
 
     def get_add_keywords_mixed(self, data):
-        """
-        Get or add the given options (if they don't exit).
-        KeywordsORM are given in a mixed format, either as a dict of mol data
-        or as existing mol id
-
-        TODO: to be split into get by_id and get_by_data
-        """
-
-        meta = get_metadata_template()
-
-        ids = []
-        for idx, kw in enumerate(data):
-            if isinstance(kw, (int, str)):
-                ids.append(kw)
-
-            elif isinstance(kw, KeywordSet):
-                new_id = self.add_keywords([kw])["data"][0]
-                ids.append(new_id)
-            else:
-                meta["errors"].append((idx, "Data type not understood"))
-                ids.append(None)
-
-        missing = []
-        ret = []
-        for idx, id in enumerate(ids):
-            if id is None:
-                ret.append(None)
-                missing.append(idx)
-                continue
-
-            tmp = self.get_keywords(id=id)["data"]
-            if tmp:
-                ret.append(tmp[0])
-            else:
-                ret.append(None)
-
-        meta["success"] = True
-        meta["n_found"] = len(ret) - len(missing)
-        meta["missing"] = missing
-
-        return {"meta": meta, "data": ret}
+        return self.keywords.get_add_mixed(data)
 
     def del_keywords(self, id: str) -> int:
-        """
-        Removes a option set from the database based on its id.
+        return self.keywords.delete(id)
 
-        Parameters
-        ----------
-        id : str
-            id of the keyword
-
-        Returns
-        -------
-        int
-           number of deleted documents
-        """
-
-        count = 0
-        with self.session_scope() as session:
-            count = session.query(KeywordsORM).filter_by(id=id).delete(synchronize_session=False)
-
-        return count
-
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
-
-    ### database functions
+    # ~~~~~~~~~~~~~~~~~ Collections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
 
     def add_collection(self, data: Dict[str, Any], overwrite: bool = False):
-        """Add (or update) a collection to the database.
-
-        Parameters
-        ----------
-        data : Dict[str, Any]
-            should inlcude at least(keys):
-            collection : str (immutable)
-            name : str (immutable)
-
-        overwrite : bool
-            Update existing collection
-
-        Returns
-        -------
-        Dict[str, Any]
-        A dict with keys: 'data' and 'meta'
-            (see add_metadata_template())
-            The 'data' part is the id of the inserted document or none
-
-        Notes
-        -----
-        ** Change: The data doesn't have to include the ID, the document
-        is identified by the (collection, name) pairs.
-        ** Change: New fields will be added to the collection, but existing won't
-            be removed.
-        """
-
-        meta = add_metadata_template()
-        col_id = None
-        # try:
-
-        # if ("id" in data) and (data["id"] == "local"):
-        #     data.pop("id", None)
-        if "id" in data:  # remove the ID in any case
-            data.pop("id", None)
-        lname = data.get("name").lower()
-        collection = data.pop("collection").lower()
-
-        # Get collection class if special type is implemented
-        collection_class = get_collection_class(collection)
-
-        update_fields = {}
-        for field in collection_class._all_col_names():
-            if field in data:
-                update_fields[field] = data.pop(field)
-
-        update_fields["extra"] = data  # todo: check for sql injection
-
-        with self.session_scope() as session:
-
-            try:
-                if overwrite:
-                    col = session.query(collection_class).filter_by(collection=collection, lname=lname).first()
-                    for key, value in update_fields.items():
-                        setattr(col, key, value)
-                else:
-                    col = collection_class(collection=collection, lname=lname, **update_fields)
-
-                session.add(col)
-                session.commit()
-                col.update_relations(**update_fields)
-                session.commit()
-
-                col_id = str(col.id)
-                meta["success"] = True
-                meta["n_inserted"] = 1
-
-            except Exception as err:
-                session.rollback()
-                meta["error_description"] = str(err)
-
-        ret = {"data": col_id, "meta": meta}
-        return ret
+        return self.collection.add(data, overwrite)
 
     def get_collections(
         self,
@@ -1055,294 +567,21 @@ class SQLAlchemySocket:
         exclude: Optional[List[str]] = None,
         skip: int = 0,
     ) -> Dict[str, Any]:
-        """Get collection by collection and/or name
-
-        Parameters
-        ----------
-        collection: Optional[str], optional
-            Type of the collection, e.g. ReactionDataset
-        name: Optional[str], optional
-            Name of the collection, e.g. S22
-        col_id: Optional[int], optional
-            Database id of the collection
-        limit: Optional[int], optional
-            Maximum number of results to return
-        include: Optional[List[str]], optional
-            Columns to return
-        exclude: Optional[List[str]], optional
-            Return all but these columns
-        skip: int, optional
-            Skip the first `skip` results
-
-        Returns
-        -------
-        Dict[str, Any]
-            A dict with keys: 'data' and 'meta'
-            The data is a list of the collections found
-        """
-
-        meta = get_metadata_template()
-        if name:
-            name = name.lower()
-        if collection:
-            collection = collection.lower()
-
-        collection_class = get_collection_class(collection)
-        query = format_query(collection_class, lname=name, collection=collection, id=col_id)
-
-        # try:
-        rdata, meta["n_found"] = self.get_query_projection(
-            collection_class, query, include=include, exclude=exclude, limit=limit, skip=skip
-        )
-
-        meta["success"] = True
-        # except Exception as err:
-        #     meta['error_description'] = str(err)
-
-        return {"data": rdata, "meta": meta}
+        return self.collection.get(collection, name, col_id, limit, include, exclude, skip)
 
     def del_collection(
         self, collection: Optional[str] = None, name: Optional[str] = None, col_id: Optional[int] = None
     ) -> bool:
-        """
-        Remove a collection from the database from its keys.
+        return self.collection.delete(collection, name, col_id)
 
-        Parameters
-        ----------
-        collection: Optional[str], optional
-            CollectionORM type
-        name : Optional[str], optional
-            CollectionORM name
-        col_id: Optional[int], optional
-            Database id of the collection
-        Returns
-        -------
-        int
-            Number of documents deleted
-        """
 
-        # Assuming here that we don't want to allow deletion of all collections, all datasets, etc.
-        if not (col_id is not None or (collection is not None and name is not None)):
-            raise ValueError(
-                "Either col_id ({col_id}) must be specified, or collection ({collection}) and name ({name}) must be specified."
-            )
-
-        filter_spec = {}
-        if collection is not None:
-            filter_spec["collection"] = collection.lower()
-        if name is not None:
-            filter_spec["lname"] = name.lower()
-        if col_id is not None:
-            filter_spec["id"] = col_id
-
-        with self.session_scope() as session:
-            count = session.query(CollectionORM).filter_by(**filter_spec).delete(synchronize_session=False)
-        return count
-
-    ## ResultORMs functions
+    # ~~~~~~~~~~~~~~~~~ Results ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
 
     def add_results(self, record_list: List[ResultRecord]):
-        """
-        Add results from a given dict. The dict should have all the required
-        keys of a result.
-
-        Parameters
-        ----------
-        data : List[ResultRecord]
-            Each dict in the list must have:
-            program, driver, method, basis, options, molecule
-            Where molecule is the molecule id in the DB
-            In addition, it should have the other attributes that it needs
-            to store
-
-        Returns
-        -------
-        Dict[str, Any]
-            Dict with keys: data, meta
-            Data is the ids of the inserted/updated/existing docs, in the same order as the
-            input record_list
-        """
-
-        meta = add_metadata_template()
-
-        results_list = []
-        duplicates_list = []
-
-        # Stores indices referring to elements in record_list
-        new_record_idx, duplicates_idx = [], []
-
-        # creating condition for a multi-value select
-        # This can be used to query for multiple results in a single query
-        conds = [
-            and_(
-                ResultORM.program == res.program,
-                ResultORM.driver == res.driver,
-                ResultORM.method == res.method,
-                ResultORM.basis == res.basis,
-                ResultORM.keywords == res.keywords,
-                ResultORM.molecule == res.molecule,
-            )
-            for res in record_list
-        ]
-
-        with self.session_scope() as session:
-            # Query for all existing
-            # TODO: RACE CONDITION: Records could be inserted between this query and inserting later
-
-            existing_results = {}
-
-            for cond in conds:
-                doc = (
-                    session.query(
-                        ResultORM.program,
-                        ResultORM.driver,
-                        ResultORM.method,
-                        ResultORM.basis,
-                        ResultORM.keywords,
-                        ResultORM.molecule,
-                        ResultORM.id,
-                    )
-                    .filter(cond)
-                    .one_or_none()
-                )
-
-                if doc is not None:
-                    existing_results[
-                        (doc.program, doc.driver, doc.method, doc.basis, doc.keywords, str(doc.molecule))
-                    ] = doc
-
-            # Loop over all (input) records, keeping track each record's index in the list
-            for i, result in enumerate(record_list):
-                # constructing an index from the record compare against items existing_results
-                idx = (
-                    result.program,
-                    result.driver.value,
-                    result.method,
-                    result.basis,
-                    int(result.keywords) if result.keywords else None,
-                    result.molecule,
-                )
-
-                if idx not in existing_results:
-                    # Does not exist in the database. Construct a new ResultORM
-                    doc = ResultORM(**result.dict(exclude={"id"}))
-
-                    # Store in existing_results in case later records are duplicates
-                    existing_results[idx] = doc
-
-                    # add the object to the list for later adding and committing to database.
-                    results_list.append(doc)
-
-                    # Store the index of this record (in record_list) as a new_record
-                    new_record_idx.append(i)
-                    meta["n_inserted"] += 1
-                else:
-                    # This result already exists in the database
-                    doc = existing_results[idx]
-
-                    # Store the index of this record (in record_list) as a new_record
-                    duplicates_idx.append(i)
-
-                    # Store the entire object. Since this may be a duplicate of a record
-                    # added in a previous iteration of the loop, and the data hasn't been added/committed
-                    # to the database, the id may not be known here
-                    duplicates_list.append(doc)
-
-            session.add_all(results_list)
-            session.commit()
-
-            # At this point, all ids should be known. So store only the ids in the returned metadata
-            meta["duplicates"] = [str(doc.id) for doc in duplicates_list]
-
-            # Construct the ID list to return (in the same order as the input data)
-            # Use a placeholder for all, and we will fill later
-            result_ids = [None] * len(record_list)
-
-            # At this point:
-            #     results_list: ORM objects for all newly-added results
-            #     new_record_idx: indices (referring to record_list) of newly-added results
-            #     duplicates_idx: indices (referring to record_list) of results that already existed
-            #
-            # results_list and new_record_idx are in the same order
-            # (ie, the index stored at new_record_idx[0] refers to some element of record_list. That
-            # newly-added ResultORM is located at results_list[0])
-            #
-            # Similarly, duplicates_idx and meta["duplicates"] are in the same order
-
-            for idx, new_result in zip(new_record_idx, results_list):
-                result_ids[idx] = str(new_result.id)
-
-            # meta["duplicates"] only holds ids at this point
-            for idx, existing_result_id in zip(duplicates_idx, meta["duplicates"]):
-                result_ids[idx] = existing_result_id
-
-        assert None not in result_ids
-
-        meta["success"] = True
-
-        ret = {"data": result_ids, "meta": meta}
-        return ret
+        return self.result.add(record_list)
 
     def update_results(self, record_list: List[ResultRecord]):
-        """
-        Update results from a given dict (replace existing)
-
-        Parameters
-        ----------
-        id : list of str
-            Ids of the results to update, must exist in the DB
-        data : list of dict
-            Data that needs to be updated
-            Shouldn't update:
-            program, driver, method, basis, options, molecule
-
-        Returns
-        -------
-            number of records updated
-        """
-        query_ids = [res.id for res in record_list]
-        # find duplicates among ids
-        duplicates = len(query_ids) != len(set(query_ids))
-
-        with self.session_scope() as session:
-
-            found = session.query(ResultORM).filter(ResultORM.id.in_(query_ids)).all()
-            # found items are stored in a dictionary
-            found_dict = {str(record.id): record for record in found}
-
-            updated_count = 0
-            for result in record_list:
-
-                if result.id is None:
-                    self.logger.error("Attempted update without ID, skipping")
-                    continue
-
-                data = result.dict(exclude={"id"})
-                # retrieve the found item
-                found_db = found_dict[result.id]
-
-                # updating the found item with input attribute values.
-                for attr, val in data.items():
-                    setattr(found_db, attr, val)
-
-                # if any duplicate ids are found in the input, commit should be called each iteration
-                if duplicates:
-                    session.commit()
-                updated_count += 1
-            # if no duplicates found, only commit at the end of the loop.
-            if not duplicates:
-                session.commit()
-
-        return updated_count
-
-    def get_results_count(self):
-        """
-        TODO: just return the count, used for big queries
-
-        Returns
-        -------
-
-        """
+        return self.result.update(record_list)
 
     def get_results(
         self,
@@ -1363,176 +602,15 @@ class SQLAlchemySocket:
         return_json=True,
         with_ids=True,
     ):
-        """
-
-        Parameters
-        ----------
-        id : str or List[str]
-        program : str
-        method : str
-        basis : str
-        molecule : str
-            MoleculeORM id in the DB
-        driver : str
-        keywords : str
-            The id of the option in the DB
-        task_id: str or List[str]
-            id or a list of ids of tasks
-        manager_id: str or List[str]
-            id or a list of ids of queue_mangers
-        status : bool, optional
-            The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
-            Default is 'COMPLETE'
-        include : Optional[List[str]], optional
-            The fields to return, default to return all
-        exclude : Optional[List[str]], optional
-            The fields to not return, default to return all
-        limit : Optional[int], optional
-            maximum number of results to return
-            if 'limit' is greater than the global setting self._max_limit,
-            the self._max_limit will be returned instead
-            (This is to avoid overloading the server)
-        skip : int, optional
-            skip the first 'skip' results. Used to paginate
-            Default is 0
-        return_json : bool, optional
-            Return the results as a list of json inseated of objects
-            default is True
-        with_ids : bool, optional
-            Include the ids in the returned objects/dicts
-            default is True
-
-        Returns
-        -------
-        Dict[str, Any]
-            Dict with keys: data, meta
-            Data is the objects found
-        """
-
-        if task_id:
-            return self._get_results_by_task_id(task_id)
-
-        meta = get_metadata_template()
-
-        # Ignore status if Id is present
-        if id is not None:
-            status = None
-
-        query = format_query(
-            ResultORM,
-            id=id,
-            program=program,
-            method=method,
-            basis=basis,
-            molecule=molecule,
-            driver=driver,
-            keywords=keywords,
-            manager_id=manager_id,
-            status=status,
-        )
-
-        data, meta["n_found"] = self.get_query_projection(
-            ResultORM, query, include=include, exclude=exclude, limit=limit, skip=skip
-        )
-        meta["success"] = True
-
-        return {"data": data, "meta": meta}
-
-    def _get_results_by_task_id(self, task_id: Union[str, List] = None, return_json=True):
-        """
-
-        Parameters
-        ----------
-        task_id : str or List[str]
-
-        return_json : bool, optional
-            Return the results as a list of json inseated of objects
-            Default is True
-
-        Returns
-        -------
-        Dict[str, Any]
-            Dict with keys: data, meta
-            Data is the objects found
-        """
-
-        meta = get_metadata_template()
-
-        data = []
-        task_id_list = [task_id] if isinstance(task_id, (int, str)) else task_id
-        # try:
-        with self.session_scope() as session:
-            data = (
-                session.query(BaseResultORM)
-                .filter(BaseResultORM.id == TaskQueueORM.base_result_id)
-                .filter(TaskQueueORM.id.in_(task_id_list))
-            )
-            meta["n_found"] = get_count_fast(data)
-            data = [d.to_dict() for d in data.all()]
-            meta["success"] = True
-            # except Exception as err:
-            #     meta['error_description'] = str(err)
-
-        return {"data": data, "meta": meta}
+        return self.result.get(id, program, method, basis, molecule, driver, keywords, task_id, manager_id, status, include, exclude, limit, skip, return_json, with_ids)
 
     def del_results(self, ids: List[str]):
-        """
-        Removes results from the database using their ids
-        (Should be cautious! other tables maybe referencing results)
+        return self.result.delete(ids)
 
-        Parameters
-        ----------
-        ids : List[str]
-            The Ids of the results to be deleted
-
-        Returns
-        -------
-        int
-            number of results deleted
-        """
-
-        with self.session_scope() as session:
-            results = session.query(ResultORM).filter(ResultORM.id.in_(ids)).all()
-            # delete through session to delete correctly from base_result
-            for result in results:
-                session.delete(result)
-            session.commit()
-            count = len(results)
-
-        return count
+    # ~~~~~~~~~~~~~~~~~ Wavefunction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
 
     def add_wavefunction_store(self, blobs_list: List[Dict[str, Any]]):
-        """
-        Adds to the wavefunction key/value store table.
-
-        Parameters
-        ----------
-        blobs_list : List[Dict[str, Any]]
-            A list of wavefunction data blobs to add.
-
-        Returns
-        -------
-        Dict[str, Any]
-            Dict with keys data and meta, where data represent the blob_ids of inserted wavefuction data blobs.
-        """
-
-        meta = add_metadata_template()
-        blob_ids = []
-        with self.session_scope() as session:
-            for blob in blobs_list:
-                if blob is None:
-                    blob_ids.append(None)
-                    continue
-
-                doc = WavefunctionStoreORM(**blob)
-                session.add(doc)
-                session.commit()
-                blob_ids.append(str(doc.id))
-                meta["n_inserted"] += 1
-
-        meta["success"] = True
-
-        return {"data": blob_ids, "meta": meta}
+        return self.wavefunction.add(blobs_list)
 
     def get_wavefunction_store(
         self,
@@ -1542,42 +620,8 @@ class SQLAlchemySocket:
         limit: int = None,
         skip: int = 0,
     ) -> Dict[str, Any]:
-        """
-        Pulls from the wavefunction key/value store table.
+        return self.wavefunction.get(id, include, exclude, limit, skip)
 
-        Parameters
-        ----------
-        id : List[str], optional
-            A list of ids to query
-        include : Optional[List[str]], optional
-            The fields to return, default to return all
-        exclude : Optional[List[str]], optional
-            The fields to not return, default to return all
-        limit : int, optional
-            Maximum number of results to return.
-            Default is set to 0
-        skip : int, optional
-            Skips a number of results in the query, used for pagination
-            Default is set to 0
-
-        Returns
-        -------
-        Dict[str, Any]
-            Dictionary with keys data and meta, where data is the found wavefunction items
-        """
-
-        meta = get_metadata_template()
-
-        query = format_query(WavefunctionStoreORM, id=id)
-        rdata, meta["n_found"] = self.get_query_projection(
-            WavefunctionStoreORM, query, limit=limit, skip=skip, include=include, exclude=exclude
-        )
-
-        meta["success"] = True
-
-        return {"data": rdata, "meta": meta}
-
-    ### Mongo procedure/service functions
 
     def add_procedures(self, record_list: List["BaseRecord"]):
         """
@@ -2648,124 +1692,18 @@ class SQLAlchemySocket:
     ### QueueManagerORMs
 
     def manager_update(self, name, **kwargs):
-
-        do_log = kwargs.pop("log", False)
-
-        inc_count = {
-            # Increment relevant data
-            "submitted": QueueManagerORM.submitted + kwargs.pop("submitted", 0),
-            "completed": QueueManagerORM.completed + kwargs.pop("completed", 0),
-            "returned": QueueManagerORM.returned + kwargs.pop("returned", 0),
-            "failures": QueueManagerORM.failures + kwargs.pop("failures", 0),
-        }
-
-        upd = {key: kwargs[key] for key in QueueManagerORM.__dict__.keys() if key in kwargs}
-
-        with self.session_scope() as session:
-            # QueueManagerORM.objects()  # init
-            manager = session.query(QueueManagerORM).filter_by(name=name)
-            if manager.count() > 0:  # existing
-                upd.update(inc_count, modified_on=dt.utcnow())
-                num_updated = manager.update(upd)
-            else:  # create new, ensures defaults and validations
-                manager = QueueManagerORM(name=name, **upd)
-                session.add(manager)
-                session.commit()
-                num_updated = 1
-
-            if do_log:
-                # Pull again in case it was updated
-                manager = session.query(QueueManagerORM).filter_by(name=name).first()
-
-                manager_log = QueueManagerLogORM(
-                    manager_id=manager.id,
-                    completed=manager.completed,
-                    submitted=manager.submitted,
-                    failures=manager.failures,
-                    total_worker_walltime=manager.total_worker_walltime,
-                    total_task_walltime=manager.total_task_walltime,
-                    active_tasks=manager.active_tasks,
-                    active_cores=manager.active_cores,
-                    active_memory=manager.active_memory,
-                )
-
-                session.add(manager_log)
-                session.commit()
-
-        return num_updated == 1
+        return self.manager.update(name, **kwargs)
 
     def get_managers(
         self, name: str = None, status: str = None, modified_before=None, modified_after=None, limit=None, skip=0
     ):
-
-        meta = get_metadata_template()
-        query = format_query(QueueManagerORM, name=name, status=status)
-
-        if modified_before:
-            query.append(QueueManagerORM.modified_on <= modified_before)
-
-        if modified_after:
-            query.append(QueueManagerORM.modified_on >= modified_after)
-
-        data, meta["n_found"] = self.get_query_projection(QueueManagerORM, query, limit=limit, skip=skip)
-        meta["success"] = True
-
-        return {"data": data, "meta": meta}
+        return self.manager.get(name, status, modified_before, modified_after, limit, skip)
 
     def get_manager_logs(self, manager_ids: Union[List[str], str], timestamp_after=None, limit=None, skip=0):
-        meta = get_metadata_template()
-        query = format_query(QueueManagerLogORM, manager_id=manager_ids)
-
-        if timestamp_after:
-            query.append(QueueManagerLogORM.timestamp >= timestamp_after)
-
-        data, meta["n_found"] = self.get_query_projection(
-            QueueManagerLogORM, query, limit=limit, skip=skip, exclude=["id"]
-        )
-        meta["success"] = True
-
-        return {"data": data, "meta": meta}
+        return self.manager.get_logs(manager_ids, timestamp_after, limit, skip)
 
     def _copy_managers(self, record_list: Dict):
-        """
-        copy the given managers as-is to the DB. Used for data migration
-
-        Parameters
-        ----------
-        record_list : List[Dict[str, Any]]
-            list of dict of managers data
-        Returns
-        -------
-        Dict[str, Any]
-            Dict with keys: data, meta. Data is the ids of the inserted/updated/existing docs
-        """
-
-        meta = add_metadata_template()
-
-        manager_names = []
-        with self.session_scope() as session:
-            for manager in record_list:
-                doc = session.query(QueueManagerORM).filter_by(name=manager["name"])
-
-                if get_count_fast(doc) == 0:
-                    doc = QueueManagerORM(**manager)
-                    if isinstance(doc.created_on, float):
-                        doc.created_on = dt.fromtimestamp(doc.created_on / 1e3)
-                    if isinstance(doc.modified_on, float):
-                        doc.modified_on = dt.fromtimestamp(doc.modified_on / 1e3)
-                    session.add(doc)
-                    session.commit()  # TODO: faster if done in bulk
-                    manager_names.append(doc.name)
-                    meta["n_inserted"] += 1
-                else:
-                    name = doc.first().name
-                    meta["duplicates"].append(name)  # TODO
-                    # If new or duplicate, add the id to the return list
-                    manager_names.append(id)
-        meta["success"] = True
-
-        ret = {"data": manager_names, "meta": meta}
-        return ret
+        return self.manager._copy_managers(record_list)
 
     ### UserORMs
 
@@ -3189,69 +2127,3 @@ class SQLAlchemySocket:
 
         return count
 
-    def log_server_stats(self):
-
-        table_info = self.custom_query("database_stats", "table_information")["data"]
-
-        # Calculate table info
-        table_size = 0
-        index_size = 0
-        for row in table_info["rows"]:
-            table_size += row[2] - row[3] - (row[4] or 0)
-            index_size += row[3]
-
-        # Calculate result state info, turns out to be very costly for large databases
-        # state_data = self.custom_query("result", "count", groupby={'result_type', 'status'})["data"]
-        # result_states = {}
-
-        # for row in state_data:
-        #     result_states.setdefault(row["result_type"], {})
-        #     result_states[row["result_type"]][row["status"]] = row["count"]
-        result_states = {}
-
-        counts = {}
-        for table in ["collection", "molecule", "base_result", "kv_store", "access_log"]:
-            counts[table] = self.custom_query("database_stats", "table_count", table_name=table)["data"][0]
-
-        # Build out final data
-        data = {
-            "collection_count": counts["collection"],
-            "molecule_count": counts["molecule"],
-            "result_count": counts["base_result"],
-            "kvstore_count": counts["kv_store"],
-            "access_count": counts["access_log"],
-            "result_states": result_states,
-            "db_total_size": self.custom_query("database_stats", "database_size")["data"],
-            "db_table_size": table_size,
-            "db_index_size": index_size,
-            "db_table_information": table_info,
-        }
-
-        with self.session_scope() as session:
-            log = ServerStatsLogORM(**data)
-            session.add(log)
-            session.commit()
-
-        return data
-
-    def get_server_stats_log(self, before=None, after=None, limit=None, skip=0):
-
-        meta = get_metadata_template()
-        query = []
-
-        if before:
-            query.append(ServerStatsLogORM.timestamp <= before)
-
-        if after:
-            query.append(ServerStatsLogORM.timestamp >= after)
-
-        with self.session_scope() as session:
-            pose = session.query(ServerStatsLogORM).filter(*query).order_by(desc("timestamp"))
-            meta["n_found"] = get_count_fast(pose)
-
-            data = pose.limit(self.get_limit(limit)).offset(skip).all()
-            data = [d.to_dict() for d in data]
-
-        meta["success"] = True
-
-        return {"data": data, "meta": meta}
