@@ -14,13 +14,16 @@ class Config:
     # TODO, not used
     DB_LOGGING = True
 
+    # must be set to false to avoid restarting
+    DEBUG = False
+
     @staticmethod
     def init_app(app):
         pass
 
 
 class DevelopmentConfig(Config):
-    DEBUG = True
+    pass
 
 
 class TestingConfig(Config):
