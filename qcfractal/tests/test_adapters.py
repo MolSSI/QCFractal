@@ -138,7 +138,7 @@ def test_adapter_error_message(managed_compute_server):
 
     error = ret[0].get_error()
     assert "connectivity graph" in error.error_message
-    server.objects["storage_socket"].queue_mark_complete([queue_id])
+    server.objects["storage"].queue_mark_complete([queue_id])
 
 
 @testing.using_rdkit
@@ -161,7 +161,7 @@ def test_adapter_raised_error(managed_compute_server):
 
     error = ret[0].get_error()
     assert "Error" in error.error_message
-    server.objects["storage_socket"].queue_mark_complete([queue_id])
+    server.objects["storage"].queue_mark_complete([queue_id])
 
 
 @testing.using_rdkit
