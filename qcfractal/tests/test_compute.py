@@ -145,7 +145,7 @@ def test_task_regenerate(fractal_compute_server):
         assert old_task.created_on == new_task.created_on
 
     # Manually delete the old task
-    db = fractal_compute_server.objects["storage_socket"]
+    db = fractal_compute_server.objects["storage"]
     db.del_tasks([x.id for x in old_tasks])
 
     # Actually deleted?
@@ -211,13 +211,14 @@ def test_queue_error(fractal_compute_server):
 
     # Pull out a special iteration on the queue manager
     fractal_compute_server.update_tasks()
+    print('-------------------')
     assert len(fractal_compute_server.list_current_tasks()) == 1
 
     fractal_compute_server.await_results()
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
     # Pull from database, raw JSON
-    db = fractal_compute_server.objects["storage_socket"]
+    db = fractal_compute_server.objects["storage"]
     queue_ret = db.get_queue(status="ERROR")["data"]
     result = db.get_results(id=compute_ret.ids)["data"][0]
 
@@ -227,7 +228,7 @@ def test_queue_error(fractal_compute_server):
     assert result["status"] == "ERROR"
 
     # Force a complete mark and test
-    fractal_compute_server.objects["storage_socket"].queue_mark_complete([queue_ret[0].id])
+    fractal_compute_server.objects["storage"].queue_mark_complete([queue_ret[0].id])
     result = db.get_results(id=compute_ret.ids)["data"][0]
     assert result["status"] == "COMPLETE"
 
@@ -248,7 +249,7 @@ def test_queue_duplicate_compute(fractal_compute_server):
     # Wait for the compute to execute
     fractal_compute_server.await_results()
 
-    db = fractal_compute_server.objects["storage_socket"]
+    db = fractal_compute_server.objects["storage"]
 
     # Should catch duplicates both ways
     ret = client.add_compute("RDKIT", "uff", None, "energy", None, mol_ret)
@@ -291,7 +292,7 @@ def test_queue_compute_mixed_molecule(fractal_compute_server):
     # Pull out fireworks launchpad and queue nanny
     fractal_compute_server.await_results()
 
-    db = fractal_compute_server.objects["storage_socket"]
+    db = fractal_compute_server.objects["storage"]
 
     ret = client.add_compute("rdkit", "UFF", "", "energy", None, [mol_ret[0], bad_id2])
     assert len(ret.ids) == 2
@@ -323,7 +324,7 @@ def test_queue_duplicate_procedure(fractal_compute_server):
     # Pull out fireworks launchpad and queue nanny
     fractal_compute_server.await_results()
 
-    db = fractal_compute_server.objects["storage_socket"]
+    db = fractal_compute_server.objects["storage"]
 
     ret2 = client.add_procedure("optimization", "geometric", geometric_options, [bad_id1, hooh])
     assert len(ret2.ids) == 2
