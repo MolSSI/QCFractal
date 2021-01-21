@@ -10,6 +10,8 @@ from ..interface.models.records import RecordStatusEnum
 from ..interface.models.model_builder import build_procedure
 from ..procedures import check_procedure_available, get_procedure_parser
 from ..services import initialize_service
+from ..extras import get_information as get_qcfractal_information
+
 from flask import jsonify, request, make_response
 import traceback
 import collections
@@ -27,10 +29,10 @@ from urllib.parse import urlparse
 from ..policyuniverse import Policy
 from flask import Blueprint, current_app, session, Response
 import logging
-import json
 from functools import wraps
-import datetime
 from werkzeug.exceptions import BadRequest, NotFound, Forbidden, Unauthorized
+
+from . import api_logger, storage_socket, view_handler
 
 
 logger = logging.getLogger(__name__)
@@ -72,7 +74,7 @@ def check_access(fn):
         # load read permissions from DB if not read
         global _read_permissions
         if not _read_permissions:
-            _, _read_permissions = current_app.config.storage.get_role("read")
+            _, _read_permissions = storage_socket.get_role("read")
             _read_permissions = _read_permissions["permissions"]
 
         # if read is allowed without login, use read_permissions
@@ -124,22 +126,24 @@ def parse_bodymodel(model):
         raise BadRequest("Invalid body: " + str(e))
 
 
-class PydanticResponse(Response):
+class SerializedResponse(Response):
     """Serialize pydantic response using the given encoding and pass it
     as a flask response object"""
 
     def __init__(self, response, **kwargs):
 
-        if not isinstance(response, (str, bytes)):
-            response = serialize(response, session["encoding"])
-
-        return super(PydanticResponse, self).__init__(response, **kwargs)
-
+        # TODO: support other content types? We would need to check the Accept header
+        content_type = 'application/msgpack-ext'
+        encoding = _valid_encodings[content_type]
+        response = serialize(response, encoding)
+        super(SerializedResponse, self).__init__(response, content_type=content_type, **kwargs)
 
 @main.before_request
 def before_request_func():
+    ###############################################################
+    # Deserialize the various encodings we support (like msgpack) #
+    ###############################################################
 
-    # session['content_type'] = "Not Provided"
     try:
         # default to "application/json"
         session["content_type"] = request.headers.get("Content-Type", "application/json")
@@ -147,14 +151,14 @@ def before_request_func():
     except KeyError as e:
         raise BadRequest(f"Did not understand 'Content-Type'. {e}")
 
-    # TODO: check if needed in Flask
     try:
+        # Check to see if we have a json that is encoded as bytes rather than a string
         if (session["encoding"] == "json") and isinstance(request.data, bytes):
             blob = request.data.decode()
         else:
             blob = request.data
 
-        if blob:  # TODO:
+        if blob:
             request.data = deserialize(blob, session["encoding"])
         else:
             request.data = None
@@ -162,38 +166,38 @@ def before_request_func():
         raise BadRequest(f"Could not deserialize body. {e}")
 
 
-@main.after_request
-def after_request_func(response):
-
-    # Always reply in the format sent
-    response.headers["Content-Type"] = session["content_type"]
-
-    exclude_uris = ["/task_queue", "/service_queue", "/queue_manager"]
-
-    # No associated data, so skip all of this
-    # (maybe caused by not using portal or not using the REST API correctly?)
-    if request.data is None:
-        return response
-
-    if current_app.config.api_logger and request.method == "GET" and request.path not in exclude_uris:
-
-        extra_params = request.data.copy()
-        if _logging_param_counts:
-            for key in _logging_param_counts:
-                if extra_params["data"].get(key, None):
-                    extra_params["data"][key] = len(extra_params["data"][key])
-
-        if "data" in extra_params:
-            extra_params["data"] = {k: v for k, v in extra_params["data"].items() if v is not None}
-
-        extra_params = json.dumps(extra_params)
-
-        log = current_app.config.api_logger.get_api_access_log(request=request, extra_params=extra_params)
-        current_app.config.storage.save_access(log)
-
-        # logger.info('Done saving API access to the database')
-
-    return response
+#@main.after_request
+#def after_request_func(response):
+#
+#    # Always reply in the format sent
+#    response.headers["Content-Type"] = session["content_type"]
+#
+#    exclude_uris = ["/task_queue", "/service_queue", "/queue_manager"]
+#
+#    # No associated data, so skip all of this
+#    # (maybe caused by not using portal or not using the REST API correctly?)
+#    if request.data is None:
+#        return response
+#
+#    if api_logger.enabled and request.method == "GET" and request.path not in exclude_uris:
+#
+#        extra_params = request.data.copy()
+#        if _logging_param_counts:
+#            for key in _logging_param_counts:
+#                if "data" in extra_params and extra_params["data"].get(key, None):
+#                    extra_params["data"][key] = len(extra_params["data"][key])
+#
+#        if "data" in extra_params:
+#            extra_params["data"] = {k: v for k, v in extra_params["data"].items() if v is not None}
+#
+#        extra_params = json.dumps(extra_params)
+#
+#        log = api_logger.get_api_access_log(request=request, extra_params=extra_params)
+#        storage_socket.save_access(log)
+#
+#        # logger.info('Done saving API access to the database')
+#
+#    return response
 
 
 @main.errorhandler(KeyError)
@@ -221,7 +225,7 @@ def register():
         username = request.form["username"]
         password = request.form["password"]
 
-    success = current_app.config.storage.add_user(username, password=password, rolename="user")
+    success = storage_socket.add_user(username, password=password, rolename="user")
     if success:
         return jsonify(msg="New user created!"), 201
     else:
@@ -238,7 +242,7 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-    success, error_message, permissions = current_app.config.storage.verify_user(username, password)
+    success, error_message, permissions = storage_socket.verify_user(username, password)
     if success:
         access_token = create_access_token(identity=username, user_claims={"permissions": permissions})
         # expires_delta=datetime.timedelta(days=3))
@@ -250,8 +254,34 @@ def login():
 
 @main.route("/information", methods=["GET"])
 def get_information():
+    qcf_cfg = current_app.config["QCFRACTAL_CONFIG"]
 
-    return PydanticResponse(current_app.config.public_information)
+    db_data = storage_socket.get_server_stats_log(limit=1)["data"]
+    public_info = {
+        'name': qcf_cfg.fractal.name,
+        'manager_heartbeat_frequency': qcf_cfg.fractal.heartbeat_frequency,
+        'version': get_qcfractal_information("version"),
+        'query_limit': storage_socket.get_limit(1.0e9),
+        "client_lower_version_limit": "0.14.0",  # Must be XX.YY.ZZ
+        "client_upper_version_limit": "0.15.99",  # Must be XX.YY.ZZ
+        "collection": 0,
+        "molecule": 0,
+        "result": 0,
+        "kvstore": 0,
+        "last_update": None
+    }
+
+    if len(db_data) > 0:
+        counts = {
+            "collection": db_data[0].get("collection_count", 0),
+            "molecule": db_data[0].get("molecule_count", 0),
+            "result": db_data[0].get("result_count", 0),
+            "kvstore": db_data[0].get("kvstore_count", 0),
+            "last_update": db_data[0].get("timestamp", None)
+        }
+        public_info.update(counts)
+
+    return SerializedResponse(public_info)
 
 
 @main.route("/refresh", methods=["POST"])
@@ -260,7 +290,7 @@ def refresh():
     username = get_jwt_identity()
     ret = {
         "access_token": create_access_token(
-            identity=username, user_claims={"permissions": current_app.config.storage.get_user_permissions(username)}
+            identity=username, user_claims={"permissions": storage_socket.get_user_permissions(username)}
         )
     }
     return jsonify(ret), 200
@@ -275,7 +305,7 @@ def fresh_login():
         username = request.form["username"]
         password = request.form["password"]
 
-    success, error_message, permissions = current_app.config.storage.verify_user(username, password)
+    success, error_message, permissions = storage_socket.verify_user(username, password)
     if success:
         access_token = create_access_token(identity=username, user_claims={"permissions": permissions}, fresh=True)
         return jsonify(msg="Fresh login succeeded!", access_token=access_token), 200
@@ -304,10 +334,10 @@ def get_molecule():
 
     body_model, response_model = rest_model("molecule", "get")
     body = parse_bodymodel(body_model)
-    molecules = current_app.config.storage.get_molecules(**{**body.data.dict(), **body.meta.dict()})
+    molecules = storage_socket.get_molecules(**{**body.data.dict(), **body.meta.dict()})
     response = response_model(**molecules)
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 @main.route("/molecule", methods=["POST"])
@@ -332,10 +362,10 @@ def post_molecule():
     body_model, response_model = rest_model("molecule", "post")
     body = parse_bodymodel(body_model)
 
-    ret = current_app.config.storage.add_molecules(body.data)
+    ret = storage_socket.add_molecules(body.data)
     response = response_model(**ret)
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 @main.route("/kvstore", methods=["GET"])
@@ -357,10 +387,10 @@ def get_kvstore():
     body_model, response_model = rest_model("kvstore", "get")
     body = parse_bodymodel(body_model)
 
-    ret = current_app.config.storage.get_kvstore(body.data.id)
+    ret = storage_socket.get_kvstore(body.data.id)
     response = response_model(**ret)
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 @main.route("/keyword", methods=["GET"])
@@ -369,11 +399,11 @@ def get_keyword():
     body_model, response_model = rest_model("keyword", "get")
     body = parse_bodymodel(body_model)
 
-    ret = current_app.config.storage.get_keywords(**{**body.data.dict(), **body.meta.dict()}, with_ids=False)
+    ret = storage_socket.get_keywords(**{**body.data.dict(), **body.meta.dict()}, with_ids=False)
     response = response_model(**ret)
 
-    current_app.config.logger.info("GET: Keywords - {} pulls.".format(len(response.data)))
-    return PydanticResponse(response)
+    logger.info("GET: Keywords - {} pulls.".format(len(response.data)))
+    return SerializedResponse(response)
 
 
 @main.route("/keyword", methods=["POST"])
@@ -383,11 +413,11 @@ def post_keyword():
     body_model, response_model = rest_model("keyword", "post")
     body = parse_bodymodel(body_model)
 
-    ret = current_app.config.storage.add_keywords(body.data)
+    ret = storage_socket.add_keywords(body.data)
     response = response_model(**ret)
 
-    current_app.config.logger.info("POST: Keywords - {} inserted.".format(response.meta.n_inserted))
-    return PydanticResponse(response)
+    logger.info("POST: Keywords - {} inserted.".format(response.meta.n_inserted))
+    return SerializedResponse(response)
 
 
 @main.route("/collection", methods=["GET"])
@@ -405,7 +435,7 @@ def get_collection(collection_id: int = None, view_function: str = None):
         body_model, response_model = rest_model("collection", "get")
         body = parse_bodymodel(body_model)
 
-        cols = current_app.config.storage.get_collections(
+        cols = storage_socket.get_collections(
             **body.data.dict(), include=body.meta.include, exclude=body.meta.exclude
         )
         response = response_model(**cols)
@@ -415,7 +445,7 @@ def get_collection(collection_id: int = None, view_function: str = None):
         body_model, response_model = rest_model("collection", "get")
 
         body = parse_bodymodel(body_model)
-        cols = current_app.config.storage.get_collections(
+        cols = storage_socket.get_collections(
             **body.data.dict(), col_id=int(collection_id), include=body.meta.include, exclude=body.meta.exclude
         )
         response = response_model(**cols)
@@ -424,7 +454,7 @@ def get_collection(collection_id: int = None, view_function: str = None):
     elif (collection_id is not None) and (view_function is not None):
         body_model, response_model = rest_model(f"collection/{collection_id}/{view_function}", "get")
         body = parse_bodymodel(body_model)
-        if current_app.config.view_handler is None:
+        if view_handler is None:
             meta = {
                 "success": False,
                 "error_description": "Server does not support collection views.",
@@ -432,9 +462,9 @@ def get_collection(collection_id: int = None, view_function: str = None):
                 "msgpacked_cols": [],
             }
             response = response_model(meta=meta, data=None)
-            return PydanticResponse(response)
+            return SerializedResponse(response)
 
-        result = current_app.config.view_handler.handle_request(collection_id, view_function, body.data.dict())
+        result = view_handler.handle_request(collection_id, view_function, body.data.dict())
         response = response_model(**result)
 
     # Unreachable?
@@ -445,7 +475,7 @@ def get_collection(collection_id: int = None, view_function: str = None):
         meta["error_description"] = "GET request for view with no collection ID not understood."
         response = response_model(meta=meta, data=None)
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 @main.route("/collection", methods=["POST"])
@@ -468,12 +498,12 @@ def post_collection(collection_id: int = None, view_function: str = None):
         meta["error_description"] = "POST requests not supported for sub-resources of /collection"
         response = response_model(meta=meta, data=None)
 
-        return PydanticResponse(response)
+        return SerializedResponse(response)
 
-    ret = current_app.config.storage.add_collection(body.data.dict(), overwrite=body.meta.overwrite)
+    ret = storage_socket.add_collection(body.data.dict(), overwrite=body.meta.overwrite)
     response = response_model(**ret)
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 @main.route("/collection", methods=["DELETE"])
@@ -481,13 +511,13 @@ def post_collection(collection_id: int = None, view_function: str = None):
 @check_access
 def delete_collection(collection_id: int, view_function: str):
     body_model, response_model = rest_model(f"collection/{collection_id}", "delete")
-    ret = current_app.config.storage.del_collection(col_id=collection_id)
+    ret = storage_socket.del_collection(col_id=collection_id)
     if ret == 0:
         return jsonify(msg="Collection does not exist."), 404
     else:
         response = response_model(meta={"success": True, "errors": [], "error_description": False})
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 @main.route("/result", methods=["GET"])
@@ -497,12 +527,12 @@ def get_result():
     body_model, response_model = rest_model("result", "get")
     body = parse_bodymodel(body_model)
 
-    ret = current_app.config.storage.get_results(**{**body.data.dict(), **body.meta.dict()})
+    ret = storage_socket.get_results(**{**body.data.dict(), **body.meta.dict()})
     response = response_model(**ret)
 
     logger.info("GET: Results - {} pulls.".format(len(response.data)))
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 @main.route("/wavefunctionstore", methods=["GET"])
@@ -512,12 +542,12 @@ def get_wave_function():
     body_model, response_model = rest_model("wavefunctionstore", "get")
     body = parse_bodymodel(body_model)
 
-    ret = current_app.config.storage.get_wavefunction_store(body.data.id, include=body.meta.include)
+    ret = storage_socket.get_wavefunction_store(body.data.id, include=body.meta.include)
     if len(ret["data"]):
         ret["data"] = ret["data"][0]
     response = response_model(**ret)
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 @main.route("/procedure", methods=["GET"])
@@ -529,9 +559,9 @@ def get_procedure(query_type: str = "get"):
 
     # try:
     if query_type == "get":
-        ret = current_app.config.storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
+        ret = storage_socket.get_procedures(**{**body.data.dict(), **body.meta.dict()})
     else:  # all other queries, like 'best_opt_results'
-        ret = current_app.config.storage.custom_query(
+        ret = storage_socket.custom_query(
             "procedure", query_type, **{**body.data.dict(), **body.meta.dict()}
         )
     # except KeyError as e:
@@ -539,7 +569,7 @@ def get_procedure(query_type: str = "get"):
 
     response = response_model(**ret)
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 @main.route("/optimization/<string:query_type>", methods=["GET"])
@@ -550,9 +580,9 @@ def get_optimization(query_type: str):
 
     # try:
     if query_type == "get":
-        ret = current_app.config.storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
+        ret = storage_socket.get_procedures(**{**body.data.dict(), **body.meta.dict()})
     else:  # all other queries, like 'best_opt_results'
-        ret = current_app.config.storage.custom_query(
+        ret = storage_socket.custom_query(
             "optimization", query_type, **{**body.data.dict(), **body.meta.dict()}
         )
     # except KeyError as e:
@@ -560,7 +590,7 @@ def get_optimization(query_type: str):
 
     response = response_model(**ret)
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 @main.route("/task_queue", methods=["GET"])
@@ -569,10 +599,10 @@ def get_task_queue():
     body_model, response_model = rest_model("task_queue", "get")
     body = parse_bodymodel(body_model)
 
-    tasks = current_app.config.storage.get_queue(**{**body.data.dict(), **body.meta.dict()})
+    tasks = storage_socket.get_queue(**{**body.data.dict(), **body.meta.dict()})
     response = response_model(**tasks)
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 @main.route("/task_queue", methods=["POST"])
@@ -585,7 +615,7 @@ def post_task_queue():
     if not check_procedure_available(body.meta.procedure):
         return jsonify(msg="Unknown procedure {}.".format(body.meta.procedure)), 400
 
-    procedure_parser = get_procedure_parser(body.meta.procedure, current_app.config.storage, current_app.config.logger)
+    procedure_parser = get_procedure_parser(body.meta.procedure, storage_socket, logger)
 
     # Verify the procedure
     verify = procedure_parser.verify_input(body)
@@ -595,7 +625,7 @@ def post_task_queue():
     payload = procedure_parser.submit_tasks(body)
     response = response_model(**payload)
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 @main.route("/task_queue", methods=["PUT"])
@@ -613,11 +643,11 @@ def put_task_queue():
         d = body.data.dict()
         d.pop("new_tag", None)
         d.pop("new_priority", None)
-        tasks_updated = current_app.config.storage.queue_reset_status(**d, reset_error=True)
+        tasks_updated = storage_socket.queue_reset_status(**d, reset_error=True)
         data = {"n_updated": tasks_updated}
     elif body.meta.operation == "regenerate":
         tasks_updated = 0
-        result_data = current_app.config.storage.get_procedures(id=body.data.base_result)["data"]
+        result_data = storage_socket.get_procedures(id=body.data.base_result)["data"]
 
         new_tag = body.data.new_tag
         if body.data.new_priority is None:
@@ -631,7 +661,7 @@ def put_task_queue():
             # Only regenerate the task if the base record is not complete
             # This will not do anything if the task already exists
             if model.status != RecordStatusEnum.complete:
-                procedure_parser = get_procedure_parser(model.procedure, current_app.config.storage, current_app.config.logger)
+                procedure_parser = get_procedure_parser(model.procedure, storage_socket, logger)
 
                 task_info = procedure_parser.create_tasks([model], tag=new_tag, priority=new_priority)
                 n_inserted = task_info["meta"]["n_inserted"]
@@ -640,11 +670,11 @@ def put_task_queue():
                 # If we inserted a new task, then also reset base result statuses
                 # (ie, if it was running, then it obviously isn't since we made a new task)
                 if n_inserted > 0:
-                    current_app.config.storage.reset_base_result_status(id=body.data.base_result)
+                    storage_socket.reset_base_result_status(id=body.data.base_result)
 
             data = {"n_updated": tasks_updated}
     elif body.meta.operation == "modify":
-        tasks_updated = current_app.config.storage.queue_modify_tasks(
+        tasks_updated = storage_socket.queue_modify_tasks(
             id=body.data.id,
             base_result=body.data.base_result,
             new_tag=body.data.new_tag,
@@ -656,9 +686,9 @@ def put_task_queue():
 
     response = response_model(data=data, meta={"errors": [], "success": True, "error_description": False})
 
-    current_app.config.logger.info(f"PUT: TaskQueue - Operation: {body.meta.operation} - {tasks_updated}.")
+    logger.info(f"PUT: TaskQueue - Operation: {body.meta.operation} - {tasks_updated}.")
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 @main.route("/service_queue", methods=["GET"])
@@ -667,10 +697,10 @@ def get_service_queue():
     body_model, response_model = rest_model("service_queue", "get")
     body = parse_bodymodel(body_model)
 
-    ret = current_app.config.storage.get_services(**{**body.data.dict(), **body.meta.dict()})
+    ret = storage_socket.get_services(**{**body.data.dict(), **body.meta.dict()})
     response = response_model(**ret)
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 @main.route("/service_queue", methods=["POST"])
@@ -685,30 +715,30 @@ def post_service_queue():
     for service_input in body.data:
         # Get molecules with ids
         if isinstance(service_input.initial_molecule, list):
-            molecules = current_app.config.storage.get_add_molecules_mixed(service_input.initial_molecule)["data"]
+            molecules = storage_socket.get_add_molecules_mixed(service_input.initial_molecule)["data"]
             if len(molecules) != len(service_input.initial_molecule):
                 raise KeyError("We should catch this error.")
         else:
-            molecules = current_app.config.storage.get_add_molecules_mixed([service_input.initial_molecule])["data"][0]
+            molecules = storage_socket.get_add_molecules_mixed([service_input.initial_molecule])["data"][0]
 
         # Update the input and build a service object
         service_input = service_input.copy(update={"initial_molecule": molecules})
         new_services.append(
             initialize_service(
-                current_app.config.storage,
-                current_app.config.logger,
+                storage_socket,
+                logger,
                 service_input,
                 tag=body.meta.tag,
                 priority=body.meta.priority,
             )
         )
 
-    ret = current_app.config.storage.add_services(new_services)
+    ret = storage_socket.add_services(new_services)
     ret["data"] = {"ids": ret["data"], "existing": ret["meta"]["duplicates"]}
     ret["data"]["submitted"] = list(set(ret["data"]["ids"]) - set(ret["meta"]["duplicates"]))
     response = response_model(**ret)
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 @main.route("/service_queue", methods=["PUT"])
@@ -723,14 +753,14 @@ def put_service_queue():
         return jsonify(msg="Id or ProcedureId must be specified."), 400
 
     if body.meta.operation == "restart":
-        updates = current_app.config.storage.update_service_status("running", **body.data.dict())
+        updates = storage_socket.update_service_status("running", **body.data.dict())
         data = {"n_updated": updates}
     else:
         return jsonify(msg="Operation '{operation}' is not valid."), 400
 
     response = response_model(data=data, meta={"errors": [], "success": True, "error_description": False})
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 def _get_name_from_metadata(meta):
@@ -847,7 +877,7 @@ def get_queue_manager():
     name = _get_name_from_metadata(body.meta)
 
     # Grab new tasks and write out
-    new_tasks = current_app.config.storage.queue_get_next(
+    new_tasks = storage_socket.queue_get_next(
         name, body.meta.programs, body.meta.procedures, limit=body.data.limit, tag=body.meta.tag
     )
     response = response_model(
@@ -863,9 +893,9 @@ def get_queue_manager():
         }
     )
     # Update manager logs
-    current_app.config.storage.manager_update(name, submitted=len(new_tasks), **body.meta.dict())
+    storage_socket.manager_update(name, submitted=len(new_tasks), **body.meta.dict())
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 @main.route("/queue_manager", methods=["POST"])
@@ -876,7 +906,7 @@ def post_queue_manager():
     body_model, response_model = rest_model("queue_manager", "post")
     body = parse_bodymodel(body_model)
 
-    success, error = _insert_complete_tasks(current_app.config.storage, body, current_app.config.logger)
+    success, error = _insert_complete_tasks(storage_socket, body, logger)
 
     completed = success + error
 
@@ -896,10 +926,10 @@ def post_queue_manager():
 
     # Update manager logs
     name = _get_name_from_metadata(body.meta)
-    current_app.config.storage.manager_update(name, completed=completed, failures=error)
+    storage_socket.manager_update(name, completed=completed, failures=error)
 
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 @main.route("/queue_manager", methods=["PUT"])
@@ -917,14 +947,14 @@ def put_queue_manager():
     name = _get_name_from_metadata(body.meta)
     op = body.data.operation
     if op == "startup":
-        current_app.config.storage.manager_update(
+        storage_socket.manager_update(
             name, status="ACTIVE", configuration=body.data.configuration, **body.meta.dict(), log=True
         )
         # logger.info("QueueManager: New active manager {} detected.".format(name))
 
     elif op == "shutdown":
-        nshutdown = current_app.config.storage.queue_reset_status(manager=name, reset_running=True)
-        current_app.config.storage.manager_update(
+        nshutdown = storage_socket.queue_reset_status(manager=name, reset_running=True)
+        storage_socket.manager_update(
             name, returned=nshutdown, status="INACTIVE", **body.meta.dict(), log=True
         )
 
@@ -933,7 +963,7 @@ def put_queue_manager():
         ret = {"nshutdown": nshutdown}
 
     elif op == "heartbeat":
-        current_app.config.storage.manager_update(name, status="ACTIVE", **body.meta.dict(), log=True)
+        storage_socket.manager_update(name, status="ACTIVE", **body.meta.dict(), log=True)
         # logger.debug("QueueManager: Heartbeat of manager {} detected.".format(name))
 
     else:
@@ -942,7 +972,7 @@ def put_queue_manager():
 
     response = response_model(**{"meta": {}, "data": ret})
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 @main.route("/manager", methods=["GET"])
@@ -954,7 +984,7 @@ def get_manager():
     body = parse_bodymodel(body_model)
 
     # logger.info("GET: ComputeManagerHandler")
-    managers = current_app.config.storage.get_managers(**{**body.data.dict(), **body.meta.dict()})
+    managers = storage_socket.get_managers(**{**body.data.dict(), **body.meta.dict()})
 
     # remove passwords?
     # TODO: Are passwords stored anywhere else? Other kinds of passwords?
@@ -964,13 +994,13 @@ def get_manager():
 
     response = response_model(**managers)
 
-    return PydanticResponse(response)
+    return SerializedResponse(response)
 
 
 @main.route("/role", methods=["GET"])
 @check_access
 def get_roles():
-    roles = current_app.config.storage.get_roles()
+    roles = storage_socket.get_roles()
     return jsonify(roles), 200
 
 
@@ -978,7 +1008,7 @@ def get_roles():
 @check_access
 def get_role(rolename: str):
 
-    success, role = current_app.config.storage.get_role(rolename)
+    success, role = storage_socket.get_role(rolename)
     return jsonify(role), 200
 
 
@@ -988,7 +1018,7 @@ def add_role():
     rolename = request.json["rolename"]
     permissions = request.json["permissions"]
 
-    success, error_message = current_app.config.storage.add_role(rolename, permissions)
+    success, error_message = storage_socket.add_role(rolename, permissions)
     if success:
         return jsonify({"msg": "New role created!"}), 201
     else:
@@ -1001,7 +1031,7 @@ def update_role():
     rolename = request.json["rolename"]
     permissions = request.json["permissions"]
 
-    success = current_app.config.storage.update_role(rolename, permissions)
+    success = storage_socket.update_role(rolename, permissions)
     if success:
         return jsonify({"msg": "Role was updated!"}), 200
     else:
@@ -1013,7 +1043,7 @@ def update_role():
 def delete_role():
     rolename = request.json["rolename"]
 
-    success = current_app.config.storage.delete_role(rolename)
+    success = storage_socket.delete_role(rolename)
     if success:
         return jsonify({"msg": "Role was deleted!."}), 200
     else:

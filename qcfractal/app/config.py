@@ -11,9 +11,6 @@ class Config:
 
     SECRET_KEY = os.environ.get("SECRET_KEY") or "hard to guess string"
 
-    # TODO, not used
-    DB_LOGGING = True
-
     # must be set to false to avoid restarting
     DEBUG = False
 

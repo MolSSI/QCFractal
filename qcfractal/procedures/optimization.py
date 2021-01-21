@@ -112,7 +112,7 @@ class OptimizationTasks(BaseTasks):
         # Add all the initial molecules to the database
         # TODO: WARNING WARNING if get_add_molecules_mixed is modified to handle duplicates
         #       correctly, you must change some pieces later in this function
-        molecule_list = self.storage.get_add_molecules_mixed(data.data)["data"]
+        molecule_list = self.storage.molecule.get_add_molecules_mixed(data.data)["data"]
 
         # Keep molecule IDs that are not None
         # Molecule IDs may be None if they are duplicates (ie, the same molecule was listed twice
