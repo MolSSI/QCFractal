@@ -12,7 +12,7 @@ from enum import Enum
 from typing import Any, Dict, Optional, Union
 
 from pydantic import Field, validator
-from qcelemental.models import AutodocBaseSettings, Molecule, ProtoModel, Provenance
+from qcelemental.models import AutodocBaseSettings, Molecule, ProtoModel, Provenance, ComputeError
 from qcelemental.models.procedures import OptimizationProtocols
 from qcelemental.models.results import ResultProtocols
 

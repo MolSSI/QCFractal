@@ -10,15 +10,23 @@ from ..interface.collections import HDF5View
 
 
 class ViewHandler:
-    def __init__(self, path: Union[str, pathlib.Path]) -> None:
+    def __init__(self):
+        pass
+
+    def init_app(self, qcf_config):
         """
         Parameters
         ----------
         path: Union[str, Path]
             Directory containing dataset views
         """
+
         self._view_cache: Dict[int, HDF5View] = {}
-        self._path = pathlib.Path(path)
+        self._path = None
+
+        if qcf_config.view.enable:
+            self._path = pathlib.Path(qcf_config.view_path)
+
         if not self._path.is_dir():
             raise ValueError(f"Path in ViewHandler must be a directory, got: {self._path}")
 
