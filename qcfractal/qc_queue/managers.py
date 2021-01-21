@@ -260,7 +260,7 @@ class QueueManager:
                         self.server_query_limit
                     )
                 )
-            self.heartbeat_frequency = self.server_info["heartbeat_frequency"]
+            self.heartbeat_frequency = self.server_info["manager_heartbeat_frequency"]
 
             # Tell the server we are up and running
             payload = self._payload_template()
