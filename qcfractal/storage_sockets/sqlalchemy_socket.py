@@ -54,6 +54,7 @@ from qcfractal.storage_sockets.models import (
     QueueManagerLogORM,
     QueueManagerORM,
     ReactionDatasetORM,
+    RoleORM,
     ResultORM,
     ServerStatsLogORM,
     ServiceQueueORM,
@@ -148,13 +149,12 @@ class SQLAlchemySocket:
     SQLAlcehmy QCDB wrapper class.
     """
 
-    def __init__(
+    def __init__(self):
+        self.initialized = False
+
+    def init(
         self,
         uri: str,
-        project: str = "molssidb",
-        bypass_security: bool = False,
-        allow_read: bool = True,
-        logger: "Logger" = None,
         sql_echo: bool = False,
         max_limit: int = 1000,
         skip_version_check: bool = False,
@@ -165,26 +165,11 @@ class SQLAlchemySocket:
         """
 
         # Logging data
-        if logger:
-            self.logger = logger
-        else:
-            self.logger = logging.getLogger("SQLAlcehmySocket")
+        self.logger = logging.getLogger("SQLAlcehmySocket")
 
-        # Security
-        self._bypass_security = bypass_security
-        self._allow_read = allow_read
-
-        self._lower_results_index = ["method", "basis", "program"]
-
-        # disconnect from any active default connection
-        # disconnect()
         if "psycopg2" not in uri:
             uri = uri.replace("postgresql", "postgresql+psycopg2")
 
-        if project and not uri.endswith("/"):
-            uri = uri + "/"
-
-        uri = uri + project
         self.logger.info(f"SQLAlchemy attempt to connect to {uri}.")
 
         # Connect to DB and create session
@@ -222,30 +207,6 @@ class SQLAlchemySocket:
             cls._class_name: cls(self.engine.url.database, max_limit=max_limit) for cls in QUERY_CLASSES
         }
 
-        # if expanded_uri["password"] is not None:
-        #     # connect to mongoengine
-        #     self.client = db.connect(db=project, host=uri, authMechanism=authMechanism, authSource=authSource)
-        # else:
-        #     # connect to mongoengine
-        #     self.client = db.connect(db=project, host=uri)
-
-        # self._url, self._port = expanded_uri["nodelist"][0]
-
-        # try:
-        #     version_array = self.client.server_info()['versionArray']
-        #
-        #     if tuple(version_array) < (3, 2):
-        #         raise RuntimeError
-        # except AttributeError:
-        #     raise RuntimeError(
-        #         "Could not detect MongoDB version at URL {}. It may be a very old version or installed incorrectly. "
-        #         "Choosing to stop instead of assuming version is at least 3.2.".format(uri))
-        # except RuntimeError:
-        #     # Trap low version
-        #     raise RuntimeError("Connected MongoDB at URL {} needs to be at least version 3.2, found version {}.".
-        #                        format(uri, self.client.server_info()['version']))
-
-        self._project_name = project
         self._max_limit = max_limit
 
         # Create/initialize the subsockets
@@ -268,7 +229,15 @@ class SQLAlchemySocket:
         self.manager = ManagerSocket(self)
 
         # Add User Roles if doesn't exist
-        self._add_default_roles()
+        #self._add_default_roles()
+
+        self.initialized = True
+
+    def init_app(self, qcf_config):
+        if self.initialized:
+            raise RuntimeError("Cannot initialize a database that is already initialized")
+
+        self.init(qcf_config.database_uri())
 
     def __str__(self) -> str:
         return f"<SQLAlchemySocket: address='{self.uri}`>"
@@ -326,9 +295,6 @@ class SQLAlchemySocket:
             # Auxiliary tables
             session.query(KVStoreORM).delete(synchronize_session=False)
             session.query(MoleculeORM).delete(synchronize_session=False)
-
-    def get_project_name(self) -> str:
-        return self._project_name
 
     def get_limit(self, limit: Optional[int]) -> int:
         """Get the allowed limit on results to return in queries based on the

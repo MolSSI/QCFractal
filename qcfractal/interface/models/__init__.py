@@ -6,6 +6,7 @@ from . import rest_models
 from .common_models import (
     AutodocBaseSettings,
     Citation,
+    ComputeError,
     KeywordSet,
     CompressionEnum,
     KVStore,
