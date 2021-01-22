@@ -84,7 +84,7 @@ class ServerLogSocket:
             pose = session.query(ServerStatsLogORM).filter(*query).order_by(desc("timestamp"))
             meta["n_found"] = get_count_fast(pose)
 
-            data = pose.limit(self._core_socket.get_limit(limit)).offset(skip).all()
+            data = pose.limit(self._core_socket.get_limit('server_log', limit)).offset(skip).all()
             data = [d.to_dict() for d in data]
 
         meta["success"] = True

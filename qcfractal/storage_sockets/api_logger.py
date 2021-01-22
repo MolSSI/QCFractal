@@ -5,10 +5,15 @@ https://www.maxmind.com
 (attribution requirement)
 """
 
+from __future__ import annotations
+
 import logging
 
 logger = logging.getLogger(__name__)
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from ..config import FractalConfig
 
 class API_AccessLogger:
     """
@@ -20,31 +25,31 @@ class API_AccessLogger:
     def __init__(self):
         self.enabled = False
 
-    def init_app(self, qcf_config):
-        self.enabled = qcf_config.fractal.log_apis
+    def init_app(self, qcf_config: FractalConfig):
+        self.enabled = qcf_config.log_access
 
-        geo_file_path = qcf_config.geo_file_path()
-
+        geo_file_path = qcf_config.geo_file_path
         self.geoip2_reader = None
 
-        try:
-            import geoip2.database
+        if geo_file_path:
+            try:
+                import geoip2.database
 
-            self.geoip2_reader = geoip2.database.Reader(geo_file_path)
-            logger.info(f"Initialized geoip2 with {geo_file_path} successfully.")
-        except ImportError:
-            logger.error(
-                f"Cannot import geoip2 module. To use API access logging, you need "
-                f"to install it manually using `pip install geoip2`"
-            )
-        except FileNotFoundError:
-            logger.error(
-                f"Geoip cites file cannot be read from {geo_file_path}.\n"
-                f"Make sure to manually download the file from: \n"
-                f"https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz\n"
-                f"Then, set the geo_file_path in qcfractal_config.yaml in your base_folder "
-                f"(default base_folder is ~/.qca/qcfractal/qcfractal_config.yaml)."
-            )
+                self.geoip2_reader = geoip2.database.Reader(geo_file_path)
+                logger.info(f"Initialized geoip2 with {geo_file_path} successfully.")
+            except ImportError:
+                logger.warning(
+                    f"Cannot import geoip2 module. To use API access logging, you need "
+                    f"to install it manually using `pip install geoip2`"
+                )
+            except FileNotFoundError:
+                logger.error(
+                    f"Geoip cites file cannot be read from {geo_file_path}.\n"
+                    f"Make sure to manually download the file from: \n"
+                    f"https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz\n"
+                    f"Then, set the geo_file_path in qcfractal_config.yaml in your base_folder "
+                    f"(default base_folder is ~/.qca/qcfractal/qcfractal_config.yaml)."
+                )
 
     def get_api_access_log(self, request, access_type=None, extra_params=None):
 

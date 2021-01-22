@@ -28,14 +28,11 @@ from flask_jwt_extended import (
 from urllib.parse import urlparse
 from ..policyuniverse import Policy
 from flask import Blueprint, current_app, session, Response
-import logging
 from functools import wraps
 from werkzeug.exceptions import BadRequest, NotFound, Forbidden, Unauthorized
 
 from . import api_logger, storage_socket, view_handler
 
-
-logger = logging.getLogger(__name__)
 
 main = Blueprint("main", __name__)
 
@@ -64,8 +61,8 @@ def check_access(fn):
             from the headers' JWT token
         """
 
-        logger.debug(f"JWT_ENABLED: {current_app.config.JWT_ENABLED}")
-        logger.debug(f"ALLOW_READ: {current_app.config.ALLOW_READ}")
+        current_app.logger.debug(f"JWT_ENABLED: {current_app.config.JWT_ENABLED}")
+        current_app.logger.debug(f"ALLOW_UNAUTHENTICATED_READ: {current_app.config.ALLOW_UNAUTHENTICATED_READ}")
 
         # if no auth required, always allowed
         if not current_app.config.JWT_ENABLED:
@@ -79,7 +76,7 @@ def check_access(fn):
 
         # if read is allowed without login, use read_permissions
         # otherwise, check logged-in permissions
-        if current_app.config.ALLOW_READ:
+        if current_app.config.ALLOW_UNAUTHENTICATED_READ:
             # don't raise exception if no JWT is found
             verify_jwt_in_request_optional()
         else:
@@ -100,15 +97,15 @@ def check_access(fn):
                 # "IpAddress": request.remote_addr,
                 # "AccessTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
             }
-            logger.info(f"Permissions: {permissions}")
-            logger.info(f"Context: {context}")
+            current_app.logger.info(f"Permissions: {permissions}")
+            current_app.logger.info(f"Context: {context}")
             policy = Policy(permissions)
             if not policy.evaluate(context):
                 if not Policy(_read_permissions).evaluate(context):
                     return Forbidden(f"User {identity} is not authorized to access '{resource}' resource.")
 
         except Exception as e:
-            logger.info("Error in evaluating JWT permissions: \n" + str(e))
+            current_app.logger.info("Error in evaluating JWT permissions: \n" + str(e))
             return BadRequest("Error in evaluating JWT permissions")
 
         return fn(*args, **kwargs)
@@ -122,7 +119,7 @@ def parse_bodymodel(model):
     try:
         return model(**request.data)
     except Exception as e:
-        logger.error("Invalid request body:\n" + str(e))
+        current_app.logger.error("Invalid request body:\n" + str(e))
         raise BadRequest("Invalid body: " + str(e))
 
 
@@ -179,7 +176,7 @@ def before_request_func():
 #    if request.data is None:
 #        return response
 #
-#    if api_logger.enabled and request.method == "GET" and request.path not in exclude_uris:
+#    if api_current_app.logger.enabled and request.method == "GET" and request.path not in exclude_uris:
 #
 #        extra_params = request.data.copy()
 #        if _logging_param_counts:
@@ -192,10 +189,10 @@ def before_request_func():
 #
 #        extra_params = json.dumps(extra_params)
 #
-#        log = api_logger.get_api_access_log(request=request, extra_params=extra_params)
+#        log = api_current_app.logger.get_api_access_log(request=request, extra_params=extra_params)
 #        storage_socket.save_access(log)
 #
-#        # logger.info('Done saving API access to the database')
+#        # current_app.logger.info('Done saving API access to the database')
 #
 #    return response
 
@@ -229,7 +226,7 @@ def register():
     if success:
         return jsonify(msg="New user created!"), 201
     else:
-        logger.info("\n>>> Failed to add user. Perhaps the username is already taken?")
+        current_app.logger.info("\n>>> Failed to add user. Perhaps the username is already taken?")
         return jsonify(msg="Failed to add user."), 500
 
 
@@ -258,10 +255,10 @@ def get_information():
 
     db_data = storage_socket.get_server_stats_log(limit=1)["data"]
     public_info = {
-        'name': qcf_cfg.fractal.name,
-        'manager_heartbeat_frequency': qcf_cfg.fractal.heartbeat_frequency,
+        'name': qcf_cfg.name,
+        'manager_heartbeat_frequency': qcf_cfg.heartbeat_frequency,
         'version': get_qcfractal_information("version"),
-        'query_limit': storage_socket.get_limit(1.0e9),
+        'query_limit': storage_socket.get_limit('default'), # TODO get all limits
         "client_lower_version_limit": "0.14.0",  # Must be XX.YY.ZZ
         "client_upper_version_limit": "0.15.99",  # Must be XX.YY.ZZ
         "collection": 0,
@@ -402,7 +399,7 @@ def get_keyword():
     ret = storage_socket.get_keywords(**{**body.data.dict(), **body.meta.dict()}, with_ids=False)
     response = response_model(**ret)
 
-    logger.info("GET: Keywords - {} pulls.".format(len(response.data)))
+    current_app.logger.info("GET: Keywords - {} pulls.".format(len(response.data)))
     return SerializedResponse(response)
 
 
@@ -416,7 +413,7 @@ def post_keyword():
     ret = storage_socket.add_keywords(body.data)
     response = response_model(**ret)
 
-    logger.info("POST: Keywords - {} inserted.".format(response.meta.n_inserted))
+    current_app.logger.info("POST: Keywords - {} inserted.".format(response.meta.n_inserted))
     return SerializedResponse(response)
 
 
@@ -530,7 +527,7 @@ def get_result():
     ret = storage_socket.get_results(**{**body.data.dict(), **body.meta.dict()})
     response = response_model(**ret)
 
-    logger.info("GET: Results - {} pulls.".format(len(response.data)))
+    current_app.logger.info("GET: Results - {} pulls.".format(len(response.data)))
 
     return SerializedResponse(response)
 
@@ -615,7 +612,7 @@ def post_task_queue():
     if not check_procedure_available(body.meta.procedure):
         return jsonify(msg="Unknown procedure {}.".format(body.meta.procedure)), 400
 
-    procedure_parser = get_procedure_parser(body.meta.procedure, storage_socket, logger)
+    procedure_parser = get_procedure_parser(body.meta.procedure, storage_socket)
 
     # Verify the procedure
     verify = procedure_parser.verify_input(body)
@@ -661,7 +658,7 @@ def put_task_queue():
             # Only regenerate the task if the base record is not complete
             # This will not do anything if the task already exists
             if model.status != RecordStatusEnum.complete:
-                procedure_parser = get_procedure_parser(model.procedure, storage_socket, logger)
+                procedure_parser = get_procedure_parser(model.procedure, storage_socket)
 
                 task_info = procedure_parser.create_tasks([model], tag=new_tag, priority=new_priority)
                 n_inserted = task_info["meta"]["n_inserted"]
@@ -686,7 +683,7 @@ def put_task_queue():
 
     response = response_model(data=data, meta={"errors": [], "success": True, "error_description": False})
 
-    logger.info(f"PUT: TaskQueue - Operation: {body.meta.operation} - {tasks_updated}.")
+    current_app.logger.info(f"PUT: TaskQueue - Operation: {body.meta.operation} - {tasks_updated}.")
 
     return SerializedResponse(response)
 
@@ -726,7 +723,6 @@ def post_service_queue():
         new_services.append(
             initialize_service(
                 storage_socket,
-                logger,
                 service_input,
                 tag=body.meta.tag,
                 priority=body.meta.priority,
@@ -770,15 +766,15 @@ def _get_name_from_metadata(meta):
     ret = meta.cluster + "-" + meta.hostname + "-" + meta.uuid
     return ret
 
-def _insert_complete_tasks(storage_socket, body, logger):
+def _insert_complete_tasks(storage_socket, body):
 
         results = body.data
         meta = body.meta
         task_ids = list(results.keys())
 
         manager_name = _get_name_from_metadata(meta)
-        logger.info("QueueManager: Received completed tasks from {}.".format(manager_name))
-        logger.info("              Task ids: " + " ".join(task_ids))
+        current_app.logger.info("QueueManager: Received completed tasks from {}.".format(manager_name))
+        current_app.logger.info("              Task ids: " + " ".join(task_ids))
 
         # Pivot data so that we group all results in categories
         new_results = collections.defaultdict(list)
@@ -804,17 +800,17 @@ def _insert_complete_tasks(storage_socket, body, logger):
 
                 # Does the task exist?
                 if existing_task_data is None:
-                    logger.warning(f"Task id {task_id} does not exist in the task queue.")
+                    current_app.logger.warning(f"Task id {task_id} does not exist in the task queue.")
                     task_failures += 1
 
                 # Is the task in the running state
                 elif existing_task_data.status != TaskStatusEnum.running:
-                    logger.warning(f"Task id {task_id} is not in the running state.")
+                    current_app.logger.warning(f"Task id {task_id} is not in the running state.")
                     task_failures += 1
 
                 # Was the manager that sent the data the one that was assigned?
                 elif existing_task_data.manager != manager_name:
-                    logger.warning(f"Task id {task_id} belongs to {existing_task_data.manager}, not this manager")
+                    current_app.logger.warning(f"Task id {task_id} belongs to {existing_task_data.manager}, not this manager")
                     task_failures += 1
 
                 # Failed task
@@ -824,7 +820,7 @@ def _insert_complete_tasks(storage_socket, body, logger):
                     else:
                         error = result["error"]
 
-                    logger.debug(
+                    current_app.logger.debug(
                         "Task id {key} did not complete successfully:\n"
                         "error_type: {error_type}\nerror_message: {error_message}".format(key=str(task_id), **error)
                     )
@@ -843,12 +839,12 @@ def _insert_complete_tasks(storage_socket, body, logger):
             except Exception:
                 msg = "Internal FractalServer Error:\n" + traceback.format_exc()
                 error = {"error_type": "internal_fractal_error", "error_message": msg}
-                logger.error("update: ERROR\n{}".format(msg))
+                current_app.logger.error("update: ERROR\n{}".format(msg))
                 error_data.append((task_id, error))
                 task_failures += 1
 
         if task_totals:
-            logger.info(
+            current_app.logger.info(
                 "QueueManager: Found {} complete tasks ({} successful, {} failed).".format(
                     task_totals, task_success, task_failures
                 )
@@ -857,7 +853,7 @@ def _insert_complete_tasks(storage_socket, body, logger):
         # Run output parsers and handle completed tasks
         completed = []
         for k, v in new_results.items():
-            procedure_parser = get_procedure_parser(k, storage_socket, logger)
+            procedure_parser = get_procedure_parser(k, storage_socket)
             com = procedure_parser.handle_completed_output(v)
             completed.extend(com)
 
@@ -906,7 +902,7 @@ def post_queue_manager():
     body_model, response_model = rest_model("queue_manager", "post")
     body = parse_bodymodel(body_model)
 
-    success, error = _insert_complete_tasks(storage_socket, body, logger)
+    success, error = _insert_complete_tasks(storage_socket, body)
 
     completed = success + error
 
@@ -950,7 +946,7 @@ def put_queue_manager():
         storage_socket.manager_update(
             name, status="ACTIVE", configuration=body.data.configuration, **body.meta.dict(), log=True
         )
-        # logger.info("QueueManager: New active manager {} detected.".format(name))
+        # current_app.logger.info("QueueManager: New active manager {} detected.".format(name))
 
     elif op == "shutdown":
         nshutdown = storage_socket.queue_reset_status(manager=name, reset_running=True)
@@ -958,13 +954,13 @@ def put_queue_manager():
             name, returned=nshutdown, status="INACTIVE", **body.meta.dict(), log=True
         )
 
-        # logger.info("QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(name, nshutdown))
+        # current_app.logger.info("QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(name, nshutdown))
 
         ret = {"nshutdown": nshutdown}
 
     elif op == "heartbeat":
         storage_socket.manager_update(name, status="ACTIVE", **body.meta.dict(), log=True)
-        # logger.debug("QueueManager: Heartbeat of manager {} detected.".format(name))
+        # current_app.logger.debug("QueueManager: Heartbeat of manager {} detected.".format(name))
 
     else:
         msg = "Operation '{}' not understood.".format(op)
@@ -983,7 +979,7 @@ def get_manager():
     body_model, response_model = rest_model("manager", "get")
     body = parse_bodymodel(body_model)
 
-    # logger.info("GET: ComputeManagerHandler")
+    # current_app.logger.info("GET: ComputeManagerHandler")
     managers = storage_socket.get_managers(**{**body.data.dict(), **body.meta.dict()})
 
     # remove passwords?

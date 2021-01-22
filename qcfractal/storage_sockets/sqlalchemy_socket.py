@@ -2,7 +2,10 @@
 SQLAlchemy Database class to handle access to Pstgres through ORM
 """
 
+from __future__ import annotations
+
 try:
+    from sqlalchemy.event import listen
     from sqlalchemy import create_engine, and_, or_, case, func, exc
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
@@ -42,21 +45,16 @@ from qcfractal.interface.models.records import RecordStatusEnum
 
 from qcfractal.storage_sockets.db_queries import QUERY_CLASSES
 from qcfractal.storage_sockets.models import (
-    AccessLogORM,
     BaseResultORM,
     CollectionORM,
-    DatasetORM,
     GridOptimizationProcedureORM,
-    KeywordsORM,
     KVStoreORM,
     MoleculeORM,
     OptimizationProcedureORM,
     QueueManagerLogORM,
     QueueManagerORM,
-    ReactionDatasetORM,
     RoleORM,
     ResultORM,
-    ServerStatsLogORM,
     ServiceQueueORM,
     TaskQueueORM,
     TorsionDriveProcedureORM,
@@ -70,9 +68,12 @@ from .models import Base
 
 if TYPE_CHECKING:
     from ..services.service_util import BaseService
+    from ..config import FractalConfig
 
 # for version checking
-import qcelemental, qcfractal, qcengine
+import qcelemental
+import qcfractal
+import qcengine
 
 _null_keys = {"basis", "keywords"}
 _id_keys = {"id", "molecule", "keywords", "procedure_id"}
@@ -154,18 +155,16 @@ class SQLAlchemySocket:
 
     def init(
         self,
-        uri: str,
-        sql_echo: bool = False,
-        max_limit: int = 1000,
-        skip_version_check: bool = False,
+        qcf_config: FractalConfig
     ):
         """
         Constructs a new SQLAlchemy socket
-
         """
+        self.qcf_config = qcf_config
 
         # Logging data
-        self.logger = logging.getLogger("SQLAlcehmySocket")
+        self.logger = logging.getLogger("SQLAlchemySocket")
+        uri = qcf_config.database.uri
 
         if "psycopg2" not in uri:
             uri = uri.replace("postgresql", "postgresql+psycopg2")
@@ -176,7 +175,7 @@ class SQLAlchemySocket:
         self.uri = uri
         self.engine = create_engine(
             uri,
-            echo=sql_echo,  # echo for logging into python logging
+            echo=qcf_config.database.echo_sql,  # echo for logging into python logging
             pool_size=5,  # 5 is the default, 0 means unlimited
         )
         self.logger.info(
@@ -188,7 +187,7 @@ class SQLAlchemySocket:
         # check version compatibility
         db_ver = self.check_lib_versions()
         self.logger.info(f"DB versions: {db_ver}")
-        if (not skip_version_check) and (db_ver and qcfractal.__version__ != db_ver["fractal_version"]):
+        if (not qcf_config.database.skip_version_check) and (db_ver and qcfractal.__version__ != db_ver["fractal_version"]):
             raise TypeError(
                 f"You are running QCFractal version {qcfractal.__version__} "
                 f'with an older DB version ({db_ver["fractal_version"]}). '
@@ -203,11 +202,10 @@ class SQLAlchemySocket:
             raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}") from None
 
         # Advanced queries objects
+        # TODO - replace max limit
         self._query_classes = {
-            cls._class_name: cls(self.engine.url.database, max_limit=max_limit) for cls in QUERY_CLASSES
+            cls._class_name: cls(self.engine.url.database, max_limit=1000) for cls in QUERY_CLASSES
         }
-
-        self._max_limit = max_limit
 
         # Create/initialize the subsockets
         from qcfractal.storage_sockets.subsockets.server_logs import ServerLogSocket
@@ -233,11 +231,11 @@ class SQLAlchemySocket:
 
         self.initialized = True
 
-    def init_app(self, qcf_config):
+    def init_app(self, qcf_config: FractalConfig):
         if self.initialized:
             raise RuntimeError("Cannot initialize a database that is already initialized")
 
-        self.init(qcf_config.database_uri())
+        self.init(qcf_config)
 
     def __str__(self) -> str:
         return f"<SQLAlchemySocket: address='{self.uri}`>"
@@ -296,15 +294,22 @@ class SQLAlchemySocket:
             session.query(KVStoreORM).delete(synchronize_session=False)
             session.query(MoleculeORM).delete(synchronize_session=False)
 
-    def get_limit(self, limit: Optional[int]) -> int:
-        """Get the allowed limit on results to return in queries based on the
-        given `limit`. If this number is greater than the
-        SQLAlchemySocket.max_limit then the max_limit will be returned instead.
+    def get_limit(self, table: str, limit: Optional[int] = None) -> int:
+        """Get the allowed limit on results to return for a particular table.
+
+        If 'limit' is given, will return min(limit, max_limit) where max_limit is
+        the set value for the table.
         """
 
-        return limit if limit is not None and limit < self._max_limit else self._max_limit
+        max_limit = self.qcf_config.response_limits.get_limit(table)
+        if limit is not None:
+            return min(limit, max_limit)
+        else:
+            return max_limit
 
     def get_query_projection(self, className, query, *, limit=None, skip=0, include=None, exclude=None):
+
+        table_name = className.__tablename__
 
         if include and exclude:
             raise AttributeError(
@@ -347,6 +352,7 @@ class SQLAlchemySocket:
         for key in join_attrs:
             _projection.remove(key)
 
+        limit = self.get_limit(table_name, limit)
         with self.session_scope() as session:
             if _projection or join_attrs:
 
@@ -358,7 +364,7 @@ class SQLAlchemySocket:
                 data = session.query(*proj).filter(*query)
 
                 n_found = get_count_fast(data)  # before iterating on the data
-                data = data.limit(self.get_limit(limit)).offset(skip)
+                data = data.limit(limit).offset(skip)
                 rdata = [dict(zip(_projection, row)) for row in data]
 
                 # query for joins if any (relationships and hybrids)
@@ -414,7 +420,7 @@ class SQLAlchemySocket:
                 # from sqlalchemy.dialects import postgresql
                 # print(data.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
                 n_found = get_count_fast(data)
-                data = data.limit(self.get_limit(limit)).offset(skip).all()
+                data = data.limit(limit).offset(skip).all()
                 rdata = [d.to_dict() for d in data]
 
         return rdata, n_found
@@ -462,6 +468,33 @@ class SQLAlchemySocket:
             ret["meta"]["error_description"] = str(err)
 
         return ret
+
+
+#    def is_queue_empty(self):
+#        with self.session_scope() as session:
+#            query1 = session.query(TaskQueueORM).filter(and_(TaskQueueORM.status == TaskStatusEnum.running,
+#                                                             TaskQueueORM.status == TaskStatusEnum.waiting))
+#
+#            count1 = get_count_fast(query1)
+#
+#            # No need to
+#            if count1 > 0:
+#                return False
+#
+#            query2 = session.query(ServiceQueueORM).filter(or_(ServiceQueueORM.status == TaskStatusEnum.running,
+#                                                               ServiceQueueORM.status == TaskStatusEnum.waiting))
+#
+#            count2 = get_count_fast(query2)
+#
+#        return count2 == 0
+
+
+    def set_completed_watch(self, mp_queue):
+        def on_baseresult_update(mapper, conn, target):
+            if target.status != RecordStatusEnum.running and target.status != RecordStatusEnum.incomplete:
+                mp_queue.put((target.id, target.result_type, target.status), block=False)
+
+        listen(BaseResultORM, 'after_update', on_baseresult_update, propagate=True)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1324,9 +1357,10 @@ class SQLAlchemySocket:
             List of the found tasks
         """
 
+        limit = self.get_limit('task_queue', limit)
         with self.session_scope() as session:
             found = (
-                session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(id)).limit(self.get_limit(limit)).offset(skip)
+                session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(id)).limit(limit).offset(skip)
             )
 
             if as_json:

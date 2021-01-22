@@ -3,6 +3,7 @@ Utilities and base functions for Services.
 """
 
 import abc
+import logging
 import datetime
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -18,7 +19,6 @@ from ..procedures import get_procedure_parser
 class TaskManager(ProtoModel):
 
     storage_socket: Optional[Any] = None
-    logger: Optional[Any] = None
 
     required_tasks: Dict[str, str] = {}
     tag: Optional[str] = None
@@ -26,12 +26,14 @@ class TaskManager(ProtoModel):
 
     class Config(ProtoModel.Config):
         allow_mutation = True
-        serialize_default_excludes = {"storage_socket", "logger"}
+        serialize_default_excludes = {"storage_socket"}
 
     def done(self) -> bool:
         """
         Check if requested tasks are complete.
         """
+
+        logger = logging.get_logger(__name__)
 
         if len(self.required_tasks) == 0:
             return True
@@ -49,13 +51,13 @@ class TaskManager(ProtoModel):
                 if x["status"] != "ERROR":
                     continue
 
-            self.logger.debug("Error in service compute as follows:")
+            logger.debug("Error in service compute as follows:")
             tasks = self.storage_socket.get_queue()["data"]
             for x in tasks:
                 if "error" not in x:
                     continue
 
-                self.logger.debug(x["error"]["error_message"])
+                logger.debug(x["error"]["error_message"])
 
             raise KeyError("All tasks did not execute successfully.")
         else:
@@ -76,7 +78,7 @@ class TaskManager(ProtoModel):
         """
         Submits new tasks to the queue and provides a waiter until there are done.
         """
-        procedure_parser = get_procedure_parser(procedure_type, self.storage_socket, self.logger)
+        procedure_parser = get_procedure_parser(procedure_type, self.storage_socket)
 
         required_tasks = {}
 
@@ -104,7 +106,6 @@ class BaseService(ProtoModel, abc.ABC):
 
     # Excluded fields
     storage_socket: Optional[Any]
-    logger: Optional[Any]
 
     # Base identification
     id: Optional[ObjectId] = None
@@ -137,16 +138,16 @@ class BaseService(ProtoModel, abc.ABC):
 
     class Config(ProtoModel.Config):
         allow_mutation = True
-        serialize_default_excludes = {"storage_socket", "logger"}
+        serialize_default_excludes = {"storage_socket", 'logger'}
 
     def __init__(self, **data):
+        self.logger = logging.getLogger(type(self).__name__ + '_service')
 
         dt = datetime.datetime.utcnow()
         data.setdefault("modified_on", dt)
         data.setdefault("created_on", dt)
 
         super().__init__(**data)
-        self.task_manager.logger = self.logger
         self.task_manager.storage_socket = self.storage_socket
         self.task_manager.tag = self.task_tag
         self.task_manager.priority = self.task_priority
