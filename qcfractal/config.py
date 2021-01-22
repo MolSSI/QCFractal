@@ -2,37 +2,27 @@
 The global qcfractal config file specification.
 """
 
-import argparse
+from __future__ import annotations
+from enum import Enum
 import os
-from pathlib import Path
-from typing import Optional
-
+import re
+import logging
+import pprint
+from typing import Optional, Dict, Any
 import yaml
-from pydantic import Field, validator
+from pydantic import Field, validator, PrivateAttr, root_validator, ValidationError
 
 from .interface.models import AutodocBaseSettings
 
 
-def _str2bool(v):
-    if isinstance(v, bool):
-        return v
-    if v.lower() in ("yes", "true", "t", "y", "1"):
-        return True
-    elif v.lower() in ("no", "false", "f", "n", "0"):
-        return False
-    else:
-        raise argparse.ArgumentTypeError("Boolean value expected.")
-
-
-class SettingsCommonConfig:
-    env_prefix = "QCF_"
+class ConfigCommon:
     case_insensitive = True
     extra = "forbid"
 
 
-class ConfigSettings(AutodocBaseSettings):
+class ConfigBase(AutodocBaseSettings):
 
-    _type_map = {"string": str, "integer": int, "float": float, "boolean": _str2bool}
+    _type_map = {"string": str, "integer": int, "float": float, "boolean": bool}
 
     @classmethod
     def field_names(cls):
@@ -50,184 +40,211 @@ class ConfigSettings(AutodocBaseSettings):
         return ret
 
 
-class DatabaseSettings(ConfigSettings):
+class DatabaseConfig(ConfigBase):
     """
-    Postgres Database settings
+    Settings for the database used by QCFractal
     """
 
-    port: int = Field(5432, description="The postgresql default port")
-    host: str = Field(
-        "localhost",
-        description="Default location for the postgres server. If not localhost, qcfractal command lines cannot manage "
-        "the instance.",
-    )
-    username: str = Field(None, description="The postgres username to default to.")
-    password: str = Field(None, description="The postgres password for the give user.")
-    directory: str = Field(
-        None, description="The physical location of the QCFractal instance data, defaults to the root folder."
-    )
+    base_directory: str = Field(..., description="The base folder to use as the default for some options (logs, etc). Default is the location of the config file.")
+
+    host: str = Field("localhost", description="The hostname and ip address the database is running on. If own = True, this must be localhost")
+    port: int = Field(5432, description="The port the database is running on. If own = True, a database will be started, binding to this port")
     database_name: str = Field("qcfractal_default", description="The database name to connect to.")
-    logfile: str = Field("qcfractal_postgres.log", description="The logfile to write postgres logs.")
-    own: bool = Field(
-        True,
-        description="If own is True, QCFractal will control the database instance. If False "
-        "Postgres will expect a booted server at the database specification.",
-    )
+    username: Optional[str] = Field(None, description="The database username to connect with")
+    password: Optional[str]= Field(None, description="The database password to connect with")
+    uri: Optional[str] = Field(None, description="A full database URI to connect to. This will override all other options")
 
-    class Config(SettingsCommonConfig):
-        pass
+    own: bool = Field(True, description="If True, QCFractal will control the database instance. If False, you must start and manage the database yourself" )
+
+    data_directory: Optional[str] = Field(None, description="Location to place the database if own == True. Default is [base_directory]/database")
+    logfile: str = Field(None, description="Path to a file to use as the database logfile. Default is [base_directory]/qcfractal_database.log.")
+
+    echo_sql: bool = Field(False, description="[ADVANCED] output raw SQL queries being run")
+    skip_version_check: bool = Field(False, description="[ADVANCED] Do not check that the version of QCFractal matches that of the version of the database. ONLY RECOMMENDED FOR DEVELOPMENT PURPOSES")
+
+    class Config(ConfigCommon):
+        env_prefix = "QCF_DB_"
+
+    @validator("data_directory")
+    def _check_data_directory(cls, v, values):
+        if v is None:
+            ret = os.path.join(values["base_directory"], "database")
+        else:
+            ret = v
+
+        ret = os.path.expanduser(ret)
+        return ret
+
+    @validator("logfile")
+    def _check_logfile(cls, v, values):
+        if v is None:
+            ret = os.path.join(values["base_directory"], "qcfractal_database.log")
+        else:
+            ret = v
+
+        ret = os.path.expanduser(ret)
+        return ret
 
 
-class ViewSettings(ConfigSettings):
+    @validator("uri")
+    def _check_uri(cls, v, values):
+        if v is not None:
+            return v
+
+        # If not specified, construct via hostname, port, user, and password
+        uri = "postgresql://"
+        if values["username"] is not None:
+            uri += values["username"]
+
+            if values["password"] is not None:
+                uri += ':' + values["password"]
+
+            uri += "@"
+
+        uri += values["host"] + ":" + str(values["port"]) + "/"
+        uri += values["database_name"]
+        return uri
+
+    @property
+    def safe_uri(self):
+        return re.sub(':.*@', ':********@', self.uri)
+
+
+class ResponseLimitConfig(ConfigBase):
     """
-    HDF5 view settings
+    Limits on the number of records returned per query. This can be specified per object (molecule, etc)
     """
 
-    enable: bool = Field(True, description="Enable frozen-views.")
-    directory: str = Field(None, description="Location of frozen-view data. If None, defaults to base_folder/views.")
+    default: int = Field(1000, description="Default limit for all tables not otherwise specified")
+    molecules: int = Field(5000, description="Limit on the number of molecules returned")
+    output_store: int = Field(100, description="Limit on the number of program outputs returned")
+
+    class Config(ConfigCommon):
+        env_prefix = "QCF_RESPONSELIMIT_"
+
+    def get_limit(self, table: str) -> int:
+        '''Obtain the query limit for a table'''
+        if table not in self.field_names():
+            return self.default
+        else:
+            return getattr(self, table)
 
 
-class FractalServerSettings(ConfigSettings):
+class FlaskConfig(ConfigBase):
+    """
+    Settings for the Flask REST interface
+    """
+
+    config_name: str = Field("production", description="Flask configuration to use (default, debug, production, etc)")
+    num_workers: int = Field(1, description="Number of workers to spawn in Gunicorn")
+    bind: str = Field("127.0.0.1", description="The IP address or hostname to bind to")
+    port: int = Field(7777, description="The port on which to run the REST interface.")
+
+
+class FractalConfig(ConfigBase):
     """
     Fractal Server settings
     """
 
-    name: str = Field("QCFractal Server", description="The QCFractal server default name.")
-    port: int = Field(7777, description="The QCFractal default port.")
+    base_directory: str = Field(..., description="The base folder to use as the default for some options (logs, views, etc). Default is the location of the config file.")
 
-    # TODO: to be removed, handled by Ngnix
-    compress_response: bool = Field(
-        True, description="Compress REST responses or not, should be True unless behind a proxy."
-    )
-    allow_read: bool = Field(True, description="Always allows read access to record tables.")
-    security: str = Field(
-        None,
-        description="Optional user authentication. Specify 'local' to enable "
-        "authentication through locally stored usernames. "
-        "User permissions may be manipulated through the ``qcfractal-server "
-        "user`` CLI.",
-    )
+    # Info for the REST interface
+    name: str = Field("QCFractal Server", description="The QCFractal server name")
 
-    query_limit: int = Field(1000, description="The maximum number of records to return per query.")
-    logfile: Optional[str] = Field("qcfractal_server.log", description="The logfile to write server logs.")
-    loglevel: str = Field("info", description="Level of logging to enable (debug, info, warning, error, critical)")
+    enable_security: bool = Field(True, description="Enable user authentication and authorization")
+    allow_unauthenticated_read: bool = Field(True, description="Allows unauthenticated read access to this instance. This does not extend to sensitive tables (such as user information)")
+
+    # Logging and profiling
+    logfile: Optional[str] = Field(None, description="Path to a file to use for server logging. If not specified, logs will be printed using pythons standard logging")
+    loglevel: str = Field("INFO", description="Level of logging to enable (debug, info, warning, error, critical). Case insensitive")
     cprofile: Optional[str] = Field(
-        None, description="Enable profiling via cProfile, and output cprofile data to this path"
+        None, description="Enable profiling via cProfile, and output cprofile data to this directory. Multiple files will be created"
     )
-    service_frequency: int = Field(60, description="The frequency to update the QCFractal services.")
-    max_active_services: int = Field(20, description="The maximum number of concurrent active services.")
-    heartbeat_frequency: int = Field(1800, description="The frequency (in seconds) to check the heartbeat of workers.")
-    log_apis: bool = Field(
+
+    # Periodics
+    service_frequency: int = Field(60, description="The frequency to update services (in seconds)")
+    max_active_services: int = Field(20, description="The maximum number of concurrent active services")
+    heartbeat_frequency: int = Field(1800, description="The frequency (in seconds) to check the heartbeat of compute managers")
+    heartbeat_max_missed: int = Field(5, description="The maximum number of heartbeats that a compute manager can miss. If more are missed, the worker is considered dead")
+
+    # Access logging
+    log_access: bool = Field(
         False,
-        description="True or False. Store API access in the Database. This is an advanced "
-        "option for servers accessed by external users through QCPortal.",
-    )
+        description="Store API access in the Database")
     geo_file_path: Optional[str] = Field(
         None,
-        description="Geoip2 cites file path (.mmdb) for resolving IP addresses. Defaults to [base_folder]/GeoLite2-City.mmdb",
+        description="Geoip2 cites file path (.mmdb) for geolocating IP addresses. Defaults to [base_directory]/GeoLite2-City.mmdb. If this file is not available, geo-ip lookup will not be enabled",
     )
 
-    _default_geo_filename: str = "GeoLite2-City.mmdb"
+    # Settings for views
+    enable_views: bool = Field(True, description="Enable frozen-views")
+    views_directory: Optional[str] = Field(None, description="Location of frozen-view data. If None, defaults to [base_directory]/views")
 
-    @validator("logfile")
-    def check_basis(cls, v):
-        if v == "None":
-            v = None
+    # Other settings blocks
+    database: DatabaseConfig = Field(..., description="Configuration of the settings for the database")
+    flask: FlaskConfig = Field(..., description="Configuration of the REST interface")
+    response_limits: ResponseLimitConfig = Field(..., description="Configuration of the limits to REST responses")
+
+    @root_validator(pre=True)
+    def _root_validator(cls, values):
+        values.setdefault('database', dict())
+        if 'base_directory' not in values['database']:
+            values['database']['base_directory'] = values.get('base_directory')
+
+        values.setdefault('response_limits', dict())
+        values.setdefault('flask', dict())
+        return values
+
+    @validator("views_directory")
+    def _check_views_directory(cls, v, values):
+        if v is None:
+            ret = os.path.join(values["base_directory"], "views")
+        else:
+            ret = v
+
+        ret = os.path.expanduser(ret)
+        return ret
+
+    @validator("geo_file_path")
+    def _check_geo_file_path(cls, v, values):
+        if v is None:
+            ret = os.path.join(values["base_directory"], "GeoLite2-City.mmdb")
+        else:
+            ret = v
+
+        ret = os.path.expanduser(ret)
+        return ret
+
+    @validator("loglevel")
+    def _check_loglevel(cls, v):
+        v = v.upper()
+        if v not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
+            raise ValidationError(f"{v} is not a valid loglevel. Must be DEBUG, INFO, WARNING, ERROR, or CRITICAL")
         return v
 
-    class Config(SettingsCommonConfig):
-        pass
+
+    class Config(ConfigCommon):
+        env_prefix = "QCF_"
 
 
-class FractalConfig(ConfigSettings):
-    """
-    Top level configuration headers and options for a QCFractal Configuration File
-    """
 
-    # class variable, not in the pydantic model
-    _defaults_file_path: str = os.path.expanduser("~/.qca/qcfractal_defaults.yaml")
+def read_configuration(file_paths: list[str], extra_config: Optional[Dict[str, Any]] = None) -> FractalConfig:
+    logger = logging.getLogger(__name__)
+    config_data = {}
+    # Read all the files, in order
+    for path in file_paths:
+        with open(path, 'r') as yf:
+            logger.info(f"Reading configuration data from {path}")
+            file_data = yaml.safe_load(yf)
+            logger.debug(f"Read the following data from {path}:\n" + pprint.pformat(file_data))
+            config_data.update(file_data)
 
-    base_folder: str = Field(
-        os.path.expanduser("~/.qca/qcfractal"),
-        description="The QCFractal base instance to attach to. " "Default will be your home directory",
-    )
-    database: DatabaseSettings = DatabaseSettings()
-    view: ViewSettings = ViewSettings()
-    fractal: FractalServerSettings = FractalServerSettings()
+    if extra_config:
+        config_data.update(extra_config)
 
-    class Config(SettingsCommonConfig):
-        pass
+    # Handle an old configuration
+    if 'fractal' in config_data:
+        logger.warning(f'Found old configuration format. Reading this format will be deprecated in the future.')
+        raise RuntimeError("TODO")
 
-    def __init__(self, **kwargs):
-
-        # If no base_folder provided, read it from ~/.qca/qcfractal_defaults.yaml (if it exists)
-        # else, use the default base_folder
-        if "base_folder" in kwargs:
-            kwargs["base_folder"] = os.path.expanduser(kwargs["base_folder"])
-        else:
-            if Path(FractalConfig._defaults_file_path).exists():
-                with open(FractalConfig._defaults_file_path, "r") as handle:
-                    kwargs["base_folder"] = yaml.load(handle.read(), Loader=yaml.FullLoader)["default_base_folder"]
-
-        super().__init__(**kwargs)
-
-    @classmethod
-    def from_base_folder(cls, base_folder):
-        path = Path(base_folder).absolute() / "qcfractal_config.yaml"
-        with open(str(path), "r") as handle:
-            return cls(**yaml.load(handle.read(), Loader=yaml.FullLoader))
-
-    @property
-    def base_path(self):
-        return Path(self.base_folder)
-
-    @property
-    def config_file_path(self):
-        return self.base_path / "qcfractal_config.yaml"
-
-    @property
-    def database_path(self):
-        if self.database.directory is None:
-            return self.base_path / "postgres"
-        else:
-            return Path(os.path.expanduser(self.database.directory))
-
-    def database_uri(self, safe: bool = True, database: str = None) -> str:
-
-        uri = "postgresql://"
-        if self.database.username is not None:
-            uri += f"{self.database.username}:"
-
-            if self.database.password is not None:
-                if safe:
-                    pw = "*******"
-                else:
-                    pw = self.database.password
-                uri += pw
-
-            uri += "@"
-
-        uri += f"{self.database.host}:{self.database.port}/"
-
-        if database is None:
-            uri += self.database.database_name
-        else:
-            uri += database
-
-        return uri
-
-    @property
-    def view_path(self):
-        if self.view.directory is None:
-            default_view_path = self.base_path / "views"
-            default_view_path.mkdir(parents=False, exist_ok=True)
-            return default_view_path
-        else:
-            return Path(os.path.expanduser(self.view.directory))
-
-    def geo_file_path(self):
-
-        if self.fractal.geo_file_path:
-            return self.fractal.geo_file_path
-        else:
-            return os.path.join(self.base_folder, self.fractal._default_geo_filename)
+    return FractalConfig(**config_data)
