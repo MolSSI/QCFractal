@@ -3,13 +3,14 @@ Base class for computation procedures
 """
 
 import abc
+import logging
 from ..interface.models import KVStore
 
 
 class BaseTasks(abc.ABC):
-    def __init__(self, storage, logger):
+    def __init__(self, storage):
         self.storage = storage
-        self.logger = logger
+        self.logger = logging.getLogger(type(self).__name__ + '_procedure')
 
     def submit_tasks(self, data):
         """

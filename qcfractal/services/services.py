@@ -21,15 +21,13 @@ def _service_chooser(name):
         raise KeyError("Name {} not recognized.".format(name.title()))
 
 
-def initialize_service(storage_socket, logger, service_input, tag=None, priority=None):
+def initialize_service(storage_socket, service_input, tag=None, priority=None):
     """Initializes a service from a API call.
 
     Parameters
     ----------
     storage_socket : StorageSocket
         A StorageSocket to the currently active database
-    logger
-        A logger for use by the service
     service_input
         The service to be initialized.
     tag : Optional
@@ -44,18 +42,16 @@ def initialize_service(storage_socket, logger, service_input, tag=None, priority
 
     """
     name = service_input.procedure
-    return _service_chooser(name).initialize_from_api(storage_socket, logger, service_input, tag=tag, priority=priority)
+    return _service_chooser(name).initialize_from_api(storage_socket, service_input, tag=tag, priority=priority)
 
 
-def construct_service(storage_socket, logger, data):
+def construct_service(storage_socket, data):
     """Initializes a service from a JSON blob.
 
     Parameters
     ----------
     storage_socket : StorageSocket
         A StorageSocket to the currently active database
-    logger
-        A logger for use by the service
     data : dict
         The associated JSON blob with the service
 
@@ -66,4 +62,4 @@ def construct_service(storage_socket, logger, data):
 
     """
     name = data["service"]
-    return _service_chooser(name)(**data, storage_socket=storage_socket, logger=logger)
+    return _service_chooser(name)(**data, storage_socket=storage_socket)

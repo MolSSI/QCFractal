@@ -8,7 +8,7 @@ import qcelemental as qcel
 import qcengine as qcng
 
 from .base import BaseTasks
-from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord, KeywordSet
+from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord, KeywordSet, RecordStatusEnum
 from ..interface.models.task_models import PriorityEnum
 from .procedures_util import parse_single_tasks, form_qcinputspec_schema
 
@@ -112,7 +112,7 @@ class OptimizationTasks(BaseTasks):
         # Add all the initial molecules to the database
         # TODO: WARNING WARNING if get_add_molecules_mixed is modified to handle duplicates
         #       correctly, you must change some pieces later in this function
-        molecule_list = self.storage.molecule.get_add_molecules_mixed(data.data)["data"]
+        molecule_list = self.storage.molecule.get_add_mixed(data.data)["data"]
 
         # Keep molecule IDs that are not None
         # Molecule IDs may be None if they are duplicates (ie, the same molecule was listed twice
@@ -268,6 +268,7 @@ class OptimizationTasks(BaseTasks):
             update_dict["trajectory"] = ret["data"]
             update_dict["energies"] = procedure["energies"]
             update_dict["provenance"] = procedure["provenance"]
+            update_dict["status"] = RecordStatusEnum.complete
 
             rec = OptimizationRecord(**{**rec.dict(), **update_dict})
             updates.append(rec)
