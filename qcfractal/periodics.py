@@ -1,24 +1,40 @@
-
+from __future__ import annotations
 import traceback
+import signal
+import multiprocessing
 import logging
+import logging.handlers
+import time
 from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.schedulers.base import STATE_STOPPED
 from qcfractal.interface.models import ManagerStatusEnum, TaskStatusEnum, ComputeError
+from .storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .config import FractalConfig
+
 
 from .services import construct_service
 
-class QCFractalPeriodics:
-    def __init__(self, storage_socket, qcf_cfg):
+
+class EndProcess(RuntimeError):
+    pass
+
+
+
+class FractalPeriodics:
+    def __init__(self, storage_socket, qcf_cfg: FractalConfig):
         self.storage_socket = storage_socket
         self.scheduler = BackgroundScheduler()
         self.logger = logging.getLogger("qcfractal_periodics")
 
         # Frequencies/Intervals at which to run various tasks
         self.server_stats_frequency = 60
-        self.manager_heartbeat_frequency = qcf_cfg.fractal.heartbeat_frequency
-        self.service_frequency = qcf_cfg.fractal.service_frequency
-        self.max_active_services = qcf_cfg.fractal.max_active_services
+        self.manager_heartbeat_frequency = qcf_cfg.heartbeat_frequency
+        self.service_frequency = qcf_cfg.service_frequency
+        self.max_active_services = qcf_cfg.max_active_services
 
         self.logger.info("Periodics Information:")
         self.logger.info(f"    Server stats update frequency: {self.server_stats_frequency} seconds")
@@ -53,8 +69,8 @@ class QCFractalPeriodics:
             # For each manager, reset any orphaned tasks that belong to that manager
             # These are stored as 'returned' in the manager info table
 
-            n_incomplete = self.storage.queue_reset_status(manager=name, reset_running=True)
-            self.storage.manager_update(name, returned=n_incomplete, status=ManagerStatusEnum.inactive)
+            n_incomplete = self.storage_socket.queue_reset_status(manager=name, reset_running=True)
+            self.storage_socket.manager_update(name, returned=n_incomplete, status=ManagerStatusEnum.inactive)
 
             self.logger.info(
                 "Hearbeat missing from {}. Recycling {} incomplete tasks.".format(
@@ -91,7 +107,7 @@ class QCFractalPeriodics:
 
             # Attempt to iteration and get message
             try:
-                service = construct_service(self.storage_socket, self.logger, data)
+                service = construct_service(self.storage_socket, data)
                 finished = service.iterate()
             except Exception:
                 error_message = "FractalServer Service Build and Iterate Error:\n{}".format(traceback.format_exc())
@@ -122,7 +138,6 @@ class QCFractalPeriodics:
 
         return running_services
 
-
     def start(self):
         self.scheduler.start()
 
@@ -134,3 +149,82 @@ class QCFractalPeriodics:
     def __del__(self):
         self.stop()
 
+
+
+class FractalPeriodicsProcess:
+    """
+    Runs periodics in a separate process
+    """
+
+    def __init__(
+            self,
+            qcf_config: FractalConfig,
+            mp_context: multiprocessing.context.SpawnContext,
+            log_queue: multiprocessing.queues.Queue,
+            start: bool = True
+    ):
+        self._qcf_config = qcf_config
+        self._mp_ctx = mp_context
+
+        # Store logs into a queue. This will be passed to the subprocesses, and they
+        # will log to this
+        self._log_queue = log_queue
+
+        self._periodics_process = self._mp_ctx.Process(name="periodics_proc", target=FractalPeriodicsProcess._run_periodics, args=(self._qcf_config, self._log_queue))
+        if start:
+            self.start()
+
+    def start(self):
+        if self._periodics_process.is_alive():
+            raise RuntimeError("Periodics process is already running")
+        else:
+            self._periodics_process.start()
+
+
+    def stop(self):
+        self._periodics_process.terminate()
+        self._periodics_process.join()
+
+    def __del__(self):
+        self.stop()
+
+    #
+    # These cannot be full class members (with 'self') because then this class would need to
+    # be pickleable (I think). But the Process objects are not.
+    #
+
+    @staticmethod
+    def _run_periodics(qcf_config: FractalConfig, log_queue):
+        # This runs in a separate process, so we can modify the global logger
+        # which will only affect that process
+        qh = logging.handlers.QueueHandler(log_queue)
+        logger = logging.getLogger()
+        logger.handlers = [qh]
+        logger.setLevel(qcf_config.loglevel)
+
+        storage_socket = SQLAlchemySocket()
+        storage_socket.init(qcf_config)
+
+        periodics = FractalPeriodics(storage_socket, qcf_config)
+
+        def _cleanup(sig, frame):
+            signame = signal.Signals(sig).name
+            logger.debug("In cleanup of _run_periodics. Received " + signame)
+            raise EndProcess(signame)
+
+        signal.signal(signal.SIGINT, _cleanup)
+        signal.signal(signal.SIGTERM, _cleanup)
+
+        try:
+            periodics.start()
+
+            # Periodics are now running in the background. But we need to keep this process alive
+            while True:
+                time.sleep(3600)
+
+        except EndProcess as e:
+            logger.debug("_run_periodics received EndProcess: " + str(e))
+            periodics.stop()
+        except Exception as e:
+            tb = ''.join(traceback.format_exception(None, e, e.__traceback__))
+            logger.critical(f"Exception while running periodics process:\n{tb}")

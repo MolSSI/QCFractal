@@ -46,7 +46,7 @@ class GridOptimizationService(BaseService):
     starting_molecule: Molecule
 
     @classmethod
-    def initialize_from_api(cls, storage_socket, logger, service_input, tag=None, priority=None):
+    def initialize_from_api(cls, storage_socket, service_input, tag=None, priority=None):
 
         # Build the record
         # TODO: This removes the task_id which may exist on old records, but does not exist
@@ -102,7 +102,7 @@ class GridOptimizationService(BaseService):
 
         meta["task_tag"] = tag
         meta["task_priority"] = priority
-        return cls(**meta, storage_socket=storage_socket, logger=logger)
+        return cls(**meta, storage_socket=storage_socket)
 
     @staticmethod
     def _calculate_starting_grid(scans, molecule):

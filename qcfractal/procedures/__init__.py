@@ -18,7 +18,7 @@ def check_procedure_available(procedure: str) -> List[str]:
     return procedure.lower() in __procedure_map
 
 
-def get_procedure_parser(procedure_type: str, storage, logger) -> supported_procedures:
+def get_procedure_parser(procedure_type: str, storage) -> supported_procedures:
     """A factory method that returns the appropriate parser class
     for the supported procedure types (like single and optimization)
     Parameters
@@ -34,6 +34,6 @@ def get_procedure_parser(procedure_type: str, storage, logger) -> supported_proc
     """
 
     try:
-        return __procedure_map[procedure_type.lower()](storage, logger)
+        return __procedure_map[procedure_type.lower()](storage)
     except KeyError:
         raise KeyError("Procedure type ({}) is not suported yet.".format(procedure_type))

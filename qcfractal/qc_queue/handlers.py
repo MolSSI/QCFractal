@@ -145,7 +145,7 @@ class ServiceQueueHandler(APIHandler):
             service_input = service_input.copy(update={"initial_molecule": molecules})
             new_services.append(
                 initialize_service(
-                    self.storage, self.logger, service_input, tag=body.meta.tag, priority=body.meta.priority
+                    self.storage, service_input, tag=body.meta.tag, priority=body.meta.priority
                 )
             )
 

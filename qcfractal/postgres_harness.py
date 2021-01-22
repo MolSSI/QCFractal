@@ -1,10 +1,12 @@
 import atexit
 import os
 import shutil
+import pathlib
 import subprocess
 import tempfile
 import time
 import re
+import logging
 from typing import Any, Dict, List, Optional, Union
 
 import psycopg2
@@ -13,36 +15,33 @@ from sqlalchemy.orm import sessionmaker
 
 from qcfractal.storage_sockets.models import Base, VersionsORM
 
-from .config import FractalConfig
+from .config import DatabaseConfig
 from .port_util import find_port, is_port_open
 
 
 class PostgresHarness:
-    def __init__(self, config: Union[Dict[str, Any], FractalConfig], quiet: bool = True, logger: "print" = print):
+    def __init__(self, config: DatabaseConfig):
         """A flexible connection to a PostgreSQL server
 
         Parameters
         ----------
-        config : Union[Dict[str, Any], FractalConfig]
+        config : DatabaseConfig
             The configuration options
         quiet : bool, optional
             If True, does not log any operations
         logger : print, optional
             The logger to show the operations to.
         """
-        if isinstance(config, dict):
-            config = FractalConfig(**config)
         self.config = config
-        self.quiet = quiet
-        self._logger = logger
+        self._logger = logging.getLogger('PostgresHarness')
         self._checked = False
+
         self._alembic_ini = os.path.join(os.path.abspath(os.path.dirname(__file__)), "alembic.ini")
 
     def _run(self, commands):
         proc = subprocess.run(commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout = proc.stdout.decode()
-        if not self.quiet:
-            self.logger(stdout)
+        self._logger.info(stdout)
 
         ret = {"retcode": proc.returncode, "stdout": stdout, "stderr": proc.stderr.decode()}
 
@@ -53,7 +52,7 @@ class PostgresHarness:
         Checks to see if the proper PostgreSQL commands are present. Raises a ValueError if they are not found.
         """
 
-        if self.config.database.host != "localhost":
+        if self.config.host != "localhost":
             raise ValueError(f"Cannot modify PostgreSQL as configuration points to non-localhost: {self.config.host}")
 
         if self._checked:
@@ -70,17 +69,6 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         else:
             self._checked = True
 
-    def logger(self, msg: str) -> None:
-        """Prints a logging message depending on quiet settings.
-
-        Parameters
-        ----------
-        msg : str
-            The message to show.
-        """
-        if not self.quiet:
-            self._logger(msg)
-
     def database_uri(self) -> str:
         """Provides the full PostgreSQL URI string.
 
@@ -89,7 +77,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         str
             The database URI
         """
-        return self.config.database_uri(safe=False, database="")
+        return self.config.uri
 
     def connect(self, database: Optional[str] = None) -> "Connection":
         """Builds a psycopg2 connection object.
@@ -108,10 +96,10 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
             database = "postgres"
         return psycopg2.connect(
             database=database,
-            user=self.config.database.username,
-            host=self.config.database.host,
-            port=self.config.database.port,
-            password=self.config.database.password,
+            user=self.config.username,
+            host=self.config.host,
+            port=self.config.port,
+            password=self.config.password,
         )
 
     def is_alive(self, database: Optional[str] = None) -> bool:
@@ -133,7 +121,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         except psycopg2._psycopg.OperationalError:
             return False
 
-    def command(self, cmd: str, check: bool = True) -> Any:
+    def command(self, cmd: Union[str, List[str]], check: bool = True) -> Any:
         """Runs psql commands and returns their output while connected to the correct postgres instance.
 
         Parameters
@@ -148,8 +136,8 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         if isinstance(cmd, str):
             cmd = [cmd]
 
-        self.logger(f"pqsl command: {cmd}")
-        psql_cmd = [shutil.which("psql"), "-p", str(self.config.database.port), "-c"]
+        self._logger.debug(f"pqsl command: {cmd}")
+        psql_cmd = [shutil.which("psql"), "-p", str(self.config.port), "-c"]
 
         cmd = self._run(psql_cmd + cmd)
         if check:
@@ -167,8 +155,8 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         """
         self._check_psql()
 
-        self.logger(f"pg_ctl command: {cmds}")
-        psql_cmd = [shutil.which("pg_ctl"), "-D", str(self.config.database_path)]
+        self._logger.debug(f"pg_ctl command: {cmds}")
+        psql_cmd = [shutil.which("pg_ctl"), "-l", self.config.logfile, "-D", self.config.data_directory]
         return self._run(psql_cmd + cmds)
 
     def create_database(self, database_name: str) -> bool:
@@ -200,8 +188,8 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
     def create_tables(self):
         """Create database tables using SQLAlchemy models"""
 
-        uri = self.config.database_uri(safe=False)
-        self.logger(f"Creating tables for database: {uri}")
+        uri = self.config.uri
+        self._logger.info(f"Creating tables for database: {uri}")
         engine = create_engine(uri, echo=False, pool_size=1)
 
         # actually create the tables
@@ -213,9 +201,13 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         return True
 
     def update_db_version(self):
-        """Update current version of QCFractal in the DB"""
+        """Update current version of QCFractal that is stored in the database
 
-        uri = self.config.database_uri(safe=False)
+        This does not actually perform the upgrade, but will store the current versions of the software stack
+        (qcengine, qcelemental, qcfractal) into the database
+        """
+
+        uri = self.config.uri
 
         engine = create_engine(uri, echo=False, pool_size=1)
         session = sessionmaker(bind=engine)()
@@ -226,7 +218,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
             fractal_version = qcfractal.__version__
             engine_version = qcengine.__version__
 
-            self.logger(f"Updating current version of QCFractal in DB: {uri} \n" f"to version {qcfractal.__version__}")
+            self._logger.info(f"Updating current version of QCFractal in DB: {uri} \n" f"to version {qcfractal.__version__}")
             current_ver = VersionsORM(
                 elemental_version=elemental_version, fractal_version=fractal_version, engine_version=engine_version
             )
@@ -248,7 +240,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         ret = self._run(self.alembic_commands() + ["upgrade", "head"])
 
         if ret["retcode"] != 0:
-            self.logger(ret["stderr"])
+            self._logger.error(ret["stderr"])
             raise ValueError(
                 f"\nFailed to Upgrade the database, make sure to init the database first before being able to upgrade it.\n"
             )
@@ -264,36 +256,33 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         self._check_psql()
 
         # Startup the server
-        self.logger("Starting the database:")
+        self._logger.info("Starting the database:")
 
-        if is_port_open(self.config.database.host, self.config.database.port):
-            self.logger("Service currently running the configured port, current_status:\n")
+        if is_port_open(self.config.host, self.config.port):
+            self._logger.info("Service currently running the configured port, current_status:\n")
             status = self.pg_ctl(["status"])
 
             # If status is ok, exit is 0
             if status["retcode"] != 0:
                 raise ValueError(
-                    f"A process is already running on 'port:{self.config.database.port}` that is not associated with the PostgreSQL instance at `location:{self.config.database.directory}.`"
+                    f"A process is already running on 'port:{self.config.port}` that is not associated with the PostgreSQL instance at `location:{self.config.data_directory}.`"
                     "\nThis often happens when two PostgreSQL databases are attempted to run on the same port."
-                    "\nEither shut down the other PostgreSQL database or change the `qcfractal-server init --db-port`."
+                    "\nEither shut down the other PostgreSQL database or change the settings in the qcfractal configuration."
                     "\nStopping."
                 )
 
             if not self.is_alive():
-                raise ValueError(f"PostgreSQL is running, but cannot connect to the default port.")
+                raise ValueError(f"PostgreSQL does not is running, but cannot connect to it.")
 
-            self.logger("Found running PostgreSQL instance with correct configuration.")
+            self._logger.info("Found running PostgreSQL instance with correct configuration.")
 
         else:
-            start_status = self.pg_ctl(
-                ["-l", str(self.config.database_path / self.config.database.logfile), "start"]
-            )  # yapf: disable
+
+            start_status = self.pg_ctl(["start"])
 
             if not (("server started" in start_status["stdout"]) or ("server starting" in start_status["stdout"])):
-                with open(str(self.config.database_path / self.config.database.logfile)) as log_f:
-                    log_contents = log_f.read()
                 raise ValueError(
-                    f"Could not start the PostgreSQL server. Error below:\n\n{start_status['stderr']}\n\nLog contents:\n\n{log_contents}"
+                    f"Could not start the PostgreSQL server. Error below:\n\n{start_status['stderr']}\n\nstdout:\n\n{start_status['stdout']}"
                 )
 
             # Check that we are alive
@@ -307,9 +296,8 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
                     f"Could not connect to the server after booting. Boot log:\n\n{start_status['stderr']}"
                 )
 
-            self.logger("PostgreSQL successfully started in a background process, current_status:\n")
-            if not self.quiet:
-                self._run([shutil.which("pg_ctl"), "-D", str(self.config.database_path), "status"])  # yapf: disable
+            self._run([shutil.which("pg_ctl"), "-D", str(self.config.data_directory), "status"])
+            self._logger.info("PostgreSQL successfully started in a background process, current_status:\n")
 
         return True
 
@@ -326,48 +314,50 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
 
         self._check_psql()
 
-        self.logger("Initializing the Postgresql database:")
+        self._logger.info("Initializing the Postgresql database:")
 
         # Initialize the database
-        init_status = self._run([shutil.which("initdb"), "-D", self.config.database_path])
+        init_status = self._run([shutil.which("initdb"), "-D", self.config.data_directory])
         if "Success." not in init_status["stdout"]:
             raise ValueError(f"Could not initialize the PostgreSQL server. Error below:\n\n{init_status['stderr']}")
 
-        # Change any configurations
-        psql_conf_file = self.config.database_path / "postgresql.conf"
-        psql_conf = psql_conf_file.read_text()
-        if self.config.database.port != 5432:
+        # Change some configuration options
+        psql_conf_file = os.path.join(self.config.data_directory, "postgresql.conf")
+        psql_conf_path = pathlib.Path(psql_conf_file)
+        psql_conf = psql_conf_path.read_text()
+
+        if self.config.port != 5432:
             assert "#port = 5432" in psql_conf
-            psql_conf = psql_conf.replace("#port = 5432", f"port = {self.config.database.port}")
+            psql_conf = psql_conf.replace("#port = 5432", f"port = {self.config.port}")
 
             # Change the location of the socket file
             # Some OSs/Linux distributions will use a directory not writeable by a normal user
             psql_conf = re.sub(
                 r"#?unix_socket_directories =.*",
-                f"unix_socket_directories = '{self.config.database_path}'",
+                f"unix_socket_directories = '{self.config.data_directory}'",
                 psql_conf,
                 re.M,
             )
 
-            psql_conf_file.write_text(psql_conf)
+            psql_conf_path.write_text(psql_conf)
 
         # Start the database
         self.start()
 
         # Create the user and database
-        self.logger(f"Building user information.")
-        self._run([shutil.which("createdb"), "-p", str(self.config.database.port)])
+        self._logger.info(f"Building user information.")
+        self._run([shutil.which("createdb"), "-p", str(self.config.port)])
 
-        success = self.create_database(self.config.database.database_name)
+        success = self.create_database(self.config.database_name)
 
         if success is False:
             self.shutdown()
             raise ValueError("Database created successfully, but could not connect. Shutting down postgres.")
 
-        self.logger("\nDatabase server successfully started!")
+        self._logger.info("\nDatabase server successfully started!")
 
     def alembic_commands(self) -> List[str]:
-        db_uri = self.config.database_uri(safe=False)
+        db_uri = self.config.uri
         return [shutil.which("alembic"), "-c", self._alembic_ini, "-x", "uri=" + db_uri]
 
     def init_database(self) -> None:
@@ -378,12 +368,12 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         self.create_tables()
 
         # update alembic_version table with the current version
-        self.logger(f"\nStamping Database with current version..")
+        self._logger.info(f"\nStamping Database with current version..")
 
         ret = self._run(self.alembic_commands() + ["stamp", "head"])
 
         if ret["retcode"] != 0:
-            self.logger(ret)
+            self._logger.error(ret)
             raise ValueError("\nFailed to Stamp the database with current version.\n")
 
     def backup_database(self, filename: Optional[str] = None) -> None:
@@ -392,25 +382,25 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         self._check_psql()
 
         if filename is None:
-            filename = f"{self.config.database.database_name}.bak"
+            filename = f"{self.config.database_name}.bak"
 
         filename = os.path.realpath(filename)
 
         # fmt: off
         cmds = [
             shutil.which("pg_dump"),
-            "-p", str(self.config.database.port),
-            "-d", self.config.database.database_name,
+            "-p", str(self.config.port),
+            "-d", self.config.database_name,
             "-Fc", # Custom postgres format, fast
             "--file", filename
         ]
         # fmt: on
 
-        self.logger(f"pg_backup command: {'  '.join(cmds)}")
+        self._logger.debug(f"pg_backup command: {'  '.join(cmds)}")
         ret = self._run(cmds)
 
         if ret["retcode"] != 0:
-            self.logger(ret)
+            self._logger.debug(str(ret))
             raise ValueError("\nFailed to backup the database.\n")
 
     def restore_database(self, filename) -> None:
@@ -418,22 +408,22 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         # Reasonable check here
         self._check_psql()
 
-        self.create_database(self.config.database.database_name)
+        self.create_database(self.config.database_name)
 
         # fmt: off
         cmds = [
             shutil.which("pg_restore"),
-            f"--port={self.config.database.port}",
-            f"--dbname={self.config.database.database_name}",
+            f"--port={self.config.port}",
+            f"--dbname={self.config.database_name}",
             filename
         ]
         # fmt: on
 
-        self.logger(f"pg_backup command: {'  '.join(cmds)}")
+        self._logger.debug(f"pg_backup command: {'  '.join(cmds)}")
         ret = self._run(cmds)
 
         if ret["retcode"] != 0:
-            self.logger(ret["stderr"])
+            self._logger.debug(ret["stderr"])
             raise ValueError("\nFailed to restore the database.\n")
 
     def database_size(self) -> str:
@@ -442,17 +432,14 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         """
 
         return self.command(
-            [f"SELECT pg_size_pretty( pg_database_size('{self.config.database.database_name}') );", "-t", "-A"]
+            [f"SELECT pg_size_pretty( pg_database_size('{self.config.database_name}') );", "-t", "-A"]
         )
 
 
 class TemporaryPostgres:
     def __init__(
         self,
-        database_name: Optional[str] = None,
-        tmpdir: Optional[str] = None,
-        quiet: bool = True,
-        logger: "print" = print,
+        data_dir: Optional[str] = None
     ):
         """A PostgreSQL instance run in a temporary folder.
 
@@ -460,30 +447,24 @@ class TemporaryPostgres:
 
         Parameters
         ----------
-        database_name : Optional[str], optional
-            The database name to create.
-        tmpdir : Optional[str], optional
-            A directory to create the postgres instance in, if not None the data is not deleted upon shutdown.
-        quiet : bool, optional
-            If True, does not log any operations
-        logger : print, optional
-            The logger to show the operations to.
+        data_dir: str, optional
+            Path to the directory to store the database data. If not provided, one will
+            be created
         """
 
         self._active = True
 
-        if not tmpdir:
-            self._db_tmpdir = tempfile.TemporaryDirectory()
+        if data_dir:
+            self._data_dir = data_dir
         else:
-            self._db_tmpdir = tmpdir
+            self._data_tmpdir = tempfile.TemporaryDirectory()
+            self._data_dir = self._data_tmpdir.name
 
-        self.quiet = quiet
-        self.logger = logger
+        db_config = {"port": find_port(), "data_directory": self._data_dir}
+        db_config["base_directory"] = self._data_dir
+        db_config["database_name"] = 'qcfractal_tmp_db'
 
-        config_data = {"port": find_port(), "directory": self._db_tmpdir.name}
-        if database_name:
-            config_data["database_name"] = database_name
-        self.config = FractalConfig(database=config_data)
+        self.config = DatabaseConfig(**db_config)
         self.psql = PostgresHarness(self.config)
         self.psql.initialize_postgres()
         self.psql.init_database()
@@ -519,7 +500,11 @@ class TemporaryPostgres:
         str
             The database URI
         """
-        return self.config.database_uri(safe=safe, database=database)
+
+        if safe:
+            return self.config.safe_uri
+        else:
+            return self.config.uri
 
     def stop(self) -> None:
         """
@@ -535,8 +520,3 @@ class TemporaryPostgres:
         self._active = False
         atexit.unregister(self.stop)
 
-
-# createuser [-p 5433] --superuser postgres
-# psql [-p 5433] -c "create database qcarchivedb;" -U postgres
-# psql [-p 5433] -c "create user qcarchive with password 'mypass';" -U postgres
-# psql [-p 5433] -c "grant all privileges on database qcarchivedb to qcarchive;" -U postgres

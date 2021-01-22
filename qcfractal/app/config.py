@@ -39,6 +39,11 @@ class ProductionConfig(Config):
         # do more production specific
 
 
+class SnowflakeConfig(ProductionConfig):
+    PROPAGATE_EXCEPTIONS = None
+
+
+
 class DockerConfig(ProductionConfig):
     @classmethod
     def init_app(cls, app):
@@ -74,4 +79,5 @@ config = {
     "docker": DockerConfig,
     "unix": UnixConfig,
     "default": DevelopmentConfig,
+    "snowflake": SnowflakeConfig,
 }

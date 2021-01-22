@@ -53,7 +53,7 @@ class TorsionDriveService(BaseService):
     molecule_template: str
 
     @classmethod
-    def initialize_from_api(cls, storage_socket, logger, service_input, tag=None, priority=None):
+    def initialize_from_api(cls, storage_socket, service_input, tag=None, priority=None):
         _check_td()
         import torsiondrive
         from torsiondrive import td_api
@@ -127,7 +127,7 @@ class TorsionDriveService(BaseService):
 
         meta["task_tag"] = tag
         meta["task_priority"] = priority
-        return cls(**meta, storage_socket=storage_socket, logger=logger)
+        return cls(**meta, storage_socket=storage_socket)
 
     def iterate(self):
         _check_td()

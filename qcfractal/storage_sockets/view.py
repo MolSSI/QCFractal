@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import io
 import pathlib
 from typing import Any, Dict, Union
@@ -7,13 +9,15 @@ import pandas as pd
 from qcelemental.util.serialization import serialize
 
 from ..interface.collections import HDF5View
-
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from ..config import FractalConfig
 
 class ViewHandler:
     def __init__(self):
         pass
 
-    def init_app(self, qcf_config):
+    def init_app(self, qcf_config: FractalConfig):
         """
         Parameters
         ----------
@@ -24,11 +28,11 @@ class ViewHandler:
         self._view_cache: Dict[int, HDF5View] = {}
         self._path = None
 
-        if qcf_config.view.enable:
-            self._path = pathlib.Path(qcf_config.view_path)
+        if qcf_config.enable_views:
+            self._path = pathlib.Path(qcf_config.views_directory)
 
-        if not self._path.is_dir():
-            raise ValueError(f"Path in ViewHandler must be a directory, got: {self._path}")
+            if self._path.is_dir():
+                raise ValueError(f"Path in ViewHandler must be a directory, got: {self._path}")
 
     def view_path(self, collection_id: int) -> pathlib.Path:
         """
