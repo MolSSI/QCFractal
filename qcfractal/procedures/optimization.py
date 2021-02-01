@@ -4,6 +4,7 @@ Optimization procedure/task
 
 from typing import List, Optional
 
+from datetime import datetime as dt
 import qcelemental as qcel
 import qcengine as qcng
 
@@ -30,49 +31,7 @@ class OptimizationTasks(BaseTasks):
         return True
 
     def parse_input(self, data, duplicate_id="hash_index"):
-        """Parse input json into internally appropriate format
-
-        json_data = {
-            "meta": {
-                "procedure": "optimization",
-                "option": "default",
-                "program": "geometric",
-                "qc_meta": {
-                    "driver": "energy",
-                    "method": "HF",
-                    "basis": "sto-3g",
-                    "keywords": "default",
-                    "program": "psi4"
-                },
-            },
-            "data": ["mol_id_1", "mol_id_2", ...],
-        }
-
-        qc_schema_input = {
-            "molecule": {
-                "geometry": [
-                    0.0,  0.0, -0.6,
-                    0.0,  0.0,  0.6,
-                ],
-                "symbols": ["H", "H"],
-                "connectivity": [[0, 1, 1]]
-            },
-            "driver": "gradient",
-            "model": {
-                "method": "HF",
-                "basis": "sto-3g"
-            },
-            "keywords": {},
-        }
-        json_data = {
-            "keywords": {
-                "coordsys": "tric",
-                "maxiter": 100,
-                "program": "psi4"
-            },
-        }
-
-        """
+        """Parse input json into internally appropriate format"""
 
         # Get the optimization specification from the input meta dictionary
         opt_spec = data.meta
@@ -235,7 +194,7 @@ class OptimizationTasks(BaseTasks):
         completed_tasks = []
         updates = []
         for output in opt_outputs:
-            rec = self.storage.get_procedures(id=output["base_result"])["data"][0]
+            rec = self.storage.get_procedures(id=output["base_result_id"])["data"][0]
             rec = OptimizationRecord(**rec)
 
             procedure = output["result"]
@@ -256,30 +215,37 @@ class OptimizationTasks(BaseTasks):
             update_dict["final_molecule"] = final_mol
 
             # Parse trajectory computations and add task_id
-            traj_dict = {k: v for k, v in enumerate(procedure["trajectory"])}
+            traj = procedure["trajectory"]
 
-            # Add results for the trajectory to the database
-            for k, v in traj_dict.items():
+            # Add outputs for the trajectory to the database
+            for v in traj:
                 self.retrieve_outputs(v)
 
-            results = parse_single_tasks(self.storage, traj_dict, rec.qc_spec)
-            for k, v in results.items():
-                results[k] = ResultRecord(**v)
+            results = parse_single_tasks(self.storage, traj, rec.qc_spec)
+            results_rec = []
+            for v in results:
+                v["manager_name"] = output["manager_name"]
+                results_rec.append(ResultRecord(**v))
 
-            ret = self.storage.add_results(list(results.values()))
+            ret = self.storage.add_results(results_rec)
             update_dict["trajectory"] = ret["data"]
             update_dict["energies"] = procedure["energies"]
             update_dict["provenance"] = procedure["provenance"]
             update_dict["status"] = RecordStatusEnum.complete
+            update_dict["manager_name"] = output["manager_name"]
+            update_dict["modified_on"] = dt.utcnow()
+
+            completed_tasks.append(output["task_id"])
 
             rec = OptimizationRecord(**{**rec.dict(), **update_dict})
             updates.append(rec)
-            completed_tasks.append(output["task_id"])
 
         self.storage.update_procedures(updates)
         self.storage.queue_mark_complete(completed_tasks)
 
-        return completed_tasks
+        # Return success/failures
+        # (failures is a placeholder for now)
+        return completed_tasks, []
 
     @staticmethod
     def _build_schema_input(
