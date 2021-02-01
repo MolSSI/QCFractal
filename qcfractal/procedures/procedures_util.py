@@ -8,7 +8,7 @@ from typing import Optional, Dict, Any
 
 from qcelemental.models import ResultInput
 
-from ..interface.models import Molecule, QCSpecification
+from ..interface.models import Molecule, QCSpecification, RecordStatusEnum
 
 
 def unpack_single_task_spec(storage, meta, molecules):
@@ -99,7 +99,7 @@ def parse_single_tasks(storage, results, qc_spec):
 
     """
 
-    for k, v in results.items():
+    for v in results:
         # Flatten data back out
         v["method"] = v["model"]["method"]
         v["basis"] = v["model"]["basis"]
@@ -122,9 +122,9 @@ def parse_single_tasks(storage, results, qc_spec):
         del v["schema_version"]
 
         if v.pop("success"):
-            v["status"] = "COMPLETE"
+            v["status"] = RecordStatusEnum.complete
         else:
-            v["status"] = "ERROR"
+            v["status"] = RecordStatusEnum.error
 
     return results
 

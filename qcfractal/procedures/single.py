@@ -2,13 +2,14 @@
 Procedure for a single computational task (energy, gradient, etc)
 """
 
+from datetime import datetime as dt
 from typing import List, Optional
 
 import qcelemental as qcel
 import qcengine as qcng
 
 from .base import BaseTasks
-from ..interface.models import Molecule, ResultRecord, TaskRecord, KeywordSet
+from ..interface.models import Molecule, ResultRecord, TaskRecord, KeywordSet, RecordStatusEnum
 from ..interface.models.task_models import PriorityEnum
 
 _wfn_return_names = set(qcel.models.results.WavefunctionProperties._return_results_names)
@@ -217,7 +218,7 @@ class SingleResultTasks(BaseTasks):
 
         for output in result_outputs:
             # Find the existing result information in the database
-            base_id = output["base_result"]
+            base_id = output["base_result_id"]
             existing_result = self.storage.get_results(id=base_id)
             if existing_result["meta"]["n_found"] != 1:
                 raise KeyError(f"Could not find existing base result {base_id}")
@@ -227,14 +228,13 @@ class SingleResultTasks(BaseTasks):
 
             # Some consistency checks:
             # Is this marked as incomplete?
-            # TODO: Check manager, although that information isn't sent to us right now
             if existing_result["status"] != "INCOMPLETE":
                 self.logger.warning(f"Skipping returned results for base_id={base_id}, as it is not marked incomplete")
                 continue
 
             rdata = output["result"]
 
-            # Adds the results to the database and sets the appropriate fields
+            # Adds the outputs to the database and sets the appropriate fields
             # inside the dictionary
             self.retrieve_outputs(rdata)
 
@@ -281,18 +281,23 @@ class SingleResultTasks(BaseTasks):
             existing_result["error"] = rdata["error"]
             existing_result["stdout"] = rdata["stdout"]
             existing_result["stderr"] = rdata["stderr"]
-            existing_result["status"] = "COMPLETE"
+
+            existing_result["status"] = RecordStatusEnum.complete
+            existing_result["manager_name"] = output["manager_name"]
+            existing_result["modified_on"] = dt.utcnow()
+            completed_tasks.append(output["task_id"])
 
             result = ResultRecord(**existing_result)
 
             # Add to the list to be updated
             updates.append(result)
-            completed_tasks.append(output["task_id"])
 
         self.storage.update_results(updates)
         self.storage.queue_mark_complete(completed_tasks)
 
-        return completed_tasks
+        # Return success/failures
+        # (failures is a placeholder for now)
+        return completed_tasks, []
 
     @staticmethod
     def _build_schema_input(
