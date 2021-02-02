@@ -159,7 +159,7 @@ class FractalPeriodicsProcess:
     def __init__(
             self,
             qcf_config: FractalConfig,
-            mp_context: multiprocessing.context.SpawnContext,
+            mp_context: multiprocessing.context.BaseContext,
             log_queue: multiprocessing.queues.Queue,
             start: bool = True
     ):
