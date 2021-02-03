@@ -6,7 +6,6 @@ import multiprocessing
 import logging
 import logging.handlers
 import traceback
-from io import StringIO
 from concurrent.futures import ProcessPoolExecutor
 from typing import Optional, Union
 from .qc_queue import QueueManager
@@ -30,7 +29,6 @@ class SnowflakeComputeProcess:
             self,
             qcf_config: FractalConfig,
             mp_context: multiprocessing.context.BaseContext,
-            log_queue: multiprocessing.queues.Queue,
             start: bool = True,
             max_workers: int = 2
     ):
@@ -38,11 +36,7 @@ class SnowflakeComputeProcess:
         self._mp_ctx = mp_context
         self._max_workers = max_workers
 
-        # Store logs into a queue. This will be passed to the subprocesses, and they
-        # will log to this
-        self._log_queue = log_queue
-
-        self._compute_process = self._mp_ctx.Process(name="compute_proc", target=SnowflakeComputeProcess._run_compute_worker, args=(self._qcf_config, self._log_queue, self._max_workers))
+        self._compute_process = self._mp_ctx.Process(name="compute_proc", target=SnowflakeComputeProcess._run_compute_worker, args=(self._qcf_config, self._max_workers))
         if start:
             self.start()
 
@@ -60,19 +54,11 @@ class SnowflakeComputeProcess:
     def __del__(self):
         self.stop()
 
-    #
-    # These cannot be full class members (with 'self') because then this class would need to
-    # be pickleable (I think). But the Process objects are not.
-    #
-
     @staticmethod
-    def _run_compute_worker(qcf_config: FractalConfig, log_queue, max_workers):
+    def _run_compute_worker(qcf_config: FractalConfig, max_workers):
         # This runs in a separate process, so we can modify the global logger
         # which will only affect that process
-        qh = logging.handlers.QueueHandler(log_queue)
         logger = logging.getLogger()
-        logger.handlers = [qh]
-        logger.setLevel(qcf_config.loglevel)
 
         def _cleanup(sig, frame):
             signame = signal.Signals(sig).name
@@ -85,6 +71,7 @@ class SnowflakeComputeProcess:
         host = qcf_config.flask.bind
         port = qcf_config.flask.port
 
+        queue_manager = None
         try:
             # Try to connect 20 times (~2 seconds). If it fails after that, raise the last exception
             for i in range(21):
@@ -102,7 +89,8 @@ class SnowflakeComputeProcess:
             queue_manager.start()
         except EndProcess as e:
             logger.debug("_run_compute_worker received EndProcess: " + str(e))
-            queue_manager.stop(str(e))
+            if queue_manager is not None:
+                queue_manager.stop(str(e))
         except Exception as e:
             tb = ''.join(traceback.format_exception(None, e, e.__traceback__))
             logger.critical(f"Exception while running compute worker:\n{tb}")
@@ -160,29 +148,14 @@ class FractalSnowflake:
         qcf_cfg["enable_security"] = False
         self._qcfractal_config = FractalConfig(**qcf_cfg)
 
-        # "Spawn" is better than fork, since fork will copy this entire process
-        # (and spawn is the default now in some python versions)
-        self._mp_ctx = multiprocessing.get_context('spawn')
-
-        # Store logs into a queue. This will be passed to the subprocesses, and they
-        # will log to this
-        self._log_queue = self._mp_ctx.Queue()
-
-        # Set up logging. Subprocesses will send logs to the queue above, which are
-        # then processed by a QueueListener
-        self._log_stream = StringIO()
-        log_str_handler = logging.StreamHandler(self._log_stream)
-
-        formatter = logging.Formatter(fmt='[%(asctime)s] (%(processName)14s) %(levelname)8s: %(name)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S %Z')
-        log_str_handler.setFormatter(formatter)
-
-        self._log_listener = logging.handlers.QueueListener(self._log_queue, log_str_handler, respect_handler_level=True)
-        self._log_listener.start()
+        # Always use fork. This is generally a sane default until problems crop up
+        # In particular, logging will be inherited from the parent process
+        self._mp_ctx = multiprocessing.get_context('fork')
 
         ######################################
         # Now start the various subprocesses #
         ######################################
-        self._flask_proc = FractalFlaskProcess(self._qcfractal_config, self._mp_ctx, self._log_queue, start, enable_watching)
+        self._flask_proc = FractalFlaskProcess(self._qcfractal_config, self._mp_ctx, start, enable_watching)
 
         # Try to connect 10 times. If it fails after that, raise an exception
         for i in range(11):
@@ -195,8 +168,8 @@ class FractalSnowflake:
                 else:
                     time.sleep(0.2)
 
-        self._periodics_proc = FractalPeriodicsProcess(self._qcfractal_config, self._mp_ctx, self._log_queue, start)
-        self._compute_proc = SnowflakeComputeProcess(self._qcfractal_config, self._mp_ctx, self._log_queue, start, max_workers)
+        self._periodics_proc = FractalPeriodicsProcess(self._qcfractal_config, self._mp_ctx, start)
+        self._compute_proc = SnowflakeComputeProcess(self._qcfractal_config, self._mp_ctx, start, max_workers)
 
 
     def stop(self):
@@ -207,9 +180,6 @@ class FractalSnowflake:
 
     def __del__(self):
         self.stop()
-
-    def get_log(self):
-        return self._log_stream.getvalue()
 
     def wait_for_results(self, ids, timeout=None):
         self._flask_proc.wait_for_results(ids, timeout)
