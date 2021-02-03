@@ -160,17 +160,12 @@ class FractalPeriodicsProcess:
             self,
             qcf_config: FractalConfig,
             mp_context: multiprocessing.context.BaseContext,
-            log_queue: multiprocessing.queues.Queue,
             start: bool = True
     ):
         self._qcf_config = qcf_config
         self._mp_ctx = mp_context
 
-        # Store logs into a queue. This will be passed to the subprocesses, and they
-        # will log to this
-        self._log_queue = log_queue
-
-        self._periodics_process = self._mp_ctx.Process(name="periodics_proc", target=FractalPeriodicsProcess._run_periodics, args=(self._qcf_config, self._log_queue))
+        self._periodics_process = self._mp_ctx.Process(name="periodics_proc", target=FractalPeriodicsProcess._run_periodics, args=(self._qcf_config,))
         if start:
             self.start()
 
@@ -188,19 +183,11 @@ class FractalPeriodicsProcess:
     def __del__(self):
         self.stop()
 
-    #
-    # These cannot be full class members (with 'self') because then this class would need to
-    # be pickleable (I think). But the Process objects are not.
-    #
-
     @staticmethod
-    def _run_periodics(qcf_config: FractalConfig, log_queue):
+    def _run_periodics(qcf_config: FractalConfig):
         # This runs in a separate process, so we can modify the global logger
         # which will only affect that process
-        qh = logging.handlers.QueueHandler(log_queue)
         logger = logging.getLogger()
-        logger.handlers = [qh]
-        logger.setLevel(qcf_config.loglevel)
 
         storage_socket = SQLAlchemySocket()
         storage_socket.init(qcf_config)
