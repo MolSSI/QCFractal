@@ -1,13 +1,11 @@
 import os
-import signal
 import tempfile
 import time
 import multiprocessing
 import logging
 import logging.handlers
-import traceback
 from concurrent.futures import ProcessPoolExecutor
-from typing import Optional, Union
+from typing import Optional
 from .qc_queue import QueueManager
 
 from .interface import FractalClient
@@ -16,11 +14,10 @@ from .port_util import find_port
 from .config import FractalConfig, DatabaseConfig
 from .periodics import FractalPeriodicsProcess
 from .app.flask_app import FractalFlaskProcess
+from .fractal_proc import FractalProcessBase, FractalProcessRunner
 
-class EndProcess(RuntimeError):
-    pass
 
-class SnowflakeComputeProcess:
+class SnowflakeComputeProcess(FractalProcessBase):
     """
     Runs  a compute manager in a separate process
     """
@@ -28,75 +25,32 @@ class SnowflakeComputeProcess:
     def __init__(
             self,
             qcf_config: FractalConfig,
-            mp_context: multiprocessing.context.BaseContext,
-            start: bool = True,
             max_workers: int = 2
     ):
         self._qcf_config = qcf_config
-        self._mp_ctx = mp_context
         self._max_workers = max_workers
 
-        self._compute_process = self._mp_ctx.Process(name="compute_proc", target=SnowflakeComputeProcess._run_compute_worker, args=(self._qcf_config, self._max_workers))
-        if start:
-            self.start()
+    def run(self) -> None:
+        host = self._qcf_config.flask.bind
+        port = self._qcf_config.flask.port
 
-    def start(self):
-        if self._compute_process.is_alive():
-            raise RuntimeError("Compute manager process is already running")
-        else:
-            self._compute_process.start()
+        # Try to connect 20 times (~2 seconds). If it fails after that, raise the last exception
+        for i in range(21):
+            try:
+                client = FractalClient(f'http://{host}:{port}')
+                break
+            except Exception:
+                if i == 10:
+                    raise
+                else:
+                    time.sleep(0.2)
 
+        worker_pool = ProcessPoolExecutor(self._max_workers)
+        queue_manager = QueueManager(client, worker_pool, manager_name="snowflake_compute")
+        queue_manager.start()
 
-    def stop(self):
-        self._compute_process.terminate()
-        self._compute_process.join()
-
-    def __del__(self):
-        self.stop()
-
-    @staticmethod
-    def _run_compute_worker(qcf_config: FractalConfig, max_workers):
-        # This runs in a separate process, so we can modify the global logger
-        # which will only affect that process
-        logger = logging.getLogger()
-
-        def _cleanup(sig, frame):
-            signame = signal.Signals(sig).name
-            logger.debug("In cleanup of _run_compute_worker. Received " + signame)
-            raise EndProcess(signame)
-
-        signal.signal(signal.SIGINT, _cleanup)
-        signal.signal(signal.SIGTERM, _cleanup)
-
-        host = qcf_config.flask.bind
-        port = qcf_config.flask.port
-
-        queue_manager = None
-        try:
-            # Try to connect 20 times (~2 seconds). If it fails after that, raise the last exception
-            for i in range(21):
-                try:
-                    client = FractalClient(f'http://{host}:{port}')
-                    break
-                except Exception as e:
-                    if i == 10:
-                        raise
-                    else:
-                        time.sleep(0.2)
-
-            worker_pool = ProcessPoolExecutor(max_workers)
-            queue_manager = QueueManager(client, worker_pool, manager_name="snowflake_compute")
-            queue_manager.start()
-        except EndProcess as e:
-            logger.debug("_run_compute_worker received EndProcess: " + str(e))
-            if queue_manager is not None:
-                queue_manager.stop(str(e))
-        except Exception as e:
-            tb = ''.join(traceback.format_exception(None, e, e.__traceback__))
-            logger.critical(f"Exception while running compute worker:\n{tb}")
-            exit(1)
-
-
+    def finalize(self) -> None:
+        pass
 
 
 class FractalSnowflake:
@@ -150,26 +104,18 @@ class FractalSnowflake:
 
         # Always use fork. This is generally a sane default until problems crop up
         # In particular, logging will be inherited from the parent process
-        self._mp_ctx = multiprocessing.get_context('fork')
+        mp_ctx = multiprocessing.get_context('fork')
 
         ######################################
         # Now start the various subprocesses #
         ######################################
-        self._flask_proc = FractalFlaskProcess(self._qcfractal_config, self._mp_ctx, start, enable_watching)
+        flask = FractalFlaskProcess(self._qcfractal_config)
+        compute = SnowflakeComputeProcess(self._qcfractal_config, max_workers)
+        periodics = FractalPeriodicsProcess(self._qcfractal_config)
 
-        # Try to connect 10 times. If it fails after that, raise an exception
-        for i in range(11):
-            try:
-                FractalClient(address=self._fractal_uri)
-            except Exception as e:
-                if i == 10:
-                    logger = logging.getLogger('snowflake_init')
-                    logger.critical("The flask process has not started correctly. View the logs for more detail")
-                else:
-                    time.sleep(0.2)
-
-        self._periodics_proc = FractalPeriodicsProcess(self._qcfractal_config, self._mp_ctx, start)
-        self._compute_proc = SnowflakeComputeProcess(self._qcfractal_config, self._mp_ctx, start, max_workers)
+        self._flask_proc = FractalProcessRunner('snowflake_flask', mp_ctx, flask, start)
+        self._periodics_proc = FractalProcessRunner('snowflake_periodics', mp_ctx, periodics, start)
+        self._compute_proc = FractalProcessRunner('snowflake_compute', mp_ctx, compute, start)
 
 
     def stop(self):
@@ -182,6 +128,7 @@ class FractalSnowflake:
         self.stop()
 
     def wait_for_results(self, ids, timeout=None):
+        raise RuntimeError("TODO")
         self._flask_proc.wait_for_results(ids, timeout)
 
     def client(self):
