@@ -1,4 +1,5 @@
-import atexit
+from __future__ import annotations
+
 import os
 import shutil
 import pathlib
@@ -7,16 +8,67 @@ import tempfile
 import time
 import re
 import logging
-from typing import Any, Dict, List, Optional, Union
+import urllib.parse
 
 import psycopg2
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
 from qcfractal.storage_sockets.models import Base, VersionsORM
 
 from .config import DatabaseConfig
 from .port_util import find_port, is_port_open
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from typing import Any, List, Optional, Tuple
+    import psycopg2.extensions
+
+
+def replace_db_in_uri(uri: str, new_dbname: str) -> str:
+    """
+    Replaces the database name part of a URI with a different database name
+
+    The rest of the URI (host, password, etc) all remain the same.
+
+    For example, can turn postgres://user:pass@127.0.0.1/some_db into
+    postgres://user:pass@127.0.0.1/postgres
+
+    Parameters
+    ----------
+    uri: str
+        The base URI to use
+    new_dbname: str
+        The database name to replace with
+
+    Returns
+    -------
+    str
+        A new URI with the database name replaced
+    """
+
+    components = urllib.parse.urlparse(uri)
+    components = components._replace(path=new_dbname)
+    return urllib.parse.urlunparse(components)
+
+
+def db_uri_base(uri: str) -> str:
+    """
+    Returns the base part of a uri (scheme, user, password, host, port).
+
+    That is, returns the URI minus the database name at the end
+
+    Parameters
+    ----------
+    uri: str
+        The base URI to use
+
+    Returns
+    -------
+    str
+        The base part of the URI (without the database name)
+    """
+
+    return replace_db_in_uri(uri, "")
 
 
 class PostgresHarness:
@@ -27,198 +79,242 @@ class PostgresHarness:
         ----------
         config : DatabaseConfig
             The configuration options
-        quiet : bool, optional
-            If True, does not log any operations
-        logger : print, optional
-            The logger to show the operations to.
         """
         self.config = config
-        self._logger = logging.getLogger('PostgresHarness')
-        self._checked = False
-
+        self._logger = logging.getLogger("PostgresHarness")
         self._alembic_ini = os.path.join(os.path.abspath(os.path.dirname(__file__)), "alembic.ini")
 
-    def _run(self, commands):
-        proc = subprocess.run(commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        stdout = proc.stdout.decode()
-        self._logger.info(stdout)
-
-        ret = {"retcode": proc.returncode, "stdout": stdout, "stderr": proc.stderr.decode()}
-
-        return ret
-
-    def _check_psql(self) -> None:
+    def _get_tool(self, tool: str) -> str:
         """
-        Checks to see if the proper PostgreSQL commands are present. Raises a ValueError if they are not found.
-        """
+        Obtains the path to a postgres tool (such as pg_ctl)
 
-        if self.config.host != "localhost":
-            raise ValueError(f"Cannot modify PostgreSQL as configuration points to non-localhost: {self.config.host}")
+        If 'pg_tool_dir' is not specified, the current PATH environment is searched instead
 
-        if self._checked:
-            return
+        If the tool is not found, an exception is raised
 
-        msg = """
-Could not find 'pg_ctl' in the current path. Please install PostgreSQL with 'conda install postgresql'.
-
-Alternatively, you can install a system PostgreSQL manually, please see the following link: https://www.postgresql.org/download/
-"""
-
-        if shutil.which("pg_ctl") is None:
-            raise ValueError(msg)
-        else:
-            self._checked = True
-
-    def database_uri(self) -> str:
-        """Provides the full PostgreSQL URI string.
+        Parameters
+        ----------
+        tool: str
+            Tool to search for (ie, psql)
 
         Returns
         -------
-        str
-            The database URI
+            Full path to the tools executable
         """
+
+        tool_path = shutil.which(tool, path=self.config.pg_tool_dir)
+        if tool_path is None:
+            raise RuntimeError(
+                f"Postgresql tool/command {tool} cannot be found. Postgresql may not be installed, or pg_tool_dir is incorrect. If you do have Postgrsql, try setting pg_tool_dir in the configuration to the directory containing psql, pg_ctl, etc"
+            )
+        return tool_path
+
+    def _run_subprocess(self, command: List[str]) -> Tuple[int, str, str]:
+        """
+        Runs a command using subprocess, and output stdout into the logger
+
+        Parameters
+        ----------
+        command: List[str]
+            Command to run as a list of strings (see documentation for subprocess)
+
+        Returns
+        -------
+        Tuple[int, str, str]
+            Return code, stdout, and stderr as a Tuple
+        """
+
+        proc = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self._logger.debug("Running subprocess: " + str(command))
+        stdout = proc.stdout.decode()
+        stderr = proc.stderr.decode()
+        self._logger.info(stdout)
+        self._logger.error(stderr)
+
+        return proc.returncode, stdout, stderr
+
+    def database_uri(self) -> str:
+        """Provides the full PostgreSQL URI string."""
         return self.config.uri
 
-    def connect(self, database: Optional[str] = None) -> "Connection":
+    @staticmethod
+    def connect(uri) -> psycopg2.extensions.connection:
         """Builds a psycopg2 connection object.
 
         Parameters
         ----------
-        database : Optional[str], optional
-            The database to connect to, otherwise defaults to None
+        uri :str
+            The database to URI to connect to
 
         Returns
         -------
-        Connection
-            A live Connection object.
+        psycopg2.extensions.connection
+            A live psycopg2 connection
         """
-        if database is None:
-            database = "postgres"
-        return psycopg2.connect(
-            database=database,
-            user=self.config.username,
-            host=self.config.host,
-            port=self.config.port,
-            password=self.config.password,
-        )
 
-    def is_alive(self, database: Optional[str] = None) -> bool:
+        # Note that we can just use the URI here. The docs are a little misleading
+        return psycopg2.connect(uri)
+
+    def is_alive(self, check_database: bool = True) -> bool:
         """Checks if the postgres is alive, and optionally if the database is present.
+
+        If check_database is True, then we will check to see if the database specified
+        in the configuration exists. Otherwise, we will just check to see that the postgres
+        instance is running and that we can connect to it
 
         Parameters
         ----------
-        database : Optional[str], optional
-            The datbase to connect to
+        check_database : Optional[str], optional
+            If true, check to see if the database specified in the config exists.
 
         Returns
         -------
         bool
-            If True, the postgres database is alive.
+            True if the instance is alive and that the database exists (if check_database is True)
         """
         try:
-            self.connect(database=database)
+            uri = self.config.uri
+            if not check_database:
+                # We try to connect to the "postgres" database which should always exist
+                uri = replace_db_in_uri(uri, "postgres")
+            self.connect(uri)
             return True
-        except psycopg2._psycopg.OperationalError:
+        except psycopg2.OperationalError as e:
             return False
 
-    def command(self, cmd: Union[str, List[str]], check: bool = True) -> Any:
-        """Runs psql commands and returns their output while connected to the correct postgres instance.
+    def ensure_alive(self):
+        """
+        Checks to see that the postgres instance is up and running. Does not check anything
+        about the database.
+
+        If it is not running, but we are expected to control the database, it will be started.
+
+        Will raise an exception if the database is not alive and/or could not be started
+        """
+
+        # if own = True, we are responsible for starting the db instance
+        if self.config.own:
+            if self.is_alive(False):
+                raise RuntimeError(
+                    "I am supposed to start the database, since own = True. However it is already running. Is another postgresql or qcfractal-server process running?"
+                )
+            self.start()
+            self._logger.info(f"Started a postgres instance for uri {self.config.safe_uri}")
+        elif not self.is_alive(False):
+            raise RuntimeError(
+                f"A running postgres instance serving uri {self.config.safe_uri} does not appear to be running. It must be running for me to start"
+            )
+
+        self._logger.info(f"Database serving uri {self.config.safe_uri} appears to be up and running")
+
+    def sql_command(self, statement: str, database_name: Optional[str] = None, fail_ok: bool = False) -> Any:
+        """Runs a single SQL query or statement string and returns the output
 
         Parameters
         ----------
-        cmd : str
-            A psql command string.
-            Description
-
+        statement: str
+            A psql command/query string.
+        database_name: Optional[str]:
+            Connect to an alternate database name rather than the one specified in the config
+        fail_ok: bool
+            If False, raise an exception if there is an error
         """
-        self._check_psql()
 
-        if isinstance(cmd, str):
-            cmd = [cmd]
+        uri = self.config.uri
+        if database_name:
+            uri = replace_db_in_uri(uri, database_name)
 
-        self._logger.debug(f"pqsl command: {cmd}")
-        psql_cmd = [shutil.which("psql"), "-p", str(self.config.port), "-c"]
+        conn = self.connect(uri)
+        cursor = conn.cursor()
 
-        cmd = self._run(psql_cmd + cmd)
-        if check:
-            if cmd["retcode"] != 0:
-                raise ValueError("psql operation did not complete.")
-        return cmd
+        self._logger.debug(f"Executing SQL: {statement}")
+        cursor.execute(statement)
+        r = cursor.fetchall()
+        return r
 
-    def pg_ctl(self, cmds: List[str]) -> Any:
-        """Runs pg_ctl commands and returns their output while connected to the correct postgres instance.
+    def pg_ctl(self, cmds: List[str]) -> Tuple[int, str, str]:
+        """Runs a pg_ctl command and returns its output
 
         Parameters
         ----------
         cmds : List[str]
             A list of PostgreSQL pg_ctl commands to run.
-        """
-        self._check_psql()
-
-        self._logger.debug(f"pg_ctl command: {cmds}")
-        psql_cmd = [shutil.which("pg_ctl"), "-l", self.config.logfile, "-D", self.config.data_directory]
-        return self._run(psql_cmd + cmds)
-
-    def create_database(self, database_name: str) -> bool:
-        """Creates a new database for the current postgres instance. If the database is existing, no
-        changes to the database are made.
-
-        Parameters
-        ----------
-        database_name : str
-            The name of the database to create.
 
         Returns
         -------
-        bool
-            If the operation was successful or not.
+        Tuple[int, str, str]
+            The return code, stdout, and stderr returned by pg_ctl
         """
-        conn = self.connect()
+
+        # pg_ctl should only be run if we are managing the db
+        assert self.config.own
+        self._logger.debug(f"Running pg_ctl command: {cmds}")
+
+        psql_cmd = self._get_tool("pg_ctl")
+        all_cmds = [psql_cmd, "-l", self.config.logfile, "-D", self.config.data_directory]
+        all_cmds.extend(cmds)
+        return self._run_subprocess(all_cmds)
+
+    def create_database(self):
+        """Creates a new qcarchive database given in the configuration.
+
+        The postgres instance must be up and running.
+
+        If the database is existing, no changes to the database are made.
+
+        If there is an error, an exception in raised
+        """
+
+        # First we connect to the 'postgres' database
+        # The database specified in the config may not exist yet
+        pg_uri = replace_db_in_uri(self.config.uri, "postgres")
+        conn = self.connect(pg_uri)
         conn.autocommit = True
 
         cursor = conn.cursor()
-        cursor.execute(f"SELECT 1 FROM pg_catalog.pg_database WHERE datname = '{database_name}'")
+
+        # Now we can search the pg_catalog to see if the database we want exists yet
+        cursor.execute(f"SELECT 1 FROM pg_catalog.pg_database WHERE datname = '{self.config.database_name}'")
         exists = cursor.fetchone()
 
         if not exists:
-            cursor.execute(f"CREATE DATABASE {database_name}")
+            self._logger.info(f"Database {self.config.database_name} does not exist. Creating...")
+            cursor.execute(f"CREATE DATABASE {self.config.database_name}")
+            self._logger.info(f"Database {self.config.database_name} created")
+            self._init_database()
+        else:
+            self._logger.info(f"Database {self.config.database_name} already exists, so I am leaving it alone")
 
-        return self.is_alive(database=database_name)
+        # Check to see that everything is ok
+        if not self.is_alive():
+            raise RuntimeError("I created the database, but now it is not alive? Maybe check the postgres logs")
 
-    def create_tables(self):
-        """Create database tables using SQLAlchemy models"""
 
-        uri = self.config.uri
-        self._logger.info(f"Creating tables for database: {uri}")
-        engine = create_engine(uri, echo=False, pool_size=1)
-
-        # actually create the tables
-        try:
-            Base.metadata.create_all(engine)
-        except Exception as e:
-            raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}")
-
-        return True
-
-    def update_db_version(self):
+    def _update_db_version(self) -> None:
         """Update current version of QCFractal that is stored in the database
 
         This does not actually perform the upgrade, but will store the current versions of the software stack
         (qcengine, qcelemental, qcfractal) into the database
         """
 
+
+        # TODO: Move some of this to the socket (this uses ORM)
         uri = self.config.uri
 
         engine = create_engine(uri, echo=False, pool_size=1)
         session = sessionmaker(bind=engine)()
         try:
-            import qcfractal, qcelemental, qcengine
+            import qcfractal
+            import qcelemental
+            import qcengine
 
             elemental_version = qcelemental.__version__
             fractal_version = qcfractal.__version__
             engine_version = qcengine.__version__
 
-            self._logger.info(f"Updating current version of QCFractal in DB: {uri} \n" f"to version {qcfractal.__version__}")
+            self._logger.info(
+                f"Updating current version of QCFractal in DB: {uri} \n" f"to version {qcfractal.__version__}"
+            )
             current_ver = VersionsORM(
                 elemental_version=elemental_version, fractal_version=fractal_version, engine_version=engine_version
             )
@@ -229,218 +325,254 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         finally:
             session.close()
 
-        return True
-
-    def upgrade(self):
+    def upgrade(self) -> None:
         """
         Upgrade the database schema using the latest alembic revision.
-        The database data won't be deleted.
         """
 
-        ret = self._run(self.alembic_commands() + ["upgrade", "head"])
+        retcode, _, _ = self._run_subprocess(self.alembic_commands() + ["upgrade", "head"])
 
-        if ret["retcode"] != 0:
-            self._logger.error(ret["stderr"])
-            raise ValueError(
-                f"\nFailed to Upgrade the database, make sure to init the database first before being able to upgrade it.\n"
+        if retcode != 0:
+            raise RuntimeError(
+                f"Failed to Upgrade the database, make sure to init the database first before being able to upgrade it."
             )
 
-        return True
+        self._update_db_version()
 
-    def start(self) -> Any:
+    def start(self) -> None:
         """
-        Starts a PostgreSQL server based off the current configuration parameters. The server must be initialized
-        and the configured port open.
+        Starts a PostgreSQL server based off the current configuration parameters.
+
+        The PostgreSQL server must be initialized and the configured port open. The database does not need to exist.
         """
 
-        self._check_psql()
+        # We should only do this if we are in charge of the database itself
+        assert self.config.own
 
         # Startup the server
-        self._logger.info("Starting the database:")
+        self._logger.info("Starting the database")
 
+        # We should be in charge of this postgres process. If something is running, then that is a problem
         if is_port_open(self.config.host, self.config.port):
-            self._logger.info("Service currently running the configured port, current_status:\n")
-            status = self.pg_ctl(["status"])
-
-            # If status is ok, exit is 0
-            if status["retcode"] != 0:
-                raise ValueError(
-                    f"A process is already running on 'port:{self.config.port}` that is not associated with the PostgreSQL instance at `location:{self.config.data_directory}.`"
-                    "\nThis often happens when two PostgreSQL databases are attempted to run on the same port."
-                    "\nEither shut down the other PostgreSQL database or change the settings in the qcfractal configuration."
-                    "\nStopping."
-                )
-
-            if not self.is_alive():
-                raise ValueError(f"PostgreSQL does not is running, but cannot connect to it.")
-
-            self._logger.info("Found running PostgreSQL instance with correct configuration.")
-
+            raise RuntimeError(
+                f"A process is already running on 'port:{self.config.port}` that is not associated with this QCFractal instance's database"
+            )
         else:
+            retcode, stdout, stderr = self.pg_ctl(["start"])
 
-            start_status = self.pg_ctl(["start"])
+            err_msg = f"Error starting database. Did you remember to initialize it (qcfractal-server init)?:\noutput:\n{stdout}\nstderr:\n{stderr}"
 
-            if not (("server started" in start_status["stdout"]) or ("server starting" in start_status["stdout"])):
-                raise ValueError(
-                    f"Could not start the PostgreSQL server. Error below:\n\n{start_status['stderr']}\n\nstdout:\n\n{start_status['stdout']}"
-                )
+            if retcode != 0:
+                raise RuntimeError(err_msg)
+            if not (("server started" in stdout) or ("server starting" in stdout)):
+                raise RuntimeError(err_msg)
 
             # Check that we are alive
             for x in range(10):
-                if self.is_alive():
+                if self.is_alive(False):
                     break
                 else:
-                    time.sleep(0.1)
+                    time.sleep(0.2)
             else:
-                raise ValueError(
-                    f"Could not connect to the server after booting. Boot log:\n\n{start_status['stderr']}"
-                )
+                raise RuntimeError(err_msg)
 
-            self._run([shutil.which("pg_ctl"), "-D", str(self.config.data_directory), "status"])
-            self._logger.info("PostgreSQL successfully started in a background process, current_status:\n")
+            retcode, stdout, stderr = self.pg_ctl(["status"])
+            if retcode == 0:
+                self._logger.info("PostgreSQL successfully started in a background process")
+            else:
+                err_msg = f"Database seemed to start, but status check failed:\noutput:\n{stdout}\nstderr:\n{stderr}"
+                raise RuntimeError(err_msg)
 
-        return True
+    def shutdown(self) -> None:
+        """Shuts down the current postgres instance."""
 
-    def shutdown(self) -> Any:
-        """Shutsdown the current postgres instance."""
+        # We should only do this if we are in charge of the database itself
+        assert self.config.own
 
-        self._check_psql()
+        if self.config.own is False:
+            return
 
-        ret = self.pg_ctl(["stop"])
-        return ret
+        retcode, stdout, stderr = self.pg_ctl(["stop"])
+        if retcode == 0:
+            self._logger.info("PostgreSQL successfully stopped")
+        else:
+            err_msg = f"Error stopping the postgres instance:\noutput:\n{stdout}\nstderr:\n{stderr}"
+            raise RuntimeError(err_msg)
 
     def initialize_postgres(self) -> None:
-        """Initializes and starts the current postgres instance."""
+        """Initializes a postgresql instance and starts it
 
-        self._check_psql()
+        The data directory and port from the configuration is used for the postgres instance
+        """
 
-        self._logger.info("Initializing the Postgresql database:")
+        # Can only initialize if we are expected to manage it
+        assert self.config.own
 
-        # Initialize the database
-        init_status = self._run([shutil.which("initdb"), "-D", self.config.data_directory])
-        if "Success." not in init_status["stdout"]:
-            raise ValueError(f"Could not initialize the PostgreSQL server. Error below:\n\n{init_status['stderr']}")
+        self._logger.info("Initializing the Postgresql database")
+
+        initdb_path = self._get_tool("initdb")
+        createdb_path = self._get_tool("createdb")
+        retcode, stdout, stderr = self._run_subprocess([initdb_path, "-D", self.config.data_directory])
+
+        if retcode != 0 or "Success." not in stdout:
+            err_msg = f"Error initializing a PostgreSQL instance:\noutput:\n{stdout}\nstderr:\n{stderr}"
+            raise RuntimeError(err_msg)
 
         # Change some configuration options
         psql_conf_file = os.path.join(self.config.data_directory, "postgresql.conf")
         psql_conf_path = pathlib.Path(psql_conf_file)
         psql_conf = psql_conf_path.read_text()
 
-        if self.config.port != 5432:
-            assert "#port = 5432" in psql_conf
-            psql_conf = psql_conf.replace("#port = 5432", f"port = {self.config.port}")
+        assert "#port = 5432" in psql_conf
+        psql_conf = psql_conf.replace("#port = 5432", f"port = {self.config.port}")
 
-            # Change the location of the socket file
-            # Some OSs/Linux distributions will use a directory not writeable by a normal user
-            psql_conf = re.sub(
-                r"#?unix_socket_directories =.*",
-                f"unix_socket_directories = '{self.config.data_directory}'",
-                psql_conf,
-                re.M,
-            )
+        # Change the location of the socket file
+        # Some OSs/Linux distributions will use a directory not writeable by a normal user
+        psql_conf = re.sub(
+            r"#?unix_socket_directories =.*",
+            f"unix_socket_directories = '{self.config.data_directory}'",
+            psql_conf,
+            re.M,
+        )
 
-            psql_conf_path.write_text(psql_conf)
+        psql_conf_path.write_text(psql_conf)
 
-        # Start the database
+        # Start the database. It needs to be running for createdb
         self.start()
 
         # Create the user and database
-        self._logger.info(f"Building user information.")
-        self._run([shutil.which("createdb"), "-p", str(self.config.port)])
+        self._logger.info(f"Building database user information & creating QCFractal database")
+        try:
+            retcode, stdout, stderr = self._run_subprocess([createdb_path, "-h", "localhost", "-p", str(self.config.port)])
+            if retcode != 0:
+                err_msg = f"Error running createdb:\noutput:\n{stdout}\nstderr:\n{stderr}"
+                raise RuntimeError(err_msg)
 
-        success = self.create_database(self.config.database_name)
-
-        if success is False:
+            self.create_database()
+        except Exception:
             self.shutdown()
-            raise ValueError("Database created successfully, but could not connect. Shutting down postgres.")
+            raise
 
-        self._logger.info("\nDatabase server successfully started!")
+        self._logger.info("Postgresql instance successfully initialized and started")
 
     def alembic_commands(self) -> List[str]:
+        """
+        Get the components of an alembic command that can be passed to _run_subprocess
+
+        This will find the almembic command and also add the uri and alembic configuration information
+        to the command line.
+
+        Returns
+        -------
+        List[str]
+            Components of an alembic command line as a list of strings
+        """
+
         db_uri = self.config.uri
-        return [shutil.which("alembic"), "-c", self._alembic_ini, "-x", "uri=" + db_uri]
+        alembic_path = shutil.which("alembic")
 
-    def init_database(self) -> None:
+        if alembic_path is None:
+            raise RuntimeError("Cannot find the 'alembic' command. Is it installed?")
+        return [alembic_path, "-c", self._alembic_ini, "-x", "uri=" + db_uri]
 
-        # TODO: drop tables
+    def _init_database(self) -> None:
+        """
+        Creates the actual database and tables for use by this QCFractal instance
+        """
 
-        # create models
-        self.create_tables()
+        # create the tables via sqlalchemy
+        uri = self.config.uri
+        self._logger.info(f"Creating tables for database: {uri}")
+        engine = create_engine(uri, echo=False, pool_size=1)
+
+        try:
+            Base.metadata.create_all(engine)
+        except Exception as e:
+            raise RuntimeError(f"SQLAlchemy Connection Error\n{str(e)}")
 
         # update alembic_version table with the current version
-        self._logger.info(f"\nStamping Database with current version..")
+        self._logger.debug(f"Stamping Database with current version")
+        retcode, stdout, stderr = self._run_subprocess(self.alembic_commands() + ["stamp", "head"])
 
-        ret = self._run(self.alembic_commands() + ["stamp", "head"])
+        if retcode != 0:
+            err_msg = f"Error stamping the database with the current version:\noutput:\n{stdout}\nstderr:\n{stderr}"
+            raise RuntimeError(err_msg)
 
-        if ret["retcode"] != 0:
-            self._logger.error(ret)
-            raise ValueError("\nFailed to Stamp the database with current version.\n")
+    def backup_database(self, filepath: str) -> None:
+        """
+        Backs up the database into a file
 
-    def backup_database(self, filename: Optional[str] = None) -> None:
+        Parameters
+        ----------
+        filepath: str
+            File to store the backup to. Must not exist
+        """
 
-        # Reasonable check here
-        self._check_psql()
+        # Only do this if we manage the database ourselves
+        assert self.config.own
 
-        if filename is None:
-            filename = f"{self.config.database_name}.bak"
+        filepath = os.path.realpath(filepath)
+        if os.path.exists(filepath):
+            raise RuntimeError(f"Path {filepath} exists already, so cannot back up to there")
 
-        filename = os.path.realpath(filename)
-
-        # fmt: off
         cmds = [
-            shutil.which("pg_dump"),
-            "-p", str(self.config.port),
-            "-d", self.config.database_name,
-            "-Fc", # Custom postgres format, fast
-            "--file", filename
+            self._get_tool("pg_dump"),
+            "-p",
+            str(self.config.port),
+            "-d",
+            self.config.database_name,
+            "-Fc",  # Custom postgres format, fast
+            "--file",
+            filepath,
         ]
-        # fmt: on
 
         self._logger.debug(f"pg_backup command: {'  '.join(cmds)}")
-        ret = self._run(cmds)
+        retcode, stdout, stderr = self._run_subprocess(cmds)
 
-        if ret["retcode"] != 0:
-            self._logger.debug(str(ret))
-            raise ValueError("\nFailed to backup the database.\n")
+        if retcode != 0:
+            err_msg = f"Error backing up the database\noutput:\n{stdout}\nstderr:\n{stderr}"
+            raise RuntimeError(err_msg)
 
-    def restore_database(self, filename) -> None:
+    def restore_database(self, filepath) -> None:
 
-        # Reasonable check here
-        self._check_psql()
+        # Only do this if we manage the database ourselves
+        assert self.config.own
 
-        self.create_database(self.config.database_name)
+        self.create_database()
 
-        # fmt: off
         cmds = [
-            shutil.which("pg_restore"),
+            self._get_tool("pg_restore"),
             f"--port={self.config.port}",
             f"--dbname={self.config.database_name}",
-            filename
+            filepath,
         ]
-        # fmt: on
 
         self._logger.debug(f"pg_backup command: {'  '.join(cmds)}")
-        ret = self._run(cmds)
+        retcode, stdout, stderr = self._run_subprocess(cmds)
 
-        if ret["retcode"] != 0:
-            self._logger.debug(ret["stderr"])
-            raise ValueError("\nFailed to restore the database.\n")
+        if retcode != 0:
+            err_msg = f"Error restoring the database\noutput:\n{stdout}\nstderr:\n{stderr}"
+            raise RuntimeError(err_msg)
 
     def database_size(self) -> str:
         """
         Returns a pretty formatted string of the database size.
         """
 
-        return self.command(
-            [f"SELECT pg_size_pretty( pg_database_size('{self.config.database_name}') );", "-t", "-A"]
-        )
+        sql = f"SELECT pg_size_pretty( pg_database_size('{self.config.database_name}') );"
+        size = self.sql_command(sql, "postgres")
+
+        # sql_command returns a list of tuples
+        return size[0][0]
 
 
 class TemporaryPostgres:
-    def __init__(
-        self,
-        data_dir: Optional[str] = None
-    ):
+    """
+    This class is used to create a temporary PostgreSQL instance and database. On destruction,
+    the database and all its data will be deleted.
+    """
+
+    def __init__(self, data_dir: Optional[str] = None):
         """A PostgreSQL instance run in a temporary folder.
 
         ! Warning ! All data is lost when this object is deleted.
@@ -449,10 +581,10 @@ class TemporaryPostgres:
         ----------
         data_dir: str, optional
             Path to the directory to store the database data. If not provided, one will
-            be created
+            be created (and it will be deleted afterwards)
         """
 
-        self._active = True
+        logger = logging.getLogger(__name__)
 
         if data_dir:
             self._data_dir = data_dir
@@ -460,16 +592,16 @@ class TemporaryPostgres:
             self._data_tmpdir = tempfile.TemporaryDirectory()
             self._data_dir = self._data_tmpdir.name
 
-        db_config = {"port": find_port(), "data_directory": self._data_dir}
-        db_config["base_directory"] = self._data_dir
-        db_config["database_name"] = 'qcfractal_tmp_db'
+        port = find_port()
+        db_config = {"port": port, "data_directory": self._data_dir, "base_directory": self._data_dir,
+                     "database_name": "qcfractal_tmp_db", "own": True}
 
         self.config = DatabaseConfig(**db_config)
         self.psql = PostgresHarness(self.config)
         self.psql.initialize_postgres()
-        self.psql.init_database()
-
-        atexit.register(self.stop)
+        self.psql.create_database()
+        self._active = True
+        logger.info(f"Created temporary postgres database at location {self._data_dir} running on port {port}")
 
     def __del__(self):
         """
@@ -478,22 +610,13 @@ class TemporaryPostgres:
 
         self.stop()
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.stop()
-        return False
-
-    def database_uri(self, safe: bool = True, database: Optional[str] = None) -> str:
+    def database_uri(self, safe: bool = True) -> str:
         """Provides the full Postgres URI string.
 
         Parameters
         ----------
         safe : bool, optional
             If True, hides the postgres password.
-        database : Optional[str], optional
-            An optional database to add to the string.
 
         Returns
         -------
@@ -511,12 +634,5 @@ class TemporaryPostgres:
         Shuts down the Snowflake instance. This instance is not recoverable after a stop call.
         """
 
-        if not self._active:
-            return
-
-        self.psql.shutdown()
-
-        # Closed down
-        self._active = False
-        atexit.unregister(self.stop)
-
+        if self._active:
+            self.psql.shutdown()
