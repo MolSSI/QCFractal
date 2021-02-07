@@ -1,7 +1,5 @@
 from __future__ import annotations
 import traceback
-import signal
-import multiprocessing
 import logging
 import logging.handlers
 import time
@@ -10,6 +8,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.schedulers.base import STATE_STOPPED
 from qcfractal.interface.models import ManagerStatusEnum, TaskStatusEnum, ComputeError
 from .storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+from .fractal_proc import FractalProcessBase
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -17,12 +16,6 @@ if TYPE_CHECKING:
 
 
 from .services import construct_service
-
-
-class EndProcess(RuntimeError):
-    pass
-
-
 
 class FractalPeriodics:
     def __init__(self, storage_socket, qcf_cfg: FractalConfig):
@@ -151,7 +144,7 @@ class FractalPeriodics:
 
 
 
-class FractalPeriodicsProcess:
+class FractalPeriodicsProcess(FractalProcessBase):
     """
     Runs periodics in a separate process
     """
@@ -159,59 +152,19 @@ class FractalPeriodicsProcess:
     def __init__(
             self,
             qcf_config: FractalConfig,
-            mp_context: multiprocessing.context.BaseContext,
-            start: bool = True
     ):
-        self._qcf_config = qcf_config
-        self._mp_ctx = mp_context
+        FractalProcessBase.__init__(self)
+        self.config = qcf_config
 
-        self._periodics_process = self._mp_ctx.Process(name="periodics_proc", target=FractalPeriodicsProcess._run_periodics, args=(self._qcf_config,))
-        if start:
-            self.start()
+    def run(self) -> None:
+        self.storage_socket = SQLAlchemySocket()
+        self.storage_socket.init(self.config)
+        self.periodics = FractalPeriodics(self.storage_socket, self.config)
+        self.periodics.start()
 
-    def start(self):
-        if self._periodics_process.is_alive():
-            raise RuntimeError("Periodics process is already running")
-        else:
-            self._periodics_process.start()
+        # Periodics are now running in the background. But we need to keep this process alive
+        while True:
+            time.sleep(3600)
 
-
-    def stop(self):
-        self._periodics_process.terminate()
-        self._periodics_process.join()
-
-    def __del__(self):
-        self.stop()
-
-    @staticmethod
-    def _run_periodics(qcf_config: FractalConfig):
-        # This runs in a separate process, so we can modify the global logger
-        # which will only affect that process
-        logger = logging.getLogger()
-
-        storage_socket = SQLAlchemySocket()
-        storage_socket.init(qcf_config)
-
-        periodics = FractalPeriodics(storage_socket, qcf_config)
-
-        def _cleanup(sig, frame):
-            signame = signal.Signals(sig).name
-            logger.debug("In cleanup of _run_periodics. Received " + signame)
-            raise EndProcess(signame)
-
-        signal.signal(signal.SIGINT, _cleanup)
-        signal.signal(signal.SIGTERM, _cleanup)
-
-        try:
-            periodics.start()
-
-            # Periodics are now running in the background. But we need to keep this process alive
-            while True:
-                time.sleep(3600)
-
-        except EndProcess as e:
-            logger.debug("_run_periodics received EndProcess: " + str(e))
-            periodics.stop()
-        except Exception as e:
-            tb = ''.join(traceback.format_exception(None, e, e.__traceback__))
-            logger.critical(f"Exception while running periodics process:\n{tb}")
+    def finalize(self) -> None:
+        self.periodics.stop()

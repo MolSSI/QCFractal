@@ -3,16 +3,22 @@ The global qcfractal config file specification.
 """
 
 from __future__ import annotations
-from enum import Enum
+import urllib
 import os
-import re
 import logging
-import pprint
 from typing import Optional, Dict, Any
 import yaml
-from pydantic import Field, validator, PrivateAttr, root_validator, ValidationError
+from pydantic import Field, validator, root_validator, ValidationError
 
 from .interface.models import AutodocBaseSettings
+
+def updated_nested_dict(d, u):
+    for k, v in u.items():
+        if isinstance(v, dict):
+            d[k] = updated_nested_dict(d.get(k, {}), v)
+        else:
+            d[k] = v
+    return d
 
 
 class ConfigCommon:
@@ -30,13 +36,21 @@ class ConfigBase(AutodocBaseSettings):
 
     @classmethod
     def help_info(cls, field):
+        """
+        Create 'help' information for use by argparse from a field in a settings class
+        """
         info = cls.schema()["properties"][field]
 
         ret = {"type": cls._type_map[info["type"]]}
+
+        # Don't add defaults here. Argparse would then end up using thses
+        # defaults on the command line, overriding values specified in the config
         # if "default" in info:
         #     ret["default"] = info["default"]
+
         if "description" in info:
             ret["help"] = info["description"]
+
         return ret
 
 
@@ -52,15 +66,15 @@ class DatabaseConfig(ConfigBase):
     database_name: str = Field("qcfractal_default", description="The database name to connect to.")
     username: Optional[str] = Field(None, description="The database username to connect with")
     password: Optional[str]= Field(None, description="The database password to connect with")
-    uri: Optional[str] = Field(None, description="A full database URI to connect to. This will override all other options")
 
     own: bool = Field(True, description="If True, QCFractal will control the database instance. If False, you must start and manage the database yourself" )
 
     data_directory: Optional[str] = Field(None, description="Location to place the database if own == True. Default is [base_directory]/database")
-    logfile: str = Field(None, description="Path to a file to use as the database logfile. Default is [base_directory]/qcfractal_database.log.")
+    logfile: Optional[str] = Field(None, description="Path to a file to use as the database logfile (if own == True). Default is [base_directory]/qcfractal_database.log")
 
     echo_sql: bool = Field(False, description="[ADVANCED] output raw SQL queries being run")
     skip_version_check: bool = Field(False, description="[ADVANCED] Do not check that the version of QCFractal matches that of the version of the database. ONLY RECOMMENDED FOR DEVELOPMENT PURPOSES")
+    pg_tool_dir: Optional[str] = Field(None, description="Directory containing Postgres tools such as psql and pg_ctl (ie, /usr/bin, or /usr/lib/postgresql/13/bin). If not specified, will look in the current PATH")
 
     class Config(ConfigCommon):
         env_prefix = "QCF_DB_"
@@ -86,28 +100,23 @@ class DatabaseConfig(ConfigBase):
         return ret
 
 
-    @validator("uri")
-    def _check_uri(cls, v, values):
-        if v is not None:
-            return v
+    @property
+    def uri(self):
+        # Hostname can be a directory (unix sockets). But we need to escape some stuff
+        host = urllib.parse.quote(self.host, safe='')
+        username = self.username if self.username is not None else ''
+        password = f':{self.password}' if self.password is not None else ''
+        sep = '@' if username != '' or password != '' else ''
+        return f'postgres://{username}{password}{sep}{host}:{self.port}/{self.database_name}'
 
-        # If not specified, construct via hostname, port, user, and password
-        uri = "postgresql://"
-        if values["username"] is not None:
-            uri += values["username"]
-
-            if values["password"] is not None:
-                uri += ':' + values["password"]
-
-            uri += "@"
-
-        uri += values["host"] + ":" + str(values["port"]) + "/"
-        uri += values["database_name"]
-        return uri
 
     @property
     def safe_uri(self):
-        return re.sub(':.*@', ':********@', self.uri)
+        host = urllib.parse.quote(self.host, safe='')
+        username = self.username if self.username is not None else ''
+        password = ':********' if self.password is not None else ''
+        sep = '@' if username != '' or password != '' else ''
+        return f'postgres://{username}{password}{sep}{host}:{self.port}/{self.database_name}'
 
 
 class ResponseLimitConfig(ConfigBase):
@@ -140,13 +149,16 @@ class FlaskConfig(ConfigBase):
     bind: str = Field("127.0.0.1", description="The IP address or hostname to bind to")
     port: int = Field(7777, description="The port on which to run the REST interface.")
 
+    class Config(ConfigCommon):
+        env_prefix = "QCF_FLASK_"
+
 
 class FractalConfig(ConfigBase):
     """
     Fractal Server settings
     """
 
-    base_directory: str = Field(..., description="The base folder to use as the default for some options (logs, views, etc). Default is the location of the config file.")
+    base_directory: str = Field(..., description="The base directory to use as the default for some options (logs, views, etc). Default is the location of the config file.")
 
     # Info for the REST interface
     name: str = Field("QCFractal Server", description="The QCFractal server name")
@@ -155,7 +167,7 @@ class FractalConfig(ConfigBase):
     allow_unauthenticated_read: bool = Field(True, description="Allows unauthenticated read access to this instance. This does not extend to sensitive tables (such as user information)")
 
     # Logging and profiling
-    logfile: Optional[str] = Field(None, description="Path to a file to use for server logging. If not specified, logs will be printed using pythons standard logging")
+    logfile: Optional[str] = Field(None, description="Path to a file to use for server logging. If not specified, logs will be printed to standard output")
     loglevel: str = Field("INFO", description="Level of logging to enable (debug, info, warning, error, critical). Case insensitive")
     cprofile: Optional[str] = Field(
         None, description="Enable profiling via cProfile, and output cprofile data to this directory. Multiple files will be created"
@@ -231,16 +243,27 @@ class FractalConfig(ConfigBase):
 def read_configuration(file_paths: list[str], extra_config: Optional[Dict[str, Any]] = None) -> FractalConfig:
     logger = logging.getLogger(__name__)
     config_data = {}
+
+    if len(file_paths) == 0:
+        raise RuntimeError("Cannot read configurations without any file paths!")
+
     # Read all the files, in order
     for path in file_paths:
         with open(path, 'r') as yf:
             logger.info(f"Reading configuration data from {path}")
             file_data = yaml.safe_load(yf)
-            logger.debug(f"Read the following data from {path}:\n" + pprint.pformat(file_data))
-            config_data.update(file_data)
+            updated_nested_dict(config_data, file_data)
 
     if extra_config:
-        config_data.update(extra_config)
+        updated_nested_dict(config_data, extra_config)
+
+    # use the location of the last file as the base directory
+    base_dir = os.path.dirname(file_paths[-1])
+
+    # convert relative paths to full, absolute paths
+    base_dir = os.path.abspath(base_dir)
+
+    config_data['base_directory'] = base_dir
 
     # Handle an old configuration
     if 'fractal' in config_data:

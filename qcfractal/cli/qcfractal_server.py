@@ -6,26 +6,26 @@ import os
 import argparse
 import shutil
 import sys
-
+import textwrap
+import logging
+import multiprocessing
 import yaml
+import time
+import signal
+import traceback
 
 import qcfractal
 
-from ..config import DatabaseSettings, FractalConfig, FractalServerSettings, _str2bool
+from ..config import read_configuration, FractalConfig, FlaskConfig
 from ..postgres_harness import PostgresHarness
-from ..storage_sockets import storage_socket_factory
+from ..storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+from ..periodics import FractalPeriodicsProcess
+from ..app.gunicorn_app import FractalGunicornProcess
+from ..fractal_proc import FractalProcessRunner
 from .cli_utils import install_signal_handlers
 
-
-def ensure_postgres_alive(psql):
-    if not psql.is_alive():
-        try:
-            print("\nCould not detect a PostgreSQL from configuration options, starting a PostgreSQL server.\n")
-            psql.start()
-        except ValueError as e:
-            print(str(e))
-            sys.exit(1)
-
+class EndProcess(RuntimeError):
+    pass
 
 def human_sizeof_byte(num, suffix="B"):
     # SO: https://stackoverflow.com/questions/1094841/reusable-library-to-get-human-readable-version-of-file-size
@@ -34,6 +34,31 @@ def human_sizeof_byte(num, suffix="B"):
             return "%3.1f%s%s" % (num, unit, suffix)
         num /= 1024.0
     return "%.1f%s%s" % (num, "Yi", suffix)
+
+def dump_config(qcf_config: FractalConfig, indent: int = 0) -> str:
+    '''
+    Returns a string showing a full QCFractal configuration.
+
+    It will be formatted in YAML. It will start and end with a line of '-'
+
+    Parameters
+    ----------
+    qcf_config: FractalConfig
+        Configuration to print
+    indent: int
+        Indent the entire configuration by this many spaces
+
+    Returns
+    -------
+    str
+        The configuration as a human-readable string
+    '''
+
+    s = "-"*80 + '\n'
+    cfg_str = yaml.dump(qcf_config.dict())
+    s += textwrap.indent(cfg_str, ' '*indent)
+    s += '-'*80
+    return s
 
 
 def standard_command_startup(name, config, check=True):
@@ -48,83 +73,79 @@ def standard_command_startup(name, config, check=True):
     return psql
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="A CLI for the QCFractalServer.")
+def parse_args() -> argparse.Namespace:
+    '''
+    Sets up the command line arguments and parses them
+
+    Returns
+    -------
+    argparse.Namespace
+        Argparse namespace containing the information about all the options specified on
+        the command line
+    '''
+
+    parser = argparse.ArgumentParser(description="A CLI for managing & running a QCFractal server.")
     parser.add_argument("--version", action="version", version=f"{qcfractal.__version__}")
 
     subparsers = parser.add_subparsers(dest="command")
 
-    # Init subcommands
-    init = subparsers.add_parser("init", help="Initializes a QCFractal server and database information.")
-    db_init = init.add_argument_group("Database Settings")
-    for field in DatabaseSettings.field_names():
-        cli_name = "--db-" + field.replace("_", "-")
-        db_init.add_argument(cli_name, **DatabaseSettings.help_info(field))
+    #####################################
+    # init subcommand
+    #####################################
+    init = subparsers.add_parser("init", help="Initializes a QCFractal server and database information from a given configuration.")
+    init.add_argument("--base-folder", **FractalConfig.help_info("base_directory"))
+    init.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
+    init.add_argument("-v", "--verbose", action="store_true", help="Output more details about the initialization process")
 
-    server_init = init.add_argument_group("Server Settings")
-    for field in FractalServerSettings.field_names():
-        cli_name = "--" + field.replace("_", "-")
-        server_init.add_argument(cli_name, **FractalServerSettings.help_info(field))
-
-    init.add_argument("--overwrite-config", action="store_true", help="Overwrites the current configuration file.")
-    init.add_argument(
-        "--clear-database", action="store_true", help="Clear the content of the given database and initialize it."
-    )
-    init.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-
-    # Start subcommands
+    #####################################
+    # start subcommand
+    #####################################
     start = subparsers.add_parser("start", help="Starts a QCFractal server instance.")
-    start.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+    start.add_argument("--base-folder", **FractalConfig.help_info("base_directory"))
+    start.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
 
     # Allow some config settings to be altered via the command line
     fractal_args = start.add_argument_group("Server Settings")
-    for field in ["port", "logfile", "loglevel", "cprofile"]:
-        cli_name = "--" + field.replace("_", "-")
-        fractal_args.add_argument(cli_name, **FractalServerSettings.help_info(field))
-
-    fractal_args.add_argument("--server-name", **FractalServerSettings.help_info("name"))
-    fractal_args.add_argument(
-        "--start-periodics",
-        default=True,
-        type=_str2bool,
-        help="Expert! Can disable periodic update (services, heartbeats) if False. Useful when running behind a proxy.",
-    )
+    fractal_args.add_argument("--port", **FlaskConfig.help_info("port"))
+    fractal_args.add_argument("--bind", **FlaskConfig.help_info("bind"))
+    fractal_args.add_argument("--num-workers", **FlaskConfig.help_info("num_workers"))
+    fractal_args.add_argument("--logfile", **FractalConfig.help_info("loglevel"))
+    fractal_args.add_argument("--loglevel", **FractalConfig.help_info("loglevel"))
+    fractal_args.add_argument("--cprofile", **FractalConfig.help_info("cprofile"))
+    fractal_args.add_argument("--enable-security", **FractalConfig.help_info("enable_security"))
 
     fractal_args.add_argument(
-        "--disable-ssl",
-        default=False,
-        type=_str2bool,
-        help="Disables SSL if present, if False a SSL cert will be created for you.",
+        "--disable-periodics",
+        action="store_true",
+        help="[ADVANCED] Disable periodic tasks (service updates and manager cleanup)"
     )
-    fractal_args.add_argument("--tls-cert", type=str, default=None, help="Certificate file for TLS (in PEM format)")
-    fractal_args.add_argument("--tls-key", type=str, default=None, help="Private key file for TLS (in PEM format)")
 
-    # Upgrade subcommands
+    #####################################
+    # upgrade subcommand
+    #####################################
     upgrade = subparsers.add_parser("upgrade", help="Upgrade QCFractal database.")
-    upgrade.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+    upgrade.add_argument("--base-folder", **FractalConfig.help_info("base_directory"))
+    upgrade.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
 
-    compute_args = start.add_argument_group("Local Computation Settings")
-    compute_args.add_argument(
-        "--local-manager",
-        const=-1,
-        default=None,
-        action="store",
-        nargs="?",
-        type=int,
-        help="Creates a local pool QueueManager attached to the server.",
-    )
 
-    # Config subcommands
+    #####################################
+    # info subcommand
+    #####################################
     info = subparsers.add_parser("info", help="Manage users and permissions on a QCFractal server instance.")
     info.add_argument(
         "category", nargs="?", default="config", choices=["config", "alembic"], help="The config category to show."
     )
-    info.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+    info.add_argument("--base-folder", **FractalConfig.help_info("base_directory"))
+    info.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
 
-    # User subcommands
+    #####################################
+    # user subcommand
+    #####################################
     user = subparsers.add_parser("user", help="Configure a QCFractal server instance.")
-    user.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+    user.add_argument("--base-folder", **FractalConfig.help_info("base_directory"))
+    user.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
 
+    # user sub-subcommands
     user_subparsers = user.add_subparsers(dest="user_command")
 
     user_add = user_subparsers.add_parser("add", help="Add a user to the QCFractal server.")
@@ -171,7 +192,9 @@ def parse_args():
     user_remove = user_subparsers.add_parser("remove", help="Remove a user.")
     user_remove.add_argument("username", default=None, type=str, help="The username to remove.")
 
-    # Backup
+    #####################################
+    # backup subcommand
+    #####################################
     backup = subparsers.add_parser("backup", help="Creates a postgres backup file of the current database.")
     backup.add_argument(
         "--filename",
@@ -179,62 +202,28 @@ def parse_args():
         type=str,
         help="The filename to dump the backup to, defaults to 'database_name.bak'.",
     )
-    backup.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+    backup.add_argument("--base-folder", **FractalConfig.help_info("base_directory"))
+    backup.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
 
-    # Restore
+    #####################################
+    # restore subcommand
+    #####################################
     restore = subparsers.add_parser("restore", help="Restores the database from a backup file.")
     restore.add_argument("filename", default=None, type=str, help="The filename to restore from.")
-    restore.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-    # restore.add_argument(
-    #     "--force", action="store_true", help="If True, do not ask if the user wishes to delete the current database."
-    # )
+    restore.add_argument("--base-folder", **FractalConfig.help_info("base_directory"))
+    restore.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
 
-    # Move args around
-    args = vars(parser.parse_args())
 
-    ret = {}
-    ret["database"] = {}
-    ret["fractal"] = {}
-    for key, value in args.items():
-
-        # DB bucket
-        if ("db_" in key) and (key.replace("db_", "") in DatabaseSettings.field_names()):
-            if value is None:
-                continue
-            ret["database"][key.replace("db_", "")] = value
-
-        # Fractal bucket
-        elif key in FractalServerSettings.field_names():
-            if value is None:
-                continue
-            ret["fractal"][key] = value
-
-        # Additional base values that should be none
-        elif key in ["base_folder"]:
-            if value is None:
-                continue
-            ret[key] = value
-        else:
-            ret[key] = value
-
-    if args["command"] is None:
-        parser.print_help(sys.stderr)
-        sys.exit(1)
-
-    return ret
+    args = parser.parse_args()
+    return args
 
 
 def server_init(args, config):
-    # alembic stamp head
+    logger = logging.getLogger(__name__)
+    logger.info("*** Initializing QCFractal from configuration ***")
 
-    print("Initializing QCFractal configuration.")
-    # Configuration settings
-
-    config.base_path.mkdir(parents=True, exist_ok=True)
-    overwrite_config = args.get("overwrite_config", False)
-    clear_database = args.get("clear_database", False)
-
-    psql = PostgresHarness(config, quiet=False, logger=print)
+    psql = PostgresHarness(config)
+    quit()
 
     # Make sure we do not delete anything.
     if config.config_file_path.exists():
@@ -306,120 +295,89 @@ def server_init(args, config):
     print("\n>>> Success! Please run `qcfractal-server start` to boot a FractalServer!")
 
 
-def server_info(args, config):
-
-    psql = PostgresHarness(config, quiet=False, logger=print)
-
-    if args["category"] == "config":
-        print(f"Displaying QCFractal configuration:\n")
-        print(yaml.dump(config.dict(), default_flow_style=False))
-    elif args["category"] == "alembic":
+def server_info(args, qcf_config):
+    # Just use raw printing here, rather than going through logging
+    if args.category == "config":
+        print("Displaying QCFractal configuration below")
+        print(dump_config(qcf_config))
+    elif args.category == "alembic":
+        psql = PostgresHarness(qcf_config.database)
         print(f"Displaying QCFractal Alembic CLI configuration:\n")
         print(" ".join(psql.alembic_commands()))
 
 
 def server_start(args, config):
-    # check if db not current, ask for upgrade
+    logger = logging.getLogger(__name__)
+    logger.info("*** Starting a QCFractal server ***")
+    logger.info(f"QCFractal server base directory: {config.base_directory}")
 
-    print("Starting a QCFractal server.\n")
-    print(f"QCFractal server base folder: {config.base_folder}")
-
-    # Build an optional adapter
-    if args["local_manager"]:
-        ncores = args["local_manager"]
-        if ncores == -1:
-            ncores = None
-
-        from concurrent.futures import ProcessPoolExecutor
-
-        adapter = ProcessPoolExecutor(max_workers=ncores)
-
+    # Initialize the global logging infrastructure
+    if config.logfile is not None:
+        logger.info(f"Logging to {config.logfile} at level {config.loglevel}")
+        log_handler = logging.FileHandler(config.logfile)
     else:
-        adapter = None
+        logger.info(f"Logging to stdout at level {config.loglevel}")
+        log_handler = logging.StreamHandler(sys.stdout)
 
-    print("\n>>> Examining SSL Certificates...")
-    # Handle SSL
-    if args["disable_ssl"]:
-        print("SSL disabled.")
-        ssl_options = False
-    else:
-        ssl_certs = sum(args[x] is not None for x in ["tls_key", "tls_cert"])
-        if ssl_certs == 0:
-            ssl_options = True
-            print("Autogenerated SSL certificates, clients must use 'verify=False' when connecting.")
-        elif ssl_certs == 2:
-            ssl_options = {"crt": args["tls_cert"], "key": args["tls_key"]}
-            print("Reading SSL certificates.")
-        else:
-            raise KeyError("Both tls-cert and tls-key must be passed in.")
+    # Reset the logger given the full configuration
+    logging.basicConfig(level=config.loglevel, handlers=[log_handler], format='[%(asctime)s] (%(processName)-16s) %(levelname)8s: %(name)s: %(message)s', datefmt = '%Y-%m-%d %H:%M:%S %Z', force=True)
 
-    # Build the server itself
-    if config.fractal.logfile is None:
-        logfile = None
-    else:
-        logfile = str(config.base_path / config.fractal.logfile)
+    # Logger for the rest of this function
+    logger = logging.getLogger(__name__)
 
-    print("\n>>> Logging to " + logfile)
-    print(">>> Loglevel: " + config.fractal.loglevel.upper())
+    logger.info("Checking the PostgreSQL connection...")
+    psql = PostgresHarness(config.database)
 
-    print("\n>>> Checking the PostgreSQL connection...")
-    psql = PostgresHarness(config, quiet=False, logger=print)
-
-    ensure_postgres_alive(psql)
+    # If we are expected to manage the postgres instance ourselves, start it
+    # If not, make sure it is started
+    psql.ensure_alive()
 
     # make sure DB is created
-    psql.create_database(config.database.database_name)
+    # If it exists, no changes are made
+    psql.create_database()
 
-    print("\n>>> Initializing the QCFractal server...")
+    # Start up a socket. The main thing is to see if it can connect, and also
+    # to check if the database needs to be upgraded
+    # We then no loger need the socket (gunicorn and periodics will use their own
+    # in their subprocesses)
+    socket = SQLAlchemySocket()
+    socket.init(config)
+
+    # Start up the gunicorn and periodics
+    mp_ctx = multiprocessing.get_context('fork')
+    gunicorn = FractalGunicornProcess(config)
+    periodics = FractalPeriodicsProcess(config)
+    gunicorn_proc = FractalProcessRunner('gunicorn', mp_ctx, gunicorn)
+    periodics_proc = FractalProcessRunner('periodics', mp_ctx, periodics)
+
+    def _cleanup(sig, frame):
+        signame = signal.Signals(sig).name
+        logger.debug("In cleanup of qcfractal_server")
+        raise EndProcess(signame)
+
+    signal.signal(signal.SIGINT, _cleanup)
+    signal.signal(signal.SIGTERM, _cleanup)
+
     try:
-        server = qcfractal.FractalServer(
-            name=args.get("server_name", None) or config.fractal.name,
-            port=config.fractal.port,
-            # compress_response=config.fractal.compress_response,
-            # Security
-            security=config.fractal.security,
-            allow_read=config.fractal.allow_read,
-            ssl_options=ssl_options,
-            # Database
-            storage_uri=config.database_uri(safe=False, database=""),
-            storage_project_name=config.database.database_name,
-            query_limit=config.fractal.query_limit,
-            # Collection views
-            view_enabled=config.view.enable,
-            view_path=config.view_path,
-            # Log options
-            logfile_prefix=logfile,
-            loglevel=config.fractal.loglevel,
-            log_apis=config.fractal.log_apis,
-            geo_file_path=config.geo_file_path(),
-            # Queue options
-            service_frequency=config.fractal.service_frequency,
-            heartbeat_frequency=config.fractal.heartbeat_frequency,
-            max_active_services=config.fractal.max_active_services,
-            queue_socket=adapter,
-        )
-
+        while True:
+            time.sleep(15)
+            if not gunicorn_proc.is_alive():
+                raise RuntimeError("Gunicorn process died! Check the logs")
+            if not periodics_proc.is_alive():
+                raise RuntimeError("Periodics process died! Check the logs")
+    except EndProcess as e:
+        logger.debug("server_start received EndProcess: " + str(e))
     except Exception as e:
-        print("Fatal during server startup:\n")
-        print(str(e))
-        print("\nFailed to start the server, shutting down.")
-        sys.exit(1)
+        tb = ''.join(traceback.format_exception(None, e, e.__traceback__))
+        logger.critical(f"Exception while running QCFractal server:\n{tb}")
 
-    print(f"Server: {str(server)}")
+    gunicorn_proc.stop()
+    periodics_proc.stop()
 
-    # Register closing
-    # install_signal_handlers(server.loop, server.stop)
+    # Shutdown the database, but only if we manage it
+    if config.database.own:
+        psql.shutdown()
 
-    # Blocks until keyboard interupt
-    print("\n>>> Starting the QCFractal server...")
-    if args["start_periodics"]:
-        print("Periodics are enabled.")
-    else:
-        print("Periodics are disabled.")
-
-    server.start(start_periodics=args["start_periodics"])
-    # check and start manager if set in config
-    server.start_manager()
 
 
 def server_upgrade(args, config):
@@ -429,7 +387,6 @@ def server_upgrade(args, config):
 
     try:
         psql.upgrade()
-        psql.update_db_version()
     except ValueError as e:
         print(str(e))
         sys.exit(1)
@@ -557,77 +514,111 @@ def server_restore(args, config):
     print("Restore complete!")
 
 
-def main(args=None):
+def main():
+    # Parse all the command line arguments
+    args = parse_args()
 
-    # Grab CLI args if not present
-    if args is None:
-        args = parse_args()
+    # If the user wants verbose output (for some commands), then set logging level to be DEBUG
+    # Use a stripped down format, since we are just logging to stdout
+    verbose = "verbose" in args and args.verbose is True
 
-    command = args.pop("command")
+    # Also set it to debug if loglevel is specified to debug
+    verbose = verbose or ("loglevel" in args and args.loglevel.upper() == "DEBUG")
 
-    # More default manipulation to get supersets correct
-    config_kwargs = ["base_folder", "fractal", "database"]
-    config_args = {}
-    for x in config_kwargs:
-        if x in args:
-            config_args[x] = args.pop(x)
+    log_handler = logging.StreamHandler(sys.stdout)
 
-    config = FractalConfig(**config_args)
+    if verbose:
+        logging.basicConfig(level="DEBUG", handlers=[log_handler], format='%(levelname)s: %(name)s: %(message)s')
+    else:
+        logging.basicConfig(level="INFO", handlers=[log_handler], format='%(levelname)s: %(message)s')
+    logger = logging.getLogger(__name__)
+
+    # command = the subcommand used (init, start, etc)
+    command = args.command
+
+    # If command is not 'init', we need to build the configuration
+    # Priority: 1.) command line
+    #           2.) environment variables
+    #           3.) config file
+    # We do not explicitly handle environment variables.
+    # They are handled automatically by pydantic
+
+    # Handle some arguments given on the command line
+    # They are only valid if starting a server
+    cmd_config = {'flask': {}}
+
+    if command == "start":
+        if args.port is not None:
+            cmd_config["flask"]["port"] = args.port
+        if args.bind is not None:
+            cmd_config["flask"]["bind"] = args.bind
+        if args.num_workers is not None:
+            cmd_config["flask"]["num_workers"] = args.num_workers
+        if args.logfile is not None:
+            cmd_config["logfile"] = args.logfile
+        if args.loglevel is not None:
+            cmd_config["loglevel"] = args.loglevel
+        if args.cprofile is not None:
+            cmd_config["cprofile"] = args.cprofile
+        if args.enable_security is not None:
+            cmd_config["enable_security"] = args.enable_security
+
+    # base_folder is deprecated. If specified, replace with config=base_folder/qcfractal_config.yaml
+    if args.base_folder is not None:
+        if args.config is not None:
+            raise RuntimeError("Cannot specify both --base-folder and --config at the same time!")
+
+        config_path = os.path.join(args.base_folder, 'qcfractal_config.yaml')
+        logger.warning("*"*80)
+        logger.warning("Using --base-folder is deprecated. Use --config=/path/to/config.yaml instead.")
+        logger.warning(f"For now, I will automatically use --config={config_path}")
+        logger.warning("*"*80)
+
+    elif args.config is not None:
+        config_path = args.config
+    else:
+        config_path = os.path.expanduser(os.path.join("~", '.qca', 'qcfractal', 'qcfractal_config.yaml'))
+        logger.info(f"Using default configuration path {config_path}")
+
+    # Now read and form the complete configuration
+    qcf_config = read_configuration([config_path], cmd_config)
+
+    cfg_str = dump_config(qcf_config, 4)
+    logger.debug("Assembled the following configuration:\n" + cfg_str)
 
     # If desired, enable profiling
-    if config.fractal.cprofile is not None:
-        print("!" * 80)
-        print(f"! Enabling profiling via cProfile. Outputting data file to {config.fractal.cprofile}")
-        print("!" * 80)
-        import cProfile
+    #if config.fractal.cprofile is not None:
+    #    print("!" * 80)
+    #    print(f"! Enabling profiling via cProfile. Outputting data file to {config.fractal.cprofile}")
+    #    print("!" * 80)
+    #    import cProfile
 
-        pr = cProfile.Profile()
-        pr.enable()
+    #    pr = cProfile.Profile()
+    #    pr.enable()
 
-    # Merge files
-    if command != "init":
-        if not config.base_path.exists():
-            print(f"Could not find configuration file path: {config.base_path}")
-            sys.exit(1)
-        if not config.config_file_path.exists():
-            print(f"Could not find configuration file: {config.config_file_path}")
-            sys.exit(1)
-
-        file_dict = FractalConfig(**yaml.load(config.config_file_path.read_text(), Loader=yaml.FullLoader)).dict()
-        config_dict = config.dict(exclude_unset=True)
-
-        # Only fractal options can be changed by user input parameters
-        file_dict["fractal"] = {**file_dict.pop("fractal"), **config_dict.pop("fractal")}
-
-        # base_folder is global (outside of fractal, database, etc).
-        # Should be included here, just for debugging and printing purposes (as its only purpose
-        # was to read the config_file above)
-        file_dict["base_folder"] = config.base_folder
-
-        config = FractalConfig(**file_dict)
-
-    if command == "init":
-        server_init(args, config)
-    elif command == "info":
-        server_info(args, config)
+    if command == "info":
+        server_info(args, qcf_config)
+    elif command == "init":
+        server_init(args, qcf_config)
     elif command == "start":
-        server_start(args, config)
-    elif command == "upgrade":
-        server_upgrade(args, config)
-    elif command == "user":
-        server_user(args, config)
-    elif command == "backup":
-        server_backup(args, config)
-    elif command == "restore":
-        server_restore(args, config)
+        server_start(args, qcf_config)
+    quit()
+    #elif command == "upgrade":
+    #    server_upgrade(args, qcf_config)
+    #elif command == "user":
+    #    server_user(args, qcf_config)
+    #elif command == "backup":
+    #    server_backup(args, qcf_config)
+    #elif command == "restore":
+    #    server_restore(args, qcf_config)
 
     # Everything finished. If profiling is enabled, write out the
     # data file
-    if config.fractal.cprofile is not None:
-        print(f"! Writing profiling data to {config.fractal.cprofile}")
-        print("! Read using the Stats class of the pstats package")
-        pr.disable()
-        pr.dump_stats(config.fractal.cprofile)
+    #if config.fractal.cprofile is not None:
+    #    print(f"! Writing profiling data to {config.fractal.cprofile}")
+    #    print("! Read using the Stats class of the pstats package")
+    #    pr.disable()
+    #    pr.dump_stats(config.fractal.cprofile)
 
 
 if __name__ == "__main__":
