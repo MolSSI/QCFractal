@@ -7,16 +7,15 @@ from .config import config
 # from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 import logging
-import traceback
-import signal
-import os
 
 from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
 from qcfractal.storage_sockets import ViewHandler, API_AccessLogger
+from qcfractal.fractal_proc import FractalProcessBase
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..config import FractalConfig
+    from typing import Optional
 
 storage_socket = SQLAlchemySocket()
 api_logger = API_AccessLogger()
@@ -24,10 +23,6 @@ view_handler = ViewHandler()
 
 jwt = JWTManager()
 # cors = CORS()
-
-# Signalling of process termination via an exception
-class EndProcess(RuntimeError):
-    pass
 
 def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     config_name = qcfractal_config.flask.config_name
@@ -65,95 +60,52 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     return app
 
 
-
-class FractalFlaskProcess:
+class FractalFlaskProcess(FractalProcessBase):
     """
-    Creates a flask app in a separate process, and allows for control
+    Flask running in a separate process
     """
 
     def __init__(
             self,
             qcf_config: FractalConfig,
-            mp_context: multiprocessing.context.BaseContext,
-            start: bool = True,
-            enable_watching: bool = False
+            completed_queue: Optional[multiprocessing.Queue] = None
     ):
         self._qcf_config = qcf_config
-        self._mp_ctx = mp_context
+        self._completed_queue = completed_queue
 
-        self._completed_queue = None
 
-        if enable_watching:
-            self._completed_queue = self._mp_ctx.Queue()
-            self._all_completed = []
 
-        self._flask_process = self._mp_ctx.Process(name="flask_proc", target=FractalFlaskProcess._run_flask, args=(self._qcf_config, self._completed_queue))
-        if start:
-            self.start()
+#    def wait_for_results(self, ids, timeout=None) -> bool:
+#        logger = logging.getLogger(__name__)
+#
+#        if self._completed_queue is None:
+#            raise RuntimeError("Cannot wait for results when the completed queue is not enabled. See the 'enable_watching' argument to the constructor")
+#
+#        ids = set(int(x) for x in ids)
+#
+#        while len(ids) > 0:
+#            # The queue stores a tuple of (id, type, status)
+#            try:
+#                base_result_info = self._completed_queue.get(True, timeout)
+#            except self._mp_ctx.Queue.Empty as e:
+#                logger.debug(f'No tasks finished in {timeout} seconds')
+#                return False
+#
+#            logger.debug("Task finished: id={}, type={}, status={}".format(*base_result_info))
+#            self._all_completed.append(base_result_info[0])
+#            ids.remove(base_result_info[0])
+#
+#        return True
 
-    def start(self):
-        if self._flask_process.is_alive():
-            raise RuntimeError("Flask process is already running")
-        else:
-            self._flask_process.start()
+    def run(self):
+        flask_app = create_qcfractal_flask_app(self._qcf_config)
 
-    def stop(self):
-        self._flask_process.terminate()
-        self._flask_process.join()
+        if self._completed_queue is not None:
+            # Get the global storage socket and set up the queue
+            from .flask_app import storage_socket as flask_storage_socket
+            flask_storage_socket.set_completed_watch(self._completed_queue)
 
-    def __del__(self):
-        self.stop()
+        flask_app.run(host=self._qcf_config.flask.bind, port=self._qcf_config.flask.port)
 
-    def wait_for_results(self, ids, timeout=None) -> bool:
-        logger = logging.getLogger(__name__)
-
-        if self._completed_queue is None:
-            raise RuntimeError("Cannot wait for results when the completed queue is not enabled. See the 'enable_watching' argument to the constructor")
-
-        ids = set(int(x) for x in ids)
-
-        while len(ids) > 0:
-            # The queue stores a tuple of (id, type, status)
-            try:
-                base_result_info = self._completed_queue.get(True, timeout)
-            except self._mp_ctx.Queue.Empty as e:
-                logger.debug(f'No tasks finished in {timeout} seconds')
-                return False
-
-            logger.debug("Task finished: id={}, type={}, status={}".format(*base_result_info))
-            self._all_completed.append(base_result_info[0])
-            ids.remove(base_result_info[0])
-
-        return True
-
-    @staticmethod
-    def _run_flask(qcf_config: FractalConfig, completed_queue):
-        logger = logging.getLogger()
-
-        def _cleanup(sig, frame):
-            signame = signal.Signals(sig).name
-            logger.debug("In cleanup of _run_flask. Received " + signame)
-            raise EndProcess(signame)
-
-        signal.signal(signal.SIGINT, _cleanup)
-        signal.signal(signal.SIGTERM, _cleanup)
-
-        # Disable a few lines of flask output that always gets sent to stdout/stderr
-        os.environ["WERKZEUG_RUN_MAIN"] = 'true'
-
-        # Start the flask server
-        try:
-            flask_app = create_qcfractal_flask_app(qcf_config)
-
-            if completed_queue is not None:
-                from .flask_app import storage_socket as flask_storage_socket
-                flask_storage_socket.set_completed_watch(completed_queue)
-
-            flask_app.run(host=qcf_config.flask.bind, port=qcf_config.flask.port)
-        except EndProcess as e:
-            logger.debug("_run_flask received EndProcess: " + str(e))
-            exit(0)
-        except Exception as e:
-            tb = ''.join(traceback.format_exception(None, e, e.__traceback__))
-            logger.critical(f"Exception while running flask app:\n{tb}")
-            exit(1)
+    def finalize(self) -> None:
+        pass

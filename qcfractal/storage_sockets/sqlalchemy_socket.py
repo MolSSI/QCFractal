@@ -166,8 +166,8 @@ class SQLAlchemySocket:
         self.logger = logging.getLogger("SQLAlchemySocket")
         uri = qcf_config.database.uri
 
-        if "psycopg2" not in uri:
-            uri = uri.replace("postgresql", "postgresql+psycopg2")
+        #if "psycopg2" not in uri:
+        #    uri = uri.replace("postgresql", "postgresql+psycopg2")
 
         self.logger.info(f"SQLAlchemy attempt to connect to {uri}.")
 
