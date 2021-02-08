@@ -18,7 +18,7 @@ from qcfractal.testing import fractal_compute_server
 def test_compute_queue_stack(fractal_compute_server):
 
     # Build a client
-    client = ptl.FractalClient(fractal_compute_server)
+    client = fractal_compute_server.client()
 
     # Add a hydrogen and helium molecule
     hydrogen = ptl.Molecule.from_data([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
@@ -36,16 +36,15 @@ def test_compute_queue_stack(fractal_compute_server):
     r = client.add_compute("psi4", "HF", "sto-3g", "energy", kw_id, [hydrogen_mol_id, helium])
     assert len(r.ids) == 2
 
+    # Test deduplication
     r2 = client.add_compute(**compute_args, molecule=[hydrogen_mol_id, helium])
     assert len(r2.ids) == 2
     assert len(r2.submitted) == 0
     assert set(r2.ids) == set(r.ids)
 
-    # Manually handle the compute
-    fractal_compute_server.await_results()
-    assert len(fractal_compute_server.list_current_tasks()) == 0
+    fractal_compute_server.wait_for_results(r.ids)
 
-    # Query result and check against out manual pul
+    # Query result and check against
     results_query = {
         "program": "psi4",
         "molecule": [hydrogen_mol_id, helium_mol_id],
@@ -76,7 +75,7 @@ def test_compute_wavefunction(fractal_compute_server):
         pytest.skip("Must be used a modern version of Psi4 to execute")
 
     # Build a client
-    client = ptl.FractalClient(fractal_compute_server)
+    client = fractal_compute_server.client()
 
     # Add a hydrogen and helium molecule
     hydrogen = ptl.Molecule.from_data([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
@@ -91,8 +90,7 @@ def test_compute_wavefunction(fractal_compute_server):
         protocols={"wavefunction": "orbitals_and_eigenvalues"},
     )
 
-    fractal_compute_server.await_results()
-    assert len(fractal_compute_server.list_current_tasks()) == 0
+    fractal_compute_server.wait_for_results(r.ids)
 
     result = client.query_results(id=r.ids)[0]
     assert result.wavefunction
@@ -112,7 +110,7 @@ def test_procedure_optimization_single(fractal_compute_server):
 
     # Add a hydrogen molecule
     hydrogen = ptl.Molecule.from_data([[1, 0, 0, -0.672], [1, 0, 0, 0.672]], dtype="numpy", units="bohr")
-    client = ptl.FractalClient(fractal_compute_server.get_address(""))
+    client = fractal_compute_server.client()
     mol_ret = client.add_molecules([hydrogen])
 
     kw = ptl.models.KeywordSet(values={"scf_properties": ["quadrupole", "wiberg_lowdin_indices"]})
@@ -130,8 +128,7 @@ def test_procedure_optimization_single(fractal_compute_server):
     compute_key = r.ids[0]
 
     # Manually handle the compute
-    fractal_compute_server.await_results()
-    assert len(fractal_compute_server.list_current_tasks()) == 0
+    fractal_compute_server.wait_for_results(r.ids)
 
     # # Query result and check against out manual pul
     query1 = client.query_procedures(procedure="optimization", program="geometric")
@@ -200,11 +197,9 @@ def test_procedure_optimization_protocols(fractal_compute_server):
     # Ask the server to compute a new computation
     r = client.add_procedure("optimization", "geometric", options, [hydrogen])
     assert len(r.ids) == 1
-    compute_key = r.ids[0]
 
     # Manually handle the compute
-    fractal_compute_server.await_results()
-    assert len(fractal_compute_server.list_current_tasks()) == 0
+    fractal_compute_server.wait_for_results(r.ids)
 
     # # Query result and check against out manual pul
     proc = client.query_procedures(id=r.ids)[0]
