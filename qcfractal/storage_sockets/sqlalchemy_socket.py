@@ -194,9 +194,8 @@ class SQLAlchemySocket:
                 f'Please run "qcfractal-server upgrade" first before starting the server.'
             )
 
-        # actually create the tables
+        # Check for compatible versions of the QCFractal database schema
         try:
-            Base.metadata.create_all(self.engine)
             self.check_lib_versions()  # update version if new DB
         except Exception as e:
             raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}") from None
@@ -464,6 +463,8 @@ class SQLAlchemySocket:
                 ret["meta"]["n_found"] = len(ret["data"])
             except TypeError:
                 ret["meta"]["n_found"] = 1
+            finally:
+                session.close()
         except Exception as err:
             ret["meta"]["error_description"] = str(err)
 

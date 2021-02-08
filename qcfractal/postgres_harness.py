@@ -128,8 +128,10 @@ class PostgresHarness:
         self._logger.debug("Running subprocess: " + str(command))
         stdout = proc.stdout.decode()
         stderr = proc.stderr.decode()
-        self._logger.info(stdout)
-        self._logger.error(stderr)
+        if len(stdout) > 0:
+            self._logger.info(stdout)
+        if len(stderr) > 0:
+            self._logger.info(stderr)
 
         return proc.returncode, stdout, stderr
 
@@ -290,6 +292,29 @@ class PostgresHarness:
             raise RuntimeError("I created the database, but now it is not alive? Maybe check the postgres logs")
 
 
+    def delete_database(self) -> None:
+        """
+        Deletes the database
+
+        This will delete all data associated with the database!
+        """
+        # First we connect to the 'postgres' database
+        # The database specified in the config may not exist yet
+        pg_uri = replace_db_in_uri(self.config.uri, "postgres")
+        conn = self.connect(pg_uri)
+        conn.autocommit = True
+
+        cursor = conn.cursor()
+
+        # Now we can search the pg_catalog to see if the database we want exists yet
+        self._logger.info(f"Deleting/Dropping database {self.config.database_name}")
+        cursor.execute(f"DROP DATABASE IF EXISTS {self.config.database_name}")
+
+        # Check to see that it was deleted
+        if self.is_alive():
+            raise RuntimeError("Could not delete database. Was it still open somewhere?")
+
+
     def _update_db_version(self) -> None:
         """Update current version of QCFractal that is stored in the database
 
@@ -403,6 +428,8 @@ class PostgresHarness:
         """Initializes a postgresql instance and starts it
 
         The data directory and port from the configuration is used for the postgres instance
+
+        This does not create the QCFractal database or its tables
         """
 
         # Can only initialize if we are expected to manage it
@@ -447,8 +474,6 @@ class PostgresHarness:
             if retcode != 0:
                 err_msg = f"Error running createdb:\noutput:\n{stdout}\nstderr:\n{stderr}"
                 raise RuntimeError(err_msg)
-
-            self.create_database()
         except Exception:
             self.shutdown()
             raise
@@ -497,6 +522,7 @@ class PostgresHarness:
         if retcode != 0:
             err_msg = f"Error stamping the database with the current version:\noutput:\n{stdout}\nstderr:\n{stderr}"
             raise RuntimeError(err_msg)
+
 
     def backup_database(self, filepath: str) -> None:
         """
@@ -594,12 +620,12 @@ class TemporaryPostgres:
 
         port = find_port()
         db_config = {"port": port, "data_directory": self._data_dir, "base_directory": self._data_dir,
-                     "database_name": "qcfractal_tmp_db", "own": True}
+                     "own": True}
 
         self.config = DatabaseConfig(**db_config)
-        self.psql = PostgresHarness(self.config)
-        self.psql.initialize_postgres()
-        self.psql.create_database()
+        self.harness = PostgresHarness(self.config)
+        self.harness.initialize_postgres()
+
         self._active = True
         logger.info(f"Created temporary postgres database at location {self._data_dir} running on port {port}")
 
@@ -635,4 +661,5 @@ class TemporaryPostgres:
         """
 
         if self._active:
-            self.psql.shutdown()
+            self.harness.shutdown()
+        self._active = False

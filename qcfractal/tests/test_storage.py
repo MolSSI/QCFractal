@@ -10,11 +10,11 @@ from time import time
 import numpy as np
 import pytest
 import sqlalchemy
+import sqlalchemy.exc
 
 import qcfractal.interface as ptl
 from qcfractal.interface.models.task_models import TaskStatusEnum
 from qcfractal.services.services import TorsionDriveService
-from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
 
 bad_id1 = "99999000"
 bad_id2 = "99999001"
@@ -758,9 +758,7 @@ def test_storage_queue_roundtrip(storage_results, status):
     queue_id2 = storage_results.queue_get_next("test_manager2", ["p1"], ["p1"], limit=1)[0].id
 
     if status == "ERROR":
-        err1 = {"error_type": "test_error", "error_message": "Error msg"}
-        err2 = {"error_type": "test_error", "error_message": "Error msg2"}
-        r = storage_results.queue_mark_error([(queue_id, err1), (queue_id2, err2)])
+        r = storage_results.queue_mark_error([queue_id, queue_id2])
     elif status == "COMPLETE":
         r = storage_results.queue_mark_complete([queue_id2, queue_id])
         # Check queue is empty
@@ -774,15 +772,9 @@ def test_storage_queue_roundtrip(storage_results, status):
     assert r == 2
 
     # Check results
-    res = storage_results.get_results(id=results[0]["id"])["data"][0]
-    assert res["status"] == status
-    assert res["manager_name"] == "test_manager"
-    if status == "ERROR":
-        err_id = res["error"]
-        err = storage_results.get_kvstore(err_id)
-        js = err["data"][err_id].get_json()
-        assert js["error_message"] == "Error msg"
-        assert js["error_type"] == "test_error"
+    # TODO: We no longer change base results through queue_mark_*. So we should remove this?
+    #res = storage_results.get_results(id=results[0]["id"])["data"][0]
+    #assert res["status"] == status
 
 
 def test_queue_submit_many_order(storage_results):
@@ -1055,7 +1047,6 @@ def test_services_sql(storage_results):
         "dihedral_template": "1",
         "optimization_template": "2",
         "molecule_template": "",
-        "logger": None,
         "storage_socket": storage_results,
         "task_priority": 0,
         "output": proc_pydantic,
@@ -1072,7 +1063,7 @@ def test_services_sql(storage_results):
     assert ret["data"][0]["dihedral_template"] == service_data["dihedral_template"]
 
     # Create Pydantic object from DB returned object
-    py_obj = TorsionDriveService(**ret["data"][0], storage_socket=storage_results, logger=None)
+    py_obj = TorsionDriveService(**ret["data"][0], storage_socket=storage_results)
     assert py_obj
 
     # Test update
@@ -1082,10 +1073,6 @@ def test_services_sql(storage_results):
 
     ret = storage_results.get_services(procedure_id=ret["data"][0]["procedure_id"], status=TaskStatusEnum.waiting)
     assert ret["data"][0]["task_priority"] == py_obj.task_priority
-
-
-def test_project_name(storage_socket):
-    assert "test" in storage_socket.get_project_name()
 
 
 def test_results_pagination(storage_socket):
