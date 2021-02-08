@@ -273,6 +273,7 @@ def server_init(args, config):
     if config.database.own:
         try:
             psql.initialize_postgres()
+            psql.create_database()
         except ValueError as e:
             print(str(e))
             sys.exit(1)
@@ -326,15 +327,15 @@ def server_start(args, config):
     logger = logging.getLogger(__name__)
 
     logger.info("Checking the PostgreSQL connection...")
-    psql = PostgresHarness(config.database)
+    pg_harness = PostgresHarness(config.database)
 
     # If we are expected to manage the postgres instance ourselves, start it
     # If not, make sure it is started
-    psql.ensure_alive()
+    pg_harness.ensure_alive()
 
     # make sure DB is created
     # If it exists, no changes are made
-    psql.create_database()
+    pg_harness.create_database()
 
     # Start up a socket. The main thing is to see if it can connect, and also
     # to check if the database needs to be upgraded
@@ -376,7 +377,7 @@ def server_start(args, config):
 
     # Shutdown the database, but only if we manage it
     if config.database.own:
-        psql.shutdown()
+        pg_harness.shutdown()
 
 
 

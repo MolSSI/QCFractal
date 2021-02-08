@@ -138,11 +138,9 @@ class BaseService(ProtoModel, abc.ABC):
 
     class Config(ProtoModel.Config):
         allow_mutation = True
-        serialize_default_excludes = {"storage_socket", 'logger'}
+        serialize_default_excludes = {"storage_socket"}
 
     def __init__(self, **data):
-        self.logger = logging.getLogger(type(self).__name__ + '_service')
-
         dt = datetime.datetime.utcnow()
         data.setdefault("modified_on", dt)
         data.setdefault("created_on", dt)

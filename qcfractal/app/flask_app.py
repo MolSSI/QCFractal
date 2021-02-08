@@ -74,29 +74,6 @@ class FractalFlaskProcess(FractalProcessBase):
         self._completed_queue = completed_queue
 
 
-
-#    def wait_for_results(self, ids, timeout=None) -> bool:
-#        logger = logging.getLogger(__name__)
-#
-#        if self._completed_queue is None:
-#            raise RuntimeError("Cannot wait for results when the completed queue is not enabled. See the 'enable_watching' argument to the constructor")
-#
-#        ids = set(int(x) for x in ids)
-#
-#        while len(ids) > 0:
-#            # The queue stores a tuple of (id, type, status)
-#            try:
-#                base_result_info = self._completed_queue.get(True, timeout)
-#            except self._mp_ctx.Queue.Empty as e:
-#                logger.debug(f'No tasks finished in {timeout} seconds')
-#                return False
-#
-#            logger.debug("Task finished: id={}, type={}, status={}".format(*base_result_info))
-#            self._all_completed.append(base_result_info[0])
-#            ids.remove(base_result_info[0])
-#
-#        return True
-
     def run(self):
         flask_app = create_qcfractal_flask_app(self._qcf_config)
 
