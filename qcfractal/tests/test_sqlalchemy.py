@@ -23,8 +23,6 @@ from qcfractal.storage_sockets.models import (
     TorsionDriveProcedureORM,
     Trajectory,
 )
-from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
-
 
 def session_delete_all(session, className):
     rows = session.query(className).all()
@@ -200,7 +198,6 @@ def test_services(storage_socket, session):
         "dihedral_template": "1",  # Not realistic?
         "optimization_template": "2",  # Not realistic?
         "molecule_template": "",
-        "logger": None,
         "storage_socket": storage_socket,
         "task_priority": 0,
     }
