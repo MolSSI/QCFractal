@@ -6,11 +6,11 @@ import os
 import pkgutil
 import shutil
 import signal
-import socket
 import subprocess
 import sys
 import threading
 import time
+import gc
 from collections import Mapping
 from contextlib import contextmanager
 
@@ -20,19 +20,20 @@ import pytest
 import qcengine as qcng
 import requests
 from qcelemental.models import Molecule
-from tornado.ioloop import IOLoop
+from .port_util import find_port
+from .config import FractalConfig
 
 from .interface import FractalClient
 from .postgres_harness import PostgresHarness, TemporaryPostgres
 from .qc_queue import build_queue_adapter
-from .server import FractalServer
 from .snowflake import FractalSnowflake
-from .storage_sockets import storage_socket_factory
+from .periodics import FractalPeriodics
+from .storage_sockets.sqlalchemy_socket import SQLAlchemySocket
 
 ## For mock flask responses
-from requests_mock_flask import add_flask_app_to_mock
-import requests_mock
-import responses
+#from requests_mock_flask import add_flask_app_to_mock
+#import requests_mock
+#import responses
 
 ### Addon testing capabilities
 
@@ -67,9 +68,6 @@ def pytest_collection_modifyitems(config, items):
 
 
 def pytest_configure(config):
-    import sys
-
-    sys._called_from_test = True
     config.addinivalue_line("markers", "example: Mark a given test as an example which can be run")
     config.addinivalue_line(
         "markers", "slow: Mark a given test as slower than most other tests, needing a special " "flag to run."
@@ -77,9 +75,7 @@ def pytest_configure(config):
 
 
 def pytest_unconfigure(config):
-    import sys
-
-    del sys._called_from_test
+    pass
 
 
 def _plugin_import(plug):
@@ -153,18 +149,6 @@ def recursive_dict_merge(base_dict, dict_to_merge_in):
             base_dict[k] = dict_to_merge_in[k]
 
 
-def find_open_port():
-    """
-    Use socket's built in ability to find an open port.
-    """
-    sock = socket.socket()
-    sock.bind(("", 0))
-
-    host, port = sock.getsockname()
-
-    return port
-
-
 @contextmanager
 def preserve_cwd():
     """Always returns to CWD on exit"""
@@ -174,83 +158,6 @@ def preserve_cwd():
     finally:
         os.chdir(cwd)
 
-
-def await_true(wait_time, func, *args, **kwargs):
-
-    wait_period = kwargs.pop("period", 4)
-    periods = max(int(wait_time / wait_period), 1)
-    for period in range(periods):
-        ret = func(*args, **kwargs)
-        if ret:
-            return True
-        time.sleep(wait_period)
-
-    return False
-
-
-### Background thread loops
-
-
-@contextmanager
-def pristine_loop():
-    """
-    Builds a clean IOLoop for using as a background request.
-    Courtesy of Dask Distributed
-    """
-    IOLoop.clear_instance()
-    IOLoop.clear_current()
-    loop = IOLoop()
-    loop.make_current()
-    assert IOLoop.current() is loop
-
-    try:
-        yield loop
-    finally:
-        try:
-            loop.close(all_fds=True)
-        except (ValueError, KeyError, RuntimeError):
-            pass
-        IOLoop.clear_instance()
-        IOLoop.clear_current()
-
-
-@contextmanager
-def loop_in_thread():
-    with pristine_loop() as loop:
-        # Add the IOloop to a thread daemon
-        thread = threading.Thread(target=loop.start, name="test IOLoop")
-        thread.daemon = True
-        thread.start()
-        loop_started = threading.Event()
-        loop.add_callback(loop_started.set)
-        loop_started.wait()
-
-        try:
-            yield loop
-        finally:
-            try:
-                loop.add_callback(loop.stop)
-                thread.join(timeout=5)
-            except:
-                pass
-
-
-def terminate_process(proc):
-    if proc.poll() is None:
-
-        # Sigint (keyboard interupt)
-        if sys.platform.startswith("win"):
-            proc.send_signal(signal.CTRL_BREAK_EVENT)
-        else:
-            proc.send_signal(signal.SIGINT)
-
-        try:
-            start = time.time()
-            while (proc.poll() is None) and (time.time() < (start + 15)):
-                time.sleep(0.02)
-        # Flat kill
-        finally:
-            proc.kill()
 
 
 @contextmanager
@@ -339,83 +246,163 @@ def run_process(args, **kwargs):
     return retcode == 0
 
 
+#######################################
+# Database and storage socket fixtures
+#######################################
+@pytest.fixture(scope="session")
+def postgres_server(tmp_path_factory):
+    '''
+    A postgres server instance, not including any databases
+
+    This is built only once per session, and automatically deleted after the session. It uses
+    a pytest-proveded session-scoped temporary directory
+    '''
+
+    db_path = str(tmp_path_factory.mktemp('db'))
+    tmp_pg = TemporaryPostgres(data_dir=db_path)
+    pg_harness = tmp_pg.harness
+    print(f"Using database located at {db_path} with uri {pg_harness.database_uri()}")
+    assert pg_harness.is_alive(False) and not pg_harness.is_alive(True)
+    yield pg_harness
+
+    if tmp_pg:
+        tmp_pg.stop()
+
+
+@contextmanager
+def _storage_socket(qcf_config: FractalConfig) -> SQLAlchemySocket:
+    '''
+    A function to wrap socket creation
+
+    This is needed so that the socket gets destructed, freeing any connections to the database
+    so that it can be deleted.
+
+    We wrap it in a contextmanager so that we can use 'with _storage_socket as ...'
+
+    Parameters
+    ----------
+    qcf_config: FractalConfig
+        Configuration to initialize the socket with
+    '''
+
+    socket = SQLAlchemySocket()
+    socket.init(qcf_config)
+
+    yield socket
+
+@pytest.fixture(scope="function")
+def temporary_database(postgres_server):
+    """
+    A temporary database that only lasts for one function
+
+    It is part of the postgres instance given by the postgres_server fixture
+    """
+
+    # Make sure that the server is up, but that the database doesn't exist
+    assert postgres_server.is_alive(False) and not postgres_server.is_alive(True)
+
+    # Now create it (including creating tables)
+    postgres_server.create_database()
+
+    try:
+        yield postgres_server
+    finally:
+        # Force a garbage collection. Sometimes there's session objects or something
+        # hanging around, which will prevent the database from being deleted
+        gc.collect()
+
+        postgres_server.delete_database()
+
+
+@pytest.fixture(scope="function")
+def storage_socket(temporary_database):
+    '''
+    A fixture for temporary database and storage socket
+    '''
+
+    # Create a configuration. Since this is mostly just for a storage socket,
+    # We can use defaults for almost all, since a flask server, etc, won't be instantiated
+    cfg_dict = {}
+    cfg_dict["base_directory"] = temporary_database.config.base_directory
+    cfg_dict["loglevel"] = "DEBUG"
+    cfg_dict["database"] = temporary_database.config.dict()
+    qcf_config = FractalConfig(**cfg_dict)
+
+    with _storage_socket(qcf_config) as socket:
+        try:
+            yield socket
+        finally:
+            # Remove the connection to the database from the socket
+            # We don't expose this since it should only be used in testing
+            socket.engine.dispose()
+
+
 ### Server testing mechanics
 
 
-@pytest.fixture(scope="session")
-def postgres_server():
-
-    if shutil.which("psql") is None:
-        pytest.skip("Postgres is not installed on this server and no active postgres could be found.")
-
-    storage = None
-    # psql = PostgresHarness({"database": {"port": 5432}})
-    psql = PostgresHarness({"database": {"port": 5432, "username": "qcarchive", "password": "mypass"}})
-    if not psql.is_alive():
-        print()
-        print(
-            f"Could not connect to a Postgres server at {psql.config.database_uri()}, this will increase time per test session by ~3 seconds."
-        )
-        print()
-        storage = TemporaryPostgres()
-        psql = storage.psql
-        print("Using Database: ", psql.config.database_uri())
-
-    yield psql
-
-    if storage:
-        storage.stop()
-
-
-def reset_server_database(server):
-    """Resets the server database for testing."""
-    if "QCFRACTAL_RESET_TESTING_DB" in os.environ:
-        server.storage._clear_db(server.storage._project_name)
-
-    server.storage._delete_DB_data(server.storage._project_name)
-
-    # Force a heartbeat after database clean if a manager is present.
-
-    if server.queue_socket:
-        try:
-            server.await_results()
-        except:
-              pass
-
-
-@pytest.fixture(scope="module")
-def test_server(request, postgres_server):
+@pytest.fixture(scope="function")
+def test_server(temporary_database):
     """
-    Builds a server instance with the event loop running in a thread.
-
-    No security - no Auth, read allowed
-    No manager
-    Flask mock, no real flask
+    A QCFractal server with no compute attached, and with security disabled
     """
-
-    # Storage name
-    storage_name = "test_qcfractal_server"
-    postgres_server.create_database(storage_name)
 
     with FractalSnowflake(
-        max_workers=0, # no managers
-        storage_project_name="test_qcfractal_server",
-        storage_uri=postgres_server.database_uri(),
-        start_server=False,
-        reset_database=True,
+        start=True,
+        max_workers=0,
+        enable_watching=True,
+        database_config=temporary_database.config,
         flask_config="testing",
     ) as server:
+        yield server
 
-        # Clean and re-init the database
 
-        with responses.RequestsMock(assert_all_requests_are_fired=False) as resp_m:
-            # with requests_mock.Mocker() as resp_m:
-            add_flask_app_to_mock(
-                mock_obj=resp_m,
-                flask_app=server.app,
-                base_url=server.get_address(),
-            )
-            yield server
+@pytest.fixture(scope="function")
+def _fractal_compute_base(temporary_database):
+    """
+    A Fractal snowflake with local compute manager
+
+    Subprocesses are not started automatically
+    """
+
+    # Tighten the service frequency for tests
+    extra_config = {}
+    extra_config['service_frequency'] = 5
+
+    with FractalSnowflake(
+            start=True,
+            max_workers=2,
+            enable_watching=True,
+            database_config=temporary_database.config,
+            flask_config="testing",
+            extra_config=extra_config
+    ) as server:
+        yield server
+
+
+@pytest.fixture(scope="function")
+def fractal_compute_server(_fractal_compute_base):
+    """
+    A Fractal snowflake with local compute manager
+
+    All subprocesses are started
+    """
+
+    _fractal_compute_base.start()
+    yield _fractal_compute_base
+
+
+@pytest.fixture(scope="function")
+def fractal_compute_server_manualperiodics(_fractal_compute_base):
+    """
+    A Fractal snowflake with local compute manager, but with periodics disabled and manually controllable
+    """
+
+    _fractal_compute_base._flask_proc.start()
+    _fractal_compute_base._compute_proc.start()
+
+    # Separate periodics class
+    periodics = FractalPeriodics(_fractal_compute_base._qcfractal_config)
+    yield _fractal_compute_base, periodics
 
 
 def build_adapter_clients(mtype, storage_name="test_qcfractal_compute_server"):
@@ -476,7 +463,7 @@ def managed_compute_server(request, postgres_server):
     # Not all adapters play well with internal loops
     with loop_in_thread() as loop:
         server = FractalServer(
-            port=find_open_port(),
+            port=find_port(),
             storage_project_name=storage_name,
             storage_uri=postgres_server.database_uri(),
             loop=loop,
@@ -503,75 +490,6 @@ def managed_compute_server(request, postgres_server):
         # Close down and clean the adapter
         manager.close_adapter()
         manager.stop()
-
-
-@pytest.fixture(scope="module")
-def fractal_compute_server(postgres_server):
-    """
-    A FractalServer with a local Pool manager.
-
-    No security - no Auth, read allowed
-    With ProcessPool manager
-    Flask mock, no real flask
-    """
-
-    # Storage name
-    storage_name = "test_qcfractal_compute_snowflake"
-    postgres_server.create_database(storage_name)
-
-    with FractalSnowflake(
-        max_workers=2,
-        storage_project_name=storage_name,
-        storage_uri=postgres_server.database_uri(),
-        reset_database=True,
-        start_server=False,
-        flask_config="testing"
-    ) as server:
-
-        reset_server_database(server)
-
-        with responses.RequestsMock(assert_all_requests_are_fired=False) as resp_m:
-            # with requests_mock.Mocker() as resp_m:
-            add_flask_app_to_mock(
-                mock_obj=resp_m,
-                flask_app=server.app,
-                base_url=server.get_address(),
-            )
-
-            server.start_manager()
-
-            yield server
-
-
-def build_socket_fixture(server=None):
-    print("")
-
-    # Check mongo
-    storage_name = "test_qcfractal_storage"
-
-    server.create_database(storage_name)
-    storage = storage_socket_factory(server.database_uri(), storage_name, sql_echo=False)
-
-    # Clean and re-init the database
-    storage._clear_db(storage_name)
-    storage._add_default_roles()
-
-    yield storage
-
-
-# storage._clear_db(storage_name)
-
-
-# @pytest.fixture(scope="module", params=["sqlalchemy"])
-# def socket_fixture(request):
-#
-#     yield from build_socket_fixture(request.param)
-
-
-@pytest.fixture(scope="module")
-def sqlalchemy_socket_fixture(request, postgres_server):
-
-    yield from build_socket_fixture(postgres_server)
 
 
 def live_fractal_or_skip():

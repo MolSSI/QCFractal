@@ -18,8 +18,9 @@ if TYPE_CHECKING:
 from .services import construct_service
 
 class FractalPeriodics:
-    def __init__(self, storage_socket, qcf_cfg: FractalConfig):
-        self.storage_socket = storage_socket
+    def __init__(self, qcf_cfg: FractalConfig):
+        self.storage_socket = SQLAlchemySocket()
+        self.storage_socket.init(qcf_cfg)
         self.scheduler = BackgroundScheduler()
         self.logger = logging.getLogger("qcfractal_periodics")
 
@@ -156,10 +157,12 @@ class FractalPeriodicsProcess(FractalProcessBase):
         FractalProcessBase.__init__(self)
         self.config = qcf_config
 
+        # We cannot instantiate this here. The .run() function will be run in a separate process
+        # and so instantiation must happen there
+        self.periodics = None
+
     def run(self) -> None:
-        self.storage_socket = SQLAlchemySocket()
-        self.storage_socket.init(self.config)
-        self.periodics = FractalPeriodics(self.storage_socket, self.config)
+        self.periodics = FractalPeriodics(self.config)
         self.periodics.start()
 
         # Periodics are now running in the background. But we need to keep this process alive
@@ -167,4 +170,5 @@ class FractalPeriodicsProcess(FractalProcessBase):
             time.sleep(3600)
 
     def finalize(self) -> None:
-        self.periodics.stop()
+        if self.periodics:
+            self.periodics.stop()
