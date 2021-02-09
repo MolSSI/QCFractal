@@ -2,7 +2,8 @@
 Main init function for qcfractal
 """
 
-from . import interface
+#from . import interface
+from . import portal
 
 # Handle versioneer
 from .extras import get_information
