@@ -75,7 +75,7 @@ def rest_model(resource: str, rest: str) -> Tuple[ProtoModel, ProtoModel]:
     resource : str
         The REST endpoint resource name.
     rest : str
-        The REST endpoint type: GET, POST, PUT, DELETE
+        The method to use on the REST endpoint: GET, POST, PUT, DELETE
 
     Returns
     -------
