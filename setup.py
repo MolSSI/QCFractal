@@ -22,9 +22,10 @@ if __name__ == "__main__":
         version=versioneer.get_version(),
         cmdclass=versioneer.get_cmdclass(),
         packages=setuptools.find_packages(),
+        python_requires=">=3.7",
         install_requires=[
             # Core dependencies
-            "numpy",
+            "numpy >=1.17",
             "msgpack >=0.6.1",
             "tornado",
             "requests",
