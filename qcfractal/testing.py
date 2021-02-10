@@ -298,21 +298,19 @@ def storage_socket(temporary_database):
 
     # Create a configuration. Since this is mostly just for a storage socket,
     # We can use defaults for almost all, since a flask server, etc, won't be instantiated
+    # Also disable connection pooling in the storage socket
+    # (which can leave db connections open, causing problems when we go to delete
+    # the database)
     cfg_dict = {}
     cfg_dict["base_directory"] = temporary_database.config.base_directory
     cfg_dict["loglevel"] = "DEBUG"
     cfg_dict["database"] = temporary_database.config.dict()
+    cfg_dict["database"]["pool_size"] = 0
     qcf_config = FractalConfig(**cfg_dict)
 
     socket = SQLAlchemySocket()
     socket.init(qcf_config)
-    try:
-        yield socket
-    finally:
-        # Remove the connection to the database from the socket
-        # We don't expose this since it should only be used in testing
-        socket.engine.dispose()
-
+    yield socket
 
 
 @pytest.fixture(scope="function")
@@ -321,12 +319,21 @@ def test_server(temporary_database):
     A QCFractal server with no compute attached, and with security disabled
     """
 
+    # Tighten the service frequency for tests
+    # Also disable connection pooling in the storage socket
+    # (which can leave db connections open, causing problems when we go to delete
+    # the database)
+    extra_config = {}
+    extra_config['service_frequency'] = 5
+    extra_config['database'] = {'pool_size': 0}
+
     with FractalSnowflake(
         start=True,
         max_workers=0,
         enable_watching=True,
         database_config=temporary_database.config,
         flask_config="testing",
+        extra_config=extra_config
     ) as server:
         yield server
 
@@ -340,8 +347,12 @@ def fractal_compute_server(temporary_database):
     """
 
     # Tighten the service frequency for tests
+    # Also disable connection pooling in the storage socket
+    # (which can leave db connections open, causing problems when we go to delete
+    # the database)
     extra_config = {}
     extra_config['service_frequency'] = 5
+    extra_config['database'] = {'pool_size': 0}
 
     with FractalSnowflake(
             start=True,
@@ -361,8 +372,12 @@ def fractal_compute_server_manualperiodics(temporary_database):
     """
 
     # Tighten the service frequency for tests
+    # Also disable connection pooling in the storage socket
+    # (which can leave db connections open, causing problems when we go to delete
+    # the database)
     extra_config = {}
     extra_config['service_frequency'] = 5
+    extra_config['database'] = {'pool_size': 0}
 
     with FractalSnowflake(
             start=False,
@@ -377,16 +392,7 @@ def fractal_compute_server_manualperiodics(temporary_database):
         server._compute_proc.start()
 
         periodics = FractalPeriodics(qcf_cfg)
-        try:
-            yield server, periodics
-        finally:
-            # For testing, we must make the storage socket that is part of the periodics class
-            # releases its connections to the database so that the db can be deleted.
-            # Since this is only really needed in testing, we don't expose
-            # such functionality in the storage socket API
-            periodics.stop()
-            periodics.scheduler.remove_all_jobs()
-            periodics.storage_socket.engine.dispose()
+        yield server, periodics
 
 
 def build_adapter_clients(mtype, storage_name="test_qcfractal_compute_server"):
