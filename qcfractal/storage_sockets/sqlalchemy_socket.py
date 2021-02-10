@@ -11,6 +11,7 @@ try:
     from sqlalchemy.orm import sessionmaker, with_polymorphic
     from sqlalchemy.sql.expression import desc
     from sqlalchemy.sql.expression import case as expression_case
+    from sqlalchemy.pool import NullPool
 except ImportError:
     raise ImportError(
         "SQLAlchemy_socket requires sqlalchemy, please install this python " "module or try a different db_socket."
@@ -166,18 +167,28 @@ class SQLAlchemySocket:
         self.logger = logging.getLogger("SQLAlchemySocket")
         uri = qcf_config.database.uri
 
-        #if "psycopg2" not in uri:
-        #    uri = uri.replace("postgresql", "postgresql+psycopg2")
-
         self.logger.info(f"SQLAlchemy attempt to connect to {uri}.")
 
         # Connect to DB and create session
         self.uri = uri
-        self.engine = create_engine(
-            uri,
-            echo=qcf_config.database.echo_sql,  # echo for logging into python logging
-            pool_size=5,  # 5 is the default, 0 means unlimited
-        )
+
+        # If the pool size given in the config is zero, then that corresponds to using a NullPool here.
+        # Note that this is different than SQLAlchemy, where pool_size = 0 means unlimited
+        # If pool_size in the config is non-zero, then set the pool class to None (meaning use
+        # SQLAlchemy default)
+        if qcf_config.database.pool_size == 0:
+            self.engine = create_engine(
+                uri,
+                echo=qcf_config.database.echo_sql,
+                poolclass=NullPool
+            )
+        else:
+            self.engine = create_engine(
+                uri,
+                echo=qcf_config.database.echo_sql,
+                pool_size=qcf_config.database.pool_size
+            )
+
         self.logger.info(
             "Connected SQLAlchemy to DB dialect {} with driver {}".format(self.engine.dialect.name, self.engine.driver)
         )
