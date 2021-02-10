@@ -3,10 +3,10 @@ import os
 import tempfile
 import time
 import multiprocessing
+from queue import Empty # Just for exception handling
 import logging
 import logging.handlers
 from concurrent.futures import ProcessPoolExecutor
-from typing import Optional
 from .qc_queue import QueueManager
 
 from .interface import FractalClient
@@ -19,7 +19,7 @@ from .fractal_proc import FractalProcessBase, FractalProcessRunner
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from typing import Dict, Any
+    from typing import Dict, Any, List, Optional
 
 
 def attempt_client_connect(host: str, port: int) -> FractalClient:
@@ -142,6 +142,9 @@ class FractalSnowflake:
         qcf_cfg["enable_security"] = False
 
         # Add in any options passed to this Snowflake
+        if extra_config is None:
+            extra_config = {}
+
         updated_nested_dict(qcf_cfg, extra_config)
         self._qcfractal_config = FractalConfig(**qcf_cfg)
 
@@ -153,7 +156,7 @@ class FractalSnowflake:
         self._completed_queue = None
         if enable_watching:
             self._completed_queue = mp_ctx.Queue()
-            self._all_completed = []
+            self._all_completed = set()
 
         ######################################
         # Now start the various subprocesses #
@@ -184,25 +187,68 @@ class FractalSnowflake:
     def __del__(self):
         self.stop()
 
-    def wait_for_results(self, ids, timeout=None) -> bool:
+    def wait_for_results(self, ids: Optional[List[int]] = None, timeout: float = None) -> bool:
+        """
+        Wait for computations to complete
+
+        This function will block until the specified computations are complete (either success for failure).
+        If timeout is given, that is the maximum amount of time to wait for a result. This timer is reset
+        after each completed result.
+
+        Parameters
+        ----------
+        ids: Optional[List[int]]
+            Result/Procedure IDs to wait for. If not specified, all currently incomplete tasks
+            will be waited for.
+
+        timeout: float
+            Maximum time to wait for a single result.
+
+
+        Returns
+        -------
+        bool
+            True if all the results were received, False if timeout has elapsed without receiving a completed computation
+        """
         logger = logging.getLogger(__name__)
 
         if self._completed_queue is None:
             raise RuntimeError("Cannot wait for results when the completed queue is not enabled. See the 'enable_watching' argument to the constructor")
 
+        if ids is None:
+            c = self.client()
+            proc = c.query_tasks(status=["WAITING", "RUNNING"])
+            ids = [x.base_result for x in proc]
+
         ids = set(int(x) for x in ids)
+
+        # Remove any we have already marked as completed
+        ids = ids - self._all_completed
+
+        if len(ids) == 0:
+            logger.debug("All tasks are already finished")
+            return True
+
+        logger.debug("Waiting for ids: " + str(ids))
 
         while len(ids) > 0:
             # The queue stores a tuple of (id, type, status)
             try:
                 base_result_info = self._completed_queue.get(True, timeout)
-            except multiprocessing.queue.Empty as e:
-                logger.debug(f'No tasks finished in {timeout} seconds')
+            except Empty:
+                logger.warning(f'No tasks finished in {timeout} seconds')
                 return False
 
             logger.debug("Task finished: id={}, type={}, status={}".format(*base_result_info))
-            self._all_completed.append(base_result_info[0])
-            ids.remove(base_result_info[0])
+            finished_id = base_result_info[0]
+
+            # Add it to the list of all completed results we have seen
+            self._all_completed.add(finished_id)
+
+            # We may not be watching for this id, but if we are, remove it from the list
+            # we are watching
+            if finished_id in ids:
+                ids.remove(finished_id)
 
         return True
 

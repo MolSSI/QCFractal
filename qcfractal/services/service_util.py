@@ -33,7 +33,7 @@ class TaskManager(ProtoModel):
         Check if requested tasks are complete.
         """
 
-        logger = logging.get_logger(__name__)
+        logger = logging.getLogger(__name__)
 
         if len(self.required_tasks) == 0:
             return True
