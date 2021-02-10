@@ -1,5 +1,6 @@
 from collections import defaultdict
 import re
+import os
 
 import requests
 
@@ -38,7 +39,7 @@ class PortalClient:
         username: Optional[str] = None,
         password: Optional[str] = None,
         verify: bool = True,
-        cachedir: Optional[Union[str, Path]] = None,
+        cache: Optional[Union[str, Path]] = None,
     ) -> None:
         """Initializes a PortalClient instance from an address and verification information.
 
@@ -55,7 +56,9 @@ class PortalClient:
             Verifies the SSL connection with a third party server. This may be False if a
             FractalServer was not provided a SSL certificate and defaults back to self-signed
             SSL keys.
-        cachedir : str, optional
+        cache : str, optional
+            Path to directory to use for cache.
+            If None, only in-memory caching used.
             
         """
 
@@ -79,7 +82,6 @@ class PortalClient:
         self._verify = verify
         self._headers: Dict[str, str] = {}
         self.encoding = "msgpack-ext"
-        self.cachedir = None
 
         # Mode toggle for network error testing, not public facing
         self._mock_network_error = False
@@ -139,8 +141,7 @@ class PortalClient:
                     f"\n(Only MAJOR.MINOR versions are checked and shown)"
                 )
 
-        if self.cachedir is not None:
-            self._cache = PortalCache(self, cachedir)
+        self._cache = PortalCache(self, cachedir=cache)
 
     def __repr__(self) -> str:
         """A short representation of the current PortalClient.
@@ -150,8 +151,8 @@ class PortalClient:
         str
             The desired representation.
         """
-        ret = "PortalClient(server_name='{}', address='{}', username='{}')".format(
-            self.server_name, self.address, self.username
+        ret = "PortalClient(server_name='{}', address='{}', username='{}', cache='{}')".format(
+            self.server_name, self.address, self.username, self.cache
         )
         return ret
 
@@ -163,6 +164,7 @@ class PortalClient:
           <li><b>Server:   &nbsp; </b>{self.server_name}</li>
           <li><b>Address:  &nbsp; </b>{self.address}</li>
           <li><b>Username: &nbsp; </b>{self.username}</li>
+          <li><b>Cache: &nbsp; </b>{self.cache}</li>
         </ul>
         """
 
@@ -205,7 +207,6 @@ class PortalClient:
             raise IOError("Server communication failure. Reason: {}".format(r.reason))
 
         return r
-
 
     def _automodel_request(
         self, name: str, rest: str, payload: Dict[str, Any], full_return: bool = False, timeout: int = None
@@ -250,6 +251,11 @@ class PortalClient:
         else:
             return response.data
 
+
+    @property
+    def cache(self):
+        return os.path.relpath(self._cache.cachedir)
+    
     def get_collection(
         self,
         collection_type: str,
@@ -326,6 +332,15 @@ class PortalClient:
         payload = {"meta": {"overwrite": overwrite}, "data": collection}
         return self._automodel_request("collection", "post", payload, full_return=full_return)
 
+    # TODO: what are the query_limit rules exactly?
+    #       does it use the total count of query terms, including mixed-and-matching fields
+    #def _chunk_request(self, items):
+    #    procedures: List[Dict[str, Any]] = []
+    #    for i in range(0, len(items), self.query_limit):
+    #        chunk_ids = query_ids[i : i + self.client.query_limit]
+    #        procedures.extend(self.client._query_procedures(id=chunk_ids))
+
+
     def _query_procedures(
         self,
         id: Optional["QueryObjectId"] = None,
@@ -363,6 +378,7 @@ class PortalClient:
             Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
+            Disables use of client cache.
 
         Returns
         -------
@@ -370,7 +386,20 @@ class PortalClient:
             Returns a List of found RecordResult's without include, or a
             dictionary of results with include.
         """
+        # passthrough the cache first
+        # if id is specified
+        if not full_return:
+            procs = self._cache.get(id)
 
+            if isinstance(id, list):
+                for i in procs:
+                    id.remove(i)
+            else:
+                id = None
+
+        # NOTE: is there a way to query the server with this kind of structure,
+        #       but only get back object ids or perhaps hash_indices?
+        #       This would allow our cache to be fairly dumb on this side, just a kv store
         payload = {
             "meta": {"limit": limit, "skip": skip, "include": include},
             "data": {
@@ -391,4 +420,7 @@ class PortalClient:
         if full_return:
             return response
         else:
-            return response.data
+            # NOTE: no particular order returned here
+            # could put the "only complete" logic into the cache itself as a policy
+            self._cache.put([proc for proc in response.data if proc.status == 'COMPLETE'])
+            return response.data + list(procs.values())
