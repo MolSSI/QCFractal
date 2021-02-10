@@ -136,8 +136,8 @@ class FractalPeriodics:
         self.scheduler.start()
 
     def stop(self):
+        self.logger.info("Shutting down periodics")
         if self.scheduler.state != STATE_STOPPED:
-            self.logger.info("Shutting down periodics")
             self.scheduler.shutdown(wait=True)
 
     def __del__(self):

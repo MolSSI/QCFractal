@@ -11,6 +11,7 @@ import logging
 import urllib.parse
 
 import psycopg2
+import psycopg2.errors
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from qcfractal.storage_sockets.models import Base, VersionsORM
@@ -308,11 +309,11 @@ class PostgresHarness:
 
         # Now we can search the pg_catalog to see if the database we want exists yet
         self._logger.info(f"Deleting/Dropping database {self.config.database_name}")
-        cursor.execute(f"DROP DATABASE IF EXISTS {self.config.database_name}")
 
-        # Check to see that it was deleted
-        if self.is_alive():
-            raise RuntimeError("Could not delete database. Was it still open somewhere?")
+        try:
+            cursor.execute(f"DROP DATABASE IF EXISTS {self.config.database_name}")
+        except psycopg2.errors.ObjectInUse as e:
+            raise RuntimeError(f"Could not delete database. Was it still open somewhere? Error: {str(e)}")
 
 
     def _update_db_version(self) -> None:

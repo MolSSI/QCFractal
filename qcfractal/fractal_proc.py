@@ -65,8 +65,9 @@ class FractalProcessRunner:
         return self._subproc.is_alive()
 
     def stop(self) -> None:
-        self._subproc.terminate()
-        self._subproc.join()
+        if self._subproc.is_alive():
+            self._subproc.terminate()
+            self._subproc.join()
 
     def __del__(self):
         self.stop()

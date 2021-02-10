@@ -4,11 +4,8 @@ Contains testing infrastructure for QCFractal.
 
 import os
 import pkgutil
-import shutil
-import signal
 import subprocess
 import sys
-import threading
 import time
 import gc
 from collections import Mapping
@@ -269,27 +266,6 @@ def postgres_server(tmp_path_factory):
         tmp_pg.stop()
 
 
-@contextmanager
-def _storage_socket(qcf_config: FractalConfig) -> SQLAlchemySocket:
-    '''
-    A function to wrap socket creation
-
-    This is needed so that the socket gets destructed, freeing any connections to the database
-    so that it can be deleted.
-
-    We wrap it in a contextmanager so that we can use 'with _storage_socket as ...'
-
-    Parameters
-    ----------
-    qcf_config: FractalConfig
-        Configuration to initialize the socket with
-    '''
-
-    socket = SQLAlchemySocket()
-    socket.init(qcf_config)
-
-    yield socket
-
 @pytest.fixture(scope="function")
 def temporary_database(postgres_server):
     """
@@ -328,16 +304,15 @@ def storage_socket(temporary_database):
     cfg_dict["database"] = temporary_database.config.dict()
     qcf_config = FractalConfig(**cfg_dict)
 
-    with _storage_socket(qcf_config) as socket:
-        try:
-            yield socket
-        finally:
-            # Remove the connection to the database from the socket
-            # We don't expose this since it should only be used in testing
-            socket.engine.dispose()
+    socket = SQLAlchemySocket()
+    socket.init(qcf_config)
+    try:
+        yield socket
+    finally:
+        # Remove the connection to the database from the socket
+        # We don't expose this since it should only be used in testing
+        socket.engine.dispose()
 
-
-### Server testing mechanics
 
 
 @pytest.fixture(scope="function")
@@ -357,11 +332,11 @@ def test_server(temporary_database):
 
 
 @pytest.fixture(scope="function")
-def _fractal_compute_base(temporary_database):
+def fractal_compute_server(temporary_database):
     """
     A Fractal snowflake with local compute manager
 
-    Subprocesses are not started automatically
+    All subprocesses are started automatically
     """
 
     # Tighten the service frequency for tests
@@ -380,29 +355,38 @@ def _fractal_compute_base(temporary_database):
 
 
 @pytest.fixture(scope="function")
-def fractal_compute_server(_fractal_compute_base):
-    """
-    A Fractal snowflake with local compute manager
-
-    All subprocesses are started
-    """
-
-    _fractal_compute_base.start()
-    yield _fractal_compute_base
-
-
-@pytest.fixture(scope="function")
-def fractal_compute_server_manualperiodics(_fractal_compute_base):
+def fractal_compute_server_manualperiodics(temporary_database):
     """
     A Fractal snowflake with local compute manager, but with periodics disabled and manually controllable
     """
 
-    _fractal_compute_base._flask_proc.start()
-    _fractal_compute_base._compute_proc.start()
+    # Tighten the service frequency for tests
+    extra_config = {}
+    extra_config['service_frequency'] = 5
 
-    # Separate periodics class
-    periodics = FractalPeriodics(_fractal_compute_base._qcfractal_config)
-    yield _fractal_compute_base, periodics
+    with FractalSnowflake(
+            start=False,
+            max_workers=2,
+            enable_watching=True,
+            database_config=temporary_database.config,
+            flask_config="testing",
+            extra_config=extra_config
+    ) as server:
+        qcf_cfg = server._qcfractal_config
+        server._flask_proc.start()
+        server._compute_proc.start()
+
+        periodics = FractalPeriodics(qcf_cfg)
+        try:
+            yield server, periodics
+        finally:
+            # For testing, we must make the storage socket that is part of the periodics class
+            # releases its connections to the database so that the db can be deleted.
+            # Since this is only really needed in testing, we don't expose
+            # such functionality in the storage socket API
+            periodics.stop()
+            periodics.scheduler.remove_all_jobs()
+            periodics.storage_socket.engine.dispose()
 
 
 def build_adapter_clients(mtype, storage_name="test_qcfractal_compute_server"):
