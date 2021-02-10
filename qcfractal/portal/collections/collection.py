@@ -1,7 +1,5 @@
-"""
-QCDB Abstract basic Collection class
+"""Base Collection classes.
 
-Helper
 """
 
 import abc
@@ -10,6 +8,7 @@ import json
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 import pandas as pd
+from tqdm import tqdm
 
 from ...interface.models import ProtoModel
 
@@ -110,7 +109,7 @@ class Collection(abc.ABC):
         return f"<{self}>"
 
     def _check_client(self):
-        if self.client is None:
+        if self._client is None:
             raise AttributeError("This method requires a PortalClient and no client was set")
 
     @property
@@ -124,7 +123,7 @@ class Collection(abc.ABC):
         Parameters
         ----------
         client : PortalClient
-            A PortalClient connected to a server
+            A PortalClient connected to a server.
         name : str
             The name of the collection to pull from.
 
@@ -239,7 +238,7 @@ class Collection(abc.ABC):
 
         if client is None:
             self._check_client()
-            client = self.client
+            client = self._client
 
         self._pre_save_prep(client)
 
@@ -278,6 +277,15 @@ class Collection(abc.ABC):
 
 
 class BaseProcedureDataset(Collection):
+    class _DataModel(Collection._DataModel):
+
+        records: Dict[str, Any] = {}
+        history: Set[str] = set()
+        specs: Dict[str, Any] = {}
+
+        class Config(Collection._DataModel.Config):
+            pass
+
     def __init__(self, name: str, client: "PortalClient" = None, **kwargs):
         """Initialize a ProcedureDataset Collection.
 
@@ -297,27 +305,18 @@ class BaseProcedureDataset(Collection):
 
         super().__init__(name, client=client, **kwargs)
 
-        self._df = None
-
-    @property
-    def df(self):
-        """Return a DataFrame view of the collection."""
-        return pd.DataFrame(index=self._get_index())
-
-    class _DataModel(Collection._DataModel):
-
-        records: Dict[str, Any] = {}
-        history: Set[str] = set()
-        specs: Dict[str, Any] = {}
-
-        class Config(Collection.DataModel.Config):
-            pass
+    def __getitem__(self, spec: Union[List[str], str]):
+        if isinstance(spec, list):
+            pad = max(map(len, spec))
+            return {sp: self._query(sp, pad=pad) for sp in spec}
+        else:
+            return self._query(spec)
 
     @abc.abstractmethod
     def _internal_compute_add(self, spec: Any, entry: Any, tag: str, priority: str) -> "ObjectId":
         pass
 
-    def _pre_save_prep(self, client: "PortalClient") -> None:
+    def _pre_sync_prep(self, client: "PortalClient") -> None:
         pass
 
     def _get_index(self):
@@ -344,15 +343,14 @@ class BaseProcedureDataset(Collection):
         self.sync()
 
     def _get_procedure_ids(self, spec: str, sieve: Optional[List[str]] = None) -> Dict[str, "ObjectId"]:
-        """Aquires the
+        """Get a mapping of record names to its object ID in the database.
 
         Parameters
         ----------
         spec : str
-            The specification to get the map of
+            The specification to get mapping for.
         sieve : Optional[List[str]], optional
-            A
-            Description
+            List of record names to restrict the mapping to.
 
         Returns
         -------
@@ -376,12 +374,21 @@ class BaseProcedureDataset(Collection):
 
         return mapper
 
+    @property
+    def specs(self):
+        return self.list_specifications()
+
+    @property
+    def index(self):
+        return self._get_index()
+
     def get_specification(self, name: str) -> Any:
-        """
+        """Get full parameters for the given named specification.
+
         Parameters
         ----------
         name : str
-            The name of the specification
+            The name of the specification.
 
         Returns
         -------
@@ -394,24 +401,22 @@ class BaseProcedureDataset(Collection):
         except KeyError:
             raise KeyError(f"Specification '{name}' not found.")
 
-    def list_specifications(self, description=True) -> Union[List[str], pd.DataFrame]:
-        """Lists all available specifications
+    def list_specifications(self, description=False) -> Union[List[str], Dict[str, str]]:
+        """Gives all available specifications.
 
         Parameters
         ----------
         description : bool, optional
-            If True returns a DataFrame with
-            Description
+            If True, returns a dictionary with spec names as keys, descriptions as values.
 
         Returns
         -------
-        Union[List[str], 'DataFrame']
-            A list of known specification names.
+        Union[List[str], Dict[str, str]]
+            Known specification names.
 
         """
         if description:
-            data = [(x.name, x.description) for x in self.data.specs.values()]
-            return pd.DataFrame(data, columns=["Name", "Description"]).set_index("Name")
+            return {x.name: x.description for x in self._data.specs.values()}
         else:
             return [x.name for x in self._data.specs.values()]
 
@@ -431,10 +436,10 @@ class BaseProcedureDataset(Collection):
         self._check_entry_exists(name)
         self.data.records[name.lower()] = record
         if save:
-            self.save()
+            self.sync()
 
     def _get_entry(self, name: str) -> Any:
-        """Obtains a record from the Dataset
+        """Obtains an entry from the Dataset
 
         Parameters
         ----------
@@ -444,7 +449,7 @@ class BaseProcedureDataset(Collection):
         Returns
         -------
         Record
-            The requested record
+            The requested entry.
         """
         try:
             return self.data.records[name.lower()]
@@ -473,7 +478,7 @@ class BaseProcedureDataset(Collection):
         if rec_id is None:
             raise KeyError(f"Could not find a record for ({name}: {specification}).")
 
-        return self.client._query_procedures(id=rec_id)[0]
+        return self._client._query_procedures(id=rec_id)[0]
 
     def compute(
         self, specification: str, subset: Set[str] = None, tag: Optional[str] = None, priority: Optional[str] = None
@@ -517,56 +522,57 @@ class BaseProcedureDataset(Collection):
 
         # Nothing to save
         if submitted:
-            self.save()
+            self.sync()
 
         return submitted
 
-    def query(self, specification: str, force: bool = False) -> pd.Series:
-        """Queries a given specification from the server
+    def _query(self, specification: str, series: bool = False, pad: int = 0) -> Union[Dict, pd.Series]:
+        """Queries a given specification from the server.
 
         Parameters
         ----------
         specification : str
-            The specification name to query
-        force : bool, optional
-            Force a fresh query if the specification already exists.
+            The specification name to query.
+        series : bool
+            If True, return a `pandas.Series`.
+        pad : int
+            Spaces to pad spec names in progress output
 
         Returns
         -------
-        pd.Series
-            Records collected from the server
+        Union[Dict, pd.Series]
+            Records collected from the server.
         """
-        # Try to get the specification, will throw if not found.
+        # Try to get the specification, will exception if not found.
         spec = self.get_specification(specification)
-
-        if not force and (spec.name in self.df):
-            return spec.name
 
         mapper = self._get_procedure_ids(spec.name)
         query_ids = list(mapper.values())
 
         # Chunk up the queries
         procedures: List[Dict[str, Any]] = []
-        for i in range(0, len(query_ids), self.client.query_limit):
-            chunk_ids = query_ids[i : i + self.client.query_limit]
-            procedures.extend(self.client._query_procedures(id=chunk_ids))
+        for i in tqdm(
+            range(0, len(query_ids), self._client.query_limit),
+            desc="{} || {} ".format(specification.rjust(pad), self._client.address),
+        ):
+            chunk_ids = query_ids[i : i + self._client.query_limit]
+            procedures.extend(self._client._query_procedures(id=chunk_ids))
 
         proc_lookup = {x.id: x for x in procedures}
 
-        data = []
+        data = {}
         for name, oid in mapper.items():
             try:
-                data.append([name, proc_lookup[oid]])
+                data[name] = proc_lookup[oid]
             except KeyError:
-                data.append([name, None])
+                data[name] = None
 
-        df = pd.DataFrame(data, columns=["index", spec.name])
-        df.set_index("index", inplace=True)
+        if series:
+            return pd.Series(data)
+        else:
+            return data
 
-        self.df[spec.name] = df[spec.name]
-
-        return df[spec.name]
-
+    # TODO: make status stateless; no df manipulation
     def status(
         self,
         specs: Optional[Union[str, List[str]]] = None,
@@ -602,12 +608,6 @@ class BaseProcedureDataset(Collection):
             elif specs is None:
                 specs = self.list_specifications(description=False)
 
-            # Query all of the specs and make sure they are valid
-            # Specs may not be loaded to self.df yet. This can be accomplished
-            #     with self.query, which stores the info in self.df
-            for spec in specs:
-                self.query(spec)
-
             def get_status(item):
                 try:
                     return item.status.value
@@ -615,7 +615,7 @@ class BaseProcedureDataset(Collection):
                     return None
 
             # apply status by column then by row
-            df = self.df[specs].apply(lambda col: col.apply(get_status))
+            df = pd.DataFrame(self[specs]).apply(lambda col: col.apply(get_status))
 
             if status:
                 df = df[(df == status.upper()).all(axis=1)]
@@ -640,7 +640,7 @@ class BaseProcedureDataset(Collection):
 
         mapper = self._get_procedure_ids(specs)
         reverse_map = {v: k for k, v in mapper.items()}
-        procedures = self.client._query_procedures(id=list(mapper.values()))
+        procedures = self._client._query_procedures(id=list(mapper.values()))
 
         data = []
 

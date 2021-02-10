@@ -1,5 +1,5 @@
-"""
-QCPortal Database ODM
+"""Optimization dataset collection.
+
 """
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
@@ -33,13 +33,13 @@ class OptEntrySpecification(ProtoModel):
 
 
 class OptimizationDataset(BaseProcedureDataset):
-    class _DataModel(BaseProcedureDataset.DataModel):
+    class _DataModel(BaseProcedureDataset._DataModel):
 
         records: Dict[str, OptEntry] = {}
         history: Set[str] = set()
         specs: Dict[str, OptEntrySpecification] = {}
 
-        class Config(BaseProcedureDataset.DataModel.Config):
+        class Config(BaseProcedureDataset._DataModel.Config):
             pass
 
     def _internal_compute_add(self, spec: Any, entry: Any, tag: str, priority: str) -> ObjectId:
