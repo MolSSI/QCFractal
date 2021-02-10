@@ -2081,4 +2081,3 @@ class SQLAlchemySocket:
             count = get_count_fast(query)
 
         return count
-
