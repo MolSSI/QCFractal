@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from typing import Dict, Any, List, Optional
 
 
-def attempt_client_connect(host: str, port: int, **client_args) -> FractalClient:
+def attempt_client_connect(uri: str, **client_args) -> FractalClient:
     """
     Attempt to obtain a FractalClient for a host and port
 
@@ -33,10 +33,8 @@ def attempt_client_connect(host: str, port: int, **client_args) -> FractalClient
 
     Parameters
     ----------
-    host: str
-        Host IP/hostname to attempt to connect to
-    port: int
-        Port to attempt to connect to
+    uri: str
+        URI to the rest server (ie, http://127.0.01:1234)
     **client_args
         Additional arguments to pass to the FractalClient constructor
 
@@ -49,7 +47,7 @@ def attempt_client_connect(host: str, port: int, **client_args) -> FractalClient
     # Try to connect 20 times (~2 seconds). If it fails after that, raise the last exception
     for i in range(21):
         try:
-            return FractalClient(f'http://{host}:{port}', **client_args)
+            return FractalClient(uri, **client_args)
         except Exception:
             if i == 20:
                 # Out of attempts. Just give the last exception
@@ -194,6 +192,18 @@ class FractalSnowflake:
     def __del__(self):
         self.stop()
 
+    def get_uri(self) -> str:
+        """
+        Obtain the URI/address of the REST interface of this server
+
+        Returns
+        -------
+        str
+            Address/URI of the rest interface (ie, 'http://127.0.0.1:1234')
+        """
+
+        return f'http://{self._qcf_config.flask.bind}:{self._qcf_config.flask.port}'
+
     def wait_for_results(self, ids: Optional[List[int]] = None, timeout: float = None) -> bool:
         """
         Wait for computations to complete
@@ -265,9 +275,7 @@ class FractalSnowflake:
         Obtain a FractalClient connected to this server
         '''
 
-        host = self._qcf_config.flask.bind
-        port = self._qcf_config.flask.port
-        return attempt_client_connect(host, port)
+        return attempt_client_connect(self.get_uri())
 
     def __enter__(self):
         return self
