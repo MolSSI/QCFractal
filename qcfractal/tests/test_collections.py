@@ -125,7 +125,7 @@ def gradient_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
 
         ds.compute("HF", "sto-3g")
         ds.compute("HF", "3-21g")
-        fractal_compute_server.wait_for_results()
+        fractal_compute_server.await_results()
 
         assert ds.get_records("HF", "sto-3g").iloc[0, 0].status == "COMPLETE"
         assert ds.get_records("HF", "sto-3g").iloc[1, 0].status == "COMPLETE"
@@ -517,7 +517,7 @@ def test_dataset_protocols(fractal_compute_server):
     response = ds.compute(method="hf", basis="sto-3g", protocols={"wavefunction": "orbitals_and_eigenvalues"})
 
     # await the result and check for orbitals
-    fractal_compute_server.wait_for_results()
+    fractal_compute_server.await_results()
 
     result = client.query_results(id=response.ids)[0]
     orbitals = result.get_wavefunction("orbitals_a")

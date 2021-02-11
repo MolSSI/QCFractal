@@ -42,7 +42,7 @@ def test_compute_queue_stack(fractal_compute_server):
     assert len(r2.submitted) == 0
     assert set(r2.ids) == set(r.ids)
 
-    fractal_compute_server.wait_for_results(r.ids)
+    fractal_compute_server.await_results(r.ids)
 
     # Query result and check against
     results_query = {
@@ -90,7 +90,7 @@ def test_compute_wavefunction(fractal_compute_server):
         protocols={"wavefunction": "orbitals_and_eigenvalues"},
     )
 
-    fractal_compute_server.wait_for_results(r.ids)
+    fractal_compute_server.await_results(r.ids)
 
     result = client.query_results(id=r.ids)[0]
     assert result.wavefunction
@@ -128,7 +128,7 @@ def test_procedure_optimization_single(fractal_compute_server):
     compute_key = r.ids[0]
 
     # Manually handle the compute
-    fractal_compute_server.wait_for_results(r.ids)
+    fractal_compute_server.await_results(r.ids)
 
     # # Query result and check against out manual pul
     query1 = client.query_procedures(procedure="optimization", program="geometric")
@@ -199,7 +199,7 @@ def test_procedure_optimization_protocols(fractal_compute_server):
     assert len(r.ids) == 1
 
     # Manually handle the compute
-    fractal_compute_server.wait_for_results(r.ids)
+    fractal_compute_server.await_results(r.ids)
 
     # # Query result and check against out manual pul
     proc = client.query_procedures(id=r.ids)[0]
