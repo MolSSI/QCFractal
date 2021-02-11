@@ -11,11 +11,11 @@ dependencies:
   - pyyaml >=5.1
   - pydantic >=1.4.0
   - requests
-  - tornado
 
   # Security dependencies
   - bcrypt
   - cryptography
+  - rdkit
 
   # Storage dependencies
   - conda-forge::alembic
