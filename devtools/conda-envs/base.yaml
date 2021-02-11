@@ -37,7 +37,7 @@ dependencies:
   - pytest-cov
   - requests-mock
   - responses
-  - requests_mock_flask
+#  - requests_mock_flask
 
 #   QCArchive includes
   - qcengine >=0.17.0
