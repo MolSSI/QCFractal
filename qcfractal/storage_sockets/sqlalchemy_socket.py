@@ -5,7 +5,6 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 from __future__ import annotations
 
 try:
-    from sqlalchemy.event import listen
     from sqlalchemy import create_engine, and_, or_, case, func, exc
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
@@ -162,6 +161,9 @@ class SQLAlchemySocket:
         Constructs a new SQLAlchemy socket
         """
         self.qcf_config = qcf_config
+
+        # By default, disable watching
+        self._completed_queue = None
 
         # Logging data
         self.logger = logging.getLogger("SQLAlchemySocket")
@@ -500,13 +502,13 @@ class SQLAlchemySocket:
 #
 #        return count2 == 0
 
-
     def set_completed_watch(self, mp_queue):
-        def on_baseresult_update(mapper, conn, target):
-            if target.status != RecordStatusEnum.running and target.status != RecordStatusEnum.incomplete:
-                mp_queue.put((target.id, target.result_type, target.status), block=False)
+        self._completed_queue = mp_queue
 
-        listen(BaseResultORM, 'after_update', on_baseresult_update, propagate=True)
+    def notify_completed_watch(self, base_result_id, status):
+        if self._completed_queue is not None:
+            # Don't want to block here. Just put it in the queue and move on
+            self._completed_queue.put((int(base_result_id), status), block=False)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -819,6 +821,9 @@ class SQLAlchemySocket:
                 #     session.execute(statement)
 
                 session.commit()
+
+                if procedure.status in [TaskStatusEnum.complete, TaskStatusEnum.error]:
+                    self.notify_completed_watch(procedure.id, procedure.status)
                 updated_count += 1
 
         # session.commit()  # save changes, takes care of inheritance
@@ -1068,6 +1073,9 @@ class SQLAlchemySocket:
 
             session.commit()
 
+            if status in ["error", "complete"]:
+                self.notify_completed_watch(service.procedure_id, service.status)
+
         return 1
 
     def services_completed(self, records_list: List["BaseService"]) -> int:
@@ -1100,6 +1108,8 @@ class SQLAlchemySocket:
                 self.update_procedures([procedure])
 
                 session.query(ServiceQueueORM).filter_by(id=service.id).delete()  # synchronize_session=False)
+
+            self.notify_completed_watch(service.procedure_id, service.status)
 
             done += 1
 

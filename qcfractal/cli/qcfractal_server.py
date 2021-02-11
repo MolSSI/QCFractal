@@ -339,7 +339,7 @@ def server_start(args, config):
 
     # Start up a socket. The main thing is to see if it can connect, and also
     # to check if the database needs to be upgraded
-    # We then no loger need the socket (gunicorn and periodics will use their own
+    # We then no longer need the socket (gunicorn and periodics will use their own
     # in their subprocesses)
     socket = SQLAlchemySocket()
     socket.init(config)
