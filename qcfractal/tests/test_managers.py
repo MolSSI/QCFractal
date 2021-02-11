@@ -38,9 +38,7 @@ def caplog_handler_at_level(caplog_fixture, level, logger=None):
 @pytest.fixture(scope="function")
 def compute_adapter_fixture(test_server):
 
-    host = test_server._qcf_config.flask.bind
-    port = test_server._qcf_config.flask.port
-    client = attempt_client_connect(host, port) # TODO: , username=CLIENT_USERNAME)
+    client = attempt_client_connect(test_server.get_uri()) # TODO: , username=CLIENT_USERNAME)
 
     with ProcessPoolExecutor(max_workers=2) as adapter:
         yield client, test_server, adapter
