@@ -33,12 +33,15 @@ class FractalPeriodics:
         # Frequencies/Intervals at which to run various tasks
         self.server_stats_frequency = 60
         self.manager_heartbeat_frequency = qcf_cfg.heartbeat_frequency
+        self.manager_max_missed_heartbeats = qcf_cfg.heartbeat_max_missed
+
         self.service_frequency = qcf_cfg.service_frequency
         self.max_active_services = qcf_cfg.max_active_services
 
         self.logger.info("Periodics Information:")
         self.logger.info(f"    Server stats update frequency: {self.server_stats_frequency} seconds")
         self.logger.info(f"      Manager heartbeat frequency: {self.manager_heartbeat_frequency} seconds")
+        self.logger.info(f"    Manager max missed heartbeats: {self.manager_max_missed_heartbeats}")
         self.logger.info(f"         Service update frequency: {self.service_frequency} seconds")
         self.logger.info(f"              Max active services: {self.max_active_services}")
 
@@ -61,7 +64,8 @@ class FractalPeriodics:
 
     def _check_manager_heartbeats(self):
         self.logger.info("Checking manager heartbeats")
-        dt = datetime.utcnow() - timedelta(seconds=(5*self.manager_heartbeat_frequency))
+        manager_window =self.manager_max_missed_heartbeats*self.manager_heartbeat_frequency
+        dt = datetime.utcnow() - timedelta(seconds=manager_window)
         ret = self.storage_socket.get_managers(status=ManagerStatusEnum.active, modified_before=dt)
 
         for manager in ret["data"]:
