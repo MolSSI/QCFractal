@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from typing import Dict, Any, List, Optional
 
 
-def attempt_client_connect(host: str, port: int) -> FractalClient:
+def attempt_client_connect(host: str, port: int, **client_args) -> FractalClient:
     """
     Attempt to obtain a FractalClient for a host and port
 
@@ -37,6 +37,8 @@ def attempt_client_connect(host: str, port: int) -> FractalClient:
         Host IP/hostname to attempt to connect to
     port: int
         Port to attempt to connect to
+    **client_args
+        Additional arguments to pass to the FractalClient constructor
 
     Returns
     -------
@@ -47,7 +49,7 @@ def attempt_client_connect(host: str, port: int) -> FractalClient:
     # Try to connect 20 times (~2 seconds). If it fails after that, raise the last exception
     for i in range(21):
         try:
-            return FractalClient(f'http://{host}:{port}')
+            return FractalClient(f'http://{host}:{port}', **client_args)
         except Exception:
             if i == 20:
                 # Out of attempts. Just give the last exception
@@ -147,6 +149,7 @@ class FractalSnowflake:
 
         updated_nested_dict(qcf_cfg, extra_config)
         self._qcf_config = FractalConfig(**qcf_cfg)
+        self._max_workers = max_workers
 
         # Always use fork. This is generally a sane default until problems crop up
         # In particular, logging will be inherited from the parent process
@@ -162,21 +165,25 @@ class FractalSnowflake:
         # Now start the various subprocesses #
         ######################################
         flask = FractalFlaskProcess(self._qcf_config, self._completed_queue)
-        compute = SnowflakeComputeProcess(self._qcf_config, max_workers)
         periodics = FractalPeriodicsProcess(self._qcf_config, self._completed_queue)
 
         self._flask_proc = FractalProcessRunner('snowflake_flask', mp_ctx, flask, start)
         self._periodics_proc = FractalProcessRunner('snowflake_periodics', mp_ctx, periodics, start)
-        self._compute_proc = FractalProcessRunner('snowflake_compute', mp_ctx, compute, start)
+
+        if self._max_workers > 0:
+            compute = SnowflakeComputeProcess(self._qcf_config, self._max_workers)
+            self._compute_proc = FractalProcessRunner('snowflake_compute', mp_ctx, compute, start)
 
     def stop(self):
         # Send all our processes SIGTERM
-        self._compute_proc.stop()
+        if self._max_workers > 0:
+            self._compute_proc.stop()
+
         self._flask_proc.stop()
         self._periodics_proc.stop()
 
     def start(self):
-        if not self._compute_proc.is_alive():
+        if self._max_workers > 0 and not self._compute_proc.is_alive():
             self._compute_proc.start()
         if not self._flask_proc.is_alive():
             self._flask_proc.start()
@@ -258,10 +265,8 @@ class FractalSnowflake:
         Obtain a FractalClient connected to this server
         '''
 
-        # Try to connect 20 times (~2 seconds). If it fails after that, raise the last exception
         host = self._qcf_config.flask.bind
         port = self._qcf_config.flask.port
-
         return attempt_client_connect(host, port)
 
     def __enter__(self):
