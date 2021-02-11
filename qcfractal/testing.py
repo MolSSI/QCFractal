@@ -27,7 +27,7 @@ from qcfractal.interface.models import TorsionDriveInput
 from .interface import FractalClient
 from .interface.models import TorsionDriveInput
 from .postgres_harness import TemporaryPostgres
-from .qc_queue import build_queue_adapter
+from .qc_queue import build_queue_adapter, QueueManager
 from .snowflake import FractalSnowflake
 from .periodics import FractalPeriodics
 from .storage_sockets.sqlalchemy_socket import SQLAlchemySocket
@@ -483,7 +483,7 @@ def torsiondrive_fixture(fractal_compute_server_manualperiodics):
 
 
 
-def build_adapter_clients(mtype, storage_name="test_qcfractal_compute_server"):
+def build_adapter_clients(mtype):
 
     # Basic boot and loop information
     if mtype == "pool":
@@ -502,7 +502,7 @@ def build_adapter_clients(mtype, storage_name="test_qcfractal_compute_server"):
     elif mtype == "fireworks":
         fireworks = pytest.importorskip("fireworks")
 
-        fireworks_name = storage_name + "_fireworks_queue"
+        fireworks_name = "qcfractal_fireworks_queue"
         adapter_client = fireworks.LaunchPad(name=fireworks_name, logdir="/tmp/", strm_lvl="CRITICAL")
 
     elif mtype == "parsl":
@@ -526,48 +526,19 @@ def adapter_client_fixture(request):
     build_queue_adapter(adapter_client).close()
 
 
-@pytest.fixture(scope="module", params=_adapter_testing)
-def managed_compute_server(request, postgres_server):
+@pytest.fixture(scope="function", params=_adapter_testing)
+def managed_compute_server(request, test_server):
     """
-    A FractalServer with compute associated parametrize for all managers.
+    A Fractal snowflake server with an external compute worker
     """
 
-    storage_name = "test_qcfractal_compute_server"
-    postgres_server.create_database(storage_name)
+    adapter_client = build_adapter_clients(request.param)
 
-    adapter_client = build_adapter_clients(request.param, storage_name=storage_name)
-
-    # Build a server with the thread in a outer context loop
-    # Not all adapters play well with internal loops
-    with loop_in_thread() as loop:
-        server = FractalServer(
-            port=find_port(),
-            storage_project_name=storage_name,
-            storage_uri=postgres_server.database_uri(),
-            loop=loop,
-            queue_socket=adapter_client,
-            ssl_options=False,
-            skip_storage_version_check=True,
-            flask_config="testing"
-        )
-
-        # Clean and re-init the database
-        reset_server_database(server)
-
-        # Build Client and Manager
-        from qcfractal.interface import FractalClient
-
-        client = FractalClient(server)
-
-        from qcfractal.qc_queue import QueueManager
-
-        manager = QueueManager(client, adapter_client)
-
-        yield client, server, manager
-
-        # Close down and clean the adapter
-        manager.close_adapter()
-        manager.stop()
+    client = test_server.client()
+    manager = QueueManager(client, adapter_client)
+    yield client, test_server, manager
+    manager.close_adapter()
+    manager.stop()
 
 
 def live_fractal_or_skip():
