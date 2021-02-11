@@ -3,92 +3,18 @@ Tests the on-node procedures compute capabilities.
 """
 
 from __future__ import annotations
-import copy
 
-import time
 import pytest
-import logging
 import warnings
 
 import qcfractal.interface as ptl
 from qcfractal.interface.models import GridOptimizationInput, TorsionDriveInput
-from qcfractal.testing import recursive_dict_merge, using_geometric, using_rdkit
+from qcfractal.testing import run_services, using_geometric, using_rdkit
 
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from ..snowflake import FractalSnowflake
-    from ..periodics import FractalPeriodics
-
-def run_services(server: FractalSnowflake, periodics: FractalPeriodics, max_iter: int = 10) -> bool:
-    """
-    Run up to max_iter iterations on a service
-    """
-
-    logger = logging.getLogger(__name__)
-    # Wait for everything currently running to finish
-    server.wait_for_results()
-
-    for i in range(1, max_iter+1):
-        logger.debug(f"Iteration {i}")
-        running_services = periodics._update_services()
-        logger.debug(f"Running services: {running_services}")
-        if running_services == 0:
-            return True
-
-        server.wait_for_results()
-
-    return False
-
-
-
-@pytest.fixture(scope="function")
-def torsiondrive_fixture(fractal_compute_server_manualperiodics):
-
-    # Cannot use this fixture without these services. Also cannot use `mark` and `fixture` decorators
-    pytest.importorskip("torsiondrive")
-    pytest.importorskip("geometric")
-    pytest.importorskip("rdkit")
-
-    server, periodics = fractal_compute_server_manualperiodics
-    client = server.client()
-
-    # Add a HOOH
-    hooh = ptl.data.get_molecule("hooh.json")
-    mol_ret = client.add_molecules([hooh])
-
-    # Geometric options
-    torsiondrive_options = {
-        "initial_molecule": mol_ret[0],
-        "keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [90]},
-        "optimization_spec": {
-            "program": "geometric",
-            "keywords": {"coordsys": "tric"},
-            "protocols": {"trajectory": "initial_and_final"},
-        },
-        "qc_spec": {"driver": "gradient", "method": "UFF", "basis": "", "keywords": None, "program": "rdkit"},
-    }
-
-    def spin_up_test(**keyword_augments):
-        run_service = keyword_augments.pop("run_service", True)
-
-        instance_options = copy.deepcopy(torsiondrive_options)
-        recursive_dict_merge(instance_options, keyword_augments)
-
-        inp = TorsionDriveInput(**instance_options)
-        ret = client.add_service([inp], full_return=True)
-
-        if ret.meta.n_inserted:  # In case test already submitted
-            compute_key = ret.data.ids[0]
-            service = client.query_services(procedure_id=compute_key)[0]
-            assert "WAITING" in service["status"]
-
-        if run_service:
-            finished = run_services(server, periodics)
-            assert finished
-
-        return ret.data
-
-    yield spin_up_test, server, periodics
+#from typing import TYPE_CHECKING
+#if TYPE_CHECKING:
+#    from ..snowflake import FractalSnowflake
+#    from ..periodics import FractalPeriodics
 
 
 def test_service_torsiondrive_service_incomplete(torsiondrive_fixture):
@@ -535,23 +461,3 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
 
     mol = client.query_molecules(id=result.starting_molecule)[0]
     assert pytest.approx(mol.measure([1, 2])) == initial_distance
-
-
-@pytest.mark.skip
-def test_query_time(fractal_compute_server):
-
-    client = fractal_compute_server.client()
-
-    t = time.time()
-    p = client.query_procedures(procedure="optimization")
-    total = time.time() - t
-    print(total)
-    print(len(p))
-    print("---- per optmization proc: ", total / len(p))
-
-    t = time.time()
-    p = client.query_procedures(procedure="torsiondrive")
-    total = time.time() - t
-    print(total)
-    print(len(p))
-    print("---- per Torsion proc: ", total / len(p))
