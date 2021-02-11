@@ -2,24 +2,55 @@
 Tests the on-node procedures compute capabilities.
 """
 
+from __future__ import annotations
 import copy
 
+import time
 import pytest
+import logging
+import warnings
 
 import qcfractal.interface as ptl
 from qcfractal.interface.models import GridOptimizationInput, TorsionDriveInput
-from qcfractal.testing import fractal_compute_server, recursive_dict_merge, using_geometric, using_rdkit
+from qcfractal.testing import recursive_dict_merge, using_geometric, using_rdkit
+
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from ..snowflake import FractalSnowflake
+    from ..periodics import FractalPeriodics
+
+def run_services(server: FractalSnowflake, periodics: FractalPeriodics, max_iter: int = 10) -> bool:
+    """
+    Run up to max_iter iterations on a service
+    """
+
+    logger = logging.getLogger(__name__)
+    # Wait for everything currently running to finish
+    server.wait_for_results()
+
+    for i in range(1, max_iter+1):
+        logger.debug(f"Iteration {i}")
+        running_services = periodics._update_services()
+        logger.debug(f"Running services: {running_services}")
+        if running_services == 0:
+            return True
+
+        server.wait_for_results()
+
+    return False
 
 
-@pytest.fixture(scope="module")
-def torsiondrive_fixture(fractal_compute_server):
+
+@pytest.fixture(scope="function")
+def torsiondrive_fixture(fractal_compute_server_manualperiodics):
 
     # Cannot use this fixture without these services. Also cannot use `mark` and `fixture` decorators
     pytest.importorskip("torsiondrive")
     pytest.importorskip("geometric")
     pytest.importorskip("rdkit")
 
-    client = ptl.FractalClient(fractal_compute_server)
+    server, periodics = fractal_compute_server_manualperiodics
+    client = server.client()
 
     # Add a HOOH
     hooh = ptl.data.get_molecule("hooh.json")
@@ -35,7 +66,7 @@ def torsiondrive_fixture(fractal_compute_server):
             "protocols": {"trajectory": "initial_and_final"},
         },
         "qc_spec": {"driver": "gradient", "method": "UFF", "basis": "", "keywords": None, "program": "rdkit"},
-    }  # yapf: disable
+    }
 
     def spin_up_test(**keyword_augments):
         run_service = keyword_augments.pop("run_service", True)
@@ -52,19 +83,21 @@ def torsiondrive_fixture(fractal_compute_server):
             assert "WAITING" in service["status"]
 
         if run_service:
-            fractal_compute_server.await_services()
-            assert len(fractal_compute_server.list_current_tasks()) == 0
+            finished = run_services(server, periodics)
+            assert finished
 
         return ret.data
 
-    yield spin_up_test, client
+    yield spin_up_test, server, periodics
 
 
-def test_service_torsiondrive_service_incomplete(fractal_compute_server, torsiondrive_fixture):
+def test_service_torsiondrive_service_incomplete(torsiondrive_fixture):
     hooh = ptl.data.get_molecule("hooh.json")
     hooh.geometry[0] += 0.00031
 
-    spin_up_test, client = torsiondrive_fixture
+    spin_up_test, server, periodics = torsiondrive_fixture
+    client = server.client()
+
     ret = spin_up_test(run_service=False)
 
     # Check the blank
@@ -73,17 +106,21 @@ def test_service_torsiondrive_service_incomplete(fractal_compute_server, torsion
     assert len(result.optimization_history) == 0
     assert result.status == "INCOMPLETE"
 
-    # Update the service, but no compute
-    fractal_compute_server.update_services()
+    # Update the service
+    periodics._update_services()
+
     result = client.query_procedures(id=ret.ids)[0]
     status = result.detailed_status()
     assert result.status == "RUNNING"
     assert status["incomplete_tasks"] == 1
 
-    fractal_compute_server.await_results()
+    # wait for the computation for this iteration to finish
+    server.wait_for_results()
 
-    # Take a compute step
-    fractal_compute_server.await_services(max_iter=1)
+    # Take another compute step
+    r = run_services(server, periodics, 1)
+    assert r is False
+
     result = client.query_procedures(id=ret.ids)[0]
     status = result.detailed_status()
     assert status["total_points"] == 4
@@ -96,7 +133,8 @@ def test_service_torsiondrive_service_incomplete(fractal_compute_server, torsion
     assert result.status == "RUNNING"
 
     # Repeat compute step checking for updates
-    fractal_compute_server.await_services(max_iter=1)
+    r = run_services(server, periodics, max_iter=1)
+    assert r is False
     result = client.query_procedures(id=ret.ids)[0]
     assert len(result.final_energy_dict) == 3
     assert len(result.optimization_history) == 4
@@ -104,7 +142,8 @@ def test_service_torsiondrive_service_incomplete(fractal_compute_server, torsion
     assert result.status == "RUNNING"
 
     # Finalize
-    fractal_compute_server.await_services(max_iter=6)
+    r = run_services(server, periodics, max_iter=6)
+    assert r is True
     result = client.query_procedures(id=ret.ids)[0]
     assert len(result.final_energy_dict) == 4
     assert len(result.optimization_history) == 4
@@ -114,7 +153,8 @@ def test_service_torsiondrive_service_incomplete(fractal_compute_server, torsion
 
 def test_service_manipulation(torsiondrive_fixture):
 
-    spin_up_test, client = torsiondrive_fixture
+    spin_up_test, server, _ = torsiondrive_fixture
+    client = server.client()
 
     hooh = ptl.data.get_molecule("hooh.json")
     hooh.geometry[0] += 3.1
@@ -133,7 +173,8 @@ def test_service_manipulation(torsiondrive_fixture):
 def test_service_torsiondrive_single(torsiondrive_fixture):
     """ "Tests torsiondrive pathway and checks the result"""
 
-    spin_up_test, client = torsiondrive_fixture
+    spin_up_test, server, _ = torsiondrive_fixture
+    client = server.client()
 
     ret = spin_up_test()
 
@@ -156,7 +197,8 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
 
 @pytest.mark.slow
 def test_service_torsiondrive_multi_single(torsiondrive_fixture):
-    spin_up_test, client = torsiondrive_fixture
+    spin_up_test, server, _ = torsiondrive_fixture
+    client = server.client()
 
     hooh = ptl.data.get_molecule("hooh.json")
     hooh2 = hooh.copy(deep=True)
@@ -171,7 +213,8 @@ def test_service_torsiondrive_multi_single(torsiondrive_fixture):
 def test_service_torsiondrive_duplicates(torsiondrive_fixture):
     """Ensure that duplicates are properly caught and yield the same results without calculation"""
 
-    spin_up_test, client = torsiondrive_fixture
+    spin_up_test, server, _ = torsiondrive_fixture
+    client = server.client()
 
     # Run the test without modifications
     id1 = spin_up_test().ids[0]
@@ -192,7 +235,9 @@ def test_service_torsiondrive_duplicates(torsiondrive_fixture):
 def test_service_torsiondrive_option_dihedral_ranges(torsiondrive_fixture):
     """ "Tests torsiondrive with dihedral_ranges optional keyword"""
 
-    spin_up_test, client = torsiondrive_fixture
+    spin_up_test, server, _ = torsiondrive_fixture
+    client = server.client()
+
     ret = spin_up_test(keywords={"grid_spacing": [30], "dihedral_ranges": [[-150, -60]]})
 
     result = client.query_procedures(id=ret.ids)[0]
@@ -216,7 +261,9 @@ def test_service_torsiondrive_option_dihedral_ranges(torsiondrive_fixture):
 def test_service_torsiondrive_option_energy_decrease_thresh(torsiondrive_fixture):
     """ "Tests torsiondrive with energy_decrease_thresh optional keyword"""
 
-    spin_up_test, client = torsiondrive_fixture
+    spin_up_test, server, _ = torsiondrive_fixture
+    client = server.client()
+
     ret = spin_up_test(keywords={"grid_spacing": [90], "energy_decrease_thresh": 3e-5})
 
     result = client.query_procedures(id=ret.ids)[0]
@@ -235,7 +282,9 @@ def test_service_torsiondrive_option_energy_decrease_thresh(torsiondrive_fixture
 def test_service_torsiondrive_option_energy_upper_limit(torsiondrive_fixture):
     """ "Tests torsiondrive with energy_upper_limit optional keyword"""
 
-    spin_up_test, client = torsiondrive_fixture
+    spin_up_test, server, _ = torsiondrive_fixture
+    client = server.client()
+
     ret = spin_up_test(keywords={"grid_spacing": [30], "energy_upper_limit": 1e-4})
 
     result = client.query_procedures(id=ret.ids)[0]
@@ -254,7 +303,9 @@ def test_service_torsiondrive_option_energy_upper_limit(torsiondrive_fixture):
 def test_service_torsiondrive_option_extra_constraints(torsiondrive_fixture):
     """ "Tests torsiondrive with extra_constraints in optimization_spec"""
 
-    spin_up_test, client = torsiondrive_fixture
+    spin_up_test, server, _ = torsiondrive_fixture
+    client = server.client()
+
     ret = spin_up_test(
         optimization_spec={
             "program": "geometric",
@@ -284,10 +335,15 @@ def test_service_torsiondrive_option_extra_constraints(torsiondrive_fixture):
 def test_service_iterate_error(torsiondrive_fixture):
     """Ensure errors are caught and logged when iterating serivces"""
 
-    spin_up_test, client = torsiondrive_fixture
+    spin_up_test, server, _ = torsiondrive_fixture
+    client = server.client()
 
-    # Run the test without modifications
-    ret = spin_up_test(keywords={"dihedrals": [[0, 1, 2, 50]]})
+    # torsiondrive will spit out a wanrning about unbonded atoms. This is expected
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message=r'Following atom pairs.*not bonded')
+
+        # Run the test without modifications
+        ret = spin_up_test(keywords={"dihedrals": [[0, 1, 2, 50]]})
 
     status = client.query_services(procedure_id=ret.ids)
     assert len(status) == 1
@@ -305,7 +361,8 @@ def test_service_iterate_error(torsiondrive_fixture):
 def test_service_torsiondrive_compute_error(torsiondrive_fixture):
     """Ensure errors are caught and logged when computing serivces"""
 
-    spin_up_test, client = torsiondrive_fixture
+    spin_up_test, server, _ = torsiondrive_fixture
+    client = server.client()
 
     # Run the test without modifications
     ret = spin_up_test(qc_spec={"method": "waffles_crasher"})
@@ -320,7 +377,9 @@ def test_service_torsiondrive_compute_error(torsiondrive_fixture):
 def test_service_torsiondrive_visualization(torsiondrive_fixture):
     """Test the visualization function for the 1-D case"""
 
-    spin_up_test, client = torsiondrive_fixture
+    spin_up_test, server, _ = torsiondrive_fixture
+    client = server.client()
+
     ret = spin_up_test()
 
     # Get a TorsionDriveORM result and check data
@@ -333,7 +392,9 @@ def test_service_torsiondrive_visualization(torsiondrive_fixture):
 def test_service_torsiondrive_get_final_results(torsiondrive_fixture):
     """Test the get_final_results function for the 1-D case"""
 
-    spin_up_test, client = torsiondrive_fixture
+    spin_up_test, server, _ = torsiondrive_fixture
+    client = server.client()
+
     ret = spin_up_test()
 
     # Get a TorsionDriveORM result and check data
@@ -349,9 +410,10 @@ def test_service_torsiondrive_get_final_results(torsiondrive_fixture):
 
 @using_geometric
 @using_rdkit
-def test_service_gridoptimization_single_opt(fractal_compute_server):
+def test_service_gridoptimization_single_opt(fractal_compute_server_manualperiodics):
 
-    client = ptl.FractalClient(fractal_compute_server)
+    server, periodics = fractal_compute_server_manualperiodics
+    client = server.client()
 
     # Add a HOOH
     hooh = ptl.data.get_molecule("hooh.json")
@@ -376,12 +438,14 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
 
     ret = client.add_service([service], tag="gridopt", priority="low")
 
-    fractal_compute_server.await_services(max_iter=1)
+    r = run_services(server, periodics, max_iter=1)
+    assert r is False
     result = client.query_procedures(id=ret.ids)[0]
     assert result.grid_optimizations.keys() == {'"preoptimization"'}
     assert result.status == "RUNNING"
 
-    fractal_compute_server.await_services(max_iter=1)
+    r = run_services(server, periodics, max_iter=1)
+    assert r is False
     result = client.query_procedures(id=ret.ids)[0]
     status = result.detailed_status()
     assert status["total_points"] == 5
@@ -389,12 +453,14 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     assert result.grid_optimizations.keys() == {'"preoptimization"', "[1, 0]"}
     assert result.status == "RUNNING"
 
-    fractal_compute_server.await_services(max_iter=1)
+    r = run_services(server, periodics, max_iter=1)
+    assert r is False
     result = client.query_procedures(id=ret.ids)[0]
     assert result.grid_optimizations.keys() == {'"preoptimization"', "[1, 0]", "[0, 0]", "[1, 1]"}
     assert result.status == "RUNNING"
 
-    fractal_compute_server.await_services(max_iter=6)
+    r = run_services(server, periodics, max_iter=6)
+    assert r is True
     result = client.query_procedures(id=ret.ids)[0]
     status = result.detailed_status()
     assert status["complete_tasks"] == 5
@@ -434,7 +500,7 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
 @using_rdkit
 def test_service_gridoptimization_single_noopt(fractal_compute_server):
 
-    client = ptl.FractalClient(fractal_compute_server)
+    client = fractal_compute_server.client()
 
     # Add a HOOH
     hooh = ptl.data.get_molecule("hooh.json")
@@ -454,8 +520,7 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
     )  # yapf: disable
 
     ret = client.add_service([service])
-    fractal_compute_server.await_services()
-    assert len(fractal_compute_server.list_current_tasks()) == 0
+    fractal_compute_server.wait_for_results(ret.ids)
 
     result = client.query_procedures(id=ret.ids)[0]
 
@@ -475,9 +540,7 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
 @pytest.mark.skip
 def test_query_time(fractal_compute_server):
 
-    client = ptl.FractalClient(fractal_compute_server)
-
-    import time
+    client = fractal_compute_server.client()
 
     t = time.time()
     p = client.query_procedures(procedure="optimization")
@@ -485,8 +548,6 @@ def test_query_time(fractal_compute_server):
     print(total)
     print(len(p))
     print("---- per optmization proc: ", total / len(p))
-
-    import time
 
     t = time.time()
     p = client.query_procedures(procedure="torsiondrive")
