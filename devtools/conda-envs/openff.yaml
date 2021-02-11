@@ -13,7 +13,9 @@ dependencies:
   - pyyaml >=5.1
   - pydantic >=1.4.0
   - requests
-  - tornado
+  - flask
+  - gunicorn
+  - apscheduler
 
   # Security dependencies
   - bcrypt
@@ -54,3 +56,6 @@ dependencies:
 #   QCArchive includes
   - qcengine >=0.17.0
   - qcelemental >=0.17.0
+
+  - pip:
+    - flask_jwt_extended
