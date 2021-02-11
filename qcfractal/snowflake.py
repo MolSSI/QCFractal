@@ -146,7 +146,7 @@ class FractalSnowflake:
             extra_config = {}
 
         updated_nested_dict(qcf_cfg, extra_config)
-        self._qcfractal_config = FractalConfig(**qcf_cfg)
+        self._qcf_config = FractalConfig(**qcf_cfg)
 
         # Always use fork. This is generally a sane default until problems crop up
         # In particular, logging will be inherited from the parent process
@@ -161,9 +161,9 @@ class FractalSnowflake:
         ######################################
         # Now start the various subprocesses #
         ######################################
-        flask = FractalFlaskProcess(self._qcfractal_config, self._completed_queue)
-        compute = SnowflakeComputeProcess(self._qcfractal_config, max_workers)
-        periodics = FractalPeriodicsProcess(self._qcfractal_config, self._completed_queue)
+        flask = FractalFlaskProcess(self._qcf_config, self._completed_queue)
+        compute = SnowflakeComputeProcess(self._qcf_config, max_workers)
+        periodics = FractalPeriodicsProcess(self._qcf_config, self._completed_queue)
 
         self._flask_proc = FractalProcessRunner('snowflake_flask', mp_ctx, flask, start)
         self._periodics_proc = FractalProcessRunner('snowflake_periodics', mp_ctx, periodics, start)
@@ -259,8 +259,8 @@ class FractalSnowflake:
         '''
 
         # Try to connect 20 times (~2 seconds). If it fails after that, raise the last exception
-        host = self._qcfractal_config.flask.bind
-        port = self._qcfractal_config.flask.port
+        host = self._qcf_config.flask.bind
+        port = self._qcf_config.flask.port
 
         return attempt_client_connect(host, port)
 
