@@ -260,10 +260,12 @@ def postgres_server(tmp_path_factory):
     a pytest-proveded session-scoped temporary directory
     '''
 
+    logger = logging.getLogger(__name__)
+
     db_path = str(tmp_path_factory.mktemp('db'))
     tmp_pg = TemporaryPostgres(data_dir=db_path)
     pg_harness = tmp_pg.harness
-    print(f"Using database located at {db_path} with uri {pg_harness.database_uri()}")
+    logger.debug(f"Using database located at {db_path} with uri {pg_harness.database_uri()}")
     assert pg_harness.is_alive(False) and not pg_harness.is_alive(True)
     yield pg_harness
 
@@ -330,6 +332,8 @@ def test_server(temporary_database):
     # the database)
     extra_config = {}
     extra_config['service_frequency'] = 5
+    extra_config['heartbeat_frequency'] = 3
+    extra_config['heartbeat_max_missed'] = 2
     extra_config['database'] = {'pool_size': 0}
 
     with FractalSnowflake(
@@ -357,6 +361,8 @@ def fractal_compute_server(temporary_database):
     # the database)
     extra_config = {}
     extra_config['service_frequency'] = 5
+    extra_config['heartbeat_frequency'] = 3
+    extra_config['heartbeat_max_missed'] = 2
     extra_config['database'] = {'pool_size': 0}
 
     with FractalSnowflake(
@@ -382,6 +388,8 @@ def fractal_compute_server_manualperiodics(temporary_database):
     # the database)
     extra_config = {}
     extra_config['service_frequency'] = 5
+    extra_config['heartbeat_frequency'] = 3
+    extra_config['heartbeat_max_missed'] = 2
     extra_config['database'] = {'pool_size': 0}
 
     with FractalSnowflake(
