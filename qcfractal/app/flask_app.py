@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from flask import Flask
 import multiprocessing
 
@@ -79,6 +80,9 @@ class FractalFlaskProcess(FractalProcessBase):
 
         # Get the global storage socket and set up the queue
         storage_socket.set_completed_watch(self._completed_queue)
+
+        # Disable printing "Environment: ... WARNING: This is a development server...
+        os.environ['WERKZEUG_RUN_MAIN'] = 'true'
 
         flask_app.run(host=self._qcf_config.flask.bind, port=self._qcf_config.flask.port)
 

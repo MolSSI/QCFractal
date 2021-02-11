@@ -7,13 +7,15 @@ import datetime
 import logging
 import re
 import time
+from qcfractal.port_util import find_port
 from concurrent.futures import ProcessPoolExecutor
 
 import pytest
 
 import qcfractal.interface as ptl
-from qcfractal import FractalServer, qc_queue as queue, testing
-from qcfractal.testing import reset_server_database, test_server
+from qcfractal import qc_queue as queue, testing
+from qcfractal.snowflake import attempt_client_connect
+from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
 
 CLIENT_USERNAME = "test_compute_adapter"
 
@@ -33,20 +35,20 @@ def caplog_handler_at_level(caplog_fixture, level, logger=None):
     caplog_fixture.handler.setLevel(starting_handler_level)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def compute_adapter_fixture(test_server):
 
-    client = ptl.FractalClient(test_server, username=CLIENT_USERNAME)
+    host = test_server._qcf_config.flask.bind
+    port = test_server._qcf_config.flask.port
+    client = attempt_client_connect(host, port) # TODO: , username=CLIENT_USERNAME)
 
     with ProcessPoolExecutor(max_workers=2) as adapter:
-
         yield client, test_server, adapter
 
 
 @testing.using_rdkit
 def test_queue_manager_single_tags(compute_adapter_fixture):
     client, server, adapter = compute_adapter_fixture
-    reset_server_database(server)
 
     config = {"Hello": "World"}
     manager_stuff = queue.QueueManager(client, adapter, queue_tag="stuff", configuration=config)
@@ -75,14 +77,13 @@ def test_queue_manager_single_tags(compute_adapter_fixture):
         value = test_results[manager["tag"]]
         assert manager["submitted"] == value
         assert manager["completed"] == value
-        assert manager["username"] == CLIENT_USERNAME
+        # TODO assert manager["username"] == CLIENT_USERNAME
         assert isinstance(manager["configuration"], dict)
 
 
 @testing.using_rdkit
 def test_queue_manager_multiple_tags(compute_adapter_fixture):
     client, server, adapter = compute_adapter_fixture
-    reset_server_database(server)
 
     config = {"Hello": "World"}
     base_molecule = ptl.data.get_molecule("butane.json")
@@ -151,7 +152,6 @@ def test_queue_manager_log_statistics(compute_adapter_fixture, caplog):
     """Test statistics are correctly generated"""
     # Setup manager and add some compute
     client, server, adapter = compute_adapter_fixture
-    reset_server_database(server)
 
     manager = queue.QueueManager(client, adapter, cores_per_task=1, memory_per_task=1, verbose=True)
 
@@ -180,11 +180,14 @@ def test_queue_manager_log_statistics(compute_adapter_fixture, caplog):
     # Record a heartbeat
     timestamp = datetime.datetime.utcnow()
     manager.heartbeat()
-    manager_record = server.storage.get_managers()["data"][0]
-    logs = server.storage.get_manager_logs(manager_record["id"])["data"]
+
+    storage_socket = SQLAlchemySocket()
+    storage_socket.init(server._qcf_config)
+    manager_record = storage_socket.get_managers()["data"][0]
+    logs = storage_socket.get_manager_logs(manager_record["id"])["data"]
 
     # Grab just the last log
-    latest_log = server.storage.get_manager_logs(manager_record["id"], timestamp_after=timestamp)["data"]
+    latest_log = storage_socket.get_manager_logs(manager_record["id"], timestamp_after=timestamp)["data"]
     assert len(latest_log) >= 1
     assert len(latest_log) < len(logs)
     state = latest_log[0]
@@ -200,7 +203,6 @@ def test_queue_manager_log_statistics(compute_adapter_fixture, caplog):
 def test_queue_manager_shutdown(compute_adapter_fixture):
     """Tests to ensure tasks are returned to queue when the manager shuts down"""
     client, server, adapter = compute_adapter_fixture
-    reset_server_database(server)
 
     manager = queue.QueueManager(client, adapter)
 
@@ -214,7 +216,7 @@ def test_queue_manager_shutdown(compute_adapter_fixture):
     shutdown = manager.shutdown()
     assert shutdown["nshutdown"] == 1, shutdown["info"]
 
-    sman = server.list_managers(name=manager.name())
+    sman = client.query_managers(name=manager.name(), status="INACTIVE")
     assert len(sman) == 1
     assert sman[0]["status"] == "INACTIVE"
 
@@ -230,7 +232,6 @@ def test_queue_manager_shutdown(compute_adapter_fixture):
 def test_queue_manager_server_delay(compute_adapter_fixture):
     """Test to ensure interrupts to the server shutdown correctly"""
     client, server, adapter = compute_adapter_fixture
-    reset_server_database(server)
 
     manager = queue.QueueManager(client, adapter, server_error_retries=1)
 
@@ -283,39 +284,33 @@ def test_queue_manager_server_delay(compute_adapter_fixture):
 
 
 def test_queue_manager_heartbeat(compute_adapter_fixture):
-    """Tests to ensure tasks are returned to queue when the manager shuts down"""
+    """Tests to ensure managers are marked as inactive when heartbeat times are exceeded
+    """
 
     client, server, adapter = compute_adapter_fixture
 
-    with testing.loop_in_thread() as loop:
+    hooh = ptl.data.get_molecule("hooh.json")
+    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh], tag="other")
 
-        # Build server, manually handle IOLoop (no start/stop needed)
-        server = FractalServer(
-            port=testing.find_open_port(),
-            storage_project_name=server.storage_database,
-            storage_uri=server.storage_uri,
-            loop=loop,
-            ssl_options=False,
-            heartbeat_frequency=0.1,
-        )
+    manager = queue.QueueManager(client, adapter, queue_tag="other")
 
-        # Clean and re-init the database
-        testing.reset_server_database(server)
+    manager.update()
+    assert len(manager.list_current_tasks()) > 0
 
-        client = ptl.FractalClient(server)
-        manager = queue.QueueManager(client, adapter)
+    tasks = client.query_tasks(status="WAITING")
+    assert len(tasks) == 0
 
-        sman = server.list_managers(name=manager.name())
-        assert len(sman) == 1
-        assert sman[0]["status"] == "ACTIVE"
+    # By default, the manager isn't contacting the server with heartbeats
+    # So just wait out the right amount of time and the server should mark it as inactive
+    wait_time = server._qcf_config.heartbeat_frequency * (server._qcf_config.heartbeat_max_missed+1) + 2
+    time.sleep(wait_time)
 
-        # Make sure interval exceeds heartbeat time
-        time.sleep(1)
-        server.check_manager_heartbeats()
+    sman = client.query_managers(name=manager.name(), status="INACTIVE")
+    assert len(sman) == 1
+    assert sman[0]["status"] == "INACTIVE"
 
-        sman = server.list_managers(name=manager.name())
-        assert len(sman) == 1
-        assert sman[0]["status"] == "INACTIVE"
+    tasks = client.query_tasks(status="WAITING")
+    assert len(tasks) == 1
 
 
 def test_manager_max_tasks_limiter(compute_adapter_fixture):
