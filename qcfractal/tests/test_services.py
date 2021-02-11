@@ -41,7 +41,7 @@ def test_service_torsiondrive_service_incomplete(torsiondrive_fixture):
     assert status["incomplete_tasks"] == 1
 
     # wait for the computation for this iteration to finish
-    server.wait_for_results()
+    server.await_results()
 
     # Take another compute step
     r = run_services(server, periodics, 1)
@@ -446,7 +446,7 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
     )  # yapf: disable
 
     ret = client.add_service([service])
-    fractal_compute_server.wait_for_results(ret.ids)
+    fractal_compute_server.await_results(ret.ids)
 
     result = client.query_procedures(id=ret.ids)[0]
 

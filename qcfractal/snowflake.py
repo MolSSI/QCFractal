@@ -205,7 +205,7 @@ class FractalSnowflake:
 
         return f'http://{self._qcf_config.flask.bind}:{self._qcf_config.flask.port}'
 
-    def wait_for_results(self, ids: Optional[List[int]] = None, timeout: float = None) -> bool:
+    def await_results(self, ids: Optional[List[int]] = None, timeout: float = None) -> bool:
         """
         Wait for computations to complete
 

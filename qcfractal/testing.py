@@ -418,7 +418,7 @@ def run_services(server: FractalSnowflake, periodics: FractalPeriodics, max_iter
 
     logger = logging.getLogger(__name__)
     # Wait for everything currently running to finish
-    server.wait_for_results()
+    server.await_results()
 
     for i in range(1, max_iter+1):
         logger.debug(f"Iteration {i}")
@@ -427,7 +427,7 @@ def run_services(server: FractalSnowflake, periodics: FractalPeriodics, max_iter
         if running_services == 0:
             return True
 
-        server.wait_for_results()
+        server.await_results()
 
     return False
 
