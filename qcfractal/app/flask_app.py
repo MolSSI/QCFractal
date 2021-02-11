@@ -77,10 +77,8 @@ class FractalFlaskProcess(FractalProcessBase):
     def run(self):
         flask_app = create_qcfractal_flask_app(self._qcf_config)
 
-        if self._completed_queue is not None:
-            # Get the global storage socket and set up the queue
-            from .flask_app import storage_socket as flask_storage_socket
-            flask_storage_socket.set_completed_watch(self._completed_queue)
+        # Get the global storage socket and set up the queue
+        storage_socket.set_completed_watch(self._completed_queue)
 
         flask_app.run(host=self._qcf_config.flask.bind, port=self._qcf_config.flask.port)
 

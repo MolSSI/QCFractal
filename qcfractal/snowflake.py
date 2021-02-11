@@ -163,7 +163,7 @@ class FractalSnowflake:
         ######################################
         flask = FractalFlaskProcess(self._qcfractal_config, self._completed_queue)
         compute = SnowflakeComputeProcess(self._qcfractal_config, max_workers)
-        periodics = FractalPeriodicsProcess(self._qcfractal_config)
+        periodics = FractalPeriodicsProcess(self._qcfractal_config, self._completed_queue)
 
         self._flask_proc = FractalProcessRunner('snowflake_flask', mp_ctx, flask, start)
         self._periodics_proc = FractalProcessRunner('snowflake_periodics', mp_ctx, periodics, start)
@@ -239,7 +239,7 @@ class FractalSnowflake:
                 logger.warning(f'No tasks finished in {timeout} seconds')
                 return False
 
-            logger.debug("Task finished: id={}, type={}, status={}".format(*base_result_info))
+            logger.debug("Task finished: id={}, status={}".format(*base_result_info))
             finished_id = base_result_info[0]
 
             # Add it to the list of all completed results we have seen
@@ -249,6 +249,7 @@ class FractalSnowflake:
             # we are watching
             if finished_id in ids:
                 ids.remove(finished_id)
+                logger.debug(f"Removed id={finished_id}. Remaining ids: " + "None" if len(ids) == 0 else str(ids))
 
         return True
 
