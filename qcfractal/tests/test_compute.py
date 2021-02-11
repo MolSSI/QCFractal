@@ -45,7 +45,7 @@ def test_task_molecule_no_orientation(data, fractal_compute_server):
     assert "nsubmitted" in str(ret)
 
     # Manually handle the compute
-    fractal_compute_server.wait_for_results()
+    fractal_compute_server.await_results()
 
     # Check for the single result
     ret = client.query_results(id=ret.submitted)
@@ -72,7 +72,7 @@ def test_task_error(fractal_compute_server):
     ret = client.add_compute("rdkit", "cookiemonster", "", "energy", None, [mol])
 
     # Manually handle the compute
-    fractal_compute_server.wait_for_results()
+    fractal_compute_server.await_results()
 
     # Check for error
     results = client.query_results(id=ret.submitted)
@@ -98,7 +98,7 @@ def test_task_client_restart(fractal_compute_server):
     ret = client.add_compute("rdkit", "cookiemonster", "", "energy", None, [mol])
 
     # Manually handle the compute
-    fractal_compute_server.wait_for_results()
+    fractal_compute_server.await_results()
 
     tasks = client.query_tasks(base_result=ret.submitted)[0]
     assert tasks.status == "ERROR"
@@ -128,7 +128,7 @@ def test_task_regenerate(fractal_compute_server):
 
     ret1 = client.add_compute("rdkit", "cookiemonster", "", "energy", None, [mol])
     ret2 = client.add_procedure("optimization", "geometric", geometric_options, [mol])
-    fractal_compute_server.wait_for_results()
+    fractal_compute_server.await_results()
 
     base_ids = [ret1.submitted[0], ret2.submitted[0]]
     old_tasks = client.query_tasks(base_result=base_ids)
@@ -209,7 +209,7 @@ def test_queue_error(fractal_compute_server):
     hooh = ptl.data.get_molecule("hooh.json").copy(update={"connectivity_": None})
     compute_ret = client.add_compute("rdkit", "UFF", "", "energy", None, hooh)
 
-    fractal_compute_server.wait_for_results()
+    fractal_compute_server.await_results()
 
     # Pull from database, raw JSON
     storage_socket = SQLAlchemySocket()
@@ -243,7 +243,7 @@ def test_queue_duplicate_compute(fractal_compute_server):
     assert len(ret.existing) == 0
 
     # Wait for the compute to execute
-    fractal_compute_server.wait_for_results()
+    fractal_compute_server.await_results()
 
     # Should catch duplicates both ways
     ret = client.add_compute("RDKIT", "uff", None, "energy", None, mol_ret)
@@ -284,7 +284,7 @@ def test_queue_compute_mixed_molecule(fractal_compute_server):
     assert len(ret.data.existing) == 0
 
     # Pull out fireworks launchpad and queue nanny
-    fractal_compute_server.wait_for_results()
+    fractal_compute_server.await_results()
 
     ret = client.add_compute("rdkit", "UFF", "", "energy", None, [mol_ret[0], bad_id2])
     assert len(ret.ids) == 2
@@ -314,7 +314,7 @@ def test_queue_duplicate_procedure(fractal_compute_server):
     assert len(ret.existing) == 0
 
     # Pull out fireworks launchpad and queue nanny
-    fractal_compute_server.wait_for_results()
+    fractal_compute_server.await_results()
 
     ret2 = client.add_procedure("optimization", "geometric", geometric_options, [bad_id1, hooh])
     assert len(ret2.ids) == 2
