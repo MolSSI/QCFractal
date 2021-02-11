@@ -11,7 +11,9 @@ dependencies:
   - pyyaml >=5.1
   - pydantic >=1.4.0
   - requests
-  - tornado
+  - flask
+  - gunicorn
+  - apscheduler
 
   # Security dependencies
   - bcrypt
@@ -48,3 +50,4 @@ dependencies:
     - git+git://github.com/MolSSI/QCElemental#egg=qcelemental
     - git+git://github.com/leeping/geomeTRIC#egg=geometric
     - git+git://github.com/lpwgroup/torsiondrive.git#egg=torsiondrive
+    - flask_jwt_extended
