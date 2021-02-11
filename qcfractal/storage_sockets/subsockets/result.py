@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from sqlalchemy import and_
 from qcfractal.storage_sockets.models import BaseResultORM, ResultORM, TaskQueueORM
-from qcfractal.interface.models import ResultRecord
+from qcfractal.interface.models import ResultRecord, TaskStatusEnum
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 from qcfractal.storage_sockets.sqlalchemy_socket import format_query, get_count_fast
 
@@ -203,6 +203,10 @@ class ResultSocket:
                 # if any duplicate ids are found in the input, commit should be called each iteration
                 if duplicates:
                     session.commit()
+
+                if result.status in [TaskStatusEnum.complete, TaskStatusEnum.error]:
+                    self._core_socket.notify_completed_watch(result.id, result.status)
+
                 updated_count += 1
             # if no duplicates found, only commit at the end of the loop.
             if not duplicates:
