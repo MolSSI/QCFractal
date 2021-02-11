@@ -4,10 +4,12 @@ Contains testing infrastructure for QCFractal.
 
 import os
 import pkgutil
+import logging
 import subprocess
 import sys
 import time
 import gc
+import copy
 from collections import Mapping
 from contextlib import contextmanager
 
@@ -20,8 +22,11 @@ from qcelemental.models import Molecule
 from .port_util import find_port
 from .config import FractalConfig
 
+import qcfractal.interface as ptl
+from qcfractal.interface.models import TorsionDriveInput
 from .interface import FractalClient
-from .postgres_harness import PostgresHarness, TemporaryPostgres
+from .interface.models import TorsionDriveInput
+from .postgres_harness import TemporaryPostgres
 from .qc_queue import build_queue_adapter
 from .snowflake import FractalSnowflake
 from .periodics import FractalPeriodics
@@ -387,12 +392,87 @@ def fractal_compute_server_manualperiodics(temporary_database):
             flask_config="testing",
             extra_config=extra_config
     ) as server:
-        qcf_cfg = server._qcfractal_config
+        qcf_cfg = server._qcf_config
         server._flask_proc.start()
         server._compute_proc.start()
 
         periodics = FractalPeriodics(qcf_cfg)
         yield server, periodics
+
+
+####################################
+# Torsiondrive fixtures & functions
+####################################
+def run_services(server: FractalSnowflake, periodics: FractalPeriodics, max_iter: int = 10) -> bool:
+    """
+    Run up to max_iter iterations on a service
+    """
+
+    logger = logging.getLogger(__name__)
+    # Wait for everything currently running to finish
+    server.wait_for_results()
+
+    for i in range(1, max_iter+1):
+        logger.debug(f"Iteration {i}")
+        running_services = periodics._update_services()
+        logger.debug(f"Number of running services: {running_services}")
+        if running_services == 0:
+            return True
+
+        server.wait_for_results()
+
+    return False
+
+
+@pytest.fixture(scope="function")
+def torsiondrive_fixture(fractal_compute_server_manualperiodics):
+
+    # Cannot use this fixture without these services. Also cannot use `mark` and `fixture` decorators
+    pytest.importorskip("torsiondrive")
+    pytest.importorskip("geometric")
+    pytest.importorskip("rdkit")
+
+    server, periodics = fractal_compute_server_manualperiodics
+    client = server.client()
+
+    # Add a HOOH
+    hooh = ptl.data.get_molecule("hooh.json")
+    mol_ret = client.add_molecules([hooh])
+
+    # Geometric options
+    torsiondrive_options = {
+        "initial_molecule": mol_ret[0],
+        "keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [90]},
+        "optimization_spec": {
+            "program": "geometric",
+            "keywords": {"coordsys": "tric"},
+            "protocols": {"trajectory": "initial_and_final"},
+        },
+        "qc_spec": {"driver": "gradient", "method": "UFF", "basis": "", "keywords": None, "program": "rdkit"},
+    }
+
+    def spin_up_test(**keyword_augments):
+        run_service = keyword_augments.pop("run_service", True)
+
+        instance_options = copy.deepcopy(torsiondrive_options)
+        recursive_dict_merge(instance_options, keyword_augments)
+
+        inp = TorsionDriveInput(**instance_options)
+        ret = client.add_service([inp], full_return=True)
+
+        if ret.meta.n_inserted:  # In case test already submitted
+            compute_key = ret.data.ids[0]
+            service = client.query_services(procedure_id=compute_key)[0]
+            assert "WAITING" in service["status"]
+
+        if run_service:
+            finished = run_services(server, periodics)
+            assert finished
+
+        return ret.data
+
+    yield spin_up_test, server, periodics
+
 
 
 def build_adapter_clients(mtype, storage_name="test_qcfractal_compute_server"):
