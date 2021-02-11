@@ -12,16 +12,22 @@ from .fractal_proc import FractalProcessBase
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
+    import multiprocessing
+    from typing import Optional
     from .config import FractalConfig
 
 
 from .services import construct_service
 
 class FractalPeriodics:
-    def __init__(self, qcf_cfg: FractalConfig):
+    def __init__(self, qcf_cfg: FractalConfig, completed_queue: Optional[multiprocessing.Queue] = None):
         self.storage_socket = SQLAlchemySocket()
         self.storage_socket.init(qcf_cfg)
         self.scheduler = BackgroundScheduler()
+
+        self._completed_queue = completed_queue
+        self.storage_socket.set_completed_watch(self._completed_queue)
+
         self.logger = logging.getLogger("qcfractal_periodics")
 
         # Frequencies/Intervals at which to run various tasks
@@ -153,16 +159,18 @@ class FractalPeriodicsProcess(FractalProcessBase):
     def __init__(
             self,
             qcf_config: FractalConfig,
+            completed_queue: Optional[multiprocessing.Queue] = None
     ):
         FractalProcessBase.__init__(self)
-        self.config = qcf_config
+        self._qcf_config = qcf_config
+        self._completed_queue = completed_queue
 
         # We cannot instantiate this here. The .run() function will be run in a separate process
         # and so instantiation must happen there
         self.periodics = None
 
     def run(self) -> None:
-        self.periodics = FractalPeriodics(self.config)
+        self.periodics = FractalPeriodics(self._qcf_config, self._completed_queue)
         self.periodics.start()
 
         # Periodics are now running in the background. But we need to keep this process alive

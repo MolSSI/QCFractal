@@ -5,9 +5,14 @@ import logging
 import abc
 
 
-class EndProcess(RuntimeError):
+class EndProcess(BaseException):
     """
     Exception class used to signal that the process should end
+
+    This (like KeyboardInterrupt) derives from BaseException to prevent
+    it from being handled with "except Exception". Without this, sometimes
+    exceptions wouldn't really interrupt a running process if it is thrown while
+    the process is in certain places
     """
     pass
 
@@ -81,7 +86,7 @@ class FractalProcessRunner:
         #       may not run for them
         def _cleanup(sig, frame):
             signame = signal.Signals(sig).name
-            logger.debug(f"In cleanup of _run_process. Received " + signame)
+            logger.debug(f"In cleanup of _run_process for {name}. Received " + signame)
             raise EndProcess(signame)
 
         signal.signal(signal.SIGINT, _cleanup)
