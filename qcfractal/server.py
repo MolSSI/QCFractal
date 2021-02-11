@@ -189,7 +189,7 @@ class StandaloneFractalServer:
             queue_manager.stop(str(e))
 
 
-    def wait_for_results(self, ids, timeout=None):
+    def await_results(self, ids, timeout=None):
         logger = logging.getLogger(__name__)
 
         if self._completed_queue is None:
