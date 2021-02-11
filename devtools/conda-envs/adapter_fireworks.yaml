@@ -11,6 +11,9 @@ dependencies:
   - pyyaml >=5.1
   - pydantic >=1.4.0
   - requests
+  - flask
+  - gunicorn
+  - apscheduler
 
   # Security dependencies
   - bcrypt
@@ -46,3 +49,4 @@ dependencies:
 #   Pip includes
   - pip:
     - fireworks
+    - flask_jwt_extended

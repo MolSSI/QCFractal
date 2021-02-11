@@ -11,7 +11,9 @@ dependencies:
   - pyyaml >=5.1
   - pydantic >=1.4.0
   - requests
-  - tornado
+  - flask
+  - gunicorn
+  - apscheduler
 
   # Security dependencies
   - bcrypt
@@ -40,5 +42,8 @@ dependencies:
 #  - requests_mock_flask
 
 #   QCArchive includes
-  - qcengine >=0.20,<0.21
-  - qcelemental >=0.23,<0.24
+  - qcengine >=0.20
+  - qcelemental >=0.23
+
+  - pip:
+    - flask_jwt_extended
