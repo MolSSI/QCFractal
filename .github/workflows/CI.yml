@@ -6,9 +6,11 @@ on:
   push:
     branches:
       - master
+      - next
   pull_request:
     branches:
       - master
+      - next
   schedule:
     - cron: '0 0 * * *'
 

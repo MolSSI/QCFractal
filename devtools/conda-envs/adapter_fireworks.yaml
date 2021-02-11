@@ -15,7 +15,6 @@ dependencies:
   # Security dependencies
   - bcrypt
   - cryptography
-  - rdkit
 
   # Storage dependencies
   - conda-forge::alembic
@@ -36,6 +35,9 @@ dependencies:
   - pytest
   - pytest-cov
   - requests-mock
+
+#   Environment specific includes
+  - rdkit
 
 #   QCArchive includes
   - qcengine >=0.20,<0.21
