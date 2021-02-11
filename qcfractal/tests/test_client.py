@@ -6,10 +6,6 @@ import numpy as np
 import pytest
 
 import qcfractal.interface as ptl
-from qcfractal.testing import test_server
-
-# All tests should import test_server, but not use it
-# Make PyTest aware that this module needs the server
 
 valid_encodings = ["json", "json-ext", "msgpack-ext"]
 
@@ -17,7 +13,7 @@ valid_encodings = ["json", "json-ext", "msgpack-ext"]
 @pytest.mark.parametrize("encoding", valid_encodings)
 def test_client_molecule(test_server, encoding):
 
-    client = ptl.FractalClient(test_server)
+    client = test_server.client()
     client._set_encoding(encoding)
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
@@ -38,7 +34,7 @@ def test_client_molecule(test_server, encoding):
 @pytest.mark.parametrize("encoding", valid_encodings)
 def test_client_keywords(test_server, encoding):
 
-    client = ptl.FractalClient(test_server)
+    client = test_server.client()
     client._set_encoding(encoding)
 
     opt = ptl.models.KeywordSet(values={"one": "fish", "two": encoding})
@@ -57,7 +53,7 @@ def test_client_keywords(test_server, encoding):
 @pytest.mark.parametrize("encoding", valid_encodings)
 def test_client_duplicate_keywords(test_server, encoding):
 
-    client = ptl.FractalClient(test_server)
+    client = test_server.client()
     client._set_encoding(encoding)
 
     key_name = f"key-{encoding}"
@@ -82,7 +78,7 @@ def test_client_duplicate_keywords(test_server, encoding):
 @pytest.mark.parametrize("encoding", valid_encodings)
 def test_empty_query(test_server, encoding):
 
-    client = ptl.FractalClient(test_server)
+    client = test_server.client()
     client._set_encoding(encoding)
 
     with pytest.raises(IOError) as error:
@@ -105,7 +101,7 @@ def test_collection_portal(test_server, encoding):
         "group": "default",
     }
 
-    client = ptl.FractalClient(test_server)
+    client = test_server.client()
     client._set_encoding(encoding)
 
     # Test add
@@ -152,7 +148,7 @@ def test_collection_portal(test_server, encoding):
 def test_custom_queries(test_server, encoding):
     """ Test the round trip between client and server in custom queries"""
 
-    client = ptl.FractalClient(test_server)
+    client = test_server.client()
     client._set_encoding(encoding)
 
     # Dummy test, not found

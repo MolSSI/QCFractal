@@ -79,7 +79,8 @@ class SnowflakeComputeProcess(FractalProcessBase):
     def run(self) -> None:
         host = self._qcf_config.flask.bind
         port = self._qcf_config.flask.port
-        client = attempt_client_connect(host, port)
+        uri = f'http://{host}:{port}'
+        client = attempt_client_connect(uri)
 
         self.worker_pool = ProcessPoolExecutor(self._max_workers)
         self.queue_manager = QueueManager(client, self.worker_pool, manager_name="snowflake_compute")
