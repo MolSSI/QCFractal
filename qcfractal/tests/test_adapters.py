@@ -11,12 +11,6 @@ import pytest
 import qcfractal.interface as ptl
 from qcfractal import QueueManager, testing
 from qcfractal.qc_queue import build_queue_adapter
-from qcfractal.testing import (
-    adapter_client_fixture,
-    build_adapter_clients,
-    managed_compute_server,
-    reset_server_database,
-)
 
 
 def test_adapter_client_active_task_slots(adapter_client_fixture):
@@ -32,7 +26,6 @@ def test_adapter_client_active_task_slots(adapter_client_fixture):
 def test_adapter_single(managed_compute_server):
     client, server, manager = managed_compute_server
 
-    reset_server_database(server)
     manager.heartbeat()  # Re-register with server after clear
 
     # Add compute
@@ -47,7 +40,7 @@ def test_adapter_single(managed_compute_server):
 
 @pytest.mark.parametrize(
     "cores_per_task,memory_per_task,scratch_dir", [(None, None, None), (1, 1, "tmpdir"), (2, 1.9, "tmpdir")]
-)  # yapf: disable
+)
 @testing.using_psi4
 def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per_task, scratch_dir):
 
@@ -112,7 +105,6 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
 def test_adapter_error_message(managed_compute_server):
     client, server, manager = managed_compute_server
 
-    reset_server_database(server)
     manager.heartbeat()  # Re-register with server after clear
 
     # HOOH without connectivity, RDKit should fail
@@ -138,14 +130,12 @@ def test_adapter_error_message(managed_compute_server):
 
     error = ret[0].get_error()
     assert "connectivity graph" in error.error_message
-    server.objects["storage"].queue_mark_complete([queue_id])
 
 
 @testing.using_rdkit
 def test_adapter_raised_error(managed_compute_server):
     client, server, manager = managed_compute_server
 
-    reset_server_database(server)
     manager.heartbeat()  # Re-register with server after clear
 
     # HOOH without connectivity, RDKit should fail
@@ -161,7 +151,6 @@ def test_adapter_raised_error(managed_compute_server):
 
     error = ret[0].get_error()
     assert "Error" in error.error_message
-    server.objects["storage"].queue_mark_complete([queue_id])
 
 
 @testing.using_rdkit
