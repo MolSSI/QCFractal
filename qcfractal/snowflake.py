@@ -3,7 +3,7 @@ import os
 import tempfile
 import time
 import multiprocessing
-from queue import Empty # Just for exception handling
+from queue import Empty  # Just for exception handling
 import logging
 import logging.handlers
 from concurrent.futures import ProcessPoolExecutor
@@ -18,8 +18,9 @@ from .app.flask_app import FlaskProcess
 from .process_runner import ProcessBase, ProcessRunner
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
-    from typing import Dict, Any, List, Optional
+    from typing import Dict, Any, Sequence, Optional, Set
 
 
 def attempt_client_connect(uri: str, **client_args) -> FractalClient:
@@ -63,23 +64,14 @@ class SnowflakeComputeProcess(ProcessBase):
     Runs  a compute manager in a separate process
     """
 
-    def __init__(
-            self,
-            qcf_config: FractalConfig,
-            max_workers: int = 2
-    ):
+    def __init__(self, qcf_config: FractalConfig, max_workers: int = 2):
         self._qcf_config = qcf_config
         self._max_compute_workers = max_workers
-
-        # We cannot instantiate these here. The .run() function will be run in a separate process
-        # and so instantiation must happen there
-        self.worker_pool = None
-        self.queue_manager = None
 
     def run(self) -> None:
         host = self._qcf_config.flask.bind
         port = self._qcf_config.flask.port
-        uri = f'http://{host}:{port}'
+        uri = f"http://{host}:{port}"
         client = attempt_client_connect(uri)
 
         self.worker_pool = ProcessPoolExecutor(self._max_compute_workers)
@@ -97,49 +89,49 @@ class FractalSnowflake:
     def __init__(
         self,
         start: bool = True,
-        max_compute_workers: Optional[int] = 2,
+        max_compute_workers: int = 2,
         enable_watching: bool = True,
         database_config: Optional[DatabaseConfig] = None,
         flask_config: str = "snowflake",
-        extra_config: Optional[Dict[str, Any]] = None
+        extra_config: Optional[Dict[str, Any]] = None,
     ):
         """A temporary FractalServer that can be used to run complex workflows or try new computations.
 
         ! Warning ! All data is lost when the server is shutdown.
         """
 
-        self._logger = logging.getLogger('fractal_snowflake')
+        self._logger = logging.getLogger("fractal_snowflake")
 
         # Create a temporary directory for everything
         self._tmpdir = tempfile.TemporaryDirectory()
 
         # db is in a subdir of that
-        db_dir = os.path.join(self._tmpdir.name, 'db')
+        db_dir = os.path.join(self._tmpdir.name, "db")
 
         if database_config is None:
+            # Make this part of the class so it is kept alive
             self._storage = TemporaryPostgres(data_dir=db_dir)
             self._storage.harness.create_database()
             self._storage_uri = self._storage.database_uri(safe=False)
             db_config = self._storage.config
         else:
-            self._storage = None
             self._storage_uri = database_config.uri
             db_config = database_config
 
         fractal_host = "127.0.0.1"
         fractal_port = find_port()
-        self._fractal_uri = f'http://{fractal_host}:{fractal_port}'
+        self._fractal_uri = f"http://{fractal_host}:{fractal_port}"
 
         # Create a configuration for QCFractal
         # Assign the log level for subprocesses. Use the same level as what is assigned for this object
         loglevel = self._logger.getEffectiveLevel()
 
-        qcf_cfg = {}
+        qcf_cfg: Dict[str, Any] = {}
         qcf_cfg["base_directory"] = self._tmpdir.name
         qcf_cfg["loglevel"] = logging.getLevelName(loglevel)
         qcf_cfg["database"] = db_config.dict()
         qcf_cfg["enable_views"] = False
-        qcf_cfg["flask"] = {'config_name': flask_config, 'bind': fractal_host, 'port': fractal_port}
+        qcf_cfg["flask"] = {"config_name": flask_config, "bind": fractal_host, "port": fractal_port}
         qcf_cfg["enable_security"] = False
 
         # Add in any options passed to this Snowflake
@@ -150,15 +142,14 @@ class FractalSnowflake:
         self._qcf_config = FractalConfig(**qcf_cfg)
         self._max_compute_workers = max_compute_workers
 
-
         # Do we want to enable watching/waiting for finished tasks?
         self._completed_queue = None
         if enable_watching:
             # We use fork inside ProcessRunner, so we must use for here to set up the Queues
             # This must be changed if the ProcessRunner is ever changed to use seomthing else
-            mp_ctx = multiprocessing.get_context('fork')
+            mp_ctx = multiprocessing.get_context("fork")
             self._completed_queue = mp_ctx.Queue()
-            self._all_completed = set()
+            self._all_completed: Set[int] = set()
 
         ######################################
         # Now start the various subprocesses #
@@ -166,12 +157,12 @@ class FractalSnowflake:
         flask = FlaskProcess(self._qcf_config, self._completed_queue)
         periodics = PeriodicsProcess(self._qcf_config, self._completed_queue)
 
-        self._flask_proc = ProcessRunner('snowflake_flask', flask, start)
-        self._periodics_proc = ProcessRunner('snowflake_periodics', periodics, start)
+        self._flask_proc = ProcessRunner("snowflake_flask", flask, start)
+        self._periodics_proc = ProcessRunner("snowflake_periodics", periodics, start)
 
         if self._max_compute_workers > 0:
             compute = SnowflakeComputeProcess(self._qcf_config, self._max_compute_workers)
-            self._compute_proc = ProcessRunner('snowflake_compute', compute, start)
+            self._compute_proc = ProcessRunner("snowflake_compute", compute, start)
 
     def stop(self):
         # Send all our processes SIGTERM
@@ -189,7 +180,6 @@ class FractalSnowflake:
         if not self._periodics_proc.is_alive():
             self._periodics_proc.start()
 
-
     def __del__(self):
         self.stop()
 
@@ -203,9 +193,9 @@ class FractalSnowflake:
             Address/URI of the rest interface (ie, 'http://127.0.0.1:1234')
         """
 
-        return f'http://{self._qcf_config.flask.bind}:{self._qcf_config.flask.port}'
+        return f"http://{self._qcf_config.flask.bind}:{self._qcf_config.flask.port}"
 
-    def await_results(self, ids: Optional[List[int]] = None, timeout: float = None) -> bool:
+    def await_results(self, ids: Optional[Sequence[int]] = None, timeout: Optional[float] = None) -> bool:
         """
         Wait for computations to complete
 
@@ -215,7 +205,7 @@ class FractalSnowflake:
 
         Parameters
         ----------
-        ids: Optional[List[int]]
+        ids: Optional[Sequence[int]]
             Result/Procedure IDs to wait for. If not specified, all currently incomplete tasks
             will be waited for.
 
@@ -231,30 +221,32 @@ class FractalSnowflake:
         logger = logging.getLogger(__name__)
 
         if self._completed_queue is None:
-            raise RuntimeError("Cannot wait for results when the completed queue is not enabled. See the 'enable_watching' argument to the constructor")
+            raise RuntimeError(
+                "Cannot wait for results when the completed queue is not enabled. See the 'enable_watching' argument to the constructor"
+            )
 
         if ids is None:
             c = self.client()
             proc = c.query_tasks(status=["WAITING", "RUNNING"])
             ids = [x.base_result for x in proc]
 
-        ids = set(int(x) for x in ids)
+        ids = [int(x) for x in ids]
 
         # Remove any we have already marked as completed
-        ids = ids - self._all_completed
+        remaining_ids = set(ids) - self._all_completed
 
-        if len(ids) == 0:
+        if len(remaining_ids) == 0:
             logger.debug("All tasks are already finished")
             return True
 
-        logger.debug("Waiting for ids: " + str(ids))
+        logger.debug("Waiting for ids: " + str(remaining_ids))
 
-        while len(ids) > 0:
+        while len(remaining_ids) > 0:
             # The queue stores a tuple of (id, type, status)
             try:
                 base_result_info = self._completed_queue.get(True, timeout)
             except Empty:
-                logger.warning(f'No tasks finished in {timeout} seconds')
+                logger.warning(f"No tasks finished in {timeout} seconds")
                 return False
 
             logger.debug("Task finished: id={}, status={}".format(*base_result_info))
@@ -265,16 +257,20 @@ class FractalSnowflake:
 
             # We may not be watching for this id, but if we are, remove it from the list
             # we are watching
-            if finished_id in ids:
+            if finished_id in remaining_ids:
                 ids.remove(finished_id)
-                logger.debug(f"Removed id={finished_id}. Remaining ids: " + "None" if len(ids) == 0 else str(ids))
+                logger.debug(
+                    f"Removed id={finished_id}. Remaining ids: " + "None"
+                    if len(remaining_ids) == 0
+                    else str(remaining_ids)
+                )
 
         return True
 
     def client(self) -> FractalClient:
-        '''
+        """
         Obtain a FractalClient connected to this server
-        '''
+        """
 
         return attempt_client_connect(self.get_uri())
 
