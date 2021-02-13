@@ -4,7 +4,7 @@ import logging.handlers
 import gunicorn.app.base
 from gunicorn.glogging import Logger as GLogger
 from .flask_app import create_qcfractal_flask_app
-from ..fractal_proc import FractalProcessBase
+from ..process_runner import ProcessBase
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -51,13 +51,13 @@ class FractalGunicornApp(gunicorn.app.base.BaseApplication):
             self.cfg.set(key.lower(), value)
 
 
-class FractalGunicornProcess(FractalProcessBase):
+class GunicornProcess(ProcessBase):
     """
     Gunicorn running in a separate process
     """
 
     def __init__(self, qcf_config: FractalConfig):
-        FractalProcessBase.__init__(self)
+        ProcessBase.__init__(self)
         self.config = qcf_config
 
     def run(self) -> None:
