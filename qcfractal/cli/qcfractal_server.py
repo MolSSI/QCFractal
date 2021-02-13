@@ -341,8 +341,7 @@ def server_start(args, config):
     # to check if the database needs to be upgraded
     # We then no longer need the socket (gunicorn and periodics will use their own
     # in their subprocesses)
-    socket = SQLAlchemySocket()
-    socket.init(config)
+    socket = SQLAlchemySocket(config)
 
     # Start up the gunicorn and periodics
     gunicorn = GunicornProcess(config)

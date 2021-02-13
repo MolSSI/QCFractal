@@ -18,9 +18,32 @@ if TYPE_CHECKING:
     from ..config import FractalConfig
     from typing import Optional
 
-storage_socket = SQLAlchemySocket()
-api_logger = API_AccessLogger()
-view_handler = ViewHandler()
+
+class _FlaskSQLAlchemySocket(SQLAlchemySocket):
+    def __init__(self):
+        pass
+
+    def init(self, qcf_config):
+        SQLAlchemySocket.__init__(self, qcf_config)
+
+class _FlaskAPILogger(API_AccessLogger):
+    def __init__(self):
+        pass
+
+    def init(self, qcf_config):
+        API_AccessLogger.__init__(self, qcf_config)
+
+class _FlaskViewHandler(ViewHandler):
+    def __init__(self):
+        pass
+
+    def init(self, qcf_config):
+        ViewHandler.__init__(self, qcf_config)
+
+
+storage_socket = _FlaskSQLAlchemySocket()
+api_logger = _FlaskAPILogger()
+view_handler = _FlaskViewHandler()
 
 jwt = JWTManager()
 # cors = CORS()
@@ -44,9 +67,9 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     jwt.init_app(app)
 
     # Initialize the database socket, API logger, and view handler
-    storage_socket.init_app(qcfractal_config)
-    api_logger.init_app(qcfractal_config)
-    view_handler.init_app(qcfractal_config)
+    storage_socket.init(qcfractal_config)
+    api_logger.init(qcfractal_config)
+    view_handler.init(qcfractal_config)
 
     app.config.JWT_ENABLED = qcfractal_config.enable_security
     app.config.ALLOW_UNAUTHENTICATED_READ = qcfractal_config.allow_unauthenticated_read

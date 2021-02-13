@@ -146,8 +146,7 @@ def test_task_regenerate(fractal_compute_server):
         assert old_task.created_on == new_task.created_on
 
     # Manually delete the old task
-    storage_socket = SQLAlchemySocket()
-    storage_socket.init(fractal_compute_server._qcf_config)
+    storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
     storage_socket.del_tasks([x.id for x in old_tasks])
 
     # Actually deleted?
@@ -212,8 +211,7 @@ def test_queue_error(fractal_compute_server):
     fractal_compute_server.await_results()
 
     # Pull from database, raw JSON
-    storage_socket = SQLAlchemySocket()
-    storage_socket.init(fractal_compute_server._qcf_config)
+    storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
     queue_ret = storage_socket.get_queue(status="ERROR")["data"]
     result = storage_socket.get_results(id=compute_ret.ids)["data"][0]
 
@@ -222,8 +220,7 @@ def test_queue_error(fractal_compute_server):
     # assert "connectivity graph" in queue_ret[0].error.error_message
     assert result["status"] == "ERROR"
 
-    storage_socket = SQLAlchemySocket()
-    storage_socket.init(fractal_compute_server._qcf_config)
+    storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
 
     # Force a complete mark and test
     storage_socket.queue_mark_complete([queue_ret[0].id])
@@ -377,8 +374,7 @@ def test_queue_ordering_time(fractal_compute_server):
     ret1 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol1).ids[0]
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2).ids[0]
 
-    storage_socket = SQLAlchemySocket()
-    storage_socket.init(fractal_compute_server._qcf_config)
+    storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
     manager = get_manager_name(storage_socket)
 
     assert len(storage_socket.queue_get_next(manager, [], [], limit=1)) == 0
@@ -401,8 +397,7 @@ def test_queue_ordering_priority(fractal_compute_server):
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2, priority="high").ids[0]
     ret3 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol3, priority="HIGH").ids[0]
 
-    storage_socket = SQLAlchemySocket()
-    storage_socket.init(fractal_compute_server._qcf_config)
+    storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
     manager = get_manager_name(storage_socket)
 
     queue_id1 = storage_socket.queue_get_next(manager, ["rdkit"], [], limit=1)[0].base_result
@@ -431,8 +426,7 @@ def test_queue_order_procedure_priority(fractal_compute_server):
     ret3 = client.add_procedure("OPTimization", "GEOmetric", geometric_options, [mol3], priority="HIGH").ids[0]
 
 
-    storage_socket = SQLAlchemySocket()
-    storage_socket.init(fractal_compute_server._qcf_config)
+    storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
     manager = get_manager_name(storage_socket)
 
 
@@ -484,8 +478,7 @@ def test_queue_query_manager(fractal_compute_server):
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2).ids[0]
     ret3 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol3).ids[0]
 
-    storage_socket = SQLAlchemySocket()
-    storage_socket.init(fractal_compute_server._qcf_config)
+    storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
     manager = get_manager_name(storage_socket)
 
     storage_socket.queue_get_next(manager, ["rdkit"], [], limit=1)[0]
