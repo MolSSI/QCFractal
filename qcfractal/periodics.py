@@ -47,8 +47,7 @@ class FractalPeriodics:
             will be passed into this queue. See :func:`SQLAlchemySocket.set_completed_watch`
         """
 
-        self.storage_socket = SQLAlchemySocket()
-        self.storage_socket.init(qcf_config)
+        self.storage_socket = SQLAlchemySocket(qcf_config)
         self.scheduler = BackgroundScheduler()
 
         self._completed_queue = completed_queue

@@ -14,15 +14,8 @@ if TYPE_CHECKING:
     from ..config import FractalConfig
 
 class ViewHandler:
-    def __init__(self):
-        pass
-
-    def init_app(self, qcf_config: FractalConfig):
+    def __init__(self, qcf_config: FractalConfig):
         """
-        Parameters
-        ----------
-        path: Union[str, Path]
-            Directory containing dataset views
         """
 
         self._view_cache: Dict[int, HDF5View] = {}
