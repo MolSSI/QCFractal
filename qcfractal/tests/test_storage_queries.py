@@ -19,8 +19,7 @@ def storage_query_fixture(torsiondrive_fixture):
     ret = spin_up_test()
     torsion_id = ret.ids[0]
 
-    storage_socket = SQLAlchemySocket()
-    storage_socket.init(server._qcf_config)
+    storage_socket = SQLAlchemySocket(server._qcf_config)
 
     torsion = storage_socket.get_procedures(id=torsion_id)["data"][0]
 

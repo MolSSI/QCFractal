@@ -179,8 +179,7 @@ def test_queue_manager_log_statistics(compute_adapter_fixture, caplog):
     timestamp = datetime.datetime.utcnow()
     manager.heartbeat()
 
-    storage_socket = SQLAlchemySocket()
-    storage_socket.init(server._qcf_config)
+    storage_socket = SQLAlchemySocket(server._qcf_config)
     manager_record = storage_socket.get_managers()["data"][0]
     logs = storage_socket.get_manager_logs(manager_record["id"])["data"]
 

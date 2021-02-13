@@ -22,10 +22,7 @@ class API_AccessLogger:
     otherwise, just extracts the basic information
     """
 
-    def __init__(self):
-        self.enabled = False
-
-    def init_app(self, qcf_config: FractalConfig):
+    def __init__(self, qcf_config: FractalConfig):
         self.enabled = qcf_config.log_access
 
         geo_file_path = qcf_config.geo_file_path

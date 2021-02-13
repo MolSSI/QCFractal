@@ -147,13 +147,10 @@ def get_procedure_class(record):
 
 class SQLAlchemySocket:
     """
-    SQLAlcehmy QCDB wrapper class.
+    Main handler for managing/accessing an SQLAlchemy database
     """
 
-    def __init__(self):
-        self.initialized = False
-
-    def init(
+    def __init__(
         self,
         qcf_config: FractalConfig
     ):
@@ -241,13 +238,6 @@ class SQLAlchemySocket:
         # Add User Roles if doesn't exist
         #self._add_default_roles()
 
-        self.initialized = True
-
-    def init_app(self, qcf_config: FractalConfig):
-        if self.initialized:
-            raise RuntimeError("Cannot initialize a database that is already initialized")
-
-        self.init(qcf_config)
 
     def __str__(self) -> str:
         return f"<SQLAlchemySocket: address='{self.uri}`>"
