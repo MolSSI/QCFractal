@@ -103,3 +103,5 @@ runinfo/
 
 # Mac cruft
 .DS_Store
+
+.mypy_cache
