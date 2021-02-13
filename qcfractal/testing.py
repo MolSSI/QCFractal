@@ -338,7 +338,7 @@ def test_server(temporary_database):
 
     with FractalSnowflake(
         start=True,
-        max_workers=0,
+        max_compute_workers=0,
         enable_watching=True,
         database_config=temporary_database.config,
         flask_config="testing",
@@ -367,7 +367,7 @@ def fractal_compute_server(temporary_database):
 
     with FractalSnowflake(
             start=True,
-            max_workers=2,
+            max_compute_workers=1,
             enable_watching=True,
             database_config=temporary_database.config,
             flask_config="testing",
@@ -394,7 +394,7 @@ def fractal_compute_server_manualperiodics(temporary_database):
 
     with FractalSnowflake(
             start=False,
-            max_workers=2,
+            max_compute_workers=1,
             enable_watching=True,
             database_config=temporary_database.config,
             flask_config="testing",

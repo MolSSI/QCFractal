@@ -19,9 +19,9 @@ import qcfractal
 from ..config import read_configuration, FractalConfig, FlaskConfig
 from ..postgres_harness import PostgresHarness
 from ..storage_sockets.sqlalchemy_socket import SQLAlchemySocket
-from ..periodics import FractalPeriodicsProcess
-from ..app.gunicorn_app import FractalGunicornProcess
-from ..fractal_proc import FractalProcessRunner
+from ..periodics import PeriodicsProcess
+from ..app.gunicorn_app import GunicornProcess
+from ..process_runner import ProcessRunner
 from .cli_utils import install_signal_handlers
 
 class EndProcess(RuntimeError):
@@ -345,11 +345,10 @@ def server_start(args, config):
     socket.init(config)
 
     # Start up the gunicorn and periodics
-    mp_ctx = multiprocessing.get_context('fork')
-    gunicorn = FractalGunicornProcess(config)
-    periodics = FractalPeriodicsProcess(config)
-    gunicorn_proc = FractalProcessRunner('gunicorn', mp_ctx, gunicorn)
-    periodics_proc = FractalProcessRunner('periodics', mp_ctx, periodics)
+    gunicorn = GunicornProcess(config)
+    periodics = PeriodicsProcess(config)
+    gunicorn_proc = ProcessRunner('gunicorn', gunicorn)
+    periodics_proc = ProcessRunner('periodics', periodics)
 
     def _cleanup(sig, frame):
         signame = signal.Signals(sig).name

@@ -11,7 +11,7 @@ import logging
 
 from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
 from qcfractal.storage_sockets import ViewHandler, API_AccessLogger
-from qcfractal.fractal_proc import FractalProcessBase
+from qcfractal.process_runner import ProcessBase
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -61,7 +61,7 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     return app
 
 
-class FractalFlaskProcess(FractalProcessBase):
+class FlaskProcess(ProcessBase):
     """
     Flask running in a separate process
     """
