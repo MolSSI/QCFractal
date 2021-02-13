@@ -8,7 +8,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.schedulers.base import STATE_STOPPED
 from qcfractal.interface.models import ManagerStatusEnum, TaskStatusEnum, ComputeError
 from .storage_sockets.sqlalchemy_socket import SQLAlchemySocket
-from .fractal_proc import FractalProcessBase
+from .process_runner import ProcessBase
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -155,7 +155,7 @@ class FractalPeriodics:
 
 
 
-class FractalPeriodicsProcess(FractalProcessBase):
+class PeriodicsProcess(ProcessBase):
     """
     Runs periodics in a separate process
     """
@@ -165,7 +165,7 @@ class FractalPeriodicsProcess(FractalProcessBase):
             qcf_config: FractalConfig,
             completed_queue: Optional[multiprocessing.Queue] = None
     ):
-        FractalProcessBase.__init__(self)
+        ProcessBase.__init__(self)
         self._qcf_config = qcf_config
         self._completed_queue = completed_queue
 

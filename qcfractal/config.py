@@ -129,6 +129,7 @@ class ResponseLimitConfig(ConfigBase):
     default: int = Field(1000, description="Default limit for all tables not otherwise specified")
     molecules: int = Field(5000, description="Limit on the number of molecules returned")
     output_store: int = Field(100, description="Limit on the number of program outputs returned")
+    managers: int = Field(10000)
 
     class Config(ConfigCommon):
         env_prefix = "QCF_RESPONSELIMIT_"
