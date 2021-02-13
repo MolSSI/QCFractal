@@ -315,8 +315,7 @@ def storage_socket(temporary_database):
     cfg_dict["database"]["pool_size"] = 0
     qcf_config = FractalConfig(**cfg_dict)
 
-    socket = SQLAlchemySocket()
-    socket.init(qcf_config)
+    socket = SQLAlchemySocket(qcf_config)
     yield socket
 
 
