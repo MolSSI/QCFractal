@@ -17,9 +17,10 @@ from sqlalchemy.orm import sessionmaker
 from qcfractal.storage_sockets.models import Base, VersionsORM
 
 from .config import DatabaseConfig
-from .port_util import find_port, is_port_open
+from .port_util import find_port, is_port_inuse
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from typing import Any, List, Optional, Tuple
     import psycopg2.extensions
@@ -74,7 +75,11 @@ def db_uri_base(uri: str) -> str:
 
 class PostgresHarness:
     def __init__(self, config: DatabaseConfig):
-        """A flexible connection to a PostgreSQL server
+        """A manager for postgres server instances
+
+        This class is used to create, start and stop postgres instances, particularly if
+        QCFractal is expected to own this instance. This can also be used to detect
+        and update postgres databases.
 
         Parameters
         ----------
@@ -292,7 +297,6 @@ class PostgresHarness:
         if not self.is_alive():
             raise RuntimeError("I created the database, but now it is not alive? Maybe check the postgres logs")
 
-
     def delete_database(self) -> None:
         """
         Deletes the database
@@ -315,14 +319,12 @@ class PostgresHarness:
         except psycopg2.errors.ObjectInUse as e:
             raise RuntimeError(f"Could not delete database. Was it still open somewhere? Error: {str(e)}")
 
-
     def _update_db_version(self) -> None:
         """Update current version of QCFractal that is stored in the database
 
         This does not actually perform the upgrade, but will store the current versions of the software stack
         (qcengine, qcelemental, qcfractal) into the database
         """
-
 
         # TODO: Move some of this to the socket (this uses ORM)
         uri = self.config.uri
@@ -379,7 +381,7 @@ class PostgresHarness:
         self._logger.info("Starting the database")
 
         # We should be in charge of this postgres process. If something is running, then that is a problem
-        if is_port_open(self.config.host, self.config.port):
+        if is_port_inuse(self.config.host, self.config.port):
             raise RuntimeError(
                 f"A process is already running on 'port:{self.config.port}` that is not associated with this QCFractal instance's database"
             )
@@ -471,7 +473,9 @@ class PostgresHarness:
         # Create the user and database
         self._logger.info(f"Building database user information & creating QCFractal database")
         try:
-            retcode, stdout, stderr = self._run_subprocess([createdb_path, "-h", "localhost", "-p", str(self.config.port)])
+            retcode, stdout, stderr = self._run_subprocess(
+                [createdb_path, "-h", "localhost", "-p", str(self.config.port)]
+            )
             if retcode != 0:
                 err_msg = f"Error running createdb:\noutput:\n{stdout}\nstderr:\n{stderr}"
                 raise RuntimeError(err_msg)
@@ -523,7 +527,6 @@ class PostgresHarness:
         if retcode != 0:
             err_msg = f"Error stamping the database with the current version:\noutput:\n{stdout}\nstderr:\n{stderr}"
             raise RuntimeError(err_msg)
-
 
     def backup_database(self, filepath: str) -> None:
         """
@@ -620,8 +623,7 @@ class TemporaryPostgres:
             self._data_dir = self._data_tmpdir.name
 
         port = find_port()
-        db_config = {"port": port, "data_directory": self._data_dir, "base_directory": self._data_dir,
-                     "own": True}
+        db_config = {"port": port, "data_directory": self._data_dir, "base_directory": self._data_dir, "own": True}
 
         self.config = DatabaseConfig(**db_config)
         self.harness = PostgresHarness(self.config)
