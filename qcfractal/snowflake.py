@@ -258,12 +258,9 @@ class FractalSnowflake:
             # We may not be watching for this id, but if we are, remove it from the list
             # we are watching
             if finished_id in remaining_ids:
-                ids.remove(finished_id)
-                logger.debug(
-                    f"Removed id={finished_id}. Remaining ids: " + "None"
-                    if len(remaining_ids) == 0
-                    else str(remaining_ids)
-                )
+                remaining_ids.remove(finished_id)
+                remaining_str = "None" if len(remaining_ids) == 0 else str(remaining_ids)
+                logger.debug(f"Removed id={finished_id}. Remaining ids: {remaining_str}")
 
         return True
 
