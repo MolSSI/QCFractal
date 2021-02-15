@@ -222,78 +222,20 @@ def server_init(args, config):
     logger = logging.getLogger(__name__)
     logger.info("*** Initializing QCFractal from configuration ***")
 
-    psql = PostgresHarness(config)
-    quit()
+    psql = PostgresHarness(config.database)
 
-    # Make sure we do not delete anything.
-    if config.config_file_path.exists():
-        print()
-        if not overwrite_config:
-            print(
-                "QCFractal configuration file already exists, to overwrite use '--overwrite-config' "
-                "or use the `qcfractal-server config` command line to alter settings."
-            )
-            sys.exit(2)
-        else:
-            user_required_input = f"REMOVEALLDATA {str(config.database_path)}"
-            print("!WARNING! A QCFractal configuration is currently initialized")
-            print(
-                f"!WARNING! Overwriting will delete all current Fractal data, this includes all data in {str(config.database_path)}."
-            )
-            print("!WARNING! Please use `qcfractal-server config` to alter configuration settings instead.")
-            print()
-            print(f"!WARNING! If you are sure you wish to proceed please type '{user_required_input}' below.")
-
-            inp = input("  > ")
-            print()
-            if inp == user_required_input:
-                print("All data will be removed from the current QCFractal instance.")
-                psql.shutdown()
-                shutil.rmtree(str(config.database_path), ignore_errors=True)
-            else:
-                print("Input does not match 'REMOVEALLDATA', exiting.")
-                sys.exit(1)
-
-    # WARNING! Passwords do not currently work.
-    # if config.database.password is None:
-    #     print("  Database password is None, generating a new private key.")
-    #     config.database.password = secrets.token_urlsafe(16)
-
-    print_config = config.dict()
-    print_config["database"]["password"] = "**************"
-    print_config = yaml.dump(print_config, default_flow_style=False)
-    print("\n>>> Settings found:\n")
-    print(print_config)
-
-    print("\n>>> Writing settings...")
-    config.config_file_path.write_text(yaml.dump(config.dict(), default_flow_style=False))
-
-    print("\n>>> Setting up PostgreSQL...\n")
-    config.database_path.mkdir(exist_ok=True)
+    # If we own the database, start it up
     if config.database.own:
-        try:
-            psql.initialize_postgres()
-            psql.create_database()
-        except ValueError as e:
-            print(str(e))
-            sys.exit(1)
-    else:
-        print(
-            "Own was set to False, QCFractal will expect a live PostgreSQL server with the above connection information."
-        )
+        psql.start()
 
-    if config.database.own or clear_database:
+    # Does the database already exist? If so, don't do anything
+    if psql.is_alive():
+        raise RuntimeError("Database already exists, so you don't need to run init")
 
-        print("\n>>> Initializing database schema...\n")
-        try:
-            psql.init_database()
-        except ValueError as e:
-            print(str(e))
-            sys.exit(1)
+    psql.create_database()
 
-    # create tables and stamp version (if not)
-    print("\n>>> Finishing up...")
-    print("\n>>> Success! Please run `qcfractal-server start` to boot a FractalServer!")
+    # Adds default roles, etc
+    socket = SQLAlchemySocket(config)
 
 
 def server_info(args, qcf_config):
