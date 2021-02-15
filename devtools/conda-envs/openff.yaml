@@ -17,6 +17,7 @@ dependencies:
   - msgpack-python
   - flask
   - flask-jwt-extended
+  - gunicorn
   - apscheduler
   - requests
   - pyyaml
