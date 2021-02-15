@@ -14,7 +14,7 @@ from ..extras import get_information as get_qcfractal_information
 
 from flask import jsonify, request, make_response
 import traceback
-import collections
+import json
 from flask_jwt_extended import (
     fresh_jwt_required,
     create_access_token,
@@ -163,38 +163,36 @@ def before_request_func():
         raise BadRequest(f"Could not deserialize body. {e}")
 
 
-#@main.after_request
-#def after_request_func(response):
-#
-#    # Always reply in the format sent
-#    response.headers["Content-Type"] = session["content_type"]
-#
-#    exclude_uris = ["/task_queue", "/service_queue", "/queue_manager"]
-#
-#    # No associated data, so skip all of this
-#    # (maybe caused by not using portal or not using the REST API correctly?)
-#    if request.data is None:
-#        return response
-#
-#    if api_current_app.logger.enabled and request.method == "GET" and request.path not in exclude_uris:
-#
-#        extra_params = request.data.copy()
-#        if _logging_param_counts:
-#            for key in _logging_param_counts:
-#                if "data" in extra_params and extra_params["data"].get(key, None):
-#                    extra_params["data"][key] = len(extra_params["data"][key])
-#
-#        if "data" in extra_params:
-#            extra_params["data"] = {k: v for k, v in extra_params["data"].items() if v is not None}
-#
-#        extra_params = json.dumps(extra_params)
-#
-#        log = api_current_app.logger.get_api_access_log(request=request, extra_params=extra_params)
-#        storage_socket.save_access(log)
-#
-#        # current_app.logger.info('Done saving API access to the database')
-#
-#    return response
+@main.after_request
+def after_request_func(response):
+
+    # Always reply in the format sent
+    response.headers["Content-Type"] = session["content_type"]
+
+    exclude_uris = ["/task_queue", "/service_queue", "/queue_manager"]
+
+    # No associated data, so skip all of this
+    # (maybe caused by not using portal or not using the REST API correctly?)
+    if request.data is None:
+        return response
+
+    log_access = current_app.config["QCFRACTAL_CONFIG"].log_access
+    if log_access and request.method == "GET" and request.path not in exclude_uris:
+        extra_params = request.data.copy()
+        if _logging_param_counts:
+            for key in _logging_param_counts:
+                if "data" in extra_params and extra_params["data"].get(key, None):
+                    extra_params["data"][key] = len(extra_params["data"][key])
+
+        if "data" in extra_params:
+            extra_params["data"] = {k: v for k, v in extra_params["data"].items() if v is not None}
+
+        extra_params = json.dumps(extra_params)
+
+        log = api_logger.get_api_access_log(request=request, extra_params=extra_params)
+        storage_socket.save_access(log)
+
+    return response
 
 
 @main.errorhandler(KeyError)
