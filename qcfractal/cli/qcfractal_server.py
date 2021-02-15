@@ -61,18 +61,6 @@ def dump_config(qcf_config: FractalConfig, indent: int = 0) -> str:
     return s
 
 
-def standard_command_startup(name, config, check=True):
-    print(f"QCFractal server {name}.\n")
-    print(f"QCFractal server base folder: {config.base_folder}")
-
-    if check:
-        print("\n>>> Checking the PostgreSQL connection...")
-        psql = PostgresHarness(config, quiet=False, logger=print)
-        ensure_postgres_alive(psql)
-
-    return psql
-
-
 def parse_args() -> argparse.Namespace:
     '''
     Sets up the command line arguments and parses them
@@ -322,9 +310,10 @@ def server_start(args, config):
 
 
 def server_upgrade(args, config):
-    psql = standard_command_startup("upgrade", config)
+    logger = logging.getLogger(__name__)
 
-    print("\n>>> Upgrading the Database...")
+    psql = PostgresHarness(config.database)
+    logger.info(f"Upgrading the postgres database at {config.database.safe_uri}")
 
     try:
         psql.upgrade()
@@ -539,9 +528,8 @@ def main():
         server_init(args, qcf_config)
     elif command == "start":
         server_start(args, qcf_config)
-    quit()
-    #elif command == "upgrade":
-    #    server_upgrade(args, qcf_config)
+    elif command == "upgrade":
+        server_upgrade(args, qcf_config)
     #elif command == "user":
     #    server_user(args, qcf_config)
     #elif command == "backup":
