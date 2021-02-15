@@ -12,8 +12,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
+    from typing import Dict, Optional, Any
+    from werkzeug.wrappers import BaseRequest
     from ..config import FractalConfig
+
 
 class API_AccessLogger:
     """
@@ -48,9 +52,11 @@ class API_AccessLogger:
                     f"(default base_folder is ~/.qca/qcfractal/qcfractal_config.yaml)."
                 )
 
-    def get_api_access_log(self, request, access_type=None, extra_params=None):
+    def get_api_access_log(
+        self, request: BaseRequest, access_type: Optional[str] = None, extra_params: Optional[Dict[str, Any]] = None
+    ):
 
-        log = {}
+        log: Dict[str, Any] = {}
 
         if not access_type:
             log["access_type"] = request.path[1:]  # remove /
@@ -83,8 +89,8 @@ class API_AccessLogger:
 
         return log
 
-    def get_geoip2_data(self, ip_address):
-        out = {}
+    def get_geoip2_data(self, ip_address: str) -> Dict[str, Any]:
+        out: Dict[str, Any] = {}
 
         if not self.geoip2_reader:
             return out
