@@ -53,15 +53,22 @@ class API_AccessLogger:
         log = {}
 
         if not access_type:
-            log["access_type"] = request.uri[1:]  # remove /
+            log["access_type"] = request.path[1:]  # remove /
         else:
             log["access_type"] = access_type
 
         log["access_method"] = request.method  # GET or POST
 
         # get the real IP address behind a proxy or ngnix
-        x_real_ip = request.headers.get("X-Real-IP", None)
-        log["ip_address"] = x_real_ip or request.remote_ip
+        real_ip = request.headers.get("X-Real-IP", None)
+
+        # The IP address is the last address listed in access_route, which
+        # comes from the X-FORWARDED-FOR header
+        # (If access_route is empty, use the original request ip)
+        if real_ip is None:
+            real_ip = request.access_route[-1] if len(request.access_route) > 0 else request.remote_addr
+
+        log["ip_address"] = real_ip
 
         log["user_agent"] = request.headers["User-Agent"]
 
