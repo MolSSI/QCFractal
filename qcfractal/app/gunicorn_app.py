@@ -38,7 +38,7 @@ class FractalGunicornApp(gunicorn.app.base.BaseApplication):
     def load_config(self):
         # This must be provided. It is called from the superclass, and we need to
         # populate self.cfg
-        bind = self.qcfractal_config.flask.bind
+        bind = self.qcfractal_config.flask.host
         port = self.qcfractal_config.flask.port
 
         config = {'bind': f'{bind}:{port}',

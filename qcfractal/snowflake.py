@@ -69,7 +69,7 @@ class SnowflakeComputeProcess(ProcessBase):
         self._max_compute_workers = max_workers
 
     def run(self) -> None:
-        host = self._qcf_config.flask.bind
+        host = self._qcf_config.flask.host
         port = self._qcf_config.flask.port
         uri = f"http://{host}:{port}"
         client = attempt_client_connect(uri)
@@ -127,11 +127,11 @@ class FractalSnowflake:
         loglevel = self._logger.getEffectiveLevel()
 
         qcf_cfg: Dict[str, Any] = {}
-        qcf_cfg["base_directory"] = self._tmpdir.name
+        qcf_cfg["base_folder"] = self._tmpdir.name
         qcf_cfg["loglevel"] = logging.getLevelName(loglevel)
         qcf_cfg["database"] = db_config.dict()
         qcf_cfg["enable_views"] = False
-        qcf_cfg["flask"] = {"config_name": flask_config, "bind": fractal_host, "port": fractal_port}
+        qcf_cfg["flask"] = {"config_name": flask_config, "host": fractal_host, "port": fractal_port}
         qcf_cfg["enable_security"] = False
 
         # Add in any options passed to this Snowflake
@@ -193,7 +193,7 @@ class FractalSnowflake:
             Address/URI of the rest interface (ie, 'http://127.0.0.1:1234')
         """
 
-        return f"http://{self._qcf_config.flask.bind}:{self._qcf_config.flask.port}"
+        return f"http://{self._qcf_config.flask.host}:{self._qcf_config.flask.port}"
 
     def await_results(self, ids: Optional[Sequence[int]] = None, timeout: Optional[float] = None) -> bool:
         """
