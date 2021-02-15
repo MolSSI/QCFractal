@@ -34,11 +34,23 @@ jobs:
         
     steps:
       - uses: actions/checkout@v2
+
+      # Sets the variable YEARWEEK to be the 4 digit year and 2 digit week number
+      # This is used to invalidate the cache of conda weekly
       - name: Additional info about the build
         run: |
-          uname -a
-          df -h
-          ulimit -a
+          echo "YEARWEEK=$(date +'%Y%U')" >> $GITHUB_ENV
+
+      - name: Cache conda
+        uses: actions/cache@v2
+        env:
+          # Increase this number to force cache invalidation
+          CONDA_CACHE_NUMBER: 0
+          CONDA_ENV_PATH: 'devtools/conda-envs/${{ matrix.environ }}.yaml'
+        with:
+            path: ~/conda_pkgs_dir
+            key:
+              conda-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles(env.CONDA_ENV_PATH) }}-${{ matrix.environ }}-${{ env.YEARWEEK }}-${{ env.CONDA_CACHE_NUMBER }}
 
       - name: Configure conda
         uses: conda-incubator/setup-miniconda@v2
@@ -47,6 +59,7 @@ jobs:
           activate-environment: qcarchive
           environment-file: devtools/conda-envs/${{ matrix.environ }}.yaml
           auto-activate-base: false
+          use-only-tar-bz2: true # needed for caching
 
       - name: Environment Information
         shell: bash -l {0}
@@ -74,7 +87,6 @@ jobs:
         run: |
           pytest -v -rsx --log-cli-level=DEBUG --runslow --cov=qcfractal qcfractal/ --tb=short --cov-report=xml
 
-      # TODO: verify this works as we expect
       - name: Code coverage
         uses: codecov/codecov-action@v1
         with:
