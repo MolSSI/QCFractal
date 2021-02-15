@@ -236,7 +236,7 @@ class SQLAlchemySocket:
         self.manager = ManagerSocket(self)
 
         # Add User Roles if doesn't exist
-        #self._add_default_roles()
+        self._add_default_roles()
 
 
     def __str__(self) -> str:
