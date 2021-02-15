@@ -29,6 +29,7 @@ if __name__ == "__main__":
             "msgpack",
             "flask",
             "flask_jwt_extended",
+            "gunicorn",
             "apscheduler",
             "requests",
             "pyyaml",
