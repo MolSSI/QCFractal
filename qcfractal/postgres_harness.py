@@ -623,7 +623,7 @@ class TemporaryPostgres:
             self._data_dir = self._data_tmpdir.name
 
         port = find_port()
-        db_config = {"port": port, "data_directory": self._data_dir, "base_directory": self._data_dir, "own": True}
+        db_config = {"port": port, "data_directory": self._data_dir, "base_folder": self._data_dir, "own": True}
 
         self.config = DatabaseConfig(**db_config)
         self.harness = PostgresHarness(self.config)

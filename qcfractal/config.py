@@ -62,7 +62,7 @@ class DatabaseConfig(ConfigBase):
     Settings for the database used by QCFractal
     """
 
-    base_directory: str = Field(
+    base_folder: str = Field(
         ...,
         description="The base folder to use as the default for some options (logs, etc). Default is the location of the config file.",
     )
@@ -85,11 +85,11 @@ class DatabaseConfig(ConfigBase):
     )
 
     data_directory: str = Field(
-        None, description="Location to place the database if own == True. Default is [base_directory]/database"
+        None, description="Location to place the database if own == True. Default is [base_folder]/database"
     )
     logfile: str = Field(
         None,
-        description="Path to a file to use as the database logfile (if own == True). Default is [base_directory]/qcfractal_database.log",
+        description="Path to a file to use as the database logfile (if own == True). Default is [base_folder]/qcfractal_database.log",
     )
 
     echo_sql: bool = Field(False, description="[ADVANCED] output raw SQL queries being run")
@@ -113,7 +113,7 @@ class DatabaseConfig(ConfigBase):
     @validator("data_directory")
     def _check_data_directory(cls, v, values):
         if v is None:
-            ret = os.path.join(values["base_directory"], "database")
+            ret = os.path.join(values["base_folder"], "database")
         else:
             ret = v
 
@@ -123,7 +123,7 @@ class DatabaseConfig(ConfigBase):
     @validator("logfile")
     def _check_logfile(cls, v, values):
         if v is None:
-            ret = os.path.join(values["base_directory"], "qcfractal_database.log")
+            ret = os.path.join(values["base_folder"], "qcfractal_database.log")
         else:
             ret = v
 
@@ -176,7 +176,7 @@ class FlaskConfig(ConfigBase):
 
     config_name: str = Field("production", description="Flask configuration to use (default, debug, production, etc)")
     num_workers: int = Field(1, description="Number of workers to spawn in Gunicorn")
-    bind: str = Field("127.0.0.1", description="The IP address or hostname to bind to")
+    host: str = Field("127.0.0.1", description="The IP address or hostname to bind to")
     port: int = Field(7777, description="The port on which to run the REST interface.")
 
     class Config(ConfigCommon):
@@ -188,7 +188,7 @@ class FractalConfig(ConfigBase):
     Fractal Server settings
     """
 
-    base_directory: str = Field(
+    base_folder: str = Field(
         ...,
         description="The base directory to use as the default for some options (logs, views, etc). Default is the location of the config file.",
     )
@@ -230,13 +230,13 @@ class FractalConfig(ConfigBase):
     log_access: bool = Field(False, description="Store API access in the Database")
     geo_file_path: Optional[str] = Field(
         None,
-        description="Geoip2 cites file path (.mmdb) for geolocating IP addresses. Defaults to [base_directory]/GeoLite2-City.mmdb. If this file is not available, geo-ip lookup will not be enabled",
+        description="Geoip2 cites file path (.mmdb) for geolocating IP addresses. Defaults to [base_folder]/GeoLite2-City.mmdb. If this file is not available, geo-ip lookup will not be enabled",
     )
 
     # Settings for views
     enable_views: bool = Field(True, description="Enable frozen-views")
     views_directory: Optional[str] = Field(
-        None, description="Location of frozen-view data. If None, defaults to [base_directory]/views"
+        None, description="Location of frozen-view data. If None, defaults to [base_folder]/views"
     )
 
     # Other settings blocks
@@ -247,8 +247,8 @@ class FractalConfig(ConfigBase):
     @root_validator(pre=True)
     def _root_validator(cls, values):
         values.setdefault("database", dict())
-        if "base_directory" not in values["database"]:
-            values["database"]["base_directory"] = values.get("base_directory")
+        if "base_folder" not in values["database"]:
+            values["database"]["base_folder"] = values.get("base_folder")
 
         values.setdefault("response_limits", dict())
         values.setdefault("flask", dict())
@@ -257,7 +257,7 @@ class FractalConfig(ConfigBase):
     @validator("views_directory")
     def _check_views_directory(cls, v, values):
         if v is None:
-            ret = os.path.join(values["base_directory"], "views")
+            ret = os.path.join(values["base_folder"], "views")
         else:
             ret = v
 
@@ -267,7 +267,7 @@ class FractalConfig(ConfigBase):
     @validator("geo_file_path")
     def _check_geo_file_path(cls, v, values):
         if v is None:
-            ret = os.path.join(values["base_directory"], "GeoLite2-City.mmdb")
+            ret = os.path.join(values["base_folder"], "GeoLite2-City.mmdb")
         else:
             ret = v
 
@@ -313,7 +313,7 @@ def read_configuration(file_paths: list[str], extra_config: Optional[Dict[str, A
     # convert relative paths to full, absolute paths
     base_dir = os.path.abspath(base_dir)
 
-    config_data["base_directory"] = base_dir
+    config_data["base_folder"] = base_dir
 
     # Handle an old configuration
     if "fractal" in config_data:
