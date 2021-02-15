@@ -309,7 +309,7 @@ def storage_socket(temporary_database):
     # (which can leave db connections open, causing problems when we go to delete
     # the database)
     cfg_dict = {}
-    cfg_dict["base_directory"] = temporary_database.config.base_directory
+    cfg_dict["base_folder"] = temporary_database.config.base_folder
     cfg_dict["loglevel"] = "DEBUG"
     cfg_dict["database"] = temporary_database.config.dict()
     cfg_dict["database"]["pool_size"] = 0

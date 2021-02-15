@@ -93,7 +93,7 @@ def parse_args() -> argparse.Namespace:
     # init subcommand
     #####################################
     init = subparsers.add_parser("init", help="Initializes a QCFractal server and database information from a given configuration.")
-    init.add_argument("--base-folder", **FractalConfig.help_info("base_directory"))
+    init.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
     init.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
     init.add_argument("-v", "--verbose", action="store_true", help="Output more details about the initialization process")
 
@@ -101,13 +101,13 @@ def parse_args() -> argparse.Namespace:
     # start subcommand
     #####################################
     start = subparsers.add_parser("start", help="Starts a QCFractal server instance.")
-    start.add_argument("--base-folder", **FractalConfig.help_info("base_directory"))
+    start.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
     start.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
 
     # Allow some config settings to be altered via the command line
     fractal_args = start.add_argument_group("Server Settings")
     fractal_args.add_argument("--port", **FlaskConfig.help_info("port"))
-    fractal_args.add_argument("--bind", **FlaskConfig.help_info("bind"))
+    fractal_args.add_argument("--host", **FlaskConfig.help_info("host"))
     fractal_args.add_argument("--num-workers", **FlaskConfig.help_info("num_workers"))
     fractal_args.add_argument("--logfile", **FractalConfig.help_info("loglevel"))
     fractal_args.add_argument("--loglevel", **FractalConfig.help_info("loglevel"))
@@ -124,7 +124,7 @@ def parse_args() -> argparse.Namespace:
     # upgrade subcommand
     #####################################
     upgrade = subparsers.add_parser("upgrade", help="Upgrade QCFractal database.")
-    upgrade.add_argument("--base-folder", **FractalConfig.help_info("base_directory"))
+    upgrade.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
     upgrade.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
 
 
@@ -135,14 +135,14 @@ def parse_args() -> argparse.Namespace:
     info.add_argument(
         "category", nargs="?", default="config", choices=["config", "alembic"], help="The config category to show."
     )
-    info.add_argument("--base-folder", **FractalConfig.help_info("base_directory"))
+    info.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
     info.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
 
     #####################################
     # user subcommand
     #####################################
     user = subparsers.add_parser("user", help="Configure a QCFractal server instance.")
-    user.add_argument("--base-folder", **FractalConfig.help_info("base_directory"))
+    user.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
     user.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
 
     # user sub-subcommands
@@ -202,7 +202,7 @@ def parse_args() -> argparse.Namespace:
         type=str,
         help="The filename to dump the backup to, defaults to 'database_name.bak'.",
     )
-    backup.add_argument("--base-folder", **FractalConfig.help_info("base_directory"))
+    backup.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
     backup.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
 
     #####################################
@@ -210,7 +210,7 @@ def parse_args() -> argparse.Namespace:
     #####################################
     restore = subparsers.add_parser("restore", help="Restores the database from a backup file.")
     restore.add_argument("filename", default=None, type=str, help="The filename to restore from.")
-    restore.add_argument("--base-folder", **FractalConfig.help_info("base_directory"))
+    restore.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
     restore.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
 
 
@@ -310,7 +310,7 @@ def server_info(args, qcf_config):
 def server_start(args, config):
     logger = logging.getLogger(__name__)
     logger.info("*** Starting a QCFractal server ***")
-    logger.info(f"QCFractal server base directory: {config.base_directory}")
+    logger.info(f"QCFractal server base directory: {config.base_folder}")
 
     # Initialize the global logging infrastructure
     if config.logfile is not None:
@@ -549,8 +549,8 @@ def main():
     if command == "start":
         if args.port is not None:
             cmd_config["flask"]["port"] = args.port
-        if args.bind is not None:
-            cmd_config["flask"]["bind"] = args.bind
+        if args.host is not None:
+            cmd_config["flask"]["host"] = args.host
         if args.num_workers is not None:
             cmd_config["flask"]["num_workers"] = args.num_workers
         if args.logfile is not None:
@@ -562,16 +562,12 @@ def main():
         if args.enable_security is not None:
             cmd_config["enable_security"] = args.enable_security
 
-    # base_folder is deprecated. If specified, replace with config=base_folder/qcfractal_config.yaml
+    # If base_folder is specified, replace with config=base_folder/qcfractal_config.yaml
     if args.base_folder is not None:
         if args.config is not None:
             raise RuntimeError("Cannot specify both --base-folder and --config at the same time!")
 
         config_path = os.path.join(args.base_folder, 'qcfractal_config.yaml')
-        logger.warning("*"*80)
-        logger.warning("Using --base-folder is deprecated. Use --config=/path/to/config.yaml instead.")
-        logger.warning(f"For now, I will automatically use --config={config_path}")
-        logger.warning("*"*80)
 
     elif args.config is not None:
         config_path = args.config
