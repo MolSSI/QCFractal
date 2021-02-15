@@ -107,7 +107,7 @@ class FlaskProcess(ProcessBase):
         # Disable printing "Environment: ... WARNING: This is a development server...
         os.environ['WERKZEUG_RUN_MAIN'] = 'true'
 
-        flask_app.run(host=self._qcf_config.flask.bind, port=self._qcf_config.flask.port)
+        flask_app.run(host=self._qcf_config.flask.host, port=self._qcf_config.flask.port)
 
     def finalize(self) -> None:
         pass
