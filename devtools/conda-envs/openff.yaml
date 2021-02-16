@@ -1,11 +1,11 @@
 name: qcarchive
 channels:
-  - defaults
-  - conda-forge
-
   # Extra channels for environment
   - omnia
   - psi4/label/dev
+
+  - conda-forge
+  - defaults
 
 dependencies:
   - pip
