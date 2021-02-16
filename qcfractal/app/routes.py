@@ -164,9 +164,6 @@ def before_request_func():
 @main.after_request
 def after_request_func(response):
 
-    # Always reply in the format sent
-    response.headers["Content-Type"] = session["content_type"]
-
     exclude_uris = ["/task_queue", "/service_queue", "/queue_manager"]
 
     # No associated data, so skip all of this
