@@ -17,12 +17,11 @@ import traceback
 import json
 from flask_jwt_extended import (
     create_access_token,
-    get_jwt_claims,
-    jwt_refresh_token_required,
+    get_jwt,
+    jwt_required,
     create_refresh_token,
     get_jwt_identity,
     verify_jwt_in_request,
-    verify_jwt_in_request_optional,
 )
 from urllib.parse import urlparse
 from ..policyuniverse import Policy
@@ -77,12 +76,12 @@ def check_access(fn):
         # otherwise, check logged-in permissions
         if current_app.config.ALLOW_UNAUTHENTICATED_READ:
             # don't raise exception if no JWT is found
-            verify_jwt_in_request_optional()
+            verify_jwt_in_request(optional=True)
         else:
             # read JWT token from request headers
-            verify_jwt_in_request()
+            verify_jwt_in_request(optional=False)
 
-        claims = get_jwt_claims()
+        claims = get_jwt()
         permissions = claims.get("permissions", {})
 
         try:
@@ -238,7 +237,7 @@ def login():
 
     success, error_message, permissions = storage_socket.verify_user(username, password)
     if success:
-        access_token = create_access_token(identity=username, user_claims={"permissions": permissions})
+        access_token = create_access_token(identity=username, additional_claims={"permissions": permissions})
         # expires_delta=datetime.timedelta(days=3))
         refresh_token = create_refresh_token(identity=username)
         return jsonify(msg="Login succeeded!", access_token=access_token, refresh_token=refresh_token), 200
@@ -280,12 +279,12 @@ def get_information():
 
 
 @main.route("/refresh", methods=["POST"])
-@jwt_refresh_token_required
+@jwt_required(refresh=True)
 def refresh():
     username = get_jwt_identity()
     ret = {
         "access_token": create_access_token(
-            identity=username, user_claims={"permissions": storage_socket.get_user_permissions(username)}
+            identity=username, additional_claims={"permissions": storage_socket.get_user_permissions(username)}
         )
     }
     return jsonify(ret), 200
@@ -302,7 +301,7 @@ def fresh_login():
 
     success, error_message, permissions = storage_socket.verify_user(username, password)
     if success:
-        access_token = create_access_token(identity=username, user_claims={"permissions": permissions}, fresh=True)
+        access_token = create_access_token(identity=username, additionalclaims={"permissions": permissions}, fresh=True)
         return jsonify(msg="Fresh login succeeded!", access_token=access_token), 200
     else:
         return Unauthorized(error_message)
