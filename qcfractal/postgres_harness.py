@@ -90,6 +90,61 @@ class PostgresHarness:
         self._logger = logging.getLogger("PostgresHarness")
         self._alembic_ini = os.path.join(os.path.abspath(os.path.dirname(__file__)), "alembic.ini")
 
+        # Figure out the directory containing postgres utilities
+        # if not specified in the configuration
+        # This is only required if own == True
+        self._tool_dir = config.pg_tool_dir if config.own is True else None
+
+        # Own the database, but no tool directory specified
+        if config.own and config.pg_tool_dir is None:
+            # Find pg_config. However, we should try all the possible pg_config available in the PATH.
+            # We depend on libpq, which will install pg_config but none of the other tools
+            env_path = os.environ.get("PATH", None)
+
+            # Not sure this should ever happen
+            search_dirs = list() if env_path is None else env_path.split(os.pathsep)
+
+            # Go through all the path directories, finding pg_config
+            # Then, after running pg_config --bindir, test that path for pg_ctl
+            for search_dir in search_dirs:
+                self._logger.debug(f"Searching for pg_config in path {search_dir}")
+                pg_config_path = shutil.which("pg_config", path=search_dir)
+                if pg_config_path is None:
+                    continue
+
+                self._logger.debug(f"Found pg_config in path {search_dir}")
+
+                # Run pg_config to get the path
+                ret, stdout, _ = self._run_subprocess([pg_config_path, "--bindir"])
+                if ret != 0:
+                    self._logger.error(f"pg_config returned non-zero error code: {ret}")
+                else:
+                    possible_path = stdout.strip()
+
+                    # Does pg_ctl exist there?
+                    pg_ctl_path = shutil.which("pg_ctl", path=possible_path)
+                    if pg_ctl_path is not None:
+                        self._logger.info(f"Using Postgres tools found via pg_config located in {possible_path}")
+                        self._tool_dir = possible_path
+                        break
+
+            # If the tool dir is still None, that is a problem (when own = True)
+            if self._tool_dir is None:
+                raise RuntimeError(
+                    "Postgresql tools cannot be found. Postgresql may not be installed, or pg_tool_dir is incorrect. If you do have Postgresql, try setting pg_tool_dir in the configuration to the directory containing psql, pg_ctl, etc"
+                )
+
+            # Determine version
+            pg_ctl_path = self._get_tool("pg_ctl")
+            ret, stdout, stderr = self._run_subprocess([pg_ctl_path, "--version"])
+            if ret != 0:
+                raise RuntimeError(
+                    f"Error running pg_ctl --version. Something is probably pretty wrong. Return code {ret}\noutput:\n{stdout}\nstderr:\n{stderr}"
+                )
+
+            pg_version = stdout.strip()
+            self._logger.info(f"Postgresql version found: {pg_version}")
+
     def _get_tool(self, tool: str) -> str:
         """
         Obtains the path to a postgres tool (such as pg_ctl)
@@ -108,10 +163,10 @@ class PostgresHarness:
             Full path to the tools executable
         """
 
-        tool_path = shutil.which(tool, path=self.config.pg_tool_dir)
+        tool_path = shutil.which(tool, path=self._tool_dir)
         if tool_path is None:
             raise RuntimeError(
-                f"Postgresql tool/command {tool} cannot be found. Postgresql may not be installed, or pg_tool_dir is incorrect. If you do have Postgrsql, try setting pg_tool_dir in the configuration to the directory containing psql, pg_ctl, etc"
+                f"Postgresql tool/command {tool} cannot be found in path {self._tool_dir}. Postgresql may not be installed, or pg_tool_dir is incorrect."
             )
         return tool_path
 
@@ -316,7 +371,7 @@ class PostgresHarness:
 
         try:
             cursor.execute(f"DROP DATABASE IF EXISTS {self.config.database_name}")
-        except psycopg2.errors.ObjectInUse as e:
+        except psycopg2.OperationalError as e:
             raise RuntimeError(f"Could not delete database. Was it still open somewhere? Error: {str(e)}")
 
     def _update_db_version(self) -> None:
@@ -388,7 +443,7 @@ class PostgresHarness:
         else:
             retcode, stdout, stderr = self.pg_ctl(["start"])
 
-            err_msg = f"Error starting database. Did you remember to initialize it (qcfractal-server init)?:\noutput:\n{stdout}\nstderr:\n{stderr}"
+            err_msg = f"Error starting database. Did you remember to initialize it (qcfractal-server init)?\noutput:\n{stdout}\nstderr:\n{stderr}"
 
             if retcode != 0:
                 raise RuntimeError(err_msg)
