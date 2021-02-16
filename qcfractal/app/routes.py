@@ -16,7 +16,6 @@ from flask import jsonify, request, make_response
 import traceback
 import json
 from flask_jwt_extended import (
-    fresh_jwt_required,
     create_access_token,
     get_jwt_claims,
     jwt_refresh_token_required,
