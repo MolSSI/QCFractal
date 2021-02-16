@@ -11,7 +11,6 @@ from enum import Enum
 from math import ceil
 from typing import List, Optional, Union
 
-import tornado.log
 import yaml
 from pydantic import Field, validator
 
@@ -718,10 +717,8 @@ def main(args=None):
         logger.setLevel("DEBUG")
 
     if settings.manager.log_file_prefix is not None:
-        tornado.options.options["log_file_prefix"] = settings.manager.log_file_prefix
-        # Clones the log to the output
-        tornado.options.options["log_to_stderr"] = True
-    tornado.log.enable_pretty_logging()
+        log_handler = logging.FileHandler(settings.manager.log_file_prefix)
+        logging.getLogger().addHandler(log_handler)
 
     if settings.manager.test:
         # Test this manager, no client needed
