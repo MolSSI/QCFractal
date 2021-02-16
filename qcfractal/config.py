@@ -99,7 +99,7 @@ class DatabaseConfig(ConfigBase):
     )
     pg_tool_dir: Optional[str] = Field(
         None,
-        description="Directory containing Postgres tools such as psql and pg_ctl (ie, /usr/bin, or /usr/lib/postgresql/13/bin). If not specified, will look in the current PATH",
+        description="Directory containing Postgres tools such as psql and pg_ctl (ie, /usr/bin, or /usr/lib/postgresql/13/bin). If not specified, an attempt to find them will be made. This field is only required if autodetection fails and own == True",
     )
 
     pool_size: int = Field(
