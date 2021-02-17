@@ -20,8 +20,10 @@ class ViewHandler:
 
         self._view_cache: Dict[int, HDF5View] = {}
         self._path = None
+        self.enabled = False
 
         if qcf_config.enable_views:
+            self.enabled = True
             self._path = pathlib.Path(qcf_config.views_directory)
 
             if self._path.is_dir():
@@ -41,6 +43,7 @@ class ViewHandler:
         pathlib.Path
             Path of requested view
         """
+
 
         return self._path / f"{collection_id}.hdf5"
 
@@ -92,6 +95,8 @@ class ViewHandler:
             Dictionary corresponding to requested REST model
         """
         meta = {"errors": [], "success": False, "error_description": False, "msgpacked_cols": []}
+
+
 
         try:
             view = self._get_view(collection_id)

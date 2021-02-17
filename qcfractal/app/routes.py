@@ -445,7 +445,7 @@ def get_collection(collection_id: int = None, view_function: str = None):
     elif (collection_id is not None) and (view_function is not None):
         body_model, response_model = rest_model(f"collection/{collection_id}/{view_function}", "get")
         body = parse_bodymodel(body_model)
-        if view_handler is None:
+        if view_handler.enabled is False:
             meta = {
                 "success": False,
                 "error_description": "Server does not support collection views.",
