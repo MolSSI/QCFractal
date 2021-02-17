@@ -5,7 +5,7 @@ The global qcfractal config file specification.
 """
 
 from __future__ import annotations
-import urllib
+import urllib.parse
 import os
 import logging
 from typing import Optional, Dict, Any
