@@ -157,12 +157,16 @@ class FractalSnowflake:
         flask = FlaskProcess(self._qcf_config, self._completed_queue)
         periodics = PeriodicsProcess(self._qcf_config, self._completed_queue)
 
-        self._flask_proc = ProcessRunner("snowflake_flask", flask, start)
-        self._periodics_proc = ProcessRunner("snowflake_periodics", periodics, start)
+        # Don't auto start here. we will handle it later
+        self._flask_proc = ProcessRunner("snowflake_flask", flask, False)
+        self._periodics_proc = ProcessRunner("snowflake_periodics", periodics, False)
 
         if self._max_compute_workers > 0:
             compute = SnowflakeComputeProcess(self._qcf_config, self._max_compute_workers)
-            self._compute_proc = ProcessRunner("snowflake_compute", compute, start)
+            self._compute_proc = ProcessRunner("snowflake_compute", compute, False)
+
+        if start:
+            self.start()
 
     def stop(self):
         # Send all our processes SIGTERM
@@ -179,6 +183,10 @@ class FractalSnowflake:
             self._flask_proc.start()
         if not self._periodics_proc.is_alive():
             self._periodics_proc.start()
+
+        # Attempt to get a client. This will block until the server is ready,
+        # or result in an exception after a bit
+        self.client()
 
     def __del__(self):
         self.stop()
