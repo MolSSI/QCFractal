@@ -665,10 +665,11 @@ def parse_args():
 
 def main(args=None):
 
+    logging.basicConfig()
+
     # Grab CLI args if not present
     if args is None:
         args = parse_args()
-    exit_callbacks = []
 
     try:
         if args["debug"]["schema"]:
@@ -1000,10 +1001,6 @@ def main(args=None):
 
     # Set stats correctly since we buffer the max tasks a bit
     manager.statistics.max_concurrent_tasks = max_concurrent_tasks
-
-    # Add exit callbacks
-    for cb in exit_callbacks:
-        manager.add_exit_callback(cb[0], *cb[1], **cb[2])
 
     # Either startup the manager or run until complete
     if settings.manager.test:

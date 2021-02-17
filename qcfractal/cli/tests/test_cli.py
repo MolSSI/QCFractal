@@ -1,6 +1,7 @@
 """
 Tests for QCFractals CLI
 """
+
 import os
 import tempfile
 import time
@@ -12,8 +13,8 @@ import yaml
 import qcfractal
 from qcfractal import testing
 from qcfractal.cli.cli_utils import read_config_file
+from qcfractal.port_util import find_open_port
 
-_options = {"coverage": True, "dump_stdout": True}
 _pwd = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -23,40 +24,67 @@ def qcfractal_base_init():
     storage = qcfractal.TemporaryPostgres()
     tmpdir = tempfile.TemporaryDirectory()
 
+    template_path = os.path.join(_pwd, "qcfractal_config.yaml.template1")
+    dest_template_path = os.path.join(tmpdir.name, "qcfractal_config.yaml")
+
+    with open(template_path, 'r') as tf:
+        template_yaml = tf.read()
+
+    db_port = storage.config.port
+    db_host = storage.config.host
+    rest_port = find_open_port()
+
+    template_yaml = template_yaml.replace('DATABASE_HOST', str(db_host))
+    template_yaml = template_yaml.replace('DATABASE_PORT', str(db_port))
+    template_yaml = template_yaml.replace('FLASK_PORT', str(rest_port))
+
+    with open(dest_template_path, 'w') as tf:
+        tf.write(template_yaml)
+
     args = [
         "qcfractal-server",
         "init",
         "--base-folder",
         str(tmpdir.name),
-        "--db-own=False",
-        "--clear-database",
-        f"--db-port={storage.config.database.port}",
     ]
-    assert testing.run_process(args, **_options)
+    assert testing.run_process(args)
 
     yield f"--base-folder={tmpdir.name}"
 
 
+@pytest.fixture(scope="module")
+def active_server(qcfractal_base_init):
+    # Can change the port on the command line
+    port = find_open_port()
+    args = ["qcfractal-server", "start", qcfractal_base_init, f"--port={port}"]
+
+    with testing.popen(args) as server:
+        time.sleep(2)
+
+        server.test_uri_cli = f"--fractal-uri=http://localhost:{port}"
+        yield server
+
+
 @pytest.mark.slow
 def test_cli_server_boot(qcfractal_base_init):
-    port = "--port=" + str(testing.find_open_port())
-    args = ["qcfractal-server", "start", qcfractal_base_init, port]
-    assert testing.run_process(args, interupt_after=10, **_options)
+    args = ["qcfractal-server", "start", qcfractal_base_init]
+    assert testing.run_process(args, interrupt_after=10)
 
 
 @pytest.mark.slow
-def test_cli_upgrade(qcfractal_base_init):
+def test_cli_server_upgrade(qcfractal_base_init):
     args = ["qcfractal-server", "upgrade", qcfractal_base_init]
-    assert testing.run_process(args, interupt_after=10, **_options)
+    assert testing.run_process(args, interrupt_after=10)
 
 
 @pytest.mark.slow
+@pytest.mark.skip("User management will be changed soon")
 def test_cli_user_add(qcfractal_base_init):
     args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_add_1", "--permissions", "admin"]
-    assert testing.run_process(args, **_options)
+    assert testing.run_process(args)
 
     args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_add_1", "--permissions", "admin"]
-    assert testing.run_process(args, **_options) is False
+    assert testing.run_process(args) is False
 
     args = [
         "qcfractal-server",
@@ -69,28 +97,30 @@ def test_cli_user_add(qcfractal_base_init):
         "--permissions",
         "admin",
     ]
-    assert testing.run_process(args, **_options)
+    assert testing.run_process(args)
 
     args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_add_3"]
-    assert testing.run_process(args, **_options) is False
+    assert testing.run_process(args) is False
 
 
 @pytest.mark.slow
+@pytest.mark.skip("User management will be changed soon")
 def test_cli_user_show(qcfractal_base_init):
     args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_show", "--permissions", "admin"]
-    assert testing.run_process(args, **_options)
+    assert testing.run_process(args)
 
     args = ["qcfractal-server", "user", qcfractal_base_init, "info", "test_user_show"]
-    assert testing.run_process(args, **_options)
+    assert testing.run_process(args)
 
     args = ["qcfractal-server", "user", qcfractal_base_init, "info", "badname_1234"]
-    assert testing.run_process(args, **_options) is False
+    assert testing.run_process(args) is False
 
 
 @pytest.mark.slow
+@pytest.mark.skip("User management will be changed soon")
 def test_cli_user_modify(qcfractal_base_init):
     args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_modify", "--permissions", "read"]
-    assert testing.run_process(args, **_options)
+    assert testing.run_process(args)
 
     args = [
         "qcfractal-server",
@@ -103,82 +133,40 @@ def test_cli_user_modify(qcfractal_base_init):
         "write",
         "--reset-password",
     ]
-    assert testing.run_process(args, **_options)
+    assert testing.run_process(args)
 
     args = ["qcfractal-server", "user", qcfractal_base_init, "modify", "test_user_modify", "--password", "foopass"]
-    assert testing.run_process(args, **_options)
+    assert testing.run_process(args)
 
     args = ["qcfractal-server", "user", qcfractal_base_init, "modify", "test_user_modify", "--permissions", "read"]
-    assert testing.run_process(args, **_options)
+    assert testing.run_process(args)
 
     args = ["qcfractal-server", "user", qcfractal_base_init, "modify", "badname_1234"]
-    assert testing.run_process(args, **_options) is False
+    assert testing.run_process(args) is False
 
 
 @pytest.mark.slow
+@pytest.mark.skip("User management will be changed soon")
 def test_cli_user_remove(qcfractal_base_init):
     args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_remove", "--permissions", "admin"]
-    assert testing.run_process(args, **_options)
+    assert testing.run_process(args)
 
     args = ["qcfractal-server", "user", qcfractal_base_init, "remove", "test_user_remove"]
-    assert testing.run_process(args, **_options)
+    assert testing.run_process(args)
 
     args = ["qcfractal-server", "user", qcfractal_base_init, "remove", "badname_1234"]
-    assert testing.run_process(args, **_options) is False
-
-
-@pytest.mark.xfail(reason="Failing on Travis for unknown reasons.")
-@pytest.mark.slow
-def test_cli_server_local_boot(qcfractal_base_init):
-    port = "--port=" + str(testing.find_open_port())
-    args = ["qcfractal-server", "start", "--local-manager=1", port, qcfractal_base_init]
-    assert testing.run_process(args, interupt_after=10, **_options)
-
-
-@pytest.fixture(scope="module")
-def active_server(request, qcfractal_base_init):
-    port = str(testing.find_open_port())
-    args = ["qcfractal-server", "start", qcfractal_base_init, f"--port={port}"]
-    assert testing.run_process(args, interupt_after=10, **_options)
-    with testing.popen(args, **_options) as server:
-        time.sleep(2)
-
-        server.test_uri_cli = "--fractal-uri=localhost:" + port
-        yield server
-
-
-@pytest.mark.slow
-@pytest.mark.parametrize("log_apis", [0, 1])
-def test_with_api_logging(postgres_server, log_apis):
-
-    tmpdir = tempfile.TemporaryDirectory()
-
-    args = [
-        "qcfractal-server",
-        "init",
-        "--base-folder",
-        str(tmpdir.name),
-        "--db-own=False",
-        "--clear-database",
-        f"--db-port={postgres_server.config.database.port}",
-        f"--log-apis={log_apis}",
-    ]
-    assert testing.run_process(args, **_options)
-
-    port = "--port=" + str(testing.find_open_port())
-    args = ["qcfractal-server", "start", f"--base-folder={tmpdir.name}", port]
-    assert testing.run_process(args, interupt_after=10, **_options)
+    assert testing.run_process(args) is False
 
 
 @pytest.mark.slow
 def test_manager_local_testing_process():
-    assert testing.run_process(["qcfractal-manager", "--adapter=pool", "--test", "--tasks-per-worker=2"], **_options)
+    assert testing.run_process(["qcfractal-manager", "--adapter=pool", "--test", "--tasks-per-worker=2"])
 
 
 @pytest.mark.slow
 def test_manager_executor_manager_boot(active_server):
-    args = ["qcfractal-manager", active_server.test_uri_cli, "--adapter=pool", "--tasks-per-worker=2", "--verify=False"]
-    assert testing.run_process(args, interupt_after=7, **_options)
+    args = ["qcfractal-manager", active_server.test_uri_cli, "--adapter=pool", "--tasks-per-worker=2", "--verify=False", "--verbose"]
+    assert testing.run_process(args, interrupt_after=7)
 
 
 @pytest.mark.slow
@@ -200,15 +188,14 @@ def test_manager_executor_manager_boot_from_file(active_server, tmp_path):
     p.write_text(yaml_file)
 
     args = ["qcfractal-manager", "--config-file={}".format(p)]
-    assert testing.run_process(args, interupt_after=7, **_options)
+    assert testing.run_process(args, interrupt_after=7)
 
 
-@pytest.mark.slow
 def cli_manager_runs(config_data, tmp_path):
     temp_config = tmp_path / "temp_config.yaml"
     temp_config.write_text(yaml.dump(config_data))
     args = ["qcfractal-manager", f"--config-file={temp_config}", "--test"]
-    assert testing.run_process(args, **_options)
+    assert testing.run_process(args)
 
 
 @pytest.mark.slow
@@ -280,14 +267,14 @@ def test_cli_managers_none(adapter, tmp_path):
 def test_cli_managers_help():
     """Test that qcfractal_manager --help works"""
     args = ["qcfractal-manager", "--help"]
-    testing.run_process(args, **_options)
+    testing.run_process(args)
 
 
 @pytest.mark.slow
 def test_cli_managers_schema():
     """Test that qcfractal_manager --schema works"""
     args = ["qcfractal-manager", "--schema"]
-    testing.run_process(args, **_options)
+    testing.run_process(args)
 
 
 @pytest.mark.slow
@@ -295,7 +282,7 @@ def test_cli_managers_skel(tmp_path):
     """Test that qcfractal_manager --skeleton works"""
     config = tmp_path / "config.yaml"
     args = ["qcfractal-manager", "--skel", config.as_posix()]
-    testing.run_process(args, **_options)
+    testing.run_process(args)
 
 
 @testing.using_parsl

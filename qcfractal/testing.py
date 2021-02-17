@@ -4,6 +4,7 @@ Contains testing infrastructure for QCFractal.
 
 import os
 import pkgutil
+import signal
 import logging
 import subprocess
 import sys
@@ -19,7 +20,7 @@ import pytest
 import qcengine as qcng
 import requests
 from qcelemental.models import Molecule
-from .port_util import find_port
+from .port_util import find_open_port
 from .config import FractalConfig
 
 import qcfractal.interface as ptl
@@ -160,15 +161,28 @@ def preserve_cwd():
     finally:
         os.chdir(cwd)
 
+def terminate_process(proc):
+    if proc.poll() is None:
 
+        # Interrupt (SIGINT)
+        if sys.platform.startswith("win"):
+            proc.send_signal(signal.CTRL_BREAK_EVENT)
+        else:
+            proc.send_signal(signal.SIGINT)
+
+        try:
+            start = time.time()
+            while (proc.poll() is None) and (time.time() < (start + 15)):
+                time.sleep(0.02)
+
+        # Kill (SIGKILL)
+        finally:
+            proc.kill()
 
 @contextmanager
-def popen(args, **kwargs):
+def popen(args):
     """
     Opens a background task.
-
-    Code and idea from dask.distributed's testing suite
-    https://github.com/dask/distributed
     """
     args = list(args)
 
@@ -178,28 +192,23 @@ def popen(args, **kwargs):
     else:
         bin_prefix = os.path.join(sys.prefix, "bin")
 
-    # Do we prefix with Python?
-    if kwargs.pop("append_prefix", True):
-        args[0] = os.path.join(bin_prefix, args[0])
+    # First argument is the executable name
+    # We are testing executable scripts found in the bin directory
+    args[0] = os.path.join(bin_prefix, args[0])
+
 
     # Add coverage testing
-    if kwargs.pop("coverage", False):
-        coverage_dir = os.path.join(bin_prefix, "coverage")
-        if not os.path.exists(coverage_dir):
-            print("Could not find Python coverage, skipping cov.")
+    coverage_dir = os.path.join(bin_prefix, "coverage")
+    if not os.path.exists(coverage_dir):
+        print("Could not find Python coverage, skipping cov.")
+    else:
+        src_dir = os.path.dirname(os.path.abspath(__file__))
+        # --source is the path to the QCFractal source
+        # --append means to append to an existing coverage file (or create if it doesn't exist)
+        coverage_flags = [coverage_dir, "run", "--append", "--source=" + src_dir]
+        args = coverage_flags + args
 
-        else:
-            src_dir = os.path.dirname(os.path.abspath(__file__))
-            coverage_flags = [coverage_dir, "run", "--parallel-mode", "--source=" + src_dir]
-
-            # If python script, skip the python bin
-            if args[0].endswith("python"):
-                args.pop(0)
-            args = coverage_flags + args
-
-    # Do we optionally dumpstdout?
-    dump_stdout = kwargs.pop("dump_stdout", False)
-
+    kwargs = {}
     if sys.platform.startswith("win"):
         # Allow using CTRL_C_EVENT / CTRL_BREAK_EVENT
         kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
@@ -210,37 +219,35 @@ def popen(args, **kwargs):
     try:
         yield proc
     except Exception:
-        dump_stdout = True
         raise
-
     finally:
         try:
             terminate_process(proc)
         finally:
             output, error = proc.communicate()
-            if dump_stdout:
-                print("\n" + "-" * 30)
-                print("\n|| Process command: {}".format(" ".join(args)))
+            print("-" * 80)
+            print("|| Process command: {}".format(" ".join(args)))
+            print("|| Process stdout: \n{}".format(output.decode()))
+            print("-" * 80)
+            print()
+            if error:
                 print("\n|| Process stderr: \n{}".format(error.decode()))
-                print("-" * 30)
-                print("\n|| Process stdout: \n{}".format(output.decode()))
-                print("-" * 30)
+                print("-" * 80)
 
 
-def run_process(args, **kwargs):
+def run_process(args, interrupt_after=15):
     """
     Runs a process in the background until complete.
 
     Returns True if exit code zero.
     """
 
-    timeout = kwargs.pop("timeout", 30)
-    terminate_after = kwargs.pop("interupt_after", None)
-    with popen(args, **kwargs) as proc:
-        if terminate_after is None:
-            proc.wait(timeout=timeout)
-        else:
-            time.sleep(terminate_after)
+    with popen(args) as proc:
+        try:
+            proc.wait(timeout=interrupt_after)
+        except subprocess.TimeoutExpired:
+            pass
+        finally:
             terminate_process(proc)
 
         retcode = proc.poll()
