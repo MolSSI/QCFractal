@@ -7,7 +7,7 @@ import datetime
 import logging
 import re
 import time
-from qcfractal.port_util import find_port
+from qcfractal.port_util import find_open_port
 from concurrent.futures import ProcessPoolExecutor
 
 import pytest

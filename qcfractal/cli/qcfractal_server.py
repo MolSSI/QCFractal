@@ -452,8 +452,9 @@ def main():
     # Use a stripped down format, since we are just logging to stdout
     verbose = "verbose" in args and args.verbose is True
 
-    # Also set it to debug if loglevel is specified to debug
-    verbose = verbose or ("loglevel" in args and args.loglevel.upper() == "DEBUG")
+    # Also set it to debug if loglevel is specified to debug (for the commands that support loglevel)
+    if "loglevel" in args and args.loglevel is not None:
+        verbose = verbose or args.loglevel.upper() == "DEBUG"
 
     log_handler = logging.StreamHandler(sys.stdout)
 

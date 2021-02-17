@@ -5,7 +5,7 @@ Utility functions for handling network ports
 import socket
 
 
-def find_port() -> int:
+def find_open_port() -> int:
     """
     Finds an open port that we can bind to
     """

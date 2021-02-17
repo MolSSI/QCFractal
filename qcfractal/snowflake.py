@@ -11,7 +11,7 @@ from .qc_queue import QueueManager
 
 from .interface import FractalClient
 from .postgres_harness import TemporaryPostgres
-from .port_util import find_port
+from .port_util import find_open_port
 from .config import FractalConfig, DatabaseConfig, updated_nested_dict
 from .periodics import PeriodicsProcess
 from .app.flask_app import FlaskProcess
@@ -119,7 +119,7 @@ class FractalSnowflake:
             db_config = database_config
 
         fractal_host = "127.0.0.1"
-        fractal_port = find_port()
+        fractal_port = find_open_port()
         self._fractal_uri = f"http://{fractal_host}:{fractal_port}"
 
         # Create a configuration for QCFractal

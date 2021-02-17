@@ -17,7 +17,7 @@ from sqlalchemy.orm import sessionmaker
 from qcfractal.storage_sockets.models import Base, VersionsORM
 
 from .config import DatabaseConfig
-from .port_util import find_port, is_port_inuse
+from .port_util import find_open_port, is_port_inuse
 
 from typing import TYPE_CHECKING
 
@@ -677,7 +677,7 @@ class TemporaryPostgres:
             self._data_tmpdir = tempfile.TemporaryDirectory()
             self._data_dir = self._data_tmpdir.name
 
-        port = find_port()
+        port = find_open_port()
         db_config = {"port": port, "data_directory": self._data_dir, "base_folder": self._data_dir, "own": True}
 
         self.config = DatabaseConfig(**db_config)
