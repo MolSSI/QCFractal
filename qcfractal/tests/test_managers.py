@@ -280,6 +280,7 @@ def test_queue_manager_server_delay(compute_adapter_fixture):
     assert manager.n_stale_jobs == 0
 
 
+@testing.using_rdkit
 def test_queue_manager_heartbeat(compute_adapter_fixture):
     """Tests to ensure managers are marked as inactive when heartbeat times are exceeded
     """
@@ -292,7 +293,8 @@ def test_queue_manager_heartbeat(compute_adapter_fixture):
     manager = queue.QueueManager(client, adapter, queue_tag="other")
 
     manager.update()
-    assert len(manager.list_current_tasks()) > 0
+    cur_tasks = manager.list_current_tasks()
+    assert len(cur_tasks) > 0
 
     tasks = client.query_tasks(status="WAITING")
     assert len(tasks) == 0
