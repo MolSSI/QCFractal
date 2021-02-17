@@ -611,7 +611,7 @@ def post_task_queue():
     # Verify the procedure
     verify = procedure_parser.verify_input(body)
     if verify is not True:
-        return jsonify(msg="Verify error"), 400
+        return jsonify(msg=verify), 400
 
     payload = procedure_parser.submit_tasks(body)
     response = response_model(**payload)
