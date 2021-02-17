@@ -204,8 +204,8 @@ def popen(args):
     else:
         src_dir = os.path.dirname(os.path.abspath(__file__))
         # --source is the path to the QCFractal source
-        # --append means to append to an existing coverage file (or create if it doesn't exist)
-        coverage_flags = [coverage_dir, "run", "--append", "--source=" + src_dir]
+        # --parallel-mode means every process gets its own file (useful because we do multiple processes)
+        coverage_flags = [coverage_dir, "run", "--parallel-mode", "--source=" + src_dir]
         args = coverage_flags + args
 
     kwargs = {}

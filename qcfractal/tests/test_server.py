@@ -143,10 +143,7 @@ def test_bad_view_endpoints(test_server):
     addr = test_server.get_uri()
 
     assert requests.get(addr + "/collection//value").status_code == 404
-    # TODO: mocker can't handle this
-    # assert requests.get(addr + "/collection/234/values").status_code == 404
-    with pytest.raises(requests.exceptions.ConnectionError):
-        assert requests.get(addr + "/collections/234/value").status_code == 404
+    assert requests.get(addr + "/collection/234/values").status_code == 404
     assert requests.get(addr + "/collection/234/view/value").status_code == 404
     assert requests.get(addr + "/collection/value").status_code == 404
     assert requests.get(addr + "/collection/S22").status_code == 404
