@@ -68,21 +68,24 @@ class SnowflakeComputeProcess(ProcessBase):
         self._qcf_config = qcf_config
         self._max_compute_workers = max_workers
 
-    def run(self) -> None:
+        # Don't initialize the worker pool here. It must be done in setup(), because
+        # that is run in the separate process
+
+    def setup(self) -> None:
         host = self._qcf_config.flask.host
         port = self._qcf_config.flask.port
         uri = f"http://{host}:{port}"
         client = attempt_client_connect(uri)
 
-        self.worker_pool = ProcessPoolExecutor(self._max_compute_workers)
-        self.queue_manager = QueueManager(client, self.worker_pool, manager_name="snowflake_compute")
-        self.queue_manager.start()
+        self._worker_pool = ProcessPoolExecutor(self._max_compute_workers)
+        self._queue_manager = QueueManager(client, self._worker_pool, manager_name="snowflake_compute")
+
+    def run(self) -> None:
+        self._queue_manager.start()
 
     def finalize(self) -> None:
-        if self.worker_pool is not None:
-            self.worker_pool.shutdown()
-        if self.queue_manager is not None:
-            self.queue_manager.stop()
+        self._worker_pool.shutdown()
+        self._queue_manager.stop()
 
 
 class FractalSnowflake:
@@ -169,7 +172,6 @@ class FractalSnowflake:
             self.start()
 
     def stop(self):
-        # Send all our processes SIGTERM
         if self._max_compute_workers > 0:
             self._compute_proc.stop()
 
@@ -185,7 +187,7 @@ class FractalSnowflake:
             self._periodics_proc.start()
 
         # Attempt to get a client. This will block until the server is ready,
-        # or result in an exception after a bit
+        # or result in an exception after some time
         self.client()
 
     def __del__(self):
