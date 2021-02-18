@@ -758,6 +758,11 @@ def main(args=None):
             dask_settings["extra"] = []
         if QCA_RESOURCE_STRING not in dask_settings["extra"]:
             dask_settings["extra"].append(QCA_RESOURCE_STRING)
+
+        # Other clusters don't understand lsf_units
+        if settings.cluster.scheduler != "lsf":
+            dask_settings.pop("lsf_units", None)
+
         # Scheduler opts
         scheduler_opts = settings.cluster.scheduler_options.copy()
 
