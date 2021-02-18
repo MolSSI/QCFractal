@@ -16,6 +16,7 @@ import qcengine as qcng
 from qcfractal.extras import get_information
 
 from ..interface.data import get_molecule
+from ..process_runner import InterruptableSleep, SleepInterrupted
 from .adapters import build_queue_adapter
 from .compress import compress_results
 
@@ -196,11 +197,12 @@ class QueueManager:
             update_frequency=update_frequency,
         )
 
-        self.scheduler = None
+        self.int_sleep = InterruptableSleep()
+        self.scheduler = sched.scheduler(time.time, self.int_sleep)
+
         self.update_frequency = update_frequency
         self.periodic = {}
         self.active = 0
-        self.exit_callbacks = []
 
         # Server response/stale job handling
         self.server_error_retries = server_error_retries
@@ -329,12 +331,11 @@ class QueueManager:
     def start(self) -> None:
         """
         Starts up all IOLoops and processes.
+
+        This will block until stop() is called
         """
 
         self.assert_connected()
-
-        self.scheduler = sched.scheduler(time.time, time.sleep)
-        heartbeat_time = int(0.4 * self.heartbeat_frequency)
 
         def scheduler_update():
             self.update()
@@ -342,37 +343,36 @@ class QueueManager:
 
         def scheduler_heartbeat():
             self.heartbeat()
-            self.scheduler.enter(heartbeat_time, 1, scheduler_heartbeat)
+            self.scheduler.enter(self.heartbeat_frequency, 1, scheduler_heartbeat)
 
-        self.logger.info("QueueManager successfully started.\n")
+        self.logger.info("QueueManager successfully started.")
 
         self.scheduler.enter(0, 1, scheduler_update)
         self.scheduler.enter(0, 2, scheduler_heartbeat)
 
-        self.scheduler.run()
+        try:
+            self.scheduler.run()
+        except SleepInterrupted:
+            self.logger.info("Running of services successfully interrupted")
 
-    def stop(self, signame="Not provided", signum=None, stack=None) -> None:
+            # Push data back to the server
+            self.shutdown()
+        finally:
+            # Close down the adapter
+            self.close_adapter()
+
+            self.logger.info("QueueManager stopping gracefully.")
+
+    def stop(self, signame="Not provided") -> None:
         """
-        Shuts down all IOLoops and periodic updates.
+        Shuts down the manager
         """
         self.logger.info("QueueManager received shutdown signal: {}.\n".format(signame))
 
-        # Cancel all events
-        if self.scheduler is not None:
-            for event in self.scheduler.queue:
-                self.scheduler.cancel(event)
+        # Interrupt the scheduler (will finish if in the middle of an update or something, but will
+        # cancel running calculations)
+        self.int_sleep.interrupt()
 
-        # Push data back to the server
-        self.shutdown()
-
-        # Close down the adapter
-        self.close_adapter()
-
-        # Call exit callbacks
-        for func, args, kwargs in self.exit_callbacks:
-            func(*args, **kwargs)
-
-        self.logger.info("QueueManager stopping gracefully.\n")
 
     def close_adapter(self) -> bool:
         """
@@ -432,21 +432,6 @@ class QueueManager:
 
         response["info"] = shutdown_string
         return response
-
-    def add_exit_callback(self, callback: Callable, *args: List[Any], **kwargs: Dict[Any, Any]) -> None:
-        """Adds additional callbacks to perform when closing down the server.
-
-        Parameters
-        ----------
-        callback : callable
-            The function to call at exit
-        *args
-            Arguments to call with the function.
-        **kwargs
-            Kwargs to call with the function.
-
-        """
-        self.exit_callbacks.append((callback, args, kwargs))
 
     def _post_update(self, payload_data, allow_shutdown=True):
         """Internal function to post payload update"""

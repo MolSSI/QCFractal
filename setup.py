@@ -30,7 +30,6 @@ if __name__ == "__main__":
             "flask",
             "flask_jwt_extended",
             "gunicorn",
-            "apscheduler",
             "requests",
             "pyyaml",
             "pydantic",

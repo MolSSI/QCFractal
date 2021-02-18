@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import signal
 from flask import Flask
 import multiprocessing
 
@@ -97,9 +98,8 @@ class FlaskProcess(ProcessBase):
         self._qcf_config = qcf_config
         self._completed_queue = completed_queue
 
-
-    def run(self):
-        flask_app = create_qcfractal_flask_app(self._qcf_config)
+    def setup(self):
+        self._flask_app = create_qcfractal_flask_app(self._qcf_config)
 
         # Get the global storage socket and set up the queue
         storage_socket.set_completed_watch(self._completed_queue)
@@ -107,7 +107,11 @@ class FlaskProcess(ProcessBase):
         # Disable printing "Environment: ... WARNING: This is a development server...
         os.environ['WERKZEUG_RUN_MAIN'] = 'true'
 
-        flask_app.run(host=self._qcf_config.flask.host, port=self._qcf_config.flask.port)
+    def run(self):
+        self._flask_app.run(host=self._qcf_config.flask.host, port=self._qcf_config.flask.port)
 
     def finalize(self) -> None:
-        pass
+        # We got here via SIGINT or SIGTERM. Convert both to SIGINT and let
+        # flask handle it
+        # Note that this is also run inside the subprocess, so we can do this
+        os.kill(os.getpid(), signal.SIGINT)
