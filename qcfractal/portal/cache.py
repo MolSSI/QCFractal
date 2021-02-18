@@ -97,8 +97,9 @@ class PortalCache:
         cachefile = os.path.join(self.cachedir, "{}.json.bz2".format(id))
         if os.path.exists(cachefile):
             with open(cachefile, "rb") as f:
-                return build_procedure(json.loads(bz2.decompress(f.read()).decode()))
-                # return build_procedure(json.load(f))
+                self.memcache[id] = build_procedure(json.loads(bz2.decompress(f.read()).decode()))
+                return self.memcache[id]
+
         else:
             return
 
