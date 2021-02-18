@@ -812,6 +812,7 @@ class SQLAlchemySocket:
 
                 session.commit()
 
+                # Should only be done after committing
                 if procedure.status in [TaskStatusEnum.complete, TaskStatusEnum.error]:
                     self.notify_completed_watch(procedure.id, procedure.status)
                 updated_count += 1
@@ -1063,6 +1064,7 @@ class SQLAlchemySocket:
 
             session.commit()
 
+            # Should only be done after committing
             if status in ["error", "complete"]:
                 self.notify_completed_watch(service.procedure_id, service.status)
 
@@ -1099,6 +1101,7 @@ class SQLAlchemySocket:
 
                 session.query(ServiceQueueORM).filter_by(id=service.id).delete()  # synchronize_session=False)
 
+            # Should only be done after committing
             self.notify_completed_watch(service.procedure_id, service.status)
 
             done += 1
