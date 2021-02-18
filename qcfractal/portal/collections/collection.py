@@ -379,8 +379,12 @@ class BaseProcedureDataset(Collection):
         return self.list_specifications()
 
     @property
-    def index(self):
+    def entry_names(self):
         return self._get_index()
+
+    @property
+    def entries(self):
+        return dict(self._data.records)
 
     def get_specification(self, name: str) -> Any:
         """Get full parameters for the given named specification.
