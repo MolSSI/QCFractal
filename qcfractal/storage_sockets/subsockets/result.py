@@ -204,13 +204,17 @@ class ResultSocket:
                 if duplicates:
                     session.commit()
 
-                if result.status in [TaskStatusEnum.complete, TaskStatusEnum.error]:
-                    self._core_socket.notify_completed_watch(result.id, result.status)
-
                 updated_count += 1
             # if no duplicates found, only commit at the end of the loop.
             if not duplicates:
                 session.commit()
+
+        # Notify of completion only after committing
+        # (also, session not needed)
+        for result in record_list:
+            if result.status in [TaskStatusEnum.complete, TaskStatusEnum.error]:
+                self._core_socket.notify_completed_watch(result.id, result.status)
+
 
         return updated_count
 
