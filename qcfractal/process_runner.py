@@ -4,37 +4,68 @@ Running external processes, with graceful shutdown
 
 import traceback
 import signal
+import abc
 import multiprocessing
 import logging
-import abc
+import threading
+import sys
 
 
-class EndProcess(BaseException):
+class SleepInterrupted(BaseException):
     """
-    Exception class used to signal that the process should end
+    Exception class used to signal that an InterruptableSleep was interrupted
 
     This (like KeyboardInterrupt) derives from BaseException to prevent
-    it from being handled with "except Exception". Without this, sometimes
-    exceptions wouldn't really interrupt a running process if it is thrown while
-    the process is running certain codes
+    it from being handled with "except Exception".
     """
 
     pass
+
+
+class InterruptableSleep:
+    """
+    A class for sleeping, but interruptable
+
+    This class uses threading Events to wake up from a sleep before the entire sleep
+    duration has run. If the sleep is interrupted, then an SleepInterrupted exception is raised.
+
+    This class is a functor, so an instance can be passed as the delay function to a python
+    sched.scheduler
+    """
+    def __init__(self):
+        self._event = threading.Event()
+
+    def __call__(self, delay: float):
+        interrupted = self._event.wait(delay)
+        if interrupted:
+            raise SleepInterrupted()
+
+    def interrupt(self):
+        self._event.set()
+
+    def clear(self):
+        self._event.clear()
 
 
 class ProcessBase(abc.ABC):
     """
     A class to define functionality to be run in another process
 
-    Classes that inherit this class define two functions. Both these functions are
+    Classes that inherit this class define three functions. All these functions are
     run in a separate process via ProcessRunner.
 
-    Since both functions are run in a separate function, any major initialization
-    should take place there and not in an __init__ function.
+    All major initialization should take place in the setup function and not the __init__ function.
+    If a signal such as SIGTERM is received during setup, the process ends as is, and finalize is not called.
+
+    After run is called (and is blocking), finalize will be called if the process receives a SIGTERM or SIGINT.
 
     If 'spawn' is used (rather than 'fork'), it is likely that the derived class
     must also be pickleable (but I haven't checked this)
     """
+
+    @abc.abstractmethod
+    def setup(self) -> None:
+        pass
 
     @abc.abstractmethod
     def run(self) -> None:
@@ -61,18 +92,15 @@ class ProcessRunner:
     Graceful Stopping
     -----------------
 
-    Stopping gracefully is implemented via signal handling and exceptions.
+    Stopping gracefully is implemented via signal handling.
 
     First, a cleanup function is registered to handle SIGINT (interrupt) and SIGTERM (terminate)
     signals. When one of these signals is sent to the subprocess, execution will be interrupted and
-    this function will be called. This function then raises an EndProcess exception. When control returns
-    to whatever was executing when the signal was received, the exception handling procedure for python will be
-    started.
+    this cleanup function will be called. This function will call the finalize function of the provided class
+    (derived from ProcessBase).
 
-    The run function defined by the ProcessBase-derived class will then end semi-gracefully due to the exception
-    (similarly to how it would end with KeyboardInterrupt).
-
-    The EndProcess exception is then handled by calling the finalize function of the ProcessBase-derived class.
+    If a signal is received during setup (ie, during ProcessBase.setup()) then the finalize function is not
+    called and the process is terminated as is.
 
     Note that some things being run in the subprocess (like Gunicorn) set up their own signal handling, so
     the cleanup function above may not be always run.
@@ -134,26 +162,41 @@ class ProcessRunner:
     def _run_process(name: str, proc_class: ProcessBase):
         logger = logging.getLogger(f"_run_process[{name}]")
 
+        # Are we currently doing setup?
+        doing_setup = True
+
+        # get the current signal handlers
+        sigint_handler = signal.getsignal(signal.SIGINT)
+        sigterm_handler = signal.getsignal(signal.SIGTERM)
+
         # Use the following function to handle signals SIGINT and SIGKILL
         # Note: Some process (Gunicorn) may use their own signal handlers, so these
         #       may not run for them
         def _cleanup(sig, frame):
             signame = signal.Signals(sig).name
             logger.debug(f"In cleanup of _run_process. Received " + signame)
-            raise EndProcess(signame)
+
+            # reset the signal handler to prevent any infinite loops
+            # (where finalize() may raise another signal)
+            signal.signal(signal.SIGINT, sigint_handler)
+            signal.signal(signal.SIGTERM, sigterm_handler)
+
+            if doing_setup:
+                logger.debug(f"Currently being asked to terminate during setup. So simply exiting")
+                sys.exit(0)
+            else:
+                proc_class.finalize()
 
         signal.signal(signal.SIGINT, _cleanup)
         signal.signal(signal.SIGTERM, _cleanup)
 
         try:
+            proc_class.setup()
+            doing_setup = False
             proc_class.run()
-        except EndProcess as e:
-            logger.debug(f"_run_process received EndProcess: " + str(e))
-            proc_class.finalize()
-            exit(0)
         except Exception as e:
             tb = "".join(traceback.format_exception(None, e, e.__traceback__))
             logger.critical(f"Exception while running {name}:\n{tb}")
 
             # Since this function is run within a new process, this will just exit the subprocess
-            exit(1)
+            sys.exit(1)

@@ -60,9 +60,13 @@ class GunicornProcess(ProcessBase):
         ProcessBase.__init__(self)
         self.config = qcf_config
 
+    def setup(self) -> None:
+        self._gunicorn_app = FractalGunicornApp(self.config)
+
     def run(self) -> None:
-        gunicorn_app = FractalGunicornApp(self.config)
-        gunicorn_app.run()
+        self._gunicorn_app.run()
 
     def finalize(self) -> None:
+        # Gunicorn installs its own signal handlers, so nothing
+        # to do here
         pass
