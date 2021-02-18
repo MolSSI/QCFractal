@@ -371,11 +371,15 @@ def test_queue_ordering_time(fractal_compute_server):
     mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 1.1")
     mol2 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
 
-    ret1 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol1).ids[0]
-    ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2).ids[0]
-
     storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
     manager = get_manager_name(storage_socket)
+
+    # Now stop the compute manager. We don't want it pulling tasks
+    # TODO: replace with fixture?
+    fractal_compute_server._compute_proc.stop()
+
+    ret1 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol1).ids[0]
+    ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2).ids[0]
 
     assert len(storage_socket.queue_get_next(manager, [], [], limit=1)) == 0
 
@@ -393,12 +397,16 @@ def test_queue_ordering_priority(fractal_compute_server):
     mol2 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
     mol3 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 3.3")
 
+    storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
+    manager = get_manager_name(storage_socket)
+
+    # Now stop the compute manager. We don't want it pulling tasks
+    # TODO: replace with fixture?
+    fractal_compute_server._compute_proc.stop()
+
     ret1 = client.add_compute("rdkit", "uff", "", "energy", None, mol1).ids[0]
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2, priority="high").ids[0]
     ret3 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol3, priority="HIGH").ids[0]
-
-    storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
-    manager = get_manager_name(storage_socket)
 
     queue_id1 = storage_socket.queue_get_next(manager, ["rdkit"], [], limit=1)[0].base_result
     queue_id2 = storage_socket.queue_get_next(manager, ["RDkit"], [], limit=1)[0].base_result
@@ -421,14 +429,16 @@ def test_queue_order_procedure_priority(fractal_compute_server):
     mol2 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
     mol3 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 3.3")
 
-    ret1 = client.add_procedure("optimization", "geometric", geometric_options, [mol1]).ids[0]
-    ret2 = client.add_procedure("OPTIMIZATION", "geometric", geometric_options, [mol2], priority="high").ids[0]
-    ret3 = client.add_procedure("OPTimization", "GEOmetric", geometric_options, [mol3], priority="HIGH").ids[0]
-
-
     storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
     manager = get_manager_name(storage_socket)
 
+    # Now stop the compute manager. We don't want it pulling tasks
+    # TODO: replace with fixture?
+    fractal_compute_server._compute_proc.stop()
+
+    ret1 = client.add_procedure("optimization", "geometric", geometric_options, [mol1]).ids[0]
+    ret2 = client.add_procedure("OPTIMIZATION", "geometric", geometric_options, [mol2], priority="high").ids[0]
+    ret3 = client.add_procedure("OPTimization", "GEOmetric", geometric_options, [mol3], priority="HIGH").ids[0]
 
     assert len(storage_socket.queue_get_next(manager, ["rdkit"], [], limit=1)) == 0
     assert len(storage_socket.queue_get_next(manager, ["rdkit"], ["geom"], limit=1)) == 0
@@ -449,6 +459,10 @@ def test_queue_query_tag(fractal_compute_server):
     mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 1.1")
     mol2 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
     mol3 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 3.3")
+
+    # Now stop the compute manager. We don't want it pulling tasks
+    # TODO: replace with fixture?
+    fractal_compute_server._compute_proc.stop()
 
     ret1 = client.add_compute("rdkit", "uff", "", "energy", None, mol1).ids[0]
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2, tag="test").ids[0]
@@ -474,12 +488,17 @@ def test_queue_query_manager(fractal_compute_server):
     mol2 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
     mol3 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 3.3")
 
+    storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
+    manager = get_manager_name(storage_socket)
+
+    # Now stop the compute manager. We don't want it pulling tasks
+    # TODO: replace with fixture?
+    fractal_compute_server._compute_proc.stop()
+
     ret1 = client.add_compute("rdkit", "uff", "", "energy", None, mol1).ids[0]
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2).ids[0]
     ret3 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol3).ids[0]
 
-    storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
-    manager = get_manager_name(storage_socket)
 
     storage_socket.queue_get_next(manager, ["rdkit"], [], limit=1)[0]
     tasks_manager = client.query_tasks(manager=manager)
