@@ -7,14 +7,13 @@ dead managers, and updating statistics.
 
 from __future__ import annotations
 import traceback
+import sched
 import logging
 import time
 from datetime import datetime, timedelta
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.schedulers.base import STATE_STOPPED
 from qcfractal.interface.models import ManagerStatusEnum, TaskStatusEnum, ComputeError
 from .storage_sockets.sqlalchemy_socket import SQLAlchemySocket
-from .process_runner import ProcessBase
+from .process_runner import ProcessBase, InterruptableSleep, SleepInterrupted
 
 from typing import TYPE_CHECKING
 
@@ -48,7 +47,8 @@ class FractalPeriodics:
         """
 
         self.storage_socket = SQLAlchemySocket(qcf_config)
-        self.scheduler = BackgroundScheduler()
+        self._int_sleep = InterruptableSleep()
+        self.scheduler = sched.scheduler(time.time, self._int_sleep)
 
         self._completed_queue = completed_queue
         self.storage_socket.set_completed_watch(self._completed_queue)
@@ -70,17 +70,22 @@ class FractalPeriodics:
         self.logger.info(f"         Service update frequency: {self.service_frequency} seconds")
         self.logger.info(f"              Max active services: {self.max_active_services}")
 
+        self.logger.info("Initializing QCFractal Periodics")
+
         # Set up the typical periodics
+        # We set the delay to zero so it will run immediately. Inside the various functions
+        # we will set up the next runs
+        # The second argument (1,2,3) is the priority
+
         # 1.) Updating the overall server information (counts, etc)
         #     This is stored in a public info class
-        self.logger.info("Initializing QCFractal Periodics")
-        self.scheduler.add_job(self._update_server_stats, "interval", seconds=self.server_stats_frequency)
+        self.scheduler.enter(0, 1, self._update_server_stats)
 
         # 2.) Manager heartbeats
-        self.scheduler.add_job(self._check_manager_heartbeats, "interval", seconds=self.manager_heartbeat_frequency)
+        self.scheduler.enter(0, 2, self._check_manager_heartbeats)
 
         # 3.) Service updates
-        self.scheduler.add_job(self._update_services, "interval", seconds=self.service_frequency)
+        self.scheduler.enter(0, 3, self._update_services)
 
     def _update_server_stats(self) -> None:
         """
@@ -88,6 +93,9 @@ class FractalPeriodics:
         """
         self.logger.info("Updating server stats in the database")
         self.storage_socket.log_server_stats()
+
+        # Set up the next run of this function
+        self.scheduler.enter(self.server_stats_frequency, 1, self._update_server_stats)
 
     def _check_manager_heartbeats(self) -> None:
         """
@@ -112,6 +120,9 @@ class FractalPeriodics:
 
             self.logger.info("Hearbeat missing from {}. Recycling {} incomplete tasks.".format(name, n_incomplete))
 
+        # Set up the next run of this function
+        self.scheduler.enter(self.manager_heartbeat_frequency, 2, self._check_manager_heartbeats)
+
     def _update_services(self) -> int:
         """Runs through all active services and examines their current status
 
@@ -120,6 +131,9 @@ class FractalPeriodics:
 
         If new services are waiting, they will also be started as long as the total number of services
         are under the limit given by max_active_services
+
+        The current number of running services is returned. While this is not used when running under the scheduler,
+        it is used in testing where this function is run manually
         """
 
         # Grab current services
@@ -181,16 +195,22 @@ class FractalPeriodics:
         # Add new procedures and services
         self.storage_socket.services_completed(completed_services)
 
+        # Set up the next run of this function
+        self.scheduler.enter(self.service_frequency, 3, self._update_services)
+
         return running_services
 
     def start(self) -> None:
         """
-        Start running the periodic tasks in the background
+        Start running the periodic tasks in the foreground
 
-        This function will immediately return, with the tasks now running periodically in the background
+        This function will block until interrupted
         """
 
-        self.scheduler.start()
+        try:
+            self.scheduler.run()
+        except SleepInterrupted:
+            self.logger.info("Scheduler interrupted and is now shut down")
 
     def stop(self) -> None:
         """
@@ -199,9 +219,8 @@ class FractalPeriodics:
         This will stop the tasks that are running in the background. Currently running tasks will
         be allowed to finish.
         """
-        self.logger.info("Shutting down periodics")
-        if self.scheduler.state != STATE_STOPPED:
-            self.scheduler.shutdown(wait=True)
+        self.logger.info("Shutting down periodics (currently running tasks will finish")
+        self._int_sleep.interrupt()
 
     def __del__(self):
         self.stop()
@@ -221,18 +240,15 @@ class PeriodicsProcess(ProcessBase):
 
         # ---------------------------------------------------------------
         # We should not instantiate the FractalPeriodics class here.
-        # The .run() function will be run in a separate process
+        # The setup and run functions will be run in a separate process
         # and so instantiation should happen there
         # ---------------------------------------------------------------
 
-    def run(self) -> None:
-        self.periodics = FractalPeriodics(self._qcf_config, self._completed_queue)
-        self.periodics.start()
+    def setup(self) -> None:
+        self._periodics = FractalPeriodics(self._qcf_config, self._completed_queue)
 
-        # Periodics are now running in the background. But we need to keep this process alive
-        while True:
-            time.sleep(3600)
+    def run(self) -> None:
+        self._periodics.start()
 
     def finalize(self) -> None:
-        if self.periodics:
-            self.periodics.stop()
+        self._periodics.stop()

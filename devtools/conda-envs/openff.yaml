@@ -15,7 +15,6 @@ dependencies:
   - flask
   - flask-jwt-extended
   - gunicorn
-  - apscheduler
   - requests
   - pyyaml
   - pydantic
