@@ -419,10 +419,6 @@ class OptimizationRecord(RecordBase):
         "``initial_molecule`` will be the first index, and ``final_molecule`` will be the last index.",
     )
 
-    @property
-    def df(self):
-        pass
-
     class Config(RecordBase.Config):
         pass
 
