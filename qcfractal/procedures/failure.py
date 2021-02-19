@@ -68,6 +68,10 @@ class FailedOperationHandler(BaseTasks):
             rec["manager_name"] = output["manager_name"]
             rec["modified_on"] = dt.utcnow()
 
+            # TODO - must be done before marking result as error due to race condition
+            # (will be fixed with better transaction handling)
+            self.storage.queue_mark_error([output["task_id"]])
+
             # TODO - could use an update_procedures that can take single results, too
             proc = build_procedure(rec)
             if rec["procedure"] == "single":
@@ -77,7 +81,6 @@ class FailedOperationHandler(BaseTasks):
 
             failed_tasks.append(output["task_id"])
 
-        self.storage.queue_mark_error(failed_tasks)
 
         # Return success/failures
         # (successes is a placeholder for now)

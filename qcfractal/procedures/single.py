@@ -292,8 +292,10 @@ class SingleResultTasks(BaseTasks):
             # Add to the list to be updated
             updates.append(result)
 
-        self.storage.update_results(updates)
+        # TODO - must be done before update results
+        # (will be fixed with better transaction handling)
         self.storage.queue_mark_complete(completed_tasks)
+        self.storage.update_results(updates)
 
         # Return success/failures
         # (failures is a placeholder for now)
