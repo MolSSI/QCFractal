@@ -3,6 +3,7 @@ Tests the server compute capabilities.
 """
 
 import pytest
+import time
 
 import qcfractal.interface as ptl
 from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
@@ -13,14 +14,14 @@ bad_id2 = "000000000000000000000001"
 
 
 def get_manager_name(storage_socket):
-
-    manager = storage_socket.get_managers()["data"]
-    assert len(manager) == 1
-    return manager[0]["name"]
-#    fractal_compute_server.storage.manager_update("test manager")
-#        return "test manager"
-#    else:
-#        return manager[0]["name"]
+    for _ in range(20):
+        manager = storage_socket.get_managers()["data"]
+        if len(manager) == 1:
+            return manager[0]["name"]
+        else:
+            time.sleep(0.3)
+    else:
+        assert len(manager) == 1
 
 
 @pytest.mark.parametrize(
