@@ -424,3 +424,95 @@ class PortalClient:
             # could put the "only complete" logic into the cache itself as a policy
             self._cache.put([proc for proc in response.data if proc.status == 'COMPLETE'])
             return response.data + list(procs.values())
+
+    def list_collections(
+        self,
+        collection_type: Optional[str] = None,
+        full: bool = False,
+        taglines: bool = False,
+        aslist: bool = False,
+        group: Optional[str] = "default",
+        show_hidden: bool = False,
+        tag: Optional[Union[str, List[str]]] = None,
+    ) -> Dict:
+        """Print the available collections currently on the server.
+
+        Parameters
+        ----------
+        collection_type : Optional[str], optional
+            If `None` all collection types will be returned, otherwise only the
+            specified collection type will be returned
+        full : bool, optional
+            Whether to include tags, group in output; default False.
+        taglines : bool, optional
+            Whether to include taglines in output; default False.
+        aslist : bool, optional
+            Return output as a list instead of printing.
+        group : Optional[str], optional
+            Show only collections belonging to a specified group.
+            To explicitly return all collections, set group=None
+        show_hidden : bool, optional
+            Show collections whose visibility flag is set to False. Default: False.
+        tag : Optional[Union[str, List[str]]], optional
+            Show collections whose tags match one of the passed tags.
+            By default, collections are not filtered on tag.
+        Returns
+        -------
+        Union[None, List]
+            Prints output as table to screen; if `aslist=True`,
+            returns list of output content instead.
+        """
+        from tabulate import tabulate
+
+        # preprocess inputs
+        if tag is not None:
+            if isinstance(tag, str):
+                tag = [tag]
+
+        query: Dict[str, str] = {}
+        if collection_type is not None:
+            query = {"collection": collection_type.lower()}
+
+        payload = {"meta": {"include": ["name", "collection", "tagline", "visibility", "group", "tags"]}, "data": query}
+        response: List[Dict[str, Any]] = self._automodel_request("collection", "get", payload, full_return=False)
+
+        collection_data = response
+
+        # apply filters
+        if not show_hidden:
+            collection_data = [item for item in collection_data if item['visibility']]
+        if group is not None:
+            collection_data = [item for item in collection_data if item['group'] == group]
+        if tag is not None:
+            collection_data = [item for item in collection_data if set(item['tags']).intersection(tag)]
+        if collection_type is not None:
+            collection_data = [item for item in collection_data if item['collection']]
+
+        name_map = collections_name_map()
+        output = []
+        for item in collection_data:
+            if item['collection'] in name_map:
+                trimmed = {}
+                collection_type_i = name_map[item['collection']]
+                
+                if collection_type is not None:
+                    if collection_type_i.lower() != collection_type.lower():
+                        continue
+                else:
+                    trimmed['Collection Type'] = collection_type_i
+
+                trimmed['Collection Name'] = item['name']
+
+                if full:
+                    trimmed['tags'] = item['tags']
+                    trimmed['group'] = item['group']
+
+                if taglines:
+                    trimmed['tagline'] = item['tagline']
+                output.append(trimmed)
+            
+        # give representation
+        if not aslist:
+            print(tabulate(output, headers='keys'))
+        elif aslist:
+            return output
