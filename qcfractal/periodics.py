@@ -175,6 +175,11 @@ class FractalPeriodics:
                 error_message = "Error iterating service with id={}:\n{}".format(service.id, traceback.format_exc())
                 self.logger.error(error_message)
                 service.status = "ERROR"
+
+                # TODO: HACK HACK
+                # Service itself should be responsible for this (maybe in base class?)
+                service.output.__dict__["status"] = "ERROR"
+
                 service.error = ComputeError(error_type="iteration_error", error_message=error_message)
                 self.storage_socket.update_service_status("ERROR", id=service.id)
                 finished = False
