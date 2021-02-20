@@ -13,17 +13,6 @@ bad_id1 = "000000000000000000000000"
 bad_id2 = "000000000000000000000001"
 
 
-def get_manager_name(storage_socket):
-    for _ in range(20):
-        manager = storage_socket.get_managers()["data"]
-        if len(manager) == 1:
-            return manager[0]["name"]
-        else:
-            time.sleep(0.3)
-    else:
-        assert len(manager) == 1
-
-
 @pytest.mark.parametrize(
     "data",
     [
@@ -31,12 +20,12 @@ def get_manager_name(storage_socket):
         pytest.param(("rdkit", "UFF", None), id="rdkit", marks=using_rdkit),
     ],
 )
-def test_task_molecule_no_orientation(data, fractal_compute_server):
+def test_task_molecule_no_orientation(data, fractal_test_server):
     """
     Molecule orientation should not change on compute
     """
 
-    client = fractal_compute_server.client()
+    client = fractal_test_server.client()
     mol = ptl.Molecule(symbols=["H", "H"], geometry=[0, 0, 0, 0, 5, 0], connectivity=[(0, 1, 1)])
 
     mol_id = client.add_molecules([mol])[0]
@@ -45,8 +34,9 @@ def test_task_molecule_no_orientation(data, fractal_compute_server):
     ret = client.add_compute(program, method, basis, "energy", None, [mol_id])
     assert "nsubmitted" in str(ret)
 
-    # Manually handle the compute
-    fractal_compute_server.await_results()
+    # Perform the computation
+    fractal_test_server.start_compute_worker()
+    fractal_test_server.await_results()
 
     # Check for the single result
     ret = client.query_results(id=ret.submitted)
@@ -61,19 +51,20 @@ def test_task_molecule_no_orientation(data, fractal_compute_server):
 
     # Check get_molecule
     mol = ret[0].get_molecule()
-    assert ret[0].id == mol_id
+    assert ret[0].id == mol.id
 
 
 @using_rdkit
-def test_task_error(fractal_compute_server):
-    client = fractal_compute_server.client()
+def test_task_error(fractal_test_server):
+    client = fractal_test_server.client()
 
     mol = ptl.models.Molecule(**{"geometry": [0, 0, 0], "symbols": ["He"]})
     # Cookiemonster is an invalid method
     ret = client.add_compute("rdkit", "cookiemonster", "", "energy", None, [mol])
 
-    # Manually handle the compute
-    fractal_compute_server.await_results()
+    # Perform the computation
+    fractal_test_server.start_compute_worker()
+    fractal_test_server.await_results()
 
     # Check for error
     results = client.query_results(id=ret.submitted)
@@ -90,22 +81,23 @@ def test_task_error(fractal_compute_server):
 
 
 @using_rdkit
-def test_task_client_restart(fractal_compute_server):
-    client = fractal_compute_server.client()
+def test_task_client_restart(fractal_test_server):
+    client = fractal_test_server.client()
 
     mol = ptl.models.Molecule(**{"geometry": [0, 0, 1], "symbols": ["He"]})
 
     # Cookiemonster is an invalid method
     ret = client.add_compute("rdkit", "cookiemonster", "", "energy", None, [mol])
 
-    # Manually handle the compute
-    fractal_compute_server.await_results()
+    # Perform the computation
+    fractal_test_server.start_compute_worker()
+    fractal_test_server.await_results()
 
     tasks = client.query_tasks(base_result=ret.submitted)[0]
     assert tasks.status == "ERROR"
 
     # Stop the compute worker
-    fractal_compute_server._compute_proc.stop()
+    fractal_test_server._compute_proc.stop()
 
     upd = client.modify_tasks("restart", ret.submitted)
     assert upd.n_updated == 1
@@ -116,8 +108,8 @@ def test_task_client_restart(fractal_compute_server):
 
 @using_rdkit
 @using_geometric
-def test_task_regenerate(fractal_compute_server):
-    client = fractal_compute_server.client()
+def test_task_regenerate(fractal_test_server):
+    client = fractal_test_server.client()
 
     # Add a single computation and a geometry optimization
     # Both of these have invalid methods
@@ -129,7 +121,10 @@ def test_task_regenerate(fractal_compute_server):
 
     ret1 = client.add_compute("rdkit", "cookiemonster", "", "energy", None, [mol])
     ret2 = client.add_procedure("optimization", "geometric", geometric_options, [mol])
-    fractal_compute_server.await_results()
+
+    # Perform the computation
+    fractal_test_server.start_compute_worker()
+    fractal_test_server.await_results()
 
     base_ids = [ret1.submitted[0], ret2.submitted[0]]
     old_tasks = client.query_tasks(base_result=base_ids)
@@ -147,7 +142,7 @@ def test_task_regenerate(fractal_compute_server):
         assert old_task.created_on == new_task.created_on
 
     # Manually delete the old task
-    storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
+    storage_socket = fractal_test_server.get_storage_socket()
     storage_socket.del_tasks([x.id for x in old_tasks])
 
     # Actually deleted?
@@ -181,8 +176,8 @@ def test_task_regenerate(fractal_compute_server):
     assert all(x.status == "INCOMPLETE" for x in res)
 
 
-def test_task_modify(test_server):
-    client = test_server.client()
+def test_task_modify(fractal_test_server):
+    client = fractal_test_server.client()
 
     # Add a single computation
     mol = ptl.models.Molecule(**{"geometry": [0, 0, 1], "symbols": ["He"]})
@@ -203,16 +198,18 @@ def test_task_modify(test_server):
 
 
 @using_rdkit
-def test_queue_error(fractal_compute_server):
-    client = fractal_compute_server.client()
+def test_queue_error(fractal_test_server):
+    client = fractal_test_server.client()
 
     hooh = ptl.data.get_molecule("hooh.json").copy(update={"connectivity_": None})
     compute_ret = client.add_compute("rdkit", "UFF", "", "energy", None, hooh)
 
-    fractal_compute_server.await_results()
+    # Perform the computation
+    fractal_test_server.start_compute_worker()
+    fractal_test_server.await_results()
 
     # Pull from database, raw JSON
-    storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
+    storage_socket = SQLAlchemySocket(fractal_test_server._qcf_config)
     queue_ret = storage_socket.get_queue(status="ERROR")["data"]
     result = storage_socket.get_results(id=compute_ret.ids)["data"][0]
 
@@ -221,7 +218,7 @@ def test_queue_error(fractal_compute_server):
     # assert "connectivity graph" in queue_ret[0].error.error_message
     assert result["status"] == "ERROR"
 
-    storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
+    storage_socket = SQLAlchemySocket(fractal_test_server._qcf_config)
 
     # Force a complete mark and test
     storage_socket.queue_mark_complete([queue_ret[0].id])
@@ -230,8 +227,8 @@ def test_queue_error(fractal_compute_server):
 
 
 @using_rdkit
-def test_queue_duplicate_compute(fractal_compute_server):
-    client = fractal_compute_server.client()
+def test_queue_duplicate_compute(fractal_test_server):
+    client = fractal_test_server.client()
 
     hooh = ptl.data.get_molecule("hooh.json")
     mol_ret = client.add_molecules([hooh])
@@ -240,8 +237,9 @@ def test_queue_duplicate_compute(fractal_compute_server):
     assert len(ret.ids) == 1
     assert len(ret.existing) == 0
 
-    # Wait for the compute to execute
-    fractal_compute_server.await_results()
+    # Perform the computation
+    fractal_test_server.start_compute_worker()
+    fractal_test_server.await_results()
 
     # Should catch duplicates both ways
     ret = client.add_compute("RDKIT", "uff", None, "energy", None, mol_ret)
@@ -266,9 +264,9 @@ def test_queue_duplicate_compute(fractal_compute_server):
 
 
 @using_rdkit
-def test_queue_compute_mixed_molecule(fractal_compute_server):
+def test_queue_compute_mixed_molecule(fractal_test_server):
 
-    client = fractal_compute_server.client()
+    client = fractal_test_server.client()
 
     mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.1")
     mol_ret = client.add_molecules([mol1])
@@ -281,8 +279,9 @@ def test_queue_compute_mixed_molecule(fractal_compute_server):
     assert len(ret.data.submitted) == 2
     assert len(ret.data.existing) == 0
 
-    # Pull out fireworks launchpad and queue nanny
-    fractal_compute_server.await_results()
+    # Perform the computation
+    fractal_test_server.start_compute_worker()
+    fractal_test_server.await_results()
 
     ret = client.add_compute("rdkit", "UFF", "", "energy", None, [mol_ret[0], bad_id2])
     assert len(ret.ids) == 2
@@ -293,9 +292,9 @@ def test_queue_compute_mixed_molecule(fractal_compute_server):
 
 @using_rdkit
 @using_geometric
-def test_queue_duplicate_procedure(fractal_compute_server):
+def test_queue_duplicate_procedure(fractal_test_server):
 
-    client = fractal_compute_server.client()
+    client = fractal_test_server.client()
 
     hooh = ptl.data.get_molecule("hooh.json")
     mol_ret = client.add_molecules([hooh])
@@ -311,8 +310,9 @@ def test_queue_duplicate_procedure(fractal_compute_server):
     assert len(ret.submitted) == 1
     assert len(ret.existing) == 0
 
-    # Pull out fireworks launchpad and queue nanny
-    fractal_compute_server.await_results()
+    # Perform the computation
+    fractal_test_server.start_compute_worker()
+    fractal_test_server.await_results()
 
     ret2 = client.add_procedure("optimization", "geometric", geometric_options, [bad_id1, hooh])
     assert len(ret2.ids) == 2
@@ -323,21 +323,21 @@ def test_queue_duplicate_procedure(fractal_compute_server):
     assert ret.ids[0] == ret2.ids[1]
 
 
-def test_queue_bad_compute_method(fractal_compute_server):
+def test_queue_bad_compute_method(fractal_test_server):
 
-    client = fractal_compute_server.client()
+    client = fractal_test_server.client()
 
     mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.1")
 
     with pytest.raises(IOError) as exc:
-        ret = client.add_compute("badprogram", "UFF", "", "energy", None, [mol1], full_return=True)
+        client.add_compute("badprogram", "UFF", "", "energy", None, [mol1], full_return=True)
 
     assert "not avail" in str(exc.value)
 
 
-def test_queue_bad_procedure_method(fractal_compute_server):
+def test_queue_bad_procedure_method(fractal_test_server):
 
-    client = fractal_compute_server.client()
+    client = fractal_test_server.client()
     mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.1")
 
     geometric_options = {
@@ -347,79 +347,77 @@ def test_queue_bad_procedure_method(fractal_compute_server):
 
     # Test bad procedure
     with pytest.raises(IOError) as exc:
-        ret = client.add_procedure("optimization", "badproc", geometric_options, [mol1])
+        client.add_procedure("optimization", "badproc", geometric_options, [mol1])
 
     assert "not avail" in str(exc.value)
 
     # Test procedure class
     with pytest.raises(IOError) as exc:
-        ret = client.add_procedure("badprocedure", "geometric", geometric_options, [mol1])
+        client.add_procedure("badprocedure", "geometric", geometric_options, [mol1])
 
     assert "Unknown procedure" in str(exc.value)
 
     # Test bad program
     with pytest.raises(IOError) as exc:
         geometric_options["qc_spec"]["program"] = "badqc"
-        ret = client.add_procedure("optimization", "geometric", geometric_options, [mol1])
+        client.add_procedure("optimization", "geometric", geometric_options, [mol1])
 
     assert "not avail" in str(exc.value)
     assert "badqc" in str(exc.value)
 
 
-def test_queue_ordering_time(fractal_compute_server):
-    client = fractal_compute_server.client()
+def test_queue_ordering_time(fractal_test_server):
+    client = fractal_test_server.client()
 
     mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 1.1")
     mol2 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
 
-    storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
-    manager = get_manager_name(storage_socket)
+    storage_socket = fractal_test_server.get_storage_socket()
+    manager = fractal_test_server.get_compute_manager("qcfractal_test_manager")
+    manager_name = manager._name
 
-    # Now stop the compute manager. We don't want it pulling tasks
-    # TODO: replace with fixture?
-    fractal_compute_server._compute_proc.stop()
+    # We are purposely not starting the compute worker. We just want to examine the queue
 
     ret1 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol1).ids[0]
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2).ids[0]
 
-    assert len(storage_socket.queue_get_next(manager, [], [], limit=1)) == 0
+    assert len(storage_socket.queue_get_next(manager_name, [], [], limit=1)) == 0
 
-    queue_id1 = storage_socket.queue_get_next(manager, ["rdkit"], [], limit=1)[0].base_result
-    queue_id2 = storage_socket.queue_get_next(manager, ["rdkit"], [], limit=1)[0].base_result
+    queue_id1 = storage_socket.queue_get_next(manager_name, ["rdkit"], [], limit=1)[0].base_result
+    queue_id2 = storage_socket.queue_get_next(manager_name, ["rdkit"], [], limit=1)[0].base_result
 
     assert queue_id1 == ret1
     assert queue_id2 == ret2
 
 
-def test_queue_ordering_priority(fractal_compute_server):
-    client = fractal_compute_server.client()
+def test_queue_ordering_priority(fractal_test_server):
+    client = fractal_test_server.client()
 
     mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 1.1")
     mol2 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
     mol3 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 3.3")
 
-    storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
-    manager = get_manager_name(storage_socket)
+    storage_socket = fractal_test_server.get_storage_socket()
+    manager = fractal_test_server.get_compute_manager("qcfractal_test_manager")
+    manager_name = manager._name
 
-    # Now stop the compute manager. We don't want it pulling tasks
-    # TODO: replace with fixture?
-    fractal_compute_server._compute_proc.stop()
+    # We are purposely not starting the compute worker. We just want to examine the queue
 
     ret1 = client.add_compute("rdkit", "uff", "", "energy", None, mol1).ids[0]
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2, priority="high").ids[0]
     ret3 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol3, priority="HIGH").ids[0]
 
-    queue_id1 = storage_socket.queue_get_next(manager, ["rdkit"], [], limit=1)[0].base_result
-    queue_id2 = storage_socket.queue_get_next(manager, ["RDkit"], [], limit=1)[0].base_result
-    queue_id3 = storage_socket.queue_get_next(manager, ["RDKIT"], [], limit=1)[0].base_result
+    queue_id1 = storage_socket.queue_get_next(manager_name, ["rdkit"], [], limit=1)[0].base_result
+    queue_id2 = storage_socket.queue_get_next(manager_name, ["RDkit"], [], limit=1)[0].base_result
+    queue_id3 = storage_socket.queue_get_next(manager_name, ["RDKIT"], [], limit=1)[0].base_result
 
     assert queue_id1 == ret2
     assert queue_id2 == ret3
     assert queue_id3 == ret1
 
 
-def test_queue_order_procedure_priority(fractal_compute_server):
-    client = fractal_compute_server.client()
+def test_queue_order_procedure_priority(fractal_test_server):
+    client = fractal_test_server.client()
 
     geometric_options = {
         "keywords": None,
@@ -430,40 +428,37 @@ def test_queue_order_procedure_priority(fractal_compute_server):
     mol2 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
     mol3 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 3.3")
 
-    storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
-    manager = get_manager_name(storage_socket)
+    storage_socket = fractal_test_server.get_storage_socket()
+    manager = fractal_test_server.get_compute_manager("qcfractal_test_manager")
+    manager_name = manager._name
 
-    # Now stop the compute manager. We don't want it pulling tasks
-    # TODO: replace with fixture?
-    fractal_compute_server._compute_proc.stop()
+    # We are purposely not starting the compute worker. We just want to examine the queue
 
     ret1 = client.add_procedure("optimization", "geometric", geometric_options, [mol1]).ids[0]
     ret2 = client.add_procedure("OPTIMIZATION", "geometric", geometric_options, [mol2], priority="high").ids[0]
     ret3 = client.add_procedure("OPTimization", "GEOmetric", geometric_options, [mol3], priority="HIGH").ids[0]
 
-    assert len(storage_socket.queue_get_next(manager, ["rdkit"], [], limit=1)) == 0
-    assert len(storage_socket.queue_get_next(manager, ["rdkit"], ["geom"], limit=1)) == 0
-    assert len(storage_socket.queue_get_next(manager, ["prog1"], ["geometric"], limit=1)) == 0
+    assert len(storage_socket.queue_get_next(manager_name, ["rdkit"], [], limit=1)) == 0
+    assert len(storage_socket.queue_get_next(manager_name, ["rdkit"], ["geom"], limit=1)) == 0
+    assert len(storage_socket.queue_get_next(manager_name, ["prog1"], ["geometric"], limit=1)) == 0
 
-    queue_id1 = storage_socket.queue_get_next(manager, ["rdkit"], ["geometric"], limit=1)[0].base_result
-    queue_id2 = storage_socket.queue_get_next(manager, ["RDKIT"], ["geometric"], limit=1)[0].base_result
-    queue_id3 = storage_socket.queue_get_next(manager, ["rdkit"], ["GEOMETRIC"], limit=1)[0].base_result
+    queue_id1 = storage_socket.queue_get_next(manager_name, ["rdkit"], ["geometric"], limit=1)[0].base_result
+    queue_id2 = storage_socket.queue_get_next(manager_name, ["RDKIT"], ["geometric"], limit=1)[0].base_result
+    queue_id3 = storage_socket.queue_get_next(manager_name, ["rdkit"], ["GEOMETRIC"], limit=1)[0].base_result
 
     assert queue_id1 == ret2
     assert queue_id2 == ret3
     assert queue_id3 == ret1
 
 
-def test_queue_query_tag(fractal_compute_server):
-    client = fractal_compute_server.client()
+def test_queue_query_tag(fractal_test_server):
+    client = fractal_test_server.client()
 
     mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 1.1")
     mol2 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
     mol3 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 3.3")
 
-    # Now stop the compute manager. We don't want it pulling tasks
-    # TODO: replace with fixture?
-    fractal_compute_server._compute_proc.stop()
+    # We are purposely not starting the compute worker. We just want to examine the queue
 
     ret1 = client.add_compute("rdkit", "uff", "", "energy", None, mol1).ids[0]
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2, tag="test").ids[0]
@@ -482,31 +477,30 @@ def test_queue_query_tag(fractal_compute_server):
     assert {task.base_result for task in tasks_tagged} == {ret2, ret3}
 
 
-def test_queue_query_manager(fractal_compute_server):
-    client = fractal_compute_server.client()
+def test_queue_query_manager(fractal_test_server):
+    client = fractal_test_server.client()
 
     mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 1.1")
     mol2 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
     mol3 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 3.3")
 
-    storage_socket = SQLAlchemySocket(fractal_compute_server._qcf_config)
-    manager = get_manager_name(storage_socket)
+    storage_socket = fractal_test_server.get_storage_socket()
+    manager = fractal_test_server.get_compute_manager("qcfractal_test_manager")
+    manager_name = manager._name
 
-    # Now stop the compute manager. We don't want it pulling tasks
-    # TODO: replace with fixture?
-    fractal_compute_server._compute_proc.stop()
+    # We are purposely not starting the compute worker. We just want to examine the queue
 
     ret1 = client.add_compute("rdkit", "uff", "", "energy", None, mol1).ids[0]
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2).ids[0]
     ret3 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol3).ids[0]
 
 
-    storage_socket.queue_get_next(manager, ["rdkit"], [], limit=1)[0]
-    tasks_manager = client.query_tasks(manager=manager)
+    storage_socket.queue_get_next(manager_name, ["rdkit"], [], limit=1)[0]
+    tasks_manager = client.query_tasks(manager=manager_name)
     assert len(tasks_manager) == 1
     assert tasks_manager[0].base_result == ret1
 
-    storage_socket.queue_get_next(manager, ["RDkit"], [], limit=1)[0]
-    storage_socket.queue_get_next(manager, ["RDKIT"], [], limit=1)[0]
-    tasks_manager = client.query_tasks(manager=manager)
+    storage_socket.queue_get_next(manager_name, ["RDkit"], [], limit=1)[0]
+    storage_socket.queue_get_next(manager_name, ["RDKIT"], [], limit=1)[0]
+    tasks_manager = client.query_tasks(manager=manager_name)
     assert len(tasks_manager) == 3
