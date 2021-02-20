@@ -1010,7 +1010,8 @@ def main(args=None):
         for signame in {"SIGHUP", "SIGINT", "SIGTERM"}:
 
             def stop(*args, **kwargs):
-                manager.stop(signame)
+                # TODO: Do logging of received signal here
+                manager.stop()
                 raise KeyboardInterrupt()
 
             signal.signal(getattr(signal, signame), stop)

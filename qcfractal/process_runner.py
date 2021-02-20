@@ -10,6 +10,8 @@ import logging
 import threading
 import sys
 
+from typing import Union
+
 
 class SleepInterrupted(BaseException):
     """
@@ -55,9 +57,10 @@ class ProcessBase(abc.ABC):
     run in a separate process via ProcessRunner.
 
     All major initialization should take place in the setup function and not the __init__ function.
-    If a signal such as SIGTERM is received during setup, the process ends as is, and finalize is not called.
+    If a signal such as SIGTERM is received during setup, the interrupt function will be called immediately after
+    setup, bypassing run(). The derived class must be tolerant of this.
 
-    After run is called (and is blocking), finalize will be called if the process receives a SIGTERM or SIGINT.
+    After run is called (and is blocking), interrupt() will be called if the process receives a SIGTERM or SIGINT.
 
     If 'spawn' is used (rather than 'fork'), it is likely that the derived class
     must also be pickleable (but I haven't checked this)
@@ -72,7 +75,7 @@ class ProcessBase(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def finalize(self) -> None:
+    def interrupt(self) -> None:
         pass
 
 
@@ -96,11 +99,11 @@ class ProcessRunner:
 
     First, a cleanup function is registered to handle SIGINT (interrupt) and SIGTERM (terminate)
     signals. When one of these signals is sent to the subprocess, execution will be interrupted and
-    this cleanup function will be called. This function will call the finalize function of the provided class
+    this cleanup function will be called. This function will then call the interrupt() function of the provided class
     (derived from ProcessBase).
 
-    If a signal is received during setup (ie, during ProcessBase.setup()) then the finalize function is not
-    called and the process is terminated as is.
+    If a signal is received during setup (ie, during ProcessBase.setup()) then the interrupt function is run
+    immediately after setup (ie, run() is not used). The ProcessBase-derived class must be tolerant of this.
 
     Note that some things being run in the subprocess (like Gunicorn) set up their own signal handling, so
     the cleanup function above may not be always run.
@@ -151,9 +154,32 @@ class ProcessRunner:
         return self._subproc.is_alive()
 
     def stop(self) -> None:
-        if self._subproc.is_alive():
+        logger = logging.getLogger(f"ProcessRunner.stop[{self._name}]")
+
+        # Skip everything if already dead
+        if not self._subproc.is_alive():
+            return
+
+        # send SIGTERM 3 times, then kill
+        for i in range(3):
+            logger.debug(f"Sending terminate signal [Try #{i+1}]")
             self._subproc.terminate()
+            self._subproc.join(5)
+
+            if not self._subproc.is_alive():
+                break
+
+        # If still alive, send kill signal
+        if self._subproc.is_alive():
+            logger.warning(f"Process seems to be hanging. Sending KILL signal")
+            self._subproc.kill()
             self._subproc.join()
+
+        logger.debug("Process ended")
+
+
+    def exitcode(self) -> Union[int, None]:
+        return self._subproc.exitcode
 
     def __del__(self):
         self.stop()
@@ -161,6 +187,9 @@ class ProcessRunner:
     @staticmethod
     def _run_process(name: str, proc_class: ProcessBase):
         logger = logging.getLogger(f"_run_process[{name}]")
+
+        # Have the process received a signal?
+        received_signal = threading.Event()
 
         # Are we currently doing setup?
         doing_setup = True
@@ -176,16 +205,12 @@ class ProcessRunner:
             signame = signal.Signals(sig).name
             logger.debug(f"In cleanup of _run_process. Received " + signame)
 
-            # reset the signal handler to prevent any infinite loops
-            # (where finalize() may raise another signal)
-            signal.signal(signal.SIGINT, sigint_handler)
-            signal.signal(signal.SIGTERM, sigterm_handler)
+            received_signal.set()
 
             if doing_setup:
-                logger.debug(f"Currently being asked to terminate during setup. So simply exiting")
-                sys.exit(0)
+                logger.info(f"Being asked to terminate during setup. Will wait until setup is completed")
             else:
-                proc_class.finalize()
+                proc_class.interrupt()
 
         signal.signal(signal.SIGINT, _cleanup)
         signal.signal(signal.SIGTERM, _cleanup)
@@ -193,7 +218,16 @@ class ProcessRunner:
         try:
             proc_class.setup()
             doing_setup = False
-            proc_class.run()
+            if received_signal.is_set():
+                # reset the signal handler to prevent any infinite loops
+                # (where interrupt() may raise another signal)
+                signal.signal(signal.SIGINT, sigint_handler)
+                signal.signal(signal.SIGTERM, sigterm_handler)
+
+                logger.info(f"Signal received during setup, so now interrupting/exiting")
+                proc_class.interrupt()
+            else:
+                proc_class.run()
         except Exception as e:
             tb = "".join(traceback.format_exception(None, e, e.__traceback__))
             logger.critical(f"Exception while running {name}:\n{tb}")

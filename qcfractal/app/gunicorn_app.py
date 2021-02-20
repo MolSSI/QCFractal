@@ -1,5 +1,6 @@
 from __future__ import annotations
 import logging
+import sys
 import logging.handlers
 import gunicorn.app.base
 from gunicorn.glogging import Logger as GLogger
@@ -66,7 +67,8 @@ class GunicornProcess(ProcessBase):
     def run(self) -> None:
         self._gunicorn_app.run()
 
-    def finalize(self) -> None:
-        # Gunicorn installs its own signal handlers, so nothing
-        # to do here
-        pass
+    def interrupt(self) -> None:
+        # Normally not reachable as gunicorn uses its own signal handlers. However,
+        # may be reached if the process is interrupted during setup
+        logging.getLogger(__name__).debug("Exiting gunicorn process")
+        sys.exit(0)
