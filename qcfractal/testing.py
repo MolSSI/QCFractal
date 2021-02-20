@@ -308,6 +308,9 @@ def temporary_database(postgres_server):
 def storage_socket(temporary_database):
     '''
     A fixture for temporary database and storage socket
+
+    This should not be used with other fixtures, but used for unit testing
+    the storage socket.
     '''
 
     # Create a configuration. Since this is mostly just for a storage socket,
@@ -324,6 +327,146 @@ def storage_socket(temporary_database):
 
     socket = SQLAlchemySocket(qcf_config)
     yield socket
+
+
+class TestingSnowflake(FractalSnowflake):
+    """
+    A snowflake class used for testing
+
+    This mostly behaves like FractalSnowflake, but
+    allows for some extra features such as manual handling of periodics
+    and creating storage sockets from an instance.
+
+    By default, the periodics and worker subprocesses are not started.
+    """
+
+    def __init__(self, database_config, start_flask=True):
+
+        # Tighten the service frequency for tests
+        # Also disable connection pooling in the storage socket
+        # (which can leave db connections open, causing problems when we go to delete
+        # the database)
+        extra_config = {}
+        extra_config['service_frequency'] = 5
+        extra_config['loglevel'] = "DEBUG"
+        extra_config['heartbeat_frequency'] = 3
+        extra_config['heartbeat_max_missed'] = 2
+        extra_config['database'] = {'pool_size': 0}
+
+        FractalSnowflake.__init__(self,
+                                  start=False,
+                                  max_compute_workers=1,
+                                  enable_watching=True,
+                                  database_config=database_config,
+                                  flask_config="testing",
+                                  extra_config=extra_config)
+
+        # Always start the flask process
+        if start_flask:
+            self.start_flask()
+
+
+    def get_storage_socket(self) -> SQLAlchemySocket:
+        """
+        Obtain a new SQLAlchemy socket
+
+        This function will create a new socket instance every time it is called
+        """
+
+        return SQLAlchemySocket(self._qcf_config)
+
+
+    def get_periodics(self) -> FractalPeriodics:
+        """
+        Obtain a new FractalPeriodics object
+
+        This function will create a new FractalPeriodics object every time it is called
+        """
+
+        return FractalPeriodics(self._qcf_config)
+
+    def get_compute_manager(self, name: str) -> QueueManager:
+        """
+        Obtain a new QueueManager attached to this instance
+
+        This function will create a new QueueManager object every time it is called
+        """
+
+        client = self.client()
+        adapter_client = build_adapter_clients("pool")
+        return QueueManager(client, adapter_client, manager_name=name)
+
+    def start_flask(self) -> None:
+        """
+        Starts the flask subprocess
+        """
+        if not self._flask_proc.is_alive():
+            self._flask_proc.start()
+
+            # Wait until it is alive
+            # (This will attempt client connects until it is ready)
+            self.client()
+
+
+    def stop_flask(self) -> None:
+        """
+        Stops the flask subprocess
+        """
+        if self._flask_proc.is_alive():
+            self._flask_proc.stop()
+
+
+    def start_periodics(self) -> None:
+        """
+        Starts the periodics subprocess
+        """
+        if not self._periodics_proc.is_alive():
+            self._periodics_proc.start()
+
+    def stop_periodics(self) -> None:
+        """
+        Stops the periodics subprocess
+        """
+        if self._periodics_proc.is_alive():
+            self._periodics_proc.stop()
+
+    def start_compute_worker(self) -> None:
+        """
+        Starts the compute worker subprocess
+        """
+        if not self._compute_proc.is_alive():
+            self._compute_proc.start()
+
+    def stop_compute_worker(self) -> None:
+        """
+        Stops the compute worker subprocess
+        """
+        if self._compute_proc.is_alive():
+            self._compute_proc.stop()
+
+
+
+@pytest.fixture(scope="function")
+def fractal_stopped_test_server(temporary_database):
+    """
+    A QCFractal snowflake server used for testing, but with nothing started by default
+    """
+
+    db_config = temporary_database.config
+    with TestingSnowflake(db_config, start_flask=False) as server:
+        yield server
+
+
+
+@pytest.fixture(scope="function")
+def fractal_test_server(temporary_database):
+    """
+    A QCFractal snowflake server used for testing
+    """
+
+    db_config = temporary_database.config
+    with TestingSnowflake(db_config, start_flask=True) as server:
+        yield server
 
 
 @pytest.fixture(scope="function")
@@ -528,7 +671,7 @@ def adapter_client_fixture(request):
     adapter_client = build_adapter_clients(request.param)
     yield adapter_client
 
-    # Do a final close with existing tech
+    # Do a final close with existing adapter
     build_queue_adapter(adapter_client).close()
 
 
