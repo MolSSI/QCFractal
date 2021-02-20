@@ -11,9 +11,9 @@ valid_encodings = ["json", "json-ext", "msgpack-ext"]
 
 
 @pytest.mark.parametrize("encoding", valid_encodings)
-def test_client_molecule(test_server, encoding):
+def test_client_molecule(fractal_test_server, encoding):
 
-    client = test_server.client()
+    client = fractal_test_server.client()
     client._set_encoding(encoding)
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
@@ -32,9 +32,9 @@ def test_client_molecule(test_server, encoding):
 
 
 @pytest.mark.parametrize("encoding", valid_encodings)
-def test_client_keywords(test_server, encoding):
+def test_client_keywords(fractal_test_server, encoding):
 
-    client = test_server.client()
+    client = fractal_test_server.client()
     client._set_encoding(encoding)
 
     opt = ptl.models.KeywordSet(values={"one": "fish", "two": encoding})
@@ -51,9 +51,9 @@ def test_client_keywords(test_server, encoding):
 
 
 @pytest.mark.parametrize("encoding", valid_encodings)
-def test_client_duplicate_keywords(test_server, encoding):
+def test_client_duplicate_keywords(fractal_test_server, encoding):
 
-    client = test_server.client()
+    client = fractal_test_server.client()
     client._set_encoding(encoding)
 
     key_name = f"key-{encoding}"
@@ -76,9 +76,9 @@ def test_client_duplicate_keywords(test_server, encoding):
 
 
 @pytest.mark.parametrize("encoding", valid_encodings)
-def test_empty_query(test_server, encoding):
+def test_empty_query(fractal_test_server, encoding):
 
-    client = test_server.client()
+    client = fractal_test_server.client()
     client._set_encoding(encoding)
 
     with pytest.raises(IOError) as error:
@@ -88,7 +88,7 @@ def test_empty_query(test_server, encoding):
 
 
 @pytest.mark.parametrize("encoding", valid_encodings)
-def test_collection_portal(test_server, encoding):
+def test_collection_portal(fractal_test_server, encoding):
 
     db_name = f"Torsion123-{encoding}"
     db = {
@@ -101,7 +101,7 @@ def test_collection_portal(test_server, encoding):
         "group": "default",
     }
 
-    client = test_server.client()
+    client = fractal_test_server.client()
     client._set_encoding(encoding)
 
     # Test add
@@ -145,10 +145,10 @@ def test_collection_portal(test_server, encoding):
 
 
 @pytest.mark.parametrize("encoding", valid_encodings)
-def test_custom_queries(test_server, encoding):
-    """Test the round trip between client and server in custom queries"""
+def test_custom_queries(fractal_test_server, encoding):
+    """ Test the round trip between client and server in custom queries"""
 
-    client = test_server.client()
+    client = fractal_test_server.client()
     client._set_encoding(encoding)
 
     # Dummy test, not found

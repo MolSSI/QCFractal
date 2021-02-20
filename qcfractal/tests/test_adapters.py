@@ -23,8 +23,8 @@ def test_adapter_client_active_task_slots(adapter_client_fixture):
 
 
 @testing.using_rdkit
-def test_adapter_single(managed_compute_server):
-    client, server, manager = managed_compute_server
+def test_adapter_single(fractal_test_server_adapter):
+    client, server, manager = fractal_test_server_adapter
 
     manager.heartbeat()  # Re-register with server after clear
 
@@ -102,8 +102,8 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
 
 
 @testing.using_rdkit
-def test_adapter_error_message(managed_compute_server):
-    client, server, manager = managed_compute_server
+def test_adapter_error_message(fractal_test_server_adapter):
+    client, server, manager = fractal_test_server_adapter
 
     manager.heartbeat()  # Re-register with server after clear
 
@@ -133,8 +133,8 @@ def test_adapter_error_message(managed_compute_server):
 
 
 @testing.using_rdkit
-def test_adapter_raised_error(managed_compute_server):
-    client, server, manager = managed_compute_server
+def test_adapter_raised_error(fractal_test_server_adapter):
+    client, server, manager = fractal_test_server_adapter
 
     manager.heartbeat()  # Re-register with server after clear
 

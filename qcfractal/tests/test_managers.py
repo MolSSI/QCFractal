@@ -7,17 +7,12 @@ import datetime
 import logging
 import re
 import time
-from qcfractal.port_util import find_open_port
 from concurrent.futures import ProcessPoolExecutor
 
 import pytest
 
 import qcfractal.interface as ptl
 from qcfractal import qc_queue as queue, testing
-from qcfractal.snowflake import attempt_client_connect
-from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
-
-CLIENT_USERNAME = "test_compute_adapter"
 
 
 @contextlib.contextmanager
@@ -36,12 +31,12 @@ def caplog_handler_at_level(caplog_fixture, level, logger=None):
 
 
 @pytest.fixture(scope="function")
-def compute_adapter_fixture(test_server):
+def compute_adapter_fixture(fractal_test_server):
 
-    client = attempt_client_connect(test_server.get_uri()) # TODO: , username=CLIENT_USERNAME)
+    client = fractal_test_server.client()
 
     with ProcessPoolExecutor(max_workers=2) as adapter:
-        yield client, test_server, adapter
+        yield client, fractal_test_server, adapter
 
 
 @testing.using_rdkit
@@ -148,7 +143,6 @@ def test_queue_manager_multiple_tags(compute_adapter_fixture):
 @testing.using_rdkit
 def test_queue_manager_log_statistics(compute_adapter_fixture, caplog):
     """Test statistics are correctly generated"""
-    # Setup manager and add some compute
     client, server, adapter = compute_adapter_fixture
 
     manager = queue.QueueManager(client, adapter, cores_per_task=1, memory_per_task=1, verbose=True)
@@ -179,7 +173,7 @@ def test_queue_manager_log_statistics(compute_adapter_fixture, caplog):
     timestamp = datetime.datetime.utcnow()
     manager.heartbeat()
 
-    storage_socket = SQLAlchemySocket(server._qcf_config)
+    storage_socket = server.get_storage_socket()
     manager_record = storage_socket.get_managers()["data"][0]
     logs = storage_socket.get_manager_logs(manager_record["id"])["data"]
 
@@ -286,6 +280,7 @@ def test_queue_manager_heartbeat(compute_adapter_fixture):
     """
 
     client, server, adapter = compute_adapter_fixture
+    server.start_periodics()
 
     hooh = ptl.data.get_molecule("hooh.json")
     ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh], tag="other")
@@ -301,7 +296,9 @@ def test_queue_manager_heartbeat(compute_adapter_fixture):
 
     # By default, the manager isn't contacting the server with heartbeats
     # So just wait out the right amount of time and the server should mark it as inactive
-    wait_time = server._qcf_config.heartbeat_frequency * (server._qcf_config.heartbeat_max_missed+1) + 2
+    heartbeat_freq = server._qcf_config.heartbeat_frequency
+    max_missed = server._qcf_config.heartbeat_max_missed
+    wait_time = heartbeat_freq * (max_missed+1) + 2
     time.sleep(wait_time)
 
     sman = client.query_managers(name=manager.name(), status="INACTIVE")

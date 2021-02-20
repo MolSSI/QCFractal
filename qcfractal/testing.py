@@ -11,7 +11,6 @@ import sys
 import time
 import gc
 import copy
-from collections import Mapping
 from contextlib import contextmanager
 
 import numpy as np
@@ -20,11 +19,9 @@ import pytest
 import qcengine as qcng
 import requests
 from qcelemental.models import Molecule
-from .port_util import find_open_port
-from .config import FractalConfig
+from .config import FractalConfig, update_nested_dict
 
 import qcfractal.interface as ptl
-from qcfractal.interface.models import TorsionDriveInput
 from .interface import FractalClient
 from .interface.models import TorsionDriveInput
 from .postgres_harness import TemporaryPostgres
@@ -141,15 +138,6 @@ using_unix = pytest.mark.skipif(
 )
 
 ### Generic helpers
-
-
-def recursive_dict_merge(base_dict, dict_to_merge_in):
-    """Recursive merge for more complex than a simple top-level merge {**x, **y} which does not handle nested dict."""
-    for k, v in dict_to_merge_in.items():
-        if k in base_dict and isinstance(base_dict[k], dict) and isinstance(dict_to_merge_in[k], Mapping):
-            recursive_dict_merge(base_dict[k], dict_to_merge_in[k])
-        else:
-            base_dict[k] = dict_to_merge_in[k]
 
 
 @contextmanager
@@ -496,67 +484,6 @@ def test_server(temporary_database):
         yield server
 
 
-@pytest.fixture(scope="function")
-def fractal_compute_server(temporary_database):
-    """
-    A Fractal snowflake with local compute manager
-
-    All subprocesses are started automatically
-    """
-
-    # Tighten the service frequency for tests
-    # Also disable connection pooling in the storage socket
-    # (which can leave db connections open, causing problems when we go to delete
-    # the database)
-    extra_config = {}
-    extra_config['service_frequency'] = 5
-    extra_config['heartbeat_frequency'] = 3
-    extra_config['heartbeat_max_missed'] = 2
-    extra_config['database'] = {'pool_size': 0}
-
-    with FractalSnowflake(
-            start=True,
-            max_compute_workers=1,
-            enable_watching=True,
-            database_config=temporary_database.config,
-            flask_config="testing",
-            extra_config=extra_config
-    ) as server:
-        yield server
-
-
-@pytest.fixture(scope="function")
-def fractal_compute_server_manualperiodics(temporary_database):
-    """
-    A Fractal snowflake with local compute manager, but with periodics disabled and manually controllable
-    """
-
-    # Tighten the service frequency for tests
-    # Also disable connection pooling in the storage socket
-    # (which can leave db connections open, causing problems when we go to delete
-    # the database)
-    extra_config = {}
-    extra_config['service_frequency'] = 5
-    extra_config['heartbeat_frequency'] = 3
-    extra_config['heartbeat_max_missed'] = 2
-    extra_config['database'] = {'pool_size': 0}
-
-    with FractalSnowflake(
-            start=False,
-            max_compute_workers=1,
-            enable_watching=True,
-            database_config=temporary_database.config,
-            flask_config="testing",
-            extra_config=extra_config
-    ) as server:
-        qcf_cfg = server._qcf_config
-        server._flask_proc.start()
-        server._compute_proc.start()
-
-        periodics = FractalPeriodics(qcf_cfg)
-        yield server, periodics
-
-
 ####################################
 # Torsiondrive fixtures & functions
 ####################################
@@ -582,15 +509,16 @@ def run_services(server: FractalSnowflake, periodics: FractalPeriodics, max_iter
 
 
 @pytest.fixture(scope="function")
-def torsiondrive_fixture(fractal_compute_server_manualperiodics):
+def torsiondrive_fixture(fractal_test_server):
 
     # Cannot use this fixture without these services. Also cannot use `mark` and `fixture` decorators
     pytest.importorskip("torsiondrive")
     pytest.importorskip("geometric")
     pytest.importorskip("rdkit")
 
-    server, periodics = fractal_compute_server_manualperiodics
-    client = server.client()
+    client = fractal_test_server.client()
+    periodics = fractal_test_server.get_periodics()
+    fractal_test_server.start_compute_worker()
 
     # Add a HOOH
     hooh = ptl.data.get_molecule("hooh.json")
@@ -612,7 +540,7 @@ def torsiondrive_fixture(fractal_compute_server_manualperiodics):
         run_service = keyword_augments.pop("run_service", True)
 
         instance_options = copy.deepcopy(torsiondrive_options)
-        recursive_dict_merge(instance_options, keyword_augments)
+        update_nested_dict(instance_options, keyword_augments)
 
         inp = TorsionDriveInput(**instance_options)
         ret = client.add_service([inp], full_return=True)
@@ -623,12 +551,12 @@ def torsiondrive_fixture(fractal_compute_server_manualperiodics):
             assert "WAITING" in service["status"]
 
         if run_service:
-            finished = run_services(server, periodics)
+            finished = run_services(fractal_test_server, periodics)
             assert finished
 
         return ret.data
 
-    yield spin_up_test, server, periodics
+    yield spin_up_test, fractal_test_server, periodics
 
 
 
@@ -676,7 +604,7 @@ def adapter_client_fixture(request):
 
 
 @pytest.fixture(scope="function", params=_adapter_testing)
-def managed_compute_server(request, test_server):
+def fractal_test_server_adapter(request, test_server):
     """
     A Fractal snowflake server with an external compute worker
     """
