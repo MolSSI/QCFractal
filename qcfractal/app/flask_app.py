@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-import signal
+import sys
 from flask import Flask
 import multiprocessing
 
@@ -110,8 +110,7 @@ class FlaskProcess(ProcessBase):
     def run(self):
         self._flask_app.run(host=self._qcf_config.flask.host, port=self._qcf_config.flask.port)
 
-    def finalize(self) -> None:
-        # We got here via SIGINT or SIGTERM. Convert both to SIGINT and let
-        # flask handle it
-        # Note that this is also run inside the subprocess, so we can do this
-        os.kill(os.getpid(), signal.SIGINT)
+    def interrupt(self) -> None:
+        # We got here via SIGINT or SIGTERM. Convert both to SIGTERM and let flask handle it
+        logging.getLogger(__name__).debug("Exiting flask process")
+        sys.exit(0)

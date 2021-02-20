@@ -255,5 +255,5 @@ class PeriodicsProcess(ProcessBase):
     def run(self) -> None:
         self._periodics.start()
 
-    def finalize(self) -> None:
+    def interrupt(self) -> None:
         self._periodics.stop()
