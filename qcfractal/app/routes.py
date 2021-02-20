@@ -244,7 +244,6 @@ def login():
 
 @main.route("/information", methods=["GET"])
 def get_information():
-    import logging
     qcf_cfg = current_app.config["QCFRACTAL_CONFIG"]
 
     db_data = storage_socket.get_server_stats_log(limit=1)["data"]
