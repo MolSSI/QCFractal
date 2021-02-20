@@ -8,14 +8,8 @@ import pytest
 import warnings
 
 import qcfractal.interface as ptl
-from qcfractal.interface.models import GridOptimizationInput, TorsionDriveInput
+from qcfractal.interface.models import GridOptimizationInput
 from qcfractal.testing import run_services, using_geometric, using_rdkit
-
-#from typing import TYPE_CHECKING
-#if TYPE_CHECKING:
-#    from ..snowflake import FractalSnowflake
-#    from ..periodics import FractalPeriodics
-
 
 def test_service_torsiondrive_service_incomplete(torsiondrive_fixture):
     hooh = ptl.data.get_molecule("hooh.json")
@@ -336,10 +330,11 @@ def test_service_torsiondrive_get_final_results(torsiondrive_fixture):
 
 @using_geometric
 @using_rdkit
-def test_service_gridoptimization_single_opt(fractal_compute_server_manualperiodics):
+def test_service_gridoptimization_single_opt(fractal_test_server):
 
-    server, periodics = fractal_compute_server_manualperiodics
-    client = server.client()
+    client = fractal_test_server.client()
+    periodics = fractal_test_server.get_periodics()
+    fractal_test_server.start_compute_worker()
 
     # Add a HOOH
     hooh = ptl.data.get_molecule("hooh.json")
@@ -364,13 +359,13 @@ def test_service_gridoptimization_single_opt(fractal_compute_server_manualperiod
 
     ret = client.add_service([service], tag="gridopt", priority="low")
 
-    r = run_services(server, periodics, max_iter=1)
+    r = run_services(fractal_test_server, periodics, max_iter=1)
     assert r is False
     result = client.query_procedures(id=ret.ids)[0]
     assert result.grid_optimizations.keys() == {'"preoptimization"'}
     assert result.status == "RUNNING"
 
-    r = run_services(server, periodics, max_iter=1)
+    r = run_services(fractal_test_server, periodics, max_iter=1)
     assert r is False
     result = client.query_procedures(id=ret.ids)[0]
     status = result.detailed_status()
@@ -379,13 +374,13 @@ def test_service_gridoptimization_single_opt(fractal_compute_server_manualperiod
     assert result.grid_optimizations.keys() == {'"preoptimization"', "[1, 0]"}
     assert result.status == "RUNNING"
 
-    r = run_services(server, periodics, max_iter=1)
+    r = run_services(fractal_test_server, periodics, max_iter=1)
     assert r is False
     result = client.query_procedures(id=ret.ids)[0]
     assert result.grid_optimizations.keys() == {'"preoptimization"', "[1, 0]", "[0, 0]", "[1, 1]"}
     assert result.status == "RUNNING"
 
-    r = run_services(server, periodics, max_iter=6)
+    r = run_services(fractal_test_server, periodics, max_iter=6)
     assert r is True
     result = client.query_procedures(id=ret.ids)[0]
     status = result.detailed_status()
@@ -424,9 +419,11 @@ def test_service_gridoptimization_single_opt(fractal_compute_server_manualperiod
 
 @using_geometric
 @using_rdkit
-def test_service_gridoptimization_single_noopt(fractal_compute_server):
+def test_service_gridoptimization_single_noopt(fractal_test_server):
 
-    client = fractal_compute_server.client()
+    client = fractal_test_server.client()
+    fractal_test_server.start_periodics()
+    fractal_test_server.start_compute_worker()
 
     # Add a HOOH
     hooh = ptl.data.get_molecule("hooh.json")
@@ -446,7 +443,7 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
     )  # yapf: disable
 
     ret = client.add_service([service])
-    fractal_compute_server.await_results(ret.ids)
+    fractal_test_server.await_results(ret.ids)
 
     result = client.query_procedures(id=ret.ids)[0]
 

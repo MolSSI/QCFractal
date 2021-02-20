@@ -10,15 +10,16 @@ from qcelemental.util import parse_version
 import qcengine as qcng
 import qcfractal.interface as ptl
 from qcfractal import testing
-from qcfractal.testing import fractal_compute_server
+from qcfractal.testing import fractal_test_server
 
 
 ### Tests the compute queue stack
 @testing.using_psi4
-def test_compute_queue_stack(fractal_compute_server):
+def test_compute_queue_stack(fractal_test_server):
+    fractal_test_server.start_compute_worker()
 
     # Build a client
-    client = fractal_compute_server.client()
+    client = fractal_test_server.client()
 
     # Add a hydrogen and helium molecule
     hydrogen = ptl.Molecule.from_data([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
@@ -42,7 +43,7 @@ def test_compute_queue_stack(fractal_compute_server):
     assert len(r2.submitted) == 0
     assert set(r2.ids) == set(r.ids)
 
-    fractal_compute_server.await_results(r.ids)
+    fractal_test_server.await_results(r.ids)
 
     # Query result and check against
     results_query = {
@@ -68,14 +69,15 @@ def test_compute_queue_stack(fractal_compute_server):
 
 ### Tests the compute queue stack
 @testing.using_psi4
-def test_compute_wavefunction(fractal_compute_server):
+def test_compute_wavefunction(fractal_test_server):
+    fractal_test_server.start_compute_worker()
 
     psiver = qcng.get_program("psi4").get_version()
     if parse_version(psiver) < parse_version("1.4a2.dev160"):
         pytest.skip("Must be used a modern version of Psi4 to execute")
 
     # Build a client
-    client = fractal_compute_server.client()
+    client = fractal_test_server.client()
 
     # Add a hydrogen and helium molecule
     hydrogen = ptl.Molecule.from_data([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
@@ -90,7 +92,7 @@ def test_compute_wavefunction(fractal_compute_server):
         protocols={"wavefunction": "orbitals_and_eigenvalues"},
     )
 
-    fractal_compute_server.await_results(r.ids)
+    fractal_test_server.await_results(r.ids)
 
     result = client.query_results(id=r.ids)[0]
     assert result.wavefunction
@@ -106,11 +108,12 @@ def test_compute_wavefunction(fractal_compute_server):
 ### Tests the compute queue stack
 @testing.using_geometric
 @testing.using_psi4
-def test_procedure_optimization_single(fractal_compute_server):
+def test_procedure_optimization_single(fractal_test_server):
+    fractal_test_server.start_compute_worker()
 
     # Add a hydrogen molecule
     hydrogen = ptl.Molecule.from_data([[1, 0, 0, -0.672], [1, 0, 0, 0.672]], dtype="numpy", units="bohr")
-    client = fractal_compute_server.client()
+    client = fractal_test_server.client()
     mol_ret = client.add_molecules([hydrogen])
 
     kw = ptl.models.KeywordSet(values={"scf_properties": ["quadrupole", "wiberg_lowdin_indices"]})
@@ -128,7 +131,7 @@ def test_procedure_optimization_single(fractal_compute_server):
     compute_key = r.ids[0]
 
     # Manually handle the compute
-    fractal_compute_server.await_results(r.ids)
+    fractal_test_server.await_results(r.ids)
 
     # # Query result and check against out manual pul
     query1 = client.query_procedures(procedure="optimization", program="geometric")
@@ -181,11 +184,12 @@ def test_procedure_optimization_single(fractal_compute_server):
 
 @testing.using_geometric
 @testing.using_psi4
-def test_procedure_optimization_protocols(fractal_compute_server):
+def test_procedure_optimization_protocols(fractal_test_server):
+    fractal_test_server.start_compute_worker()
 
     # Add a hydrogen molecule
     hydrogen = ptl.Molecule.from_data([[1, 0, 0, -0.673], [1, 0, 0, 0.673]], dtype="numpy", units="bohr")
-    client = fractal_compute_server.client()
+    client = fractal_test_server.client()
 
     # Add compute
     options = {
@@ -199,7 +203,7 @@ def test_procedure_optimization_protocols(fractal_compute_server):
     assert len(r.ids) == 1
 
     # Manually handle the compute
-    fractal_compute_server.await_results(r.ids)
+    fractal_test_server.await_results(r.ids)
 
     # # Query result and check against out manual pul
     proc = client.query_procedures(id=r.ids)[0]

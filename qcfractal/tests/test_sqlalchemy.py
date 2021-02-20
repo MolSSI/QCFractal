@@ -24,27 +24,10 @@ from qcfractal.storage_sockets.models import (
     Trajectory,
 )
 
-def session_delete_all(session, className):
-    rows = session.query(className).all()
-    for row in rows:
-        session.delete(row)
-
-    session.commit()
-    return len(rows)
-
-
 @pytest.fixture(scope="function")
-def session(storage_socket):
-
-    session = storage_socket.Session()
-    try:
-        yield session
-        session.commit()
-    except:
-        session.rollback()
-        raise
-    finally:
-        session.close()
+def session_fixture(storage_socket):
+    with storage_socket.session_scope() as session:
+        yield storage_socket, session
 
 
 @pytest.fixture
@@ -56,9 +39,6 @@ def molecules_H4O2(storage_socket):
 
     yield list(ret["data"])
 
-    r = storage_socket.del_molecules(molecule_hash=[water.get_hash(), water2.get_hash()])
-    assert r == 2
-
 
 @pytest.fixture
 def kw_fixtures(storage_socket):
@@ -67,14 +47,12 @@ def kw_fixtures(storage_socket):
 
     yield list(ret["data"])
 
-    r = storage_socket.del_keywords(ret["data"][0])
-    assert r == 1
-
 
 @pytest.mark.parametrize("compression", ptl.models.CompressionEnum)
 @pytest.mark.parametrize("compression_level", [None, 1, 5])
-def test_kvstore(session, compression, compression_level):
+def test_kvstore(session_fixture, compression, compression_level):
 
+    _, session = session_fixture
     assert session.query(KVStoreORM).count() == 0
 
     input_str = "This is some input " * 10
@@ -91,15 +69,14 @@ def test_kvstore(session, compression, compression_level):
     assert kv2.get_string() == input_str
     assert kv2.compression is compression
 
-    session_delete_all(session, KVStoreORM)
 
-
-def test_old_kvstore(storage_socket, session):
+def test_old_kvstore(session_fixture):
     """
     Tests retrieving old data from KVStore
     TODO: Remove once entire migration is complete
     """
 
+    storage_socket, session = session_fixture
     assert session.query(KVStoreORM).count() == 0
 
     input_str = "This is some input " * 10
@@ -116,10 +93,8 @@ def test_old_kvstore(storage_socket, session):
     assert q.compression is ptl.models.CompressionEnum.none
     assert q.compression_level == 0
 
-    session_delete_all(session, KVStoreORM)
 
-
-def test_molecule_sql(storage_socket, session):
+def test_molecule_sql(session_fixture):
     """
     Test the use of the ME class MoleculeORM
 
@@ -128,6 +103,7 @@ def test_molecule_sql(storage_socket, session):
         Should create a MoleculeORM using: mongoengine_socket.add_molecules
     """
 
+    storage_socket, session = session_fixture
     num_mol_in_db = session.query(MoleculeORM).count()
     # MoleculeORM.objects().delete()
     assert num_mol_in_db == 0
@@ -170,8 +146,9 @@ def test_molecule_sql(storage_socket, session):
     storage_socket.del_molecules(molecule_hash=[water.get_hash(), water2.get_hash()])
 
 
-def test_services(storage_socket, session):
+def test_services(session_fixture):
 
+    storage_socket, session = session_fixture
     assert session.query(OptimizationProcedureORM).count() == 0
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
@@ -223,11 +200,12 @@ def test_services(storage_socket, session):
     assert session.query(ServiceQueueORM).count() == 0
 
 
-def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
+def test_results_sql(session_fixture, molecules_H4O2, kw_fixtures):
     """
     Handling results throught the ME classes
     """
 
+    storage_socket, session = session_fixture
     assert session.query(ResultORM).count() == 0
 
     assert len(molecules_H4O2) == 2
@@ -274,15 +252,13 @@ def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
     assert ret.molecule_obj.molecular_formula == "H4O2"
     assert ret.method == "m2"
 
-    # clean up
-    session_delete_all(session, ResultORM)
 
-
-def test_optimization_procedure(storage_socket, session, molecules_H4O2):
+def test_optimization_procedure(session_fixture, molecules_H4O2):
     """
     Optimization procedure
     """
 
+    _, session = session_fixture
     assert session.query(OptimizationProcedureORM).count() == 0
     # assert Keywords.objects().count() == 0
 
@@ -327,16 +303,13 @@ def test_optimization_procedure(storage_socket, session, molecules_H4O2):
     proc = session.query(OptimizationProcedureORM).options(joinedload("trajectory_obj")).first()
     assert proc.trajectory_obj
 
-    # clean up
-    session_delete_all(session, ResultORM)
-    session_delete_all(session, OptimizationProcedureORM)
 
-
-def test_torsiondrive_procedure(storage_socket, session):
+def test_torsiondrive_procedure(session_fixture):
     """
     Torsiondrive procedure
     """
 
+    storage_socket, session = session_fixture
     assert session.query(TorsionDriveProcedureORM).count() == 0
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
@@ -372,19 +345,15 @@ def test_torsiondrive_procedure(storage_socket, session):
     torj_proc = session.query(TorsionDriveProcedureORM).options(joinedload("optimization_history_obj")).first()
     assert torj_proc.optimization_history == {"20": [str(opt_proc.id), str(opt_proc2.id)]}
 
-    # clean up
-    session_delete_all(session, OptimizationProcedureORM)
-    # session_delete_all(session, TorsionDriveProcedureORM)
 
-
-def test_add_task_queue(storage_socket, session, molecules_H4O2):
+def test_add_task_queue(session_fixture, molecules_H4O2):
     """
     Simple test of adding a task using the SQL classes
     in QCFractal, tasks should be added using storage_socket
     """
 
+    _, session = session_fixture
     assert session.query(TaskQueueORM).count() == 0
-    # TaskQueueORM.objects().delete()
 
     page1 = {
         "procedure": "single",
@@ -412,16 +381,13 @@ def test_add_task_queue(storage_socket, session, molecules_H4O2):
     assert task.status == "WAITING"
     assert task.base_result_obj.status == "INCOMPLETE"
 
-    # cleanup
-    session_delete_all(session, TaskQueueORM)
-    session_delete_all(session, ResultORM)
 
-
-def test_results_pagination(storage_socket, session, molecules_H4O2, kw_fixtures):
+def test_results_pagination(session_fixture, molecules_H4O2, kw_fixtures):
     """
     Test results pagination
     """
 
+    _, session = session_fixture
     assert session.query(ResultORM).count() == 0
 
     result_template = {
@@ -486,6 +452,3 @@ def test_results_pagination(storage_socket, session, molecules_H4O2, kw_fixtures
 
     total_time = (time() - t1) * 1000 / total_results
     print("Query {} results in {:.3f} msec /doc".format(total_results, total_time))
-
-    # cleanup
-    session_delete_all(session, ResultORM)

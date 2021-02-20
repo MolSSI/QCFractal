@@ -9,34 +9,36 @@ from qcelemental.util import deserialize
 meta_set = {"errors", "n_inserted", "success", "duplicates", "error_description", "validation_errors"}
 
 
-def test_server_up(test_server):
-    info_addr = test_server.get_uri() + "/information"  # Targets and endpoint in the FractalServer
+def test_server_up(fractal_test_server):
+    info_addr = fractal_test_server.get_uri() + "/information"  # Targets and endpoint in the FractalServer
 
     r = requests.get(info_addr, json={})
     assert r.status_code == 200, r.reason
 
 
-def test_server_full_read(test_server):
+def test_server_full_read(fractal_test_server):
 
-    addr = test_server.get_uri() + "/manager"
+    addr = fractal_test_server.get_uri() + "/manager"
 
     body = {"meta": "", "data": ""}
 
-    r = requests.get(addr, json=body)  # , headers=test_server.app.config.headers)
+    r = requests.get(addr, json=body)  # , headers=fractal_test_server.app.config.headers)
     assert r.status_code == 200
 
 
-def test_server_information(test_server):
+def test_server_information(fractal_test_server):
 
-    client = test_server.client()
+    client = fractal_test_server.client()
 
     server_info = client.server_information()
     assert {"name", "manager_heartbeat_frequency"} <= set(server_info.keys())
 
 
-def test_storage_api(test_server):
+def test_storage_api(fractal_test_server):
 
-    storage_api_addr = test_server.get_uri() + "/collection"  # Targets and endpoint in the FractalServer
+    storage_api_addr = fractal_test_server.get_uri() + "/collection"  # Targets and endpoint in the FractalServer
+    print("ADDR: ", storage_api_addr)
+
     storage = {
         "collection": "TorsionDriveRecord",
         "name": "Torsion123",
@@ -95,12 +97,12 @@ def test_storage_api(test_server):
     assert len(r["data"]) == 0
 
 
-def test_bad_collection_get(test_server):
+def test_bad_collection_get(fractal_test_server):
     for storage_api_addr in [
-        test_server.get_uri() + "/collection/1234/entry",
-        test_server.get_uri() + "/collection/1234/value",
-        test_server.get_uri() + "/collection/1234/list",
-        test_server.get_uri() + "/collection/1234/molecule",
+        fractal_test_server.get_uri() + "/collection/1234/entry",
+        fractal_test_server.get_uri() + "/collection/1234/value",
+        fractal_test_server.get_uri() + "/collection/1234/list",
+        fractal_test_server.get_uri() + "/collection/1234/molecule",
     ]:
         r = requests.get(storage_api_addr, json={"meta": {}, "data": {}})
 
@@ -111,7 +113,7 @@ def test_bad_collection_get(test_server):
         assert rcontent["meta"]["success"] is False, storage_api_addr
 
 
-def test_bad_collection_post(test_server):
+def test_bad_collection_post(fractal_test_server):
     storage = {
         "collection": "TorsionDriveRecord",
         "name": "Torsion123",
@@ -124,11 +126,11 @@ def test_bad_collection_post(test_server):
     storage["collection"] = storage["collection"].lower()
 
     for storage_api_addr in [
-        test_server.get_uri() + "/collection/1234",
-        test_server.get_uri() + "/collection/1234/value",
-        test_server.get_uri() + "/collection/1234/entry",
-        test_server.get_uri() + "/collection/1234/list",
-        test_server.get_uri() + "/collection/1234/molecule",
+        fractal_test_server.get_uri() + "/collection/1234",
+        fractal_test_server.get_uri() + "/collection/1234/value",
+        fractal_test_server.get_uri() + "/collection/1234/entry",
+        fractal_test_server.get_uri() + "/collection/1234/list",
+        fractal_test_server.get_uri() + "/collection/1234/molecule",
     ]:
         r = requests.post(storage_api_addr, json={"meta": {}, "data": storage})
         assert r.status_code == 200, r.reason
@@ -138,9 +140,9 @@ def test_bad_collection_post(test_server):
         assert r["meta"]["success"] is False
 
 
-def test_bad_view_endpoints(test_server):
+def test_bad_view_endpoints(fractal_test_server):
     """ Tests that certain misspellings of the view endpoints result in 404s """
-    addr = test_server.get_uri()
+    addr = fractal_test_server.get_uri()
 
     assert requests.get(addr + "/collection//value").status_code == 404
     assert requests.get(addr + "/collection/234/values").status_code == 404
