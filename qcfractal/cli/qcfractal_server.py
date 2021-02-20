@@ -290,6 +290,7 @@ def server_start(args, config):
     signal.signal(signal.SIGINT, _cleanup)
     signal.signal(signal.SIGTERM, _cleanup)
 
+    exitcode = 0
     try:
         while True:
             time.sleep(15)
@@ -302,6 +303,7 @@ def server_start(args, config):
     except Exception as e:
         tb = ''.join(traceback.format_exception(None, e, e.__traceback__))
         logger.critical(f"Exception while running QCFractal server:\n{tb}")
+        exitcode = 1
 
     gunicorn_proc.stop()
     periodics_proc.stop()
@@ -309,6 +311,8 @@ def server_start(args, config):
     # Shutdown the database, but only if we manage it
     if config.database.own:
         pg_harness.shutdown()
+
+    sys.exit(exitcode)
 
 
 

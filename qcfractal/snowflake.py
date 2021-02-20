@@ -83,9 +83,9 @@ class SnowflakeComputeProcess(ProcessBase):
     def run(self) -> None:
         self._queue_manager.start()
 
-    def finalize(self) -> None:
-        self._worker_pool.shutdown()
+    def interrupt(self) -> None:
         self._queue_manager.stop()
+        self._worker_pool.shutdown()
 
 
 class FractalSnowflake:
@@ -188,7 +188,12 @@ class FractalSnowflake:
 
         # Attempt to get a client. This will block until the server is ready,
         # or result in an exception after some time
-        self.client()
+        try:
+            self.client()
+        except:
+            self.stop()
+            print(self._flask_proc._subproc.exitcode)
+            raise RuntimeError("Error starting all the subprocesses. See logging & output for details")
 
     def __del__(self):
         self.stop()

@@ -363,11 +363,11 @@ class QueueManager:
 
             self.logger.info("QueueManager stopping gracefully.")
 
-    def stop(self, signame="Not provided") -> None:
+    def stop(self) -> None:
         """
         Shuts down the manager
         """
-        self.logger.info("QueueManager received shutdown signal: {}.\n".format(signame))
+        self.logger.info("QueueManager stopping/shutting down")
 
         # Interrupt the scheduler (will finish if in the middle of an update or something, but will
         # cancel running calculations)
