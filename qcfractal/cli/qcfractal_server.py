@@ -250,8 +250,11 @@ def server_start(args, config):
         logger.info(f"Logging to stdout at level {config.loglevel}")
         log_handler = logging.StreamHandler(sys.stdout)
 
+    formatter = logging.Formatter('[%(asctime)s] (%(processName)-16s) %(levelname)8s: %(name)s: %(message)s', '%Y-%m-%d %H:%M:%S %Z')
+    log_handler.setFormatter(formatter)
+
     # Reset the logger given the full configuration
-    logging.basicConfig(level=config.loglevel, handlers=[log_handler], format='[%(asctime)s] (%(processName)-16s) %(levelname)8s: %(name)s: %(message)s', datefmt = '%Y-%m-%d %H:%M:%S %Z', force=True)
+    logging.getLogger().handlers = [log_handler]
 
     # Logger for the rest of this function
     logger = logging.getLogger(__name__)
