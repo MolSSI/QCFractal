@@ -355,7 +355,7 @@ class TestingSnowflake(FractalSnowflake):
 
         FractalSnowflake.__init__(self,
                                   start=False,
-                                  max_compute_workers=1,
+                                  compute_workers=1,
                                   enable_watching=True,
                                   database_config=database_config,
                                   flask_config="testing",
@@ -487,7 +487,7 @@ def test_server(temporary_database):
 
     with FractalSnowflake(
         start=True,
-        max_compute_workers=0,
+        compute_workers=0,
         enable_watching=True,
         database_config=temporary_database.config,
         flask_config="testing",

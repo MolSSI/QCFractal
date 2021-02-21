@@ -64,9 +64,9 @@ class SnowflakeComputeProcess(ProcessBase):
     Runs  a compute manager in a separate process
     """
 
-    def __init__(self, qcf_config: FractalConfig, max_workers: int = 2):
+    def __init__(self, qcf_config: FractalConfig, compute_workers: int = 2):
         self._qcf_config = qcf_config
-        self._max_compute_workers = max_workers
+        self._compute_workers = compute_workers
 
         # Don't initialize the worker pool here. It must be done in setup(), because
         # that is run in the separate process
@@ -77,7 +77,7 @@ class SnowflakeComputeProcess(ProcessBase):
         uri = f"http://{host}:{port}"
         client = attempt_client_connect(uri)
 
-        self._worker_pool = ProcessPoolExecutor(self._max_compute_workers)
+        self._worker_pool = ProcessPoolExecutor(self._compute_workers)
         self._queue_manager = QueueManager(client, self._worker_pool, manager_name="snowflake_compute")
 
     def run(self) -> None:
@@ -92,7 +92,7 @@ class FractalSnowflake:
     def __init__(
         self,
         start: bool = True,
-        max_compute_workers: int = 2,
+        compute_workers: int = 2,
         enable_watching: bool = True,
         database_config: Optional[DatabaseConfig] = None,
         flask_config: str = "snowflake",
@@ -143,7 +143,7 @@ class FractalSnowflake:
 
         update_nested_dict(qcf_cfg, extra_config)
         self._qcf_config = FractalConfig(**qcf_cfg)
-        self._max_compute_workers = max_compute_workers
+        self._compute_workers = compute_workers
 
         # Do we want to enable watching/waiting for finished tasks?
         self._completed_queue = None
@@ -164,22 +164,22 @@ class FractalSnowflake:
         self._flask_proc = ProcessRunner("snowflake_flask", flask, False)
         self._periodics_proc = ProcessRunner("snowflake_periodics", periodics, False)
 
-        if self._max_compute_workers > 0:
-            compute = SnowflakeComputeProcess(self._qcf_config, self._max_compute_workers)
+        if self._compute_workers > 0:
+            compute = SnowflakeComputeProcess(self._qcf_config, self._compute_workers)
             self._compute_proc = ProcessRunner("snowflake_compute", compute, False)
 
         if start:
             self.start()
 
     def stop(self):
-        if self._max_compute_workers > 0:
+        if self._compute_workers > 0:
             self._compute_proc.stop()
 
         self._flask_proc.stop()
         self._periodics_proc.stop()
 
     def start(self):
-        if self._max_compute_workers > 0 and not self._compute_proc.is_alive():
+        if self._compute_workers > 0 and not self._compute_proc.is_alive():
             self._compute_proc.start()
         if not self._flask_proc.is_alive():
             self._flask_proc.start()
