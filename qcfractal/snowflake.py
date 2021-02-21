@@ -12,7 +12,7 @@ from .qc_queue import QueueManager
 from .interface import FractalClient
 from .postgres_harness import TemporaryPostgres
 from .port_util import find_open_port
-from .config import FractalConfig, DatabaseConfig, updated_nested_dict
+from .config import FractalConfig, DatabaseConfig, update_nested_dict
 from .periodics import PeriodicsProcess
 from .app.flask_app import FlaskProcess
 from .process_runner import ProcessBase, ProcessRunner
@@ -141,7 +141,7 @@ class FractalSnowflake:
         if extra_config is None:
             extra_config = {}
 
-        updated_nested_dict(qcf_cfg, extra_config)
+        update_nested_dict(qcf_cfg, extra_config)
         self._qcf_config = FractalConfig(**qcf_cfg)
         self._max_compute_workers = max_compute_workers
 
