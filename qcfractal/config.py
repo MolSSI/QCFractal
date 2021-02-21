@@ -15,10 +15,10 @@ from pydantic import Field, validator, root_validator, ValidationError
 from .interface.models import AutodocBaseSettings
 
 
-def updated_nested_dict(d, u):
+def update_nested_dict(d, u):
     for k, v in u.items():
         if isinstance(v, dict):
-            d[k] = updated_nested_dict(d.get(k, {}), v)
+            d[k] = update_nested_dict(d.get(k, {}), v)
         else:
             d[k] = v
     return d
@@ -302,10 +302,10 @@ def read_configuration(file_paths: list[str], extra_config: Optional[Dict[str, A
         with open(path, "r") as yf:
             logger.info(f"Reading configuration data from {path}")
             file_data = yaml.safe_load(yf)
-            updated_nested_dict(config_data, file_data)
+            update_nested_dict(config_data, file_data)
 
     if extra_config:
-        updated_nested_dict(config_data, extra_config)
+        update_nested_dict(config_data, extra_config)
 
     # use the location of the last file as the base directory
     base_dir = os.path.dirname(file_paths[-1])
