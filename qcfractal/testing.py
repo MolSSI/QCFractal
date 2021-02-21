@@ -328,13 +328,15 @@ class TestingSnowflake(FractalSnowflake):
     By default, the periodics and worker subprocesses are not started.
     """
 
-    def __init__(self, database_config, start_flask=True):
+    def __init__(self, database_config, start_flask=True, extra_config=None):
 
         # Tighten the service frequency for tests
         # Also disable connection pooling in the storage socket
         # (which can leave db connections open, causing problems when we go to delete
         # the database)
-        extra_config = {}
+        if extra_config is None:
+            extra_config = {}
+
         extra_config['service_frequency'] = 5
         extra_config['loglevel'] = "DEBUG"
         extra_config['heartbeat_frequency'] = 3
