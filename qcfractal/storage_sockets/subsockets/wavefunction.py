@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from qcfractal.storage_sockets.models import WavefunctionStoreORM
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 from qcfractal.storage_sockets.sqlalchemy_socket import format_query, calculate_limit
@@ -14,6 +15,7 @@ if TYPE_CHECKING:
 class WavefunctionSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._logger = logging.getLogger(__name__)
         self._limit = core_socket.qcf_config.response_limits.wavefunction
 
     def add(self, blobs_list: List[Dict[str, Any]]):

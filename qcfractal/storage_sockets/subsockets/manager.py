@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime as dt
 
 from qcfractal.storage_sockets.models import QueueManagerORM, QueueManagerLogORM
@@ -16,6 +17,7 @@ if TYPE_CHECKING:
 class ManagerSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._logger = logging.getLogger(__name__)
         self._manager_limit = core_socket.qcf_config.response_limits.manager
         self._manager_log_limit = core_socket.qcf_config.response_limits.manager_log
 

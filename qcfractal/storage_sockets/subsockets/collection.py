@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from qcfractal.storage_sockets.models import CollectionORM, DatasetORM, ReactionDatasetORM
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 from qcfractal.storage_sockets.sqlalchemy_socket import format_query, calculate_limit
@@ -26,6 +27,7 @@ def get_collection_class(collection_type):
 class CollectionSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._logger = logging.getLogger(__name__)
         self._limit = core_socket.qcf_config.response_limits.collection
 
     def add(self, data: Dict[str, Any], overwrite: bool = False):
