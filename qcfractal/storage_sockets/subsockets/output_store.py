@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from qcfractal.storage_sockets.models import KVStoreORM
 from qcfractal.interface.models import KVStore
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
@@ -16,6 +17,7 @@ if TYPE_CHECKING:
 class OutputStoreSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._logger = logging.getLogger(__name__)
         self._limit = core_socket.qcf_config.response_limits.output_store
 
     def add(self, outputs: List[KVStore]):

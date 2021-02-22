@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from qcfractal.storage_sockets.models import KeywordsORM
 from qcfractal.interface.models import KeywordSet
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
@@ -15,6 +16,7 @@ if TYPE_CHECKING:
 class KeywordsSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._logger = logging.getLogger(__name__)
         self._limit = core_socket.qcf_config.response_limits.keyword
 
     def add(self, keyword_sets: List[KeywordSet]):

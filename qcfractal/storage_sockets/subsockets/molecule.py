@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import qcelemental
 
 from qcfractal.storage_sockets.models import MoleculeORM
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
 class MoleculeSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._logger = logging.getLogger(__name__)
         self._limit = core_socket.qcf_config.response_limits.molecule
 
     def get_add_mixed(self, data: List[Union[ObjectId, Molecule]]) -> List[Molecule]:
