@@ -5,18 +5,20 @@ import qcelemental
 from qcfractal.storage_sockets.models import MoleculeORM
 from qcfractal.interface.models import Molecule
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
-from qcfractal.storage_sockets.sqlalchemy_socket import format_query
+from qcfractal.storage_sockets.sqlalchemy_socket import format_query, calculate_limit
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
     from qcfractal.interface.models import ObjectId
     from typing import List, Union
 
 
 class MoleculeSocket:
-    def __init__(self, core_socket):
+    def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._limit = core_socket.qcf_config.response_limits.molecule
 
     def get_add_mixed(self, data: List[Union[ObjectId, Molecule]]) -> List[Molecule]:
         """
@@ -189,6 +191,7 @@ class MoleculeSocket:
             # Probably, the user provided an invalid chemical formula
             pass
 
+        limit = calculate_limit(self._limit, limit)
         meta = get_metadata_template()
 
         query = format_query(MoleculeORM, id=id, molecule_hash=molecule_hash, molecular_formula=molecular_formula)

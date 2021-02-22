@@ -1070,10 +1070,11 @@ class Dataset(Collection):
         """
 
         molecule_ids = list(set(indexer.values()))
+        query_limit = self.client.query_limits["molecule"]
         if not self._use_view(force):
             molecules: List["Molecule"] = []
-            for i in range(0, len(molecule_ids), self.client.query_limit):
-                molecules.extend(self.client.query_molecules(id=molecule_ids[i : i + self.client.query_limit]))
+            for i in range(0, len(molecule_ids), query_limit):
+                molecules.extend(self.client.query_molecules(id=molecule_ids[i : i + query_limit]))
             # XXX: molecules = pd.DataFrame({"molecule_id": molecule_ids, "molecule": molecules}) fails
             #      test_gradient_dataset_get_molecules and I don't know why
             molecules = pd.DataFrame({"molecule_id": molecule.id, "molecule": molecule} for molecule in molecules)
@@ -1102,7 +1103,6 @@ class Dataset(Collection):
         include: Optional[List[str]] = None,
         merge: bool = False,
         raise_on_plan: Union[str, bool] = False,
-        status: Optional[List[str]] = None,
     ) -> "pd.Series":
         """
         Runs a query based on an indexer which is index : molecule_id
@@ -1119,8 +1119,6 @@ class Dataset(Collection):
             Sum compound queries together, useful for mixing results
         raise_on_plan : Union[str, bool], optional
             Raises a KeyError is True or string if a multi-stage plan is detected.
-        status : List[str]
-            Include only records with these statuses. By default, obtain all records
 
         Returns
         -------
@@ -1152,9 +1150,10 @@ class Dataset(Collection):
 
             # Chunk up the queries
             records: List[ResultRecord] = []
-            for i in range(0, len(molecules), self.client.query_limit):
-                query_set["molecule"] = molecules[i : i + self.client.query_limit]
-                records.extend(self.client.query_results(**query_set, status=status))
+            query_limit = self.client.query_limits["result"]
+            for i in range(0, len(molecules), query_limit):
+                query_set["molecule"] = molecules[i : i + query_limit]
+                records.extend(self.client.query_results(**query_set))
 
             if include is None:
                 records = [{"molecule": x.molecule, "record": x} for x in records]
@@ -1219,10 +1218,11 @@ class Dataset(Collection):
         ids: List[Optional[ObjectId]] = []
         submitted: List[ObjectId] = []
         existing: List[ObjectId] = []
+        query_limit = self.client.query_limits["result"]
         for compute_set in composition_planner(**dbkeys):
 
-            for i in range(0, len(umols), self.client.query_limit):
-                chunk_mols = umols[i : i + self.client.query_limit]
+            for i in range(0, len(umols), query_limit):
+                chunk_mols = umols[i : i + query_limit]
                 ret = self.client.add_compute(
                     **compute_set, molecule=chunk_mols, tag=tag, priority=priority, protocols=protocols
                 )
@@ -1567,7 +1567,6 @@ class Dataset(Collection):
         include: Optional[List[str]] = None,
         subset: Optional[Union[str, Set[str]]] = None,
         merge: bool = False,
-        status: Optional[List[str]] = None,
     ) -> Union[pd.DataFrame, "ResultRecord"]:
         """
         Queries full ResultRecord objects from the database.
@@ -1589,8 +1588,6 @@ class Dataset(Collection):
         merge : bool
             Merge multiple results into one (as in the case of DFT-D3).
             This only works when include=['return_results'], as in get_values.
-        status : List[str]
-            Include only records with these statuses. By default, obtain all records
 
         Returns
         -------
@@ -1602,7 +1599,7 @@ class Dataset(Collection):
             raise KeyError(f"Requested query ({name}) did not match a known record.")
 
         indexer = self._molecule_indexer(subset=subset, force=True)
-        df = self._get_records(indexer, history, include=include, merge=merge, status=status)
+        df = self._get_records(indexer, history, include=include, merge=merge)
 
         if not merge and len(df) == 1:
             df = df[0]
@@ -1638,7 +1635,6 @@ class Dataset(Collection):
         *,
         keywords: Optional[str] = None,
         program: Optional[str] = None,
-        subset: Optional[Set[str]] = None,
         tag: Optional[str] = None,
         priority: Optional[str] = None,
         protocols: Optional[Dict[str, Any]] = None,
@@ -1663,8 +1659,6 @@ class Dataset(Collection):
         protocols: Optional[Dict[str, Any]], optional
             Protocols for store more or less data per field. Current valid
             protocols: {'wavefunction'}
-        subset : Set[str], optional
-            Computes only a subset of the dataset.
 
         Returns
         -------
@@ -1677,10 +1671,7 @@ class Dataset(Collection):
         self.get_entries(force=True)
         compute_keys = {"program": program, "method": method, "basis": basis, "keywords": keywords}
 
-        if subset:
-            molecule_idx = set(subset)
-        else:
-            molecule_idx = [e.molecule_id for e in self.data.records]
+        molecule_idx = [e.molecule_id for e in self.data.records]
 
         ret = self._compute(compute_keys, molecule_idx, tag, priority, protocols)
         self.save()
