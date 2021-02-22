@@ -4,12 +4,11 @@ import secrets
 import bcrypt
 from sqlalchemy.exc import IntegrityError
 from qcfractal.storage_sockets.models import UserORM, RoleORM
-from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
-from qcfractal.storage_sockets.sqlalchemy_socket import get_count_fast
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
     from typing import Dict, Optional, Tuple, Any
 
 def _generate_password() -> str:
@@ -25,7 +24,7 @@ def _generate_password() -> str:
 
 
 class UserSocket:
-    def __init__(self, core_socket):
+    def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
 
     def add(self, username: str, password: Optional[str] = None, rolename: str = "read") -> bool:

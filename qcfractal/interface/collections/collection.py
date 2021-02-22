@@ -266,7 +266,7 @@ class Collection(abc.ABC):
             flat_map_keys.append(k)
             flat_map_mols.append(v)
 
-        CHUNK_SIZE = client.query_limit
+        CHUNK_SIZE = client.query_limits["molecule"]
         mol_ret = []
         for i in range(0, len(flat_map_mols), CHUNK_SIZE):
             mol_ret.extend(client.add_molecules(flat_map_mols[i : i + CHUNK_SIZE]))
@@ -526,9 +526,10 @@ class BaseProcedureDataset(Collection):
         query_ids = list(mapper.values())
 
         # Chunk up the queries
+        query_limit = self.client.query_limits["result"]
         procedures: List[Dict[str, Any]] = []
-        for i in range(0, len(query_ids), self.client.query_limit):
-            chunk_ids = query_ids[i : i + self.client.query_limit]
+        for i in range(0, len(query_ids), query_limit):
+            chunk_ids = query_ids[i : i + query_limit]
             procedures.extend(self.client.query_procedures(id=chunk_ids))
 
         proc_lookup = {x.id: x for x in procedures}

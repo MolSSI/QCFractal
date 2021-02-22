@@ -3,17 +3,19 @@ from __future__ import annotations
 from qcfractal.interface.models import KVStore
 from qcfractal.storage_sockets.models import BaseResultORM, ServiceQueueORM
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
-from qcfractal.storage_sockets.sqlalchemy_socket import format_query, get_count_fast, get_procedure_class
+from qcfractal.storage_sockets.sqlalchemy_socket import format_query, calculate_limit
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import List, Dict, Union, Optional
+    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+    from typing import List, Dict, Union
 
 
 class ServiceSocket:
-    def __init__(self, core_socket):
+    def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._limit = core_socket.qcf_config.response_limits.service
 
     def add(self, service_list: List["BaseService"]):
         """
@@ -104,6 +106,8 @@ class ServiceSocket:
             Dict with keys: data, meta. Data is the objects found
         """
 
+        # TODO this function is used by the periodics class, for which the limit shouldn't apply
+        limit =  calculate_limit(self._limit, limit)
         meta = get_metadata_template()
         query = format_query(ServiceQueueORM, id=id, hash_index=hash_index, procedure_id=procedure_id, status=status)
 

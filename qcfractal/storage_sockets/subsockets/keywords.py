@@ -3,17 +3,19 @@ from __future__ import annotations
 from qcfractal.storage_sockets.models import KeywordsORM
 from qcfractal.interface.models import KeywordSet
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
-from qcfractal.storage_sockets.sqlalchemy_socket import format_query
+from qcfractal.storage_sockets.sqlalchemy_socket import format_query, calculate_limit
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import List
+    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+    from typing import List, Union
 
 
 class KeywordsSocket:
-    def __init__(self, core_socket):
+    def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._limit = core_socket.qcf_config.response_limits.keyword
 
     def add(self, keyword_sets: List[KeywordSet]):
         """Add one KeywordSet uniquly identified by 'program' and the 'name'.
@@ -100,6 +102,7 @@ class KeywordsSocket:
             The 'data' part is an object of the result or None if not found
         """
 
+        limit = calculate_limit(self._limit, limit)
         meta = get_metadata_template()
         query = format_query(KeywordsORM, id=id, hash_index=hash_index)
 

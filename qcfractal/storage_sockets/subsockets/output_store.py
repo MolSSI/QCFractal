@@ -3,18 +3,20 @@ from __future__ import annotations
 from qcfractal.storage_sockets.models import KVStoreORM
 from qcfractal.interface.models import KVStore
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
-from qcfractal.storage_sockets.sqlalchemy_socket import format_query
+from qcfractal.storage_sockets.sqlalchemy_socket import format_query, calculate_limit
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from qcfractal.interface.models import ObjectId
+    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
     from typing import List
 
 
 class OutputStoreSocket:
-    def __init__(self, core_socket):
+    def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._limit = core_socket.qcf_config.response_limits.output_store
 
     def add(self, outputs: List[KVStore]):
         """
@@ -67,6 +69,7 @@ class OutputStoreSocket:
             Dictionary with keys data and meta, data is a key-value dictionary of found key-value stored items.
         """
 
+        limit = calculate_limit(self._limit, limit)
         meta = get_metadata_template()
 
         query = format_query(KVStoreORM, id=id)

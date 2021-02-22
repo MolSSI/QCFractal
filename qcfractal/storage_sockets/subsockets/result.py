@@ -4,17 +4,19 @@ from sqlalchemy import and_
 from qcfractal.storage_sockets.models import BaseResultORM, ResultORM, TaskQueueORM
 from qcfractal.interface.models import ResultRecord, TaskStatusEnum
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
-from qcfractal.storage_sockets.sqlalchemy_socket import format_query, get_count_fast
+from qcfractal.storage_sockets.sqlalchemy_socket import format_query, get_count_fast, calculate_limit
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
     from typing import List, Dict, Union, Optional
 
 
 class ResultSocket:
-    def __init__(self, core_socket):
+    def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._limit = core_socket.qcf_config.response_limits.result
 
     def add(self, record_list: List[ResultRecord]):
         """
@@ -260,11 +262,11 @@ class ResultSocket:
         include : Optional[List[str]], optional
             The fields to return, default to return all
         exclude : Optional[List[str]], optional
-            The fields to not return, default to return all
+            he fields to not return, default to return all
         limit : Optional[int], optional
             maximum number of results to return
-            if 'limit' is greater than the global setting self._max_limit,
-            the self._max_limit will be returned instead
+            if 'limit' is greater than the global setting self._limit,
+            the self._limit will be returned instead
             (This is to avoid overloading the server)
         skip : int, optional
             skip the first 'skip' results. Used to paginate
@@ -286,6 +288,7 @@ class ResultSocket:
         if task_id:
             return self._get_by_task_id(task_id)
 
+        limit = calculate_limit(self._limit, limit)
         meta = get_metadata_template()
 
         # Ignore status if Id is present

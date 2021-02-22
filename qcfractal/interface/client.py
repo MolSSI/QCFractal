@@ -140,7 +140,7 @@ class FractalClient(object):
         self.server_info = self._automodel_request("information", "get", {}, full_return=True).dict()
 
         self.server_name = self.server_info["name"]
-        self.query_limit: int = self.server_info["query_limit"]
+        self.query_limits = self.server_info["query_limits"]
 
         if _isportal:
             try:

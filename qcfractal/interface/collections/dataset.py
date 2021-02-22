@@ -1070,10 +1070,11 @@ class Dataset(Collection):
         """
 
         molecule_ids = list(set(indexer.values()))
+        query_limit = self.client.query_limits["molecule"]
         if not self._use_view(force):
             molecules: List["Molecule"] = []
-            for i in range(0, len(molecule_ids), self.client.query_limit):
-                molecules.extend(self.client.query_molecules(id=molecule_ids[i : i + self.client.query_limit]))
+            for i in range(0, len(molecule_ids), query_limit):
+                molecules.extend(self.client.query_molecules(id=molecule_ids[i : i + query_limit]))
             # XXX: molecules = pd.DataFrame({"molecule_id": molecule_ids, "molecule": molecules}) fails
             #      test_gradient_dataset_get_molecules and I don't know why
             molecules = pd.DataFrame({"molecule_id": molecule.id, "molecule": molecule} for molecule in molecules)
@@ -1149,8 +1150,9 @@ class Dataset(Collection):
 
             # Chunk up the queries
             records: List[ResultRecord] = []
-            for i in range(0, len(molecules), self.client.query_limit):
-                query_set["molecule"] = molecules[i : i + self.client.query_limit]
+            query_limit = self.client.query_limits["result"]
+            for i in range(0, len(molecules), query_limit):
+                query_set["molecule"] = molecules[i : i + query_limit]
                 records.extend(self.client.query_results(**query_set))
 
             if include is None:
@@ -1216,10 +1218,11 @@ class Dataset(Collection):
         ids: List[Optional[ObjectId]] = []
         submitted: List[ObjectId] = []
         existing: List[ObjectId] = []
+        query_limit = self.client.query_limits["result"]
         for compute_set in composition_planner(**dbkeys):
 
-            for i in range(0, len(umols), self.client.query_limit):
-                chunk_mols = umols[i : i + self.client.query_limit]
+            for i in range(0, len(umols), query_limit):
+                chunk_mols = umols[i : i + query_limit]
                 ret = self.client.add_compute(
                     **compute_set, molecule=chunk_mols, tag=tag, priority=priority, protocols=protocols
                 )

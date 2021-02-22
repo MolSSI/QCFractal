@@ -2,17 +2,19 @@ from __future__ import annotations
 
 from qcfractal.storage_sockets.models import WavefunctionStoreORM
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
-from qcfractal.storage_sockets.sqlalchemy_socket import format_query
+from qcfractal.storage_sockets.sqlalchemy_socket import format_query, calculate_limit
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
     from typing import Dict, Any, List, Optional
 
 
 class WavefunctionSocket:
-    def __init__(self, core_socket):
+    def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._limit = core_socket.qcf_config.response_limits.wavefunction
 
     def add(self, blobs_list: List[Dict[str, Any]]):
         """
@@ -79,6 +81,7 @@ class WavefunctionSocket:
             Dictionary with keys data and meta, where data is the found wavefunction items
         """
 
+        limit = calculate_limit(self._limit, limit)
         meta = get_metadata_template()
 
         query = format_query(WavefunctionStoreORM, id=id)
