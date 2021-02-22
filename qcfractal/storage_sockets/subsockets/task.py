@@ -5,18 +5,21 @@ from sqlalchemy import or_
 from datetime import datetime as dt
 from qcfractal.storage_sockets.models import BaseResultORM, TaskQueueORM
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
-from qcfractal.storage_sockets.sqlalchemy_socket import format_query, get_count_fast, get_procedure_class
+from qcfractal.storage_sockets.sqlalchemy_socket import format_query, calculate_limit
 from qcfractal.interface.models import TaskRecord, RecordStatusEnum, TaskStatusEnum
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
     from typing import List, Dict, Union, Optional
 
 
 class TaskSocket:
-    def __init__(self, core_socket):
+    def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._user_limit = core_socket.qcf_config.response_limits.task
+        self._manager_limit = core_socket.qcf_config.response_limits.manager_task
 
     def add(self, data: List[TaskRecord]):
         """Submit a list of tasks to the queue.
@@ -102,7 +105,7 @@ class TaskSocket:
         return ret
 
     def get_next(
-            self, manager, available_programs, available_procedures, limit=100, tag=None
+            self, manager, available_programs, available_procedures, limit=None, tag=None
     ) -> List[TaskRecord]:
         """Obtain tasks for a manager
 
@@ -110,6 +113,7 @@ class TaskSocket:
         waiting tasks to run.
         """
 
+        limit = calculate_limit(self._manager_limit, limit)
         proc_filt = TaskQueueORM.procedure.in_([p.lower() for p in available_procedures])
         none_filt = TaskQueueORM.procedure == None  # lgtm [py/test-equals-none]
 
@@ -234,6 +238,7 @@ class TaskSocket:
             Dict with keys: data, meta. Data is the objects found
         """
 
+        limit = calculate_limit(self._user_limit, limit)
         meta = get_metadata_template()
         query = format_query(
             TaskQueueORM,
@@ -280,7 +285,7 @@ class TaskSocket:
             List of the found tasks
         """
 
-        limit = self._core_socket.get_limit('task_queue', limit)
+        limit = calculate_limit(self._user_limit, limit)
         with self._core_socket.session_scope() as session:
             found = (
                 session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(id)).limit(limit).offset(skip)

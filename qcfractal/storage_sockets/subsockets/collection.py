@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from qcfractal.storage_sockets.models import CollectionORM, DatasetORM, ReactionDatasetORM
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
-from qcfractal.storage_sockets.sqlalchemy_socket import format_query
+from qcfractal.storage_sockets.sqlalchemy_socket import format_query, calculate_limit
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
     from typing import List, Dict, Any, Optional
 
 
@@ -23,8 +24,9 @@ def get_collection_class(collection_type):
 
 
 class CollectionSocket:
-    def __init__(self, core_socket):
+    def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._limit = core_socket.qcf_config.response_limits.collection
 
     def add(self, data: Dict[str, Any], overwrite: bool = False):
         """Add (or update) a collection to the database.
@@ -137,6 +139,7 @@ class CollectionSocket:
             The data is a list of the collections found
         """
 
+        limit = calculate_limit(self._limit, limit)
         meta = get_metadata_template()
         if name:
             name = name.lower()

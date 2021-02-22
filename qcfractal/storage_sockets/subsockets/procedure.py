@@ -4,17 +4,19 @@ from sqlalchemy.orm import with_polymorphic
 from qcfractal.storage_sockets.models import BaseResultORM, OptimizationProcedureORM, TorsionDriveProcedureORM, GridOptimizationProcedureORM
 from qcfractal.interface.models import TaskStatusEnum
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
-from qcfractal.storage_sockets.sqlalchemy_socket import format_query, get_count_fast, get_procedure_class
+from qcfractal.storage_sockets.sqlalchemy_socket import format_query, get_count_fast, get_procedure_class, calculate_limit
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
     from typing import List, Dict, Union
 
 
 class ProcedureSocket:
-    def __init__(self, core_socket):
+    def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._limit = core_socket.qcf_config.response_limits.result
 
     def add(self, record_list: List["BaseRecord"]):
         """
@@ -118,6 +120,7 @@ class ProcedureSocket:
             Dict with keys: data and meta. Data is the objects found
         """
 
+        limit = calculate_limit(self._limit, limit)
         meta = get_metadata_template()
 
         if id is not None or task_id is not None:

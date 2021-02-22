@@ -4,17 +4,20 @@ from datetime import datetime as dt
 
 from qcfractal.storage_sockets.models import QueueManagerORM, QueueManagerLogORM
 from qcfractal.storage_sockets.storage_utils import get_metadata_template, add_metadata_template
-from qcfractal.storage_sockets.sqlalchemy_socket import format_query, get_count_fast
+from qcfractal.storage_sockets.sqlalchemy_socket import format_query, get_count_fast, calculate_limit
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
     from typing import Union, List, Dict
 
 
 class ManagerSocket:
-    def __init__(self, core_socket):
+    def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._manager_limit = core_socket.qcf_config.response_limits.manager
+        self._manager_log_limit = core_socket.qcf_config.response_limits.manager_log
 
     def update(self, name, **kwargs):
 
@@ -65,6 +68,7 @@ class ManagerSocket:
 
     def get(self, name: str = None, status: str = None, modified_before=None, modified_after=None, limit=None, skip=0):
 
+        limit = calculate_limit(self._manager_limit, limit)
         meta = get_metadata_template()
         query = format_query(QueueManagerORM, name=name, status=status)
 
@@ -80,6 +84,7 @@ class ManagerSocket:
         return {"data": data, "meta": meta}
 
     def get_logs(self, manager_ids: Union[List[str], str], timestamp_after=None, limit=None, skip=0):
+        limit = calculate_limit(self._manager_log_limit, limit)
         meta = get_metadata_template()
         query = format_query(QueueManagerLogORM, manager_id=manager_ids)
 
