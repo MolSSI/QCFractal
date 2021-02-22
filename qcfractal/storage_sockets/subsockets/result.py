@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from sqlalchemy import and_
 from qcfractal.storage_sockets.models import BaseResultORM, ResultORM, TaskQueueORM
 from qcfractal.interface.models import ResultRecord, TaskStatusEnum
@@ -16,6 +17,7 @@ if TYPE_CHECKING:
 class ResultSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._logger = logging.getLogger(__name__)
         self._limit = core_socket.qcf_config.response_limits.result
 
     def add(self, record_list: List[ResultRecord]):
@@ -191,7 +193,7 @@ class ResultSocket:
             for result in record_list:
 
                 if result.id is None:
-                    self._core_socket.logger.error("Attempted update without ID, skipping")
+                    self._logger.error("Attempted update without ID, skipping")
                     continue
 
                 data = result.dict(exclude={"id"})
