@@ -27,12 +27,13 @@ def live_fractal_or_skip():
     try:
         return portal.FractalClient("localhost:7777", verify=False)
     except (requests.exceptions.ConnectionError, ConnectionRefusedError):
-        print("Failed to connect to localhost")
-        try:
-            requests.get("https://api.qcarchive.molssi.org:443", json={}, timeout=5)
-            return portal.FractalClient()
-        except (requests.exceptions.ConnectionError, ConnectionRefusedError):
-            return pytest.skip("Could not make a connection to central Fractal server")
+        return pytest.skip("Failed to connect to localhost, skipping")
+        #print("Failed to connect to localhost")
+        #try:
+        #    requests.get("https://api.qcarchive.molssi.org:443", json={}, timeout=5)
+        #    return portal.FractalClient()
+        #except (requests.exceptions.ConnectionError, ConnectionRefusedError):
+        #    return pytest.skip("Could not make a connection to central Fractal server")
 
 
 @pytest.fixture

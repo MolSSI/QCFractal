@@ -80,6 +80,19 @@ def dict_from_tuple(keys, values):
     return [dict(zip(keys, row)) for row in values]
 
 
+def calculate_limit(max_limit: int, given_limit: Optional[int]):
+    """Get the allowed limit on results to return for a particular or type of object
+
+    If 'given_limit' is given (ie, by the user), this will return min(limit, max_limit)
+    where max_limit is the set value for the table/type of object
+    """
+
+    if given_limit is None:
+        return max_limit
+
+    return min(given_limit, max_limit)
+
+
 def format_query(ORMClass, **query: Dict[str, Union[str, List[str]]]) -> Dict[str, Union[str, List[str]]]:
     """
     Formats a query into a SQLAlchemy format.
@@ -328,19 +341,6 @@ class SQLAlchemySocket:
             session.query(KVStoreORM).delete(synchronize_session=False)
             session.query(MoleculeORM).delete(synchronize_session=False)
 
-    def get_limit(self, table: str, limit: Optional[int] = None) -> int:
-        """Get the allowed limit on results to return for a particular table.
-
-        If 'limit' is given, will return min(limit, max_limit) where max_limit is
-        the set value for the table.
-        """
-
-        max_limit = self.qcf_config.response_limits.get_limit(table)
-        if limit is not None:
-            return min(limit, max_limit)
-        else:
-            return max_limit
-
     def get_query_projection(self, className, query, *, limit=None, skip=0, include=None, exclude=None):
 
         table_name = className.__tablename__
@@ -386,7 +386,6 @@ class SQLAlchemySocket:
         for key in join_attrs:
             _projection.remove(key)
 
-        limit = self.get_limit(table_name, limit)
         with self.session_scope() as session:
             if _projection or join_attrs:
 
@@ -730,7 +729,7 @@ class SQLAlchemySocket:
         return self.task.add(data)
 
     def queue_get_next(
-        self, manager, available_programs, available_procedures, limit=100, tag=None
+        self, manager, available_programs, available_procedures, limit=None, tag=None
     ) -> List[TaskRecord]:
         return self.task.get_next(manager, available_programs, available_procedures, limit, tag)
 

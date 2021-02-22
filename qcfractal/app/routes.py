@@ -251,7 +251,7 @@ def get_information():
         'name': qcf_cfg.name,
         'manager_heartbeat_frequency': qcf_cfg.heartbeat_frequency,
         'version': get_qcfractal_information("version"),
-        'query_limit': storage_socket.get_limit('default'), # TODO get all limits
+        'query_limits': qcf_cfg.response_limits.dict(),
         "client_lower_version_limit": "0.14.0",  # Must be XX.YY.ZZ
         "client_upper_version_limit": "0.15.99",  # Must be XX.YY.ZZ
         "collection": 0,

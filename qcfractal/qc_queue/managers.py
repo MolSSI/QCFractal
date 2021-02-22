@@ -254,7 +254,7 @@ class QueueManager:
             self.server_info = client.server_information()
             self.server_name = self.server_info["name"]
             self.server_version = self.server_info["version"]
-            self.server_query_limit = self.server_info["query_limit"]
+            self.server_query_limit = self.server_info["query_limits"]["manager_task"]
             if self.max_tasks > self.server_query_limit:
                 self.max_tasks = self.server_query_limit
                 self.logger.warning(

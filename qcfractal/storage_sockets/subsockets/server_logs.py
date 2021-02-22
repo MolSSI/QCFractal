@@ -4,18 +4,22 @@ from sqlalchemy import desc
 
 from qcfractal.storage_sockets.models import AccessLogORM, ServerStatsLogORM
 from qcfractal.storage_sockets.storage_utils import get_metadata_template
-from qcfractal.storage_sockets.sqlalchemy_socket import get_count_fast
+from qcfractal.storage_sockets.sqlalchemy_socket import get_count_fast, calculate_limit
 
-#from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING
 
-#if TYPE_CHECKING:
-#    from typing import List
+if TYPE_CHECKING:
+    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
 
 
 class ServerLogSocket:
-    def __init__(self, core_socket):
+    def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._access_log_limit = core_socket.qcf_config.response_limits.access_logs
+        self._server_log_limit = core_socket.qcf_config.response_limits.server_logs
 
+
+    # TODO - getting access logs
 
     def save_access(self, log_data):
         with self._core_socket.session_scope() as session:
@@ -71,6 +75,7 @@ class ServerLogSocket:
 
     def get(self, before=None, after=None, limit=None, skip=0):
 
+        limit = calculate_limit(self._server_log_limit, limit)
         meta = get_metadata_template()
         query = []
 
@@ -84,7 +89,7 @@ class ServerLogSocket:
             pose = session.query(ServerStatsLogORM).filter(*query).order_by(desc("timestamp"))
             meta["n_found"] = get_count_fast(pose)
 
-            data = pose.limit(self._core_socket.get_limit('server_log', limit)).offset(skip).all()
+            data = pose.limit(limit).offset(skip).all()
             data = [d.to_dict() for d in data]
 
         meta["success"] = True
