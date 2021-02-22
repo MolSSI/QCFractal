@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from sqlalchemy.exc import IntegrityError
 from qcfractal.storage_sockets.models import RoleORM
 
@@ -12,6 +13,7 @@ if TYPE_CHECKING:
 class RoleSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._logger = logging.getLogger(__name__)
 
     def list(self):
         """
@@ -67,7 +69,7 @@ class RoleSocket:
                 session.add(role)
                 return True, f"Role: {rolename} was added successfully."
             except IntegrityError as err:
-                self._core_socket.logger.warning(str(err))
+                self._logger.warning(str(err))
                 session.rollback()
                 return False, str(err.orig.args)
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import json
 from sqlalchemy import or_
 from datetime import datetime as dt
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
 class TaskSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._logger = logging.getLogger(__name__)
         self._user_limit = core_socket.qcf_config.response_limits.task
         self._manager_limit = core_socket.qcf_config.response_limits.manager_task
 
@@ -183,7 +185,7 @@ class TaskSocket:
             found = [TaskRecord(**task, **update_fields) for task in found]
 
         if update_count != len(found):
-            self._core_socket.logger.warning("QUEUE: Number of found tasks does not match the number of updated tasks.")
+            self._logger.warning("QUEUE: Number of found tasks does not match the number of updated tasks.")
 
         return found
 

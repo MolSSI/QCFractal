@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from qcfractal.interface.models import KVStore
 from qcfractal.storage_sockets.models import BaseResultORM, ServiceQueueORM
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
@@ -15,6 +16,7 @@ if TYPE_CHECKING:
 class ServiceSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._logger = logging.getLogger(__name__)
         self._limit = core_socket.qcf_config.response_limits.service
 
     def add(self, service_list: List["BaseService"]):
@@ -250,7 +252,7 @@ class ServiceSocket:
         done = 0
         for service in records_list:
             if service.id is None:
-                self._core_socket.logger.error(
+                self._logger.error(
                     "No service id found on completion (hash_index={}), skipping.".format(service.hash_index)
                 )
                 continue

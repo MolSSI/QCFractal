@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from sqlalchemy.orm import with_polymorphic
 from qcfractal.storage_sockets.models import BaseResultORM, OptimizationProcedureORM, TorsionDriveProcedureORM, GridOptimizationProcedureORM
 from qcfractal.interface.models import TaskStatusEnum
@@ -16,6 +17,7 @@ if TYPE_CHECKING:
 class ProcedureSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._logger = logging.getLogger(__name__)
         self._limit = core_socket.qcf_config.response_limits.result
 
     def add(self, record_list: List["BaseRecord"]):
@@ -138,7 +140,7 @@ class ProcedureSocket:
             className = BaseResultORM  # all classes, including those with 'selectin'
             program = None  # make sure it's not used
             if id is None:
-                self._core_socket.logger.error(f"Procedure type not specified({procedure}), and ID is not given.")
+                self._logger.error(f"Procedure type not specified({procedure}), and ID is not given.")
                 raise KeyError("ID is required if procedure type is not specified.")
 
         query = format_query(

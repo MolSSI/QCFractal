@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import secrets
 import bcrypt
 from sqlalchemy.exc import IntegrityError
@@ -26,6 +27,7 @@ def _generate_password() -> str:
 class UserSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._logger = logging.getLogger(__name__)
 
     def add(self, username: str, password: Optional[str] = None, rolename: str = "read") -> bool:
         """
@@ -65,7 +67,7 @@ class UserSocket:
                 session.commit()
                 success = True
             except IntegrityError as err:
-                self._core_socket.logger.warning(str(err))
+                self._logger.warning(str(err))
                 session.rollback()
 
         return success, password
@@ -99,8 +101,8 @@ class UserSocket:
             try:
                 pwcheck = bcrypt.checkpw(password.encode("UTF-8"), data.password)
             except Exception as e:
-                self._core_socket.logger.warning(f"Password check failure, error: {str(e)}")
-                self._core_socket.logger.warning(
+                self._logger.warning(f"Password check failure, error: {str(e)}")
+                self._logger.warning(
                     f"Error likely caused by encryption salt mismatch, potentially fixed by creating a new password for user {username}."
                 )
                 return (False, "Password decryption failure, please contact your database administrator.")

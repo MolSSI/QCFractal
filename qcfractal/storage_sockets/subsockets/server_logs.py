@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from sqlalchemy import desc
 
 from qcfractal.storage_sockets.models import AccessLogORM, ServerStatsLogORM
@@ -15,6 +16,7 @@ if TYPE_CHECKING:
 class ServerLogSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
+        self._logger = logging.getLogger(__name__)
         self._access_log_limit = core_socket.qcf_config.response_limits.access_logs
         self._server_log_limit = core_socket.qcf_config.response_limits.server_logs
 
