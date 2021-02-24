@@ -44,7 +44,7 @@ def register_collection(collection: "Collection") -> None:
 
 
 def collection_factory(data: Dict[str, Any], client: "FractalClient" = None) -> "Collection":
-    """Creates a new Collection class from a JSON blob.
+    """Creates a new Collection instance from a JSON blob.
 
     Parameters
     ----------
