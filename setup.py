@@ -41,6 +41,7 @@ if __name__ == "__main__":
             "tqdm",
             "plotly >=4.0.0",
             "pandas",
+            "tabulate"
             "h5py",
             "pyarrow >=0.13.0",
             #            'double-conversion >=3.0.0',

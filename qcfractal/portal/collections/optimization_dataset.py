@@ -35,7 +35,7 @@ class OptEntrySpecification(ProtoModel):
 class OptimizationDataset(BaseProcedureDataset):
     class _DataModel(BaseProcedureDataset._DataModel):
 
-        records: Dict[str, OptEntry] = {}
+        records: Dict[str, OptEntry] = {} # TODO: can we rename this to `entries` without breaking everything?
         history: Set[str] = set()
         specs: Dict[str, OptEntrySpecification] = {}
 
