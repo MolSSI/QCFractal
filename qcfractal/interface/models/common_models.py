@@ -15,6 +15,10 @@ from pydantic import Field, validator
 from qcelemental.models import AutodocBaseSettings, Molecule, ProtoModel, Provenance, ComputeError
 from qcelemental.models.procedures import OptimizationProtocols
 from qcelemental.models.results import ResultProtocols
+from qcelemental.models import FailedOperation, AtomicResult, OptimizationResult
+
+# All possible result types that come back from managers
+AllResultTypes = Union[FailedOperation, AtomicResult, OptimizationResult]
 
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 
