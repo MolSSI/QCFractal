@@ -30,7 +30,7 @@ class OptimizationTasks(BaseTasks):
 
         return True
 
-    def parse_input(self, data, duplicate_id="hash_index"):
+    def parse_input(self, data):
         """Parse input json into internally appropriate format"""
 
         # Get the optimization specification from the input meta dictionary
@@ -183,7 +183,8 @@ class OptimizationTasks(BaseTasks):
 
         return self.storage.queue_submit(new_tasks)
 
-    def handle_completed_output(self, opt_outputs):
+    def handle_completed_output(self, task_id: int, base_result_id: int, manager_name: str,
+                                result: qcel.models.OptimizationResult):
         """Save the results of the procedure.
         It must make sure to save the results in the results table
         including the task_id in the TaskQueue table
@@ -191,52 +192,52 @@ class OptimizationTasks(BaseTasks):
 
         completed_tasks = []
         updates = []
-        for output in opt_outputs:
-            rec = self.storage.get_procedures(id=output["base_result_id"])["data"][0]
-            rec = OptimizationRecord(**rec)
 
-            procedure = output["result"]
+        rec = self.storage.get_procedures(id=base_result_id)["data"][0]
+        rec = OptimizationRecord(**rec)
 
-            # Adds the results to the database and sets the ids inside the dictionary
-            self.retrieve_outputs(procedure)
+        procedure = result.dict()
 
-            # Add initial and final molecules
-            update_dict = {}
-            update_dict["stdout"] = procedure.get("stdout", None)
-            update_dict["stderr"] = procedure.get("stderr", None)
-            update_dict["error"] = procedure.get("error", None)
+        # Adds the results to the database and sets the ids inside the dictionary
+        self.retrieve_outputs(procedure)
 
-            initial_mol, final_mol = self.storage.add_molecules(
-                [Molecule(**procedure["initial_molecule"]), Molecule(**procedure["final_molecule"])]
-            )["data"]
-            assert initial_mol == rec.initial_molecule
-            update_dict["final_molecule"] = final_mol
+        # Add initial and final molecules
+        update_dict = {}
+        update_dict["stdout"] = procedure.get("stdout", None)
+        update_dict["stderr"] = procedure.get("stderr", None)
+        update_dict["error"] = procedure.get("error", None)
 
-            # Parse trajectory computations and add task_id
-            traj = procedure["trajectory"]
+        initial_mol, final_mol = self.storage.add_molecules(
+            [Molecule(**procedure["initial_molecule"]), Molecule(**procedure["final_molecule"])]
+        )["data"]
+        assert initial_mol == rec.initial_molecule
+        update_dict["final_molecule"] = final_mol
 
-            # Add outputs for the trajectory to the database
-            for v in traj:
-                self.retrieve_outputs(v)
+        # Parse trajectory computations and add task_id
+        traj = procedure["trajectory"]
 
-            results = parse_single_tasks(self.storage, traj, rec.qc_spec)
-            results_rec = []
-            for v in results:
-                v["manager_name"] = output["manager_name"]
-                results_rec.append(ResultRecord(**v))
+        # Add outputs for the trajectory to the database
+        for v in traj:
+            self.retrieve_outputs(v)
 
-            ret = self.storage.add_results(results_rec)
-            update_dict["trajectory"] = ret["data"]
-            update_dict["energies"] = procedure["energies"]
-            update_dict["provenance"] = procedure["provenance"]
-            update_dict["status"] = RecordStatusEnum.complete
-            update_dict["manager_name"] = output["manager_name"]
-            update_dict["modified_on"] = dt.utcnow()
+        results = parse_single_tasks(self.storage, traj, rec.qc_spec)
+        results_rec = []
+        for v in results:
+            v["manager_name"] = manager_name
+            results_rec.append(ResultRecord(**v))
 
-            completed_tasks.append(output["task_id"])
+        ret = self.storage.add_results(results_rec)
+        update_dict["trajectory"] = ret["data"]
+        update_dict["energies"] = procedure["energies"]
+        update_dict["provenance"] = procedure["provenance"]
+        update_dict["status"] = RecordStatusEnum.complete
+        update_dict["manager_name"] = manager_name
+        update_dict["modified_on"] = dt.utcnow()
 
-            rec = OptimizationRecord(**{**rec.dict(), **update_dict})
-            updates.append(rec)
+        completed_tasks.append(task_id)
+
+        rec = OptimizationRecord(**{**rec.dict(), **update_dict})
+        updates.append(rec)
 
         self.storage.update_procedures(updates)
         self.storage.queue_mark_complete(completed_tasks)

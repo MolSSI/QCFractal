@@ -2,13 +2,19 @@
 Base class for computation procedures
 """
 
+from __future__ import annotations
+
 import abc
 import logging
 from ..interface.models import KVStore
+from ..interface.models.common_models import AllResultTypes
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from ..storage_sockets.sqlalchemy_socket import SQLAlchemySocket
 
 class BaseTasks(abc.ABC):
-    def __init__(self, storage):
+    def __init__(self, storage: SQLAlchemySocket):
         self.storage = storage
         self.logger = logging.getLogger(type(self).__name__ + '_procedure')
 
@@ -90,5 +96,5 @@ class BaseTasks(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def handle_completed_output(self, data):
+    def handle_completed_output(self, task_id: int, base_result_id: int, manager_name: str, result: AllResultTypes):
         pass
