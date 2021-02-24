@@ -14,7 +14,7 @@ from ...interface.models import ProtoModel
 from ...interface.models.records import RecordBase
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .. import PortalClient 
+    from .. import PortalClient
     from ..models import ObjectId
 
 
@@ -123,7 +123,7 @@ class Collection(abc.ABC):
 
         Parameters
         ----------
-        client : PortalClient 
+        client : PortalClient
             A PortalClient connected to a server.
         name : str
             The name of the collection to pull from.
@@ -278,7 +278,6 @@ class Collection(abc.ABC):
 
 
 class BaseProcedureDataset(Collection):
-
     class _DataModel(Collection._DataModel):
 
         records: Dict[str, Any] = {}
@@ -307,7 +306,7 @@ class BaseProcedureDataset(Collection):
 
         super().__init__(name, client=client, **kwargs)
 
-    def __getitem__(self, spec : Union[List[str], str]):
+    def __getitem__(self, spec: Union[List[str], str]):
         if isinstance(spec, list):
             pad = max(map(len, spec))
             return {sp: self._query(sp, pad=pad) for sp in spec}
@@ -386,9 +385,7 @@ class BaseProcedureDataset(Collection):
 
     @property
     def entries(self):
-        """A dictionary with entry names as keys and entry content as values.
-
-        """
+        """A dictionary with entry names as keys and entry content as values."""
         return dict(self._data.records)
 
     def get_specification(self, name: str) -> Any:
@@ -560,8 +557,10 @@ class BaseProcedureDataset(Collection):
 
         # Chunk up the queries
         procedures: List[Dict[str, Any]] = []
-        for i in tqdm(range(0, len(query_ids), self._client.query_limit),
-                desc="{} || {} ".format(specification.rjust(pad), self._client.address)):
+        for i in tqdm(
+            range(0, len(query_ids), self._client.query_limit),
+            desc="{} || {} ".format(specification.rjust(pad), self._client.address),
+        ):
             chunk_ids = query_ids[i : i + self._client.query_limit]
             procedures.extend(self._client._query_procedures(id=chunk_ids))
 
@@ -637,12 +636,12 @@ class BaseProcedureDataset(Collection):
             output = status_data
         else:
             output = status_data.apply(lambda x: x.value_counts())
-            output.index.name = 'status'
+            output.index.name = "status"
 
         # give representation
         if not (aslist or asdf):
-            print(tabulate(output.reset_index().to_dict('records'), headers='keys'))
+            print(tabulate(output.reset_index().to_dict("records"), headers="keys"))
         elif aslist:
-            return output.reset_index().to_dict('records')
+            return output.reset_index().to_dict("records")
         elif asdf:
             return output
