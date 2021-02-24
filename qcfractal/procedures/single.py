@@ -211,86 +211,84 @@ class SingleResultTasks(BaseTasks):
 
         return self.storage.queue_submit(new_tasks)
 
-    def handle_completed_output(self, result_outputs):
+    def handle_completed_output(self, task_id: int, base_result_id: int, manager_name: str, result: qcel.models.AtomicResult):
 
         completed_tasks = []
         updates = []
 
-        for output in result_outputs:
-            # Find the existing result information in the database
-            base_id = output["base_result_id"]
-            existing_result = self.storage.get_results(id=base_id)
-            if existing_result["meta"]["n_found"] != 1:
-                raise KeyError(f"Could not find existing base result {base_id}")
+        # Find the existing result information in the database
+        existing_result = self.storage.get_results(id=base_result_id)
+        if existing_result["meta"]["n_found"] != 1:
+            raise KeyError(f"Could not find existing base result {base_result_id}")
 
-            # Get the original result data from the dictionary
-            existing_result = existing_result["data"][0]
+        # Get the original result data from the dictionary
+        existing_result = existing_result["data"][0]
 
-            # Some consistency checks:
-            # Is this marked as incomplete?
-            if existing_result["status"] != "INCOMPLETE":
-                self.logger.warning(f"Skipping returned results for base_id={base_id}, as it is not marked incomplete")
-                continue
+        # Some consistency checks:
+        # Is this marked as incomplete?
+        if existing_result["status"] != "INCOMPLETE":
+            self.logger.warning(f"Skipping returned results for base_result_id={base_result_id}, as it is not marked incomplete")
+            return
 
-            rdata = output["result"]
+        rdata = result.dict()
 
-            # Adds the outputs to the database and sets the appropriate fields
-            # inside the dictionary
-            self.retrieve_outputs(rdata)
+        # Adds the outputs to the database and sets the appropriate fields
+        # inside the dictionary
+        self.retrieve_outputs(rdata)
 
-            # Store Wavefunction data
-            if rdata.get("wavefunction", False):
-                wfn = rdata.get("wavefunction", False)
-                available = set(wfn.keys()) - {"restricted", "basis"}
-                return_map = {k: wfn[k] for k in wfn.keys() & _wfn_return_names}
+        # Store Wavefunction data
+        if rdata.get("wavefunction", False):
+            wfn = rdata.get("wavefunction", False)
+            available = set(wfn.keys()) - {"restricted", "basis"}
+            return_map = {k: wfn[k] for k in wfn.keys() & _wfn_return_names}
 
-                rdata["wavefunction"] = {
-                    "available": list(available),
-                    "restricted": wfn["restricted"],
-                    "return_map": return_map,
-                }
+            rdata["wavefunction"] = {
+                "available": list(available),
+                "restricted": wfn["restricted"],
+                "return_map": return_map,
+            }
 
-                # Extra fields are trimmed as we have a column *per* wavefunction structure.
-                available_keys = wfn.keys() - _wfn_return_names
-                if available_keys > _wfn_all_fields:
-                    self.logger.warning(f"Too much wavefunction data for result {base_id}, removing extra data.")
-                    available_keys &= _wfn_all_fields
+            # Extra fields are trimmed as we have a column *per* wavefunction structure.
+            available_keys = wfn.keys() - _wfn_return_names
+            if available_keys > _wfn_all_fields:
+                self.logger.warning(f"Too much wavefunction data for result {base_result_id}, removing extra data.")
+                available_keys &= _wfn_all_fields
 
-                wavefunction_save = {k: wfn[k] for k in available_keys}
-                wfn_data_id = self.storage.add_wavefunction_store([wavefunction_save])["data"][0]
-                rdata["wavefunction_data_id"] = wfn_data_id
+            wavefunction_save = {k: wfn[k] for k in available_keys}
+            wfn_data_id = self.storage.add_wavefunction_store([wavefunction_save])["data"][0]
+            rdata["wavefunction_data_id"] = wfn_data_id
 
-            # Create an updated ResultRecord based on the existing record and the new results
-            # Double check to make sure everything is consistent
-            assert existing_result["method"] == rdata["model"]["method"]
-            assert existing_result["basis"] == rdata["model"]["basis"]
-            assert existing_result["driver"] == rdata["driver"]
-            assert existing_result["molecule"] == rdata["molecule"]["id"]
+        # Create an updated ResultRecord based on the existing record and the new results
+        # Double check to make sure everything is consistent
+        assert existing_result["method"] == rdata["model"]["method"]
+        assert existing_result["basis"] == rdata["model"]["basis"]
+        assert existing_result["driver"] == rdata["driver"]
+        assert existing_result["molecule"] == rdata["molecule"]["id"]
 
-            # Result specific
-            existing_result["extras"] = rdata["extras"]
-            existing_result["return_result"] = rdata["return_result"]
-            existing_result["properties"] = rdata["properties"]
+        # Result specific
+        existing_result["extras"] = rdata["extras"]
+        existing_result["return_result"] = rdata["return_result"]
+        existing_result["properties"] = rdata["properties"]
 
-            # Wavefunction data
-            existing_result["wavefunction"] = rdata.get("wavefunction", None)
-            existing_result["wavefunction_data_id"] = rdata.get("wavefunction_data_id", None)
+        # Wavefunction data
+        existing_result["wavefunction"] = rdata.get("wavefunction", None)
+        existing_result["wavefunction_data_id"] = rdata.get("wavefunction_data_id", None)
 
-            # Standard blocks
-            existing_result["provenance"] = rdata["provenance"]
-            existing_result["error"] = rdata["error"]
-            existing_result["stdout"] = rdata["stdout"]
-            existing_result["stderr"] = rdata["stderr"]
+        # Standard blocks
+        existing_result["provenance"] = rdata["provenance"]
+        existing_result["error"] = rdata["error"]
+        existing_result["stdout"] = rdata["stdout"]
+        existing_result["stderr"] = rdata["stderr"]
 
-            existing_result["status"] = RecordStatusEnum.complete
-            existing_result["manager_name"] = output["manager_name"]
-            existing_result["modified_on"] = dt.utcnow()
-            completed_tasks.append(output["task_id"])
+        existing_result["status"] = RecordStatusEnum.complete
+        existing_result["manager_name"] = manager_name
+        existing_result["modified_on"] = dt.utcnow()
+        completed_tasks.append(task_id)
 
-            result = ResultRecord(**existing_result)
+        result = ResultRecord(**existing_result)
 
-            # Add to the list to be updated
-            updates.append(result)
+        # Add to the list to be updated
+        updates.append(result)
 
         # TODO - must be done before update results
         # (will be fixed with better transaction handling)

@@ -3,6 +3,7 @@ Routes handlers for Flask
 """
 
 from qcelemental.util import deserialize, serialize
+from qcelemental.models import FailedOperation
 from ..storage_sockets.storage_utils import add_metadata_template
 from ..interface.models.rest_models import rest_model
 from ..interface.models.task_models import PriorityEnum, TaskStatusEnum
@@ -11,6 +12,8 @@ from ..interface.models.model_builder import build_procedure
 from ..procedures import check_procedure_available, get_procedure_parser
 from ..services import initialize_service
 from ..extras import get_information as get_qcfractal_information
+
+from ..interface.models.rest_models import QueueManagerPOSTBody, QueueManagerPOSTResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse
 
 from flask import jsonify, request, make_response
 import traceback
@@ -598,8 +601,7 @@ def get_task_queue():
 @main.route("/task_queue", methods=["POST"])
 @check_access
 def post_task_queue():
-    body_model, response_model = rest_model("task_queue", "post")
-    body = parse_bodymodel(body_model)
+    body = parse_bodymodel(TaskQueuePOSTBody)
 
     # Format and submit tasks
     if not check_procedure_available(body.meta.procedure):
@@ -613,7 +615,7 @@ def post_task_queue():
         return jsonify(msg=verify), 400
 
     payload = procedure_parser.submit_tasks(body)
-    response = response_model(**payload)
+    response = TaskQueuePOSTResponse(**payload)
 
     return SerializedResponse(response)
 
@@ -759,15 +761,15 @@ def _get_name_from_metadata(meta):
     ret = meta.cluster + "-" + meta.hostname + "-" + meta.uuid
     return ret
 
-def _insert_complete_tasks(storage_socket, body):
+def _insert_complete_tasks(storage_socket, body: QueueManagerPOSTBody):
 
         results = body.data
         meta = body.meta
-        task_ids = list(results.keys())
+        task_ids = list(int(x) for x in results.keys())
 
         manager_name = _get_name_from_metadata(meta)
         current_app.logger.info("QueueManager: Received completed tasks from {}.".format(manager_name))
-        current_app.logger.info("              Task ids: " + " ".join(task_ids))
+        current_app.logger.info("              Task ids: " + " ".join(str(x) for x in task_ids))
 
         # Pivot data so that we group all results in categories
         queue = storage_socket.get_queue(id=task_ids)["data"]
@@ -793,12 +795,7 @@ def _insert_complete_tasks(storage_socket, body):
                 # Perform some checks for consistency
                 #################################################################
                 # Information passed to handle_completed_output for the various output parsers
-                task_info = {
-                    "result": result,
-                    "task_id": task_id,
-                    "base_result_id": existing_task_data.base_result,
-                    "manager_name": manager_name,
-                }
+                base_result_id = int(existing_task_data.base_result)
 
                 # Is the task in the running state
                 # If so, do not attempt to modify the task queue. Just move on
@@ -813,13 +810,11 @@ def _insert_complete_tasks(storage_socket, body):
                     task_failures += 1
 
                 # Failed task returning FailedOperation
-                # TODO - better detection of FailedOperation. Right now, the easiest way to detect
-                #        FailedOperation is to see if 'input_data' is part of it. Other results don't have that
-                elif result["success"] is False and "input_data" in result:
-                    failure_parser.handle_completed_output([task_info])
+                elif result.success is False and isinstance(result, FailedOperation):
+                    failure_parser.handle_completed_output(task_id, base_result_id, manager_name, result)
                     task_failures += 1
 
-                elif result["success"] is not True:
+                elif result.success is not True:
                     # QCEngine should always return either FailedOperation, or some result with success == True
                     current_app.logger.warning(f"Task id {task_id} returned success != True, but is not a FailedOperation")
                     task_failures += 1
@@ -827,7 +822,7 @@ def _insert_complete_tasks(storage_socket, body):
                 # Manager returned a full, successful result
                 else:
                     parser = get_procedure_parser(queue[task_id].parser, storage_socket)
-                    parser.handle_completed_output([task_info])
+                    parser.handle_completed_output(task_id, base_result_id, manager_name, result)
                     task_success += 1
 
             except Exception:
@@ -835,14 +830,9 @@ def _insert_complete_tasks(storage_socket, body):
                 error = {"error_type": "internal_fractal_error", "error_message": msg}
                 failed_op = {"error": error, "success": False}
 
-                fail_info = {
-                    "result": failed_op,
-                    "task_id": task_id,
-                    "base_result_id": existing_task_data.base_result,
-                    "manager_name": manager_name,
-                }
+                base_result_id = int(existing_task_data.base_result)
 
-                failure_parser.handle_completed_output([fail_info])
+                failure_parser.handle_completed_output(task_id, base_result_id, manager_name, failed_op)
                 current_app.logger.error("update: ERROR\n{}".format(msg))
                 task_failures += 1
 
@@ -895,14 +885,13 @@ def get_queue_manager():
 def post_queue_manager():
     """Posts complete tasks to the task queue"""
 
-    body_model, response_model = rest_model("queue_manager", "post")
-    body = parse_bodymodel(body_model)
+    body = parse_bodymodel(QueueManagerPOSTBody)
 
     success, error = _insert_complete_tasks(storage_socket, body)
 
     completed = success + error
 
-    response = response_model(
+    response = QueueManagerPOSTResponse(
         **{
             "meta": {
                 "n_inserted": completed,

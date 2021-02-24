@@ -14,6 +14,7 @@ from .gridoptimization import GridOptimizationInput
 from .records import ResultRecord
 from .task_models import PriorityEnum, TaskRecord
 from .torsiondrive import TorsionDriveInput
+from ...interface.models.common_models import AllResultTypes
 
 __all__ = [
     "ComputeResponse",
@@ -1039,10 +1040,9 @@ class QueueManagerGETResponse(ProtoModel):
 
 register_model("queue_manager", "GET", QueueManagerGETBody, QueueManagerGETResponse)
 
-
 class QueueManagerPOSTBody(ProtoModel):
     meta: QueueManagerMeta = Field(..., description=common_docs[QueueManagerMeta])
-    data: Dict[ObjectId, Any] = Field(..., description="A Dictionary of tasks to return to the server.")
+    data: Dict[ObjectId, AllResultTypes] = Field(..., description="A Dictionary of tasks to return to the server.")
 
 
 class QueueManagerPOSTResponse(ProtoModel):
