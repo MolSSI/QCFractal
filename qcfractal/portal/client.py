@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, DefaultDict, Dict, List, Optional, Tuple,
 from pathlib import Path
 
 from pydantic import ValidationError
+import pandas as pd
 
 from ..interface.models.rest_models import rest_model
 from ..interface.models import build_procedure
@@ -261,8 +262,8 @@ class PortalClient:
         collection_type: str,
         name: str,
         full_return: bool = False,
-        include: "QueryListStr" = None,
-        exclude: "QueryListStr" = None,
+        include: "QueryListStr" = None,  # TODO: WHAT ARE THESE FOR?
+        exclude: "QueryListStr" = None,  # TODO: WHAT ARE THESE FOR?
     ) -> "Collection":
         """Returns a given collection from the server.
 
@@ -430,11 +431,12 @@ class PortalClient:
         full: bool = False,
         taglines: bool = False,
         aslist: bool = False,
+        asdf: bool = False,
         group: Optional[str] = "default",
         show_hidden: bool = False,
         tag: Optional[Union[str, List[str]]] = None,
-    ) -> Dict:
-        """Print the available collections currently on the server.
+    ) -> Union[None, List]:
+        """Print or return the available collections currently on the server.
 
         Parameters
         ----------
@@ -447,6 +449,8 @@ class PortalClient:
             Whether to include taglines in output; default False.
         aslist : bool, optional
             Return output as a list instead of printing.
+        asdf : bool, optional
+            Return output as a `pandas` DataFrame instead of printing.
         group : Optional[str], optional
             Show only collections belonging to a specified group.
             To explicitly return all collections, set group=None
@@ -503,15 +507,17 @@ class PortalClient:
                 trimmed["Collection Name"] = item["name"]
 
                 if full:
-                    trimmed["tags"] = item["tags"]
-                    trimmed["group"] = item["group"]
+                    trimmed["Tags"] = item["tags"]
+                    trimmed["Group"] = item["group"]
 
                 if taglines:
-                    trimmed["tagline"] = item["tagline"]
+                    trimmed["Tagline"] = item["tagline"]
                 output.append(trimmed)
 
         # give representation
-        if not aslist:
+        if not (aslist or asdf):
             print(tabulate(output, headers="keys"))
         elif aslist:
             return output
+        elif asdf:
+            return pd.DataFrame(output)
