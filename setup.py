@@ -44,6 +44,7 @@ if __name__ == "__main__":
             "tqdm",
             "plotly",
             "pandas",
+            "tabulate"
             "h5py",
             # QCArchive depends
             "qcengine>=0.20",

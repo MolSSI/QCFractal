@@ -11,6 +11,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from ...interface.models import ProtoModel
+from ...interface.models.records import RecordBase
 
 if TYPE_CHECKING:  # pragma: no cover
     from .. import PortalClient
@@ -384,6 +385,7 @@ class BaseProcedureDataset(Collection):
 
     @property
     def entries(self):
+        """A dictionary with entry names as keys and entry content as values."""
         return dict(self._data.records)
 
     def get_specification(self, name: str) -> Any:
@@ -576,93 +578,70 @@ class BaseProcedureDataset(Collection):
         else:
             return data
 
-    # TODO: make status stateless; no df manipulation
     def status(
         self,
         specs: Optional[Union[str, List[str]]] = None,
-        collapse: bool = True,
-        status: Optional[str] = None,
-        detail: bool = False,
-    ) -> pd.DataFrame:
-        """Return the status of all existing compute specifications.
+        full: bool = False,
+        aslist: bool = False,
+        asdf: bool = False,
+        status: Optional[Union[str, List[str]]] = None,
+    ) -> Union[None, List]:
+        """Print or return a status report for all existing compute specifications.
 
         Parameters
         ----------
         specs : Optional[Union[str, List[str]]]
             If given, only yield status of the listed compute specifications.
-        collapse : bool, optional
-            If True, collapse the status into summaries per specification.
-        status : Optional[str], optional
-            If not None, only returns results that match the provided status.
-        detail : bool, optional
-            Shows a detailed description of the current status of incomplete jobs.
+        full : bool, optional
+            If True, expand to give status per entry.
+        aslist: bool, optional
+            Return output as a list instead of printing.
+        asdf : bool, optional
+            Return output as a `pandas` DataFrame instead of printing.
+        status : Optional[Union[str, List[str]]], optional
+            If not None, only returns results that match the provided statuses.
 
         Returns
         -------
-        DataFrame
-            A DataFrame of all known statuses
+        Union[None, List]
+            Prints output as table to screen; if `aslist=True`,
+            returns list of output content instead.
 
         """
-        # Simple no detail case
-        if detail is False:
-            # detail = False can handle multiple specifications
-            # If specs is None, then use all (via list_specifications)
-            if isinstance(specs, str):
-                specs = [specs]
-            elif specs is None:
-                specs = self.list_specifications(description=False)
+        # TODO: consider instead creating a `status` REST API endpoint
+        # no real need for us to populate data objects to get this
+        from tabulate import tabulate
 
-            def get_status(item):
-                try:
-                    return item.status.value
-                except AttributeError:
-                    return None
+        # preprocess inputs
+        if specs is None:
+            specs = self.list_specifications(description=False)
+        elif isinstance(specs, str):
+            specs = [specs]
 
-            # apply status by column then by row
-            df = pd.DataFrame(self[specs]).apply(lambda col: col.apply(get_status))
+        if isinstance(status, str):
+            status = [status.lower()]
+        elif isinstance(status, list):
+            status = [s.lower() for s in status]
 
-            if status:
-                df = df[(df == status.upper()).all(axis=1)]
+        records = self[specs]
 
-            if collapse:
-                return df.apply(lambda x: x.value_counts())
-            else:
-                return df
+        status_data = pd.DataFrame(records).applymap(lambda x: x.status.value if isinstance(x, RecordBase) else None)
 
-        if status not in [None, "INCOMPLETE"]:
-            raise KeyError("Detailed status is only available for incomplete procedures.")
+        # apply filters
+        if status is not None:
+            status_data = status_data[status_data.applymap(lambda x: x in status).any(axis=0)]
 
-        # Can only do detailed status for a single spec
-        # If specs is a string, ok. If it is a list, then it should have length = 1
-        if not (isinstance(specs, str) or len(specs) == 1):
-            raise KeyError("Detailed status is only available for a single specification at a time.")
+        # apply transformations
+        if full:
+            output = status_data
+        else:
+            output = status_data.apply(lambda x: x.value_counts())
+            output.index.name = "status"
 
-        # If specs is a list (of length = 1, checked above), then make it a string
-        # (_get_procedure_ids expects a string)
-        if not isinstance(specs, str):
-            specs = specs[0]
-
-        mapper = self._get_procedure_ids(specs)
-        reverse_map = {v: k for k, v in mapper.items()}
-        procedures = self._client._query_procedures(id=list(mapper.values()))
-
-        data = []
-
-        for proc in procedures:
-            if proc.status == "COMPLETE":
-                continue
-
-            try:
-                blob = proc.detailed_status()
-            except:
-                raise AttributeError("Detailed statuses are not available for this dataset type.")
-
-            blob["Name"] = reverse_map[proc.id]
-            data.append(blob)
-
-        df = pd.DataFrame(data)
-        df.rename(columns={x: x.replace("_", " ").title() for x in df.columns}, inplace=True)
-        if df.shape[0]:
-            df = df.set_index("Name")
-
-        return df
+        # give representation
+        if not (aslist or asdf):
+            print(tabulate(output.reset_index().to_dict("records"), headers="keys"))
+        elif aslist:
+            return output.reset_index().to_dict("records")
+        elif asdf:
+            return output
