@@ -9,17 +9,16 @@ import bz2
 from typing import Union, List, Dict
 
 from ..interface.models.records import RecordBase
-from ..interface.models import build_procedure 
+from ..interface.models import build_procedure
 from .collections.collection_utils import collection_factory
 
 
 # TODO: make caching for different servers a layer beneath, ultimately transparent for most users
 class PortalCache:
-
     def __init__(self, client, cachedir):
         self.client = client
         self.cachedir = os.path.abspath(cachedir)
-        self.metafile = os.path.join(self.cachedir, 'meta.json')
+        self.metafile = os.path.join(self.cachedir, "meta.json")
 
         os.makedirs(self.cachedir, exist_ok=True)
 
@@ -34,7 +33,7 @@ class PortalCache:
 
     def _get_writelock(self):
         """Context manager for applying cross-platform filesystem lock to cache lockfile.
-        
+
         Only required for write to cache.
         Allows multiple clients to write without further coordination.
 
@@ -49,25 +48,25 @@ class PortalCache:
             return
         else:
             self._put(rec)
-                
+
     def _put(self, record):
 
         if isinstance(record, dict):
-            id = record['id']
+            id = record["id"]
         else:
             id = record.id
 
         # if we already have this in memcache, no further action
         if id in self.memcache:
             return
-        
+
         # add to memcache
         self.memcache[id] = record
 
         # add to fs cache
         cachefile = os.path.join(self.cachedir, "{}.json.bz2".format(id))
-        with open(cachefile, 'wb') as f:
-            f.write(bz2.compress(record.json().encode('utf-8')))
+        with open(cachefile, "wb") as f:
+            f.write(bz2.compress(record.json().encode("utf-8")))
 
     def get(self, ids: Union[List[str], str]):
         if isinstance(ids, list):
@@ -97,29 +96,25 @@ class PortalCache:
         # return if found, otherwise return None
         cachefile = os.path.join(self.cachedir, "{}.json.bz2".format(id))
         if os.path.exists(cachefile):
-            with open(cachefile, 'rb') as f:
+            with open(cachefile, "rb") as f:
                 self.memcache[id] = build_procedure(json.loads(bz2.decompress(f.read()).decode()))
                 return self.memcache[id]
 
         else:
             return
 
-
     def stamp_cache(self):
-        """Place metadata indicating which server this cache belongs to.
+        """Place metadata indicating which server this cache belongs to."""
+        meta = {"purpose": "QCFractal PortalClient cache", "server": self.client.address}
 
-        """
-        meta = {'purpose': "QCFractal PortalClient cache",
-                'server': self.client.address}
-
-        with open(self.metafile, 'w') as f:
+        with open(self.metafile, "w") as f:
             json.dump(meta, f)
 
     def check_cache(self):
-        with open(self.metafile, 'r') as f:
+        with open(self.metafile, "r") as f:
             meta = json.load(f)
 
             # TODO: consider other ways to verify same server besides URI
             # is there some kind of fingerprint the server keeps for itself?
-            if meta['server'] != self.client.address:
+            if meta["server"] != self.client.address:
                 raise Exception("Existing cache directory corresponds to a different QCFractal Server")

@@ -6,7 +6,8 @@ from . import collections
 
 # Add imports here
 from .client import PortalClient
-#from .models import Molecule
+
+# from .models import Molecule
 
 # We are running inside QCPortal repo
 try:

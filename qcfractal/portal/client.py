@@ -21,6 +21,7 @@ _ssl_error_msg = (
 )
 _connection_error_msg = "\n\nCould not connect to server {}, please check the address and try again."
 
+
 def _version_list(version):
     version_match = re.search(r"\d+\.\d+\.\d+", version)
     if version_match is None:
@@ -31,9 +32,9 @@ def _version_list(version):
     version = version_match.group(0)
     return [int(x) for x in version.split(".")]
 
+
 # TODO : built-in query limit chunking, progress bars, fs caching and invalidation
 class PortalClient:
-
     def __init__(
         self,
         address: Union[str, "FractalServer"] = "api.qcarchive.molssi.org:443",
@@ -60,7 +61,7 @@ class PortalClient:
         cache : str, optional
             Path to directory to use for cache.
             If None, only in-memory caching used.
-            
+
         """
 
         if hasattr(address, "get_address"):
@@ -252,18 +253,17 @@ class PortalClient:
         else:
             return response.data
 
-
     @property
     def cache(self):
         return os.path.relpath(self._cache.cachedir)
-    
+
     def get_collection(
         self,
         collection_type: str,
         name: str,
         full_return: bool = False,
-        include: "QueryListStr" = None, # TODO: WHAT ARE THESE FOR?
-        exclude: "QueryListStr" = None, # TODO: WHAT ARE THESE FOR?
+        include: "QueryListStr" = None,  # TODO: WHAT ARE THESE FOR?
+        exclude: "QueryListStr" = None,  # TODO: WHAT ARE THESE FOR?
     ) -> "Collection":
         """Returns a given collection from the server.
 
@@ -335,12 +335,11 @@ class PortalClient:
 
     # TODO: what are the query_limit rules exactly?
     #       does it use the total count of query terms, including mixed-and-matching fields
-    #def _chunk_request(self, items):
+    # def _chunk_request(self, items):
     #    procedures: List[Dict[str, Any]] = []
     #    for i in range(0, len(items), self.query_limit):
     #        chunk_ids = query_ids[i : i + self.client.query_limit]
     #        procedures.extend(self.client._query_procedures(id=chunk_ids))
-
 
     def _query_procedures(
         self,
@@ -423,7 +422,7 @@ class PortalClient:
         else:
             # NOTE: no particular order returned here
             # could put the "only complete" logic into the cache itself as a policy
-            self._cache.put([proc for proc in response.data if proc.status == 'COMPLETE'])
+            self._cache.put([proc for proc in response.data if proc.status == "COMPLETE"])
             return response.data + list(procs.values())
 
     def list_collections(
@@ -484,40 +483,40 @@ class PortalClient:
 
         # apply filters
         if not show_hidden:
-            collection_data = [item for item in collection_data if item['visibility']]
+            collection_data = [item for item in collection_data if item["visibility"]]
         if group is not None:
-            collection_data = [item for item in collection_data if item['group'] == group]
+            collection_data = [item for item in collection_data if item["group"] == group]
         if tag is not None:
-            collection_data = [item for item in collection_data if set(item['tags']).intersection(tag)]
+            collection_data = [item for item in collection_data if set(item["tags"]).intersection(tag)]
         if collection_type is not None:
-            collection_data = [item for item in collection_data if item['collection']]
+            collection_data = [item for item in collection_data if item["collection"]]
 
         name_map = collections_name_map()
         output = []
         for item in collection_data:
-            if item['collection'] in name_map:
+            if item["collection"] in name_map:
                 trimmed = {}
-                collection_type_i = name_map[item['collection']]
-                
+                collection_type_i = name_map[item["collection"]]
+
                 if collection_type is not None:
                     if collection_type_i.lower() != collection_type.lower():
                         continue
                 else:
-                    trimmed['Collection Type'] = collection_type_i
+                    trimmed["Collection Type"] = collection_type_i
 
-                trimmed['Collection Name'] = item['name']
+                trimmed["Collection Name"] = item["name"]
 
                 if full:
-                    trimmed['Tags'] = item['tags']
-                    trimmed['Group'] = item['group']
+                    trimmed["Tags"] = item["tags"]
+                    trimmed["Group"] = item["group"]
 
                 if taglines:
-                    trimmed['Tagline'] = item['tagline']
+                    trimmed["Tagline"] = item["tagline"]
                 output.append(trimmed)
-            
+
         # give representation
         if not (aslist or asdf):
-            print(tabulate(output, headers='keys'))
+            print(tabulate(output, headers="keys"))
         elif aslist:
             return output
         elif asdf:
