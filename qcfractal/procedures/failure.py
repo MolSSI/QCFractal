@@ -4,14 +4,13 @@ Procedure for a failed task
 
 from datetime import datetime as dt
 
-import qcelemental as qcel
-
 from .base import BaseTasks
 from ..interface.models import (
     RecordStatusEnum,
     KVStore,
     CompressionEnum,
     build_procedure,
+    FailedOperation
 )
 
 
@@ -28,7 +27,7 @@ class FailedOperationHandler(BaseTasks):
         raise RuntimeError("parse_input is not available for FailedOperationHandler")
 
     def handle_completed_output(self, task_id: int, base_result_id: int, manager_name: str,
-                                result: qcel.models.FailedOperation):
+                                result: FailedOperation):
 
         failed_tasks = []
 

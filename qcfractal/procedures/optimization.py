@@ -5,12 +5,10 @@ Optimization procedure/task
 from typing import List, Optional
 
 from datetime import datetime as dt
-import qcelemental as qcel
 import qcengine as qcng
 
 from .base import BaseTasks
-from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord, KeywordSet, RecordStatusEnum
-from ..interface.models.task_models import PriorityEnum
+from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord, KeywordSet, RecordStatusEnum, OptimizationResult, OptimizationInput, PriorityEnum
 from .procedures_util import parse_single_tasks, form_qcinputspec_schema
 
 
@@ -186,7 +184,7 @@ class OptimizationTasks(BaseTasks):
         return self.storage.queue_submit(new_tasks)
 
     def handle_completed_output(self, task_id: int, base_result_id: int, manager_name: str,
-                                result: qcel.models.OptimizationResult):
+                                result: OptimizationResult):
         """Save the results of the procedure.
         It must make sure to save the results in the results table
         including the task_id in the TaskQueue table
@@ -251,7 +249,7 @@ class OptimizationTasks(BaseTasks):
     @staticmethod
     def _build_schema_input(
         record: OptimizationRecord, initial_molecule: "Molecule", qc_keywords: Optional["KeywordSet"] = None
-    ) -> "OptimizationInput":
+    ) -> OptimizationInput:
         """
         Creates a OptimizationInput schema.
         """
@@ -262,7 +260,7 @@ class OptimizationTasks(BaseTasks):
 
         qcinput_spec = form_qcinputspec_schema(record.qc_spec, keywords=qc_keywords)
 
-        model = qcel.models.OptimizationInput(
+        model = OptimizationInput(
             id=record.id,
             initial_molecule=initial_molecule,
             keywords=record.keywords,

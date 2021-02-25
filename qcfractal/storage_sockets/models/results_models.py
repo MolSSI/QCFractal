@@ -19,7 +19,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.orm import column_property, relationship
 
-from qcfractal.interface.models.records import DriverEnum, RecordStatusEnum
+from qcfractal.interface.models import DriverEnum, RecordStatusEnum
 from qcfractal.storage_sockets.models.sql_base import Base, MsgpackExt
 from qcfractal.storage_sockets.models.sql_models import KeywordsORM, KVStoreORM, MoleculeORM
 

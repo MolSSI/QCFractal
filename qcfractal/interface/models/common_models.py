@@ -1,6 +1,9 @@
 """
 Common models for QCPortal/Fractal
 """
+
+from __future__ import annotations
+
 import json
 
 # For compression
@@ -9,26 +12,27 @@ import bz2
 import gzip
 
 from enum import Enum
-from typing import Any, Dict, Optional, Union
 
 from pydantic import Field, validator
-from qcelemental.models import AutodocBaseSettings, Molecule, ProtoModel, Provenance, ComputeError
+from qcelemental.models import (
+    AutodocBaseSettings,
+    Molecule,
+    ProtoModel,
+    Provenance,
+    ComputeError,
+    FailedOperation,
+    AtomicInput,
+    AtomicResult,
+    OptimizationInput,
+    OptimizationResult,
+)
+
 from qcelemental.models.procedures import OptimizationProtocols
-from qcelemental.models.results import ResultProtocols
-from qcelemental.models import FailedOperation, AtomicResult, OptimizationResult
-
-# All possible result types that come back from managers
-AllResultTypes = Union[FailedOperation, AtomicResult, OptimizationResult]
-
+from qcelemental.models.results import AtomicResultProtocols, WavefunctionProperties
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 
-__all__ = ["QCSpecification", "OptimizationSpecification", "KeywordSet", "ObjectId", "DriverEnum", "Citation"]
-
-# Add in QCElemental models
-__all__.extend(["Molecule", "Provenance", "ProtoModel"])
-
-# Autodoc
-__all__.extend(["OptimizationProtocols", "ResultProtocols"])
+from typing import Any, Dict, Optional, Union
+AllResultTypes = Union[FailedOperation, AtomicResult, OptimizationResult]
 
 
 class ObjectId(str):
@@ -231,7 +235,7 @@ class QCSpecification(ProtoModel):
         description="The Id of the :class:`KeywordSet` registered in the database to run this calculation with. This "
         "Id must exist in the database.",
     )
-    protocols: Optional[ResultProtocols] = Field(ResultProtocols(), description=str(ResultProtocols.__base_doc__))
+    protocols: Optional[AtomicResultProtocols] = Field(AtomicResultProtocols(), description=str(AtomicResultProtocols.__base_doc__))
     program: str = Field(
         ...,
         description="The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs"

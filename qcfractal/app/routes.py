@@ -5,10 +5,7 @@ Routes handlers for Flask
 from qcelemental.util import deserialize, serialize
 from qcelemental.models import FailedOperation
 from ..storage_sockets.storage_utils import add_metadata_template
-from ..interface.models.rest_models import rest_model
-from ..interface.models.task_models import PriorityEnum, TaskStatusEnum
-from ..interface.models.records import RecordStatusEnum
-from ..interface.models.model_builder import build_procedure
+from ..interface.models import rest_model, build_procedure, PriorityEnum, TaskStatusEnum, RecordStatusEnum
 from ..procedures import check_procedure_available, get_procedure_parser
 from ..services import initialize_service
 from ..extras import get_information as get_qcfractal_information

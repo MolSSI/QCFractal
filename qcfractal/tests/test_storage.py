@@ -13,7 +13,7 @@ import sqlalchemy
 import sqlalchemy.exc
 
 import qcfractal.interface as ptl
-from qcfractal.interface.models.task_models import TaskStatusEnum
+from qcfractal.interface.models import TaskStatusEnum
 from qcfractal.services.services import TorsionDriveService
 
 bad_id1 = "99999000"

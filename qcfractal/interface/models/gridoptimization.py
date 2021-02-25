@@ -12,8 +12,6 @@ from .common_models import Molecule, ObjectId, OptimizationSpecification, ProtoM
 from .model_utils import recursive_normalizer
 from .records import RecordBase
 
-__all__ = ["GOKeywords", "GridOptimizationInput", "GridOptimizationRecord", "ScanDimension"]
-
 
 class ScanTypeEnum(str, Enum):
     """
