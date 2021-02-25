@@ -6,8 +6,7 @@ from __future__ import annotations
 
 import abc
 import logging
-from ..interface.models import KVStore
-from ..interface.models.common_models import AllResultTypes
+from ..interface.models import KVStore, AllResultTypes
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

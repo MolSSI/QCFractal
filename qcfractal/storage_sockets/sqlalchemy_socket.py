@@ -30,13 +30,10 @@ from qcfractal.interface.models import (
     OptimizationRecord,
     ResultRecord,
     TaskRecord,
-    TaskStatusEnum,
     TorsionDriveRecord,
     KVStore,
-    CompressionEnum,
     prepare_basis,
 )
-from qcfractal.interface.models.records import RecordStatusEnum
 
 from qcfractal.storage_sockets.db_queries import QUERY_CLASSES
 from qcfractal.storage_sockets.models import (
@@ -48,12 +45,10 @@ from qcfractal.storage_sockets.models import (
     OptimizationProcedureORM,
     QueueManagerLogORM,
     QueueManagerORM,
-    RoleORM,
     ResultORM,
     ServiceQueueORM,
     TaskQueueORM,
     TorsionDriveProcedureORM,
-    UserORM,
     VersionsORM,
     WavefunctionStoreORM,
 )

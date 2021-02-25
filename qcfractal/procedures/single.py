@@ -9,8 +9,7 @@ import qcelemental as qcel
 import qcengine as qcng
 
 from .base import BaseTasks
-from ..interface.models import Molecule, ResultRecord, TaskRecord, KeywordSet, RecordStatusEnum
-from ..interface.models.task_models import PriorityEnum
+from ..interface.models import Molecule, ResultRecord, TaskRecord, KeywordSet, RecordStatusEnum, PriorityEnum
 
 _wfn_return_names = set(qcel.models.results.WavefunctionProperties._return_results_names)
 _wfn_all_fields = set(qcel.models.results.WavefunctionProperties.__fields__.keys())
