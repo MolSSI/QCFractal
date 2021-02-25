@@ -3,7 +3,6 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from pydantic import Field, validator
-from qcelemental.models import ComputeError
 
 from .common_models import ObjectId, ProtoModel
 

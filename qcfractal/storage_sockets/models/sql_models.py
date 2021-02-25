@@ -26,8 +26,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
 
-from qcfractal.interface.models.task_models import ManagerStatusEnum, PriorityEnum, TaskStatusEnum
-from qcfractal.interface.models.common_models import CompressionEnum
+from qcfractal.interface.models import ManagerStatusEnum, PriorityEnum, TaskStatusEnum, CompressionEnum
 from qcfractal.storage_sockets.models.sql_base import Base, MsgpackExt
 
 
