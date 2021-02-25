@@ -1,11 +1,14 @@
+from __future__ import annotations
+
 import hashlib
 import json
-from typing import Any, Dict, Optional
-
 import numpy as np
 
-json_encoders = {np.ndarray: lambda v: v.flatten().tolist()}
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from typing import Any, Dict, Optional
 
+json_encoders = {np.ndarray: lambda v: v.flatten().tolist()}
 
 def prepare_basis(basis: Optional[str]) -> Optional[str]:
     """

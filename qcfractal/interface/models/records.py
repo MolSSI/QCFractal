@@ -2,6 +2,8 @@
 A model for Compute Records
 """
 
+from __future__ import annotations
+
 import abc
 import datetime
 from enum import Enum
@@ -15,12 +17,8 @@ from ..visualization import scatter_plot
 from .common_models import DriverEnum, ObjectId, ProtoModel, QCSpecification
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 
-if TYPE_CHECKING:  # pragma: no cover
-    from qcelemental.models import OptimizationInput, ResultInput
-
-    from .common_models import KeywordSet, Molecule
-
-__all__ = ["OptimizationRecord", "ResultRecord", "OptimizationRecord", "RecordBase"]
+if TYPE_CHECKING:
+    from .common_models import Molecule
 
 
 class RecordStatusEnum(str, Enum):
@@ -356,7 +354,7 @@ class ResultRecord(RecordBase):
         else:
             return ret
 
-    def get_molecule(self) -> "Molecule":
+    def get_molecule(self) -> Molecule:
         """
         Pulls the Result's Molecule from the connected database.
 
@@ -459,7 +457,7 @@ class OptimizationRecord(RecordBase):
 
         return self.cache["trajectory"]
 
-    def get_molecular_trajectory(self) -> List["Molecule"]:
+    def get_molecular_trajectory(self) -> List[Molecule]:
         """Returns the Molecule at each gradient evaluation in the trajectory.
 
         Returns
@@ -477,7 +475,7 @@ class OptimizationRecord(RecordBase):
 
         return self.cache["molecular_trajectory"]
 
-    def get_initial_molecule(self) -> "Molecule":
+    def get_initial_molecule(self) -> Molecule:
         """Returns the initial molecule
 
         Returns
@@ -489,7 +487,7 @@ class OptimizationRecord(RecordBase):
         ret = self.client.query_molecules(id=[self.initial_molecule])
         return ret[0]
 
-    def get_final_molecule(self) -> "Molecule":
+    def get_final_molecule(self) -> Molecule:
         """Returns the optimized molecule
 
         Returns
