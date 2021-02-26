@@ -4,6 +4,7 @@ import tempfile
 import time
 import multiprocessing
 from queue import Empty  # Just for exception handling
+import weakref
 import logging
 import logging.handlers
 from concurrent.futures import ProcessPoolExecutor
@@ -164,19 +165,28 @@ class FractalSnowflake:
         self._flask_proc = ProcessRunner("snowflake_flask", flask, False)
         self._periodics_proc = ProcessRunner("snowflake_periodics", periodics, False)
 
-        if self._compute_workers > 0:
-            compute = SnowflakeComputeProcess(self._qcf_config, self._compute_workers)
-            self._compute_proc = ProcessRunner("snowflake_compute", compute, False)
+        compute = SnowflakeComputeProcess(self._qcf_config, self._compute_workers)
+        self._compute_proc = ProcessRunner("snowflake_compute", compute, False)
 
         if start:
             self.start()
 
-    def stop(self):
-        if self._compute_workers > 0:
-            self._compute_proc.stop()
+        self._finalizer = weakref.finalize(self, self._stop, self._compute_proc, self._flask_proc, self._periodics_proc)
 
-        self._flask_proc.stop()
-        self._periodics_proc.stop()
+    @classmethod
+    def _stop(cls, compute_proc, flask_proc, periodics_proc):
+        ####################################################################################
+        # This is written as a class method so that it can be called by a weakref finalizer
+        ####################################################################################
+
+        # Stop these in a particular order
+        # First the compute, since it will communicate its demise to the flask server
+        compute_proc.stop()
+        flask_proc.stop()
+        periodics_proc.stop()
+
+    def stop(self):
+        self._stop(self._compute_proc, self._flask_proc, self._periodics_proc)
 
     def start(self):
         if self._compute_workers > 0 and not self._compute_proc.is_alive():
@@ -192,11 +202,7 @@ class FractalSnowflake:
             self.client()
         except:
             self.stop()
-            print(self._flask_proc._subproc.exitcode)
             raise RuntimeError("Error starting all the subprocesses. See logging & output for details")
-
-    def __del__(self):
-        self.stop()
 
     def get_uri(self) -> str:
         """
