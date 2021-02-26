@@ -97,7 +97,7 @@ class QueueManager:
         queue_tag: Optional[Union[str, List[str]]] = None,
         manager_name: str = "unlabeled",
         update_frequency: Union[int, float] = 2,
-        verbose: bool = True,
+        verbose: bool = False, # TODO: Remove verbose flag, always respect logging level
         server_error_retries: Optional[int] = 1,
         stale_update_limit: Optional[int] = 10,
         cores_per_task: Optional[int] = None,
