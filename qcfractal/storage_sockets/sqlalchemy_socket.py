@@ -256,13 +256,15 @@ class SQLAlchemySocket:
         return f"<SQLAlchemySocket: address='{self.uri}`>"
 
     @contextmanager
-    def session_scope(self):
+    def session_scope(self, read_only=False):
         """Provide a transactional scope"""
 
         session = self.Session()
         try:
             yield session
-            session.commit()
+
+            if not read_only:
+                session.commit()
         except:
             session.rollback()
             raise
