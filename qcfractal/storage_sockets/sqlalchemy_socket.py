@@ -88,7 +88,7 @@ def calculate_limit(max_limit: int, given_limit: Optional[int]):
     return min(given_limit, max_limit)
 
 
-def format_query(ORMClass, **query: Dict[str, Union[str, List[str]]]) -> Dict[str, Union[str, List[str]]]:
+def format_query(ORMClass, **query: Union[None, str, int, Iterable[int], Iterable[str]]) -> List[Any]:
     """
     Formats a query into a SQLAlchemy format.
     """
@@ -103,6 +103,7 @@ def format_query(ORMClass, **query: Dict[str, Union[str, List[str]]]) -> Dict[st
         if (k in _null_keys) and (v == "null"):
             v = None
 
+        # TODO: Remove these fixups at some point. This should be handled at a different level
         if k in _prepare_keys:
             f = _prepare_keys[k]
             if isinstance(v, (list, tuple)):
