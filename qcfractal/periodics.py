@@ -10,6 +10,7 @@ import traceback
 import sched
 import logging
 import time
+import weakref
 from datetime import datetime, timedelta
 from qcfractal.interface.models import ManagerStatusEnum, TaskStatusEnum, ComputeError
 from .storage_sockets.sqlalchemy_socket import SQLAlchemySocket
@@ -69,6 +70,9 @@ class FractalPeriodics:
         self.logger.info(f"    Manager max missed heartbeats: {self.manager_max_missed_heartbeats}")
         self.logger.info(f"         Service update frequency: {self.service_frequency} seconds")
         self.logger.info(f"              Max active services: {self.max_active_services}")
+
+        # Now set up the finalizer so that the background stuff always shuts down correctly
+        self._finalizer = weakref.finalize(self, self._stop, self.logger, self._int_sleep)
 
         self.logger.info("Initializing QCFractal Periodics")
 
@@ -217,6 +221,15 @@ class FractalPeriodics:
         except SleepInterrupted:
             self.logger.info("Scheduler interrupted and is now shut down")
 
+    @classmethod
+    def _stop(cls, logger, int_sleep) -> None:
+        ####################################################################################
+        # This is written as a class method so that it can be called by a weakref finalizer
+        ####################################################################################
+
+        logger.info("Shutting down periodics (currently running tasks will finish)")
+        int_sleep.interrupt()
+
     def stop(self) -> None:
         """
         Stop running the periodic tasks
@@ -224,11 +237,8 @@ class FractalPeriodics:
         This will stop the tasks that are running in the background. Currently running tasks will
         be allowed to finish.
         """
-        self.logger.info("Shutting down periodics (currently running tasks will finish")
-        self._int_sleep.interrupt()
 
-    def __del__(self):
-        self.stop()
+        self._stop(self.logger, self._int_sleep)
 
 
 class PeriodicsProcess(ProcessBase):

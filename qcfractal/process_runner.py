@@ -9,6 +9,7 @@ import multiprocessing
 import logging
 import threading
 import sys
+import weakref
 
 from typing import Union
 
@@ -34,6 +35,7 @@ class InterruptableSleep:
     This class is a functor, so an instance can be passed as the delay function to a python
     sched.scheduler
     """
+
     def __init__(self):
         self._event = threading.Event()
 
@@ -144,6 +146,37 @@ class ProcessRunner:
         if start:
             self.start()
 
+        # Add a finalizer
+        self._finalize_logger = logging.getLogger(f"ProcessRunner.stop[{name}]")
+        self._finalizer = weakref.finalize(self, self._stop, self._subproc, self._finalize_logger)
+
+    @classmethod
+    def _stop(cls, subproc, logger) -> None:
+        ####################################################################################
+        # This is written as a class method so that it can be called by a weakref finalizer
+        ####################################################################################
+
+        # Skip everything if already dead
+        if not subproc.is_alive():
+            return
+
+        # send SIGTERM 3 times, then kill
+        for i in range(3):
+            logger.debug(f"Sending terminate signal [Try #{i+1}]")
+            subproc.terminate()
+            subproc.join(5)
+
+            if not subproc.is_alive():
+                break
+
+        # If still alive, send kill signal
+        if subproc.is_alive():
+            logger.warning(f"Process seems to be hanging. Sending KILL signal")
+            subproc.kill()
+            subproc.join()
+
+        logger.debug("Process ended")
+
     def start(self) -> None:
         if self._subproc.is_alive():
             raise RuntimeError(f"Process {self._name} is already running")
@@ -153,36 +186,17 @@ class ProcessRunner:
     def is_alive(self) -> bool:
         return self._subproc.is_alive()
 
-    def stop(self) -> None:
-        logger = logging.getLogger(f"ProcessRunner.stop[{self._name}]")
+    def stop(self):
+        """
+        Terminate the subprocess
+        """
 
-        # Skip everything if already dead
-        if not self._subproc.is_alive():
-            return
-
-        # send SIGTERM 3 times, then kill
-        for i in range(3):
-            logger.debug(f"Sending terminate signal [Try #{i+1}]")
-            self._subproc.terminate()
-            self._subproc.join(5)
-
-            if not self._subproc.is_alive():
-                break
-
-        # If still alive, send kill signal
-        if self._subproc.is_alive():
-            logger.warning(f"Process seems to be hanging. Sending KILL signal")
-            self._subproc.kill()
-            self._subproc.join()
-
-        logger.debug("Process ended")
-
+        # Don't call self._finalizer, since the subprocess could be restarted with start()
+        # and calling the finalizer will detach the finalizer
+        self._stop(self._subproc, self._finalize_logger)
 
     def exitcode(self) -> Union[int, None]:
         return self._subproc.exitcode
-
-    def __del__(self):
-        self.stop()
 
     @staticmethod
     def _run_process(name: str, proc_class: ProcessBase):
