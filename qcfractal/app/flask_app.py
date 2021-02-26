@@ -107,6 +107,11 @@ class FlaskProcess(ProcessBase):
         # Disable printing "Environment: ... WARNING: This is a development server...
         os.environ['WERKZEUG_RUN_MAIN'] = 'true'
 
+        # Get the werkzeug logger to shut up by setting its level to the root level
+        # I don't know what flask does but it seems to override it to INFO if not set
+        # on this particular logger
+        logging.getLogger('werkzeug').setLevel(logging.getLogger().level)
+
     def run(self):
         self._flask_app.run(host=self._qcf_config.flask.host, port=self._qcf_config.flask.port)
 
