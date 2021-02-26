@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import weakref
 import shutil
 import pathlib
 import subprocess
@@ -673,6 +674,7 @@ class TemporaryPostgres:
 
         if data_dir:
             self._data_dir = data_dir
+            self._data_tmpdir = None
         else:
             self._data_tmpdir = tempfile.TemporaryDirectory()
             self._data_dir = self._data_tmpdir.name
@@ -684,15 +686,9 @@ class TemporaryPostgres:
         self.harness = PostgresHarness(self.config)
         self.harness.initialize_postgres()
 
-        self._active = True
         logger.info(f"Created temporary postgres database at location {self._data_dir} running on port {port}")
 
-    def __del__(self):
-        """
-        Cleans up the TemporaryPostgres instance on delete.
-        """
-
-        self.stop()
+        self._finalizer = weakref.finalize(self, self._stop, self.harness, self._data_tmpdir)
 
     def database_uri(self, safe: bool = True) -> str:
         """Provides the full Postgres URI string.
@@ -713,11 +709,21 @@ class TemporaryPostgres:
         else:
             return self.config.uri
 
-    def stop(self) -> None:
+    def stop(self):
         """
-        Shuts down the Snowflake instance. This instance is not recoverable after a stop call.
+        Stops and deletes the temporary database. Once done, it cannot be started again
         """
 
-        if self._active:
-            self.harness.shutdown()
-        self._active = False
+        # This will call the finalizer, and then detach the finalizer. This object
+        # is pretty much dead after that
+        self._finalizer()
+
+    @classmethod
+    def _stop(cls, harness, tmpdir) -> None:
+        ####################################################################################
+        # This is written as a class method so that it can be called by a weakref finalizer
+        ####################################################################################
+
+        harness.shutdown()
+        if tmpdir is not None:
+            tmpdir.cleanup()
