@@ -19,7 +19,7 @@ except ImportError:
 import logging
 from collections.abc import Iterable
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
 
 # pydantic classes
 from qcfractal.interface.models import (
