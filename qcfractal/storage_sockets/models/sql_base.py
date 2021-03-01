@@ -1,6 +1,6 @@
 from qcfractal.interface.models import ObjectId
 from qcelemental.util import msgpackext_dumps, msgpackext_loads
-from sqlalchemy import and_, inspect
+from sqlalchemy import and_, inspect, Integer
 from sqlalchemy.dialects.postgresql import BYTEA
 from sqlalchemy.ext.associationproxy import ASSOCIATION_PROXY
 from sqlalchemy.ext.declarative import as_declarative
@@ -65,21 +65,39 @@ class Base:
 
         return ret
 
-    def dict(self, exclude=None):
+    def dict(self, exclude=None, include_relations=None):
         """
-        Convert the ORM to a dictionary
+        Converts the ORM to a dictionary
 
         All columns and hybrid properties are included by default, but some
-        can be removed using the exclude parameter
+        can be removed using the exclude parameter.
+
+        The include_relations parameter specifies any relations to also
+        include in the dictionary. By default, none will be included.
 
         NOTE: This is meant to replace to_dict above
         """
-        col_list = self._all_col_names()
+
+        all_cols, hybrid, relations = self._get_col_types()
+        col_list = all_cols + hybrid
+
+        if include_relations is not None:
+            col_list += list(relations)
 
         if exclude is None:
             ret = {k: getattr(self, k) for k in col_list}
         else:
             ret = {k: getattr(self, k) for k in col_list if k not in exclude}
+
+        # TODO - INT ID we shouldn't be doing this
+        # transform ids from int into ObjectId
+        id_fields = self._get_fieldnames_with_DB_ids_()
+        for key in id_fields:
+            if key in ret.keys() and ret[key] is not None:
+                if isinstance(ret[key], (list, tuple)):
+                    ret[key] = [ObjectId(i) for i in ret[key]]
+                else:
+                    ret[key] = ObjectId(ret[key])
 
         return ret
 
@@ -94,6 +112,36 @@ class Base:
                 id_fields.append(key)
 
         return id_fields
+
+    @classmethod
+    def get_autoincrement_pkey(cls):
+        """
+        Returns the name of the primary key column with an autoincrement/serial id. If there
+        isn't one, None is returned
+        """
+
+        if hasattr(cls, "__autoincrement_pkey"):
+            return cls.__autoincrement_pkey
+
+        pk_cols = inspect(cls).primary_key
+
+        # Composite primary key? Don't think we use those
+        assert len(pk_cols) <= 1
+
+        if len(pk_cols) == 0:
+            cls.__autoincrement_pkey = None
+
+        pk_col = pk_cols[0]
+
+        # To be autoincrement/serial, the column must be an integer type (or derived from that),
+        # and the autoincrement must be set to 'auto' (default) or explicitly set to True
+        if issubclass(type(pk_col.type), Integer) and pk_col.autoincrement in ["auto", True]:
+            cls.__autoincrement_pkey = pk_col.name
+        else:
+            # Found a primary key, but is not autoincrement and integer
+            cls.__autoincrement_pkey = None
+
+        return cls.__autoincrement_pkey
 
     @classmethod
     def _get_col_types(cls):
