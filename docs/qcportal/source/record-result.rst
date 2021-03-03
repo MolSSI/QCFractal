@@ -1,7 +1,8 @@
 Results
 ========
 
-A result is a single quantum chemistry method evaluation, which can be an energy, gradient, Hessian, or property computation.
+The ``result`` of a single (often quantum chemical) calculation 
+which can correspond to an energy, gradient, Hessian, or property computation.
 
 .. toctree::
    :maxdepth: 1

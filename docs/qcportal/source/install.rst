@@ -1,49 +1,51 @@
 Install QCPortal
 =================
 
-You can install ``qcportal`` with ``conda`` or with ``pip``.
+QCPortal can be installed using ``conda`` or ``pip``.
 
 Conda
 -----
 
-You can install qcportal using `conda <https://www.anaconda.com/download/>`_:
+The following command installs QCPortal and its dependencies 
+using `conda <https://www.anaconda.com/download/>`_:
 
 .. code-block:: console
 
-    >>> conda install qcportal -c conda-forge
+   >>> conda install qcportal -c conda-forge
 
-This installs QCPortal and its dependencies. The qcportal package is maintained on the
+The QCPortal package is maintained on the 
 `conda-forge channel <https://conda-forge.github.io/>`_.
-
 
 Pip
 ---
 
-you can also install QCPortal using ``pip``:
+QCPortal can also be installed using ``pip``:
 
 .. code-block:: console
 
    >>> pip install qcportal
 
 
-Test the Installation
----------------------
+Testing the Installation
+------------------------
 
-You can test to make sure that QCPortal is installed correctly by first installing ``pytest``.
-
-From ``conda``:
+The installation process for QCPortal can be verified
+using ``pytest`` through running the tests.
+The ``pytest`` package can be installed using ``conda``:
 
 .. code-block:: console
 
    >>> conda install pytest -c conda-forge
 
-From ``pip``:
+or ``pip``:
 
 .. code-block:: console
 
    >>> pip install pytest
 
-Then, run the following command:
+After installing ``pytest``, the following command 
+collects the tests and runs them individually in order to 
+verify the installation:
 
 .. code-block::
 
@@ -53,6 +55,6 @@ Then, run the following command:
 Developing from Source
 ----------------------
 
-The QCPortal package is part of the QCFractal package and is the ``qcfractal.interface`` folder. If you are a developer
-and want to make contributions Portal, you can access the source code from
-`github <https://github.com/molssi/qcfractal>`_ and the aforementioned folder.
+The QCPortal is a part of the QCFractal package and resides in the ``qcfractal.interface`` folder.
+Developers can make contributions to QCPortal by accessing the source code
+`here <https://github.com/MolSSI/QCFractal/tree/master/qcfractal/interface>`_.
