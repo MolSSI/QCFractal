@@ -73,6 +73,9 @@ class BaseResultORM(Base):
     __table_args__ = (
         Index("ix_base_result_status", "status"),
         Index("ix_base_result_type", "result_type"),  # todo: needed?
+        Index("ix_base_result_stdout", "stdout", unique=True),
+        Index("ix_base_result_stderr", "stderr", unique=True),
+        Index("ix_base_result_error", "error", unique=True),
     )
 
     __mapper_args__ = {"polymorphic_on": "result_type"}
