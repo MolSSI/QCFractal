@@ -56,7 +56,7 @@ def qcfractal_base_init():
 def active_server(qcfractal_base_init):
     # Can change the port on the command line
     port = find_open_port()
-    args = ["qcfractal-server", "start", qcfractal_base_init, f"--port={port}"]
+    args = ["qcfractal-server", qcfractal_base_init, "start", f"--port={port}"]
 
     with testing.popen(args) as server:
         time.sleep(2)
@@ -67,94 +67,89 @@ def active_server(qcfractal_base_init):
 
 @pytest.mark.slow
 def test_cli_server_boot(qcfractal_base_init):
-    args = ["qcfractal-server", "start", qcfractal_base_init]
+    args = ["qcfractal-server", qcfractal_base_init, "start"]
     assert testing.run_process(args, interrupt_after=10)
 
 
 @pytest.mark.slow
 def test_cli_server_upgrade(qcfractal_base_init):
-    args = ["qcfractal-server", "upgrade", qcfractal_base_init]
+    args = ["qcfractal-server", qcfractal_base_init, "upgrade"]
     assert testing.run_process(args, interrupt_after=10)
 
 
 @pytest.mark.slow
-@pytest.mark.skip("User management will be changed soon")
 def test_cli_user_add(qcfractal_base_init):
-    args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_add_1", "--permissions", "admin"]
+    args = ["qcfractal-server", qcfractal_base_init, "user", "add", "test_user_add_1", "--role", "admin"]
     assert testing.run_process(args)
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_add_1", "--permissions", "admin"]
+    args = ["qcfractal-server", qcfractal_base_init, "user", "add", "test_user_add_1", "--role", "admin"]
     assert testing.run_process(args) is False
 
     args = [
         "qcfractal-server",
-        "user",
         qcfractal_base_init,
+        "user",
         "add",
         "test_user_add_2",
         "--password",
         "foo",
-        "--permissions",
+        "--role",
         "admin",
     ]
     assert testing.run_process(args)
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_add_3"]
+    args = ["qcfractal-server", qcfractal_base_init, "user", "add", "test_user_add_3"]
     assert testing.run_process(args) is False
 
 
 @pytest.mark.slow
-@pytest.mark.skip("User management will be changed soon")
 def test_cli_user_show(qcfractal_base_init):
-    args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_show", "--permissions", "admin"]
+    args = ["qcfractal-server", qcfractal_base_init, "user", "add", "test_user_show", "--role", "admin"]
     assert testing.run_process(args)
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "info", "test_user_show"]
+    args = ["qcfractal-server", qcfractal_base_init, "user", "info", "test_user_show"]
     assert testing.run_process(args)
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "info", "badname_1234"]
+    args = ["qcfractal-server", qcfractal_base_init, "user", "info", "badname_1234"]
     assert testing.run_process(args) is False
 
 
 @pytest.mark.slow
-@pytest.mark.skip("User management will be changed soon")
 def test_cli_user_modify(qcfractal_base_init):
-    args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_modify", "--permissions", "read"]
+    args = ["qcfractal-server", qcfractal_base_init, "user", "add", "test_user_modify", "--role", "read"]
     assert testing.run_process(args)
 
     args = [
         "qcfractal-server",
-        "user",
         qcfractal_base_init,
+        "user",
         "modify",
         "test_user_modify",
-        "--permissions",
-        "read",
-        "write",
+        "--role",
+        "submit",
         "--reset-password",
     ]
     assert testing.run_process(args)
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "modify", "test_user_modify", "--password", "foopass"]
+    args = ["qcfractal-server", qcfractal_base_init, "user", "modify", "test_user_modify", "--password", "foopass"]
     assert testing.run_process(args)
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "modify", "test_user_modify", "--permissions", "read"]
+    args = ["qcfractal-server", qcfractal_base_init, "user", "modify", "test_user_modify", "--role", "admin"]
     assert testing.run_process(args)
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "modify", "badname_1234"]
+    args = ["qcfractal-server", qcfractal_base_init, "user", "modify", "badname_1234"]
     assert testing.run_process(args) is False
 
 
 @pytest.mark.slow
-@pytest.mark.skip("User management will be changed soon")
-def test_cli_user_remove(qcfractal_base_init):
-    args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_remove", "--permissions", "admin"]
+def test_cli_user_delete(qcfractal_base_init):
+    args = ["qcfractal-server", qcfractal_base_init, "user", "add", "test_user_remove", "--role", "admin"]
     assert testing.run_process(args)
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "remove", "test_user_remove"]
+    args = ["qcfractal-server", qcfractal_base_init, "user", "delete", "test_user_remove", "--no-prompt"]
     assert testing.run_process(args)
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "remove", "badname_1234"]
+    args = ["qcfractal-server", qcfractal_base_init, "user", "delete", "badname_1234"]
     assert testing.run_process(args) is False
 
 
