@@ -24,6 +24,8 @@ from .common_models import (
     AtomicResultProtocols,
     WavefunctionProperties,
     AllResultTypes,
+    UserInfo,
+    RoleInfo,
 )
 from .gridoptimization import GridOptimizationInput, GridOptimizationRecord
 from .model_builder import build_procedure
