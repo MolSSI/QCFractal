@@ -270,11 +270,15 @@ class UserORM(Base):
     __tablename__ = "user"
 
     id = Column(Integer, primary_key=True)
-    role_id = Column(Integer, ForeignKey("role.id"), nullable=True)
+    role_id = Column(Integer, ForeignKey("role.id"), nullable=False)
     role_obj = relationship("RoleORM", lazy="select")  # or lazy='joined'
 
-    username = Column(String, nullable=False, unique=True)  # indexed and unique
+    username = Column(String, nullable=False, index=True, unique=True)  # indexed and unique
     password = Column(LargeBinary, nullable=False)
+    enabled = Column(Boolean, nullable=False, default=True)
+    fullname = Column(String, nullable=False, default="")
+    organization = Column(String, nullable=False, default="")
+    email = Column(String, nullable=False, default="")
 
 
 class RoleORM(Base):
@@ -284,7 +288,7 @@ class RoleORM(Base):
     id = Column(Integer, primary_key=True)
 
     rolename = Column(String, nullable=False, unique=True)  # indexed and unique
-    permissions = Column(JSON)
+    permissions = Column(JSON, nullable=False)
 
 
 class QueueManagerLogORM(Base):

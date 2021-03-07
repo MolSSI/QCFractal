@@ -15,7 +15,8 @@ import psycopg2
 import psycopg2.errors
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from qcfractal.storage_sockets.models import Base, VersionsORM
+from qcfractal.storage_sockets.models import Base, VersionsORM, RoleORM
+from qcfractal.storage_sockets.subsockets.role import default_roles
 
 from .config import DatabaseConfig
 from .port_util import find_open_port, is_port_inuse
@@ -382,9 +383,7 @@ class PostgresHarness:
         (qcengine, qcelemental, qcfractal) into the database
         """
 
-        # TODO: Move some of this to the socket (this uses ORM)
         uri = self.config.uri
-
         engine = create_engine(uri, echo=False, pool_size=1)
         session = sessionmaker(bind=engine)()
         try:
@@ -575,6 +574,21 @@ class PostgresHarness:
             Base.metadata.create_all(engine)
         except Exception as e:
             raise RuntimeError(f"SQLAlchemy Connection Error\n{str(e)}")
+
+        # populate the roles table with defaults
+        uri = self.config.uri
+        engine = create_engine(uri, echo=False, pool_size=1)
+        session = sessionmaker(bind=engine)()
+
+        try:
+            for rolename, permissions in default_roles.items():
+                orm = RoleORM(rolename=rolename, permissions=permissions)
+                session.add(orm)
+            session.commit()
+        except Exception as e:
+            raise RuntimeError(f"Failed to populate default roles:\n {str(e)}")
+        finally:
+            session.close()
 
         # update alembic_version table with the current version
         self._logger.debug(f"Stamping Database with current version")

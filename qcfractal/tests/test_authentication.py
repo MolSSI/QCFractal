@@ -12,9 +12,9 @@ from qcfractal.testing import TestingSnowflake
 
 
 _users = {
-    "read": {"pw": "hello", "rolename": "read"},
-    "write": {"pw": "something", "rolename": "write"},
-    "admin": {"pw": "something", "rolename": "admin"},
+    "read": {"pw": "hello", "role": "read"},
+    "write": {"pw": "something", "role": "submit"},
+    "admin": {"pw": "something", "role": "admin"},
 }
 
 _roles = {
@@ -30,7 +30,7 @@ _roles = {
             {"Effect": "Allow", "Action": "POST", "Resource": ["molecule", "manager"]},
         ]
     },
-    #    "admim": {
+    #    "admin": {
     #        "Statement": [
     #            {"Effect": "Allow", "Action": "*", "Resource": "*"},
     #        ]
@@ -52,9 +52,10 @@ def fractal_test_secure_server(temporary_database):
         # Get a storage socket and add the roles/users/passwords
         storage = server.get_storage_socket()
         for k, v in _roles.items():
-            assert storage.add_role(k, permissions=v)
+            storage.role.add(k, permissions=v)
         for k, v in _users.items():
-            assert storage.add_user(k, v["pw"], v["rolename"])
+            uinfo = ptl.models.UserInfo(username=k, fullname="Ms. Test User", enabled=True, role=v["role"])
+            storage.user.add(uinfo, password=v["pw"])
         yield server
 
 
@@ -73,9 +74,10 @@ def fractal_test_secure_server_read(temporary_database):
         # Get a storage socket and add the roles/users/passwords
         storage = server.get_storage_socket()
         for k, v in _roles.items():
-            assert storage.add_role(k, permissions=v)
+            storage.role.add(k, permissions=v)
         for k, v in _users.items():
-            assert storage.add_user(k, v["pw"], v["rolename"])
+            uinfo = ptl.models.UserInfo(username=k, fullname="Ms. Test User", enabled=True, role=v["role"])
+            storage.user.add(uinfo, password=v["pw"])
         yield server
 
 
@@ -148,16 +150,6 @@ def test_security_auth_refresh(fractal_test_secure_server):
 
     # will automatically refresh JWT and get new access_token
     client.add_molecules([])
-
-
-def test_security_auth_password_gen(fractal_test_secure_server):
-
-    storage = fractal_test_secure_server.get_storage_socket()
-    success, pw = storage.add_user("autogenpw", None, "read")
-    assert success
-    assert storage.verify_user("autogenpw", pw)[0]
-    assert isinstance(pw, str)
-    assert len(pw) > 20
 
 
 ## Allow read tests

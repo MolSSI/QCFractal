@@ -19,6 +19,7 @@ import qcfractal
 from ..config import read_configuration, FractalConfig, FlaskConfig
 from ..postgres_harness import PostgresHarness
 from ..storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+from ..interface.models import UserInfo
 from ..periodics import PeriodicsProcess
 from ..app.gunicorn_app import GunicornProcess
 from ..process_runner import ProcessRunner
@@ -64,6 +65,34 @@ def dump_config(qcf_config: FractalConfig, indent: int = 0) -> str:
     return s
 
 
+def start_database(args, config, logger):
+    """
+    Obtain a storage socket to a running postgres server
+
+    If the server is not started and we are expected to manage it, this will also
+    start it.
+
+    This returns a harness and a storage socket
+    """
+
+    logger.info("Checking the PostgreSQL connection...")
+    pg_harness = PostgresHarness(config.database)
+
+    # If we are expected to manage the postgres instance ourselves, start it
+    # If not, make sure it is started
+    pg_harness.ensure_alive()
+
+    # make sure DB is created
+    # If it exists, no changes are made
+    pg_harness.create_database()
+
+    # Start up a socket. The main thing is to see if it can connect, and also
+    # to check if the database needs to be upgraded
+    # We then no longer need the socket (gunicorn and periodics will use their own
+    # in their subprocesses)
+    return pg_harness, SQLAlchemySocket(config)
+
+
 def parse_args() -> argparse.Namespace:
     """
     Sets up the command line arguments and parses them
@@ -77,6 +106,10 @@ def parse_args() -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(description="A CLI for managing & running a QCFractal server.")
     parser.add_argument("--version", action="version", version=f"{qcfractal.__version__}")
+    parser.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+    parser.add_argument(
+        "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
+    )
 
     subparsers = parser.add_subparsers(dest="command")
 
@@ -98,10 +131,6 @@ def parse_args() -> argparse.Namespace:
     # start subcommand
     #####################################
     start = subparsers.add_parser("start", help="Starts a QCFractal server instance.")
-    start.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-    start.add_argument(
-        "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
-    )
 
     # Allow some config settings to be altered via the command line
     fractal_args = start.add_argument_group("Server Settings")
@@ -122,19 +151,11 @@ def parse_args() -> argparse.Namespace:
     # upgrade subcommand
     #####################################
     upgrade = subparsers.add_parser("upgrade", help="Upgrade QCFractal database.")
-    upgrade.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-    upgrade.add_argument(
-        "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
-    )
 
     #####################################
     # upgrade-config subcommand
     #####################################
     upgrade_config = subparsers.add_parser("upgrade-config", help="Upgrade a QCFractal configuration file.")
-    upgrade_config.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-    upgrade_config.add_argument(
-        "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
-    )
 
     #####################################
     # info subcommand
@@ -143,46 +164,54 @@ def parse_args() -> argparse.Namespace:
     info.add_argument(
         "category", nargs="?", default="config", choices=["config", "alembic"], help="The config category to show."
     )
-    info.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-    info.add_argument(
-        "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
-    )
 
     #####################################
     # user subcommand
     #####################################
-    user = subparsers.add_parser("user", help="Configure a QCFractal server instance.")
-    user.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-    user.add_argument(
-        "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
-    )
+    user = subparsers.add_parser("user", help="Manage users for this instance")
 
     # user sub-subcommands
     user_subparsers = user.add_subparsers(dest="user_command")
 
+    # user list
+    user_subparsers.add_parser("list", help="List information about all users")
+
+    # user info
+    user_info = user_subparsers.add_parser("info", help="Show information about a user")
+    user_info.add_argument("username", default=None, type=str, help="The username to display information about.")
+
+    # user add
     user_add = user_subparsers.add_parser("add", help="Add a user to the QCFractal server.")
     user_add.add_argument("username", default=None, type=str, help="The username to add.")
     user_add.add_argument(
         "--password",
-        default=None,
         type=str,
         required=False,
-        help="The password for the user. If None, a default one will be created and printed.",
+        help="The password for the user. If not specified, a default one will be created and printed.",
     )
+    user_add.add_argument("--role", type=str, required=True, help="The role of this user on the server")
+
     user_add.add_argument(
-        "--permissions",
-        nargs="+",
-        default=None,
-        type=str,
-        required=True,
-        help="Permissions for the user. Allowed values: read, write, queue, compute, admin.",
+        "--fullname", default=None, type=str, help="The real name or description of this user (optional)"
     )
+    user_add.add_argument("--organization", default=None, type=str, help="The organization of this user (optional)")
+    user_add.add_argument("--email", default=None, type=str, help="Email of the user (optional)")
 
-    user_show = user_subparsers.add_parser("info", help="Show the user's current permissions.")
-    user_show.add_argument("username", default=None, type=str, help="The username to show.")
-
+    # user modify
     user_modify = user_subparsers.add_parser("modify", help="Change a user's password or permissions.")
     user_modify.add_argument("username", default=None, type=str, help="The username to modify.")
+
+    user_modify.add_argument(
+        "--fullname", default=None, type=str, help="The real name or description of this user (optional)"
+    )
+    user_modify.add_argument("--organization", default=None, type=str, help="New organization of the user")
+    user_modify.add_argument("--email", default=None, type=str, help="New email of the user")
+    user_modify.add_argument("--role", default=None, type=str, help="New role of the user")
+
+    user_modify_enable = user_modify.add_mutually_exclusive_group()
+    user_modify_enable.add_argument("--enable", action="store_true", help="Enable this user")
+    user_modify_enable.add_argument("--disable", action="store_true", help="Disable this user")
+
     user_modify_password = user_modify.add_mutually_exclusive_group()
     user_modify_password.add_argument(
         "--password", type=str, default=None, required=False, help="Change the user's password to the specified value."
@@ -192,17 +221,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Reset the user's password. A new password will be generated and printed.",
     )
-    user_modify.add_argument(
-        "--permissions",
-        nargs="+",
-        default=None,
-        type=str,
-        required=False,
-        help="Change the users's permissions. Allowed values: read, write, compute, queue, admin.",
-    )
 
-    user_remove = user_subparsers.add_parser("remove", help="Remove a user.")
-    user_remove.add_argument("username", default=None, type=str, help="The username to remove.")
+    # user delete
+    user_delete = user_subparsers.add_parser("delete", help="Delete a user.")
+    user_delete.add_argument("username", default=None, type=str, help="The username to delete/remove")
+    user_delete.add_argument("--no-prompt", action="store_true", help="Do not prompt for confirmation")
 
     #####################################
     # backup subcommand
@@ -214,20 +237,12 @@ def parse_args() -> argparse.Namespace:
         type=str,
         help="The filename to dump the backup to, defaults to 'database_name.bak'.",
     )
-    backup.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-    backup.add_argument(
-        "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
-    )
 
     #####################################
     # restore subcommand
     #####################################
     restore = subparsers.add_parser("restore", help="Restores the database from a backup file.")
     restore.add_argument("filename", default=None, type=str, help="The filename to restore from.")
-    restore.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-    restore.add_argument(
-        "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
-    )
 
     args = parser.parse_args()
     return args
@@ -288,22 +303,8 @@ def server_start(args, config):
     # Logger for the rest of this function
     logger = logging.getLogger(__name__)
 
-    logger.info("Checking the PostgreSQL connection...")
-    pg_harness = PostgresHarness(config.database)
-
-    # If we are expected to manage the postgres instance ourselves, start it
-    # If not, make sure it is started
-    pg_harness.ensure_alive()
-
-    # make sure DB is created
-    # If it exists, no changes are made
-    pg_harness.create_database()
-
-    # Start up a socket. The main thing is to see if it can connect, and also
-    # to check if the database needs to be upgraded
-    # We then no longer need the socket (gunicorn and periodics will use their own
-    # in their subprocesses)
-    socket = SQLAlchemySocket(config)
+    # Ensure that the database is alive, optionally starting it
+    pg_harness, _ = start_database(args, config, logger)
 
     # Start up the gunicorn and periodics
     gunicorn = GunicornProcess(config)
@@ -411,56 +412,111 @@ def server_upgrade_config(args, config_path):
 
 
 def server_user(args, config):
-    standard_command_startup("user function", config)
+    logger = logging.getLogger(__name__)
+    user_command = args.user_command
+    pg_harness, storage = start_database(args, config, logger)
 
-    storage = storage_socket_factory(config.database_uri(safe=False))
+    def print_user_info(u):
+        enabled = "True" if u.enabled else "False"
+        print("-" * 80)
+        print(f"      username: {u.username}")
+        print(f"     full name: {u.fullname}")
+        print(f"  organization: {u.organization}")
+        print(f"         email: {u.email}")
+        print(f"          role: {u.role}")
+        print(f"       enabled: {enabled}")
+        print("-" * 80)
 
-    try:
-        if args["user_command"] == "add":
-            print("\n>>> Adding new user...")
-            success, pw = storage.add_user(args["username"], password=args["password"], permissions=args["permissions"])
-            if success:
-                print(f"\n>>> New user successfully added, password:\n{pw}")
-                if config.fractal.security is None:
-                    print(
-                        "Warning: security is disabled. To enable security, change the configuration YAML field "
-                        "fractal:security to local."
-                    )
-            else:
-                print("\n>>> Failed to add user. Perhaps the username is already taken?")
-                sys.exit(1)
-        elif args["user_command"] == "info":
-            print(f"\n>>> Showing permissions for user '{args['username']}'...")
-            permissions = storage.get_user_permissions(args["username"])
-            if permissions is None:
-                print("Username not found!")
-                sys.exit(1)
-            else:
-                print(permissions)
-        elif args["user_command"] == "modify":
-            print(f"\n>>> Modifying user '{args['username']}'...")
-            success, message = storage.modify_user(
-                args["username"], args["password"], args["reset_password"], args["permissions"]
-            )
-            if success:
-                info = "Successfully modified user\n"
-                if message is not None:
-                    info += "with message: " + message
-                print(info)
-            else:
-                print("Failed to modify user\nwith message:", message)
-                sys.exit(1)
-        elif args["user_command"] == "remove":
-            print(f"\n>>> Removing user '{args['username']}'...")
-            if storage.remove_user(args["username"]):
-                print("Successfully removed user.")
-            else:
-                print("Failed to remove user.")
-                sys.exit(1)
+    if user_command == "list":
+        user_list = storage.user.list()
 
-    except Exception as e:
-        print(type(e), str(e))
-        sys.exit(1)
+        print("{:20}  {:16}  {:7}  {}".format("username", "role", "enabled", "fullname"))
+        print("{:20}  {:16}  {:7}  {}".format("--------", "----", "-------", "--------"))
+        for u in user_list:
+            enabled = "True" if u.enabled else "False"
+            print(f"{u.username:20}  {u.role:16}  {enabled:>7}  {u.fullname}")
+
+    if user_command == "info":
+        u = storage.user.get(args.username)
+        print_user_info(u)
+
+    if user_command == "add":
+        fullname = args.fullname if args.fullname is not None else ""
+        organization = args.organization if args.organization is not None else ""
+        email = args.email if args.email is not None else ""
+
+        user_info = UserInfo(
+            username=args.username,
+            role=args.role,
+            fullname=fullname,
+            email=email,
+            organization=organization,
+            enabled=True,
+        )
+
+        pw = storage.user.add(user_info, args.password)
+
+        if args.password is None:
+            print("Autogenerated password for user is below")
+            print("-" * 80)
+            print(pw)
+            print("-" * 80)
+
+        print(f"Created user {args.username}")
+
+    if user_command == "modify":
+        u = storage.user.get(args.username)
+
+        update = {}
+        if args.fullname is not None:
+            update["fullname"] = args.fullname
+        if args.organization is not None:
+            update["organization"] = args.organization
+        if args.email is not None:
+            update["email"] = args.email
+        if args.role is not None:
+            update["role"] = args.role
+
+        # Enable/disable are separate on the command line
+        if args.enable is True:
+            update["enabled"] = True
+        if args.disable is True:
+            update["enabled"] = False
+
+        u2 = u.copy(update=update)
+        print(f"Updating information for user {u2.username}")
+        storage.user.modify(u2, as_admin=True)
+
+        # Passwords are handled separately
+        if args.reset_password is True:
+            print(f"Resetting password...")
+            pw = storage.user.reset_password(u.username)
+            print("New password is below")
+            print("-" * 80)
+            print(pw)
+            print("-" * 80)
+        elif args.password is not None:
+            print("Setting the password...")
+            storage.user.change_password(u.username, args.password)
+
+    if user_command == "delete":
+        u = storage.user.get(args.username)
+        print_user_info(u)
+
+        if args.no_prompt is not True:
+            r = input("Really delete this user? (Y/N): ")
+            if r.lower() == "y":
+                storage.user.delete(u.username)
+                print("Deleted!")
+            else:
+                print("ABORTING!")
+        else:
+            storage.user.delete(u.username)
+            print("Deleted!")
+
+    # Shutdown the database, but only if we manage it
+    if config.database.own:
+        pg_harness.shutdown()
 
 
 def server_backup(args, config):
@@ -546,14 +602,16 @@ def main():
 
     log_handler = logging.StreamHandler(sys.stdout)
 
-    if verbose:
-        logging.basicConfig(level="DEBUG", handlers=[log_handler], format="%(levelname)s: %(name)s: %(message)s")
-    else:
-        logging.basicConfig(level="INFO", handlers=[log_handler], format="%(levelname)s: %(message)s")
-    logger = logging.getLogger(__name__)
-
     # command = the subcommand used (init, start, etc)
     command = args.command
+
+    if verbose:
+        logging.basicConfig(level="DEBUG", handlers=[log_handler], format="%(levelname)s: %(name)s: %(message)s")
+    elif command == "upgrade":
+        logging.basicConfig(level="INFO", handlers=[log_handler], format="%(levelname)s: %(message)s")
+    else:
+        logging.basicConfig(level="WARNING", handlers=[log_handler], format="%(levelname)s: %(message)s")
+    logger = logging.getLogger(__name__)
 
     # If command is not 'init', we need to build the configuration
     # Priority: 1.) command line
@@ -613,13 +671,9 @@ def main():
         server_start(args, qcf_config)
     elif command == "upgrade":
         server_upgrade(args, qcf_config)
-    # elif command == "user":
-    #    server_user(args, qcf_config)
+    elif command == "user":
+        server_user(args, qcf_config)
     # elif command == "backup":
     #    server_backup(args, qcf_config)
     # elif command == "restore":
     #    server_restore(args, qcf_config)
-
-
-if __name__ == "__main__":
-    main()
