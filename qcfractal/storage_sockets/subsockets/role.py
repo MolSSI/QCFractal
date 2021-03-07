@@ -3,12 +3,60 @@ from __future__ import annotations
 import logging
 from sqlalchemy.exc import IntegrityError
 from qcfractal.storage_sockets.models import RoleORM
+from qcfractal.interface.models import RoleInfo
+from qcfractal.storage_sockets.sqlalchemy_socket import AuthorizationFailure
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Dict
+    from typing import Dict, List
+    from sqlalchemy.orm.session import Session
     from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+
+"""
+Default roles are:
+    * admin   (read/write to everything)
+    * read    (read only, all resources except user, role, manager)
+    * monitor (read only, all resources except user, role)
+    * compute (for compute workers, read/write on queue_manager)
+    * submit  (read on all except user, role, manager, write on task_queue, service_queue, molecule, keyword, collection)
+"""
+
+default_roles = {
+    "admin": {
+        "Statement": [
+            {"Effect": "Allow", "Action": "*", "Resource": "*"},
+        ]
+    },
+    "read": {
+        "Statement": [
+            {"Effect": "Allow", "Action": "GET", "Resource": "*"},
+            {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager", "role"]},
+        ]
+    },
+    "monitor": {
+        "Statement": [
+            {"Effect": "Allow", "Action": "GET", "Resource": "*"},
+            {"Effect": "Deny", "Action": "*", "Resource": ["user", "role"]},
+        ]
+    },
+    "compute": {
+        "Statement": [
+            {"Effect": "Allow", "Action": "*", "Resource": ["queue_manager"]},
+        ]
+    },
+    "submit": {
+        "Statement": [
+            {"Effect": "Allow", "Action": "GET", "Resource": "*"},
+            {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager", "role"]},
+            {
+                "Effect": "Allow",
+                "Action": "*",
+                "Resource": ["task_queue", "service_queue", "molecule", "keyword", "collection"],
+            },
+        ]
+    },
+}
 
 
 class RoleSocket:
@@ -16,30 +64,41 @@ class RoleSocket:
         self._core_socket = core_socket
         self._logger = logging.getLogger(__name__)
 
-    def list(self):
-        """
-        get all roles
-        """
-        with self._core_socket.session_scope() as session:
-            data = session.query(RoleORM).filter().all()
-            data = [x.to_dict(exclude=["id"]) for x in data]
-        return data
+    @staticmethod
+    def _role_orm_to_model(role_orm: RoleORM) -> RoleInfo:
+        return RoleInfo(**role_orm.dict(exclude={"id"}))
 
-    def get(self, rolename: str):
-        """"""
-        if rolename is None:
-            return False, f"Role {rolename} not found."
+    def _get_internal(self, session: Session, rolename: str) -> RoleORM:
+        """
+        Returns a RoleORM for the given rolename, or raises an exception if it does not exist
+
+        The returned ORM is attached to the session
+        """
 
         rolename = rolename.lower()
+        orm = session.query(RoleORM).filter(RoleORM.rolename == rolename).one_or_none()
+        if orm is None:
+            raise AuthorizationFailure(f"Role {rolename} does not exist")
+
+        return orm
+
+    def list(self) -> List[RoleInfo]:
+        """
+        Get information about all roles
+        """
         with self._core_socket.session_scope() as session:
-            data = session.query(RoleORM).filter_by(rolename=rolename).first()
+            roles = session.query(RoleORM).order_by(RoleORM.id.asc()).all()
+            return [self._role_orm_to_model(x) for x in roles]
 
-            if data is None:
-                return False, f"Role {rolename} not found."
-            role = data.to_dict(exclude=["id"])
-        return True, role
+    def get(self, rolename: str) -> RoleInfo:
+        """
+        Get information about a particular role
+        """
+        with self._core_socket.session_scope() as session:
+            role = self._get_internal(session, rolename)
+            return self._role_orm_to_model(role)
 
-    def add(self, rolename: str, permissions: Dict):
+    def add(self, rolename: str, permissions: Dict) -> None:
         """
         Adds a new role.
 
@@ -53,100 +112,52 @@ class RoleSocket:
                     {"Effect": "Allow","Action": "*","Resource": "*"},
                     {"Effect": "Deny","Action": "GET","Resource": "user"},
                 ]}
-
-
-        Returns
-        -------
-        bool :
-            A Boolean of success flag
         """
 
         rolename = rolename.lower()
         with self._core_socket.session_scope() as session:
-            blob = {"rolename": rolename, "permissions": permissions}
-
             try:
-                role = RoleORM(**blob)
+                role = RoleORM(rolename=rolename, permissions=permissions)  # type: ignore
                 session.add(role)
-                return True, f"Role: {rolename} was added successfully."
             except IntegrityError as err:
-                self._logger.warning(str(err))
-                session.rollback()
-                return False, str(err.orig.args)
+                raise AuthorizationFailure(f"Role {rolename} already exists")
 
-    def add_default(self):
-        """
-        Add default roles to the DB IF they don't exists
-
-        Default roles are Admin, read (readonly)
-
-        """
-
-        read_permissions = {
-            "Statement": [
-                {"Effect": "Allow", "Action": "GET", "Resource": "*"},
-                {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager", "role"]},
-            ]
-        }
-
-        admin_permissions = {
-            "Statement": [
-                {"Effect": "Allow", "Action": "*", "Resource": "*"},
-            ]
-        }
-
-        with self._core_socket.session_scope() as session:
-            user1 = {"rolename": "read", "permissions": read_permissions}
-            user2 = {"rolename": "admin", "permissions": admin_permissions}
-
-            try:
-                session.add_all([RoleORM(**user1), RoleORM(**user2)])
-                session.commit()
-                return True
-            except Exception:
-                session.rollback()
-                return False
-
-    def update(self, rolename: str, permissions: Dict):
+    def modify(self, rolename: str, permissions: Dict) -> None:
         """
         Update role's permissions.
 
         Parameters
         ----------
-        rolename : str
-        permissions : Dict
-
-        Returns
-        -------
-        bool :
-            A Boolean of success flag
+        rolename
+            The name of the role to update
+        permissions
+            The new permissions to be associated with that role
         """
 
-        rolename = rolename.lower()
+        # Cannot change admin role
+        if rolename == "admin":
+            raise AuthorizationFailure("Cannot modify the admin role")
+
         with self._core_socket.session_scope() as session:
-            role = session.query(RoleORM).filter_by(rolename=rolename).first()
-
-            if role is None:
-                return False, f"Role {rolename} is not found."
-
-            success = session.query(RoleORM).filter_by(rolename=rolename).update({"permissions": permissions})
-
-        return success
+            role = self._get_internal(session, rolename)
+            role.permissions = permissions
 
     def delete(self, rolename: str):
         """
         Delete role.
 
+
+        This will raise an exception if the role does not exist or is being referenced from somewhere else.
+
         Parameters
         ----------
-        rolename : str
-
-        Returns
-        -------
-        bool :
-            A Boolean of success flag
+        rolename
+            The role name to delete
         """
-        with self._core_socket.session_scope() as session:
-            success = session.query(RoleORM).filter_by(rolename=rolename.lower()).delete()
 
-        return success
+        try:
+            with self._core_socket.session_scope() as session:
+                role = self._get_internal(session, rolename)
+                session.delete(role)
+        except IntegrityError:
+            raise AuthorizationFailure("Role could not be deleted. Likely it is being referenced somewhere")

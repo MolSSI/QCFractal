@@ -5,7 +5,8 @@ Routes handlers for Flask
 from qcelemental.util import deserialize, serialize
 from qcelemental.models import FailedOperation
 from ..storage_sockets.storage_utils import add_metadata_template
-from ..interface.models import rest_model, build_procedure, PriorityEnum, TaskStatusEnum, RecordStatusEnum
+from ..storage_sockets.sqlalchemy_socket import AuthorizationFailure
+from ..interface.models import rest_model, build_procedure, PriorityEnum, TaskStatusEnum, RecordStatusEnum, UserInfo
 from ..procedures import check_procedure_available, get_procedure_parser
 from ..services import initialize_service
 from ..extras import get_information as get_qcfractal_information
@@ -80,8 +81,7 @@ def check_access(fn):
         # load read permissions from DB if not read
         global _read_permissions
         if not _read_permissions:
-            _, _read_permissions = storage_socket.get_role("read")
-            _read_permissions = _read_permissions["permissions"]
+            _read_permissions = storage_socket.role.get("read").permissions
 
         # if read is allowed without login, use read_permissions
         # otherwise, check logged-in permissions
@@ -223,16 +223,44 @@ def register():
     if request.is_json:
         username = request.json["username"]
         password = request.json["password"]
+        fullname = request.json["fullname"]
+        email = request.json["email"]
+        organization = request.json["organization"]
     else:
         username = request.form["username"]
         password = request.form["password"]
+        fullname = request.form["fullname"]
+        email = request.form["email"]
+        organization = request.form["organization"]
 
-    success = storage_socket.add_user(username, password=password, rolename="user")
-    if success:
-        return jsonify(msg="New user created!"), 201
-    else:
-        current_app.logger.info("\n>>> Failed to add user. Perhaps the username is already taken?")
-        return jsonify(msg="Failed to add user."), 500
+    role = "read"
+    try:
+        user_info = UserInfo(
+            username=username,
+            enabled=True,
+            fullname=fullname,
+            email=email,
+            organization=organization,
+            role=role,
+        )
+    except Exception as e:
+        return jsonify(msg=f"Invalid user information: {str(e)}"), 500
+
+    # add returns the password. Raises exception on error
+    try:
+        pw = storage_socket.user.add(user_info, password=password)
+        if password is None or len(password) == 0:
+            return jsonify(msg="New user created!"), 201
+        else:
+            return jsonify(msg="New user created! Password is '{pw}'"), 201
+    except AuthorizationFailure as e:
+        # AuthorizationFailures are safe to report to the user
+        current_app.logger.warning(f"Failed to add user {username}. Error: {str(e)}")
+        return jsonify(msg="Failed to add user: {str(e)}"), 500
+    except Exception as e:
+        # Other exceptions should be logged, with a generic error being reported
+        current_app.logger.warning(f"Failed to add user {username}. Error: {str(e)}")
+        return jsonify(msg=f"Failed to add user with unknown error. Contact your administrator for details"), 500
 
 
 @main.route("/login", methods=["POST"])
@@ -244,14 +272,21 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-    success, error_message, permissions = storage_socket.verify_user(username, password)
-    if success:
-        access_token = create_access_token(identity=username, additional_claims={"permissions": permissions})
-        # expires_delta=datetime.timedelta(days=3))
-        refresh_token = create_refresh_token(identity=username)
-        return jsonify(msg="Login succeeded!", access_token=access_token, refresh_token=refresh_token), 200
-    else:
-        return Unauthorized(error_message)
+    try:
+        permissions = storage_socket.user.verify(username, password)
+    except AuthorizationFailure as e:
+        # AuthorizationFailures are safe to report to the user
+        current_app.logger.info(f"Login failure for user {username}: {str(e)}")
+        return Unauthorized(str(e))
+    except Exception as e:
+        # Other exceptions should be logged, with a generic error being reported
+        current_app.logger.info(f"Login failure for user {username}: {str(e)}")
+        return Unauthorized("Unknown error. Contact your administrator for details")
+
+    access_token = create_access_token(identity=username, additional_claims={"permissions": permissions})
+    # expires_delta=datetime.timedelta(days=3))
+    refresh_token = create_refresh_token(identity=username)
+    return jsonify(msg="Login succeeded!", access_token=access_token, refresh_token=refresh_token), 200
 
 
 @main.route("/information", methods=["GET"])
@@ -290,11 +325,8 @@ def get_information():
 @jwt_required(refresh=True)
 def refresh():
     username = get_jwt_identity()
-    ret = {
-        "access_token": create_access_token(
-            identity=username, additional_claims={"permissions": storage_socket.get_user_permissions(username)}
-        )
-    }
+    permissions = storage_socket.user.get_permissions(username)
+    ret = {"access_token": create_access_token(identity=username, additional_claims={"permissions": permissions})}
     return jsonify(ret), 200
 
 
@@ -307,12 +339,20 @@ def fresh_login():
         username = request.form["username"]
         password = request.form["password"]
 
-    success, error_message, permissions = storage_socket.verify_user(username, password)
-    if success:
-        access_token = create_access_token(identity=username, additionalclaims={"permissions": permissions}, fresh=True)
+    try:
+        permissions = storage_socket.user.verify(username, password)
+        access_token = create_access_token(
+            identity=username, additionalclaims={"permissions": permissions.dict()}, fresh=True
+        )
         return jsonify(msg="Fresh login succeeded!", access_token=access_token), 200
-    else:
-        return Unauthorized(error_message)
+    except AuthorizationFailure as e:
+        # AuthorizationFailures are safe to report to the user
+        current_app.logger.info(f"Login failure for user {username}: {str(e)}")
+        return Unauthorized(str(e))
+    except Exception as e:
+        # Other exceptions should be logged, with a generic error being reported
+        current_app.logger.info(f"Login failure for user {username}: {str(e)}")
+        return Unauthorized("Unknown error. Contact your administrator for details")
 
 
 @main.route("/molecule", methods=["GET"])
@@ -982,7 +1022,9 @@ def get_manager():
 @main.route("/role", methods=["GET"])
 @check_access
 def get_roles():
-    roles = storage_socket.get_roles()
+    roles = storage_socket.role.list()
+    # TODO - SerializedResponse?
+    r = [x.dict() for x in roles]
     return jsonify(roles), 200
 
 
@@ -990,8 +1032,9 @@ def get_roles():
 @check_access
 def get_role(rolename: str):
 
-    success, role = storage_socket.get_role(rolename)
-    return jsonify(role), 200
+    role = storage_socket.role.get(rolename)
+    # TODO - SerializedResponse?
+    return jsonify(role.dict()), 200
 
 
 @main.route("/role/<string:rolename>", methods=["POST"])
@@ -1000,11 +1043,12 @@ def add_role():
     rolename = request.json["rolename"]
     permissions = request.json["permissions"]
 
-    success, error_message = storage_socket.add_role(rolename, permissions)
-    if success:
+    try:
+        storage_socket.role.add(rolename, permissions)
         return jsonify({"msg": "New role created!"}), 201
-    else:
-        return jsonify({"msg": error_message}), 400
+    except Exception as e:
+        current_app.logger.warning(f"Error creating role {rolename}: {str(e)}")
+        return jsonify({"msg": "Error creating role"}), 400
 
 
 @main.route("/role", methods=["PUT"])
@@ -1013,10 +1057,11 @@ def update_role():
     rolename = request.json["rolename"]
     permissions = request.json["permissions"]
 
-    success = storage_socket.update_role(rolename, permissions)
-    if success:
+    try:
+        storage_socket.role.update(rolename, permissions)
         return jsonify({"msg": "Role was updated!"}), 200
-    else:
+    except Exception as e:
+        current_app.logger.warning(f"Error updating role {rolename}: {str(e)}")
         return jsonify({"msg": "Failed to update role"}), 400
 
 
@@ -1025,8 +1070,9 @@ def update_role():
 def delete_role():
     rolename = request.json["rolename"]
 
-    success = storage_socket.delete_role(rolename)
-    if success:
-        return jsonify({"msg": "Role was deleted!."}), 200
-    else:
-        return jsonify({"msg": "Filed to delete role!."}), 400
+    try:
+        storage_socket.role.delete(rolename)
+        return jsonify({"msg": "Role was deleted!"}), 200
+    except Exception as e:
+        current_app.logger.warning(f"Error deleting role {rolename}: {str(e)}")
+        return jsonify({"msg": "Failed to delete role!"}), 400

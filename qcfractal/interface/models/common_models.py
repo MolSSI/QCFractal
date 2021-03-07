@@ -4,6 +4,7 @@ Common models for QCPortal/Fractal
 
 from __future__ import annotations
 
+import re
 import json
 
 # For compression
@@ -13,7 +14,7 @@ import gzip
 
 from enum import Enum
 
-from pydantic import Field, validator
+from pydantic import Field, validator, ConstrainedStr
 from qcelemental.models import (
     AutodocBaseSettings,
     Molecule,
@@ -31,7 +32,7 @@ from qcelemental.models.procedures import OptimizationProtocols
 from qcelemental.models.results import AtomicResultProtocols, WavefunctionProperties
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, List
 
 AllResultTypes = Union[FailedOperation, AtomicResult, OptimizationResult]
 
@@ -373,3 +374,57 @@ class Citation(ProtoModel):
     def to_acs(self) -> str:
         """Returns an ACS-formatted citation"""
         return self.acs_citation
+
+
+# class PermissionsStatement(ProtoModel):
+#    """
+#    A statment of permissions for a role
+#    """
+#
+#    Effect: str = Field(..., description="The effect of the permission (Allow, Deny)")
+#    Resource: Union[str, List[str]] = Field(..., description="The resource this permission applies to. Usually the first part of the path (molecules, keywords, etc). May be '*' to apply to all.")
+#    Action: Union[str, List[str]] = Field(..., description="The actions this permission applies to (GET, POST, etc). May be '*' to apply to all.")
+#
+# class PermissionsInfo(ProtoModel):
+#    """
+#    Permissions assigned to a role
+#    """
+#
+#    Statement: List[PermissionsStatement] = Field(..., description="Permission statements")
+
+
+class RoleInfo(ProtoModel):
+    """
+    Information about a role
+    """
+
+    rolename: str = Field(..., description="The name of the role")
+    permissions: Dict = Field(..., description="The permissions associated with this role")
+
+
+class UserInfo(ProtoModel):
+    """
+    Information about a user
+    """
+
+    username: str = Field(..., description="The username of this user")
+    role: str = Field(..., description="The role this user belongs to")
+    enabled: bool = Field(..., description="Whether this user is enabled or not")
+    fullname: str = Field("", description="The full name or description of the user")
+    organization: str = Field("", description="The organization the user belongs to")
+    email: str = Field("", description="The email address for the user")
+
+    @validator("username", pre=True)
+    def _valid_username(cls, v):
+        """Makes sure the username is a valid string"""
+
+        v = v.strip().lower()
+
+        if len(v) == 0:
+            raise ValueError(f"Username is blank (or just spaces)")
+        if not re.match(r"^[a-z0-9_\-]+$", v):
+            raise ValueError(
+                f"Username {v} is not a valid username. Must contain only letters, numbers, uderscore, and hyphen"
+            )
+
+        return v

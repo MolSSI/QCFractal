@@ -65,6 +65,14 @@ import qcelemental
 import qcfractal
 import qcengine
 
+
+# This class is used to signal the caller about authorization-related
+# errors. While not always about authorization, the caller
+# is expected to report the provided string to the end user.
+class AuthorizationFailure(RuntimeError):
+    pass
+
+
 _null_keys = {"basis", "keywords"}
 _id_keys = {"id", "molecule", "keywords", "procedure_id"}
 _lower_func = lambda x: x.lower()
@@ -237,9 +245,6 @@ class SQLAlchemySocket:
         self.task = TaskSocket(self)
         self.user = UserSocket(self)
         self.role = RoleSocket(self)
-
-        # Add User Roles if doesn't exist
-        self._add_default_roles()
 
     def __str__(self) -> str:
         return f"<SQLAlchemySocket: address='{self.uri}`>"
@@ -829,46 +834,3 @@ class SQLAlchemySocket:
 
     def _copy_managers(self, record_list: Dict):
         return self.manager._copy_managers(record_list)
-
-    ### UserORMs
-
-    def add_user(self, username: str, password: Optional[str] = None, rolename: str = "read") -> bool:
-        return self.user.add(username, password, rolename)
-
-    def verify_user(self, username: str, password: str) -> Tuple[bool, str, Any]:
-        return self.user.verify(username, password)
-
-    def modify_user(
-        self,
-        username: str,
-        password: Optional[str] = None,
-        reset_password: bool = False,
-        rolename: Optional[str] = None,
-    ) -> Tuple[bool, str]:
-        return self.user.modify(username, password, reset_password, rolename)
-
-    def remove_user(self, username: str) -> bool:
-        return self.user.delete(username)
-
-    def get_user_permissions(self, username: str) -> Dict:
-        return self.user.get_permissions(username)
-
-    ### RoleORMs
-
-    def get_roles(self):
-        return self.role.list()
-
-    def get_role(self, rolename: str):
-        return self.role.get(rolename)
-
-    def add_role(self, rolename: str, permissions: Dict):
-        return self.role.add(rolename, permissions)
-
-    def _add_default_roles(self):
-        return self.role.add_default()
-
-    def update_role(self, rolename: str, permissions: Dict):
-        return self.role.update(rolename, permissions)
-
-    def delete_role(self, rolename: str):
-        return self.role.delete(rolename)
