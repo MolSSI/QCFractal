@@ -181,6 +181,17 @@ class FlaskConfig(ConfigBase):
     host: str = Field("127.0.0.1", description="The IP address or hostname to bind to")
     port: int = Field(7777, description="The port on which to run the REST interface.")
 
+    secret_key: str = Field("default_key_PLEASE_CHANGE_ME", description="Secret key for flask. See documentation")
+    jwt_secret_key: str = Field(
+        "default_key_PLEASE_CHANGE_ME", description="Secret key for web tokens. See documentation"
+    )
+    jwt_access_token_expires: int = Field(
+        60 * 60 * 24 * 7, description="The time (in seconds) an access token is valid for. Default is 1 week"
+    )
+    jwt_refresh_token_expires: int = Field(
+        60 * 60 * 24 * 30, description="The time (in seconds) a refresh token is valid for. Default is 30 days"
+    )
+
     class Config(ConfigCommon):
         env_prefix = "QCF_FLASK_"
 

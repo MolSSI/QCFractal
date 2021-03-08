@@ -45,7 +45,8 @@ def fractal_test_secure_server(temporary_database):
     """
 
     db_config = temporary_database.config
-    extra_config = {"enable_security": True, "allow_unauthenticated_read": False}
+    flask_config = {"jwt_access_token_expires": 1}  # expire tokens in 1 second
+    extra_config = {"enable_security": True, "allow_unauthenticated_read": False, "flask": flask_config}
 
     with TestingSnowflake(db_config, start_flask=True, extra_config=extra_config) as server:
         # Get a storage socket and add the roles/users/passwords
@@ -65,7 +66,9 @@ def fractal_test_secure_server_read(temporary_database):
     """
 
     db_config = temporary_database.config
-    extra_config = {"enable_security": True, "allow_unauthenticated_read": True}
+    flask_config = {"jwt_access_token_expires": 1}  # expire tokens in 1 second
+    extra_config = {"enable_security": True, "allow_unauthenticated_read": True, "flask": flask_config}
+
     with TestingSnowflake(db_config, start_flask=True, extra_config=extra_config) as server:
         # Get a storage socket and add the roles/users/passwords
         storage = server.get_storage_socket()
