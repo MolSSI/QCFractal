@@ -162,7 +162,7 @@ class ResponseLimitConfig(ConfigBase):
     collection: int = Field(25, description="Limit on the number of collections to return")
     task: int = Field(1000, description="Limit on the number of tasks to return")
     service: int = Field(1000, description="Limit on the number of service to return")
-    manager_task: int = Field(100, description="Limit on the number of tasks a single manager can pull down")
+    manager_task: int = Field(200, description="Limit on the number of tasks a single manager can pull down")
     wavefunction: int = Field(25, description="Limit on the number of wavefunctions to return")
     server_logs: int = Field(25, description="Limit on the number of server log records to return")
     access_logs: int = Field(10000, description="Limit on the number of access log records to return")
