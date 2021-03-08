@@ -77,8 +77,13 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     api_logger.init(qcfractal_config)
     view_handler.init(qcfractal_config)
 
-    app.config.JWT_ENABLED = qcfractal_config.enable_security
-    app.config.ALLOW_UNAUTHENTICATED_READ = qcfractal_config.allow_unauthenticated_read
+    app.config["JWT_ENABLED"] = qcfractal_config.enable_security
+    app.config["ALLOW_UNAUTHENTICATED_READ"] = qcfractal_config.allow_unauthenticated_read
+
+    app.config["SECRET_KEY"] = qcfractal_config.flask.secret_key
+    app.config["JWT_SECRET_KEY"] = qcfractal_config.flask.jwt_secret_key
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = qcfractal_config.flask.jwt_access_token_expires
+    app.config["JWT_REFRESH_TOKEN_EXPIRES"] = qcfractal_config.flask.jwt_refresh_token_expires
 
     # logger.debug("Adding blueprints..")
 

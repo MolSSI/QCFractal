@@ -65,11 +65,16 @@ def check_access(fn):
             from the headers' JWT token
         """
 
-        current_app.logger.debug(f"JWT_ENABLED: {current_app.config.JWT_ENABLED}")
-        current_app.logger.debug(f"ALLOW_UNAUTHENTICATED_READ: {current_app.config.ALLOW_UNAUTHENTICATED_READ}")
+        # current_app.logger.debug(f"JWT_ENABLED: {current_app.config['JWT_ENABLED']}")
+        # current_app.logger.debug(f"ALLOW_UNAUTHENTICATED_READ: {current_app.config['ALLOW_UNAUTHENTICATED_READ']}")
+        # current_app.logger.debug(f"SECRET_KEY: {current_app.secret_key}")
+        # current_app.logger.debug(f"SECRET_KEY: {current_app.config['SECRET_KEY']}")
+        # current_app.logger.debug(f"JWT_SECRET_KEY: {current_app.config['JWT_SECRET_KEY']}")
+        # current_app.logger.debug(f"JWT_ACCESS_TOKEN_EXPIRES: {current_app.config['JWT_ACCESS_TOKEN_EXPIRES']}")
+        # current_app.logger.debug(f"JWT_REFRESH_TOKEN_EXPIRES: {current_app.config['JWT_REFRESH_TOKEN_EXPIRES']}")
 
         # if no auth required, always allowed
-        if not current_app.config.JWT_ENABLED:
+        if not current_app.config["JWT_ENABLED"]:
             return fn(*args, **kwargs)
 
         # load read permissions from DB if not read
@@ -80,7 +85,7 @@ def check_access(fn):
 
         # if read is allowed without login, use read_permissions
         # otherwise, check logged-in permissions
-        if current_app.config.ALLOW_UNAUTHENTICATED_READ:
+        if current_app.config["ALLOW_UNAUTHENTICATED_READ"]:
             # don't raise exception if no JWT is found
             verify_jwt_in_request(optional=True)
         else:
