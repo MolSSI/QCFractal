@@ -76,6 +76,7 @@ class BaseResultORM(Base):
         Index("ix_base_result_stdout", "stdout", unique=True),
         Index("ix_base_result_stderr", "stderr", unique=True),
         Index("ix_base_result_error", "error", unique=True),
+        Index("ix_base_result_hash_index", "hash_index", unique=True),
     )
 
     __mapper_args__ = {"polymorphic_on": "result_type"}
