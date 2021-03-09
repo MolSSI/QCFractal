@@ -110,7 +110,6 @@ def parse_args() -> argparse.Namespace:
     fractal_args.add_argument("--num-workers", **FlaskConfig.help_info("num_workers"))
     fractal_args.add_argument("--logfile", **FractalConfig.help_info("loglevel"))
     fractal_args.add_argument("--loglevel", **FractalConfig.help_info("loglevel"))
-    fractal_args.add_argument("--cprofile", **FractalConfig.help_info("cprofile"))
     fractal_args.add_argument("--enable-security", **FractalConfig.help_info("enable_security"))
 
     fractal_args.add_argument(
@@ -125,6 +124,15 @@ def parse_args() -> argparse.Namespace:
     upgrade = subparsers.add_parser("upgrade", help="Upgrade QCFractal database.")
     upgrade.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
     upgrade.add_argument(
+        "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
+    )
+
+    #####################################
+    # upgrade-config subcommand
+    #####################################
+    upgrade_config = subparsers.add_parser("upgrade-config", help="Upgrade a QCFractal configuration file.")
+    upgrade_config.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+    upgrade_config.add_argument(
         "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
     )
 
@@ -349,6 +357,59 @@ def server_upgrade(args, config):
         sys.exit(1)
 
 
+def server_upgrade_config(args, config_path):
+    import secrets
+    from ..old_config import OldFractalConfig
+    from ..config import convert_old_configuration
+
+    logger = logging.getLogger(__name__)
+
+    logger.info(f"Reading configuration data from {config_path}")
+    with open(config_path, "r") as yf:
+        file_data = yaml.safe_load(yf)
+
+    # Is this really an old config?
+    if "fractal" not in file_data:
+        logger.info(f"Configuration appears to be up-to-date")
+        return
+
+    old_qcf_config = OldFractalConfig(**file_data)
+    new_qcf_config = convert_old_configuration(old_qcf_config)
+
+    # Move the old file out of the way
+    base_backup_path = config_path + ".backup"
+    backup_path = base_backup_path
+
+    # Find a suitable backup name. If the path exists,
+    # add .1, .2, .3, etc, until it does
+    i = 1
+    while os.path.exists(backup_path):
+        backup_path = base_backup_path + f".{i}"
+        i += 1
+
+    logger.info(f"Moving original configuration to {backup_path}")
+    shutil.move(config_path, backup_path)
+
+    # We strip out some stuff from the configuration, including things that were
+    # set to the default
+    new_qcf_config_dict = new_qcf_config.dict(skip_defaults=True)
+    new_qcf_config_dict["database"].pop("base_folder")
+    new_qcf_config_dict.pop("base_folder")
+
+    # Generate secret keys for the user. They can always change it later
+    new_qcf_config_dict["flask"]["secret_key"] = secrets.token_hex(24)
+    new_qcf_config_dict["flask"]["jwt_secret_key"] = secrets.token_hex(24)
+
+    logger.info(f"Writing new configuration data to  {config_path}")
+    with open(config_path, "w") as yf:
+        yaml.dump(new_qcf_config_dict, yf)
+
+    logger.info("*" * 80)
+    logger.info("Your configuration file has been upgraded, but will most likely need some fine tuning.")
+    logger.info(f"Please edit {config_path} by hand. See the upgrade documentation for details.")
+    logger.info("*" * 80)
+
+
 def server_user(args, config):
     standard_command_startup("user function", config)
 
@@ -516,8 +577,6 @@ def main():
             cmd_config["logfile"] = args.logfile
         if args.loglevel is not None:
             cmd_config["loglevel"] = args.loglevel
-        if args.cprofile is not None:
-            cmd_config["cprofile"] = args.cprofile
         if args.enable_security is not None:
             cmd_config["enable_security"] = args.enable_security
 
@@ -534,21 +593,17 @@ def main():
         config_path = os.path.expanduser(os.path.join("~", ".qca", "qcfractal", "qcfractal_config.yaml"))
         logger.info(f"Using default configuration path {config_path}")
 
+    # Shortcut here for upgrading the configuration
+    # This prevent s actually reading the configuration with the newest code
+    if command == "upgrade-config":
+        server_upgrade_config(args, config_path)
+        exit(0)
+
     # Now read and form the complete configuration
     qcf_config = read_configuration([config_path], cmd_config)
 
     cfg_str = dump_config(qcf_config, 4)
     logger.debug("Assembled the following configuration:\n" + cfg_str)
-
-    # If desired, enable profiling
-    # if config.fractal.cprofile is not None:
-    #    print("!" * 80)
-    #    print(f"! Enabling profiling via cProfile. Outputting data file to {config.fractal.cprofile}")
-    #    print("!" * 80)
-    #    import cProfile
-
-    #    pr = cProfile.Profile()
-    #    pr.enable()
 
     if command == "info":
         server_info(args, qcf_config)
@@ -564,14 +619,6 @@ def main():
     #    server_backup(args, qcf_config)
     # elif command == "restore":
     #    server_restore(args, qcf_config)
-
-    # Everything finished. If profiling is enabled, write out the
-    # data file
-    # if config.fractal.cprofile is not None:
-    #    print(f"! Writing profiling data to {config.fractal.cprofile}")
-    #    print("! Read using the Stats class of the pstats package")
-    #    pr.disable()
-    #    pr.dump_stats(config.fractal.cprofile)
 
 
 if __name__ == "__main__":

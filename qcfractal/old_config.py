@@ -26,7 +26,6 @@ class OldDatabaseSettings(ConfigBase):
     )
     username: str = Field(None, description="The postgres username to default to.")
     password: str = Field(None, description="The postgres password for the give user.")
-    uri: str = Field(None, description="Full database URI to connect to (overrides all other options")
     directory: str = Field(
         None, description="The physical location of the QCFractal instance data, defaults to the root folder."
     )
@@ -151,10 +150,6 @@ class OldFractalConfig(ConfigBase):
             return Path(os.path.expanduser(self.database.directory))
 
     def database_uri(self, safe: bool = True, database: str = None) -> str:
-
-        if self.database.uri:
-            return self.database.uri
-
         uri = "postgresql://"
         if self.database.username is not None:
             uri += f"{self.database.username}:"
