@@ -223,10 +223,6 @@ class FractalConfig(ConfigBase):
     loglevel: str = Field(
         "INFO", description="Level of logging to enable (debug, info, warning, error, critical). Case insensitive"
     )
-    cprofile: Optional[str] = Field(
-        None,
-        description="Enable profiling via cProfile, and output cprofile data to this directory. Multiple files will be created",
-    )
 
     # Periodics
     service_frequency: int = Field(60, description="The frequency to update services (in seconds)")
@@ -298,6 +294,54 @@ class FractalConfig(ConfigBase):
         env_prefix = "QCF_"
 
 
+def convert_old_configuration(old_config):
+    cfg_dict = {}
+
+    cfg_dict["base_folder"] = old_config.base_folder
+
+    # Database settings
+    cfg_dict["database"] = {}
+    cfg_dict["database"]["own"] = old_config.database.own
+    cfg_dict["database"]["host"] = old_config.database.host
+    cfg_dict["database"]["port"] = old_config.database.port
+    cfg_dict["database"]["username"] = old_config.database.username
+    cfg_dict["database"]["password"] = old_config.database.password
+    cfg_dict["database"]["database_name"] = old_config.database.database_name
+    cfg_dict["database"]["logfile"] = old_config.database.logfile
+
+    if old_config.database.own:
+        cfg_dict["database"]["data_directory"] = old_config.database.directory
+
+    # Response limits. The old config only had one. Set all the possible
+    # limits to that value
+    response_limit = old_config.fractal.query_limit
+    field_list = ResponseLimitConfig.field_names()
+    cfg_dict["response_limits"] = {k: response_limit for k in field_list}
+
+    # Flask server settings
+    cfg_dict["flask"] = {}
+    cfg_dict["flask"]["port"] = old_config.fractal.port
+
+    # Now general fractal settings. Before these were in a
+    # separate config class, but now they are in the top level
+    cfg_dict["name"] = old_config.fractal.name
+    cfg_dict["enable_security"] = old_config.fractal.security == "local"
+    cfg_dict["allow_unauthenticated_read"] = old_config.fractal.allow_read
+    cfg_dict["logfile"] = old_config.fractal.logfile
+    cfg_dict["loglevel"] = old_config.fractal.loglevel
+    cfg_dict["service_frequency"] = old_config.fractal.service_frequency
+    cfg_dict["max_active_services"] = old_config.fractal.max_active_services
+    cfg_dict["heartbeat_frequency"] = old_config.fractal.heartbeat_frequency
+    cfg_dict["log_access"] = old_config.fractal.log_apis
+    cfg_dict["geo_file_path"] = old_config.fractal.geo_file_path
+
+    # View options have also been moved to the top level
+    cfg_dict["enable_views"] = old_config.view.enable
+    cfg_dict["views_directory"] = old_config.view.directory
+
+    return FractalConfig(**cfg_dict)
+
+
 def read_configuration(file_paths: list[str], extra_config: Optional[Dict[str, Any]] = None) -> FractalConfig:
     """
     Reads QCFractal configuration from YAML files
@@ -330,7 +374,6 @@ def read_configuration(file_paths: list[str], extra_config: Optional[Dict[str, A
 
     # Handle an old configuration
     if "fractal" in config_data:
-        logger.warning(f"Found old configuration format. Reading this format will be deprecated in the future.")
-        raise RuntimeError("TODO")
+        raise RuntimeError("Found an old configuration. Please migrate with qcfractal-server upgrade-config")
 
     return FractalConfig(**config_data)
