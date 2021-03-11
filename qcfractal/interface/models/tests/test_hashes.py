@@ -137,64 +137,28 @@ def test_hash_fields(model):
     assert "program" in model.get_hash_fields()
 
 
-## Record hashes
-_base_result = {
-    "driver": "gradient",
-    "method": "hf",
-    "basis": "sto-3g",
-    "keywords": None,
-    "program": "prog",
-    "molecule": "5c7896fb95d592ad07a2fe3b",
-}
-
-
-@pytest.mark.parametrize(
-    "data, hash_index",
-    [
-        # Check same
-        ({}, "e1e20d5c13c8ad7ba894f71af39f3c0884ef2aca"),
-        ({"program": "PROG"}, "e1e20d5c13c8ad7ba894f71af39f3c0884ef2aca"),
-        ({"method": "HF"}, "e1e20d5c13c8ad7ba894f71af39f3c0884ef2aca"),
-        # All different
-        ({"program": "prog2"}, "f8638510976e5146b6bef79995f6f14acd06f645"),
-        ({"driver": "energy"}, "4c2c737694f9438c73b294d7f72249acbbd3b649"),
-        ({"keywords": "5c7896fb95d592ad07a2fe3b"}, "32e115a991ffb85ac0c29bf4dd5d93e733919b5c"),
-        # Check same
-        ({"basis": ""}, "1ae5df953fc38f9b866bd50af6d5513dbfc49cc6"),
-        ({"basis": "null"}, "1ae5df953fc38f9b866bd50af6d5513dbfc49cc6"),
-        ({"basis": None}, "1ae5df953fc38f9b866bd50af6d5513dbfc49cc6"),
-    ],
-)  # yapf: disable
-def test_result_record_canary_hash(data, hash_index):
-
-    opt = ResultRecord(**{**_base_result, **data})
-
-    assert hash_index == opt.get_hash_index(), data
-    assert opt.hash_index is None  # Not set
-
-
 ## Optimization hashes
 _qc_spec = {"driver": "gradient", "method": "HF", "basis": "sto-3g", "keywords": None, "program": "prog"}
-_base_opt = {"keywords": {}, "program": "prog2", "initial_molecule": "5c7896fb95d592ad07a2fe3b", "qc_spec": _qc_spec}
+_base_opt = {"keywords": {}, "program": "prog2", "initial_molecule": "76634", "qc_spec": _qc_spec}
 
 
 @pytest.mark.parametrize(
     "data, hash_index",
     [
         # Check same
-        ({}, "254de59f1598570d0c31aa2d3d84b601c9da12b9"),
-        ({"program": "PROG2"}, "254de59f1598570d0c31aa2d3d84b601c9da12b9"),
-        ({"qc_spec": {**_qc_spec, **{"program": "prog"}}}, "254de59f1598570d0c31aa2d3d84b601c9da12b9"),
-        ({"qc_spec": {**_qc_spec, **{"method": "HF"}}}, "254de59f1598570d0c31aa2d3d84b601c9da12b9"),
+        ({}, "3f2ae89f38a712e701a64bb51a9c5e1638e295f7"),
+        ({"program": "PROG2"}, "3f2ae89f38a712e701a64bb51a9c5e1638e295f7"),
+        ({"qc_spec": {**_qc_spec, **{"program": "prog"}}}, "3f2ae89f38a712e701a64bb51a9c5e1638e295f7"),
+        ({"qc_spec": {**_qc_spec, **{"method": "HF"}}}, "3f2ae89f38a712e701a64bb51a9c5e1638e295f7"),
         # Check tolerances
-        ({"keywords": {"tol": 1.0e-12}}, "8ab52bff9430f7759323e6a547afc58725422c47"),
-        ({"keywords": {"tol": 0.0}}, "8ab52bff9430f7759323e6a547afc58725422c47"),
-        ({"keywords": {"tol": 1.0e-9}}, "1628caf9a29c9bf17a66cb55b13106e7f2704e51"),  # Should be different from above
+        ({"keywords": {"tol": 1.0e-12}}, "005fe9fd7a47a17a108256f90bf7fa1107d352f2"),
+        ({"keywords": {"tol": 0.0}}, "005fe9fd7a47a17a108256f90bf7fa1107d352f2"),
+        ({"keywords": {"tol": 1.0e-9}}, "29a510ac629ee8a4e483cbffb428d3369fe10de5"),  # Should be different from above
         # Check fields
-        ({"initial_molecule": "5c78987e95d592ad07a2fe3c"}, "3c20c8f7b1be857460f2d71d74680dd19e9d9113"),
+        ({"initial_molecule": "84202"}, "9e32d55f58f39203d29db801172714d51c8d0eeb"),
         # Check basis preps
-        ({"qc_spec": {**_qc_spec, **{"basis": None}}}, "3489e0c47144ebedb4fdcc2bfab61f7aa4dc947c"),
-        ({"qc_spec": {**_qc_spec, **{"basis": ""}}}, "3489e0c47144ebedb4fdcc2bfab61f7aa4dc947c"),
+        ({"qc_spec": {**_qc_spec, **{"basis": None}}}, "55c23e37a1db6ae75f9c01b74daec171c5aed54f"),
+        ({"qc_spec": {**_qc_spec, **{"basis": ""}}}, "55c23e37a1db6ae75f9c01b74daec171c5aed54f"),
     ],
 )  # yapf: disable
 def test_optimization_record_canary_hash(data, hash_index):
@@ -213,8 +177,8 @@ _base_gridopt = {
     "keywords": {"preoptimization": False, "scans": [_scan_spec]},
     "optimization_spec": _opt_spec,
     "qc_spec": _qc_spec,
-    "initial_molecule": "5c7896fb95d592ad07a2fe3b",
-    "starting_molecule": "5c7896fb95d592ad07a2fe3b",
+    "initial_molecule": "12886",
+    "starting_molecule": "12886",
     "grid_optimizations": {},
     "final_energy_dict": {},
     "starting_grid": tuple(),
@@ -226,7 +190,7 @@ _base_gridopt = {
     "data, hash_index",
     [
         # Check same
-        ({}, "fa2da83aae1651a9115f5eaea83043187c4c8c7b"),
+        ({}, "7a6ea87f85e3cb21539592479b8b8e03a021d6ea"),
         (
             {
                 "keywords": {
@@ -234,17 +198,17 @@ _base_gridopt = {
                     "scans": [{**_scan_spec, **{"steps": [-0.1 + 1e-12, 0.0 - 1.0e-12]}}],
                 }
             },
-            "fa2da83aae1651a9115f5eaea83043187c4c8c7b",
+            "7a6ea87f85e3cb21539592479b8b8e03a021d6ea",
         ),
         # Check opt keywords stability
         (
             {"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 1.0e-12}}}},
-            "fa2da83aae1651a9115f5eaea83043187c4c8c7b",
+            "7a6ea87f85e3cb21539592479b8b8e03a021d6ea",
         ),
-        ({"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 0}}}}, "fa2da83aae1651a9115f5eaea83043187c4c8c7b"),
+        ({"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 0}}}}, "7a6ea87f85e3cb21539592479b8b8e03a021d6ea"),
         # Check fields
-        ({"initial_molecule": "5c78987e95d592ad07a2fe3c"}, "9624ce2eca96eabcdb9ec3b2e073429f6dd4b8a4"),
-        ({"qc_spec": {**_qc_spec, **{"method": "custom1"}}}, "d6a187bf6de7a25d36402c5d16109ddc6f4f217d"),
+        ({"initial_molecule": "78231"}, "ef670e2fe96081de257681fa7fe71a6df0c07447"),
+        ({"qc_spec": {**_qc_spec, **{"method": "custom1"}}}, "64847da809f22adc272564c7b2280682c4f4b918"),
     ],
 )  # yapf: disable
 def test_gridoptimization_canary_hash(data, hash_index):
@@ -260,7 +224,7 @@ _base_torsion = {
     "keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [10]},
     "optimization_spec": _opt_spec,
     "qc_spec": _qc_spec,
-    "initial_molecule": ["5c7896fb95d592ad07a2fe3b"],
+    "initial_molecule": ["89712"],
     "final_energy_dict": {},
     "optimization_history": {},
     "minimum_positions": {},
@@ -271,31 +235,31 @@ _base_torsion = {
 @pytest.mark.parametrize(
     "data, hash_index",
     [
-        ({}, "dd305011ee2b741b1dcd03350994920a3718b289"),
+        ({}, "67f61724520622e0c3376acc5c57defd7afdb970"),
         # Check same
         (
             {"keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [10], "energy_upper_limit": 1.0e-12}},
-            "37b65cba19ec4fbd0d54c10fd74d0a27f627cdea",
+            "3f8637e2873ee9424e13a0a9aa485e594f8bd561",
         ),
         (
             {"keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [10], "energy_upper_limit": 0}},
-            "37b65cba19ec4fbd0d54c10fd74d0a27f627cdea",
+            "3f8637e2873ee9424e13a0a9aa485e594f8bd561",
         ),
         (
             {"keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [10], "energy_upper_limit": 1.0e-9}},
-            "64b400229d3e5bff476e47c093c1a159c69d9fdc",
+            "1e5f5c2d4216ab11e458766124f94f32c0697f0a",
         ),
         # Check opt keywords stability
         (
             {"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 0.0}}}},
-            "a12fd524b0e215b5252b464ca4041091916df8bb",
+            "75c1506ae205f2978c1dcc3c9b25d2013e28e69b",
         ),
         (
             {"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 1.0e-12}}}},
-            "a12fd524b0e215b5252b464ca4041091916df8bb",
+            "75c1506ae205f2978c1dcc3c9b25d2013e28e69b",
         ),
         # Check fields
-        ({"initial_molecule": ["5c78987e95d592ad07a2fe3c"]}, "f209751a4a6559a8d2d539c070f3b701d1ddf9f2"),
+        ({"initial_molecule": ["22718"]}, "d9f703e2cb11a4d7dc5aa3e0c630625d057864ae"),
     ],
 )  # yapf disable
 def test_torsiondrive_canary_hash(data, hash_index):
