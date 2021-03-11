@@ -825,7 +825,7 @@ def _insert_complete_tasks(storage_socket, body: QueueManagerPOSTBody):
             except Exception:
                 msg = "Internal FractalServer Error:\n" + traceback.format_exc()
                 error = {"error_type": "internal_fractal_error", "error_message": msg}
-                failed_op = {"error": error, "success": False}
+                failed_op = FailedOperation(error=error, success=False)
 
                 base_result_id = int(existing_task_data.base_result)
 
