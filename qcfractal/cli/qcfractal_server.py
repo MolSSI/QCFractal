@@ -24,8 +24,10 @@ from ..app.gunicorn_app import GunicornProcess
 from ..process_runner import ProcessRunner
 from .cli_utils import install_signal_handlers
 
+
 class EndProcess(RuntimeError):
     pass
+
 
 def human_sizeof_byte(num, suffix="B"):
     # SO: https://stackoverflow.com/questions/1094841/reusable-library-to-get-human-readable-version-of-file-size
@@ -35,8 +37,9 @@ def human_sizeof_byte(num, suffix="B"):
         num /= 1024.0
     return "%.1f%s%s" % (num, "Yi", suffix)
 
+
 def dump_config(qcf_config: FractalConfig, indent: int = 0) -> str:
-    '''
+    """
     Returns a string showing a full QCFractal configuration.
 
     It will be formatted in YAML. It will start and end with a line of '-'
@@ -52,17 +55,17 @@ def dump_config(qcf_config: FractalConfig, indent: int = 0) -> str:
     -------
     str
         The configuration as a human-readable string
-    '''
+    """
 
-    s = "-"*80 + '\n'
+    s = "-" * 80 + "\n"
     cfg_str = yaml.dump(qcf_config.dict())
-    s += textwrap.indent(cfg_str, ' '*indent)
-    s += '-'*80
+    s += textwrap.indent(cfg_str, " " * indent)
+    s += "-" * 80
     return s
 
 
 def parse_args() -> argparse.Namespace:
-    '''
+    """
     Sets up the command line arguments and parses them
 
     Returns
@@ -70,7 +73,7 @@ def parse_args() -> argparse.Namespace:
     argparse.Namespace
         Argparse namespace containing the information about all the options specified on
         the command line
-    '''
+    """
 
     parser = argparse.ArgumentParser(description="A CLI for managing & running a QCFractal server.")
     parser.add_argument("--version", action="version", version=f"{qcfractal.__version__}")
@@ -80,17 +83,25 @@ def parse_args() -> argparse.Namespace:
     #####################################
     # init subcommand
     #####################################
-    init = subparsers.add_parser("init", help="Initializes a QCFractal server and database information from a given configuration.")
+    init = subparsers.add_parser(
+        "init", help="Initializes a QCFractal server and database information from a given configuration."
+    )
     init.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-    init.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
-    init.add_argument("-v", "--verbose", action="store_true", help="Output more details about the initialization process")
+    init.add_argument(
+        "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
+    )
+    init.add_argument(
+        "-v", "--verbose", action="store_true", help="Output more details about the initialization process"
+    )
 
     #####################################
     # start subcommand
     #####################################
     start = subparsers.add_parser("start", help="Starts a QCFractal server instance.")
     start.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-    start.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
+    start.add_argument(
+        "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
+    )
 
     # Allow some config settings to be altered via the command line
     fractal_args = start.add_argument_group("Server Settings")
@@ -105,7 +116,7 @@ def parse_args() -> argparse.Namespace:
     fractal_args.add_argument(
         "--disable-periodics",
         action="store_true",
-        help="[ADVANCED] Disable periodic tasks (service updates and manager cleanup)"
+        help="[ADVANCED] Disable periodic tasks (service updates and manager cleanup)",
     )
 
     #####################################
@@ -113,8 +124,9 @@ def parse_args() -> argparse.Namespace:
     #####################################
     upgrade = subparsers.add_parser("upgrade", help="Upgrade QCFractal database.")
     upgrade.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-    upgrade.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
-
+    upgrade.add_argument(
+        "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
+    )
 
     #####################################
     # info subcommand
@@ -124,14 +136,18 @@ def parse_args() -> argparse.Namespace:
         "category", nargs="?", default="config", choices=["config", "alembic"], help="The config category to show."
     )
     info.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-    info.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
+    info.add_argument(
+        "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
+    )
 
     #####################################
     # user subcommand
     #####################################
     user = subparsers.add_parser("user", help="Configure a QCFractal server instance.")
     user.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-    user.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
+    user.add_argument(
+        "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
+    )
 
     # user sub-subcommands
     user_subparsers = user.add_subparsers(dest="user_command")
@@ -191,7 +207,9 @@ def parse_args() -> argparse.Namespace:
         help="The filename to dump the backup to, defaults to 'database_name.bak'.",
     )
     backup.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-    backup.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
+    backup.add_argument(
+        "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
+    )
 
     #####################################
     # restore subcommand
@@ -199,8 +217,9 @@ def parse_args() -> argparse.Namespace:
     restore = subparsers.add_parser("restore", help="Restores the database from a backup file.")
     restore.add_argument("filename", default=None, type=str, help="The filename to restore from.")
     restore.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-    restore.add_argument("--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml")
-
+    restore.add_argument(
+        "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
+    )
 
     args = parser.parse_args()
     return args
@@ -250,7 +269,9 @@ def server_start(args, config):
         logger.info(f"Logging to stdout at level {config.loglevel}")
         log_handler = logging.StreamHandler(sys.stdout)
 
-    formatter = logging.Formatter('[%(asctime)s] (%(processName)-16s) %(levelname)8s: %(name)s: %(message)s', '%Y-%m-%d %H:%M:%S %Z')
+    formatter = logging.Formatter(
+        "[%(asctime)s] (%(processName)-16s) %(levelname)8s: %(name)s: %(message)s", "%Y-%m-%d %H:%M:%S %Z"
+    )
     log_handler.setFormatter(formatter)
 
     # Reset the logger given the full configuration
@@ -279,8 +300,8 @@ def server_start(args, config):
     # Start up the gunicorn and periodics
     gunicorn = GunicornProcess(config)
     periodics = PeriodicsProcess(config)
-    gunicorn_proc = ProcessRunner('gunicorn', gunicorn)
-    periodics_proc = ProcessRunner('periodics', periodics)
+    gunicorn_proc = ProcessRunner("gunicorn", gunicorn)
+    periodics_proc = ProcessRunner("periodics", periodics)
 
     def _cleanup(sig, frame):
         signame = signal.Signals(sig).name
@@ -301,7 +322,7 @@ def server_start(args, config):
     except EndProcess as e:
         logger.debug("server_start received EndProcess: " + str(e))
     except Exception as e:
-        tb = ''.join(traceback.format_exception(None, e, e.__traceback__))
+        tb = "".join(traceback.format_exception(None, e, e.__traceback__))
         logger.critical(f"Exception while running QCFractal server:\n{tb}")
         exitcode = 1
 
@@ -313,7 +334,6 @@ def server_start(args, config):
         pg_harness.shutdown()
 
     sys.exit(exitcode)
-
 
 
 def server_upgrade(args, config):
@@ -466,9 +486,9 @@ def main():
     log_handler = logging.StreamHandler(sys.stdout)
 
     if verbose:
-        logging.basicConfig(level="DEBUG", handlers=[log_handler], format='%(levelname)s: %(name)s: %(message)s')
+        logging.basicConfig(level="DEBUG", handlers=[log_handler], format="%(levelname)s: %(name)s: %(message)s")
     else:
-        logging.basicConfig(level="INFO", handlers=[log_handler], format='%(levelname)s: %(message)s')
+        logging.basicConfig(level="INFO", handlers=[log_handler], format="%(levelname)s: %(message)s")
     logger = logging.getLogger(__name__)
 
     # command = the subcommand used (init, start, etc)
@@ -483,7 +503,7 @@ def main():
 
     # Handle some arguments given on the command line
     # They are only valid if starting a server
-    cmd_config = {'flask': {}}
+    cmd_config = {"flask": {}}
 
     if command == "start":
         if args.port is not None:
@@ -506,12 +526,12 @@ def main():
         if args.config is not None:
             raise RuntimeError("Cannot specify both --base-folder and --config at the same time!")
 
-        config_path = os.path.join(args.base_folder, 'qcfractal_config.yaml')
+        config_path = os.path.join(args.base_folder, "qcfractal_config.yaml")
 
     elif args.config is not None:
         config_path = args.config
     else:
-        config_path = os.path.expanduser(os.path.join("~", '.qca', 'qcfractal', 'qcfractal_config.yaml'))
+        config_path = os.path.expanduser(os.path.join("~", ".qca", "qcfractal", "qcfractal_config.yaml"))
         logger.info(f"Using default configuration path {config_path}")
 
     # Now read and form the complete configuration
@@ -521,7 +541,7 @@ def main():
     logger.debug("Assembled the following configuration:\n" + cfg_str)
 
     # If desired, enable profiling
-    #if config.fractal.cprofile is not None:
+    # if config.fractal.cprofile is not None:
     #    print("!" * 80)
     #    print(f"! Enabling profiling via cProfile. Outputting data file to {config.fractal.cprofile}")
     #    print("!" * 80)
@@ -538,16 +558,16 @@ def main():
         server_start(args, qcf_config)
     elif command == "upgrade":
         server_upgrade(args, qcf_config)
-    #elif command == "user":
+    # elif command == "user":
     #    server_user(args, qcf_config)
-    #elif command == "backup":
+    # elif command == "backup":
     #    server_backup(args, qcf_config)
-    #elif command == "restore":
+    # elif command == "restore":
     #    server_restore(args, qcf_config)
 
     # Everything finished. If profiling is enabled, write out the
     # data file
-    #if config.fractal.cprofile is not None:
+    # if config.fractal.cprofile is not None:
     #    print(f"! Writing profiling data to {config.fractal.cprofile}")
     #    print("! Read using the Stats class of the pstats package")
     #    pr.disable()

@@ -9,13 +9,15 @@ import logging
 from ..interface.models import KVStore, AllResultTypes
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from ..storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+
 
 class BaseTasks(abc.ABC):
     def __init__(self, storage: SQLAlchemySocket):
         self.storage = storage
-        self.logger = logging.getLogger(type(self).__name__ + '_procedure')
+        self.logger = logging.getLogger(type(self).__name__ + "_procedure")
 
     def submit_tasks(self, data):
         """

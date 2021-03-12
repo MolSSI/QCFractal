@@ -33,6 +33,7 @@ class TestingConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
+
     @classmethod
     def init_app(cls, app):
         Config.init_app(app)
@@ -41,7 +42,6 @@ class ProductionConfig(Config):
 
 class SnowflakeConfig(ProductionConfig):
     PROPAGATE_EXCEPTIONS = None
-
 
 
 class DockerConfig(ProductionConfig):

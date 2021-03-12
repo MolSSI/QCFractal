@@ -20,7 +20,6 @@ class ServerLogSocket:
         self._access_log_limit = core_socket.qcf_config.response_limits.access_logs
         self._server_log_limit = core_socket.qcf_config.response_limits.server_logs
 
-
     # TODO - getting access logs
 
     def save_access(self, log_data):
@@ -28,7 +27,6 @@ class ServerLogSocket:
             log = AccessLogORM(**log_data)
             session.add(log)
             session.commit()
-
 
     def update(self):
 

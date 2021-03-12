@@ -1029,6 +1029,7 @@ class QueueManagerGETResponse(ProtoModel):
 
 register_model("queue_manager", "GET", QueueManagerGETBody, QueueManagerGETResponse)
 
+
 class QueueManagerPOSTBody(ProtoModel):
     meta: QueueManagerMeta = Field(..., description=common_docs[QueueManagerMeta])
     data: Dict[ObjectId, AllResultTypes] = Field(..., description="A Dictionary of tasks to return to the server.")

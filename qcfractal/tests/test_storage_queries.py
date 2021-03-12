@@ -11,6 +11,7 @@ from qcelemental.util import msgpackext_dumps, msgpackext_loads
 
 from qcfractal.testing import run_services
 
+
 @pytest.fixture(scope="function")
 def storage_query_fixture(torsiondrive_fixture):
     # Takes the default torsiondrive fixture and runs it

@@ -6,12 +6,12 @@ from .config import config
 from ..config import read_configuration
 
 # Forward these to the other flask_app file
-from .flask_app import storage_socket, api_logger, view_handler, jwt #,cors
+from .flask_app import storage_socket, api_logger, view_handler, jwt  # ,cors
 from .flask_app import create_qcfractal_flask_app
 
 
 # Is something like this really needed?
-#def create_app(config_name: str ="default"):
+# def create_app(config_name: str ="default"):
 #    '''
 #    Default create_app for running a standalone flask server
 #

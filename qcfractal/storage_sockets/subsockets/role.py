@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from typing import Dict
     from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
 
+
 class RoleSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
@@ -149,5 +150,3 @@ class RoleSocket:
             success = session.query(RoleORM).filter_by(rolename=rolename.lower()).delete()
 
         return success
-
-

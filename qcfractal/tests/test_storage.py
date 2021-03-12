@@ -773,8 +773,8 @@ def test_storage_queue_roundtrip(storage_results, status):
 
     # Check results
     # TODO: We no longer change base results through queue_mark_*. So we should remove this?
-    #res = storage_results.get_results(id=results[0]["id"])["data"][0]
-    #assert res["status"] == status
+    # res = storage_results.get_results(id=results[0]["id"])["data"][0]
+    # assert res["status"] == status
 
 
 def test_queue_submit_many_order(storage_results):

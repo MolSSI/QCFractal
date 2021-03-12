@@ -203,9 +203,8 @@ class FractalClient(object):
     def _get_JWT_token(self, username: str, password: str) -> None:
 
         try:
-            ret = requests.post(self.address + "login",
-                                json={"username": username, "password": password},
-                                verify=self._verify
+            ret = requests.post(
+                self.address + "login", json={"username": username, "password": password}, verify=self._verify
             )
         except requests.exceptions.SSLError:
             raise ConnectionRefusedError(_ssl_error_msg) from None
@@ -221,9 +220,7 @@ class FractalClient(object):
     def _refresh_JWT_token(self) -> None:
 
         ret = requests.post(
-            self.address + "refresh",
-            headers={"Authorization": f"Bearer {self.refresh_token}"},
-            verify=self._verify
+            self.address + "refresh", headers={"Authorization": f"Bearer {self.refresh_token}"}, verify=self._verify
         )
 
         if ret.status_code == 200:
