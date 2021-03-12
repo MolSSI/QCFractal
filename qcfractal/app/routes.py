@@ -10,7 +10,12 @@ from ..procedures import check_procedure_available, get_procedure_parser
 from ..services import initialize_service
 from ..extras import get_information as get_qcfractal_information
 
-from ..interface.models.rest_models import QueueManagerPOSTBody, QueueManagerPOSTResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse
+from ..interface.models.rest_models import (
+    QueueManagerPOSTBody,
+    QueueManagerPOSTResponse,
+    TaskQueuePOSTBody,
+    TaskQueuePOSTResponse,
+)
 
 from flask import jsonify, request, make_response
 import traceback
@@ -44,6 +49,7 @@ _valid_encodings = {
 # TODO: not implemented yet
 _logging_param_counts = {"id"}
 _read_permissions = {}
+
 
 def check_access(fn):
     @wraps(fn)
@@ -86,7 +92,7 @@ def check_access(fn):
 
         try:
             # host_url = request.host_url
-            identity = get_jwt_identity() or 'anonymous'
+            identity = get_jwt_identity() or "anonymous"
             resource = urlparse(request.url).path.split("/")[1]
             context = {
                 "Principal": identity,
@@ -128,10 +134,11 @@ class SerializedResponse(Response):
     def __init__(self, response, **kwargs):
 
         # TODO: support other content types? We would need to check the Accept header
-        content_type = 'application/msgpack-ext'
+        content_type = "application/msgpack-ext"
         encoding = _valid_encodings[content_type]
         response = serialize(response, encoding)
         super(SerializedResponse, self).__init__(response, content_type=content_type, **kwargs)
+
 
 @main.before_request
 def before_request_func():
@@ -248,17 +255,17 @@ def get_information():
 
     db_data = storage_socket.get_server_stats_log(limit=1)["data"]
     public_info = {
-        'name': qcf_cfg.name,
-        'manager_heartbeat_frequency': qcf_cfg.heartbeat_frequency,
-        'version': get_qcfractal_information("version"),
-        'query_limits': qcf_cfg.response_limits.dict(),
+        "name": qcf_cfg.name,
+        "manager_heartbeat_frequency": qcf_cfg.heartbeat_frequency,
+        "version": get_qcfractal_information("version"),
+        "query_limits": qcf_cfg.response_limits.dict(),
         "client_lower_version_limit": "0.14.0",  # Must be XX.YY.ZZ
         "client_upper_version_limit": "0.15.99",  # Must be XX.YY.ZZ
         "collection": 0,
         "molecule": 0,
         "result": 0,
         "kvstore": 0,
-        "last_update": None
+        "last_update": None,
     }
 
     if len(db_data) > 0:
@@ -267,7 +274,7 @@ def get_information():
             "molecule": db_data[0].get("molecule_count", 0),
             "result": db_data[0].get("result_count", 0),
             "kvstore": db_data[0].get("kvstore_count", 0),
-            "last_update": db_data[0].get("timestamp", None)
+            "last_update": db_data[0].get("timestamp", None),
         }
         public_info.update(counts)
 
@@ -425,9 +432,7 @@ def get_collection(collection_id: int = None, view_function: str = None):
         body_model, response_model = rest_model("collection", "get")
         body = parse_bodymodel(body_model)
 
-        cols = storage_socket.get_collections(
-            **body.data.dict(), include=body.meta.include, exclude=body.meta.exclude
-        )
+        cols = storage_socket.get_collections(**body.data.dict(), include=body.meta.include, exclude=body.meta.exclude)
         response = response_model(**cols)
 
     # Get specific collection
@@ -551,9 +556,7 @@ def get_procedure(query_type: str = "get"):
     if query_type == "get":
         ret = storage_socket.get_procedures(**{**body.data.dict(), **body.meta.dict()})
     else:  # all other queries, like 'best_opt_results'
-        ret = storage_socket.custom_query(
-            "procedure", query_type, **{**body.data.dict(), **body.meta.dict()}
-        )
+        ret = storage_socket.custom_query("procedure", query_type, **{**body.data.dict(), **body.meta.dict()})
     # except KeyError as e:
     #     return jsonify(msg=str(e)), 500
 
@@ -572,9 +575,7 @@ def get_optimization(query_type: str):
     if query_type == "get":
         ret = storage_socket.get_procedures(**{**body.data.dict(), **body.meta.dict()})
     else:  # all other queries, like 'best_opt_results'
-        ret = storage_socket.custom_query(
-            "optimization", query_type, **{**body.data.dict(), **body.meta.dict()}
-        )
+        ret = storage_socket.custom_query("optimization", query_type, **{**body.data.dict(), **body.meta.dict()})
     # except KeyError as e:
     #     return jsonify(msg=str(e)), 500
 
@@ -758,90 +759,91 @@ def _get_name_from_metadata(meta):
     ret = meta.cluster + "-" + meta.hostname + "-" + meta.uuid
     return ret
 
+
 def _insert_complete_tasks(storage_socket, body: QueueManagerPOSTBody):
 
-        results = body.data
-        meta = body.meta
-        task_ids = list(int(x) for x in results.keys())
+    results = body.data
+    meta = body.meta
+    task_ids = list(int(x) for x in results.keys())
 
-        manager_name = _get_name_from_metadata(meta)
-        current_app.logger.info("QueueManager: Received completed tasks from {}.".format(manager_name))
-        current_app.logger.info("              Task ids: " + " ".join(str(x) for x in task_ids))
+    manager_name = _get_name_from_metadata(meta)
+    current_app.logger.info("QueueManager: Received completed tasks from {}.".format(manager_name))
+    current_app.logger.info("              Task ids: " + " ".join(str(x) for x in task_ids))
 
-        # Pivot data so that we group all results in categories
-        queue = storage_socket.get_queue(id=task_ids)["data"]
-        queue = {v.id: v for v in queue}
+    # Pivot data so that we group all results in categories
+    queue = storage_socket.get_queue(id=task_ids)["data"]
+    queue = {v.id: v for v in queue}
 
-        task_success = 0
-        task_failures = 0
-        task_totals = len(results.items())
+    task_success = 0
+    task_failures = 0
+    task_totals = len(results.items())
 
-        failure_parser = get_procedure_parser('failed_operation', storage_socket)
+    failure_parser = get_procedure_parser("failed_operation", storage_socket)
 
-        for task_id, result in results.items():
-            existing_task_data = queue.get(task_id, None)
+    for task_id, result in results.items():
+        existing_task_data = queue.get(task_id, None)
 
-            # Does the task exist?
-            if existing_task_data is None:
-                current_app.logger.warning(f"Task id {task_id} does not exist in the task queue.")
-                task_failures += 1
-                continue
+        # Does the task exist?
+        if existing_task_data is None:
+            current_app.logger.warning(f"Task id {task_id} does not exist in the task queue.")
+            task_failures += 1
+            continue
 
-            try:
-                #################################################################
-                # Perform some checks for consistency
-                #################################################################
-                # Information passed to handle_completed_output for the various output parsers
-                base_result_id = int(existing_task_data.base_result)
+        try:
+            #################################################################
+            # Perform some checks for consistency
+            #################################################################
+            # Information passed to handle_completed_output for the various output parsers
+            base_result_id = int(existing_task_data.base_result)
 
-                # Is the task in the running state
-                # If so, do not attempt to modify the task queue. Just move on
-                if existing_task_data.status != TaskStatusEnum.running:
-                    current_app.logger.warning(f"Task id {task_id} is not in the running state.")
-                    task_failures += 1
-
-                # Was the manager that sent the data the one that was assigned?
-                # If so, do not attempt to modify the task queue. Just move on
-                elif existing_task_data.manager != manager_name:
-                    current_app.logger.warning(f"Task id {task_id} belongs to {existing_task_data.manager}, not this manager")
-                    task_failures += 1
-
-                # Failed task returning FailedOperation
-                elif result.success is False and isinstance(result, FailedOperation):
-                    failure_parser.handle_completed_output(task_id, base_result_id, manager_name, result)
-                    task_failures += 1
-
-                elif result.success is not True:
-                    # QCEngine should always return either FailedOperation, or some result with success == True
-                    current_app.logger.warning(f"Task id {task_id} returned success != True, but is not a FailedOperation")
-                    task_failures += 1
-
-                # Manager returned a full, successful result
-                else:
-                    parser = get_procedure_parser(queue[task_id].parser, storage_socket)
-                    parser.handle_completed_output(task_id, base_result_id, manager_name, result)
-                    task_success += 1
-
-            except Exception:
-                msg = "Internal FractalServer Error:\n" + traceback.format_exc()
-                error = {"error_type": "internal_fractal_error", "error_message": msg}
-                failed_op = FailedOperation(error=error, success=False)
-
-                base_result_id = int(existing_task_data.base_result)
-
-                failure_parser.handle_completed_output(task_id, base_result_id, manager_name, failed_op)
-                current_app.logger.error("update: ERROR\n{}".format(msg))
+            # Is the task in the running state
+            # If so, do not attempt to modify the task queue. Just move on
+            if existing_task_data.status != TaskStatusEnum.running:
+                current_app.logger.warning(f"Task id {task_id} is not in the running state.")
                 task_failures += 1
 
+            # Was the manager that sent the data the one that was assigned?
+            # If so, do not attempt to modify the task queue. Just move on
+            elif existing_task_data.manager != manager_name:
+                current_app.logger.warning(
+                    f"Task id {task_id} belongs to {existing_task_data.manager}, not this manager"
+                )
+                task_failures += 1
 
+            # Failed task returning FailedOperation
+            elif result.success is False and isinstance(result, FailedOperation):
+                failure_parser.handle_completed_output(task_id, base_result_id, manager_name, result)
+                task_failures += 1
 
-        current_app.logger.info(
-            "QueueManager: Found {} complete tasks ({} successful, {} failed).".format(
-                task_totals, task_success, task_failures
-            )
+            elif result.success is not True:
+                # QCEngine should always return either FailedOperation, or some result with success == True
+                current_app.logger.warning(f"Task id {task_id} returned success != True, but is not a FailedOperation")
+                task_failures += 1
+
+            # Manager returned a full, successful result
+            else:
+                parser = get_procedure_parser(queue[task_id].parser, storage_socket)
+                parser.handle_completed_output(task_id, base_result_id, manager_name, result)
+                task_success += 1
+
+        except Exception:
+            msg = "Internal FractalServer Error:\n" + traceback.format_exc()
+            error = {"error_type": "internal_fractal_error", "error_message": msg}
+            failed_op = FailedOperation(error=error, success=False)
+
+            base_result_id = int(existing_task_data.base_result)
+
+            failure_parser.handle_completed_output(task_id, base_result_id, manager_name, failed_op)
+            current_app.logger.error("update: ERROR\n{}".format(msg))
+            task_failures += 1
+
+    current_app.logger.info(
+        "QueueManager: Found {} complete tasks ({} successful, {} failed).".format(
+            task_totals, task_success, task_failures
         )
+    )
 
-        return task_success, task_failures
+    return task_success, task_failures
 
 
 @main.route("/queue_manager", methods=["GET"])
@@ -906,7 +908,6 @@ def post_queue_manager():
     name = _get_name_from_metadata(body.meta)
     storage_socket.manager_update(name, completed=completed, failures=error)
 
-
     return SerializedResponse(response)
 
 
@@ -932,9 +933,7 @@ def put_queue_manager():
 
     elif op == "shutdown":
         nshutdown = storage_socket.queue_reset_status(manager=name, reset_running=True)
-        storage_socket.manager_update(
-            name, returned=nshutdown, status="INACTIVE", **body.meta.dict(), log=True
-        )
+        storage_socket.manager_update(name, returned=nshutdown, status="INACTIVE", **body.meta.dict(), log=True)
 
         # current_app.logger.info("QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(name, nshutdown))
 

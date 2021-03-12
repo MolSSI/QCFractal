@@ -60,8 +60,8 @@ class TaskSocket:
             all_base_results = [record.base_result for record in data]
             query_res = (
                 session.query(TaskQueueORM.id, TaskQueueORM.base_result_id)
-                    .filter(TaskQueueORM.base_result_id.in_(all_base_results))
-                    .all()
+                .filter(TaskQueueORM.base_result_id.in_(all_base_results))
+                .all()
             )
 
             # constructing a dict of found tasks and their ids
@@ -106,9 +106,7 @@ class TaskSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def get_next(
-            self, manager, available_programs, available_procedures, limit=None, tag=None
-    ) -> List[TaskRecord]:
+    def get_next(self, manager, available_programs, available_procedures, limit=None, tag=None) -> List[TaskRecord]:
         """Obtain tasks for a manager
 
         Given tags and available programs/procedures on the manager, obtain
@@ -152,10 +150,10 @@ class TaskSocket:
                 # (possibly from another process)
                 query = (
                     session.query(TaskQueueORM)
-                        .filter(*q)
-                        .order_by(*order_by)
-                        .limit(new_limit)
-                        .with_for_update(skip_locked=True)
+                    .filter(*q)
+                    .order_by(*order_by)
+                    .limit(new_limit)
+                    .with_for_update(skip_locked=True)
                 )
 
                 new_items = query.all()
@@ -164,8 +162,8 @@ class TaskSocket:
                 # Update all the task records to reflect this manager claiming them
                 update_count += (
                     session.query(TaskQueueORM)
-                        .filter(TaskQueueORM.id.in_(new_ids))
-                        .update(update_fields, synchronize_session=False)
+                    .filter(TaskQueueORM.id.in_(new_ids))
+                    .update(update_fields, synchronize_session=False)
                 )
 
                 # After commiting, the row locks are released
@@ -190,20 +188,20 @@ class TaskSocket:
         return found
 
     def get(
-            self,
-            id=None,
-            hash_index=None,
-            program=None,
-            status: str = None,
-            base_result: str = None,
-            tag=None,
-            manager=None,
-            include=None,
-            exclude=None,
-            limit: int = None,
-            skip: int = 0,
-            return_json=False,
-            with_ids=True,
+        self,
+        id=None,
+        hash_index=None,
+        program=None,
+        status: str = None,
+        base_result: str = None,
+        tag=None,
+        manager=None,
+        include=None,
+        exclude=None,
+        limit: int = None,
+        skip: int = 0,
+        return_json=False,
+        with_ids=True,
     ):
         """
         TODO: check what query keys are needs
@@ -289,9 +287,7 @@ class TaskSocket:
 
         limit = calculate_limit(self._user_limit, limit)
         with self._core_socket.session_scope() as session:
-            found = (
-                session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(id)).limit(limit).offset(skip)
-            )
+            found = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(id)).limit(limit).offset(skip)
 
             if as_json:
                 found = [TaskRecord(**task.to_dict()) for task in found]
@@ -356,12 +352,12 @@ class TaskSocket:
         return len(task_ids)
 
     def reset_status(
-            self,
-            id: Union[str, List[str]] = None,
-            base_result: Union[str, List[str]] = None,
-            manager: Optional[str] = None,
-            reset_running: bool = False,
-            reset_error: bool = False,
+        self,
+        id: Union[str, List[str]] = None,
+        base_result: Union[str, List[str]] = None,
+        manager: Optional[str] = None,
+        reset_running: bool = False,
+        reset_error: bool = False,
     ) -> int:
         """
         Reset the status of the tasks that a manager owns from Running to Waiting
@@ -415,15 +411,15 @@ class TaskSocket:
 
             updated = (
                 session.query(TaskQueueORM)
-                    .filter(TaskQueueORM.id.in_(task_ids))
-                    .update(dict(status=TaskStatusEnum.waiting, modified_on=dt.utcnow()), synchronize_session=False)
+                .filter(TaskQueueORM.id.in_(task_ids))
+                .update(dict(status=TaskStatusEnum.waiting, modified_on=dt.utcnow()), synchronize_session=False)
             )
 
         return updated
 
     def reset_base_result_status(
-            self,
-            id: Union[str, List[str]] = None,
+        self,
+        id: Union[str, List[str]] = None,
     ) -> int:
         """
         Reset the status of a base result to "incomplete". Will only work if the
@@ -448,19 +444,19 @@ class TaskSocket:
         with self._core_socket.session_scope() as session:
             updated = (
                 session.query(BaseResultORM)
-                    .filter(*query)
-                    .filter(BaseResultORM.status != RecordStatusEnum.complete)
-                    .update(update_dict, synchronize_session=False)
+                .filter(*query)
+                .filter(BaseResultORM.status != RecordStatusEnum.complete)
+                .update(update_dict, synchronize_session=False)
             )
 
         return updated
 
     def modify(
-            self,
-            id: Union[str, List[str]] = None,
-            base_result: Union[str, List[str]] = None,
-            new_tag: Optional[str] = None,
-            new_priority: Optional[int] = None,
+        self,
+        id: Union[str, List[str]] = None,
+        base_result: Union[str, List[str]] = None,
+        new_tag: Optional[str] = None,
+        new_priority: Optional[int] = None,
     ):
         """
         Modifies the tag and priority of tasks.
@@ -504,9 +500,9 @@ class TaskSocket:
         with self._core_socket.session_scope() as session:
             updated = (
                 session.query(TaskQueueORM)
-                    .filter(*query)
-                    .filter(TaskQueueORM.status != TaskStatusEnum.running)
-                    .update(update_dict, synchronize_session=False)
+                .filter(*query)
+                .filter(TaskQueueORM.status != TaskStatusEnum.running)
+                .update(update_dict, synchronize_session=False)
             )
 
         return updated

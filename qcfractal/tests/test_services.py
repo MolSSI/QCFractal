@@ -11,6 +11,7 @@ import qcfractal.interface as ptl
 from qcfractal.interface.models import GridOptimizationInput
 from qcfractal.testing import run_services, using_geometric, using_rdkit
 
+
 def test_service_torsiondrive_service_incomplete(torsiondrive_fixture):
     hooh = ptl.data.get_molecule("hooh.json")
     hooh.geometry[0] += 0.00031
@@ -260,7 +261,7 @@ def test_service_iterate_error(torsiondrive_fixture):
 
     # torsiondrive will spit out a wanrning about unbonded atoms. This is expected
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", message=r'Following atom pairs.*not bonded')
+        warnings.filterwarnings("ignore", message=r"Following atom pairs.*not bonded")
 
         # Run the test without modifications
         ret = spin_up_test(keywords={"dihedrals": [[0, 1, 2, 50]]})

@@ -23,7 +23,7 @@ from .common_models import (
     AtomicResult,
     AtomicResultProtocols,
     WavefunctionProperties,
-    AllResultTypes
+    AllResultTypes,
 )
 from .gridoptimization import GridOptimizationInput, GridOptimizationRecord
 from .model_builder import build_procedure

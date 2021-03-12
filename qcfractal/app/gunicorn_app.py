@@ -8,6 +8,7 @@ from .flask_app import create_qcfractal_flask_app
 from ..process_runner import ProcessBase
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from ..config import FractalConfig, Optional
 
@@ -25,9 +26,9 @@ class FractalGunicornLogger(GLogger):
         self.error_log.propagate = True
         self.access_log.propagate = True
 
-class FractalGunicornApp(gunicorn.app.base.BaseApplication):
 
-    def __init__(self,  qcfractal_config: FractalConfig):
+class FractalGunicornApp(gunicorn.app.base.BaseApplication):
+    def __init__(self, qcfractal_config: FractalConfig):
         self.qcfractal_config = qcfractal_config
         self.application = create_qcfractal_flask_app(qcfractal_config)
 
@@ -42,11 +43,12 @@ class FractalGunicornApp(gunicorn.app.base.BaseApplication):
         bind = self.qcfractal_config.flask.host
         port = self.qcfractal_config.flask.port
 
-        config = {'bind': f'{bind}:{port}',
-                  'workers': self.qcfractal_config.flask.num_workers,
-                  'loglevel': self.qcfractal_config.loglevel,
-                  'logger_class': FractalGunicornLogger
-                  }
+        config = {
+            "bind": f"{bind}:{port}",
+            "workers": self.qcfractal_config.flask.num_workers,
+            "loglevel": self.qcfractal_config.loglevel,
+            "logger_class": FractalGunicornLogger,
+        }
 
         for key, value in config.items():
             self.cfg.set(key.lower(), value)

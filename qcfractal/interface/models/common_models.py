@@ -32,6 +32,7 @@ from qcelemental.models.results import AtomicResultProtocols, WavefunctionProper
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 
 from typing import Any, Dict, Optional, Union
+
 AllResultTypes = Union[FailedOperation, AtomicResult, OptimizationResult]
 
 
@@ -235,7 +236,9 @@ class QCSpecification(ProtoModel):
         description="The Id of the :class:`KeywordSet` registered in the database to run this calculation with. This "
         "Id must exist in the database.",
     )
-    protocols: Optional[AtomicResultProtocols] = Field(AtomicResultProtocols(), description=str(AtomicResultProtocols.__base_doc__))
+    protocols: Optional[AtomicResultProtocols] = Field(
+        AtomicResultProtocols(), description=str(AtomicResultProtocols.__base_doc__)
+    )
     program: str = Field(
         ...,
         description="The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs"

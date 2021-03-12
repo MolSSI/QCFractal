@@ -24,6 +24,7 @@ from qcfractal.storage_sockets.models import (
     Trajectory,
 )
 
+
 @pytest.fixture(scope="function")
 def session_fixture(storage_socket):
     with storage_socket.session_scope() as session:
