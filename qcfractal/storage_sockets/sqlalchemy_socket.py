@@ -154,10 +154,7 @@ class SQLAlchemySocket:
     Main handler for managing/accessing an SQLAlchemy database
     """
 
-    def __init__(
-        self,
-        qcf_config: FractalConfig
-    ):
+    def __init__(self, qcf_config: FractalConfig):
         """
         Constructs a new SQLAlchemy socket
         """
@@ -180,17 +177,9 @@ class SQLAlchemySocket:
         # If pool_size in the config is non-zero, then set the pool class to None (meaning use
         # SQLAlchemy default)
         if qcf_config.database.pool_size == 0:
-            self.engine = create_engine(
-                uri,
-                echo=qcf_config.database.echo_sql,
-                poolclass=NullPool
-            )
+            self.engine = create_engine(uri, echo=qcf_config.database.echo_sql, poolclass=NullPool)
         else:
-            self.engine = create_engine(
-                uri,
-                echo=qcf_config.database.echo_sql,
-                pool_size=qcf_config.database.pool_size
-            )
+            self.engine = create_engine(uri, echo=qcf_config.database.echo_sql, pool_size=qcf_config.database.pool_size)
 
         self.logger.info(
             "Connected SQLAlchemy to DB dialect {} with driver {}".format(self.engine.dialect.name, self.engine.driver)
@@ -201,7 +190,9 @@ class SQLAlchemySocket:
         # check version compatibility
         db_ver = self.check_lib_versions()
         self.logger.info(f"DB versions: {db_ver}")
-        if (not qcf_config.database.skip_version_check) and (db_ver and qcfractal.__version__ != db_ver["fractal_version"]):
+        if (not qcf_config.database.skip_version_check) and (
+            db_ver and qcfractal.__version__ != db_ver["fractal_version"]
+        ):
             raise TypeError(
                 f"You are running QCFractal version {qcfractal.__version__} "
                 f'with an older DB version ({db_ver["fractal_version"]}). '
@@ -216,9 +207,7 @@ class SQLAlchemySocket:
 
         # Advanced queries objects
         # TODO - replace max limit
-        self._query_classes = {
-            cls._class_name: cls(self.engine.url.database, max_limit=1000) for cls in QUERY_CLASSES
-        }
+        self._query_classes = {cls._class_name: cls(self.engine.url.database, max_limit=1000) for cls in QUERY_CLASSES}
 
         # Create/initialize the subsockets
         from qcfractal.storage_sockets.subsockets.server_logs import ServerLogSocket
@@ -251,7 +240,6 @@ class SQLAlchemySocket:
 
         # Add User Roles if doesn't exist
         self._add_default_roles()
-
 
     def __str__(self) -> str:
         return f"<SQLAlchemySocket: address='{self.uri}`>"
@@ -502,7 +490,6 @@ class SQLAlchemySocket:
 
         return ret
 
-
     def get_total_count(self, className, **kwargs):
 
         with self.session_scope() as session:
@@ -511,24 +498,23 @@ class SQLAlchemySocket:
 
         return count
 
-
-#    def is_queue_empty(self):
-#        with self.session_scope() as session:
-#            query1 = session.query(TaskQueueORM).filter(and_(TaskQueueORM.status == TaskStatusEnum.running,
-#                                                             TaskQueueORM.status == TaskStatusEnum.waiting))
-#
-#            count1 = get_count_fast(query1)
-#
-#            # No need to
-#            if count1 > 0:
-#                return False
-#
-#            query2 = session.query(ServiceQueueORM).filter(or_(ServiceQueueORM.status == TaskStatusEnum.running,
-#                                                               ServiceQueueORM.status == TaskStatusEnum.waiting))
-#
-#            count2 = get_count_fast(query2)
-#
-#        return count2 == 0
+    #    def is_queue_empty(self):
+    #        with self.session_scope() as session:
+    #            query1 = session.query(TaskQueueORM).filter(and_(TaskQueueORM.status == TaskStatusEnum.running,
+    #                                                             TaskQueueORM.status == TaskStatusEnum.waiting))
+    #
+    #            count1 = get_count_fast(query1)
+    #
+    #            # No need to
+    #            if count1 > 0:
+    #                return False
+    #
+    #            query2 = session.query(ServiceQueueORM).filter(or_(ServiceQueueORM.status == TaskStatusEnum.running,
+    #                                                               ServiceQueueORM.status == TaskStatusEnum.waiting))
+    #
+    #            count2 = get_count_fast(query2)
+    #
+    #        return count2 == 0
 
     def set_completed_watch(self, mp_queue):
         self._completed_queue = mp_queue
@@ -615,7 +601,6 @@ class SQLAlchemySocket:
     ) -> bool:
         return self.collection.delete(collection, name, col_id)
 
-
     # ~~~~~~~~~~~~~~~~~ Results ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
 
     def add_results(self, record_list: List[ResultRecord]):
@@ -643,7 +628,24 @@ class SQLAlchemySocket:
         return_json=True,
         with_ids=True,
     ):
-        return self.result.get(id, program, method, basis, molecule, driver, keywords, task_id, manager_id, status, include, exclude, limit, skip, return_json, with_ids)
+        return self.result.get(
+            id,
+            program,
+            method,
+            basis,
+            molecule,
+            driver,
+            keywords,
+            task_id,
+            manager_id,
+            status,
+            include,
+            exclude,
+            limit,
+            skip,
+            return_json,
+            with_ids,
+        )
 
     def del_results(self, ids: List[str]):
         return self.result.delete(ids)
@@ -662,7 +664,6 @@ class SQLAlchemySocket:
         skip: int = 0,
     ) -> Dict[str, Any]:
         return self.wavefunction.get(id, include, exclude, limit, skip)
-
 
     # ~~~~~~~~~~~~~~~~~~ Procedures ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def add_procedures(self, record_list: List["BaseRecord"]):
@@ -684,14 +685,27 @@ class SQLAlchemySocket:
         return_json=True,
         with_ids=True,
     ):
-        return self.procedure.get(id, procedure, program, hash_index, task_id, manager_id, status, include, exclude, limit, skip, return_json, with_ids)
+        return self.procedure.get(
+            id,
+            procedure,
+            program,
+            hash_index,
+            task_id,
+            manager_id,
+            status,
+            include,
+            exclude,
+            limit,
+            skip,
+            return_json,
+            with_ids,
+        )
 
     def update_procedures(self, records_list: List["BaseRecord"]):
         return self.procedure.update(records_list)
 
     def del_procedures(self, ids: List[str]):
         return self.procedure.delete(ids)
-
 
     # ~~~~~~~~ Services ~~~~~~~~~~~~~
 
@@ -747,7 +761,21 @@ class SQLAlchemySocket:
         return_json=False,
         with_ids=True,
     ):
-        return self.task.get(id, hash_index, program, status, base_result, tag, manager, include, exclude, limit, skip, return_json, with_ids)
+        return self.task.get(
+            id,
+            hash_index,
+            program,
+            status,
+            base_result,
+            tag,
+            manager,
+            include,
+            exclude,
+            limit,
+            skip,
+            return_json,
+            with_ids,
+        )
 
     def queue_get_by_id(self, id: List[str], limit: int = None, skip: int = 0, as_json: bool = True):
         return self.task.get_by_id(id, limit, skip, as_json)
@@ -785,7 +813,6 @@ class SQLAlchemySocket:
 
     def del_tasks(self, id: Union[str, list]):
         return self.task.delete(id)
-
 
     ### QueueManagerORMs
 
@@ -845,4 +872,3 @@ class SQLAlchemySocket:
 
     def delete_role(self, rolename: str):
         return self.role.delete(rolename)
-

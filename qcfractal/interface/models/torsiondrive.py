@@ -15,6 +15,7 @@ from .common_models import Molecule, ObjectId, OptimizationSpecification, ProtoM
 from .model_utils import recursive_normalizer
 from .records import RecordBase
 
+
 class TDKeywords(ProtoModel):
     """
     TorsionDriveRecord options

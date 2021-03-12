@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
     from typing import Dict, Optional, Tuple, Any
 
+
 def _generate_password() -> str:
     """
     Generates a random password e.g. for add_user and modify_user.
@@ -113,11 +114,11 @@ class UserSocket:
             return (True, "Success", data.role_obj.permissions)
 
     def modify(
-            self,
-            username: str,
-            password: Optional[str] = None,
-            reset_password: bool = False,
-            rolename: Optional[str] = None,
+        self,
+        username: str,
+        password: Optional[str] = None,
+        reset_password: bool = False,
+        rolename: Optional[str] = None,
     ) -> Tuple[bool, str]:
         """
         Alters a user's password, permissions, or both

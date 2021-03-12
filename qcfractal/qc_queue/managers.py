@@ -97,7 +97,7 @@ class QueueManager:
         queue_tag: Optional[Union[str, List[str]]] = None,
         manager_name: str = "unlabeled",
         update_frequency: Union[int, float] = 2,
-        verbose: bool = False, # TODO: Remove verbose flag, always respect logging level
+        verbose: bool = False,  # TODO: Remove verbose flag, always respect logging level
         server_error_retries: Optional[int] = 1,
         stale_update_limit: Optional[int] = 10,
         cores_per_task: Optional[int] = None,
@@ -372,7 +372,6 @@ class QueueManager:
         # Interrupt the scheduler (will finish if in the middle of an update or something, but will
         # cancel running calculations)
         self.int_sleep.interrupt()
-
 
     def close_adapter(self) -> bool:
         """

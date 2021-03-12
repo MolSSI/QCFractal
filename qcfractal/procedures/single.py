@@ -212,7 +212,9 @@ class SingleResultTasks(BaseTasks):
 
         return self.storage.queue_submit(new_tasks)
 
-    def handle_completed_output(self, task_id: int, base_result_id: int, manager_name: str, result: qcel.models.AtomicResult):
+    def handle_completed_output(
+        self, task_id: int, base_result_id: int, manager_name: str, result: qcel.models.AtomicResult
+    ):
 
         completed_tasks = []
         updates = []
@@ -228,7 +230,9 @@ class SingleResultTasks(BaseTasks):
         # Some consistency checks:
         # Is this marked as incomplete?
         if existing_result["status"] != "INCOMPLETE":
-            self.logger.warning(f"Skipping returned results for base_result_id={base_result_id}, as it is not marked incomplete")
+            self.logger.warning(
+                f"Skipping returned results for base_result_id={base_result_id}, as it is not marked incomplete"
+            )
             return
 
         rdata = result.dict()

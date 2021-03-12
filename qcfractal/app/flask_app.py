@@ -6,6 +6,7 @@ from flask import Flask
 import multiprocessing
 
 from .config import config
+
 # from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 import logging
@@ -15,6 +16,7 @@ from qcfractal.storage_sockets import ViewHandler, API_AccessLogger
 from qcfractal.process_runner import ProcessBase
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from ..config import FractalConfig
     from typing import Optional
@@ -27,12 +29,14 @@ class _FlaskSQLAlchemySocket(SQLAlchemySocket):
     def init(self, qcf_config):
         SQLAlchemySocket.__init__(self, qcf_config)
 
+
 class _FlaskAPILogger(API_AccessLogger):
     def __init__(self):
         pass
 
     def init(self, qcf_config):
         API_AccessLogger.__init__(self, qcf_config)
+
 
 class _FlaskViewHandler(ViewHandler):
     def __init__(self):
@@ -49,11 +53,12 @@ view_handler = _FlaskViewHandler()
 jwt = JWTManager()
 # cors = CORS()
 
+
 def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     config_name = qcfractal_config.flask.config_name
 
     app = Flask(__name__)
-    app.logger = logging.getLogger('fractal_flask_app')
+    app.logger = logging.getLogger("fractal_flask_app")
     app.logger.info(f"Creating app with config '{config_name}'")
 
     # Load the defaults for the Flask configuration
@@ -75,7 +80,7 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     app.config.JWT_ENABLED = qcfractal_config.enable_security
     app.config.ALLOW_UNAUTHENTICATED_READ = qcfractal_config.allow_unauthenticated_read
 
-    #logger.debug("Adding blueprints..")
+    # logger.debug("Adding blueprints..")
 
     # The main application entry
     from .routes import main
@@ -90,11 +95,7 @@ class FlaskProcess(ProcessBase):
     Flask running in a separate process
     """
 
-    def __init__(
-            self,
-            qcf_config: FractalConfig,
-            completed_queue: Optional[multiprocessing.Queue] = None
-    ):
+    def __init__(self, qcf_config: FractalConfig, completed_queue: Optional[multiprocessing.Queue] = None):
         self._qcf_config = qcf_config
         self._completed_queue = completed_queue
 
@@ -105,12 +106,12 @@ class FlaskProcess(ProcessBase):
         storage_socket.set_completed_watch(self._completed_queue)
 
         # Disable printing "Environment: ... WARNING: This is a development server...
-        os.environ['WERKZEUG_RUN_MAIN'] = 'true'
+        os.environ["WERKZEUG_RUN_MAIN"] = "true"
 
         # Get the werkzeug logger to shut up by setting its level to the root level
         # I don't know what flask does but it seems to override it to INFO if not set
         # on this particular logger
-        logging.getLogger('werkzeug').setLevel(logging.getLogger().level)
+        logging.getLogger("werkzeug").setLevel(logging.getLogger().level)
 
     def run(self):
         self._flask_app.run(host=self._qcf_config.flask.host, port=self._qcf_config.flask.port)

@@ -8,7 +8,18 @@ from datetime import datetime as dt
 import qcengine as qcng
 
 from .base import BaseTasks
-from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord, KeywordSet, RecordStatusEnum, OptimizationResult, OptimizationInput, PriorityEnum
+from ..interface.models import (
+    Molecule,
+    OptimizationRecord,
+    QCSpecification,
+    ResultRecord,
+    TaskRecord,
+    KeywordSet,
+    RecordStatusEnum,
+    OptimizationResult,
+    OptimizationInput,
+    PriorityEnum,
+)
 from .procedures_util import parse_single_tasks, form_qcinputspec_schema
 
 
@@ -183,8 +194,7 @@ class OptimizationTasks(BaseTasks):
 
         return self.storage.queue_submit(new_tasks)
 
-    def handle_completed_output(self, task_id: int, base_result_id: int, manager_name: str,
-                                result: OptimizationResult):
+    def handle_completed_output(self, task_id: int, base_result_id: int, manager_name: str, result: OptimizationResult):
         """Save the results of the procedure.
         It must make sure to save the results in the results table
         including the task_id in the TaskQueue table
