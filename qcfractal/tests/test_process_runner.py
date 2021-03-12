@@ -15,7 +15,7 @@ from qcfractal.app.gunicorn_app import GunicornProcess
 from qcfractal.snowflake import SnowflakeComputeProcess
 
 
-@pytest.mark.parametrize('test_base_class', [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
+@pytest.mark.parametrize("test_base_class", [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
 def test_quick_stop(fractal_stopped_test_server, test_base_class):
     """
     Tests that quickly starting then stopping a process is ok
@@ -33,7 +33,7 @@ def test_quick_stop(fractal_stopped_test_server, test_base_class):
     assert runner.is_alive() is False
 
 
-@pytest.mark.parametrize('test_base_class', [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
+@pytest.mark.parametrize("test_base_class", [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
 def test_normal_stop(fractal_stopped_test_server, test_base_class):
     """
     Tests that stopping the process after 5 seconds is ok
@@ -53,7 +53,7 @@ def test_normal_stop(fractal_stopped_test_server, test_base_class):
     assert runner.exitcode() == 0
 
 
-@pytest.mark.parametrize('test_base_class', [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
+@pytest.mark.parametrize("test_base_class", [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
 def test_stop_in_setup(fractal_stopped_test_server, test_base_class):
     """
     Tests that stopping the process while it is still in setup
@@ -83,7 +83,7 @@ def test_stop_in_setup(fractal_stopped_test_server, test_base_class):
     assert runner.exitcode() == 0
 
 
-@pytest.mark.parametrize('test_base_class', [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
+@pytest.mark.parametrize("test_base_class", [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
 def test_stop_in_run(fractal_stopped_test_server, test_base_class):
     """
     Tests that stopping the process while it is in the run step
@@ -112,7 +112,7 @@ def test_stop_in_run(fractal_stopped_test_server, test_base_class):
     assert runner.exitcode() == 0
 
 
-@pytest.mark.parametrize('test_base_class', [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
+@pytest.mark.parametrize("test_base_class", [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
 def test_hang_in_setup(fractal_stopped_test_server, test_base_class):
     """
     Tests that stopping the process while it is hanging in setup
@@ -145,7 +145,8 @@ def test_hang_in_setup(fractal_stopped_test_server, test_base_class):
     assert runner.is_alive() is False
     assert runner.exitcode() != 0
 
-@pytest.mark.parametrize('test_base_class', [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
+
+@pytest.mark.parametrize("test_base_class", [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
 def test_hang_in_run(fractal_stopped_test_server, test_base_class):
     """
     Tests that stopping the process while it is hanging in run
@@ -177,7 +178,8 @@ def test_hang_in_run(fractal_stopped_test_server, test_base_class):
     assert runner.is_alive() is False
     assert runner.exitcode() != 0
 
-@pytest.mark.parametrize('test_base_class', [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
+
+@pytest.mark.parametrize("test_base_class", [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
 def test_exception_in_setup(fractal_stopped_test_server, test_base_class):
     """
     Tests that raising an exception during setup() stops the process, returning non-zero exit code
@@ -205,7 +207,7 @@ def test_exception_in_setup(fractal_stopped_test_server, test_base_class):
     assert runner.exitcode() != 0
 
 
-@pytest.mark.parametrize('test_base_class', [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
+@pytest.mark.parametrize("test_base_class", [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
 def test_exception_in_run(fractal_stopped_test_server, test_base_class):
     """
     Tests that raising an exception during run() stops the process, returning non-zero exit code

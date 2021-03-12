@@ -494,7 +494,6 @@ def test_queue_query_manager(fractal_test_server):
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2).ids[0]
     ret3 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol3).ids[0]
 
-
     storage_socket.queue_get_next(manager_name, ["rdkit"], [], limit=1)[0]
     tasks_manager = client.query_tasks(manager=manager_name)
     assert len(tasks_manager) == 1

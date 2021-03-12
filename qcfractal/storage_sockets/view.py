@@ -10,13 +10,14 @@ from qcelemental.util.serialization import serialize
 
 from ..interface.collections import HDF5View
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from ..config import FractalConfig
 
+
 class ViewHandler:
     def __init__(self, qcf_config: FractalConfig):
-        """
-        """
+        """"""
 
         self._view_cache: Dict[int, HDF5View] = {}
         self._path = None
@@ -43,7 +44,6 @@ class ViewHandler:
         pathlib.Path
             Path of requested view
         """
-
 
         return self._path / f"{collection_id}.hdf5"
 
@@ -95,8 +95,6 @@ class ViewHandler:
             Dictionary corresponding to requested REST model
         """
         meta = {"errors": [], "success": False, "error_description": False, "msgpacked_cols": []}
-
-
 
         try:
             view = self._get_view(collection_id)

@@ -31,9 +31,9 @@ from .periodics import FractalPeriodics
 from .storage_sockets.sqlalchemy_socket import SQLAlchemySocket
 
 ## For mock flask responses
-#from requests_mock_flask import add_flask_app_to_mock
-#import requests_mock
-#import responses
+# from requests_mock_flask import add_flask_app_to_mock
+# import requests_mock
+# import responses
 
 ### Addon testing capabilities
 
@@ -149,6 +149,7 @@ def preserve_cwd():
     finally:
         os.chdir(cwd)
 
+
 def terminate_process(proc):
     if proc.poll() is None:
 
@@ -167,6 +168,7 @@ def terminate_process(proc):
         finally:
             proc.kill()
 
+
 @contextmanager
 def popen(args):
     """
@@ -183,7 +185,6 @@ def popen(args):
     # First argument is the executable name
     # We are testing executable scripts found in the bin directory
     args[0] = os.path.join(bin_prefix, args[0])
-
 
     # Add coverage testing
     coverage_dir = os.path.join(bin_prefix, "coverage")
@@ -248,16 +249,16 @@ def run_process(args, interrupt_after=15):
 #######################################
 @pytest.fixture(scope="session")
 def postgres_server(tmp_path_factory):
-    '''
+    """
     A postgres server instance, not including any databases
 
     This is built only once per session, and automatically deleted after the session. It uses
     a pytest-proveded session-scoped temporary directory
-    '''
+    """
 
     logger = logging.getLogger(__name__)
 
-    db_path = str(tmp_path_factory.mktemp('db'))
+    db_path = str(tmp_path_factory.mktemp("db"))
     tmp_pg = TemporaryPostgres(data_dir=db_path)
     pg_harness = tmp_pg.harness
     logger.debug(f"Using database located at {db_path} with uri {pg_harness.database_uri()}")
@@ -294,12 +295,12 @@ def temporary_database(postgres_server):
 
 @pytest.fixture(scope="function")
 def storage_socket(temporary_database):
-    '''
+    """
     A fixture for temporary database and storage socket
 
     This should not be used with other fixtures, but used for unit testing
     the storage socket.
-    '''
+    """
 
     # Create a configuration. Since this is mostly just for a storage socket,
     # We can use defaults for almost all, since a flask server, etc, won't be instantiated
@@ -337,24 +338,25 @@ class TestingSnowflake(FractalSnowflake):
         if extra_config is None:
             extra_config = {}
 
-        extra_config['service_frequency'] = 5
-        extra_config['loglevel'] = "DEBUG"
-        extra_config['heartbeat_frequency'] = 3
-        extra_config['heartbeat_max_missed'] = 2
-        extra_config['database'] = {'pool_size': 0}
+        extra_config["service_frequency"] = 5
+        extra_config["loglevel"] = "DEBUG"
+        extra_config["heartbeat_frequency"] = 3
+        extra_config["heartbeat_max_missed"] = 2
+        extra_config["database"] = {"pool_size": 0}
 
-        FractalSnowflake.__init__(self,
-                                  start=False,
-                                  compute_workers=1,
-                                  enable_watching=True,
-                                  database_config=database_config,
-                                  flask_config="testing",
-                                  extra_config=extra_config)
+        FractalSnowflake.__init__(
+            self,
+            start=False,
+            compute_workers=1,
+            enable_watching=True,
+            database_config=database_config,
+            flask_config="testing",
+            extra_config=extra_config,
+        )
 
         # Always start the flask process
         if start_flask:
             self.start_flask()
-
 
     def get_storage_socket(self) -> SQLAlchemySocket:
         """
@@ -364,7 +366,6 @@ class TestingSnowflake(FractalSnowflake):
         """
 
         return SQLAlchemySocket(self._qcf_config)
-
 
     def get_periodics(self) -> FractalPeriodics:
         """
@@ -397,14 +398,12 @@ class TestingSnowflake(FractalSnowflake):
             # (This will attempt client connects until it is ready)
             self.client()
 
-
     def stop_flask(self) -> None:
         """
         Stops the flask subprocess
         """
         if self._flask_proc.is_alive():
             self._flask_proc.stop()
-
 
     def start_periodics(self) -> None:
         """
@@ -435,7 +434,6 @@ class TestingSnowflake(FractalSnowflake):
             self._compute_proc.stop()
 
 
-
 @pytest.fixture(scope="function")
 def fractal_stopped_test_server(temporary_database):
     """
@@ -445,7 +443,6 @@ def fractal_stopped_test_server(temporary_database):
     db_config = temporary_database.config
     with TestingSnowflake(db_config, start_flask=False) as server:
         yield server
-
 
 
 @pytest.fixture(scope="function")
@@ -470,10 +467,10 @@ def test_server(temporary_database):
     # (which can leave db connections open, causing problems when we go to delete
     # the database)
     extra_config = {}
-    extra_config['service_frequency'] = 5
-    extra_config['heartbeat_frequency'] = 3
-    extra_config['heartbeat_max_missed'] = 2
-    extra_config['database'] = {'pool_size': 0}
+    extra_config["service_frequency"] = 5
+    extra_config["heartbeat_frequency"] = 3
+    extra_config["heartbeat_max_missed"] = 2
+    extra_config["database"] = {"pool_size": 0}
 
     with FractalSnowflake(
         start=True,
@@ -481,7 +478,7 @@ def test_server(temporary_database):
         enable_watching=True,
         database_config=temporary_database.config,
         flask_config="testing",
-        extra_config=extra_config
+        extra_config=extra_config,
     ) as server:
         yield server
 
@@ -498,7 +495,7 @@ def run_services(server: FractalSnowflake, periodics: FractalPeriodics, max_iter
     # Wait for everything currently running to finish
     server.await_results()
 
-    for i in range(1, max_iter+1):
+    for i in range(1, max_iter + 1):
         logger.debug(f"Iteration {i}")
         running_services = periodics._update_services()
         logger.debug(f"Number of running services: {running_services}")
@@ -559,7 +556,6 @@ def torsiondrive_fixture(fractal_test_server):
         return ret.data
 
     yield spin_up_test, fractal_test_server, periodics
-
 
 
 def build_adapter_clients(mtype):
@@ -629,11 +625,11 @@ def live_fractal_or_skip():
         return FractalClient("localhost:7777", verify=False)
     except (requests.exceptions.ConnectionError, ConnectionRefusedError):
         return pytest.skip("Failed to connect to localhost, skipping")
-        #print("Failed to connect to localhost, trying MolSSI QCArchive.")
-        #try:
+        # print("Failed to connect to localhost, trying MolSSI QCArchive.")
+        # try:
         #    requests.get("https://api.qcarchive.molssi.org:443", json={}, timeout=5)
         #    return FractalClient()
-        #except (requests.exceptions.ConnectionError, ConnectionRefusedError):
+        # except (requests.exceptions.ConnectionError, ConnectionRefusedError):
         #    return pytest.skip("Could not make a connection to central Fractal server")
 
 

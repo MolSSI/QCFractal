@@ -276,8 +276,7 @@ def test_queue_manager_server_delay(compute_adapter_fixture):
 
 @testing.using_rdkit
 def test_queue_manager_heartbeat(compute_adapter_fixture):
-    """Tests to ensure managers are marked as inactive when heartbeat times are exceeded
-    """
+    """Tests to ensure managers are marked as inactive when heartbeat times are exceeded"""
 
     client, server, adapter = compute_adapter_fixture
     server.start_periodics()
@@ -298,7 +297,7 @@ def test_queue_manager_heartbeat(compute_adapter_fixture):
     # So just wait out the right amount of time and the server should mark it as inactive
     heartbeat_freq = server._qcf_config.heartbeat_frequency
     max_missed = server._qcf_config.heartbeat_max_missed
-    wait_time = heartbeat_freq * (max_missed+1) + 2
+    wait_time = heartbeat_freq * (max_missed + 1) + 2
     time.sleep(wait_time)
 
     sman = client.query_managers(name=manager.name(), status="INACTIVE")

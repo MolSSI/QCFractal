@@ -18,23 +18,23 @@ _users = {
 }
 
 _roles = {
-#    "read": {
-#        "Statement": [
-#            {"Effect": "Allow", "Action": "GET", "Resource": "*"},
-#            {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager"]},
-#        ]
-#    },
+    #    "read": {
+    #        "Statement": [
+    #            {"Effect": "Allow", "Action": "GET", "Resource": "*"},
+    #            {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager"]},
+    #        ]
+    #    },
     "write": {
         "Statement": [
             {"Effect": "Allow", "Action": "GET", "Resource": "*"},
             {"Effect": "Allow", "Action": "POST", "Resource": ["molecule", "manager"]},
         ]
     },
-#    "admim": {
-#        "Statement": [
-#            {"Effect": "Allow", "Action": "*", "Resource": "*"},
-#        ]
-#    },
+    #    "admim": {
+    #        "Statement": [
+    #            {"Effect": "Allow", "Action": "*", "Resource": "*"},
+    #        ]
+    #    },
 }
 
 
@@ -45,7 +45,7 @@ def fractal_test_secure_server(temporary_database):
     """
 
     db_config = temporary_database.config
-    extra_config = {'enable_security': True, 'allow_unauthenticated_read': False}
+    extra_config = {"enable_security": True, "allow_unauthenticated_read": False}
 
     with TestingSnowflake(db_config, start_flask=True, extra_config=extra_config) as server:
         # Get a storage socket and add the roles/users/passwords
@@ -65,7 +65,7 @@ def fractal_test_secure_server_read(temporary_database):
     """
 
     db_config = temporary_database.config
-    extra_config = {'enable_security': True, 'allow_unauthenticated_read': True}
+    extra_config = {"enable_security": True, "allow_unauthenticated_read": True}
     with TestingSnowflake(db_config, start_flask=True, extra_config=extra_config) as server:
         # Get a storage socket and add the roles/users/passwords
         storage = server.get_storage_socket()
@@ -74,7 +74,6 @@ def fractal_test_secure_server_read(temporary_database):
         for k, v in _users.items():
             assert storage.add_user(k, v["pw"], v["rolename"])
         yield server
-
 
 
 def test_security_auth_decline_none(fractal_test_secure_server):
@@ -87,7 +86,7 @@ def test_security_auth_decline_none(fractal_test_secure_server):
 def test_security_auth_bad_ssl(fractal_test_secure_server):
     with pytest.raises(ConnectionRefusedError) as excinfo:
         address = fractal_test_secure_server.get_uri()
-        address = address.replace('http', 'https')
+        address = address.replace("http", "https")
 
         client = ptl.FractalClient.from_file(
             {
@@ -106,7 +105,12 @@ def test_security_auth_bad_ssl(fractal_test_secure_server):
 def test_security_auth_decline_bad_user(fractal_test_secure_server):
     with pytest.raises(IOError) as excinfo:
         client = ptl.FractalClient.from_file(
-            {"address": fractal_test_secure_server.get_uri(), "username": "hello", "password": "something", "verify": False}
+            {
+                "address": fractal_test_secure_server.get_uri(),
+                "username": "hello",
+                "password": "something",
+                "verify": False,
+            }
         )
         r = client.query_molecules(id=[])
     assert "authentication failed" in str(excinfo.value).lower()

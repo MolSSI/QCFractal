@@ -72,14 +72,14 @@ class ServiceSocket:
         return ret
 
     def get(
-            self,
-            id: Union[List[str], str] = None,
-            procedure_id: Union[List[str], str] = None,
-            hash_index: Union[List[str], str] = None,
-            status: str = None,
-            limit: int = None,
-            skip: int = 0,
-            return_json=True,
+        self,
+        id: Union[List[str], str] = None,
+        procedure_id: Union[List[str], str] = None,
+        hash_index: Union[List[str], str] = None,
+        status: str = None,
+        limit: int = None,
+        skip: int = 0,
+        return_json=True,
     ):
         """
 
@@ -109,18 +109,18 @@ class ServiceSocket:
         """
 
         # TODO this function is used by the periodics class, for which the limit shouldn't apply
-        limit =  calculate_limit(self._limit, limit)
+        limit = calculate_limit(self._limit, limit)
         meta = get_metadata_template()
         query = format_query(ServiceQueueORM, id=id, hash_index=hash_index, procedure_id=procedure_id, status=status)
 
         with self._core_socket.session_scope() as session:
             data = (
                 session.query(ServiceQueueORM)
-                    .filter(*query)
-                    .order_by(ServiceQueueORM.priority.desc(), ServiceQueueORM.created_on)
-                    .limit(limit)
-                    .offset(skip)
-                    .all()
+                .filter(*query)
+                .order_by(ServiceQueueORM.priority.desc(), ServiceQueueORM.created_on)
+                .limit(limit)
+                .offset(skip)
+                .all()
             )
             data = [x.to_dict() for x in data]
 
@@ -189,7 +189,7 @@ class ServiceSocket:
         return updated_count
 
     def update_status(
-            self, status: str, id: Union[List[str], str] = None, procedure_id: Union[List[str], str] = None
+        self, status: str, id: Union[List[str], str] = None, procedure_id: Union[List[str], str] = None
     ) -> int:
         """
         Update the status of the existing services in the database.
@@ -272,5 +272,3 @@ class ServiceSocket:
             done += 1
 
         return done
-
-

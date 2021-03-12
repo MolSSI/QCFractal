@@ -5,10 +5,12 @@ import json
 import numpy as np
 
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from typing import Any, Dict, Optional
 
 json_encoders = {np.ndarray: lambda v: v.flatten().tolist()}
+
 
 def prepare_basis(basis: Optional[str]) -> Optional[str]:
     """

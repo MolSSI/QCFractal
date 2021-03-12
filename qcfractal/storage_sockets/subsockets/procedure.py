@@ -2,10 +2,20 @@ from __future__ import annotations
 
 import logging
 from sqlalchemy.orm import with_polymorphic
-from qcfractal.storage_sockets.models import BaseResultORM, OptimizationProcedureORM, TorsionDriveProcedureORM, GridOptimizationProcedureORM
+from qcfractal.storage_sockets.models import (
+    BaseResultORM,
+    OptimizationProcedureORM,
+    TorsionDriveProcedureORM,
+    GridOptimizationProcedureORM,
+)
 from qcfractal.interface.models import TaskStatusEnum
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
-from qcfractal.storage_sockets.sqlalchemy_socket import format_query, get_count_fast, get_procedure_class, calculate_limit
+from qcfractal.storage_sockets.sqlalchemy_socket import (
+    format_query,
+    get_count_fast,
+    get_procedure_class,
+    calculate_limit,
+)
 
 from typing import TYPE_CHECKING
 
@@ -70,20 +80,20 @@ class ProcedureSocket:
         return ret
 
     def get(
-            self,
-            id: Union[str, List] = None,
-            procedure: str = None,
-            program: str = None,
-            hash_index: str = None,
-            task_id: Union[str, List] = None,
-            manager_id: Union[str, List] = None,
-            status: str = "COMPLETE",
-            include=None,
-            exclude=None,
-            limit: int = None,
-            skip: int = 0,
-            return_json=True,
-            with_ids=True,
+        self,
+        id: Union[str, List] = None,
+        procedure: str = None,
+        program: str = None,
+        hash_index: str = None,
+        task_id: Union[str, List] = None,
+        manager_id: Union[str, List] = None,
+        status: str = "COMPLETE",
+        include=None,
+        exclude=None,
+        limit: int = None,
+        skip: int = 0,
+        return_json=True,
+        with_ids=True,
     ):
         """
 
@@ -240,8 +250,8 @@ class ProcedureSocket:
                         [OptimizationProcedureORM, TorsionDriveProcedureORM, GridOptimizationProcedureORM],
                     )
                 )
-                    .filter(BaseResultORM.id.in_(ids))
-                    .all()
+                .filter(BaseResultORM.id.in_(ids))
+                .all()
             )
             # delete through session to delete correctly from base_result
             for proc in procedures:
@@ -250,4 +260,3 @@ class ProcedureSocket:
             count = len(procedures)
 
         return count
-

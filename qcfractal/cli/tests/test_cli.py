@@ -27,18 +27,18 @@ def qcfractal_base_init():
     template_path = os.path.join(_pwd, "qcfractal_config.yaml.template1")
     dest_template_path = os.path.join(tmpdir.name, "qcfractal_config.yaml")
 
-    with open(template_path, 'r') as tf:
+    with open(template_path, "r") as tf:
         template_yaml = tf.read()
 
     db_port = storage.config.port
     db_host = storage.config.host
     rest_port = find_open_port()
 
-    template_yaml = template_yaml.replace('DATABASE_HOST', str(db_host))
-    template_yaml = template_yaml.replace('DATABASE_PORT', str(db_port))
-    template_yaml = template_yaml.replace('FLASK_PORT', str(rest_port))
+    template_yaml = template_yaml.replace("DATABASE_HOST", str(db_host))
+    template_yaml = template_yaml.replace("DATABASE_PORT", str(db_port))
+    template_yaml = template_yaml.replace("FLASK_PORT", str(rest_port))
 
-    with open(dest_template_path, 'w') as tf:
+    with open(dest_template_path, "w") as tf:
         tf.write(template_yaml)
 
     args = [
@@ -165,7 +165,14 @@ def test_manager_local_testing_process():
 
 @pytest.mark.slow
 def test_manager_executor_manager_boot(active_server):
-    args = ["qcfractal-manager", active_server.test_uri_cli, "--adapter=pool", "--tasks-per-worker=2", "--verify=False", "--verbose"]
+    args = [
+        "qcfractal-manager",
+        active_server.test_uri_cli,
+        "--adapter=pool",
+        "--tasks-per-worker=2",
+        "--verify=False",
+        "--verbose",
+    ]
     assert testing.run_process(args, interrupt_after=7)
 
 

@@ -12,6 +12,7 @@ from pydantic import Field, validator
 
 from .config import ConfigBase, ConfigCommon
 
+
 class OldDatabaseSettings(ConfigBase):
     """
     Postgres Database settings
