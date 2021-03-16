@@ -35,9 +35,9 @@ class AccessLogORM(Base):
     __tablename__ = "access_log"
 
     id = Column(Integer, primary_key=True)
-    access_date = Column(DateTime, default=datetime.datetime.utcnow)
+    access_date = Column(DateTime, default=datetime.datetime.utcnow, index=True)
     access_method = Column(String, nullable=False)
-    access_type = Column(String, nullable=False)
+    access_type = Column(String, nullable=False, index=True)
 
     # Note: no performance difference between varchar and text in postgres
     # will mostly have a serialized JSON, but not stored as JSON for speed
@@ -55,8 +55,6 @@ class AccessLogORM(Base):
     ip_long = Column(String)
     postal_code = Column(String)
     subdivision = Column(String)
-
-    __table_args__ = (Index("access_type", "access_date"),)
 
 
 class ServerStatsLogORM(Base):
