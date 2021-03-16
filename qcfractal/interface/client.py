@@ -3,8 +3,11 @@
 import json
 import os
 import re
+from pkg_resources import parse_version
+
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any, DefaultDict, Dict, List, Optional, Tuple, Union
+
 
 import pandas as pd
 import requests
@@ -50,22 +53,6 @@ _ssl_error_msg = (
     "If you trust the server you are connecting to, try 'FractalClient(... verify=False)'"
 )
 _connection_error_msg = "\n\nCould not connect to server {}, please check the address and try again."
-
-### Helper functions
-
-
-def _version_list(version):
-    version_match = re.search(r"\d+\.\d+\.\d+", version)
-    if version_match is None:
-        raise ValueError(
-            f"Could not read version of form XX.YY.ZZ from {version}. There is something very "
-            f"malformed about the version string. Please report this to the Fractal developers."
-        )
-    version = version_match.group(0)
-    return [int(x) for x in version.split(".")]
-
-
-### Fractal Client
 
 
 class FractalClient(object):
@@ -143,33 +130,15 @@ class FractalClient(object):
         self.query_limits = self.server_info["query_limits"]
 
         if _isportal:
-            try:
-                server_version_min_client = _version_list(self.server_info["client_lower_version_limit"])[:2]
-                server_version_max_client = _version_list(self.server_info["client_upper_version_limit"])[:2]
-            except KeyError:
-                server_ver_str = ".".join([str(i) for i in self.server_info["version"]])
-                raise IOError(
-                    f"The Server at {self.address}, version {self.server_info['version']} does not report "
-                    f"what Client versions it accepts! It can be almost asserted your Client is too new for "
-                    f"the Server you are connecting to. Please downgrade your Client with "
-                    f"the one of following commands (pip or conda):"
-                    f"\n\t- pip install qcportal=={server_ver_str}"
-                    f"\n\t- conda install -c conda-forge qcportal=={server_ver_str}"
-                    f"\n(Only MAJOR.MINOR versions are checked)"
-                )
-            client_version = _version_list(__version__)[:2]
+            server_version_min_client = parse_version(self.server_info["client_lower_version_limit"])
+            server_version_max_client = parse_version(self.server_info["client_upper_version_limit"])
+
+            client_version = parse_version(__version__)
             if not server_version_min_client <= client_version <= server_version_max_client:
-                client_ver_str = ".".join([str(i) for i in client_version])
-                server_version_min_str = ".".join([str(i) for i in server_version_min_client])
-                server_version_max_str = ".".join([str(i) for i in server_version_max_client])
                 raise IOError(
-                    f"This Client of version {client_ver_str} does not fall within the Server's allowed "
-                    f"Client versions of [{server_version_min_str}, {server_version_max_str}] at "
-                    f"Server address: {self.address}. Please change your Client version with one of the "
-                    f"following commands:"
-                    f"\n\t- pip install qcportal=={server_version_max_str}.*"
-                    f"\n\t- conda install -c conda-forge qcportal=={server_version_max_str}.*"
-                    f"\n(Only MAJOR.MINOR versions are checked and shown)"
+                    f"This client version {str(client_version)} does not fall within the server's allowed "
+                    f"client versions of [{str(server_version_min_client)}, {str(server_version_max_client)}]."
+                    f"You may need to upgrade or downgrade"
                 )
 
     def __repr__(self) -> str:
