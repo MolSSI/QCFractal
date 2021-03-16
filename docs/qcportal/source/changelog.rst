@@ -15,6 +15,13 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.15.3 / 2021-03-15
+-------------------
+
+Similar to the previous release, this this release focused on core QCFractal issues. The previous
+release should be compatible with newer QCFractal instances.
+
+
 0.15.0 / 2020-11-11
 -------------------
 
