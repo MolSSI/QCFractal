@@ -35,7 +35,7 @@ if __name__ == "__main__":
             "bcrypt",
             "cryptography",
             # Storage dependencies
-            "sqlalchemy >=1.3",
+            "sqlalchemy >=1.3,<1.4",
             "alembic",
             "psycopg2 >=2.7",
             # QCPortal dependencies
