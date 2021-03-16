@@ -15,6 +15,21 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.15.3 / 2021-03-15
+-------------------
+
+This is a small release focused on some database migrations to improve performance.
+This should greatly improve performance of certain actions (particularly task submission)
+with large databases.
+
+This release also drops support for python < 3.7
+
+Client and managers should not need to be upgraded.
+
+- (:pr:`663`) Adds indices to base_result and molecule (improves ability to delete orphan kvstore)
+- (:pr:`664`) Adds indices to base_result and access_log (improves existing procedure lookup)
+
+
 0.15.0 / 2020-11-11
 -------------------
 
