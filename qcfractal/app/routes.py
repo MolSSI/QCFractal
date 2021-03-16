@@ -293,14 +293,18 @@ def login():
 def get_information():
     qcf_cfg = current_app.config["QCFRACTAL_CONFIG"]
 
+    qcf_version = get_qcfractal_information("version")
+
+    # TODO FOR RELEASE - change lower and upper version limits?
+
     db_data = storage_socket.get_server_stats_log(limit=1)["data"]
     public_info = {
         "name": qcf_cfg.name,
         "manager_heartbeat_frequency": qcf_cfg.heartbeat_frequency,
-        "version": get_qcfractal_information("version"),
+        "version": qcf_version,
         "query_limits": qcf_cfg.response_limits.dict(),
-        "client_lower_version_limit": "0.14.0",  # Must be XX.YY.ZZ
-        "client_upper_version_limit": "0.15.99",  # Must be XX.YY.ZZ
+        "client_lower_version_limit": qcf_version,
+        "client_upper_version_limit": qcf_version,
         "collection": 0,
         "molecule": 0,
         "result": 0,
