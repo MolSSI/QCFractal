@@ -152,7 +152,7 @@ class MoleculeORM(Base):
     provenance = Column(JSON)
     extras = Column(JSON)
 
-    __table_args__ = (Index("ix_molecule_hash", "molecule_hash", unique=True),)
+    __table_args__ = (Index("ix_molecule_hash", "molecule_hash", unique=False),)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
