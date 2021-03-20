@@ -21,7 +21,7 @@ def upgrade():
     op.drop_index("access_type", table_name="access_log")
     op.create_index(op.f("ix_access_log_access_date"), "access_log", ["access_date"], unique=False)
     op.create_index(op.f("ix_access_log_access_type"), "access_log", ["access_type"], unique=False)
-    op.create_index("ix_base_result_hash_index", "base_result", ["hash_index"], unique=True)
+    op.create_index("ix_base_result_hash_index", "base_result", ["hash_index"], unique=False)
     # ### end Alembic commands ###
 
 

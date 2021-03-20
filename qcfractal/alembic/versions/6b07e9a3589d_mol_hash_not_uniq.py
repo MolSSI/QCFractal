@@ -23,6 +23,10 @@ def upgrade():
     # depending on whether the user upgraded to 0.15.4 before 0.15.5
     op.drop_index("ix_molecule_hash", table_name="molecule")
     op.create_index("ix_molecule_hash", "molecule", ["molecule_hash"], unique=False)
+
+    # Drop the index on base_result hash if it exists, and (re-)create it with unique=False
+    op.execute("DROP INDEX IF EXISTS ix_base_result_hash_index")
+    op.create_index("ix_base_result_hash_index", "base_result", ["hash_index"], unique=False)
     # ### end Alembic commands ###
 
 
