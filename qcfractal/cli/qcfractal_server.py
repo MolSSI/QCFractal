@@ -106,8 +106,13 @@ def parse_args() -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(description="A CLI for managing & running a QCFractal server.")
     parser.add_argument("--version", action="version", version=f"{qcfractal.__version__}")
-    parser.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
     parser.add_argument(
+        "--verbose", action="store_true", help="Output more details about the startup of qcfractal-server commands"
+    )
+
+    config_location = parser.add_mutually_exclusive_group()
+    config_location.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+    config_location.add_argument(
         "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
     )
 
@@ -122,9 +127,6 @@ def parse_args() -> argparse.Namespace:
     init.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
     init.add_argument(
         "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
-    )
-    init.add_argument(
-        "-v", "--verbose", action="store_true", help="Output more details about the initialization process"
     )
 
     #####################################
@@ -299,6 +301,7 @@ def server_start(args, config):
 
     # Reset the logger given the full configuration
     logging.getLogger().handlers = [log_handler]
+    logging.getLogger().setLevel(config.loglevel)
 
     # Logger for the rest of this function
     logger = logging.getLogger(__name__)
@@ -592,25 +595,16 @@ def main():
     # Parse all the command line arguments
     args = parse_args()
 
-    # If the user wants verbose output (for some commands), then set logging level to be DEBUG
-    # Use a stripped down format, since we are just logging to stdout
-    verbose = "verbose" in args and args.verbose is True
-
-    # Also set it to debug if loglevel is specified to debug (for the commands that support loglevel)
-    if "loglevel" in args and args.loglevel is not None:
-        verbose = verbose or args.loglevel.upper() == "DEBUG"
-
+    # Set up a a log handler. This is used before the logfile is set up
     log_handler = logging.StreamHandler(sys.stdout)
 
-    # command = the subcommand used (init, start, etc)
-    command = args.command
-
-    if verbose:
+    # If the user wants verbose output (particularly about startup of all the commands), then set logging level to be DEBUG
+    # Use a stripped down format, since we are just logging to stdout
+    if args.verbose:
         logging.basicConfig(level="DEBUG", handlers=[log_handler], format="%(levelname)s: %(name)s: %(message)s")
-    elif command == "upgrade":
-        logging.basicConfig(level="INFO", handlers=[log_handler], format="%(levelname)s: %(message)s")
     else:
-        logging.basicConfig(level="WARNING", handlers=[log_handler], format="%(levelname)s: %(message)s")
+        logging.basicConfig(level="INFO", handlers=[log_handler], format="%(levelname)s: %(message)s")
+
     logger = logging.getLogger(__name__)
 
     # If command is not 'init', we need to build the configuration
@@ -624,7 +618,8 @@ def main():
     # They are only valid if starting a server
     cmd_config = {"flask": {}}
 
-    if command == "start":
+    # command = the subcommand used (init, start, etc)
+    if args.command == "start":
         if args.port is not None:
             cmd_config["flask"]["port"] = args.port
         if args.host is not None:
@@ -640,9 +635,8 @@ def main():
 
     # If base_folder is specified, replace with config=base_folder/qcfractal_config.yaml
     if args.base_folder is not None:
-        if args.config is not None:
-            raise RuntimeError("Cannot specify both --base-folder and --config at the same time!")
-
+        # Mutual exclusion is handled by argparse
+        assert args.config is None
         config_path = os.path.join(args.base_folder, "qcfractal_config.yaml")
 
     elif args.config is not None:
@@ -653,7 +647,7 @@ def main():
 
     # Shortcut here for upgrading the configuration
     # This prevent s actually reading the configuration with the newest code
-    if command == "upgrade-config":
+    if args.command == "upgrade-config":
         server_upgrade_config(args, config_path)
         exit(0)
 
@@ -663,17 +657,17 @@ def main():
     cfg_str = dump_config(qcf_config, 4)
     logger.debug("Assembled the following configuration:\n" + cfg_str)
 
-    if command == "info":
+    if args.command == "info":
         server_info(args, qcf_config)
-    elif command == "init":
+    elif args.command == "init":
         server_init(args, qcf_config)
-    elif command == "start":
+    elif args.command == "start":
         server_start(args, qcf_config)
-    elif command == "upgrade":
+    elif args.command == "upgrade":
         server_upgrade(args, qcf_config)
-    elif command == "user":
+    elif args.command == "user":
         server_user(args, qcf_config)
-    # elif command == "backup":
+    # elif args.command == "backup":
     #    server_backup(args, qcf_config)
-    # elif command == "restore":
+    # elif args.command == "restore":
     #    server_restore(args, qcf_config)
