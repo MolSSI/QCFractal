@@ -7,6 +7,7 @@ import pandas as pd
 import qcelemental as qcel
 
 from ...interface.models import ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
+
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
 
