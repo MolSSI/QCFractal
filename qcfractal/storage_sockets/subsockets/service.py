@@ -175,11 +175,11 @@ class ServiceSocket:
             # Copy the stdout/error from the service itself to its procedure
             if service.stdout:
                 stdout = KVStore(data=service.stdout)
-                stdout_id = self._core_socket.output_store.add([stdout])["data"][0]
+                stdout_id = self._core_socket.output_store.add([stdout])[0]
                 procedure.__dict__["stdout"] = stdout_id
             if service.error:
                 error = KVStore(data=service.error.dict())
-                error_id = self._core_socket.output_store.add([error])["data"][0]
+                error_id = self._core_socket.output_store.add([error])[0]
                 procedure.__dict__["error"] = error_id
 
             self._core_socket.procedure.update([procedure])

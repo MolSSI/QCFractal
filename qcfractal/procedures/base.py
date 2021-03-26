@@ -82,11 +82,12 @@ class BaseTasks(abc.ABC):
             error = KVStore(data=rdata["error"])
 
         # Now add to the database and set the ids in the diction
-        outputs = [stdout, stderr, error]
-        stdout_id, stderr_id, error_id = self.storage.add_kvstore(outputs)["data"]
-        rdata["stdout"] = stdout_id
-        rdata["stderr"] = stderr_id
-        rdata["error"] = error_id
+        if stdout is not None:
+            rdata["stdout"] = self.storage.output_store.add([stdout])[0]
+        if stderr is not None:
+            rdata["stderr"] = self.storage.output_store.add([stderr])[0]
+        if error is not None:
+            rdata["error"] = self.storage.output_store.add([error])[0]
 
     @abc.abstractmethod
     def verify_input(self, data):

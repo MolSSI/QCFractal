@@ -535,14 +535,6 @@ class SQLAlchemySocket:
     def get_server_stats_log(self, before=None, after=None, limit=None, skip=0):
         return self.server_log.get(before, after, limit, skip)
 
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logs (KV store) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    def add_kvstore(self, outputs: List[KVStore]):
-        return self.output_store.add(outputs)
-
-    def get_kvstore(self, id: List[ObjectId] = None, limit: int = None, skip: int = 0):
-        return self.output_store.get(id, limit, skip)
-
     # ~~~~~~~~~~~~~~~~~~~~~~~ Keywords ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def add_keywords(self, keyword_sets: List[KeywordSet]):

@@ -32,7 +32,7 @@ class FailedOperationHandler(BaseTasks):
 
         # Compress error dicts here. Should be ok since they are small
         err_compressed = KVStore.compress(err, CompressionEnum.lzma, 1)
-        err_id = self.storage.add_kvstore([err_compressed])["data"][0]
+        err_id = self.storage.output_store.add([err_compressed])[0]
 
         # A little hacky. Create a dict for stdout,stderr and then use retrieve_outputs
         # These are stored in input_data for a FailedOperation object
