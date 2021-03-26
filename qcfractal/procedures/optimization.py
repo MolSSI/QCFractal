@@ -8,7 +8,7 @@ import qcelemental as qcel
 import qcengine as qcng
 
 from .base import BaseTasks
-from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord, KeywordSet
+from ..interface.models import Molecule, OptimizationRecord, QCSpecification, SingleResultRecord, TaskRecord, KeywordSet
 from ..interface.models.task_models import PriorityEnum
 from .procedures_util import parse_single_tasks, form_qcinputspec_schema
 
@@ -262,7 +262,7 @@ class OptimizationTasks(BaseTasks):
 
             results = parse_single_tasks(self.storage, traj_dict, rec.qc_spec)
             for k, v in results.items():
-                results[k] = ResultRecord(**v)
+                results[k] = SingleResultRecord(**v)
 
             ret = self.storage.add_results(list(results.values()))
             update_dict["trajectory"] = ret["data"]

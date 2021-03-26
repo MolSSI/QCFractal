@@ -8,7 +8,7 @@ import qcelemental as qcel
 import qcengine as qcng
 
 from .base import BaseTasks
-from ..interface.models import Molecule, ResultRecord, TaskRecord, KeywordSet
+from ..interface.models import Molecule, SingleResultRecord, TaskRecord, KeywordSet
 from ..interface.models.task_models import PriorityEnum
 
 _wfn_return_names = set(qcel.models.results.WavefunctionProperties._return_results_names)
@@ -62,7 +62,7 @@ class SingleResultTasks(BaseTasks):
         assert procedure.lower() == "single"
 
         # Grab the tag and priority if available
-        # These are not used in the ResultRecord, so we can pop them
+        # These are not used in the SingleResultRecord, so we can pop them
         tag = qc_spec_dict.pop("tag")
         priority = qc_spec_dict.pop("priority")
 
@@ -93,10 +93,10 @@ class SingleResultTasks(BaseTasks):
         valid_molecule_idx = [idx for idx, mol in enumerate(molecule_list) if mol is not None]
         valid_molecules = [x for x in molecule_list if x is not None]
 
-        # Create ResultRecords for everything
+        # Create SingleResultRecords for everything
         all_result_records = []
         for mol in valid_molecules:
-            record = ResultRecord(**qc_spec_dict.copy(), molecule=mol.id)
+            record = SingleResultRecord(**qc_spec_dict.copy(), molecule=mol.id)
             all_result_records.append(record)
 
         # Add all results in a single function call
@@ -132,7 +132,7 @@ class SingleResultTasks(BaseTasks):
 
     def create_tasks(
         self,
-        records: List[ResultRecord],
+        records: List[SingleResultRecord],
         molecules: Optional[List[Molecule]] = None,
         keywords: Optional[List[KeywordSet]] = None,
         tag: Optional[str] = None,
@@ -146,7 +146,7 @@ class SingleResultTasks(BaseTasks):
 
         Parameters
         ----------
-        records: List[ResultRecord]
+        records: List[SingleResultRecord]
             Records for which to create the TaskRecord object
         molecules: Optional[List[Molecule]]
             Molecules to be applied to the records. If given, must be the same length as records, and
@@ -260,7 +260,7 @@ class SingleResultTasks(BaseTasks):
                 wfn_data_id = self.storage.add_wavefunction_store([wavefunction_save])["data"][0]
                 rdata["wavefunction_data_id"] = wfn_data_id
 
-            # Create an updated ResultRecord based on the existing record and the new results
+            # Create an updated SingleResultRecord based on the existing record and the new results
             # Double check to make sure everything is consistent
             assert existing_result["method"] == rdata["model"]["method"]
             assert existing_result["basis"] == rdata["model"]["basis"]
@@ -283,7 +283,7 @@ class SingleResultTasks(BaseTasks):
             existing_result["stderr"] = rdata["stderr"]
             existing_result["status"] = "COMPLETE"
 
-            result = ResultRecord(**existing_result)
+            result = SingleResultRecord(**existing_result)
 
             # Add to the list to be updated
             updates.append(result)
@@ -296,14 +296,14 @@ class SingleResultTasks(BaseTasks):
 
     @staticmethod
     def _build_schema_input(
-        record: ResultRecord, molecule: "Molecule", keywords: Optional["KeywordSet"] = None
+        record: SingleResultRecord, molecule: "Molecule", keywords: Optional["KeywordSet"] = None
     ) -> "ResultInput":
         """
         Creates an input schema for a single calculation
         """
 
         # Check for programmer sanity. Since we are building this input
-        # right after creating the ResultRecord, these should never fail.
+        # right after creating the SingleResultRecord, these should never fail.
         # But would be very hard to debug
         assert record.molecule == molecule.id
         if record.keywords:

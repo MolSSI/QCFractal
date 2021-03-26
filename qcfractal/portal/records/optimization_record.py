@@ -1,6 +1,7 @@
 from typing import Any
 
 from ...interface.models import OptimizationRecord as _OptimizationRecord
+from .record_utils import register_record
 
 
 class OptimizationRecord:
