@@ -89,7 +89,8 @@ def test_old_kvstore(session_fixture):
     session.commit()
 
     # Now query through the interface
-    q = storage_socket.get_kvstore([log.id])["data"][str(log.id)]
+    q_dict = storage_socket.output_store.get([log.id])[0]
+    q = ptl.models.KVStore(**q_dict)
     assert q.data.decode() == input_str
     assert q.compression is ptl.models.CompressionEnum.none
     assert q.compression_level == 0

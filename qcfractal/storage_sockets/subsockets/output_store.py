@@ -2,16 +2,17 @@ from __future__ import annotations
 
 import logging
 from qcfractal.storage_sockets.models import KVStoreORM
-from qcfractal.interface.models import KVStore
-from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
-from qcfractal.storage_sockets.sqlalchemy_socket import format_query, calculate_limit
+from qcfractal.storage_sockets.sqlalchemy_common import get_query_proj_columns
+from qcfractal.interface.models import KVStore, ObjectId
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from qcfractal.interface.models import ObjectId
+    from sqlalchemy.orm.session import Session
     from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
-    from typing import List
+    from typing import List, Optional, Sequence, Dict, Any
+
+    OutputDict = Dict[str, Any]
 
 
 class OutputStoreSocket:
@@ -20,79 +21,141 @@ class OutputStoreSocket:
         self._logger = logging.getLogger(__name__)
         self._limit = core_socket.qcf_config.response_limits.output_store
 
-    def add(self, outputs: List[KVStore]):
+    @staticmethod
+    def output_to_orm(output: KVStore) -> KVStoreORM:
+        return KVStoreORM(**output.dict())  # type: ignore
+
+    @staticmethod
+    def cleanup_outputstore_dict(out_dict: OutputDict) -> OutputDict:
+        # Old way: store a plain string or dict in "value"
+        # New way: store (possibly) compressed output in "data"
+        val = out_dict.pop("value")
+
+        # If stored the old way, convert to the new way
+        if out_dict["data"] is None:
+            # Set the data field to be the string or dictionary
+            out_dict["data"] = val
+
+            # Remove these and let the model handle the defaults
+            out_dict.pop("compression")
+            out_dict.pop("compression_level")
+
+        # TODO - int id
+        if "id" in out_dict:
+            out_dict["id"] = ObjectId(out_dict["id"])
+
+        return out_dict
+
+    def add_internal(self, session: Session, outputs: Sequence[KVStore]) -> List[ObjectId]:
         """
-        Adds to the key/value store table.
+        Inserts output store data into an existing session
+
+        Since all entries are always inserted, we don't need to return any
+        metadata like other types of insertions
+
+        Changes are not committed to to the database, but they are flushed.
 
         Parameters
         ----------
-        outputs : List[Any]
-            A list of KVStore objects add.
+        session
+            An existing SQLAlchemy session to add the data to
+        outputs
+            A sequence of output store data to add.
 
         Returns
         -------
-        Dict[str, Any]
-            Dictionary with keys data and meta, data is the ids of added blobs
+        :
+            A list of all newly-inserted IDs
         """
 
-        meta = add_metadata_template()
+        # Since outputs can be relatively large, we don't explicitly create
+        # a list of ORMs (one for each output). We only go one at a time
+
         output_ids = []
-        with self._core_socket.session_scope() as session:
-            for output in outputs:
-                if output is None:
-                    output_ids.append(None)
-                    continue
 
-                entry = KVStoreORM(**output.dict())
-                session.add(entry)
-                session.commit()
-                output_ids.append(str(entry.id))
-                meta["n_inserted"] += 1
+        for output in outputs:
+            output_orm = self.output_to_orm(output)
+            session.add(output_orm)
+            session.flush()
+            output_ids.append(ObjectId(output_orm.id))
 
-        meta["success"] = True
+        return output_ids
 
-        return {"data": output_ids, "meta": meta}
-
-    def get(self, id: List[ObjectId] = None, limit: int = None, skip: int = 0):
+    def add(self, outputs: List[KVStore]) -> List[ObjectId]:
         """
-        Pulls from the key/value store table.
+        Inserts outputs into the database
+
+        Since all entries are always inserted, we don't need to return any
+        metadata like other types of insertions
 
         Parameters
         ----------
-        id : List[str]
-            A list of ids to query
-        limit : Optional[int], optional
-            Maximum number of results to return.
-        skip : Optional[int], optional
-            skip the `skip` results
+        outputs
+            A list/sequence of KVStore objects add.
+
         Returns
         -------
-        Dict[str, Any]
-            Dictionary with keys data and meta, data is a key-value dictionary of found key-value stored items.
+        :
+            A list of all the newly-inserted IDs
         """
 
-        limit = calculate_limit(self._limit, limit)
-        meta = get_metadata_template()
+        # TODO - remove me after switching to only using add_internal!
 
-        query = format_query(KVStoreORM, id=id)
+        with self._core_socket.session_scope() as session:
+            return self.add_internal(session, outputs)
 
-        rdata, meta["n_found"] = self._core_socket.get_query_projection(KVStoreORM, query, limit=limit, skip=skip)
+    def get(self, id: Sequence[ObjectId], missing_ok: bool = False) -> List[Optional[OutputDict]]:
+        """
+        Obtain outputs from the database
 
-        meta["success"] = True
+        The returned dictionaries will be in the same order as the IDs specified with the `id` parameter.
 
-        data = {}
-        # TODO - after migrating everything, remove the 'value' column in the table
-        for d in rdata:
-            val = d.pop("value")
-            if d["data"] is None:
-                # Set the data field to be the string or dictionary
-                d["data"] = val
+        If missing_ok is False, then any ids that are missing in the database will raise an exception. Otherwise,
+        the corresponding entry in the returned list of KVStore will be None.
 
-                # Remove these and let the model handle the defaults
-                d.pop("compression")
-                d.pop("compression_level")
+        Parameters
+        ----------
+        id
+            A list or other sequence of ids to query
+        missing_ok
+           If set to True, then missing ids will be tolerated, and the returned list of
+           KVStore will contain None for the corresponding IDs that were not found.
+           Otherwise, an exception will be raised.
 
-            # The KVStore constructor can handle conversion of strings and dictionaries
-            data[d["id"]] = KVStore(**d)
+        Returns
+        -------
+        :
+            A list of KVStore  in the same order as the given ids. If missing_ok is True, then this list
+            will contain None where the id was missing.
+        """
 
-        return {"data": data, "meta": meta}
+        # Check that we are not requesting more outputs than the limit
+        if len(id) > self._limit:
+            raise RuntimeError(f"Request for {len(id)} outputs is over the limit of {self._limit}")
+
+        # TODO - int id
+        id = [int(x) for x in id]
+
+        unique_ids = list(set(id))
+
+        query_cols_names, query_cols = get_query_proj_columns(KVStoreORM)
+
+        with self._core_socket.session_scope(True) as session:
+            # No need to split out id like in other subsockets, we always include all columns
+            results = session.query(*query_cols).filter(KVStoreORM.id.in_(unique_ids)).all()
+            result_dicts = [dict(zip(query_cols_names, x)) for x in results]
+
+        # Fixes some old fields
+        result_dicts = list(map(self.cleanup_outputstore_dict, result_dicts))
+
+        # TODO - int id
+        # We previously changed int to ObjectId in cleanup_outputstore_dict
+        result_map = {int(x["id"]): x for x in result_dicts}
+
+        # Put into the original order
+        ret = [result_map.get(x, None) for x in id]
+
+        if missing_ok is False and None in ret:
+            raise RuntimeError("Could not find all requested KVStore records")
+
+        return ret
