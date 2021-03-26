@@ -582,8 +582,8 @@ class BaseProcedureDataset(Collection):
         self,
         specs: Optional[Union[str, List[str]]] = None,
         full: bool = False,
-        aslist: bool = False,
-        asdf: bool = False,
+        as_list: bool = False,
+        as_df: bool = False,
         status: Optional[Union[str, List[str]]] = None,
     ) -> Union[None, List]:
         """Print or return a status report for all existing compute specifications.
@@ -594,9 +594,9 @@ class BaseProcedureDataset(Collection):
             If given, only yield status of the listed compute specifications.
         full : bool, optional
             If True, expand to give status per entry.
-        aslist: bool, optional
+        as_list: bool, optional
             Return output as a list instead of printing.
-        asdf : bool, optional
+        as_df : bool, optional
             Return output as a `pandas` DataFrame instead of printing.
         status : Optional[Union[str, List[str]]], optional
             If not None, only returns results that match the provided statuses.
@@ -639,9 +639,9 @@ class BaseProcedureDataset(Collection):
             output.index.name = "status"
 
         # give representation
-        if not (aslist or asdf):
+        if not (as_list or as_df):
             print(tabulate(output.reset_index().to_dict("records"), headers="keys"))
-        elif aslist:
+        elif as_list:
             return output.reset_index().to_dict("records")
-        elif asdf:
+        elif as_df:
             return output

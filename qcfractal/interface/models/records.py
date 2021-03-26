@@ -263,7 +263,7 @@ class RecordBase(ProtoModel, abc.ABC):
             return value
 
 
-class ResultRecord(RecordBase):
+class SingleResultRecord(RecordBase):
 
     # Classdata
     _hash_indices = {"driver", "method", "basis", "molecule", "keywords", "program"}
