@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional
 
 from .gridoptimization import GridOptimizationRecord
-from .records import OptimizationRecord, ResultRecord
+from .records import OptimizationRecord, SingleResultRecord
 from .torsiondrive import TorsionDriveRecord
 
 
@@ -47,7 +47,7 @@ def build_procedure(
     # import json
     # print(json.dumps(data, indent=2))
     if data["procedure"].lower() == "single":
-        return ResultRecord(**data, client=client)
+        return SingleResultRecord(**data, client=client)
     elif data["procedure"].lower() == "torsiondrive":
         return TorsionDriveRecord(**data, client=client)
     elif data["procedure"].lower() == "gridoptimization":
