@@ -23,6 +23,8 @@ from ..interface.models.rest_models import (
     MoleculeGETResponse,
     MoleculePOSTBody,
     MoleculePOSTResponse,
+    KVStoreGETBody,
+    KVStoreGETResponse,
 )
 
 from flask import jsonify, request, make_response
@@ -498,11 +500,18 @@ def get_kvstore():
         "data" - A dictionary of {key : value} dictionary of the results
     """
 
-    body_model, response_model = rest_model("kvstore", "get")
-    body = parse_bodymodel(body_model)
+    body = parse_bodymodel(KVStoreGETBody)
+    ret = storage_socket.output_store.get(body.data.id, True)
 
-    ret = storage_socket.get_kvstore(body.data.id)
-    response = response_model(**ret)
+    # REST API currently expects a dict {id: KVStore dict}
+    # But socket returns a list of KVStore dict
+    ret_dict = {x["id"]: x for x in ret if x is not None}
+
+    missing_id = [x for x, y in zip(body.data.id, ret) if y is None]
+
+    # Transform to the old metadata format
+    meta = ResponseGETMeta(n_found=len(ret), missing=missing_id, errors=[], error_description=False, success=True)
+    response = KVStoreGETResponse(meta=meta, data=ret_dict)
 
     return SerializedResponse(response)
 
