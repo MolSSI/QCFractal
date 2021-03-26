@@ -25,7 +25,7 @@ def register_collection(collection: "Collection") -> None:
 
 
 def collection_factory(data: Dict[str, Any], client: "PortalClient" = None) -> "Collection":
-    """Creates a new Collection class from a JSON blob.
+    """Returns a Collection object from data deserialized from JSON.
 
     Parameters
     ----------
