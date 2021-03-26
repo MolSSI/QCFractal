@@ -12,7 +12,7 @@ from ..interface.models import (
     Molecule,
     OptimizationRecord,
     QCSpecification,
-    ResultRecord,
+    SingleResultRecord,
     TaskRecord,
     KeywordSet,
     RecordStatusEnum,
@@ -232,7 +232,7 @@ class OptimizationTasks(BaseTasks):
         results_rec = []
         for v in results:
             v["manager_name"] = manager_name
-            results_rec.append(ResultRecord(**v))
+            results_rec.append(SingleResultRecord(**v))
 
         ret = self.storage.add_results(results_rec)
         update_dict["trajectory"] = ret["data"]

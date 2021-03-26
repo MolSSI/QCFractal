@@ -19,8 +19,6 @@ def register_collection(collection: "Collection") -> None:
     """
 
     class_name = collection.__name__.lower()
-    # if class_name in __registered_collections:
-    #     raise KeyError("Collection type '{}' already registered".format(class_name))
     __registered_collections[class_name] = collection
 
 
@@ -32,16 +30,16 @@ def collection_factory(data: Dict[str, Any], client: "PortalClient" = None) -> "
     data : Dict[str, Any]
         The JSON blob to create a new class from.
     client : PortalClient, optional
-        A PortalClient connected to a server
+        A PortalClient connected to a server.
 
     Returns
     -------
     Collection
-        A ODM of the data.
+        An object representation of the data.
 
     """
     if "collection" not in data:
-        raise KeyError("Attempted to create Collection from JSON, but no `collection` field found.")
+        raise KeyError("Attempted to create Collection from data, but no `collection` field found.")
 
     if data["collection"].lower() not in __registered_collections:
         raise KeyError("Attempted to create Collection of unknown type '{}'.".format(data["collection"]))

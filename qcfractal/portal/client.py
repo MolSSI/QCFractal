@@ -11,8 +11,8 @@ from pydantic import ValidationError
 import pandas as pd
 
 from ..interface.models.rest_models import rest_model
-from ..interface.models import build_procedure
 from .collections import collection_factory, collections_name_map
+from .records import record_factory, record_name_map
 from .cache import PortalCache
 
 _ssl_error_msg = (
@@ -425,7 +425,7 @@ class PortalClient:
 
         if not include:
             for ind in range(len(response.data)):
-                response.data[ind] = build_procedure(response.data[ind], client=self)
+                response.data[ind] = record_factory(response.data[ind], client=self)
 
         if full_return:
             return response

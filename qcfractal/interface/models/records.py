@@ -252,7 +252,7 @@ class SingleResultRecord(RecordBase):
     _hash_indices = {"driver", "method", "basis", "molecule", "keywords", "program"}
 
     # Version data
-    version: int = Field(1, description="Version of the ResultRecord Model which this data was created with.")
+    version: int = Field(1, description="Version of the SingleResultRecord Model which this data was created with.")
     procedure: constr(strip_whitespace=True, regex="single") = Field(
         "single", description='Procedure is fixed as "single" because this is single quantum chemistry result.'
     )
@@ -288,7 +288,7 @@ class SingleResultRecord(RecordBase):
     wavefunction_data_id: Optional[ObjectId] = Field(None, description="The id of the wavefunction")
 
     class Config(RecordBase.Config):
-        """A hash index is not used for ResultRecords as they can be
+        """A hash index is not used for SingleResultRecords as they can be
         uniquely determined with queryable keys.
         """
 
@@ -440,12 +440,12 @@ class OptimizationRecord(RecordBase):
         """
         return self.energies[-1]
 
-    def get_trajectory(self) -> List[ResultRecord]:
+    def get_trajectory(self) -> List[SingleResultRecord]:
         """Returns the Result records for each gradient evaluation in the trajectory.
 
         Returns
         -------
-        List['ResultRecord']
+        List['SingleResultRecord']
             A ordered list of Result record gradient computations.
 
         """
