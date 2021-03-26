@@ -14,6 +14,9 @@ from .collections.collection_utils import collection_factory
 
 
 # TODO: make caching for different servers a layer beneath, ultimately transparent for most users
+# TODO: evaluate use of joblib as the cache implementation instead
+#       should assess possible performance, maintainability improvements
+#       also where would it fall short?
 class PortalCache:
     def __init__(self, client, cachedir):
         self.client = client

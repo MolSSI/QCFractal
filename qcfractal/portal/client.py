@@ -341,6 +341,16 @@ class PortalClient:
     #        chunk_ids = query_ids[i : i + self.client.query_limit]
     #        procedures.extend(self.client._query_procedures(id=chunk_ids))
 
+    # TODO: simplified alternative to `_query_procedures`
+    #       can always use cache
+    def _get_by_id():
+
+        pass
+
+
+    # TODO: would like to merge the functionality of
+    #       `query_result`, `query_procedure`, `query_service`.
+    #       perhaps just `query_record`?
     def _query_procedures(
         self,
         id: Optional["QueryObjectId"] = None,
@@ -430,8 +440,8 @@ class PortalClient:
         collection_type: Optional[str] = None,
         full: bool = False,
         taglines: bool = False,
-        aslist: bool = False,
-        asdf: bool = False,
+        as_list: bool = False,
+        as_df: bool = False,
         group: Optional[str] = "default",
         show_hidden: bool = False,
         tag: Optional[Union[str, List[str]]] = None,
@@ -447,9 +457,9 @@ class PortalClient:
             Whether to include tags, group in output; default False.
         taglines : bool, optional
             Whether to include taglines in output; default False.
-        aslist : bool, optional
+        as_list : bool, optional
             Return output as a list instead of printing.
-        asdf : bool, optional
+        as_df : bool, optional
             Return output as a `pandas` DataFrame instead of printing.
         group : Optional[str], optional
             Show only collections belonging to a specified group.
@@ -462,7 +472,7 @@ class PortalClient:
         Returns
         -------
         Union[None, List]
-            Prints output as table to screen; if `aslist=True`,
+            Prints output as table to screen; if `as_list=True`,
             returns list of output content instead.
         """
         from tabulate import tabulate
@@ -515,9 +525,9 @@ class PortalClient:
                 output.append(trimmed)
 
         # give representation
-        if not (aslist or asdf):
+        if not (as_list or as_df):
             print(tabulate(output, headers="keys"))
-        elif aslist:
+        elif as_list:
             return output
-        elif asdf:
+        elif as_df:
             return pd.DataFrame(output)
