@@ -35,9 +35,9 @@ class AccessLogORM(Base):
     __tablename__ = "access_log"
 
     id = Column(Integer, primary_key=True)
-    access_date = Column(DateTime, default=datetime.datetime.utcnow)
+    access_date = Column(DateTime, default=datetime.datetime.utcnow, index=True)
     access_method = Column(String, nullable=False)
-    access_type = Column(String, nullable=False)
+    access_type = Column(String, nullable=False, index=True)
 
     # Note: no performance difference between varchar and text in postgres
     # will mostly have a serialized JSON, but not stored as JSON for speed
@@ -55,8 +55,6 @@ class AccessLogORM(Base):
     ip_long = Column(String)
     postal_code = Column(String)
     subdivision = Column(String)
-
-    __table_args__ = (Index("access_type", "access_date"),)
 
 
 class ServerStatsLogORM(Base):
@@ -115,6 +113,8 @@ class MoleculeORM(Base):
 
     id = Column(Integer, primary_key=True)
     molecular_formula = Column(String)
+
+    # TODO - hash can be stored more efficiently (ie, byte array)
     molecule_hash = Column(String)
 
     # Required data
@@ -152,27 +152,7 @@ class MoleculeORM(Base):
     provenance = Column(JSON)
     extras = Column(JSON)
 
-    # def __str__(self):
-    #     return str(self.id)
-
-    __table_args__ = (
-        Index("ix_molecule_hash", "molecule_hash", unique=False),  # dafault index is B-tree
-        # TODO: no index on molecule_formula
-    )
-
-    # meta = {
-    #
-    #     'indexes': [
-    #         {
-    #             'fields': ('molecule_hash', ),
-    #             'unique': False
-    #         },  # should almost be unique
-    #         {
-    #             'fields': ('molecular_formula', ),
-    #             'unique': False
-    #         }
-    #     ]
-    # }
+    __table_args__ = (Index("ix_molecule_hash", "molecule_hash", unique=False),)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
