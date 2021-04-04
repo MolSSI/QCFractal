@@ -44,7 +44,7 @@ def collection_factory(data: Dict[str, Any], client: "PortalClient" = None) -> "
     if data["collection"].lower() not in __registered_collections:
         raise KeyError("Attempted to create Collection of unknown type '{}'.".format(data["collection"]))
 
-    return __registered_collections[data["collection"].lower()].from_json(data, client=client)
+    return __registered_collections[data["collection"].lower()].from_dict(data, client=client)
 
 
 def collections_name_map() -> Dict[str, str]:
