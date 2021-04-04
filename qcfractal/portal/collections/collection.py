@@ -145,23 +145,20 @@ class Collection(abc.ABC):
 
         return cls.from_json(tmp_data.data[0], client=client)
 
-    # TODO: properly refactor, since this doesn't consume JSON at all
     @classmethod
-    def from_json(cls, data: Dict[str, Any], client: "PortalClient" = None) -> "Collection":
-        """Creates a new class from a JSON blob
-
+    def from_dict(cls, data: Dict[str, Any], client: "FractalClient" = None) -> "Collection":
+        """Creates a new Collection instance from a dict representation.
+        Allows roundtrips from `Collection.to_dict`.
         Parameters
         ----------
         data : Dict[str, Any]
-            The JSON blob to create a new class from.
-        client : PortalClient, optional
-            A PortalClient connected to a server
-
+            A dict to create a new Collection instance from.
+        client : FractalClient, optional
+            A FractalClient connected to a server.
         Returns
         -------
         Collection
-            A constructed collection.
-
+            A Collection instance.
         """
         # Check we are building the correct object
         class_name = cls.__name__.lower()
@@ -180,27 +177,68 @@ class Collection(abc.ABC):
         ret = cls(name, client=client, **data)
         return ret
 
-    # TODO: properly refactor, since this doesn'tt produce JSON at all
-    def to_json(self, filename: Optional[str] = None):
-        """If a filename is provided, dumps the file to disk.
-        Otherwise returns a copy of the current data.
-
+    @classmethod
+    def from_json(cls, jsondata: Optional[str] = None, filename: Optional[str] = None, client: "FractalClient" = None) -> "Collection":
+        """Creates a new Collection instance from a JSON string.
+        Allows roundtrips from `Collection.to_json`.
+        One of `jsondata` or `filename` must be provided.
         Parameters
         ----------
+        jsondata : str, Optional, Default: None
+            The JSON string to create a new Collection instance from.
         filename : str, Optional, Default: None
-            The filename to drop the data to.
+            The filename to read JSON data from.
+        client : FractalClient, optional
+            A FractalClient connected to a server.
+        Returns
+        -------
+        Collection
+            A Collection instance.
+        """
+        if (jsondata is not None) and (filename is not None):
+            raise ValueError("One of `jsondata` or `filename` must be specified, not both")
 
+        if jsondata is not None:
+            data = json.loads(jsondata)
+        elif filename is not None:
+            with open(filename, 'r') as jsonfile:
+                data = json.load(jsonfile)
+        else:
+            raise ValueError("One of `jsondata` or `filename` must be specified")
+
+        return cls.from_dict(data, client)
+
+    def to_dict(self):
+        """
+        Returns a copy of the current Collection data as a Python dict.
         Returns
         -------
         ret : dict
-            A JSON representation of the Collection
+            A Python dict representation of the Collection data.
         """
-        data = self._data.dict()
+        datadict = self.data.dict()
+        return copy.deepcopy(datadict)
+
+    def to_json(self, filename: Optional[str] = None):
+        """
+        If a filename is provided, dumps the file to disk.
+        Otherwise returns data as a JSON string.
+        Parameters
+        ----------
+        filename : str, Optional, Default: None
+            The filename to write JSON data to.
+        Returns
+        -------
+        ret : dict
+            If `filename=None`, a JSON representation of the Collection.
+            Otherwise `None`.
+        """
+        jsondata = self.json()
         if filename is not None:
             with open(filename, "w") as open_file:
-                json.dump(data, open_file)
+                open_file.write(jsondata)
         else:
-            return copy.deepcopy(data)
+            return jsondata
 
     @abc.abstractmethod
     def _pre_sync_prep(self, client: "PortalClient"):

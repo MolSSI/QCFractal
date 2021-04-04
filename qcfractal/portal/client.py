@@ -425,7 +425,7 @@ class PortalClient:
 
         if not include:
             for ind in range(len(response.data)):
-                response.data[ind] = record_factory(response.data[ind], client=self)
+                response.data[ind] = record_factory(response.data[ind])
 
         if full_return:
             return response

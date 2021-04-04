@@ -8,8 +8,7 @@ import bz2
 
 from typing import Union, List, Dict
 
-from ..interface.models.records import RecordBase
-from ..interface.models import build_procedure
+from .records import record_factory
 from .collections.collection_utils import collection_factory
 
 
@@ -69,7 +68,7 @@ class PortalCache:
         # add to fs cache
         cachefile = os.path.join(self.cachedir, "{}.json.bz2".format(id))
         with open(cachefile, "wb") as f:
-            f.write(bz2.compress(record.json().encode("utf-8")))
+            f.write(bz2.compress(record.to_json().encode("utf-8")))
 
     def get(self, ids: Union[List[str], str]):
         if isinstance(ids, list):
@@ -100,7 +99,7 @@ class PortalCache:
         cachefile = os.path.join(self.cachedir, "{}.json.bz2".format(id))
         if os.path.exists(cachefile):
             with open(cachefile, "rb") as f:
-                self.memcache[id] = build_procedure(json.loads(bz2.decompress(f.read()).decode()))
+                self.memcache[id] = record_factory(json.loads(bz2.decompress(f.read()).decode()))
                 return self.memcache[id]
 
         else:
