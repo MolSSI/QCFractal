@@ -10,6 +10,7 @@ from .common_models import (
     Citation,
     ProtoModel,
     ComputeError,
+    DriverEnum,
     FailedOperation,
     KeywordSet,
     CompressionEnum,
@@ -35,7 +36,7 @@ from .query_meta import InsertMetadata, DeleteMetadata, QueryMetadata
 from .gridoptimization import GridOptimizationInput, GridOptimizationRecord
 from .model_builder import build_procedure
 from .model_utils import hash_dictionary, json_encoders, prepare_basis
-from .records import OptimizationRecord, SingleResultRecord
+from .records import OptimizationRecord, SingleResultRecord, RecordStatusEnum
 from .rest_models import ComputeResponse, rest_model
 from .task_models import (
     ManagerStatusEnum,
