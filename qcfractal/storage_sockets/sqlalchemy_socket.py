@@ -28,7 +28,7 @@ from qcfractal.interface.models import (
     Molecule,
     ObjectId,
     OptimizationRecord,
-    ResultRecord,
+    SingleResultRecord,
     TaskRecord,
     TorsionDriveRecord,
     KVStore,
@@ -608,10 +608,10 @@ class SQLAlchemySocket:
 
     # ~~~~~~~~~~~~~~~~~ Results ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
 
-    def add_results(self, record_list: List[ResultRecord]):
+    def add_results(self, record_list: List[SingleResultRecord]):
         return self.result.add(record_list)
 
-    def update_results(self, record_list: List[ResultRecord]):
+    def update_results(self, record_list: List[SingleResultRecord]):
         return self.result.update(record_list)
 
     def get_results(

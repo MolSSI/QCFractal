@@ -15,15 +15,15 @@ from qcelemental import constants
 from qcelemental.models.types import Array
 from tqdm import tqdm
 
-from ..models import Citation, ComputeResponse, ObjectId, ProtoModel
-from ..statistics import wrap_statistics
-from ..visualization import bar_plot, violin_plot
+from ...interface.models import Citation, ComputeResponse, ObjectId, ProtoModel
+from ...interface.statistics import wrap_statistics
+from ...interface.visualization import bar_plot, violin_plot
 from .collection import Collection
-from .collection_utils import composition_planner, register_collection
+from .collection_utils import register_collection
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .. import FractalClient
-    from ..models import KeywordSet, Molecule, ResultRecord
+    from .. import PortalClient
+    from ...interface.models import KeywordSet, Molecule, SingleResultRecord
     from . import DatasetView
 
 
@@ -34,6 +34,7 @@ class MoleculeEntry(ProtoModel):
     local_results: Dict[str, Any] = Field({}, description="Additional local values.")
 
 
+# TODO: do we still want a concept of contributed values?
 class ContributedValues(ProtoModel):
     name: str = Field(..., description="The name of the contributed values.")
     values: Any = Field(..., description="The values in the contributed values.")
@@ -70,59 +71,52 @@ class Dataset(Collection):
 
     Attributes
     ----------
-    client : client.FractalClient
-        A FractalClient connected to a server
-    data : dict
-        JSON representation of the database backbone
+    client : PortalClient
+        A PortalClient connected to a server.
     df : pd.DataFrame
-        The underlying dataframe for the Dataset object
+        A tabular representation of the dataset.
+
     """
 
-    def __init__(self, name: str, client: Optional["FractalClient"] = None, **kwargs: Any) -> None:
+    def __init__(self, name: str, client: Optional["PortalClient"] = None, **kwargs: Any) -> None:
         """
-        Initializer for the Dataset object. If no Portal is supplied or the database name
-        is not present on the server that the Portal is connected to a blank database will be
-        created.
+        Initialize a the Dataset. 
+
+        If no client is supplied or the dataset name is not present on the server,
+        a blank database will be created.
 
         Parameters
         ----------
         name : str
             The name of the Dataset
-        client : Optional['FractalClient'], optional
+        client : Optional['PortalClient'], optional
             A Portal client to connected to a server
         **kwargs : Dict[str, Any]
             Additional kwargs to pass to the collection
+
         """
         super().__init__(name, client=client, **kwargs)
 
-        self._units = self.data.default_units
+        self._units = self._data.default_units
 
-        # If we making a new database we may need new hashes and json objects
+        # If making a new database may need new hashes and json objects
         self._new_molecules: Dict[str, Molecule] = {}
         self._new_keywords: Dict[Tuple[str, str], KeywordSet] = {}
         self._new_records: List[Dict[str, Any]] = []
         self._updated_state = False
 
         self._view: Optional[DatasetView] = None
-        if self.data.view_available:
+        if self._data.view_available:
             from . import RemoteView
 
-            self._view = RemoteView(client, self.data.id)
+            self._view = RemoteView(client, self._data.id)
         self._disable_view: bool = False  # for debugging and testing
         self._disable_query_limit: bool = False  # for debugging and testing
 
-        # Initialize internal data frames and load in contrib
-        self.df = pd.DataFrame()
+        # Load contributed columns
         self._column_metadata: Dict[str, Any] = {}
 
-        # If this is a brand new dataset, initialize the records and cv fields
-        if self.data.id == "local":
-            if self.data.records is None:
-                self.data.__dict__["records"] = []
-            if self.data.contributed_values is None:
-                self.data.__dict__["contributed_values"] = {}
-
-    class DataModel(Collection.DataModel):
+    class _DataModel(Collection._DataModel):
 
         # Defaults
         default_program: Optional[str] = None
@@ -134,112 +128,29 @@ class Dataset(Collection):
         alias_keywords: Dict[str, Dict[str, str]] = {}
 
         # Data
-        records: Optional[List[MoleculeEntry]] = None
-        contributed_values: Dict[str, ContributedValues] = None
+        records: Optional[List[MoleculeEntry]] = []
+        contributed_values: Dict[str, ContributedValues] = {}
 
         # History: driver, program, method (basis, keywords)
         history: Set[Tuple[str, str, str, Optional[str], Optional[str]]] = set()
         history_keys: Tuple[str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords")
 
-    def set_view(self, path: Union[str, Path]) -> None:
-        """
-        Set a dataset to use a local view.
 
-        Parameters
-        ----------
-        path: Union[str, Path]
-            path to an hdf5 file representing a view for this dataset
-        """
-        from . import HDF5View
 
-        self._view = HDF5View(path)
 
-    def download(
-        self, local_path: Optional[Union[str, Path]] = None, verify: bool = True, progress_bar: bool = True
-    ) -> None:
-        """
-        Download a remote view if available. The dataset will use this view to avoid server queries for calls to:
-        - get_entries
-        - get_molecules
-        - get_values
-        - list_values
 
-        Parameters
-        ----------
-        local_path: Optional[Union[str, Path]], optional
-            Local path the store downloaded view. If None, the view will be stored in a temporary file and deleted on exit.
-        verify: bool, optional
-            Verify download checksum. Default: True.
-        progress_bar: bool, optional
-            Display a download progress bar. Default: True
-        """
-        chunk_size = 8192
-        if self.data.view_url_hdf5 is None:
-            raise ValueError("A view for this dataset is not available on the server")
 
-        if local_path is not None:
-            local_path = Path(local_path)
-        else:
-            self._view_tempfile = tempfile.NamedTemporaryFile()  # keep temp file alive until self is destroyed
-            local_path = self._view_tempfile.name
 
-        r = requests.get(self.data.view_url_hdf5, stream=True)
-        pbar = None
-        if progress_bar:
-            try:
-                file_length = int(r.headers.get("content-length"))
-                pbar = tqdm(total=file_length, initial=0, unit="B", unit_scale=True)
-            except Exception:
-                warnings.warn("Failed to create download progress bar", RuntimeWarning)
 
-        with open(local_path, "wb") as fd:
-            for chunk in r.iter_content(chunk_size=chunk_size):
-                fd.write(chunk)
-                if pbar is not None:
-                    pbar.update(chunk_size)
 
-        with open(local_path, "rb") as f:
-            magic = f.read(2)
-            gzipped = magic == b"\x1f\x8b"
-        if gzipped:
-            extract_tempfile = tempfile.NamedTemporaryFile()  # keep temp file alive until self is destroyed
-            with gzip.open(local_path, "rb") as fgz:
-                with open(extract_tempfile.name, "wb") as f:
-                    f.write(fgz.read())
-            self._view_tempfile = extract_tempfile
-            local_path = self._view_tempfile.name
 
-        if verify:
-            remote_checksum = self.data.view_metadata["blake2b_checksum"]
-            from . import HDF5View
 
-            local_checksum = HDF5View(local_path).hash()
-            if remote_checksum != local_checksum:
-                raise ValueError(f"Checksum verification failed. Expected: {remote_checksum}, Got: {local_checksum}")
 
-        self.set_view(local_path)
+# OLD STUFF BELOW; GRAB ONLY AS NEEDED
 
-    def to_file(self, path: Union[str, Path], encoding: str) -> None:
-        """
-        Writes a view of the dataset to a file
+class _Dataset(Collection):
 
-        Parameters
-        ----------
-        path: Union[str, Path]
-            Where to write the file
-        encoding: str
-            Options: plaintext, hdf5
-        """
-        if encoding.lower() == "plaintext":
-            from . import PlainTextView
 
-            PlainTextView(path).write(self)
-        elif encoding.lower() in ["hdf5", "h5"]:
-            from . import HDF5View
-
-            HDF5View(path).write(self)
-        else:
-            raise NotImplementedError(f"Unsupported encoding: {encoding}")
 
     def _get_data_records_from_db(self):
         self._check_client()
@@ -247,25 +158,25 @@ class Dataset(Collection):
         # objects. So what we do is call get_collection with include. But we have to also include collection and
         # name in the query because they are required in the collection DataModel. But we can use these to check that
         # we got back the right data, so that's nice.
-        response = self.client.get_collection(
+        response = self._client.get_collection(
             self.__class__.__name__.lower(),
             self.name,
             full_return=False,
             include=["records", "contributed_values", "collection", "name", "id"],
         )
-        if not (response.data.id == self.data.id and response.data.name == self.name):
+        if not (response.data.id == self._data.id and response.data.name == self.name):
             raise ValueError("Got the wrong records and contributed values from the server.")
         # This works because get_collection builds a validated Dataset object
-        self.data.__dict__["records"] = response.data.records
-        self.data.__dict__["contributed_values"] = response.data.contributed_values
+        self._data.__dict__["records"] = response.data.records
+        self._data.__dict__["contributed_values"] = response.data.contributed_values
 
     def _entry_index(self, subset: Optional[List[str]] = None) -> pd.DataFrame:
         # TODO: make this fast for subsets
-        if self.data.records is None:
+        if self._data.records is None:
             self._get_data_records_from_db()
 
         ret = pd.DataFrame(
-            [[entry.name, entry.molecule_id] for entry in self.data.records], columns=["name", "molecule_id"]
+            [[entry.name, entry.molecule_id] for entry in self._data.records], columns=["name", "molecule_id"]
         )
         if subset is None:
             return ret
@@ -276,19 +187,19 @@ class Dataset(Collection):
         if self._new_molecules or self._new_keywords or self._new_records or self._updated_state:
             raise ValueError("New molecules, keywords, or records detected, run save before submitting new tasks.")
 
-    def _canonical_pre_save(self, client: "FractalClient") -> None:
+    def _canonical_pre_sync(self, client: "PortalClient") -> None:
         self._ensure_contributed_values()
-        if self.data.records is None:
+        if self._data.records is None:
             self._get_data_records_from_db()
         for k in list(self._new_keywords.keys()):
             ret = client.add_keywords([self._new_keywords[k]])
             assert len(ret) == 1, "KeywordSet added incorrectly"
-            self.data.alias_keywords[k[0]][k[1]] = ret[0]
+            self._data.alias_keywords[k[0]][k[1]] = ret[0]
             del self._new_keywords[k]
         self._updated_state = False
 
-    def _pre_save_prep(self, client: "FractalClient") -> None:
-        self._canonical_pre_save(client)
+    def _pre_sync_prep(self, client: "PortalClient") -> None:
+        self._canonical_pre_sync(client)
 
         # Preps any new molecules introduced to the Dataset before storing data.
         mol_ret = self._add_molecules_by_dict(client, self._new_molecules)
@@ -297,7 +208,7 @@ class Dataset(Collection):
         for record in self._new_records:
             molecule_hash = record.pop("molecule_hash")
             new_record = MoleculeEntry(molecule_id=mol_ret[molecule_hash], **record)
-            self.data.records.append(new_record)
+            self._data.records.append(new_record)
 
         self._new_records = []
         self._new_molecules = {}
@@ -353,11 +264,11 @@ class Dataset(Collection):
         """
         Adds compute history to the dataset
         """
-        if history.keys() != set(self.data.history_keys):
+        if history.keys() != set(self._data.history_keys):
             raise KeyError("Internal error: Incorrect history keys passed in.")
 
         new_history = []
-        for key in self.data.history_keys:
+        for key in self._data.history_keys:
 
             value = history[key]
             if value is not None:
@@ -365,7 +276,7 @@ class Dataset(Collection):
 
             new_history.append(value)
 
-        self.data.history.add(tuple(new_history))
+        self._data.history.add(tuple(new_history))
 
     def list_values(
         self,
@@ -440,13 +351,13 @@ class Dataset(Collection):
         ret = self._filter_records(ret, **spec)
 
         # Sort
-        sort_index = ["native"] + list(self.data.history_keys[:-1])
+        sort_index = ["native"] + list(self._data.history_keys[:-1])
         if "stoichiometry" in ret.columns:
             sort_index += ["stoichiometry", "name"]
         ret.set_index(sort_index, inplace=True)
         ret.sort_index(inplace=True)
         ret.reset_index(inplace=True)
-        ret.set_index(["native"] + list(self.data.history_keys[:-1]), inplace=True)
+        ret.set_index(["native"] + list(self._data.history_keys[:-1]), inplace=True)
 
         return ret
 
@@ -521,7 +432,7 @@ class Dataset(Collection):
         """
         show_dftd3 = dftd3
 
-        history = pd.DataFrame(list(self.data.history), columns=self.data.history_keys)
+        history = pd.DataFrame(list(self._data.history), columns=self._data.history_keys)
 
         # Short circuit because merge and apply below require data
         if history.shape[0] == 0:
@@ -648,10 +559,10 @@ class Dataset(Collection):
         if native in {True, None}:
             spec_nodriver = spec.copy()
             driver = spec_nodriver.pop("driver")
-            if driver is not None and driver != self.data.default_driver:
+            if driver is not None and driver != self._data.default_driver:
                 raise KeyError(
                     f"For native values, driver ({driver}) must be the same as the dataset's default driver "
-                    f"({self.data.default_driver}). Consider using get_records instead."
+                    f"({self._data.default_driver}). Consider using get_records instead."
                 )
             df = self._get_native_values(subset=subset_set, force=force, **spec_nodriver)
             ret.append(df)
@@ -717,7 +628,7 @@ class Dataset(Collection):
 
             qname = query["name"]
             names.append(qname)
-            if force or not self._subset_in_cache(qname, subset):
+            if force:
                 self._column_metadata[qname] = query
                 new_queries.append(query)
 
@@ -744,8 +655,7 @@ class Dataset(Collection):
             new_data[qname] *= constants.conversion_factor(units[qname], self.units)
             self._column_metadata[qname].update({"native": True, "units": self.units})
 
-        self._update_cache(new_data)
-        return self.df.loc[subset, names]
+        return self._df.loc[subset, names]
 
     def _form_queries(
         self,
@@ -860,7 +770,7 @@ class Dataset(Collection):
             queries = [query]
             query_names = ["Stats"]
 
-        title = f"{self.data.name} Dataset Statistics"
+        title = f"{self._data.name} Dataset Statistics"
 
         series = []
         for q, name in zip(queries, query_names):
@@ -989,10 +899,10 @@ class Dataset(Collection):
         elif basis:
             name = f"{basis.lower()}"
 
-        if keywords and (keywords != self.data.default_keywords.get(program, None)):
+        if keywords and (keywords != self._data.default_keywords.get(program, None)):
             name = f"{name}-{keywords}"
 
-        if program and (program.lower() != self.data.default_program):
+        if program and (program.lower() != self._data.default_program):
             name = f"{name}-{program.title()}"
 
         if stoich:
@@ -1017,26 +927,26 @@ class Dataset(Collection):
 
         # Handle default program
         if program is None:
-            if self.data.default_program is None:
+            if self._data.default_program is None:
                 raise KeyError("No default program was set and none was provided.")
-            program = self.data.default_program
+            program = self._data.default_program
         else:
             program = program.lower()
 
-        driver = self.data.default_driver
+        driver = self._data.default_driver
 
         # Handle keywords
         keywords_alias = keywords
         if keywords is None:
-            if program in self.data.default_keywords:
-                keywords_alias = self.data.default_keywords[program]
-                keywords = self.data.alias_keywords[program][keywords_alias]
+            if program in self._data.default_keywords:
+                keywords_alias = self._data.default_keywords[program]
+                keywords = self._data.alias_keywords[program][keywords_alias]
         else:
-            if (program not in self.data.alias_keywords) or (keywords not in self.data.alias_keywords[program]):
+            if (program not in self._data.alias_keywords) or (keywords not in self._data.alias_keywords[program]):
                 raise KeyError("KeywordSet alias '{}' not found for program '{}'.".format(keywords, program))
 
             keywords_alias = keywords
-            keywords = self.data.alias_keywords[program][keywords]
+            keywords = self._data.alias_keywords[program][keywords]
 
         # Form database and history keys
         dbkeys = {"driver": driver, "program": program, "method": method, "basis": basis, "keywords": keywords}
@@ -1072,8 +982,8 @@ class Dataset(Collection):
         molecule_ids = list(set(indexer.values()))
         if not self._use_view(force):
             molecules: List["Molecule"] = []
-            for i in range(0, len(molecule_ids), self.client.query_limit):
-                molecules.extend(self.client.query_molecules(id=molecule_ids[i : i + self.client.query_limit]))
+            for i in range(0, len(molecule_ids), self._client.query_limit):
+                molecules.extend(self._client.query_molecules(id=molecule_ids[i : i + self._client.query_limit]))
             # XXX: molecules = pd.DataFrame({"molecule_id": molecule_ids, "molecule": molecules}) fails
             #      test_gradient_dataset_get_molecules and I don't know why
             molecules = pd.DataFrame({"molecule_id": molecule.id, "molecule": molecule} for molecule in molecules)
@@ -1113,7 +1023,7 @@ class Dataset(Collection):
         query : Dict[str, Any]
             A results query
         include : Optional[List[str]], optional
-            The attributes to return. Otherwise returns ResultRecord objects.
+            The attributes to return. Otherwise returns SingleResultRecord objects.
         merge : bool, optional
             Sum compound queries together, useful for mixing results
         raise_on_plan : Union[str, bool], optional
@@ -1129,7 +1039,7 @@ class Dataset(Collection):
         self._check_state()
 
         ret = []
-        plan = composition_planner(**query)
+        plan = self._composition_planner(**query)
         if raise_on_plan and (len(plan) > 1):
             if raise_on_plan is True:
                 raise KeyError("Recieved a multi-stage plan when this function does not support multi-staged plans.")
@@ -1148,10 +1058,10 @@ class Dataset(Collection):
                 query_set["include"] = proj
 
             # Chunk up the queries
-            records: List[ResultRecord] = []
-            for i in range(0, len(molecules), self.client.query_limit):
-                query_set["molecule"] = molecules[i : i + self.client.query_limit]
-                records.extend(self.client.query_results(**query_set))
+            records: List[SingleResultRecord] = []
+            for i in range(0, len(molecules), self._client.query_limit):
+                query_set["molecule"] = molecules[i : i + self._client.query_limit]
+                records.extend(self._client.query_results(**query_set))
 
             if include is None:
                 records = [{"molecule": x.molecule, "record": x} for x in records]
@@ -1216,11 +1126,11 @@ class Dataset(Collection):
         ids: List[Optional[ObjectId]] = []
         submitted: List[ObjectId] = []
         existing: List[ObjectId] = []
-        for compute_set in composition_planner(**dbkeys):
+        for compute_set in self._composition_planner(**dbkeys):
 
-            for i in range(0, len(umols), self.client.query_limit):
-                chunk_mols = umols[i : i + self.client.query_limit]
-                ret = self.client.add_compute(
+            for i in range(0, len(umols), self._client.query_limit):
+                chunk_mols = umols[i : i + self._client.query_limit]
+                ret = self._client.add_compute(
                     **compute_set, molecule=chunk_mols, tag=tag, priority=priority, protocols=protocols
                 )
 
@@ -1242,9 +1152,9 @@ class Dataset(Collection):
 
     @units.setter
     def units(self, value):
-        for column in self.df.columns:
+        for column in self._df.columns:
             try:
-                self.df[column] *= constants.conversion_factor(self._column_metadata[column]["units"], value)
+                self._df[column] *= constants.conversion_factor(self._column_metadata[column]["units"], value)
 
                 # Cast units to quantities so that `kcal / mol` == `kilocalorie / mole`
                 metadata_quantity = constants.Quantity(self._column_metadata[column]["units"])
@@ -1275,7 +1185,7 @@ class Dataset(Collection):
             The program to default to.
         """
 
-        self.data.__dict__["default_program"] = program.lower()
+        self._data.__dict__["default_program"] = program.lower()
         return True
 
     def set_default_benchmark(self, benchmark: str) -> bool:
@@ -1288,7 +1198,7 @@ class Dataset(Collection):
             The benchmark to default to.
         """
 
-        self.data.__dict__["default_benchmark"] = benchmark
+        self._data.__dict__["default_benchmark"] = benchmark
         return True
 
     def add_keywords(self, alias: str, program: str, keyword: "KeywordSet", default: bool = False) -> bool:
@@ -1311,16 +1221,16 @@ class Dataset(Collection):
 
         alias = alias.lower()
         program = program.lower()
-        if program not in self.data.alias_keywords:
-            self.data.alias_keywords[program] = {}
+        if program not in self._data.alias_keywords:
+            self._data.alias_keywords[program] = {}
 
-        if alias in self.data.alias_keywords[program]:
+        if alias in self._data.alias_keywords[program]:
             raise KeyError("Alias '{}' already set for program {}.".format(alias, program))
 
         self._new_keywords[(program, alias)] = keyword
 
         if default:
-            self.data.default_keywords[program] = alias
+            self._data.default_keywords[program] = alias
         return True
 
     def list_keywords(self) -> pd.DataFrame:
@@ -1333,8 +1243,8 @@ class Dataset(Collection):
             default for a program. Indexed on program.
         """
         data = []
-        for program, kwaliases in self.data.alias_keywords.items():
-            prog_default_kw = self.data.default_keywords.get(program, None)
+        for program, kwaliases in self._data.alias_keywords.items():
+            prog_default_kw = self._data.default_keywords.get(program, None)
             for kwalias, kwid in kwaliases.items():
                 data.append(
                     {
@@ -1374,14 +1284,14 @@ class Dataset(Collection):
 
         alias = alias.lower()
         program = program.lower()
-        if (program not in self.data.alias_keywords) or (alias not in self.data.alias_keywords[program]):
+        if (program not in self._data.alias_keywords) or (alias not in self._data.alias_keywords[program]):
             raise KeyError("Keywords {}: {} not found.".format(program, alias))
 
-        kwid = self.data.alias_keywords[program][alias]
+        kwid = self._data.alias_keywords[program][alias]
         if return_id:
             return kwid
         else:
-            return self.client.query_keywords([kwid])[0]
+            return self._client.query_keywords([kwid])[0]
 
     def add_contributed_values(self, contrib: ContributedValues, overwrite: bool = False) -> None:
         """
@@ -1408,16 +1318,16 @@ class Dataset(Collection):
 
         # Check the key
         key = contrib.name.lower()
-        if (key in self.data.contributed_values) and (overwrite is False):
+        if (key in self._data.contributed_values) and (overwrite is False):
             raise KeyError(
                 "Key '{}' already found in contributed values. Use `overwrite=True` to force an update.".format(key)
             )
 
-        self.data.contributed_values[key] = contrib
+        self._data.contributed_values[key] = contrib
         self._updated_state = True
 
     def _ensure_contributed_values(self) -> None:
-        if self.data.contributed_values is None:
+        if self._data.contributed_values is None:
             self._get_data_records_from_db()
 
     def _list_contributed_values(self) -> pd.DataFrame:
@@ -1430,19 +1340,19 @@ class Dataset(Collection):
             Contributed value specifications.
         """
         self._ensure_contributed_values()
-        ret = pd.DataFrame(columns=self.data.history_keys + tuple(["name"]))
+        ret = pd.DataFrame(columns=self._data.history_keys + tuple(["name"]))
 
         cvs = (
-            (cv_data.name, cv_data.theory_level_details) for (cv_name, cv_data) in self.data.contributed_values.items()
+            (cv_data.name, cv_data.theory_level_details) for (cv_name, cv_data) in self._data.contributed_values.items()
         )
 
         for cv_name, theory_level_details in cvs:
             spec = {"name": cv_name}
-            for k in self.data.history_keys:
+            for k in self._data.history_keys:
                 spec[k] = "Unknown"
             # ReactionDataset uses "default" as a default value for stoich,
             # but many contributed datasets lack a stoich field
-            if "stoichiometry" in self.data.history_keys:
+            if "stoichiometry" in self._data.history_keys:
                 spec["stoichiometry"] = "default"
             if isinstance(theory_level_details, dict):
                 spec.update(**theory_level_details)
@@ -1450,19 +1360,13 @@ class Dataset(Collection):
 
         return ret
 
-    def _subset_in_cache(self, column_name: str, subset: Set[str]) -> bool:
-        try:
-            return not self.df.loc[subset, column_name].isna().any()
-        except KeyError:
-            return False
-
     def _update_cache(self, new_data: pd.DataFrame) -> None:
         new_df = pd.DataFrame(
-            index=set(self.df.index) | set(new_data.index), columns=set(self.df.columns) | set(new_data.columns)
+            index=set(self._df.index) | set(new_data.index), columns=set(self._df.columns) | set(new_data.columns)
         )
         new_df.update(new_data)
-        new_df.update(self.df)
-        self.df = new_df
+        new_df.update(self._df)
+        self._df = new_df
 
     def _get_contributed_values(self, subset: Set[str], force: bool = False, **spec) -> pd.DataFrame:
 
@@ -1474,7 +1378,7 @@ class Dataset(Collection):
         for query in queries.to_dict("records"):
             column_name = query["name"]
             column_names.append(column_name)
-            if force or not self._subset_in_cache(column_name, subset):
+            if force:
                 self._column_metadata[column_name] = query
                 new_queries.append(query)
 
@@ -1484,7 +1388,7 @@ class Dataset(Collection):
             units: Dict[str, str] = {}
 
             for query in new_queries:
-                data = self.data.contributed_values[query["name"].lower()].copy()
+                data = self._data.contributed_values[query["name"].lower()].copy()
                 column_name = data.name
 
                 # Annoying work around to prevent some pandas magic
@@ -1495,7 +1399,7 @@ class Dataset(Collection):
                     if isinstance(data.theory_level_details, dict) and "driver" in data.theory_level_details:
                         cv_driver = data.theory_level_details["driver"]
                     else:
-                        cv_driver = self.data.default_driver
+                        cv_driver = self._data.default_driver
 
                     if cv_driver == "gradient":
                         values = [np.array(v).reshape(-1, 3) for v in data.values]
@@ -1526,8 +1430,7 @@ class Dataset(Collection):
                     raise
             self._column_metadata[column_name].update(metadata)
 
-        self._update_cache(new_data)
-        return self.df.loc[subset, column_names]
+        return self._df.loc[subset, column_names]
 
     def get_molecules(
         self, subset: Optional[Union[str, Set[str]]] = None, force: bool = False
@@ -1564,9 +1467,9 @@ class Dataset(Collection):
         include: Optional[List[str]] = None,
         subset: Optional[Union[str, Set[str]]] = None,
         merge: bool = False,
-    ) -> Union[pd.DataFrame, "ResultRecord"]:
+    ) -> Union[pd.DataFrame, "SingleResultRecord"]:
         """
-        Queries full ResultRecord objects from the database.
+        Queries full SingleResultRecord objects from the database.
 
         Parameters
         ----------
@@ -1579,7 +1482,7 @@ class Dataset(Collection):
         program : Optional[str], optional
             The program to query on
         include : Optional[List[str]], optional
-            The attributes to return. Otherwise returns ResultRecord objects.
+            The attributes to return. Otherwise returns SingleResultRecord objects.
         subset : Optional[Union[str, Set[str]]], optional
             The index subset to query on
         merge : bool
@@ -1588,8 +1491,8 @@ class Dataset(Collection):
 
         Returns
         -------
-        Union[pd.DataFrame, 'ResultRecord']
-            Either a DataFrame of indexed ResultRecords or a single ResultRecord if a single subset string was provided.
+        Union[pd.DataFrame, 'SingleResultRecord']
+            Either a DataFrame of indexed SingleResultRecords or a single SingleResultRecord if a single subset string was provided.
         """
         name, _, history = self._default_parameters(program, method, basis, keywords)
         if len(self.list_records(**history)) == 0:
@@ -1668,7 +1571,7 @@ class Dataset(Collection):
         self.get_entries(force=True)
         compute_keys = {"program": program, "method": method, "basis": basis, "keywords": keywords}
 
-        molecule_idx = [e.molecule_id for e in self.data.records]
+        molecule_idx = [e.molecule_id for e in self._data.records]
 
         ret = self._compute(compute_keys, molecule_idx, tag, priority, protocols)
         self.save()
@@ -1686,7 +1589,7 @@ class Dataset(Collection):
         """
         return list(self.get_entries(subset=subset, force=force)["name"].unique())
 
-    # Statistical quantities
+    ## Statistical quantities
     def statistics(
         self, stype: str, value: str, bench: Optional[str] = None, **kwargs: Dict[str, Any]
     ) -> Union[np.ndarray, pd.Series, np.float64]:
@@ -1711,7 +1614,7 @@ class Dataset(Collection):
         """
 
         if bench is None:
-            bench = self.data.default_benchmark
+            bench = self._data.default_benchmark
 
         if bench is None:
             raise KeyError("No benchmark provided and default_benchmark is None!")
@@ -1721,11 +1624,6 @@ class Dataset(Collection):
     def _use_view(self, force: bool = False) -> bool:
         """Helper function to decide whether to use a locally available HDF5 view"""
         return (force is False) and (self._view is not None) and (self._disable_view is False)
-
-    def _clear_cache(self) -> None:
-        self.df = pd.DataFrame()
-        self.data.__dict__["records"] = None
-        self.data.__dict__["contributed_values"] = None
 
     # Getters
     def __getitem__(self, args: str) -> pd.Series:
@@ -1741,7 +1639,126 @@ class Dataset(Collection):
         ret : pd.Series, pd.DataFrame
             A view of the underlying dataframe data
         """
-        return self.df[args]
+        return self._df[args]
 
+
+    @staticmethod
+    def _composition_planner(program=None, method=None, basis=None, driver=None, keywords=None):
+        """
+        Plans out a given query into multiple pieces
+        """
+    
+        base = {"program": program, "method": method, "basis": basis, "driver": driver, "keywords": keywords}
+    
+        if ("-d3" in method.lower()) and ("dftd3" != program.lower()) and ("hessian" != driver.lower()):
+            dftd3keys = {"program": "dftd3", "method": method, "basis": None, "driver": driver, "keywords": None}
+            base["method"] = method.lower().split("-d3")[0]
+    
+            return [dftd3keys, base]
+    
+        else:
+            return [base]
+
+    ## View functionality
+
+    def set_view(self, path: Union[str, Path]) -> None:
+        """
+        Set a dataset to use a local view.
+
+        Parameters
+        ----------
+        path: Union[str, Path]
+            path to an hdf5 file representing a view for this dataset
+        """
+        from . import HDF5View
+
+        self._view = HDF5View(path)
+
+    def download(
+        self, local_path: Optional[Union[str, Path]] = None, verify: bool = True, progress_bar: bool = True
+    ) -> None:
+        """
+        Download a remote view if available. The dataset will use this view to avoid server queries for calls to:
+        - get_entries
+        - get_molecules
+        - get_values
+        - list_values
+
+        Parameters
+        ----------
+        local_path: Optional[Union[str, Path]], optional
+            Local path the store downloaded view. If None, the view will be stored in a temporary file and deleted on exit.
+        verify: bool, optional
+            Verify download checksum. Default: True.
+        progress_bar: bool, optional
+            Display a download progress bar. Default: True
+        """
+        chunk_size = 8192
+        if self._data.view_url_hdf5 is None:
+            raise ValueError("A view for this dataset is not available on the server")
+
+        if local_path is not None:
+            local_path = Path(local_path)
+        else:
+            self._view_tempfile = tempfile.NamedTemporaryFile()  # keep temp file alive until self is destroyed
+            local_path = self._view_tempfile.name
+
+        r = requests.get(self._data.view_url_hdf5, stream=True)
+        pbar = None
+        if progress_bar:
+            try:
+                file_length = int(r.headers.get("content-length"))
+                pbar = tqdm(total=file_length, initial=0, unit="B", unit_scale=True)
+            except Exception:
+                warnings.warn("Failed to create download progress bar", RuntimeWarning)
+
+        with open(local_path, "wb") as fd:
+            for chunk in r.iter_content(chunk_size=chunk_size):
+                fd.write(chunk)
+                if pbar is not None:
+                    pbar.update(chunk_size)
+
+        with open(local_path, "rb") as f:
+            magic = f.read(2)
+            gzipped = magic == b"\x1f\x8b"
+        if gzipped:
+            extract_tempfile = tempfile.NamedTemporaryFile()  # keep temp file alive until self is destroyed
+            with gzip.open(local_path, "rb") as fgz:
+                with open(extract_tempfile.name, "wb") as f:
+                    f.write(fgz.read())
+            self._view_tempfile = extract_tempfile
+            local_path = self._view_tempfile.name
+
+        if verify:
+            remote_checksum = self._data.view_metadata["blake2b_checksum"]
+            from . import HDF5View
+
+            local_checksum = HDF5View(local_path).hash()
+            if remote_checksum != local_checksum:
+                raise ValueError(f"Checksum verification failed. Expected: {remote_checksum}, Got: {local_checksum}")
+
+        self.set_view(local_path)
+
+    def to_file(self, path: Union[str, Path], encoding: str) -> None:
+        """
+        Writes a view of the dataset to a file
+
+        Parameters
+        ----------
+        path: Union[str, Path]
+            Where to write the file
+        encoding: str
+            Options: plaintext, hdf5
+        """
+        if encoding.lower() == "plaintext":
+            from . import PlainTextView
+
+            PlainTextView(path).write(self)
+        elif encoding.lower() in ["hdf5", "h5"]:
+            from . import HDF5View
+
+            HDF5View(path).write(self)
+        else:
+            raise NotImplementedError(f"Unsupported encoding: {encoding}")
 
 register_collection(Dataset)

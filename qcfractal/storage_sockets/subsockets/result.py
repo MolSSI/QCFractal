@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from sqlalchemy import and_
 from qcfractal.storage_sockets.models import BaseResultORM, ResultORM, TaskQueueORM
-from qcfractal.interface.models import ResultRecord, TaskStatusEnum
+from qcfractal.interface.models import SingleResultRecord, TaskStatusEnum
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 from qcfractal.storage_sockets.sqlalchemy_socket import format_query, get_count_fast, calculate_limit
 
@@ -20,14 +20,14 @@ class ResultSocket:
         self._logger = logging.getLogger(__name__)
         self._limit = core_socket.qcf_config.response_limits.result
 
-    def add(self, record_list: List[ResultRecord]):
+    def add(self, record_list: List[SingleResultRecord]):
         """
         Add results from a given dict. The dict should have all the required
         keys of a result.
 
         Parameters
         ----------
-        data : List[ResultRecord]
+        data : List[SingleResultRecord]
             Each dict in the list must have:
             program, driver, method, basis, options, molecule
             Where molecule is the molecule id in the DB
@@ -162,7 +162,7 @@ class ResultSocket:
         ret = {"data": result_ids, "meta": meta}
         return ret
 
-    def update(self, record_list: List[ResultRecord]):
+    def update(self, record_list: List[SingleResultRecord]):
         """
         Update results from a given dict (replace existing)
 

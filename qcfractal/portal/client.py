@@ -341,12 +341,38 @@ class PortalClient:
     #        chunk_ids = query_ids[i : i + self.client.query_limit]
     #        procedures.extend(self.client._query_procedures(id=chunk_ids))
 
-    # TODO: simplified alternative to `_query_procedures`
-    #       can always use cache
-    def _get_by_id():
+    def _get_record_by_id(self, id: Union[List, "QueryObjectId", int]):
+        """Get result records by id.
 
+        This is used by collections to retrieve their results when demanded.
+        Can reliably use the client's own caching for performance.
+
+        """
+        # passthrough the cache first
+        # if id is specified
+        cached_records = self._cache.get(id)
+
+        if isinstance(id, list):
+            for i in cached_records:
+                id.remove(i)
+        else:
+            id = None
+
+        payload = {
+            "meta": {},
+            "data": {
+                "id": id,
+            },
+        }
+        response = self._automodel_request("procedure", "get", payload, full_return=True)
+
+        # NOTE: no particular order returned here
+        # could put the "only complete" logic into the cache itself as a policy
+        self._cache.put([proc for proc in response.data if proc.status == "COMPLETE"])
+        return response.data + list(cached_records.values())
+
+    def _query_record(ids: Union[List, "QueryObjectId", int]):
         pass
-
 
     # TODO: would like to merge the functionality of
     #       `query_result`, `query_procedure`, `query_service`.
