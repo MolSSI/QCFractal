@@ -25,6 +25,8 @@ from ..interface.models.rest_models import (
     MoleculePOSTResponse,
     KVStoreGETBody,
     KVStoreGETResponse,
+    WavefunctionStoreGETBody,
+    WavefunctionStoreGETResponse,
 )
 
 from flask import jsonify, request, make_response
@@ -660,13 +662,20 @@ def get_result():
 @check_access
 def get_wave_function():
 
-    body_model, response_model = rest_model("wavefunctionstore", "get")
-    body = parse_bodymodel(body_model)
+    # NOTE - this only supports one wavefunction at a time
+    body = parse_bodymodel(WavefunctionStoreGETBody)
 
-    ret = storage_socket.get_wavefunction_store(body.data.id, include=body.meta.include)
-    if len(ret["data"]):
-        ret["data"] = ret["data"][0]
-    response = response_model(**ret)
+    ret = storage_socket.wavefunction.get([body.data.id], include=body.meta.include)
+    meta_nfound = len(ret)
+    if len(ret) > 0:
+        meta_missing = []
+        ret = ret[0]
+    else:
+        meta_missing = [body.data.id]
+
+    meta = ResponseGETMeta(errors=[], success=True, error_description=False, missing=meta_missing, n_found=meta_nfound)
+
+    response = WavefunctionStoreGETResponse(meta=meta, data=ret)
 
     return SerializedResponse(response)
 
