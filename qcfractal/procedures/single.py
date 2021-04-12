@@ -9,7 +9,15 @@ import qcelemental as qcel
 import qcengine as qcng
 
 from .base import BaseTasks
-from ..interface.models import Molecule, ResultRecord, TaskRecord, KeywordSet, RecordStatusEnum, PriorityEnum
+from ..interface.models import (
+    Molecule,
+    ResultRecord,
+    TaskRecord,
+    KeywordSet,
+    RecordStatusEnum,
+    PriorityEnum,
+    WavefunctionProperties,
+)
 
 _wfn_return_names = set(qcel.models.results.WavefunctionProperties._return_results_names)
 _wfn_all_fields = set(qcel.models.results.WavefunctionProperties.__fields__.keys())
@@ -220,8 +228,8 @@ class SingleResultTasks(BaseTasks):
         self.retrieve_outputs(rdata)
 
         # Store Wavefunction data
-        if rdata.get("wavefunction", False):
-            wfn = rdata.get("wavefunction", False)
+        wfn = rdata.get("wavefunction", None)
+        if wfn is not None:
             available = set(wfn.keys()) - {"restricted", "basis"}
             return_map = {k: wfn[k] for k in wfn.keys() & _wfn_return_names}
 
@@ -238,7 +246,8 @@ class SingleResultTasks(BaseTasks):
                 available_keys &= _wfn_all_fields
 
             wavefunction_save = {k: wfn[k] for k in available_keys}
-            wfn_data_id = self.storage.add_wavefunction_store([wavefunction_save])["data"][0]
+            wfn_prop = WavefunctionProperties(**wavefunction_save)
+            wfn_data_id = self.storage.wavefunction.add([wfn_prop])[0]
             rdata["wavefunction_data_id"] = wfn_data_id
 
         # Create an updated ResultRecord based on the existing record and the new results
