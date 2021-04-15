@@ -54,8 +54,8 @@ class GridOptimizationService(BaseService):
         # If a proper migration is ever done,
         output = GridOptimizationRecord(
             **service_input.dict(exclude={"initial_molecule", "task_id"}),
-            initial_molecule=service_input.initial_molecule.id,
-            starting_molecule=service_input.initial_molecule.id,
+            initial_molecule=service_input.initial_molecule["id"],
+            starting_molecule=service_input.initial_molecule["id"],
             provenance={
                 "creator": "qcfractal",
                 "version": get_information("version"),
@@ -146,9 +146,10 @@ class GridOptimizationService(BaseService):
 
             complete_tasks = self.task_manager.get_tasks()
 
-            self.starting_molecule = self.storage_socket.get_molecules(
-                id=[complete_tasks["initial_opt"]["final_molecule"]]
-            )["data"][0]
+            starting_molecule_id = complete_tasks["initial_opt"]["final_molecule"]
+            starting_molecule_dict = self.storage_socket.molecule.get(id=[starting_molecule_id])[0]
+            self.starting_molecule = Molecule(**starting_molecule_dict)
+
             self.starting_grid = self._calculate_starting_grid(self.output.keywords.scans, self.starting_molecule)
 
             self.submit_optimization_tasks({self.output.serialize_key(self.starting_grid): self.starting_molecule.id})

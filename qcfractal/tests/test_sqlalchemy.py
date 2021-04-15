@@ -36,9 +36,9 @@ def molecules_H4O2(storage_socket):
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
     water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
 
-    ret = storage_socket.add_molecules([water, water2])
+    meta, ret = storage_socket.molecule.add([water, water2])
 
-    yield list(ret["data"])
+    yield ret
 
 
 @pytest.fixture
@@ -113,13 +113,12 @@ def test_molecule_sql(session_fixture):
     water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
 
     # Add MoleculeORM
-    ret = storage_socket.add_molecules([water, water2])
-    assert ret["meta"]["success"] is True
-    assert ret["meta"]["n_inserted"] == 2
+    meta, ret = storage_socket.molecule.add([water, water2])
+    assert meta.success
+    assert meta.n_inserted == 2
 
-    ret = storage_socket.get_molecules()
-
-    assert ret["meta"]["n_found"] == 2
+    meta, ret = storage_socket.molecule.query()
+    assert meta.n_returned == 2
 
     # Use the ORM class
     water_mol = session.query(MoleculeORM).first()
@@ -143,9 +142,6 @@ def test_molecule_sql(session_fixture):
     )
     assert len(one_mol.all()) == 1
 
-    # Clean up
-    storage_socket.del_molecules(molecule_hash=[water.get_hash(), water2.get_hash()])
-
 
 def test_services(session_fixture):
 
@@ -153,12 +149,12 @@ def test_services(session_fixture):
     assert session.query(OptimizationProcedureORM).count() == 0
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
-    ret = storage_socket.add_molecules([water])
-    assert ret["meta"]["success"] is True
-    assert ret["meta"]["n_inserted"] == 1
+    meta, ret = storage_socket.molecule.add([water])
+    assert meta.success
+    assert meta.n_inserted == 1
 
     proc_data = {
-        "initial_molecule": ret["data"][0],
+        "initial_molecule": ret[0],
         "keywords": None,
         "program": "p7",
         "qc_spec": {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"},
@@ -314,9 +310,9 @@ def test_torsiondrive_procedure(session_fixture):
     assert session.query(TorsionDriveProcedureORM).count() == 0
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
-    ret = storage_socket.add_molecules([water])
-    assert ret["meta"]["success"] is True
-    assert ret["meta"]["n_inserted"] == 1
+    meta, ret = storage_socket.molecule.add([water])
+    assert meta.success
+    assert meta.n_inserted == 1
 
     data1 = {
         "keywords": None,
@@ -332,7 +328,7 @@ def test_torsiondrive_procedure(session_fixture):
 
     # Add optimization_history
 
-    data1["initial_molecule"] = ret["data"][0]
+    data1["initial_molecule"] = ret[0]
     opt_proc = OptimizationProcedureORM(**data1)
     opt_proc2 = OptimizationProcedureORM(**data1)
     session.add_all([opt_proc, opt_proc2])

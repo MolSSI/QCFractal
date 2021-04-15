@@ -4,13 +4,15 @@ import logging
 from sqlalchemy import desc
 
 from qcfractal.storage_sockets.models import AccessLogORM, ServerStatsLogORM
-from qcfractal.storage_sockets.storage_utils import get_metadata_template
 from qcfractal.storage_sockets.sqlalchemy_socket import get_count_fast, calculate_limit
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+    from typing import Dict, Any
+
+    AccessLogDict = Dict[str, Any]
 
 
 class ServerLogSocket:
@@ -20,13 +22,15 @@ class ServerLogSocket:
         self._access_log_limit = core_socket.qcf_config.response_limits.access_logs
         self._server_log_limit = core_socket.qcf_config.response_limits.server_logs
 
-    # TODO - getting access logs
 
-    def save_access(self, log_data):
+    def save_access(self, log_data: AccessLogDict):
+        '''
+        Saves information about an access to the database
+        '''
+
         with self._core_socket.session_scope() as session:
-            log = AccessLogORM(**log_data)
+            log = AccessLogORM(**log_data) # type: ignore
             session.add(log)
-            session.commit()
 
     def update(self):
 

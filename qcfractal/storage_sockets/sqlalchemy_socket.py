@@ -543,20 +543,6 @@ class SQLAlchemySocket:
     def get_kvstore(self, id: List[ObjectId] = None, limit: int = None, skip: int = 0):
         return self.output_store.get(id, limit, skip)
 
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Molecule ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    def get_add_molecules_mixed(self, data: List[Union[ObjectId, Molecule]]) -> List[Molecule]:
-        return self.molecule.get_add_mixed(data)
-
-    def add_molecules(self, molecules: List[Molecule]):
-        return self.molecule.add(molecules)
-
-    def get_molecules(self, id=None, molecule_hash=None, molecular_formula=None, limit: int = None, skip: int = 0):
-        return self.molecule.get(id, molecule_hash, molecular_formula, limit, skip)
-
-    def del_molecules(self, id: List[str] = None, molecule_hash: List[str] = None):
-        return self.molecule.delete(id, molecule_hash)
-
     # ~~~~~~~~~~~~~~~~~~~~~~~ Keywords ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def add_keywords(self, keyword_sets: List[KeywordSet]):

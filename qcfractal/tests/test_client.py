@@ -23,11 +23,11 @@ def test_client_molecule(fractal_test_server, encoding):
     ret = client.add_molecules([water])
 
     # Test get
-    get_mol = client.query_molecules(id=ret[0])
+    get_mol = client.query_molecules(id=[ret[0]])
     assert water.compare(get_mol[0])
 
     # Test molecular_formula get
-    get_mol = client.query_molecules(molecular_formula="H4O2")
+    get_mol = client.query_molecules(molecular_formula=["H4O2"])
     assert len(get_mol)
 
 
