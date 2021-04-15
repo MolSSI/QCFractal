@@ -3,7 +3,7 @@ Procedure for a single computational task (energy, gradient, etc)
 """
 
 from datetime import datetime as dt
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 import qcelemental as qcel
 import qcengine as qcng
@@ -82,27 +82,20 @@ class SingleResultTasks(BaseTasks):
         # qc_spec = QCSpecification(**qc_spec_dict)
 
         # Add all the molecules to the database
-        # TODO: WARNING WARNING if get_add_molecules_mixed is modified to handle duplicates
-        #       correctly, you must change some pieces later in this function
         input_molecules = data.data
-        molecule_list = self.storage.get_add_molecules_mixed(input_molecules)["data"]
+        meta, molecule_ids = self.storage.molecule.add_mixed(input_molecules)
 
-        # Keep molecule IDs that are not None
-        # Molecule IDs may be None if they are duplicates (ie, the same molecule was listed twice
-        # in data.data) or an id specified in data.data was invalid
-        valid_molecule_idx = [idx for idx, mol in enumerate(molecule_list) if mol is not None]
-        valid_molecules = [x for x in molecule_list if x is not None]
+        # Molecules that were inserted or existing are valid
+        valid_molecule_ids = [x for x in molecule_ids if x is not None]
 
         # Create ResultRecords for everything
+        # add_mixed may return duplicate IDs if duplicate molecules/ids were specified
         all_result_records = []
-        for mol in valid_molecules:
-            record = ResultRecord(**qc_spec_dict.copy(), molecule=mol.id)
+        for mol_id in set(valid_molecule_ids):
+            record = ResultRecord(**qc_spec_dict.copy(), molecule=mol_id)
             all_result_records.append(record)
 
-        # Add all results in a single function call
-        # NOTE: Because get_add_molecules_mixed returns None for duplicate
-        # molecules (or when specifying incorrect ids),
-        # all_result_records should never contain duplicates
+        # Add all results to the database
         ret = self.storage.add_results(all_result_records)
 
         # Get all the result IDs (may be new or existing)
@@ -115,25 +108,21 @@ class SingleResultTasks(BaseTasks):
             r = all_result_records[idx].copy(update={"id": all_result_ids[idx]})
             all_result_records[idx] = r
 
-        # Now generate all the tasks, but only for results that don't exist already
-        self.create_tasks(
-            all_result_records, valid_molecules, [keywords] * len(all_result_records), tag=tag, priority=priority
-        )
+        # Now generate all the tasks in the task queue
+        self.create_tasks(all_result_records, [keywords] * len(all_result_records), tag=tag, priority=priority)
 
-        # Keep the returned result id list in the same order as the input molecule list
-        # If a molecule was None, then the corresponding result ID will be None
-        # (since the entry in valid_molecule_idx will be missing). Ditto for molecules specified
-        # more than once in the argument to this function
-        results_ids = [None] * len(molecule_list)
-        for idx, result_id in zip(valid_molecule_idx, all_result_ids):
-            results_ids[idx] = result_id
+        # Make sure the list of IDs we return is in the same order as the input molecule list
+        # And therefore in the same order as we got back from molecule.add_mixed
+        results_ids = [None] * len(molecule_ids)
+        for r in all_result_records:
+            idx = molecule_ids.index(r.molecule)
+            results_ids[idx] = r.id
 
         return results_ids, existing_ids
 
     def create_tasks(
         self,
         records: List[ResultRecord],
-        molecules: Optional[List[Molecule]] = None,
         keywords: Optional[List[KeywordSet]] = None,
         tag: Optional[str] = None,
         priority: Optional[PriorityEnum] = None,
@@ -161,18 +150,9 @@ class SingleResultTasks(BaseTasks):
             TaskRecords that can be added to the database
         """
 
-        # Find the molecule keywords specified in the records
+        # Find the molecules specified in the records
         rec_mol_ids = [x.molecule for x in records]
-
-        # If not specified when calling this function, load them from the database
-        # TODO: there can be issues with duplicate molecules. So we have to go one by one
-        if molecules is None:
-            molecules = [self.storage.get_molecules(x)["data"][0] for x in rec_mol_ids]
-
-        # Check id to make sure the molecules match the ids in the records
-        mol_ids = [x.id for x in molecules]
-        if rec_mol_ids != mol_ids:
-            raise ValueError(f"Given molecule ids {str(mol_ids)} do not match those in records: {str(rec_mol_ids)}")
+        molecules = self.storage.molecule.get(rec_mol_ids)
 
         # Do the same as above but with with keywords
         rec_kw_ids = [x.keywords for x in records]
@@ -266,6 +246,7 @@ class SingleResultTasks(BaseTasks):
         assert existing_result["method"] == rdata["model"]["method"]
         assert existing_result["basis"] == rdata["model"]["basis"]
         assert existing_result["driver"] == rdata["driver"]
+
         assert existing_result["molecule"] == rdata["molecule"]["id"]
 
         # Result specific
@@ -304,7 +285,7 @@ class SingleResultTasks(BaseTasks):
 
     @staticmethod
     def _build_schema_input(
-        record: ResultRecord, molecule: "Molecule", keywords: Optional["KeywordSet"] = None
+        record: ResultRecord, molecule: Dict[str, Any], keywords: Optional["KeywordSet"] = None
     ) -> "ResultInput":
         """
         Creates an input schema for a single calculation
@@ -313,7 +294,7 @@ class SingleResultTasks(BaseTasks):
         # Check for programmer sanity. Since we are building this input
         # right after creating the ResultRecord, these should never fail.
         # But would be very hard to debug
-        assert record.molecule == molecule.id
+        assert record.molecule == molecule["id"]
         if record.keywords:
             assert record.keywords == keywords.id
 

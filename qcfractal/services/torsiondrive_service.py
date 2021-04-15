@@ -3,7 +3,6 @@ Wraps geometric procedures
 """
 
 import io
-import copy
 import json
 import contextlib
 from typing import Any, Dict, List
@@ -11,7 +10,7 @@ from typing import Any, Dict, List
 import numpy as np
 
 from ..extras import find_module
-from ..interface.models import TorsionDriveRecord
+from ..interface.models import TorsionDriveRecord, Molecule
 from .service_util import BaseService, TaskManager
 
 __all__ = ["TorsionDriveService"]
@@ -64,7 +63,7 @@ class TorsionDriveService(BaseService):
         # If a proper migration is ever done,
         output = TorsionDriveRecord(
             **service_input.dict(exclude={"initial_molecule", "task_id"}),
-            initial_molecule=[x.id for x in service_input.initial_molecule],
+            initial_molecule=[x["id"] for x in service_input.initial_molecule],
             provenance={
                 "creator": "torsiondrive",
                 "version": torsiondrive.__version__,
@@ -78,7 +77,8 @@ class TorsionDriveService(BaseService):
         meta = {"output": output}
 
         # Remove identity info from molecule template
-        molecule_template = copy.deepcopy(service_input.initial_molecule[0].dict(encoding="json"))
+        # Use JSON for various molecule fields
+        molecule_template = Molecule(**service_input.initial_molecule[0]).dict(encoding="json")
         molecule_template.pop("id", None)
         molecule_template.pop("identifiers", None)
         meta["molecule_template"] = json.dumps(molecule_template)
@@ -92,7 +92,7 @@ class TorsionDriveService(BaseService):
                 dihedrals=output.keywords.dihedrals,
                 grid_spacing=output.keywords.grid_spacing,
                 elements=molecule_template["symbols"],
-                init_coords=[x.geometry for x in service_input.initial_molecule],
+                init_coords=[x["geometry"] for x in service_input.initial_molecule],
                 dihedral_ranges=output.keywords.dihedral_ranges,
                 energy_decrease_thresh=output.keywords.energy_decrease_thresh,
                 energy_upper_limit=output.keywords.energy_upper_limit,
@@ -150,8 +150,9 @@ class TorsionDriveService(BaseService):
                 final_id = ret["final_molecule"]
 
                 mol_ids = [initial_id, final_id]
-                mol_data = self.storage_socket.get_molecules(id=mol_ids)["data"]
-                mol_map = {x.id: x.geometry for x in mol_data}
+                mol_data = self.storage_socket.molecule.get(id=mol_ids)
+
+                mol_map = {x["id"]: x["geometry"] for x in mol_data}
 
                 task_results[key].append((mol_map[initial_id], mol_map[final_id], ret["energies"][-1]))
 

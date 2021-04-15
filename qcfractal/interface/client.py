@@ -409,6 +409,13 @@ class FractalClient(object):
             A list of found molecules.
         """
 
+        if id is not None and not isinstance(id, (list, tuple)):
+            id = [id]
+        if molecule_hash is not None and not isinstance(molecule_hash, (list, tuple)):
+            molecule_hash = [molecule_hash]
+        if molecular_formula is not None and not isinstance(molecular_formula, (list, tuple)):
+            molecular_formula = [molecular_formula]
+
         payload = {
             "meta": {"limit": limit, "skip": skip},
             "data": {"id": id, "molecule_hash": molecule_hash, "molecular_formula": molecular_formula},
