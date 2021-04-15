@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from sqlalchemy import and_
 from qcfractal.storage_sockets.models import BaseResultORM, ResultORM, TaskQueueORM
-from qcfractal.interface.models import ResultRecord, TaskStatusEnum
+from qcfractal.interface.models import ResultRecord, TaskStatusEnum, ObjectId
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 from qcfractal.storage_sockets.sqlalchemy_socket import format_query, get_count_fast, calculate_limit
 
@@ -87,7 +87,7 @@ class ResultSocket:
 
                 if doc is not None:
                     existing_results[
-                        (doc.program, doc.driver, doc.method, doc.basis, doc.keywords, str(doc.molecule))
+                        (doc.program, doc.driver, doc.method, doc.basis, doc.keywords, ObjectId(doc.molecule))
                     ] = doc
 
             # Loop over all (input) records, keeping track each record's index in the list
@@ -131,7 +131,7 @@ class ResultSocket:
             session.commit()
 
             # At this point, all ids should be known. So store only the ids in the returned metadata
-            meta["duplicates"] = [str(doc.id) for doc in duplicates_list]
+            meta["duplicates"] = [ObjectId(doc.id) for doc in duplicates_list]
 
             # Construct the ID list to return (in the same order as the input data)
             # Use a placeholder for all, and we will fill later

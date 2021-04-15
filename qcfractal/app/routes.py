@@ -1,6 +1,7 @@
 """
 Routes handlers for Flask
 """
+from __future__ import annotations
 
 from qcelemental.util import deserialize, serialize
 from qcelemental.models import FailedOperation
@@ -12,10 +13,16 @@ from ..services import initialize_service
 from ..extras import get_information as get_qcfractal_information
 
 from ..interface.models.rest_models import (
+    ResponseGETMeta,
+    ResponsePOSTMeta,
     QueueManagerPOSTBody,
     QueueManagerPOSTResponse,
     TaskQueuePOSTBody,
     TaskQueuePOSTResponse,
+    MoleculeGETBody,
+    MoleculeGETResponse,
+    MoleculePOSTBody,
+    MoleculePOSTResponse,
 )
 
 from flask import jsonify, request, make_response
@@ -37,6 +44,14 @@ from werkzeug.exceptions import BadRequest, NotFound, Forbidden, Unauthorized
 
 from . import api_logger, storage_socket, view_handler
 
+from typing import TYPE_CHECKING, Sequence
+
+if TYPE_CHECKING:
+    from ..interface.models.query_meta import QueryMetadata, InsertMetadata, DeleteMetadata
+    from typing import Union, TypeVar, List
+
+    _T = TypeVar("_T")
+
 
 main = Blueprint("main", __name__)
 
@@ -50,6 +65,56 @@ _valid_encodings = {
 # TODO: not implemented yet
 _logging_param_counts = {"id"}
 _read_permissions = {}
+
+
+def make_list(obj: Union[_T, Sequence[_T]]) -> List[_T]:
+    """
+    Returns a list containing obj if obj is not a list or sequence type object
+    """
+
+    # Be careful. strings are sequences
+    if isinstance(obj, str):
+        return [obj]
+    if not isinstance(obj, Sequence):
+        return [obj]
+    return list(obj)
+
+
+def convert_get_response_metadata(meta: QueryMetadata, missing: List) -> ResponseGETMeta:
+    """
+    Converts the new QueryMetadata format to the old ResponseGETMeta format
+    """
+
+    error_description = meta.error_description
+    if error_description is None:
+        error_description = False
+
+    return ResponseGETMeta(
+        errors=meta.errors,
+        success=meta.success,
+        error_description=error_description,
+        missing=missing,
+        n_found=meta.n_found,
+    )
+
+
+def convert_post_response_metadata(meta: InsertMetadata, duplicates: List) -> ResponsePOSTMeta:
+    """
+    Converts the new InsertMetadata format to the old ResponsePOSTMeta format
+    """
+
+    error_description = meta.error_description
+    if error_description is None:
+        error_description = False
+
+    return ResponsePOSTMeta(
+        errors=meta.errors,
+        success=meta.success,
+        error_description=error_description,
+        n_inserted=meta.n_inserted,
+        duplicates=duplicates,
+        validation_errors=[],
+    )
 
 
 def check_access(fn):
@@ -362,26 +427,26 @@ def fresh_login():
 @main.route("/molecule", methods=["GET"])
 @check_access
 def get_molecule():
-    """
-    Request:
-        "meta" - Overall options to the Molecule pull request
-            - "index" - What kind of index used to find the data ("id", "molecule_hash", "molecular_formula")
-        "data" - A dictionary of {key : index} requests
+    body = parse_bodymodel(MoleculeGETBody)
 
-    Returns:
-        "meta" - Metadata associated with the query
-            - "errors" - A list of errors in (index, error_id) format.
-            - "n_found" - The number of molecule found.
-            - "success" - If the query was successful or not.
-            - "error_description" - A string based description of the error or False
-            - "missing" - A list of keys that were not found.
-        "data" - A dictionary of {key : molecule JSON} results
-    """
+    # TODO - should only accept lists/sequences/iterables
+    data_dict = body.data.dict()
+    molecule_hash = data_dict.pop("molecule_hash", None)
+    molecular_formula = data_dict.pop("molecular_formula", None)
 
-    body_model, response_model = rest_model("molecule", "get")
-    body = parse_bodymodel(body_model)
-    molecules = storage_socket.get_molecules(**{**body.data.dict(), **body.meta.dict()})
-    response = response_model(**molecules)
+    if molecule_hash is not None:
+        molecule_hash = make_list(molecule_hash)
+    if molecular_formula is not None:
+        molecular_formula = make_list(molecular_formula)
+
+    meta, molecules = storage_socket.molecule.query(
+        **data_dict, **body.meta.dict(), molecular_formula=molecular_formula, molecule_hash=molecule_hash
+    )
+
+    # Convert the new metadata format to the old format
+    meta_old = convert_get_response_metadata(meta, missing=[])
+
+    response = MoleculeGETResponse(meta=meta_old, data=molecules)
 
     return SerializedResponse(response)
 
@@ -405,12 +470,15 @@ def post_molecule():
         "data" - A dictionary of {key : id} results
     """
 
-    body_model, response_model = rest_model("molecule", "post")
-    body = parse_bodymodel(body_model)
+    body = parse_bodymodel(MoleculePOSTBody)
 
-    ret = storage_socket.add_molecules(body.data)
-    response = response_model(**ret)
+    meta, ret = storage_socket.molecule.add(body.data)
 
+    # Convert new metadata format to old
+    duplicate_ids = [ret[i] for i in meta.existing_idx]
+    meta_old = convert_post_response_metadata(meta, duplicate_ids)
+
+    response = MoleculePOSTResponse(meta=meta_old, data=ret)
     return SerializedResponse(response)
 
 
@@ -752,13 +820,17 @@ def post_service_queue():
 
     new_services = []
     for service_input in body.data:
-        # Get molecules with ids
-        if isinstance(service_input.initial_molecule, list):
-            molecules = storage_socket.get_add_molecules_mixed(service_input.initial_molecule)["data"]
-            if len(molecules) != len(service_input.initial_molecule):
-                raise KeyError("We should catch this error.")
-        else:
-            molecules = storage_socket.get_add_molecules_mixed([service_input.initial_molecule])["data"][0]
+        # Add all the molecules specified (or check that specified IDs exist)
+        mol_list = make_list(service_input.initial_molecule)
+
+        meta, molecule_ids = storage_socket.molecule.add_mixed(mol_list)
+        if not meta.success:
+            err_msg = "Error adding initial molecules:\n" + meta.error_string
+            raise RuntimeError(err_msg)
+
+        molecules = storage_socket.molecule.get(molecule_ids)
+        if not isinstance(service_input.initial_molecule, list):
+            molecules = molecules[0]
 
         # Update the input and build a service object
         service_input = service_input.copy(update={"initial_molecule": molecules})

@@ -11,74 +11,74 @@ from qcelemental.models import ResultInput
 from ..interface.models import Molecule, QCSpecification, RecordStatusEnum
 
 
-def unpack_single_task_spec(storage, meta, molecules):
-    """Transforms a metadata compute packet into an expanded
-    QC Schema for multiple runs.
-
-    Parameters
-    ----------
-    storage : DBSocket
-        A live connection to the current database.
-    meta : dict
-        A JSON description of the metadata involved with the computation
-    molecules : list of str, dict
-        A list of molecule ID's or full JSON molecules associated with the run.
-
-    Returns
-    -------
-    ret : tuple(dict, list)
-        A dictionary of JSON representations with keys built in.
-        The list is an array of any errors occurred
-
-    Examples
-    --------
-
-    >>> meta = {
-        "procedure": "single",
-        "driver": "energy",
-        "method": "HF",
-        "basis": "sto-3g",
-        "keywords": "default",
-        "program": "psi4",
-    }
-
-    >>> molecules = [{"geometry": [0, 0, 0], "symbols" : ["He"]}]
-
-    >>> unpack_single_task_spec(storage, meta, molecules)
-
-    """
-
-    # Get the required molecules
-    raw_molecules_query = storage.get_add_molecules_mixed(molecules)
-
-    # Pull out the needed keywords
-    if meta["keywords"] is None:
-        keyword_set = {}
-    else:
-        keyword_set = storage.get_add_keywords_mixed([meta["keywords"]])["data"][0]
-        keyword_set = keyword_set["values"]
-
-    # Create the "universal header"
-    task_meta = json.dumps(
-        {
-            "driver": meta["driver"],
-            "keywords": keyword_set,
-            "model": {"method": meta["method"], "basis": meta["basis"]},
-        }
-    )
-
-    tasks = []
-    for mol in raw_molecules_query["data"]:
-        if mol is None:
-            tasks.append(None)
-            continue
-
-        data = json.loads(task_meta)
-        data["molecule"] = mol
-
-        tasks.append(ResultInput(**data))
-
-    return tasks, []
+# def unpack_single_task_spec(storage, meta, molecules):
+#    """Transforms a metadata compute packet into an expanded
+#    QC Schema for multiple runs.
+#
+#    Parameters
+#    ----------
+#    storage : DBSocket
+#        A live connection to the current database.
+#    meta : dict
+#        A JSON description of the metadata involved with the computation
+#    molecules : list of str, dict
+#        A list of molecule ID's or full JSON molecules associated with the run.
+#
+#    Returns
+#    -------
+#    ret : tuple(dict, list)
+#        A dictionary of JSON representations with keys built in.
+#        The list is an array of any errors occurred
+#
+#    Examples
+#    --------
+#
+#    >>> meta = {
+#        "procedure": "single",
+#        "driver": "energy",
+#        "method": "HF",
+#        "basis": "sto-3g",
+#        "keywords": "default",
+#        "program": "psi4",
+#    }
+#
+#    >>> molecules = [{"geometry": [0, 0, 0], "symbols" : ["He"]}]
+#
+#    >>> unpack_single_task_spec(storage, meta, molecules)
+#
+#    """
+#
+#    # Get the required molecules
+#    raw_molecules_query = storage.molecule.add_mixed(molecules)
+#
+#    # Pull out the needed keywords
+#    if meta["keywords"] is None:
+#        keyword_set = {}
+#    else:
+#        keyword_set = storage.get_add_keywords_mixed([meta["keywords"]])["data"][0]
+#        keyword_set = keyword_set["values"]
+#
+#    # Create the "universal header"
+#    task_meta = json.dumps(
+#        {
+#            "driver": meta["driver"],
+#            "keywords": keyword_set,
+#            "model": {"method": meta["method"], "basis": meta["basis"]},
+#        }
+#    )
+#
+#    tasks = []
+#    for mol in raw_molecules_query["data"]:
+#        if mol is None:
+#            tasks.append(None)
+#            continue
+#
+#        data = json.loads(task_meta)
+#        data["molecule"] = mol
+#
+#        tasks.append(ResultInput(**data))
+#
+#    return tasks, []
 
 
 def parse_single_tasks(storage, results, qc_spec):
@@ -106,7 +106,8 @@ def parse_single_tasks(storage, results, qc_spec):
         del v["model"]
 
         # Molecule should be by ID
-        v["molecule"] = storage.add_molecules([Molecule(**v["molecule"])])["data"][0]
+        _, mol_ids = storage.molecule.add([Molecule(**v["molecule"])])
+        v["molecule"] = mol_ids[0]
 
         v["keywords"] = qc_spec.keywords
         v["program"] = qc_spec.program

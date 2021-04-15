@@ -25,153 +25,6 @@ def test_storage_repr(storage_socket):
     assert isinstance(repr(storage_socket), str)
 
 
-def test_molecules_add(storage_socket):
-
-    water = ptl.data.get_molecule("water_dimer_minima.psimol")
-
-    # Add once
-    ret1 = storage_socket.add_molecules([water])
-    assert ret1["meta"]["success"] is True
-    assert ret1["meta"]["n_inserted"] == 1
-
-    # Try duplicate adds
-    ret2 = storage_socket.add_molecules([water])
-    assert ret2["meta"]["success"] is True
-    assert ret2["meta"]["n_inserted"] == 0
-    assert ret2["meta"]["duplicates"][0] == ret1["data"][0]
-
-    # Assert the ids match
-    assert ret1["data"][0] == ret2["data"][0]
-
-    # Pull molecule from the DB for tests
-    db_json = storage_socket.get_molecules(molecule_hash=water.get_hash())["data"][0]
-    water.compare(db_json)
-
-    # Cleanup adds
-    ret = storage_socket.del_molecules(molecule_hash=water.get_hash())
-    assert ret == 1
-
-
-def test_identical_mol_insert(storage_socket):
-    """
-    Tests as edge case where to identical molecules are added under different tags.
-    """
-
-    water = ptl.data.get_molecule("water_dimer_minima.psimol")
-
-    # Add two identical molecules
-    ret1 = storage_socket.add_molecules([water, water])
-    assert ret1["meta"]["success"] is True
-    assert ret1["meta"]["n_inserted"] == 1
-    assert ret1["data"][0] == ret1["data"][1]
-
-    # Should only find one molecule
-    ret2 = storage_socket.get_molecules(molecule_hash=[water.get_hash()])
-    assert ret2["meta"]["n_found"] == 1
-
-    ret = storage_socket.del_molecules(molecule_hash=water.get_hash())
-    assert ret == 1
-
-
-def test_molecules_add_many(storage_socket):
-    water = ptl.data.get_molecule("water_dimer_minima.psimol")
-    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
-
-    ret = storage_socket.add_molecules([water, water2])
-    assert ret["meta"]["n_inserted"] == 2
-
-    # Cleanup adds
-    ret = storage_socket.del_molecules(molecule_hash=[water.get_hash(), water2.get_hash()])
-    assert ret == 2
-
-    ret = storage_socket.add_molecules([water, water2])
-    assert ret["meta"]["n_inserted"] == 2
-
-    # Cleanup adds
-    ret = storage_socket.del_molecules(id=ret["data"])
-    assert ret == 2
-
-
-def test_molecules_get(storage_socket):
-
-    water = ptl.data.get_molecule("water_dimer_minima.psimol")
-
-    # Add once
-    ret = storage_socket.add_molecules([water])
-    assert ret["meta"]["n_inserted"] == 1
-    water_id = ret["data"][0]
-
-    # Pull molecule from the DB for tests
-    water2 = storage_socket.get_molecules(id=water_id)["data"][0]
-    water2.compare(water)
-
-    # Cleanup adds
-    ret = storage_socket.del_molecules(id=water_id)
-    assert ret == 1
-
-
-def test_molecules_duplicate_insert(storage_socket):
-    water = ptl.data.get_molecule("water_dimer_minima.psimol")
-    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
-
-    ret = storage_socket.add_molecules([water, water2])
-    assert ret["meta"]["n_inserted"] == 2
-
-    ret2 = storage_socket.add_molecules([water, water2])
-    assert ret2["meta"]["n_inserted"] == 0
-    assert ret["data"][0] == ret2["data"][0]
-    assert ret["data"][1] == ret2["data"][1]
-
-    ret3 = storage_socket.add_molecules([water, water])
-    assert ret2["meta"]["n_inserted"] == 0
-    assert ret["data"][0] == ret3["data"][0]
-    assert ret["data"][0] == ret3["data"][1]
-
-    # Cleanup adds
-    ret = storage_socket.del_molecules(id=ret["data"])
-    assert ret == 2
-
-
-def test_molecules_mixed_add_get(storage_socket):
-    water = ptl.data.get_molecule("water_dimer_minima.psimol")
-    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
-
-    del_ids = []
-    water2_id = storage_socket.add_molecules([water2])["data"][0]
-    del_ids.append(water2_id)
-
-    ret = storage_socket.get_add_molecules_mixed([bad_id1, water, bad_id2, water2_id])
-    assert ret["data"][0] is None
-    assert ret["data"][1].identifiers.molecule_hash == water.get_hash()
-    assert ret["data"][2] is None
-    assert ret["data"][3].id == water2_id
-    assert set(ret["meta"]["missing"]) == {0, 2}
-
-    # Cleanup adds
-    del_ids.append(ret["data"][1].id)
-    ret = storage_socket.del_molecules(id=del_ids)
-    assert ret == 2
-
-
-def test_molecules_bad_get(storage_socket):
-
-    water = ptl.data.get_molecule("water_dimer_minima.psimol")
-
-    # Add once
-    ret = storage_socket.add_molecules([water])
-    water_id = ret["data"][0]
-
-    # Pull molecule from the DB for tests
-    ret = storage_socket.get_molecules(id=[water_id, bad_id1, bad_id2])
-
-    assert ret["data"][0].id == water_id
-    assert ret["meta"]["n_found"] == 1
-
-    # Cleanup adds
-    ret = storage_socket.del_molecules(id=water_id)
-    assert ret == 1
-
-
 def test_keywords_add(storage_socket):
 
     kw = ptl.models.KeywordSet(**{"values": {"o": 5}, "hash_index": "something_unique"})
@@ -305,7 +158,7 @@ def test_dataset_add_delete_cascade(storage_socket):
     # Add two waters
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
     water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
-    mol_insert = storage_socket.add_molecules([water, water2])
+    _, mol_insert = storage_socket.molecule.add([water, water2])
 
     db = {
         "collection": collection,
@@ -314,8 +167,8 @@ def test_dataset_add_delete_cascade(storage_socket):
         "view_available": False,
         "group": "default",
         "records": [
-            {"name": "He1", "molecule_id": mol_insert["data"][0], "comment": None, "local_results": {}},
-            {"name": "He2", "molecule_id": mol_insert["data"][1], "comment": None, "local_results": {}},
+            {"name": "He1", "molecule_id": mol_insert[0], "comment": None, "local_results": {}},
+            {"name": "He2", "molecule_id": mol_insert[1], "comment": None, "local_results": {}},
         ],
         "contributed_values": {
             "contrib1": {
@@ -330,7 +183,7 @@ def test_dataset_add_delete_cascade(storage_socket):
     }
 
     ret = storage_socket.add_collection(db.copy())
-    print(ret["meta"]["error_description"])
+    # print(ret["meta"]["error_description"])
     assert ret["meta"]["n_inserted"] == 1, ret["meta"]["error_description"]
 
     ret = storage_socket.get_collections(collection=collection, name=name)
@@ -381,16 +234,20 @@ def test_dataset_add_delete_cascade(storage_socket):
     assert len(ret["data"][0]["records"]) == 0
 
     # cleanup
-    # Can't delete molecule when datasets refernece it (no cascade)
-    with pytest.raises(sqlalchemy.exc.IntegrityError):
-        storage_socket.del_molecules(mol_insert["data"])
+    # Can't delete molecule when datasets reference it (no cascade)
+    ret = storage_socket.molecule.delete(mol_insert)
+    assert not ret.success
+    assert ret.n_errors == 2
+    for e in ret.errors:
+        assert "Attempting to delete resulted in error" in e[1]
 
     # should cascade delete entries and records when dataset is deleted
     assert storage_socket.del_collection(collection=collection, name=name) == 1
     assert storage_socket.del_collection(collection=collection2, name=name2) == 1
 
     # Now okay to delete molecules
-    storage_socket.del_molecules(mol_insert["data"])
+    ret = storage_socket.molecule.delete(mol_insert)
+    assert ret.success
 
 
 def test_results_add(storage_socket):
@@ -398,14 +255,14 @@ def test_results_add(storage_socket):
     # Add two waters
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
     water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
-    mol_insert = storage_socket.add_molecules([water, water2])
+    _, mol_insert = storage_socket.molecule.add([water, water2])
 
     kw1 = ptl.models.KeywordSet(**{"comments": "a", "values": {}})
     kwid1 = storage_socket.add_keywords([kw1])["data"][0]
 
     page1 = ptl.models.ResultRecord(
         **{
-            "molecule": mol_insert["data"][0],
+            "molecule": mol_insert[0],
             "method": "M1",
             "basis": "B1",
             "keywords": kwid1,
@@ -420,7 +277,7 @@ def test_results_add(storage_socket):
 
     page2 = ptl.models.ResultRecord(
         **{
-            "molecule": mol_insert["data"][1],
+            "molecule": mol_insert[1],
             "method": "M1",
             "basis": "B1",
             "keywords": kwid1,
@@ -435,7 +292,7 @@ def test_results_add(storage_socket):
 
     page3 = ptl.models.ResultRecord(
         **{
-            "molecule": mol_insert["data"][1],
+            "molecule": mol_insert[1],
             "method": "M22",
             "basis": "B1",
             "keywords": None,
@@ -466,8 +323,8 @@ def test_results_add(storage_socket):
 
     ret = storage_socket.del_results(ids)
     assert ret == 3
-    ret = storage_socket.del_molecules(id=mol_insert["data"])
-    assert ret == 2
+    ret = storage_socket.molecule.delete(mol_insert)
+    assert ret.n_deleted == 2
 
 
 ### Build out a set of query tests
@@ -477,7 +334,6 @@ def test_results_add(storage_socket):
 def storage_results(storage_socket):
     # Add two waters
 
-    assert len(storage_socket.get_molecules()["data"]) == 0
     mol_names = [
         "water_dimer_minima.psimol",
         "water_dimer_stretch.psimol",
@@ -490,14 +346,15 @@ def storage_results(storage_socket):
         mol = ptl.data.get_molecule(mol_name)
         molecules.append(mol)
 
-    mol_insert = storage_socket.add_molecules(molecules)
+    meta, mol_insert = storage_socket.molecule.add(molecules)
+    assert meta.success
 
     kw1 = ptl.models.KeywordSet(**{"values": {}})
     kwid1 = storage_socket.add_keywords([kw1])["data"][0]
 
     page1 = ptl.models.ResultRecord(
         **{
-            "molecule": mol_insert["data"][0],
+            "molecule": mol_insert[0],
             "method": "M1",
             "basis": "B1",
             "keywords": kwid1,
@@ -511,7 +368,7 @@ def storage_results(storage_socket):
 
     page2 = ptl.models.ResultRecord(
         **{
-            "molecule": mol_insert["data"][1],
+            "molecule": mol_insert[1],
             "method": "M1",
             "basis": "B1",
             "keywords": kwid1,
@@ -525,7 +382,7 @@ def storage_results(storage_socket):
 
     page3 = ptl.models.ResultRecord(
         **{
-            "molecule": mol_insert["data"][0],
+            "molecule": mol_insert[0],
             "method": "M1",
             "basis": "B1",
             "keywords": kwid1,
@@ -539,7 +396,7 @@ def storage_results(storage_socket):
 
     page4 = ptl.models.ResultRecord(
         **{
-            "molecule": mol_insert["data"][0],
+            "molecule": mol_insert[0],
             "method": "M2",
             "basis": "B1",
             "keywords": kwid1,
@@ -553,7 +410,7 @@ def storage_results(storage_socket):
 
     page5 = ptl.models.ResultRecord(
         **{
-            "molecule": mol_insert["data"][1],
+            "molecule": mol_insert[1],
             "method": "M2",
             "basis": "B1",
             "keywords": kwid1,
@@ -567,7 +424,7 @@ def storage_results(storage_socket):
 
     page6 = ptl.models.ResultRecord(
         **{
-            "molecule": mol_insert["data"][1],
+            "molecule": mol_insert[1],
             "method": "M3",
             "basis": "B1",
             "keywords": None,
@@ -592,16 +449,15 @@ def storage_results(storage_socket):
     ret = storage_socket.del_results(result_ids)
     assert ret == results_insert["meta"]["n_inserted"]
 
-    ret = storage_socket.del_molecules(id=mol_insert["data"])
-    assert ret == mol_insert["meta"]["n_inserted"]
+    ret = storage_socket.molecule.delete(mol_insert)
+    assert ret.n_deleted == len(mol_insert)
 
 
 def test_empty_get(storage_results):
 
-    assert 0 == len(storage_results.get_molecules(id=[])["data"])
-    assert 0 == len(storage_results.get_molecules(id=bad_id1)["data"])
-    # Todo: This needs to return top limit of the table
-    assert 4 == len(storage_results.get_molecules()["data"])
+    assert 0 == len(storage_results.molecule.query(id=[])[1])
+    assert 0 == len(storage_results.molecule.query(id=[bad_id1])[1])
+    assert 4 == len(storage_results.molecule.query()[1])
 
     assert 6 == len(storage_results.get_results()["data"])
     assert 1 == len(storage_results.get_results(keywords="null")["data"])
@@ -826,7 +682,8 @@ def test_manager(storage_socket):
 
 def test_procedure_sql(storage_results):
 
-    mol_ids = [int(mol.id) for mol in storage_results.get_molecules()["data"]]
+    _, mols = storage_results.molecule.query()
+    mol_ids = [mol["id"] for mol in mols]
     results = storage_results.get_results()["data"]
 
     assert len(storage_results.get_procedures(procedure="optimization", status=None)["data"]) == 0
@@ -936,7 +793,8 @@ def test_procedure_sql(storage_results):
 
 def test_services_sql(storage_results):
 
-    mol_ids = [int(mol.id) for mol in storage_results.get_molecules()["data"]]
+    _, mols = storage_results.molecule.query()
+    mol_ids = [mol["id"] for mol in mols]
 
     torsion_proc = {
         "procedure": "torsiondrive",
@@ -1009,7 +867,7 @@ def test_results_pagination(storage_socket):
     assert len(storage_socket.get_results()["data"]) == 0
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
-    mol = storage_socket.add_molecules([water])["data"][0]
+    mol = storage_socket.molecule.add([water])[1][0]
 
     result_template = {
         "molecule": mol,
@@ -1066,7 +924,6 @@ def test_results_pagination(storage_socket):
 
     # cleanup
     storage_socket.del_results(inserted["data"])
-    storage_socket.del_molecules(mol)
 
 
 def test_procedure_pagination(storage_socket):
@@ -1075,7 +932,7 @@ def test_procedure_pagination(storage_socket):
     """
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
-    mol = storage_socket.add_molecules([water])["data"][0]
+    mol = storage_socket.molecule.add([water])[1][0]
 
     assert len(storage_socket.get_procedures(procedure="optimization")["data"]) == 0
 
@@ -1105,80 +962,6 @@ def test_procedure_pagination(storage_socket):
     assert len(ret["data"]) == limit
 
     storage_socket.del_procedures(inserted["data"])
-    storage_socket.del_molecules(mol)
-
-
-def test_mol_pagination(storage_socket):
-    """
-    Test Molecule pagination
-    """
-
-    assert len(storage_socket.get_molecules()["data"]) == 0
-    mol_names = [
-        "water_dimer_minima.psimol",
-        "water_dimer_stretch.psimol",
-        "water_dimer_stretch2.psimol",
-        "neon_tetramer.psimol",
-    ]
-
-    total = len(mol_names)
-    molecules = []
-    for mol_name in mol_names:
-        mol = ptl.data.get_molecule(mol_name)
-        molecules.append(mol)
-
-    inserted = storage_socket.add_molecules(molecules)
-
-    try:
-        assert inserted["meta"]["n_inserted"] == total
-
-        ret = storage_socket.get_molecules(skip=1)
-        assert len(ret["data"]) == total - 1
-        assert ret["meta"]["n_found"] == total
-
-        ret = storage_socket.get_molecules(skip=total + 1)
-        assert len(ret["data"]) == 0
-        assert ret["meta"]["n_found"] == total
-
-    finally:
-        # cleanup
-        storage_socket.del_molecules(inserted["data"])
-
-
-def test_mol_formula(storage_socket):
-    """
-    Test Molecule pagination
-    """
-
-    assert len(storage_socket.get_molecules()["data"]) == 0
-    mol_names = [
-        "water_dimer_minima.psimol",
-    ]
-    total = len(mol_names)
-    molecules = []
-    for mol_name in mol_names:
-        mol = ptl.data.get_molecule(mol_name)
-        molecules.append(mol)
-
-    inserted = storage_socket.add_molecules(molecules)
-    try:
-        assert inserted["meta"]["n_inserted"] == total
-
-        ret = storage_socket.get_molecules(molecular_formula="H4O2")
-        assert len(ret["data"]) == 1
-        assert ret["meta"]["n_found"] == 1
-
-        ret = storage_socket.get_molecules(molecular_formula="O2H4")
-        assert len(ret["data"]) == 1
-        assert ret["meta"]["n_found"] == 1
-
-        ret = storage_socket.get_molecules(molecular_formula="H4o2")
-        assert len(ret["data"]) == 0
-        assert ret["meta"]["n_found"] == 0
-
-    finally:
-        # cleanup
-        storage_socket.del_molecules(inserted["data"])
 
 
 def test_reset_task_blocks(storage_socket):
@@ -1199,7 +982,7 @@ def test_server_log(storage_results):
     mol_names = ["water_dimer_minima.psimol", "water_dimer_stretch.psimol", "water_dimer_stretch2.psimol"]
 
     molecules = [ptl.data.get_molecule(mol_name) for mol_name in mol_names]
-    inserted = storage_results.add_molecules(molecules)
+    storage_results.molecule.add(molecules)
 
     ret = storage_results.log_server_stats()
     assert ret["db_table_size"] >= 1000
@@ -1232,7 +1015,7 @@ def test_collections_include_exclude(storage_socket):
     # Add two waters
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
     water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
-    mol_insert = storage_socket.add_molecules([water, water2])
+    _, mol_insert = storage_socket.molecule.add([water, water2])
 
     db = {
         "collection": collection,
@@ -1241,8 +1024,8 @@ def test_collections_include_exclude(storage_socket):
         "view_available": False,
         "group": "default",
         "records": [
-            {"name": "He1", "molecule_id": mol_insert["data"][0], "comment": None, "local_results": {}},
-            {"name": "He2", "molecule_id": mol_insert["data"][1], "comment": None, "local_results": {}},
+            {"name": "He1", "molecule_id": mol_insert[0], "comment": None, "local_results": {}},
+            {"name": "He2", "molecule_id": mol_insert[1], "comment": None, "local_results": {}},
         ],
     }
 
@@ -1297,4 +1080,3 @@ def test_collections_include_exclude(storage_socket):
     # cleanup
     storage_socket.del_collection(collection=collection, name=name)
     storage_socket.del_collection(collection=collection, name=name2)
-    storage_socket.del_molecules(mol_insert["data"])

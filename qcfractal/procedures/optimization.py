@@ -2,7 +2,7 @@
 Optimization procedure/task
 """
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from datetime import datetime as dt
 import qcengine as qcng
@@ -78,22 +78,19 @@ class OptimizationTasks(BaseTasks):
         qc_spec = QCSpecification(**qc_spec_dict)
 
         # Add all the initial molecules to the database
-        # TODO: WARNING WARNING if get_add_molecules_mixed is modified to handle duplicates
-        #       correctly, you must change some pieces later in this function
-        molecule_list = self.storage.molecule.get_add_mixed(data.data)["data"]
+        meta, molecule_list = self.storage.molecule.add_mixed(data.data)
 
         # Keep molecule IDs that are not None
-        # Molecule IDs may be None if they are duplicates (ie, the same molecule was listed twice
-        # in data.data) or an id specified in data.data was invalid
+        # Molecule IDs may be None if an id specified in data.data was invalid
         valid_molecule_idx = [idx for idx, mol in enumerate(molecule_list) if mol is not None]
         valid_molecules = [x for x in molecule_list if x is not None]
 
         # Create all OptimizationRecords
         all_opt_records = []
-        for mol in valid_molecules:
+        for mol_id in valid_molecules:
             # TODO fix handling of protocols (perhaps after hardening rest models)
             opt_data = {
-                "initial_molecule": mol.id,
+                "initial_molecule": mol_id,
                 "qc_spec": qc_spec,
                 "keywords": opt_keywords,
                 "program": opt_spec.program,
@@ -105,9 +102,7 @@ class OptimizationTasks(BaseTasks):
             all_opt_records.append(opt_rec)
 
         # Add all the procedures in a single function call
-        # NOTE: Because get_add_molecules_mixed returns None for duplicate
-        # molecules (or when specifying incorrect ids),
-        # all_opt_records should never contain duplicates
+        # NOTE: all_opt_records may contain duplicates
         ret = self.storage.add_procedures(all_opt_records)
 
         # Get all procedure IDs (may be new or existing)
@@ -115,17 +110,13 @@ class OptimizationTasks(BaseTasks):
         all_opt_ids = ret["data"]
         existing_ids = ret["meta"]["duplicates"]
 
-        # Assing ids to the optimization records
+        # Assign ids to the optimization records
         for idx in range(len(all_opt_records)):
             r = all_opt_records[idx].copy(update={"id": all_opt_ids[idx]})
             all_opt_records[idx] = r
 
         # Now generate all the tasks, but only for results that don't exist already
-        new_opt_records = [o for o in all_opt_records if o.id not in existing_ids]
-        new_molecules = [m for m, r in zip(valid_molecules, all_opt_records) if r.id not in existing_ids]
-        self.create_tasks(
-            new_opt_records, new_molecules, [qc_keywords] * len(new_molecules), tag=tag, priority=priority
-        )
+        self.create_tasks(all_opt_records, [qc_keywords] * len(all_opt_records), tag=tag, priority=priority)
 
         # Keep the returned result id list in the same order as the input molecule list
         # If a molecule was None, then the corresponding result ID will be None
@@ -140,24 +131,14 @@ class OptimizationTasks(BaseTasks):
     def create_tasks(
         self,
         records: List[OptimizationRecord],
-        molecules: Optional[List[Molecule]] = None,
         qc_keywords: Optional[List[KeywordSet]] = None,
         tag: Optional[str] = None,
         priority: Optional[PriorityEnum] = None,
     ):
 
-        # Find the molecule keywords specified in the records
+        # Find the molecules specified in the records
         rec_mol_ids = [x.initial_molecule for x in records]
-
-        # If not specified when calling this function, load them from the database
-        # TODO: there can be issues with duplicate molecules. So we have to go one by one
-        if molecules is None:
-            molecules = [self.storage.get_molecules(x)["data"][0] for x in rec_mol_ids]
-
-        # Check id to make sure the molecules match the ids in the records
-        mol_ids = [x.id for x in molecules]
-        if rec_mol_ids != mol_ids:
-            raise ValueError(f"Given molecule ids {str(mol_ids)} do not match those in records: {str(rec_mol_ids)}")
+        molecules = self.storage.molecule.get(rec_mol_ids)
 
         # Do the same as above but with with qc specification keywords
         rec_qc_kw_ids = [x.qc_spec.keywords for x in records]
@@ -217,11 +198,12 @@ class OptimizationTasks(BaseTasks):
         update_dict["stderr"] = procedure.get("stderr", None)
         update_dict["error"] = procedure.get("error", None)
 
-        initial_mol, final_mol = self.storage.add_molecules(
+        meta, mol_ids = self.storage.molecule.add(
             [Molecule(**procedure["initial_molecule"]), Molecule(**procedure["final_molecule"])]
-        )["data"]
-        assert initial_mol == rec.initial_molecule
-        update_dict["final_molecule"] = final_mol
+        )
+
+        assert mol_ids[0] == rec.initial_molecule
+        update_dict["final_molecule"] = mol_ids[1]
 
         # Parse trajectory computations and add task_id
         traj = procedure["trajectory"]
@@ -258,13 +240,13 @@ class OptimizationTasks(BaseTasks):
 
     @staticmethod
     def _build_schema_input(
-        record: OptimizationRecord, initial_molecule: "Molecule", qc_keywords: Optional["KeywordSet"] = None
+        record: OptimizationRecord, initial_molecule: Dict[str, Any], qc_keywords: Optional["KeywordSet"] = None
     ) -> OptimizationInput:
         """
         Creates a OptimizationInput schema.
         """
 
-        assert record.initial_molecule == initial_molecule.id
+        assert record.initial_molecule == initial_molecule["id"]
         if record.qc_spec.keywords:
             assert record.qc_spec.keywords == qc_keywords.id
 
