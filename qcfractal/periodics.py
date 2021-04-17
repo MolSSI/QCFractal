@@ -112,16 +112,12 @@ class FractalPeriodics:
         self.logger.info("Checking manager heartbeats")
         manager_window = self.manager_max_missed_heartbeats * self.manager_heartbeat_frequency
         dt = datetime.utcnow() - timedelta(seconds=manager_window)
-        ret = self.storage_socket.get_managers(status=ManagerStatusEnum.active, modified_before=dt)
 
-        for manager in ret["data"]:
-            name = manager["name"]
+        dead_managers = self.storage_socket.manager.deactivate(modified_before=dt)
+
+        for name in dead_managers:
             # For each manager, reset any orphaned tasks that belong to that manager
-            # These are stored as 'returned' in the manager info table
-
             n_incomplete = self.storage_socket.queue_reset_status(manager=name, reset_running=True)
-            self.storage_socket.manager_update(name, returned=n_incomplete, status=ManagerStatusEnum.inactive)
-
             self.logger.info("Hearbeat missing from {}. Recycling {} incomplete tasks.".format(name, n_incomplete))
 
         # Set up the next run of this function
