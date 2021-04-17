@@ -604,8 +604,8 @@ def test_storage_queue_roundtrip(storage_results, status):
     assert len(r["data"]) == 2
 
     # Add manager 'test_manager'
-    storage_results.manager_update("test_manager")
-    storage_results.manager_update("test_manager2")
+    storage_results.manager.update("test_manager")
+    storage_results.manager.update("test_manager2")
     # Query for next tasks
     r = storage_results.queue_get_next("test_manager", ["p1"], ["p1"], limit=1)
     assert r[0].spec.function == task1.spec.function
@@ -656,7 +656,7 @@ def test_queue_submit_many_order(storage_results):
     assert ret["meta"]["n_inserted"] == 3
 
     # Add a manager
-    storage_results.manager_update("test_manager")
+    storage_results.manager.update("test_manager")
 
     # Get tasks for manager 'test_manager'
     r = storage_results.queue_get_next("test_manager", ["p1"], ["p1"], limit=1)
@@ -669,15 +669,18 @@ def test_queue_submit_many_order(storage_results):
 
 def test_manager(storage_socket):
 
-    assert storage_socket.manager_update(name="first_manager")
-    assert storage_socket.manager_update(name="first_manager", submitted=100)
-    assert storage_socket.manager_update(name="first_manager", submitted=50)
+    assert storage_socket.manager.update(name="first_manager")
+    assert storage_socket.manager.update(name="first_manager", submitted=100)
+    assert storage_socket.manager.update(name="first_manager", submitted=50)
 
-    ret = storage_socket.get_managers(name="first_manager")
-    assert ret["data"][0]["submitted"] == 150
+    ret = storage_socket.manager.get(name=["first_manager"])
+    assert ret[0]["submitted"] == 150
 
-    ret = storage_socket.get_managers(name="first_manager", modified_before=datetime.utcnow())
-    assert len(ret["data"]) == 1
+    meta, ret2 = storage_socket.manager.query(name=["first_manager"], modified_before=datetime.utcnow())
+    assert meta.n_returned == 1
+    assert len(ret2) == 1
+
+    assert ret2[0] == ret[0]
 
 
 def test_procedure_sql(storage_results):

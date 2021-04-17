@@ -1149,8 +1149,8 @@ register_model(r"optimization/final_molecule", "GET", OptimizationAllResultBody,
 
 class ManagerInfoGETBody(ProtoModel):
     class Data(ProtoModel):
-        name: QueryStr = Field(None, description="Name(s) of managers to query for.")
-        status: QueryStr = Field(
+        name: Optional[List[str]] = Field(None, description="Name(s) of managers to query for.")
+        status: Optional[List[str]] = Field(
             None,
             description="Managers will be searched based on status. See :class:`ManagerStatusEnum` for valid statuses.",
         )

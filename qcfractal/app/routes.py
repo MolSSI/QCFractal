@@ -15,6 +15,8 @@ from ..extras import get_information as get_qcfractal_information
 from ..interface.models.rest_models import (
     ResponseGETMeta,
     ResponsePOSTMeta,
+    QueueManagerGETBody,
+    QueueManagerGETResponse,
     QueueManagerPOSTBody,
     QueueManagerPOSTResponse,
     TaskQueuePOSTBody,
@@ -25,6 +27,8 @@ from ..interface.models.rest_models import (
     MoleculePOSTResponse,
     KVStoreGETBody,
     KVStoreGETResponse,
+    ManagerInfoGETBody,
+    ManagerInfoGETResponse,
     WavefunctionStoreGETBody,
     WavefunctionStoreGETResponse,
 )
@@ -990,8 +994,7 @@ def _insert_complete_tasks(storage_socket, body: QueueManagerPOSTBody):
 def get_queue_manager():
     """Pulls new tasks from the task queue"""
 
-    body_model, response_model = rest_model("queue_manager", "get")
-    body = parse_bodymodel(body_model)
+    body = parse_bodymodel(QueueManagerGETBody)
 
     # Figure out metadata and kwargs
     name = _get_name_from_metadata(body.meta)
@@ -1000,7 +1003,7 @@ def get_queue_manager():
     new_tasks = storage_socket.queue_get_next(
         name, body.meta.programs, body.meta.procedures, limit=body.data.limit, tag=body.meta.tag
     )
-    response = response_model(
+    response = QueueManagerGETResponse(
         **{
             "meta": {
                 "n_found": len(new_tasks),
@@ -1013,7 +1016,7 @@ def get_queue_manager():
         }
     )
     # Update manager logs
-    storage_socket.manager_update(name, submitted=len(new_tasks), **body.meta.dict())
+    storage_socket.manager.update(name, submitted=len(new_tasks), **body.meta.dict())
 
     return SerializedResponse(response)
 
@@ -1045,7 +1048,7 @@ def post_queue_manager():
 
     # Update manager logs
     name = _get_name_from_metadata(body.meta)
-    storage_socket.manager_update(name, completed=completed, failures=error)
+    storage_socket.manager.update(name, completed=completed, failures=error)
 
     return SerializedResponse(response)
 
@@ -1065,21 +1068,21 @@ def put_queue_manager():
     name = _get_name_from_metadata(body.meta)
     op = body.data.operation
     if op == "startup":
-        storage_socket.manager_update(
+        storage_socket.manager.update(
             name, status="ACTIVE", configuration=body.data.configuration, **body.meta.dict(), log=True
         )
         # current_app.logger.info("QueueManager: New active manager {} detected.".format(name))
 
     elif op == "shutdown":
         nshutdown = storage_socket.queue_reset_status(manager=name, reset_running=True)
-        storage_socket.manager_update(name, returned=nshutdown, status="INACTIVE", **body.meta.dict(), log=True)
+        storage_socket.manager.update(name, returned=nshutdown, status="INACTIVE", **body.meta.dict(), log=True)
 
         # current_app.logger.info("QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(name, nshutdown))
 
         ret = {"nshutdown": nshutdown}
 
     elif op == "heartbeat":
-        storage_socket.manager_update(name, status="ACTIVE", **body.meta.dict(), log=True)
+        storage_socket.manager.update(name, status="ACTIVE", **body.meta.dict(), log=True)
         # current_app.logger.debug("QueueManager: Heartbeat of manager {} detected.".format(name))
 
     else:
@@ -1096,20 +1099,10 @@ def put_queue_manager():
 def get_manager():
     """Gets manager information from the task queue"""
 
-    body_model, response_model = rest_model("manager", "get")
-    body = parse_bodymodel(body_model)
-
-    # current_app.logger.info("GET: ComputeManagerHandler")
-    managers = storage_socket.get_managers(**{**body.data.dict(), **body.meta.dict()})
-
-    # remove passwords?
-    # TODO: Are passwords stored anywhere else? Other kinds of passwords?
-    for m in managers["data"]:
-        if "configuration" in m and isinstance(m["configuration"], dict) and "server" in m["configuration"]:
-            m["configuration"]["server"].pop("password", None)
-
-    response = response_model(**managers)
-
+    body = parse_bodymodel(ManagerInfoGETBody)
+    meta, managers = storage_socket.manager.query(**{**body.data.dict(), **body.meta.dict()})
+    meta_old = convert_get_response_metadata(meta, missing=[])
+    response = ManagerInfoGETResponse(meta=meta_old, data=managers)
     return SerializedResponse(response)
 
 
