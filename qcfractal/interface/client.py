@@ -1211,6 +1211,12 @@ class FractalClient(object):
         List[Dict[str, Any]]
             A dictionary of each match that contains all the information for each manager
         """
+
+        if isinstance(name, str):
+            name = [name]
+        if isinstance(status, str):
+            status = [status]
+
         payload = {
             "meta": {"limit": limit, "skip": skip},
             "data": {"name": name, "status": status},

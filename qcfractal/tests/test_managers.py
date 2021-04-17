@@ -174,12 +174,14 @@ def test_queue_manager_log_statistics(compute_adapter_fixture, caplog):
     manager.heartbeat()
 
     storage_socket = server.get_storage_socket()
-    manager_record = storage_socket.get_managers()["data"][0]
-    logs = storage_socket.get_manager_logs(manager_record["id"])["data"]
+    manager_records = storage_socket.manager.get(name=[manager.name()])
+    _, logs = storage_socket.manager.query_logs(manager_id=[manager_records[0]["id"]])
 
     # Grab just the last log
-    latest_log = storage_socket.get_manager_logs(manager_record["id"], timestamp_after=timestamp)["data"]
+    meta, latest_log = storage_socket.manager.query_logs(manager_id=[manager_records[0]["id"]], after=timestamp)
     assert len(latest_log) >= 1
+    assert meta.n_found >= 1
+    assert meta.n_returned >= 1
     assert len(latest_log) < len(logs)
     state = latest_log[0]
 

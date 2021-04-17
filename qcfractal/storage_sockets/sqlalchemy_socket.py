@@ -791,19 +791,3 @@ class SQLAlchemySocket:
 
     def del_tasks(self, id: Union[str, list]):
         return self.task.delete(id)
-
-    ### QueueManagerORMs
-
-    def manager_update(self, name, **kwargs):
-        return self.manager.update(name, **kwargs)
-
-    def get_managers(
-        self, name: str = None, status: str = None, modified_before=None, modified_after=None, limit=None, skip=0
-    ):
-        return self.manager.get(name, status, modified_before, modified_after, limit, skip)
-
-    def get_manager_logs(self, manager_ids: Union[List[str], str], timestamp_after=None, limit=None, skip=0):
-        return self.manager.get_logs(manager_ids, timestamp_after, limit, skip)
-
-    def _copy_managers(self, record_list: Dict):
-        return self.manager._copy_managers(record_list)
