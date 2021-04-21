@@ -137,7 +137,7 @@ class DatabaseConfig(ConfigBase):
         username = self.username if self.username is not None else ""
         password = f":{self.password}" if self.password is not None else ""
         sep = "@" if username != "" or password != "" else ""
-        return f"postgres://{username}{password}{sep}{host}:{self.port}/{self.database_name}"
+        return f"postgresql://{username}{password}{sep}{host}:{self.port}/{self.database_name}"
 
     @property
     def safe_uri(self):
@@ -145,7 +145,7 @@ class DatabaseConfig(ConfigBase):
         username = self.username if self.username is not None else ""
         password = ":********" if self.password is not None else ""
         sep = "@" if username != "" or password != "" else ""
-        return f"postgres://{username}{password}{sep}{host}:{self.port}/{self.database_name}"
+        return f"postgresql://{username}{password}{sep}{host}:{self.port}/{self.database_name}"
 
 
 class ResponseLimitConfig(ConfigBase):

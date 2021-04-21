@@ -268,10 +268,6 @@ class SQLAlchemySocket:
     def check_lib_versions(self):
         """Check the stored versions of elemental and fractal"""
 
-        # check if versions table exist
-        if not self.engine.dialect.has_table(self.engine, "versions"):
-            return None
-
         with self.session_scope() as session:
             db_ver = session.query(VersionsORM).order_by(VersionsORM.created_on.desc())
 
