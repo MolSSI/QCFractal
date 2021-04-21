@@ -312,7 +312,7 @@ class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
 
     # Output data
     starting_molecule = Column(Integer, ForeignKey("molecule.id"))
-    starting_molecule_obj = relationship(MoleculeORM, lazy="select", foreign_keys=initial_molecule)
+    starting_molecule_obj = relationship(MoleculeORM, lazy="select", foreign_keys=starting_molecule)
 
     final_energy_dict = Column(JSON)  # Dict[str, float]
     starting_grid = Column(JSON)  # tuple
