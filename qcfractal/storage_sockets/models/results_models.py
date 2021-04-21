@@ -227,9 +227,9 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
     # ids, calculated not stored in this table
     # NOTE: this won't work in SQLite since it returns ARRAYS, aggregate_order_by
     trajectory = column_property(
-        select([func.array_agg(aggregate_order_by(Trajectory.result_id, Trajectory.position))]).where(
-            Trajectory.opt_id == id
-        )
+        select([func.array_agg(aggregate_order_by(Trajectory.result_id, Trajectory.position))])
+        .where(Trajectory.opt_id == id)
+        .scalar_subquery()
     )
 
     # array of objects (results) - Lazy - raise error of accessed
@@ -422,7 +422,7 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
 
     # ids of the many to many relation
     initial_molecule = column_property(
-        select([func.array_agg(TorsionInitMol.molecule_id)]).where(TorsionInitMol.torsion_id == id)
+        select([func.array_agg(TorsionInitMol.molecule_id)]).where(TorsionInitMol.torsion_id == id).scalar_subquery()
     )
     # actual objects relation M2M, never loaded here
     initial_molecule_obj = relationship(MoleculeORM, secondary=TorsionInitMol.__table__, uselist=True, lazy="noload")
