@@ -1632,10 +1632,10 @@ class Dataset(Collection):
         *,
         keywords: Optional[str] = None,
         program: Optional[str] = None,
+        subset: Optional[Set[str]] = None,
         tag: Optional[str] = None,
         priority: Optional[str] = None,
         protocols: Optional[Dict[str, Any]] = None,
-        subset: Optional[Set[str]] = None
     ) -> ComputeResponse:
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
