@@ -243,16 +243,8 @@ class ProcedureSocket:
         """
 
         with self._core_socket.session_scope() as session:
-            procedures = (
-                session.query(
-                    with_polymorphic(
-                        BaseResultORM,
-                        [OptimizationProcedureORM, TorsionDriveProcedureORM, GridOptimizationProcedureORM],
-                    )
-                )
-                .filter(BaseResultORM.id.in_(ids))
-                .all()
-            )
+            procedures = session.query(BaseResultORM).filter(BaseResultORM.id.in_(ids)).all()
+
             # delete through session to delete correctly from base_result
             for proc in procedures:
                 session.delete(proc)

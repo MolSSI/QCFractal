@@ -45,6 +45,7 @@ class QueryBase:
         result = self.session.execute(sql_statement, kwargs)
         keys = result.keys()  # get keys before fetching
         result = result.fetchall()
+
         self.session.commit()
 
         # create a list of dict with the keys and values of the results (instead of tuples)
@@ -276,7 +277,7 @@ class TorsionDriveQueries(QueryBase):
                 )
         """
 
-        return self.execute_query(sql_statement, with_keys=False)
+        return self.execute_query(sql_statement, with_keys=True)
 
 
 class OptimizationQueries(QueryBase):
