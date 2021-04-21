@@ -25,7 +25,7 @@ class CollectionORM(Base):
     __tablename__ = "collection"
 
     id = Column(Integer, primary_key=True)
-    collection_type = Column(String)  # for inheritance
+    collection_type = Column(String, nullable=False)  # for inheritance
 
     collection = Column(String(100), nullable=False)
     lname = Column(String(100), nullable=False)
@@ -55,7 +55,7 @@ class CollectionORM(Base):
         Index("ix_collection_type", "collection_type"),
     )
 
-    __mapper_args__ = {"polymorphic_on": "collection_type"}
+    __mapper_args__ = {"polymorphic_on": "collection_type", "polymorphic_identity": "collection"}
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

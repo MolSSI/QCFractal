@@ -53,15 +53,6 @@ class Base:
             ret.update(ret["extra"])
             del ret["extra"]
 
-        # transform ids from int into str
-        id_fields = self._get_fieldnames_with_DB_ids_()
-        for key in id_fields:
-            if key in ret.keys() and ret[key] is not None:
-                if isinstance(ret[key], (list, tuple)):
-                    ret[key] = [str(i) for i in ret[key]]
-                else:
-                    ret[key] = str(ret[key])
-
         # TODO - INT ID we shouldn't be doing this
         # transform ids from int into ObjectId
         id_fields = self._get_fieldnames_with_DB_ids_()
@@ -99,7 +90,7 @@ class Base:
         id_fields = []
         for key, col in class_inspector.columns.items():
             # if PK, FK, or column property (TODO: work around for column property)
-            if col.primary_key or len(col.foreign_keys) > 0 or key != col.key:
+            if col.primary_key or len(col.foreign_keys) > 0 or key != col.name:
                 id_fields.append(key)
 
         return id_fields

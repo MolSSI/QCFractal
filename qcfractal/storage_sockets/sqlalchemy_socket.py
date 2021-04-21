@@ -136,11 +136,10 @@ def get_count_fast(query):
     Not like q.count():
         Slow: SELECT COUNT(*) FROM (SELECT ... FROM TestModel WHERE ...) ...
     """
-
-    count_q = query.statement.with_only_columns([func.count()]).order_by(None)
-    count = query.session.execute(count_q).scalar()
-
-    return count
+    # TODO - sqlalchemy 1.4 broke the "fast" way. Reverting to the slow way
+    # count_q = query.statement.with_only_columns([func.count()]).order_by(None)
+    # count = query.session.execute(count_q).scalar()
+    return query.count()
 
 
 def get_procedure_class(record):

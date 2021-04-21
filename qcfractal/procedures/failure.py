@@ -57,7 +57,7 @@ class FailedOperationHandler(BaseTasks):
 
         # TODO - must be done before marking result as error due to race condition
         # (will be fixed with better transaction handling)
-        self.storage.queue_mark_error(task_id)
+        self.storage.queue_mark_error([task_id])
 
         # TODO - could use an update_procedures that can take single results, too
         proc = build_procedure(rec)
