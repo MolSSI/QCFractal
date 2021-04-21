@@ -34,8 +34,8 @@ def replace_db_in_uri(uri: str, new_dbname: str) -> str:
 
     The rest of the URI (host, password, etc) all remain the same.
 
-    For example, can turn postgres://user:pass@127.0.0.1/some_db into
-    postgres://user:pass@127.0.0.1/postgres
+    For example, can turn postgresql://user:pass@127.0.0.1/some_db into
+    postgresql://user:pass@127.0.0.1/postgres
 
     Parameters
     ----------
