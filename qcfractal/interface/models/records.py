@@ -273,8 +273,8 @@ class ResultRecord(RecordBase):
         description="The Id of the :class:`KeywordSet` which was passed into the quantum chemistry program that "
         "performed this calculation.",
     )
-    protocols: Optional[qcel.models.results.ResultProtocols] = Field(
-        qcel.models.results.ResultProtocols(), description=""
+    protocols: Optional[qcel.models.results.AtomicResultProtocols] = Field(
+        qcel.models.results.AtomicResultProtocols(), description=""
     )
 
     # Output data

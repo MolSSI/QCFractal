@@ -25,7 +25,7 @@ def update_nested_dict(d, u):
 
 
 class ConfigCommon:
-    case_insensitive = True
+    case_sensitive = False
     extra = "forbid"
 
 
