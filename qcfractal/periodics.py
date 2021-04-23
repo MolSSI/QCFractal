@@ -96,7 +96,7 @@ class FractalPeriodics:
         Updates various server statistics (number of results, etc)
         """
         self.logger.info("Updating server stats in the database")
-        self.storage_socket.log_server_stats()
+        self.storage_socket.server_log.update_stats()
 
         # Set up the next run of this function
         self.scheduler.enter(self.server_stats_frequency, 1, self._update_server_stats)

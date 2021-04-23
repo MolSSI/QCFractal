@@ -16,10 +16,10 @@ if TYPE_CHECKING:
 """
 Default roles are:
     * admin   (read/write to everything)
-    * read    (read only, all resources except user, role, manager)
+    * read    (read only, all resources except user, role, manager, access)
     * monitor (read only, all resources except user, role)
     * compute (for compute workers, read/write on queue_manager)
-    * submit  (read on all except user, role, manager, write on task_queue, service_queue, molecule, keyword, collection)
+    * submit  (read on all except user, role, manager, access, write on task_queue, service_queue, molecule, keyword, collection)
 """
 
 default_roles = {
@@ -31,7 +31,7 @@ default_roles = {
     "read": {
         "Statement": [
             {"Effect": "Allow", "Action": "GET", "Resource": "*"},
-            {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager", "role"]},
+            {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager", "role", "access"]},
         ]
     },
     "monitor": {
@@ -48,7 +48,7 @@ default_roles = {
     "submit": {
         "Statement": [
             {"Effect": "Allow", "Action": "GET", "Resource": "*"},
-            {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager", "role"]},
+            {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager", "role", "access"]},
             {
                 "Effect": "Allow",
                 "Action": "*",

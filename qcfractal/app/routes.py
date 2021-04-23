@@ -13,6 +13,10 @@ from ..services import initialize_service
 from ..extras import get_information as get_qcfractal_information
 
 from ..interface.models.rest_models import (
+    AccessLogGETBody,
+    AccessLogGETResponse,
+    AccessSummaryGETBody,
+    AccessSummaryGETResponse,
     ResponseGETMeta,
     ResponsePOSTMeta,
     QueueManagerGETBody,
@@ -270,7 +274,7 @@ def after_request_func(response):
         extra_params = json.dumps(extra_params)
 
         log = api_logger.get_api_access_log(request=request, extra_params=extra_params)
-        storage_socket.save_access(log)
+        storage_socket.server_log.save_access(log)
 
     return response
 
@@ -370,7 +374,7 @@ def get_information():
 
     # TODO FOR RELEASE - change lower and upper version limits?
 
-    db_data = storage_socket.get_server_stats_log(limit=1)["data"]
+    db_data = storage_socket.server_log.get_latest_stats()
     public_info = {
         "name": qcf_cfg.name,
         "manager_heartbeat_frequency": qcf_cfg.heartbeat_frequency,
@@ -378,22 +382,12 @@ def get_information():
         "query_limits": qcf_cfg.response_limits.dict(),
         "client_lower_version_limit": qcf_version,
         "client_upper_version_limit": qcf_version,
-        "collection": 0,
-        "molecule": 0,
-        "result": 0,
-        "kvstore": 0,
-        "last_update": None,
+        "collection": db_data.get("collection_count", 0),
+        "molecule": db_data.get("molecule_count", 0),
+        "result": db_data.get("result_count", 0),
+        "kvstore": db_data.get("kvstore_count", 0),
+        "last_update": db_data.get("timestamp", None),
     }
-
-    if len(db_data) > 0:
-        counts = {
-            "collection": db_data[0].get("collection_count", 0),
-            "molecule": db_data[0].get("molecule_count", 0),
-            "result": db_data[0].get("result_count", 0),
-            "kvstore": db_data[0].get("kvstore_count", 0),
-            "last_update": db_data[0].get("timestamp", None),
-        }
-        public_info.update(counts)
 
     return SerializedResponse(public_info)
 
@@ -1103,6 +1097,32 @@ def get_manager():
     meta, managers = storage_socket.manager.query(**{**body.data.dict(), **body.meta.dict()})
     meta_old = convert_get_response_metadata(meta, missing=[])
     response = ManagerInfoGETResponse(meta=meta_old, data=managers)
+    return SerializedResponse(response)
+
+
+@main.route("/access/log", methods=["GET"])
+@check_access
+def get_access_log():
+    """
+    Queries access logs
+    """
+
+    body = parse_bodymodel(AccessLogGETBody)
+    meta, logs = storage_socket.server_log.query_access_logs(**{**body.data.dict(), **body.meta.dict()})
+    response = AccessLogGETResponse(meta=convert_get_response_metadata(meta, missing=[]), data=logs)
+    return SerializedResponse(response)
+
+
+@main.route("/access/summary", methods=["GET"])
+@check_access
+def get_access_summary():
+    """
+    Queries access logs
+    """
+
+    body = parse_bodymodel(AccessSummaryGETBody)
+    summary = storage_socket.server_log.query_access_summary(**{**body.data.dict()})
+    response = AccessSummaryGETResponse(data=summary)
     return SerializedResponse(response)
 
 
