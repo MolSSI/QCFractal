@@ -4,6 +4,8 @@ Models for the REST interface
 import functools
 import re
 import warnings
+
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import Field, constr, root_validator, validator
@@ -1165,3 +1167,39 @@ class ManagerInfoGETResponse(ProtoModel):
 
 
 register_model(r"manager", "GET", ManagerInfoGETBody, ManagerInfoGETResponse)
+
+
+class AccessLogGETBody(ProtoModel):
+    class Data(ProtoModel):
+        access_type: Optional[List[str]] = Field(None, description="Access types/endpoints to query for")
+        access_method: Optional[List[str]] = Field(None, description="Access methods (GET, POST) to query for")
+        after: Optional[datetime] = Field(None, description="Query for records after this date")
+        before: Optional[datetime] = Field(None, description="Query for records before this date")
+
+    meta: QueryMeta = Field(QueryMeta(), description=common_docs[QueryMeta])
+    data: Data = Field(..., description="Search parameters for the access log.")
+
+
+class AccessLogGETResponse(ProtoModel):
+    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
+    data: List[Dict[str, Any]] = Field(..., description="Individual entries from the access log")
+
+
+register_model(r"access/log", "GET", AccessLogGETBody, AccessLogGETResponse)
+
+
+class AccessSummaryGETBody(ProtoModel):
+    class Data(ProtoModel):
+        after: Optional[datetime] = Field(None, description="Query for records after this date")
+        before: Optional[datetime] = Field(None, description="Query for records before this date")
+
+    meta: EmptyMeta = Field(EmptyMeta(), description=common_docs[EmptyMeta])
+    data: Data = Field(..., description="Search parameters for the access log")
+
+
+class AccessSummaryGETResponse(ProtoModel):
+    meta: EmptyMeta = Field(EmptyMeta(), description=common_docs[EmptyMeta])
+    data: Dict[str, Any] = Field(..., description="A summary of accesses in the access logs")
+
+
+register_model(r"access/summary", "GET", AccessSummaryGETBody, AccessSummaryGETResponse)

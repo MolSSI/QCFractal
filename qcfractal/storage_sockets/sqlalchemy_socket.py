@@ -217,7 +217,7 @@ class SQLAlchemySocket:
         self._query_classes = {cls._class_name: cls(self.engine.url.database, max_limit=1000) for cls in QUERY_CLASSES}
 
         # Create/initialize the subsockets
-        from qcfractal.storage_sockets.subsockets.server_logs import ServerLogSocket
+        from qcfractal.storage_sockets.subsockets.server_log import ServerLogSocket
         from qcfractal.storage_sockets.subsockets.output_store import OutputStoreSocket
         from qcfractal.storage_sockets.subsockets.keywords import KeywordsSocket
         from qcfractal.storage_sockets.subsockets.molecule import MoleculeSocket
@@ -523,17 +523,6 @@ class SQLAlchemySocket:
         if self._completed_queue is not None:
             # Don't want to block here. Just put it in the queue and move on
             self._completed_queue.put((int(base_result_id), status), block=False)
-
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    def save_access(self, log_data):
-        return self.server_log.save_access(log_data)
-
-    def log_server_stats(self):
-        return self.server_log.update()
-
-    def get_server_stats_log(self, before=None, after=None, limit=None, skip=0):
-        return self.server_log.get(before, after, limit, skip)
 
     # ~~~~~~~~~~~~~~~~~~~~~~~ Keywords ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

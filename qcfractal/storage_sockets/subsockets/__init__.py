@@ -6,7 +6,7 @@ from .output_store import OutputStoreSocket
 from .procedure import ProcedureSocket
 from .result import ResultSocket
 from .role import RoleSocket
-from .server_logs import ServerLogSocket
+from .server_log import ServerLogSocket
 from .service import ServiceSocket
 from .task import TaskSocket
 from .user import UserSocket
