@@ -2,7 +2,7 @@
 
 import json
 import os
-import re
+from datetime import datetime
 from pkg_resources import parse_version
 
 from collections import defaultdict
@@ -1222,6 +1222,37 @@ class FractalClient(object):
             "data": {"name": name, "status": status},
         }
         return self._automodel_request("manager", "get", payload, full_return=full_return)
+
+    def query_access_log(
+        self,
+        access_type: Optional[List[str]] = None,
+        access_method: Optional[List[str]] = None,
+        before: Optional[datetime] = None,
+        after: Optional[datetime] = None,
+        limit: Optional[int] = None,
+        skip: int = 0,
+        full_return: bool = False,
+    ) -> Dict[str, Any]:
+        """Obtains individual entries in the access logs"""
+
+        payload = {
+            "meta": {"limit": limit, "skip": skip},
+            "data": {"access_type": access_type, "access_method": access_method, "before": before, "after": after},
+        }
+        return self._automodel_request("access/log", "get", payload, full_return=full_return)
+
+    def query_access_summary(
+        self,
+        before: Optional[datetime] = None,
+        after: Optional[datetime] = None,
+    ) -> Dict[str, Any]:
+        """Obtains daily summaries of accesses"""
+
+        payload = {
+            "meta": {},
+            "data": {"before": before, "after": after},
+        }
+        return self._automodel_request("access/summary", "get", payload, full_return=False)
 
     # -------------------------------------------------------------------------
     # ------------------   Advanced Queries -----------------------------------

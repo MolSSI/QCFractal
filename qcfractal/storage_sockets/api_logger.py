@@ -52,17 +52,11 @@ class API_AccessLogger:
                     f"(default base_folder is ~/.qca/qcfractal/qcfractal_config.yaml)."
                 )
 
-    def get_api_access_log(
-        self, request: BaseRequest, access_type: Optional[str] = None, extra_params: Optional[Dict[str, Any]] = None
-    ):
+    def get_api_access_log(self, request: BaseRequest, extra_params: Optional[Dict[str, Any]] = None):
 
         log: Dict[str, Any] = {}
 
-        if not access_type:
-            log["access_type"] = request.path[1:]  # remove /
-        else:
-            log["access_type"] = access_type
-
+        log["access_type"] = request.path[1:]  # remove /
         log["access_method"] = request.method  # GET or POST
 
         # get the real IP address behind a proxy or ngnix
@@ -75,7 +69,6 @@ class API_AccessLogger:
             real_ip = request.access_route[-1] if len(request.access_route) > 0 else request.remote_addr
 
         log["ip_address"] = real_ip
-
         log["user_agent"] = request.headers["User-Agent"]
 
         # TODO: extract needed info, maybe handle by caller
