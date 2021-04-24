@@ -6,7 +6,7 @@ import bcrypt
 from sqlalchemy.exc import IntegrityError
 from qcfractal.storage_sockets.models import UserORM
 from qcfractal.storage_sockets.subsockets import RoleSocket
-from qcfractal.storage_sockets.sqlalchemy_socket import AuthorizationFailure
+from qcfractal.exceptions import AuthenticationFailure, UserManagementError
 from qcfractal.interface.models import UserInfo
 
 from typing import TYPE_CHECKING
@@ -63,7 +63,7 @@ class UserSocket:
         user = session.query(UserORM).filter_by(username=username).one_or_none()
 
         if user is None:
-            raise AuthorizationFailure(f"User {username} not found.")
+            raise UserManagementError(f"User {username} not found.")
 
         return user
 
@@ -85,7 +85,7 @@ class UserSocket:
         """
 
         if self.exists(user_info.username):
-            raise AuthorizationFailure(f"User {user_info.username} already exists")
+            raise UserManagementError(f"User {user_info.username} already exists")
 
         if password is None or len(password) == 0:
             password = _generate_password()
@@ -104,7 +104,7 @@ class UserSocket:
                 session.add(user)
                 session.commit()
             except IntegrityError:
-                raise AuthorizationFailure(f"User {user_info.username} already exists?")
+                raise UserManagementError(f"User {user_info.username} already exists?")
 
         return password
 
@@ -138,10 +138,14 @@ class UserSocket:
         """
 
         with self._core_socket.session_scope() as session:
-            user = self._get_internal(session, username)
+            try:
+                user = self._get_internal(session, username)
+            except UserManagementError as e:
+                # Turn missing user into an Authentication error
+                raise AuthenticationFailure(str(e))
 
             if not user.enabled:
-                raise AuthorizationFailure(f"User {username} is disabled.")
+                raise AuthenticationFailure(f"User {username} is disabled.")
 
             try:
                 pwcheck = bcrypt.checkpw(password.encode("UTF-8"), user.password)
@@ -150,10 +154,10 @@ class UserSocket:
                 self._logger.error(
                     f"Error likely caused by encryption salt mismatch, potentially fixed by creating a new password for user {username}."
                 )
-                raise AuthorizationFailure("Password decryption failure, please contact your system administrator.")
+                raise UserManagementError("Password decryption failure, please contact your system administrator.")
 
             if pwcheck is False:
-                raise AuthorizationFailure("Incorrect password.")
+                raise AuthenticationFailure("Incorrect password.")
 
             role_model = RoleSocket._role_orm_to_model(user.role_obj)
 
@@ -176,7 +180,7 @@ class UserSocket:
         """
 
         if len(password) == 0:
-            raise AuthorizationFailure("Provided password is empty")
+            raise UserManagementError("Provided password is empty")
 
         with self._core_socket.session_scope() as session:
             user = self._get_internal(session, username)
@@ -224,7 +228,7 @@ class UserSocket:
                 user = self._get_internal(session, username)
                 session.delete(user)
         except IntegrityError:
-            raise AuthorizationFailure("User could not be deleted. Likely it is being referenced somewhere")
+            raise UserManagementError("User could not be deleted. Likely it is being referenced somewhere")
 
     def get_permissions(self, username: str) -> Dict[str, Any]:
         """

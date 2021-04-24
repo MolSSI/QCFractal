@@ -3,8 +3,8 @@ Tests for the user and role subsockets
 """
 
 import pytest
+from qcfractal.exceptions import UserManagementError, AuthenticationFailure
 from qcfractal.interface.models import UserInfo
-from qcfractal.storage_sockets.sqlalchemy_socket import AuthorizationFailure
 
 
 def test_user_basic(storage_socket):
@@ -23,7 +23,7 @@ def test_user_basic(storage_socket):
     # Raises exception on verification error
     storage_socket.user.verify("george", "oldpw")
 
-    with pytest.raises(AuthorizationFailure, match=r"Incorrect password"):
+    with pytest.raises(AuthenticationFailure, match=r"Incorrect password"):
         storage_socket.user.verify("george", "badpw")
 
     # Do we get the same data back?
@@ -49,7 +49,7 @@ def test_user_delete(storage_socket):
     storage_socket.user.delete("george")
     assert storage_socket.user.exists("george") == False
 
-    with pytest.raises(AuthorizationFailure, match=r"User.*not found"):
+    with pytest.raises(UserManagementError, match=r"User.*not found"):
         storage_socket.user.delete("george")
 
 
@@ -69,30 +69,30 @@ def test_user_duplicates(storage_socket):
     # Note the spaces on the end. These should be stripped
     # And the username should be converted to lowercase
     uinfo2 = UserInfo(username="George  ", role="read", enabled=True)
-    with pytest.raises(AuthorizationFailure, match=r"User.*already exists"):
+    with pytest.raises(UserManagementError, match=r"User.*already exists"):
         storage_socket.user.add(uinfo2, "shortpw")
 
 
 def test_unknown_user(storage_socket):
     assert storage_socket.user.exists("geoff") is False
 
-    with pytest.raises(AuthorizationFailure, match=r"User.*not found"):
+    with pytest.raises(UserManagementError, match=r"User.*not found"):
         storage_socket.user.get("geoff")
 
-    with pytest.raises(AuthorizationFailure, match=r"User.*not found"):
+    with pytest.raises(AuthenticationFailure, match=r"User.*not found"):
         storage_socket.user.verify("geoff", "a password")
 
-    with pytest.raises(AuthorizationFailure, match=r"User.*not found"):
+    with pytest.raises(UserManagementError, match=r"User.*not found"):
         storage_socket.user.reset_password("geoff")
 
-    with pytest.raises(AuthorizationFailure, match=r"User.*not found"):
+    with pytest.raises(UserManagementError, match=r"User.*not found"):
         storage_socket.user.change_password("geoff", "a password")
 
-    with pytest.raises(AuthorizationFailure, match=r"User.*not found"):
+    with pytest.raises(UserManagementError, match=r"User.*not found"):
         storage_socket.user.delete("geoff")
 
     uinfo = UserInfo(username="geoff", role="read", fullname="Test user", email="george@example.com", enabled=True)
-    with pytest.raises(AuthorizationFailure, match=r"User.*not found"):
+    with pytest.raises(UserManagementError, match=r"User.*not found"):
         storage_socket.user.modify(uinfo, False)
 
 
@@ -116,7 +116,7 @@ def test_user_change_password(storage_socket):
     # Raises exception on failure
     storage_socket.user.verify("george", "newpw")
 
-    with pytest.raises(AuthorizationFailure, match=r"Incorrect password"):
+    with pytest.raises(AuthenticationFailure, match=r"Incorrect password"):
         storage_socket.user.verify("george", "oldpw")
 
 
@@ -136,7 +136,7 @@ def test_user_password_generation(storage_socket):
     gen_pw_2 = storage_socket.user.reset_password("george")
     storage_socket.user.verify("george", gen_pw_2)
 
-    with pytest.raises(AuthorizationFailure, match=r"Incorrect password"):
+    with pytest.raises(AuthenticationFailure, match=r"Incorrect password"):
         storage_socket.user.verify("george", gen_pw)
 
 

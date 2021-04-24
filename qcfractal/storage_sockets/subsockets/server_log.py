@@ -5,8 +5,9 @@ from collections import defaultdict
 from datetime import datetime
 
 from sqlalchemy import and_, func
+import qcfractal
 from qcfractal.interface.models import QueryMetadata
-from qcfractal.storage_sockets.models import AccessLogORM, ServerStatsLogORM
+from qcfractal.storage_sockets.models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM
 from qcfractal.storage_sockets.sqlalchemy_socket import calculate_limit
 from qcfractal.storage_sockets.sqlalchemy_common import get_query_proj_columns, get_count
 
@@ -17,6 +18,7 @@ if TYPE_CHECKING:
     from typing import Dict, Any, List, Optional, Tuple
 
     AccessLogDict = Dict[str, Any]
+    ErrorLogDict = Dict[str, Any]
     ServerStatsDict = Dict[str, Any]
     AccessLogSummaryDict = Dict[str, Any]
 
@@ -36,6 +38,22 @@ class ServerLogSocket:
         with self._core_socket.session_scope() as session:
             log = AccessLogORM(**log_data)  # type: ignore
             session.add(log)
+
+    def save_error(self, error_data: ErrorLogDict) -> int:
+        """
+        Saves information about an access to the database
+
+        Returns
+        -------
+        :
+            The id of the newly-created error
+        """
+
+        log = InternalErrorLogORM(**error_data, qcfractal_version=qcfractal.__version__)  # type: ignore
+        with self._core_socket.session_scope() as session:
+            session.add(log)
+            session.commit()
+            return log.id
 
     def update_stats(self):
 
@@ -189,7 +207,7 @@ class ServerLogSocket:
             Metadata about the results of the query, and a list of Molecule that were found in the database.
         """
 
-        limit = calculate_limit(self._server_log_limit, limit)
+        limit = calculate_limit(self._access_log_limit, limit)
 
         query_cols_names, query_cols = get_query_proj_columns(AccessLogORM)
 
@@ -289,3 +307,64 @@ class ServerLogSocket:
             result_dict["_none_"] = result_dict.pop(None)
 
         return dict(result_dict)
+
+    def query_error_logs(
+        self,
+        id: Optional[List[int]] = None,
+        user: Optional[List[str]] = None,
+        before: Optional[datetime] = None,
+        after: Optional[datetime] = None,
+        limit: int = None,
+        skip: int = 0,
+    ) -> Tuple[QueryMetadata, List[AccessLogDict]]:
+        """
+        General query of server internal error logs
+
+        All search criteria are merged via 'and'. Therefore, records will only
+        be found that match all the criteria.
+
+        Parameters
+        ----------
+        id
+            Query based on the error id
+        user
+            Query for errors from a given user
+        before
+            Query for log entries with a timestamp before a specific time
+        after
+            Query for log entries with a timestamp after a specific time
+        limit
+            Limit the number of results. If None, the server limit will be used.
+            This limit will not be respected if greater than the configured limit of the server.
+        skip
+            Skip this many results from the total list of matches. The limit will apply after skipping,
+            allowing for pagination.
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of Molecule that were found in the database.
+        """
+
+        limit = calculate_limit(self._access_log_limit, limit)
+
+        query_cols_names, query_cols = get_query_proj_columns(InternalErrorLogORM)
+
+        and_query = []
+        if id:
+            and_query.append(InternalErrorLogORM.id.in_(id))
+        if user:
+            and_query.append(InternalErrorLogORM.user.in_(user))
+        if before:
+            and_query.append(InternalErrorLogORM.error_date <= before)
+        if after:
+            and_query.append(InternalErrorLogORM.error_date >= after)
+
+        with self._core_socket.session_scope(read_only=True) as session:
+            query = session.query(*query_cols).filter(and_(*and_query)).order_by(InternalErrorLogORM.error_date.desc())
+            n_found = get_count(query)
+            results = query.limit(limit).offset(skip).all()
+            result_dicts = [dict(zip(query_cols_names, x)) for x in results]
+
+        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
+        return meta, result_dicts

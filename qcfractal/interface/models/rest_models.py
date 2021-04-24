@@ -1186,7 +1186,24 @@ class AccessLogGETResponse(ProtoModel):
     data: List[Dict[str, Any]] = Field(..., description="Individual entries from the access log")
 
 
+class InternalErrorLogGETBody(ProtoModel):
+    class Data(ProtoModel):
+        id: Optional[List[int]] = Field(None, description="Query for errors with these ids")
+        user: Optional[List[str]] = Field(None, description="Query for errors belonging to this user")
+        after: Optional[datetime] = Field(None, description="Query for records after this date")
+        before: Optional[datetime] = Field(None, description="Query for records before this date")
+
+    meta: QueryMeta = Field(QueryMeta(), description=common_docs[QueryMeta])
+    data: Data = Field(..., description="Search parameters for the access log.")
+
+
+class InternalErrorLogGETResponse(ProtoModel):
+    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
+    data: List[Dict[str, Any]] = Field(..., description="Individual entries from the error log")
+
+
 register_model(r"access/log", "GET", AccessLogGETBody, AccessLogGETResponse)
+register_model(r"error", "GET", InternalErrorLogGETBody, InternalErrorLogGETResponse)
 
 
 class GroupByEnum(str, Enum):

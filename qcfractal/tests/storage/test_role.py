@@ -3,8 +3,8 @@ Tests for the user and role subsockets
 """
 
 import pytest
+from qcfractal.exceptions import UserManagementError
 from qcfractal.interface.models import RoleInfo, UserInfo
-from qcfractal.storage_sockets.sqlalchemy_socket import AuthorizationFailure
 from qcfractal.storage_sockets.subsockets.role import default_roles
 
 
@@ -16,10 +16,10 @@ def test_role_defaults(storage_socket):
 
 
 def test_role_nonexist(storage_socket):
-    with pytest.raises(AuthorizationFailure, match=r"Role.*does not exist"):
+    with pytest.raises(UserManagementError, match=r"Role.*does not exist"):
         storage_socket.role.get("doesntexist")
 
-    with pytest.raises(AuthorizationFailure, match=r"Role.*does not exist"):
+    with pytest.raises(UserManagementError, match=r"Role.*does not exist"):
         storage_socket.role.modify("doesntexist", "{}")
 
 
@@ -43,7 +43,7 @@ def test_role_add(storage_socket):
 
 def test_role_modify_admin(storage_socket):
     # The admin role should not be modifiable
-    with pytest.raises(AuthorizationFailure, match=r"Cannot modify the admin role"):
+    with pytest.raises(UserManagementError, match=r"Cannot modify the admin role"):
         storage_socket.role.modify("admin", "{}")
 
 
@@ -72,7 +72,7 @@ def test_role_delete_inuse(storage_socket):
     )
     storage_socket.user.add(uinfo, password="oldpw")
 
-    with pytest.raises(AuthorizationFailure, match=r"Role could not be deleted"):
+    with pytest.raises(UserManagementError, match=r"Role could not be deleted"):
         storage_socket.role.delete("read")
 
     # If we delete the user, we should be able to delete the role

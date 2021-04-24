@@ -240,6 +240,7 @@ class FractalClient(object):
                 msg = r.json()["msg"]
             except:
                 msg = r.reason
+
             raise IOError("Server communication failure. Code: {}, Reason: {}".format(r.status_code, msg))
 
         return r
@@ -1240,6 +1241,24 @@ class FractalClient(object):
             "data": {"access_type": access_type, "access_method": access_method, "before": before, "after": after},
         }
         return self._automodel_request("access/log", "get", payload, full_return=full_return)
+
+    def query_error_log(
+        self,
+        id: Optional[List[int]] = None,
+        user: Optional[List[str]] = None,
+        before: Optional[datetime] = None,
+        after: Optional[datetime] = None,
+        limit: Optional[int] = None,
+        skip: int = 0,
+        full_return: bool = False,
+    ) -> Dict[str, Any]:
+        """Obtains individual entries in the access logs"""
+
+        payload = {
+            "meta": {"limit": limit, "skip": skip},
+            "data": {"id": id, "user": user, "before": before, "after": after},
+        }
+        return self._automodel_request("error", "get", payload, full_return=full_return)
 
     def query_access_summary(
         self,
