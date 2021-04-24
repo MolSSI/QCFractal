@@ -1243,14 +1243,25 @@ class FractalClient(object):
 
     def query_access_summary(
         self,
+        group_by: str = "day",
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
     ) -> Dict[str, Any]:
-        """Obtains daily summaries of accesses"""
+        """Obtains daily summaries of accesses
+
+        Parameters
+        ----------
+        group_by
+            How to group the data. Valid options are "user", "hour", "day", "country", "subdivision"
+        before
+            Query for log entries with a timestamp before a specific time
+        after
+            Query for log entries with a timestamp after a specific time
+        """
 
         payload = {
             "meta": {},
-            "data": {"before": before, "after": after},
+            "data": {"group_by": group_by, "before": before, "after": after},
         }
         return self._automodel_request("access/summary", "get", payload, full_return=False)
 

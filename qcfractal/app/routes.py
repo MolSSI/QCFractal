@@ -3,6 +3,8 @@ Routes handlers for Flask
 """
 from __future__ import annotations
 
+import time
+
 from qcelemental.util import deserialize, serialize
 from qcelemental.models import FailedOperation
 from ..storage_sockets.storage_utils import add_metadata_template
@@ -37,7 +39,7 @@ from ..interface.models.rest_models import (
     WavefunctionStoreGETResponse,
 )
 
-from flask import jsonify, request, make_response
+from flask import jsonify, request, g
 import traceback
 import json
 from flask_jwt_extended import (
@@ -190,6 +192,9 @@ def check_access(fn):
                 if not Policy(_read_permissions).evaluate(context):
                     return Forbidden(f"User {identity} is not authorized to access '{resource}' resource.")
 
+            # Store the user in the global app/request context
+            g.user = identity
+
         except Exception as e:
             current_app.logger.info("Error in evaluating JWT permissions: \n" + str(e))
             return BadRequest("Error in evaluating JWT permissions")
@@ -228,6 +233,10 @@ def before_request_func():
     # Deserialize the various encodings we support (like msgpack) #
     ###############################################################
 
+    # Store timing information in the request/app context
+    # g here refers to flask.g
+    g.request_start = time.time()
+
     try:
         # default to "application/json"
         session["content_type"] = request.headers.get("Content-Type", "application/json")
@@ -253,6 +262,10 @@ def before_request_func():
 @main.after_request
 def after_request_func(response):
 
+    # Determine the time the request took
+    # g here refers to flask.g
+    request_duration = time.time() - g.request_start
+
     exclude_uris = ["/task_queue", "/service_queue", "/queue_manager"]
 
     # No associated data, so skip all of this
@@ -274,6 +287,10 @@ def after_request_func(response):
         extra_params = json.dumps(extra_params)
 
         log = api_logger.get_api_access_log(request=request, extra_params=extra_params)
+
+        log["request_duration"] = request_duration
+        log["user"] = g.user if "user" in g else None
+
         storage_socket.server_log.save_access(log)
 
     return response
@@ -1122,6 +1139,7 @@ def get_access_summary():
 
     body = parse_bodymodel(AccessSummaryGETBody)
     summary = storage_socket.server_log.query_access_summary(**{**body.data.dict()})
+    print(summary)
     response = AccessSummaryGETResponse(data=summary)
     return SerializedResponse(response)
 
