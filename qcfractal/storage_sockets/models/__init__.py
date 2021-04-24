@@ -18,6 +18,7 @@ from .sql_base import Base, MsgpackExt
 # ORM general models
 from .sql_models import (
     AccessLogORM,
+    InternalErrorLogORM,
     KeywordsORM,
     KVStoreORM,
     MoleculeORM,

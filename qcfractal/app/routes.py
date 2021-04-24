@@ -8,17 +8,19 @@ import time
 from qcelemental.util import deserialize, serialize
 from qcelemental.models import FailedOperation
 from ..storage_sockets.storage_utils import add_metadata_template
-from ..storage_sockets.sqlalchemy_socket import AuthorizationFailure
 from ..interface.models import rest_model, build_procedure, PriorityEnum, TaskStatusEnum, RecordStatusEnum, UserInfo
 from ..procedures import check_procedure_available, get_procedure_parser
 from ..services import initialize_service
 from ..extras import get_information as get_qcfractal_information
+from ..exceptions import UserReportableError, AuthenticationFailure
 
 from ..interface.models.rest_models import (
     AccessLogGETBody,
     AccessLogGETResponse,
     AccessSummaryGETBody,
     AccessSummaryGETResponse,
+    InternalErrorLogGETBody,
+    InternalErrorLogGETResponse,
     ResponseGETMeta,
     ResponsePOSTMeta,
     QueueManagerGETBody,
@@ -52,9 +54,9 @@ from flask_jwt_extended import (
 )
 from urllib.parse import urlparse
 from ..policyuniverse import Policy
-from flask import Blueprint, current_app, session, Response
+from flask import Blueprint, current_app, Response
 from functools import wraps
-from werkzeug.exceptions import BadRequest, NotFound, Forbidden, Unauthorized
+from werkzeug.exceptions import BadRequest, HTTPException, NotFound, Forbidden, Unauthorized, InternalServerError
 
 from . import api_logger, storage_socket, view_handler
 
@@ -237,22 +239,22 @@ def before_request_func():
     # g here refers to flask.g
     g.request_start = time.time()
 
-    try:
-        # default to "application/json"
-        session["content_type"] = request.headers.get("Content-Type", "application/json")
-        session["encoding"] = _valid_encodings[session["content_type"]]
-    except KeyError as e:
-        raise BadRequest(f"Did not understand 'Content-Type'. {e}")
+    # default to "application/json"
+    content_type = request.headers.get("Content-Type", "application/json")
+    encoding = _valid_encodings.get(content_type, None)
+
+    if encoding is None:
+        raise BadRequest(f"Did not understand 'Content-Type {content_type}")
 
     try:
         # Check to see if we have a json that is encoded as bytes rather than a string
-        if (session["encoding"] == "json") and isinstance(request.data, bytes):
+        if (encoding == "json") and isinstance(request.data, bytes):
             blob = request.data.decode()
         else:
             blob = request.data
 
         if blob:
-            request.data = deserialize(blob, session["encoding"])
+            request.data = deserialize(blob, encoding)
         else:
             request.data = None
     except Exception as e:
@@ -296,15 +298,52 @@ def after_request_func(response):
     return response
 
 
-@main.errorhandler(KeyError)
-def handle_python_errors(error):
-    return jsonify(msg=str(error)), 400
-    # return BadRequest(str(error))
+@main.errorhandler(InternalServerError)
+def handle_internal_error(error):
+    # For otherwise unhandled errors
+    # Do not report the details to the user. Instead, log it,
+    # and send the user the error id
+
+    # Obtain the original exception that caused the error
+    # original = getattr(error, "original_exception", None)
+
+    # Copy the headers to a dict, and remove the JWT stuff
+    headers = dict(request.headers.items())
+    headers.pop("Authorization", None)
+
+    user = g.user if "user" in g else None
+    error_log = {
+        "error_text": traceback.format_exc(),
+        "user": user,
+        "request_path": request.full_path,
+        "request_headers": str(headers),
+        "request_body": str(request.data)[:8192],
+    }
+
+    # Log it to the internal error table
+    err_id = storage_socket.server_log.save_error(error_log)
+
+    msg = error.description + f"  **Refer to internal error id {err_id} when asking your admin**"
+    return jsonify(msg=msg), error.code
 
 
-@main.errorhandler(BadRequest)
-def handle_invalid_usage(error):
+@main.errorhandler(HTTPException)
+def handle_http_exception(error):
+    # This handles many errors, such as NotFound, Unauthorized, etc
+    # These are all reportable to the user
     return jsonify(msg=str(error)), error.code
+
+
+@main.errorhandler(UserReportableError)
+def handle_userreport_error(error):
+    # This handles any errors that are reportable to the user
+    return jsonify(msg=str(error)), 400
+
+
+@main.errorhandler(AuthenticationFailure)
+def handle_auth_error(error):
+    # This handles Authentication errors (invalid user, password, etc)
+    return jsonify(msg=str(error)), 401
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -341,20 +380,12 @@ def register():
         return jsonify(msg=f"Invalid user information: {str(e)}"), 500
 
     # add returns the password. Raises exception on error
-    try:
-        pw = storage_socket.user.add(user_info, password=password)
-        if password is None or len(password) == 0:
-            return jsonify(msg="New user created!"), 201
-        else:
-            return jsonify(msg="New user created! Password is '{pw}'"), 201
-    except AuthorizationFailure as e:
-        # AuthorizationFailures are safe to report to the user
-        current_app.logger.warning(f"Failed to add user {username}. Error: {str(e)}")
-        return jsonify(msg="Failed to add user: {str(e)}"), 500
-    except Exception as e:
-        # Other exceptions should be logged, with a generic error being reported
-        current_app.logger.warning(f"Failed to add user {username}. Error: {str(e)}")
-        return jsonify(msg=f"Failed to add user with unknown error. Contact your administrator for details"), 500
+    # Exceptions should be handled property by the flask errorhandlers
+    pw = storage_socket.user.add(user_info, password=password)
+    if password is None or len(password) == 0:
+        return jsonify(msg="New user created!"), 201
+    else:
+        return jsonify(msg="New user created! Password is '{pw}'"), 201
 
 
 @main.route("/login", methods=["POST"])
@@ -366,16 +397,10 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-    try:
-        permissions = storage_socket.user.verify(username, password)
-    except AuthorizationFailure as e:
-        # AuthorizationFailures are safe to report to the user
-        current_app.logger.info(f"Login failure for user {username}: {str(e)}")
-        return Unauthorized(str(e))
-    except Exception as e:
-        # Other exceptions should be logged, with a generic error being reported
-        current_app.logger.info(f"Login failure for user {username}: {str(e)}")
-        return Unauthorized("Unknown error. Contact your administrator for details")
+    # Raises exceptions on error
+    # Also raises AuthenticationFailure if the user is invalid or the password is incorrect
+    # This should be handled properly by the flask errorhandlers
+    permissions = storage_socket.user.verify(username, password)
 
     access_token = create_access_token(identity=username, additional_claims={"permissions": permissions})
     # expires_delta=datetime.timedelta(days=3))
@@ -427,20 +452,15 @@ def fresh_login():
         username = request.form["username"]
         password = request.form["password"]
 
-    try:
-        permissions = storage_socket.user.verify(username, password)
-        access_token = create_access_token(
-            identity=username, additionalclaims={"permissions": permissions.dict()}, fresh=True
-        )
-        return jsonify(msg="Fresh login succeeded!", access_token=access_token), 200
-    except AuthorizationFailure as e:
-        # AuthorizationFailures are safe to report to the user
-        current_app.logger.info(f"Login failure for user {username}: {str(e)}")
-        return Unauthorized(str(e))
-    except Exception as e:
-        # Other exceptions should be logged, with a generic error being reported
-        current_app.logger.info(f"Login failure for user {username}: {str(e)}")
-        return Unauthorized("Unknown error. Contact your administrator for details")
+    # Raises exceptions on error
+    # Also raises AuthenticationFailure if the user is invalid or the password is incorrect
+    # This should be handled properly by the flask errorhandlers
+    permissions = storage_socket.user.verify(username, password)
+
+    access_token = create_access_token(
+        identity=username, additionalclaims={"permissions": permissions.dict()}, fresh=True
+    )
+    return jsonify(msg="Fresh login succeeded!", access_token=access_token), 200
 
 
 @main.route("/molecule", methods=["GET"])
@@ -1139,8 +1159,20 @@ def get_access_summary():
 
     body = parse_bodymodel(AccessSummaryGETBody)
     summary = storage_socket.server_log.query_access_summary(**{**body.data.dict()})
-    print(summary)
     response = AccessSummaryGETResponse(data=summary)
+    return SerializedResponse(response)
+
+
+@main.route("/error", methods=["GET"])
+@check_access
+def get_internal_error_log():
+    """
+    Queries internal error logs
+    """
+
+    body = parse_bodymodel(InternalErrorLogGETBody)
+    meta, logs = storage_socket.server_log.query_error_logs(**{**body.data.dict(), **body.meta.dict()})
+    response = InternalErrorLogGETResponse(meta=convert_get_response_metadata(meta, missing=[]), data=logs)
     return SerializedResponse(response)
 
 

@@ -64,6 +64,20 @@ class AccessLogORM(Base):
     subdivision = Column(String)
 
 
+class InternalErrorLogORM(Base):
+    __tablename__ = "internal_error_log"
+
+    id = Column(Integer, primary_key=True)
+    error_date = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    qcfractal_version = Column(String)
+    error_text = Column(String)
+    user = Column(String)
+
+    request_path = Column(String)
+    request_headers = Column(String)
+    request_body = Column(String)
+
+
 class ServerStatsLogORM(Base):
     __tablename__ = "server_stats_log"
 

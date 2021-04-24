@@ -8,6 +8,10 @@ class Config:
     # must be set to false to avoid restarting
     DEBUG = False
 
+    # Never propagate exceptions. This uses the default error pages
+    # which are HTML, but we are using json...
+    PROPAGATE_EXCEPTIONS = False
+
     @staticmethod
     def init_app(app):
         pass
@@ -35,7 +39,7 @@ class ProductionConfig(Config):
 
 
 class SnowflakeConfig(ProductionConfig):
-    PROPAGATE_EXCEPTIONS = None
+    pass
 
 
 class DockerConfig(ProductionConfig):
