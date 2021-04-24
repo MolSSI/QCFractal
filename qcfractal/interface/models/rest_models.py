@@ -4,6 +4,7 @@ Models for the REST interface
 import functools
 import re
 import warnings
+from enum import Enum
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -1188,8 +1189,17 @@ class AccessLogGETResponse(ProtoModel):
 register_model(r"access/log", "GET", AccessLogGETBody, AccessLogGETResponse)
 
 
+class GroupByEnum(str, Enum):
+    user = "user"
+    day = "day"
+    hour = "hour"
+    country = "country"
+    subdivision = "subdivision"
+
+
 class AccessSummaryGETBody(ProtoModel):
     class Data(ProtoModel):
+        group_by: GroupByEnum = Field(GroupByEnum.day, descriptoin="How to group the log summaries")
         after: Optional[datetime] = Field(None, description="Query for records after this date")
         before: Optional[datetime] = Field(None, description="Query for records before this date")
 
@@ -1199,7 +1209,7 @@ class AccessSummaryGETBody(ProtoModel):
 
 class AccessSummaryGETResponse(ProtoModel):
     meta: EmptyMeta = Field(EmptyMeta(), description=common_docs[EmptyMeta])
-    data: Dict[str, Any] = Field(..., description="A summary of accesses in the access logs")
+    data: Dict[str, Any] = Field({}, description="A summary of accesses in the access logs")
 
 
 register_model(r"access/summary", "GET", AccessSummaryGETBody, AccessSummaryGETResponse)

@@ -38,6 +38,14 @@ class AccessLogORM(Base):
     access_method = Column(String, nullable=False)
     access_type = Column(String, nullable=False, index=True)
 
+    request_duration = Column(Float)
+
+    # Because logging happens every request, we store the user as a string
+    # rather than a foreign key to the user table, which would require
+    # a lookup. This also disconnects the access log from the user table,
+    # allowing for logs to exist after a user is deleted
+    user = Column(String)
+
     # Note: no performance difference between varchar and text in postgres
     # will mostly have a serialized JSON, but not stored as JSON for speed
     extra_params = Column(String)
