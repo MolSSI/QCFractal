@@ -215,6 +215,7 @@ class ServerLogSocket:
 
     def query_access_summary(
         self,
+        group_by: str = "day",
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
     ) -> AccessLogSummaryDict:
@@ -226,6 +227,8 @@ class ServerLogSocket:
 
         Parameters
         ----------
+        group_by
+            How to group the data. Valid options are "hour", "day", "country", "subdivision"
         before
             Query for log entries with a timestamp before a specific time
         after
@@ -237,6 +240,8 @@ class ServerLogSocket:
             Metadata about the results of the query, and a list of Molecule that were found in the database.
         """
 
+        group_by = group_by.lower()
+
         and_query = []
         if before:
             and_query.append(AccessLogORM.access_date <= before)
@@ -245,14 +250,27 @@ class ServerLogSocket:
 
         result_dict = defaultdict(list)
         with self._core_socket.session_scope(read_only=True) as session:
+            if group_by == "user":
+                group_col = AccessLogORM.user.label("group_col")
+            elif group_by == "day":
+                group_col = func.to_char(AccessLogORM.access_date, "YYYY-MM-DD").label("group_col")
+            elif group_by == "hour":
+                group_col = func.to_char(AccessLogORM.access_date, "YYYY-MM-DD HH24").label("group_col")
+            elif group_by == "country":
+                group_col = AccessLogORM.country.label("group_col")
+            elif group_by == "subdivision":
+                group_col = AccessLogORM.subdivision.label("group_col")
+            else:
+                raise RuntimeError(f"Unknown group_by: {group_by}")
+
             query = session.query(
-                func.to_char(AccessLogORM.access_date, "YYYY-MM-DD").label("access_day"),
+                group_col,
                 AccessLogORM.access_type,
                 AccessLogORM.access_method,
                 func.count(AccessLogORM.id),
             )
             query = query.filter(and_(*and_query)).group_by(
-                AccessLogORM.access_type, AccessLogORM.access_method, "access_day"
+                AccessLogORM.access_type, AccessLogORM.access_method, "group_col"
             )
 
             results = query.all()
@@ -264,4 +282,10 @@ class ServerLogSocket:
                 d = {"access_type": row[1], "access_method": row[2], "count": row[3]}
                 result_dict[row[0]].append(d)
 
-        return result_dict
+        # replace None with "_none_"
+        if None in result_dict:
+            if "_none_" in result_dict:
+                raise RuntimeError("Key _none_ already exists. Weird username or country?")
+            result_dict["_none_"] = result_dict.pop(None)
+
+        return dict(result_dict)
