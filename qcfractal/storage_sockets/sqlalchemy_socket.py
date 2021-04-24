@@ -66,13 +66,6 @@ import qcfractal
 import qcengine
 
 
-# This class is used to signal the caller about authorization-related
-# errors. While not always about authorization, the caller
-# is expected to report the provided string to the end user.
-class AuthorizationFailure(RuntimeError):
-    pass
-
-
 _null_keys = {"basis", "keywords"}
 _id_keys = {"id", "molecule", "keywords", "procedure_id"}
 _lower_func = lambda x: x.lower()

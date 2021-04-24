@@ -150,6 +150,7 @@ class ProcedureSocket:
             className = BaseResultORM  # all classes, including those with 'selectin'
             program = None  # make sure it's not used
             if id is None:
+                # TODO - should be handled in pydantic model validation
                 self._logger.error(f"Procedure type not specified({procedure}), and ID is not given.")
                 raise KeyError("ID is required if procedure type is not specified.")
 

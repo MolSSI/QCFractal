@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import logging
 from sqlalchemy.exc import IntegrityError
+from qcfractal.exceptions import UserManagementError
 from qcfractal.storage_sockets.models import RoleORM
 from qcfractal.interface.models import RoleInfo
-from qcfractal.storage_sockets.sqlalchemy_socket import AuthorizationFailure
 
 from typing import TYPE_CHECKING
 
@@ -16,10 +16,11 @@ if TYPE_CHECKING:
 """
 Default roles are:
     * admin   (read/write to everything)
-    * read    (read only, all resources except user, role, manager, access)
+    * read    (read only, all resources except user, role, manager, access, error)
     * monitor (read only, all resources except user, role)
     * compute (for compute workers, read/write on queue_manager)
-    * submit  (read on all except user, role, manager, access, write on task_queue, service_queue, molecule, keyword, collection)
+    * submit  (read on all except user, role, manager, access, error
+               write on task_queue, service_queue, molecule, keyword, collection)
 """
 
 default_roles = {
@@ -31,7 +32,7 @@ default_roles = {
     "read": {
         "Statement": [
             {"Effect": "Allow", "Action": "GET", "Resource": "*"},
-            {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager", "role", "access"]},
+            {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager", "role", "access", "error"]},
         ]
     },
     "monitor": {
@@ -48,7 +49,7 @@ default_roles = {
     "submit": {
         "Statement": [
             {"Effect": "Allow", "Action": "GET", "Resource": "*"},
-            {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager", "role", "access"]},
+            {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager", "role", "access", "error"]},
             {
                 "Effect": "Allow",
                 "Action": "*",
@@ -78,7 +79,7 @@ class RoleSocket:
         rolename = rolename.lower()
         orm = session.query(RoleORM).filter(RoleORM.rolename == rolename).one_or_none()
         if orm is None:
-            raise AuthorizationFailure(f"Role {rolename} does not exist")
+            raise UserManagementError(f"Role {rolename} does not exist")
 
         return orm
 
@@ -120,7 +121,7 @@ class RoleSocket:
                 role = RoleORM(rolename=rolename, permissions=permissions)  # type: ignore
                 session.add(role)
             except IntegrityError as err:
-                raise AuthorizationFailure(f"Role {rolename} already exists")
+                raise UserManagementError(f"Role {rolename} already exists")
 
     def modify(self, rolename: str, permissions: Dict) -> None:
         """
@@ -136,7 +137,7 @@ class RoleSocket:
 
         # Cannot change admin role
         if rolename == "admin":
-            raise AuthorizationFailure("Cannot modify the admin role")
+            raise UserManagementError("Cannot modify the admin role")
 
         with self._core_socket.session_scope() as session:
             role = self._get_internal(session, rolename)
@@ -160,4 +161,4 @@ class RoleSocket:
                 role = self._get_internal(session, rolename)
                 session.delete(role)
         except IntegrityError:
-            raise AuthorizationFailure("Role could not be deleted. Likely it is being referenced somewhere")
+            raise UserManagementError("Role could not be deleted. Likely it is being referenced somewhere")
