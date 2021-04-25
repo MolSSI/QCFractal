@@ -57,7 +57,7 @@ class FractalPeriodics:
         self.logger = logging.getLogger("qcfractal_periodics")
 
         # Frequencies/Intervals at which to run various tasks
-        self.server_stats_frequency = 60
+        self.server_stats_frequency = qcf_config.statistics_frequency
         self.manager_heartbeat_frequency = qcf_config.heartbeat_frequency
         self.manager_max_missed_heartbeats = qcf_config.heartbeat_max_missed
 
