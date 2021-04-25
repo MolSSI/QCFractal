@@ -1,5 +1,7 @@
 """Provides an interface the QCDB Server instance"""
 
+from . import __version__
+
 import json
 import os
 from datetime import datetime
@@ -113,9 +115,6 @@ class FractalClient(object):
         if (username is not None) or (password is not None):
             self._get_JWT_token(username, password)
 
-        from . import __version__  # Import here to avoid circular import
-        from . import _isportal
-
         self._headers["Content-Type"] = f"application/{self.encoding}"
         self._headers["User-Agent"] = f"qcportal/{__version__}"
 
@@ -129,17 +128,16 @@ class FractalClient(object):
         self.server_name = self.server_info["name"]
         self.query_limits = self.server_info["query_limits"]
 
-        if _isportal:
-            server_version_min_client = parse_version(self.server_info["client_lower_version_limit"])
-            server_version_max_client = parse_version(self.server_info["client_upper_version_limit"])
+        server_version_min_client = parse_version(self.server_info["client_lower_version_limit"])
+        server_version_max_client = parse_version(self.server_info["client_upper_version_limit"])
 
-            client_version = parse_version(__version__)
-            if not server_version_min_client <= client_version <= server_version_max_client:
-                raise IOError(
-                    f"This client version {str(client_version)} does not fall within the server's allowed "
-                    f"client versions of [{str(server_version_min_client)}, {str(server_version_max_client)}]."
-                    f"You may need to upgrade or downgrade"
-                )
+        client_version = parse_version(__version__)
+        if not server_version_min_client <= client_version <= server_version_max_client:
+            raise RuntimeError(
+                f"This client version {str(client_version)} does not fall within the server's allowed "
+                f"client versions of [{str(server_version_min_client)}, {str(server_version_max_client)}]."
+                f"You may need to upgrade or downgrade"
+            )
 
     def __repr__(self) -> str:
         """A short representation of the current FractalClient.

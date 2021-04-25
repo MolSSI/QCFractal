@@ -2,10 +2,20 @@
 Main init function for qcfractal
 """
 
-from . import interface
+###################################################
+# The version stuff must be handled first.
+# Other packages that we import later will need it
+###################################################
 
 # Handle versioneer
-from .extras import get_information
+from ._version import get_versions
+
+versions = get_versions()
+__version__ = versions["version"]
+__git_revision__ = versions["full-revisionid"]
+del get_versions, versions
+
+from . import interface
 
 # Handle top level object imports
 from .postgres_harness import PostgresHarness, TemporaryPostgres
@@ -16,7 +26,3 @@ from .snowflake import FractalSnowflake
 
 # Import modules
 from .storage_sockets import storage_socket_factory
-
-__version__ = get_information("version")
-__git_revision__ = get_information("git_revision")
-del get_information

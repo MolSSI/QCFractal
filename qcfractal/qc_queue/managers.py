@@ -13,8 +13,8 @@ from typing import Any, Callable, Dict, List, Optional, Union
 from pydantic import BaseModel, validator
 
 import qcengine as qcng
-from qcfractal.extras import get_information
 
+from .. import __version__ as qcfractal_version
 from ..interface.data import get_molecule
 from ..process_runner import InterruptableSleep, SleepInterrupted
 from .adapters import build_queue_adapter
@@ -226,7 +226,7 @@ class QueueManager:
 
         # Print out configuration
         self.logger.info("QueueManager:")
-        self.logger.info("    Version:         {}\n".format(get_information("version")))
+        self.logger.info("    Version:         {}\n".format(qcfractal_version))
 
         if self.verbose:
             self.logger.info("    Name Information:")
@@ -288,7 +288,7 @@ class QueueManager:
             **self.name_data.copy(),
             # Version info
             "qcengine_version": qcng.__version__,
-            "manager_version": get_information("version"),
+            "manager_version": qcfractal_version,
             # User info
             "username": self.client.username,
             # Pull info
