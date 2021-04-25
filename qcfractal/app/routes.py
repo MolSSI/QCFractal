@@ -5,13 +5,13 @@ from __future__ import annotations
 
 import time
 
+from .. import __version__ as qcfractal_version
 from qcelemental.util import deserialize, serialize
 from qcelemental.models import FailedOperation
 from ..storage_sockets.storage_utils import add_metadata_template
 from ..interface.models import rest_model, build_procedure, PriorityEnum, TaskStatusEnum, RecordStatusEnum, UserInfo
 from ..procedures import check_procedure_available, get_procedure_parser
 from ..services import initialize_service
-from ..extras import get_information as get_qcfractal_information
 from ..exceptions import UserReportableError, AuthenticationFailure
 
 from ..interface.models.rest_models import (
@@ -412,18 +412,15 @@ def login():
 def get_information():
     qcf_cfg = current_app.config["QCFRACTAL_CONFIG"]
 
-    qcf_version = get_qcfractal_information("version")
-
     # TODO FOR RELEASE - change lower and upper version limits?
-
     db_data = storage_socket.server_log.get_latest_stats()
     public_info = {
         "name": qcf_cfg.name,
         "manager_heartbeat_frequency": qcf_cfg.heartbeat_frequency,
-        "version": qcf_version,
+        "version": qcfractal_version,
         "query_limits": qcf_cfg.response_limits.dict(),
-        "client_lower_version_limit": qcf_version,
-        "client_upper_version_limit": qcf_version,
+        "client_lower_version_limit": qcfractal_version,
+        "client_upper_version_limit": qcfractal_version,
         "collection": db_data.get("collection_count", 0),
         "molecule": db_data.get("molecule_count", 0),
         "result": db_data.get("result_count", 0),
