@@ -90,9 +90,11 @@ class ServerStatsLogORM(Base):
     result_count = Column(Integer)
     kvstore_count = Column(Integer)
     access_count = Column(Integer)
+    error_count = Column(Integer)
 
-    # States
-    result_states = Column(JSON)
+    # Task & service queue status
+    task_queue_status = Column(JSON)
+    service_queue_status = Column(JSON)
 
     # Database
     db_total_size = Column(BigInteger)
