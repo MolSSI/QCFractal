@@ -5,17 +5,17 @@ Wraps geometric procedures
 import io
 import json
 import contextlib
+from importlib.util import find_spec
 from typing import Any, Dict, List
 
 import numpy as np
 
-from ..extras import find_module
 from ..interface.models import TorsionDriveRecord, Molecule
 from .service_util import BaseService, TaskManager
 
 __all__ = ["TorsionDriveService"]
 
-__td_api = find_module("torsiondrive")
+__td_api = find_spec("torsiondrive")
 
 
 def _check_td():

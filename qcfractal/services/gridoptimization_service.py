@@ -7,7 +7,7 @@ from typing import Dict, Set
 
 import numpy as np
 
-from ..extras import get_information
+from .. import __version__ as qcfractal_version
 from ..interface.models import GridOptimizationRecord, Molecule
 from .service_util import BaseService, expand_ndimensional_grid
 
@@ -58,7 +58,7 @@ class GridOptimizationService(BaseService):
             starting_molecule=service_input.initial_molecule["id"],
             provenance={
                 "creator": "qcfractal",
-                "version": get_information("version"),
+                "version": qcfractal_version,
                 "routine": "qcfractal.services.gridoptimization",
             },
             final_energy_dict={},
