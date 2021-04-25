@@ -225,7 +225,10 @@ class FractalConfig(ConfigBase):
     )
 
     # Periodics
-    service_frequency: int = Field(60, description="The frequency to update services (in seconds)")
+    statistics_frequency: int = Field(
+        3600, description="The frequency at which to update servre statistics (in seconds)"
+    )
+    service_frequency: int = Field(60, description="The frequency at which to update services (in seconds)")
     max_active_services: int = Field(20, description="The maximum number of concurrent active services")
     heartbeat_frequency: int = Field(
         1800, description="The frequency (in seconds) to check the heartbeat of compute managers"
