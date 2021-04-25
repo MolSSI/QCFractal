@@ -111,55 +111,6 @@ class TaskQueries(QueryBase):
 # ----------------------------------------------------------------------------
 
 
-class DatabaseStatQueries(QueryBase):
-
-    _class_name = "database_stats"
-
-    _query_method_map = {
-        "table_count": "_table_count",
-        "database_size": "_database_size",
-        "table_information": "_table_information",
-    }
-
-    def _table_count(self, table_name=None):
-
-        if table_name is None:
-            self._raise_missing_attribute("table_name", "table name")
-
-        sql_statement = f"SELECT count(*) from {table_name}"
-        return self.execute_query(sql_statement, with_keys=False)[0]
-
-    def _database_size(self):
-
-        sql_statement = f"SELECT pg_database_size('{self.database_name}')"
-        return self.execute_query(sql_statement, with_keys=True)[0]["pg_database_size"]
-
-    def _table_information(self):
-
-        sql_statement = f"""
-SELECT relname                                AS table_name
-     , c.reltuples::BIGINT                    AS row_estimate
-     , pg_total_relation_size(c.oid)          AS total_bytes
-     , pg_indexes_size(c.oid)                 AS index_bytes
-     , pg_total_relation_size(reltoastrelid)  AS toast_bytes
-FROM pg_class c
-         LEFT JOIN pg_namespace n ON n.oid = c.relnamespace
-WHERE relkind = 'r';
- """
-
-        result = self.execute_query(sql_statement, with_keys=False)
-
-        ret = []
-        for row in result:
-            if ("pg_" in row[0]) or ("sql_" in row[0]):
-                continue
-            ret.append(list(row))
-
-        ret = {"columns": ["table_name", "row_estimate", "total_bytes", "index_bytes", "toast_bytes"], "rows": ret}
-
-        return ret
-
-
 class ResultQueries(QueryBase):
 
     _class_name = "result"
