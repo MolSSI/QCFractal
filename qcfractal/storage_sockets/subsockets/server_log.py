@@ -4,10 +4,20 @@ import logging
 from collections import defaultdict
 from datetime import datetime
 
-from sqlalchemy import and_, func
+from sqlalchemy import and_, func, text
 import qcfractal
 from qcfractal.interface.models import QueryMetadata
-from qcfractal.storage_sockets.models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM
+from qcfractal.storage_sockets.models import (
+    AccessLogORM,
+    InternalErrorLogORM,
+    ServerStatsLogORM,
+    CollectionORM,
+    MoleculeORM,
+    BaseResultORM,
+    KVStoreORM,
+    TaskQueueORM,
+    ServiceQueueORM,
+)
 from qcfractal.storage_sockets.sqlalchemy_socket import calculate_limit
 from qcfractal.storage_sockets.sqlalchemy_common import get_query_proj_columns, get_count
 
@@ -57,44 +67,79 @@ class ServerLogSocket:
 
     def update_stats(self):
 
-        table_info = self._core_socket.custom_query("database_stats", "table_information")["data"]
+        table_list = [CollectionORM, MoleculeORM, BaseResultORM, KVStoreORM, AccessLogORM, InternalErrorLogORM]
+        db_name = self._core_socket.qcf_config.database.database_name
 
-        # Calculate table info
+        table_counts = {}
+        with self._core_socket.session_scope(True) as session:
+            # total size of the database
+            db_size = session.execute(text("SELECT pg_database_size(:dbname)"), {"dbname": db_name}).scalar()
+
+            # Count the number of rows in each table
+            for table in table_list:
+                table_name = table.__tablename__
+                table_counts[table_name] = session.execute(text(f"SELECT count(*) FROM {table_name}")).scalar()
+
+            table_info_sql = f"""
+                    SELECT relname                                AS table_name
+                         , c.reltuples::BIGINT                    AS row_estimate
+                         , pg_total_relation_size(c.oid)          AS total_bytes
+                         , pg_indexes_size(c.oid)                 AS index_bytes
+                         , pg_total_relation_size(reltoastrelid)  AS toast_bytes
+                    FROM pg_class c
+                             LEFT JOIN pg_namespace n ON n.oid = c.relnamespace
+                    WHERE relkind = 'r' AND relname NOT LIKE 'pg_%' AND relname NOT LIKE 'sql_%';
+            """
+
+            table_info_result = session.execute(text(table_info_sql)).fetchall()
+
+            table_info_rows = [list(r) for r in table_info_result]
+            table_info = {
+                "columns": ["table_name", "row_estimate", "total_bytes", "index_bytes", "toast_bytes"],
+                "rows": table_info_rows,
+            }
+
+            # Task queue and Service queue status
+            task_query = (
+                session.query(TaskQueueORM.parser, TaskQueueORM.status, func.count(TaskQueueORM.id))
+                .group_by(TaskQueueORM.parser, TaskQueueORM.status)
+                .all()
+            )
+            task_stats = {"columns": ["result_type", "status", "count"], "rows": [list(r) for r in task_query]}
+
+            service_query = (
+                session.query(BaseResultORM.result_type, ServiceQueueORM.status, func.count(ServiceQueueORM.id))
+                .join(BaseResultORM, BaseResultORM.id == ServiceQueueORM.procedure_id)
+                .group_by(BaseResultORM.result_type, ServiceQueueORM.status)
+                .all()
+            )
+            service_stats = {"columns": ["result_type", "status", "count"], "rows": [list(r) for r in service_query]}
+
+        # Calculate combined table info
         table_size = 0
         index_size = 0
-        for row in table_info["rows"]:
+        for row in table_info_rows:
             table_size += row[2] - row[3] - (row[4] or 0)
             index_size += row[3]
 
-        # Calculate result state info, turns out to be very costly for large databases
-        # state_data = self.custom_query("result", "count", groupby={'result_type', 'status'})["data"]
-        # result_states = {}
-
-        # for row in state_data:
-        #     result_states.setdefault(row["result_type"], {})
-        #     result_states[row["result_type"]][row["status"]] = row["count"]
-        result_states = {}
-
-        counts = {}
-        for table in ["collection", "molecule", "base_result", "kv_store", "access_log"]:
-            counts[table] = self._core_socket.custom_query("database_stats", "table_count", table_name=table)["data"][0]
-
         # Build out final data
         data = {
-            "collection_count": counts["collection"],
-            "molecule_count": counts["molecule"],
-            "result_count": counts["base_result"],
-            "kvstore_count": counts["kv_store"],
-            "access_count": counts["access_log"],
-            "result_states": result_states,
-            "db_total_size": self._core_socket.custom_query("database_stats", "database_size")["data"],
+            "collection_count": table_counts[CollectionORM.__tablename__],
+            "molecule_count": table_counts[MoleculeORM.__tablename__],
+            "result_count": table_counts[BaseResultORM.__tablename__],
+            "kvstore_count": table_counts[KVStoreORM.__tablename__],
+            "access_count": table_counts[AccessLogORM.__tablename__],
+            "error_count": table_counts[InternalErrorLogORM.__tablename__],
+            "task_queue_status": task_stats,
+            "service_queue_status": service_stats,
+            "db_total_size": db_size,
             "db_table_size": table_size,
             "db_index_size": index_size,
             "db_table_information": table_info,
         }
 
         with self._core_socket.session_scope() as session:
-            log = ServerStatsLogORM(**data)
+            log = ServerStatsLogORM(**data)  # type: ignore
             session.add(log)
             session.commit()
 
