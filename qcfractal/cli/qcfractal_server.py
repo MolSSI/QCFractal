@@ -19,7 +19,7 @@ import qcfractal
 from ..config import read_configuration, FractalConfig, FlaskConfig
 from ..postgres_harness import PostgresHarness
 from ..storage_sockets.sqlalchemy_socket import SQLAlchemySocket
-from ..interface.models import UserInfo
+from ..interface.models import UserInfo, RoleInfo
 from ..periodics import PeriodicsProcess
 from ..app.gunicorn_app import GunicornProcess
 from ..process_runner import ProcessRunner
@@ -230,6 +230,23 @@ def parse_args() -> argparse.Namespace:
     user_delete.add_argument("--no-prompt", action="store_true", help="Do not prompt for confirmation")
 
     #####################################
+    # role subcommand
+    #####################################
+    role = subparsers.add_parser("role", help="Manage roles for this instance")
+
+    # user sub-subcommands
+    role_subparsers = role.add_subparsers(dest="role_command")
+
+    # role list
+    role_subparsers.add_parser("list", help="List all role names")
+
+    # role info
+    role_subparsers.add_parser("info", help="Get information about a role")
+
+    # role reset
+    role_subparsers.add_parser("reset", help="Reset all the original roles to their defaults")
+
+    #####################################
     # backup subcommand
     #####################################
     backup = subparsers.add_parser("backup", help="Creates a postgres backup file of the current database.")
@@ -266,7 +283,8 @@ def server_init(args, config):
 
     psql.create_database()
 
-    # Adds default roles, etc
+    # Adds tables, etc
+    # TODO: (right??)
     socket = SQLAlchemySocket(config)
 
 
@@ -419,7 +437,7 @@ def server_user(args, config):
     user_command = args.user_command
     pg_harness, storage = start_database(args, config, logger)
 
-    def print_user_info(u):
+    def print_user_info(u: UserInfo):
         enabled = "True" if u.enabled else "False"
         print("-" * 80)
         print(f"      username: {u.username}")
@@ -516,6 +534,40 @@ def server_user(args, config):
         else:
             storage.user.delete(u.username)
             print("Deleted!")
+
+    # Shutdown the database, but only if we manage it
+    if config.database.own:
+        pg_harness.shutdown()
+
+
+def server_role(args, config):
+    logger = logging.getLogger(__name__)
+    role_command = args.role_command
+    pg_harness, storage = start_database(args, config, logger)
+
+    def print_role_info(r: RoleInfo):
+        print("-" * 80)
+        print(f"    role: {r.rolename}")
+        print(f"    permissions:")
+        for stmt in r.permissions["Statement"]:
+            print("        ", stmt)
+
+    if role_command == "list":
+        role_list = storage.role.list()
+
+        print("rolename")
+        print("--------")
+        for r in role_list:
+            print(f"{r.rolename}")
+
+    if role_command == "info":
+        r = storage.role.get(args.rolename)
+        print_role_info(r)
+
+    if role_command == "reset":
+        print("Resetting default roles to their original default permissions.")
+        print("Other roles will not be affected.")
+        storage.role.reset_defaults()
 
     # Shutdown the database, but only if we manage it
     if config.database.own:
@@ -667,6 +719,8 @@ def main():
         server_upgrade(args, qcf_config)
     elif args.command == "user":
         server_user(args, qcf_config)
+    elif args.command == "role":
+        server_role(args, qcf_config)
     # elif args.command == "backup":
     #    server_backup(args, qcf_config)
     # elif args.command == "restore":
