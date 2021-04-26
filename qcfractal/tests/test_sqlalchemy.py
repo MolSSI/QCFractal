@@ -44,9 +44,8 @@ def molecules_H4O2(storage_socket):
 @pytest.fixture
 def kw_fixtures(storage_socket):
     kw1 = ptl.models.KeywordSet(**{"values": {"something": "kwfixture"}})
-    ret = storage_socket.add_keywords([kw1])
-
-    yield list(ret["data"])
+    _, ret = storage_socket.keywords.add([kw1])
+    yield list(ret)
 
 
 @pytest.mark.parametrize("compression", ptl.models.CompressionEnum)

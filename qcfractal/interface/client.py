@@ -447,9 +447,6 @@ class FractalClient(object):
         self,
         id: Optional["QueryObjectId"] = None,
         *,
-        hash_index: Optional["QueryStr"] = None,
-        limit: Optional[int] = None,
-        skip: int = 0,
         full_return: bool = False,
     ) -> Union["KeywordGETResponse", List["KeywordSet"]]:
         """Obtains KeywordSets from the server using keyword ids.
@@ -460,10 +457,6 @@ class FractalClient(object):
             A list of ids to query.
         hash_index : QueryStr, optional
             The hash index to look up
-        limit : Optional[int], optional
-            The maximum number of keywords to query
-        skip : int, optional
-            The number of keywords to skip in the query, used during pagination
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
 
@@ -473,7 +466,7 @@ class FractalClient(object):
             The requested KeywordSet objects.
         """
 
-        payload = {"meta": {}, "data": {"id": id, "hash_index": hash_index}}
+        payload = {"meta": {}, "data": {"id": id}}
         return self._automodel_request("keyword", "get", payload, full_return=full_return)
 
     def add_keywords(self, keywords: List["KeywordSet"], full_return: bool = False) -> List[str]:

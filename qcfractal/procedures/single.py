@@ -77,9 +77,13 @@ class SingleResultTasks(BaseTasks):
         # Handle keywords, which may be None
         if data.meta.keywords is not None:
             # QCSpec will only hold the ID
-            keywords = self.storage.get_add_keywords_mixed([data.meta.keywords])["data"][0]
-            if keywords is None:
+            meta, qc_keywords_ids = self.storage.keywords.add_mixed([data.meta.keywords])
+
+            if meta.success is False or qc_keywords_ids[0] is None:
                 raise KeyError("Could not find requested KeywordsSet from id key.")
+
+            keywords_dict = self.storage.keywords.get(qc_keywords_ids)[0]
+            keywords = KeywordSet(**keywords_dict)
             qc_spec_dict["keywords"] = keywords.id
         else:
             keywords = None
@@ -165,7 +169,10 @@ class SingleResultTasks(BaseTasks):
         # Do the same as above but with with keywords
         rec_kw_ids = [x.keywords for x in records]
         if keywords is None:
-            keywords = [self.storage.get_keywords(x)["data"][0] if x is not None else None for x in rec_kw_ids]
+            keyword_ids = [x for x in rec_kw_ids if x is not None]
+            qc_keywords_db = [KeywordSet(**x) for x in self.storage.keywords.get(keyword_ids)]
+            qc_keywords_map = dict(zip(keyword_ids, qc_keywords_db))
+            keywords = [qc_keywords_map[x] if x is not None else x for x in rec_kw_ids]
 
         kw_ids = [x.id if x is not None else None for x in keywords]
         if rec_kw_ids != kw_ids:
