@@ -61,7 +61,7 @@ def test_role_modify(storage_socket):
     assert rinfo.permissions == new_perms
 
 
-def test_role_delete_inuse(storage_socket):
+def test_role_delete(storage_socket):
     uinfo = UserInfo(
         username="george",
         role="read",
@@ -102,3 +102,32 @@ def test_role_list(storage_socket):
     expected = sorted(expected, key=lambda x: x.rolename)
 
     assert role_lst == expected
+
+
+def test_role_reset(storage_socket):
+    # Test resetting the roles to their defaults
+
+    # Modify something
+    new_perms = {
+        "Statement": [
+            {"Effect": "Allow", "Action": "*", "Resource": "*"},
+            {"Effect": "Allow", "Action": "Deny", "Resource": ["molecule"]},
+        ]
+    }
+
+    storage_socket.role.modify("read", new_perms)
+    rinfo = storage_socket.role.get("read")
+    assert rinfo.permissions == new_perms
+
+    # Also delete
+    storage_socket.role.delete("monitor")
+    with pytest.raises(UserManagementError, match=r"Role.*does not exist"):
+        storage_socket.role.get("monitor")
+
+    # Now reset
+    storage_socket.role.reset_defaults()
+
+    # Was the deleted role recreated, and the permissions fixed?
+    for rolename, permissions in default_roles.items():
+        rinfo = storage_socket.role.get(rolename)
+        assert rinfo.permissions == default_roles[rolename]
