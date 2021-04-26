@@ -162,3 +162,19 @@ class RoleSocket:
                 session.delete(role)
         except IntegrityError:
             raise UserManagementError("Role could not be deleted. Likely it is being referenced somewhere")
+
+    def reset_defaults(self) -> None:
+        """
+        Reset the permissions of the default roles back to their original values
+
+        If a role does not exist, it will be created. Manually-created roles will be left alone.
+        """
+
+        with self._core_socket.session_scope() as session:
+            for rolename, permissions in default_roles.items():
+                role_data = session.query(RoleORM).filter(RoleORM.rolename == rolename).one_or_none()
+                if role_data is None:
+                    role_data = RoleORM(rolename=rolename, permissions=permissions)  # type: ignore
+                    session.add(role_data)
+                else:
+                    role_data.permissions = permissions
