@@ -25,43 +25,6 @@ def test_storage_repr(storage_socket):
     assert isinstance(repr(storage_socket), str)
 
 
-def test_keywords_add(storage_socket):
-
-    kw = ptl.models.KeywordSet(**{"values": {"o": 5}, "hash_index": "something_unique"})
-
-    ret = storage_socket.add_keywords([kw, kw.copy()])
-    assert len(ret["data"]) == 2
-    assert ret["meta"]["n_inserted"] == 1
-    assert ret["data"][0] == ret["data"][1]
-
-    ret = storage_socket.add_keywords([kw])
-    assert ret["meta"]["n_inserted"] == 0
-
-    ret = storage_socket.get_keywords(hash_index="something_unique")
-    ret_kw = ret["data"][0]
-    assert ret["meta"]["n_found"] == 1
-    assert ret_kw.values == kw.values
-
-    assert 1 == storage_socket.del_keywords(id=ret_kw.id)
-
-
-def test_keywords_mixed_add_get(storage_socket):
-
-    opts1 = ptl.models.KeywordSet(values={"o": 5})
-    id1 = storage_socket.add_keywords([opts1])["data"][0]
-
-    opts2 = ptl.models.KeywordSet(values={"o": 6})
-    opts = storage_socket.get_add_keywords_mixed([opts1, opts2, id1, bad_id1, bad_id2])["data"]
-    assert opts[0].id == id1
-    assert opts[1].values["o"] == 6
-    assert opts[2].id == id1
-    assert opts[3] is None
-    assert opts[4] is None
-
-    assert 1 == storage_socket.del_keywords(id=id1)
-    assert 1 == storage_socket.del_keywords(id=opts[1].id)
-
-
 def test_collections_add(storage_socket):
 
     collection = "TorsionDriveRecord"
@@ -258,7 +221,7 @@ def test_results_add(storage_socket):
     _, mol_insert = storage_socket.molecule.add([water, water2])
 
     kw1 = ptl.models.KeywordSet(**{"comments": "a", "values": {}})
-    kwid1 = storage_socket.add_keywords([kw1])["data"][0]
+    kwid1 = storage_socket.keywords.add([kw1])[1][0]
 
     page1 = ptl.models.ResultRecord(
         **{
@@ -350,7 +313,8 @@ def storage_results(storage_socket):
     assert meta.success
 
     kw1 = ptl.models.KeywordSet(**{"values": {}})
-    kwid1 = storage_socket.add_keywords([kw1])["data"][0]
+    _, kwids = storage_socket.keywords.add([kw1])
+    kwid1 = kwids[0]
 
     page1 = ptl.models.ResultRecord(
         **{

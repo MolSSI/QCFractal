@@ -21,6 +21,10 @@ from ..interface.models.rest_models import (
     AccessSummaryGETResponse,
     InternalErrorLogGETBody,
     InternalErrorLogGETResponse,
+    KeywordGETBody,
+    KeywordGETResponse,
+    KeywordPOSTBody,
+    KeywordPOSTResponse,
     ResponseGETMeta,
     ResponsePOSTMeta,
     QueueManagerGETBody,
@@ -538,7 +542,7 @@ def get_kvstore():
     """
 
     body = parse_bodymodel(KVStoreGETBody)
-    ret = storage_socket.output_store.get(body.data.id, True)
+    ret = storage_socket.output_store.get(body.data.id, missing_ok=True)
 
     # REST API currently expects a dict {id: KVStore dict}
     # But socket returns a list of KVStore dict
@@ -556,13 +560,13 @@ def get_kvstore():
 @main.route("/keyword", methods=["GET"])
 @check_access
 def get_keyword():
-    body_model, response_model = rest_model("keyword", "get")
-    body = parse_bodymodel(body_model)
+    body = parse_bodymodel(KeywordGETBody)
 
-    ret = storage_socket.get_keywords(**{**body.data.dict(), **body.meta.dict()}, with_ids=False)
-    response = response_model(**ret)
+    ret = storage_socket.keywords.get(body.data.id, missing_ok=True)
+    missing_id = [x for x, y in zip(body.data.id, ret) if y is None]
+    meta = ResponseGETMeta(n_found=len(ret), missing=missing_id, errors=[], error_description=False, success=True)
+    response = KeywordGETResponse(meta=meta, data=ret)
 
-    current_app.logger.info("GET: Keywords - {} pulls.".format(len(response.data)))
     return SerializedResponse(response)
 
 
@@ -570,13 +574,14 @@ def get_keyword():
 @check_access
 def post_keyword():
 
-    body_model, response_model = rest_model("keyword", "post")
-    body = parse_bodymodel(body_model)
+    body = parse_bodymodel(KeywordPOSTBody)
+    meta, ret = storage_socket.keywords.add(body.data)
 
-    ret = storage_socket.add_keywords(body.data)
-    response = response_model(**ret)
+    # Convert new metadata format to old
+    duplicate_ids = [ret[i] for i in meta.existing_idx]
+    meta_old = convert_post_response_metadata(meta, duplicate_ids)
 
-    current_app.logger.info("POST: Keywords - {} inserted.".format(response.meta.n_inserted))
+    response = MoleculePOSTResponse(meta=meta_old, data=ret)
     return SerializedResponse(response)
 
 

@@ -44,10 +44,7 @@ def test_client_keywords(fractal_test_server, encoding):
 
     # Test get
     get_kw = client.query_keywords([ret[0]])
-    assert opt == get_kw[0]
-
-    get_kw = client.query_keywords(hash_index=[opt.hash_index])
-    assert opt == get_kw[0]
+    assert opt.dict(exclude={"id"}) == get_kw[0].dict(exclude={"id"})
 
 
 @pytest.mark.parametrize("encoding", valid_encodings)

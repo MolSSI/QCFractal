@@ -332,9 +332,8 @@ register_model("molecule", "POST", MoleculePOSTBody, MoleculePOSTResponse)
 class KeywordGETBody(ProtoModel):
     class Data(ProtoModel):
         id: QueryObjectId = None
-        hash_index: QueryStr = None
 
-    meta: QueryMeta = Field(QueryMeta(), description=common_docs[QueryMeta])
+    meta: EmptyMeta = Field({}, description=common_docs[EmptyMeta])
     data: Data = Field(
         ...,
         description="The formal query for a Keyword fetch, contains ``id`` or ``hash_index`` for the object to fetch.",

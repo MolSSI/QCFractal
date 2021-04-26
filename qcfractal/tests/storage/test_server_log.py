@@ -35,7 +35,7 @@ def storage_results(storage_socket):
     assert meta.success
 
     kw1 = ptl.models.KeywordSet(**{"values": {}})
-    kwid1 = storage_socket.add_keywords([kw1])["data"][0]
+    kwid1 = storage_socket.keywords.add([kw1])[1][0]
 
     page1 = ptl.models.ResultRecord(
         **{
