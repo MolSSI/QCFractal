@@ -69,9 +69,13 @@ class OptimizationTasks(BaseTasks):
         if qc_keywords is not None:
             # The keywords passed in may contain the entire KeywordSet.
             # But the QCSpec will only hold the ID
-            qc_keywords = self.storage.get_add_keywords_mixed([qc_keywords])["data"][0]
-            if qc_keywords is None:
+            meta, qc_keywords_ids = self.storage.keywords.add_mixed([qc_keywords])
+
+            if meta.success is False or qc_keywords_ids[0] is None:
                 raise KeyError("Could not find requested KeywordsSet from id key.")
+
+            qc_keywords_dict = self.storage.keywords.get(qc_keywords_ids)[0]
+            qc_keywords = KeywordSet(**qc_keywords_dict)
             qc_spec_dict["keywords"] = qc_keywords.id
 
         # Now that keywords are fixed we can do this
@@ -143,7 +147,10 @@ class OptimizationTasks(BaseTasks):
         # Do the same as above but with with qc specification keywords
         rec_qc_kw_ids = [x.qc_spec.keywords for x in records]
         if qc_keywords is None:
-            qc_keywords = [self.storage.get_keywords(x)["data"][0] if x is not None else None for x in rec_qc_kw_ids]
+            keyword_ids = [x for x in rec_qc_kw_ids if x is not None]
+            qc_keywords_db = [KeywordSet(**x) for x in self.storage.keywords.get(keyword_ids)]
+            qc_keywords_map = dict(zip(keyword_ids, qc_keywords_db))
+            qc_keywords = [qc_keywords_map[x] if x is not None else x for x in rec_qc_kw_ids]
 
         qc_kw_ids = [x.id if x is not None else None for x in qc_keywords]
         if rec_qc_kw_ids != qc_kw_ids:

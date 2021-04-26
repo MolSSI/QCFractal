@@ -517,28 +517,6 @@ class SQLAlchemySocket:
             # Don't want to block here. Just put it in the queue and move on
             self._completed_queue.put((int(base_result_id), status), block=False)
 
-    # ~~~~~~~~~~~~~~~~~~~~~~~ Keywords ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    def add_keywords(self, keyword_sets: List[KeywordSet]):
-        return self.keywords.add(keyword_sets)
-
-    def get_keywords(
-        self,
-        id: Union[str, list] = None,
-        hash_index: Union[str, list] = None,
-        limit: int = None,
-        skip: int = 0,
-        return_json: bool = False,
-        with_ids: bool = True,
-    ) -> List[KeywordSet]:
-        return self.keywords.get(id, hash_index, limit, skip, return_json, with_ids)
-
-    def get_add_keywords_mixed(self, data):
-        return self.keywords.get_add_mixed(data)
-
-    def del_keywords(self, id: str) -> int:
-        return self.keywords.delete(id)
-
     # ~~~~~~~~~~~~~~~~~ Collections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
 
     def add_collection(self, data: Dict[str, Any], overwrite: bool = False):

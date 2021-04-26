@@ -2,15 +2,22 @@ from __future__ import annotations
 
 import logging
 from qcfractal.storage_sockets.models import KeywordsORM
-from qcfractal.interface.models import KeywordSet
-from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
-from qcfractal.storage_sockets.sqlalchemy_socket import format_query, calculate_limit
+from qcfractal.interface.models import KeywordSet, InsertMetadata, DeleteMetadata, ObjectId
+from qcfractal.storage_sockets.sqlalchemy_common import (
+    get_query_proj_columns,
+    insert_general,
+    delete_general,
+    insert_mixed_general,
+)
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from sqlalchemy.orm.session import Session
     from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
-    from typing import List, Union
+    from typing import List, Sequence, Union, Dict, Any, Tuple, Optional
+
+    KeywordDict = Dict[str, Any]
 
 
 class KeywordsSocket:
@@ -19,169 +26,194 @@ class KeywordsSocket:
         self._logger = logging.getLogger(__name__)
         self._limit = core_socket.qcf_config.response_limits.keyword
 
-    def add(self, keyword_sets: List[KeywordSet]):
-        """Add one KeywordSet uniquly identified by 'program' and the 'name'.
+    @staticmethod
+    def keywords_to_orm(keywords: KeywordSet) -> KeywordsORM:
+        kw_dict = keywords.dict(exclude={"id"})
+        return KeywordsORM(**kw_dict)  # type: ignore
+
+    @staticmethod
+    def cleanup_keywords_dict(kw_dict: KeywordDict) -> KeywordDict:
+        """
+        Perform any cleanup of a keywords dictionary
+        """
+
+        # TODO - int id
+        if "id" in kw_dict:
+            kw_dict["id"] = ObjectId(kw_dict["id"])
+
+        return kw_dict
+
+    def add_internal(self, session: Session, keywords: Sequence[KeywordSet]) -> Tuple[InsertMetadata, List[ObjectId]]:
+        """
+        Add keywords to a session
+
+        This checks if the keywords already exists in the database via its hash. If so, it returns
+        the existing id, otherwise it will insert it and return the new id.
+
+        Changes are not committed to to the database, but they are flushed.
 
         Parameters
         ----------
-        keywords_set : List[KeywordSet]
-            A list of KeywordSets to be inserted.
+        session
+            An existing SQLAlchemy session to add the data to
+        keywords
+            Keyword data to add to the session
 
         Returns
         -------
-        Dict[str, Any]
-            (see add_metadata_template())
-            The 'data' part is a list of ids of the inserted options
-            data['duplicates'] has the duplicate entries
-
-        Notes
-        ------
-            Duplicates are not considered errors.
-
+        :
+            Metadata about the insertion, and a list of keyword ids. The ids will be in the
+            order of the input keywords.
         """
 
-        meta = add_metadata_template()
+        ###############################################################################
+        # Exceptions in this function would usually be a programmer error, as any
+        # valid KeywordSet object should be insertable into the database
+        ###############################################################################
 
-        keywords = []
+        kw_orm = [self.keywords_to_orm(x) for x in keywords]
+
+        meta, added_ids = insert_general(session, kw_orm, (KeywordsORM.hash_index,), (KeywordsORM.id,))
+
+        # insert_general should always succeed or raise exception
+        assert meta.success
+
+        # Added ids are a list of tuple, with each tuple only having one value
+        return meta, [ObjectId(x[0]) for x in added_ids]
+
+    def add(self, keywords: Sequence[KeywordSet]) -> Tuple[InsertMetadata, List[ObjectId]]:
+        """Adds keywords to the database
+
+        This function returns metadata about the insertion, and a list of IDs of the keywords in the database.
+        This list will be in the same order as the `keywords` parameter.
+
+        For each keyword given, the database will be checked to see if it already exists in the database.
+        If it does, that ID will be returned. Otherwise, the keywords will be added to the database and the
+        new ID returned.
+
+        On any error, this function will raise an exception.
+
+        Parameters
+        ----------
+        keywords
+            A list of keyword sets to be inserted.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and a list of keywordids. The ids will be in the
+            order of the input keywords.
+        """
+
         with self._core_socket.session_scope() as session:
-            for kw in keyword_sets:
-
-                kw_dict = kw.dict(exclude={"id"})
-
-                # search by index keywords not by all keys, much faster
-                found = session.query(KeywordsORM).filter_by(hash_index=kw_dict["hash_index"]).first()
-                if not found:
-                    doc = KeywordsORM(**kw_dict)
-                    session.add(doc)
-                    session.commit()
-                    keywords.append(str(doc.id))
-                    meta["n_inserted"] += 1
-                else:
-                    meta["duplicates"].append(str(found.id))  # TODO
-                    keywords.append(str(found.id))
-                meta["success"] = True
-
-        ret = {"data": keywords, "meta": meta}
-
-        return ret
+            return self.add_internal(session, keywords)
 
     def get(
         self,
-        id: Union[str, list] = None,
-        hash_index: Union[str, list] = None,
-        limit: int = None,
-        skip: int = 0,
-        return_json: bool = False,
-        with_ids: bool = True,
-    ) -> List[KeywordSet]:
-        """Search for one (unique) option based on the 'program'
-        and the 'name'. No overwrite allowed.
+        id: Sequence[ObjectId],
+        missing_ok: bool = False,
+    ) -> List[Optional[KeywordDict]]:
+        """
+        Obtain keywords with specified IDs
+
+        The returned keyword information will be in order of the given ids
+
+        If missing_ok is False, then any ids that are missing in the database will raise an exception. Otherwise,
+        the corresponding entry in the returned list of keywords will be None.
 
         Parameters
         ----------
-        id : List[str] or str
-            Ids of the keywords
-        hash_index : List[str] or str
-            hash index of keywords
-        limit : Optional[int], optional
-            Maximum number of results to return.
-            If this number is greater than the SQLAlchemySocket.max_limit then
-            the max_limit will be returned instead.
-            Default is to return the socket's max_limit (when limit=None or 0)
-        skip : int, optional
-        return_json : bool, optional
-            Return the results as a json object
-            Default is True
-        with_ids : bool, optional
-            Include the DB ids in the returned object (names 'id')
-            Default is True
-
+        id
+            A list or other sequence of keyword IDs
+        missing_ok
+           If set to True, then missing keywords will be tolerated, and the returned list of
+           keywords will contain None for the corresponding IDs that were not found.
 
         Returns
         -------
-            A dict with keys: 'data' and 'meta'
-            (see get_metadata_template())
-            The 'data' part is an object of the result or None if not found
+        :
+            Keyword information as a dictionary in the same order as the given ids.
+            If missing_ok is True, then this list will contain None where the keywords were missing
         """
 
-        limit = calculate_limit(self._limit, limit)
-        meta = get_metadata_template()
-        query = format_query(KeywordsORM, id=id, hash_index=hash_index)
+        if len(id) > self._limit:
+            raise RuntimeError(f"Request for {len(id)} keywords is over the limit of {self._limit}")
 
-        rdata, meta["n_found"] = self._core_socket.get_query_projection(
-            KeywordsORM, query, limit=limit, skip=skip, exclude=[None if with_ids else "id"]
-        )
+        # TODO - int id
+        id = [int(x) for x in id]
 
-        meta["success"] = True
+        unique_ids = list(set(id))
 
-        # meta['error_description'] = str(err)
+        query_cols_names, query_cols = get_query_proj_columns(KeywordsORM)
 
-        if not return_json:
-            data = [KeywordSet(**d) for d in rdata]
-        else:
-            data = rdata
+        with self._core_socket.session_scope(True) as session:
+            results = session.query(*query_cols).filter(KeywordsORM.id.in_(unique_ids)).all()
+            result_dicts = [dict(zip(query_cols_names, x)) for x in results]
 
-        return {"data": data, "meta": meta}
+        result_dicts = list(map(self.cleanup_keywords_dict, result_dicts))
 
-    def get_add_mixed(self, data):
+        # TODO - int id
+        # We previously changed int to ObjectId in cleanup_keywords_dict
+        result_map = {int(x["id"]): x for x in result_dicts}
+
+        # Put into the original order
+        ret = [result_map.get(x, None) for x in id]
+
+        if missing_ok is False and None in ret:
+            raise RuntimeError("Could not find all requested keyword records")
+
+        return ret
+
+    def add_mixed(
+        self, keyword_data: Sequence[Union[ObjectId, KeywordSet]]
+    ) -> Tuple[InsertMetadata, List[Optional[ObjectId]]]:
         """
-        Get or add the given options (if they don't exit).
-        KeywordsORM are given in a mixed format, either as a dict of mol data
-        or as existing mol id
+        Add a mixed format keywords specification to the database.
 
-        TODO: to be split into get by_id and get_by_data
+        This function can take both KeywordSet objects and keyword ids. If a keyword id is given
+        in the list, then it is checked to make sure it exists. If it does not exist, then it will be
+        marked as an error in the returned metadata and the corresponding entry in the returned
+        list of IDs will be None.
+
+        If a KeywordSet object is given, it will be added to the database if it does not already exist
+        in the database (based on the hash) and the existing ID will be returned. Otherwise, the new
+        ID will be returned.
         """
 
-        meta = get_metadata_template()
+        # TODO - INT ID
+        keyword_data_2 = [int(x) if isinstance(x, (int, str, ObjectId)) else x for x in keyword_data]
 
-        ids = []
-        for idx, kw in enumerate(data):
-            if isinstance(kw, (int, str)):
-                ids.append(kw)
-
-            elif isinstance(kw, KeywordSet):
-                new_id = self.add([kw])["data"][0]
-                ids.append(new_id)
-            else:
-                meta["errors"].append((idx, "Data type not understood"))
-                ids.append(None)
-
-        missing = []
-        ret = []
-        for idx, id in enumerate(ids):
-            if id is None:
-                ret.append(None)
-                missing.append(idx)
-                continue
-
-            tmp = self.get(id=id)["data"]
-            if tmp:
-                ret.append(tmp[0])
-            else:
-                ret.append(None)
-
-        meta["success"] = True
-        meta["n_found"] = len(ret) - len(missing)
-        meta["missing"] = missing
-
-        return {"meta": meta, "data": ret}
-
-    def delete(self, id: str) -> int:
-        """
-        Removes a option set from the database based on its id.
-
-        Parameters
-        ----------
-        id : str
-            id of the keyword
-
-        Returns
-        -------
-        int
-           number of deleted documents
-        """
+        keyword_orm: List[Union[int, KeywordsORM]] = [
+            x if isinstance(x, int) else self.keywords_to_orm(x) for x in keyword_data_2
+        ]
 
         with self._core_socket.session_scope() as session:
-            count = session.query(KeywordsORM).filter_by(id=id).delete(synchronize_session=False)
+            meta, all_ids = insert_mixed_general(
+                session, KeywordsORM, keyword_orm, KeywordsORM.id, (KeywordsORM.hash_index,), (KeywordsORM.id,)
+            )
 
-        return count
+        # all_ids is a list of Tuples
+        # TODO - INT ID
+        return meta, [ObjectId(x[0]) if x is not None else None for x in all_ids]
+
+    def delete(self, id: List[ObjectId]) -> DeleteMetadata:
+        """
+        Removes keywords from the database based on id
+
+        Parameters
+        ----------
+        id
+            IDs of the keywords to remove
+
+        Returns
+        -------
+        :
+            Information about what was deleted and any errors that occurred
+        """
+
+        # TODO - INT ID
+        id_lst = [(int(x),) for x in id]
+
+        with self._core_socket.session_scope() as session:
+            # session will commit on exiting from the context
+            return delete_general(session, KeywordsORM, (KeywordsORM.id,), id_lst)
