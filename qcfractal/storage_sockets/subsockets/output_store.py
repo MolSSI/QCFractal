@@ -159,3 +159,26 @@ class OutputStoreSocket:
             raise RuntimeError("Could not find all requested KVStore records")
 
         return ret
+
+    def delete_internal(self, session: Session, id: Sequence[int]) -> int:
+        """
+        Removes outputs objects from the database
+
+        If the output is still being referred to, then an exception is raised. Since this is for internal
+        use, that would be a bug.
+
+        Parameters
+        ----------
+        session
+            An existing SQLAlchemy session to add the data to
+        id
+            IDs of the output objects to remove
+
+        Returns
+        -------
+        :
+            The number of deleted outputs
+        """
+
+        n = session.query(KVStoreORM).filter(KVStoreORM.id.in_(id)).delete()
+        return n
