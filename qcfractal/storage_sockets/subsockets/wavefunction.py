@@ -154,3 +154,26 @@ class WavefunctionSocket:
             raise RuntimeError("Could not find all requested Wavefunction records")
 
         return ret
+
+    def delete_internal(self, session: Session, id: Sequence[int]) -> int:
+        """
+        Removes wavefunction objects from the database
+
+        If the wavefunction is still being referred to, then an exception is raised. Since this is for internal
+        use, that would be a bug.
+
+        Parameters
+        ----------
+        session
+            An existing SQLAlchemy session to add the data to
+        id
+            IDs of the wavefunction objects to remove
+
+        Returns
+        -------
+        :
+            The number of deleted wavefunctions
+        """
+
+        n = session.query(WavefunctionStoreORM).filter(WavefunctionStoreORM.id.in_(id)).delete()
+        return n
