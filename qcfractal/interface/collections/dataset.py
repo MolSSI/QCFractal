@@ -1632,6 +1632,7 @@ class Dataset(Collection):
         *,
         keywords: Optional[str] = None,
         program: Optional[str] = None,
+        subset: Optional[Set[str]] = None,
         tag: Optional[str] = None,
         priority: Optional[str] = None,
         protocols: Optional[Dict[str, Any]] = None,
@@ -1656,6 +1657,8 @@ class Dataset(Collection):
         protocols: Optional[Dict[str, Any]], optional
             Protocols for store more or less data per field. Current valid
             protocols: {'wavefunction'}
+        subset : Set[str], optional
+            Computes only a subset of the dataset.
 
         Returns
         -------
@@ -1668,7 +1671,10 @@ class Dataset(Collection):
         self.get_entries(force=True)
         compute_keys = {"program": program, "method": method, "basis": basis, "keywords": keywords}
 
-        molecule_idx = [e.molecule_id for e in self.data.records]
+        if subset:
+            molecule_idx = set(subset)
+        else:
+            molecule_idx = [e.molecule_id for e in self.data.records]
 
         ret = self._compute(compute_keys, molecule_idx, tag, priority, protocols)
         self.save()
