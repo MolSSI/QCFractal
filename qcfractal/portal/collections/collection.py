@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 import pandas as pd
 from tqdm import tqdm
 
-from ...interface.models import ProtoModel
+from ...interface.models import ProtoModel, QCSpecification
 from ...interface.models.records import RecordBase
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -50,14 +50,40 @@ class Collection(abc.ABC):
         """
         Internal base model typed by PyDantic.
 
-        This structure validates input, allows server-side validation and data security,
+        This structure validates input, allows server-side validation,
         and puts information into a form that is passable between server and client.
 
-        Subclasses of Collection can extend this class to supplement the data defined by the Collection.
+        Subclasses of Collection can extend this class to supplement the data
+        defined by the Collection.
+
+        Attributes
+        ----------
+        id : str
+            The server-side id of the Collection, if sourced from there.
+            If "local", then sourced from the local PortalClient.
+        name : str
+            The name of the Collection.
+        collection : str
+            The Collection type. This is the name of the Collection subclass.
+        provenance : Dict[str, str]
+            Key-values giving point-in-time creation metadata for this Collection instance.
+        tags : List[str]
+            Individual strings (case-insensitive) for discoverability/queryability of
+            this Collection.
+        tagline : Optional[str]
+            Short description of this Collection.
+            Try to keep within 80 characters for displayability.
+        description : Optional[str]
+            Long description of this Collection.
+        group : str
+            The organization that submitted the Collection.
+        visibility : bool
+            If `True`, list Collection by default through the PortalClient.
+        metadata : Dict[str, Any]
+            Any additional user-generated metadata for the Collection.
 
         """
 
-        # TODO: document each of these fields in docstring?
         id: str = "local"
         name: str
 
@@ -70,11 +96,6 @@ class Collection(abc.ABC):
 
         group: str = "default"
         visibility: bool = True
-
-        view_url_hdf5: Optional[str] = None
-        view_url_plaintext: Optional[str] = None
-        view_metadata: Optional[Dict[str, str]] = None
-        view_available: bool = False
 
         metadata: Dict[str, Any] = {}
 
@@ -109,9 +130,12 @@ class Collection(abc.ABC):
     def __repr__(self) -> str:
         return f"<{self}>"
 
-    @abc.abstractmethod
     def __getitem__(self, spec: Union[List[str], str]):
-        pass
+        if isinstance(spec, list):
+            pad = max(map(len, spec))
+            return {sp: self._query(sp, pad=pad) for sp in spec}
+        else:
+            return self._query(spec)
 
     def _check_client(self):
         if self._client is None:
@@ -253,23 +277,25 @@ class Collection(abc.ABC):
     @abc.abstractproperty
     @property
     def entry_names(self):
-        pass
+        """A list of all entry names."""
+        return self.list_entries()
 
-    @abc.abstractproperty
     @property
     def entries(self):
-        pass
+        """A dict with all entry names in this Collection as keys and entries as values."""
+        return dict(self._data.records)
 
     @abc.abstractmethod
     def list_entries(self):
+        """List all entry names in this Collection."""
+        return list(self._data.records.keys())
+
+    @abc.abstractmethod
+    def get_entry(self, entry_name):
         pass
 
     @abc.abstractmethod
-    def get_entry(self):
-        pass
-
-    @abc.abstractmethod
-    def add_entry(self):
+    def add_entry(self, entry_name, entry):
         pass
 
     ## spec touchpoints
@@ -277,24 +303,53 @@ class Collection(abc.ABC):
     @abc.abstractproperty
     @property
     def spec_names(self):
-        pass
+        """A list of all spec names applied to this Collection."""
+        return self.list_specs()
 
-    @abc.abstractproperty
     @property
     def specs(self):
+        """A dict with all spec names in this Collection as keys and specs as values."""
         pass
 
     @abc.abstractmethod
     def list_specs(self):
+        """List all spec names in this Collection."""
         pass
 
     @abc.abstractmethod
-    def get_spec(self):
+    def get_spec(self, spec_name):
         pass
 
-    @abc.abstractmethod
-    def add_spec(self):
-        pass
+    # TODO: keyword id handling should not be in the UI
+    # May require excising this from QCSpecification, or making
+    # keywords explicit there
+    # need to examine where else in the Fractal stack QCSpecification is used
+    def add_spec(
+        self,
+        spec_name: str,
+        spec: QCSpecification,
+        description: Optional[str] = None,
+        protocols: Optional[Dict[str, Any]] = None,
+        overwrite: bool = False,
+    ) -> None:
+        """
+        Parameters
+        ----------
+        spec_name : str
+            The name of the specification.
+        qc_spec : QCSpecification
+            A full quantum chemistry specification.
+        description : str, optional
+            A short text description of the specification.
+        protocols : Optional[Dict[str, Any]], optional
+            Protocols for this specification.
+        overwrite : bool, optional
+            Overwrite existing specification names.
+        """
+        if (spec_name in self._data.specs) and (not overwrite):
+            raise KeyError(f"{self.__class__.__name__} '{spec_name}' already present, use `overwrite=True` to replace.")
+
+        self._data.specs[spec_name] = spec
 
     ## record touchpoints
 
@@ -351,7 +406,7 @@ class Collection(abc.ABC):
             self._check_client()
             client = self._client
 
-        self._pre_save_prep(client)
+        self._pre_sync_prep(client)
 
         # For a collection that is not already on the database
         if self._data.id == self._data.__fields__["id"].default:
@@ -376,7 +431,7 @@ class Collection(abc.ABC):
 
     def status(
         self,
-        specs: Optional[Union[str, List[str]]] = None,
+        spec_names: Optional[Union[str, List[str]]] = None,
         full: bool = False,
         as_list: bool = False,
         as_df: bool = False,
@@ -386,7 +441,7 @@ class Collection(abc.ABC):
 
         Parameters
         ----------
-        specs : Optional[Union[str, List[str]]]
+        spec_names : Optional[Union[str, List[str]]]
             If given, only yield status of the listed compute specifications.
         full : bool, optional
             If True, expand to give status per entry.
@@ -409,17 +464,17 @@ class Collection(abc.ABC):
         from tabulate import tabulate
 
         # preprocess inputs
-        if specs is None:
-            specs = self.list_specifications(description=False)
-        elif isinstance(specs, str):
-            specs = [specs]
+        if spec_names is None:
+            spec_names = self.list_specifications(description=False)
+        elif isinstance(spec_names, str):
+            spec_names = [spec_names]
 
         if isinstance(status, str):
             status = [status.lower()]
         elif isinstance(status, list):
             status = [s.lower() for s in status]
 
-        records = self[specs]
+        records = self[spec_names]
 
         status_data = pd.DataFrame(records).applymap(lambda x: x.status.value if isinstance(x, RecordBase) else None)
 
@@ -490,13 +545,6 @@ class BaseProcedureDataset(Collection):
 
         super().__init__(name, client=client, **kwargs)
 
-    def __getitem__(self, spec: Union[List[str], str]):
-        if isinstance(spec, list):
-            pad = max(map(len, spec))
-            return {sp: self._query(sp, pad=pad) for sp in spec}
-        else:
-            return self._query(spec)
-
     @abc.abstractmethod
     def _internal_compute_add(self, spec: Any, entry: Any, tag: str, priority: str) -> "ObjectId":
         pass
@@ -506,26 +554,6 @@ class BaseProcedureDataset(Collection):
 
     def _get_index(self):
         return [x.name for x in self._data.records.values()]
-
-    def _add_specification(self, name: str, spec: Any, overwrite=False) -> None:
-        """
-        Parameters
-        ----------
-        name : str
-            The name of the specification
-        spec : Any
-            The specification object
-        overwrite : bool, optional
-            Overwrite existing specification names
-
-        """
-
-        lname = name.lower()
-        if (lname in self._data.specs) and (not overwrite):
-            raise KeyError(f"{self.__class__.__name__} '{name}' already present, use `overwrite=True` to replace.")
-
-        self._data.specs[lname] = spec
-        self.sync()
 
     def _get_procedure_ids(self, spec: str, sieve: Optional[List[str]] = None) -> Dict[str, "ObjectId"]:
         """Get a mapping of record names to its object ID in the database.
@@ -558,10 +586,6 @@ class BaseProcedureDataset(Collection):
                 pass
 
         return mapper
-
-    @property
-    def specs(self):
-        return self.list_specifications()
 
     @property
     def entry_names(self):
