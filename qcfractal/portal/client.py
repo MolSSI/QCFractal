@@ -333,19 +333,25 @@ class PortalClient:
         payload = {"meta": {"overwrite": overwrite}, "data": collection}
         return self._automodel_request("collection", "post", payload, full_return=full_return)
 
-    # TODO: what are the query_limit rules exactly?
-    #       does it use the total count of query terms, including mixed-and-matching fields
     # def _chunk_request(self, items):
     #    procedures: List[Dict[str, Any]] = []
     #    for i in range(0, len(items), self.query_limit):
     #        chunk_ids = query_ids[i : i + self.client.query_limit]
     #        procedures.extend(self.client._query_procedures(id=chunk_ids))
 
-    def _get_record_by_id(self, id: Union[List, "QueryObjectId", int]):
+    def _get_record_by_id(self, id: "QueryObjectId", record_type: str) -> List[Dict[str, Any]]:
         """Get result records by id.
 
         This is used by collections to retrieve their results when demanded.
         Can reliably use the client's own caching for performance.
+
+        Parameters
+        ----------
+        id : Qu
+            Queries the record ``id`` field.
+            Multiple ids can be included in a list.
+        record_type
+            One of 'result', 'procedure', 'service'.
 
         """
         # passthrough the cache first
@@ -364,6 +370,7 @@ class PortalClient:
                 "id": id,
             },
         }
+
         response = self._automodel_request("procedure", "get", payload, full_return=True)
 
         # NOTE: no particular order returned here
@@ -371,12 +378,12 @@ class PortalClient:
         self._cache.put([proc for proc in response.data if proc.status == "COMPLETE"])
         return response.data + list(cached_records.values())
 
-    def _query_record(ids: Union[List, "QueryObjectId", int]):
-        pass
-
     # TODO: would like to merge the functionality of
     #       `query_result`, `query_procedure`, `query_service`.
     #       perhaps just `query_record`?
+    def _query_record(ids: Union[List, "QueryObjectId", int]):
+        pass
+
     def _query_procedures(
         self,
         id: Optional["QueryObjectId"] = None,

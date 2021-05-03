@@ -109,6 +109,10 @@ class Collection(abc.ABC):
     def __repr__(self) -> str:
         return f"<{self}>"
 
+    @abc.abstractmethod
+    def __getitem__(self, spec: Union[List[str], str]):
+        pass
+
     def _check_client(self):
         if self._client is None:
             raise AttributeError("This method requires a PortalClient and no client was set")
@@ -116,6 +120,8 @@ class Collection(abc.ABC):
     @property
     def name(self) -> str:
         return self._data.name
+
+    ## inits and export
 
     @classmethod
     def from_server(cls, client: "PortalClient", name: str) -> "Collection":
@@ -242,6 +248,70 @@ class Collection(abc.ABC):
         else:
             return jsondata
 
+    ## entry touchpoints
+
+    @abc.abstractproperty
+    @property
+    def entry_names(self):
+        pass
+
+    @abc.abstractproperty
+    @property
+    def entries(self):
+        pass
+
+    @abc.abstractmethod
+    def list_entries(self):
+        pass
+
+    @abc.abstractmethod
+    def get_entry(self):
+        pass
+
+    @abc.abstractmethod
+    def add_entry(self):
+        pass
+
+    ## spec touchpoints
+
+    @abc.abstractproperty
+    @property
+    def spec_names(self):
+        pass
+
+    @abc.abstractproperty
+    @property
+    def specs(self):
+        pass
+
+    @abc.abstractmethod
+    def list_specs(self):
+        pass
+
+    @abc.abstractmethod
+    def get_spec(self):
+        pass
+
+    @abc.abstractmethod
+    def add_spec(self):
+        pass
+
+    ## record touchpoints
+
+    @abc.abstractmethod
+    def get_record(self, entry_name, spec_name):
+        pass
+
+    @abc.abstractproperty
+    def loc(self):
+        pass
+
+    @abc.abstractproperty
+    def iter(self):
+        pass
+
+    ## server interaction
+
     @abc.abstractmethod
     def _pre_sync_prep(self, client: "PortalClient"):
         """Additional actions to take before syncing, done as the last step before data is written.
@@ -254,8 +324,8 @@ class Collection(abc.ABC):
         client : PortalClient
             A PortalClient connected to a server used for storage access
         """
+        pass
 
-    # Setters
     def sync(self, client: Optional["PortalClient"] = None) -> "ObjectId":
         """Synchronizes Collection data to the server.
 
@@ -298,7 +368,81 @@ class Collection(abc.ABC):
 
         return self._data.id
 
-    ### General helpers
+    @abc.abstractmethod
+    def compute(
+        self, specification: str, subset: Set[str] = None, tag: Optional[str] = None, priority: Optional[str] = None
+    ) -> int:
+        pass
+
+    def status(
+        self,
+        specs: Optional[Union[str, List[str]]] = None,
+        full: bool = False,
+        as_list: bool = False,
+        as_df: bool = False,
+        status: Optional[Union[str, List[str]]] = None,
+    ) -> Union[None, List]:
+        """Print or return a status report for all existing compute specifications.
+
+        Parameters
+        ----------
+        specs : Optional[Union[str, List[str]]]
+            If given, only yield status of the listed compute specifications.
+        full : bool, optional
+            If True, expand to give status per entry.
+        as_list: bool, optional
+            Return output as a list instead of printing.
+        as_df : bool, optional
+            Return output as a `pandas` DataFrame instead of printing.
+        status : Optional[Union[str, List[str]]], optional
+            If not None, only returns results that match the provided statuses.
+
+        Returns
+        -------
+        Union[None, List]
+            Prints output as table to screen; if `aslist=True`,
+            returns list of output content instead.
+
+        """
+        # TODO: consider instead creating a `status` REST API endpoint
+        # no real need for us to populate data objects to get this
+        from tabulate import tabulate
+
+        # preprocess inputs
+        if specs is None:
+            specs = self.list_specifications(description=False)
+        elif isinstance(specs, str):
+            specs = [specs]
+
+        if isinstance(status, str):
+            status = [status.lower()]
+        elif isinstance(status, list):
+            status = [s.lower() for s in status]
+
+        records = self[specs]
+
+        status_data = pd.DataFrame(records).applymap(lambda x: x.status.value if isinstance(x, RecordBase) else None)
+
+        # apply filters
+        if status is not None:
+            status_data = status_data[status_data.applymap(lambda x: x in status).any(axis=0)]
+
+        # apply transformations
+        if full:
+            output = status_data
+        else:
+            output = status_data.apply(lambda x: x.value_counts())
+            output.index.name = "status"
+
+        # give representation
+        if not (as_list or as_df):
+            print(tabulate(output.reset_index().to_dict("records"), headers="keys"))
+        elif as_list:
+            return output.reset_index().to_dict("records")
+        elif as_df:
+            return output
+
+    ## miscellaneous
 
     @staticmethod
     def _add_molecules_by_dict(client, molecules):
@@ -617,71 +761,3 @@ class BaseProcedureDataset(Collection):
             return pd.Series(data)
         else:
             return data
-
-    def status(
-        self,
-        specs: Optional[Union[str, List[str]]] = None,
-        full: bool = False,
-        as_list: bool = False,
-        as_df: bool = False,
-        status: Optional[Union[str, List[str]]] = None,
-    ) -> Union[None, List]:
-        """Print or return a status report for all existing compute specifications.
-
-        Parameters
-        ----------
-        specs : Optional[Union[str, List[str]]]
-            If given, only yield status of the listed compute specifications.
-        full : bool, optional
-            If True, expand to give status per entry.
-        as_list: bool, optional
-            Return output as a list instead of printing.
-        as_df : bool, optional
-            Return output as a `pandas` DataFrame instead of printing.
-        status : Optional[Union[str, List[str]]], optional
-            If not None, only returns results that match the provided statuses.
-
-        Returns
-        -------
-        Union[None, List]
-            Prints output as table to screen; if `aslist=True`,
-            returns list of output content instead.
-
-        """
-        # TODO: consider instead creating a `status` REST API endpoint
-        # no real need for us to populate data objects to get this
-        from tabulate import tabulate
-
-        # preprocess inputs
-        if specs is None:
-            specs = self.list_specifications(description=False)
-        elif isinstance(specs, str):
-            specs = [specs]
-
-        if isinstance(status, str):
-            status = [status.lower()]
-        elif isinstance(status, list):
-            status = [s.lower() for s in status]
-
-        records = self[specs]
-
-        status_data = pd.DataFrame(records).applymap(lambda x: x.status.value if isinstance(x, RecordBase) else None)
-
-        # apply filters
-        if status is not None:
-            status_data = status_data[status_data.applymap(lambda x: x in status).any(axis=0)]
-
-        # apply transformations
-        if full:
-            output = status_data
-        else:
-            output = status_data.apply(lambda x: x.value_counts())
-            output.index.name = "status"
-
-        # give representation
-        if not (as_list or as_df):
-            print(tabulate(output.reset_index().to_dict("records"), headers="keys"))
-        elif as_list:
-            return output.reset_index().to_dict("records")
-        elif as_df:
-            return output
