@@ -47,6 +47,8 @@ def register_model(name: str, rest: str, body: ProtoModel, response: ProtoModel)
     __rest_models[name][rest] = (body, response)
 
 
+# DD FIXME: if we can remove the need for regex matching at all, would you be simpler, more performant
+#           should be possible since REST API is fully specified
 @functools.lru_cache(1000, typed=True)
 def rest_model(resource: str, rest: str) -> Tuple[ProtoModel, ProtoModel]:
     """
@@ -67,6 +69,10 @@ def rest_model(resource: str, rest: str) -> Tuple[ProtoModel, ProtoModel]:
     """
     rest = rest.upper()
     matches = []
+    # DD: we're doing a regex for each of these???
+    # this is probably way slower than just a hash mapping (e.g. dict)
+    # apparently due to View support; if we can separate View support from FractalServer
+    # (make it it's own thing entirely), we can improve performance and reliability on FractalServer
     for model_re in __rest_models.keys():
         if re.fullmatch(model_re, resource):
             try:
