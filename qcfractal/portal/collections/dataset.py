@@ -67,54 +67,14 @@ class ContributedValues(ProtoModel):
 
 class Dataset(Collection):
     """
-    The Dataset class for homogeneous computations on many molecules.
+    The Dataset class for homogeneous point computations on many molecules.
 
     Attributes
     ----------
     client : PortalClient
         A PortalClient connected to a server.
-    df : pd.DataFrame
-        A tabular representation of the dataset.
 
     """
-
-    def __init__(self, name: str, client: Optional["PortalClient"] = None, **kwargs: Any) -> None:
-        """
-        Initialize a the Dataset.
-
-        If no client is supplied or the dataset name is not present on the server,
-        a blank database will be created.
-
-        Parameters
-        ----------
-        name : str
-            The name of the Dataset
-        client : Optional['PortalClient'], optional
-            A Portal client to connected to a server
-        **kwargs : Dict[str, Any]
-            Additional kwargs to pass to the collection
-
-        """
-        super().__init__(name, client=client, **kwargs)
-
-        self._units = self._data.default_units
-
-        # If making a new database may need new hashes and json objects
-        self._new_molecules: Dict[str, Molecule] = {}
-        self._new_keywords: Dict[Tuple[str, str], KeywordSet] = {}
-        self._new_records: List[Dict[str, Any]] = []
-        self._updated_state = False
-
-        self._view: Optional[DatasetView] = None
-        if self._data.view_available:
-            from . import RemoteView
-
-            self._view = RemoteView(client, self._data.id)
-        self._disable_view: bool = False  # for debugging and testing
-        self._disable_query_limit: bool = False  # for debugging and testing
-
-        # Load contributed columns
-        self._column_metadata: Dict[str, Any] = {}
 
     class _DataModel(Collection._DataModel):
 
@@ -134,6 +94,127 @@ class Dataset(Collection):
         # History: driver, program, method (basis, keywords)
         history: Set[Tuple[str, str, str, Optional[str], Optional[str]]] = set()
         history_keys: Tuple[str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords")
+
+    def __init__(self, name: str, client: Optional["PortalClient"] = None, **kwargs: Any) -> None:
+        """Initialize a Dataset Collection.
+
+        Parameters
+        ----------
+        name : str
+            The name of the Collection object; used to reference the collection on the server.
+        client : PortalClient, optional
+            A PortalClient connected to a server.
+        **kwargs : Dict[str, Any]
+            Additional keywords passed to the Collection and the initial data constructor.
+            It is up to Collection subclasses to make use of that data.
+
+        """
+        super().__init__(name, client=client, **kwargs)
+
+        self._units = self._data.default_units
+
+        # If making a new dataset may need new hashes and json objects
+        # self._new_molecules: Dict[str, Molecule] = {}
+        # self._new_keywords: Dict[Tuple[str, str], KeywordSet] = {}
+        # self._new_records: List[Dict[str, Any]] = []
+        # self._updated_state = False
+
+        # Load contributed columns
+        # self._column_metadata: Dict[str, Any] = {}
+
+    def __getitem__(self, spec: Union[List[str], str]):
+        if isinstance(spec, list):
+            pad = max(map(len, spec))
+            return {sp: self._query(sp, pad=pad) for sp in spec}
+        else:
+            return self._query(spec)
+
+    def _query(self, spec):
+        pass
+
+    def _pre_sync_prep(self, client: "PortalClient") -> None:
+        pass
+
+    @property
+    def specs(self):
+        pass
+
+    @property
+    def entry_names(self):
+        pass
+
+    @property
+    def entries(self):
+        """A dictionary with entry names as keys and entry content as values."""
+        pass
+
+    def get_specification(self, name: str) -> Any:
+        """Get full parameters for the given named specification.
+
+        Parameters
+        ----------
+        name : str
+            The name of the specification.
+
+        Returns
+        -------
+        Specification
+            The requested specification.
+
+        """
+        pass
+
+    def list_specifications(self, description=False) -> Union[List[str], Dict[str, str]]:
+        """Gives all available specifications.
+
+        Parameters
+        ----------
+        description : bool, optional
+            If True, returns a dictionary with spec names as keys, descriptions as values.
+
+        Returns
+        -------
+        Union[List[str], Dict[str, str]]
+            Known specification names.
+
+        """
+        pass
+
+    def add_specification(
+        self,
+        name: str,
+        optimization_spec: OptimizationSpecification,
+        qc_spec: QCSpecification,
+        description: Optional[str] = None,
+        protocols: Optional[Dict[str, Any]] = None,
+        overwrite=False,
+    ) -> None:
+        """
+        Parameters
+        ----------
+        name : str
+            The name of the specification
+        optimization_spec : OptimizationSpecification
+            A full optimization specification for Optimization
+        qc_spec : QCSpecification
+            A full quantum chemistry specification for Optimization
+        description : str, optional
+            A short text description of the specification
+        protocols : Optional[Dict[str, Any]], optional
+            Protocols for this specification.
+        overwrite : bool, optional
+            Overwrite existing specification names
+        """
+
+    def add_entry(
+        self,
+        name: str,
+        initial_molecule: "Molecule",
+        additional_keywords: Optional[Dict[str, Any]] = None,
+        attributes: Optional[Dict[str, Any]] = None,
+        save: bool = True,
+    ) -> None:
+        pass
 
 
 # OLD STUFF BELOW; GRAB ONLY AS NEEDED
