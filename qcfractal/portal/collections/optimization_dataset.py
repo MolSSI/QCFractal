@@ -66,24 +66,24 @@ class OptimizationDataset(BaseProcedureDataset):
             priority=priority,
         ).ids[0]
 
-    def add_specification(
+    def add_spec(
         self,
-        name: str,
+        spec_name: str,
+        spec: QCSpecification,
         optimization_spec: OptimizationSpecification,
-        qc_spec: QCSpecification,
         description: Optional[str] = None,
         protocols: Optional[Dict[str, Any]] = None,
-        overwrite=False,
+        overwrite: bool = False,
     ) -> None:
         """
         Parameters
         ----------
-        name : str
+        spec_name : str
             The name of the specification
+        spec : QCSpecification
+            A full quantum chemistry specification for Optimization
         optimization_spec : OptimizationSpecification
             A full optimization specification for Optimization
-        qc_spec : QCSpecification
-            A full quantum chemistry specification for Optimization
         description : str, optional
             A short text description of the specification
         protocols : Optional[Dict[str, Any]], optional
@@ -94,15 +94,15 @@ class OptimizationDataset(BaseProcedureDataset):
         if protocols is None:
             protocols = {}
 
-        spec = OptEntrySpecification(
-            name=name,
+        full_spec = OptEntrySpecification(
+            name=spec_name,
             optimization_spec=optimization_spec,
-            qc_spec=qc_spec,
+            qc_spec=spec,
             description=description,
             protocols=protocols,
         )
 
-        return self._add_specification(name, spec, overwrite=overwrite)
+        return super().add_spec(spec_name, full_spec, overwrite=overwrite)
 
     def add_entry(
         self,
