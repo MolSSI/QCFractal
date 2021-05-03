@@ -15,7 +15,7 @@ from qcelemental import constants
 from qcelemental.models.types import Array
 from tqdm import tqdm
 
-from ...interface.models import Citation, ComputeResponse, ObjectId, ProtoModel
+from ...interface.models import Citation, ComputeResponse, ObjectId, ProtoModel, QCSpecification
 from ...interface.statistics import wrap_statistics
 from ...interface.visualization import bar_plot, violin_plot
 from .collection import Collection
@@ -78,11 +78,11 @@ class Dataset(Collection):
     class _DataModel(Collection._DataModel):
 
         # Defaults
-        default_program: Optional[str] = None
-        default_keywords: Dict[str, str] = {}
-        default_driver: str = "energy"
-        default_units: str = "kcal / mol"
-        default_benchmark: Optional[str] = None
+        #default_program: Optional[str] = None
+        #default_keywords: Dict[str, str] = {}
+        #default_driver: str = "energy"
+        #default_units: str = "kcal / mol"
+        #default_benchmark: Optional[str] = None
 
         alias_keywords: Dict[str, Dict[str, str]] = {}
 
@@ -120,14 +120,6 @@ class Dataset(Collection):
 
         # Load contributed columns
         #self._column_metadata: Dict[str, Any] = {}
-
-
-    def __getitem__(self, spec: Union[List[str], str]):
-        if isinstance(spec, list):
-            pad = max(map(len, spec))
-            return {sp: self._query(sp, pad=pad) for sp in spec}
-        else:
-            return self._query(spec)
 
 
     def _query(self, spec):
@@ -181,32 +173,6 @@ class Dataset(Collection):
 
         """
         pass
-
-    def add_specification(
-        self,
-        name: str,
-        optimization_spec: OptimizationSpecification,
-        qc_spec: QCSpecification,
-        description: Optional[str] = None,
-        protocols: Optional[Dict[str, Any]] = None,
-        overwrite=False,
-    ) -> None:
-        """
-        Parameters
-        ----------
-        name : str
-            The name of the specification
-        optimization_spec : OptimizationSpecification
-            A full optimization specification for Optimization
-        qc_spec : QCSpecification
-            A full quantum chemistry specification for Optimization
-        description : str, optional
-            A short text description of the specification
-        protocols : Optional[Dict[str, Any]], optional
-            Protocols for this specification.
-        overwrite : bool, optional
-            Overwrite existing specification names
-        """
 
     def add_entry(
         self,
