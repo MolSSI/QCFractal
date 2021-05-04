@@ -34,12 +34,6 @@ class SingleResultTasks(BaseTasks):
         if program not in qcng.list_all_programs():
             return f"Program '{program}' not available in QCEngine."
 
-        if data.meta.dict().get("protocols", None) is not None:
-            try:
-                qcel.models.results.ResultProtocols(**data.meta.protocols)
-            except Exception as e:
-                return f"Could not validate protocols: {str(e)}"
-
         return True
 
     def parse_input(self, data):
