@@ -27,8 +27,12 @@ class KeywordsSocket:
         self._limit = core_socket.qcf_config.response_limits.keyword
 
     @staticmethod
-    def keywords_to_orm(keywords: KeywordSet) -> KeywordsORM:
-        kw_dict = keywords.dict(exclude={"id"})
+    def keywords_to_orm(keywords: Union[KeywordDict, KeywordSet]) -> KeywordsORM:
+        if isinstance(keywords, KeywordSet):
+            kw_dict = keywords.dict(exclude={"id"})
+        else:
+            kw_dict = KeywordSet(values=keywords).dict(exclude={"id"})
+
         return KeywordsORM(**kw_dict)  # type: ignore
 
     @staticmethod
@@ -165,17 +169,17 @@ class KeywordsSocket:
         return ret
 
     def add_mixed(
-        self, keyword_data: Sequence[Union[ObjectId, KeywordSet]]
+        self, keyword_data: Sequence[Union[ObjectId, KeywordSet, KeywordDict]]
     ) -> Tuple[InsertMetadata, List[Optional[ObjectId]]]:
         """
         Add a mixed format keywords specification to the database.
 
-        This function can take both KeywordSet objects and keyword ids. If a keyword id is given
+        This function can take KeywordSet objects, keyword ids, or dictionaries. If a keyword id is given
         in the list, then it is checked to make sure it exists. If it does not exist, then it will be
         marked as an error in the returned metadata and the corresponding entry in the returned
         list of IDs will be None.
 
-        If a KeywordSet object is given, it will be added to the database if it does not already exist
+        If a KeywordSet or dictionary is given, it will be added to the database if it does not already exist
         in the database (based on the hash) and the existing ID will be returned. Otherwise, the new
         ID will be returned.
         """

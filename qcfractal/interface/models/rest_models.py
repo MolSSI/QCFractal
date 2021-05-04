@@ -12,7 +12,16 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from pydantic import Field, constr, root_validator, validator
 from qcelemental.util import get_base_docs
 
-from .common_models import AllResultTypes, KeywordSet, Molecule, ObjectId, ProtoModel, KVStore
+from .common_models import (
+    AllResultTypes,
+    KeywordSet,
+    Molecule,
+    ObjectId,
+    ProtoModel,
+    KVStore,
+    AtomicResultProtocols,
+    OptimizationProtocols,
+)
 from .gridoptimization import GridOptimizationInput
 from .records import ResultRecord
 from .task_models import PriorityEnum, TaskRecord
@@ -777,28 +786,42 @@ class TaskQueueGETResponse(ProtoModel):
 register_model("task_queue", "GET", TaskQueueGETBody, TaskQueueGETResponse)
 
 
+class TaskQueueSinglePOSTBodyMeta(ProtoModel):
+    procedure: constr(to_lower=True, regex="single") = Field("single")
+    driver: constr(to_lower=True)
+    program: constr(to_lower=True)
+    method: constr(to_lower=True)
+    basis: Optional[constr(to_lower=True)] = Field(None)
+    keywords: Optional[Union[ObjectId, Dict[str, Any]]] = Field(None)
+    protocols: AtomicResultProtocols = Field(AtomicResultProtocols())
+    tag: Optional[str] = Field(None)
+    priority: PriorityEnum = Field(PriorityEnum.NORMAL)
+
+    @validator("priority", pre=True)
+    def munge_priority(cls, v):
+        if isinstance(v, str):
+            v = PriorityEnum[v.upper()]
+        return v
+
+
+class TaskQueueOptimizationPOSTBodyMeta(ProtoModel):
+    procedure: constr(to_lower=True, regex="optimization") = Field("optimization")
+    program: constr(to_lower=True)
+    keywords: Dict[str, Any] = Field(default_factory=dict)
+    qc_spec: Dict[str, Any]
+    protocols: OptimizationProtocols = Field(OptimizationProtocols())
+    tag: Optional[str] = Field(None)
+    priority: PriorityEnum = Field(PriorityEnum.NORMAL)
+
+    @validator("priority", pre=True)
+    def munge_priority(cls, v):
+        if isinstance(v, str):
+            v = PriorityEnum[v.upper()]
+        return v
+
+
 class TaskQueuePOSTBody(ProtoModel):
-    class Meta(ProtoModel):
-        procedure: str = Field(..., description="Name of the procedure which the Task will execute.")
-        program: str = Field(..., description="The program which this Task will execute.")
-
-        tag: Optional[str] = Field(
-            None,
-            description="Tag to assign to this Task so that Queue Managers can pull only Tasks based on this entry."
-            "If no Tag is specified, any Queue Manager can pull this Task.",
-        )
-        priority: Union[PriorityEnum, None] = Field(None, description=str(PriorityEnum.__doc__))
-
-        class Config(ProtoModel.Config):
-            extra = "allow"
-
-        @validator("priority", pre=True)
-        def munge_priority(cls, v):
-            if isinstance(v, str):
-                v = PriorityEnum[v.upper()]
-            return v
-
-    meta: Meta = Field(..., description="The additional specification information for the Task to add to the Database.")
+    meta: Union[TaskQueueSinglePOSTBodyMeta, TaskQueueOptimizationPOSTBodyMeta]
     data: List[Union[ObjectId, Molecule]] = Field(
         ...,
         description="The list of either Molecule objects or Molecule Id's (those already in the database) to submit as "

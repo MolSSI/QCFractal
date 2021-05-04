@@ -354,10 +354,8 @@ def test_queue_bad_procedure_method(fractal_test_server):
     assert "not avail" in str(exc.value)
 
     # Test procedure class
-    with pytest.raises(IOError) as exc:
+    with pytest.raises(RuntimeError) as exc:
         client.add_procedure("badprocedure", "geometric", geometric_options, [mol1])
-
-    assert "Unknown procedure" in str(exc.value)
 
     # Test bad program
     with pytest.raises(IOError) as exc:

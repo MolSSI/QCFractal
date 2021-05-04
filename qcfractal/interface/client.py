@@ -808,7 +808,7 @@ class FractalClient(object):
         method: str = None,
         basis: Optional[str] = None,
         driver: str = None,
-        keywords: Optional["ObjectId"] = None,
+        keywords: Optional[Union[Dict[str, Any], "ObjectId"]] = None,
         molecule: Union["ObjectId", "Molecule", List[Union["ObjectId", "Molecule"]]] = None,
         *,
         priority: Optional[str] = None,
@@ -874,21 +874,19 @@ class FractalClient(object):
         if not isinstance(molecule, list):
             molecule = [molecule]
 
-        if protocols is None:
-            protocols = {}
+        meta = {"procedure": "single", "driver": driver, "program": program, "method": method, "tag": tag}
+
+        if basis is not None:
+            meta["basis"] = basis
+        if keywords is not None:
+            meta["keywords"] = keywords
+        if protocols is not None:
+            meta["protocols"] = protocols
+        if priority is not None:
+            meta["priority"] = priority
 
         payload = {
-            "meta": {
-                "procedure": "single",
-                "driver": driver,
-                "program": program,
-                "method": method,
-                "basis": basis,
-                "keywords": keywords,
-                "protocols": protocols,
-                "tag": tag,
-                "priority": priority,
-            },
+            "meta": meta,
             "data": molecule,
         }
 
@@ -937,15 +935,27 @@ class FractalClient(object):
 
         """
 
+        if procedure.lower() != "optimization":
+            raise RuntimeError("Optimization is the only supported procedure")
+
         # Always a list
         if isinstance(molecule, str):
             molecule = [molecule]
 
+        meta = {"procedure": procedure, "program": program, "qc_spec": program_options["qc_spec"], "tag": tag}
+
+        if priority is not None:
+            meta["priority"] = priority
+        if "keywords" in program_options and program_options["keywords"] is not None:
+            meta["keywords"] = program_options["keywords"]
+        if "protocols" in program_options and program_options["protocols"] is not None:
+            meta["protocols"] = program_options["protocols"]
+
         payload = {
-            "meta": {"procedure": procedure, "program": program, "tag": tag, "priority": priority},
+            "meta": meta,
             "data": molecule,
         }
-        payload["meta"].update(program_options)
+
         return self._automodel_request("task_queue", "post", payload, full_return=full_return)
 
     def query_tasks(
