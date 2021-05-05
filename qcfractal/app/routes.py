@@ -262,7 +262,7 @@ def before_request_func():
 
 
 @main.after_request
-def after_request_func(response):
+def after_request_func(response: SerializedResponse):
 
     # Determine the time the request took
     # g here refers to flask.g
@@ -292,6 +292,9 @@ def after_request_func(response):
 
         log["request_duration"] = request_duration
         log["user"] = g.user if "user" in g else None
+
+        if isinstance(response.response, (bytes, str)):
+            log["response_bytes"] = len(response.response)
 
         storage_socket.server_log.save_access(log)
 
