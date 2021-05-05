@@ -39,6 +39,7 @@ class AccessLogORM(Base):
     access_type = Column(String, nullable=False, index=True)
 
     request_duration = Column(Float)
+    response_bytes = Column(BigInteger)
 
     # Because logging happens every request, we store the user as a string
     # rather than a foreign key to the user table, which would require
