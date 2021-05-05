@@ -1102,6 +1102,7 @@ class Dataset(Collection):
         include: Optional[List[str]] = None,
         merge: bool = False,
         raise_on_plan: Union[str, bool] = False,
+        status: Optional[List[str]] = None,
     ) -> "pd.Series":
         """
         Runs a query based on an indexer which is index : molecule_id
@@ -1118,6 +1119,8 @@ class Dataset(Collection):
             Sum compound queries together, useful for mixing results
         raise_on_plan : Union[str, bool], optional
             Raises a KeyError is True or string if a multi-stage plan is detected.
+        status : List[str]
+            Include only records with these statuses. By default, obtain all records
 
         Returns
         -------
@@ -1151,7 +1154,7 @@ class Dataset(Collection):
             records: List[ResultRecord] = []
             for i in range(0, len(molecules), self.client.query_limit):
                 query_set["molecule"] = molecules[i : i + self.client.query_limit]
-                records.extend(self.client.query_results(**query_set))
+                records.extend(self.client.query_results(**query_set, status=status))
 
             if include is None:
                 records = [{"molecule": x.molecule, "record": x} for x in records]
@@ -1564,6 +1567,7 @@ class Dataset(Collection):
         include: Optional[List[str]] = None,
         subset: Optional[Union[str, Set[str]]] = None,
         merge: bool = False,
+        status: Optional[List[str]] = None,
     ) -> Union[pd.DataFrame, "ResultRecord"]:
         """
         Queries full ResultRecord objects from the database.
@@ -1585,6 +1589,8 @@ class Dataset(Collection):
         merge : bool
             Merge multiple results into one (as in the case of DFT-D3).
             This only works when include=['return_results'], as in get_values.
+        status : List[str]
+            Include only records with these statuses. By default, obtain all records
 
         Returns
         -------
@@ -1596,7 +1602,7 @@ class Dataset(Collection):
             raise KeyError(f"Requested query ({name}) did not match a known record.")
 
         indexer = self._molecule_indexer(subset=subset, force=True)
-        df = self._get_records(indexer, history, include=include, merge=merge)
+        df = self._get_records(indexer, history, include=include, merge=merge, status=status)
 
         if not merge and len(df) == 1:
             df = df[0]
