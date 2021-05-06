@@ -350,7 +350,7 @@ class KeywordSet(ProtoModel):
 
 
 class Citation(ProtoModel):
-    """ A literature citation.  """
+    """A literature citation."""
 
     acs_citation: Optional[
         str
@@ -360,5 +360,5 @@ class Citation(ProtoModel):
     url: Optional[str] = None
 
     def to_acs(self) -> str:
-        """ Returns an ACS-formatted citation """
+        """Returns an ACS-formatted citation"""
         return self.acs_citation

@@ -41,7 +41,7 @@ dependencies:
   - rdkit
   - ipyparallel
   - ipykernel
-  - parsl >=0.9.0
+  - parsl ==1.0.0
 
 #   QCArchive includes
   - qcengine >=0.17.0
