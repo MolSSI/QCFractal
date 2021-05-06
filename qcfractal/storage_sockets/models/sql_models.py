@@ -93,7 +93,7 @@ class VersionsORM(Base):
 
 
 class KVStoreORM(Base):
-    """TODO: rename to """
+    """TODO: rename to"""
 
     __tablename__ = "kv_store"
 
@@ -300,7 +300,7 @@ class QueueManagerLogORM(Base):
 
 
 class QueueManagerORM(Base):
-    """"""
+    """ """
 
     __tablename__ = "queue_manager"
 

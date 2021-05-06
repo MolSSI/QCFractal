@@ -558,7 +558,7 @@ def live_fractal_or_skip():
 
 
 def df_compare(df1, df2, sort=False):
-    """ checks equality even when columns contain numpy arrays, which .equals and == struggle with """
+    """checks equality even when columns contain numpy arrays, which .equals and == struggle with"""
     if sort:
         if isinstance(df1, pd.DataFrame):
             df1 = df1.reindex(sorted(df1.columns), axis=1)

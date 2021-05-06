@@ -424,7 +424,7 @@ class HDF5View(DatasetView):
         self._entries = None
 
     def hash(self) -> str:
-        """ Returns the Blake2b hash of the view """
+        """Returns the Blake2b hash of the view"""
         b2b = hashlib.blake2b()
         with open(self._path, "rb") as f:
             for chunk in iter(lambda: f.read(8192), b""):
@@ -433,7 +433,7 @@ class HDF5View(DatasetView):
 
     @staticmethod
     def _normalize_hdf5_name(name: str) -> str:
-        """ Handles names with / in them, which is disallowed in HDF5 """
+        """Handles names with / in them, which is disallowed in HDF5"""
         if ":" in name:
             raise ValueError("':' not allowed in names")
         return name.replace("/", ":")
