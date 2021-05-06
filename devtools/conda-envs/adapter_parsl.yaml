@@ -47,4 +47,9 @@ dependencies:
   - rdkit
   - ipyparallel
   - ipykernel
-  - parsl >=0.9.0
+
+  # As of 2021-05-06, parsl doesn't support sqlalchemy 1.4
+  # This constraint is not mentioned in v1.0.0, but is still true
+  # We don't use any features of parsl that require sqlalchemy anyway
+  # v1.1.0 also pulls in an old pyjwt
+  - parsl ==1.0.0
