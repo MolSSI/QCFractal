@@ -397,12 +397,20 @@ def register():
 
 @main.route("/login", methods=["POST"])
 def login():
-    if request.is_json:
-        username = request.json["username"]
-        password = request.json["password"]
-    else:
-        username = request.form["username"]
-        password = request.form["password"]
+    try:
+        if request.is_json:
+            username = request.json["username"]
+            password = request.json["password"]
+        else:
+            username = request.form["username"]
+            password = request.form["password"]
+    except Exception:
+        raise AuthenticationFailure("Invalid/malformed login request")
+
+    if username is None:
+        raise AuthenticationFailure("No username provided for login")
+    if password is None:
+        raise AuthenticationFailure("No password provided for login")
 
     # Raises exceptions on error
     # Also raises AuthenticationFailure if the user is invalid or the password is incorrect
