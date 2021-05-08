@@ -147,7 +147,7 @@ def test_collection_portal(fractal_test_server, encoding):
 
 @pytest.mark.parametrize("encoding", valid_encodings)
 def test_custom_queries(fractal_test_server, encoding):
-    """ Test the round trip between client and server in custom queries"""
+    """Test the round trip between client and server in custom queries"""
 
     client = fractal_test_server.client()
     client._set_encoding(encoding)

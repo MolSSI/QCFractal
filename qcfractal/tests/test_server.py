@@ -141,7 +141,7 @@ def test_bad_collection_post(fractal_test_server):
 
 
 def test_bad_view_endpoints(fractal_test_server):
-    """ Tests that certain misspellings of the view endpoints result in 404s """
+    """Tests that certain misspellings of the view endpoints result in 404s"""
     addr = fractal_test_server.get_uri()
 
     assert requests.get(addr + "/collection//value").status_code == 404
