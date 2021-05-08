@@ -344,7 +344,7 @@ def test_gradient_dataset_records_args(gradient_dataset_fixture):
 
 @pytest.fixture(scope="module", params=["download_view", "no_view", "remote_view"])
 def contributed_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
-    """ Fixture for testing rich contributed datasets with many properties and molecules of different sizes"""
+    """Fixture for testing rich contributed datasets with many properties and molecules of different sizes"""
     client = fractal_compute_server.client()
     try:
         ds = client.get_collection("Dataset", "ds_contributed")
@@ -482,7 +482,7 @@ def test_dataset_contributed_mixed_values(contributed_dataset_fixture):
 
 
 def test_dataset_compute_response(fractal_compute_server):
-    """ Tests that the full compute response is returned when calling Dataset.compute """
+    """Tests that the full compute response is returned when calling Dataset.compute"""
     client = fractal_compute_server.client()
 
     # Build a dataset
@@ -505,7 +505,7 @@ def test_dataset_compute_response(fractal_compute_server):
 
 @testing.using_psi4
 def test_dataset_protocols(fractal_compute_server):
-    """ Tests using protocols with dataset compute."""
+    """Tests using protocols with dataset compute."""
     client = fractal_compute_server.client()
 
     # Build basis dataset
@@ -971,7 +971,7 @@ def s22_fixture(request, tmp_path_factory):
 
 @pytest.mark.slow
 def test_qm3_list_select(qm3_fixture):
-    """ tests list_values and get_values with multiple selections on the method and basis field """
+    """tests list_values and get_values with multiple selections on the method and basis field"""
     client, ds = qm3_fixture
 
     methods = {"b3lyp", "pbe"}
@@ -993,7 +993,7 @@ def test_qm3_list_select(qm3_fixture):
 
 @pytest.mark.slow
 def test_s22_list_select(s22_fixture):
-    """ tests list_values and get_values with multiple selections on the method and basis field """
+    """tests list_values and get_values with multiple selections on the method and basis field"""
     client, ds = s22_fixture
 
     methods = {"b3lyp", "pbe"}
@@ -1030,7 +1030,7 @@ def test_rds_rxn(fractal_compute_server):
 
 
 def assert_list_get_values(ds):
-    """ Tests that the output of list_values can be used as input to get_values"""
+    """Tests that the output of list_values can be used as input to get_values"""
     columns = ds.list_values().reset_index()
     all_specs_unique = len(columns.drop("name", axis=1).drop_duplicates()) == len(columns.drop("name", axis=1))
     for row in columns.to_dict("records"):
@@ -1075,7 +1075,7 @@ def test_s22_list_get_values(s22_fixture):
 
 
 def assert_view_identical(ds):
-    """ Tests if get_values, list_values, get_entries, and get_molecules return the same result with/out a view"""
+    """Tests if get_values, list_values, get_entries, and get_molecules return the same result with/out a view"""
 
     ds._disable_view = True
     list_ds = ds.list_values(force=True)

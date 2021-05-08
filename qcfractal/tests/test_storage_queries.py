@@ -50,7 +50,7 @@ def test_molecule_count_queries(storage_query_fixture):
 
 
 def test_torsiondrive_initial_final_molecule(storage_query_fixture):
-    """ With single initial molecule in torsion proc"""
+    """With single initial molecule in torsion proc"""
 
     storage_socket, torsion = storage_query_fixture
 
@@ -85,7 +85,7 @@ def test_torsiondrive_initial_final_molecule(storage_query_fixture):
 
 
 def test_torsiondrive_return_results(storage_query_fixture):
-    """ With single initial molecule in torsion proc"""
+    """With single initial molecule in torsion proc"""
 
     storage_socket, torsion = storage_query_fixture
 
@@ -96,7 +96,7 @@ def test_torsiondrive_return_results(storage_query_fixture):
 
 
 def test_optimization_best_results(storage_query_fixture):
-    """ Test return best optimization proc results in one query"""
+    """Test return best optimization proc results in one query"""
 
     storage_socket, torsion = storage_query_fixture
 
@@ -111,7 +111,7 @@ def test_optimization_best_results(storage_query_fixture):
 
 
 def test_optimization_all_results(storage_query_fixture):
-    """ Test return best optimization proc results in one query"""
+    """Test return best optimization proc results in one query"""
 
     storage_socket, torsion = storage_query_fixture
 
@@ -126,7 +126,7 @@ def test_optimization_all_results(storage_query_fixture):
 
 
 def test_optimization_initial_molecules(storage_query_fixture):
-    """ Test return best optimization proc results in one query"""
+    """Test return best optimization proc results in one query"""
 
     storage_socket, torsion = storage_query_fixture
 
@@ -141,7 +141,7 @@ def test_optimization_initial_molecules(storage_query_fixture):
 
 
 def test_optimization_final_molecules(storage_query_fixture):
-    """ Test return best optimization proc results in one query"""
+    """Test return best optimization proc results in one query"""
 
     storage_socket, torsion = storage_query_fixture
 
