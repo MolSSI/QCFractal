@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 class ViewHandler:
     def __init__(self, qcf_config: FractalConfig):
-        """"""
+        """ """
 
         self._view_cache: Dict[int, HDF5View] = {}
         self._path = None
