@@ -5,6 +5,7 @@ from collections import defaultdict
 from datetime import datetime
 
 from sqlalchemy import and_, func, text
+from sqlalchemy.orm import load_only
 import qcfractal
 from qcfractal.interface.models import QueryMetadata
 from qcfractal.storage_sockets.models import (
@@ -24,8 +25,9 @@ from qcfractal.storage_sockets.sqlalchemy_common import get_query_proj_columns, 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from sqlalchemy.orm.session import Session
     from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
-    from typing import Dict, Any, List, Optional, Tuple
+    from typing import Dict, Any, List, Optional, Tuple, Iterable
 
     AccessLogDict = Dict[str, Any]
     ErrorLogDict = Dict[str, Any]
@@ -40,18 +42,41 @@ class ServerLogSocket:
         self._access_log_limit = core_socket.qcf_config.response_limits.access_logs
         self._server_log_limit = core_socket.qcf_config.response_limits.server_logs
 
-    def save_access(self, log_data: AccessLogDict):
+    def save_access(self, log_data: AccessLogDict, *, session: Optional[Session] = None) -> int:
         """
         Saves information about an access to the database
+
+        Parameters
+        ----------
+        log_data
+            Dictionary of data to add to the database
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
+
+        Returns
+        -------
+        :
+            The id of the newly-created log entry
         """
 
-        with self._core_socket.session_scope() as session:
+        with self._core_socket.optional_session(session) as session:
             log = AccessLogORM(**log_data)  # type: ignore
             session.add(log)
+            session.flush()
+            return log.id
 
-    def save_error(self, error_data: ErrorLogDict) -> int:
+    def save_error(self, error_data: ErrorLogDict, *, session: Optional[Session] = None) -> int:
         """
-        Saves information about an access to the database
+        Saves information about an internal error to the database
+
+        Parameters
+        ----------
+        error_data
+            Dictionary of error data to add to the database
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
 
         Returns
         -------
@@ -60,18 +85,32 @@ class ServerLogSocket:
         """
 
         log = InternalErrorLogORM(**error_data, qcfractal_version=qcfractal.__version__)  # type: ignore
-        with self._core_socket.session_scope() as session:
+        with self._core_socket.optional_session(session) as session:
             session.add(log)
-            session.commit()
+            session.flush()
             return log.id
 
-    def update_stats(self):
+    def update_stats(self, *, session: Optional[Session] = None) -> int:
+        """
+        Obtains some statistics about the server and stores them in the database
+
+        Parameters
+        ----------
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
+
+        Returns
+        -------
+        :
+            The ID of the newly-created statistics entry
+        """
 
         table_list = [CollectionORM, MoleculeORM, BaseResultORM, KVStoreORM, AccessLogORM, InternalErrorLogORM]
         db_name = self._core_socket.qcf_config.database.database_name
 
         table_counts = {}
-        with self._core_socket.session_scope(True) as session:
+        with self._core_socket.optional_session(session) as session:
             # total size of the database
             db_size = session.execute(text("SELECT pg_database_size(:dbname)"), {"dbname": db_name}).scalar()
 
@@ -115,36 +154,42 @@ class ServerLogSocket:
             )
             service_stats = {"columns": ["result_type", "status", "count"], "rows": [list(r) for r in service_query]}
 
-        # Calculate combined table info
-        table_size = 0
-        index_size = 0
-        for row in table_info_rows:
-            table_size += row[2] - row[3] - (row[4] or 0)
-            index_size += row[3]
+            # Calculate combined table info
+            table_size = 0
+            index_size = 0
+            for row in table_info_rows:
+                table_size += row[2] - row[3] - (row[4] or 0)
+                index_size += row[3]
 
-        # Build out final data
-        data = {
-            "collection_count": table_counts[CollectionORM.__tablename__],
-            "molecule_count": table_counts[MoleculeORM.__tablename__],
-            "result_count": table_counts[BaseResultORM.__tablename__],
-            "kvstore_count": table_counts[KVStoreORM.__tablename__],
-            "access_count": table_counts[AccessLogORM.__tablename__],
-            "error_count": table_counts[InternalErrorLogORM.__tablename__],
-            "task_queue_status": task_stats,
-            "service_queue_status": service_stats,
-            "db_total_size": db_size,
-            "db_table_size": table_size,
-            "db_index_size": index_size,
-            "db_table_information": table_info,
-        }
+            # Build out final data
+            data = {
+                "collection_count": table_counts[CollectionORM.__tablename__],
+                "molecule_count": table_counts[MoleculeORM.__tablename__],
+                "result_count": table_counts[BaseResultORM.__tablename__],
+                "kvstore_count": table_counts[KVStoreORM.__tablename__],
+                "access_count": table_counts[AccessLogORM.__tablename__],
+                "error_count": table_counts[InternalErrorLogORM.__tablename__],
+                "task_queue_status": task_stats,
+                "service_queue_status": service_stats,
+                "db_total_size": db_size,
+                "db_table_size": table_size,
+                "db_index_size": index_size,
+                "db_table_information": table_info,
+            }
 
-        with self._core_socket.session_scope() as session:
             log = ServerStatsLogORM(**data)  # type: ignore
             session.add(log)
-            session.commit()
+            session.flush()
+            return log.id
 
     def query_stats(
-        self, before: Optional[datetime] = None, after: Optional[datetime] = None, limit: int = None, skip: int = 0
+        self,
+        before: Optional[datetime] = None,
+        after: Optional[datetime] = None,
+        limit: int = None,
+        skip: int = 0,
+        *,
+        session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[ServerStatsDict]]:
         """
         General query of server statistics
@@ -164,6 +209,8 @@ class ServerLogSocket:
         skip
             Skip this many results from the total list of matches. The limit will apply after skipping,
             allowing for pagination.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
 
         Returns
         -------
@@ -173,28 +220,33 @@ class ServerLogSocket:
 
         limit = calculate_limit(self._server_log_limit, limit)
 
-        query_cols_names, query_cols = get_query_proj_columns(ServerStatsLogORM)
-
         and_query = []
         if before:
             and_query.append(ServerStatsLogORM.timestamp <= before)
         if after:
             and_query.append(ServerStatsLogORM.timestamp >= after)
 
-        with self._core_socket.session_scope(read_only=True) as session:
-            query = session.query(*query_cols).filter(and_(*and_query)).order_by(ServerStatsLogORM.timestamp.desc())
+        with self._core_socket.optional_session(session, True) as session:
+            query = (
+                session.query(ServerStatsLogORM).filter(and_(*and_query)).order_by(ServerStatsLogORM.timestamp.desc())
+            )
             n_found = get_count(query)
             results = query.limit(limit).offset(skip).all()
-            result_dicts = [dict(zip(query_cols_names, x)) for x in results]
+            result_dicts = [x.dict() for x in results]
 
         meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
         return meta, result_dicts
 
-    def get_latest_stats(self) -> ServerStatsDict:
+    def get_latest_stats(self, *, session: Optional[Session] = None) -> ServerStatsDict:
         """
         Obtain the latest statistics for the server
 
         If none are found, the server is updated and the new results returned
+
+        Parameters
+        ----------
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
 
         Returns
         -------
@@ -202,17 +254,17 @@ class ServerLogSocket:
             A dictionary containing the latest server stats
         """
 
-        query_cols_names, query_cols = get_query_proj_columns(ServerStatsLogORM)
+        meta, stats = self.query_stats(limit=1, session=session)
+        if meta.n_returned == 0:
+            # we don't have any?
+            self.update_stats()
 
-        with self._core_socket.session_scope(read_only=True) as session:
-            query = session.query(*query_cols).order_by(ServerStatsLogORM.timestamp.desc())
-            result = query.limit(1).one_or_none()
-
-            if result is not None:
-                return dict(zip(query_cols_names, result))
-            else:
-                self.update_stats()
-                return self.get_latest_stats()
+            meta, stats = self.query_stats(limit=1, session=session)
+            if meta.n_returned == 0:
+                raise RuntimeError("No stats available and none could be created?")
+            return stats[0]
+        else:
+            return stats[0]
 
     def query_access_logs(
         self,
@@ -220,8 +272,12 @@ class ServerLogSocket:
         access_method: Optional[List[str]] = None,
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
+        include: Optional[Iterable[str]] = None,
+        exclude: Optional[Iterable[str]] = None,
         limit: int = None,
         skip: int = 0,
+        *,
+        session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[AccessLogDict]]:
         """
         General query of server access logs
@@ -239,12 +295,18 @@ class ServerLogSocket:
             Query for log entries with a timestamp before a specific time
         after
             Query for log entries with a timestamp after a specific time
+        include
+            Which fields of the access log return. Default is to return all fields.
+        exclude
+            Remove these fields from the return. Default is to return all fields.
         limit
             Limit the number of results. If None, the server limit will be used.
             This limit will not be respected if greater than the configured limit of the server.
         skip
             Skip this many results from the total list of matches. The limit will apply after skipping,
             allowing for pagination.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
 
         Returns
         -------
@@ -254,7 +316,7 @@ class ServerLogSocket:
 
         limit = calculate_limit(self._access_log_limit, limit)
 
-        query_cols_names, query_cols = get_query_proj_columns(AccessLogORM)
+        load_cols = get_query_proj_columns(AccessLogORM, include, exclude)
 
         and_query = []
         if access_type:
@@ -267,11 +329,12 @@ class ServerLogSocket:
         if after:
             and_query.append(AccessLogORM.access_date >= after)
 
-        with self._core_socket.session_scope(read_only=True) as session:
-            query = session.query(*query_cols).filter(and_(*and_query)).order_by(AccessLogORM.access_date.desc())
+        with self._core_socket.optional_session(session, True) as session:
+            query = session.query(AccessLogORM).filter(and_(*and_query)).order_by(AccessLogORM.access_date.desc())
+            query = query.options(load_only(*load_cols))
             n_found = get_count(query)
             results = query.limit(limit).offset(skip).all()
-            result_dicts = [dict(zip(query_cols_names, x)) for x in results]
+            result_dicts = [x.dict() for x in results]
 
         meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
         return meta, result_dicts
@@ -281,6 +344,8 @@ class ServerLogSocket:
         group_by: str = "day",
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
+        *,
+        session: Optional[Session] = None,
     ) -> AccessLogSummaryDict:
         """
         General query of server access logs
@@ -296,6 +361,8 @@ class ServerLogSocket:
             Query for log entries with a timestamp before a specific time
         after
             Query for log entries with a timestamp after a specific time
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
 
         Returns
         -------
@@ -312,7 +379,7 @@ class ServerLogSocket:
             and_query.append(AccessLogORM.access_date >= after)
 
         result_dict = defaultdict(list)
-        with self._core_socket.session_scope(read_only=True) as session:
+        with self._core_socket.optional_session(session, True) as session:
             if group_by == "user":
                 group_col = AccessLogORM.user.label("group_col")
             elif group_by == "day":
@@ -379,6 +446,8 @@ class ServerLogSocket:
         after: Optional[datetime] = None,
         limit: int = None,
         skip: int = 0,
+        *,
+        session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[AccessLogDict]]:
         """
         General query of server internal error logs
@@ -402,6 +471,8 @@ class ServerLogSocket:
         skip
             Skip this many results from the total list of matches. The limit will apply after skipping,
             allowing for pagination.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
 
         Returns
         -------
@@ -411,7 +482,7 @@ class ServerLogSocket:
 
         limit = calculate_limit(self._access_log_limit, limit)
 
-        query_cols_names, query_cols = get_query_proj_columns(InternalErrorLogORM)
+        load_cols = get_query_proj_columns(InternalErrorLogORM)
 
         and_query = []
         if id:
@@ -423,11 +494,16 @@ class ServerLogSocket:
         if after:
             and_query.append(InternalErrorLogORM.error_date >= after)
 
-        with self._core_socket.session_scope(read_only=True) as session:
-            query = session.query(*query_cols).filter(and_(*and_query)).order_by(InternalErrorLogORM.error_date.desc())
+        with self._core_socket.optional_session(session, True) as session:
+            query = (
+                session.query(InternalErrorLogORM)
+                .filter(and_(*and_query))
+                .order_by(InternalErrorLogORM.error_date.desc())
+            )
+            query = query.options(load_only(*load_cols))
             n_found = get_count(query)
             results = query.limit(limit).offset(skip).all()
-            result_dicts = [dict(zip(query_cols_names, x)) for x in results]
+            result_dicts = [x.dict() for x in results]
 
         meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
         return meta, result_dicts

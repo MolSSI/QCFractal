@@ -4,7 +4,6 @@ import logging
 from qcfractal.storage_sockets.models import KeywordsORM
 from qcfractal.interface.models import KeywordSet, InsertMetadata, DeleteMetadata, ObjectId
 from qcfractal.storage_sockets.sqlalchemy_common import (
-    get_query_proj_columns,
     insert_general,
     delete_general,
     insert_mixed_general,
@@ -35,21 +34,11 @@ class KeywordsSocket:
 
         return KeywordsORM(**kw_dict)  # type: ignore
 
-    @staticmethod
-    def cleanup_keywords_dict(kw_dict: KeywordDict) -> KeywordDict:
+    def add(
+        self, keywords: Sequence[KeywordSet], *, session: Optional[Session] = None
+    ) -> Tuple[InsertMetadata, List[ObjectId]]:
         """
-        Perform any cleanup of a keywords dictionary
-        """
-
-        # TODO - int id
-        if "id" in kw_dict:
-            kw_dict["id"] = ObjectId(kw_dict["id"])
-
-        return kw_dict
-
-    def add_internal(self, session: Session, keywords: Sequence[KeywordSet]) -> Tuple[InsertMetadata, List[ObjectId]]:
-        """
-        Add keywords to a session
+        Add keywords to the database
 
         This checks if the keywords already exists in the database via its hash. If so, it returns
         the existing id, otherwise it will insert it and return the new id.
@@ -58,10 +47,11 @@ class KeywordsSocket:
 
         Parameters
         ----------
-        session
-            An existing SQLAlchemy session to add the data to
         keywords
             Keyword data to add to the session
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
 
         Returns
         -------
@@ -77,7 +67,8 @@ class KeywordsSocket:
 
         kw_orm = [self.keywords_to_orm(x) for x in keywords]
 
-        meta, added_ids = insert_general(session, kw_orm, (KeywordsORM.hash_index,), (KeywordsORM.id,))
+        with self._core_socket.optional_session(session) as session:
+            meta, added_ids = insert_general(session, kw_orm, (KeywordsORM.hash_index,), (KeywordsORM.id,))
 
         # insert_general should always succeed or raise exception
         assert meta.success
@@ -85,37 +76,8 @@ class KeywordsSocket:
         # Added ids are a list of tuple, with each tuple only having one value
         return meta, [ObjectId(x[0]) for x in added_ids]
 
-    def add(self, keywords: Sequence[KeywordSet]) -> Tuple[InsertMetadata, List[ObjectId]]:
-        """Adds keywords to the database
-
-        This function returns metadata about the insertion, and a list of IDs of the keywords in the database.
-        This list will be in the same order as the `keywords` parameter.
-
-        For each keyword given, the database will be checked to see if it already exists in the database.
-        If it does, that ID will be returned. Otherwise, the keywords will be added to the database and the
-        new ID returned.
-
-        On any error, this function will raise an exception.
-
-        Parameters
-        ----------
-        keywords
-            A list of keyword sets to be inserted.
-
-        Returns
-        -------
-        :
-            Metadata about the insertion, and a list of keywordids. The ids will be in the
-            order of the input keywords.
-        """
-
-        with self._core_socket.session_scope() as session:
-            return self.add_internal(session, keywords)
-
     def get(
-        self,
-        id: Sequence[ObjectId],
-        missing_ok: bool = False,
+        self, id: Sequence[ObjectId], missing_ok: bool = False, *, session: Optional[Session] = None
     ) -> List[Optional[KeywordDict]]:
         """
         Obtain keywords with specified IDs
@@ -127,11 +89,15 @@ class KeywordsSocket:
 
         Parameters
         ----------
+        session
+            An existing SQLAlchemy session to get data from
         id
             A list or other sequence of keyword IDs
         missing_ok
            If set to True, then missing keywords will be tolerated, and the returned list of
            keywords will contain None for the corresponding IDs that were not found.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
 
         Returns
         -------
@@ -141,35 +107,26 @@ class KeywordsSocket:
         """
 
         if len(id) > self._limit:
-            raise RuntimeError(f"Request for {len(id)} keywords is over the limit of {self._limit}")
+            raise RuntimeError(f"Request for {len(id)} molecules is over the limit of {self._limit}")
 
         # TODO - int id
-        id = [int(x) for x in id]
+        int_id = [int(x) for x in id]
+        unique_ids = list(set(int_id))
 
-        unique_ids = list(set(id))
+        with self._core_socket.optional_session(session, True) as session:
+            results = session.query(KeywordsORM).filter(KeywordsORM.id.in_(unique_ids)).yield_per(500)
+            result_map = {r.id: r.dict() for r in results}
 
-        query_cols_names, query_cols = get_query_proj_columns(KeywordsORM)
-
-        with self._core_socket.session_scope(True) as session:
-            results = session.query(*query_cols).filter(KeywordsORM.id.in_(unique_ids)).all()
-            result_dicts = [dict(zip(query_cols_names, x)) for x in results]
-
-        result_dicts = list(map(self.cleanup_keywords_dict, result_dicts))
-
-        # TODO - int id
-        # We previously changed int to ObjectId in cleanup_keywords_dict
-        result_map = {int(x["id"]): x for x in result_dicts}
-
-        # Put into the original order
-        ret = [result_map.get(x, None) for x in id]
+        # Put into the requested order
+        ret = [result_map.get(x, None) for x in int_id]
 
         if missing_ok is False and None in ret:
-            raise RuntimeError("Could not find all requested keyword records")
+            raise RuntimeError("Could not find all requested keywords records")
 
         return ret
 
     def add_mixed(
-        self, keyword_data: Sequence[Union[ObjectId, KeywordSet, KeywordDict]]
+        self, keyword_data: Sequence[Union[ObjectId, KeywordSet, KeywordDict]], *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, List[Optional[ObjectId]]]:
         """
         Add a mixed format keywords specification to the database.
@@ -182,6 +139,14 @@ class KeywordsSocket:
         If a KeywordSet or dictionary is given, it will be added to the database if it does not already exist
         in the database (based on the hash) and the existing ID will be returned. Otherwise, the new
         ID will be returned.
+
+        Parameters
+        ----------
+        keyword_data
+            Keyword data to add. Can be a mix of IDs and Keyword objects
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
         """
 
         # TODO - INT ID
@@ -191,7 +156,7 @@ class KeywordsSocket:
             x if isinstance(x, int) else self.keywords_to_orm(x) for x in keyword_data_2
         ]
 
-        with self._core_socket.session_scope() as session:
+        with self._core_socket.optional_session(session) as session:
             meta, all_ids = insert_mixed_general(
                 session, KeywordsORM, keyword_orm, KeywordsORM.id, (KeywordsORM.hash_index,), (KeywordsORM.id,)
             )
@@ -200,7 +165,7 @@ class KeywordsSocket:
         # TODO - INT ID
         return meta, [ObjectId(x[0]) if x is not None else None for x in all_ids]
 
-    def delete(self, id: List[ObjectId]) -> DeleteMetadata:
+    def delete(self, id: List[ObjectId], *, session: Optional[Session] = None) -> DeleteMetadata:
         """
         Removes keywords from the database based on id
 
@@ -208,6 +173,9 @@ class KeywordsSocket:
         ----------
         id
             IDs of the keywords to remove
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
 
         Returns
         -------
@@ -218,6 +186,5 @@ class KeywordsSocket:
         # TODO - INT ID
         id_lst = [(int(x),) for x in id]
 
-        with self._core_socket.session_scope() as session:
-            # session will commit on exiting from the context
+        with self._core_socket.optional_session(session) as session:
             return delete_general(session, KeywordsORM, (KeywordsORM.id,), id_lst)

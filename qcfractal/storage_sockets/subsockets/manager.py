@@ -4,6 +4,7 @@ import logging
 from datetime import datetime
 
 from sqlalchemy import or_, and_, update
+from sqlalchemy.orm import load_only, selectinload
 from qcfractal.interface.models import ObjectId, ManagerStatusEnum, QueryMetadata
 from qcfractal.storage_sockets.models import QueueManagerORM, QueueManagerLogORM
 from qcfractal.storage_sockets.sqlalchemy_socket import calculate_limit
@@ -27,54 +28,7 @@ class ManagerSocket:
         self._manager_limit = core_socket.qcf_config.response_limits.manager
         self._manager_log_limit = core_socket.qcf_config.response_limits.manager_log
 
-    @staticmethod
-    def cleanup_manager_dict(mdict: ManagerDict) -> ManagerDict:
-        # remove passwords?
-        # TODO: Are passwords stored anywhere else? Other kinds of passwords?
-        if "configuration" in mdict and isinstance(mdict["configuration"], dict) and "server" in mdict["configuration"]:
-            mdict["configuration"]["server"].pop("password", None)
-
-        # TODO - int id
-        if "id" in mdict:
-            mdict["id"] = ObjectId(mdict["id"])
-
-        return mdict
-
-    @staticmethod
-    def cleanup_manager_log_dict(mdict: ManagerLogDict) -> ManagerLogDict:
-        # Placeholder
-        return mdict
-
-    def _attach_logs(self, session: Session, id_name_map: Dict[int, str], result_map: Dict[str, ManagerDict]):
-        """
-        Retrieve all the logs for managers and attach it to the results
-
-        The result_map object is modified by adding a 'logs' key to the dictionaries.
-
-        Parameters
-        ----------
-        session
-            An existing SQLAlchemy session to use for querying
-        id_name_map
-            A mapping of manager IDs to names
-        result_map
-            Mapping of manager names to the results of a manager query
-        """
-        # Add the logs entries
-        for v in result_map.values():
-            v["logs"] = []
-
-        manager_ids = list(id_name_map.keys())
-        log_query_cols_names, log_query_cols = get_query_proj_columns(QueueManagerLogORM)
-        log_results = session.query(*log_query_cols).filter(QueueManagerLogORM.manager_id.in_(manager_ids)).all()
-
-        for log in log_results:
-            log_dict = self.cleanup_manager_log_dict(dict(zip(log_query_cols_names, log)))
-
-            m_name = id_name_map[log["manager_id"]]
-            result_map[m_name]["logs"].append(log_dict)
-
-    def update(self, name: str, **kwargs):
+    def update(self, name: str, *, session: Optional[Session] = None, **kwargs):
         """
         Updates information for a queue manager in the database
 
@@ -84,6 +38,9 @@ class ManagerSocket:
         ----------
         name
             The name of the manager to update
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
         """
 
         do_log = kwargs.pop("log", False)
@@ -98,16 +55,16 @@ class ManagerSocket:
 
         upd = {key: kwargs[key] for key in QueueManagerORM.__dict__.keys() if key in kwargs}
 
-        with self._core_socket.session_scope() as session:
+        with self._core_socket.optional_session(session) as session:
             manager_query = session.query(QueueManagerORM).filter_by(name=name)
             if manager_query.count() > 0:  # existing
                 upd.update(inc_count, modified_on=datetime.utcnow())
                 num_updated = manager_query.update(upd)
             else:
                 # Manager did not exist, so create it
-                manager = QueueManagerORM(name=name, **upd)
+                manager = QueueManagerORM(name=name, **upd)  # type: ignore
                 session.add(manager)
-                session.commit()
+                session.flush()
                 num_updated = 1
 
             if do_log:
@@ -127,11 +84,16 @@ class ManagerSocket:
                 )
 
                 session.add(manager_log)
-                session.commit()
 
         return num_updated == 1
 
-    def deactivate(self, name: Optional[Iterable[str]] = None, modified_before: Optional[datetime] = None) -> List[str]:
+    def deactivate(
+        self,
+        name: Optional[Iterable[str]] = None,
+        modified_before: Optional[datetime] = None,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[str]:
         """Marks managers as inactive
 
         Parameters
@@ -140,6 +102,9 @@ class ManagerSocket:
             Names of managers to mark as inactive
         modified_before
             Mark all managers that were last modified before this date as inactive
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
 
         Returns
         -------
@@ -163,7 +128,8 @@ class ManagerSocket:
             .values(status=ManagerStatusEnum.inactive, modified_on=now)
             .returning(QueueManagerORM.name)
         )
-        with self._core_socket.session_scope() as session:
+
+        with self._core_socket.optional_session(session) as session:
             deactivated_names = session.execute(stmt).fetchall()
 
         # deactivated_names is a list of tuples
@@ -181,16 +147,18 @@ class ManagerSocket:
         include: Optional[Sequence[str]] = None,
         exclude: Optional[Sequence[str]] = None,
         missing_ok: bool = False,
+        *,
+        session: Optional[Session] = None,
     ) -> List[Optional[ManagerDict]]:
         """
-        Obtain manager information from specified names
+        Obtain manager information from specified names frm an existing session
 
         Names for managers are unique, since they include a UUID.
 
         The returned molecule ORMs will be in order of the given names
 
-        If missing_ok is False, then any manager names that are missing in the database will raise an exception. Otherwise,
-        the corresponding entry in the returned list of manager info will be None.
+        If missing_ok is False, then any manager names that are missing in the database will raise an exception.
+        Otherwise, the corresponding entry in the returned list of manager info will be None.
 
         Parameters
         ----------
@@ -205,6 +173,8 @@ class ManagerSocket:
         missing_ok
            If set to True, then missing managers will be tolerated, and the returned list of
            managers will contain None for the corresponding IDs that were not found.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
 
         Returns
         -------
@@ -217,33 +187,23 @@ class ManagerSocket:
             raise RuntimeError(f"Request for {len(name)} managers is over the limit of {self._manager_limit}")
 
         unique_names = list(set(name))
+        load_cols = get_query_proj_columns(QueueManagerORM, include, exclude)
 
-        query_cols_names, query_cols = get_query_proj_columns(QueueManagerORM, include, exclude)
-
-        with self._core_socket.session_scope(True) as session:
-            results = (
-                session.query(QueueManagerORM.id, QueueManagerORM.name, *query_cols)
+        with self._core_socket.optional_session(session, True) as session:
+            query = (
+                session.query(QueueManagerORM)
                 .filter(QueueManagerORM.name.in_(unique_names))
-                .all()
+                .options(load_only(*load_cols))
             )
 
-            # x[0] is the manager id, x[1] is the name, the rest are the columns we want to return
-            # we zip it with the column names to form our dictionary
-            result_map = {x[1]: dict(zip(query_cols_names, x[2:])) for x in results}
-
-            # If we want to include all the logs for these managers, do a separate query
-            # (this is why we needed the id above, even though we typically work with names which
-            # are unique)
             if include_logs:
-                # Mapping of manager ids to names
-                id_name_map = dict((x[0], x[1]) for x in results)
+                query = query.options(selectinload(QueueManagerORM.logs_obj))
 
-                self._attach_logs(session, id_name_map, result_map)
+            results = query.yield_per(500)
+            result_map = {r.name: r.dict() for r in results}
 
-        result_map = {k: self.cleanup_manager_dict(v) for k, v in result_map.items()}
-
-        # Put into the original order
-        ret = [result_map.get(x, None) for x in unique_names]
+        # Put into the requested order
+        ret = [result_map.get(x, None) for x in name]
 
         if missing_ok is False and None in ret:
             raise RuntimeError("Could not find all requested manager records")
@@ -263,6 +223,8 @@ class ManagerSocket:
         exclude: Optional[Iterable[str]] = None,
         limit: Optional[int] = None,
         skip: int = 0,
+        *,
+        session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[ManagerDict]]:
         """
         General query of managers in the database
@@ -296,6 +258,8 @@ class ManagerSocket:
         skip
             Skip this many results from the total list of matches. The limit will apply after skipping,
             allowing for pagination.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
 
         Returns
         -------
@@ -305,7 +269,7 @@ class ManagerSocket:
 
         limit = calculate_limit(self._manager_limit, limit)
 
-        query_cols_names, query_cols = get_query_proj_columns(QueueManagerORM, include, exclude)
+        load_cols = get_query_proj_columns(QueueManagerORM, include, exclude)
 
         and_query = []
         if id is not None:
@@ -323,16 +287,12 @@ class ManagerSocket:
         if modified_after is not None:
             and_query.append(QueueManagerORM.modified_on > modified_after)
 
-        with self._core_socket.session_scope(True) as session:
-            query = session.query(*query_cols).filter(and_(*and_query))
+        with self._core_socket.optional_session(session, True) as session:
+            query = session.query(QueueManagerORM).filter(and_(*and_query))
+            query = query.options(load_only(*load_cols))
             n_found = get_count(query)
             results = query.limit(limit).offset(skip).all()
-            result_dicts = [dict(zip(query_cols_names, x)) for x in results]
-
-        # TODO - int id
-        for x in result_dicts:
-            if "id" in x:
-                x["id"] = ObjectId(x["id"])
+            result_dicts = [x.dict() for x in results]
 
         meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
         return meta, result_dicts
@@ -346,6 +306,8 @@ class ManagerSocket:
         exclude: Optional[Iterable[str]] = None,
         limit=None,
         skip=0,
+        *,
+        session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[ManagerLogDict]]:
         """
         General query of managers in the database
@@ -371,6 +333,8 @@ class ManagerSocket:
         skip
             Skip this many results from the total list of matches. The limit will apply after skipping,
             allowing for pagination.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
 
         Returns
         -------
@@ -386,18 +350,14 @@ class ManagerSocket:
         if after is not None:
             and_query.append(QueueManagerLogORM.timestamp > after)
 
-        query_cols_names, query_cols = get_query_proj_columns(QueueManagerLogORM, include, exclude)
+        load_cols = get_query_proj_columns(QueueManagerLogORM, include, exclude)
 
-        with self._core_socket.session_scope(True) as session:
-            query = session.query(*query_cols).filter(and_(*and_query))
+        with self._core_socket.optional_session(session, True) as session:
+            query = session.query(QueueManagerLogORM).filter(and_(*and_query))
+            query = query.options(load_only(*load_cols))
             n_found = get_count(query)
             results = query.limit(limit).offset(skip).all()
-            result_dicts = [dict(zip(query_cols_names, x)) for x in results]
-
-        # TODO - int id
-        for x in result_dicts:
-            if "id" in x:
-                x["id"] = ObjectId(x["id"])
+            result_dicts = [x.dict() for x in results]
 
         meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
         return meta, result_dicts

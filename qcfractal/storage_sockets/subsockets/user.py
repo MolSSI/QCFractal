@@ -36,7 +36,10 @@ class UserSocket:
 
     @staticmethod
     def _orm_to_model(user: UserORM) -> UserInfo:
-        d = user.dict(exclude={"id", "role_id", "password"})
+        d = user.dict()
+        d.pop("id", None)
+        d.pop("role_id", None)
+        d.pop("password", None)
         d["role"] = user.role_obj.rolename
         return UserInfo(**d)
 

@@ -19,7 +19,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.orm import column_property, relationship
 
-from qcfractal.interface.models import DriverEnum, RecordStatusEnum
+from qcfractal.interface.models import DriverEnum, RecordStatusEnum, ObjectId
 from qcfractal.storage_sockets.models.sql_base import Base, MsgpackExt
 from qcfractal.storage_sockets.models.sql_models import KeywordsORM, KVStoreORM, MoleculeORM
 
@@ -115,6 +115,16 @@ class WavefunctionStoreORM(Base):
 
     # Extras
     extras = Column(MsgpackExt, nullable=True)
+
+    def dict(self):
+
+        d = Base.dict(self)
+
+        # TODO - INT ID should not be done
+        if "id" in d:
+            d["id"] = ObjectId(d["id"])
+
+        return d
 
 
 class ResultORM(BaseResultORM):

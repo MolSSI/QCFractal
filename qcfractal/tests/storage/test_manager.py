@@ -124,7 +124,10 @@ def test_manager_query(storage_socket):
     assert meta.success
     assert meta.n_returned == 1
     assert len(ret) == 1
-    assert ret[0] == {"cluster": "test_cluster"}  # We only returned the cluster
+    assert ret[0]["cluster"] == "test_cluster"
+
+    # we only asked for cluster. id is also returned automatically
+    assert set(ret[0].keys()) == {"cluster", "id"}
 
     meta, ret = storage_socket.manager.query(
         hostname=["test_hostname0"], include=["name", "uuid"], modified_before=datetime.utcnow()
