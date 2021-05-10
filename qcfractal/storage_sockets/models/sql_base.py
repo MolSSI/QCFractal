@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from qcfractal.interface.models import ObjectId
 from qcelemental.util import msgpackext_dumps, msgpackext_loads
 from sqlalchemy import and_, inspect, Integer
@@ -11,6 +13,11 @@ from sqlalchemy.types import TypeDecorator
 # from sqlalchemy.ext.orderinglist import ordering_list
 # from sqlalchemy.ext.associationproxy import association_proxy
 # from sqlalchemy.dialects.postgresql import aggregate_order_by
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import str, Any
 
 
 class MsgpackExt(TypeDecorator):
@@ -65,7 +72,7 @@ class Base:
 
         return ret
 
-    def dict(self, exclude=None, include_relations=None):
+    def dict(self) -> Dict[str, Any]:
         """
         Converts the ORM to a dictionary
 
@@ -78,28 +85,14 @@ class Base:
         NOTE: This is meant to replace to_dict above
         """
 
-        all_cols, hybrid, relations = self._get_col_types()
-        col_list = all_cols + hybrid
+        d = self.__dict__.copy()
+        d.pop("_sa_instance_state")
 
-        if include_relations is not None:
-            col_list += list(relations)
+        for k, v in d.items():
+            if isinstance(v, Base):
+                d[k] = v.dict()
 
-        if exclude is None:
-            ret = {k: getattr(self, k) for k in col_list}
-        else:
-            ret = {k: getattr(self, k) for k in col_list if k not in exclude}
-
-        # TODO - INT ID we shouldn't be doing this
-        # transform ids from int into ObjectId
-        id_fields = self._get_fieldnames_with_DB_ids_()
-        for key in id_fields:
-            if key in ret.keys() and ret[key] is not None:
-                if isinstance(ret[key], (list, tuple)):
-                    ret[key] = [ObjectId(i) for i in ret[key]]
-                else:
-                    ret[key] = ObjectId(ret[key])
-
-        return ret
+        return d
 
     @classmethod
     def _get_fieldnames_with_DB_ids_(cls):

@@ -4,6 +4,8 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 
 from __future__ import annotations
 
+import contextlib
+
 try:
     from sqlalchemy import create_engine, and_, or_, case, func, exc
     from sqlalchemy.exc import IntegrityError
@@ -19,7 +21,7 @@ except ImportError:
 import logging
 from collections.abc import Iterable
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 # pydantic classes
 from qcfractal.interface.models import (
@@ -57,6 +59,7 @@ from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_m
 from .models import Base
 
 if TYPE_CHECKING:
+    from sqlalchemy.orm.session import Session
     from ..services.service_util import BaseService
     from ..config import FractalConfig
 
@@ -242,7 +245,7 @@ class SQLAlchemySocket:
         return f"<SQLAlchemySocket: address='{self.uri}`>"
 
     @contextmanager
-    def session_scope(self, read_only=False):
+    def session_scope(self, read_only: bool = False):
         """Provide a transactional scope"""
 
         session = self.Session()
@@ -256,6 +259,47 @@ class SQLAlchemySocket:
             raise
         finally:
             session.close()
+
+    def optional_session(self, existing_session: Optional[Session], read_only: bool = False):
+        """
+        Use the existing session if available, otherwise use a new session
+
+        If an existing session is used, it is automatically flushed at the end, but not committed
+
+        This is meant to be used with `with`, and where existing_session may be None.
+
+         .. code-block:: python
+
+            def somefunction(session: Optional[Session]=None):
+                # will use session if not None, or will create a new session
+                with storage_socket.optional_session(session) as s:
+                    s.add(stuff)
+
+        Parameters
+        ----------
+        existing_session
+            An optional, existing sqlalchemy session
+        read_only
+            If True and a new session is created, it will be a read-only session
+        """
+
+        @contextmanager
+        def autoflushing_scope(session: Session, read_only: bool):
+            """
+            Wraps an existing session to flush at the end
+            """
+            try:
+                yield session
+
+                if not read_only:
+                    session.flush()
+            except:
+                raise
+
+        if existing_session is not None:
+            return autoflushing_scope(existing_session, read_only)
+        else:
+            return self.session_scope(read_only)
 
     def check_lib_versions(self):
         """Check the stored versions of elemental and fractal"""

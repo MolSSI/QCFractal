@@ -143,5 +143,5 @@ def test_keywords_get_nonexist(storage_socket):
     assert kw[3] is None
 
     # Now try with missing_ok = False. This should raise an exception
-    with pytest.raises(RuntimeError, match=r"Could not find all requested keyword records"):
+    with pytest.raises(RuntimeError, match=r"Could not find all requested keywords records"):
         storage_socket.keywords.get([ids[0], ids[1], ids[1], ids[0]], missing_ok=False)

@@ -67,7 +67,9 @@ class RoleSocket:
 
     @staticmethod
     def _role_orm_to_model(role_orm: RoleORM) -> RoleInfo:
-        return RoleInfo(**role_orm.dict(exclude={"id"}))
+        d = role_orm.dict()
+        d.pop("id", None)
+        return RoleInfo(**d)
 
     def _get_internal(self, session: Session, rolename: str) -> RoleORM:
         """
