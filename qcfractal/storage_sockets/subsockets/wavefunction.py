@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from sqlalchemy.orm import load_only
 from qcfractal.interface.models import WavefunctionProperties, ObjectId
 from qcfractal.storage_sockets.models import WavefunctionStoreORM
 from qcfractal.storage_sockets.sqlalchemy_common import get_query_proj_columns
@@ -25,19 +26,9 @@ class WavefunctionSocket:
     def wavefunction_to_orm(wfn: WavefunctionProperties) -> WavefunctionStoreORM:
         return WavefunctionStoreORM(**wfn.dict())  # type: ignore
 
-    @staticmethod
-    def cleanup_wavefunction_dict(wfn_dict: WavefunctionDict) -> WavefunctionDict:
-        """
-        Removes any fields of a molecule dictionary that are None
-        """
-
-        # TODO - int id
-        if "id" in wfn_dict:
-            wfn_dict["id"] = ObjectId(wfn_dict["id"])
-
-        return wfn_dict
-
-    def add_internal(self, session: Session, wavefunctions: Sequence[WavefunctionProperties]) -> List[ObjectId]:
+    def add(
+        self, wavefunctions: Sequence[WavefunctionProperties], *, session: Optional[Session] = None
+    ) -> List[ObjectId]:
         """
         Inserts wavefunction data into an existing session
 
@@ -48,10 +39,11 @@ class WavefunctionSocket:
 
         Parameters
         ----------
-        session
-            An existing SQLAlchemy session to add the data to
         wavefunctions
             A sequence of wavefunction data to add.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
 
         Returns
         -------
@@ -63,36 +55,15 @@ class WavefunctionSocket:
         # a list of ORMs (one for each wfn). We only go one at a time
 
         wfn_ids = []
-        for wfn in wavefunctions:
-            wfn_orm = self.wavefunction_to_orm(wfn)
-            session.add(wfn_orm)
-            session.flush()
-            wfn_ids.append(ObjectId(wfn_orm.id))
+
+        with self._core_socket.optional_session(session) as session:
+            for wfn in wavefunctions:
+                wfn_orm = self.wavefunction_to_orm(wfn)
+                session.add(wfn_orm)
+                session.flush()
+                wfn_ids.append(ObjectId(wfn_orm.id))
 
         return wfn_ids
-
-    def add(self, wavefunctions: Sequence[WavefunctionProperties]) -> List[ObjectId]:
-        """
-        Inserts wavefunction data into the database
-
-        Since all entries are always inserted, we don't need to return any
-        metadata like other types of insertions
-
-        Parameters
-        ----------
-        wavefunctions
-            A list/sequence of wavefunction data blobs to add.
-
-        Returns
-        -------
-        :
-            A list of all newly-inserted IDs
-        """
-
-        # TODO - remove me after switching to only using add_internal!
-
-        with self._core_socket.session_scope() as session:
-            return self.add_internal(session, wavefunctions)
 
     def get(
         self,
@@ -100,6 +71,8 @@ class WavefunctionSocket:
         include: Optional[Iterable[str]] = None,
         exclude: Optional[Iterable[str]] = None,
         missing_ok: bool = False,
+        *,
+        session: Optional[Session] = None,
     ) -> List[Optional[WavefunctionDict]]:
         """
         Obtain wavefunction data from the database.
@@ -117,6 +90,8 @@ class WavefunctionSocket:
         missing_ok
             If set to True, missing ids will be tolerated and the returned list
             will contain None for missing ids. Otherwise, an exception will be raised.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
 
         Returns
         -------
@@ -128,34 +103,30 @@ class WavefunctionSocket:
             raise RuntimeError(f"Request for {len(id)} wavefunctions is over the limit of {self._limit}")
 
         # TODO - int id
-        id = [int(x) for x in id]
+        int_id = [int(x) for x in id]
+        unique_ids = list(set(int_id))
 
-        unique_ids = list(set(id))
+        load_cols = get_query_proj_columns(WavefunctionStoreORM, include, exclude)
 
-        query_cols_names, query_cols = get_query_proj_columns(WavefunctionStoreORM, include, exclude)
-
-        with self._core_socket.session_scope(True) as session:
+        with self._core_socket.optional_session(session, True) as session:
             results = (
-                session.query(WavefunctionStoreORM.id, *query_cols)
+                session.query(WavefunctionStoreORM)
                 .filter(WavefunctionStoreORM.id.in_(unique_ids))
-                .all()
+                .options(load_only(*load_cols))
+                .yield_per(50)
             )
 
-            # x[0] is the id, the rest are the columns we want to return
-            # we zip it with the column names to form our dictionary
-            result_map = {x[0]: dict(zip(query_cols_names, x[1:])) for x in results}
+            result_map = {r.id: r.dict() for r in results}
 
-        result_map = {k: self.cleanup_wavefunction_dict(v) for k, v in result_map.items()}
-
-        # Put things back into the same order
-        ret = [result_map.get(x, None) for x in id]
+        # Put things back into the requested order
+        ret = [result_map.get(x, None) for x in int_id]
 
         if missing_ok is False and None in ret:
-            raise RuntimeError("Could not find all requested Wavefunction records")
+            raise RuntimeError("Could not find all requested wavefunction records")
 
         return ret
 
-    def delete_internal(self, session: Session, id: Sequence[int]) -> int:
+    def delete(self, id: Sequence[int], *, session: Optional[Session] = None) -> int:
         """
         Removes wavefunction objects from the database
 
@@ -164,10 +135,11 @@ class WavefunctionSocket:
 
         Parameters
         ----------
-        session
-            An existing SQLAlchemy session to add the data to
         id
             IDs of the wavefunction objects to remove
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
 
         Returns
         -------
@@ -175,5 +147,5 @@ class WavefunctionSocket:
             The number of deleted wavefunctions
         """
 
-        n = session.query(WavefunctionStoreORM).filter(WavefunctionStoreORM.id.in_(id)).delete()
-        return n
+        with self._core_socket.optional_session(session) as session:
+            return session.query(WavefunctionStoreORM).filter(WavefunctionStoreORM.id.in_(id)).delete()

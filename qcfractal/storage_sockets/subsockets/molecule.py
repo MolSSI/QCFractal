@@ -4,6 +4,7 @@ import logging
 import qcelemental
 
 from sqlalchemy import and_
+from sqlalchemy.orm import load_only
 from qcfractal.storage_sockets.models import MoleculeORM
 from qcfractal.interface.models import Molecule, ObjectId, InsertMetadata, DeleteMetadata, QueryMetadata
 from qcfractal.storage_sockets.sqlalchemy_socket import calculate_limit
@@ -55,23 +56,11 @@ class MoleculeSocket:
 
         return MoleculeORM(**mol_dict)  # type: ignore
 
-    @staticmethod
-    def cleanup_molecule_dict(mol_dict: MoleculeDict) -> MoleculeDict:
+    def add(
+        self, molecules: Sequence[Molecule], *, session: Optional[Session] = None
+    ) -> Tuple[InsertMetadata, List[ObjectId]]:
         """
-        Removes any fields of a molecule dictionary that are None
-        """
-
-        # TODO - int id
-        if "id" in mol_dict:
-            mol_dict["id"] = ObjectId(mol_dict["id"])
-
-        # Also, remove any values that are None/Null in the db
-        # The molecule pydantic model cannot always handle these, so let the model handle the defaults
-        return {k: v for k, v in mol_dict.items() if v is not None}
-
-    def add_internal(self, session: Session, molecules: Sequence[Molecule]) -> Tuple[InsertMetadata, List[ObjectId]]:
-        """
-        Add molecules to a session
+        Add molecules to the database
 
         This checks if the molecule already exists in the database via its hash. If so, it returns
         the existing id, otherwise it will insert it and return the new id.
@@ -80,10 +69,11 @@ class MoleculeSocket:
 
         Parameters
         ----------
-        session
-            An existing SQLAlchemy session to add the data to
         molecules
             Molecule data to add to the session
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
 
         Returns
         -------
@@ -99,7 +89,8 @@ class MoleculeSocket:
 
         molecule_orm = [self.molecule_to_orm(x) for x in molecules]
 
-        meta, added_ids = insert_general(session, molecule_orm, (MoleculeORM.molecule_hash,), (MoleculeORM.id,))
+        with self._core_socket.optional_session(session) as session:
+            meta, added_ids = insert_general(session, molecule_orm, (MoleculeORM.molecule_hash,), (MoleculeORM.id,))
 
         # insert_general should always succeed or raise exception
         assert meta.success
@@ -113,6 +104,8 @@ class MoleculeSocket:
         include: Optional[Sequence[str]] = None,
         exclude: Optional[Sequence[str]] = None,
         missing_ok: bool = False,
+        *,
+        session: Optional[Session] = None,
     ) -> List[Optional[MoleculeDict]]:
         """
         Obtain molecules from with specified IDs
@@ -133,6 +126,8 @@ class MoleculeSocket:
         missing_ok
            If set to True, then missing molecules will be tolerated, and the returned list of
            Molecules will contain None for the corresponding IDs that were not found.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
 
         Returns
         -------
@@ -141,72 +136,43 @@ class MoleculeSocket:
             If missing_ok is True, then this list will contain None where the molecule was missing.
         """
 
-        if len(id) > self._limit:
-            raise RuntimeError(f"Request for {len(id)} molecules is over the limit of {self._limit}")
+        with self._core_socket.optional_session(session, True) as session:
+            if len(id) > self._limit:
+                raise RuntimeError(f"Request for {len(id)} molecules is over the limit of {self._limit}")
 
-        # TODO - int id
-        id = [int(x) for x in id]
+            # TODO - int id
+            int_id = [int(x) for x in id]
+            unique_ids = list(set(int_id))
 
-        unique_ids = list(set(id))
+            # TODO - remove this eventually
+            # right now, a lot of code depends on these fields not being here
+            # but that is not right. After changing the client code to be more dict-oriented,
+            # then we can add these back
+            if exclude is not None:
+                exclude = list(exclude) + ["molecule_hash", "molecular_formula"]
+            else:
+                exclude = ["molecule_hash", "molecular_formula"]
 
-        # TODO - remove this eventually
-        # right now, a lot of code depends on these fields not being here
-        # but that is not right. After changing the client code to be more dict-oriented,
-        # then we can add these back
-        if exclude is not None:
-            exclude = list(exclude) + ["molecule_hash", "molecular_formula"]
-        else:
-            exclude = ["molecule_hash", "molecular_formula"]
+            load_cols = get_query_proj_columns(MoleculeORM, include, exclude)
 
-        query_cols_names, query_cols = get_query_proj_columns(MoleculeORM, include, exclude)
+            results = (
+                session.query(MoleculeORM)
+                .filter(MoleculeORM.id.in_(unique_ids))
+                .options(load_only(*load_cols))
+                .yield_per(500)
+            )
+            result_map = {r.id: r.dict() for r in results}
 
-        with self._core_socket.session_scope(True) as session:
-            results = session.query(MoleculeORM.id, *query_cols).filter(MoleculeORM.id.in_(unique_ids)).all()
+            # Put into the requested order
+            ret = [result_map.get(x, None) for x in int_id]
 
-            # x[0] is the id, the rest are the columns we want to return
-            # we zip it with the column names to form our dictionary
-            result_map = {x[0]: dict(zip(query_cols_names, x[1:])) for x in results}
+            if missing_ok is False and None in ret:
+                raise RuntimeError("Could not find all requested molecule records")
 
-        result_map = {k: self.cleanup_molecule_dict(v) for k, v in result_map.items()}
-
-        # Put into the original order
-        ret = [result_map.get(x, None) for x in id]
-
-        if missing_ok is False and None in ret:
-            raise RuntimeError("Could not find all requested molecule records")
-
-        return ret
-
-    def add(self, molecules: Sequence[Molecule]) -> Tuple[InsertMetadata, List[ObjectId]]:
-        """
-        Adds molecules to the database.
-
-        This function returns metadata about the insertion, and a list of IDs of the molecules in the database.
-        This list will be in the same order as the `molecules` parameter.
-
-        For each molecule given, the database will be checked to see if it already exists in the database.
-        If it does, that ID will be returned. Otherwise, the molecule will be added to the database and the
-        new ID returned.
-
-        On any error, this function will raise an exception.
-
-        Parameters
-        ----------
-        molecules
-            A List of Molecule objects to add.
-
-        Returns
-        -------
-        :
-            Metadata about the insertion, and a list of Molecule ids. The ids will be in the
-            order of the input molecules.
-        """
-
-        with self._core_socket.session_scope() as session:
-            return self.add_internal(session, molecules)
+            return ret
 
     def add_mixed(
-        self, molecule_data: Sequence[Union[ObjectId, Molecule]]
+        self, molecule_data: Sequence[Union[ObjectId, Molecule]], *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, List[Optional[ObjectId]]]:
         """
         Add a mixed format molecule specification to the database.
@@ -219,6 +185,14 @@ class MoleculeSocket:
         If a Molecule object is given, it will be added to the database if it does not already exist
         in the database (based on the hash) and the existing ID will be returned. Otherwise, the new
         ID will be returned.
+
+        Parameters
+        ----------
+        molecule_data
+            Molecule data to add. Can be a mix of IDs and Molecule objects
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
         """
 
         # TODO - INT ID
@@ -228,7 +202,7 @@ class MoleculeSocket:
             x if isinstance(x, int) else self.molecule_to_orm(x) for x in molecule_data_2
         ]
 
-        with self._core_socket.session_scope() as session:
+        with self._core_socket.optional_session(session) as session:
             meta, all_ids = insert_mixed_general(
                 session, MoleculeORM, molecule_orm, MoleculeORM.id, (MoleculeORM.molecule_hash,), (MoleculeORM.id,)
             )
@@ -237,7 +211,7 @@ class MoleculeSocket:
         # TODO - INT ID
         return meta, [ObjectId(x[0]) if x is not None else None for x in all_ids]
 
-    def delete(self, id: List[ObjectId]) -> DeleteMetadata:
+    def delete(self, id: List[ObjectId], *, session: Optional[Session] = None) -> DeleteMetadata:
         """
         Removes molecules from the database based on id
 
@@ -245,6 +219,9 @@ class MoleculeSocket:
         ----------
         id
             IDs of the molecules to remove
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
 
         Returns
         -------
@@ -255,8 +232,7 @@ class MoleculeSocket:
         # TODO - INT ID
         id_lst = [(int(x),) for x in id]
 
-        with self._core_socket.session_scope() as session:
-            # session will commit on exiting from the context
+        with self._core_socket.optional_session(session) as session:
             return delete_general(session, MoleculeORM, (MoleculeORM.id,), id_lst)
 
     def query(
@@ -268,6 +244,8 @@ class MoleculeSocket:
         exclude: Optional[Iterable[str]] = None,
         limit: Optional[int] = None,
         skip: int = 0,
+        *,
+        session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[MoleculeDict]]:
         """
         General query of molecules in the database
@@ -293,6 +271,8 @@ class MoleculeSocket:
         skip
             Skip this many results from the total list of matches. The limit will apply after skipping,
             allowing for pagination.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
 
         Returns
         -------
@@ -319,7 +299,7 @@ class MoleculeSocket:
         else:
             exclude = ["molecule_hash", "molecular_formula"]
 
-        query_cols_names, query_cols = get_query_proj_columns(MoleculeORM, include, exclude)
+        load_cols = get_query_proj_columns(MoleculeORM, include, exclude)
 
         and_query = []
         if molecular_formula is not None:
@@ -329,16 +309,12 @@ class MoleculeSocket:
         if id is not None:
             and_query.append(MoleculeORM.id.in_(id))
 
-        with self._core_socket.session_scope(True) as session:
-            query = session.query(*query_cols).filter(and_(*and_query))
+        with self._core_socket.optional_session(session, True) as session:
+            query = session.query(MoleculeORM).filter(and_(*and_query))
+            query = query.options(load_only(*load_cols))
             n_found = get_count(query)
-            results = query.limit(limit).offset(skip).all()
-            result_dicts = [dict(zip(query_cols_names, x)) for x in results]
-
-        # Remove any values that are None/Null in the db
-        # The molecule pydantic model cannot always handle these, so let the model
-        # handle the defaults
-        result_dicts = list(map(self.cleanup_molecule_dict, result_dicts))
+            results = query.limit(limit).offset(skip).yield_per(500)
+            result_dicts = [x.dict() for x in results]
 
         meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
         return meta, result_dicts

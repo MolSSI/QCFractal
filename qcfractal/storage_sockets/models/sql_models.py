@@ -26,7 +26,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
 
-from qcfractal.interface.models import ManagerStatusEnum, PriorityEnum, TaskStatusEnum, CompressionEnum
+from qcfractal.interface.models import ManagerStatusEnum, PriorityEnum, TaskStatusEnum, CompressionEnum, ObjectId
 from qcfractal.storage_sockets.models.sql_base import Base, MsgpackExt
 
 
@@ -127,6 +127,29 @@ class KVStoreORM(Base):
     value = Column(JSON, nullable=True)
     data = Column(LargeBinary, nullable=True)
 
+    def dict(self):
+
+        d = Base.dict(self)
+
+        # Old way: store a plain string or dict in "value"
+        # New way: store (possibly) compressed output in "data"
+        val = d.pop("value")
+
+        # If stored the old way, convert to the new way
+        if d["data"] is None:
+            # Set the data field to be the string or dictionary
+            d["data"] = val
+
+            # Remove these and let the model handle the defaults
+            d.pop("compression")
+            d.pop("compression_level")
+
+        # TODO - INT ID should not be done
+        if "id" in d:
+            d["id"] = ObjectId(d["id"])
+
+        return d
+
 
 class MoleculeORM(Base):
     """
@@ -178,6 +201,18 @@ class MoleculeORM(Base):
 
     __table_args__ = (Index("ix_molecule_hash", "molecule_hash", unique=False),)
 
+    def dict(self):
+
+        d = Base.dict(self)
+
+        # TODO - INT ID should not be done
+        if "id" in d:
+            d["id"] = ObjectId(d["id"])
+
+        # Also, remove any values that are None/Null in the db
+        # The molecule pydantic model cannot always handle these, so let the model handle the defaults
+        return {k: v for k, v in d.items() if v is not None}
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -198,7 +233,16 @@ class KeywordsORM(Base):
     comments = Column(String)
 
     __table_args__ = (Index("ix_keywords_hash_index", "hash_index", unique=True),)
-    # meta = {'indexes': [{'fields': ('hash_index', ), 'unique': True}]}
+
+    def dict(self):
+
+        d = Base.dict(self)
+
+        # TODO - INT ID should not be done
+        if "id" in d:
+            d["id"] = ObjectId(d["id"])
+
+        return d
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -377,4 +421,21 @@ class QueueManagerORM(Base):
     programs = Column(JSON)
     procedures = Column(JSON)
 
+    logs_obj = relationship(QueueManagerLogORM, lazy="select")
+
     __table_args__ = (Index("ix_queue_manager_status", "status"), Index("ix_queue_manager_modified_on", "modified_on"))
+
+    def dict(self):
+        d = Base.dict(self)
+        # TODO: Are passwords stored anywhere else? Other kinds of passwords?
+        if "configuration" in d and isinstance(d["configuration"], dict) and "server" in d["configuration"]:
+            d["configuration"]["server"].pop("password", None)
+
+        # TODO - int id
+        if "id" in d:
+            d["id"] = ObjectId(d["id"])
+
+        if "logs_obj" in d:
+            d["logs"] = d.pop("logs_obj")
+
+        return d

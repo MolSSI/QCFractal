@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 from qcfractal.storage_sockets.models import KVStoreORM
-from qcfractal.storage_sockets.sqlalchemy_common import get_query_proj_columns
 from qcfractal.interface.models import KVStore, ObjectId
 
 from typing import TYPE_CHECKING
@@ -25,30 +24,9 @@ class OutputStoreSocket:
     def output_to_orm(output: KVStore) -> KVStoreORM:
         return KVStoreORM(**output.dict())  # type: ignore
 
-    @staticmethod
-    def cleanup_outputstore_dict(out_dict: OutputDict) -> OutputDict:
-        # Old way: store a plain string or dict in "value"
-        # New way: store (possibly) compressed output in "data"
-        val = out_dict.pop("value")
-
-        # If stored the old way, convert to the new way
-        if out_dict["data"] is None:
-            # Set the data field to be the string or dictionary
-            out_dict["data"] = val
-
-            # Remove these and let the model handle the defaults
-            out_dict.pop("compression")
-            out_dict.pop("compression_level")
-
-        # TODO - int id
-        if "id" in out_dict:
-            out_dict["id"] = ObjectId(out_dict["id"])
-
-        return out_dict
-
-    def add_internal(self, session: Session, outputs: Sequence[KVStore]) -> List[ObjectId]:
+    def add(self, outputs: Sequence[KVStore], *, session: Optional[Session] = None) -> List[ObjectId]:
         """
-        Inserts output store data into an existing session
+        Inserts output store data into the database
 
         Since all entries are always inserted, we don't need to return any
         metadata like other types of insertions
@@ -57,10 +35,11 @@ class OutputStoreSocket:
 
         Parameters
         ----------
-        session
-            An existing SQLAlchemy session to add the data to
         outputs
             A sequence of output store data to add.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
 
         Returns
         -------
@@ -73,38 +52,18 @@ class OutputStoreSocket:
 
         output_ids = []
 
-        for output in outputs:
-            output_orm = self.output_to_orm(output)
-            session.add(output_orm)
-            session.flush()
-            output_ids.append(ObjectId(output_orm.id))
+        with self._core_socket.optional_session(session) as session:
+            for output in outputs:
+                output_orm = self.output_to_orm(output)
+                session.add(output_orm)
+                session.flush()
+                output_ids.append(ObjectId(output_orm.id))
 
         return output_ids
 
-    def add(self, outputs: List[KVStore]) -> List[ObjectId]:
-        """
-        Inserts outputs into the database
-
-        Since all entries are always inserted, we don't need to return any
-        metadata like other types of insertions
-
-        Parameters
-        ----------
-        outputs
-            A list/sequence of KVStore objects add.
-
-        Returns
-        -------
-        :
-            A list of all the newly-inserted IDs
-        """
-
-        # TODO - remove me after switching to only using add_internal!
-
-        with self._core_socket.session_scope() as session:
-            return self.add_internal(session, outputs)
-
-    def get(self, id: Sequence[ObjectId], missing_ok: bool = False) -> List[Optional[OutputDict]]:
+    def get(
+        self, id: Sequence[ObjectId], missing_ok: bool = False, *, session: Optional[Session] = None
+    ) -> List[Optional[OutputDict]]:
         """
         Obtain outputs from the database
 
@@ -121,6 +80,8 @@ class OutputStoreSocket:
            If set to True, then missing ids will be tolerated, and the returned list of
            KVStore will contain None for the corresponding IDs that were not found.
            Otherwise, an exception will be raised.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
 
         Returns
         -------
@@ -134,33 +95,22 @@ class OutputStoreSocket:
             raise RuntimeError(f"Request for {len(id)} outputs is over the limit of {self._limit}")
 
         # TODO - int id
-        id = [int(x) for x in id]
+        int_id = [int(x) for x in id]
+        unique_ids = [list(set(int_id))]
 
-        unique_ids = list(set(id))
+        with self._core_socket.optional_session(session, True) as session:
+            results = session.query(KVStoreORM).filter(KVStoreORM.id.in_(unique_ids)).yield_per(50)
+            result_map = {r.id: r.dict() for r in results}
 
-        query_cols_names, query_cols = get_query_proj_columns(KVStoreORM)
-
-        with self._core_socket.session_scope(True) as session:
-            # No need to split out id like in other subsockets, we always include all columns
-            results = session.query(*query_cols).filter(KVStoreORM.id.in_(unique_ids)).all()
-            result_dicts = [dict(zip(query_cols_names, x)) for x in results]
-
-        # Fixes some old fields
-        result_dicts = list(map(self.cleanup_outputstore_dict, result_dicts))
-
-        # TODO - int id
-        # We previously changed int to ObjectId in cleanup_outputstore_dict
-        result_map = {int(x["id"]): x for x in result_dicts}
-
-        # Put into the original order
-        ret = [result_map.get(x, None) for x in id]
+        # Put into the requested order
+        ret = [result_map.get(x, None) for x in int_id]
 
         if missing_ok is False and None in ret:
             raise RuntimeError("Could not find all requested KVStore records")
 
         return ret
 
-    def delete_internal(self, session: Session, id: Sequence[int]) -> int:
+    def delete(self, id: Sequence[int], *, session: Optional[Session] = None) -> int:
         """
         Removes outputs objects from the database
 
@@ -169,10 +119,11 @@ class OutputStoreSocket:
 
         Parameters
         ----------
-        session
-            An existing SQLAlchemy session to add the data to
         id
             IDs of the output objects to remove
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
 
         Returns
         -------
@@ -180,5 +131,5 @@ class OutputStoreSocket:
             The number of deleted outputs
         """
 
-        n = session.query(KVStoreORM).filter(KVStoreORM.id.in_(id)).delete()
-        return n
+        with self._core_socket.optional_session(session) as session:
+            return session.query(KVStoreORM).filter(KVStoreORM.id.in_(id)).delete()
