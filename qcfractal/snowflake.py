@@ -249,7 +249,7 @@ class FractalSnowflake:
         if ids is None:
             c = self.client()
             proc = c.query_tasks(status=["WAITING", "RUNNING"])
-            ids = [x.base_result for x in proc]
+            ids = [x["base_result_id"] for x in proc]
 
         ids = [int(x) for x in ids]
 

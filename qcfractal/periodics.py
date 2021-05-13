@@ -117,7 +117,7 @@ class FractalPeriodics:
 
         for name in dead_managers:
             # For each manager, reset any orphaned tasks that belong to that manager
-            n_incomplete = self.storage_socket.queue_reset_status(manager=name, reset_running=True)
+            n_incomplete = self.storage_socket.task.reset_status(manager=name, reset_running=True)
             self.logger.info("Hearbeat missing from {}. Recycling {} incomplete tasks.".format(name, n_incomplete))
 
         # Set up the next run of this function

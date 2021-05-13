@@ -180,7 +180,7 @@ class OptimizationTasks(BaseTasks):
 
             new_tasks.append(task)
 
-        return self.storage.queue_submit(new_tasks)
+        return self.storage.task.add(new_tasks)
 
     def handle_completed_output(self, task_id: int, base_result_id: int, manager_name: str, result: OptimizationResult):
         """Save the results of the procedure.
@@ -239,7 +239,7 @@ class OptimizationTasks(BaseTasks):
         updates.append(rec)
 
         self.storage.update_procedures(updates)
-        self.storage.queue_mark_complete(completed_tasks)
+        self.storage.task.mark_complete(completed_tasks)
 
         # Return success/failures
         # (failures is a placeholder for now)

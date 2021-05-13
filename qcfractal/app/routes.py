@@ -43,6 +43,8 @@ from ..interface.models.rest_models import (
     KVStoreGETResponse,
     ManagerInfoGETBody,
     ManagerInfoGETResponse,
+    TaskQueueGETBody,
+    TaskQueueGETResponse,
     WavefunctionStoreGETBody,
     WavefunctionStoreGETResponse,
 )
@@ -766,11 +768,13 @@ def get_optimization(query_type: str):
 @main.route("/task_queue", methods=["GET"])
 @check_access
 def get_task_queue():
-    body_model, response_model = rest_model("task_queue", "get")
-    body = parse_bodymodel(body_model)
+    body = parse_bodymodel(TaskQueueGETBody)
 
-    tasks = storage_socket.get_queue(**{**body.data.dict(), **body.meta.dict()})
-    response = response_model(**tasks)
+    meta, tasks = storage_socket.task.query(**{**body.data.dict(), **body.meta.dict()})
+
+    # Convert the new metadata format to the old format
+    meta_old = convert_get_response_metadata(meta, missing=[])
+    response = TaskQueueGETResponse(meta=meta_old, data=tasks)
 
     return SerializedResponse(response)
 
@@ -812,7 +816,7 @@ def put_task_queue():
         d = body.data.dict()
         d.pop("new_tag", None)
         d.pop("new_priority", None)
-        tasks_updated = storage_socket.queue_reset_status(**d, reset_error=True)
+        tasks_updated = storage_socket.task.reset_status(**d, reset_error=True)
         data = {"n_updated": tasks_updated}
     elif body.meta.operation == "regenerate":
         tasks_updated = 0
@@ -839,11 +843,11 @@ def put_task_queue():
                 # If we inserted a new task, then also reset base result statuses
                 # (ie, if it was running, then it obviously isn't since we made a new task)
                 if n_inserted > 0:
-                    storage_socket.reset_base_result_status(id=body.data.base_result)
+                    storage_socket.task.reset_base_result_status(id=body.data.base_result)
 
             data = {"n_updated": tasks_updated}
     elif body.meta.operation == "modify":
-        tasks_updated = storage_socket.queue_modify_tasks(
+        tasks_updated = storage_socket.task.modify(
             id=body.data.id,
             base_result=body.data.base_result,
             new_tag=body.data.new_tag,
@@ -954,8 +958,8 @@ def _insert_complete_tasks(storage_socket, body: QueueManagerPOSTBody):
     current_app.logger.info("              Task ids: " + " ".join(str(x) for x in task_ids))
 
     # Pivot data so that we group all results in categories
-    queue = storage_socket.get_queue(id=task_ids)["data"]
-    queue = {v.id: v for v in queue}
+    queue = storage_socket.task.query(id=[task_ids])[1]
+    queue = {str(v["id"]): v for v in queue}
 
     task_success = 0
     task_failures = 0
@@ -977,17 +981,17 @@ def _insert_complete_tasks(storage_socket, body: QueueManagerPOSTBody):
             # Perform some checks for consistency
             #################################################################
             # Information passed to handle_completed_output for the various output parsers
-            base_result_id = int(existing_task_data.base_result)
+            base_result_id = int(existing_task_data['base_result_id'])
 
             # Is the task in the running state
             # If so, do not attempt to modify the task queue. Just move on
-            if existing_task_data.status != TaskStatusEnum.running:
+            if existing_task_data['status'] != TaskStatusEnum.running:
                 current_app.logger.warning(f"Task id {task_id} is not in the running state.")
                 task_failures += 1
 
             # Was the manager that sent the data the one that was assigned?
             # If so, do not attempt to modify the task queue. Just move on
-            elif existing_task_data.manager != manager_name:
+            elif existing_task_data['manager'] != manager_name:
                 current_app.logger.warning(
                     f"Task id {task_id} belongs to {existing_task_data.manager}, not this manager"
                 )
@@ -1005,7 +1009,7 @@ def _insert_complete_tasks(storage_socket, body: QueueManagerPOSTBody):
 
             # Manager returned a full, successful result
             else:
-                parser = get_procedure_parser(queue[task_id].parser, storage_socket)
+                parser = get_procedure_parser(queue[task_id]['parser'], storage_socket)
                 parser.handle_completed_output(task_id, base_result_id, manager_name, result)
                 task_success += 1
 
@@ -1014,7 +1018,7 @@ def _insert_complete_tasks(storage_socket, body: QueueManagerPOSTBody):
             error = {"error_type": "internal_fractal_error", "error_message": msg}
             failed_op = FailedOperation(error=error, success=False)
 
-            base_result_id = int(existing_task_data.base_result)
+            base_result_id = int(existing_task_data['base_result_id'])
 
             failure_parser.handle_completed_output(task_id, base_result_id, manager_name, failed_op)
             current_app.logger.error("update: ERROR\n{}".format(msg))
@@ -1040,7 +1044,7 @@ def get_queue_manager():
     name = _get_name_from_metadata(body.meta)
 
     # Grab new tasks and write out
-    new_tasks = storage_socket.queue_get_next(
+    new_tasks = storage_socket.task.claim(
         name, body.meta.programs, body.meta.procedures, limit=body.data.limit, tag=body.meta.tag
     )
     response = QueueManagerGETResponse(
@@ -1114,7 +1118,7 @@ def put_queue_manager():
         # current_app.logger.info("QueueManager: New active manager {} detected.".format(name))
 
     elif op == "shutdown":
-        nshutdown = storage_socket.queue_reset_status(manager=name, reset_running=True)
+        nshutdown = storage_socket.task.reset_status(manager=name, reset_running=True)
         storage_socket.manager.update(name, returned=nshutdown, status="INACTIVE", **body.meta.dict(), log=True)
 
         # current_app.logger.info("QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(name, nshutdown))
