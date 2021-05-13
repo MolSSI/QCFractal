@@ -406,11 +406,11 @@ def storage_results(storage_socket):
     yield storage_socket
 
     # Cleanup
-    all_tasks = storage_socket.get_queue()["data"]
-    storage_socket.del_tasks(id=[task.id for task in all_tasks])
+    all_tasks = storage_socket.task.query()["data"]
+    storage_socket.task.delete(id=[task.id for task in all_tasks])
 
     result_ids = [x for x in results_insert["data"]]
-    ret = storage_socket.del_results(result_ids)
+    ret = storage_socket.task.delete(result_ids)
     assert ret == results_insert["meta"]["n_inserted"]
 
     ret = storage_socket.molecule.delete(mol_insert)
@@ -510,12 +510,12 @@ def test_queue_submit_sql(storage_results):
     )
 
     # Submit a new task
-    ret = storage_results.queue_submit([task1])
+    ret = storage_results.task.add([task1])
     assert len(ret["data"]) == 1
     assert ret["meta"]["n_inserted"] == 1
 
     # submit a duplicate task with a hook
-    ret = storage_results.queue_submit([task1])
+    ret = storage_results.task.add([task1])
     assert len(ret["data"]) == 1
     assert ret["meta"]["n_inserted"] == 0
     assert len(ret["meta"]["duplicates"]) == 1
@@ -533,7 +533,7 @@ def test_queue_submit_sql(storage_results):
     )
 
     # submit repeated tasks
-    ret = storage_results.queue_submit([task2, task2])
+    ret = storage_results.task.add([task2, task2])
     assert len(ret["data"]) == 2
     assert ret["meta"]["n_inserted"] == 1
     assert ret["data"][0] == ret["data"][1]
@@ -564,29 +564,29 @@ def test_storage_queue_roundtrip(storage_results, status):
     task2 = ptl.models.TaskRecord(**task_template)
 
     # Submit a task
-    r = storage_results.queue_submit([task1, task2])
+    r = storage_results.task.add([task1, task2])
     assert len(r["data"]) == 2
 
     # Add manager 'test_manager'
-    storage_results.manager.update("test_manager")
-    storage_results.manager.update("test_manager2")
+    storage_results.manager.update("test_manager", status="ACTIVE")
+    storage_results.manager.update("test_manager2", status="ACTIVE")
     # Query for next tasks
-    r = storage_results.queue_get_next("test_manager", ["p1"], ["p1"], limit=1)
+    r = storage_results.task.claim("test_manager", ["p1"], ["p1"], limit=1)
     assert r[0].spec.function == task1.spec.function
     queue_id = r[0].id
 
-    queue_id2 = storage_results.queue_get_next("test_manager2", ["p1"], ["p1"], limit=1)[0].id
+    queue_id2 = storage_results.task.claim("test_manager2", ["p1"], ["p1"], limit=1)[0].id
 
     if status == "ERROR":
-        r = storage_results.queue_mark_error([queue_id, queue_id2])
+        r = storage_results.task.mark_error([queue_id, queue_id2])
     elif status == "COMPLETE":
-        r = storage_results.queue_mark_complete([queue_id2, queue_id])
+        r = storage_results.task.mark_complete([queue_id2, queue_id])
         # Check queue is empty
-        tasks = storage_results.queue_get_next("test_manager", ["p1"], ["p1"])
+        tasks = storage_results.task.claim("test_manager", ["p1"], ["p1"])
         assert len(tasks) == 0
 
         # completed task should be deleted
-        found = storage_results.queue_get_by_id([queue_id, queue_id2])
+        found = storage_results.task.get([queue_id, queue_id2], missing_ok=True)
         assert len(found) == 0
 
     assert r == 2
@@ -615,7 +615,7 @@ def test_queue_submit_many_order(storage_results):
     task3 = ptl.models.TaskRecord(**task_template, base_result=results[5]["id"])
 
     # Submit tasks
-    ret = storage_results.queue_submit([task1, task2, task3])
+    ret = storage_results.task.add([task1, task2, task3])
     assert len(ret["data"]) == 3
     assert ret["meta"]["n_inserted"] == 3
 
@@ -623,7 +623,7 @@ def test_queue_submit_many_order(storage_results):
     storage_results.manager.update("test_manager")
 
     # Get tasks for manager 'test_manager'
-    r = storage_results.queue_get_next("test_manager", ["p1"], ["p1"], limit=1)
+    r = storage_results.task.claim("test_manager", ["p1"], ["p1"], limit=1)
     assert len(r) == 1
     # will get the first submitted result first
     assert r[0].base_result == results[3]["id"]
@@ -937,10 +937,10 @@ def test_reset_task_blocks(storage_socket):
     """
 
     with pytest.raises(ValueError):
-        storage_socket.queue_reset_status(reset_running=True)
+        storage_socket.task.reset_status(reset_running=True)
 
     with pytest.raises(ValueError):
-        storage_socket.queue_reset_status(reset_error=True)
+        storage_socket.task.reset_status(reset_error=True)
 
 
 def test_collections_include_exclude(storage_socket):

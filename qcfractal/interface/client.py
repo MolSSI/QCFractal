@@ -1,14 +1,16 @@
 """Provides an interface the QCDB Server instance"""
 
+from __future__ import annotations
 from . import __version__
 
 import json
 import os
+import warnings
 from datetime import datetime
 from pkg_resources import parse_version
 
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, DefaultDict, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, DefaultDict, Dict, List, Optional, Tuple, Union, Sequence, TypeVar
 
 
 import pandas as pd
@@ -46,6 +48,24 @@ if TYPE_CHECKING:  # pragma: no cover
         ServiceQueueGETResponse,
         TaskQueueGETResponse,
     )
+
+    _T = TypeVar("_T")
+
+
+def make_list(obj: Optional[Union[_T, Sequence[_T]]]) -> Optional[List[_T]]:
+    """
+    Returns a list containing obj if obj is not a list or sequence type object
+    """
+
+    if obj is None:
+        return None
+    # Be careful. strings are sequences
+    if isinstance(obj, str):
+        return [obj]
+    if not isinstance(obj, Sequence):
+        return [obj]
+    return list(obj)
+
 
 ### Common docs
 
@@ -961,7 +981,6 @@ class FractalClient(object):
     def query_tasks(
         self,
         id: Optional["QueryObjectId"] = None,
-        hash_index: Optional["QueryStr"] = None,
         program: Optional["QueryStr"] = None,
         status: Optional["QueryStr"] = None,
         base_result: Optional["QueryStr"] = None,
@@ -978,8 +997,6 @@ class FractalClient(object):
         ----------
         id : QueryObjectId, optional
             Queries the Tasks ``id`` field.
-        hash_index : QueryStr, optional
-            Queries the Tasks ``hash_index`` field.
         program : QueryStr, optional
             Queries the Tasks ``program`` field.
         status : QueryStr, optional
@@ -1008,7 +1025,7 @@ class FractalClient(object):
         Examples
         --------
 
-        >>> client.query_tasks(id="5bd35af47b878715165f8225",include=["status"])
+        >>> client.query_tasks(id="12345",include=["status"])
         [{"status": "WAITING"}]
 
 
@@ -1017,13 +1034,12 @@ class FractalClient(object):
         payload = {
             "meta": {"limit": limit, "skip": skip, "include": include},
             "data": {
-                "id": id,
-                "hash_index": hash_index,
-                "program": program,
-                "status": status,
-                "base_result": base_result,
-                "tag": tag,
-                "manager": manager,
+                "id": make_list(id),
+                "program": make_list(program),
+                "status": make_list(status),
+                "base_result": make_list(base_result),
+                "tag": make_list(tag),
+                "manager": make_list(manager),
             },
         }
 

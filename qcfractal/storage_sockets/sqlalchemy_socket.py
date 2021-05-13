@@ -649,22 +649,8 @@ class SQLAlchemySocket:
     def del_results(self, ids: List[str]):
         return self.result.delete(ids)
 
-    # ~~~~~~~~~~~~~~~~~ Wavefunction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    def add_wavefunction_store(self, blobs_list: List[Dict[str, Any]]):
-        return self.wavefunction.add(blobs_list)
-
-    def get_wavefunction_store(
-        self,
-        id: List[str] = None,
-        include: Optional[List[str]] = None,
-        exclude: Optional[List[str]] = None,
-        limit: int = None,
-        skip: int = 0,
-    ) -> Dict[str, Any]:
-        return self.wavefunction.get(id, include, exclude, limit, skip)
-
     # ~~~~~~~~~~~~~~~~~~ Procedures ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     def add_procedures(self, record_list: List["BaseRecord"]):
         return self.procedure.add(record_list)
 
@@ -733,82 +719,3 @@ class SQLAlchemySocket:
 
     def services_completed(self, records_list: List["BaseService"]) -> int:
         return self.service.completed(records_list)
-
-    # ~~~~~~~~~~~~~~~~~ Task queue ~~~~~~~~~~~~~~~~~~
-
-    def queue_submit(self, data: List[TaskRecord]):
-        return self.task.add(data)
-
-    def queue_get_next(
-        self, manager, available_programs, available_procedures, limit=None, tag=None
-    ) -> List[TaskRecord]:
-        return self.task.get_next(manager, available_programs, available_procedures, limit, tag)
-
-    def get_queue(
-        self,
-        id=None,
-        hash_index=None,
-        program=None,
-        status: str = None,
-        base_result: str = None,
-        tag=None,
-        manager=None,
-        include=None,
-        exclude=None,
-        limit: int = None,
-        skip: int = 0,
-        return_json=False,
-        with_ids=True,
-    ):
-        return self.task.get(
-            id,
-            hash_index,
-            program,
-            status,
-            base_result,
-            tag,
-            manager,
-            include,
-            exclude,
-            limit,
-            skip,
-            return_json,
-            with_ids,
-        )
-
-    def queue_get_by_id(self, id: List[str], limit: int = None, skip: int = 0, as_json: bool = True):
-        return self.task.get_by_id(id, limit, skip, as_json)
-
-    def queue_mark_complete(self, task_ids: List[str]) -> int:
-        return self.task.mark_complete(task_ids)
-
-    def queue_mark_error(self, task_ids: List[str]) -> int:
-        return self.task.mark_error(task_ids)
-
-    def queue_reset_status(
-        self,
-        id: Union[str, List[str]] = None,
-        base_result: Union[str, List[str]] = None,
-        manager: Optional[str] = None,
-        reset_running: bool = False,
-        reset_error: bool = False,
-    ) -> int:
-        return self.task.reset_status(id, base_result, manager, reset_running, reset_error)
-
-    def reset_base_result_status(
-        self,
-        id: Union[str, List[str]] = None,
-    ) -> int:
-        return self.task.reset_base_result_status(id)
-
-    def queue_modify_tasks(
-        self,
-        id: Union[str, List[str]] = None,
-        base_result: Union[str, List[str]] = None,
-        new_tag: Optional[str] = None,
-        new_priority: Optional[int] = None,
-    ):
-        return self.task.modify(id, base_result, new_tag, new_priority)
-
-    def del_tasks(self, id: Union[str, list]):
-        return self.task.delete(id)

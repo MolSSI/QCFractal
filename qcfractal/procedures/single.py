@@ -197,7 +197,7 @@ class SingleResultTasks(BaseTasks):
 
             new_tasks.append(task)
 
-        return self.storage.queue_submit(new_tasks)
+        return self.storage.task.add(new_tasks)
 
     def handle_completed_output(
         self, task_id: int, base_result_id: int, manager_name: str, result: qcel.models.AtomicResult
@@ -286,7 +286,7 @@ class SingleResultTasks(BaseTasks):
 
         # TODO - must be done before update results
         # (will be fixed with better transaction handling)
-        self.storage.queue_mark_complete(completed_tasks)
+        self.storage.task.mark_complete(completed_tasks)
         self.storage.update_results(updates)
 
         # Return success/failures

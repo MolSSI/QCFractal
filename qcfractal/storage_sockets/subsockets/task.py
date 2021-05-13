@@ -1,19 +1,24 @@
 from __future__ import annotations
 
 import logging
-import json
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
+from sqlalchemy.orm import load_only
 from datetime import datetime as dt
 from qcfractal.storage_sockets.models import BaseResultORM, TaskQueueORM
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 from qcfractal.storage_sockets.sqlalchemy_socket import format_query, calculate_limit
-from qcfractal.interface.models import TaskRecord, RecordStatusEnum, TaskStatusEnum
+from qcfractal.storage_sockets.sqlalchemy_common import insert_general, get_query_proj_columns, get_count
+from qcfractal.interface.models import TaskRecord, RecordStatusEnum, TaskStatusEnum, ObjectId
+from qcfractal.interface.models.query_meta import InsertMetadata, QueryMetadata
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from sqlalchemy.orm.session import Session
     from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
-    from typing import List, Dict, Union, Optional
+    from typing import List, Dict, Union, Optional, Tuple, Sequence, Iterable, Any
+
+    TaskDict = Dict[str, Any]
 
 
 class TaskSocket:
@@ -51,6 +56,7 @@ class TaskSocket:
             meta['duplicates'] has the duplicate tasks
         """
 
+        self._logger.warning("REMOVE ME")
         meta = add_metadata_template()
 
         results = ["placeholder"] * len(data)
@@ -106,40 +112,170 @@ class TaskSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def get_next(self, manager, available_programs, available_procedures, limit=None, tag=None) -> List[TaskRecord]:
-        """Obtain tasks for a manager
+    def add_orm(
+        self, tasks: List[TaskQueueORM], *, session: Optional[Session] = None
+    ) -> Tuple[InsertMetadata, List[ObjectId]]:
+        """
+        Adds TaskQueueORM to the database, taking into account duplicates
+
+        The session is flushed at the end of this function.
+
+        Parameters
+        ----------
+        session
+            An exist SQLAlchemy session to use
+        tasks
+            ORM objects to add to the database
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata showing what was added, and a list of returned task ids. These will be in the
+            same order as the inputs, and may correspond to newly-inserted ORMs or to existing data.
+
+        """
+
+        with self._core_socket.optional_session(session) as session:
+            meta, orm = insert_general(session, tasks, (TaskQueueORM.base_result_id,), (TaskQueueORM.id,))
+            return meta, [x[0] for x in orm]
+
+    def get(
+        self,
+        id: Sequence[str],
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
+        missing_ok: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Optional[TaskDict]]:
+        """Get tasks by their IDs
+
+        The returned task information will be in order of the given ids
+
+        If missing_ok is False, then any ids that are missing in the database will raise an exception. Otherwise,
+        the corresponding entry in the returned list of tasks will be None.
+
+        Parameters
+        ----------
+        id
+            List of the task Ids in the DB
+        include
+            Which fields of the task to return. Default is to return all fields.
+        exclude
+            Remove these fields from the return. Default is to return all fields.
+        missing_ok
+           If set to True, then missing tasks will be tolerated, and the returned list of
+           tasks will contain None for the corresponding IDs that were not found.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
+
+        Returns
+        -------
+        :
+            List of the found tasks
+        """
+
+        with self._core_socket.optional_session(session, True) as session:
+            if len(id) > self._user_limit:
+                raise RuntimeError(f"Request for {len(id)} tasks is over the limit of {self._user_limit}")
+
+            # TODO - int id
+            int_id = [int(x) for x in id]
+            unique_ids = list(set(int_id))
+
+            load_cols = get_query_proj_columns(TaskQueueORM, include, exclude)
+
+            results = (
+                session.query(TaskQueueORM)
+                .filter(TaskQueueORM.id.in_(unique_ids))
+                .options(load_only(*load_cols))
+                .yield_per(250)
+            )
+            result_map = {r.id: r.dict() for r in results}
+
+            # Put into the requested order
+            ret = [result_map.get(x, None) for x in int_id]
+
+            if missing_ok is False and None in ret:
+                raise RuntimeError("Could not find all requested task records")
+
+            return ret
+
+    def claim(
+        self,
+        manager_name: str,
+        available_programs: Iterable[str],
+        available_procedures: Iterable[str],
+        limit: Optional[int] = None,
+        tag: Sequence[str] = None,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[TaskRecord]:
+        """Claim/assign tasks for a manager
 
         Given tags and available programs/procedures on the manager, obtain
         waiting tasks to run.
+
+        Parameters
+        ----------
+        manager_name
+            Name of the manager requesting tasks
+        available_programs
+            List or other iterable of programs available on that manager
+        available_procedures
+            List or other iterable of procedures available on that manager
+        limit
+            Maximum number of tasks that the manager can claim
+        tag
+            List or other sequence of tags (with earlier tags taking preference over later tags)
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
         """
+
+        # TODO - rewrite to avoid format_query
 
         limit = calculate_limit(self._manager_limit, limit)
         proc_filt = TaskQueueORM.procedure.in_([p.lower() for p in available_procedures])
         none_filt = TaskQueueORM.procedure == None  # lgtm [py/test-equals-none]
 
-        order_by = []
-        if tag is not None:
-            if isinstance(tag, str):
-                tag = [tag]
+        with self._core_socket.optional_session(session) as session:
+            manager = self._core_socket.manager.get(
+                [manager_name], include=["status"], missing_ok=True, session=session
+            )
+            if manager[0] is None:
+                self._logger.warning(f"Manager {manager_name} does not exist!")
+                return []
+            elif manager[0]["status"] != "ACTIVE":
+                self._logger.warning(f"Manager {manager_name} exists but is not active!")
+                return []
 
-        order_by.extend([TaskQueueORM.priority.desc(), TaskQueueORM.created_on])
-        queries = []
-        if tag is not None:
-            for t in tag:
-                query = format_query(TaskQueueORM, status=TaskStatusEnum.waiting, program=available_programs, tag=t)
-                query.append(or_(proc_filt, none_filt))
+            order_by = []
+            if tag is not None:
+                if isinstance(tag, str):
+                    tag = [tag]
+
+            order_by.extend([TaskQueueORM.priority.desc(), TaskQueueORM.created_on])
+            queries = []
+            if tag is not None:
+                for t in tag:
+                    query = format_query(TaskQueueORM, status=TaskStatusEnum.waiting, program=available_programs, tag=t)
+                    query.append(or_(proc_filt, none_filt))
+                    queries.append(query)
+            else:
+                query = format_query(TaskQueueORM, status=TaskStatusEnum.waiting, program=available_programs)
+                query.append((or_(proc_filt, none_filt)))
                 queries.append(query)
-        else:
-            query = format_query(TaskQueueORM, status=TaskStatusEnum.waiting, program=available_programs)
-            query.append((or_(proc_filt, none_filt)))
-            queries.append(query)
 
-        new_limit = limit
-        found = []
-        update_count = 0
+            new_limit = limit
+            found = []
+            update_count = 0
 
-        update_fields = {"status": TaskStatusEnum.running, "modified_on": dt.utcnow(), "manager": manager}
-        with self._core_socket.session_scope() as session:
+            update_fields = {"status": TaskStatusEnum.running, "modified_on": dt.utcnow(), "manager": manager_name}
+
             for q in queries:
 
                 # Have we found all we needed to find
@@ -187,115 +323,91 @@ class TaskSocket:
 
         return found
 
-    def get(
+    def query(
         self,
-        id=None,
-        hash_index=None,
-        program=None,
-        status: str = None,
-        base_result: str = None,
-        tag=None,
-        manager=None,
-        include=None,
-        exclude=None,
-        limit: int = None,
+        id: Optional[Iterable[ObjectId]] = None,
+        base_result: Optional[Iterable[ObjectId]] = None,
+        program: Optional[Iterable[ObjectId]] = None,
+        status: Optional[Iterable[TaskStatusEnum]] = None,
+        tag: Optional[Iterable[str]] = None,
+        manager: Optional[Iterable[str]] = None,
+        include: Optional[Iterable[str]] = None,
+        exclude: Optional[Iterable[str]] = None,
+        limit: Optional[int] = None,
         skip: int = 0,
-        return_json=False,
-        with_ids=True,
-    ):
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[QueryMetadata, List[TaskDict]]:
         """
-        TODO: check what query keys are needs
+        General query of tasks in the database
+
+        All search criteria are merged via 'and'. Therefore, records will only
+        be found that match all the criteria.
+
         Parameters
         ----------
-        id : Optional[List[str]], optional
-            Ids of the tasks
-        Hash_index: Optional[List[str]], optional,
-            hash_index of service, not used
-        program, list of str or str, optional
-        status : Optional[bool], optional (find all)
+        id
+            Ids of the task (not result!) to search for
+        base_result
+            The base result ID of the task
+        program
+            Programs to search for
+        status
             The status of the task: 'COMPLETE', 'RUNNING', 'WAITING', or 'ERROR'
-        base_result: Optional[str], optional
-            base_result id
-        include : Optional[List[str]], optional
-            The fields to return, default to return all
-        exclude : Optional[List[str]], optional
-            The fields to not return, default to return all
-        limit : Optional[int], optional
-            maximum number of results to return
-            if 'limit' is greater than the global setting self._max_limit,
-            the self._max_limit will be returned instead
-            (This is to avoid overloading the server)
-        skip : int, optional
-            skip the first 'skip' results. Used to paginate, default is 0
-        return_json : bool, optional
-            Return the results as a list of json inseated of objects, deafult is True
-        with_ids : bool, optional
-            Include the ids in the returned objects/dicts, default is True
+        tag
+            Tags of the task to search for
+        manager
+            Search for tasks assigned to given managers
+        include
+            Which fields of the molecule to return. Default is to return all fields.
+        exclude
+            Remove these fields from the return. Default is to return all fields.
+        limit
+            Limit the number of results. If None, the server limit will be used.
+            This limit will not be respected if greater than the configured limit of the server.
+        skip
+            Skip this many results from the total list of matches. The limit will apply after skipping,
+            allowing for pagination.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
 
         Returns
         -------
-        Dict[str, Any]
+        :
             Dict with keys: data, meta. Data is the objects found
         """
 
         limit = calculate_limit(self._user_limit, limit)
-        meta = get_metadata_template()
-        query = format_query(
-            TaskQueueORM,
-            program=program,
-            id=id,
-            hash_index=hash_index,
-            status=status,
-            base_result_id=base_result,
-            tag=tag,
-            manager=manager,
-        )
 
-        data = []
-        try:
-            data, meta["n_found"] = self._core_socket.get_query_projection(
-                TaskQueueORM, query, limit=limit, skip=skip, include=include, exclude=exclude
-            )
-            meta["success"] = True
-        except Exception as err:
-            meta["error_description"] = str(err)
+        load_cols = get_query_proj_columns(TaskQueueORM, include, exclude)
 
-        data = [TaskRecord(**task) for task in data]
+        and_query = []
+        if id is not None:
+            and_query.append(TaskQueueORM.id.in_(id))
+        if base_result is not None:
+            and_query.append(TaskQueueORM.base_result_id.in_(base_result))
+        if program is not None:
+            and_query.append(TaskQueueORM.program.in_(program))
+        if status is not None:
+            and_query.append(TaskQueueORM.status.in_(status))
+        if tag is not None:
+            and_query.append(TaskQueueORM.tag.in_(tag))
+        if manager is not None:
+            and_query.append(TaskQueueORM.manager.in_(manager))
 
-        return {"data": data, "meta": meta}
+        with self._core_socket.optional_session(session, True) as session:
+            query = session.query(TaskQueueORM).filter(and_(*and_query))
+            query = query.options(load_only(*load_cols))
+            n_found = get_count(query)
+            results = query.limit(limit).offset(skip).yield_per(500)
+            result_dicts = [x.dict() for x in results]
 
-    def get_by_id(self, id: List[str], limit: int = None, skip: int = 0, as_json: bool = True):
-        """Get tasks by their IDs
-
-        Parameters
-        ----------
-        id : List[str]
-            List of the task Ids in the DB
-        limit : Optional[int], optional
-            max number of returned tasks. If limit > max_limit, max_limit
-            will be returned instead (safe query)
-        skip : int, optional
-            skip the first 'skip' results. Used to paginate, default is 0
-        as_json : bool, optioanl
-            Return tasks as JSON, default is True
-
-        Returns
-        -------
-        List[TaskRecord]
-            List of the found tasks
-        """
-
-        limit = calculate_limit(self._user_limit, limit)
-        with self._core_socket.session_scope() as session:
-            found = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(id)).limit(limit).offset(skip)
-
-            if as_json:
-                found = [TaskRecord(**task.to_dict()) for task in found]
-
-        return found
+        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
+        return meta, result_dicts
 
     def mark_complete(self, task_ids: List[str]) -> int:
         """Update the given tasks as complete
+
         Note that each task is already pointing to its result location
         Mark the corresponding result/procedure as complete
 
@@ -523,6 +635,9 @@ class TaskSocket:
 
         task_ids = [id] if isinstance(id, (int, str)) else id
         with self._core_socket.session_scope() as session:
-            count = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(task_ids)).delete(synchronize_session=False)
+            count = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(task_ids)).delete()
+            print("*" * 100)
+            print(task_ids)
+            print(count)
 
         return count
