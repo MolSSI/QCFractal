@@ -34,6 +34,10 @@ class MoleculeEntry(ProtoModel):
     local_results: Dict[str, Any] = Field({}, description="Additional local values.")
 
 
+class MoleculeEntrySpecification(ProtoModel):
+    pass
+
+
 # TODO: do we still want a concept of contributed values?
 class ContributedValues(ProtoModel):
     name: str = Field(..., description="The name of the contributed values.")
@@ -79,21 +83,22 @@ class Dataset(Collection):
     class _DataModel(Collection._DataModel):
 
         # Defaults
-        # default_program: Optional[str] = None
-        # default_keywords: Dict[str, str] = {}
-        # default_driver: str = "energy"
-        # default_units: str = "kcal / mol"
-        # default_benchmark: Optional[str] = None
+        #default_program: Optional[str] = None
+        #default_keywords: Dict[str, str] = {}
+        #default_driver: str = "energy"
+        default_units: str = "kcal / mol"
+        #default_benchmark: Optional[str] = None
 
-        alias_keywords: Dict[str, Dict[str, str]] = {}
+        #alias_keywords: Dict[str, Dict[str, str]] = {}
 
         # Data
-        records: Optional[List[MoleculeEntry]] = []
+        #records: Optional[List[MoleculeEntry]] = []
         contributed_values: Dict[str, ContributedValues] = {}
 
         # History: driver, program, method (basis, keywords)
-        history: Set[Tuple[str, str, str, Optional[str], Optional[str]]] = set()
-        history_keys: Tuple[str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords")
+        #history: Set[Tuple[str, str, str, Optional[str], Optional[str]]] = set()
+        #history_keys: Tuple[str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords")
+
 
     def __init__(self, name: str, client: Optional["PortalClient"] = None, **kwargs: Any) -> None:
         """Initialize a Dataset Collection.
@@ -132,15 +137,6 @@ class Dataset(Collection):
     def specs(self):
         pass
 
-    @property
-    def entry_names(self):
-        pass
-
-    @property
-    def entries(self):
-        """A dictionary with entry names as keys and entry content as values."""
-        pass
-
     def get_specification(self, name: str) -> Any:
         """Get full parameters for the given named specification.
 
@@ -176,13 +172,29 @@ class Dataset(Collection):
     def add_entry(
         self,
         name: str,
-        initial_molecule: "Molecule",
-        additional_keywords: Optional[Dict[str, Any]] = None,
-        attributes: Optional[Dict[str, Any]] = None,
-        save: bool = True,
+        molecule: "Molecule",
+        comment: Optional[Dict[str, Any]] = None,
+        local_results: Dict[str, Any] = None,
     ) -> None:
-        pass
 
+        if name in self._data.records:
+            raise KeyError(f"Entry {name} already in the dataset.")
+
+        # Build new objects
+        molecule_id = self.client.add_molecules([molecule])[0]
+        entry = MoleculeEntry(
+            name=name, molecule=molecule_id, comment=comment, local_results=local_results
+        )
+        self._data.records[name] = entry
+
+    def add_spec(self, name):
+
+        spec = 
+        if (name in self._data.specs) and (not overwrite):
+            raise KeyError(f"{self.__class__.__name__} '{name}' already present, use `overwrite=True` to replace.")
+
+        self._data.specs[name] = spec
+        pass
 
 # OLD STUFF BELOW; GRAB ONLY AS NEEDED
 
@@ -1677,6 +1689,8 @@ class _Dataset(Collection):
         """
         return self._df[args]
 
+
+    # NOTE: needed for older datasets that featured `-d3` in method call, using `dftd3`
     @staticmethod
     def _composition_planner(program=None, method=None, basis=None, driver=None, keywords=None):
         """
