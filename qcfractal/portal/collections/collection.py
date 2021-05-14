@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 import pandas as pd
 from tqdm import tqdm
+import pprint
 
 from ...interface.models import ProtoModel, QCSpecification
 from ...interface.models.records import RecordBase
@@ -81,6 +82,14 @@ class Collection(abc.ABC):
             If `True`, list Collection by default through the PortalClient.
         metadata : Dict[str, Any]
             Any additional user-generated metadata for the Collection.
+        records : Dict[str, Any]
+            A dict of all entries in the Collection, with entry names as keys,
+            entries as values.
+        history : Set[str]
+            
+        specs : Dict[str, Any]
+            A dict of all specs applied to the Collection, with spec names as keys,
+            specs as values.
 
         """
 
@@ -98,6 +107,20 @@ class Collection(abc.ABC):
         visibility: bool = True
 
         metadata: Dict[str, Any] = {}
+
+        # NOTE: would really like to change this to `entries`
+        # we should make it a principle that we *never* have result data here
+        records: Dict[str, Any] = {}
+
+        # NOTE: must complete docstring for history once we re-implement its usage
+        history: Set[str] = set()
+        specs: Dict[str, Any] = {}
+
+        # NOTE: needed for backwards compatibility with existing datasets
+        view_url_hdf5: Optional[str] = None
+        view_url_plaintext: Optional[str] = None
+        view_metadata: Optional[Dict[str, str]] = None
+        view_available: bool = False
 
     def __str__(self) -> str:
         """
@@ -272,113 +295,173 @@ class Collection(abc.ABC):
 
     ## entry touchpoints
 
-    @abc.abstractproperty
     @property
     def entry_names(self):
         """A list of all entry names.
 
         """
-        return self.list_entries()
+        return list(self.list_entries(as_dict=True).keys())
 
     @property
     def entries(self):
         """A dict with all entry names in this Collection as keys and entries as values.
 
         """
-        return dict(self._data.records)
+        return self.list_entries(as_dict=True)
 
-    @abc.abstractmethod
-    def list_entries(self):
-        """List all entry names in this Collection.
+    def list_entries(self,
+            as_dict: bool = False):
+        """Return all entries in this Collection.
+
+        Parameters
+        ----------
+        as_dict: bool, optional
+            Return output as a dict instead of a list.
+            Entry names as keys, entries as values.
+
+        Returns
+        -------
+        Union[List, Dict]
+            Return all entries in a list.
+            If `as_dict=True`, returns dict with entry names as keys, entries as values.
 
         """
-        return list(self._data.records.keys())
+        if as_dict:
+            return {x.name: x for x in self._data.records.values()}
+        else:
+            return list(self._data.records.values())
+
+    def get_entry(self, name: str) -> "Entry":
+        """Get an individual entry by name from this Collection.
+
+        Parameters
+        ----------
+        name : str
+            The name of the entry.
+
+        Returns
+        -------
+        entry : Entry
+            An entry instance corresponding to this Collection type.
+
+        """
+        try:
+            return self.entries[name]
+        except KeyError:
+            raise KeyError(f"Could not find entry name '{name}' in the dataset.")
 
     @abc.abstractmethod
-    def get_entry(self, entry_name):
-        pass
+    def add_entry(self, 
+        name: str, 
+        **entry: "Entry"
+    ) -> None:
+        """Add an entry to the Collection.
 
-    @abc.abstractmethod
-    def add_entry(self, entry_name, entry):
+        Parameters
+        ----------
+        name : str
+            The name of the entry.
+        entry : Entry
+            An entry instance corresponding to this Collection type.
+        """
         pass
 
     ## spec touchpoints
 
-    @abc.abstractproperty
     @property
     def spec_names(self):
         """A list of all spec names applied to this Collection.
 
         """
-        return self.list_specs()
+        return list(self.list_specs(as_dict=True).keys())
 
     @property
     def specs(self):
         """A dict with all spec names in this Collection as keys and specs as values.
 
         """
-        pass
+        return self.list_specs(as_dict=True)
 
-    @abc.abstractmethod
-    def list_specs(self):
-        """List all spec names in this Collection.
+    def list_specs(self,
+            as_dict: bool = False):
+        """Return all specs in this Collection.
+
+        Parameters
+        ----------
+        as_dict: bool, optional
+            Return output as a dict instead of a list.
+            Spec names as keys, specs as values.
+
+        Returns
+        -------
+        Union[List, Dict]
+            Return all specs in a list.
+            If `as_dict=True`, returns dict with spec names as keys, specs as values.
 
         """
-        pass
+        if as_dict:
+            return {x.name: x for x in self._data.specs.values()}
+        else:
+            return list(self._data.specs.values())
 
-    @abc.abstractmethod
-    def get_spec(self, spec_name):
-        pass
+    def get_spec(self, name: str) -> QCSpecification:
+        """Get an individual spec by name from this Collection.
+
+        Parameters
+        ----------
+        name : str
+            The name of the spec.
+
+        Returns
+        -------
+        spec : QCSpecification
+            A full quantum chemistry specification.
+
+        """
+        try:
+            return self.specs[name]
+        except KeyError:
+            raise KeyError(f"Could not find spec name '{name}' in the dataset.")
 
     # TODO: keyword id handling should not be in the UI
     # May require excising this from QCSpecification, or making
     # keywords explicit there
     # need to examine where else in the Fractal stack QCSpecification is used
+    @abc.abstractmethod
     def add_spec(
         self,
-        spec_name: str,
-        spec: QCSpecification,
-        description: Optional[str] = None,
-        protocols: Optional[Dict[str, Any]] = None,
-        overwrite: bool = False,
+        name: str,
+        **spec: QCSpecification,
     ) -> None:
-        """
+        """Add a compute spec to the Collection.
+
         Parameters
         ----------
-        spec_name : str
+        name : str
             The name of the specification.
-        qc_spec : QCSpecification
+        spec : QCSpecification
             A full quantum chemistry specification.
-        description : str, optional
-            A short text description of the specification.
-        protocols : Optional[Dict[str, Any]], optional
-            Protocols for this specification.
-        overwrite : bool, optional
-            Overwrite existing specification names.
         """
-        if (spec_name in self._data.specs) and (not overwrite):
-            raise KeyError(f"{self.__class__.__name__} '{spec_name}' already present, use `overwrite=True` to replace.")
+        pass
 
-        self._data.specs[spec_name] = spec
-        
 
     ## record touchpoints
 
-    @abc.abstractmethod
+    #@abc.abstractmethod
     def get_record(self, entry_name, spec_name):
         pass
 
-    @abc.abstractproperty
+    #@abc.abstractproperty
     def loc(self):
         pass
 
-    @abc.abstractproperty
+    #@abc.abstractproperty
     def iter(self):
         pass
 
     ## server interaction
 
-    @abc.abstractmethod
+    #@abc.abstractmethod
     def _pre_sync_prep(self, client: "PortalClient"):
         """Additional actions to take before syncing, done as the last step before data is written.
 
@@ -434,10 +517,10 @@ class Collection(abc.ABC):
 
         return self._data.id
 
-    @abc.abstractmethod
+    #@abc.abstractmethod
     def compute(
         self, 
-        specification: str, 
+        spec_name: str, 
         subset: Set[str] = None, 
         tag: Optional[str] = None, 
         priority: Optional[str] = None
@@ -532,14 +615,6 @@ class Collection(abc.ABC):
 
 
 class BaseProcedureDataset(Collection):
-    class _DataModel(Collection._DataModel):
-
-        records: Dict[str, Any] = {}
-        history: Set[str] = set()
-        specs: Dict[str, Any] = {}
-
-        class Config(Collection._DataModel.Config):
-            pass
 
     def __init__(self, name: str, client: "PortalClient" = None, **kwargs):
         """Initialize a ProcedureDataset Collection.
@@ -548,12 +623,15 @@ class BaseProcedureDataset(Collection):
         ----------
         name : str
             The name of the Collection object; used to reference the collection on the server.
-        client : PortalClient, optional
+        client : PortalClient
             A PortalClient connected to a server.
         **kwargs : Dict[str, Any]
             Additional keywords passed to the Collection and the initial data constructor.
             It is up to Collection subclasses to make use of that data.
         """
+
+        # NOTE: ProcedureDatasets require a client, but generally Collections don't
+        # can we establish a clear reason? If not, then we can eliminate this variation
 
         if client is None:
             raise KeyError("{self.__class__.__name__} must initialize with a PortalClient.")
@@ -561,15 +639,16 @@ class BaseProcedureDataset(Collection):
         super().__init__(name, client=client, **kwargs)
 
     @abc.abstractmethod
-    def _internal_compute_add(self, spec: Any, entry: Any, tag: str, priority: str) -> "ObjectId":
+    def _internal_compute_add(
+            self,
+            spec: Any,
+            entry: Any,
+            tag: str,
+            priority: str) -> "ObjectId":
         pass
 
     def _pre_sync_prep(self, client: "PortalClient") -> None:
         pass
-
-    def _get_index(self):
-        return [x.name for x in self._data.records.values()]
-
 
     def _get_procedure_ids(self, spec: str, sieve: Optional[List[str]] = None) -> Dict[str, "ObjectId"]:
         """Get a mapping of record names to its object ID in the database.
@@ -603,15 +682,6 @@ class BaseProcedureDataset(Collection):
 
         return mapper
 
-
-    @property
-    def entry_names(self):
-        return self._get_index()
-
-    @property
-    def entries(self):
-        """A dictionary with entry names as keys and entry content as values."""
-        return dict(self._data.records)
 
     def get_specification(self, name: str) -> Any:
         """Get full parameters for the given named specification.
@@ -665,9 +735,7 @@ class BaseProcedureDataset(Collection):
         """
 
         self._check_entry_exists(name)
-        self.data.records[name.lower()] = record
-        if save:
-            self.sync()
+        self.data.records[name] = record
 
     def _get_entry(self, name: str) -> Any:
         """Obtains an entry from the Dataset
@@ -733,13 +801,16 @@ class BaseProcedureDataset(Collection):
             The number of submitted computations
         """
 
+        # TODO: review and refactor this method
+        # try to migrate to `Collection` for full consistency
+
         specification = specification.lower()
         spec = self.get_specification(specification)
         if subset:
             subset = set(subset)
 
         submitted = 0
-        for entry in self.data.records.values():
+        for entry in self._data.records.values():
             if (subset is not None) and (entry.name not in subset):
                 continue
 
@@ -749,7 +820,7 @@ class BaseProcedureDataset(Collection):
             entry.object_map[spec.name] = self._internal_compute_add(spec, entry, tag, priority)
             submitted += 1
 
-        self.data.history.add(specification)
+        self._data.history.add(specification)
 
         # Nothing to save
         if submitted:

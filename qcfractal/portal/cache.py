@@ -13,6 +13,7 @@ from .collections.collection_utils import collection_factory
 
 
 # TODO: make caching for different servers a layer beneath, ultimately transparent for most users
+# TODO: consider a single file for serialized JSON caching, key-value store
 class PortalCache:
     def __init__(self, client, cachedir):
         self.client = client

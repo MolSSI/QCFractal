@@ -22,7 +22,7 @@ class OptEntry(ProtoModel):
     initial_molecule: ObjectId
     additional_keywords: Dict[str, Any] = {}
     attributes: Dict[str, Any] = {}
-    object_map: Dict[str, ObjectId] = {}
+    object_map: Dict[str, ObjectId] = {}   # NOTE: needs a better name
 
 
 class OptEntrySpecification(ProtoModel):
@@ -68,7 +68,7 @@ class OptimizationDataset(BaseProcedureDataset):
 
     def add_spec(
         self,
-        spec_name: str,
+        name: str,
         spec: QCSpecification,
         optimization_spec: OptimizationSpecification,
         description: Optional[str] = None,
@@ -95,14 +95,18 @@ class OptimizationDataset(BaseProcedureDataset):
             protocols = {}
 
         full_spec = OptEntrySpecification(
-            name=spec_name,
+            name=name,
             optimization_spec=optimization_spec,
             qc_spec=spec,
             description=description,
             protocols=protocols,
         )
 
-        return super().add_spec(spec_name, full_spec, overwrite=overwrite)
+        if (name in self._data.specs) and (not overwrite):
+            raise KeyError(f"{self.__class__.__name__} '{name}' already present, use `overwrite=True` to replace.")
+
+        self._data.specs[name] = spec
+        
 
     def add_entry(
         self,
@@ -110,7 +114,6 @@ class OptimizationDataset(BaseProcedureDataset):
         initial_molecule: "Molecule",
         additional_keywords: Optional[Dict[str, Any]] = None,
         attributes: Optional[Dict[str, Any]] = None,
-        save: bool = True,
     ) -> None:
         """
         Parameters
@@ -128,7 +131,8 @@ class OptimizationDataset(BaseProcedureDataset):
             to call save after all entries are added, otherwise data pointers may be lost.
         """
 
-        self._check_entry_exists(name)  # Fast skip
+        if name in self._data.records:
+            raise KeyError(f"Entry {name} already in the dataset.")
 
         if additional_keywords is None:
             additional_keywords = {}
@@ -141,8 +145,7 @@ class OptimizationDataset(BaseProcedureDataset):
         entry = OptEntry(
             name=name, initial_molecule=molecule_id, additional_keywords=additional_keywords, attributes=attributes
         )
-
-        self._add_entry(name, entry, save)
+        self._data.records[name] = entry
 
     def counts(
         self, entries: Optional[Union[str, List[str]]] = None, specs: Optional[Union[str, List[str]]] = None

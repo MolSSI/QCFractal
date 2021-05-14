@@ -22,7 +22,7 @@ class TDEntry(ProtoModel):
     initial_molecules: Set[ObjectId]
     td_keywords: TDKeywords
     attributes: Dict[str, Any]
-    object_map: Dict[str, ObjectId] = {}
+    object_map: Dict[str, ObjectId] = {}   # NOTE: needs a better name
 
 
 class TDEntrySpecification(ProtoModel):
@@ -55,7 +55,7 @@ class TorsionDriveDataset(BaseProcedureDataset):
 
     def add_spec(
         self,
-        spec_name: str,
+        name: str,
         spec: QCSpecification,
         optimization_spec: OptimizationSpecification,
         description: Optional[str] = None,
@@ -78,13 +78,15 @@ class TorsionDriveDataset(BaseProcedureDataset):
         """
 
         full_spec = TDEntrySpecification(
-            name=spec_name,
+            name=name,
             optimization_spec=optimization_spec,
             qc_spec=spec,
             description=description
         )
+        if (name in self._data.specs) and (not overwrite):
+            raise KeyError(f"{self.__class__.__name__} '{name}' already present, use `overwrite=True` to replace.")
 
-        return super().add_spec(spec_name, full_spec, overwrite=overwrite)
+        self._data.specs[name] = spec
 
     def add_entry(
         self,
@@ -96,7 +98,6 @@ class TorsionDriveDataset(BaseProcedureDataset):
         energy_decrease_thresh: Optional[float] = None,
         energy_upper_limit: Optional[float] = None,
         attributes: Dict[str, Any] = None,
-        save: bool = True,
     ) -> None:
         """
         Parameters
@@ -122,7 +123,8 @@ class TorsionDriveDataset(BaseProcedureDataset):
             to call save after all entries are added, otherwise data pointers may be lost.
         """
 
-        self._check_entry_exists(name)  # Fast skip
+        if name in self._data.records:
+            raise KeyError(f"Entry {name} already in the dataset.")
 
         if attributes is None:
             attributes = {}
@@ -137,9 +139,10 @@ class TorsionDriveDataset(BaseProcedureDataset):
             energy_upper_limit=energy_upper_limit,
         )
 
-        entry = TDEntry(name=name, initial_molecules=molecule_ids, td_keywords=td_keywords, attributes=attributes)
-
-        self._add_entry(name, entry, save)
+        entry = TDEntry(
+            name=name, initial_molecules=molecule_ids, td_keywords=td_keywords, attributes=attributes
+        )
+        self._data.records[name] = entry
 
     def counts(
         self,

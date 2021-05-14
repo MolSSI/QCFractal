@@ -294,6 +294,7 @@ class PortalClient:
             payload["meta"]["include"] = include
             payload["meta"]["exclude"] = exclude
 
+        print("{} : '{}' || {}".format(collection_type, name, self.address))
         response = self._automodel_request("collection", "get", payload, full_return=True)
         if full_return:
             return response
@@ -481,7 +482,7 @@ class PortalClient:
         group: Optional[str] = "default",
         show_hidden: bool = False,
         tag: Optional[Union[str, List[str]]] = None,
-    ) -> Union[None, List]:
+    ) -> Union[None, List, pd.DataFrame]:
         """Print or return the available collections currently on the server.
 
         Parameters
@@ -505,9 +506,10 @@ class PortalClient:
         tag : Optional[Union[str, List[str]]], optional
             Show collections whose tags match one of the passed tags.
             By default, collections are not filtered on tag.
+
         Returns
         -------
-        Union[None, List]
+        Union[None, List, pandas.DataFrame]
             Prints output as table to screen; if `as_list=True`,
             returns list of output content instead.
         """
@@ -525,7 +527,7 @@ class PortalClient:
         payload = {"meta": {"include": ["name", "collection", "tagline", "visibility", "group", "tags"]}, "data": query}
         response: List[Dict[str, Any]] = self._automodel_request("collection", "get", payload, full_return=False)
 
-        collection_data = response
+        collection_data = sorted(response, key=lambda x: (x['collection'], x['name']))
 
         # apply filters
         if not show_hidden:
