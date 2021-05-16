@@ -247,7 +247,7 @@ class TaskSocket:
                 [manager_name], include=["status"], missing_ok=True, session=session
             )
             if manager[0] is None:
-                self._logger.warning(f"Manager {manager_name} does not exist!")
+                self._logger.warning(f"Manager {manager_name} does not exist! Will not give it tasks")
                 return []
             elif manager[0]["status"] != "ACTIVE":
                 self._logger.warning(f"Manager {manager_name} exists but is not active!")
@@ -470,6 +470,8 @@ class TaskSocket:
         manager: Optional[str] = None,
         reset_running: bool = False,
         reset_error: bool = False,
+        *,
+        session: Optional[Session] = None
     ) -> int:
         """
         Reset the status of the tasks that a manager owns from Running to Waiting
@@ -514,7 +516,7 @@ class TaskSocket:
         if len(query) < 2:
             raise ValueError("All query fields are None, reset_status must specify queries.")
 
-        with self._core_socket.session_scope() as session:
+        with self._core_socket.optional_session(session) as session:
             # Update results and procedures if reset_error
             task_ids = session.query(TaskQueueORM.id).filter(*query)
             session.query(BaseResultORM).filter(TaskQueueORM.base_result_id == BaseResultORM.id).filter(

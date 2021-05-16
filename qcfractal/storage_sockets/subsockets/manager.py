@@ -92,6 +92,7 @@ class ManagerSocket:
         name: Optional[Iterable[str]] = None,
         modified_before: Optional[datetime] = None,
         *,
+        reason: str = '(none given)',
         session: Optional[Session] = None,
     ) -> List[str]:
         """Marks managers as inactive
@@ -102,6 +103,8 @@ class ManagerSocket:
             Names of managers to mark as inactive
         modified_before
             Mark all managers that were last modified before this date as inactive
+        reason
+            A descriptive reason given for deactivation
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed before returning from this function.
@@ -131,14 +134,14 @@ class ManagerSocket:
 
         with self._core_socket.optional_session(session) as session:
             deactivated_names = session.execute(stmt).fetchall()
+            deactivated_names = [x[0] for x in deactivated_names]
 
-        # deactivated_names is a list of tuples
-        ret = [x[0] for x in deactivated_names]
-        self._logger.info(f"Deactivated {len(ret)} managers:")
-        for n in ret:
-            self._logger.info(f"    {n}")
+            # For the manager, also reset any orphaned tasks that belong to that manager
+            for dead_name in deactivated_names:
+                n_incomplete = self._core_socket.task.reset_status(manager=dead_name, reset_running=True, session=session)
+                self._logger.info(f"Deactivated manager {dead_name}. Reason: {reason}. Recycling {n_incomplete} incomplete tasks.")
 
-        return ret
+        return deactivated_names
 
     def get(
         self,
