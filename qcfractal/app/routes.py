@@ -7,10 +7,8 @@ import time
 
 from .. import __version__ as qcfractal_version
 from qcelemental.util import deserialize, serialize
-from qcelemental.models import FailedOperation
 from ..storage_sockets.storage_utils import add_metadata_template
-from ..interface.models import rest_model, build_procedure, PriorityEnum, TaskStatusEnum, RecordStatusEnum, UserInfo
-from ..procedures import check_procedure_available, get_procedure_parser
+from ..interface.models import rest_model, build_procedure, PriorityEnum, RecordStatusEnum, UserInfo
 from ..services import initialize_service
 from ..exceptions import UserReportableError, AuthenticationFailure
 
@@ -587,7 +585,7 @@ def post_keyword():
     duplicate_ids = [ret[i] for i in meta.existing_idx]
     meta_old = convert_post_response_metadata(meta, duplicate_ids)
 
-    response = MoleculePOSTResponse(meta=meta_old, data=ret)
+    response = KeywordPOSTResponse(meta=meta_old, data=ret)
     return SerializedResponse(response)
 
 
@@ -790,7 +788,9 @@ def post_task_queue():
     submitted_ids = [ids[i] for i in meta.inserted_idx]
     meta_old = convert_post_response_metadata(meta, duplicate_ids)
 
-    resp = {"meta": meta_old, "data": {"ids": ids, "submitted": submitted_ids, "existing": duplicate_ids}}
+    resp = TaskQueuePOSTResponse(
+        meta=meta_old, data={"ids": ids, "submitted": submitted_ids, "existing": duplicate_ids}
+    )
     return SerializedResponse(resp)
 
 
