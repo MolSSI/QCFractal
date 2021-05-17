@@ -65,7 +65,7 @@ def test_procedure_basic(storage_socket):
     storage_socket.task.claim("manager_2", ["psi4", "rdkit"], ["geometric"], 50, ["for_manager_2"])
 
     # Tasks should be assigned correctly
-    procs = storage_socket.procedure.get(all_ids, include_task=True)
+    procs = storage_socket.procedure.get(all_ids, include=["*", "task_obj"])
 
     assert procs[0]["task_obj"]["manager"] == "manager_1"
     assert procs[1]["task_obj"]["manager"] == "manager_1"
@@ -89,7 +89,7 @@ def test_procedure_basic(storage_socket):
     assert tasks[1]["base_result_id"] == ids5[0]
 
     # Are the statuses, etc correct?
-    procs = storage_socket.procedure.get(all_ids, include_task=True)
+    procs = storage_socket.procedure.get(all_ids, include=["*", "task_obj"])
     assert procs[0]["status"] == "COMPLETE"
     assert procs[1]["status"] == "COMPLETE"
     assert procs[2]["status"] == "ERROR"
@@ -125,10 +125,7 @@ def test_procedure_wrong_manager_return(storage_socket, caplog):
         assert "belongs to manager_1, not manager manager_2" in caplog.text
 
     # The task should still be running, assigned to the other manager
-    procs = storage_socket.procedure.get(ids, include_task=True)
-    import pprint
-
-    pprint.pprint(procs)
+    procs = storage_socket.procedure.get(ids, include=["*", "task_obj"])
 
     assert len(procs) == 1
     assert procs[0]["task_obj"]["manager"] == "manager_1"
@@ -173,5 +170,5 @@ def test_procedure_base_already_complete(storage_socket, caplog):
         assert "is already complete!" in caplog.text
 
     # The corresponding task should be deleted now
-    procs = storage_socket.procedure.get(ids, include_task=True)
+    procs = storage_socket.procedure.get(ids, include=["*", "task_obj"])
     assert procs[0]["task_obj"] is None

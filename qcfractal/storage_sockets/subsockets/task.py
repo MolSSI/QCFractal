@@ -184,7 +184,7 @@ class TaskSocket:
             int_id = [int(x) for x in id]
             unique_ids = list(set(int_id))
 
-            load_cols = get_query_proj_columns(TaskQueueORM, include, exclude)
+            load_cols, _ = get_query_proj_columns(TaskQueueORM, include, exclude)
 
             results = (
                 session.query(TaskQueueORM)
@@ -377,7 +377,7 @@ class TaskSocket:
 
         limit = calculate_limit(self._user_limit, limit)
 
-        load_cols = get_query_proj_columns(TaskQueueORM, include, exclude)
+        load_cols, _ = get_query_proj_columns(TaskQueueORM, include, exclude)
 
         and_query = []
         if id is not None:

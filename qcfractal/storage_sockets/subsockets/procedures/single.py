@@ -136,7 +136,7 @@ class SingleResultHandler(BaseProcedureHandler):
         int_id = [int(x) for x in id]
         unique_ids = list(set(int_id))
 
-        load_cols = get_query_proj_columns(ResultORM, include, exclude)
+        load_cols, _ = get_query_proj_columns(ResultORM, include, exclude)
 
         with self._core_socket.optional_session(session, True) as session:
             query = session.query(ResultORM).filter(ResultORM.id.in_(unique_ids)).options(load_only(*load_cols))

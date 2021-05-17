@@ -169,6 +169,16 @@ class Base:
         return cls.__columns, cls.__hybrids, cls.__relationships
 
     @classmethod
+    def get_col_types_2(cls):
+
+        mapper = inspect(cls)
+
+        columns = set(mapper.column_attrs.keys())
+        relationships = set(mapper.relationships.keys())
+
+        return columns, relationships
+
+    @classmethod
     def _all_col_names(cls):
         all_cols, hybrid, _ = cls._get_col_types()
         return all_cols + hybrid

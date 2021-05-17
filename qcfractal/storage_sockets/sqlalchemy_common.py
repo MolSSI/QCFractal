@@ -39,20 +39,31 @@ def get_count(query):
 
 def get_query_proj_columns(
     orm_type: Type[_ORM_T], include: Optional[Iterable[str]] = None, exclude: Optional[Iterable[str]] = None
-) -> Tuple[InstrumentedAttribute, ...]:
+) -> Tuple[Tuple[InstrumentedAttribute, ...], Tuple[InstrumentedAttribute, ...]]:
 
-    # If include is none, then include all the columns
+    columns, relationships = orm_type.get_col_types_2()
+
+    # If include is none, then include all the columns, but not relationships
     if include is None:
-        # Do not include hybrid or relationships
-        col_list, _, _ = orm_type._get_col_types()
+        ret = columns.copy()
     else:
-        col_list = list(include)
+        ret = set(include)
+
+    # If "default" in the include list, then add in all the fields
+    if "*" in ret:
+        ret.update(columns)
 
     if exclude is not None:
-        col_list = [x for x in col_list if x not in exclude]
+        ret -= set(exclude)
 
-    # Now get the actual SQLAlchemy attributes of the ORM class
-    return tuple(getattr(orm_type, x) for x in col_list)
+    # Split out which ones are columns and which are attributes
+    ret_columns = ret.intersection(columns)
+    ret_relationships = ret.intersection(relationships)
+
+    def to_attr(s):
+        return tuple(getattr(orm_type, x) for x in s)
+
+    return to_attr(ret_columns), to_attr(ret_relationships)
 
 
 def find_all_indices(lst: Sequence[_T], value: _T) -> Tuple[int, ...]:

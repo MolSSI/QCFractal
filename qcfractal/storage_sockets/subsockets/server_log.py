@@ -316,7 +316,7 @@ class ServerLogSocket:
 
         limit = calculate_limit(self._access_log_limit, limit)
 
-        load_cols = get_query_proj_columns(AccessLogORM, include, exclude)
+        load_cols, _ = get_query_proj_columns(AccessLogORM, include, exclude)
 
         and_query = []
         if access_type:
@@ -482,7 +482,7 @@ class ServerLogSocket:
 
         limit = calculate_limit(self._access_log_limit, limit)
 
-        load_cols = get_query_proj_columns(InternalErrorLogORM)
+        load_cols, _ = get_query_proj_columns(InternalErrorLogORM)
 
         and_query = []
         if id:
