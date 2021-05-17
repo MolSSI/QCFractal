@@ -437,7 +437,4 @@ class QueueManagerORM(Base):
         if "id" in d:
             d["id"] = ObjectId(d["id"])
 
-        if "logs_obj" in d:
-            d["logs"] = d.pop("logs_obj")
-
         return d

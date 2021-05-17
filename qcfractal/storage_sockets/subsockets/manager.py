@@ -150,7 +150,6 @@ class ManagerSocket:
     def get(
         self,
         name: Sequence[str],
-        include_logs: bool = False,
         include: Optional[Sequence[str]] = None,
         exclude: Optional[Sequence[str]] = None,
         missing_ok: bool = False,
@@ -171,8 +170,6 @@ class ManagerSocket:
         ----------
         name
             A list or other sequence of manager names
-        include_logs
-            Return all of a manager's access logs as part of the return (in an entry "logs")
         include
             Which fields of the manager info to return. Default is to return all fields.
         exclude
@@ -194,7 +191,7 @@ class ManagerSocket:
             raise RuntimeError(f"Request for {len(name)} managers is over the limit of {self._manager_limit}")
 
         unique_names = list(set(name))
-        load_cols = get_query_proj_columns(QueueManagerORM, include, exclude)
+        load_cols, load_rels = get_query_proj_columns(QueueManagerORM, include, exclude)
 
         with self._core_socket.optional_session(session, True) as session:
             query = (
@@ -203,8 +200,8 @@ class ManagerSocket:
                 .options(load_only(*load_cols))
             )
 
-            if include_logs:
-                query = query.options(selectinload(QueueManagerORM.logs_obj))
+            for r in load_rels:
+                query = query.options(selectinload(r))
 
             results = query.yield_per(500)
             result_map = {r.name: r.dict() for r in results}
@@ -276,7 +273,7 @@ class ManagerSocket:
 
         limit = calculate_limit(self._manager_limit, limit)
 
-        load_cols = get_query_proj_columns(QueueManagerORM, include, exclude)
+        load_cols, _ = get_query_proj_columns(QueueManagerORM, include, exclude)
 
         and_query = []
         if id is not None:
@@ -357,7 +354,7 @@ class ManagerSocket:
         if after is not None:
             and_query.append(QueueManagerLogORM.timestamp > after)
 
-        load_cols = get_query_proj_columns(QueueManagerLogORM, include, exclude)
+        load_cols, _ = get_query_proj_columns(QueueManagerLogORM, include, exclude)
 
         with self._core_socket.optional_session(session, True) as session:
             query = session.query(QueueManagerLogORM).filter(and_(*and_query))

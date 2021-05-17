@@ -23,15 +23,15 @@ def test_manager_basic(storage_socket):
     # Updating with submitted,completed,failures should add, rather than replace
     assert storage_socket.manager.update(name="first_manager", submitted=100, completed=200, failures=300, log=True)
     assert storage_socket.manager.update(name="first_manager", submitted=50, completed=100, failures=150, log=True)
-    ret = storage_socket.manager.get(name=["first_manager"], include_logs=True)
+    ret = storage_socket.manager.get(name=["first_manager"], include=["*", "logs_obj"])
     assert ret[0]["submitted"] == 150
     assert ret[0]["completed"] == 300
     assert ret[0]["failures"] == 450
-    assert len(ret[0]["logs"]) == 2
+    assert len(ret[0]["logs_obj"]) == 2
 
     # If we don't want log, they shouldn't be there
     ret = storage_socket.manager.get(name=["first_manager"])
-    assert "logs" not in ret[0]
+    assert "logs_obj" not in ret[0]
 
 
 def test_manager_get_nonexist(storage_socket):

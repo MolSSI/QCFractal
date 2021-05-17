@@ -153,7 +153,7 @@ class MoleculeSocket:
             else:
                 exclude = ["molecule_hash", "molecular_formula"]
 
-            load_cols = get_query_proj_columns(MoleculeORM, include, exclude)
+            load_cols, _ = get_query_proj_columns(MoleculeORM, include, exclude)
 
             results = (
                 session.query(MoleculeORM)
@@ -299,7 +299,7 @@ class MoleculeSocket:
         else:
             exclude = ["molecule_hash", "molecular_formula"]
 
-        load_cols = get_query_proj_columns(MoleculeORM, include, exclude)
+        load_cols, _ = get_query_proj_columns(MoleculeORM, include, exclude)
 
         and_query = []
         if molecular_formula is not None:

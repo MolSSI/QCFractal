@@ -157,9 +157,6 @@ class ProcedureSocket:
     def get(
         self,
         id: Sequence[ObjectId],
-        include_outputs: bool = False,
-        include_wavefunction: bool = False,
-        include_task: bool = False,
         include: Optional[Sequence[str]] = None,
         exclude: Optional[Sequence[str]] = None,
         missing_ok: bool = False,
@@ -180,12 +177,6 @@ class ProcedureSocket:
             An existing SQLAlchemy session to get data from
         id
             A list or other sequence of result IDs
-        include_outputs
-            If True, include the full calculation outputs (stdout, stderr, error) in the returned dictionary
-        include_wavefunction
-            If True, include the full wavefunction data in the returned dictionary
-        include_task
-            If True, include all info about the task in the returned dictionary
         include
             Which fields of the result to return. Default is to return all fields.
         exclude
@@ -210,23 +201,13 @@ class ProcedureSocket:
         int_id = [int(x) for x in id]
         unique_ids = list(set(int_id))
 
-        load_cols = get_query_proj_columns(BaseResultORM, include, exclude)
+        load_cols, load_rels = get_query_proj_columns(BaseResultORM, include, exclude)
 
         with self._core_socket.optional_session(session, True) as session:
             query = session.query(BaseResultORM).filter(BaseResultORM.id.in_(unique_ids)).options(load_only(*load_cols))
 
-            if include_outputs:
-                query = query.options(
-                    selectinload(
-                        BaseResultORM.stdout_obj,
-                        BaseResultORM.stderr_obj,
-                        BaseResultORM.error_obj,
-                    )
-                )
-            if include_wavefunction:
-                query = query.options(selectinload(BaseResultORM.wavefunction_data_obj))
-            if include_task:
-                query = query.options(selectinload(BaseResultORM.task_obj))
+            for r in load_rels:
+                query = query.options(selectinload(r))
 
             results = query.yield_per(100)
             result_map = {r.id: r.dict() for r in results}
