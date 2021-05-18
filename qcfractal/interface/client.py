@@ -722,7 +722,7 @@ class FractalClient(object):
         if not include:
             for result in response.data:
                 if isinstance(result, dict):
-                    result['client'] = self
+                    result["client"] = self
                 else:
                     result.__dict__["client"] = self
 
