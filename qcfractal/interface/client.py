@@ -720,7 +720,10 @@ class FractalClient(object):
         # Add references back to the client
         if not include:
             for result in response.data:
-                result.__dict__["client"] = self
+                if isinstance(result, dict):
+                    result['client'] = self
+                else:
+                    result.__dict__["client"] = self
 
         if full_return:
             return response
