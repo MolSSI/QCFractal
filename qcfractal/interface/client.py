@@ -699,7 +699,8 @@ class FractalClient(object):
         -------
         Union[List[RecordResult], Dict[str, Any]]
             Returns a List of found RecordResult's without include, or a
-            dictionary of results with include.
+            dictionary of results with include. A dictionary will be returned
+            of a result is defined with an outdated model (temporary workaround).
         """
         payload = {
             "meta": {"limit": limit, "skip": skip, "include": include},
