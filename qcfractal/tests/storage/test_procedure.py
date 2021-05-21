@@ -53,7 +53,7 @@ def test_procedure_basic(storage_socket):
     all_ids = ids1 + ids2 + ids3 + ids4 + ids5
 
     # Should have created tasks
-    meta, tasks = storage_socket.task.query(base_result=all_ids)
+    meta, tasks = storage_socket.task.query(base_result_id=all_ids)
     assert meta.n_found == 5
 
     # Create the fake managers in the database
@@ -81,7 +81,7 @@ def test_procedure_basic(storage_socket):
     storage_socket.procedure.update_completed("manager_1", {ids5[0]: result_data_5})
 
     # Two tasks were failures. Those tasks should be the only ones remaining in the task queue
-    meta, tasks = storage_socket.task.query(base_result=all_ids)
+    meta, tasks = storage_socket.task.query(base_result_id=all_ids)
     assert meta.n_found == 2
     assert tasks[0]["manager"] == "manager_2"
     assert tasks[0]["base_result_id"] == ids3[0]

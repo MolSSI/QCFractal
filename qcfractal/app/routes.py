@@ -768,10 +768,20 @@ def get_optimization(query_type: str):
 def get_task_queue():
     body = parse_bodymodel(TaskQueueGETBody)
 
-    meta, tasks = storage_socket.task.query(**{**body.data.dict(), **body.meta.dict()})
+    # Change base_result -> base_result_id
+    data = body.data.dict()
+    if "base_result" in data:
+        data["base_result_id"] = data.pop("base_result")
+
+    meta, tasks = storage_socket.task.query(**{**data, **body.meta.dict()})
 
     # Convert the new metadata format to the old format
     meta_old = convert_get_response_metadata(meta, missing=[])
+
+    for t in tasks:
+        if "base_result_id" in t:
+            t["base_result"] = t.pop("base_result_id")
+
     response = TaskQueueGETResponse(meta=meta_old, data=tasks)
 
     return SerializedResponse(response)
@@ -839,7 +849,7 @@ def put_task_queue():
                     # If we inserted a new task, then also reset base result statuses
                     # (ie, if it was running, then it obviously isn't since we made a new task)
                     if meta.n_inserted > 0:
-                        storage_socket.reset_base_result_status(id=body.data.base_result, session=session)
+                        storage_socket.task.reset_base_result_status(id=body.data.base_result, session=session)
 
             data = {"n_updated": tasks_updated}
     elif body.meta.operation == "modify":

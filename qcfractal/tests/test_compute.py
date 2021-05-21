@@ -3,14 +3,14 @@ Tests the server compute capabilities.
 """
 
 import pytest
-import time
 
 import qcfractal.interface as ptl
 from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+from qcfractal.storage_sockets.models import TaskQueueORM
 from qcfractal.testing import using_psi4, using_rdkit, using_geometric
 
-bad_id1 = "000000000000000000000000"
-bad_id2 = "000000000000000000000001"
+bad_id1 = "99999999998"
+bad_id2 = "99999999999"
 
 
 @pytest.mark.parametrize(
@@ -145,7 +145,8 @@ def test_task_regenerate(fractal_test_server):
 
     # Manually delete the old task
     storage_socket = fractal_test_server.get_storage_socket()
-    storage_socket.task.delete([x.id for x in old_tasks])
+    with storage_socket.session_scope() as session:
+        session.query(TaskQueueORM).filter(TaskQueueORM.id.in_([x.id for x in old_tasks])).delete()
 
     # Actually deleted?
     del_task = client.query_tasks(base_result=base_ids)
@@ -212,20 +213,11 @@ def test_queue_error(fractal_test_server):
 
     # Pull from database, raw JSON
     storage_socket = SQLAlchemySocket(fractal_test_server._qcf_config)
-    queue_ret = storage_socket.task.query(status="ERROR")["data"]
-    result = storage_socket.task.query(id=compute_ret.ids)["data"][0]
+    queue_ret = storage_socket.task.query(status=["ERROR"])[1]
+    result = storage_socket.task.query(id=compute_ret.ids)[1][0]
 
     assert len(queue_ret) == 1
-    # TODO: task.error is not used anymore
-    # assert "connectivity graph" in queue_ret[0].error.error_message
     assert result["status"] == "ERROR"
-
-    storage_socket = SQLAlchemySocket(fractal_test_server._qcf_config)
-
-    # Force a complete mark and test
-    storage_socket.task.mark_complete([queue_ret[0].id])
-    queue_ret = storage_socket.get_queue(base_result=[queue_ret[0].id])["data"]
-    assert len(queue_ret) == 0
 
 
 @using_rdkit
@@ -325,45 +317,45 @@ def test_queue_duplicate_procedure(fractal_test_server):
     assert ret.ids[0] == ret2.ids[1]
 
 
-def test_queue_bad_compute_method(fractal_test_server):
-
-    client = fractal_test_server.client()
-
-    mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.1")
-
-    with pytest.raises(IOError) as exc:
-        client.add_compute("badprogram", "UFF", "", "energy", None, [mol1], full_return=True)
-
-    assert "not avail" in str(exc.value)
-
-
-def test_queue_bad_procedure_method(fractal_test_server):
-
-    client = fractal_test_server.client()
-    mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.1")
-
-    geometric_options = {
-        "keywords": None,
-        "qc_spec": {"driver": "gradient", "method": "UFF", "basis": "", "keywords": None, "program": "rdkit"},
-    }
-
-    # Test bad procedure
-    with pytest.raises(IOError) as exc:
-        client.add_procedure("optimization", "badproc", geometric_options, [mol1])
-
-    assert "not avail" in str(exc.value)
-
-    # Test procedure class
-    with pytest.raises(RuntimeError) as exc:
-        client.add_procedure("badprocedure", "geometric", geometric_options, [mol1])
-
-    # Test bad program
-    with pytest.raises(IOError) as exc:
-        geometric_options["qc_spec"]["program"] = "badqc"
-        client.add_procedure("optimization", "geometric", geometric_options, [mol1])
-
-    assert "not avail" in str(exc.value)
-    assert "badqc" in str(exc.value)
+# def test_queue_bad_compute_method(fractal_test_server):
+#
+#    client = fractal_test_server.client()
+#
+#    mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.1")
+#
+#    with pytest.raises(IOError) as exc:
+#        client.add_compute("badprogram", "UFF", "", "energy", None, [mol1], full_return=True)
+#
+#    assert "not avail" in str(exc.value)
+#
+#
+# def test_queue_bad_procedure_method(fractal_test_server):
+#
+#    client = fractal_test_server.client()
+#    mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.1")
+#
+#    geometric_options = {
+#        "keywords": None,
+#        "qc_spec": {"driver": "gradient", "method": "UFF", "basis": "", "keywords": None, "program": "rdkit"},
+#    }
+#
+#    # Test bad procedure
+#    with pytest.raises(IOError) as exc:
+#        client.add_procedure("optimization", "badproc", geometric_options, [mol1])
+#
+#    assert "not avail" in str(exc.value)
+#
+#    # Test procedure class
+#    with pytest.raises(RuntimeError) as exc:
+#        client.add_procedure("badprocedure", "geometric", geometric_options, [mol1])
+#
+#    # Test bad program
+#    with pytest.raises(IOError) as exc:
+#        geometric_options["qc_spec"]["program"] = "badqc"
+#        client.add_procedure("optimization", "geometric", geometric_options, [mol1])
+#
+#    assert "not avail" in str(exc.value)
+#    assert "badqc" in str(exc.value)
 
 
 def test_queue_ordering_time(fractal_test_server):
@@ -383,11 +375,11 @@ def test_queue_ordering_time(fractal_test_server):
 
     assert len(storage_socket.task.claim(manager_name, [], [], limit=1)) == 0
 
-    queue_id1 = storage_socket.task.claim(manager_name, ["rdkit"], [], limit=1)[0].base_result
-    queue_id2 = storage_socket.task.claim(manager_name, ["rdkit"], [], limit=1)[0].base_result
+    queue_id1 = storage_socket.task.claim(manager_name, ["rdkit"], [], limit=1)[0]["base_result_id"]
+    queue_id2 = storage_socket.task.claim(manager_name, ["rdkit"], [], limit=1)[0]["base_result_id"]
 
-    assert queue_id1 == ret1
-    assert queue_id2 == ret2
+    assert queue_id1 == int(ret1)
+    assert queue_id2 == int(ret2)
 
 
 def test_queue_ordering_priority(fractal_test_server):
@@ -407,13 +399,13 @@ def test_queue_ordering_priority(fractal_test_server):
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2, priority="high").ids[0]
     ret3 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol3, priority="HIGH").ids[0]
 
-    queue_id1 = storage_socket.task.claim(manager_name, ["rdkit"], [], limit=1)[0].base_result
-    queue_id2 = storage_socket.task.claim(manager_name, ["RDkit"], [], limit=1)[0].base_result
-    queue_id3 = storage_socket.task.claim(manager_name, ["RDKIT"], [], limit=1)[0].base_result
+    queue_id1 = storage_socket.task.claim(manager_name, ["rdkit"], [], limit=1)[0]["base_result_id"]
+    queue_id2 = storage_socket.task.claim(manager_name, ["RDkit"], [], limit=1)[0]["base_result_id"]
+    queue_id3 = storage_socket.task.claim(manager_name, ["RDKIT"], [], limit=1)[0]["base_result_id"]
 
-    assert queue_id1 == ret2
-    assert queue_id2 == ret3
-    assert queue_id3 == ret1
+    assert queue_id1 == int(ret2)
+    assert queue_id2 == int(ret3)
+    assert queue_id3 == int(ret1)
 
 
 def test_queue_order_procedure_priority(fractal_test_server):
@@ -442,13 +434,13 @@ def test_queue_order_procedure_priority(fractal_test_server):
     assert len(storage_socket.task.claim(manager_name, ["rdkit"], ["geom"], limit=1)) == 0
     assert len(storage_socket.task.claim(manager_name, ["prog1"], ["geometric"], limit=1)) == 0
 
-    queue_id1 = storage_socket.task.claim(manager_name, ["rdkit"], ["geometric"], limit=1)[0].base_result
-    queue_id2 = storage_socket.task.claim(manager_name, ["RDKIT"], ["geometric"], limit=1)[0].base_result
-    queue_id3 = storage_socket.task.claim(manager_name, ["rdkit"], ["GEOMETRIC"], limit=1)[0].base_result
+    queue_id1 = storage_socket.task.claim(manager_name, ["rdkit"], ["geometric"], limit=1)[0]["base_result_id"]
+    queue_id2 = storage_socket.task.claim(manager_name, ["RDKIT"], ["geometric"], limit=1)[0]["base_result_id"]
+    queue_id3 = storage_socket.task.claim(manager_name, ["rdkit"], ["GEOMETRIC"], limit=1)[0]["base_result_id"]
 
-    assert queue_id1 == ret2
-    assert queue_id2 == ret3
-    assert queue_id3 == ret1
+    assert queue_id1 == int(ret2)
+    assert queue_id2 == int(ret3)
+    assert queue_id3 == int(ret1)
 
 
 def test_queue_query_tag(fractal_test_server):
