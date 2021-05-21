@@ -330,7 +330,7 @@ class SingleResultHandler(BaseProcedureHandler):
 
             new_tasks.append(task)
 
-            return self._core_socket.task.add_orm(new_tasks, session=session)
+        return self._core_socket.task.add_orm(new_tasks, session=session)
 
     def update_completed(self, session: Session, task_orm: TaskQueueORM, manager_name: str, result: AtomicResult):
         """

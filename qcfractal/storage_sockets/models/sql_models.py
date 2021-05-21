@@ -273,16 +273,6 @@ class TaskQueueORM(Base):
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
     modified_on = Column(DateTime, default=datetime.datetime.utcnow)
 
-    # TODO: for back-compatibility with mongo, tobe removed
-    # (requries modifying pydantic model)
-    @hybrid_property
-    def base_result(self):
-        return self.base_result_id
-
-    @base_result.setter
-    def base_result(self, val):
-        self.base_result_id = int(val)
-
     # can reference ResultORMs or any ProcedureORM
     base_result_id = Column(Integer, ForeignKey("base_result.id", ondelete="cascade"), unique=True, nullable=False)
     base_result_obj = relationship(

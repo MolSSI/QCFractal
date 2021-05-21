@@ -7,9 +7,14 @@ from datetime import datetime as dt
 from qcfractal.storage_sockets.models import BaseResultORM, TaskQueueORM
 from qcfractal.storage_sockets.storage_utils import add_metadata_template
 from qcfractal.storage_sockets.sqlalchemy_socket import format_query, calculate_limit
-from qcfractal.storage_sockets.sqlalchemy_common import insert_general, get_query_proj_columns, get_count
+from qcfractal.storage_sockets.sqlalchemy_common import (
+    insert_general,
+    get_query_proj_columns,
+    get_count,
+    delete_general,
+)
 from qcfractal.interface.models import TaskRecord, RecordStatusEnum, TaskStatusEnum, ObjectId
-from qcfractal.interface.models.query_meta import InsertMetadata, QueryMetadata
+from qcfractal.interface.models.query_meta import InsertMetadata, QueryMetadata, DeleteMetadata
 
 from typing import TYPE_CHECKING
 
@@ -211,7 +216,7 @@ class TaskSocket:
         tag: Sequence[str] = None,
         *,
         session: Optional[Session] = None,
-    ) -> List[TaskRecord]:
+    ) -> List[TaskDict]:
         """Claim/assign tasks for a manager
 
         Given tags and available programs/procedures on the manager, obtain
@@ -270,9 +275,6 @@ class TaskSocket:
 
             new_limit = limit
             found = []
-            update_count = 0
-
-            update_fields = {"status": TaskStatusEnum.running, "modified_on": dt.utcnow(), "manager": manager_name}
 
             for q in queries:
 
@@ -291,17 +293,14 @@ class TaskSocket:
                 )
 
                 new_items = query.all()
-                new_ids = [x.id for x in new_items]
 
                 # Update all the task records to reflect this manager claiming them
-                update_count += (
-                    session.query(TaskQueueORM)
-                    .filter(TaskQueueORM.id.in_(new_ids))
-                    .update(update_fields, synchronize_session=False)
-                )
+                for task in new_items:
+                    task.status = TaskStatusEnum.running
+                    task.modified_on = dt.utcnow()
+                    task.manager = manager_name
 
-                # After commiting, the row locks are released
-                session.commit()
+                session.flush()
 
                 # How many more do we have to query
                 new_limit = limit - len(new_items)
@@ -310,21 +309,15 @@ class TaskSocket:
                 # that would be really bad, and lead to an infinite loop
                 assert new_limit >= 0
 
-                # Store in dict form for returning. We will add the updated fields later
-                found.extend([task.to_dict(exclude=update_fields.keys()) for task in new_items])
-
-            # avoid another trip to the DB to get the updated values, set them here
-            found = [TaskRecord(**task, **update_fields) for task in found]
-
-        if update_count != len(found):
-            self._logger.warning("QUEUE: Number of found tasks does not match the number of updated tasks.")
+                # Store in dict form for returning
+                found.extend([task.dict() for task in new_items])
 
         return found
 
     def query(
         self,
         id: Optional[Iterable[ObjectId]] = None,
-        base_result: Optional[Iterable[ObjectId]] = None,
+        base_result_id: Optional[Iterable[ObjectId]] = None,
         program: Optional[Iterable[ObjectId]] = None,
         status: Optional[Iterable[TaskStatusEnum]] = None,
         tag: Optional[Iterable[str]] = None,
@@ -382,8 +375,8 @@ class TaskSocket:
         and_query = []
         if id is not None:
             and_query.append(TaskQueueORM.id.in_(id))
-        if base_result is not None:
-            and_query.append(TaskQueueORM.base_result_id.in_(base_result))
+        if base_result_id is not None:
+            and_query.append(TaskQueueORM.base_result_id.in_(base_result_id))
         if program is not None:
             and_query.append(TaskQueueORM.program.in_(program))
         if status is not None:
@@ -403,64 +396,6 @@ class TaskSocket:
         meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
         return meta, result_dicts
 
-    def mark_complete(self, task_ids: List[str]) -> int:
-        """Update the given tasks as complete
-
-        Note that each task is already pointing to its result location
-        Mark the corresponding result/procedure as complete
-
-        Parameters
-        ----------
-        task_ids : List[str]
-            IDs of the tasks to mark as COMPLETE
-
-        Returns
-        -------
-        int
-            number of TaskRecord objects marked as COMPLETE, and deleted from the database consequtively.
-        """
-
-        if not task_ids:
-            return 0
-
-        with self._core_socket.session_scope() as session:
-            # delete completed tasks
-            tasks_c = (
-                session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(task_ids)).delete(synchronize_session=False)
-            )
-
-        return tasks_c
-
-    def mark_error(self, task_ids: List[str]) -> int:
-        """
-        update the given tasks as errored
-
-        Parameters
-        ----------
-        task_ids : List[str]
-            IDs of the tasks to mark as ERROR
-
-        Returns
-        -------
-        int
-            Number of tasks updated as errored.
-        """
-
-        if not task_ids:
-            return 0
-
-        updated_ids = []
-        with self._core_socket.session_scope() as session:
-            task_objects = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(task_ids)).all()
-
-            for task_obj in task_objects:
-                task_obj.status = TaskStatusEnum.error
-                task_obj.modified_on = dt.utcnow()
-
-            session.commit()
-
-        return len(task_ids)
-
     def reset_status(
         self,
         id: Union[str, List[str]] = None,
@@ -472,8 +407,7 @@ class TaskSocket:
         session: Optional[Session] = None,
     ) -> int:
         """
-        Reset the status of the tasks that a manager owns from Running to Waiting
-        If reset_error is True, then also reset errored tasks AND its results/proc
+        Reset the status of tasks to waiting
 
         Parameters
         ----------
@@ -529,10 +463,7 @@ class TaskSocket:
 
         return updated
 
-    def reset_base_result_status(
-        self,
-        id: Union[str, List[str]] = None,
-    ) -> int:
+    def reset_base_result_status(self, id: Union[str, List[str]] = None, *, session: Optional[Session] = None) -> int:
         """
         Reset the status of a base result to "incomplete". Will only work if the
         status is not complete.
@@ -553,7 +484,7 @@ class TaskSocket:
         query = format_query(BaseResultORM, id=id)
         update_dict = {"status": RecordStatusEnum.incomplete, "modified_on": dt.utcnow()}
 
-        with self._core_socket.session_scope() as session:
+        with self._core_socket.optional_session(session) as session:
             updated = (
                 session.query(BaseResultORM)
                 .filter(*query)
@@ -618,23 +549,3 @@ class TaskSocket:
             )
 
         return updated
-
-    def delete(self, id: Union[str, list]):
-        """
-        Delete a task from the queue. Use with cautious
-
-        Parameters
-        ----------
-        id : str or List
-            Ids of the tasks to delete
-        Returns
-        -------
-        int
-            Number of tasks deleted
-        """
-
-        task_ids = [id] if isinstance(id, (int, str)) else id
-        with self._core_socket.session_scope() as session:
-            count = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(task_ids)).delete()
-
-        return count
