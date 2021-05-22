@@ -235,7 +235,6 @@ class SQLAlchemySocket:
         from qcfractal.storage_sockets.subsockets.keywords import KeywordsSocket
         from qcfractal.storage_sockets.subsockets.molecule import MoleculeSocket
         from qcfractal.storage_sockets.subsockets.collection import CollectionSocket
-        from qcfractal.storage_sockets.subsockets.result import ResultSocket
         from qcfractal.storage_sockets.subsockets.procedure import ProcedureSocket
         from qcfractal.storage_sockets.subsockets.service import ServiceSocket
         from qcfractal.storage_sockets.subsockets.wavefunction import WavefunctionSocket
@@ -249,7 +248,6 @@ class SQLAlchemySocket:
         self.keywords = KeywordsSocket(self)
         self.molecule = MoleculeSocket(self)
         self.collection = CollectionSocket(self)
-        self.result = ResultSocket(self)
         self.procedure = ProcedureSocket(self)
         self.service = ServiceSocket(self)
         self.wavefunction = WavefunctionSocket(self)
@@ -599,85 +597,6 @@ class SQLAlchemySocket:
         self, collection: Optional[str] = None, name: Optional[str] = None, col_id: Optional[int] = None
     ) -> bool:
         return self.collection.delete(collection, name, col_id)
-
-    # ~~~~~~~~~~~~~~~~~ Results ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
-
-    def get_results(
-        self,
-        id: Union[str, List] = None,
-        program: str = None,
-        method: str = None,
-        basis: str = None,
-        molecule: str = None,
-        driver: str = None,
-        keywords: str = None,
-        task_id: Union[str, List] = None,
-        manager_id: Union[str, List] = None,
-        status: str = "COMPLETE",
-        include: Optional[List[str]] = None,
-        exclude: Optional[List[str]] = None,
-        limit: int = None,
-        skip: int = 0,
-        return_json=True,
-        with_ids=True,
-    ):
-        return self.result.get(
-            id,
-            program,
-            method,
-            basis,
-            molecule,
-            driver,
-            keywords,
-            task_id,
-            manager_id,
-            status,
-            include,
-            exclude,
-            limit,
-            skip,
-            return_json,
-            with_ids,
-        )
-
-    def del_results(self, ids: List[str]):
-        return self.result.delete(ids)
-
-    # ~~~~~~~~~~~~~~~~~~ Procedures ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def get_procedures(
-        self,
-        id: Union[str, List] = None,
-        procedure: str = None,
-        program: str = None,
-        hash_index: str = None,
-        task_id: Union[str, List] = None,
-        manager_id: Union[str, List] = None,
-        status: str = "COMPLETE",
-        include=None,
-        exclude=None,
-        limit: int = None,
-        skip: int = 0,
-        return_json=True,
-        with_ids=True,
-    ):
-        return self.procedure.query(
-            id,
-            procedure,
-            program,
-            hash_index,
-            task_id,
-            manager_id,
-            status,
-            include,
-            exclude,
-            limit,
-            skip,
-            return_json,
-            with_ids,
-        )
-
-    def update_procedures(self, records_list: List["BaseRecord"]):
-        return self.procedure.update(records_list)
 
     # ~~~~~~~~ Services ~~~~~~~~~~~~~
 

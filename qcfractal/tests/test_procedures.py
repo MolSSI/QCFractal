@@ -134,7 +134,7 @@ def test_procedure_optimization_single(fractal_test_server):
     fractal_test_server.await_results(r.ids)
 
     # # Query result and check against out manual pul
-    query1 = client.query_procedures(procedure="optimization", program="geometric")
+    query1 = client.query_procedures(procedure="optimization")
     query2 = client.query_procedures(id=compute_key)
 
     for query in [query1, query2]:

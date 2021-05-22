@@ -677,14 +677,12 @@ class FractalClient(object):
     def query_results(
         self,
         id: Optional["QueryObjectId"] = None,
-        task_id: Optional["QueryObjectId"] = None,
         program: Optional["QueryStr"] = None,
         molecule: Optional["QueryObjectId"] = None,
         driver: Optional["QueryStr"] = None,
         method: Optional["QueryStr"] = None,
         basis: Optional["QueryStr"] = None,
-        keywords: Optional["QueryObjectId"] = None,
-        status: "QueryStr" = "COMPLETE",
+        status: Optional["QueryStr"] = None,
         limit: Optional[int] = None,
         skip: int = 0,
         include: Optional["QueryListStr"] = None,
@@ -696,8 +694,6 @@ class FractalClient(object):
         ----------
         id : QueryObjectId, optional
             Queries the Result ``id`` field.
-        task_id : QueryObjectId, optional
-            Queries the Result ``task_id`` field.
         program : QueryStr, optional
             Queries the Result ``program`` field.
         molecule : QueryObjectId, optional
@@ -708,8 +704,6 @@ class FractalClient(object):
             Queries the Result ``method`` field.
         basis : QueryStr, optional
             Queries the Result ``basis`` field.
-        keywords : QueryObjectId, optional
-            Queries the Result ``keywords`` field.
         status : QueryStr, optional
             Queries the Result ``status`` field.
         limit : Optional[int], optional
@@ -730,15 +724,13 @@ class FractalClient(object):
         payload = {
             "meta": {"limit": limit, "skip": skip, "include": include},
             "data": {
-                "id": id,
-                "task_id": task_id,
-                "program": program,
-                "molecule": molecule,
-                "driver": driver,
-                "method": method,
-                "basis": basis,
-                "keywords": keywords,
-                "status": status,
+                "id": make_list(id),
+                "program": make_list(program),
+                "molecule": make_list(molecule),
+                "driver": make_list(driver),
+                "method": make_list(method),
+                "basis": make_list(basis),
+                "status": make_list(status),
             },
         }
         response = self._automodel_request("result", "get", payload, full_return=True)
@@ -756,10 +748,7 @@ class FractalClient(object):
     def query_procedures(
         self,
         id: Optional["QueryObjectId"] = None,
-        task_id: Optional["QueryObjectId"] = None,
         procedure: Optional["QueryStr"] = None,
-        program: Optional["QueryStr"] = None,
-        hash_index: Optional["QueryStr"] = None,
         status: "QueryStr" = "COMPLETE",
         limit: Optional[int] = None,
         skip: int = 0,
@@ -772,14 +761,8 @@ class FractalClient(object):
         ----------
         id : QueryObjectId, optional
             Queries the Procedure ``id`` field.
-        task_id : QueryObjectId, optional
-            Queries the Procedure ``task_id`` field.
         procedure : QueryStr, optional
             Queries the Procedure ``procedure`` field.
-        program : QueryStr, optional
-            Queries the Procedure ``program`` field.
-        hash_index : QueryStr, optional
-            Queries the Procedure ``hash_index`` field.
         status : QueryStr, optional
             Queries the Procedure ``status`` field.
         limit : Optional[int], optional
@@ -801,12 +784,9 @@ class FractalClient(object):
         payload = {
             "meta": {"limit": limit, "skip": skip, "include": include},
             "data": {
-                "id": id,
-                "task_id": task_id,
-                "program": program,
-                "procedure": procedure,
-                "hash_index": hash_index,
-                "status": status,
+                "id": make_list(id),
+                "procedure": make_list(procedure),
+                "status": make_list(status),
             },
         }
         response = self._automodel_request("procedure", "get", payload, full_return=True)

@@ -338,3 +338,31 @@ def test_molecules_query_limit(storage_socket):
     assert meta.success
     assert meta.n_returned == 0
     assert len(mols) == 0
+
+
+def test_molecules_get_empty(storage_socket):
+    assert storage_socket.molecule.get([]) == []
+
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    _, ids = storage_socket.molecule.add([water])
+    assert len(ids) == 1
+
+    assert storage_socket.molecule.get([]) == []
+
+
+def test_molecules_query_empty(storage_socket):
+    assert storage_socket.molecule.query()[1] == []
+
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    _, ids = storage_socket.molecule.add([water])
+    assert len(ids) == 1
+
+    # Empty everything = return all
+    meta, mols = storage_socket.molecule.query()
+    assert meta.n_found == 1
+    assert mols[0]["id"] == ids[0]
+
+    # Empty lists will constrain the results to be empty
+    meta, mols = storage_socket.molecule.query(id=[])
+    assert meta.n_found == 0
+    assert mols == []

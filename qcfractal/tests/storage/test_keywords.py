@@ -145,3 +145,12 @@ def test_keywords_get_nonexist(storage_socket):
     # Now try with missing_ok = False. This should raise an exception
     with pytest.raises(RuntimeError, match=r"Could not find all requested keywords records"):
         storage_socket.keywords.get([ids[0], ids[1], ids[1], ids[0]], missing_ok=False)
+
+
+def test_keywords_get_empty(storage_socket):
+    kw1 = ptl.models.KeywordSet(values={"o": 5, "f": 1.111111111111111})
+    kw6 = ptl.models.KeywordSet(values={"O": 5, "f": 1.111111111121111}, lowercase=False)
+    meta, ids = storage_socket.keywords.add([kw1, kw6])
+    assert meta.n_inserted == 2
+
+    assert storage_socket.keywords.get([]) == []

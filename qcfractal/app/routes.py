@@ -25,6 +25,8 @@ from ..interface.models.rest_models import (
     KeywordPOSTResponse,
     ResponseGETMeta,
     ResponsePOSTMeta,
+    ResultGETBody,
+    ResultGETResponse,
     QueueManagerGETBody,
     QueueManagerGETResponse,
     QueueManagerPOSTBody,
@@ -691,11 +693,18 @@ def delete_collection(collection_id: int, view_function: str):
 @check_access
 def get_result():
 
-    body_model, response_model = rest_model("result", "get")
-    body = parse_bodymodel(body_model)
+    body = parse_bodymodel(ResultGETBody)
 
-    ret = storage_socket.get_results(**{**body.data.dict(), **body.meta.dict()})
-    response = response_model(**ret)
+    meta, results = storage_socket.procedure.single.query(**{**body.data.dict(), **body.meta.dict()})
+
+    # Remove result_type. This isn't used right now and is missing from the model
+    for r in results:
+        r.pop("result_type", None)
+
+    # Convert the new metadata format to the old format
+    meta_old = convert_get_response_metadata(meta, missing=[])
+
+    response = ResultGETResponse(meta=meta_old, data=results)
 
     current_app.logger.info("GET: Results - {} pulls.".format(len(response.data)))
 
@@ -733,13 +742,20 @@ def get_procedure(query_type: str = "get"):
 
     # try:
     if query_type == "get":
-        ret = storage_socket.get_procedures(**{**body.data.dict(), **body.meta.dict()})
+        meta, ret = storage_socket.procedure.query(**{**body.data.dict(), **body.meta.dict()})
+
+        # Remove result_type. This isn't used right now and is missing from the model
+        for r in ret:
+            r.pop("result_type", None)
+
+        # Convert the new metadata format to the old format
+        meta_old = convert_get_response_metadata(meta, missing=[])
+
+        response = response_model(meta=meta_old, data=ret)
     else:  # all other queries, like 'best_opt_results'
         ret = storage_socket.custom_query("procedure", query_type, **{**body.data.dict(), **body.meta.dict()})
-    # except KeyError as e:
-    #     return jsonify(msg=str(e)), 500
 
-    response = response_model(**ret)
+        response = response_model(**ret)
 
     return SerializedResponse(response)
 
@@ -750,15 +766,21 @@ def get_optimization(query_type: str):
     body_model, response_model = rest_model(f"optimization/{query_type}", "get")
     body = parse_bodymodel(body_model)
 
-    # try:
     if query_type == "get":
-        ret = storage_socket.get_procedures(**{**body.data.dict(), **body.meta.dict()})
+        meta, ret = storage_socket.procedure.optimization.query(**{**body.data.dict(), **body.meta.dict()})
+
+        # Remove result_type. This isn't used right now and is missing from the model
+        for r in ret:
+            r.pop("result_type", None)
+
+        # Convert the new metadata format to the old format
+        meta_old = convert_get_response_metadata(meta, missing=[])
+
+        response = response_model(meta=meta_old, data=ret)
+
     else:  # all other queries, like 'best_opt_results'
         ret = storage_socket.custom_query("optimization", query_type, **{**body.data.dict(), **body.meta.dict()})
-    # except KeyError as e:
-    #     return jsonify(msg=str(e)), 500
-
-    response = response_model(**ret)
+        response = response_model(**ret)
 
     return SerializedResponse(response)
 
@@ -823,7 +845,7 @@ def put_task_queue():
         data = {"n_updated": tasks_updated}
     elif body.meta.operation == "regenerate":
         tasks_updated = 0
-        result_data = storage_socket.get_procedures(id=body.data.base_result)["data"]
+        result_data = storage_socket.procedure.get(id=body.data.base_result)
 
         new_tag = body.data.new_tag
         if body.data.new_priority is None:
@@ -832,6 +854,8 @@ def put_task_queue():
             new_priority = PriorityEnum(int(body.data.new_priority))
 
         for r in result_data:
+            # TODO - remove eventually
+            r.pop("result_type", None)
             model = build_procedure(r)
 
             # Only regenerate the task if the base record is not complete

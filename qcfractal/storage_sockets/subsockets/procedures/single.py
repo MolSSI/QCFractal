@@ -4,19 +4,16 @@ Procedure for a single computational task (energy, gradient, etc)
 from __future__ import annotations
 
 import logging
-from datetime import datetime as dt
+from datetime import datetime
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import joinedload, load_only, selectinload
 
 from . import helpers
 from .base import BaseProcedureHandler
 from ...models import TaskQueueORM, ResultORM
-from ...sqlalchemy_common import insert_general, get_query_proj_columns
-from ....interface.models import (
-    ObjectId,
-    RecordStatusEnum,
-    PriorityEnum,
-    AtomicInput,
-)
+from ...sqlalchemy_common import insert_general, get_query_proj_columns, get_count
+from ...sqlalchemy_socket import calculate_limit
+from ....interface.models import ObjectId, RecordStatusEnum, PriorityEnum, AtomicInput, QueryMetadata
 
 from typing import TYPE_CHECKING
 
@@ -24,7 +21,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from ...sqlalchemy_socket import SQLAlchemySocket
     from ....interface.models import AtomicResult, SingleProcedureSpecification, InsertMetadata
-    from typing import List, Optional, Tuple, Dict, Any, Sequence
+    from typing import List, Optional, Tuple, Dict, Any, Sequence, Iterable
 
     SingleProcedureDict = Dict[str, Any]
 
@@ -76,90 +73,6 @@ class SingleResultHandler(BaseProcedureHandler):
         with self._core_socket.optional_session(session) as session:
             meta, orm = insert_general(session, results, dedup_cols, (ResultORM.id,))
             return meta, [x[0] for x in orm]
-
-    def get(
-        self,
-        id: Sequence[ObjectId],
-        include_molecule: bool = False,
-        include_outputs: bool = False,
-        include_wavefunction: bool = False,
-        include_task: bool = False,
-        include: Optional[Sequence[str]] = None,
-        exclude: Optional[Sequence[str]] = None,
-        missing_ok: bool = False,
-        *,
-        session: Optional[Session] = None,
-    ) -> List[Optional[SingleProcedureDict]]:
-        """
-        Obtain results of single computations from with specified IDs from an existing session
-
-        The returned information will be in order of the given ids
-
-        If missing_ok is False, then any ids that are missing in the database will raise an exception. Otherwise,
-        the corresponding entry in the returned list of results will be None.
-
-        Parameters
-        ----------
-        session
-            An existing SQLAlchemy session to get data from
-        id
-            A list or other sequence of result IDs
-        include_molecule
-            If True, include the full molecule information in the returned dictionary
-        include_outputs
-            If True, include the full calculation outputs (stdout, stderr, error) in the returned dictionary
-        include_wavefunction
-            If True, include the full wavefunction data in the returned dictionary
-        include_task
-            If True, include all info about the task in the returned dictionary
-        include
-            Which fields of the result to return. Default is to return all fields.
-        exclude
-            Remove these fields from the return. Default is to return all fields.
-        missing_ok
-           If set to True, then missing results will be tolerated, and the returned list of
-           Molecules will contain None for the corresponding IDs that were not found.
-        session
-            An existing SQLAlchemy session to use. If None, one will be created
-
-        Returns
-        -------
-        :
-            Single result information as a dictionary in the same order as the given ids.
-            If missing_ok is True, then this list will contain None where the molecule was missing.
-        """
-
-        if len(id) > self._limit:
-            raise RuntimeError(f"Request for {len(id)} single results is over the limit of {self._limit}")
-
-        # TODO - int id
-        int_id = [int(x) for x in id]
-        unique_ids = list(set(int_id))
-
-        load_cols, _ = get_query_proj_columns(ResultORM, include, exclude)
-
-        with self._core_socket.optional_session(session, True) as session:
-            query = session.query(ResultORM).filter(ResultORM.id.in_(unique_ids)).options(load_only(*load_cols))
-
-            if include_molecule:
-                query = query.options(selectinload(ResultORM.molecule_obj))
-            if include_outputs:
-                query = query.options(selectinload(ResultORM.stdout_obj, ResultORM.stderr_obj, ResultORM.error_obj))
-            if include_wavefunction:
-                query = query.options(selectinload(ResultORM.wavefunction_data_obj))
-            if include_task:
-                query = query.options(selectinload(ResultORM.task_obj))
-
-            results = query.yield_per(100)
-            result_map = {r.id: r.dict() for r in results}
-
-            # Put into the requested order
-            ret = [result_map.get(x, None) for x in int_id]
-
-            if missing_ok is False and None in ret:
-                raise RuntimeError("Could not find all requested single result records")
-
-            return ret
 
     @staticmethod
     def build_schema_input(result: ResultORM, molecule: Dict[str, Any], keywords: Dict[str, Any]) -> AtomicInput:
@@ -385,6 +298,186 @@ class SingleResultHandler(BaseProcedureHandler):
         result_orm.provenance = result.provenance.dict()
         result_orm.manager_name = manager_name
         result_orm.status = RecordStatusEnum.complete
-        result_orm.modified_on = dt.utcnow()
+        result_orm.modified_on = datetime.utcnow()
 
         session.flush()
+
+    def get(
+        self,
+        id: Sequence[ObjectId],
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
+        missing_ok: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Optional[SingleProcedureDict]]:
+        """
+        Obtain results of single computations from with specified IDs from an existing session
+
+        The returned information will be in order of the given ids
+
+        If missing_ok is False, then any ids that are missing in the database will raise an exception. Otherwise,
+        the corresponding entry in the returned list of results will be None.
+
+        Parameters
+        ----------
+        session
+            An existing SQLAlchemy session to get data from
+        id
+            A list or other sequence of result IDs
+        include
+            Which fields of the result to return. Default is to return all fields.
+        exclude
+            Remove these fields from the return. Default is to return all fields.
+        missing_ok
+           If set to True, then missing results will be tolerated, and the returned list of
+           Molecules will contain None for the corresponding IDs that were not found.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
+
+        Returns
+        -------
+        :
+            Single result information as a dictionary in the same order as the given ids.
+            If missing_ok is True, then this list will contain None where the molecule was missing.
+        """
+
+        if len(id) > self._limit:
+            raise RuntimeError(f"Request for {len(id)} single results is over the limit of {self._limit}")
+
+        # TODO - int id
+        int_id = [int(x) for x in id]
+        unique_ids = list(set(int_id))
+
+        load_cols, load_rels = get_query_proj_columns(ResultORM, include, exclude)
+
+        with self._core_socket.optional_session(session, True) as session:
+            query = session.query(ResultORM).filter(ResultORM.id.in_(unique_ids)).options(load_only(*load_cols))
+
+            for r in load_rels:
+                query = query.options(selectinload(r))
+
+            results = query.yield_per(100)
+            result_map = {r.id: r.dict() for r in results}
+
+            # Put into the requested order
+            ret = [result_map.get(x, None) for x in int_id]
+
+            if missing_ok is False and None in ret:
+                raise RuntimeError("Could not find all requested single result records")
+
+            return ret
+
+    def query(
+        self,
+        id: Optional[Iterable[ObjectId]] = None,
+        program: Optional[Iterable[str]] = None,
+        driver: Optional[Iterable[str]] = None,
+        method: Optional[Iterable[str]] = None,
+        basis: Optional[Iterable[str]] = None,
+        molecule: Optional[Iterable[ObjectId]] = None,
+        manager: Optional[Iterable[str]] = None,
+        status: Optional[Iterable[RecordStatusEnum]] = None,
+        created_before: Optional[datetime] = None,
+        created_after: Optional[datetime] = None,
+        modified_before: Optional[datetime] = None,
+        modified_after: Optional[datetime] = None,
+        include: Optional[Iterable[str]] = None,
+        exclude: Optional[Iterable[str]] = None,
+        limit: int = None,
+        skip: int = 0,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[QueryMetadata, List[SingleProcedureDict]]:
+        """
+
+        Parameters
+        ----------
+        id
+            Query for procedures based on its ID
+        program
+            Query based on program
+        driver
+            Query based on driver
+        method
+            Query based on method
+        basis
+            Query based on basis
+        molecule
+            Query based on molecule
+        manager
+            Query based on manager
+        status
+            The status of the procedure
+        created_before
+            Query for records created before this date
+        created_after
+            Query for records created after this date
+        modified_before
+            Query for records modified before this date
+        modified_after
+            Query for records modified after this date
+        include
+            Which fields of the molecule to return. Default is to return all fields.
+        exclude
+            Remove these fields from the return. Default is to return all fields.
+        limit
+            Limit the number of results. If None, the server limit will be used.
+            This limit will not be respected if greater than the configured limit of the server.
+        skip
+            Skip this many results from the total list of matches. The limit will apply after skipping,
+            allowing for pagination.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of procedure data (as dictionaries)
+        """
+
+        limit = calculate_limit(self._limit, limit)
+
+        load_cols, load_rels = get_query_proj_columns(ResultORM, include, exclude)
+
+        and_query = []
+        if id is not None:
+            and_query.append(ResultORM.id.in_(id))
+        if program is not None:
+            and_query.append(ResultORM.program.in_(program))
+        if driver is not None:
+            and_query.append(ResultORM.driver.in_(driver))
+        if method is not None:
+            and_query.append(ResultORM.method.in_(method))
+        if basis is not None:
+            # Since basis can be null.....
+            and_query.append(or_(ResultORM.basis == x for x in basis))
+        if manager is not None:
+            and_query.append(ResultORM.manager_name.in_(manager))
+        if molecule is not None:
+            and_query.append(ResultORM.molecule.in_(molecule))
+        if status is not None:
+            and_query.append(ResultORM.status.in_(status))
+        if created_before is not None:
+            and_query.append(ResultORM.created_on < created_before)
+        if created_after is not None:
+            and_query.append(ResultORM.created_on > created_after)
+        if modified_before is not None:
+            and_query.append(ResultORM.modified_on < modified_before)
+        if modified_after is not None:
+            and_query.append(ResultORM.modified_on > modified_after)
+
+        with self._core_socket.optional_session(session, True) as session:
+            query = session.query(ResultORM).filter(and_(*and_query))
+            query = query.options(load_only(*load_cols))
+
+            for r in load_rels:
+                query = query.options(selectinload(r))
+
+            n_found = get_count(query)
+            results = query.limit(limit).offset(skip).yield_per(500)
+
+            result_dicts = [x.dict() for x in results]
+
+        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
+        return meta, result_dicts

@@ -6,10 +6,8 @@ import logging
 from qcfractal.storage_sockets.models import (
     BaseResultORM,
     TaskQueueORM,
-    OptimizationProcedureORM,
-    TorsionDriveProcedureORM,
-    GridOptimizationProcedureORM,
 )
+from sqlalchemy import and_
 from sqlalchemy.orm import joinedload, selectinload, load_only
 from qcfractal.interface.models import (
     TaskStatusEnum,
@@ -17,11 +15,10 @@ from qcfractal.interface.models import (
     RecordStatusEnum,
     InsertMetadata,
     AllProcedureSpecifications,
+    QueryMetadata,
 )
-from qcfractal.storage_sockets.storage_utils import get_metadata_template
-from ..sqlalchemy_common import get_query_proj_columns
+from ..sqlalchemy_common import get_query_proj_columns, get_count
 from qcfractal.storage_sockets.sqlalchemy_socket import (
-    format_query,
     calculate_limit,
 )
 
@@ -33,7 +30,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
     from qcfractal.interface.models import ObjectId, AllResultTypes, Molecule
-    from typing import List, Dict, Union, Tuple, Optional, Sequence, Any
+    from typing import List, Dict, Tuple, Optional, Sequence, Any, Iterable
 
     ProcedureDict = Dict[str, Any]
 
@@ -57,102 +54,70 @@ class ProcedureSocket:
 
     def query(
         self,
-        id: Union[str, List] = None,
-        procedure: str = None,
-        program: str = None,
-        hash_index: str = None,
-        task_id: Union[str, List] = None,
-        manager_id: Union[str, List] = None,
-        status: str = "COMPLETE",
-        include=None,
-        exclude=None,
+        id: Optional[Iterable[ObjectId]] = None,
+        procedure: Optional[Iterable[str]] = None,
+        manager: Optional[Iterable[str]] = None,
+        status: Optional[Iterable[RecordStatusEnum]] = None,
+        include: Optional[Iterable[str]] = None,
+        exclude: Optional[Iterable[str]] = None,
         limit: int = None,
         skip: int = 0,
-        return_json=True,
-        with_ids=True,
-    ):
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[QueryMetadata, List[ProcedureDict]]:
         """
 
         Parameters
         ----------
-        id : str or List[str]
-        procedure : str
-        program : str
-        hash_index : str
-        task_id : str or List[str]
-        status : bool, optional
-            The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
-            Default is 'COMPLETE'
-        include : Optional[List[str]], optional
-            The fields to return, default to return all
-        exclude : Optional[List[str]], optional
-            The fields to not return, default to return all
-        limit : Optional[int], optional
-            maximum number of results to return
-            if 'limit' is greater than the global setting self._max_limit,
-            the self._max_limit will be returned instead
-            (This is to avoid overloading the server)
-        skip : int, optional
-            skip the first 'skip' resaults. Used to paginate
-            Default is 0
-        return_json : bool, optional
-            Return the results as a list of json inseated of objects
-            Default is True
-        with_ids : bool, optional
-            Include the ids in the returned objects/dicts
-            Default is True
+        id
+            Query for procedures based on its ID
+        procedure
+            Query based on procedure type
+        status
+            The status of the procedure: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
+        include
+            Which fields of the molecule to return. Default is to return all fields.
+        exclude
+            Remove these fields from the return. Default is to return all fields.
+        limit
+            Limit the number of results. If None, the server limit will be used.
+            This limit will not be respected if greater than the configured limit of the server.
+        skip
+            Skip this many results from the total list of matches. The limit will apply after skipping,
+            allowing for pagination.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
 
         Returns
         -------
-        Dict[str, Any]
-            Dict with keys: data and meta. Data is the objects found
+        :
+            Metadata about the results of the query, and a list of procedure data (as dictionaries)
         """
 
         limit = calculate_limit(self._limit, limit)
-        meta = get_metadata_template()
 
-        if id is not None or task_id is not None:
-            status = None
+        load_cols, _ = get_query_proj_columns(BaseResultORM, include, exclude)
 
-        if procedure == "optimization":
-            className = OptimizationProcedureORM
-        elif procedure == "torsiondrive":
-            className = TorsionDriveProcedureORM
-        elif procedure == "gridoptimization":
-            className = GridOptimizationProcedureORM
-        else:
-            # raise TypeError('Unsupported procedure type {}. Id: {}, task_id: {}'
-            #                 .format(procedure, id, task_id))
-            className = BaseResultORM  # all classes, including those with 'selectin'
-            program = None  # make sure it's not used
-            if id is None:
-                # TODO - should be handled in pydantic model validation
-                self._logger.error(f"Procedure type not specified({procedure}), and ID is not given.")
-                raise KeyError("ID is required if procedure type is not specified.")
+        and_query = []
+        if id is not None:
+            and_query.append(BaseResultORM.id.in_(id))
+        if procedure is not None:
+            and_query.append(BaseResultORM.procedure.in_(procedure))
+        if manager is not None:
+            and_query.append(BaseResultORM.manager_name.in_(manager))
+        if status is not None:
+            and_query.append(BaseResultORM.status.in_(status))
 
-        query = format_query(
-            className,
-            id=id,
-            procedure=procedure,
-            program=program,
-            hash_index=hash_index,
-            task_id=task_id,
-            manager_id=manager_id,
-            status=status,
-        )
+        with self._core_socket.optional_session(session, True) as session:
+            query = session.query(BaseResultORM).filter(and_(*and_query))
+            query = query.options(load_only(*load_cols))
+            n_found = get_count(query)
+            results = query.limit(limit).offset(skip).yield_per(500)
 
-        data = []
-        try:
-            # TODO: decide a way to find the right type
+            result_dicts = [x.dict() for x in results]
 
-            data, meta["n_found"] = self._core_socket.get_query_projection(
-                className, query, limit=limit, skip=skip, include=include, exclude=exclude
-            )
-            meta["success"] = True
-        except Exception as err:
-            meta["error_description"] = str(err)
-
-        return {"data": data, "meta": meta}
+        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))
+        return meta, result_dicts
 
     def get(
         self,

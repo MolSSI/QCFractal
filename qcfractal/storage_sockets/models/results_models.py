@@ -49,17 +49,17 @@ class BaseResultORM(Base):
     extras = Column(MsgpackExt)
     stdout = Column(Integer, ForeignKey("kv_store.id"))
     stdout_obj = relationship(
-        KVStoreORM, lazy="noload", foreign_keys=stdout, cascade="all, delete-orphan", single_parent=True
+        KVStoreORM, lazy="select", foreign_keys=stdout, cascade="all, delete-orphan", single_parent=True
     )
 
     stderr = Column(Integer, ForeignKey("kv_store.id"))
     stderr_obj = relationship(
-        KVStoreORM, lazy="noload", foreign_keys=stderr, cascade="all, delete-orphan", single_parent=True
+        KVStoreORM, lazy="select", foreign_keys=stderr, cascade="all, delete-orphan", single_parent=True
     )
 
     error = Column(Integer, ForeignKey("kv_store.id"))
     error_obj = relationship(
-        KVStoreORM, lazy="noload", foreign_keys=error, cascade="all, delete-orphan", single_parent=True
+        KVStoreORM, lazy="select", foreign_keys=error, cascade="all, delete-orphan", single_parent=True
     )
 
     # Compute status
@@ -162,7 +162,7 @@ class ResultORM(BaseResultORM):
     wavefunction_data_id = Column(Integer, ForeignKey("wavefunction_store.id"), nullable=True)
     wavefunction_data_obj = relationship(
         WavefunctionStoreORM,
-        lazy="noload",
+        lazy="select",
         foreign_keys=wavefunction_data_id,
         cascade="all, delete-orphan",
         single_parent=True,
@@ -276,28 +276,15 @@ class OptimizationProcedureORM(BaseResultORM):
         CheckConstraint("program = LOWER(program)", name="ck_optimization_procedure_program_lower"),
     )
 
-    def update_relations(self, trajectory=None, **kwarg):
+    def dict(self):
 
-        # update optimization_results relations
-        # self._update_many_to_many(opt_result_association, 'opt_id', 'result_id',
-        #                 self.id, trajectory, self.trajectory)
+        d = Base.dict(self)
 
-        self.trajectory_obj = []
-        trajectory = [] if not trajectory else trajectory
-        for result_id in trajectory:
-            traj = Trajectory(opt_id=int(self.id), result_id=int(result_id))
-            self.trajectory_obj.append(traj)
+        # TODO - INT ID should not be done
+        if "id" in d:
+            d["id"] = ObjectId(d["id"])
 
-    # def add_relations(self, trajectory):
-    #     session = object_session(self)
-    #     # add many to many relation with results if ids are given not objects
-    #     if trajectory:
-    #         session.execute(
-    #             opt_result_association
-    #                 .insert()  # or update
-    #                 .values([(self.id, i) for i in trajectory])
-    #         )
-    #     session.commit()
+        return d
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -462,7 +449,7 @@ class TorsionDriveProcedureORM(BaseResultORM):
         select([func.array_agg(TorsionInitMol.molecule_id)]).where(TorsionInitMol.torsion_id == id).scalar_subquery()
     )
     # actual objects relation M2M, never loaded here
-    initial_molecule_obj = relationship(MoleculeORM, secondary=TorsionInitMol.__table__, uselist=True, lazy="noload")
+    initial_molecule_obj = relationship(MoleculeORM, secondary=TorsionInitMol.__table__, uselist=True, lazy="select")
 
     optimization_spec = Column(JSON)
 

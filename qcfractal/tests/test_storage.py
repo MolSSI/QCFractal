@@ -213,722 +213,337 @@ def test_dataset_add_delete_cascade(storage_socket):
     assert ret.success
 
 
-def test_results_add(storage_socket):
-
-    # Add two waters
-    water = ptl.data.get_molecule("water_dimer_minima.psimol")
-    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
-    _, mol_insert = storage_socket.molecule.add([water, water2])
-
-    kw1 = ptl.models.KeywordSet(**{"comments": "a", "values": {}})
-    kwid1 = storage_socket.keywords.add([kw1])[1][0]
-
-    page1 = ptl.models.ResultRecord(
-        **{
-            "molecule": mol_insert[0],
-            "method": "M1",
-            "basis": "B1",
-            "keywords": kwid1,
-            "program": "P1",
-            "driver": "energy",
-            # "extras": {
-            #     "other_data": 5
-            # },
-            "hash_index": 0,
-        }
-    )
-
-    page2 = ptl.models.ResultRecord(
-        **{
-            "molecule": mol_insert[1],
-            "method": "M1",
-            "basis": "B1",
-            "keywords": kwid1,
-            "program": "P1",
-            "driver": "energy",
-            # "extras": {
-            #     "other_data": 10
-            # },
-            "hash_index": 1,
-        }
-    )
-
-    page3 = ptl.models.ResultRecord(
-        **{
-            "molecule": mol_insert[1],
-            "method": "M22",
-            "basis": "B1",
-            "keywords": None,
-            "program": "P1",
-            "driver": "energy",
-            # "extras": {
-            #     "other_data": 10
-            # },
-            "hash_index": 2,
-        }
-    )
-
-    ids = []
-    ret = storage_socket.add_results([page1, page2])
-    assert ret["meta"]["n_inserted"] == 2
-    ids.extend(ret["data"])
-
-    # add with duplicates:
-    ret = storage_socket.add_results([page1, page2, page3])
-
-    assert ret["meta"]["n_inserted"] == 1
-    assert len(ret["data"]) == 3  # first 2 found are None
-    assert len(ret["meta"]["duplicates"]) == 2
-
-    for res_id in ret["data"]:
-        if res_id is not None:
-            ids.append(res_id)
-
-    ret = storage_socket.del_results(ids)
-    assert ret == 3
-    ret = storage_socket.molecule.delete(mol_insert)
-    assert ret.n_deleted == 2
-
-
-### Build out a set of query tests
-
-
-@pytest.fixture(scope="function")
-def storage_results(storage_socket):
-    # Add two waters
-
-    mol_names = [
-        "water_dimer_minima.psimol",
-        "water_dimer_stretch.psimol",
-        "water_dimer_stretch2.psimol",
-        "neon_tetramer.psimol",
-    ]
-
-    molecules = []
-    for mol_name in mol_names:
-        mol = ptl.data.get_molecule(mol_name)
-        molecules.append(mol)
-
-    meta, mol_insert = storage_socket.molecule.add(molecules)
-    assert meta.success
-
-    kw1 = ptl.models.KeywordSet(**{"values": {}})
-    _, kwids = storage_socket.keywords.add([kw1])
-    kwid1 = kwids[0]
-
-    page1 = ptl.models.ResultRecord(
-        **{
-            "molecule": mol_insert[0],
-            "method": "M1",
-            "basis": "B1",
-            "keywords": kwid1,
-            "program": "P1",
-            "driver": "energy",
-            "return_result": 5,
-            "hash_index": 0,
-            "status": "COMPLETE",
-        }
-    )
-
-    page2 = ptl.models.ResultRecord(
-        **{
-            "molecule": mol_insert[1],
-            "method": "M1",
-            "basis": "B1",
-            "keywords": kwid1,
-            "program": "P1",
-            "driver": "energy",
-            "return_result": 10,
-            "hash_index": 1,
-            "status": "COMPLETE",
-        }
-    )
-
-    page3 = ptl.models.ResultRecord(
-        **{
-            "molecule": mol_insert[0],
-            "method": "M1",
-            "basis": "B1",
-            "keywords": kwid1,
-            "program": "P2",
-            "driver": "gradient",
-            "return_result": 15,
-            "hash_index": 2,
-            "status": "COMPLETE",
-        }
-    )
-
-    page4 = ptl.models.ResultRecord(
-        **{
-            "molecule": mol_insert[0],
-            "method": "M2",
-            "basis": "B1",
-            "keywords": kwid1,
-            "program": "P2",
-            "driver": "gradient",
-            "return_result": 15,
-            "hash_index": 3,
-            "status": "COMPLETE",
-        }
-    )
-
-    page5 = ptl.models.ResultRecord(
-        **{
-            "molecule": mol_insert[1],
-            "method": "M2",
-            "basis": "B1",
-            "keywords": kwid1,
-            "program": "P1",
-            "driver": "gradient",
-            "return_result": 20,
-            "hash_index": 4,
-            "status": "COMPLETE",
-        }
-    )
-
-    page6 = ptl.models.ResultRecord(
-        **{
-            "molecule": mol_insert[1],
-            "method": "M3",
-            "basis": "B1",
-            "keywords": None,
-            "program": "P1",
-            "driver": "gradient",
-            "return_result": 20,
-            "hash_index": 5,
-            "status": "COMPLETE",
-        }
-    )
-
-    results_insert = storage_socket.add_results([page1, page2, page3, page4, page5, page6])
-    assert results_insert["meta"]["n_inserted"] == 6
-
-    yield storage_socket
-
-    # Cleanup
-    all_tasks = storage_socket.task.query()["data"]
-    storage_socket.task.delete(id=[task.id for task in all_tasks])
-
-    result_ids = [x for x in results_insert["data"]]
-    ret = storage_socket.task.delete(result_ids)
-    assert ret == results_insert["meta"]["n_inserted"]
-
-    ret = storage_socket.molecule.delete(mol_insert)
-    assert ret.n_deleted == len(mol_insert)
-
-
-def test_empty_get(storage_results):
-
-    assert 0 == len(storage_results.molecule.query(id=[])[1])
-    assert 0 == len(storage_results.molecule.query(id=[bad_id1])[1])
-    assert 4 == len(storage_results.molecule.query()[1])
-
-    assert 6 == len(storage_results.get_results()["data"])
-    assert 1 == len(storage_results.get_results(keywords="null")["data"])
-    assert 0 == len(storage_results.get_results(program="null")["data"])
-
-
-def test_results_get_total(storage_results):
-
-    assert 6 == len(storage_results.get_results()["data"])
-
-
-def test_results_get_0(storage_results):
-    assert 0 == len(storage_results.get_results(limit=0)["data"])
-
-
-def test_get_results_by_ids(storage_results):
-    results = storage_results.get_results()["data"]
-    ids = [x["id"] for x in results]
-
-    ret = storage_results.get_results(id=ids, return_json=False)
-    assert ret["meta"]["n_found"] == 6
-    assert len(ret["data"]) == 6
-
-    ret = storage_results.get_results(id=ids, include=["status", "id"])
-    assert ret["data"][0].keys() == {"id", "status"}
-
-
-def test_results_get_method(storage_results):
-
-    ret = storage_results.get_results(method=["M2", "M1"])
-    assert ret["meta"]["n_found"] == 5
-
-    ret = storage_results.get_results(method=["M2"])
-    assert ret["meta"]["n_found"] == 2
-
-    ret = storage_results.get_results(method="M2")
-    assert ret["meta"]["n_found"] == 2
-
-
-def test_results_get_dual(storage_results):
-
-    ret = storage_results.get_results(method=["M2", "M1"], program=["P1", "P2"])
-    assert ret["meta"]["n_found"] == 5
-
-    ret = storage_results.get_results(method=["M2"], program="P2")
-    assert ret["meta"]["n_found"] == 1
-
-    ret = storage_results.get_results(method="M2", program="P2")
-    assert ret["meta"]["n_found"] == 1
-
-
-def test_results_get_project(storage_results):
-    """See new changes in design here"""
-
-    ret_true = storage_results.get_results(method="M2", program="P2", include=["return_result", "id"])["data"][0]
-    assert set(ret_true.keys()) == {"id", "return_result"}
-    assert ret_true["return_result"] == 15
-
-    # Note: explicitly set with_ids=False to remove ids
-    ret = storage_results.get_results(method="M2", program="P2", with_ids=False, include=["return_result"])["data"][0]
-    assert set(ret.keys()) == {"return_result"}
-
-
-def test_results_get_driver(storage_results):
-    ret = storage_results.get_results(driver="energy")
-    assert ret["meta"]["n_found"] == 2
-
-
 # ------ New Task Queue tests ------
 # No hash index, tasks are unique by their base_result
 
 
-def test_queue_submit_sql(storage_results):
-
-    result1 = storage_results.get_results()["data"][0]
-
-    task1 = ptl.models.TaskRecord(
-        **{
-            # "hash_index": idx,  # not used anymore
-            "spec": {"function": "qcengine.compute_procedure", "args": [{"json_blob": "data"}], "kwargs": {}},
-            "tag": None,
-            "program": "p1",
-            "parser": "",
-            "base_result": result1["id"],
-        }
-    )
-
-    # Submit a new task
-    ret = storage_results.task.add([task1])
-    assert len(ret["data"]) == 1
-    assert ret["meta"]["n_inserted"] == 1
-
-    # submit a duplicate task with a hook
-    ret = storage_results.task.add([task1])
-    assert len(ret["data"]) == 1
-    assert ret["meta"]["n_inserted"] == 0
-    assert len(ret["meta"]["duplicates"]) == 1
-
-    result2 = storage_results.get_results()["data"][1]
-
-    task2 = ptl.models.TaskRecord(
-        **{
-            "spec": {"function": "qcengine.compute_procedure", "args": [{"json_blob": "data"}], "kwargs": {}},
-            "tag": None,
-            "program": "p1",
-            "parser": "",
-            "base_result": result2["id"],
-        }
-    )
-
-    # submit repeated tasks
-    ret = storage_results.task.add([task2, task2])
-    assert len(ret["data"]) == 2
-    assert ret["meta"]["n_inserted"] == 1
-    assert ret["data"][0] == ret["data"][1]
-
-
-# ----------------------------------------------------------
-
-# Builds tests for the queue - Changed design
-
-
-@pytest.mark.parametrize("status", ["COMPLETE", "ERROR"])
-def test_storage_queue_roundtrip(storage_results, status):
-
-    results = storage_results.get_results()["data"]
-
-    task_template = {
-        "spec": {"function": "qcengine.compute_procedure", "args": [{"json_blob": "data"}], "kwargs": {}},
-        "tag": None,
-        "program": "P1",
-        "procedure": "P1",
-        "parser": "",
-        "base_result": None,
-    }
-
-    task_template["base_result"] = results[0]["id"]
-    task1 = ptl.models.TaskRecord(**task_template)
-    task_template["base_result"] = results[1]["id"]
-    task2 = ptl.models.TaskRecord(**task_template)
-
-    # Submit a task
-    r = storage_results.task.add([task1, task2])
-    assert len(r["data"]) == 2
-
-    # Add manager 'test_manager'
-    storage_results.manager.update("test_manager", status="ACTIVE")
-    storage_results.manager.update("test_manager2", status="ACTIVE")
-    # Query for next tasks
-    r = storage_results.task.claim("test_manager", ["p1"], ["p1"], limit=1)
-    assert r[0].spec.function == task1.spec.function
-    queue_id = r[0].id
-
-    queue_id2 = storage_results.task.claim("test_manager2", ["p1"], ["p1"], limit=1)[0].id
-
-    if status == "ERROR":
-        r = storage_results.task.mark_error([queue_id, queue_id2])
-    elif status == "COMPLETE":
-        r = storage_results.task.mark_complete([queue_id2, queue_id])
-        # Check queue is empty
-        tasks = storage_results.task.claim("test_manager", ["p1"], ["p1"])
-        assert len(tasks) == 0
-
-        # completed task should be deleted
-        found = storage_results.task.get([queue_id, queue_id2], missing_ok=True)
-        assert len(found) == 0
-
-    assert r == 2
-
-    # Check results
-    # TODO: We no longer change base results through queue_mark_*. So we should remove this?
-    # res = storage_results.get_results(id=results[0]["id"])["data"][0]
-    # assert res["status"] == status
-
-
-def test_queue_submit_many_order(storage_results):
-
-    results = storage_results.get_results()["data"]
-
-    task_template = {
-        # "hash_index": idx,
-        "spec": {"function": "qcengine.compute_procedure", "args": [{"json_blob": "data"}], "kwargs": {}},
-        "tag": None,
-        "program": "P1",
-        "procedure": "P1",
-        "parser": "",
-    }
-
-    task1 = ptl.models.TaskRecord(**task_template, base_result=results[3]["id"])
-    task2 = ptl.models.TaskRecord(**task_template, base_result=results[4]["id"])
-    task3 = ptl.models.TaskRecord(**task_template, base_result=results[5]["id"])
-
-    # Submit tasks
-    ret = storage_results.task.add([task1, task2, task3])
-    assert len(ret["data"]) == 3
-    assert ret["meta"]["n_inserted"] == 3
-
-    # Add a manager
-    storage_results.manager.update("test_manager")
-
-    # Get tasks for manager 'test_manager'
-    r = storage_results.task.claim("test_manager", ["p1"], ["p1"], limit=1)
-    assert len(r) == 1
-    # will get the first submitted result first
-    assert r[0].base_result == results[3]["id"]
-
-    # Todo: test more scenarios
-
-
-def test_manager(storage_socket):
-
-    assert storage_socket.manager.update(name="first_manager")
-    assert storage_socket.manager.update(name="first_manager", submitted=100)
-    assert storage_socket.manager.update(name="first_manager", submitted=50)
-
-    ret = storage_socket.manager.get(name=["first_manager"])
-    assert ret[0]["submitted"] == 150
-
-    meta, ret2 = storage_socket.manager.query(name=["first_manager"], modified_before=datetime.utcnow())
-    assert meta.n_returned == 1
-    assert len(ret2) == 1
-
-    assert ret2[0] == ret[0]
-
-
-def test_procedure_sql(storage_results):
-
-    _, mols = storage_results.molecule.query()
-    mol_ids = [mol["id"] for mol in mols]
-    results = storage_results.get_results()["data"]
-
-    assert len(storage_results.get_procedures(procedure="optimization", status=None)["data"]) == 0
-
-    proc_template = {
-        "procedure": "optimization",
-        "initial_molecule": mol_ids[0],
-        "program": "something",
-        "hash_index": 123,
-        # "trajectory": None,
-        "trajectory": [results[0]["id"], results[1]["id"]],
-        "qc_spec": {
-            "driver": "gradient",
-            "method": "HF",
-            "basis": "sto-3g",
-            # "keywords": None,
-            "program": "psi4",
-        },
-    }
-
-    # Optimization
-    inserted = storage_results.add_procedures([ptl.models.OptimizationRecord(**proc_template)])
-    assert inserted["meta"]["n_inserted"] == 1
-
-    ret = storage_results.get_procedures(procedure="optimization", status=None)
-    assert len(ret["data"]) == 1
-    # assert ret['data'][0]['trajectory'] == [str(i) for i in proc_template['trajectory']]
-    assert ret["data"][0]["trajectory"] == proc_template["trajectory"]
-
-    new_proc = ret["data"][0]
-
-    test_traj = [
-        [results[0]["id"], results[1]["id"], results[2]["id"]],  # add
-        # [results[0]['id']],  # remove
-        # [results[0]['id']],  # no change
-        # None  # empty
-    ]
-    # update relations
-    for trajectory in test_traj:
-        new_proc["trajectory"] = trajectory
-        ret_count = storage_results.update_procedures([ptl.models.OptimizationRecord(**new_proc)])
-        assert ret_count == 1
-
-        ret = storage_results.get_procedures(procedure="optimization", status=None)
-        assert len(ret["data"]) == 1
-        assert ret["data"][0]["trajectory"] == trajectory
-
-        opt_proc = ret["data"][0]
-
-    # Torsiondrive procedures
-    assert len(storage_results.get_procedures(procedure="torsiondrive", status=None)["data"]) == 0
-
-    torsion_proc = {
-        "procedure": "torsiondrive",
-        "keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [10]},
-        "hash_index": 456,
-        "optimization_spec": {"program": "geometric", "keywords": {"coordsys": "tric"}},
-        "qc_spec": {
-            "driver": "gradient",
-            "method": "HF",
-            "basis": "sto-3g",
-            # "keywords": None,
-            "program": "psi4",
-        },
-        "initial_molecule": [mol_ids[0], mol_ids[1]],
-        "final_energy_dict": {},
-        "optimization_history": {},
-        "minimum_positions": {},
-        "provenance": {"creator": ""},
-    }
-
-    # Torsiondrive init molecule many to many
-    inserted2 = storage_results.add_procedures([ptl.models.TorsionDriveRecord(**torsion_proc)])
-    assert inserted2["meta"]["n_inserted"] == 1
-
-    ret = storage_results.get_procedures(procedure="torsiondrive", status=None)
-    assert len(ret["data"]) == 1
-    torsion = ret["data"][0]
-
-    init_mol_tests = [[mol_ids[0]], [mol_ids[0], mol_ids[2], mol_ids[3]]]  # del one
-
-    for init_mol in init_mol_tests:
-        torsion["initial_molecule"] = init_mol
-        ret = storage_results.update_procedures([ptl.models.TorsionDriveRecord(**torsion)])
-        assert ret == 1
-        ret = storage_results.get_procedures(procedure="torsiondrive", status=None)
-        assert set(ret["data"][0]["initial_molecule"]) == set([str(i) for i in init_mol])
-
-    # optimization history
-    opt_hist_tests = [
-        {"90": [opt_proc["id"]]},  # add one
-        {"90": [opt_proc["id"]], "44": [opt_proc["id"]]},
-        {"5": [opt_proc["id"]]},
-    ]
-
-    for opt_hist in opt_hist_tests:
-        torsion["optimization_history"] = opt_hist
-        ret = storage_results.update_procedures([ptl.models.TorsionDriveRecord(**torsion)])
-        assert ret == 1
-        ret = storage_results.get_procedures(procedure="torsiondrive", status=None)
-        assert ret["data"][0]["optimization_history"] == opt_hist
-
-    # clean up
-    storage_results.del_procedures(inserted["data"])
-    storage_results.del_procedures(inserted2["data"])
-
-
-def test_services_sql(storage_results):
-
-    _, mols = storage_results.molecule.query()
-    mol_ids = [mol["id"] for mol in mols]
-
-    torsion_proc = {
-        "procedure": "torsiondrive",
-        "keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [10]},
-        "hash_index": 456,
-        "optimization_spec": {"program": "geometric", "keywords": {"coordsys": "tric"}},
-        "qc_spec": {
-            "driver": "gradient",
-            "method": "HF",
-            "basis": "sto-3g",
-            # "keywords": None,
-            "program": "psi4",
-        },
-        "initial_molecule": [mol_ids[0], mol_ids[1]],
-        "final_energy_dict": {},
-        "optimization_history": {},
-        "minimum_positions": {},
-        "provenance": {"creator": ""},
-    }
-
-    # Procedure
-    proc_pydantic = ptl.models.TorsionDriveRecord(**torsion_proc)
-
-    service_data = {
-        "tag": "tag1 tag2",
-        "hash_index": "123",
-        "status": TaskStatusEnum.waiting,
-        "optimization_program": "gaussian",
-        # extra fields
-        "torsiondrive_state": {},
-        "dihedral_template": "1",
-        "optimization_template": "2",
-        "molecule_template": "",
-        "storage_socket": storage_results,
-        "task_priority": 0,
-        "output": proc_pydantic,
-    }
-
-    service = TorsionDriveService(**service_data)
-    ret = storage_results.add_services([service])
-    assert len(ret["data"]) == 1
-
-    ret = storage_results.get_services(procedure_id=ret["data"][0], status=TaskStatusEnum.waiting)
-    assert ret["data"][0]["hash_index"] == service_data["hash_index"]
-
-    # attributes in extra fields
-    assert ret["data"][0]["dihedral_template"] == service_data["dihedral_template"]
-
-    # Create Pydantic object from DB returned object
-    py_obj = TorsionDriveService(**ret["data"][0], storage_socket=storage_results)
-    assert py_obj
-
-    # Test update
-    py_obj.task_priority = 3
-    ret_count = storage_results.update_services([py_obj])
-    assert ret_count == 1
-
-    ret = storage_results.get_services(procedure_id=ret["data"][0]["procedure_id"], status=TaskStatusEnum.waiting)
-    assert ret["data"][0]["task_priority"] == py_obj.task_priority
-
-
-def test_results_pagination(storage_socket):
-    """
-    Test results pagination
-    """
-
-    # results = storage_socket.get_results()['data']
-    # storage_socket.del_results([result['id'] for result in results])
-
-    assert len(storage_socket.get_results()["data"]) == 0
-
-    water = ptl.data.get_molecule("water_dimer_minima.psimol")
-    mol = storage_socket.molecule.add([water])[1][0]
-
-    result_template = {
-        "molecule": mol,
-        "method": "M1",
-        "basis": "B1",
-        "keywords": None,
-        "program": "P1",
-        "driver": "energy",
-    }
-
-    # Save (~ 1-7 msec/doc)
-    t1 = time()
-
-    total_results = 50
-    first_half = int(total_results / 2)
-    limit = 10
-    skip = 5
-
-    results = []
-    for i in range(first_half):
-        tmp = result_template.copy()
-        tmp["basis"] = str(i)
-        results.append(ptl.models.ResultRecord(**tmp))
-
-    result_template["method"] = "M2"
-    for i in range(first_half, total_results):
-        tmp = result_template.copy()
-        tmp["basis"] = str(i)
-        results.append(ptl.models.ResultRecord(**tmp))
-
-    inserted = storage_socket.add_results(results)
-    assert inserted["meta"]["n_inserted"] == total_results
-
-    # total_time = (time() - t1) * 1000 / total_results
-    # print('Inserted {} results in {:.2f} msec / doc'.format(total_results, total_time))
-    #
-    # query (~ 0.03 msec/doc)
-    # t1 = time()
-
-    ret = storage_socket.get_results(method="M2", status=None, limit=limit, skip=skip)
-
-    # total_time = (time() - t1) * 1000 / first_half
-    # print('Query {} results in {:.2f} msec /doc'.format(first_half, total_time))
-
-    # count is total, but actual data size is the limit
-    assert ret["meta"]["n_found"] == total_results - first_half
-    assert len(ret["data"]) == limit
-
-    assert int(ret["data"][0]["basis"]) == first_half + skip
-
-    # get the last page when with fewer than limit are remaining
-    ret = storage_socket.get_results(method="M1", skip=(int(first_half - limit / 2)), status=None)
-    assert len(ret["data"]) == limit / 2
-
-    # cleanup
-    storage_socket.del_results(inserted["data"])
-
-
-def test_procedure_pagination(storage_socket):
-    """
-    Test procedure pagination
-    """
-
-    water = ptl.data.get_molecule("water_dimer_minima.psimol")
-    mol = storage_socket.molecule.add([water])[1][0]
-
-    assert len(storage_socket.get_procedures(procedure="optimization")["data"]) == 0
-
-    proc_template = {
-        "initial_molecule": mol,
-        "program": "something",
-        "qc_spec": {"driver": "gradient", "method": "HF", "basis": "sto-3g", "keywords": None, "program": "psi4"},
-    }
-
-    total = 10
-    limit = 5
-    skip = 4
-
-    procedures = []
-    for i in range(total):
-        tmp = proc_template.copy()
-        tmp["hash_index"] = str(i)
-        procedures.append(ptl.models.OptimizationRecord(**tmp))
-
-    inserted = storage_socket.add_procedures(procedures)
-    assert inserted["meta"]["n_inserted"] == total
-
-    ret = storage_socket.get_procedures(procedure="optimization", status=None, limit=limit, skip=skip)
-
-    # count is total, but actual data size is the limit
-    assert ret["meta"]["n_found"] == total
-    assert len(ret["data"]) == limit
-
-    storage_socket.del_procedures(inserted["data"])
+# def test_queue_submit_sql(storage_results):
+#
+#    result1 = storage_results.get_results()["data"][0]
+#
+#    task1 = ptl.models.TaskRecord(
+#        **{
+#            # "hash_index": idx,  # not used anymore
+#            "spec": {"function": "qcengine.compute_procedure", "args": [{"json_blob": "data"}], "kwargs": {}},
+#            "tag": None,
+#            "program": "p1",
+#            "parser": "",
+#            "base_result": result1["id"],
+#        }
+#    )
+#
+#    # Submit a new task
+#    ret = storage_results.task.add([task1])
+#    assert len(ret["data"]) == 1
+#    assert ret["meta"]["n_inserted"] == 1
+#
+#    # submit a duplicate task with a hook
+#    ret = storage_results.task.add([task1])
+#    assert len(ret["data"]) == 1
+#    assert ret["meta"]["n_inserted"] == 0
+#    assert len(ret["meta"]["duplicates"]) == 1
+#
+#    result2 = storage_results.get_results()["data"][1]
+#
+#    task2 = ptl.models.TaskRecord(
+#        **{
+#            "spec": {"function": "qcengine.compute_procedure", "args": [{"json_blob": "data"}], "kwargs": {}},
+#            "tag": None,
+#            "program": "p1",
+#            "parser": "",
+#            "base_result": result2["id"],
+#        }
+#    )
+#
+#    # submit repeated tasks
+#    ret = storage_results.task.add([task2, task2])
+#    assert len(ret["data"]) == 2
+#    assert ret["meta"]["n_inserted"] == 1
+#    assert ret["data"][0] == ret["data"][1]
+#
+#
+## ----------------------------------------------------------
+#
+## Builds tests for the queue - Changed design
+#
+#
+# @pytest.mark.parametrize("status", ["COMPLETE", "ERROR"])
+# def test_storage_queue_roundtrip(storage_results, status):
+#
+#    results = storage_results.get_results()["data"]
+#
+#    task_template = {
+#        "spec": {"function": "qcengine.compute_procedure", "args": [{"json_blob": "data"}], "kwargs": {}},
+#        "tag": None,
+#        "program": "P1",
+#        "procedure": "P1",
+#        "parser": "",
+#        "base_result": None,
+#    }
+#
+#    task_template["base_result"] = results[0]["id"]
+#    task1 = ptl.models.TaskRecord(**task_template)
+#    task_template["base_result"] = results[1]["id"]
+#    task2 = ptl.models.TaskRecord(**task_template)
+#
+#    # Submit a task
+#    r = storage_results.task.add([task1, task2])
+#    assert len(r["data"]) == 2
+#
+#    # Add manager 'test_manager'
+#    storage_results.manager.update("test_manager", status="ACTIVE")
+#    storage_results.manager.update("test_manager2", status="ACTIVE")
+#    # Query for next tasks
+#    r = storage_results.task.claim("test_manager", ["p1"], ["p1"], limit=1)
+#    assert r[0].spec.function == task1.spec.function
+#    queue_id = r[0].id
+#
+#    queue_id2 = storage_results.task.claim("test_manager2", ["p1"], ["p1"], limit=1)[0].id
+#
+#    if status == "ERROR":
+#        r = storage_results.task.mark_error([queue_id, queue_id2])
+#    elif status == "COMPLETE":
+#        r = storage_results.task.mark_complete([queue_id2, queue_id])
+#        # Check queue is empty
+#        tasks = storage_results.task.claim("test_manager", ["p1"], ["p1"])
+#        assert len(tasks) == 0
+#
+#        # completed task should be deleted
+#        found = storage_results.task.get([queue_id, queue_id2], missing_ok=True)
+#        assert len(found) == 0
+#
+#    assert r == 2
+#
+#    # Check results
+#    # TODO: We no longer change base results through queue_mark_*. So we should remove this?
+#    # res = storage_results.get_results(id=results[0]["id"])["data"][0]
+#    # assert res["status"] == status
+#
+#
+# def test_queue_submit_many_order(storage_results):
+#
+#    results = storage_results.get_results()["data"]
+#
+#    task_template = {
+#        # "hash_index": idx,
+#        "spec": {"function": "qcengine.compute_procedure", "args": [{"json_blob": "data"}], "kwargs": {}},
+#        "tag": None,
+#        "program": "P1",
+#        "procedure": "P1",
+#        "parser": "",
+#    }
+#
+#    task1 = ptl.models.TaskRecord(**task_template, base_result=results[3]["id"])
+#    task2 = ptl.models.TaskRecord(**task_template, base_result=results[4]["id"])
+#    task3 = ptl.models.TaskRecord(**task_template, base_result=results[5]["id"])
+#
+#    # Submit tasks
+#    ret = storage_results.task.add([task1, task2, task3])
+#    assert len(ret["data"]) == 3
+#    assert ret["meta"]["n_inserted"] == 3
+#
+#    # Add a manager
+#    storage_results.manager.update("test_manager")
+#
+#    # Get tasks for manager 'test_manager'
+#    r = storage_results.task.claim("test_manager", ["p1"], ["p1"], limit=1)
+#    assert len(r) == 1
+#    # will get the first submitted result first
+#    assert r[0].base_result == results[3]["id"]
+#
+#    # Todo: test more scenarios
+#
+#
+# def test_manager(storage_socket):
+#
+#    assert storage_socket.manager.update(name="first_manager")
+#    assert storage_socket.manager.update(name="first_manager", submitted=100)
+#    assert storage_socket.manager.update(name="first_manager", submitted=50)
+#
+#    ret = storage_socket.manager.get(name=["first_manager"])
+#    assert ret[0]["submitted"] == 150
+#
+#    meta, ret2 = storage_socket.manager.query(name=["first_manager"], modified_before=datetime.utcnow())
+#    assert meta.n_returned == 1
+#    assert len(ret2) == 1
+#
+#    assert ret2[0] == ret[0]
+
+
+# def test_procedure_sql(storage_socket):
+#
+#    _, mols = storage_socket.molecule.query()
+#    mol_ids = [mol["id"] for mol in mols]
+#    results = storage_socket.get_results()["data"]
+#
+#    assert len(storage_socket.get_procedures(procedure="optimization", status=None)["data"]) == 0
+#
+#    proc_template = {
+#        "procedure": "optimization",
+#        "initial_molecule": mol_ids[0],
+#        "program": "something",
+#        "hash_index": 123,
+#        # "trajectory": None,
+#        "trajectory": [results[0]["id"], results[1]["id"]],
+#        "qc_spec": {
+#            "driver": "gradient",
+#            "method": "HF",
+#            "basis": "sto-3g",
+#            # "keywords": None,
+#            "program": "psi4",
+#        },
+#    }
+#
+#    # Optimization
+#    inserted = storage_socket.add_procedures([ptl.models.OptimizationRecord(**proc_template)])
+#    assert inserted["meta"]["n_inserted"] == 1
+#
+#    ret = storage_socket.get_procedures(procedure="optimization", status=None)
+#    assert len(ret["data"]) == 1
+#    # assert ret['data'][0]['trajectory'] == [str(i) for i in proc_template['trajectory']]
+#    assert ret["data"][0]["trajectory"] == proc_template["trajectory"]
+#
+#    new_proc = ret["data"][0]
+#
+#    test_traj = [
+#        [results[0]["id"], results[1]["id"], results[2]["id"]],  # add
+#        # [results[0]['id']],  # remove
+#        # [results[0]['id']],  # no change
+#        # None  # empty
+#    ]
+#    # update relations
+#    for trajectory in test_traj:
+#        new_proc["trajectory"] = trajectory
+#        ret_count = storage_socket.update_procedures([ptl.models.OptimizationRecord(**new_proc)])
+#        assert ret_count == 1
+#
+#        ret = storage_socket.get_procedures(procedure="optimization", status=None)
+#        assert len(ret["data"]) == 1
+#        assert ret["data"][0]["trajectory"] == trajectory
+#
+#        opt_proc = ret["data"][0]
+#
+#    # Torsiondrive procedures
+#    assert len(storage_socket.get_procedures(procedure="torsiondrive", status=None)["data"]) == 0
+#
+#    torsion_proc = {
+#        "procedure": "torsiondrive",
+#        "keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [10]},
+#        "hash_index": 456,
+#        "optimization_spec": {"program": "geometric", "keywords": {"coordsys": "tric"}},
+#        "qc_spec": {
+#            "driver": "gradient",
+#            "method": "HF",
+#            "basis": "sto-3g",
+#            # "keywords": None,
+#            "program": "psi4",
+#        },
+#        "initial_molecule": [mol_ids[0], mol_ids[1]],
+#        "final_energy_dict": {},
+#        "optimization_history": {},
+#        "minimum_positions": {},
+#        "provenance": {"creator": ""},
+#    }
+#
+#    # Torsiondrive init molecule many to many
+#    inserted2 = storage_socket.add_procedures([ptl.models.TorsionDriveRecord(**torsion_proc)])
+#    assert inserted2["meta"]["n_inserted"] == 1
+#
+#    ret = storage_socket.get_procedures(procedure="torsiondrive", status=None)
+#    assert len(ret["data"]) == 1
+#    torsion = ret["data"][0]
+#
+#    init_mol_tests = [[mol_ids[0]], [mol_ids[0], mol_ids[2], mol_ids[3]]]  # del one
+#
+#    for init_mol in init_mol_tests:
+#        torsion["initial_molecule"] = init_mol
+#        ret = storage_socket.update_procedures([ptl.models.TorsionDriveRecord(**torsion)])
+#        assert ret == 1
+#        ret = storage_socket.get_procedures(procedure="torsiondrive", status=None)
+#        assert set(ret["data"][0]["initial_molecule"]) == set([str(i) for i in init_mol])
+#
+#    # optimization history
+#    opt_hist_tests = [
+#        {"90": [opt_proc["id"]]},  # add one
+#        {"90": [opt_proc["id"]], "44": [opt_proc["id"]]},
+#        {"5": [opt_proc["id"]]},
+#    ]
+#
+#    for opt_hist in opt_hist_tests:
+#        torsion["optimization_history"] = opt_hist
+#        ret = storage_socket.update_procedures([ptl.models.TorsionDriveRecord(**torsion)])
+#        assert ret == 1
+#        ret = storage_socket.get_procedures(procedure="torsiondrive", status=None)
+#        assert ret["data"][0]["optimization_history"] == opt_hist
+#
+#    # clean up
+#    storage_socket.del_procedures(inserted["data"])
+#    storage_socket.del_procedures(inserted2["data"])
+#
+#
+# def test_services_sql(storage_socket):
+#
+#    _, mols = storage_socket.molecule.query()
+#    mol_ids = [mol["id"] for mol in mols]
+#
+#    torsion_proc = {
+#        "procedure": "torsiondrive",
+#        "keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [10]},
+#        "hash_index": 456,
+#        "optimization_spec": {"program": "geometric", "keywords": {"coordsys": "tric"}},
+#        "qc_spec": {
+#            "driver": "gradient",
+#            "method": "HF",
+#            "basis": "sto-3g",
+#            # "keywords": None,
+#            "program": "psi4",
+#        },
+#        "initial_molecule": [mol_ids[0], mol_ids[1]],
+#        "final_energy_dict": {},
+#        "optimization_history": {},
+#        "minimum_positions": {},
+#        "provenance": {"creator": ""},
+#    }
+#
+#    # Procedure
+#    proc_pydantic = ptl.models.TorsionDriveRecord(**torsion_proc)
+#
+#    service_data = {
+#        "tag": "tag1 tag2",
+#        "hash_index": "123",
+#        "status": TaskStatusEnum.waiting,
+#        "optimization_program": "gaussian",
+#        # extra fields
+#        "torsiondrive_state": {},
+#        "dihedral_template": "1",
+#        "optimization_template": "2",
+#        "molecule_template": "",
+#        "storage_socket": storage_socket,
+#        "task_priority": 0,
+#        "output": proc_pydantic,
+#    }
+#
+#    service = TorsionDriveService(**service_data)
+#    ret = storage_socket.add_services([service])
+#    assert len(ret["data"]) == 1
+#
+#    ret = storage_socket.get_services(procedure_id=ret["data"][0], status=TaskStatusEnum.waiting)
+#    assert ret["data"][0]["hash_index"] == service_data["hash_index"]
+#
+#    # attributes in extra fields
+#    assert ret["data"][0]["dihedral_template"] == service_data["dihedral_template"]
+#
+#    # Create Pydantic object from DB returned object
+#    py_obj = TorsionDriveService(**ret["data"][0], storage_socket=storage_socket)
+#    assert py_obj
+#
+#    # Test update
+#    py_obj.task_priority = 3
+#    ret_count = storage_socket.update_services([py_obj])
+#    assert ret_count == 1
+#
+#    ret = storage_socket.get_services(procedure_id=ret["data"][0]["procedure_id"], status=TaskStatusEnum.waiting)
+#    assert ret["data"][0]["task_priority"] == py_obj.task_priority
 
 
 def test_reset_task_blocks(storage_socket):
