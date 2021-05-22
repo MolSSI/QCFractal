@@ -254,8 +254,6 @@ def test_queue_duplicate_compute(fractal_test_server):
     assert len(client.query_results(basis=None)) == 1
     assert len(client.query_results(basis="")) == 1
 
-    assert len(client.query_results(keywords=None)) == 1
-
 
 @using_rdkit
 def test_queue_compute_mixed_molecule(fractal_test_server):

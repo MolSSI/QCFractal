@@ -88,6 +88,11 @@ class Base:
         d = self.__dict__.copy()
         d.pop("_sa_instance_state")
 
+        if len(d) == 0:
+            raise RuntimeError(
+                "Dictionary of ORM is empty. It is likely that this ORM object is expired (ie, you are calling dict() after a session commit()) or you haven't specified any columns to be loaded. This is a QCFractal developer error."
+            )
+
         for k, v in d.items():
             if isinstance(v, Base):
                 d[k] = v.dict()

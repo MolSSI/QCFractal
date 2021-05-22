@@ -1,7 +1,8 @@
 from __future__ import annotations
-from ..interface.models.query_meta import InsertMetadata, DeleteMetadata
+from ..interface.models.query_meta import InsertMetadata, DeleteMetadata, QueryMetadata
 from qcfractal.storage_sockets.models import Base
 from sqlalchemy import tuple_, and_, or_
+from sqlalchemy.orm import load_only, selectinload
 import logging
 
 from typing import TYPE_CHECKING
@@ -59,6 +60,9 @@ def get_query_proj_columns(
     # Split out which ones are columns and which are attributes
     ret_columns = ret.intersection(columns)
     ret_relationships = ret.intersection(relationships)
+
+    if len(ret_columns) == 0 and len(ret_relationships) == 0:
+        raise RuntimeError("No columns or relationships specified to be loaded. This is a QCFractal developer error")
 
     def to_attr(s):
         return tuple(getattr(orm_type, x) for x in s)
@@ -277,6 +281,71 @@ def insert_mixed_general(
         all_ret.extend(ret)
 
     return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx, errors=errors), all_ret  # type: ignore
+
+
+# def query_general(
+#        session: sqlalchemy.orm.session.Session,
+#        orm_type: Type[_ORM_T],
+#        search_values: Iterable[Tuple[InstrumentedAttribute, Optional[Iterable[Any]]]],
+#        include: Optional[Iterable[str]] = None,
+#        exclude: Optional[Iterable[str]] = None,
+#        limit: int = None,
+#        skip: int = 0,
+# ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+#    """
+#
+#    Parameters
+#    ----------
+#    session
+#        An existing SQLAlchemy session to use for querying/adding/updating/deleting
+#    orm_type
+#        ORM to search for (MoleculeORM, etc)
+#    search_values
+#        Pairs of columns to list of values to search for. Each column will search for the
+#        specified values using the SQL 'IN' operator.
+#    include
+#        Which fields of the orm to return. Default is to return all fields, but no relationships.
+#    exclude
+#        Remove these fields from the return. Default is to return all fields, but no relationships.
+#    limit
+#        Limit the number of results. If None, the server limit will be used.
+#        This limit will not be respected if greater than the configured limit of the server.
+#    skip
+#        Skip this many results from the total list of matches. The limit will apply after skipping,
+#        allowing for pagination.
+#    session
+#        An existing SQLAlchemy session to use. If None, one will be created
+#
+#    Returns
+#    -------
+#    :
+#        Metadata about the results of the query, and a list of procedure data (as dictionaries)
+#    """
+#
+#    load_cols, load_rels = get_query_proj_columns(orm_type, include, exclude)
+#
+#    # We combine all the search criteria using AND
+#    and_query = []
+#    for col, values in search_values:
+#        if values is not None:
+#            and_query.append(col.in_(values))
+#
+#    query = session.query(orm_type).filter(and_(*and_query))
+#
+#    # Only load the specified columns into the ORM
+#    # Only these will be present in the dictionary
+#    query = query.options(load_only(*load_cols))
+#
+#    for rel in load_rels:
+#        query = query.options(selectinload(rel))
+#
+#    n_found = get_count(query)
+#    results = query.limit(limit).offset(skip).yield_per(500)
+#
+#    result_dicts = [x.dict() for x in results]
+#
+#    meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts)) # type: ignore
+#    return meta, result_dicts
 
 
 def get_general(

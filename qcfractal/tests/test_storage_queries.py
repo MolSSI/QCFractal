@@ -22,7 +22,7 @@ def storage_query_fixture(torsiondrive_fixture):
 
     storage_socket = SQLAlchemySocket(server._qcf_config)
 
-    torsion = storage_socket.get_procedures(id=torsion_id)["data"][0]
+    torsion = storage_socket.procedure.get(id=[torsion_id])["data"][0]
 
     yield storage_socket, torsion
 

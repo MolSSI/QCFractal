@@ -4,10 +4,10 @@ Tests the database wrappers
 All tests should be atomic, that is create and cleanup their data
 """
 
-import pytest
 import logging
 from ...testing import load_procedure_data, caplog_handler_at_level
 from ...storage_sockets.models import BaseResultORM
+from qcfractal.interface.models import ObjectId
 
 fake_manager_1 = {
     "cluster": "test_cluster",
@@ -72,13 +72,25 @@ def test_procedure_basic(storage_socket):
     assert procs[2]["task_obj"]["manager"] == "manager_2"
     assert procs[3]["task_obj"]["manager"] == "manager_2"
     assert procs[4]["task_obj"]["manager"] == "manager_1"
+    assert procs[0]["task_obj"]["status"] == "RUNNING"
+    assert procs[1]["task_obj"]["status"] == "RUNNING"
+    assert procs[2]["task_obj"]["status"] == "RUNNING"
+    assert procs[3]["task_obj"]["status"] == "RUNNING"
+    assert procs[4]["task_obj"]["status"] == "RUNNING"
+    assert procs[0]["status"] == "INCOMPLETE"
+    assert procs[1]["status"] == "INCOMPLETE"
+    assert procs[2]["status"] == "INCOMPLETE"
+    assert procs[3]["status"] == "INCOMPLETE"
+    assert procs[4]["status"] == "INCOMPLETE"
 
     # Return results
-    storage_socket.procedure.update_completed("manager_1", {ids1[0]: result_data_1})
-    storage_socket.procedure.update_completed("manager_1", {ids2[0]: result_data_2})
-    storage_socket.procedure.update_completed("manager_2", {ids3[0]: result_data_3})
-    storage_socket.procedure.update_completed("manager_2", {ids4[0]: result_data_4})
-    storage_socket.procedure.update_completed("manager_1", {ids5[0]: result_data_5})
+    # The ids returned from create() are the result ids, but the managers return task ids
+    task_ids = [x["task_obj"]["id"] for x in procs]
+    storage_socket.procedure.update_completed("manager_1", {task_ids[0]: result_data_1})
+    storage_socket.procedure.update_completed("manager_1", {task_ids[1]: result_data_2})
+    storage_socket.procedure.update_completed("manager_2", {task_ids[2]: result_data_3})
+    storage_socket.procedure.update_completed("manager_2", {task_ids[3]: result_data_4})
+    storage_socket.procedure.update_completed("manager_1", {task_ids[4]: result_data_5})
 
     # Two tasks were failures. Those tasks should be the only ones remaining in the task queue
     meta, tasks = storage_socket.task.query(base_result_id=all_ids)
@@ -172,3 +184,102 @@ def test_procedure_base_already_complete(storage_socket, caplog):
     # The corresponding task should be deleted now
     procs = storage_socket.procedure.get(ids, include=["*", "task_obj"])
     assert procs[0]["task_obj"] is None
+
+
+def test_procedure_get(storage_socket):
+    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_benzene_energy_1")
+    input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_benzene_opt")
+    input_spec_3, molecule_3, result_data_3 = load_procedure_data("rdkit_water_energy")
+
+    _, ids1 = storage_socket.procedure.create([molecule_1], input_spec_1)
+    _, ids2 = storage_socket.procedure.create([molecule_2], input_spec_2)
+    _, ids3 = storage_socket.procedure.create([molecule_3], input_spec_3)
+
+    # notice the order
+    procs = storage_socket.procedure.get(id=ids3 + ids1 + ids2)
+    assert procs[0]["id"] == ObjectId(ids3[0])
+    assert procs[1]["id"] == ObjectId(ids1[0])
+    assert procs[2]["id"] == ObjectId(ids2[0])
+
+
+def test_procedure_get_empty(storage_socket):
+    assert storage_socket.procedure.get([]) == []
+
+    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_benzene_energy_1")
+    _, ids1 = storage_socket.procedure.create([molecule_1], input_spec_1)
+
+    assert storage_socket.procedure.get([]) == []
+
+
+def test_procedure_query(storage_socket):
+    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_benzene_energy_1")
+    input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_methane_gradient_fail_iter")
+    input_spec_3, molecule_3, result_data_3 = load_procedure_data("psi4_benzene_opt")
+    input_spec_4, molecule_4, result_data_4 = load_procedure_data("psi4_peroxide_opt_fail_optiter")
+    input_spec_5, molecule_5, result_data_5 = load_procedure_data("rdkit_water_energy")
+
+    # set tags
+    input_spec_1 = input_spec_1.copy(update={"tag": "for_manager_1"})
+    input_spec_2 = input_spec_2.copy(update={"tag": "for_manager_1"})
+    input_spec_3 = input_spec_3.copy(update={"tag": "for_manager_2"})
+    input_spec_4 = input_spec_4.copy(update={"tag": "for_manager_2"})
+    input_spec_5 = input_spec_5.copy(update={"tag": "for_manager_3"})
+
+    _, ids1 = storage_socket.procedure.create([molecule_1], input_spec_1)
+    _, ids2 = storage_socket.procedure.create([molecule_2], input_spec_2)
+    _, ids3 = storage_socket.procedure.create([molecule_3], input_spec_3)
+    _, ids4 = storage_socket.procedure.create([molecule_4], input_spec_4)
+    _, ids5 = storage_socket.procedure.create([molecule_5], input_spec_5)
+    all_ids = ids1 + ids2 + ids3 + ids4 + ids5
+
+    # Create the fake managers in the database
+    assert storage_socket.manager.update(name="manager_1", **fake_manager_1)
+    assert storage_socket.manager.update(name="manager_2", **fake_manager_2)
+
+    # Managers claim some of the tasks
+    storage_socket.task.claim("manager_1", ["psi4", "rdkit"], ["geometric"], 50, ["for_manager_1"])
+    storage_socket.task.claim("manager_2", ["psi4", "rdkit"], ["geometric"], 50, ["for_manager_2"])
+
+    # Return some of the results
+    # The ids returned from create() are the result ids, but the managers return task ids
+    procs = storage_socket.procedure.get(all_ids, include=["*", "task_obj"])
+    task_ids = [x["task_obj"]["id"] for x in procs]
+
+    storage_socket.procedure.update_completed("manager_1", {task_ids[0]: result_data_1})
+    storage_socket.procedure.update_completed("manager_1", {task_ids[1]: result_data_2})
+    storage_socket.procedure.update_completed("manager_2", {task_ids[2]: result_data_3})
+
+    # Now finally test the queries
+    meta, procs = storage_socket.procedure.query(id=ids1)
+    assert meta.n_returned == 1
+    assert procs[0]["procedure"] == "single"
+    assert procs[0]["program"] == "psi4"
+
+    meta, procs = storage_socket.procedure.query(procedure=["optimization"], status=["COMPLETE"])
+    assert meta.n_returned == 1
+    assert {int(x["id"]) for x in procs} == {ids3[0]}
+
+    meta, procs = storage_socket.procedure.query(status=["ERROR"])
+    assert meta.n_returned == 1
+    assert {int(x["id"]) for x in procs} == {ids2[0]}
+
+    meta, procs = storage_socket.procedure.query(manager=["manager_1"])
+    assert meta.n_returned == 2
+    assert {int(x["id"]) for x in procs} == {ids1[0], ids2[0]}
+
+
+def test_procedure_query_empty(storage_socket):
+    meta, procs = storage_socket.procedure.query()
+    assert meta.n_returned == 0
+
+    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_benzene_energy_1")
+    _, ids1 = storage_socket.procedure.create([molecule_1], input_spec_1)
+
+    meta, procs = storage_socket.procedure.query()
+    assert meta.n_returned == 1
+
+    meta, procs = storage_socket.procedure.query(id=[])
+    assert meta.n_returned == 0
+
+    meta, procs = storage_socket.procedure.query(status=[])
+    assert meta.n_returned == 0
