@@ -734,53 +734,21 @@ def get_wave_function():
 
 
 @main.route("/procedure", methods=["GET"])
-@main.route("/procedure/<string:query_type>", methods=["GET"])
 @check_access
 def get_procedure(query_type: str = "get"):
     body_model, response_model = rest_model("procedure", query_type)
     body = parse_bodymodel(body_model)
 
-    # try:
-    if query_type == "get":
-        meta, ret = storage_socket.procedure.query(**{**body.data.dict(), **body.meta.dict()})
+    meta, ret = storage_socket.procedure.query(**{**body.data.dict(), **body.meta.dict()})
 
-        # Remove result_type. This isn't used right now and is missing from the model
-        for r in ret:
-            r.pop("result_type", None)
+    # Remove result_type. This isn't used right now and is missing from the model
+    for r in ret:
+        r.pop("result_type", None)
 
-        # Convert the new metadata format to the old format
-        meta_old = convert_get_response_metadata(meta, missing=[])
+    # Convert the new metadata format to the old format
+    meta_old = convert_get_response_metadata(meta, missing=[])
 
-        response = response_model(meta=meta_old, data=ret)
-    else:  # all other queries, like 'best_opt_results'
-        ret = storage_socket.custom_query("procedure", query_type, **{**body.data.dict(), **body.meta.dict()})
-
-        response = response_model(**ret)
-
-    return SerializedResponse(response)
-
-
-@main.route("/optimization/<string:query_type>", methods=["GET"])
-@check_access
-def get_optimization(query_type: str):
-    body_model, response_model = rest_model(f"optimization/{query_type}", "get")
-    body = parse_bodymodel(body_model)
-
-    if query_type == "get":
-        meta, ret = storage_socket.procedure.optimization.query(**{**body.data.dict(), **body.meta.dict()})
-
-        # Remove result_type. This isn't used right now and is missing from the model
-        for r in ret:
-            r.pop("result_type", None)
-
-        # Convert the new metadata format to the old format
-        meta_old = convert_get_response_metadata(meta, missing=[])
-
-        response = response_model(meta=meta_old, data=ret)
-
-    else:  # all other queries, like 'best_opt_results'
-        ret = storage_socket.custom_query("optimization", query_type, **{**body.data.dict(), **body.meta.dict()})
-        response = response_model(**ret)
+    response = response_model(meta=meta_old, data=ret)
 
     return SerializedResponse(response)
 
