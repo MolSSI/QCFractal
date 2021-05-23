@@ -38,7 +38,6 @@ from qcfractal.interface.models import (
     prepare_basis,
 )
 
-from qcfractal.storage_sockets.db_queries import QUERY_CLASSES
 from qcfractal.storage_sockets.models import (
     BaseResultORM,
     CollectionORM,
@@ -224,10 +223,6 @@ class SQLAlchemySocket:
             self.check_lib_versions()  # update version if new DB
         except Exception as e:
             raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}") from None
-
-        # Advanced queries objects
-        # TODO - replace max limit
-        self._query_classes = {cls._class_name: cls(self.engine.url.database, max_limit=1000) for cls in QUERY_CLASSES}
 
         # Create/initialize the subsockets
         from qcfractal.storage_sockets.subsockets.server_log import ServerLogSocket
@@ -497,50 +492,6 @@ class SQLAlchemySocket:
         return rdata, n_found
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    def custom_query(self, class_name: str, query_key: str, **kwargs):
-        """
-        Run advanced or specialized queries on different classes
-
-        Parameters
-        ----------
-        class_name : str
-            REST APIs name of the class (not the actual python name),
-             e.g., torsiondrive
-        query_key : str
-            The feature or attribute to look for, like initial_molecule
-        kwargs
-            Extra arguments needed by the query, like the id of the torison drive
-
-        Returns
-        -------
-            Dict[str,Any]:
-                Query result dictionary with keys:
-                data: returned data by the query (variable format)
-                meta:
-                    success: True or False
-                    error_description: Error msg to show to the user
-        """
-
-        ret = {"data": [], "meta": get_metadata_template()}
-
-        try:
-            if class_name not in self._query_classes:
-                raise AttributeError(f"Class name {class_name} is not found.")
-
-            session = self.Session()
-            ret["data"] = self._query_classes[class_name].query(session, query_key, **kwargs)
-            ret["meta"]["success"] = True
-            try:
-                ret["meta"]["n_found"] = len(ret["data"])
-            except TypeError:
-                ret["meta"]["n_found"] = 1
-            finally:
-                session.close()
-        except Exception as err:
-            ret["meta"]["error_description"] = str(err)
-
-        return ret
 
     def get_total_count(self, className, **kwargs):
 
