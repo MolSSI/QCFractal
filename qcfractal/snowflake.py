@@ -17,6 +17,7 @@ from .config import FractalConfig, DatabaseConfig, update_nested_dict
 from .periodics import PeriodicsProcess
 from .app.flask_app import FlaskProcess
 from .process_runner import ProcessBase, ProcessRunner
+from .interface.models import TaskStatusEnum
 
 from typing import TYPE_CHECKING
 
@@ -36,7 +37,7 @@ def attempt_client_connect(uri: str, **client_args) -> FractalClient:
     Parameters
     ----------
     uri: str
-        URI to the rest server (ie, http://127.0.01:1234)
+        URI to the rest server (ie, http://127.0.0.1:1234)
     **client_args
         Additional arguments to pass to the FractalClient constructor
 
@@ -248,7 +249,7 @@ class FractalSnowflake:
 
         if ids is None:
             c = self.client()
-            proc = c.query_tasks(status=["WAITING", "RUNNING"])
+            proc = c.query_tasks(status=[TaskStatusEnum.waiting, TaskStatusEnum.running])
             ids = [x.base_result for x in proc]
 
         # TODO - INT ID

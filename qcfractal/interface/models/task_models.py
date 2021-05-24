@@ -12,10 +12,25 @@ class TaskStatusEnum(str, Enum):
     The state of a Task object. The states which are available are a finite set.
     """
 
-    running = "RUNNING"
-    waiting = "WAITING"
-    error = "ERROR"
-    complete = "COMPLETE"
+    running = "running"
+    waiting = "waiting"
+    error = "error"
+    complete = "complete"
+
+    @classmethod
+    def _missing_(cls, name):
+        """Attempts to find the correct status in a case-insensitive way
+
+        If a string being converted to a TaskStatusEnum is missing, then this function
+        will convert the case and try to find the appropriate status.
+        """
+        name = name.lower()
+
+        # Search this way rather than doing 'in' since we are comparing
+        # a string to an enum
+        for status in cls:
+            if name == status:
+                return cls(name)
 
 
 class ManagerStatusEnum(str, Enum):
@@ -23,8 +38,23 @@ class ManagerStatusEnum(str, Enum):
     The state of a Queue Manager. The states which are available are a finite set.
     """
 
-    active = "ACTIVE"
-    inactive = "INACTIVE"
+    active = "active"
+    inactive = "inactive"
+
+    @classmethod
+    def _missing_(cls, name):
+        """Attempts to find the correct status in a case-insensitive way
+
+        If a string being converted to a ManagerStatusEnum is missing, then this function
+        will convert the case and try to find the appropriate status.
+        """
+        name = name.lower()
+
+        # Search this way rather than doing 'in' since we are comparing
+        # a string to an enum
+        for status in cls:
+            if name == status:
+                return cls(name)
 
 
 class PriorityEnum(int, Enum):

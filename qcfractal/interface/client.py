@@ -5,7 +5,6 @@ from . import __version__
 
 import json
 import os
-import warnings
 from datetime import datetime
 from pkg_resources import parse_version
 
@@ -18,8 +17,8 @@ import requests
 from pydantic import ValidationError
 
 from .collections import collection_factory, collections_name_map
-from .models import build_procedure
-from .models.task_models import PriorityEnum
+from .models.records import RecordStatusEnum
+from .models.task_models import PriorityEnum, TaskStatusEnum
 from .models.rest_models import rest_model
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -363,7 +362,7 @@ class FractalClient(object):
 
         return cls(data.pop("address"), **data)
 
-    def server_information(self) -> Dict[str, str]:
+    def server_information(self) -> Dict[str, Any]:
         """Pull down various data on the connected server.
 
         Returns
@@ -375,7 +374,7 @@ class FractalClient(object):
 
     ### KVStore section
 
-    def query_kvstore(self, id: "QueryObjectId", full_return: bool = False) -> Dict[str, Any]:
+    def query_kvstore(self, id: QueryObjectId, full_return: bool = False) -> Dict[str, Any]:
         """Queries items from the database's KVStore
 
         Parameters
@@ -397,64 +396,61 @@ class FractalClient(object):
 
     def query_molecules(
         self,
-        id: Optional["QueryObjectId"] = None,
-        molecule_hash: Optional["QueryStr"] = None,
-        molecular_formula: Optional["QueryStr"] = None,
+        id: QueryObjectId = None,
+        molecule_hash: QueryStr = None,
+        molecular_formula: QueryStr = None,
         limit: Optional[int] = None,
         skip: int = 0,
         full_return: bool = False,
-    ) -> Union["MoleculeGETResponse", List["Molecule"]]:
+    ) -> Union[MoleculeGETResponse, List[Molecule]]:
         """Queries molecules from the database.
 
         Parameters
         ----------
-        id : QueryObjectId, optional
+        id
             Queries the Molecule ``id`` field.
-        molecule_hash : QueryStr, optional
+        molecule_hash
             Queries the Molecule ``molecule_hash`` field.
-        molecular_formula : QueryStr, optional
+        molecular_formula
             Queries the Molecule ``molecular_formula`` field. Molecular formulas are case-sensitive.
             Molecular formulas are not order-sensitive (e.g. "H2O == OH2 != Oh2").
-        limit : Optional[int], optional
+        limit
             The maximum number of Molecules to query
-        skip : int, optional
+        skip
             The number of Molecules to skip in the query, used during pagination
-        full_return : bool, optional
+        full_return
             Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
-        List[Molecule]
+        :
             A list of found molecules.
         """
 
-        if id is not None and not isinstance(id, (list, tuple)):
-            id = [id]
-        if molecule_hash is not None and not isinstance(molecule_hash, (list, tuple)):
-            molecule_hash = [molecule_hash]
-        if molecular_formula is not None and not isinstance(molecular_formula, (list, tuple)):
-            molecular_formula = [molecular_formula]
-
         payload = {
             "meta": {"limit": limit, "skip": skip},
-            "data": {"id": id, "molecule_hash": molecule_hash, "molecular_formula": molecular_formula},
+            "data": {
+                "id": make_list(id),
+                "molecule_hash": make_list(molecule_hash),
+                "molecular_formula": make_list(molecular_formula),
+            },
         }
         response = self._automodel_request("molecule", "get", payload, full_return=full_return)
         return response
 
-    def add_molecules(self, mol_list: List["Molecule"], full_return: bool = False) -> List[str]:
+    def add_molecules(self, mol_list: List[Molecule], full_return: bool = False) -> List[ObjectId]:
         """Adds molecules to the Server.
 
         Parameters
         ----------
-        mol_list : List[Molecule]
+        mol_list
             A list of Molecules to add to the server.
-        full_return : bool, optional
+        full_return
             Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
-        List[str]
+        :
             A list of Molecule id's in the sent order, can be None where issues occured.
 
         """
@@ -465,18 +461,15 @@ class FractalClient(object):
 
     def query_keywords(
         self,
-        id: Optional["QueryObjectId"] = None,
-        *,
+        id: QueryObjectId = None,
         full_return: bool = False,
-    ) -> Union["KeywordGETResponse", List["KeywordSet"]]:
+    ) -> Union[KeywordGETResponse, List[KeywordSet]]:
         """Obtains KeywordSets from the server using keyword ids.
 
         Parameters
         ----------
         id : QueryObjectId, optional
             A list of ids to query.
-        hash_index : QueryStr, optional
-            The hash index to look up
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
 
@@ -486,10 +479,10 @@ class FractalClient(object):
             The requested KeywordSet objects.
         """
 
-        payload = {"meta": {}, "data": {"id": id}}
+        payload = {"meta": {}, "data": {"id": make_list(id)}}
         return self._automodel_request("keyword", "get", payload, full_return=full_return)
 
-    def add_keywords(self, keywords: List["KeywordSet"], full_return: bool = False) -> List[str]:
+    def add_keywords(self, keywords: List[KeywordSet], full_return: bool = False) -> List[ObjectId]:
         """Adds KeywordSets to the server.
 
         Parameters
@@ -676,51 +669,55 @@ class FractalClient(object):
 
     def query_results(
         self,
-        id: Optional["QueryObjectId"] = None,
-        program: Optional["QueryStr"] = None,
-        molecule: Optional["QueryObjectId"] = None,
-        driver: Optional["QueryStr"] = None,
-        method: Optional["QueryStr"] = None,
-        basis: Optional["QueryStr"] = None,
-        status: Optional["QueryStr"] = None,
+        id: QueryObjectId = None,
+        program: QueryStr = None,
+        molecule: QueryObjectId = None,
+        driver: QueryStr = None,
+        method: QueryStr = None,
+        basis: QueryStr = None,
+        status: QueryStr = None,
         limit: Optional[int] = None,
         skip: int = 0,
-        include: Optional["QueryListStr"] = None,
+        include: QueryListStr = None,
         full_return: bool = False,
-    ) -> Union["ResultGETResponse", List["ResultRecord"], Dict[str, Any]]:
+    ) -> Union[ResultGETResponse, List[ResultRecord], Dict[str, Any]]:
         """Queries ResultRecords from the server.
 
         Parameters
         ----------
-        id : QueryObjectId, optional
+        id
             Queries the Result ``id`` field.
-        program : QueryStr, optional
+        program
             Queries the Result ``program`` field.
-        molecule : QueryObjectId, optional
+        molecule
             Queries the Result ``molecule`` field.
-        driver : QueryStr, optional
+        driver
             Queries the Result ``driver`` field.
-        method : QueryStr, optional
+        method
             Queries the Result ``method`` field.
-        basis : QueryStr, optional
+        basis
             Queries the Result ``basis`` field.
-        status : QueryStr, optional
-            Queries the Result ``status`` field.
-        limit : Optional[int], optional
+        status
+            Queries the Result ``status`` field. By default, only return completed results.
+        limit
             The maximum number of Results to query
-        skip : int, optional
+        skip
             The number of Results to skip in the query, used during pagination
-        include : QueryListStr, optional
+        include
             Filters the returned fields, will return a dictionary rather than an object.
-        full_return : bool, optional
+        full_return
             Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
-        Union[List[RecordResult], Dict[str, Any]]
+        :
             Returns a List of found RecordResult's without include, or a
             dictionary of results with include.
         """
+
+        if status is None and id is None:
+            status = [RecordStatusEnum.complete]
+
         payload = {
             "meta": {"limit": limit, "skip": skip, "include": include},
             "data": {
@@ -747,39 +744,42 @@ class FractalClient(object):
 
     def query_procedures(
         self,
-        id: Optional["QueryObjectId"] = None,
-        procedure: Optional["QueryStr"] = None,
-        status: "QueryStr" = "COMPLETE",
+        id: QueryObjectId = None,
+        procedure: QueryStr = None,
+        status: QueryStr = None,
         limit: Optional[int] = None,
         skip: int = 0,
         include: Optional["QueryListStr"] = None,
         full_return: bool = False,
-    ) -> Union["ProcedureGETResponse", List[Dict[str, Any]]]:
+    ) -> Union[ProcedureGETResponse, List[Dict[str, Any]]]:
         """Queries Procedures from the server.
 
         Parameters
         ----------
-        id : QueryObjectId, optional
+        id
             Queries the Procedure ``id`` field.
-        procedure : QueryStr, optional
+        procedure
             Queries the Procedure ``procedure`` field.
-        status : QueryStr, optional
-            Queries the Procedure ``status`` field.
-        limit : Optional[int], optional
+        status
+            Queries the Procedure ``status`` field. By default, only return completed tasks
+        limit
             The maximum number of Procedures to query
-        skip : int, optional
+        skip
             The number of Procedures to skip in the query, used during pagination
-        include : QueryListStr, optional
+        include
             Filters the returned fields, will return a dictionary rather than an object.
-        full_return : bool, optional
+        full_return
             Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
-        Union[List['RecordBase'], Dict[str, Any]]
+        :
             Returns a List of found RecordResult's without include, or a
             dictionary of results with include.
         """
+
+        if status is None and id is None:
+            status = [RecordStatusEnum.complete]
 
         payload = {
             "meta": {"limit": limit, "skip": skip, "include": include},
@@ -792,8 +792,8 @@ class FractalClient(object):
         response = self._automodel_request("procedure", "get", payload, full_return=True)
 
         if not include:
-            for ind in range(len(response.data)):
-                response.data[ind] = build_procedure(response.data[ind], client=self)
+            for result in response.data:
+                result.__dict__["client"] = self
 
         if full_return:
             return response
@@ -1184,7 +1184,7 @@ class FractalClient(object):
     def query_managers(
         self,
         name: Optional["QueryStr"] = None,
-        status: Optional["QueryStr"] = "ACTIVE",
+        status: Optional["QueryStr"] = "active",
         limit: Optional[int] = None,
         skip: int = 0,
         full_return: bool = False,

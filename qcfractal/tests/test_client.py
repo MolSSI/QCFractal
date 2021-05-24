@@ -22,8 +22,12 @@ def test_client_molecule(fractal_test_server, encoding):
     # Test add
     ret = client.add_molecules([water])
 
-    # Test get
+    # Test get as a list
     get_mol = client.query_molecules(id=[ret[0]])
+    assert water.compare(get_mol[0])
+
+    # Test get as a single id
+    get_mol = client.query_molecules(id=ret[0])
     assert water.compare(get_mol[0])
 
     # Test molecular_formula get
@@ -70,19 +74,6 @@ def test_client_duplicate_keywords(fractal_test_server, encoding):
     ret3 = client.add_keywords([opt2, opt1, opt3])
     assert len(ret3) == 3
     assert ret3[1] == ret[0]
-
-
-@pytest.mark.parametrize("encoding", valid_encodings)
-def test_empty_query(fractal_test_server, encoding):
-
-    client = fractal_test_server.client()
-    client._set_encoding(encoding)
-
-    with pytest.raises(IOError) as error:
-        client.query_procedures(limit=1)
-
-    # TODO - move to pydantic model validation
-    # assert "ID is required" in str(error.value)
 
 
 @pytest.mark.parametrize("encoding", valid_encodings)

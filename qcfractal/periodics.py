@@ -172,14 +172,14 @@ class FractalPeriodics:
             except Exception:
                 error_message = "Error iterating service with id={}:\n{}".format(service.id, traceback.format_exc())
                 self.logger.error(error_message)
-                service.status = "ERROR"
+                service.status = TaskStatusEnum.error
 
                 # TODO: HACK HACK
                 # Service itself should be responsible for this (maybe in base class?)
-                service.output.__dict__["status"] = "ERROR"
+                service.output.__dict__["status"] = TaskStatusEnum.error
 
                 service.error = ComputeError(error_type="iteration_error", error_message=error_message)
-                self.storage_socket.update_service_status("ERROR", id=service.id)
+                self.storage_socket.update_service_status(TaskStatusEnum.error, id=service.id)
                 finished = False
 
             self.storage_socket.update_services([service])

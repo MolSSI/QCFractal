@@ -8,6 +8,7 @@ import pytest
 import warnings
 
 import qcfractal.interface as ptl
+from qcfractal.interface.models import RecordStatusEnum, TaskStatusEnum
 from qcfractal.interface.models import GridOptimizationInput
 from qcfractal.testing import run_services, using_geometric, using_rdkit
 
@@ -25,14 +26,14 @@ def test_service_torsiondrive_service_incomplete(torsiondrive_fixture):
     result = client.query_procedures(id=ret.ids)[0]
     assert len(result.final_energy_dict) == 0
     assert len(result.optimization_history) == 0
-    assert result.status == "INCOMPLETE"
+    assert result.status == RecordStatusEnum.incomplete
 
     # Update the service
     periodics._update_services()
 
     result = client.query_procedures(id=ret.ids)[0]
     status = result.detailed_status()
-    assert result.status == "RUNNING"
+    assert result.status == RecordStatusEnum.running
     assert status["incomplete_tasks"] == 1
 
     # wait for the computation for this iteration to finish
@@ -51,7 +52,7 @@ def test_service_torsiondrive_service_incomplete(torsiondrive_fixture):
     assert len(result.final_energy_dict) == 1  # One complete
     assert len(result.optimization_history) == 3  # Three spawned
     assert result.minimum_positions["[-90]"] == 0
-    assert result.status == "RUNNING"
+    assert result.status == RecordStatusEnum.running
 
     # Repeat compute step checking for updates
     r = run_services(server, periodics, max_iter=1)
@@ -60,7 +61,7 @@ def test_service_torsiondrive_service_incomplete(torsiondrive_fixture):
     assert len(result.final_energy_dict) == 3
     assert len(result.optimization_history) == 4
     assert result.minimum_positions["[-90]"] == 0
-    assert result.status == "RUNNING"
+    assert result.status == RecordStatusEnum.running
 
     # Finalize
     r = run_services(server, periodics, max_iter=6)
@@ -69,7 +70,7 @@ def test_service_torsiondrive_service_incomplete(torsiondrive_fixture):
     assert len(result.final_energy_dict) == 4
     assert len(result.optimization_history) == 4
     assert result.minimum_positions["[-90]"] == 2
-    assert result.status == "COMPLETE"
+    assert result.status == RecordStatusEnum.complete
 
 
 def test_service_manipulation(torsiondrive_fixture):
@@ -83,12 +84,12 @@ def test_service_manipulation(torsiondrive_fixture):
     ret = spin_up_test(run_service=False, initial_molecule=[hooh])
 
     service = client.query_services(procedure_id=ret.ids)[0]
-    assert service["status"] == "WAITING"
+    assert service["status"] == TaskStatusEnum.waiting
 
     client.modify_services("restart", id=service["id"])
 
     service = client.query_services(procedure_id=ret.ids)[0]
-    assert service["status"] == "RUNNING"
+    assert service["status"] == TaskStatusEnum.running
 
 
 def test_service_torsiondrive_single(torsiondrive_fixture):
@@ -101,7 +102,7 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
 
     # Get a TorsionDriveORM result and check data
     result = client.query_procedures(id=ret.ids)[0]
-    assert result.status == "COMPLETE"
+    assert result.status == RecordStatusEnum.complete
     assert isinstance(str(result), str)  # Check that repr runs
 
     assert pytest.approx(0.002597541340221565, abs=1e-6) == result.get_final_energies(0)
@@ -128,7 +129,7 @@ def test_service_torsiondrive_multi_single(torsiondrive_fixture):
     ret = spin_up_test(initial_molecule=[hooh, hooh2])
 
     result = client.query_procedures(id=ret.ids)[0]
-    assert result.status == "COMPLETE"
+    assert result.status == RecordStatusEnum.complete
 
 
 def test_service_torsiondrive_duplicates(torsiondrive_fixture):
@@ -162,7 +163,7 @@ def test_service_torsiondrive_option_dihedral_ranges(torsiondrive_fixture):
     ret = spin_up_test(keywords={"grid_spacing": [30], "dihedral_ranges": [[-150, -60]]})
 
     result = client.query_procedures(id=ret.ids)[0]
-    assert result.status == "COMPLETE"
+    assert result.status == RecordStatusEnum.complete
 
     # The dihedral range should be limited to -150, -90, -60
     final_energies = result.get_final_energies()
@@ -188,7 +189,7 @@ def test_service_torsiondrive_option_energy_decrease_thresh(torsiondrive_fixture
     ret = spin_up_test(keywords={"grid_spacing": [90], "energy_decrease_thresh": 3e-5})
 
     result = client.query_procedures(id=ret.ids)[0]
-    assert result.status == "COMPLETE"
+    assert result.status == RecordStatusEnum.complete
 
     # the final energies are the same as the default setting, because this molecule is too simple
     final_energies = result.get_final_energies()
@@ -209,7 +210,7 @@ def test_service_torsiondrive_option_energy_upper_limit(torsiondrive_fixture):
     ret = spin_up_test(keywords={"grid_spacing": [30], "energy_upper_limit": 1e-4})
 
     result = client.query_procedures(id=ret.ids)[0]
-    assert result.status == "COMPLETE"
+    assert result.status == RecordStatusEnum.complete
 
     # The energy_upper_limit should limit the range of the scan
     final_energies = result.get_final_energies()
@@ -235,7 +236,7 @@ def test_service_torsiondrive_option_extra_constraints(torsiondrive_fixture):
     )
 
     result = client.query_procedures(id=ret.ids)[0]
-    assert result.status == "COMPLETE"
+    assert result.status == RecordStatusEnum.complete
 
     # The final energies are the same as the default setting, because this molecule is too simple
     final_energies = result.get_final_energies()
@@ -269,13 +270,13 @@ def test_service_iterate_error(torsiondrive_fixture):
     status = client.query_services(procedure_id=ret.ids)
     assert len(status) == 1
 
-    assert status[0]["status"] == "ERROR"
+    assert status[0]["status"] == TaskStatusEnum.error
     assert "Error iterating service" in status[0]["error"]["error_message"]
 
     # Test that the error is propagated to the procedure
     proc_status = client.query_procedures(ret.ids)
     assert len(proc_status) == 1
-    assert proc_status[0].status == "ERROR"
+    assert proc_status[0].status == RecordStatusEnum.error
     assert "Error iterating service" in proc_status[0].get_error().error_message
 
 
@@ -291,7 +292,7 @@ def test_service_torsiondrive_compute_error(torsiondrive_fixture):
     status = client.query_services(procedure_id=ret.ids)
     assert len(status) == 1
 
-    assert status[0]["status"] == "ERROR"
+    assert status[0]["status"] == TaskStatusEnum.error
     assert "All tasks" in status[0]["error"]["error_message"]
 
 
@@ -305,7 +306,7 @@ def test_service_torsiondrive_visualization(torsiondrive_fixture):
 
     # Get a TorsionDriveORM result and check data
     result = client.query_procedures(id=ret.ids)[0]
-    assert result.status == "COMPLETE"
+    assert result.status == RecordStatusEnum.complete
 
     result.visualize()
 
@@ -320,7 +321,7 @@ def test_service_torsiondrive_get_final_results(torsiondrive_fixture):
 
     # Get a TorsionDriveORM result and check data
     result = client.query_procedures(id=ret.ids)[0]
-    assert result.status == "COMPLETE"
+    assert result.status == RecordStatusEnum.complete
 
     final_result_records = result.get_final_results()
     assert set(final_result_records.keys()) == {(-90,), (-0,), (90,), (180,)}
@@ -364,7 +365,7 @@ def test_service_gridoptimization_single_opt(fractal_test_server):
     assert r is False
     result = client.query_procedures(id=ret.ids)[0]
     assert result.grid_optimizations.keys() == {'"preoptimization"'}
-    assert result.status == "RUNNING"
+    assert result.status == TaskStatusEnum.running
 
     r = run_services(fractal_test_server, periodics, max_iter=1)
     assert r is False
@@ -373,20 +374,20 @@ def test_service_gridoptimization_single_opt(fractal_test_server):
     assert status["total_points"] == 5
     assert status["complete_tasks"] == 2
     assert result.grid_optimizations.keys() == {'"preoptimization"', "[1, 0]"}
-    assert result.status == "RUNNING"
+    assert result.status == TaskStatusEnum.running
 
     r = run_services(fractal_test_server, periodics, max_iter=1)
     assert r is False
     result = client.query_procedures(id=ret.ids)[0]
     assert result.grid_optimizations.keys() == {'"preoptimization"', "[1, 0]", "[0, 0]", "[1, 1]"}
-    assert result.status == "RUNNING"
+    assert result.status == TaskStatusEnum.running
 
     r = run_services(fractal_test_server, periodics, max_iter=6)
     assert r is True
     result = client.query_procedures(id=ret.ids)[0]
     status = result.detailed_status()
     assert status["complete_tasks"] == 5
-    assert result.status == "COMPLETE"
+    assert result.status == RecordStatusEnum.complete
 
     assert result.starting_grid == (1, 0)
     assert pytest.approx(result.get_final_energies((0, 0)), abs=1.0e-4) == 0.0010044105443485617
@@ -448,7 +449,7 @@ def test_service_gridoptimization_single_noopt(fractal_test_server):
 
     result = client.query_procedures(id=ret.ids)[0]
 
-    assert result.status == "COMPLETE"
+    assert result.status == RecordStatusEnum.complete
     assert result.starting_grid == (1,)
     assert pytest.approx(result.get_final_energies((0,)), abs=1.0e-4) == 0.00032145876568280524
 

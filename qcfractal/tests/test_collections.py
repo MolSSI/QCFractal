@@ -12,6 +12,7 @@ import pytest
 import qcelemental as qcel
 
 import qcfractal.interface as ptl
+from qcfractal.interface.models import RecordStatusEnum, TaskStatusEnum
 from qcfractal.interface.collections.dataset_view import HDF5View
 from qcfractal import testing
 from qcfractal.testing import df_compare, live_fractal_or_skip
@@ -128,10 +129,10 @@ def gradient_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
         ds.compute("HF", "3-21g")
         fractal_compute_server.await_results()
 
-        assert ds.get_records("HF", "sto-3g").iloc[0, 0].status == "COMPLETE"
-        assert ds.get_records("HF", "sto-3g").iloc[1, 0].status == "COMPLETE"
-        assert ds.get_records("HF", "3-21g").iloc[0, 0].status == "COMPLETE"
-        assert ds.get_records("HF", "3-21g").iloc[1, 0].status == "COMPLETE"
+        assert ds.get_records("HF", "sto-3g").iloc[0, 0].status == RecordStatusEnum.complete
+        assert ds.get_records("HF", "sto-3g").iloc[1, 0].status == RecordStatusEnum.complete
+        assert ds.get_records("HF", "3-21g").iloc[0, 0].status == RecordStatusEnum.complete
+        assert ds.get_records("HF", "3-21g").iloc[1, 0].status == RecordStatusEnum.complete
 
         # build_dataset_fixture_view(ds, fractal_compute_server)
 
@@ -173,17 +174,17 @@ def test_gradient_dataset_get_records(gradient_dataset_fixture):
         records = ds.get_records("HF", "sto-3g")
 
     assert records.shape == (2, 1)
-    assert records.iloc[0, 0].status == "COMPLETE"
-    assert records.iloc[1, 0].status == "COMPLETE"
+    assert records.iloc[0, 0].status == RecordStatusEnum.complete
+    assert records.iloc[1, 0].status == RecordStatusEnum.complete
 
     with check_requests_monitor(client, "result", request_made=True):
         records_subset1 = ds.get_records("HF", "sto-3g", subset="He2")
-    assert records_subset1.status == "COMPLETE"
+    assert records_subset1.status == RecordStatusEnum.complete
 
     with check_requests_monitor(client, "result", request_made=True):
         records_subset2 = ds.get_records("HF", "sto-3g", subset=["He2"])
     assert records_subset2.shape == (1, 1)
-    assert records_subset2.iloc[0, 0].status == "COMPLETE"
+    assert records_subset2.iloc[0, 0].status == RecordStatusEnum.complete
 
     with check_requests_monitor(client, "result", request_made=True):
         rec_proj = ds.get_records("HF", "sto-3g", include=["extras", "return_result"])
@@ -653,11 +654,11 @@ def test_reactiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
 
     records = ds.get_records("B3LYP", "6-31g")
     assert records.shape == (1, 1)
-    assert records.iloc[0, 0].status == "COMPLETE"
+    assert records.iloc[0, 0].status == RecordStatusEnum.complete
 
     records = ds.get_records("B3LYP", "6-31g", stoich="default")
     assert records.shape == (1, 1)
-    assert records.iloc[0, 0].status == "COMPLETE"
+    assert records.iloc[0, 0].status == RecordStatusEnum.complete
 
     records = ds.get_records("B3LYP", "6-31g", stoich="default", subset="HeDimer")
     assert records.shape == (1, 1)
@@ -1313,9 +1314,9 @@ def test_torsiondrive_dataset(fractal_compute_server):
     # Check status
     ds.query("Spec1", force=True)
     status_basic = ds.status()
-    assert status_basic.loc["RUNNING", "Spec1"] == 2
+    assert status_basic.loc[RecordStatusEnum.running, "Spec1"] == 2
     status_spec = ds.status("Spec1")
-    assert status_basic.loc["RUNNING", "Spec1"] == 2
+    assert status_basic.loc[RecordStatusEnum.running, "Spec1"] == 2
 
     status_detail = ds.status("Spec1", detail=True)
     assert status_detail.loc["hooh2", "Complete Tasks"] == 1
@@ -1347,8 +1348,8 @@ def test_torsiondrive_dataset(fractal_compute_server):
         for spec in ["Spec1", "spec2"]:
             assert pytest.approx(ds.df.loc[row, spec].get_final_energies(60), 1.0e-5) == 0.0007991272305133664
 
-    assert ds.status().loc["COMPLETE", "Spec1"] == 2
-    assert ds.status(collapse=False).loc["hooh1", "Spec1"] == "COMPLETE"
+    assert ds.status().loc[RecordStatusEnum.complete, "Spec1"] == 2
+    assert ds.status(collapse=False).loc["hooh1", "Spec1"] == RecordStatusEnum.complete
 
     assert ds.counts("hooh1").loc["hooh1", "Spec1"] > 5
     assert ds.counts("hooh1", specs="spec1", count_gradients=True).loc["hooh1", "Spec1"] > 30
@@ -1408,12 +1409,12 @@ def test_optimization_dataset(fractal_compute_server):
     ds.query("test2")
 
     status = ds.status()
-    assert status.loc["COMPLETE", "test"] == 3
-    assert status.loc["COMPLETE", "test2"] == 1
+    assert status.loc[RecordStatusEnum.complete, "test"] == 3
+    assert status.loc[RecordStatusEnum.complete, "test2"] == 1
 
     status_spec = ds.status(["test", "test2"])
-    assert status_spec.loc["COMPLETE", "test"] == 3
-    assert status_spec.loc["COMPLETE", "test2"] == 1
+    assert status_spec.loc[RecordStatusEnum.complete, "test"] == 3
+    assert status_spec.loc[RecordStatusEnum.complete, "test2"] == 1
 
     counts = ds.counts()
     assert counts.loc["hooh1", "test"] == 9
@@ -1456,7 +1457,7 @@ def test_grid_optimization_dataset(fractal_compute_server):
     fractal_compute_server.await_services()
 
     ds.query("test")
-    assert ds.get_record("hooh1", "test").status == "COMPLETE"
+    assert ds.get_record("hooh1", "test").status == RecordStatusEnum.complete
 
 
 @pytest.mark.parametrize("ds_class", [ptl.collections.Dataset, ptl.collections.ReactionDataset])

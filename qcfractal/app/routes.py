@@ -8,7 +8,15 @@ import time
 from .. import __version__ as qcfractal_version
 from qcelemental.util import deserialize, serialize
 from ..storage_sockets.storage_utils import add_metadata_template
-from ..interface.models import rest_model, build_procedure, PriorityEnum, RecordStatusEnum, UserInfo
+from ..interface.models import (
+    rest_model,
+    build_procedure,
+    PriorityEnum,
+    RecordStatusEnum,
+    ManagerStatusEnum,
+    UserInfo,
+    ObjectId,
+)
 from ..services import initialize_service
 from ..exceptions import UserReportableError, AuthenticationFailure
 
@@ -358,7 +366,7 @@ def handle_auth_error(error):
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#                            Routes
+#                           V1  Routes
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -475,84 +483,38 @@ def fresh_login():
 
 @main.route("/molecule", methods=["GET"])
 @check_access
-def get_molecule():
+def query_molecule_v1():
     body = parse_bodymodel(MoleculeGETBody)
-
-    # TODO - should only accept lists/sequences/iterables
-    data_dict = body.data.dict()
-    molecule_hash = data_dict.pop("molecule_hash", None)
-    molecular_formula = data_dict.pop("molecular_formula", None)
-
-    if molecule_hash is not None:
-        molecule_hash = make_list(molecule_hash)
-    if molecular_formula is not None:
-        molecular_formula = make_list(molecular_formula)
-
-    meta, molecules = storage_socket.molecule.query(
-        **data_dict, **body.meta.dict(), molecular_formula=molecular_formula, molecule_hash=molecule_hash
-    )
+    meta, molecules = storage_socket.molecule.query(**body.data.dict(), **body.meta.dict())
 
     # Convert the new metadata format to the old format
     meta_old = convert_get_response_metadata(meta, missing=[])
-
     response = MoleculeGETResponse(meta=meta_old, data=molecules)
-
     return SerializedResponse(response)
 
 
 @main.route("/molecule", methods=["POST"])
 @check_access
-def post_molecule():
-    """
-    Request:
-        "meta" - Overall options to the Molecule pull request
-            - No current options
-        "data" - A dictionary of {key : molecule JSON} requests
-
-    Returns:
-        "meta" - Metadata associated with the query
-            - "errors" - A list of errors in (index, error_id) format.
-            - "n_inserted" - The number of molecule inserted.
-            - "success" - If the query was successful or not.
-            - "error_description" - A string based description of the error or False
-            - "duplicates" - A list of keys that were already inserted.
-        "data" - A dictionary of {key : id} results
-    """
-
+def add_molecule_v1():
     body = parse_bodymodel(MoleculePOSTBody)
-
     meta, ret = storage_socket.molecule.add(body.data)
 
     # Convert new metadata format to old
     duplicate_ids = [ret[i] for i in meta.existing_idx]
     meta_old = convert_post_response_metadata(meta, duplicate_ids)
-
     response = MoleculePOSTResponse(meta=meta_old, data=ret)
     return SerializedResponse(response)
 
 
 @main.route("/kvstore", methods=["GET"])
 @check_access
-def get_kvstore():
-    """
-    Request:
-        "data" - A list of key requests
-    Returns:
-        "meta" - Metadata associated with the query
-            - "errors" - A list of errors in (index, error_id) format.
-            - "n_found" - The number of molecule found.
-            - "success" - If the query was successful or not.
-            - "error_description" - A string based description of the error or False
-            - "missing" - A list of keys that were not found.
-        "data" - A dictionary of {key : value} dictionary of the results
-    """
-
+def query_kvstore_v1():
     body = parse_bodymodel(KVStoreGETBody)
     ret = storage_socket.output_store.get(body.data.id, missing_ok=True)
 
     # REST API currently expects a dict {id: KVStore dict}
     # But socket returns a list of KVStore dict
-    ret_dict = {x["id"]: x for x in ret if x is not None}
+    ret_dict = {ObjectId(x["id"]): x for x in ret if x is not None}
 
     missing_id = [x for x, y in zip(body.data.id, ret) if y is None]
 
@@ -565,7 +527,7 @@ def get_kvstore():
 
 @main.route("/keyword", methods=["GET"])
 @check_access
-def get_keyword():
+def query_keywords_v1():
     body = parse_bodymodel(KeywordGETBody)
 
     ret = storage_socket.keywords.get(body.data.id, missing_ok=True)
@@ -578,7 +540,7 @@ def get_keyword():
 
 @main.route("/keyword", methods=["POST"])
 @check_access
-def post_keyword():
+def add_keywords_v1():
 
     body = parse_bodymodel(KeywordPOSTBody)
     meta, ret = storage_socket.keywords.add(body.data)
@@ -691,10 +653,9 @@ def delete_collection(collection_id: int, view_function: str):
 
 @main.route("/result", methods=["GET"])
 @check_access
-def get_result():
+def query_result_v1():
 
     body = parse_bodymodel(ResultGETBody)
-
     meta, results = storage_socket.procedure.single.query(**{**body.data.dict(), **body.meta.dict()})
 
     # Remove result_type. This isn't used right now and is missing from the model
@@ -703,24 +664,20 @@ def get_result():
 
     # Convert the new metadata format to the old format
     meta_old = convert_get_response_metadata(meta, missing=[])
-
     response = ResultGETResponse(meta=meta_old, data=results)
-
-    current_app.logger.info("GET: Results - {} pulls.".format(len(response.data)))
-
     return SerializedResponse(response)
 
 
 @main.route("/wavefunctionstore", methods=["GET"])
 @check_access
-def get_wave_function():
+def get_wavefunction_v1():
 
     # NOTE - this only supports one wavefunction at a time
     body = parse_bodymodel(WavefunctionStoreGETBody)
 
-    ret = storage_socket.wavefunction.get([body.data.id], include=body.meta.include)
-    meta_nfound = len(ret)
-    if len(ret) > 0:
+    ret = storage_socket.wavefunction.get([body.data.id], include=body.meta.include, missing_ok=True)
+    nfound = len(ret)
+    if nfound > 0:
         meta_missing = []
         ret = ret[0]
     else:
@@ -735,8 +692,8 @@ def get_wave_function():
 
 @main.route("/procedure", methods=["GET"])
 @check_access
-def get_procedure(query_type: str = "get"):
-    body_model, response_model = rest_model("procedure", query_type)
+def query_procedure_v1():
+    body_model, response_model = rest_model("procedure", "get")
     body = parse_bodymodel(body_model)
 
     meta, ret = storage_socket.procedure.query(**{**body.data.dict(), **body.meta.dict()})
@@ -1019,20 +976,22 @@ def put_queue_manager():
     op = body.data.operation
     if op == "startup":
         storage_socket.manager.update(
-            name, status="ACTIVE", configuration=body.data.configuration, **body.meta.dict(), log=True
+            name, status=ManagerStatusEnum.active, configuration=body.data.configuration, **body.meta.dict(), log=True
         )
         # current_app.logger.info("QueueManager: New active manager {} detected.".format(name))
 
     elif op == "shutdown":
         nshutdown = storage_socket.task.reset_status(manager=name, reset_running=True)
-        storage_socket.manager.update(name, returned=nshutdown, status="INACTIVE", **body.meta.dict(), log=True)
+        storage_socket.manager.update(
+            name, returned=nshutdown, status=ManagerStatusEnum.inactive, **body.meta.dict(), log=True
+        )
 
         # current_app.logger.info("QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(name, nshutdown))
 
         ret = {"nshutdown": nshutdown}
 
     elif op == "heartbeat":
-        storage_socket.manager.update(name, status="ACTIVE", **body.meta.dict(), log=True)
+        storage_socket.manager.update(name, status=ManagerStatusEnum.active, **body.meta.dict(), log=True)
         # current_app.logger.debug("QueueManager: Heartbeat of manager {} detected.".format(name))
 
     else:
