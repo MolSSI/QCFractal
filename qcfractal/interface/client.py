@@ -18,8 +18,8 @@ from pydantic import ValidationError
 
 from .collections import collection_factory, collections_name_map
 from .models.records import RecordStatusEnum
-from .models.task_models import PriorityEnum, TaskStatusEnum
-from .models.rest_models import rest_model
+from .models.task_models import PriorityEnum, TaskStatusEnum, ManagerStatusEnum
+from .models.rest_models import AllRecordTypes, rest_model
 
 if TYPE_CHECKING:  # pragma: no cover
     from qcfractal import FractalServer
@@ -46,6 +46,7 @@ if TYPE_CHECKING:  # pragma: no cover
         ResultGETResponse,
         ServiceQueueGETResponse,
         TaskQueueGETResponse,
+        WavefunctionStoreGETResponse,
     )
 
     _T = TypeVar("_T")
@@ -749,9 +750,9 @@ class FractalClient(object):
         status: QueryStr = None,
         limit: Optional[int] = None,
         skip: int = 0,
-        include: Optional["QueryListStr"] = None,
+        include: QueryListStr = None,
         full_return: bool = False,
-    ) -> Union[ProcedureGETResponse, List[Dict[str, Any]]]:
+    ) -> Union[ProcedureGETResponse, AllRecordTypes, List[Dict[str, Any]]]:
         """Queries Procedures from the server.
 
         Parameters
@@ -800,6 +801,47 @@ class FractalClient(object):
         else:
             return response.data
 
+    def query_wavefunction(
+        self,
+        id: ObjectId,
+        include: QueryListStr = None,
+        full_return: bool = False,
+    ) -> Union[WavefunctionStoreGETResponse, Dict[str, Any]]:
+        """Queries ResultRecords from the server.
+
+        Parameters
+        ----------
+        id
+            Queries the Result ``id`` field.
+        include
+            Filters the returned fields
+        full_return
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        :
+            Returns a List of found Wavefunction data
+        """
+
+        payload = {
+            "meta": {"include": include},
+            "data": {
+                "id": id,
+            },
+        }
+        response = self._automodel_request("wavefunctionstore", "get", payload, full_return=True)
+
+        # Add references back to the client
+        if not include:
+            for result in response.data:
+                result.__dict__["client"] = self
+
+        if full_return:
+            return response
+        else:
+            return response.data
+
     ### Compute section
 
     def add_compute(
@@ -808,47 +850,46 @@ class FractalClient(object):
         method: str = None,
         basis: Optional[str] = None,
         driver: str = None,
-        keywords: Optional[Union[Dict[str, Any], "ObjectId"]] = None,
-        molecule: Union["ObjectId", "Molecule", List[Union["ObjectId", "Molecule"]]] = None,
+        keywords: Optional[Union[Dict[str, Any], ObjectId]] = None,
+        molecule: Union[ObjectId, Molecule, List[Union[ObjectId, Molecule]]] = None,
         *,
         priority: Optional[str] = None,
         protocols: Optional[Dict[str, Any]] = None,
         tag: Optional[str] = None,
         full_return: bool = False,
-    ) -> "ComputeResponse":
+    ) -> ComputeResponse:
         """
         Adds a "single" compute to the server.
 
         Parameters
         ----------
-        program : str, optional
+        program
             The computational program to execute the result with (e.g., "rdkit", "psi4").
-        method : str, optional
+        method
             The computational method to use (e.g., "B3LYP", "PBE")
-        basis : Optional[str], optional
+        basis
             The basis to apply to the computation (e.g., "cc-pVDZ", "6-31G")
-        driver : str, optional
+        driver
             The primary result that the compute will aquire {"energy", "gradient", "hessian", "properties"}
-        keywords : Optional['ObjectId'], optional
+        keywords
             The KeywordSet ObjectId to use with the given compute
-        molecule : Union['ObjectId', 'Molecule', List[Union['ObjectId', 'Molecule']]], optional
+        molecule
             The Molecules or Molecule ObjectId's to compute with the above methods
-        priority : Optional[str], optional
+        priority
             The priority of the job {"HIGH", "MEDIUM", "LOW"}. Default is "MEDIUM".
-        protocols : Optional[Dict[str, Any]], optional
-            Protocols for store more or less data per field. Current valid
-            protocols: {'wavefunction'}
-        tag : Optional[str], optional
+        protocols
+            Protocols for store more or less data per field
+        tag
             The computational tag to add to your compute, managers can optionally only pull
             based off the string tags. These tags are arbitrary, but several examples are to
             use "large", "medium", "small" to denote the size of the job or "project1", "project2"
             to denote different projects.
-        full_return : bool, optional
+        full_return
             Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
-        ComputeResponse
+        :
             An object that contains the submitted ObjectIds of the new compute. This object has the following fields:
               - ids: The ObjectId's of the task in the order of input molecules
               - submitted: A list of ObjectId's that were submitted to the compute queue
@@ -870,10 +911,6 @@ class FractalClient(object):
         if molecule is None:
             raise ValueError("Molecule must be specified for the computation.")
 
-        # Always a list
-        if not isinstance(molecule, list):
-            molecule = [molecule]
-
         meta = {"procedure": "single", "driver": driver, "program": program, "method": method, "tag": tag}
 
         if basis is not None:
@@ -887,7 +924,7 @@ class FractalClient(object):
 
         payload = {
             "meta": meta,
-            "data": molecule,
+            "data": make_list(molecule),
         }
 
         return self._automodel_request("task_queue", "post", payload, full_return=full_return)
@@ -907,27 +944,27 @@ class FractalClient(object):
 
         Parameters
         ----------
-        procedure : str
+        procedure
             The computational procedure to spawn {"optimization"}
-        program : str
+        program
             The program to use for the given procedure (e.g., "geomeTRIC")
-        program_options : Dict[str, Any]
+        program_options
             Additional options and specifications for the given procedure.
-        molecule : Union[ObjectId, Molecule, List[Union[str, Molecule]]]
+        molecule
             The Molecules or Molecule ObjectId's to use with the above procedure
-        priority : str, optional
+        priority
             The priority of the job {"HIGH", "MEDIUM", "LOW"}. Default is "MEDIUM".
-        tag : str, optional
+        tag
             The computational tag to add to your procedure, managers can optionally only pull
             based off the string tags. These tags are arbitrary, but several examples are to
             use "large", "medium", "small" to denote the size of the job or "project1", "project2"
             to denote different projects.
-        full_return : bool, optional
+        full_return
             Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
-        ComputeResponse
+        :
             An object that contains the submitted ObjectIds of the new procedure. This object has the following fields:
               - ids: The ObjectId's of the task in the order of input molecules
               - submitted: A list of ObjectId's that were submitted to the compute queue
@@ -960,45 +997,45 @@ class FractalClient(object):
 
     def query_tasks(
         self,
-        id: Optional["QueryObjectId"] = None,
-        program: Optional["QueryStr"] = None,
-        status: Optional["QueryStr"] = None,
-        base_result: Optional["QueryStr"] = None,
-        tag: Optional["QueryStr"] = None,
-        manager: Optional["QueryStr"] = None,
+        id: QueryObjectId = None,
+        program: QueryStr = None,
+        status: QueryStr = None,
+        base_result: QueryStr = None,
+        tag: QueryStr = None,
+        manager: QueryStr = None,
         limit: Optional[int] = None,
         skip: int = 0,
-        include: Optional["QueryListStr"] = None,
+        include: QueryListStr = None,
         full_return: bool = False,
-    ) -> Union["TaskQueueGETResponse", List["TaskRecord"], List[Dict[str, Any]]]:
+    ) -> Union[TaskQueueGETResponse, List[TaskRecord], List[Dict[str, Any]]]:
         """Checks the status of Tasks in the Fractal queue.
 
         Parameters
         ----------
-        id : QueryObjectId, optional
+        id
             Queries the Tasks ``id`` field.
-        program : QueryStr, optional
+        program
             Queries the Tasks ``program`` field.
-        status : QueryStr, optional
+        status
             Queries the Tasks ``status`` field.
-        base_result : QueryStr, optional
+        base_result
             Queries the Tasks ``base_result`` field.
-        tag : QueryStr, optional
+        tag
             Queries the Tasks ``tag`` field.
-        manager : QueryStr, optional
+        manager
             Queries the Tasks ``manager`` field.
-        limit : Optional[int], optional
+        limit
             The maximum number of Tasks to query
-        skip : int, optional
+        skip
             The number of Tasks to skip in the query, used during pagination
-        include : QueryListStr, optional
+        include
             Filters the returned fields, will return a dictionary rather than an object.
-        full_return : bool, optional
+        full_return
             Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
-        List[Dict[str, Any]]
+        :
             A dictionary of each match that contains the current status
             and, if an error has occurred, the error message.
 
@@ -1026,12 +1063,12 @@ class FractalClient(object):
         return self._automodel_request("task_queue", "get", payload, full_return=full_return)
 
     def modify_tasks(
-        self,  # lgtm [py/similar-function]
+        self,
         operation: str,
-        base_result: "QueryObjectId",
-        id: Optional["QueryObjectId"] = None,
+        base_result: QueryObjectId,
+        id: QueryObjectId = None,
         new_tag: Optional[str] = None,
-        new_priority: Optional[int] = None,
+        new_priority: Optional[PriorityEnum] = None,
         full_return: bool = False,
     ) -> int:
         """Summary
@@ -1068,13 +1105,18 @@ class FractalClient(object):
 
         payload = {
             "meta": {"operation": operation},
-            "data": {"id": id, "base_result": base_result, "new_tag": new_tag, "new_priority": new_priority},
+            "data": {
+                "id": make_list(id),
+                "base_result": make_list(base_result),
+                "new_tag": new_tag,
+                "new_priority": new_priority,
+            },
         }
 
         return self._automodel_request("task_queue", "put", payload, full_return=full_return)
 
     def add_service(
-        self,  # lgtm [py/similar-function]
+        self,
         service: Union[List["GridOptimizationInput"], List["TorsionDriveInput"]],
         tag: Optional[str] = None,
         priority: Optional[str] = None,
@@ -1101,7 +1143,12 @@ class FractalClient(object):
               - submitted: A list of ObjectId's that were submitted to the compute queue
               - existing: A list of ObjectId's of tasks already in the database
         """
-        payload = {"meta": {"tag": tag, "priority": priority}, "data": service}
+
+        meta = {"tag": tag}
+        if priority is not None:
+            meta["priority"] = priority
+
+        payload = {"meta": meta, "data": service}
         return self._automodel_request("service_queue", "post", payload, full_return=full_return)
 
     def query_services(
@@ -1183,8 +1230,8 @@ class FractalClient(object):
 
     def query_managers(
         self,
-        name: Optional["QueryStr"] = None,
-        status: Optional["QueryStr"] = "active",
+        name: QueryStr = None,
+        status: QueryStr = None,
         limit: Optional[int] = None,
         skip: int = 0,
         full_return: bool = False,
@@ -1210,14 +1257,12 @@ class FractalClient(object):
             A dictionary of each match that contains all the information for each manager
         """
 
-        if isinstance(name, str):
-            name = [name]
-        if isinstance(status, str):
-            status = [status]
+        if status is None and name is None:
+            status = [ManagerStatusEnum.active]
 
         payload = {
             "meta": {"limit": limit, "skip": skip},
-            "data": {"name": name, "status": status},
+            "data": {"name": make_list(name), "status": make_list(status)},
         }
         return self._automodel_request("manager", "get", payload, full_return=full_return)
 
@@ -1239,8 +1284,8 @@ class FractalClient(object):
 
     def query_access_log(
         self,
-        access_type: Optional[List[str]] = None,
-        access_method: Optional[List[str]] = None,
+        access_type: QueryStr = None,
+        access_method: QueryStr = None,
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
         limit: Optional[int] = None,
@@ -1251,14 +1296,19 @@ class FractalClient(object):
 
         payload = {
             "meta": {"limit": limit, "skip": skip},
-            "data": {"access_type": access_type, "access_method": access_method, "before": before, "after": after},
+            "data": {
+                "access_type": make_list(access_type),
+                "access_method": make_list(access_method),
+                "before": before,
+                "after": after,
+            },
         }
         return self._automodel_request("access/log", "get", payload, full_return=full_return)
 
     def query_error_log(
         self,
-        id: Optional[List[int]] = None,
-        user: Optional[List[str]] = None,
+        id: QueryObjectId = None,
+        user: QueryStr = None,
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
         limit: Optional[int] = None,
@@ -1269,7 +1319,7 @@ class FractalClient(object):
 
         payload = {
             "meta": {"limit": limit, "skip": skip},
-            "data": {"id": id, "user": user, "before": before, "after": after},
+            "data": {"id": make_list(id), "user": make_list(user), "before": before, "after": after},
         }
         return self._automodel_request("error", "get", payload, full_return=full_return)
 

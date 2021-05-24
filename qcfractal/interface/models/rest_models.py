@@ -27,6 +27,7 @@ from .task_models import (
     TaskRecord,
     ManagerStatusEnum,
 )
+from .task_models import PriorityEnum
 from .records import ResultRecord, OptimizationRecord, RecordStatusEnum
 from .gridoptimization import GridOptimizationInput, GridOptimizationRecord
 from .torsiondrive import TorsionDriveInput, TorsionDriveRecord
@@ -765,12 +766,12 @@ register_model("task_queue", "POST", TaskQueuePOSTBody, TaskQueuePOSTResponse)
 
 class TaskQueuePUTBody(ProtoModel):
     class Data(ProtoModel):
-        id: QueryObjectId = Field(
+        id: Optional[List[ObjectId]] = Field(
             None,
             description="The exact Id to target in database. If this is set as a search condition, there is no "
             "reason to set anything else as this will be unique in the database, if it exists.",
         )
-        base_result: QueryObjectId = Field(  # TODO: Validate this description is correct
+        base_result: Optional[List[ObjectId]] = Field(  # TODO: Validate this description is correct
             None,
             description="The exact Id of a result which this Task is slated to write to. If this is set as a "
             "search condition, there is no reason to set anything else as this will be unique in the "
@@ -780,7 +781,7 @@ class TaskQueuePUTBody(ProtoModel):
             None,
             description="Change the tag of an existing or regenerated task to be this value",
         )
-        new_priority: Union[str, int, None] = Field(
+        new_priority: Optional[PriorityEnum] = Field(
             None,
             description="Change the priority of an existing or regenerated task to this value",
         )
@@ -857,8 +858,8 @@ class ServiceQueuePOSTBody(ProtoModel):
             "Tasks based on this entry. If no Tag is specified, any Queue Manager can pull this Tasks "
             "created by this Service.",
         )
-        priority: Union[str, int, None] = Field(
-            None,
+        priority: PriorityEnum = Field(
+            PriorityEnum.normal,
             description="Priority given to this Tasks created by this Service. Higher priority will be pulled first.",
         )
 
@@ -958,6 +959,7 @@ class QueueManagerMeta(ProtoModel):
 common_docs[QueueManagerMeta] = str(get_base_docs(QueueManagerMeta))
 
 
+# TODO - badly named. THis is for pulling tasks
 class QueueManagerGETBody(ProtoModel):
     class Data(ProtoModel):
         limit: int = Field(..., description="Max number of Queue Managers to get from the server.")
@@ -1073,7 +1075,7 @@ class ServerStatsGETResponse(ProtoModel):
 
 class InternalErrorLogGETBody(ProtoModel):
     class Data(ProtoModel):
-        id: Optional[List[int]] = Field(None, description="Query for errors with these ids")
+        id: Optional[List[ObjectId]] = Field(None, description="Query for errors with these ids")
         user: Optional[List[str]] = Field(None, description="Query for errors belonging to this user")
         after: Optional[datetime] = Field(None, description="Query for records after this date")
         before: Optional[datetime] = Field(None, description="Query for records before this date")

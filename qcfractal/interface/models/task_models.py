@@ -30,7 +30,7 @@ class TaskStatusEnum(str, Enum):
         # a string to an enum
         for status in cls:
             if name == status:
-                return cls(name)
+                return status
 
 
 class ManagerStatusEnum(str, Enum):
@@ -54,17 +54,37 @@ class ManagerStatusEnum(str, Enum):
         # a string to an enum
         for status in cls:
             if name == status:
-                return cls(name)
+                return status
 
 
 class PriorityEnum(int, Enum):
     """
-    The priority of a Task. Higher priority will be pulled first. The priorities which are available are a finite set.
+    The priority of a Task. Higher priority will be pulled first.
     """
 
-    HIGH = 2
-    NORMAL = 1
-    LOW = 0
+    high = 2
+    normal = 1
+    low = 0
+
+    @classmethod
+    def _missing_(cls, name):
+        """Attempts to find the correct priority in a case-insensitive way
+
+        If a string being converted to a PriorityEnum is missing, then this function
+        will convert the case and try to find the appropriate priority.
+        """
+
+        if isinstance(name, int):
+            # An integer that is outside the range of valid priorities
+            return
+
+        name = name.lower()
+
+        # Search this way rather than doing 'in' since we are comparing
+        # a string to an enum
+        for status in cls:
+            if name == status.name:
+                return status
 
 
 class BaseResultEnum(str, Enum):
@@ -100,7 +120,7 @@ class TaskRecord(ProtoModel):
     manager: Optional[str] = Field(None, description="The Queue Manager that evaluated this task.")
 
     # Sortables
-    priority: PriorityEnum = Field(PriorityEnum.NORMAL, description=str(PriorityEnum.__doc__))
+    priority: PriorityEnum = Field(PriorityEnum.normal, description=str(PriorityEnum.__doc__))
     tag: Optional[str] = Field(
         None,
         description="The optional tag assigned to this Task. Tagged tasks can only be pulled by Queue Managers which "
@@ -124,14 +144,6 @@ class TaskRecord(ProtoModel):
 
         super().__init__(**data)
 
-    @validator("priority", pre=True)
-    def munge_priority(cls, v):
-        if isinstance(v, str):
-            v = PriorityEnum[v.upper()]
-        elif v is None:
-            v = PriorityEnum.NORMAL
-        return v
-
     @validator("program")
     def check_program(cls, v):
         return v.lower()
@@ -152,13 +164,7 @@ class SingleProcedureSpecification(ProtoModel):
     keywords: Optional[Union[ObjectId, Dict[str, Any]]] = Field(None)
     protocols: AtomicResultProtocols = Field(AtomicResultProtocols())
     tag: Optional[str] = Field(None)
-    priority: PriorityEnum = Field(PriorityEnum.NORMAL)
-
-    @validator("priority", pre=True)
-    def munge_priority(cls, v):
-        if isinstance(v, str):
-            v = PriorityEnum[v.upper()]
-        return v
+    priority: PriorityEnum = Field(PriorityEnum.normal)
 
 
 class OptimizationProcedureSpecification(ProtoModel):
@@ -168,13 +174,7 @@ class OptimizationProcedureSpecification(ProtoModel):
     qc_spec: Dict[str, Any]
     protocols: OptimizationProtocols = Field(OptimizationProtocols())
     tag: Optional[str] = Field(None)
-    priority: PriorityEnum = Field(PriorityEnum.NORMAL)
-
-    @validator("priority", pre=True)
-    def munge_priority(cls, v):
-        if isinstance(v, str):
-            v = PriorityEnum[v.upper()]
-        return v
+    priority: PriorityEnum = Field(PriorityEnum.normal)
 
 
 AllProcedureSpecifications = Union[SingleProcedureSpecification, OptimizationProcedureSpecification]

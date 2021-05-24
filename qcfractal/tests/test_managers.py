@@ -36,7 +36,6 @@ def test_queue_manager_single_tags(compute_adapter_fixture):
     # Add compute
     hooh = ptl.data.get_molecule("hooh.json")
     ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh], tag="other")
-
     # Computer with the incorrect tag
     manager_stuff.await_results()
     ret = client.query_results()

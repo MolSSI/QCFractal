@@ -44,7 +44,7 @@ class RecordStatusEnum(str, Enum):
         # a string to an enum
         for status in cls:
             if name == status:
-                return cls(name)
+                return status
 
 
 class RecordBase(ProtoModel, abc.ABC):
@@ -350,9 +350,7 @@ class ResultRecord(RecordBase):
             proj = [self.wavefunction["return_map"].get(x, x) for x in missing]
 
             self.cache["wavefunction"].update(
-                self.client.custom_query(
-                    "wavefunctionstore", None, {"id": self.wavefunction_data_id}, meta={"include": proj}
-                )
+                self.client.query_wavefunction(id=self.wavefunction_data_id, include=proj)
             )
 
             if "basis" in missing:
