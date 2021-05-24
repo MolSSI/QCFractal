@@ -7,13 +7,10 @@ import logging
 import datetime
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from pydantic import validator
 from qcelemental.models import ComputeError
 
 from ..interface.models import ObjectId, ProtoModel, PriorityEnum, RecordStatusEnum, TaskStatusEnum
 from ..interface.models.rest_models import TaskQueuePOSTBody
-
-# from ..procedures import get_procedure_parser
 
 
 class TaskManager(ProtoModel):
@@ -22,7 +19,7 @@ class TaskManager(ProtoModel):
 
     required_tasks: Dict[str, str] = {}
     tag: Optional[str] = None
-    priority: PriorityEnum = PriorityEnum.HIGH
+    priority: PriorityEnum = PriorityEnum.high
 
     class Config(ProtoModel.Config):
         allow_mutation = True
@@ -132,7 +129,7 @@ class BaseService(ProtoModel, abc.ABC):
     tag: Optional[str] = None
 
     # Sorting and priority
-    priority: PriorityEnum = PriorityEnum.NORMAL
+    priority: PriorityEnum = PriorityEnum.normal
     modified_on: datetime.datetime = None
     created_on: datetime.datetime = None
 
@@ -149,14 +146,6 @@ class BaseService(ProtoModel, abc.ABC):
         self.task_manager.storage_socket = self.storage_socket
         self.task_manager.tag = self.task_tag
         self.task_manager.priority = self.task_priority
-
-    @validator("task_priority", pre=True)
-    def munge_priority(cls, v):
-        if isinstance(v, str):
-            v = PriorityEnum[v.upper()]
-        elif v is None:
-            v = PriorityEnum.HIGH
-        return v
 
     @classmethod
     @abc.abstractmethod

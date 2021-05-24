@@ -41,8 +41,6 @@ from ..interface.models.rest_models import (
     QueueManagerPOSTResponse,
     ServerStatsGETBody,
     ServerStatsGETResponse,
-    TaskQueuePOSTBody,
-    TaskQueuePOSTResponse,
     MoleculeGETBody,
     MoleculeGETResponse,
     MoleculePOSTBody,
@@ -53,6 +51,10 @@ from ..interface.models.rest_models import (
     ManagerInfoGETResponse,
     TaskQueueGETBody,
     TaskQueueGETResponse,
+    TaskQueuePOSTBody,
+    TaskQueuePOSTResponse,
+    TaskQueuePUTBody,
+    TaskQueuePUTResponse,
     WavefunctionStoreGETBody,
     WavefunctionStoreGETResponse,
 )
@@ -683,7 +685,7 @@ def get_wavefunction_v1():
     else:
         meta_missing = [body.data.id]
 
-    meta = ResponseGETMeta(errors=[], success=True, error_description=False, missing=meta_missing, n_found=meta_nfound)
+    meta = ResponseGETMeta(errors=[], success=True, error_description=False, missing=meta_missing, n_found=nfound)
 
     response = WavefunctionStoreGETResponse(meta=meta, data=ret)
 
@@ -712,7 +714,7 @@ def query_procedure_v1():
 
 @main.route("/task_queue", methods=["GET"])
 @check_access
-def get_task_queue():
+def query_task_v1():
     body = parse_bodymodel(TaskQueueGETBody)
 
     # Change base_result -> base_result_id
@@ -736,7 +738,7 @@ def get_task_queue():
 
 @main.route("/task_queue", methods=["POST"])
 @check_access
-def post_task_queue():
+def add_task_v1():
     body = parse_bodymodel(TaskQueuePOSTBody)
     meta, ids = storage_socket.procedure.create(body.data, body.meta)
 
@@ -753,11 +755,10 @@ def post_task_queue():
 
 @main.route("/task_queue", methods=["PUT"])
 @check_access
-def put_task_queue():
+def modify_task_v1():
     """Modifies tasks in the task queue"""
 
-    body_model, response_model = rest_model("task_queue", "put")
-    body = parse_bodymodel(body_model)
+    body = parse_bodymodel(TaskQueuePUTBody)
 
     if (body.data.id is None) and (body.data.base_result is None):
         return jsonify(msg="Id or ResultId must be specified."), 400
@@ -774,9 +775,9 @@ def put_task_queue():
 
         new_tag = body.data.new_tag
         if body.data.new_priority is None:
-            new_priority = PriorityEnum.NORMAL
+            new_priority = PriorityEnum.normal
         else:
-            new_priority = PriorityEnum(int(body.data.new_priority))
+            new_priority = body.data.new_priority
 
         for r in result_data:
             # TODO - remove eventually
@@ -812,7 +813,7 @@ def put_task_queue():
     else:
         return jsonify(msg=f"Operation '{body.meta.operation}' is not valid."), 400
 
-    response = response_model(data=data, meta={"errors": [], "success": True, "error_description": False})
+    response = TaskQueuePUTResponse(data=data, meta={"errors": [], "success": True, "error_description": False})
 
     current_app.logger.info(f"PUT: TaskQueue - Operation: {body.meta.operation} - {tasks_updated}.")
 
@@ -904,7 +905,7 @@ def _get_name_from_metadata(meta):
 
 @main.route("/queue_manager", methods=["GET"])
 @check_access
-def get_queue_manager():
+def queue_manager_claim_v1():
     """Pulls new tasks from the task queue"""
 
     body = parse_bodymodel(QueueManagerGETBody)
@@ -936,7 +937,7 @@ def get_queue_manager():
 
 @main.route("/queue_manager", methods=["POST"])
 @check_access
-def post_queue_manager():
+def queue_manager_return_v1():
     """Posts complete tasks to the task queue"""
 
     body = parse_bodymodel(QueueManagerPOSTBody)
@@ -962,7 +963,7 @@ def post_queue_manager():
 
 @main.route("/queue_manager", methods=["PUT"])
 @check_access
-def put_queue_manager():
+def queue_manager_modify_v1():
     """
     Various manager manipulation operations
     """
@@ -1005,8 +1006,8 @@ def put_queue_manager():
 
 @main.route("/manager", methods=["GET"])
 @check_access
-def get_manager():
-    """Gets manager information from the task queue"""
+def query_manager_v1():
+    """Gets manager information about managers"""
 
     body = parse_bodymodel(ManagerInfoGETBody)
     meta, managers = storage_socket.manager.query(**{**body.data.dict(), **body.meta.dict()})
@@ -1017,7 +1018,7 @@ def get_manager():
 
 @main.route("/access/log", methods=["GET"])
 @check_access
-def get_access_log():
+def query_access_log_v1():
     """
     Queries access logs
     """
@@ -1043,7 +1044,7 @@ def get_server_stats():
 
 @main.route("/access/summary", methods=["GET"])
 @check_access
-def get_access_summary():
+def query_access_summary_v1():
     """
     Queries access logs
     """
@@ -1056,7 +1057,7 @@ def get_access_summary():
 
 @main.route("/error", methods=["GET"])
 @check_access
-def get_internal_error_log():
+def query_internal_error_log_v1():
     """
     Queries internal error logs
     """
@@ -1069,7 +1070,7 @@ def get_internal_error_log():
 
 @main.route("/role", methods=["GET"])
 @check_access
-def get_roles():
+def list_roles_v1():
     roles = storage_socket.role.list()
     # TODO - SerializedResponse?
     r = [x.dict() for x in roles]
@@ -1078,7 +1079,7 @@ def get_roles():
 
 @main.route("/role/<string:rolename>", methods=["GET"])
 @check_access
-def get_role(rolename: str):
+def get_role_v1(rolename: str):
 
     role = storage_socket.role.get(rolename)
     # TODO - SerializedResponse?
@@ -1087,7 +1088,7 @@ def get_role(rolename: str):
 
 @main.route("/role/<string:rolename>", methods=["POST"])
 @check_access
-def add_role():
+def add_role_v1():
     rolename = request.json["rolename"]
     permissions = request.json["permissions"]
 
@@ -1101,7 +1102,7 @@ def add_role():
 
 @main.route("/role", methods=["PUT"])
 @check_access
-def update_role():
+def update_role_v1():
     rolename = request.json["rolename"]
     permissions = request.json["permissions"]
 
@@ -1115,7 +1116,7 @@ def update_role():
 
 @main.route("/role", methods=["DELETE"])
 @check_access
-def delete_role():
+def delete_role_v1():
     rolename = request.json["rolename"]
 
     try:

@@ -267,7 +267,7 @@ class TaskQueueORM(Base):
     program = Column(String)
     procedure = Column(String)
     status = Column(Enum(TaskStatusEnum), default=TaskStatusEnum.waiting)
-    priority = Column(Integer, default=int(PriorityEnum.NORMAL))
+    priority = Column(Integer, default=int(PriorityEnum.normal))
     manager = Column(String, ForeignKey("queue_manager.name", ondelete="SET NULL"), default=None)
 
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
@@ -308,7 +308,7 @@ class ServiceQueueORM(Base):
     procedure_id = Column(Integer, ForeignKey("base_result.id"), unique=True)
     procedure_obj = relationship("BaseResultORM", lazy="joined")
 
-    priority = Column(Integer, default=int(PriorityEnum.NORMAL))
+    priority = Column(Integer, default=int(PriorityEnum.normal))
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
     modified_on = Column(DateTime, default=datetime.datetime.utcnow)
 
