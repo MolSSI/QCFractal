@@ -11,6 +11,7 @@ from concurrent.futures import ProcessPoolExecutor
 import pytest
 
 import qcfractal.interface as ptl
+from qcfractal.interface.models import TaskStatusEnum, RecordStatusEnum, ManagerStatusEnum
 from qcfractal import qc_queue as queue, testing
 from ..testing import caplog_handler_at_level
 
@@ -80,26 +81,24 @@ def test_queue_manager_multiple_tags(compute_adapter_fixture):
     manager.await_results()
     ret = client.query_results(tasks)
     ref_status = {
-        tasks[0]: "INCOMPLETE",
-        tasks[1]: "COMPLETE",
-        tasks[2]: "COMPLETE",
-        tasks[3]: "INCOMPLETE",
-        tasks[4]: "INCOMPLETE",
-        tasks[5]: "INCOMPLETE",
+        tasks[0]: RecordStatusEnum.incomplete,
+        tasks[1]: RecordStatusEnum.complete,
+        tasks[2]: RecordStatusEnum.complete,
+        tasks[3]: RecordStatusEnum.incomplete,
+        tasks[4]: RecordStatusEnum.incomplete,
+        tasks[5]: RecordStatusEnum.incomplete,
     }
     for result in ret:
         assert result.status == ref_status[result.id]
     manager.await_results()
     ret = client.query_results(tasks)
-    for result in ret:
-        print(f"here you go: {(result.id, result.status)}")
     ref_status = {
-        tasks[0]: "COMPLETE",
-        tasks[1]: "COMPLETE",
-        tasks[2]: "COMPLETE",
-        tasks[3]: "INCOMPLETE",
-        tasks[4]: "COMPLETE",
-        tasks[5]: "INCOMPLETE",
+        tasks[0]: RecordStatusEnum.complete,
+        tasks[1]: RecordStatusEnum.complete,
+        tasks[2]: RecordStatusEnum.complete,
+        tasks[3]: RecordStatusEnum.incomplete,
+        tasks[4]: RecordStatusEnum.complete,
+        tasks[5]: RecordStatusEnum.incomplete,
     }
     for result in ret:
         assert result.status == ref_status[result.id]
@@ -107,12 +106,12 @@ def test_queue_manager_multiple_tags(compute_adapter_fixture):
     manager.await_results()
     ret = client.query_results(tasks)
     ref_status = {
-        tasks[0]: "COMPLETE",
-        tasks[1]: "COMPLETE",
-        tasks[2]: "COMPLETE",
-        tasks[3]: "COMPLETE",
-        tasks[4]: "COMPLETE",
-        tasks[5]: "INCOMPLETE",
+        tasks[0]: RecordStatusEnum.complete,
+        tasks[1]: RecordStatusEnum.complete,
+        tasks[2]: RecordStatusEnum.complete,
+        tasks[3]: RecordStatusEnum.complete,
+        tasks[4]: RecordStatusEnum.complete,
+        tasks[5]: RecordStatusEnum.incomplete,
     }
     for result in ret:
         assert result.status == ref_status[result.id]
@@ -196,14 +195,14 @@ def test_queue_manager_shutdown(compute_adapter_fixture):
 
     sman = client.query_managers(name=manager.name(), status="INACTIVE")
     assert len(sman) == 1
-    assert sman[0]["status"] == "INACTIVE"
+    assert sman[0]["status"] == ManagerStatusEnum.inactive
 
     # Boot new manager and await results
     manager = queue.QueueManager(client, adapter)
     manager.await_results()
     ret = client.query_results()
     assert len(ret) == 1
-    assert ret[0].status == "COMPLETE"
+    assert ret[0].status == RecordStatusEnum.complete
 
 
 @testing.using_rdkit
@@ -289,7 +288,7 @@ def test_queue_manager_heartbeat(compute_adapter_fixture):
 
     sman = client.query_managers(name=manager.name(), status="INACTIVE")
     assert len(sman) == 1
-    assert sman[0]["status"] == "INACTIVE"
+    assert sman[0]["status"] == ManagerStatusEnum.inactive
 
     tasks = client.query_tasks(status="WAITING")
     assert len(tasks) == 1

@@ -6,6 +6,7 @@ All tests should be atomic, that is create and cleanup their data
 
 from datetime import datetime
 from .test_procedure import load_procedure_data, fake_manager_1, fake_manager_2
+from qcfractal.interface.models import RecordStatusEnum
 
 
 def test_procedure_single_query(storage_socket):
@@ -48,7 +49,9 @@ def test_procedure_single_query(storage_socket):
     assert meta.n_returned == 1
     assert procs[0]["id"] == str(all_ids[0])
 
-    meta, procs = storage_socket.procedure.single.query(created_before=datetime.utcnow(), status=["INCOMPLETE"])
+    meta, procs = storage_socket.procedure.single.query(
+        created_before=datetime.utcnow(), status=[RecordStatusEnum.incomplete]
+    )
     assert meta.n_returned == 2
     assert procs[0]["id"] == str(all_ids[1])
     assert procs[1]["id"] == str(all_ids[2])
@@ -56,6 +59,6 @@ def test_procedure_single_query(storage_socket):
     meta, procs = storage_socket.procedure.single.query(created_after=datetime.utcnow())
     assert meta.n_returned == 0
 
-    meta, procs = storage_socket.procedure.single.query(status=["COMPLETE"], include=["*", "stdout_obj"])
+    meta, procs = storage_socket.procedure.single.query(status=[RecordStatusEnum.complete], include=["*", "stdout_obj"])
     assert meta.n_returned == 1
     assert len(procs[0]["stdout_obj"]) > 1

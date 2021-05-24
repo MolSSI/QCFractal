@@ -20,10 +20,18 @@ from .common_models import (
     ProtoModel,
     KVStore,
 )
-from .gridoptimization import GridOptimizationInput
-from .records import ResultRecord
-from .task_models import SingleProcedureSpecification, OptimizationProcedureSpecification, TaskStatusEnum, TaskRecord
-from .torsiondrive import TorsionDriveInput
+from .task_models import (
+    SingleProcedureSpecification,
+    OptimizationProcedureSpecification,
+    TaskStatusEnum,
+    TaskRecord,
+    ManagerStatusEnum,
+)
+from .records import ResultRecord, OptimizationRecord, RecordStatusEnum
+from .gridoptimization import GridOptimizationInput, GridOptimizationRecord
+from .torsiondrive import TorsionDriveInput, TorsionDriveRecord
+
+AllRecordTypes = Union[ResultRecord, OptimizationRecord, TorsionDriveRecord, GridOptimizationRecord]
 
 ### Utility functions
 
@@ -271,7 +279,7 @@ register_model("information", "GET", InformationGETBody, InformationGETResponse)
 
 class KVStoreGETBody(ProtoModel):
     class Data(ProtoModel):
-        id: QueryObjectId = Field(None, description="Id of the Key/Value Storage object to get.")
+        id: Optional[List[ObjectId]] = Field(None, description="Id of the Key/Value Storage object to get.")
 
     meta: EmptyMeta = Field({}, description=common_docs[EmptyMeta])
     data: Data = Field(..., description="Data of the KV Get field: consists of Id of the Key/Value object to fetch.")
@@ -289,13 +297,13 @@ register_model("kvstore", "GET", KVStoreGETBody, KVStoreGETResponse)
 
 class MoleculeGETBody(ProtoModel):
     class Data(ProtoModel):
-        id: QueryObjectId = Field(None, description="Exact Id of the Molecule to fetch from the database.")
-        molecule_hash: QueryStr = Field(
+        id: Optional[List[ObjectId]] = Field(None, description="Exact Id of the Molecule to fetch from the database.")
+        molecule_hash: Optional[List[str]] = Field(
             None,
             description="Hash of the Molecule to search for in the database. Can be computed from the Molecule object "
             "directly without direct access to the Database itself.",
         )
-        molecular_formula: QueryStr = Field(
+        molecular_formula: Optional[List[str]] = Field(
             None,
             description="Query is made based on simple molecular formula. This is based on just the formula itself and "
             "contains no connectivity information.",
@@ -338,12 +346,12 @@ register_model("molecule", "POST", MoleculePOSTBody, MoleculePOSTResponse)
 
 class KeywordGETBody(ProtoModel):
     class Data(ProtoModel):
-        id: QueryObjectId = None
+        id: Optional[List[ObjectId]] = None
 
     meta: EmptyMeta = Field({}, description=common_docs[EmptyMeta])
     data: Data = Field(
         ...,
-        description="The formal query for a Keyword fetch, contains ``id`` or ``hash_index`` for the object to fetch.",
+        description="The formal query for a Keyword fetch, contains ``id`` for the object to fetch.",
     )
 
 
@@ -365,7 +373,7 @@ class KeywordPOSTBody(ProtoModel):
 
 
 class KeywordPOSTResponse(ProtoModel):
-    data: List[Optional[ObjectId]] = Field(
+    data: List[ObjectId] = Field(
         ...,
         description="The Ids assigned to the added :class:`KeywordSet` objects. In the event of duplicates, the Id "
         "will be the one already found in the database.",
@@ -581,7 +589,7 @@ register_model("collection/[0-9]+/list", "GET", CollectionListGETBody, Collectio
 
 class ResultGETBody(ProtoModel):
     class Data(ProtoModel):
-        id: QueryObjectId = Field(
+        id: Optional[List[ObjectId]] = Field(
             None,
             description="The exact Id to fetch from the database. If this is set as a search condition, there is no "
             "reason to set anything else as this will be unique in the database, if it exists.",
@@ -591,7 +599,7 @@ class ResultGETBody(ProtoModel):
             description="Results will be searched to match the quantum chemistry software which carried out the "
             "calculation.",
         )
-        molecule: QueryObjectId = Field(
+        molecule: Optional[List[ObjectId]] = Field(
             None, description="Results will be searched to match the Molecule Id which was computed on."
         )
         driver: Optional[List[constr(to_lower=True)]] = Field(
@@ -607,8 +615,8 @@ class ResultGETBody(ProtoModel):
             None,
             description="Results will be searched to match specified basis sets which were used to compute the values.",
         )
-        status: QueryStr = Field(
-            "COMPLETE",
+        status: Optional[List[RecordStatusEnum]] = Field(
+            [RecordStatusEnum.complete],
             description="Results will be searched based on where they are in the compute pipeline. See the "
             ":class:`RecordStatusEnum` for valid statuses and more information.",
         )
@@ -617,12 +625,6 @@ class ResultGETBody(ProtoModel):
         def validate_basis(cls, v):
             if (v is None) or (v == ""):
                 v = None
-            return v
-
-        @validator("status", each_item=True, pre=True)
-        def validate_status(cls, v):
-            if v is not None:
-                return [x.upper() for x in v]
             return v
 
     meta: QueryMetaFilter = Field(QueryMetaFilter(), description=common_docs[QueryMetaFilter])
@@ -640,12 +642,6 @@ class ResultGETResponse(ProtoModel):
         "if a projection was specified in the GET request, then a dict is returned with mappings based "
         "on the projection.",
     )
-
-    @validator("data", pre=True)
-    def ensure_list_of_dict(cls, v):
-        if isinstance(v, dict):
-            return [v]
-        return v
 
 
 register_model("result", "GET", ResultGETBody, ResultGETResponse)
@@ -676,7 +672,7 @@ register_model("wavefunctionstore", "GET", WavefunctionStoreGETBody, Wavefunctio
 
 class ProcedureGETBody(ProtoModel):
     class Data(ProtoModel):
-        id: QueryObjectId = Field(
+        id: Optional[List[ObjectId]] = Field(
             None,
             description="The exact Id to fetch from the database. If this is set as a search condition, there is no "
             "reason to set anything else as this will be unique in the database, if it exists.",
@@ -684,17 +680,11 @@ class ProcedureGETBody(ProtoModel):
         procedure: Optional[List[constr(to_lower=True)]] = Field(
             None, description="Procedures will be searched based on the name of the procedure."
         )
-        status: QueryStr = Field(
-            "COMPLETE",
+        status: Optional[List[RecordStatusEnum]] = Field(
+            [RecordStatusEnum.complete],
             description="Procedures will be searched based on where they are in the compute pipeline. See the "
             ":class:`RecordStatusEnum` for valid statuses.",
         )
-
-        @validator("status", each_item=True, pre=True)
-        def validate_status(cls, v):
-            if v is not None:
-                return [x.upper() for x in v]
-            return v
 
     meta: QueryMetaFilter = Field(QueryMetaFilter(), description=common_docs[QueryMetaFilter])
     data: Data = Field(..., description="The keys with data to search the database on for Procedures.")
@@ -702,7 +692,7 @@ class ProcedureGETBody(ProtoModel):
 
 class ProcedureGETResponse(ProtoModel):
     meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
-    data: List[Dict[str, Optional[Any]]] = Field(
+    data: List[Union[AllRecordTypes, Dict[str, Any]]] = Field(
         ..., description="The list of Procedure specs found based on the query."
     )
 
@@ -1034,7 +1024,7 @@ register_model("queue_manager", "PUT", QueueManagerPUTBody, QueueManagerPUTRespo
 class ManagerInfoGETBody(ProtoModel):
     class Data(ProtoModel):
         name: Optional[List[str]] = Field(None, description="Name(s) of managers to query for.")
-        status: Optional[List[str]] = Field(
+        status: Optional[List[ManagerStatusEnum]] = Field(
             None,
             description="Managers will be searched based on status. See :class:`ManagerStatusEnum` for valid statuses.",
         )

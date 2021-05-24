@@ -4,6 +4,7 @@ Tests the manager subsocket
 
 import pytest
 from datetime import datetime, timedelta
+from qcfractal.interface.models import ManagerStatusEnum
 
 
 def test_manager_basic(storage_socket):
@@ -14,7 +15,7 @@ def test_manager_basic(storage_socket):
         "username": "test_username",
         "uuid": "1234-4567-7890",
         "tag": "test_tag",
-        "status": "ACTIVE",
+        "status": ManagerStatusEnum.active,
     }
     assert storage_socket.manager.update(name="first_manager", **manager_info)
     ret = storage_socket.manager.get(name=["first_manager"])
@@ -51,24 +52,24 @@ def test_manager_deactivate_name(storage_socket):
         "username": "test_username",
         "uuid": "1234-4567-7890",
         "tag": "test_tag",
-        "status": "ACTIVE",
+        "status": ManagerStatusEnum.active,
     }
     assert storage_socket.manager.update(name="first_manager", **manager_info)
     ret = storage_socket.manager.get(name=["first_manager"])
-    assert ret[0]["status"] == "ACTIVE"
+    assert ret[0]["status"] == ManagerStatusEnum.active
 
     # Deactivate nothing?
     n = storage_socket.manager.deactivate(name=["first_manager_nonexist"])
     assert n == []
     ret = storage_socket.manager.get(name=["first_manager"])
-    assert ret[0]["status"] == "ACTIVE"
+    assert ret[0]["status"] == ManagerStatusEnum.active
 
     # Now deactivate a real manager
     n = storage_socket.manager.deactivate(name=["first_manager"])
     assert n == ["first_manager"]
 
     ret = storage_socket.manager.get(name=["first_manager"])
-    assert ret[0]["status"] == "INACTIVE"
+    assert ret[0]["status"] == ManagerStatusEnum.inactive
 
 
 def test_manager_deactivate_time(storage_socket):
@@ -79,23 +80,23 @@ def test_manager_deactivate_time(storage_socket):
         "username": "test_username",
         "uuid": "1234-4567-7890",
         "tag": "test_tag",
-        "status": "ACTIVE",
+        "status": ManagerStatusEnum.active,
     }
     assert storage_socket.manager.update(name="first_manager", **manager_info)
     ret = storage_socket.manager.get(name=["first_manager"])
-    assert ret[0]["status"] == "ACTIVE"
+    assert ret[0]["status"] == ManagerStatusEnum.active
 
     # Deactivate nothing (modified_before is an hour ago)
     n = storage_socket.manager.deactivate(modified_before=datetime.utcnow() - timedelta(seconds=3600))
     assert n == []
     ret = storage_socket.manager.get(name=["first_manager"])
-    assert ret[0]["status"] == "ACTIVE"
+    assert ret[0]["status"] == ManagerStatusEnum.active
 
     # Now deactivate real managers
     n = storage_socket.manager.deactivate(modified_before=datetime.utcnow())
     assert n == ["first_manager"]
     ret = storage_socket.manager.get(name=["first_manager"])
-    assert ret[0]["status"] == "INACTIVE"
+    assert ret[0]["status"] == ManagerStatusEnum.inactive
 
 
 def test_manager_query(storage_socket):
@@ -107,7 +108,7 @@ def test_manager_query(storage_socket):
             "username": "test_username",
             "uuid": "1234-4567-789" + str(i),
             "tag": "test_tag",
-            "status": "ACTIVE",
+            "status": ManagerStatusEnum.active,
         }
         for i in range(10)
     ]

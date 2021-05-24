@@ -7,7 +7,7 @@ All tests should be atomic, that is create and cleanup their data
 import logging
 from ...testing import load_procedure_data, caplog_handler_at_level
 from ...storage_sockets.models import BaseResultORM
-from qcfractal.interface.models import ObjectId
+from qcfractal.interface.models import ObjectId, RecordStatusEnum, TaskStatusEnum, ManagerStatusEnum
 
 fake_manager_1 = {
     "cluster": "test_cluster",
@@ -15,7 +15,7 @@ fake_manager_1 = {
     "username": "test_username",
     "uuid": "1234-4567-7890",
     "tag": "test_tag",
-    "status": "ACTIVE",
+    "status": ManagerStatusEnum.active,
 }
 
 fake_manager_2 = {
@@ -24,7 +24,7 @@ fake_manager_2 = {
     "username": "test_username",
     "uuid": "1234-4567-7890",
     "tag": "test_tag",
-    "status": "ACTIVE",
+    "status": ManagerStatusEnum.active,
 }
 
 
@@ -72,16 +72,16 @@ def test_procedure_basic(storage_socket):
     assert procs[2]["task_obj"]["manager"] == "manager_2"
     assert procs[3]["task_obj"]["manager"] == "manager_2"
     assert procs[4]["task_obj"]["manager"] == "manager_1"
-    assert procs[0]["task_obj"]["status"] == "RUNNING"
-    assert procs[1]["task_obj"]["status"] == "RUNNING"
-    assert procs[2]["task_obj"]["status"] == "RUNNING"
-    assert procs[3]["task_obj"]["status"] == "RUNNING"
-    assert procs[4]["task_obj"]["status"] == "RUNNING"
-    assert procs[0]["status"] == "INCOMPLETE"
-    assert procs[1]["status"] == "INCOMPLETE"
-    assert procs[2]["status"] == "INCOMPLETE"
-    assert procs[3]["status"] == "INCOMPLETE"
-    assert procs[4]["status"] == "INCOMPLETE"
+    assert procs[0]["task_obj"]["status"] == TaskStatusEnum.running
+    assert procs[1]["task_obj"]["status"] == TaskStatusEnum.running
+    assert procs[2]["task_obj"]["status"] == TaskStatusEnum.running
+    assert procs[3]["task_obj"]["status"] == TaskStatusEnum.running
+    assert procs[4]["task_obj"]["status"] == TaskStatusEnum.running
+    assert procs[0]["status"] == RecordStatusEnum.incomplete
+    assert procs[1]["status"] == RecordStatusEnum.incomplete
+    assert procs[2]["status"] == RecordStatusEnum.incomplete
+    assert procs[3]["status"] == RecordStatusEnum.incomplete
+    assert procs[4]["status"] == RecordStatusEnum.incomplete
 
     # Return results
     # The ids returned from create() are the result ids, but the managers return task ids
@@ -102,12 +102,12 @@ def test_procedure_basic(storage_socket):
 
     # Are the statuses, etc correct?
     procs = storage_socket.procedure.get(all_ids, include=["*", "task_obj"])
-    assert procs[0]["status"] == "COMPLETE"
-    assert procs[1]["status"] == "COMPLETE"
-    assert procs[2]["status"] == "ERROR"
+    assert procs[0]["status"] == RecordStatusEnum.complete
+    assert procs[1]["status"] == RecordStatusEnum.complete
+    assert procs[2]["status"] == RecordStatusEnum.error
     assert procs[0]["task_obj"] is None
     assert procs[1]["task_obj"] is None
-    assert procs[2]["task_obj"]["status"] == "ERROR"
+    assert procs[2]["task_obj"]["status"] == TaskStatusEnum.error
 
     assert procs[0]["manager_name"] == "manager_1"
     assert procs[1]["manager_name"] == "manager_1"
@@ -141,7 +141,7 @@ def test_procedure_wrong_manager_return(storage_socket, caplog):
 
     assert len(procs) == 1
     assert procs[0]["task_obj"]["manager"] == "manager_1"
-    assert procs[0]["task_obj"]["status"] == "RUNNING"
+    assert procs[0]["task_obj"]["status"] == TaskStatusEnum.running
 
 
 def test_procedure_nonexist_task(storage_socket, caplog):
@@ -174,7 +174,7 @@ def test_procedure_base_already_complete(storage_socket, caplog):
 
     # We don't expose this functionality for a reason...
     with storage_socket.session_scope() as session:
-        session.query(BaseResultORM).update(dict(status="COMPLETE"))
+        session.query(BaseResultORM).update(dict(status=RecordStatusEnum.complete))
 
     # Try returning something
     with caplog_handler_at_level(caplog, logging.ERROR):
@@ -255,11 +255,11 @@ def test_procedure_query(storage_socket):
     assert procs[0]["procedure"] == "single"
     assert procs[0]["program"] == "psi4"
 
-    meta, procs = storage_socket.procedure.query(procedure=["optimization"], status=["COMPLETE"])
+    meta, procs = storage_socket.procedure.query(procedure=["optimization"], status=[RecordStatusEnum.complete])
     assert meta.n_returned == 1
     assert {int(x["id"]) for x in procs} == {ids3[0]}
 
-    meta, procs = storage_socket.procedure.query(status=["ERROR"])
+    meta, procs = storage_socket.procedure.query(status=[RecordStatusEnum.error])
     assert meta.n_returned == 1
     assert {int(x["id"]) for x in procs} == {ids2[0]}
 

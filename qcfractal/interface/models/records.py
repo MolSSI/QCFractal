@@ -26,10 +26,25 @@ class RecordStatusEnum(str, Enum):
     The state of a record object. The states which are available are a finite set.
     """
 
-    complete = "COMPLETE"
-    incomplete = "INCOMPLETE"
-    running = "RUNNING"
-    error = "ERROR"
+    complete = "complete"
+    incomplete = "incomplete"
+    running = "running"
+    error = "error"
+
+    @classmethod
+    def _missing_(cls, name):
+        """Attempts to find the correct status in a case-insensitive way
+
+        If a string being converted to a RecordStatusEnum is missing, then this function
+        will convert the case and try to find the appropriate status.
+        """
+        name = name.lower()
+
+        # Search this way rather than doing 'in' since we are comparing
+        # a string to an enum
+        for status in cls:
+            if name == status:
+                return cls(name)
 
 
 class RecordBase(ProtoModel, abc.ABC):

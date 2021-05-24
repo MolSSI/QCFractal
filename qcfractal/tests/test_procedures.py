@@ -4,13 +4,12 @@ Tests the server compute capabilities.
 
 import numpy as np
 import pytest
-import requests
 from qcelemental.util import parse_version
 
 import qcengine as qcng
 import qcfractal.interface as ptl
+from qcfractal.interface.models import RecordStatusEnum, TaskStatusEnum
 from qcfractal import testing
-from qcfractal.testing import fractal_test_server
 
 
 ### Tests the compute queue stack
@@ -207,7 +206,7 @@ def test_procedure_optimization_protocols(fractal_test_server):
 
     # # Query result and check against out manual pul
     proc = client.query_procedures(id=r.ids)[0]
-    assert proc.status == "COMPLETE"
+    assert proc.status == RecordStatusEnum.complete
 
     assert len(proc.trajectory) == 1
     assert len(proc.energies) > 1

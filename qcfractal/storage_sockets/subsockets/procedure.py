@@ -74,7 +74,7 @@ class ProcedureSocket:
         procedure
             Query based on procedure type
         status
-            The status of the procedure: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
+            The status of the procedure
         include
             Which fields of the molecule to return. Default is to return all fields.
         exclude

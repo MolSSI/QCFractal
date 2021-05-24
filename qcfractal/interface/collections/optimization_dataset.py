@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 import pandas as pd
 import qcelemental as qcel
 
-from ..models import ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
+from ..models import ObjectId, OptimizationSpecification, ProtoModel, QCSpecification, RecordStatusEnum
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
 
@@ -182,7 +182,7 @@ class OptimizationDataset(BaseProcedureDataset):
             specs = new_specs
 
         def count_gradients(opt):
-            if (not hasattr(opt, "status")) or opt.status != "COMPLETE":
+            if (not hasattr(opt, "status")) or opt.status != RecordStatusEnum.complete:
                 return None
             return len(opt.energies)
 

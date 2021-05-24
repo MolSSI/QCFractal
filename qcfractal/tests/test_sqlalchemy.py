@@ -11,6 +11,7 @@ import pytest
 from sqlalchemy.orm import joinedload
 
 import qcfractal.interface as ptl
+from qcfractal.interface.models import TaskStatusEnum, RecordStatusEnum
 from qcfractal.services.services import TorsionDriveService
 from qcfractal.storage_sockets.models import (
     KVStoreORM,
@@ -158,14 +159,14 @@ def test_services(session_fixture):
         "keywords": None,
         "program": "p7",
         "qc_spec": {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"},
-        "status": "COMPLETE",
+        "status": RecordStatusEnum.complete,
         "protocols": {},
     }
 
     service_data = {
         "tag": "tag1 tag2",
         "hash_index": "123",
-        "status": "COMPLETE",
+        "status": TaskStatusEnum.complete,
         "optimization_program": "gaussian",
         # extra fields
         "torsiondrive_state": {},
@@ -216,7 +217,7 @@ def test_results_sql(session_fixture, molecules_H4O2, kw_fixtures):
         "keywords": None,
         "program": "p1",
         "driver": "energy",
-        "status": "COMPLETE",
+        "status": RecordStatusEnum.complete,
         "protocols": {},
     }
 
@@ -228,7 +229,7 @@ def test_results_sql(session_fixture, molecules_H4O2, kw_fixtures):
         "keywords": kw_fixtures[0],
         "program": "p1",
         "driver": "energy",
-        "status": "COMPLETE",
+        "status": RecordStatusEnum.complete,
         "protocols": {},
     }
 
@@ -265,7 +266,7 @@ def test_optimization_procedure(session_fixture, molecules_H4O2):
         "keywords": None,
         "program": "p7",
         "qc_spec": {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"},
-        "status": "COMPLETE",
+        "status": RecordStatusEnum.complete,
         "protocols": {},
     }
 
@@ -277,7 +278,7 @@ def test_optimization_procedure(session_fixture, molecules_H4O2):
         "keywords": None,
         "program": "p1",
         "driver": "energy",
-        "status": "COMPLETE",
+        "status": RecordStatusEnum.complete,
         "protocols": {},
     }
 
@@ -318,7 +319,7 @@ def test_torsiondrive_procedure(session_fixture):
         "keywords": None,
         "program": "p9",
         "qc_spec": {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"},
-        "status": "COMPLETE",
+        "status": RecordStatusEnum.complete,
         "protocols": {},
     }
 
@@ -375,8 +376,8 @@ def test_add_task_queue(session_fixture, molecules_H4O2):
     assert ret.count() == 1
 
     task = ret.first()
-    assert task.status == "WAITING"
-    assert task.base_result_obj.status == "INCOMPLETE"
+    assert task.status == TaskStatusEnum.waiting
+    assert task.base_result_obj.status == RecordStatusEnum.incomplete
 
 
 def test_results_pagination(session_fixture, molecules_H4O2, kw_fixtures):

@@ -5,7 +5,14 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import pandas as pd
 
-from ..models import ObjectId, OptimizationSpecification, ProtoModel, QCSpecification, TorsionDriveInput
+from ..models import (
+    ObjectId,
+    OptimizationSpecification,
+    ProtoModel,
+    QCSpecification,
+    TorsionDriveInput,
+    RecordStatusEnum,
+)
 from ..models.torsiondrive import TDKeywords
 from ..visualization import custom_plot
 from .collection import BaseProcedureDataset
@@ -188,7 +195,7 @@ class TorsionDriveDataset(BaseProcedureDataset):
 
         # Count functions
         def count_gradient_evals(td):
-            if td.status != "COMPLETE":
+            if td.status != RecordStatusEnum.complete:
                 return None
 
             total_grads = 0
@@ -198,7 +205,7 @@ class TorsionDriveDataset(BaseProcedureDataset):
             return total_grads
 
         def count_optimizations(td):
-            if td.status != "COMPLETE":
+            if td.status != RecordStatusEnum.complete:
                 return None
             return sum(len(v) for v in td.optimization_history.values())
 

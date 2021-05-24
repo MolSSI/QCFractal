@@ -10,7 +10,8 @@ from pydantic import Field, constr, validator
 
 from .common_models import Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
 from .model_utils import recursive_normalizer
-from .records import RecordBase
+from .records import RecordBase, RecordStatusEnum
+from .task_models import TaskStatusEnum
 
 
 class ScanTypeEnum(str, Enum):
@@ -287,13 +288,15 @@ class GridOptimizationRecord(RecordBase):
             "status": self.status.value,
             "total_points": tpoints,
             "computed_points": len(self.grid_optimizations),
-            "complete_tasks": sum(x.status == "COMPLETE" for x in flat_history),
-            "incomplete_tasks": sum((x.status == "INCOMPLETE") or (x.status == "RUNNING") for x in flat_history),
-            "error_tasks": sum(x.status == "ERROR" for x in flat_history),
+            "complete_tasks": sum(x.status == RecordStatusEnum.complete for x in flat_history),
+            "incomplete_tasks": sum(
+                (x.status == RecordStatusEnum.incomplete) or (x.status == TaskStatusEnum.running) for x in flat_history
+            ),
+            "error_tasks": sum(x.status == RecordStatusEnum.error for x in flat_history),
         }
         ret["current_tasks"] = ret["error_tasks"] + ret["incomplete_tasks"]
         ret["percent_complete"] = ret["computed_points"] / ret["total_points"] * 100
-        ret["errors"] = [x for x in flat_history if x.status == "ERROR"]
+        ret["errors"] = [x for x in flat_history if x.status == RecordStatusEnum.error]
 
         return ret
 

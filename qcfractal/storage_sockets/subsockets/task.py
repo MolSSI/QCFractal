@@ -11,10 +11,9 @@ from qcfractal.storage_sockets.sqlalchemy_common import (
     insert_general,
     get_query_proj_columns,
     get_count,
-    delete_general,
 )
-from qcfractal.interface.models import TaskRecord, RecordStatusEnum, TaskStatusEnum, ObjectId
-from qcfractal.interface.models.query_meta import InsertMetadata, QueryMetadata, DeleteMetadata
+from qcfractal.interface.models import TaskRecord, RecordStatusEnum, TaskStatusEnum, ManagerStatusEnum, ObjectId
+from qcfractal.interface.models.query_meta import InsertMetadata, QueryMetadata
 
 from typing import TYPE_CHECKING
 
@@ -65,7 +64,7 @@ class TaskSocket:
         """Submit a list of tasks to the queue.
         Tasks are unique by their base_result, which should be inserted into
         the DB first before submitting it's corresponding task to the queue
-        (with result.status='INCOMPLETE' as the default)
+        (with result.status='incomplete' as the default)
         The default task.status is 'WAITING'
 
         Parameters
@@ -252,7 +251,7 @@ class TaskSocket:
             if manager[0] is None:
                 self._logger.warning(f"Manager {manager_name} does not exist! Will not give it tasks")
                 return []
-            elif manager[0]["status"] != "ACTIVE":
+            elif manager[0]["status"] != ManagerStatusEnum.active:
                 self._logger.warning(f"Manager {manager_name} exists but is not active!")
                 return []
 
@@ -339,12 +338,12 @@ class TaskSocket:
         ----------
         id
             Ids of the task (not result!) to search for
-        base_result
+        base_result_id
             The base result ID of the task
         program
             Programs to search for
         status
-            The status of the task: 'COMPLETE', 'RUNNING', 'WAITING', or 'ERROR'
+            The status of the task: 'complete', 'running', 'waiting', 'error'
         tag
             Tags of the task to search for
         manager
@@ -421,7 +420,7 @@ class TaskSocket:
             If True, reset running tasks to be waiting
         reset_error : bool, optional
             If True, also reset errored tasks to be waiting,
-            also update results/proc to be INCOMPLETE
+            also update results/proc to be 'incomplete'
 
         Returns
         -------

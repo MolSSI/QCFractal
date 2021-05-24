@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from pydantic import validator
 from qcelemental.models import ComputeError
 
-from ..interface.models import ObjectId, ProtoModel, PriorityEnum
+from ..interface.models import ObjectId, ProtoModel, PriorityEnum, RecordStatusEnum, TaskStatusEnum
 from ..interface.models.rest_models import TaskQueuePOSTBody
 
 # from ..procedures import get_procedure_parser
@@ -43,12 +43,12 @@ class TaskManager(ProtoModel):
         )
 
         status_values = set(x["status"] for x in task_query["data"])
-        if status_values == {"COMPLETE"}:
+        if status_values == {RecordStatusEnum.complete}:
             return True
 
-        elif "ERROR" in status_values:
+        elif RecordStatusEnum.error in status_values:
             for x in task_query["data"]:
-                if x["status"] != "ERROR":
+                if x["status"] != RecordStatusEnum.error:
                     continue
 
             logger.debug("Error in service compute as follows:")
@@ -126,7 +126,7 @@ class BaseService(ProtoModel, abc.ABC):
     task_priority: PriorityEnum
     task_manager: TaskManager = TaskManager()
 
-    status: str = "WAITING"
+    status: str = TaskStatusEnum.waiting
     error: Optional[ComputeError] = None
     stdout: str = ""
     tag: Optional[str] = None

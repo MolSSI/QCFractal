@@ -2,6 +2,8 @@
 Either pull in QCEl models or local models
 """
 
+from typing import Union
+
 from . import rest_models
 from .common_models import (
     AutodocBaseSettings,

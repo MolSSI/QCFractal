@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 import pandas as pd
 
-from ..models import ProtoModel
+from ..models import ProtoModel, RecordStatusEnum
 
 if TYPE_CHECKING:  # pragma: no cover
     from .. import FractalClient
@@ -605,7 +605,7 @@ class BaseProcedureDataset(Collection):
             else:
                 return df
 
-        if status not in [None, "INCOMPLETE"]:
+        if status.lower() in [None, RecordStatusEnum.incomplete]:
             raise KeyError("Detailed status is only available for incomplete procedures.")
 
         # Can only do detailed status for a single spec
@@ -625,7 +625,7 @@ class BaseProcedureDataset(Collection):
         data = []
 
         for proc in procedures:
-            if proc.status == "COMPLETE":
+            if proc.status == RecordStatusEnum.complete:
                 continue
 
             try:

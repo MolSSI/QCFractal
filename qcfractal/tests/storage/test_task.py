@@ -5,6 +5,7 @@ All tests should be atomic, that is create and cleanup their data
 """
 
 from ...testing import load_procedure_data
+from qcfractal.interface.models import ManagerStatusEnum
 
 fake_manager_1 = {
     "cluster": "test_cluster",
@@ -12,7 +13,7 @@ fake_manager_1 = {
     "username": "test_username",
     "uuid": "1234-4567-7890",
     "tag": "test_tag",
-    "status": "ACTIVE",
+    "status": ManagerStatusEnum.active,
 }
 
 
@@ -53,6 +54,6 @@ def test_task_inactive_manager_claim(storage_socket):
     assert len(claimed) == 0
 
     # Manually set to active to make sure it can be claimed
-    assert storage_socket.manager.update(name="some_manager", status="ACTIVE")
+    assert storage_socket.manager.update(name="some_manager", status=ManagerStatusEnum.active)
     claimed = storage_socket.task.claim("some_manager", ["psi4", "rdkit"], ["geometric"])
     assert len(claimed) == 1
