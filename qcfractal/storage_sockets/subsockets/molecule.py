@@ -144,15 +144,6 @@ class MoleculeSocket:
             int_id = [int(x) for x in id]
             unique_ids = list(set(int_id))
 
-            # TODO - remove this eventually
-            # right now, a lot of code depends on these fields not being here
-            # but that is not right. After changing the client code to be more dict-oriented,
-            # then we can add these back
-            if exclude is not None:
-                exclude = list(exclude) + ["molecule_hash", "molecular_formula"]
-            else:
-                exclude = ["molecule_hash", "molecular_formula"]
-
             load_cols, _ = get_query_proj_columns(MoleculeORM, include, exclude)
 
             results = (
@@ -289,15 +280,6 @@ class MoleculeSocket:
                 pass
 
         limit = calculate_limit(self._limit, limit)
-
-        # TODO - remove this eventually
-        # right now, a lot of code depends on these fields not being here
-        # but that is not right. After changing the client code to be more dict-oriented,
-        # then we can add these back
-        if exclude is not None:
-            exclude = list(exclude) + ["molecule_hash", "molecular_formula"]
-        else:
-            exclude = ["molecule_hash", "molecular_formula"]
 
         load_cols, _ = get_query_proj_columns(MoleculeORM, include, exclude)
 

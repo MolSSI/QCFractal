@@ -205,6 +205,13 @@ class MoleculeORM(Base):
 
         d = Base.dict(self)
 
+        # TODO - remove this eventually
+        # right now, a lot of code depends on these fields not being here
+        # but that is not right. After changing the client code to be more dict-oriented,
+        # then we can add these back
+        d.pop("molecule_hash", None)
+        d.pop("molecular_formula", None)
+
         # TODO - INT ID should not be done
         if "id" in d:
             d["id"] = ObjectId(d["id"])

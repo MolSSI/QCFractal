@@ -48,7 +48,7 @@ class OptimizationHandler(BaseProcedureHandler):
         BaseProcedureHandler.__init__(self)
 
     def add_orm(
-        self, optimizations: List[OptimizationProcedureORM], *, session: Optional[Session] = None
+        self, optimizations: Sequence[OptimizationProcedureORM], *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, List[ObjectId]]:
         """
         Adds OptimizationProcedureORM to the database, taking into account duplicates
@@ -86,9 +86,7 @@ class OptimizationHandler(BaseProcedureHandler):
         return meta, [x[0] for x in orm]
 
     @staticmethod
-    def build_schema_input(
-        optimization: OptimizationProcedureORM, molecule: Dict[str, Any], qc_keywords: Dict[str, Any]
-    ) -> OptimizationInput:
+    def build_schema_input(optimization: OptimizationProcedureDict, qc_keywords: Dict[str, Any]) -> OptimizationInput:
         """
         Creates an input schema (QCSchema format) for an optimization calculation from an ORM
 
@@ -96,8 +94,6 @@ class OptimizationHandler(BaseProcedureHandler):
         ----------
         optimization
             An ORM of the containing information to build the schema with
-        molecule
-            A dictionary representing the initial molecule of the optimizaion
         qc_keywords
             A dictionary representing the keywords of the individual single calculations making up the optimization
 
@@ -108,10 +104,13 @@ class OptimizationHandler(BaseProcedureHandler):
         """
 
         # For the qcinput specification for the optimization (qcelemental QCInputSpecification)
-        qcinput_spec = {"driver": optimization.qc_spec["driver"], "model": {"method": optimization.qc_spec["method"]}}
+        qcinput_spec = {
+            "driver": optimization["qc_spec"]["driver"],
+            "model": {"method": optimization["qc_spec"]["method"]},
+        }
 
-        if "basis" in optimization.qc_spec:
-            qcinput_spec["model"]["basis"] = optimization.qc_spec["basis"]
+        if "basis" in optimization["qc_spec"]:
+            qcinput_spec["model"]["basis"] = optimization["qc_spec"]["basis"]
 
         if qc_keywords is not None:
             qcinput_spec["keywords"] = qc_keywords
@@ -119,13 +118,13 @@ class OptimizationHandler(BaseProcedureHandler):
             qcinput_spec["keywords"] = {}
 
         return OptimizationInput(
-            id=optimization.id,
-            initial_molecule=molecule,
-            keywords=optimization.keywords,
-            extras=optimization.extras,
-            hash_index=optimization.hash_index,
+            id=optimization["id"],
+            initial_molecule=optimization["initial_molecule_obj"],
+            keywords=optimization["keywords"],
+            extras=optimization["extras"],
+            hash_index=optimization["hash_index"],
             input_specification=qcinput_spec,
-            protocols=optimization.protocols,
+            protocols=optimization["protocols"],
         )
 
     def parse_trajectory(
@@ -166,7 +165,7 @@ class OptimizationHandler(BaseProcedureHandler):
             r.method = v.model.method.lower()
             r.basis = v.model.basis.lower() if v.model.basis else None
             r.keywords = qc_spec["keywords"] if "keywords" in qc_spec else None
-            r.molecule = mol_id
+            r.molecule = int(mol_id)  # TODO - INT ID
 
             wfn_id, wfn_info = helpers.wavefunction_helper(self._core_socket, session, v.wavefunction)
             r.wavefunction = wfn_info
@@ -273,19 +272,21 @@ class OptimizationHandler(BaseProcedureHandler):
         insert_meta, opt_ids = self.add_orm(all_opt_orms, session=session)
 
         # Now generate all the tasks in the task queue
-        self.create_tasks(session, opt_ids, opt_spec.tag, opt_spec.priority)
+        # But only for newly-created optimizations
+        new_opt_ids = [opt_ids[x] for x in insert_meta.inserted_idx]
+        self.create_tasks(session, new_opt_ids, opt_spec.tag, opt_spec.priority)
 
         return insert_meta, opt_ids
 
     def create_tasks(
         self,
         session: Session,
-        id: List[ObjectId],
+        id: Sequence[ObjectId],
         tag: Optional[str] = None,
         priority: Optional[PriorityEnum] = None,
     ) -> Tuple[InsertMetadata, List[ObjectId]]:
         """
-        Create entries in the task table for a given list of optimizaion ids
+        Create entries in the task table for a given list of optimization ids
 
         For all the optimization ids, create the corresponding task if it does not exist.
 
@@ -306,32 +307,24 @@ class OptimizationHandler(BaseProcedureHandler):
             Metadata about which tasks were created or existing, and a list of Task IDs (new or existing)
         """
 
-        # Load the ORM including the keywords
-        # All we need from keywords is the 'values' column so no need to go
-        # through the keywords subsocket
-        opt_orm: List[OptimizationProcedureORM] = (
-            session.query(OptimizationProcedureORM).filter(OptimizationProcedureORM.id.in_(id)).all()
-        )
-
-        # Find the molecules specified in the records
-        molecule_ids = [x.initial_molecule for x in opt_orm]
-        molecules = self._core_socket.molecule.get(molecule_ids, session=session)
+        # Load the ORM for the optimization, including the initial molecule
+        opt_data = self.get(id, include=["*", "initial_molecule_obj"], session=session)
 
         # Create QCSchema inputs and tasks for everything, too
         new_tasks = []
-        for opt, molecule in zip(opt_orm, molecules):
+        for opt in opt_data:
             # TODO - fix when tables are normalized
-            qc_keywords_id = opt.qc_spec.get("keywords", None)
+            qc_keywords_id = opt["qc_spec"].get("keywords", None)
 
             if qc_keywords_id is not None:
                 qc_keywords = self._core_socket.keywords.get([qc_keywords_id])[0]["values"]
             else:
                 qc_keywords = None
 
-            qcschema_inp = self.build_schema_input(opt, molecule, qc_keywords)
+            qcschema_inp = self.build_schema_input(opt, qc_keywords)
             spec = {
                 "function": "qcengine.compute_procedure",
-                "args": [qcschema_inp.dict(), opt.program],
+                "args": [qcschema_inp.dict(), opt["program"]],
                 "kwargs": {},
             }
 
@@ -339,11 +332,11 @@ class OptimizationHandler(BaseProcedureHandler):
             task = TaskQueueORM()
             task.spec = spec
             task.parser = "optimization"
-            task.program = opt.qc_spec["program"]
-            task.procedure = opt.program
+            task.program = opt["qc_spec"]["program"]
+            task.procedure = opt["program"]
             task.tag = tag
             task.priority = priority
-            task.base_result_id = opt.id
+            task.base_result_id = int(opt["id"])  # TODO - INT ID
 
             new_tasks.append(task)
 
@@ -397,8 +390,8 @@ class OptimizationHandler(BaseProcedureHandler):
 
         # Add as a list of Trajectory entries to the optimization orm
         result_orm.trajectory_obj = []
-        for idx, t in enumerate(trajectory_orm):
-            traj_assoc = Trajectory(opt_id=result_orm.id, result_id=t.id, position=idx)  # type: ignore
+        for idx, tid in enumerate(trajectory_ids):
+            traj_assoc = Trajectory(opt_id=result_orm.id, result_id=tid, position=idx)  # type: ignore
             result_orm.trajectory_obj.append(traj_assoc)
 
         # Optimization-specific fields
@@ -460,7 +453,7 @@ class OptimizationHandler(BaseProcedureHandler):
         int_id = [int(x) for x in id]
         unique_ids = list(set(int_id))
 
-        load_cols, load_rels = get_query_proj_columns(ResultORM, include, exclude)
+        load_cols, load_rels = get_query_proj_columns(OptimizationProcedureORM, include, exclude)
 
         with self._core_socket.optional_session(session, True) as session:
             query = (

@@ -6,7 +6,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from sqlalchemy import and_, or_
-from sqlalchemy.orm import joinedload, load_only, selectinload
+from sqlalchemy.orm import load_only, selectinload
 
 from . import helpers
 from .base import BaseProcedureHandler
@@ -40,7 +40,7 @@ class SingleResultHandler(BaseProcedureHandler):
         BaseProcedureHandler.__init__(self)
 
     def add_orm(
-        self, results: List[ResultORM], *, session: Optional[Session] = None
+        self, results: Sequence[ResultORM], *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, List[ObjectId]]:
         """
         Adds ResultORM to the database, taking into account duplicates
@@ -75,7 +75,7 @@ class SingleResultHandler(BaseProcedureHandler):
             return meta, [x[0] for x in orm]
 
     @staticmethod
-    def build_schema_input(result: ResultORM, molecule: Dict[str, Any], keywords: Dict[str, Any]) -> AtomicInput:
+    def build_schema_input(result: SingleProcedureDict) -> AtomicInput:
         """
         Creates an input schema (QCSchema format) for a single calculation from an ORM
 
@@ -83,11 +83,6 @@ class SingleResultHandler(BaseProcedureHandler):
         ----------
         result
             An ORM of the containing information to build the schema with
-        molecule
-            A dictionary representing the molecule of the calculation
-        keywords
-            A dictionary representing the keywords of the calculation
-
 
         Returns
         -------
@@ -96,18 +91,21 @@ class SingleResultHandler(BaseProcedureHandler):
         """
 
         # Now start creating the "model" parameter for ResultInput
-        model = {"method": result.method}
+        model = {"method": result["method"]}
 
-        if result.basis:
-            model["basis"] = result.basis
+        if result["basis"]:
+            model["basis"] = result["basis"]
+
+        # TODO - fix after keywords not nullable
+        keywords = result["keywords_obj"]["values"] if result["keywords_obj"] else {}
 
         return AtomicInput(
-            id=result.id,
-            driver=result.driver,
+            id=result["id"],
+            driver=result["driver"],
             model=model,
-            molecule=molecule,
+            molecule=result["molecule_obj"],
             keywords=keywords,
-            protocols=result.protocols,
+            protocols=result["protocols"],
         )
 
     def verify_input(self, data):
@@ -175,7 +173,9 @@ class SingleResultHandler(BaseProcedureHandler):
         insert_meta, result_ids = self.add_orm(all_result_orms, session=session)
 
         # Now generate all the tasks in the task queue
-        self.create_tasks(session, result_ids, qc_spec.tag, qc_spec.priority)
+        # But only for newly-created optimizations
+        new_result_ids = [result_ids[x] for x in insert_meta.inserted_idx]
+        self.create_tasks(session, new_result_ids, qc_spec.tag, qc_spec.priority)
 
         return insert_meta, result_ids
 
@@ -208,27 +208,15 @@ class SingleResultHandler(BaseProcedureHandler):
             Metadata about which tasks were created or existing, and a list of Task IDs (new or existing)
         """
 
-        # Load the ORM including the keywords
-        # All we need from keywords is the 'values' column so no need to go
-        # through the keywords subsocket
-        result_orm: List[ResultORM] = (
-            session.query(ResultORM).filter(ResultORM.id.in_(id)).options(joinedload(ResultORM.keywords_obj)).all()
-        )
-
-        #  Get all molecules in the same order
-        molecule_ids = [x.molecule for x in result_orm]
-        molecules = self._core_socket.molecule.get(molecule_ids, session=session)
+        result_data = self.get(id, include=["*", "keywords_obj", "molecule_obj"], session=session)
 
         # Create QCSchema inputs and tasks for everything, too
         new_tasks = []
-        for res, molecule in zip(result_orm, molecules):
-            # TODO - can remove check when keywords made not nullable
-            keywords = res.keywords_obj.values if res.keywords is not None else dict()
-
-            qcschema_inp = self.build_schema_input(res, molecule, keywords)
+        for res in result_data:
+            qcschema_inp = self.build_schema_input(res)
             spec = {
                 "function": "qcengine.compute",  # todo: add defaults in models
-                "args": [qcschema_inp.dict(), res.program],
+                "args": [qcschema_inp.dict(), res["program"]],
                 "kwargs": {},  # todo: add defaults in models
             }
 
@@ -236,8 +224,8 @@ class SingleResultHandler(BaseProcedureHandler):
             task = TaskQueueORM()
             task.spec = spec
             task.parser = "single"
-            task.program = res.program
-            task.base_result_id = res.id
+            task.program = res["program"]
+            task.base_result_id = int(res["id"])  # TODO - INT ID
             task.tag = tag
             task.priority = priority
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime as dt
+from datetime import datetime
 import traceback
 import logging
 from qcfractal.storage_sockets.models import (
@@ -58,6 +58,10 @@ class ProcedureSocket:
         procedure: Optional[Iterable[str]] = None,
         manager: Optional[Iterable[str]] = None,
         status: Optional[Iterable[RecordStatusEnum]] = None,
+        created_before: Optional[datetime] = None,
+        created_after: Optional[datetime] = None,
+        modified_before: Optional[datetime] = None,
+        modified_after: Optional[datetime] = None,
         include: Optional[Iterable[str]] = None,
         exclude: Optional[Iterable[str]] = None,
         limit: int = None,
@@ -75,6 +79,10 @@ class ProcedureSocket:
             Query based on procedure type
         status
             The status of the procedure
+        created_before
+            Query for records created before this date
+        created_after
+            Query for records created after this date
         include
             Which fields of the molecule to return. Default is to return all fields.
         exclude
@@ -107,6 +115,14 @@ class ProcedureSocket:
             and_query.append(BaseResultORM.manager_name.in_(manager))
         if status is not None:
             and_query.append(BaseResultORM.status.in_(status))
+        if created_before is not None:
+            and_query.append(BaseResultORM.created_on < created_before)
+        if created_after is not None:
+            and_query.append(BaseResultORM.created_on > created_after)
+        if modified_before is not None:
+            and_query.append(BaseResultORM.modified_on < modified_before)
+        if modified_after is not None:
+            and_query.append(BaseResultORM.modified_on > modified_after)
 
         with self._core_socket.optional_session(session, True) as session:
             query = session.query(BaseResultORM).filter(and_(*and_query))
@@ -189,10 +205,11 @@ class ProcedureSocket:
         self, molecules: List[Molecule], specification: AllProcedureSpecifications
     ) -> Tuple[InsertMetadata, List[Optional[ObjectId]]]:
 
-        # The existence of the procedure should have been checked by the pydantic model
+        # The procedure should have been checked by the pydantic model
         procedure_handler = self.handler_map[specification.procedure]
 
-        # Verify the procedure. Will raise exception  on error
+        # Verify the procedure
+        # TODO - error handling
         procedure_handler.verify_input(specification)
 
         # Add all the molecules stored in the 'data' member
@@ -313,7 +330,7 @@ class ProcedureSocket:
 
                         self.failure.update_completed(session, task_orm, manager_name, failed_op)
                         task_orm.status = TaskStatusEnum.error
-                        task_orm.modified_on = dt.utcnow()
+                        task_orm.modified_on = datetime.utcnow()
                         session.commit()
                         self._core_socket.notify_completed_watch(base_result_id, RecordStatusEnum.error)
 

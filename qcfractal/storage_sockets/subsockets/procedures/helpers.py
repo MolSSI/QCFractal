@@ -5,7 +5,14 @@ Base class for computation procedures
 from __future__ import annotations
 
 import logging
-from ....interface.models import KVStore, CompressionEnum, AllResultTypes, WavefunctionProperties
+from ....interface.models import (
+    KVStore,
+    CompressionEnum,
+    AllResultTypes,
+    WavefunctionProperties,
+    InsertMetadata,
+    ObjectId,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +25,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from ...sqlalchemy_socket import SQLAlchemySocket
     from ...models import BaseResultORM, TaskQueueORM
-    from typing import Optional, Union, Dict, Tuple, Any
+    from typing import Optional, Union, Dict, Tuple, Any, Sequence, List
 
 
 def retrieve_outputs(
@@ -84,7 +91,7 @@ def output_helper(
 
 
 def wavefunction_helper(
-    storage_socket, session, wavefunction: Optional[WavefunctionProperties]
+    storage_socket: SQLAlchemySocket, session: Session, wavefunction: Optional[WavefunctionProperties]
 ) -> Tuple[Optional[int], Optional[Dict[str, Any]]]:
     if wavefunction is None:
         return None, None
