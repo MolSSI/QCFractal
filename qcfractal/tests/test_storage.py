@@ -233,12 +233,12 @@ def test_dataset_add_delete_cascade(storage_socket):
 #    )
 #
 #    # Submit a new task
-#    ret = storage_results.task.add([task1])
+#    ret = storage_results.task_queue.add([task1])
 #    assert len(ret["data"]) == 1
 #    assert ret["meta"]["n_inserted"] == 1
 #
 #    # submit a duplicate task with a hook
-#    ret = storage_results.task.add([task1])
+#    ret = storage_results.task_queue.add([task1])
 #    assert len(ret["data"]) == 1
 #    assert ret["meta"]["n_inserted"] == 0
 #    assert len(ret["meta"]["duplicates"]) == 1
@@ -256,7 +256,7 @@ def test_dataset_add_delete_cascade(storage_socket):
 #    )
 #
 #    # submit repeated tasks
-#    ret = storage_results.task.add([task2, task2])
+#    ret = storage_results.task_queue.add([task2, task2])
 #    assert len(ret["data"]) == 2
 #    assert ret["meta"]["n_inserted"] == 1
 #    assert ret["data"][0] == ret["data"][1]
@@ -287,29 +287,29 @@ def test_dataset_add_delete_cascade(storage_socket):
 #    task2 = ptl.models.TaskRecord(**task_template)
 #
 #    # Submit a task
-#    r = storage_results.task.add([task1, task2])
+#    r = storage_results.task_queue.add([task1, task2])
 #    assert len(r["data"]) == 2
 #
 #    # Add manager 'test_manager'
 #    storage_results.manager.update("test_manager", status="ACTIVE")
 #    storage_results.manager.update("test_manager2", status="ACTIVE")
 #    # Query for next tasks
-#    r = storage_results.task.claim("test_manager", ["p1"], ["p1"], limit=1)
+#    r = storage_results.task_queue.claim("test_manager", ["p1"], ["p1"], limit=1)
 #    assert r[0].spec.function == task1.spec.function
 #    queue_id = r[0].id
 #
-#    queue_id2 = storage_results.task.claim("test_manager2", ["p1"], ["p1"], limit=1)[0].id
+#    queue_id2 = storage_results.task_queue.claim("test_manager2", ["p1"], ["p1"], limit=1)[0].id
 #
 #    if status == "ERROR":
-#        r = storage_results.task.mark_error([queue_id, queue_id2])
+#        r = storage_results.task_queue.mark_error([queue_id, queue_id2])
 #    elif status == "COMPLETE":
-#        r = storage_results.task.mark_complete([queue_id2, queue_id])
+#        r = storage_results.task_queue.mark_complete([queue_id2, queue_id])
 #        # Check queue is empty
-#        tasks = storage_results.task.claim("test_manager", ["p1"], ["p1"])
+#        tasks = storage_results.task_queue.claim("test_manager", ["p1"], ["p1"])
 #        assert len(tasks) == 0
 #
 #        # completed task should be deleted
-#        found = storage_results.task.get([queue_id, queue_id2], missing_ok=True)
+#        found = storage_results.task_queue.get([queue_id, queue_id2], missing_ok=True)
 #        assert len(found) == 0
 #
 #    assert r == 2
@@ -338,7 +338,7 @@ def test_dataset_add_delete_cascade(storage_socket):
 #    task3 = ptl.models.TaskRecord(**task_template, base_result=results[5]["id"])
 #
 #    # Submit tasks
-#    ret = storage_results.task.add([task1, task2, task3])
+#    ret = storage_results.task_queue.add([task1, task2, task3])
 #    assert len(ret["data"]) == 3
 #    assert ret["meta"]["n_inserted"] == 3
 #
@@ -346,7 +346,7 @@ def test_dataset_add_delete_cascade(storage_socket):
 #    storage_results.manager.update("test_manager")
 #
 #    # Get tasks for manager 'test_manager'
-#    r = storage_results.task.claim("test_manager", ["p1"], ["p1"], limit=1)
+#    r = storage_results.task_queue.claim("test_manager", ["p1"], ["p1"], limit=1)
 #    assert len(r) == 1
 #    # will get the first submitted result first
 #    assert r[0].base_result == results[3]["id"]
@@ -552,10 +552,10 @@ def test_reset_task_blocks(storage_socket):
     """
 
     with pytest.raises(ValueError):
-        storage_socket.task.reset_status(reset_running=True)
+        storage_socket.task_queue.reset_status(reset_running=True)
 
     with pytest.raises(ValueError):
-        storage_socket.task.reset_status(reset_error=True)
+        storage_socket.task_queue.reset_status(reset_error=True)
 
 
 def test_collections_include_exclude(storage_socket):

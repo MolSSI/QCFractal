@@ -722,7 +722,7 @@ def query_task_v1():
     if "base_result" in data:
         data["base_result_id"] = data.pop("base_result")
 
-    meta, tasks = storage_socket.task.query(**{**data, **body.meta.dict()})
+    meta, tasks = storage_socket.task_queue.query(**{**data, **body.meta.dict()})
 
     # Convert the new metadata format to the old format
     meta_old = convert_get_response_metadata(meta, missing=[])
@@ -767,7 +767,7 @@ def modify_task_v1():
         d = body.data.dict()
         d.pop("new_tag", None)
         d.pop("new_priority", None)
-        tasks_updated = storage_socket.task.reset_status(**d, reset_error=True)
+        tasks_updated = storage_socket.task_queue.reset_status(**d, reset_error=True)
         data = {"n_updated": tasks_updated}
     elif body.meta.operation == "regenerate":
         tasks_updated = 0
@@ -799,11 +799,11 @@ def modify_task_v1():
                     # If we inserted a new task, then also reset base result statuses
                     # (ie, if it was running, then it obviously isn't since we made a new task)
                     if meta.n_inserted > 0:
-                        storage_socket.task.reset_base_result_status(id=body.data.base_result, session=session)
+                        storage_socket.task_queue.reset_base_result_status(id=body.data.base_result, session=session)
 
             data = {"n_updated": tasks_updated}
     elif body.meta.operation == "modify":
-        tasks_updated = storage_socket.task.modify(
+        tasks_updated = storage_socket.task_queue.modify(
             id=body.data.id,
             base_result=body.data.base_result,
             new_tag=body.data.new_tag,
@@ -914,7 +914,7 @@ def queue_manager_claim_v1():
     name = _get_name_from_metadata(body.meta)
 
     # Grab new tasks and write out
-    new_tasks = storage_socket.task.claim(
+    new_tasks = storage_socket.task_queue.claim(
         name, body.meta.programs, body.meta.procedures, limit=body.data.limit, tag=body.meta.tag
     )
     response = QueueManagerGETResponse(
@@ -982,7 +982,7 @@ def queue_manager_modify_v1():
         # current_app.logger.info("QueueManager: New active manager {} detected.".format(name))
 
     elif op == "shutdown":
-        nshutdown = storage_socket.task.reset_status(manager=name, reset_running=True)
+        nshutdown = storage_socket.task_queue.reset_status(manager=name, reset_running=True)
         storage_socket.manager.update(
             name, returned=nshutdown, status=ManagerStatusEnum.inactive, **body.meta.dict(), log=True
         )

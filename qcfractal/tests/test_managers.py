@@ -117,7 +117,7 @@ def test_queue_manager_multiple_tags(compute_adapter_fixture):
 
     # Check that tag list is correctly validated to not include None
     # This could be implemented, but would require greater sophistication
-    # in SQLAlchemySocket.task.claim()
+    # in SQLAlchemySocket.task_queue.claim()
     with pytest.raises(TypeError):
         queue.QueueManager(client, adapter, queue_tag=["tag1", None])
 
