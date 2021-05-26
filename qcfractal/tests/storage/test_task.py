@@ -28,12 +28,12 @@ def test_task_nonexist_manager_claim(storage_socket):
     _, ids = storage_socket.procedure.create([molecule_1], input_spec_1)
 
     # Some random manager tries to claim the task
-    claimed = storage_socket.task.claim("some_manager", ["psi4", "rdkit"], ["geometric"])
+    claimed = storage_socket.task_queue.claim("some_manager", ["psi4", "rdkit"], ["geometric"])
     assert len(claimed) == 0
 
     #  Create it to make sure that it would actually claim the task
     assert storage_socket.manager.update(name="some_manager", **fake_manager_1)
-    claimed = storage_socket.task.claim("some_manager", ["psi4", "rdkit"], ["geometric"])
+    claimed = storage_socket.task_queue.claim("some_manager", ["psi4", "rdkit"], ["geometric"])
     assert len(claimed) == 1
 
 
@@ -50,10 +50,10 @@ def test_task_inactive_manager_claim(storage_socket):
     assert storage_socket.manager.update(name="some_manager", **fake_manager_1)
     storage_socket.manager.deactivate(name=["some_manager"])
 
-    claimed = storage_socket.task.claim("some_manager", ["psi4", "rdkit"], ["geometric"])
+    claimed = storage_socket.task_queue.claim("some_manager", ["psi4", "rdkit"], ["geometric"])
     assert len(claimed) == 0
 
     # Manually set to active to make sure it can be claimed
     assert storage_socket.manager.update(name="some_manager", status=ManagerStatusEnum.active)
-    claimed = storage_socket.task.claim("some_manager", ["psi4", "rdkit"], ["geometric"])
+    claimed = storage_socket.task_queue.claim("some_manager", ["psi4", "rdkit"], ["geometric"])
     assert len(claimed) == 1

@@ -7,6 +7,6 @@ from .procedure import ProcedureSocket
 from .role import RoleSocket
 from .server_log import ServerLogSocket
 from .service import ServiceSocket
-from .task import TaskSocket
+from .task_queue import TaskQueueSocket
 from .user import UserSocket
 from .wavefunction import WavefunctionSocket

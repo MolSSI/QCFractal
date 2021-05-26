@@ -214,8 +214,8 @@ def test_queue_error(fractal_test_server):
 
     # Pull from database, raw JSON
     storage_socket = SQLAlchemySocket(fractal_test_server._qcf_config)
-    queue_ret = storage_socket.task.query(status=[TaskStatusEnum.error])[1]
-    result = storage_socket.task.query(id=compute_ret.ids)[1][0]
+    queue_ret = storage_socket.task_queue.query(status=[TaskStatusEnum.error])[1]
+    result = storage_socket.task_queue.query(id=compute_ret.ids)[1][0]
 
     assert len(queue_ret) == 1
     assert result["status"] == RecordStatusEnum.error
@@ -372,10 +372,10 @@ def test_queue_ordering_time(fractal_test_server):
     ret1 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol1).ids[0]
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2).ids[0]
 
-    assert len(storage_socket.task.claim(manager_name, [], [], limit=1)) == 0
+    assert len(storage_socket.task_queue.claim(manager_name, [], [], limit=1)) == 0
 
-    queue_id1 = storage_socket.task.claim(manager_name, ["rdkit"], [], limit=1)[0]["base_result_id"]
-    queue_id2 = storage_socket.task.claim(manager_name, ["rdkit"], [], limit=1)[0]["base_result_id"]
+    queue_id1 = storage_socket.task_queue.claim(manager_name, ["rdkit"], [], limit=1)[0]["base_result_id"]
+    queue_id2 = storage_socket.task_queue.claim(manager_name, ["rdkit"], [], limit=1)[0]["base_result_id"]
 
     assert queue_id1 == int(ret1)
     assert queue_id2 == int(ret2)
@@ -398,9 +398,9 @@ def test_queue_ordering_priority(fractal_test_server):
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2, priority="high").ids[0]
     ret3 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol3, priority="HIGH").ids[0]
 
-    queue_id1 = storage_socket.task.claim(manager_name, ["rdkit"], [], limit=1)[0]["base_result_id"]
-    queue_id2 = storage_socket.task.claim(manager_name, ["RDkit"], [], limit=1)[0]["base_result_id"]
-    queue_id3 = storage_socket.task.claim(manager_name, ["RDKIT"], [], limit=1)[0]["base_result_id"]
+    queue_id1 = storage_socket.task_queue.claim(manager_name, ["rdkit"], [], limit=1)[0]["base_result_id"]
+    queue_id2 = storage_socket.task_queue.claim(manager_name, ["RDkit"], [], limit=1)[0]["base_result_id"]
+    queue_id3 = storage_socket.task_queue.claim(manager_name, ["RDKIT"], [], limit=1)[0]["base_result_id"]
 
     assert queue_id1 == int(ret2)
     assert queue_id2 == int(ret3)
@@ -429,13 +429,13 @@ def test_queue_order_procedure_priority(fractal_test_server):
     ret2 = client.add_procedure("OPTIMIZATION", "geometric", geometric_options, [mol2], priority="high").ids[0]
     ret3 = client.add_procedure("OPTimization", "GEOmetric", geometric_options, [mol3], priority="HIGH").ids[0]
 
-    assert len(storage_socket.task.claim(manager_name, ["rdkit"], [], limit=1)) == 0
-    assert len(storage_socket.task.claim(manager_name, ["rdkit"], ["geom"], limit=1)) == 0
-    assert len(storage_socket.task.claim(manager_name, ["prog1"], ["geometric"], limit=1)) == 0
+    assert len(storage_socket.task_queue.claim(manager_name, ["rdkit"], [], limit=1)) == 0
+    assert len(storage_socket.task_queue.claim(manager_name, ["rdkit"], ["geom"], limit=1)) == 0
+    assert len(storage_socket.task_queue.claim(manager_name, ["prog1"], ["geometric"], limit=1)) == 0
 
-    queue_id1 = storage_socket.task.claim(manager_name, ["rdkit"], ["geometric"], limit=1)[0]["base_result_id"]
-    queue_id2 = storage_socket.task.claim(manager_name, ["RDKIT"], ["geometric"], limit=1)[0]["base_result_id"]
-    queue_id3 = storage_socket.task.claim(manager_name, ["rdkit"], ["GEOMETRIC"], limit=1)[0]["base_result_id"]
+    queue_id1 = storage_socket.task_queue.claim(manager_name, ["rdkit"], ["geometric"], limit=1)[0]["base_result_id"]
+    queue_id2 = storage_socket.task_queue.claim(manager_name, ["RDKIT"], ["geometric"], limit=1)[0]["base_result_id"]
+    queue_id3 = storage_socket.task_queue.claim(manager_name, ["rdkit"], ["GEOMETRIC"], limit=1)[0]["base_result_id"]
 
     assert queue_id1 == int(ret2)
     assert queue_id2 == int(ret3)
@@ -485,12 +485,12 @@ def test_queue_query_manager(fractal_test_server):
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2).ids[0]
     ret3 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol3).ids[0]
 
-    storage_socket.task.claim(manager_name, ["rdkit"], [], limit=1)[0]
+    storage_socket.task_queue.claim(manager_name, ["rdkit"], [], limit=1)[0]
     tasks_manager = client.query_tasks(manager=manager_name)
     assert len(tasks_manager) == 1
     assert tasks_manager[0].base_result == ret1
 
-    storage_socket.task.claim(manager_name, ["RDkit"], [], limit=1)[0]
-    storage_socket.task.claim(manager_name, ["RDKIT"], [], limit=1)[0]
+    storage_socket.task_queue.claim(manager_name, ["RDkit"], [], limit=1)[0]
+    storage_socket.task_queue.claim(manager_name, ["RDKIT"], [], limit=1)[0]
     tasks_manager = client.query_tasks(manager=manager_name)
     assert len(tasks_manager) == 3

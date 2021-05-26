@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     TaskDict = Dict[str, Any]
 
 
-class TaskSocket:
+class TaskQueueSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
         self._logger = logging.getLogger(__name__)

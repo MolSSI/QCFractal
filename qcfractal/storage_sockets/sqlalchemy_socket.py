@@ -225,18 +225,20 @@ class SQLAlchemySocket:
             raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}") from None
 
         # Create/initialize the subsockets
-        from qcfractal.storage_sockets.subsockets.server_log import ServerLogSocket
-        from qcfractal.storage_sockets.subsockets.output_store import OutputStoreSocket
-        from qcfractal.storage_sockets.subsockets.keywords import KeywordsSocket
-        from qcfractal.storage_sockets.subsockets.molecule import MoleculeSocket
-        from qcfractal.storage_sockets.subsockets.collection import CollectionSocket
-        from qcfractal.storage_sockets.subsockets.procedure import ProcedureSocket
-        from qcfractal.storage_sockets.subsockets.service import ServiceSocket
-        from qcfractal.storage_sockets.subsockets.wavefunction import WavefunctionSocket
-        from qcfractal.storage_sockets.subsockets.manager import ManagerSocket
-        from qcfractal.storage_sockets.subsockets.task import TaskSocket
-        from qcfractal.storage_sockets.subsockets.user import UserSocket
-        from qcfractal.storage_sockets.subsockets.role import RoleSocket
+        from qcfractal.storage_sockets.subsockets import (
+            ServerLogSocket,
+            OutputStoreSocket,
+            KeywordsSocket,
+            MoleculeSocket,
+            CollectionSocket,
+            ProcedureSocket,
+            ServiceSocket,
+            WavefunctionSocket,
+            ManagerSocket,
+            TaskQueueSocket,
+            UserSocket,
+            RoleSocket,
+        )
 
         self.server_log = ServerLogSocket(self)
         self.output_store = OutputStoreSocket(self)
@@ -247,7 +249,7 @@ class SQLAlchemySocket:
         self.service = ServiceSocket(self)
         self.wavefunction = WavefunctionSocket(self)
         self.manager = ManagerSocket(self)
-        self.task = TaskSocket(self)
+        self.task_queue = TaskQueueSocket(self)
         self.user = UserSocket(self)
         self.role = RoleSocket(self)
 
