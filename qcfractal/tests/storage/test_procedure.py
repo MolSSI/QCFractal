@@ -283,3 +283,73 @@ def test_procedure_query_empty(storage_socket):
 
     meta, procs = storage_socket.procedure.query(status=[])
     assert meta.n_returned == 0
+
+
+def test_procedure_create_existing(storage_socket):
+    #
+    # Tests re-creating procedures and deduplication
+    #
+    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_benzene_energy_1")
+    input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_benzene_opt")
+    input_spec_3, molecule_3, result_data_3 = load_procedure_data("psi4_peroxide_opt_fail_optiter")
+    input_spec_4, molecule_4, result_data_4 = load_procedure_data("psi4_peroxide_energy_wfn")
+
+    _, ids1 = storage_socket.procedure.create([molecule_1], input_spec_1)
+    _, ids2 = storage_socket.procedure.create([molecule_2], input_spec_2)
+    _, ids3 = storage_socket.procedure.create([molecule_3], input_spec_3)
+    all_ids = ids1 + ids2 + ids3
+
+    # Should have created tasks
+    meta, tasks = storage_socket.task.query(base_result_id=all_ids)
+    assert meta.n_found == 3
+
+    # Create the fake managers in the database
+    assert storage_socket.manager.update(name="manager_1", **fake_manager_1)
+
+    # Managers claim the tasks
+    storage_socket.task.claim("manager_1", ["psi4", "rdkit"], ["geometric"], 50)
+
+    # Attempt to recreate. Should not do anything
+    meta_1, new_ids_1 = storage_socket.procedure.create([molecule_1], input_spec_1)
+    meta_2, new_ids_2 = storage_socket.procedure.create([molecule_2], input_spec_2)
+    meta_3, new_ids_3 = storage_socket.procedure.create([molecule_3], input_spec_3)
+    assert meta_1.n_existing == 1
+    assert meta_2.n_existing == 1
+    assert meta_3.n_existing == 1
+    meta, tasks = storage_socket.task.query(base_result_id=all_ids)
+    assert meta.n_found == 3
+    assert tasks[0]["base_result_id"] == new_ids_1[0]
+    assert tasks[1]["base_result_id"] == new_ids_2[0]
+    assert tasks[2]["base_result_id"] == new_ids_3[0]
+
+    # Return results
+    # The ids returned from create() are the result ids, but the managers return task ids
+    procs = storage_socket.procedure.get(all_ids, include=["*", "task_obj"])
+    task_ids = [x["task_obj"]["id"] for x in procs]
+    storage_socket.procedure.update_completed("manager_1", {task_ids[0]: result_data_1})
+    storage_socket.procedure.update_completed("manager_1", {task_ids[1]: result_data_2})
+    storage_socket.procedure.update_completed("manager_1", {task_ids[2]: result_data_3})
+
+    # Tasks for the successful ones shouldn't exist now
+    # One was a failure
+    meta, tasks = storage_socket.task.query(base_result_id=all_ids)
+    assert meta.n_found == 1
+
+    # If I recreate the calculations, nothing should have changed
+    # Add a new one as well
+    meta_1, new_ids_1 = storage_socket.procedure.create([molecule_1], input_spec_1)
+    meta_2, new_ids_2 = storage_socket.procedure.create([molecule_2], input_spec_2)
+    meta_3, new_ids_3 = storage_socket.procedure.create([molecule_3], input_spec_3)
+    meta_4, new_ids_4 = storage_socket.procedure.create([molecule_4], input_spec_4)
+    assert meta_1.n_existing == 1
+    assert meta_2.n_existing == 1
+    assert meta_3.n_existing == 1
+    assert meta_4.n_inserted == 1
+
+    # Tasks for the completed computations should not have been recreated
+    # (this query does not add the fourth calc we just added)
+    meta, tasks = storage_socket.task.query(base_result_id=all_ids)
+    assert meta.n_found == 1
+
+    meta, tasks = storage_socket.task.query(base_result_id=[new_ids_4])
+    assert meta.n_found == 1

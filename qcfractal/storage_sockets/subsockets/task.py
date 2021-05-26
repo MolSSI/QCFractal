@@ -38,6 +38,9 @@ class TaskSocket:
         """
         Adds TaskQueueORM to the database, taking into account duplicates
 
+        If a task should not be added because the corresponding procedure is already marked
+        complete, then that will raise an exception.
+
         The session is flushed at the end of this function.
 
         Parameters
@@ -53,12 +56,23 @@ class TaskSocket:
         :
             Metadata showing what was added, and a list of returned task ids. These will be in the
             same order as the inputs, and may correspond to newly-inserted ORMs or to existing data.
-
         """
 
+        # Check for incompatible statuses
+        base_result_ids = [x.base_result_id for x in tasks]
+        statuses = self._core_socket.procedure.get(base_result_ids, include=["status"], session=session)
+
+        # TODO - logic will need to be adjusted with new statuses
+        # This is an error. These should have been checked before calling this function
+        if any(x["status"] == RecordStatusEnum.complete for x in statuses):
+            raise RuntimeError(
+                "Cannot add TaskQueueORM for a procedure that is already complete. This is a programmer error"
+            )
+
         with self._core_socket.optional_session(session) as session:
-            meta, orm = insert_general(session, tasks, (TaskQueueORM.base_result_id,), (TaskQueueORM.id,))
-            return meta, [x[0] for x in orm]
+            meta, ids = insert_general(session, tasks, (TaskQueueORM.base_result_id,), (TaskQueueORM.id,))
+
+            return meta, [x[0] for x in ids]
 
     def add(self, data: List[TaskRecord]):
         """Submit a list of tasks to the queue.
