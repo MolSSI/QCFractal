@@ -55,34 +55,19 @@ class FailedOperationHandler(BaseProcedureHandler):
         fail_result = result.dict()
         inp_data = fail_result.get("input_data")
 
-        # Get the outputs (stdout, stderr)
-        # List of output IDs to delete when we are done
-        to_delete = []
-
         # Error is special in a FailedOperation
         error = fail_result.get("error", _default_error)
 
         base_result = task_orm.base_result_obj
-
-        if base_result.stdout is not None:
-            to_delete.append(base_result.stdout)
-        if base_result.stderr is not None:
-            to_delete.append(base_result.stderr)
-        if base_result.error is not None:
-            to_delete.append(base_result.error)
-
-        base_result.error = helpers.output_helper(self._core_socket, session, error)
+        base_result.error = self._core_socket.output_store.replace(base_result.error, error, session=session)
 
         # Get the rest of the outputs
         # This is stored in "input_data" (I know...)
         if inp_data is not None:
             stdout = inp_data.get("stdout", None)
             stderr = inp_data.get("stderr", None)
-            base_result.stdout = helpers.output_helper(self._core_socket, session, stdout)
-            base_result.stderr = helpers.output_helper(self._core_socket, session, stderr)
-
-        # Now that the outputs are set to new ids, delete the old ones
-        self._core_socket.output_store.delete(to_delete, session=session)
+            base_result.stdout = self._core_socket.output_store.replace(base_result.stdout, stdout, session=session)
+            base_result.stderr = self._core_socket.output_store.replace(base_result.stderr, stderr, session=session)
 
         # Change the status on the base result
         base_result.status = RecordStatusEnum.error

@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import logging
 from qcfractal.storage_sockets.models import KVStoreORM
-from qcfractal.interface.models import KVStore, ObjectId
+from qcfractal.interface.models import KVStore, ObjectId, CompressionEnum
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
-    from typing import List, Optional, Sequence, Dict, Any
+    from typing import List, Optional, Sequence, Dict, Any, Union
 
     OutputDict = Dict[str, Any]
 
@@ -24,7 +24,7 @@ class OutputStoreSocket:
     def output_to_orm(output: KVStore) -> KVStoreORM:
         return KVStoreORM(**output.dict())  # type: ignore
 
-    def add(self, outputs: Sequence[KVStore], *, session: Optional[Session] = None) -> List[ObjectId]:
+    def add(self, outputs: Sequence[Union[KVStore, str, Dict]], *, session: Optional[Session] = None) -> List[ObjectId]:
         """
         Inserts output store data into the database
 
@@ -36,7 +36,8 @@ class OutputStoreSocket:
         Parameters
         ----------
         outputs
-            A sequence of output store data to add.
+            A sequence of output store data to add. This can be a string or dictionary, which will be converted
+            to a KVStore object, or a KVStore object itself
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed before returning from this function.
@@ -54,7 +55,12 @@ class OutputStoreSocket:
 
         with self._core_socket.optional_session(session) as session:
             for output in outputs:
-                output_orm = self.output_to_orm(output)
+                if isinstance(output, KVStore):
+                    kv_obj = output
+                else:
+                    kv_obj = KVStore.compress(output, CompressionEnum.lzma, 1)
+
+                output_orm = self.output_to_orm(kv_obj)
                 session.add(output_orm)
                 session.flush()
                 output_ids.append(ObjectId(output_orm.id))
@@ -96,7 +102,7 @@ class OutputStoreSocket:
 
         # TODO - int id
         int_id = [int(x) for x in id]
-        unique_ids = [list(set(int_id))]
+        unique_ids = list(set(int_id))
 
         with self._core_socket.optional_session(session, True) as session:
             results = session.query(KVStoreORM).filter(KVStoreORM.id.in_(unique_ids)).yield_per(50)
@@ -133,3 +139,85 @@ class OutputStoreSocket:
 
         with self._core_socket.optional_session(session) as session:
             return session.query(KVStoreORM).filter(KVStoreORM.id.in_(id)).delete()
+
+    def append(self, id: Optional[ObjectId], to_append: str, *, session: Optional[Session] = None) -> ObjectId:
+        """
+        Appends data to an output
+
+        If the id is None, then one will be created.
+
+        If the id does not exist, an exception will be raised
+
+        Parameters
+        ----------
+        id
+            The ID of the output to append data to
+        to_append
+            Data to append to the output
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
+
+
+        Returns
+        -------
+        :
+            The ID of the output store. This is the same as the input if specified. If the input is None, then
+            this will represent the ID of the new output object
+        """
+
+        with self._core_socket.optional_session(session) as session:
+            if id is None:
+                kv = KVStore.compress(to_append)
+                return self.add([kv], session=session)[0]
+            else:
+                output = session.query(KVStoreORM).filter(KVStoreORM.id == id).one_or_none()
+
+                if output is None:
+                    raise RuntimeError(f"Cannot append to output {id} - does not exist!")
+
+                kv = KVStore(**output.dict())
+                s = kv.get_string() + to_append
+                new_orm = self.output_to_orm(KVStore.compress(s, output.compression, output.compression_level))
+                output.data = new_orm.data
+                output.value = new_orm.value
+                output.compression = new_orm.compression
+                output.compression_level = new_orm.compression_level
+                return ObjectId(output.id)
+
+    def replace(
+        self, id: Optional[ObjectId], output: Optional[Union[Dict, str, KVStore]], *, session: Optional[Session] = None
+    ) -> Optional[ObjectId]:
+        """
+        Adds an output to the output storage, and deletes the old record
+
+        If a session is provided, this will only flush and not commit.
+
+        If the given output is None, then the old record is deleted and None is returned
+
+        Parameters
+        ----------
+        id
+            An ID of an output entry to replace
+        output
+            Output data to store into the database
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
+
+        Returns
+        -------
+        :
+            The ID of the new object
+
+        """
+
+        if output is not None:
+            new_id = self.add([output], session=session)[0]
+        else:
+            new_id = None
+
+        if id is not None:
+            self.delete([id])
+
+        return new_id

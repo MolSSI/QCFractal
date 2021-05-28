@@ -7,17 +7,10 @@ from __future__ import annotations
 import logging
 from ....interface.models import (
     KVStore,
-    CompressionEnum,
     AllResultTypes,
     WavefunctionProperties,
-    InsertMetadata,
-    ObjectId,
 )
 
-logger = logging.getLogger(__name__)
-
-_wfn_return_names = set(WavefunctionProperties._return_results_names)
-_wfn_all_fields = set(WavefunctionProperties.__fields__.keys())
 
 from typing import TYPE_CHECKING
 
@@ -26,6 +19,12 @@ if TYPE_CHECKING:
     from ...sqlalchemy_socket import SQLAlchemySocket
     from ...models import BaseResultORM, TaskQueueORM
     from typing import Optional, Union, Dict, Tuple, Any, Sequence, List
+
+
+logger = logging.getLogger(__name__)
+
+_wfn_return_names = set(WavefunctionProperties._return_results_names)
+_wfn_all_fields = set(WavefunctionProperties.__fields__.keys())
 
 
 def retrieve_outputs(
@@ -59,35 +58,9 @@ def retrieve_outputs(
         logger.warning(f"Found uncompressed error for result id {result.id}")
         error = KVStore(data=result.error)
 
-    # delete existing
-    to_delete = []
-    if base_result.stdout is not None:
-        to_delete.append(base_result.stdout)
-    if base_result.stderr is not None:
-        to_delete.append(base_result.stderr)
-    if base_result.error is not None:
-        to_delete.append(base_result.error)
-
-    base_result.stdout = output_helper(storage_socket, session, stdout)
-    base_result.stderr = output_helper(storage_socket, session, stderr)
-    base_result.error = output_helper(storage_socket, session, error)
-
-    # Can now safely delete the old ones now that they are not being referred to
-    storage_socket.output_store.delete(to_delete, session=session)
-
-
-def output_helper(
-    storage_socket: SQLAlchemySocket, session, output: Optional[Union[Dict, str, KVStore]]
-) -> Optional[int]:
-    if output is None:
-        return None
-
-    if isinstance(output, KVStore):
-        output_id = storage_socket.output_store.add([output], session=session)[0]
-    else:
-        compressed = KVStore.compress(output, CompressionEnum.lzma, 1)
-        output_id = storage_socket.output_store.add([compressed], session=session)[0]
-    return output_id
+    base_result.stdout = storage_socket.output_store.replace(base_result.stdout, stdout, session=session)
+    base_result.stderr = storage_socket.output_store.replace(base_result.stderr, stderr, session=session)
+    base_result.error = storage_socket.output_store.replace(base_result.error, error, session=session)
 
 
 def wavefunction_helper(
