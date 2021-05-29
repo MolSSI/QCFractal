@@ -83,52 +83,201 @@ class OptimizationHandler(BaseProcedureHandler):
             meta, orm = insert_general(
                 session, optimizations, (OptimizationProcedureORM.hash_index,), (OptimizationProcedureORM.id,)
             )
-        return meta, [x[0] for x in orm]
+            return meta, [x[0] for x in orm]
 
-    @staticmethod
-    def build_schema_input(optimization: OptimizationProcedureDict, qc_keywords: Dict[str, Any]) -> OptimizationInput:
-        """
-        Creates an input schema (QCSchema format) for an optimization calculation from an ORM
+    def validate_input(self, spec: OptimizationProcedureSpecification):
+        #####################################
+        # See base class for method docstring
+        #####################################
+        pass
 
-        Parameters
-        ----------
-        optimization
-            An ORM of the containing information to build the schema with
-        qc_keywords
-            A dictionary representing the keywords of the individual single calculations making up the optimization
+    def create_procedures(
+        self,
+        session: Session,
+        molecule_ids: Sequence[int],
+        spec: OptimizationProcedureSpecification,
+    ) -> Tuple[InsertMetadata, List[ObjectId]]:
+        #####################################
+        # See base class for method docstring
+        #####################################
 
-        Returns
-        -------
-        :
-            A self-contained OptimizaionInput (QCSchema) that can be used to run the calculation
-        """
+        # We should only have gotten here if procedure is 'optimization'
+        assert spec.procedure.lower() == "optimization"
 
-        # For the qcinput specification for the optimization (qcelemental QCInputSpecification)
-        qcinput_spec = {
-            "driver": optimization["qc_spec"]["driver"],
-            "model": {"method": optimization["qc_spec"]["method"]},
-        }
+        # Handle (optimization) keywords, which may be None
+        # TODO: These are not stored in the keywords table (yet)
+        opt_keywords = {} if spec.keywords is None else spec.keywords
 
-        if "basis" in optimization["qc_spec"]:
-            qcinput_spec["model"]["basis"] = optimization["qc_spec"]["basis"]
+        # Set the program used for gradient evaluations. This is stored in the input qcspec
+        # but the QCInputSpecification does not have a place for program. So instead
+        # we move it to the optimization keywords
+        opt_keywords["program"] = spec.qc_spec["program"]
 
+        # Pull out the QCSpecification from the input
+        qc_spec_dict = spec.qc_spec
+
+        # Handle qc specification keywords, which may be None
+        qc_keywords = qc_spec_dict.get("keywords", None)
         if qc_keywords is not None:
-            qcinput_spec["keywords"] = qc_keywords
-        else:
-            qcinput_spec["keywords"] = {}
+            # The keywords passed in may contain the entire KeywordSet.
+            # But the QCSpec will only hold the ID
+            meta, qc_keywords_ids = self._core_socket.keywords.add_mixed([qc_keywords], session=session)
 
-        return OptimizationInput(
-            id=optimization["id"],
-            initial_molecule=optimization["initial_molecule_obj"],
-            keywords=optimization["keywords"],
-            extras=optimization["extras"],
-            hash_index=optimization["hash_index"],
-            input_specification=qcinput_spec,
-            protocols=optimization["protocols"],
+            if meta.success is False or qc_keywords_ids[0] is None:
+                raise KeyError("Could not find requested KeywordsSet from id key.")
+
+            qc_spec_dict["keywords"] = qc_keywords_ids[0]
+
+        # Create the ORM for everything
+        all_opt_orms = []
+        for mol_id in molecule_ids:
+            opt_orm = OptimizationProcedureORM()
+            opt_orm.procedure = spec.procedure
+            opt_orm.version = 1
+            opt_orm.program = spec.program
+            opt_orm.qc_spec = qc_spec_dict
+            opt_orm.initial_molecule = mol_id
+            opt_orm.keywords = opt_keywords
+            opt_orm.status = RecordStatusEnum.incomplete
+            opt_orm.extras = dict()
+
+            # TODO - fix after defaults/nullable are fixed
+            if hasattr(spec, "protocols"):
+                opt_orm.protocols = spec.protocols.dict()
+            else:
+                opt_orm.protocols = {}
+
+            all_opt_orms.append(opt_orm)
+
+        # Add all optimizations to the database. Also flushes the session
+        return self.add_orm(all_opt_orms, session=session)
+
+    def create_tasks(
+        self,
+        session: Session,
+        optimizations: Sequence[OptimizationProcedureORM],
+        tag: Optional[str],
+        priority: PriorityEnum,
+    ) -> Tuple[InsertMetadata, List[ObjectId]]:
+        #####################################
+        # See base class for method docstring
+        #####################################
+
+        all_tasks = []
+        for optimization in optimizations:
+            # TODO - fix when tables are normalized
+            qc_keywords_id = optimization.qc_spec.get("keywords", None)
+
+            # TODO - Also fix if made not nullable
+            if qc_keywords_id is not None:
+                qc_keywords = self._core_socket.keywords.get([qc_keywords_id], session=session)[0]["values"]
+            else:
+                qc_keywords = {}
+
+            qcinput_spec = {
+                "driver": optimization.qc_spec["driver"],
+                "model": {"method": optimization.qc_spec["method"]},
+                "keywords": qc_keywords,
+            }
+
+            if "basis" in optimization.qc_spec:
+                qcinput_spec["model"]["basis"] = optimization.qc_spec["basis"]
+
+            qcschema_input = OptimizationInput(
+                id=optimization.id,
+                initial_molecule=optimization.initial_molecule_obj.dict(),
+                keywords=optimization.keywords,
+                extras=optimization.extras,
+                hash_index=optimization.hash_index,
+                input_specification=qcinput_spec,
+                protocols=optimization.protocols,
+            )
+            spec = {
+                "function": "qcengine.compute_procedure",
+                "args": [qcschema_input.dict(), optimization.program],
+                "kwargs": {},
+            }
+
+            # Build task object
+            task = TaskQueueORM()
+            task.spec = spec
+
+            # For now, we just add the programs as top-level keys. Eventually I would like to add
+            # version restrictions as well
+            task.required_programs = {optimization.qc_spec["program"]: None, optimization.program: None}
+
+            task.base_result_id = optimization.id
+            task.tag = tag
+            task.priority = priority
+
+            all_tasks.append(task)
+
+        # Add all tasks to the database. Also flushes the session
+        return self._core_socket.task_queue.add_orm(all_tasks, session=session)
+
+    def update_completed(
+        self,
+        session: Session,
+        task_orm: TaskQueueORM,
+        manager_name: str,
+        result: OptimizationResult,
+    ):
+        #####################################
+        # See base class for method docstring
+        #####################################
+
+        # This should be of type OptimizationProcedureORM
+        result_orm: OptimizationProcedureORM = task_orm.base_result_obj
+        assert isinstance(result_orm, OptimizationProcedureORM)
+
+        # Get the outputs
+        helpers.retrieve_outputs(self._core_socket, session, result, result_orm)
+
+        meta, mol_ids = self._core_socket.molecule.add(
+            [result.initial_molecule, result.final_molecule], session=session
         )
 
+        assert ObjectId(mol_ids[0]) == ObjectId(result_orm.initial_molecule)
+        assert result_orm.final_molecule is None
+
+        result_orm.initial_molecule = mol_ids[0]
+        result_orm.final_molecule = mol_ids[1]
+
+        # use the QCSpec stored in the db rather than figure it out from the qcelemental model
+        trajectory_orm = self.parse_trajectory(session, result.trajectory, result_orm.qc_spec, manager_name)
+        meta, trajectory_ids = self._core_socket.procedure.single.add_orm(trajectory_orm, session=session)
+
+        # Optimizations can have overlapping trajectories
+        # An unhandled case is where the gradient is actually a requested calculation elsewhere
+        # TODO - after allowing duplicates, this won't matter anymore
+        if meta.n_existing > 0:
+            existing_ids = [trajectory_ids[x] for x in meta.existing_idx]
+            self._logger.info(
+                f"Trajectory for {task_orm.base_result_id} overlaps on gradient calculations: {existing_ids}"
+            )
+
+        # Add as a list of Trajectory entries to the optimization orm
+        result_orm.trajectory_obj = []
+        for idx, tid in enumerate(trajectory_ids):
+            traj_assoc = Trajectory(opt_id=result_orm.id, result_id=tid, position=idx)  # type: ignore
+            result_orm.trajectory_obj.append(traj_assoc)
+
+        # Optimization-specific fields
+        result_orm.energies = result.energies
+
+        # More general info
+        result_orm.extras = result.extras
+        result_orm.provenance = result.provenance.dict()
+        result_orm.manager_name = manager_name
+        result_orm.status = RecordStatusEnum.complete
+        result_orm.modified_on = datetime.utcnow()
+
     def parse_trajectory(
-        self, session: Session, results: Sequence[AtomicResult], qc_spec: Dict[str, Any], manager_name: str
+        self,
+        session: Session,
+        results: Sequence[AtomicResult],
+        qc_spec: Dict[str, Any],
+        manager_name: str,
     ) -> List[ResultORM]:
         """Parses the output of single results that form the trajectory of an optimization
 
@@ -136,6 +285,8 @@ class OptimizationHandler(BaseProcedureHandler):
 
         Parameters
         ----------
+        session
+            An existing SQLAlchemy session to use.
         results
             A list or other sequence of AtomicResult that represent the trajectory
         qc_spec
@@ -143,8 +294,6 @@ class OptimizationHandler(BaseProcedureHandler):
             assigned to each result of the trajectory
         manager_name
             The name of the manager that completed the calculation
-        session
-            An existing SQLAlchemy session to use.
 
         Returns
         -------
@@ -189,224 +338,8 @@ class OptimizationHandler(BaseProcedureHandler):
             r.created_on = r.modified_on = datetime.utcnow()
             ret.append(r)
 
-        return ret
-
-    def verify_input(self, data):
-        pass
-
-    def create(
-        self, session: Session, molecule_ids: Sequence[int], opt_spec: OptimizationProcedureSpecification
-    ) -> Tuple[InsertMetadata, List[ObjectId]]:
-        """Create optimization procedure objects and tasks for an optimizaion computation
-
-        This will create the optimization procedure objects in the database (if they do not exist), and also create the corresponding
-        tasks.
-
-        The returned list of ids (the first element of the tuple) will be in the same order as the input molecules
-
-        Parameters
-        ----------
-        session
-            An existing SQLAlchemy session to use
-        molecule_ids
-            List or other sequence of molecule IDs to create results for
-        opt_spec
-            Specification of the optimization
-
-        Returns
-        -------
-        :
-            A tuple containing information about which optimizaions were inserted, and a list of IDs corresponding
-            to all the results in the database (new or existing). This will be in the same order as the input
-            molecules.
-        """
-
-        # We should only have gotten here if procedure is 'optimization'
-        assert opt_spec.procedure.lower() == "optimization"
-
-        # Handle (optimization) keywords, which may be None
-        # TODO: These are not stored in the keywords table (yet)
-        opt_keywords = {} if opt_spec.keywords is None else opt_spec.keywords
-
-        # Set the program used for gradient evaluations. This is stored in the input qcspec
-        # but the QCInputSpecification does not have a place for program. So instead
-        # we move it to the optimization keywords
-        opt_keywords["program"] = opt_spec.qc_spec["program"]
-
-        # Pull out the QCSpecification from the input
-        qc_spec_dict = opt_spec.qc_spec
-
-        # Handle qc specification keywords, which may be None
-        qc_keywords = qc_spec_dict.get("keywords", None)
-        if qc_keywords is not None:
-            # The keywords passed in may contain the entire KeywordSet.
-            # But the QCSpec will only hold the ID
-            meta, qc_keywords_ids = self._core_socket.keywords.add_mixed([qc_keywords])
-
-            if meta.success is False or qc_keywords_ids[0] is None:
-                raise KeyError("Could not find requested KeywordsSet from id key.")
-
-            qc_spec_dict["keywords"] = qc_keywords_ids[0]
-
-        # Create the ORM for everything
-        all_opt_orms = []
-        for mol_id in molecule_ids:
-            opt_orm = OptimizationProcedureORM()
-            opt_orm.procedure = opt_spec.procedure
-            opt_orm.version = 1
-            opt_orm.program = opt_spec.program
-            opt_orm.qc_spec = qc_spec_dict
-            opt_orm.initial_molecule = mol_id
-            opt_orm.keywords = opt_keywords
-            opt_orm.status = RecordStatusEnum.incomplete
-            opt_orm.extras = dict()
-
-            # TODO - fix after defaults/nullable are fixed
-            if hasattr(opt_spec, "protocols"):
-                opt_orm.protocols = opt_spec.protocols.dict()
-            else:
-                opt_orm.protocols = {}
-
-            all_opt_orms.append(opt_orm)
-
-        insert_meta, opt_ids = self.add_orm(all_opt_orms, session=session)
-
-        # Now generate all the tasks in the task queue
-        # But only for newly-created optimizations
-        new_opt_ids = [opt_ids[x] for x in insert_meta.inserted_idx]
-        self.create_tasks(session, new_opt_ids, opt_spec.tag, opt_spec.priority)
-
-        return insert_meta, opt_ids
-
-    def create_tasks(
-        self,
-        session: Session,
-        id: Sequence[ObjectId],
-        tag: Optional[str] = None,
-        priority: Optional[PriorityEnum] = None,
-    ) -> Tuple[InsertMetadata, List[ObjectId]]:
-        """
-        Create entries in the task table for a given list of optimization ids
-
-        For all the optimization ids, create the corresponding task if it does not exist.
-
-        Parameters
-        ----------
-        session
-            An existing SQLAlchemy session to use
-        id
-            List or other sequence of result IDs to create tasks for
-        tag
-            Tag to use for newly-created tasks
-        priority
-            Priority to use for newly-created tasks
-
-        Returns
-        -------
-        :
-            Metadata about which tasks were created or existing, and a list of Task IDs (new or existing)
-        """
-
-        # Load the data for all the optimization, including the initial molecule
-        opt_data = self.get(id, include=["*", "initial_molecule_obj"], session=session)
-
-        # Create QCSchema inputs and tasks for everything, too
-        new_tasks = []
-        for opt in opt_data:
-            # TODO - fix when tables are normalized
-            qc_keywords_id = opt["qc_spec"].get("keywords", None)
-
-            if qc_keywords_id is not None:
-                qc_keywords = self._core_socket.keywords.get([qc_keywords_id])[0]["values"]
-            else:
-                qc_keywords = None
-
-            qcschema_inp = self.build_schema_input(opt, qc_keywords)
-            spec = {
-                "function": "qcengine.compute_procedure",
-                "args": [qcschema_inp.dict(), opt["program"]],
-                "kwargs": {},
-            }
-
-            # Build task object
-            task = TaskQueueORM()
-            task.spec = spec
-
-            # For now, we just add the programs as top-level keys. Eventually I would like to add
-            # version restrictions as well
-            task.required_programs = {opt["qc_spec"]["program"]: None, opt["program"]: None}
-
-            task.tag = tag
-            task.priority = priority
-            task.base_result_id = int(opt["id"])  # TODO - INT ID
-
-            new_tasks.append(task)
-
-        return self._core_socket.task_queue.add_orm(new_tasks, session=session)
-
-    def update_completed(self, session: Session, task_orm: TaskQueueORM, manager_name: str, result: OptimizationResult):
-        """
-        Update the database with information from a completed optimization task
-
-        The session is flushed at the end of this function
-
-        Parameters
-        ----------
-        session
-            An existing SQLAlchemy session to use
-        task_orm
-            A TaskORM object to fill out with the completed data
-        manager_name
-            Name of the manager that completed this task
-        result
-            The result of the computation to add to the database
-        """
-
-        # This should be of type OptimizationProcedureORM
-        result_orm: OptimizationProcedureORM = task_orm.base_result_obj
-        assert isinstance(result_orm, OptimizationProcedureORM)
-
-        # Get the outputs
-        helpers.retrieve_outputs(self._core_socket, session, result, result_orm)
-
-        meta, mol_ids = self._core_socket.molecule.add([result.initial_molecule, result.final_molecule])
-
-        assert ObjectId(mol_ids[0]) == ObjectId(result_orm.initial_molecule)
-        assert result_orm.final_molecule is None
-
-        result_orm.initial_molecule = mol_ids[0]
-        result_orm.final_molecule = mol_ids[1]
-
-        # use the QCSpec stored in the db rather than figure it out from the qcelemental model
-        trajectory_orm = self.parse_trajectory(session, result.trajectory, result_orm.qc_spec, manager_name)
-        meta, trajectory_ids = self._core_socket.procedure.single.add_orm(trajectory_orm, session=session)
-
-        # Optimizations can have overlapping trajectories
-        # An unhandled case is where the gradient is actually a requested calculation elsewhere
-        # TODO - after allowing duplicates, this won't matter anymore
-        if meta.n_existing > 0:
-            existing_ids = [trajectory_ids[x] for x in meta.existing_idx]
-            self._logger.info(
-                f"Trajectory for {task_orm.base_result_id} overlaps on gradient calculations: {existing_ids}"
-            )
-
-        # Add as a list of Trajectory entries to the optimization orm
-        result_orm.trajectory_obj = []
-        for idx, tid in enumerate(trajectory_ids):
-            traj_assoc = Trajectory(opt_id=result_orm.id, result_id=tid, position=idx)  # type: ignore
-            result_orm.trajectory_obj.append(traj_assoc)
-
-        # Optimization-specific fields
-        result_orm.energies = result.energies
-
-        # More general info
-        result_orm.extras = result.extras
-        result_orm.provenance = result.provenance.dict()
-        result_orm.manager_name = manager_name
-        result_orm.status = RecordStatusEnum.complete
-        result_orm.modified_on = datetime.utcnow()
-
         session.flush()
+        return ret
 
     def get(
         self,

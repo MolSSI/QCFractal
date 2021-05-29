@@ -132,7 +132,7 @@ class ProcedureSocket:
 
             result_dicts = [x.dict() for x in results]
 
-        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))
+        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
         return meta, result_dicts
 
     def get(
@@ -204,13 +204,24 @@ class ProcedureSocket:
     def create(
         self, molecules: List[Molecule], specification: AllProcedureSpecifications
     ) -> Tuple[InsertMetadata, List[Optional[ObjectId]]]:
+        """
+        Create procedures as well as tasks
+
+        Parameters
+        ----------
+        molecules
+        specification
+
+        Returns
+        -------
+
+        """
 
         # The procedure should have been checked by the pydantic model
         procedure_handler = self.handler_map[specification.procedure]
 
         # Verify the procedure
-        # TODO - error handling
-        procedure_handler.verify_input(specification)
+        procedure_handler.validate_input(specification)
 
         # Add all the molecules stored in the 'data' member
         # This should apply to all procedures
@@ -218,18 +229,46 @@ class ProcedureSocket:
 
         # Only do valid molecule ids (ie, not None in the returned list)
         # These would correspond to errors
-
         # TODO - INT ID
         valid_molecule_ids = [int(x) for x in molecule_ids if x is not None]
         valid_molecule_idx = [idx for idx, x in enumerate(molecule_ids) if x is not None]
+        invalid_molecule_idx = [idx for idx, x in enumerate(molecule_ids) if x is None]
 
+        # Create procedures and tasks in the same session
+        # This will be committed only at the end
         with self._core_socket.session_scope() as session:
-            meta, ids = procedure_handler.create(session, valid_molecule_ids, specification)
+            meta, ids = procedure_handler.create_procedures(session, valid_molecule_ids, specification)
+
+            if not meta.success:
+                # The above should always succeed if the model was validated. If not, that is
+                # an internal error
+                # This will rollback the session
+                raise RuntimeError(f"Error adding procedures: {meta.error_string}")
+
+            # only create tasks for new procedures
+            new_ids = [ids[i] for i in meta.inserted_idx]
+
+            new_orm = (
+                session.query(BaseResultORM).filter(BaseResultORM.id.in_(new_ids)).options(selectinload("*")).all()
+            )
+
+            # These should only correspond to the same procedure we added
+            assert all(x.procedure == specification.procedure for x in new_orm)
+
+            # Create tasks for everything
+            task_meta, _ = procedure_handler.create_tasks(session, new_orm, specification.tag, specification.priority)
+
+            if not task_meta.success:
+                # In general, create_tasks should always succeed
+                # If not, that is usually a programmer error
+                # This will rollback the session
+                raise RuntimeError(f"Error adding tasks: {task_meta.error_string}")
+
+            # session will commit when closed at the end of this 'with' block
 
         # Place None in the ids list where molecules were None
-        for idx, x in enumerate(molecule_ids):
-            if x is None:
-                ids.insert(idx, None)
+        for idx in invalid_molecule_idx:
+            ids.insert(idx, None)
 
         # Now adjust the index lists in the metadata to correspond to the original molecule order
         inserted_idx = [valid_molecule_idx[x] for x in meta.inserted_idx]
@@ -263,9 +302,9 @@ class ProcedureSocket:
             task_totals = len(results.items())
 
             for task_id, result in results.items():
+
                 # We load one at a time. This works well with 'with_for_update'
                 # which will do row locking. This lock is released on commit or rollback
-
                 task_orm: Optional[TaskQueueORM] = (
                     session.query(TaskQueueORM)
                     .filter(TaskQueueORM.id == task_id)

@@ -74,77 +74,29 @@ class SingleResultHandler(BaseProcedureHandler):
             meta, orm = insert_general(session, results, dedup_cols, (ResultORM.id,))
             return meta, [x[0] for x in orm]
 
-    @staticmethod
-    def build_schema_input(result: SingleProcedureDict) -> AtomicInput:
-        """
-        Creates an input schema (QCSchema format) for a single calculation from an ORM
-
-        Parameters
-        ----------
-        result
-            An ORM of the containing information to build the schema with
-
-        Returns
-        -------
-        :
-            A self-contained AtomicInput (QCSchema) that can be used to run the calculation
-        """
-
-        # Now start creating the "model" parameter for ResultInput
-        model = {"method": result["method"]}
-
-        if result["basis"]:
-            model["basis"] = result["basis"]
-
-        # TODO - fix after keywords not nullable
-        keywords = result["keywords_obj"]["values"] if result["keywords_obj"] else {}
-
-        return AtomicInput(
-            id=result["id"],
-            driver=result["driver"],
-            model=model,
-            molecule=result["molecule_obj"],
-            keywords=keywords,
-            protocols=result["protocols"],
-        )
-
-    def verify_input(self, data):
+    def validate_input(self, spec: SingleProcedureSpecification):
+        #####################################
+        # See base class for method docstring
+        #####################################
         pass
 
-    def create(
-        self, session: Session, molecule_ids: Sequence[int], qc_spec: SingleProcedureSpecification
+    def create_procedures(
+        self,
+        session: Session,
+        molecule_ids: Sequence[int],
+        spec: SingleProcedureSpecification,
     ) -> Tuple[InsertMetadata, List[ObjectId]]:
-        """Create result objects and tasks for a single computation
-
-        This will create the result objects in the database (if they do not exist), and also create the corresponding
-        tasks.
-
-        The returned list of ids (the first element of the tuple) will be in the same order as the input molecules
-
-        Parameters
-        ----------
-        session
-            An existing SQLAlchemy session to use
-        molecule_ids
-            List or other sequence of molecule IDs to create results for
-        qc_spec
-            Specification of the single computation
-
-        Returns
-        -------
-        :
-            A tuple containing information about which results were inserted, and a list of IDs corresponding
-            to all the results in the database (new or existing). This will be in the same order as the input
-            molecules.
-        """
+        #####################################
+        # See base class for method docstring
+        #####################################
 
         # We should only have gotten here if procedure is 'single'
-        assert qc_spec.procedure == "single"
+        assert spec.procedure == "single"
 
         # Handle keywords, which may be None
-        if qc_spec.keywords is not None:
+        if spec.keywords is not None:
             # QCSpec will only hold the ID
-            meta, qc_keywords_ids = self._core_socket.keywords.add_mixed([qc_spec.keywords])
+            meta, qc_keywords_ids = self._core_socket.keywords.add_mixed([spec.keywords], session=session)
 
             if meta.success is False or qc_keywords_ids[0] is None:
                 raise KeyError("Could not find requested KeywordsSet from id key.")
@@ -157,67 +109,56 @@ class SingleResultHandler(BaseProcedureHandler):
         all_result_orms = []
         for mol_id in molecule_ids:
             result_orm = ResultORM()
-            result_orm.procedure = qc_spec.procedure
+            result_orm.procedure = spec.procedure
             result_orm.version = 1
-            result_orm.program = qc_spec.program.lower()
-            result_orm.driver = qc_spec.driver.lower()
-            result_orm.method = qc_spec.method.lower()
-            result_orm.basis = qc_spec.basis.lower() if qc_spec.basis else None  # Will make "" -> None
+            result_orm.program = spec.program.lower()
+            result_orm.driver = spec.driver.lower()
+            result_orm.method = spec.method.lower()
+            result_orm.basis = spec.basis.lower() if spec.basis else None  # Will make "" -> None
             result_orm.keywords = int(keywords_id) if keywords_id is not None else None  # TODO - INT ID
             result_orm.molecule = mol_id
-            result_orm.protocols = qc_spec.protocols.dict()
+            result_orm.protocols = spec.protocols.dict()
             result_orm.extras = dict()
             all_result_orms.append(result_orm)
 
-        # Add all results to the database
-        insert_meta, result_ids = self.add_orm(all_result_orms, session=session)
-
-        # Now generate all the tasks in the task queue
-        # But only for newly-created optimizations
-        new_result_ids = [result_ids[x] for x in insert_meta.inserted_idx]
-        self.create_tasks(session, new_result_ids, qc_spec.tag, qc_spec.priority)
-
-        return insert_meta, result_ids
+        # Add all results to the database. Also flushes the session
+        return self.add_orm(all_result_orms, session=session)
 
     def create_tasks(
         self,
         session: Session,
-        id: Sequence[ObjectId],
-        tag: Optional[str] = None,
-        priority: Optional[PriorityEnum] = None,
+        results: Sequence[ResultORM],
+        tag: Optional[str],
+        priority: PriorityEnum,
     ) -> Tuple[InsertMetadata, List[ObjectId]]:
-        """
-        Create entries in the task table for a given list of result ids
+        #####################################
+        # See base class for method docstring
+        #####################################
 
-        For all the result ids, create the corresponding task if it does not exist.
+        all_tasks = []
+        for result in results:
+            # The "model" parameter for ResultInput is a few of our top-level fields
+            model = {"method": result.method}
 
-        Parameters
-        ----------
-        session
-            An existing SQLAlchemy session to use
-        id
-            List or other sequence of result IDs to create tasks for
-        tag
-            Tag to use for newly-created tasks
-        priority
-            Priority to use for newly-created tasks
+            if result.basis:
+                model["basis"] = result.basis
 
-        Returns
-        -------
-        :
-            Metadata about which tasks were created or existing, and a list of Task IDs (new or existing)
-        """
+            # TODO - fix after keywords not nullable
+            keywords = result.keywords_obj.values if result.keywords_obj else {}
 
-        result_data = self.get(id, include=["*", "keywords_obj", "molecule_obj"], session=session)
+            qcschema_input = AtomicInput(
+                id=result.id,
+                driver=result.driver,
+                model=model,
+                molecule=result.molecule_obj.dict(),
+                keywords=keywords,
+                protocols=result.protocols,
+            )
 
-        # Create QCSchema inputs and tasks for everything, too
-        new_tasks = []
-        for res in result_data:
-            qcschema_inp = self.build_schema_input(res)
             spec = {
-                "function": "qcengine.compute",  # todo: add defaults in models
-                "args": [qcschema_inp.dict(), res["program"]],
-                "kwargs": {},  # todo: add defaults in models
+                "function": "qcengine.compute",
+                "args": [qcschema_input.dict(), result.program],
+                "kwargs": {},
             }
 
             # Build task object
@@ -226,33 +167,21 @@ class SingleResultHandler(BaseProcedureHandler):
 
             # For now, we just add the programs as top-level keys. Eventually I would like to add
             # version restrictions as well
-            task.required_programs = {res["program"]: None}
+            task.required_programs = {result.program: None}
 
-            task.base_result_id = int(res["id"])  # TODO - INT ID
+            task.base_result_id = int(result.id)  # TODO - INT ID
             task.tag = tag
             task.priority = priority
 
-            new_tasks.append(task)
+            all_tasks.append(task)
 
-        return self._core_socket.task_queue.add_orm(new_tasks, session=session)
+        # Add all tasks to the database. Also flushes the session
+        return self._core_socket.task_queue.add_orm(all_tasks, session=session)
 
     def update_completed(self, session: Session, task_orm: TaskQueueORM, manager_name: str, result: AtomicResult):
-        """
-        Update the database with information from a completed single result task
-
-        The session is flushed at the end of this function
-
-        Parameters
-        ----------
-        session
-            An existing SQLAlchemy session to use
-        task_orm
-            A TaskORM object to fill out with the completed data
-        manager_name
-            Name of the manager that completed this task
-        result
-            The result of the computation to add to the database
-        """
+        #####################################
+        # See base class for method docstring
+        #####################################
 
         # This should be of type ResultORM
         result_orm: ResultORM = task_orm.base_result_obj
@@ -278,8 +207,6 @@ class SingleResultHandler(BaseProcedureHandler):
         assert result_orm.basis == result.model.basis
         assert result_orm.driver == result.driver
 
-        # TODO - can we have managers return int here? molecule.id is Any
-
         # Single-result specific fields
         result_orm.return_result = result.return_result
         result_orm.properties = result.properties.dict()
@@ -290,8 +217,6 @@ class SingleResultHandler(BaseProcedureHandler):
         result_orm.manager_name = manager_name
         result_orm.status = RecordStatusEnum.complete
         result_orm.modified_on = datetime.utcnow()
-
-        session.flush()
 
     def get(
         self,

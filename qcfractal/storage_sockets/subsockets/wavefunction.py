@@ -149,3 +149,44 @@ class WavefunctionSocket:
 
         with self._core_socket.optional_session(session) as session:
             return session.query(WavefunctionStoreORM).filter(WavefunctionStoreORM.id.in_(id)).delete()
+
+    def replace(
+        self,
+        id: Optional[ObjectId],
+        wavefunction: Optional[WavefunctionProperties],
+        *,
+        session: Optional[Session] = None,
+    ) -> Optional[ObjectId]:
+        """
+        Adds a wavefunction to the database, and deletes the old record
+
+        If a session is provided, this will only flush and not commit.
+
+        If the given wavefunction is None, then the old record is deleted and None is returned
+
+        Parameters
+        ----------
+        id
+            An ID of an wavefunction entry to replace
+        wavefunction
+            Wavefunction data to store into the database
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
+
+        Returns
+        -------
+        :
+            The ID of the new object
+
+        """
+
+        if wavefunction is not None:
+            new_id = self.add([wavefunction], session=session)[0]
+        else:
+            new_id = None
+
+        if id is not None:
+            self.delete([id])
+
+        return new_id
