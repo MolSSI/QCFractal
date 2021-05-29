@@ -70,7 +70,6 @@ class TaskQueueSocket:
 
         with self._core_socket.optional_session(session) as session:
             meta, ids = insert_general(session, tasks, (TaskQueueORM.base_result_id,), (TaskQueueORM.id,))
-
             return meta, [x[0] for x in ids]
 
     def get(

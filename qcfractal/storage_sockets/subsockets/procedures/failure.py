@@ -10,17 +10,16 @@ from datetime import datetime as dt
 from .base import BaseProcedureHandler
 from ....interface.models import (
     RecordStatusEnum,
-    TaskStatusEnum,
     FailedOperation,
 )
 from ...models import TaskQueueORM
-from . import helpers
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from ...sqlalchemy_socket import SQLAlchemySocket
+    from typing import Optional
 
 
 # A generic error message if the FailedOperation doesn't contain one
@@ -39,11 +38,14 @@ class FailedOperationHandler(BaseProcedureHandler):
 
         BaseProcedureHandler.__init__(self)
 
-    def verify_input(self, data):
-        raise RuntimeError("verify_input is not available for FailedOperationHandler")
+    def validate_input(self, spec):
+        raise RuntimeError("validate_input is not available for FailedOperationHandler")
 
-    def create(self, session, molecule_ids, data):
+    def create_procedures(self, session, molecule_ids, spec):
         raise RuntimeError("parse_input is not available for FailedOperationHandler")
+
+    def create_tasks(self, session, proc_orm, tag, priority):
+        raise RuntimeError("create_tasks is not available for FailedOperationHandler")
 
     def update_completed(self, session: Session, task_orm: TaskQueueORM, manager_name: str, result: FailedOperation):
         """

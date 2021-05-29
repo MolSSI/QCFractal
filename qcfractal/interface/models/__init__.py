@@ -25,6 +25,7 @@ from .common_models import (
     AtomicResult,
     AtomicResultProtocols,
     WavefunctionProperties,
+    AllInputTypes,
     AllResultTypes,
     UserInfo,
     RoleInfo,

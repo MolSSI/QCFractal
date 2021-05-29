@@ -35,6 +35,7 @@ from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 from typing import Any, Dict, Optional, Union, List
 
 AllResultTypes = Union[FailedOperation, AtomicResult, OptimizationResult]
+AllInputTypes = Union[AtomicInput, OptimizationInput]
 
 
 class ObjectId(str):
