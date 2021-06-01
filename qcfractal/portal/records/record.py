@@ -1,16 +1,89 @@
 import abc
 import copy
 import json
+import datetime
+from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
-from ...interface.models import ProtoModel
+from pydantic import Field, constr, validator
+import qcelemental as qcel
+
+from ...interface.models import ObjectId, ProtoModel
+
+
+class RecordStatusEnum(str, Enum):
+    """
+    The state of a record object.
+    The states which are available are a finite set.
+    """
+
+    complete = "COMPLETE"
+    incomplete = "INCOMPLETE"
+    running = "RUNNING"
+    error = "ERROR"
 
 
 class Record(abc.ABC):
+    _type = None
+    _SpecModel = None
 
     class _DataModel(ProtoModel):
-        # TODO: populate me with structural fields of a basic record
-        pass
+
+        # Classdata
+        # NOTE: do we want to change how these work?
+        _hash_indices: Set[str]
+
+        # Helper data
+        client: Any = Field(None, description="The client object which the records are fetched from.")
+
+        # Base identification
+        id: ObjectId = Field(
+            None, description="Id of the object on the database. This is assigned automatically by the database."
+        )
+        hash_index: Optional[str] = Field(
+            None, description="Hash of this object used to detect duplication and collisions in the database."
+        )
+        procedure: str = Field(..., description="Name of the procedure which this Record targets.")
+        program: str = Field(
+            ...,
+            description="The quantum chemistry program used for individual quantum chemistry calculations.",
+        )
+        version: int = Field(..., description="The version of this record object.")
+        protocols: Optional[Dict[str, Any]] = Field(
+            None, description="Protocols that change the data stored in top level fields."
+        )
+
+        # Extra fields
+        extras: Dict[str, Any] = Field({}, description="Extra information to associate with this record.")
+        stdout: Optional[ObjectId] = Field(
+            None,
+            description="The Id of the stdout data stored in the database which was used to generate this record from the "
+            "various programs which were called in the process.",
+        )
+        stderr: Optional[ObjectId] = Field(
+            None,
+            description="The Id of the stderr data stored in the database which was used to generate this record from the "
+            "various programs which were called in the process.",
+        )
+        error: Optional[ObjectId] = Field(
+            None,
+            description="The Id of the error data stored in the database in the event that an error was generated in the "
+            "process of carrying out the process this record targets. If no errors were raised, this field "
+            "will be empty.",
+        )
+
+        # Compute status
+        manager_name: Optional[str] = Field(None, description="Name of the Queue Manager which generated this record.")
+        status: RecordStatusEnum = Field(RecordStatusEnum.incomplete, description=str(RecordStatusEnum.__doc__))
+        modified_on: datetime.datetime = Field(None, description="Last time the data this record points to was modified.")
+        created_on: datetime.datetime = Field(None, description="Time the data this record points to was first created.")
+
+        # Carry-ons
+        provenance: Optional[qcel.models.Provenance] = Field(
+            None,
+            description="Provenance information tied to the creation of this record. This includes things such as every "
+            "program which was involved in generating the data for this record.",
+        )
 
     def __init__(self, **kwargs: Any):
         """
@@ -142,3 +215,64 @@ class Record(abc.ABC):
     @property
     def id(self):
         return self._data.id
+
+    @property
+    def spec(self):
+        """Includes keywords.
+
+        """
+        # example
+        self._SpecModel(**self._data['spec'])
+
+    @property
+    def task(self):
+        # will need to handle case of task key being present or not
+        pass
+
+    @property
+    def stdout(self):
+        pass
+
+    @property
+    def stderr(self):
+        pass
+
+    @property
+    def error(self):
+        pass
+
+    @property
+    def procedure(self):
+        """Everything should be a procedure.
+
+        """
+        pass
+
+    @property
+    def created_on(self):
+        # this is a datatime
+        pass
+
+    @property
+    def modified_on(self):
+        # this is a datatime
+        pass
+
+    def provenance(self):
+        pass
+
+    def manager(self):
+        # the manager the result is currently being executed on, if currently running
+        pass
+
+    def extras(self):
+        # dictionary
+        pass
+
+    @abc.abstractproperty
+    def protocols(self):
+        # optional configuration items for e.g. storing wavefunction of point calculation
+        # not so much how to run calculation, but what to return
+
+        # this will be specific to each procedure type
+        pass
