@@ -1,6 +1,7 @@
 from collections import defaultdict
 import re
 import os
+import copy
 
 import requests
 
@@ -42,6 +43,7 @@ class PortalClient:
         password: Optional[str] = None,
         verify: bool = True,
         cache: Optional[Union[str, Path]] = None,
+        max_memcache_size: Optional[int] = 1000000,
     ) -> None:
         """Initializes a PortalClient instance from an address and verification information.
 
@@ -61,6 +63,10 @@ class PortalClient:
         cache : str, optional
             Path to directory to use for cache.
             If None, only in-memory caching used.
+        max_memcache_size : int
+            Number of items to hold in client's memory cache.
+            Increase this value to improve performance for repeated calls,
+            at the cost of higher memory usage.
 
         """
 
@@ -143,7 +149,7 @@ class PortalClient:
                     f"\n(Only MAJOR.MINOR versions are checked and shown)"
                 )
 
-        self._cache = PortalCache(self, cachedir=cache)
+        self._cache = PortalCache(self, cachedir=cache, max_memcache_size=max_memcache_size)
 
     def __repr__(self) -> str:
         """A short representation of the current PortalClient.
@@ -255,7 +261,10 @@ class PortalClient:
 
     @property
     def cache(self):
-        return os.path.relpath(self._cache.cachedir)
+        if self._cache.cachedir is not None:
+            return os.path.relpath(self._cache.cachedir)
+        else:
+            return None
 
     def get_collection(
         self,
@@ -362,6 +371,8 @@ class PortalClient:
             If `id` is a single id, then only that record will be returned.
 
         """
+        original_id = copy.deepcopy(id)
+
         # passthrough the cache first
         # if id is specified
         cached_records = self._cache.get(id)
@@ -373,7 +384,7 @@ class PortalClient:
 
             # if all ids found in cache, no need to go further
             if len(id) == 0:
-                return cached_records
+                return [cached_records[i] for i in original_id]
 
         elif len(cached_records) == 1:
             # no need to query at all if only one id asked for, and was found in cache
@@ -396,10 +407,10 @@ class PortalClient:
         results.update(cached_records)
 
         # order the results by input id list
-        if isinstance(id, list):
-            ordered = [results[i] for i in id]
+        if isinstance(original_id, list):
+            ordered = [results[i] for i in original_id]
         else:
-            ordered = results[id]
+            ordered = results[original_id]
 
         return ordered
 
