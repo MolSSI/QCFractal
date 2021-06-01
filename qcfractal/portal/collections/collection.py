@@ -12,7 +12,7 @@ from tqdm import tqdm
 import pprint
 
 from ...interface.models import ProtoModel, QCSpecification
-from ...interface.models.records import RecordBase
+from ..records import Record
 
 if TYPE_CHECKING:  # pragma: no cover
     from .. import PortalClient
@@ -43,6 +43,9 @@ class Collection(abc.ABC):
             kwargs["collection"] = self.__class__.__name__.lower()
 
         kwargs["name"] = name
+
+        # apply remappings from stored DB data if defined
+        kwargs = self._apply_remappings(kwargs)
 
         # Create the data model
         self._data = self._DataModel(**kwargs)
@@ -163,6 +166,9 @@ class Collection(abc.ABC):
     def _check_client(self):
         if self._client is None:
             raise AttributeError("This method requires a PortalClient and no client was set")
+
+    def _apply_remappings(self, datadict):
+        return datadict
 
     @property
     def name(self) -> str:
@@ -547,7 +553,7 @@ class Collection(abc.ABC):
 
         # preprocess inputs
         if spec_names is None:
-            spec_names = self.list_specifications(description=False)
+            spec_names = self.spec_names
         elif isinstance(spec_names, str):
             spec_names = [spec_names]
 
@@ -558,7 +564,7 @@ class Collection(abc.ABC):
 
         records = self[spec_names]
 
-        status_data = pd.DataFrame(records).applymap(lambda x: x.status.value if isinstance(x, RecordBase) else None)
+        status_data = pd.DataFrame(records).applymap(lambda x: x.status.value if isinstance(x, Record) else None)
 
         # apply filters
         if status is not None:
@@ -645,7 +651,7 @@ class BaseProcedureDataset(Collection):
 
         """
 
-        spec = self.get_specification(spec)
+        spec = self.get_spec(spec)
 
         mapper = {}
         for rec in self._data.records.values():
@@ -659,44 +665,6 @@ class BaseProcedureDataset(Collection):
                 pass
 
         return mapper
-
-    def get_specification(self, name: str) -> Any:
-        """Get full parameters for the given named specification.
-
-        Parameters
-        ----------
-        name : str
-            The name of the specification.
-
-        Returns
-        -------
-        Specification
-            The requested specification.
-
-        """
-        try:
-            return self._data.specs[name.lower()].copy()
-        except KeyError:
-            raise KeyError(f"Specification '{name}' not found.")
-
-    def list_specifications(self, description=False) -> Union[List[str], Dict[str, str]]:
-        """Gives all available specifications.
-
-        Parameters
-        ----------
-        description : bool, optional
-            If True, returns a dictionary with spec names as keys, descriptions as values.
-
-        Returns
-        -------
-        Union[List[str], Dict[str, str]]
-            Known specification names.
-
-        """
-        if description:
-            return {x.name: x.description for x in self._data.specs.values()}
-        else:
-            return [x.name for x in self._data.specs.values()]
 
     def _check_entry_exists(self, name):
         """
@@ -748,7 +716,7 @@ class BaseProcedureDataset(Collection):
             The requested Record
 
         """
-        spec = self.get_specification(specification)
+        spec = self.get_spec(specification)
         rec_id = self.get_entry(name).object_map.get(spec.name, None)
 
         if rec_id is None:
@@ -782,7 +750,7 @@ class BaseProcedureDataset(Collection):
         # try to migrate to `Collection` for full consistency
 
         specification = specification.lower()
-        spec = self.get_specification(specification)
+        spec = self.get_spec(specification)
         if subset:
             subset = set(subset)
 
@@ -823,7 +791,7 @@ class BaseProcedureDataset(Collection):
             Records collected from the server.
         """
         # Try to get the specification, will exception if not found.
-        spec = self.get_specification(specification)
+        spec = self.get_spec(specification)
 
         mapper = self._get_procedure_ids(spec.name)
         query_ids = list(mapper.values())
@@ -835,7 +803,7 @@ class BaseProcedureDataset(Collection):
             desc="{} || {} ".format(specification.rjust(pad), self._client.address),
         ):
             chunk_ids = query_ids[i : i + self._client.query_limit]
-            procedures.extend(self._client._query_procedures(id=chunk_ids))
+            procedures.extend(self._client.get_record(id=chunk_ids))
 
         proc_lookup = {x.id: x for x in procedures}
 

@@ -287,12 +287,15 @@ class PortalClient:
         """
 
         payload = {"meta": {}, "data": {"collection": collection_type, "name": name}}
-        if include is None and exclude is None:
-            if collection_type.lower() in ["dataset", "reactiondataset"]:  # XXX
-                payload["meta"]["exclude"] = ["contributed_values", "records"]
-        else:
-            payload["meta"]["include"] = include
-            payload["meta"]["exclude"] = exclude
+        # if include is None and exclude is None:
+        #    if collection_type.lower() in ["dataset", "reactiondataset"]:  # XXX
+        #        payload["meta"]["exclude"] = ["contributed_values", "records"]
+        # else:
+        #    payload["meta"]["include"] = include
+        #    payload["meta"]["exclude"] = exclude
+
+        payload["meta"]["include"] = include
+        payload["meta"]["exclude"] = exclude
 
         print("{} : '{}' || {}".format(collection_type, name, self.address))
         response = self._automodel_request("collection", "get", payload, full_return=True)
@@ -340,7 +343,7 @@ class PortalClient:
     #        chunk_ids = query_ids[i : i + self.client.query_limit]
     #        procedures.extend(self.client._query_procedures(id=chunk_ids))
 
-    def _get_record_by_id(self, id: "QueryObjectId", record_type: str) -> List[Dict[str, Any]]:
+    def get_record(self, id: "QueryObjectId") -> Union[List[Dict[str, Any]], Dict[str, Any]]:
         """Get result records by id.
 
         This is used by collections to retrieve their results when demanded.
@@ -348,11 +351,15 @@ class PortalClient:
 
         Parameters
         ----------
-        id : Qu
+        id : QueryObjectId
             Queries the record ``id`` field.
-            Multiple ids can be included in a list.
-        record_type
-            One of 'result', 'procedure', 'service'.
+            Multiple ids can be included in a list; result records will be returned in the same order.
+
+        Returns
+        -------
+        records : Union[List[Dict[str, Any]], Dict[str, Any]]
+            If `id` is a list of ids, then a list of records will be returned in the same order.
+            If `id` is a single id, then only that record will be returned.
 
         """
         # passthrough the cache first
@@ -360,10 +367,17 @@ class PortalClient:
         cached_records = self._cache.get(id)
 
         if isinstance(id, list):
+            # if we were given a list of ids, remove any that were found in cache
             for i in cached_records:
                 id.remove(i)
-        else:
-            id = None
+
+            # if all ids found in cache, no need to go further
+            if len(id) == 0:
+                return cached_records
+
+        elif len(cached_records) == 1:
+            # no need to query at all if only one id asked for, and was found in cache
+            return cached_records[id]
 
         payload = {
             "meta": {},
@@ -372,17 +386,50 @@ class PortalClient:
             },
         }
 
-        response = self._automodel_request("procedure", "get", payload, full_return=True)
+        results = self._automodel_request("procedure", "get", payload)
+        results = {res["id"]: record_factory(res) for res in results}
 
-        # NOTE: no particular order returned here
-        # could put the "only complete" logic into the cache itself as a policy
-        self._cache.put([proc for proc in response.data if proc.status == "COMPLETE"])
-        return response.data + list(cached_records.values())
+        # TODO: could put the "only complete" logic into the cache itself as a policy
+        self._cache.put([record for record in results.values() if record.status == "COMPLETE"])
+
+        # combine cached records with queried results
+        results.update(cached_records)
+
+        # order the results by input id list
+        if isinstance(id, list):
+            ordered = [results[i] for i in id]
+        else:
+            ordered = results[id]
+
+        return ordered
+
+    def get_kvstore(self, id: "QueryObjectId") -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+        """Get KVStore items by id.
+
+        Parameters
+        ----------
+        id : QueryObjectId
+            Queries the KVStore by key.
+            Multiple ids can be included in a list; KVStore items will be returned in the same order.
+
+        Returns
+        -------
+        results : Union[List[Dict[str, Any]], Dict[str, Any]]
+
+
+        """
+
+        results = self._automodel_request("kvstore", "get", {"meta": {}, "data": {"id": id}}, full_return=True)
+
+        if isinstance(id, list):
+            return [results[i] for i in id]
+        else:
+            return results[id]
 
     # TODO: would like to merge the functionality of
     #       `query_result`, `query_procedure`, `query_service`.
     #       perhaps just `query_record`?
-    def _query_record(ids: Union[List, "QueryObjectId", int]):
+    def query_records(ids: Union[List, "QueryObjectId", int]):
         pass
 
     def _query_procedures(
@@ -566,3 +613,36 @@ class PortalClient:
             return output
         elif as_df:
             return pd.DataFrame(output)
+
+    def _query_keywords(
+        self,
+        id: Optional["QueryObjectId"] = None,
+        *,
+        hash_index: Optional["QueryStr"] = None,
+        limit: Optional[int] = None,
+        skip: int = 0,
+        full_return: bool = False,
+    ) -> Union["KeywordGETResponse", List["KeywordSet"]]:
+        """Obtains KeywordSets from the server using keyword ids.
+
+        Parameters
+        ----------
+        id : QueryObjectId, optional
+            A list of ids to query.
+        hash_index : QueryStr, optional
+            The hash index to look up
+        limit : Optional[int], optional
+            The maximum number of keywords to query
+        skip : int, optional
+            The number of keywords to skip in the query, used during pagination
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        List[KeywordSet]
+            The requested KeywordSet objects.
+        """
+
+        payload = {"meta": {}, "data": {"id": id, "hash_index": hash_index}}
+        return self._automodel_request("keyword", "get", payload, full_return=full_return)
