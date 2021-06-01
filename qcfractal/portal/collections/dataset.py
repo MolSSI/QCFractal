@@ -35,7 +35,12 @@ class MoleculeEntry(ProtoModel):
 
 
 class MoleculeEntrySpecification(ProtoModel):
-    pass
+    name: str
+    driver: str
+    program: str
+    method: str
+    basis: str
+    keywords: Dict[str, Any]
 
 
 # TODO: do we still want a concept of contributed values?
@@ -83,22 +88,39 @@ class Dataset(Collection):
     class _DataModel(Collection._DataModel):
 
         # Defaults
-        #default_program: Optional[str] = None
-        #default_keywords: Dict[str, str] = {}
-        #default_driver: str = "energy"
+        default_program: Optional[str] = None
+        default_keywords: Dict[str, str] = {}
+        default_driver: str = "energy"
         default_units: str = "kcal / mol"
-        #default_benchmark: Optional[str] = None
+        default_benchmark: Optional[str] = None
 
-        #alias_keywords: Dict[str, Dict[str, str]] = {}
+        alias_keywords: Dict[str, Dict[str, str]] = {}
+        # records: List = []
 
         # Data
-        #records: Optional[List[MoleculeEntry]] = []
+        # records: Optional[List[MoleculeEntry]] = []
         contributed_values: Dict[str, ContributedValues] = {}
 
         # History: driver, program, method (basis, keywords)
-        #history: Set[Tuple[str, str, str, Optional[str], Optional[str]]] = set()
-        #history_keys: Tuple[str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords")
+        history: Set[Tuple[str, str, str, Optional[str], Optional[str]]] = set()
+        history_keys: Tuple[str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords")
 
+    def _apply_remappings(self, datadict):
+        datadict["records"] = {record["name"]: MoleculeEntry(**record) for record in (datadict["records"])}
+
+        datadict["specs"] = dict()
+        for spec_content in datadict["history"]:
+            spec = {key: value for key, value in zip(datadict["history_keys"], spec_content)}
+
+            keywords_name = spec["keywords"]
+            spec["name"] = f"{spec['program']}/{keywords_name}"
+            spec["keywords"] = self._client._query_keywords(datadict["alias_keywords"][spec["program"]][keywords_name])[
+                0
+            ]
+
+            datadict["specs"][spec["name"]] = MoleculeEntrySpecification(**spec)
+
+        return datadict
 
     def __init__(self, name: str, client: Optional["PortalClient"] = None, **kwargs: Any) -> None:
         """Initialize a Dataset Collection.
@@ -133,42 +155,6 @@ class Dataset(Collection):
     def _pre_sync_prep(self, client: "PortalClient") -> None:
         pass
 
-    @property
-    def specs(self):
-        pass
-
-    def get_specification(self, name: str) -> Any:
-        """Get full parameters for the given named specification.
-
-        Parameters
-        ----------
-        name : str
-            The name of the specification.
-
-        Returns
-        -------
-        Specification
-            The requested specification.
-
-        """
-        pass
-
-    def list_specifications(self, description=False) -> Union[List[str], Dict[str, str]]:
-        """Gives all available specifications.
-
-        Parameters
-        ----------
-        description : bool, optional
-            If True, returns a dictionary with spec names as keys, descriptions as values.
-
-        Returns
-        -------
-        Union[List[str], Dict[str, str]]
-            Known specification names.
-
-        """
-        pass
-
     def add_entry(
         self,
         name: str,
@@ -182,19 +168,14 @@ class Dataset(Collection):
 
         # Build new objects
         molecule_id = self.client.add_molecules([molecule])[0]
-        entry = MoleculeEntry(
-            name=name, molecule=molecule_id, comment=comment, local_results=local_results
-        )
+        entry = MoleculeEntry(name=name, molecule=molecule_id, comment=comment, local_results=local_results)
         self._data.records[name] = entry
 
-    def add_spec(self, name):
-
-        spec = 
-        if (name in self._data.specs) and (not overwrite):
-            raise KeyError(f"{self.__class__.__name__} '{name}' already present, use `overwrite=True` to replace.")
-
-        self._data.specs[name] = spec
+    # TODO: do this next; really need to sort out how we do spec names when Dataset
+    # hasn't had this concept really before
+    def add_spec(self, name, driver, program, method, basis, keywords):
         pass
+
 
 # OLD STUFF BELOW; GRAB ONLY AS NEEDED
 
@@ -1688,7 +1669,6 @@ class _Dataset(Collection):
             A view of the underlying dataframe data
         """
         return self._df[args]
-
 
     # NOTE: needed for older datasets that featured `-d3` in method call, using `dftd3`
     @staticmethod
