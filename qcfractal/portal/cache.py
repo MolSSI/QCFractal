@@ -6,7 +6,7 @@ import os
 import json
 import bz2
 import dbm
-import functools
+import time
 
 from typing import Union, List, Dict
 
@@ -14,10 +14,10 @@ from .records import record_factory
 from .collections.collection_utils import collection_factory
 
 
-# TODO: make caching for different servers a layer beneath, ultimately transparent for most users
-# TODO: consider a single file for serialized JSON caching, key-value store to avoid FS thrashing
+
+# TODO: consider zstd compression instead of bz2 for faster read at the cost of perhaps slower write
 class PortalCache:
-    def __init__(self, client, cachedir):
+    def __init__(self, client, cachedir, max_memcache_size):
         self.client = client
         
         # TODO: need server fingerprint of some kind to use for cachedir
@@ -28,6 +28,10 @@ class PortalCache:
             self.metafile = os.path.join(self.cachedir, "meta.json")
             self.cachefile = os.path.join(self.cachedir, "cache.db")
             os.makedirs(self.cachedir, exist_ok=True)
+
+            # initialize db if it doesn't exist
+            with dbm.open(self.cachefile, 'c') as db:
+                pass
 
             # writeout metadata for reload later, exception handling if server/cache mismatch
             if not os.path.exists(self.metafile):
@@ -40,89 +44,78 @@ class PortalCache:
             self.metafile = None
             self.cachefile = None
 
-        # TODO: make this an LRU cache with finite size
-        #self.memcache = {}
+        self.memcache = MemCache(maxsize=max_memcache_size)
 
-    #def _get_writelock(self):
-    #    """Context manager for applying cross-platform filesystem lock to cache lockfile.
-
-    #    Only required for write to cache.
-    #    Allows multiple clients to write without further coordination.
-
-    #    """
-    #    pass
-
-    #def _get_readlock(self):
-    #    """Context manager for applying cross-platform filesystem lock to cache lockfile.
-
-    #    Only required for write to cache.
-    #    Allows multiple clients to write without further coordination.
-
-    #    """
-
-    def put(self, records: Union[List[Dict], Dict]):
-        if isinstance(records, list):
-            for rec in records:
-                self._put(rec)
-        elif rec is None:
-            return
-        else:
-            self._put(rec)
-
-    def _put(self, record):
-
-        # remove entr
-
-        if isinstance(record, dict):
-            id = record["id"]
-        else:
-            id = record.id
-
-        ## if we already have this in memcache, no further action
-        #if id in self.memcache:
-        #    return
-
-        # add to memcache
-        #self.memcache[id] = record
-
-        # add to fs cache
+    def put(self, record: Union[List[Dict], Dict]):
         if self.cachefile:
             with dbm.open(self.cachefile, 'c') as db:
-                db[id] = bz2.compress(record.to_json().encode("utf-8"))
+                self._put(record, db)
+        else:
+            self._put(record)
+
+    def _put(self, record, db=None):
+        if isinstance(record, list):
+            for rec in record:
+                self._put_single(rec, db)
+        elif record is None:
+            return
+        else:
+            self._put_single(record, db)
+
+    def _put_single(self, record, db=None):
+        id = record.id
+
+        # if we already have this in memcache, no further action
+        if id in self.memcache:
+            return
+
+        # add to memcache
+        self.memcache[id] = record
+
+        # add to fs cache
+        if db is not None:
+            db[id] = bz2.compress(record.to_json().encode("utf-8"))
 
     def get(self, id: Union[List[str], str]) -> Dict[str, "Record"]:
+        if self.cachefile:
+            with dbm.open(self.cachefile, 'r') as db:
+                return self._get(id, db)
+        else:
+            return self._get(id)
+
+    def _get(self, id, db=None):
         if isinstance(id, list):
             records = {}
             for i in id:
-                rec = self._get(str(i))
+                rec = self._get_single(str(i), db)
                 if rec is not None:
                     records[i] = rec
             return records
         elif id is None:
             return {}
         else:
-            self.get([str(id)])
+            return {id: self.get_single(str(id), db)}
 
-    # NOTE: use of `lru_cache` here creates a situation where a result may not be in the memory cache
-    # but could be added to the file cache by the same or another process
-    # the lru cache would continue returning `None`, skipping the cache entirely
-    @functools.lru_cache(max_size=1000)
-    def _get(self, id):
+    def _get_single(self, id, db=None):
         # first check memcache (fast)
         # if found, return
-        #record = self.memcache.get(id, None)
-        #if record is not None:
-        #    return record
+        record = self.memcache.get(id, None)
+        if record is not None:
+            return record
 
         # check fs cache (slower)
         # return if found, otherwise return None
-        if self.cachefile:
-            with dbm.open(self.cachefile, 'r') as db:
-                record = db.get(id, None)
-                if record is not None:
-                    return record_factory(json.loads(bz2.decompress(record).decode()))
-                else:
-                    return
+        if db is not None:
+            record = db.get(id, None)
+            if record is not None:
+                rec = record_factory(json.loads(bz2.decompress(record).decode()))
+
+                # add to memcache
+                self.memcache[id] = rec
+
+                return rec
+            else:
+                return
 
     def stamp_cache(self):
         """Place metadata indicating which server this cache belongs to."""
@@ -139,3 +132,42 @@ class PortalCache:
             # is there some kind of fingerprint the server keeps for itself?
             if meta["server"] != self.client.address:
                 raise Exception("Existing cache directory corresponds to a different QCFractal Server")
+
+
+# TODO: consider making this a dict subclass for performance instead of composition
+class MemCache:
+
+    def __init__(self, maxsize):
+        self.data = {}
+        self.maxsize = maxsize
+
+    def __setitem__(self, key, value):
+
+        self.garbage_collect()
+        
+        # check size; if we're beyond, chop least-recently-used value
+        self.data[key] = {'value': value, 'last_used': time.time()}
+
+    def __getitem__(self, key):
+        # update last_used, then return
+        result = self.data[key]
+        result['last_used'] = time.time()
+
+        return result['value']
+
+    def __contains__(self, item):
+        return item in self.data
+        
+    def garbage_collect(self):
+        # if cache is beyond max size, whittle it down by dropping entry least
+        # recently used
+        if (self.maxsize is not None) and len(self.data) > self.maxsize:
+            print(f"Garbage collecting: memcache size `{len(self.data)}'")
+            newsize = self.maxsize//4
+            items = sorted(self.data.items(), key=lambda x: x[1]['last_used'])
+            remove = items[:-newsize]
+            for (key, value) in remove:
+                self.data.pop(key)
+
+    def get(self, key, default=None):
+        return self[key] if key in self else default

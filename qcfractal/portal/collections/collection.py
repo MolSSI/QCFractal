@@ -580,7 +580,8 @@ class Collection(abc.ABC):
 
         records = self[spec_names]
 
-        status_data = pd.DataFrame(records).applymap(lambda x: x.status.value if isinstance(x, Record) else None)
+        status_data = pd.DataFrame(records).applymap(
+                lambda x: x.status.value if (isinstance(x, Record) and hasattr(x.status, 'value')) else None)
 
         # apply filters
         if status is not None:

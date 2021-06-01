@@ -210,7 +210,7 @@ class Record(abc.ABC):
         """Status of the calculation corresponding to this record.
 
         """
-        pass
+        return self._data.status
 
     @property
     def id(self):
@@ -269,7 +269,7 @@ class Record(abc.ABC):
         # dictionary
         pass
 
-    @abc.abstractproperty
+    #@abc.abstractproperty
     def protocols(self):
         # optional configuration items for e.g. storing wavefunction of point calculation
         # not so much how to run calculation, but what to return
