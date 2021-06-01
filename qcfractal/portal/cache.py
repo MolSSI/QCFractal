@@ -160,7 +160,6 @@ class MemCache:
         # if cache is beyond max size, whittle it down by dropping entry least
         # recently used
         if (self.maxsize is not None) and len(self.data) > self.maxsize:
-            print(f"Garbage collecting: memcache size `{len(self.data)}'")
             newsize = self.maxsize // 4
             items = sorted(self.data.items(), key=lambda x: x[1]["last_used"])
             remove = items[:-newsize]
