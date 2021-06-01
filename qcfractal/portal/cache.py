@@ -5,6 +5,8 @@
 import os
 import json
 import bz2
+import dbm
+import functools
 
 from typing import Union, List, Dict
 
@@ -13,32 +15,50 @@ from .collections.collection_utils import collection_factory
 
 
 # TODO: make caching for different servers a layer beneath, ultimately transparent for most users
-# TODO: consider a single file for serialized JSON caching, key-value store
+# TODO: consider a single file for serialized JSON caching, key-value store to avoid FS thrashing
 class PortalCache:
     def __init__(self, client, cachedir):
         self.client = client
-        self.cachedir = os.path.abspath(cachedir)
-        self.metafile = os.path.join(self.cachedir, "meta.json")
+        
+        # TODO: need server fingerprint of some kind to use for cachedir
+        # must resolve to same value for same server on each use, but to different value for different server
+        self.server_fingerprint = self.client.server_name.replace(' ', '_')
+        if cachedir:
+            self.cachedir = os.path.join(os.path.abspath(cachedir), self.server_fingerprint)
+            self.metafile = os.path.join(self.cachedir, "meta.json")
+            self.cachefile = os.path.join(self.cachedir, "cache.db")
+            os.makedirs(self.cachedir, exist_ok=True)
 
-        os.makedirs(self.cachedir, exist_ok=True)
+            # writeout metadata for reload later, exception handling if server/cache mismatch
+            if not os.path.exists(self.metafile):
+                self.stamp_cache()
+            else:
+                self.check_cache()
 
-        # writeout metadata for reload later, exception handling if server/cache mismatch
-        if not os.path.exists(self.metafile):
-            self.stamp_cache()
         else:
-            self.check_cache()
+            self.cachedir = None
+            self.metafile = None
+            self.cachefile = None
 
         # TODO: make this an LRU cache with finite size
-        self.memcache = {}
+        #self.memcache = {}
 
-    def _get_writelock(self):
-        """Context manager for applying cross-platform filesystem lock to cache lockfile.
+    #def _get_writelock(self):
+    #    """Context manager for applying cross-platform filesystem lock to cache lockfile.
 
-        Only required for write to cache.
-        Allows multiple clients to write without further coordination.
+    #    Only required for write to cache.
+    #    Allows multiple clients to write without further coordination.
 
-        """
-        pass
+    #    """
+    #    pass
+
+    #def _get_readlock(self):
+    #    """Context manager for applying cross-platform filesystem lock to cache lockfile.
+
+    #    Only required for write to cache.
+    #    Allows multiple clients to write without further coordination.
+
+    #    """
 
     def put(self, records: Union[List[Dict], Dict]):
         if isinstance(records, list):
@@ -51,57 +71,58 @@ class PortalCache:
 
     def _put(self, record):
 
+        # remove entr
+
         if isinstance(record, dict):
             id = record["id"]
         else:
             id = record.id
 
-        # if we already have this in memcache, no further action
-        if id in self.memcache:
-            return
+        ## if we already have this in memcache, no further action
+        #if id in self.memcache:
+        #    return
 
         # add to memcache
-        self.memcache[id] = record
+        #self.memcache[id] = record
 
         # add to fs cache
-        cachefile = os.path.join(self.cachedir, "{}.json.bz2".format(id))
-        with open(cachefile, "wb") as f:
-            f.write(bz2.compress(record.to_json().encode("utf-8")))
+        if self.cachefile:
+            with dbm.open(self.cachefile, 'c') as db:
+                db[id] = bz2.compress(record.to_json().encode("utf-8"))
 
-    def get(self, ids: Union[List[str], str]):
-        if isinstance(ids, list):
+    def get(self, id: Union[List[str], str]) -> Dict[str, "Record"]:
+        if isinstance(id, list):
             records = {}
-            for id in ids:
-                rec = self._get(id)
+            for i in id:
+                rec = self._get(str(i))
                 if rec is not None:
-                    records[id] = rec
+                    records[i] = rec
             return records
         elif id is None:
-            return []
+            return {}
         else:
-            return self._get(id)
+            self.get([str(id)])
 
+    # NOTE: use of `lru_cache` here creates a situation where a result may not be in the memory cache
+    # but could be added to the file cache by the same or another process
+    # the lru cache would continue returning `None`, skipping the cache entirely
+    @functools.lru_cache(max_size=1000)
     def _get(self, id):
-
-        # cast to string if not already
-        id = str(id)
-
         # first check memcache (fast)
         # if found, return
-        record = self.memcache.get(id, None)
-        if record is not None:
-            return record
+        #record = self.memcache.get(id, None)
+        #if record is not None:
+        #    return record
 
         # check fs cache (slower)
         # return if found, otherwise return None
-        cachefile = os.path.join(self.cachedir, "{}.json.bz2".format(id))
-        if os.path.exists(cachefile):
-            with open(cachefile, "rb") as f:
-                self.memcache[id] = record_factory(json.loads(bz2.decompress(f.read()).decode()))
-                return self.memcache[id]
-
-        else:
-            return
+        if self.cachefile:
+            with dbm.open(self.cachefile, 'r') as db:
+                record = db.get(id, None)
+                if record is not None:
+                    return record_factory(json.loads(bz2.decompress(record).decode()))
+                else:
+                    return
 
     def stamp_cache(self):
         """Place metadata indicating which server this cache belongs to."""
