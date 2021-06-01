@@ -148,6 +148,7 @@ class MemCache:
 
     def __getitem__(self, key):
         # update last_used, then return
+        # TODO: perhaps a more performant way to do this
         result = self.data[key]
         result["last_used"] = time.time()
 
@@ -157,8 +158,9 @@ class MemCache:
         return item in self.data
 
     def garbage_collect(self):
-        # if cache is beyond max size, whittle it down by dropping entry least
-        # recently used
+        # if cache is beyond max size, whittle it down by dropping
+        # the 3/4 of it; a bit aggressive but avoids constaint thrashing
+        # TODO: efficiency gains perhaps achievable here
         if (self.maxsize is not None) and len(self.data) > self.maxsize:
             newsize = self.maxsize // 4
             items = sorted(self.data.items(), key=lambda x: x[1]["last_used"])
