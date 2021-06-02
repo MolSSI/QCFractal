@@ -214,8 +214,10 @@ class HDF5View(DatasetView):
             with self._read_file() as f:
                 entry_group = f["entry"]
                 self._index = pd.DataFrame({"index": entry_group["entry"][()]})
+                self._index["index"] = self._index["index"].str.decode("utf-8")
                 self._index["_h5idx"] = range(len(self._index))
                 self._index.set_index("index", inplace=True)
+
         if subset is None:
             return self._index.reset_index()
         else:
@@ -233,7 +235,15 @@ class HDF5View(DatasetView):
                     raise ValueError(
                         f"Unknown entry class ({entry_group.attrs['model']}) while " f"reading HDF5 entries."
                     )
+
                 self._entries = pd.DataFrame({field: entry_group[field][()] for field in fields})
+
+                # HDF5 stores these as byte arrays. But we use strings in pandas...
+                self._entries["name"] = self._entries["name"].str.decode("utf=8")
+
+                if entry_group.attrs["model"] == "ReactionEntry":
+                    self._entries["stoichiometry"] = self._entries["stoichiometry"].str.decode("utf=8")
+
                 self._entries.set_index("name", inplace=True)
         if subset is None:
             return self._entries.reset_index()
@@ -268,6 +278,7 @@ class HDF5View(DatasetView):
         def _write_dataset(dataset, column, entry_dset):
             assert column.shape[1] == 1
             for i, name in enumerate(entry_dset):
+                name = name.decode("utf-8")
                 element = column.loc[name][0]
                 if not h5py.check_dtype(vlen=dataset.dtype):
                     dataset[i] = element
