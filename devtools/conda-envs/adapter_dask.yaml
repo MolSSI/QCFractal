@@ -39,8 +39,8 @@ dependencies:
 
 #   Environment specific includes
   - rdkit
-  - dask
-  - distributed
+  - dask==2021.5.0
+  - distributed==2021.5.0
   - dask-jobqueue >=0.5.0
 
 #   QCArchive includes
