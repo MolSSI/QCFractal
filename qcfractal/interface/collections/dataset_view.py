@@ -239,10 +239,10 @@ class HDF5View(DatasetView):
                 self._entries = pd.DataFrame({field: entry_group[field][()] for field in fields})
 
                 # HDF5 stores these as byte arrays. But we use strings in pandas...
-                self._entries["name"] = self._entries["name"].str.decode("utf=8")
+                self._entries["name"] = self._entries["name"].str.decode("utf-8")
 
                 if entry_group.attrs["model"] == "ReactionEntry":
-                    self._entries["stoichiometry"] = self._entries["stoichiometry"].str.decode("utf=8")
+                    self._entries["stoichiometry"] = self._entries["stoichiometry"].str.decode("utf-8")
 
                 self._entries.set_index("name", inplace=True)
         if subset is None:
