@@ -18,10 +18,14 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Index,
+    CheckConstraint,
     Integer,
     LargeBinary,
     String,
 )
+
+from sqlalchemy.dialects.postgresql import JSONB
+
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
@@ -270,11 +274,9 @@ class TaskQueueORM(Base):
 
     # others
     tag = Column(String, default=None)
-    parser = Column(String, default="")
-    program = Column(String)
-    procedure = Column(String)
+    required_programs = Column(JSONB, nullable=False)
     status = Column(Enum(TaskStatusEnum), default=TaskStatusEnum.waiting)
-    priority = Column(Integer, default=int(PriorityEnum.normal))
+    priority = Column(Integer, default=PriorityEnum.normal)
     manager = Column(String, ForeignKey("queue_manager.name", ondelete="SET NULL"), default=None)
 
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
@@ -292,10 +294,14 @@ class TaskQueueORM(Base):
     # can be retrieved directly, without scanning the remainder at all.
     __table_args__ = (
         Index("ix_task_queue_created_on", "created_on"),
-        Index("ix_task_queue_keys", "status", "program", "procedure", "tag"),
+        Index("ix_task_queue_keys", "status", "required_programs", "tag"),
         Index("ix_task_queue_manager", "manager"),
         Index("ix_task_queue_base_result_id", "base_result_id"),
         Index("ix_task_waiting_sort", text("priority desc,  created_on")),
+        # WARNING - these are not autodetected by alembic
+        CheckConstraint(
+            "required_programs::text = LOWER(required_programs::text)", name="ck_task_queue_requirements_lower"
+        ),
     )
 
 
@@ -418,7 +424,6 @@ class QueueManagerORM(Base):
     qcengine_version = Column(String)
     manager_version = Column(String)
     programs = Column(JSON)
-    procedures = Column(JSON)
 
     logs_obj = relationship(QueueManagerLogORM, lazy="select")
 

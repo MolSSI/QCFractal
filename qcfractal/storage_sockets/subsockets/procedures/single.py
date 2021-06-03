@@ -223,8 +223,11 @@ class SingleResultHandler(BaseProcedureHandler):
             # Build task object
             task = TaskQueueORM()
             task.spec = spec
-            task.parser = "single"
-            task.program = res["program"]
+
+            # For now, we just add the programs as top-level keys. Eventually I would like to add
+            # version restrictions as well
+            task.required_programs = {res["program"]: None}
+
             task.base_result_id = int(res["id"])  # TODO - INT ID
             task.tag = tag
             task.priority = priority

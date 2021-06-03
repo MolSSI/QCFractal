@@ -307,7 +307,7 @@ class OptimizationHandler(BaseProcedureHandler):
             Metadata about which tasks were created or existing, and a list of Task IDs (new or existing)
         """
 
-        # Load the ORM for the optimization, including the initial molecule
+        # Load the data for all the optimization, including the initial molecule
         opt_data = self.get(id, include=["*", "initial_molecule_obj"], session=session)
 
         # Create QCSchema inputs and tasks for everything, too
@@ -331,9 +331,11 @@ class OptimizationHandler(BaseProcedureHandler):
             # Build task object
             task = TaskQueueORM()
             task.spec = spec
-            task.parser = "optimization"
-            task.program = opt["qc_spec"]["program"]
-            task.procedure = opt["program"]
+
+            # For now, we just add the programs as top-level keys. Eventually I would like to add
+            # version restrictions as well
+            task.required_programs = {opt["qc_spec"]["program"]: None, opt["program"]: None}
+
             task.tag = tag
             task.priority = priority
             task.base_result_id = int(opt["id"])  # TODO - INT ID

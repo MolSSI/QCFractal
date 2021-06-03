@@ -914,9 +914,7 @@ def queue_manager_claim_v1():
     name = _get_name_from_metadata(body.meta)
 
     # Grab new tasks and write out
-    new_tasks = storage_socket.task_queue.claim(
-        name, body.meta.programs, body.meta.procedures, limit=body.data.limit, tag=body.meta.tag
-    )
+    new_tasks = storage_socket.task_queue.claim(name, body.meta.programs, limit=body.data.limit, tag=body.meta.tag)
     response = QueueManagerGETResponse(
         **{
             "meta": {

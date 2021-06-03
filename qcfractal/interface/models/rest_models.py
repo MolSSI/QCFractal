@@ -930,17 +930,12 @@ class QueueManagerMeta(ProtoModel):
     )
 
     # search info
-    programs: List[str] = Field(
+    programs: Dict[str, Optional[str]] = Field(
         ...,
         description="A list of programs which the QueueManager, and thus QCEngine, has access to. Affects which Tasks "
         "the Manager can pull.",
     )
-    procedures: List[str] = Field(
-        ...,
-        description="A list of procedures which the QueueManager has access to. Affects which Tasks "
-        "the Manager can pull.",
-    )
-    tag: QueryStr = Field(
+    tag: Optional[List[str]] = Field(
         None,
         description="Optional queue tag to pull Tasks from. If None, tasks are pulled from all tags. "
         "If a list of tags is provided, tasks are pulled in order of tags. (This does not "

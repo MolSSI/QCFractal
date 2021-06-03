@@ -107,15 +107,11 @@ class TaskRecord(ProtoModel):
     id: ObjectId = Field(None, description="The Database assigned Id of the Task, if it has been assigned yet.")
 
     spec: PythonComputeSpec = Field(..., description="The Python function specification for this Task.")
-    parser: str = Field(..., description="The type of operation this is Task is. Can be 'single' or 'optimization'.")
     status: TaskStatusEnum = Field(TaskStatusEnum.waiting, description="What stage of processing this task is at.")
 
     # Compute blockers and prevention
-    program: str = Field(
+    required_programs: Dict[str, Optional[str]] = Field(
         ..., description="Name of the quantum chemistry program which must be present to execute this task."
-    )
-    procedure: Optional[str] = Field(
-        None, description="Name of the procedure the compute platform must be able to perform to execute this task."
     )
     manager: Optional[str] = Field(None, description="The Queue Manager that evaluated this task.")
 
@@ -143,16 +139,6 @@ class TaskRecord(ProtoModel):
         data.setdefault("created_on", dt)
 
         super().__init__(**data)
-
-    @validator("program")
-    def check_program(cls, v):
-        return v.lower()
-
-    @validator("procedure")
-    def check_procedure(cls, v):
-        if v:
-            v = v.lower()
-        return v
 
 
 class SingleProcedureSpecification(ProtoModel):

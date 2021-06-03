@@ -1,18 +1,17 @@
 from __future__ import annotations
 
 import logging
-from sqlalchemy import or_, and_
+from sqlalchemy import and_
 from sqlalchemy.orm import load_only
 from datetime import datetime as dt
 from qcfractal.storage_sockets.models import BaseResultORM, TaskQueueORM
-from qcfractal.storage_sockets.storage_utils import add_metadata_template
 from qcfractal.storage_sockets.sqlalchemy_socket import format_query, calculate_limit
 from qcfractal.storage_sockets.sqlalchemy_common import (
     insert_general,
     get_query_proj_columns,
     get_count,
 )
-from qcfractal.interface.models import TaskRecord, RecordStatusEnum, TaskStatusEnum, ManagerStatusEnum, ObjectId
+from qcfractal.interface.models import RecordStatusEnum, TaskStatusEnum, ManagerStatusEnum, ObjectId
 from qcfractal.interface.models.query_meta import InsertMetadata, QueryMetadata
 
 from typing import TYPE_CHECKING
@@ -73,90 +72,6 @@ class TaskQueueSocket:
             meta, ids = insert_general(session, tasks, (TaskQueueORM.base_result_id,), (TaskQueueORM.id,))
 
             return meta, [x[0] for x in ids]
-
-    def add(self, data: List[TaskRecord]):
-        """Submit a list of tasks to the queue.
-        Tasks are unique by their base_result, which should be inserted into
-        the DB first before submitting it's corresponding task to the queue
-        (with result.status='incomplete' as the default)
-        The default task.status is 'WAITING'
-
-        Parameters
-        ----------
-        data : List[TaskRecord]
-            A task is a dict, with the following fields:
-            - hash_index: idx, not used anymore
-            - spec: dynamic field (dict-like), can have any structure
-            - tag: str
-            - base_results: tuple (required), first value is the class type
-             of the result, {'results' or 'procedure'). The second value is
-             the ID of the result in the DB. Example:
-             "base_result": ('results', result_id)
-
-        Returns
-        -------
-        Dict[str, Any]
-            Dictionary with keys data and meta.
-            'data' is a list of the IDs of the tasks IN ORDER, including
-            duplicates. An errored task has 'None' in its ID
-            meta['duplicates'] has the duplicate tasks
-        """
-
-        self._logger.warning("REMOVE ME")
-        meta = add_metadata_template()
-
-        results = ["placeholder"] * len(data)
-
-        with self._core_socket.session_scope() as session:
-            # preserving all the base results for later check
-            all_base_results = [record.base_result for record in data]
-            query_res = (
-                session.query(TaskQueueORM.id, TaskQueueORM.base_result_id)
-                .filter(TaskQueueORM.base_result_id.in_(all_base_results))
-                .all()
-            )
-
-            # constructing a dict of found tasks and their ids
-            found_dict = {str(base_result_id): str(task_id) for task_id, base_result_id in query_res}
-            new_tasks, new_idx = [], []
-            duplicate_idx = []
-            for task_num, record in enumerate(data):
-
-                if found_dict.get(record.base_result):
-                    # if found, get id from found_dict
-                    # Note: found_dict may return a task object because the duplicate id is of an object in the input.
-                    results[task_num] = found_dict.get(record.base_result)
-                    # add index of duplicates
-                    duplicate_idx.append(task_num)
-                    meta["duplicates"].append(task_num)
-
-                else:
-                    task_dict = record.dict(exclude={"id"})
-                    task = TaskQueueORM(**task_dict)
-                    new_idx.append(task_num)
-                    task.priority = task.priority.value
-                    # append all the new tasks that should be added
-                    new_tasks.append(task)
-                    # add the (yet to be) inserted object id to dictionary
-                    found_dict[record.base_result] = task
-
-            session.add_all(new_tasks)
-            session.commit()
-
-            meta["n_inserted"] += len(new_tasks)
-            # setting the id for new inserted objects, cannot be done before commiting as new objects do not have ids
-            for i, task_idx in enumerate(new_idx):
-                results[task_idx] = str(new_tasks[i].id)
-
-            # finding the duplicate items in input, for which ids are found only after insertion
-            for i in duplicate_idx:
-                if not isinstance(results[i], str):
-                    results[i] = str(results[i].id)
-
-        meta["success"] = True
-
-        ret = {"data": results, "meta": meta}
-        return ret
 
     def get(
         self,
@@ -223,8 +138,7 @@ class TaskQueueSocket:
     def claim(
         self,
         manager_name: str,
-        available_programs: Iterable[str],
-        available_procedures: Iterable[str],
+        available_programs: Dict[str, Optional[str]],
         limit: Optional[int] = None,
         tag: Sequence[str] = None,
         *,
@@ -240,9 +154,7 @@ class TaskQueueSocket:
         manager_name
             Name of the manager requesting tasks
         available_programs
-            List or other iterable of programs available on that manager
-        available_procedures
-            List or other iterable of procedures available on that manager
+            Dictionary of program name -> version. This includes all programs and procedures available.
         limit
             Maximum number of tasks that the manager can claim
         tag
@@ -252,11 +164,19 @@ class TaskQueueSocket:
             is used, it will be flushed before returning from this function.
         """
 
-        # TODO - rewrite to avoid format_query
-
         limit = calculate_limit(self._manager_limit, limit)
-        proc_filt = TaskQueueORM.procedure.in_([p.lower() for p in available_procedures])
-        none_filt = TaskQueueORM.procedure == None  # lgtm [py/test-equals-none]
+
+        common_filt = and_(
+            TaskQueueORM.required_programs.contained_by(available_programs),
+            TaskQueueORM.status == TaskStatusEnum.waiting,
+        )
+
+        tag_queries = []
+        if tag is not None:
+            for t in tag:
+                tag_queries.append((TaskQueueORM.tag == t,))
+        else:
+            tag_queries = [()]
 
         with self._core_socket.optional_session(session) as session:
             manager = self._core_socket.manager.get(
@@ -269,27 +189,10 @@ class TaskQueueSocket:
                 self._logger.warning(f"Manager {manager_name} exists but is not active!")
                 return []
 
-            order_by = []
-            if tag is not None:
-                if isinstance(tag, str):
-                    tag = [tag]
-
-            order_by.extend([TaskQueueORM.priority.desc(), TaskQueueORM.created_on])
-            queries = []
-            if tag is not None:
-                for t in tag:
-                    query = format_query(TaskQueueORM, status=TaskStatusEnum.waiting, program=available_programs, tag=t)
-                    query.append(or_(proc_filt, none_filt))
-                    queries.append(query)
-            else:
-                query = format_query(TaskQueueORM, status=TaskStatusEnum.waiting, program=available_programs)
-                query.append((or_(proc_filt, none_filt)))
-                queries.append(query)
-
             new_limit = limit
             found = []
 
-            for q in queries:
+            for q in tag_queries:
 
                 # Have we found all we needed to find
                 if new_limit == 0:
@@ -299,13 +202,17 @@ class TaskQueueSocket:
                 # (possibly from another process)
                 query = (
                     session.query(TaskQueueORM)
+                    .filter(common_filt)
                     .filter(*q)
-                    .order_by(*order_by)
+                    .order_by(TaskQueueORM.priority.desc(), TaskQueueORM.created_on)
                     .limit(new_limit)
                     .with_for_update(skip_locked=True)
                 )
 
                 new_items = query.all()
+
+                # TODO - we only test for the presence of the available_programs in the requirements. Eventually
+                # we want to then verify the versions
 
                 # Update all the task records to reflect this manager claiming them
                 for task in new_items:

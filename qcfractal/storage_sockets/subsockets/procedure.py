@@ -339,7 +339,7 @@ class ProcedureSocket:
 
                     # Manager returned a full, successful result
                     else:
-                        parser = self.handler_map[task_orm.parser]
+                        parser = self.handler_map[task_orm.base_result_obj.procedure]
                         parser.update_completed(session, task_orm, manager_name, result)
 
                         # Delete the task from the task queue since it is completed

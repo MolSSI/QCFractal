@@ -27,6 +27,8 @@ fake_manager_2 = {
     "status": ManagerStatusEnum.active,
 }
 
+fake_program_info = {"psi4": None, "rdkit": None, "geometric": None}
+
 
 def test_procedure_basic(storage_socket):
     #
@@ -52,17 +54,22 @@ def test_procedure_basic(storage_socket):
     _, ids5 = storage_socket.procedure.create([molecule_5], input_spec_5)
     all_ids = ids1 + ids2 + ids3 + ids4 + ids5
 
+    procs = storage_socket.procedure.get(all_ids, include=["*", "task_obj"])
+    task_ids = [x["task_obj"]["id"] for x in procs]
+
     # Should have created tasks
-    meta, tasks = storage_socket.task_queue.query(base_result_id=all_ids)
-    assert meta.n_found == 5
+    tasks = storage_socket.task_queue.get(task_ids)
+    assert len(tasks) == 5
+    assert all("psi4" in t["required_programs"] for t in tasks)
+    assert all("geometric" in t["required_programs"] for t in tasks[3:])
 
     # Create the fake managers in the database
     assert storage_socket.manager.update(name="manager_1", **fake_manager_1)
     assert storage_socket.manager.update(name="manager_2", **fake_manager_2)
 
     # Managers claim the tasks
-    storage_socket.task_queue.claim("manager_1", ["psi4", "rdkit"], ["geometric"], 50, ["for_manager_1"])
-    storage_socket.task_queue.claim("manager_2", ["psi4", "rdkit"], ["geometric"], 50, ["for_manager_2"])
+    storage_socket.task_queue.claim("manager_1", fake_program_info, 50, ["for_manager_1"])
+    storage_socket.task_queue.claim("manager_2", fake_program_info, 50, ["for_manager_2"])
 
     # Tasks should be assigned correctly
     procs = storage_socket.procedure.get(all_ids, include=["*", "task_obj"])
@@ -85,7 +92,6 @@ def test_procedure_basic(storage_socket):
 
     # Return results
     # The ids returned from create() are the result ids, but the managers return task ids
-    task_ids = [x["task_obj"]["id"] for x in procs]
     storage_socket.procedure.update_completed("manager_1", {task_ids[0]: result_data_1})
     storage_socket.procedure.update_completed("manager_1", {task_ids[1]: result_data_2})
     storage_socket.procedure.update_completed("manager_2", {task_ids[2]: result_data_3})
@@ -93,12 +99,13 @@ def test_procedure_basic(storage_socket):
     storage_socket.procedure.update_completed("manager_1", {task_ids[4]: result_data_5})
 
     # Two tasks were failures. Those tasks should be the only ones remaining in the task queue
-    meta, tasks = storage_socket.task_queue.query(base_result_id=all_ids)
-    assert meta.n_found == 2
-    assert tasks[0]["manager"] == "manager_2"
-    assert tasks[0]["base_result_id"] == ids3[0]
-    assert tasks[1]["manager"] == "manager_1"
-    assert tasks[1]["base_result_id"] == ids5[0]
+    tasks = storage_socket.task_queue.get(task_ids, missing_ok=True)
+    assert len(tasks) == 5
+    assert tasks.count(None) == 3
+    assert tasks[2]["manager"] == "manager_2"
+    assert tasks[2]["base_result_id"] == ids3[0]
+    assert tasks[4]["manager"] == "manager_1"
+    assert tasks[4]["base_result_id"] == ids5[0]
 
     # Are the statuses, etc correct?
     procs = storage_socket.procedure.get(all_ids, include=["*", "task_obj"])
@@ -128,7 +135,7 @@ def test_procedure_wrong_manager_return(storage_socket, caplog):
     assert storage_socket.manager.update(name="manager_2", **fake_manager_2)
 
     # Manager should claim the task
-    claimed = storage_socket.task_queue.claim("manager_1", ["psi4", "rdkit"], ["geometric"])
+    claimed = storage_socket.task_queue.claim("manager_1", fake_program_info)
     assert len(claimed) == 1
 
     # The other manager returns the results
@@ -237,8 +244,8 @@ def test_procedure_query(storage_socket):
     assert storage_socket.manager.update(name="manager_2", **fake_manager_2)
 
     # Managers claim some of the tasks
-    storage_socket.task_queue.claim("manager_1", ["psi4", "rdkit"], ["geometric"], 50, ["for_manager_1"])
-    storage_socket.task_queue.claim("manager_2", ["psi4", "rdkit"], ["geometric"], 50, ["for_manager_2"])
+    storage_socket.task_queue.claim("manager_1", fake_program_info, 50, ["for_manager_1"])
+    storage_socket.task_queue.claim("manager_2", fake_program_info, 50, ["for_manager_2"])
 
     # Return some of the results
     # The ids returned from create() are the result ids, but the managers return task ids
@@ -307,7 +314,7 @@ def test_procedure_create_existing(storage_socket):
     assert storage_socket.manager.update(name="manager_1", **fake_manager_1)
 
     # Managers claim the tasks
-    storage_socket.task_queue.claim("manager_1", ["psi4", "rdkit"], ["geometric"], 50)
+    storage_socket.task_queue.claim("manager_1", fake_program_info, 50)
 
     # Attempt to recreate. Should not do anything
     meta_1, new_ids_1 = storage_socket.procedure.create([molecule_1], input_spec_1)
@@ -318,9 +325,6 @@ def test_procedure_create_existing(storage_socket):
     assert meta_3.n_existing == 1
     meta, tasks = storage_socket.task_queue.query(base_result_id=all_ids)
     assert meta.n_found == 3
-    assert tasks[0]["base_result_id"] == new_ids_1[0]
-    assert tasks[1]["base_result_id"] == new_ids_2[0]
-    assert tasks[2]["base_result_id"] == new_ids_3[0]
 
     # Return results
     # The ids returned from create() are the result ids, but the managers return task ids

@@ -215,6 +215,9 @@ class QueueManager:
         self.available_programs = qcng.list_available_programs()
         self.available_procedures = qcng.list_available_procedures()
 
+        # TODO - get version information
+        self.all_program_info = {x: None for x in self.available_programs | self.available_procedures}
+
         # Display a warning if there are non-node-parallel programs and >1 node_per_task
         if self.nodes_per_task > 1:
             for name in self.available_programs:
@@ -292,8 +295,7 @@ class QueueManager:
             # User info
             "username": self.client.username,
             # Pull info
-            "programs": self.available_programs,
-            "procedures": self.available_procedures,
+            "programs": self.all_program_info,
             "tag": self.queue_tag,
             # Statistics
             "total_worker_walltime": self.statistics.total_worker_walltime,

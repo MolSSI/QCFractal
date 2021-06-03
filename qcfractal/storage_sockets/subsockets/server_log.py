@@ -140,8 +140,9 @@ class ServerLogSocket:
 
             # Task queue and Service queue status
             task_query = (
-                session.query(TaskQueueORM.parser, TaskQueueORM.status, func.count(TaskQueueORM.id))
-                .group_by(TaskQueueORM.parser, TaskQueueORM.status)
+                session.query(BaseResultORM.procedure, TaskQueueORM.status, func.count(TaskQueueORM.id))
+                .join(BaseResultORM, BaseResultORM.id == TaskQueueORM.base_result_id)
+                .group_by(BaseResultORM.procedure, TaskQueueORM.status)
                 .all()
             )
             task_stats = {"columns": ["result_type", "status", "count"], "rows": [list(r) for r in task_query]}
