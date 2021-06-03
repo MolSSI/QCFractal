@@ -316,132 +316,6 @@ def test_queue_duplicate_procedure(fractal_test_server):
     assert ret.ids[0] == ret2.ids[1]
 
 
-# def test_queue_bad_compute_method(fractal_test_server):
-#
-#    client = fractal_test_server.client()
-#
-#    mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.1")
-#
-#    with pytest.raises(IOError) as exc:
-#        client.add_compute("badprogram", "UFF", "", "energy", None, [mol1], full_return=True)
-#
-#    assert "not avail" in str(exc.value)
-#
-#
-# def test_queue_bad_procedure_method(fractal_test_server):
-#
-#    client = fractal_test_server.client()
-#    mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.1")
-#
-#    geometric_options = {
-#        "keywords": None,
-#        "qc_spec": {"driver": "gradient", "method": "UFF", "basis": "", "keywords": None, "program": "rdkit"},
-#    }
-#
-#    # Test bad procedure
-#    with pytest.raises(IOError) as exc:
-#        client.add_procedure("optimization", "badproc", geometric_options, [mol1])
-#
-#    assert "not avail" in str(exc.value)
-#
-#    # Test procedure class
-#    with pytest.raises(RuntimeError) as exc:
-#        client.add_procedure("badprocedure", "geometric", geometric_options, [mol1])
-#
-#    # Test bad program
-#    with pytest.raises(IOError) as exc:
-#        geometric_options["qc_spec"]["program"] = "badqc"
-#        client.add_procedure("optimization", "geometric", geometric_options, [mol1])
-#
-#    assert "not avail" in str(exc.value)
-#    assert "badqc" in str(exc.value)
-
-
-def test_queue_ordering_time(fractal_test_server):
-    client = fractal_test_server.client()
-
-    mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 1.1")
-    mol2 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
-
-    storage_socket = fractal_test_server.get_storage_socket()
-    manager = fractal_test_server.get_compute_manager("qcfractal_test_manager")
-    manager_name = manager._name
-
-    # We are purposely not starting the compute worker. We just want to examine the queue
-
-    ret1 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol1).ids[0]
-    ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2).ids[0]
-
-    assert len(storage_socket.task_queue.claim(manager_name, [], [], limit=1)) == 0
-
-    queue_id1 = storage_socket.task_queue.claim(manager_name, ["rdkit"], [], limit=1)[0]["base_result_id"]
-    queue_id2 = storage_socket.task_queue.claim(manager_name, ["rdkit"], [], limit=1)[0]["base_result_id"]
-
-    assert queue_id1 == int(ret1)
-    assert queue_id2 == int(ret2)
-
-
-def test_queue_ordering_priority(fractal_test_server):
-    client = fractal_test_server.client()
-
-    mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 1.1")
-    mol2 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
-    mol3 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 3.3")
-
-    storage_socket = fractal_test_server.get_storage_socket()
-    manager = fractal_test_server.get_compute_manager("qcfractal_test_manager")
-    manager_name = manager._name
-
-    # We are purposely not starting the compute worker. We just want to examine the queue
-
-    ret1 = client.add_compute("rdkit", "uff", "", "energy", None, mol1).ids[0]
-    ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2, priority="high").ids[0]
-    ret3 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol3, priority="HIGH").ids[0]
-
-    queue_id1 = storage_socket.task_queue.claim(manager_name, ["rdkit"], [], limit=1)[0]["base_result_id"]
-    queue_id2 = storage_socket.task_queue.claim(manager_name, ["RDkit"], [], limit=1)[0]["base_result_id"]
-    queue_id3 = storage_socket.task_queue.claim(manager_name, ["RDKIT"], [], limit=1)[0]["base_result_id"]
-
-    assert queue_id1 == int(ret2)
-    assert queue_id2 == int(ret3)
-    assert queue_id3 == int(ret1)
-
-
-def test_queue_order_procedure_priority(fractal_test_server):
-    client = fractal_test_server.client()
-
-    geometric_options = {
-        "keywords": None,
-        "qc_spec": {"driver": "gradient", "method": "UFF", "basis": "", "keywords": None, "program": "rdkit"},
-    }
-
-    mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 1.1")
-    mol2 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
-    mol3 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 3.3")
-
-    storage_socket = fractal_test_server.get_storage_socket()
-    manager = fractal_test_server.get_compute_manager("qcfractal_test_manager")
-    manager_name = manager._name
-
-    # We are purposely not starting the compute worker. We just want to examine the queue
-
-    ret1 = client.add_procedure("optimization", "geometric", geometric_options, [mol1]).ids[0]
-    ret2 = client.add_procedure("OPTIMIZATION", "geometric", geometric_options, [mol2], priority="high").ids[0]
-    ret3 = client.add_procedure("OPTimization", "GEOmetric", geometric_options, [mol3], priority="HIGH").ids[0]
-
-    assert len(storage_socket.task_queue.claim(manager_name, ["rdkit"], [], limit=1)) == 0
-    assert len(storage_socket.task_queue.claim(manager_name, ["rdkit"], ["geom"], limit=1)) == 0
-    assert len(storage_socket.task_queue.claim(manager_name, ["prog1"], ["geometric"], limit=1)) == 0
-
-    queue_id1 = storage_socket.task_queue.claim(manager_name, ["rdkit"], ["geometric"], limit=1)[0]["base_result_id"]
-    queue_id2 = storage_socket.task_queue.claim(manager_name, ["RDKIT"], ["geometric"], limit=1)[0]["base_result_id"]
-    queue_id3 = storage_socket.task_queue.claim(manager_name, ["rdkit"], ["GEOMETRIC"], limit=1)[0]["base_result_id"]
-
-    assert queue_id1 == int(ret2)
-    assert queue_id2 == int(ret3)
-    assert queue_id3 == int(ret1)
-
-
 def test_queue_query_tag(fractal_test_server):
     client = fractal_test_server.client()
 
@@ -485,12 +359,12 @@ def test_queue_query_manager(fractal_test_server):
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2).ids[0]
     ret3 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol3).ids[0]
 
-    storage_socket.task_queue.claim(manager_name, ["rdkit"], [], limit=1)[0]
+    storage_socket.task_queue.claim(manager_name, {"rdkit": None}, limit=1)[0]
     tasks_manager = client.query_tasks(manager=manager_name)
     assert len(tasks_manager) == 1
     assert tasks_manager[0].base_result == ret1
 
-    storage_socket.task_queue.claim(manager_name, ["RDkit"], [], limit=1)[0]
-    storage_socket.task_queue.claim(manager_name, ["RDKIT"], [], limit=1)[0]
+    storage_socket.task_queue.claim(manager_name, {"rdkit": None}, limit=1)[0]
+    storage_socket.task_queue.claim(manager_name, {"rdkit": None}, limit=1)[0]
     tasks_manager = client.query_tasks(manager=manager_name)
     assert len(tasks_manager) == 3
