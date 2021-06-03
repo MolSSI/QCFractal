@@ -36,7 +36,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install postgres
-        run: sudo apt install postgresql postgresql-contrib
+        run: sudo apt update && sudo apt install postgresql postgresql-contrib
  
       # Sets the variable YEARWEEK to be the 4 digit year and 2 digit week number
       # This is used to invalidate the cache of conda weekly
