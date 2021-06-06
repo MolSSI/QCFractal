@@ -15,6 +15,21 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.15.6 / 2021-06-06
+-------------------
+
+Some minor additions/fixes, mostly to the user interface. The database migration in (:pr:`676`) has been thoroughly tested,
+however please backup you database before ugrading!
+
+Client and managers should not need to be upgraded.
+
+- (:pr:`672`) Adds ability to add compute specs to only a subset of entries in a Dataset
+- (:pr:`673`) Allow for selecting by status in dataset get_records()
+- (:pr:`676`) A migration for fixing fields in the database which have been changed in QCSchema/QCElemental
+- (:pr:`678`) Fixes errors related to str vs. bytes in collection views
+- (:pr:`679`) Fix incorrect status reporting in collections
+
+
 0.15.3 / 2021-03-15
 -------------------
 

@@ -15,6 +15,17 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+
+0.15.6 / 2021-06-06
+-------------------
+
+Some minor fixes and additions to the user interface
+
+- (:pr:`672`) Adds ability to add compute specs to only a subset of entries in a Dataset
+- (:pr:`673`) Allow for selecting by status in dataset get_records()
+- (:pr:`678`) Fixes errors related to str vs. bytes in collection views
+- (:pr:`679`) Fix incorrect status reporting in collections
+
 0.15.3 / 2021-03-15
 -------------------
 
