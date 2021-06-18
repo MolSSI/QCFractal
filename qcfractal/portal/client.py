@@ -5,7 +5,7 @@ import copy
 
 import requests
 
-from typing import TYPE_CHECKING, Any, DefaultDict, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, DefaultDict, Dict, List, Optional, Tuple, Union, TypeVar, Sequence
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -15,6 +15,10 @@ from ..interface.models.rest_models import rest_model
 from .collections import collection_factory, collections_name_map
 from .records import record_factory, record_name_map
 from .cache import PortalCache
+
+
+_T = TypeVar("_T")
+
 
 _ssl_error_msg = (
     "\n\nSSL handshake failed. This is likely caused by a failure to retrieve 3rd party SSL certificates.\n"
@@ -32,6 +36,21 @@ def _version_list(version):
         )
     version = version_match.group(0)
     return [int(x) for x in version.split(".")]
+
+
+def make_list(obj: Optional[Union[_T, Sequence[_T]]]) -> Optional[List[_T]]:
+    """
+    Returns a list containing obj if obj is not a list or sequence type object
+    """
+
+    if obj is None:
+        return None
+    # Be careful. strings are sequences
+    if isinstance(obj, str):
+        return [obj]
+    if not isinstance(obj, Sequence):
+        return [obj]
+    return list(obj)
 
 
 # TODO : built-in query limit chunking, progress bars, fs caching and invalidation
@@ -266,267 +285,6 @@ class PortalClient:
         else:
             return None
 
-    def get_collection(
-        self,
-        collection_type: str,
-        name: str,
-        full_return: bool = False,
-        include: "QueryListStr" = None,  # TODO: WHAT ARE THESE FOR?
-        exclude: "QueryListStr" = None,  # TODO: WHAT ARE THESE FOR?
-    ) -> "Collection":
-        """Returns a given collection from the server.
-
-        Parameters
-        ----------
-        collection_type : str
-            The collection type.
-        name : str
-            The name of the collection.
-        full_return : bool, optional
-            If True, returns the full server response.
-        include : QueryListStr, optional
-            Return only these columns.
-        exclude : QueryListStr, optional
-            Return all but these columns.
-        Returns
-        -------
-        Collection
-            A Collection object if the given collection was found; otherwise returns `None`.
-
-        """
-
-        payload = {"meta": {}, "data": {"collection": collection_type, "name": name}}
-        # if include is None and exclude is None:
-        #    if collection_type.lower() in ["dataset", "reactiondataset"]:  # XXX
-        #        payload["meta"]["exclude"] = ["contributed_values", "records"]
-        # else:
-        #    payload["meta"]["include"] = include
-        #    payload["meta"]["exclude"] = exclude
-
-        payload["meta"]["include"] = include
-        payload["meta"]["exclude"] = exclude
-
-        print("{} : '{}' || {}".format(collection_type, name, self.address))
-        response = self._automodel_request("collection", "get", payload, full_return=True)
-        if full_return:
-            return response
-
-        # Watching for nothing found
-        if len(response.data):
-            return collection_factory(response.data[0], client=self)
-        else:
-            raise KeyError("Collection '{}:{}' not found.".format(collection_type, name))
-
-    # TODO: make this just take collections themselves, not dicts
-    def add_collection(
-        self, collection: Dict[str, Any], overwrite: bool = False, full_return: bool = False
-    ) -> Union["CollectionGETResponse", List["ObjectId"]]:
-        """Adds a new Collection to the server.
-
-        Parameters
-        ----------
-        collection : Dict[str, Any]
-            The full collection data representation.
-        overwrite : bool, optional
-            Overwrites the collection if it already exists in the database, used for updating collection.
-        full_return : bool, optional
-            Returns the full server response if True that contains additional metadata.
-
-        Returns
-        -------
-        List[ObjectId]
-            The ObjectId's of the added collection.
-
-        """
-        # Can take in either molecule or lists
-
-        if overwrite and ("id" not in collection or collection["id"] == "local"):
-            raise KeyError("Attempting to overwrite collection, but no server ID found (cannot use 'local').")
-
-        payload = {"meta": {"overwrite": overwrite}, "data": collection}
-        return self._automodel_request("collection", "post", payload, full_return=full_return)
-
-    # def _chunk_request(self, items):
-    #    procedures: List[Dict[str, Any]] = []
-    #    for i in range(0, len(items), self.query_limit):
-    #        chunk_ids = query_ids[i : i + self.client.query_limit]
-    #        procedures.extend(self.client._query_procedures(id=chunk_ids))
-
-    def get_record(self, id: "QueryObjectId") -> Union[List[Dict[str, Any]], Dict[str, Any]]:
-        """Get result records by id.
-
-        This is used by collections to retrieve their results when demanded.
-        Can reliably use the client's own caching for performance.
-
-        Parameters
-        ----------
-        id : QueryObjectId
-            Queries the record ``id`` field.
-            Multiple ids can be included in a list; result records will be returned in the same order.
-
-        Returns
-        -------
-        records : Union[List[Dict[str, Any]], Dict[str, Any]]
-            If `id` is a list of ids, then a list of records will be returned in the same order.
-            If `id` is a single id, then only that record will be returned.
-
-        """
-        original_id = copy.deepcopy(id)
-
-        # passthrough the cache first
-        # if id is specified
-        cached_records = self._cache.get(id)
-
-        if isinstance(id, list):
-            # if we were given a list of ids, remove any that were found in cache
-            for i in cached_records:
-                id.remove(i)
-
-            # if all ids found in cache, no need to go further
-            if len(id) == 0:
-                return [cached_records[i] for i in original_id]
-
-        elif len(cached_records) == 1:
-            # no need to query at all if only one id asked for, and was found in cache
-            return cached_records[id]
-
-        payload = {
-            "meta": {},
-            "data": {
-                "id": id,
-            },
-        }
-
-        results = self._automodel_request("procedure", "get", payload)
-        results = {res["id"]: record_factory(res) for res in results}
-
-        # TODO: could put the "only complete" logic into the cache itself as a policy
-        self._cache.put([record for record in results.values() if record.status == "COMPLETE"])
-
-        # combine cached records with queried results
-        results.update(cached_records)
-
-        # order the results by input id list
-        if isinstance(original_id, list):
-            ordered = [results[i] for i in original_id]
-        else:
-            ordered = results[original_id]
-
-        return ordered
-
-    def get_kvstore(self, id: "QueryObjectId") -> Union[List[Dict[str, Any]], Dict[str, Any]]:
-        """Get KVStore items by id.
-
-        Parameters
-        ----------
-        id : QueryObjectId
-            Queries the KVStore by key.
-            Multiple ids can be included in a list; KVStore items will be returned in the same order.
-
-        Returns
-        -------
-        results : Union[List[Dict[str, Any]], Dict[str, Any]]
-
-
-        """
-
-        results = self._automodel_request("kvstore", "get", {"meta": {}, "data": {"id": id}}, full_return=True)
-
-        if isinstance(id, list):
-            return [results[i] for i in id]
-        else:
-            return results[id]
-
-    # TODO: would like to merge the functionality of
-    #       `query_result`, `query_procedure`, `query_service`.
-    #       perhaps just `query_record`?
-    def query_records(ids: Union[List, "QueryObjectId", int]):
-        pass
-
-    def _query_procedures(
-        self,
-        id: Optional["QueryObjectId"] = None,
-        task_id: Optional["QueryObjectId"] = None,
-        procedure: Optional["QueryStr"] = None,
-        program: Optional["QueryStr"] = None,
-        hash_index: Optional["QueryStr"] = None,
-        status: "QueryStr" = "COMPLETE",
-        limit: Optional[int] = None,
-        skip: int = 0,
-        include: Optional["QueryListStr"] = None,
-        full_return: bool = False,
-    ) -> Union["ProcedureGETResponse", List[Dict[str, Any]]]:
-        """Queries Procedures from the server.
-
-        Parameters
-        ----------
-        id : QueryObjectId, optional
-            Queries the Procedure ``id`` field.
-        task_id : QueryObjectId, optional
-            Queries the Procedure ``task_id`` field.
-        procedure : QueryStr, optional
-            Queries the Procedure ``procedure`` field.
-        program : QueryStr, optional
-            Queries the Procedure ``program`` field.
-        hash_index : QueryStr, optional
-            Queries the Procedure ``hash_index`` field.
-        status : QueryStr, optional
-            Queries the Procedure ``status`` field.
-        limit : Optional[int], optional
-            The maximum number of Procedures to query
-        skip : int, optional
-            The number of Procedures to skip in the query, used during pagination
-        include : QueryListStr, optional
-            Filters the returned fields, will return a dictionary rather than an object.
-        full_return : bool, optional
-            Returns the full server response if True that contains additional metadata.
-            Disables use of client cache.
-
-        Returns
-        -------
-        Union[List['RecordBase'], Dict[str, Any]]
-            Returns a List of found RecordResult's without include, or a
-            dictionary of results with include.
-        """
-        # passthrough the cache first
-        # if id is specified
-        if not full_return:
-            procs = self._cache.get(id)
-
-            if isinstance(id, list):
-                for i in procs:
-                    id.remove(i)
-            else:
-                id = None
-
-        # NOTE: is there a way to query the server with this kind of structure,
-        #       but only get back object ids or perhaps hash_indices?
-        #       This would allow our cache to be fairly dumb on this side, just a kv store
-        payload = {
-            "meta": {"limit": limit, "skip": skip, "include": include},
-            "data": {
-                "id": id,
-                "task_id": task_id,
-                "program": program,
-                "procedure": procedure,
-                "hash_index": hash_index,
-                "status": status,
-            },
-        }
-        response = self._automodel_request("procedure", "get", payload, full_return=True)
-
-        if not include:
-            for ind in range(len(response.data)):
-                response.data[ind] = record_factory(response.data[ind])
-
-        if full_return:
-            return response
-        else:
-            # NOTE: no particular order returned here
-            # could put the "only complete" logic into the cache itself as a policy
-            self._cache.put([proc for proc in response.data if proc.status == "COMPLETE"])
-            return response.data + list(procs.values())
-
     def list_collections(
         self,
         collection_type: Optional[str] = None,
@@ -625,7 +383,158 @@ class PortalClient:
         elif as_df:
             return pd.DataFrame(output)
 
-    def _query_keywords(
+    def get_collection(
+        self,
+        collection_type: str,
+        name: str,
+        full_return: bool = False,
+        include: "QueryListStr" = None,  # TODO: WHAT ARE THESE FOR?
+        exclude: "QueryListStr" = None,  # TODO: WHAT ARE THESE FOR?
+    ) -> "Collection":
+        """Returns a given collection from the server.
+
+        Parameters
+        ----------
+        collection_type : str
+            The collection type.
+        name : str
+            The name of the collection.
+        full_return : bool, optional
+            If True, returns the full server response.
+        include : QueryListStr, optional
+            Return only these columns.
+        exclude : QueryListStr, optional
+            Return all but these columns.
+        Returns
+        -------
+        Collection
+            A Collection object if the given collection was found; otherwise returns `None`.
+
+        """
+
+        payload = {"meta": {}, "data": {"collection": collection_type, "name": name}}
+        # if include is None and exclude is None:
+        #    if collection_type.lower() in ["dataset", "reactiondataset"]:  # XXX
+        #        payload["meta"]["exclude"] = ["contributed_values", "records"]
+        # else:
+        #    payload["meta"]["include"] = include
+        #    payload["meta"]["exclude"] = exclude
+
+        payload["meta"]["include"] = include
+        payload["meta"]["exclude"] = exclude
+
+        print("{} : '{}' || {}".format(collection_type, name, self.address))
+        response = self._automodel_request("collection", "get", payload, full_return=True)
+        if full_return:
+            return response
+
+        # Watching for nothing found
+        if len(response.data):
+            return collection_factory(response.data[0], client=self)
+        else:
+            raise KeyError("Collection '{}:{}' not found.".format(collection_type, name))
+
+    def get_molecules(self):
+        pass
+
+    def get_records(self, id: "QueryObjectId") -> Union[List["Record"], "Record"]:
+        """Get result records by id.
+
+        This is used by collections to retrieve their results when demanded.
+        Can reliably use the client's own caching for performance.
+
+        Parameters
+        ----------
+        id : QueryObjectId
+            Queries the record ``id`` field.
+            Multiple ids can be included in a list; result records will be returned in the same order.
+        missing_ok : bool
+            If True,
+
+        Returns
+        -------
+        records : Union[List[Record], Record]
+            If `id` is a list of ids, then a list of records will be returned in the same order.
+            If `id` is a single id, then only that record will be returned.
+
+        """
+        original_id = copy.deepcopy(id)
+
+        # passthrough the cache first
+        # if id is specified
+        cached_records = self._cache.get(id)
+
+        if isinstance(id, list):
+            # if we were given a list of ids, remove any that were found in cache
+            for i in cached_records:
+                id.remove(i)
+
+            # if all ids found in cache, no need to go further
+            if len(id) == 0:
+                return [cached_records[i] for i in original_id]
+
+        elif len(cached_records) == 1:
+            # no need to query at all if only one id asked for, and was found in cache
+            return cached_records[id]
+
+        # TODO: make id always a list, use `make_list`
+        payload = {
+            "meta": {},
+            "data": {
+                "id": id,
+            },
+        }
+
+        results = self._automodel_request("procedure", "get", payload)
+        results = {res["id"]: record_factory(res, client=self) for res in results}
+
+        # TODO: could put the "only complete" logic into the cache itself as a policy
+        self._cache.put([record for record in results.values() if record.status == "COMPLETE"])
+
+        # combine cached records with queried results
+        results.update(cached_records)
+
+        # order the results by input id list
+        if isinstance(original_id, list):
+            ordered = [results[i] for i in original_id]
+        else:
+            ordered = results[original_id]
+
+        return ordered
+
+    def _get_outputs(self, id: "QueryObjectId") -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+        """Get output_store items by id.
+
+        Parameters
+        ----------
+        id : QueryObjectId
+            Queries the KVStore by key.
+            Multiple ids can be included in a list; KVStore items will be returned in the same order.
+
+        Returns
+        -------
+        results : Union[List[Dict[str, Any]], Dict[str, Any]]
+            If `id` is a list of ids, then a list of items will be returned in the same order.
+            If `id` is a single id, then only that item will be returned.
+
+        """
+        # TODO: consider utilizing the client cache for these
+
+        payload = {
+            "meta": {},
+            "data": {
+                "id": id,
+            },
+        }
+
+        results = self._automodel_request("kvstore", "get", payload)
+
+        if isinstance(id, list):
+            return [results[i] for i in id]
+        else:
+            return results[id]
+
+    def get_keywords(
         self,
         id: Optional["QueryObjectId"] = None,
         *,
@@ -657,3 +566,214 @@ class PortalClient:
 
         payload = {"meta": {}, "data": {"id": id, "hash_index": hash_index}}
         return self._automodel_request("keyword", "get", payload, full_return=full_return)
+
+    # TODO: grab this one from Ben's `next` branch
+    # TODO: we would want to cache these
+    def _get_wavefunctions(self):
+        pass
+
+    def query_molecules(self):
+        pass
+
+    # TODO: would like to merge the functionality of
+    #       `query_result`, `query_procedure`, `query_service`.
+    #       perhaps just `query_record`?
+    # TODO: populate the kwargs on this with queryables from Record datamodel fields
+    def query_records(self, ids: Union[List, "QueryObjectId", int]):
+        pass
+
+    def query_optimizations(self):
+        pass
+
+    def query_torsiondrives(self):
+        pass
+
+    def _query_procedures(
+        self,
+        created_on,
+        modified_on,
+        procedure: Optional["QueryStr"] = None,
+        status: "QueryStr" = "COMPLETE",
+        limit: Optional[int] = None,
+        skip: int = 0,
+        include: Optional["QueryListStr"] = None,
+        full_return: bool = False,
+    ) -> Union["ProcedureGETResponse", List[Dict[str, Any]]]:
+        """Queries Procedures from the server.
+
+        Parameters
+        ----------
+        task_id : QueryObjectId, optional
+            Queries the Procedure ``task_id`` field.
+        procedure : QueryStr, optional
+            Queries the Procedure ``procedure`` field.
+        status : QueryStr, optional
+            Queries the Procedure ``status`` field.
+        limit : Optional[int], optional
+            The maximum number of Procedures to query
+        skip : int, optional
+            The number of Procedures to skip in the query, used during pagination
+        include : QueryListStr, optional
+            Filters the returned fields, will return a dictionary rather than an object.
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
+            Disables use of client cache.
+
+        Returns
+        -------
+        Union[List['RecordBase'], Dict[str, Any]]
+            Returns a List of found RecordResult's without include, or a
+            dictionary of results with include.
+        """
+        # passthrough the cache first
+        # if id is specified
+        if not full_return:
+            procs = self._cache.get(id)
+
+            if isinstance(id, list):
+                for i in procs:
+                    id.remove(i)
+            else:
+                id = None
+
+        # NOTE: is there a way to query the server with this kind of structure,
+        #       but only get back object ids or perhaps hash_indices?
+        #       This would allow our cache to be fairly dumb on this side, just a kv store
+        payload = {
+            "meta": {"limit": limit, "skip": skip, "include": include},
+            "data": {
+                "id": id,
+                "task_id": task_id,
+                "program": program,
+                "procedure": procedure,
+                "hash_index": hash_index,
+                "status": status,
+            },
+        }
+        response = self._automodel_request("procedure", "get", payload, full_return=True)
+
+        if not include:
+            for ind in range(len(response.data)):
+                response.data[ind] = record_factory(response.data[ind])
+
+        if full_return:
+            return response
+        else:
+            # NOTE: no particular order returned here
+            # could put the "only complete" logic into the cache itself as a policy
+            self._cache.put([proc for proc in response.data if proc.status == "COMPLETE"])
+            return response.data + list(procs.values())
+
+    def query_tasks(
+        self,
+        id: Optional["QueryObjectId"] = None,
+        hash_index: Optional["QueryStr"] = None,
+        program: Optional["QueryStr"] = None,
+        status: Optional["QueryStr"] = None,
+        base_result: Optional["QueryStr"] = None,
+        tag: Optional["QueryStr"] = None,
+        manager: Optional["QueryStr"] = None,
+        limit: Optional[int] = None,
+        skip: int = 0,
+        include: Optional["QueryListStr"] = None,
+        full_return: bool = False,
+    ) -> Union["TaskQueueGETResponse", List["TaskRecord"], List[Dict[str, Any]]]:
+        """Checks the status of Tasks in the Fractal queue.
+
+        Parameters
+        ----------
+        id : QueryObjectId, optional
+            Queries the Tasks ``id`` field.
+        hash_index : QueryStr, optional
+            Queries the Tasks ``hash_index`` field.
+        program : QueryStr, optional
+            Queries the Tasks ``program`` field.
+        status : QueryStr, optional
+            Queries the Tasks ``status`` field.
+        base_result : QueryStr, optional
+            Queries the Tasks ``base_result`` field.
+        tag : QueryStr, optional
+            Queries the Tasks ``tag`` field.
+        manager : QueryStr, optional
+            Queries the Tasks ``manager`` field.
+        limit : Optional[int], optional
+            The maximum number of Tasks to query
+        skip : int, optional
+            The number of Tasks to skip in the query, used during pagination
+        include : QueryListStr, optional
+            Filters the returned fields, will return a dictionary rather than an object.
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        List[Dict[str, Any]]
+            A dictionary of each match that contains the current status
+            and, if an error has occurred, the error message.
+
+        Examples
+        --------
+
+        >>> client.query_tasks(id="5bd35af47b878715165f8225",include=["status"])
+        [{"status": "WAITING"}]
+
+
+        """
+
+        payload = {
+            "meta": {"limit": limit, "skip": skip, "include": include},
+            "data": {
+                "id": id,
+                "hash_index": hash_index,
+                "program": program,
+                "status": status,
+                "base_result": base_result,
+                "tag": tag,
+                "manager": manager,
+            },
+        }
+
+        return self._automodel_request("task_queue", "get", payload, full_return=full_return)
+
+    # TODO: make this just take collections themselves, not dicts
+    def add_collection(
+        self, collection: Dict[str, Any], overwrite: bool = False, full_return: bool = False
+    ) -> Union["CollectionGETResponse", List["ObjectId"]]:
+        """Adds a new Collection to the server.
+
+        Parameters
+        ----------
+        collection : Dict[str, Any]
+            The full collection data representation.
+        overwrite : bool, optional
+            Overwrites the collection if it already exists in the database, used for updating collection.
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        List[ObjectId]
+            The ObjectId's of the added collection.
+
+        """
+        # Can take in either molecule or lists
+
+        if overwrite and ("id" not in collection or collection["id"] == "local"):
+            raise KeyError("Attempting to overwrite collection, but no server ID found (cannot use 'local').")
+
+        payload = {"meta": {"overwrite": overwrite}, "data": collection}
+        return self._automodel_request("collection", "post", payload, full_return=full_return)
+
+    # TODO: consider how we want to submit compute at the client level
+    #
+    def add_records(self):
+        pass
+
+    def add_optimizations(self):
+        pass
+
+    def add_torsiondrives(self):
+        pass
+
+    def add_gridoptimizations(self):
+        pass

@@ -114,7 +114,7 @@ class Dataset(Collection):
 
             keywords_name = spec["keywords"]
             spec["name"] = f"{spec['program']}/{keywords_name}"
-            spec["keywords"] = self._client._query_keywords(datadict["alias_keywords"][spec["program"]][keywords_name])[
+            spec["keywords"] = self._client.query_keywords(datadict["alias_keywords"][spec["program"]][keywords_name])[
                 0
             ]
 
