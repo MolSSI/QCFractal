@@ -2,11 +2,50 @@ from typing import Any, Optional, Dict, List
 
 from pydantic import Field, constr, validator
 import qcelemental as qcel
+from qcelemental.models import ProtoModel
+from qcelemental.models.procedures import OptimizationProtocols
 
 from ...interface.models import QCSpecification, OptimizationSpecification
 from ...interface.models import ObjectId, DriverEnum
+from ...interface.models.model_utils import recursive_normalizer
 from .record import Record
 from .record_utils import register_record
+
+
+class OptimizationSpecification(ProtoModel):
+    """
+    Metadata describing a geometry optimization.
+    """
+
+    program: str = Field(..., description="Optimization program to run the optimization with")
+    keywords: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Dictionary of keyword arguments to pass into the ``program`` when the program runs. "
+        "Note that unlike :class:`QCSpecification` this is a dictionary of keywords, not the Id for a "
+        ":class:`KeywordSet`. ",
+    )
+    protocols: Optional[OptimizationProtocols] = Field(
+        OptimizationProtocols(), description=str(OptimizationProtocols.__base_doc__)
+    )
+
+    def dict(self, *args, **kwargs):
+        ret = super().dict(*args, **kwargs)
+
+        # Maintain hash compatability
+        if len(ret["protocols"]) == 0:
+            ret.pop("protocols", None)
+
+        return ret
+
+    @validator("program")
+    def _check_program(cls, v):
+        return v.lower()
+
+    @validator("keywords")
+    def _check_keywords(cls, v):
+        if v is not None:
+            v = recursive_normalizer(v)
+        return v
 
 
 class OptimizationRecord(Record):
@@ -18,9 +57,6 @@ class OptimizationRecord(Record):
     _type = "optimization"
 
     class _DataModel(Record._DataModel):
-        # Class data
-        _hash_indices = {"initial_molecule", "keywords", "qc_spec"}
-
         # Version data
         version: int = Field(1, description="Version of the OptimizationRecord Model which this data was created with.")
         procedure: constr(strip_whitespace=True, regex="optimization") = Field(
@@ -57,16 +93,6 @@ class OptimizationRecord(Record):
             description="The list of Molecule Id's the Optimization procedure generated at each step of the optimization."
             "``initial_molecule`` will be the first index, and ``final_molecule`` will be the last index.",
         )
-
-    def __init__(self, **kwargs: Any):
-        """
-
-        Parameters
-        ----------
-        **kwargs : Dict[str, Any]
-            Additional keywords passed to the OptimizationRecord and the initial data constructor.
-        """
-        self._data = self._DataModel(**kwargs)
 
     @property
     def initial_molecule(self):

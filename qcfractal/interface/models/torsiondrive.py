@@ -100,9 +100,6 @@ class TorsionDriveRecord(RecordBase):
     A interface to the raw JSON data of a TorsionDriveRecord torsion scan run.
     """
 
-    # Class data
-    _hash_indices = {"initial_molecule", "keywords", "optimization_spec", "qc_spec"}
-
     # Version data
     version: int = Field(1, description="The version number of the Record.")
     procedure: _td_constr = Field(

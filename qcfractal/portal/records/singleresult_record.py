@@ -4,8 +4,12 @@ from pydantic import Field, constr, validator
 import qcelemental as qcel
 
 from ...interface.models import ObjectId, DriverEnum
-from .record import Record
+from .record import Record, QCSpecification
 from .record_utils import register_record
+
+
+class SingleResultSpecification(QCSpecification):
+    pass
 
 
 class SingleResultRecord(Record):
@@ -13,7 +17,7 @@ class SingleResultRecord(Record):
     User-facing API for accessing data for a single optimization.
 
     """
-    #_SpecModel = SingleResultSpecification
+    _SpecModel = SingleResultSpecification
     _type = "singleresult"
 
     class _DataModel(Record._DataModel):
@@ -60,5 +64,6 @@ class SingleResultRecord(Record):
     @property
     def molecule(self):
         pass
+
 
 register_record(SingleResultRecord)

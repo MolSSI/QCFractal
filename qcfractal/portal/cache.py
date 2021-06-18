@@ -15,7 +15,7 @@ from .collections.collection_utils import collection_factory
 
 
 
-# TODO: consider zstd compression instead of bz2 for faster read at the cost of perhaps slower write
+# TODO: consider lzma, zstd compression instead of bz2 for faster read at the cost of perhaps slower write
 class PortalCache:
     def __init__(self, client, cachedir, max_memcache_size):
         self.client = client
@@ -94,7 +94,7 @@ class PortalCache:
         elif id is None:
             return {}
         else:
-            return {id: self.get_single(str(id), db)}
+            return {id: self._get_single(str(id), db)}
 
     def _get_single(self, id, db=None):
         # first check memcache (fast)
@@ -108,7 +108,7 @@ class PortalCache:
         if db is not None:
             record = db.get(id, None)
             if record is not None:
-                rec = record_factory(json.loads(bz2.decompress(record).decode()))
+                rec = record_factory(json.loads(bz2.decompress(record).decode()), client=self.client)
 
                 # add to memcache
                 self.memcache[id] = rec

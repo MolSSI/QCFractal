@@ -18,13 +18,15 @@ def register_record(record: "RecordBase") -> None:
     __registered_records[record_type] = record
 
 
-def record_factory(data: Dict[str, Any]) -> "RecordBase":
+def record_factory(data: Dict[str, Any], client: Optional["PortalClient"] = None) -> "RecordBase":
     """Returns a Record object from data deserialized from JSON.
 
     Parameters
     ----------
     data : Dict[str, Any]
         The JSON-serializable dict to create a new class from.
+    client : PortalClient, optional
+        A PortalClient connected to a server.
 
     Returns
     -------
@@ -39,7 +41,7 @@ def record_factory(data: Dict[str, Any]) -> "RecordBase":
         raise KeyError("Attempted to create Record of unknown type '{}'.".format(data["procedure"]))
 
     # TODO: return here after fixing `from_json`, `to_json` to be less ambiguous
-    return __registered_records[data["procedure"].lower()].from_dict(data)
+    return __registered_records[data["procedure"].lower()].from_dict(data, client=client)
 
 
 def record_name_map() -> Dict[str, str]:
