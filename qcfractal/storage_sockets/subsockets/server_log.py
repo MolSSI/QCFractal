@@ -331,6 +331,18 @@ class ServerLogSocket:
                 AccessLogORM.access_type,
                 AccessLogORM.access_method,
                 func.count(AccessLogORM.id),
+                func.min(AccessLogORM.request_duration),
+                func.percentile_disc(0.25).within_group(AccessLogORM.request_duration),
+                func.percentile_disc(0.5).within_group(AccessLogORM.request_duration),
+                func.percentile_disc(0.75).within_group(AccessLogORM.request_duration),
+                func.percentile_disc(0.95).within_group(AccessLogORM.request_duration),
+                func.max(AccessLogORM.request_duration),
+                func.min(AccessLogORM.response_bytes),
+                func.percentile_disc(0.25).within_group(AccessLogORM.response_bytes),
+                func.percentile_disc(0.5).within_group(AccessLogORM.response_bytes),
+                func.percentile_disc(0.75).within_group(AccessLogORM.response_bytes),
+                func.percentile_disc(0.95).within_group(AccessLogORM.response_bytes),
+                func.max(AccessLogORM.response_bytes),
             )
             query = query.filter(and_(*and_query)).group_by(
                 AccessLogORM.access_type, AccessLogORM.access_method, "group_col"
@@ -342,7 +354,13 @@ class ServerLogSocket:
             # We group into a dictionary where the key is the date, and the value
             # is a dictionary with the rest of the information
             for row in results:
-                d = {"access_type": row[1], "access_method": row[2], "count": row[3]}
+                d = {
+                    "access_type": row[1],
+                    "access_method": row[2],
+                    "count": row[3],
+                    "request_duration_info": row[4:10],
+                    "response_bytes_info": row[10:16],
+                }
                 result_dict[row[0]].append(d)
 
         # replace None with "_none_"
