@@ -1225,6 +1225,22 @@ class FractalClient(object):
         }
         return self._automodel_request("manager", "get", payload, full_return=full_return)
 
+    def query_server_stats(
+        self,
+        before: Optional[datetime] = None,
+        after: Optional[datetime] = None,
+        limit: Optional[int] = None,
+        skip: int = 0,
+        full_return: bool = False,
+    ) -> Dict[str, Any]:
+        """Obtains individual entries in the server stats logs"""
+
+        payload = {
+            "meta": {"limit": limit, "skip": skip},
+            "data": {"before": before, "after": after},
+        }
+        return self._automodel_request("server_stats", "get", payload, full_return=full_return)
+
     def query_access_log(
         self,
         access_type: Optional[List[str]] = None,
