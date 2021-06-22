@@ -31,6 +31,8 @@ from ..interface.models.rest_models import (
     QueueManagerGETResponse,
     QueueManagerPOSTBody,
     QueueManagerPOSTResponse,
+    ServerStatsGETBody,
+    ServerStatsGETResponse,
     TaskQueuePOSTBody,
     TaskQueuePOSTResponse,
     MoleculeGETBody,
@@ -428,7 +430,6 @@ def get_information():
     qcf_cfg = current_app.config["QCFRACTAL_CONFIG"]
 
     # TODO FOR RELEASE - change lower and upper version limits?
-    db_data = storage_socket.server_log.get_latest_stats()
     public_info = {
         "name": qcf_cfg.name,
         "manager_heartbeat_frequency": qcf_cfg.heartbeat_frequency,
@@ -436,11 +437,6 @@ def get_information():
         "query_limits": qcf_cfg.response_limits.dict(),
         "client_lower_version_limit": qcfractal_version,
         "client_upper_version_limit": qcfractal_version,
-        "collection": db_data.get("collection_count", 0),
-        "molecule": db_data.get("molecule_count", 0),
-        "result": db_data.get("result_count", 0),
-        "kvstore": db_data.get("kvstore_count", 0),
-        "last_update": db_data.get("timestamp", None),
     }
 
     return SerializedResponse(public_info)
@@ -1160,6 +1156,19 @@ def get_access_log():
     body = parse_bodymodel(AccessLogGETBody)
     meta, logs = storage_socket.server_log.query_access_logs(**{**body.data.dict(), **body.meta.dict()})
     response = AccessLogGETResponse(meta=convert_get_response_metadata(meta, missing=[]), data=logs)
+    return SerializedResponse(response)
+
+
+@main.route("/server_stats", methods=["GET"])
+@check_access
+def get_server_stats():
+    """
+    Queries access logs
+    """
+
+    body = parse_bodymodel(ServerStatsGETBody)
+    meta, logs = storage_socket.server_log.query_stats(**{**body.data.dict(), **body.meta.dict()})
+    response = ServerStatsGETResponse(meta=convert_get_response_metadata(meta, missing=[]), data=logs)
     return SerializedResponse(response)
 
 
