@@ -139,10 +139,11 @@ class ServerLogSocket:
             }
 
             # Task queue and Service queue status
+            # TODO - kind of pointless now?
             task_query = (
-                session.query(BaseResultORM.procedure, TaskQueueORM.status, func.count(TaskQueueORM.id))
+                session.query(BaseResultORM.procedure, BaseResultORM.status, func.count(TaskQueueORM.id))
                 .join(BaseResultORM, BaseResultORM.id == TaskQueueORM.base_result_id)
-                .group_by(BaseResultORM.procedure, TaskQueueORM.status)
+                .group_by(BaseResultORM.procedure, BaseResultORM.status)
                 .all()
             )
             task_stats = {"columns": ["result_type", "status", "count"], "rows": [list(r) for r in task_query]}

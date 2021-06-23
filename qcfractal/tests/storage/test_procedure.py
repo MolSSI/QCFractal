@@ -74,21 +74,16 @@ def test_procedure_basic(storage_socket):
     # Tasks should be assigned correctly
     procs = storage_socket.procedure.get(all_ids, include=["*", "task_obj"])
 
-    assert procs[0]["task_obj"]["manager"] == "manager_1"
-    assert procs[1]["task_obj"]["manager"] == "manager_1"
-    assert procs[2]["task_obj"]["manager"] == "manager_2"
-    assert procs[3]["task_obj"]["manager"] == "manager_2"
-    assert procs[4]["task_obj"]["manager"] == "manager_1"
-    assert procs[0]["task_obj"]["status"] == TaskStatusEnum.running
-    assert procs[1]["task_obj"]["status"] == TaskStatusEnum.running
-    assert procs[2]["task_obj"]["status"] == TaskStatusEnum.running
-    assert procs[3]["task_obj"]["status"] == TaskStatusEnum.running
-    assert procs[4]["task_obj"]["status"] == TaskStatusEnum.running
-    assert procs[0]["status"] == RecordStatusEnum.incomplete
-    assert procs[1]["status"] == RecordStatusEnum.incomplete
-    assert procs[2]["status"] == RecordStatusEnum.incomplete
-    assert procs[3]["status"] == RecordStatusEnum.incomplete
-    assert procs[4]["status"] == RecordStatusEnum.incomplete
+    assert procs[0]["manager_name"] == "manager_1"
+    assert procs[1]["manager_name"] == "manager_1"
+    assert procs[2]["manager_name"] == "manager_2"
+    assert procs[3]["manager_name"] == "manager_2"
+    assert procs[4]["manager_name"] == "manager_1"
+    assert procs[0]["status"] == TaskStatusEnum.running
+    assert procs[1]["status"] == TaskStatusEnum.running
+    assert procs[2]["status"] == TaskStatusEnum.running
+    assert procs[3]["status"] == TaskStatusEnum.running
+    assert procs[4]["status"] == TaskStatusEnum.running
 
     # Return results
     # The ids returned from create() are the result ids, but the managers return task ids
@@ -102,9 +97,7 @@ def test_procedure_basic(storage_socket):
     tasks = storage_socket.task_queue.get(task_ids, missing_ok=True)
     assert len(tasks) == 5
     assert tasks.count(None) == 3
-    assert tasks[2]["manager"] == "manager_2"
     assert tasks[2]["base_result_id"] == ids3[0]
-    assert tasks[4]["manager"] == "manager_1"
     assert tasks[4]["base_result_id"] == ids5[0]
 
     # Are the statuses, etc correct?
@@ -114,7 +107,6 @@ def test_procedure_basic(storage_socket):
     assert procs[2]["status"] == RecordStatusEnum.error
     assert procs[0]["task_obj"] is None
     assert procs[1]["task_obj"] is None
-    assert procs[2]["task_obj"]["status"] == TaskStatusEnum.error
 
     assert procs[0]["manager_name"] == "manager_1"
     assert procs[1]["manager_name"] == "manager_1"
@@ -147,8 +139,8 @@ def test_procedure_wrong_manager_return(storage_socket, caplog):
     procs = storage_socket.procedure.get(ids, include=["*", "task_obj"])
 
     assert len(procs) == 1
-    assert procs[0]["task_obj"]["manager"] == "manager_1"
-    assert procs[0]["task_obj"]["status"] == TaskStatusEnum.running
+    assert procs[0]["manager_name"] == "manager_1"
+    assert procs[0]["status"] == TaskStatusEnum.running
 
 
 def test_procedure_nonexist_task(storage_socket, caplog):
@@ -184,13 +176,9 @@ def test_procedure_base_already_complete(storage_socket, caplog):
         session.query(BaseResultORM).update(dict(status=RecordStatusEnum.complete))
 
     # Try returning something
-    with caplog_handler_at_level(caplog, logging.ERROR):
+    with caplog_handler_at_level(caplog, logging.WARNING):
         storage_socket.procedure.update_completed("manager_1", {ids[0]: result_data_1})
-        assert "is already complete!" in caplog.text
-
-    # The corresponding task should be deleted now
-    procs = storage_socket.procedure.get(ids, include=["*", "task_obj"])
-    assert procs[0]["task_obj"] is None
+        assert "is not in the running state" in caplog.text
 
 
 def test_procedure_get(storage_socket):

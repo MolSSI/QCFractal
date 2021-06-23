@@ -10,7 +10,7 @@ from qcfractal.storage_sockets.models import (
 from sqlalchemy import and_
 from sqlalchemy.orm import joinedload, selectinload, load_only
 from qcfractal.interface.models import (
-    TaskStatusEnum,
+    PriorityEnum,
     FailedOperation,
     RecordStatusEnum,
     InsertMetadata,
@@ -277,6 +277,73 @@ class ProcedureSocket:
 
         return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx, errors=errors), ids  # type: ignore
 
+    def regenerate_tasks(
+        self,
+        id: Iterable[ObjectId],
+        tag: Optional[str] = None,
+        priority: PriorityEnum = PriorityEnum.normal,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Optional[ObjectId]]:
+        """
+        Regenerates tasks for the given procedures
+
+        Parameters
+        ----------
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
+
+        Returns
+        -------
+        :
+            List of new task ids, in the order of the input ids. If a base result does not exist, or is marked completed,
+            or already has a task associated with it, then the corresponding entry will be None
+        """
+
+        task_ids: List[Optional[ObjectId]] = []
+
+        with self._core_socket.optional_session(session) as session:
+            # Slow, but this shouldn't be called too often
+            for record_id in id:
+                record = (
+                    session.query(BaseResultORM)
+                    .filter(BaseResultORM.id == record_id)
+                    .options(joinedload(BaseResultORM.task_obj))
+                    .one_or_none()
+                )
+
+                # Base result doesn't exist
+                if record is None:
+                    task_ids.append(None)
+                    continue
+
+                # Task entry already exists
+                if record.task_obj is not None:
+                    task_ids.append(None)
+                    continue
+
+                # Result is already complete
+                if record.status == RecordStatusEnum.complete:
+                    task_ids.append(None)
+                    continue
+
+                # Now actually create the task
+                procedure_handler = self.handler_map[record.procedure]
+                task_meta, new_task_ids = procedure_handler.create_tasks(session, [record], tag, priority)
+
+                if not task_meta.success:
+                    # In general, create_tasks should always succeed
+                    # If not, that is usually a programmer error
+                    # This will rollback the session
+                    raise RuntimeError(f"Error adding tasks: {task_meta.error_string}")
+
+                record.status = RecordStatusEnum.waiting
+                record.modified_on = datetime.utcnow()
+                task_ids.extend(new_task_ids)
+
+        return task_ids
+
     def update_completed(self, manager_name: str, results: Dict[ObjectId, AllResultTypes]):
         """
         Insert data from completed calculations into the database
@@ -319,7 +386,8 @@ class ProcedureSocket:
                     task_failures += 1
                     continue
 
-                base_result_id = task_orm.base_result_id
+                base_result: BaseResultORM = task_orm.base_result_obj
+                base_result_id = base_result.id
 
                 try:
                     #################################################################
@@ -327,35 +395,25 @@ class ProcedureSocket:
                     #################################################################
                     # Is the task in the running state
                     # If so, do not attempt to modify the task queue. Just move on
-                    if task_orm.status != TaskStatusEnum.running:
-                        self._logger.warning(f"Task id {task_id} is not in the running state.")
-                        task_failures += 1
-
-                    # Is the base result already marked complete? if so, this is a problem
-                    # This should never happen, so log at level of "error"
-                    if task_orm.base_result_obj.status == RecordStatusEnum.complete:
-                        self._logger.error(f"Base result {base_result_id} (task id {task_id}) is already complete!")
-
-                        # Go ahead and delete the task
-                        session.delete(task_orm)
-                        session.commit()
+                    if task_orm.base_result_obj.status != RecordStatusEnum.running:
+                        print("*" * 100)
+                        print(task_orm.base_result_obj.status)
+                        self._logger.warning(
+                            f"Task {task_id}/base result {base_result_id} is not in the running state."
+                        )
                         task_failures += 1
 
                     # Was the manager that sent the data the one that was assigned?
                     # If so, do not attempt to modify the task queue. Just move on
-                    elif task_orm.manager != manager_name:
+                    elif base_result.manager_name != manager_name:
                         self._logger.warning(
-                            f"Task id {task_id} belongs to {task_orm.manager}, not manager {manager_name}"
+                            f"Task {task_id}/base result {base_result_id} belongs to {base_result.manager_name}, not manager {manager_name}"
                         )
                         task_failures += 1
 
                     # Failed task returning FailedOperation
                     elif result.success is False and isinstance(result, FailedOperation):
                         self.failure.update_completed(session, task_orm, manager_name, result)
-
-                        # Update the task object
-                        task_orm.status = TaskStatusEnum.error
-                        task_orm.modified_on = task_orm.base_result_obj.modified_on
                         session.commit()
                         self._core_socket.notify_completed_watch(base_result_id, RecordStatusEnum.error)
 
@@ -363,13 +421,11 @@ class ProcedureSocket:
 
                     elif result.success is not True:
                         # QCEngine should always return either FailedOperation, or some result with success == True
-                        msg = f"Unexpected return from manager for task {task_id} base result {base_result_id}: Returned success != True, but not a FailedOperation"
+                        msg = f"Unexpected return from manager for task {task_id}/base result {base_result_id}: Returned success != True, but not a FailedOperation"
                         error = {"error_type": "internal_fractal_error", "error_message": msg}
                         failed_op = FailedOperation(error=error, success=False)
 
                         self.failure.update_completed(session, task_orm, manager_name, failed_op)
-                        task_orm.status = TaskStatusEnum.error
-                        task_orm.modified_on = datetime.utcnow()
                         session.commit()
                         self._core_socket.notify_completed_watch(base_result_id, RecordStatusEnum.error)
 

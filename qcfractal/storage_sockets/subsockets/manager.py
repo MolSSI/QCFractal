@@ -137,9 +137,10 @@ class ManagerSocket:
             deactivated_names = [x[0] for x in deactivated_names]
 
             # For the manager, also reset any orphaned tasks that belong to that manager
+            # (could also do this in one call to reset_status, but without logging n_incomplete)
             for dead_name in deactivated_names:
                 n_incomplete = self._core_socket.task_queue.reset_status(
-                    manager=dead_name, reset_running=True, session=session
+                    manager=[dead_name], reset_running=True, session=session
                 )
                 self._logger.info(
                     f"Deactivated manager {dead_name}. Reason: {reason}. Recycling {n_incomplete} incomplete tasks."

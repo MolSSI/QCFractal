@@ -87,11 +87,6 @@ class PriorityEnum(int, Enum):
                 return status
 
 
-class BaseResultEnum(str, Enum):
-    result = "result"
-    procedure = "procedure"
-
-
 class PythonComputeSpec(ProtoModel):
     function: str = Field(
         ..., description="The module and function name of a Python-callable to call. Of the form 'module.function'."
@@ -107,7 +102,6 @@ class TaskRecord(ProtoModel):
     id: ObjectId = Field(None, description="The Database assigned Id of the Task, if it has been assigned yet.")
 
     spec: PythonComputeSpec = Field(..., description="The Python function specification for this Task.")
-    status: TaskStatusEnum = Field(TaskStatusEnum.waiting, description="What stage of processing this task is at.")
 
     # Compute blockers and prevention
     required_programs: Dict[str, Optional[str]] = Field(
@@ -128,14 +122,12 @@ class TaskRecord(ProtoModel):
     )
 
     # Modified data
-    modified_on: datetime.datetime = Field(None, description="The last time this task was updated in the Database.")
     created_on: datetime.datetime = Field(None, description="The time when this task was created in the Database.")
 
     def __init__(self, **data):
 
         # Set datetime defaults if not present
         dt = datetime.datetime.utcnow()
-        data.setdefault("modified_on", dt)
         data.setdefault("created_on", dt)
 
         super().__init__(**data)

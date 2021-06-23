@@ -50,7 +50,7 @@ def test_queue_manager_single_tags(compute_adapter_fixture):
     managers = client.query_managers()
     assert len(managers) == 2
 
-    test_results = {"stuff": 0, "other": 1}
+    test_results = {"{stuff}": 0, "{other}": 1}
     for manager in managers:
         value = test_results[manager["tag"]]
         assert manager["submitted"] == value
@@ -80,12 +80,12 @@ def test_queue_manager_multiple_tags(compute_adapter_fixture):
     manager.await_results()
     ret = client.query_results(tasks)
     ref_status = {
-        tasks[0]: RecordStatusEnum.incomplete,
+        tasks[0]: RecordStatusEnum.waiting,
         tasks[1]: RecordStatusEnum.complete,
         tasks[2]: RecordStatusEnum.complete,
-        tasks[3]: RecordStatusEnum.incomplete,
-        tasks[4]: RecordStatusEnum.incomplete,
-        tasks[5]: RecordStatusEnum.incomplete,
+        tasks[3]: RecordStatusEnum.waiting,
+        tasks[4]: RecordStatusEnum.waiting,
+        tasks[5]: RecordStatusEnum.waiting,
     }
     for result in ret:
         assert result.status == ref_status[result.id]
@@ -95,9 +95,9 @@ def test_queue_manager_multiple_tags(compute_adapter_fixture):
         tasks[0]: RecordStatusEnum.complete,
         tasks[1]: RecordStatusEnum.complete,
         tasks[2]: RecordStatusEnum.complete,
-        tasks[3]: RecordStatusEnum.incomplete,
+        tasks[3]: RecordStatusEnum.waiting,
         tasks[4]: RecordStatusEnum.complete,
-        tasks[5]: RecordStatusEnum.incomplete,
+        tasks[5]: RecordStatusEnum.waiting,
     }
     for result in ret:
         assert result.status == ref_status[result.id]
@@ -110,7 +110,7 @@ def test_queue_manager_multiple_tags(compute_adapter_fixture):
         tasks[2]: RecordStatusEnum.complete,
         tasks[3]: RecordStatusEnum.complete,
         tasks[4]: RecordStatusEnum.complete,
-        tasks[5]: RecordStatusEnum.incomplete,
+        tasks[5]: RecordStatusEnum.waiting,
     }
     for result in ret:
         assert result.status == ref_status[result.id]

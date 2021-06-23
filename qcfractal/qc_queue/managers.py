@@ -8,7 +8,7 @@ import sched
 import socket
 import time
 import uuid
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union, Sequence
 
 from pydantic import BaseModel, validator
 
@@ -21,6 +21,21 @@ from .adapters import build_queue_adapter
 from .compress import compress_results
 
 __all__ = ["QueueManager"]
+
+# TODO - this function is duplicated, but partly because managers call automodel_request directly
+def make_list(obj):
+    """
+    Returns a list containing obj if obj is not a list or sequence type object
+    """
+
+    if obj is None:
+        return None
+    # Be careful. strings are sequences
+    if isinstance(obj, str):
+        return [obj]
+    if not isinstance(obj, Sequence):
+        return [obj]
+    return list(obj)
 
 
 class QueueStatistics(BaseModel):
@@ -187,7 +202,7 @@ class QueueManager:
             verbose=verbose,
         )
         self.max_tasks = max_tasks
-        self.queue_tag = queue_tag
+        self.queue_tag = make_list(queue_tag)
         self.verbose = verbose
 
         self.statistics = QueueStatistics(
