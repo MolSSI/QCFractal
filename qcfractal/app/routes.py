@@ -770,8 +770,6 @@ def modify_task_v1():
         tasks_updated = storage_socket.task_queue.reset_status(**d, reset_error=True)
         data = {"n_updated": tasks_updated}
     elif body.meta.operation == "regenerate":
-        tasks_updated = 0
-        result_data = storage_socket.procedure.get(id=body.data.base_result)
 
         new_tag = body.data.new_tag
         if body.data.new_priority is None:
@@ -779,29 +777,9 @@ def modify_task_v1():
         else:
             new_priority = body.data.new_priority
 
-        for r in result_data:
-            # TODO - remove eventually
-            r.pop("result_type", None)
-            model = build_procedure(r)
+        task_ids = storage_socket.procedure.regenerate_tasks(body.data.base_result, new_tag, new_priority)
+        data = {"n_updated": len(task_ids) - task_ids.count(None)}
 
-            # Only regenerate the task if the base record is not complete
-            # This will not do anything if the task already exists
-            if model.status != RecordStatusEnum.complete:
-                procedure_parser = storage_socket.procedure.handler_map[model.procedure]
-
-                with storage_socket.session_scope() as session:
-                    meta, task_ids = procedure_parser.create_tasks(
-                        session, [model.id], tag=new_tag, priority=new_priority
-                    )
-
-                    tasks_updated += meta.n_inserted
-
-                    # If we inserted a new task, then also reset base result statuses
-                    # (ie, if it was running, then it obviously isn't since we made a new task)
-                    if meta.n_inserted > 0:
-                        storage_socket.task_queue.reset_base_result_status(id=body.data.base_result, session=session)
-
-            data = {"n_updated": tasks_updated}
     elif body.meta.operation == "modify":
         tasks_updated = storage_socket.task_queue.modify(
             id=body.data.id,
@@ -814,8 +792,6 @@ def modify_task_v1():
         return jsonify(msg=f"Operation '{body.meta.operation}' is not valid."), 400
 
     response = TaskQueuePUTResponse(data=data, meta={"errors": [], "success": True, "error_description": False})
-
-    current_app.logger.info(f"PUT: TaskQueue - Operation: {body.meta.operation} - {tasks_updated}.")
 
     return SerializedResponse(response)
 
@@ -980,7 +956,7 @@ def queue_manager_modify_v1():
         # current_app.logger.info("QueueManager: New active manager {} detected.".format(name))
 
     elif op == "shutdown":
-        nshutdown = storage_socket.task_queue.reset_status(manager=name, reset_running=True)
+        nshutdown = storage_socket.task_queue.reset_status(manager=[name], reset_running=True)
         storage_socket.manager.update(
             name, returned=nshutdown, status=ManagerStatusEnum.inactive, **body.meta.dict(), log=True
         )

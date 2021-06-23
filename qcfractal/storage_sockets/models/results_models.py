@@ -63,7 +63,7 @@ class BaseResultORM(Base):
     )
 
     # Compute status
-    status = Column(Enum(RecordStatusEnum), nullable=False, default=RecordStatusEnum.incomplete)
+    status = Column(Enum(RecordStatusEnum), nullable=False, default=RecordStatusEnum.waiting)
 
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
     modified_on = Column(DateTime, default=datetime.datetime.utcnow)

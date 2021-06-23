@@ -17,7 +17,7 @@ from .config import FractalConfig, DatabaseConfig, update_nested_dict
 from .periodics import PeriodicsProcess
 from .app.flask_app import FlaskProcess
 from .process_runner import ProcessBase, ProcessRunner
-from .interface.models import TaskStatusEnum
+from .interface.models import RecordStatusEnum
 
 from typing import TYPE_CHECKING
 
@@ -249,7 +249,7 @@ class FractalSnowflake:
 
         if ids is None:
             c = self.client()
-            proc = c.query_tasks(status=[TaskStatusEnum.waiting, TaskStatusEnum.running])
+            proc = c.query_tasks(status=[RecordStatusEnum.waiting, RecordStatusEnum.running])
             ids = [x.base_result for x in proc]
 
         # TODO - INT ID

@@ -118,6 +118,7 @@ class SingleResultHandler(BaseProcedureHandler):
             result_orm.keywords = int(keywords_id) if keywords_id is not None else None  # TODO - INT ID
             result_orm.molecule = mol_id
             result_orm.protocols = spec.protocols.dict()
+            result_orm.status = RecordStatusEnum.waiting
             result_orm.extras = dict()
             all_result_orms.append(result_orm)
 

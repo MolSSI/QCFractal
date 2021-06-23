@@ -138,7 +138,7 @@ class OptimizationHandler(BaseProcedureHandler):
             opt_orm.qc_spec = qc_spec_dict
             opt_orm.initial_molecule = mol_id
             opt_orm.keywords = opt_keywords
-            opt_orm.status = RecordStatusEnum.incomplete
+            opt_orm.status = RecordStatusEnum.waiting
             opt_orm.extras = dict()
 
             # TODO - fix after defaults/nullable are fixed

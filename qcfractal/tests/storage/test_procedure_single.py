@@ -44,13 +44,14 @@ def test_procedure_single_query(storage_socket):
     assert meta.n_returned == 1
     assert procs[0]["id"] == str(all_ids[0])
 
-    # Manager is only assigned to the result on completion or error
+    # Manager is assigned to the result when a manager claims it
     meta, procs = storage_socket.procedure.single.query(manager=["manager_1"])
-    assert meta.n_returned == 1
-    assert procs[0]["id"] == str(all_ids[0])
+    assert meta.n_returned == 2
+    assert int(procs[0]["id"]) in all_ids[0:2]
+    assert int(procs[1]["id"]) in all_ids[0:2]
 
     meta, procs = storage_socket.procedure.single.query(
-        created_before=datetime.utcnow(), status=[RecordStatusEnum.incomplete]
+        created_before=datetime.utcnow(), status=[RecordStatusEnum.waiting, RecordStatusEnum.running]
     )
     assert meta.n_returned == 2
     assert procs[0]["id"] == str(all_ids[1])

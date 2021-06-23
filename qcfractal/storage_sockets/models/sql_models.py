@@ -275,12 +275,10 @@ class TaskQueueORM(Base):
     # others
     tag = Column(String, default=None)
     required_programs = Column(JSONB, nullable=False)
-    status = Column(Enum(TaskStatusEnum), default=TaskStatusEnum.waiting)
     priority = Column(Integer, default=PriorityEnum.normal)
     manager = Column(String, ForeignKey("queue_manager.name", ondelete="SET NULL"), default=None)
 
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
-    modified_on = Column(DateTime, default=datetime.datetime.utcnow)
 
     # can reference ResultORMs or any ProcedureORM
     base_result_id = Column(Integer, ForeignKey("base_result.id", ondelete="cascade"), unique=True, nullable=False)
@@ -294,8 +292,8 @@ class TaskQueueORM(Base):
     # can be retrieved directly, without scanning the remainder at all.
     __table_args__ = (
         Index("ix_task_queue_created_on", "created_on"),
-        Index("ix_task_queue_keys", "status", "required_programs", "tag"),
         Index("ix_task_queue_manager", "manager"),
+        Index("ix_task_queue_required_programs", "required_programs"),
         Index("ix_task_queue_base_result_id", "base_result_id"),
         Index("ix_task_waiting_sort", text("priority desc,  created_on")),
         # WARNING - these are not autodetected by alembic

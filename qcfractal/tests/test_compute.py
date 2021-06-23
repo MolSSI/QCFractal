@@ -5,7 +5,7 @@ Tests the server compute capabilities.
 import pytest
 
 import qcfractal.interface as ptl
-from qcfractal.interface.models import TaskStatusEnum, RecordStatusEnum
+from qcfractal.interface.models import RecordStatusEnum
 from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
 from qcfractal.storage_sockets.models import TaskQueueORM
 from qcfractal.testing import using_psi4, using_rdkit, using_geometric
@@ -97,7 +97,8 @@ def test_task_client_restart(fractal_test_server):
     fractal_test_server.await_results()
 
     tasks = client.query_tasks(base_result=ret.submitted)[0]
-    assert tasks.status == TaskStatusEnum.error
+    result = client.query_results(id=tasks.base_result)[0]
+    assert result.status == RecordStatusEnum.error
 
     # Stop the compute worker
     fractal_test_server._compute_proc.stop()
@@ -105,8 +106,8 @@ def test_task_client_restart(fractal_test_server):
     upd = client.modify_tasks("restart", ret.submitted)
     assert upd.n_updated == 1
 
-    tasks = client.query_tasks(base_result=ret.submitted)[0]
-    assert tasks.status == TaskStatusEnum.waiting
+    result = client.query_results(id=tasks.base_result)[0]
+    assert result.status == RecordStatusEnum.waiting
 
 
 @using_rdkit
@@ -138,10 +139,10 @@ def test_task_regenerate(fractal_test_server):
     new_tasks = client.query_tasks(base_result=base_ids)
 
     for old_task, new_task in zip(old_tasks, new_tasks):
-        assert old_task.status == TaskStatusEnum.error
+        r = client.query_procedures(id=old_task.base_result)[0]
+        assert r.status == RecordStatusEnum.error
         assert old_task.id == new_task.id
         assert old_task.base_result == new_task.base_result
-        assert old_task.modified_on == new_task.modified_on
         assert old_task.created_on == new_task.created_on
 
     # Manually delete the old task
@@ -156,12 +157,14 @@ def test_task_regenerate(fractal_test_server):
     # Now regenerate
     upd = client.modify_tasks("regenerate", base_result=base_ids)
     new_tasks = client.query_tasks(base_result=base_ids)
+    assert len(new_tasks) == 2
+
     assert upd.n_updated == 2
     for old_task, new_task in zip(old_tasks, new_tasks):
-        assert new_task.status == TaskStatusEnum.waiting
+        r = client.query_procedures(id=old_task.base_result)[0]
+        assert r.status == RecordStatusEnum.waiting
         assert old_task.id != new_task.id  # Task ids must now be different
         assert old_task.base_result == new_task.base_result
-        assert old_task.modified_on < new_task.modified_on  # New task must be newer
         assert old_task.created_on < new_task.created_on  # New task must be newer
 
     assert old_tasks[0].spec.args[0]["molecule"]["id"] == new_tasks[0].spec.args[0]["molecule"]["id"]
@@ -175,9 +178,9 @@ def test_task_regenerate(fractal_test_server):
         == new_tasks[1].spec.args[0]["initial_molecule"]["identifiers"]["molecule_hash"]
     )
 
-    # The status of the result should be reset to incomplete
+    # The status of the result should be reset to waiting
     res = client.query_procedures(base_ids)
-    assert all(x.status == RecordStatusEnum.incomplete for x in res)
+    assert all(x.status == RecordStatusEnum.waiting for x in res)
 
 
 def test_task_modify(fractal_test_server):
@@ -214,8 +217,8 @@ def test_queue_error(fractal_test_server):
 
     # Pull from database, raw JSON
     storage_socket = SQLAlchemySocket(fractal_test_server._qcf_config)
-    queue_ret = storage_socket.task_queue.query(status=[TaskStatusEnum.error])[1]
-    result = storage_socket.task_queue.query(id=compute_ret.ids)[1][0]
+    queue_ret = storage_socket.task_queue.query(status=[RecordStatusEnum.error])[1]
+    result = storage_socket.procedure.query(id=compute_ret.ids)[1][0]
 
     assert len(queue_ret) == 1
     assert result["status"] == RecordStatusEnum.error

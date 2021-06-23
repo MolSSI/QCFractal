@@ -344,42 +344,6 @@ def test_torsiondrive_procedure(session_fixture):
     assert torj_proc.optimization_history == {"20": [str(opt_proc.id), str(opt_proc2.id)]}
 
 
-def test_add_task_queue(session_fixture, molecules_H4O2):
-    """
-    Simple test of adding a task using the SQL classes
-    in QCFractal, tasks should be added using storage_socket
-    """
-
-    _, session = session_fixture
-    assert session.query(TaskQueueORM).count() == 0
-
-    page1 = {
-        "procedure": "single",
-        "molecule": molecules_H4O2[0],
-        "method": "m1",
-        "basis": "b1",
-        "keywords": None,
-        "program": "p1",
-        "driver": "energy",
-        "protocols": {},
-    }
-    # add a task that reference results
-    result = ResultORM(**page1)
-    session.add(result)
-    session.commit()
-
-    task = TaskQueueORM(base_result_obj=result, spec={"something": True})
-    session.add(task)
-    session.commit()
-
-    ret = session.query(TaskQueueORM)
-    assert ret.count() == 1
-
-    task = ret.first()
-    assert task.status == TaskStatusEnum.waiting
-    assert task.base_result_obj.status == RecordStatusEnum.incomplete
-
-
 def test_results_pagination(session_fixture, molecules_H4O2, kw_fixtures):
     """
     Test results pagination

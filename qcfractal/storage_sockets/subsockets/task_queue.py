@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import logging
 from sqlalchemy import and_
-from sqlalchemy.orm import load_only
+from sqlalchemy.orm import load_only, contains_eager
 from datetime import datetime as dt
 from qcfractal.storage_sockets.models import BaseResultORM, TaskQueueORM
-from qcfractal.storage_sockets.sqlalchemy_socket import format_query, calculate_limit
+from qcfractal.storage_sockets.sqlalchemy_socket import calculate_limit
 from qcfractal.storage_sockets.sqlalchemy_common import (
     insert_general,
     get_query_proj_columns,
     get_count,
 )
-from qcfractal.interface.models import RecordStatusEnum, TaskStatusEnum, ManagerStatusEnum, ObjectId
+from qcfractal.interface.models import RecordStatusEnum, ManagerStatusEnum, ObjectId
 from qcfractal.interface.models.query_meta import InsertMetadata, QueryMetadata
 
 from typing import TYPE_CHECKING
@@ -61,7 +61,6 @@ class TaskQueueSocket:
         base_result_ids = [x.base_result_id for x in tasks]
         statuses = self._core_socket.procedure.get(base_result_ids, include=["status"], session=session)
 
-        # TODO - logic will need to be adjusted with new statuses
         # This is an error. These should have been checked before calling this function
         if any(x["status"] == RecordStatusEnum.complete for x in statuses):
             raise RuntimeError(
@@ -165,11 +164,6 @@ class TaskQueueSocket:
 
         limit = calculate_limit(self._manager_limit, limit)
 
-        common_filt = and_(
-            TaskQueueORM.required_programs.contained_by(available_programs),
-            TaskQueueORM.status == TaskStatusEnum.waiting,
-        )
-
         tag_queries = []
         if tag is not None:
             for t in tag:
@@ -188,48 +182,54 @@ class TaskQueueSocket:
                 self._logger.warning(f"Manager {manager_name} exists but is not active!")
                 return []
 
-            new_limit = limit
             found = []
 
             for q in tag_queries:
 
+                new_limit = limit - len(found)
+
                 # Have we found all we needed to find
-                if new_limit == 0:
+                # (should always be >= 0, but can never be too careful. If it wasn't this could be an infinite loop)
+                if new_limit <= 0:
                     break
 
+                # Find tasks/base result:
+                #   1. Status is waiting
+                #   2. Whose required programs I am able to match
+                #   3. Whose tags I am able to compute
                 # with_for_update locks the rows. skip_locked=True makes it skip already-locked rows
                 # (possibly from another process)
+                # Also, load the base_result object so we can update stuff there (status)
+                # TODO - we only test for the presence of the available_programs in the requirements. Eventually
+                #        we want to then verify the versions
+
+                # We do a plain .join() because we are querying, and then also supplying contains_eager() so that
+                # the BaseResultORM.task_obj gets populated
+                # See https://docs-sqlalchemy.readthedocs.io/ko/latest/orm/loading_relationships.html#routing-explicit-joins-statements-into-eagerly-loaded-collections
                 query = (
-                    session.query(TaskQueueORM)
-                    .filter(common_filt)
+                    session.query(BaseResultORM)
+                    .join(BaseResultORM.task_obj)
+                    .options(contains_eager(BaseResultORM.task_obj))
+                    .filter(BaseResultORM.status == RecordStatusEnum.waiting)
+                    .filter(TaskQueueORM.required_programs.contained_by(available_programs))
                     .filter(*q)
-                    .order_by(TaskQueueORM.priority.desc(), TaskQueueORM.created_on)
+                    .order_by(TaskQueueORM.priority.desc(), TaskQueueORM.created_on.asc())
                     .limit(new_limit)
                     .with_for_update(skip_locked=True)
                 )
 
                 new_items = query.all()
 
-                # TODO - we only test for the presence of the available_programs in the requirements. Eventually
-                # we want to then verify the versions
-
                 # Update all the task records to reflect this manager claiming them
-                for task in new_items:
-                    task.status = TaskStatusEnum.running
-                    task.modified_on = dt.utcnow()
-                    task.manager = manager_name
+                for base_result in new_items:
+                    base_result.status = RecordStatusEnum.running
+                    base_result.manager_name = manager_name
+                    base_result.modified_on = dt.utcnow()
 
                 session.flush()
 
-                # How many more do we have to query
-                new_limit = limit - len(new_items)
-
-                # I would assume this is always true. If it isn't,
-                # that would be really bad, and lead to an infinite loop
-                assert new_limit >= 0
-
                 # Store in dict form for returning
-                found.extend([task.dict() for task in new_items])
+                found.extend([base_result.task_obj.dict() for base_result in new_items])
 
         return found
 
@@ -237,8 +237,8 @@ class TaskQueueSocket:
         self,
         id: Optional[Iterable[ObjectId]] = None,
         base_result_id: Optional[Iterable[ObjectId]] = None,
-        program: Optional[Iterable[ObjectId]] = None,
-        status: Optional[Iterable[TaskStatusEnum]] = None,
+        program: Optional[Iterable[str]] = None,
+        status: Optional[Iterable[RecordStatusEnum]] = None,
         tag: Optional[Iterable[str]] = None,
         manager: Optional[Iterable[str]] = None,
         include: Optional[Iterable[str]] = None,
@@ -263,7 +263,7 @@ class TaskQueueSocket:
         program
             Programs to search for
         status
-            The status of the task: 'complete', 'running', 'waiting', 'error'
+            The status of the task: 'running', 'waiting', 'error'
         tag
             Tags of the task to search for
         manager
@@ -296,18 +296,22 @@ class TaskQueueSocket:
             and_query.append(TaskQueueORM.id.in_(id))
         if base_result_id is not None:
             and_query.append(TaskQueueORM.base_result_id.in_(base_result_id))
-        if program is not None:
-            and_query.append(TaskQueueORM.program.in_(program))
         if status is not None:
-            and_query.append(TaskQueueORM.status.in_(status))
+            and_query.append(BaseResultORM.status.in_(status))
         if tag is not None:
             and_query.append(TaskQueueORM.tag.in_(tag))
         if manager is not None:
-            and_query.append(TaskQueueORM.manager.in_(manager))
+            and_query.append(BaseResultORM.manager_name.in_(manager))
+        if program:
+            and_query.append(TaskQueueORM.required_programs.has_any(program))
 
         with self._core_socket.optional_session(session, True) as session:
-            query = session.query(TaskQueueORM).filter(and_(*and_query))
-            query = query.options(load_only(*load_cols))
+            query = (
+                session.query(TaskQueueORM)
+                .join(BaseResultORM, TaskQueueORM.base_result_id == BaseResultORM.id)
+                .filter(and_(*and_query))
+                .options(load_only(*load_cols))
+            )
             n_found = get_count(query)
             results = query.limit(limit).offset(skip).yield_per(500)
             result_dicts = [x.dict() for x in results]
@@ -317,9 +321,9 @@ class TaskQueueSocket:
 
     def reset_status(
         self,
-        id: Union[str, List[str]] = None,
-        base_result: Union[str, List[str]] = None,
-        manager: Optional[str] = None,
+        id: Optional[List[str]] = None,
+        base_result: Optional[List[str]] = None,
+        manager: Optional[List[str]] = None,
         reset_running: bool = False,
         reset_error: bool = False,
         *,
@@ -340,7 +344,6 @@ class TaskQueueSocket:
             If True, reset running tasks to be waiting
         reset_error : bool, optional
             If True, also reset errored tasks to be waiting,
-            also update results/proc to be 'incomplete'
 
         Returns
         -------
@@ -357,66 +360,43 @@ class TaskQueueSocket:
 
         status = []
         if reset_running:
-            status.append(TaskStatusEnum.running)
+            status.append(RecordStatusEnum.running)
         if reset_error:
-            status.append(TaskStatusEnum.error)
+            status.append(RecordStatusEnum.error)
 
-        query = format_query(TaskQueueORM, id=id, base_result_id=base_result, manager=manager, status=status)
+        query = []
+        if id:
+            query.append(TaskQueueORM.id.in_(id))
+        if status:
+            query.append(BaseResultORM.status.in_(status))
+        if base_result:
+            query.append(BaseResultORM.id.in_(base_result))
+        if manager:
+            query.append(BaseResultORM.manager_name.in_(manager))
 
-        # Must have status + something, checking above as well(being paranoid)
+        # Must have status + something, checking above as well (being paranoid)
         if len(query) < 2:
             raise ValueError("All query fields are None, reset_status must specify queries.")
 
         with self._core_socket.optional_session(session) as session:
-            # Update results and procedures if reset_error
-            task_ids = session.query(TaskQueueORM.id).filter(*query)
-            session.query(BaseResultORM).filter(TaskQueueORM.base_result_id == BaseResultORM.id).filter(
-                TaskQueueORM.id.in_(task_ids)
-            ).update(dict(status=RecordStatusEnum.incomplete, modified_on=dt.utcnow()), synchronize_session=False)
-
-            updated = (
-                session.query(TaskQueueORM)
-                .filter(TaskQueueORM.id.in_(task_ids))
-                .update(dict(status=TaskStatusEnum.waiting, modified_on=dt.utcnow()), synchronize_session=False)
-            )
-
-        return updated
-
-    def reset_base_result_status(self, id: Union[str, List[str]] = None, *, session: Optional[Session] = None) -> int:
-        """
-        Reset the status of a base result to "incomplete". Will only work if the
-        status is not complete.
-
-        This should be rarely called. Handle with care!
-
-        Parameters
-        ----------
-        id : Optional[Union[str, List[str]]], optional
-            The id of the base result to modify
-
-        Returns
-        -------
-        int
-            Number of base results modified
-        """
-
-        query = format_query(BaseResultORM, id=id)
-        update_dict = {"status": RecordStatusEnum.incomplete, "modified_on": dt.utcnow()}
-
-        with self._core_socket.optional_session(session) as session:
-            updated = (
+            results = (
                 session.query(BaseResultORM)
+                .join(TaskQueueORM, TaskQueueORM.base_result_id == BaseResultORM.id)
                 .filter(*query)
-                .filter(BaseResultORM.status != RecordStatusEnum.complete)
-                .update(update_dict, synchronize_session=False)
+                .with_for_update()
+                .all()
             )
 
-        return updated
+            for r in results:
+                r.status = RecordStatusEnum.waiting
+                r.modified_on = dt.utcnow()
+
+            return len(results)
 
     def modify(
         self,
-        id: Union[str, List[str]] = None,
-        base_result: Union[str, List[str]] = None,
+        id: Optional[List[str]] = None,
+        base_result: Optional[List[str]] = None,
         new_tag: Optional[str] = None,
         new_priority: Optional[int] = None,
     ):
@@ -449,22 +429,26 @@ class TaskQueueSocket:
         if sum(x is not None for x in [id, base_result]) == 0:
             raise ValueError("All query fields are None, modify_task must specify queries.")
 
-        query = format_query(TaskQueueORM, id=id, base_result_id=base_result)
-
-        update_dict = {}
-        if new_tag is not None:
-            update_dict["tag"] = new_tag
-        if new_priority is not None:
-            update_dict["priority"] = new_priority
-
-        update_dict["modified_on"] = dt.utcnow()
+        and_query = []
+        if id is not None:
+            and_query.append(TaskQueueORM.id.in_(id))
+        if base_result is not None:
+            and_query.append(TaskQueueORM.base_result_id.in_(base_result))
 
         with self._core_socket.session_scope() as session:
-            updated = (
+            to_update = (
                 session.query(TaskQueueORM)
-                .filter(*query)
-                .filter(TaskQueueORM.status != TaskStatusEnum.running)
-                .update(update_dict, synchronize_session=False)
+                .join(TaskQueueORM.base_result_obj)
+                .filter(and_(*and_query))
+                .filter(BaseResultORM.status != RecordStatusEnum.running)
+                .all()
             )
 
-        return updated
+            for r in to_update:
+                r.modified_on = dt.utcnow()
+                if new_tag is not None:
+                    r.tag = new_tag
+                if new_priority is not None:
+                    r.priority = new_priority
+
+            return len(to_update)
