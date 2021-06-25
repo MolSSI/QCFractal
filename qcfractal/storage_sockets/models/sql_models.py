@@ -306,6 +306,16 @@ class TaskQueueORM(Base):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+class ServiceQueueTasks(Base):
+    __tablename__ = "service_queue_tasks"
+
+    service_id = Column(Integer, ForeignKey("service_queue.id", ondelete="cascade"), primary_key=True)
+    procedure_id = Column(Integer, ForeignKey("base_result.id", ondelete="cascade"), primary_key=True)
+
+    procedure_obj = relationship("BaseResultORM", lazy="selectin")
+    extras = Column(JSON)
+
+
 class ServiceQueueORM(Base):
 
     __tablename__ = "service_queue"
@@ -323,6 +333,8 @@ class ServiceQueueORM(Base):
     modified_on = Column(DateTime, default=datetime.datetime.utcnow)
 
     extra = Column(MsgpackExt)
+
+    tasks_obj = relationship(ServiceQueueTasks, lazy="joined", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index("ix_service_queue_tag", "tag"),
