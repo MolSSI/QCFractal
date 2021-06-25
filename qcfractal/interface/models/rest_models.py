@@ -697,7 +697,32 @@ class ProcedureGETResponse(ProtoModel):
     )
 
 
+class OptimizationGETBody(ProtoModel):
+    class Data(ProtoModel):
+        id: Optional[List[ObjectId]] = Field(
+            None,
+            description="The exact Id to fetch from the database. If this is set as a search condition, there is no "
+            "reason to set anything else as this will be unique in the database, if it exists.",
+        )
+        status: Optional[List[RecordStatusEnum]] = Field(
+            [RecordStatusEnum.complete],
+            description="Procedures will be searched based on where they are in the compute pipeline. See the "
+            ":class:`RecordStatusEnum` for valid statuses.",
+        )
+
+    meta: QueryMetaFilter = Field(QueryMetaFilter(), description=common_docs[QueryMetaFilter])
+    data: Data = Field(..., description="The keys with data to search the database on for Procedures.")
+
+
+class OptimizationGETResponse(ProtoModel):
+    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
+    data: List[Union[OptimizationRecord, Dict[str, Any]]] = Field(
+        ..., description="The list of Procedure specs found based on the query."
+    )
+
+
 register_model("procedure", "GET", ProcedureGETBody, ProcedureGETResponse)
+register_model("optimization", "GET", OptimizationGETBody, OptimizationGETResponse)
 
 ### Task Queue
 
