@@ -96,6 +96,8 @@ class Base:
         for k, v in d.items():
             if isinstance(v, Base):
                 d[k] = v.dict()
+            elif isinstance(v, list):
+                d[k] = [x.dict() if isinstance(x, Base) else x for x in v]
 
         return d
 
