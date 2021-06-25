@@ -104,35 +104,45 @@ def parse_args() -> argparse.Namespace:
         the command line
     """
 
+    # Common help strings
+    base_folder_help = "The base directory to use as the default for some options (logs, views, etc). Default is the location of the config file."
+    config_file_help = "Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
+    verbose_help = "Output more details about the startup of qcfractal-server commands"
+
     parser = argparse.ArgumentParser(description="A CLI for managing & running a QCFractal server.")
+
     parser.add_argument("--version", action="version", version=f"{qcfractal.__version__}")
-    parser.add_argument(
-        "--verbose", action="store_true", help="Output more details about the startup of qcfractal-server commands"
-    )
+    parser.add_argument("--verbose", action="store_true", help=verbose_help)
 
     config_location = parser.add_mutually_exclusive_group()
-    config_location.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-    config_location.add_argument(
-        "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
-    )
+    config_location.add_argument("--base-folder", help=base_folder_help)
+    config_location.add_argument("--config", help=config_file_help)
 
+    # Common arguments. These are added to the subcommands
+    # They are similar to the global options above, but with SUPPRESS as the default
+    base_parser = argparse.ArgumentParser(add_help=False)
+    base_parser.add_argument("--verbose", action="store_true", default=argparse.SUPPRESS, help=verbose_help)
+
+    config_location = base_parser.add_mutually_exclusive_group()
+    config_location.add_argument("--base-folder", default=argparse.SUPPRESS, help=base_folder_help)
+    config_location.add_argument("--config", default=argparse.SUPPRESS, help=config_file_help)
+
+    # Now start the real subcommands
     subparsers = parser.add_subparsers(dest="command")
 
     #####################################
     # init subcommand
     #####################################
     init = subparsers.add_parser(
-        "init", help="Initializes a QCFractal server and database information from a given configuration."
-    )
-    init.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-    init.add_argument(
-        "--config", help="Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
+        "init",
+        help="Initializes a QCFractal server and database information from a given configuration.",
+        parents=[base_parser],
     )
 
     #####################################
     # start subcommand
     #####################################
-    start = subparsers.add_parser("start", help="Starts a QCFractal server instance.")
+    start = subparsers.add_parser("start", help="Starts a QCFractal server instance.", parents=[base_parser])
 
     # Allow some config settings to be altered via the command line
     fractal_args = start.add_argument_group("Server Settings")
@@ -152,17 +162,21 @@ def parse_args() -> argparse.Namespace:
     #####################################
     # upgrade subcommand
     #####################################
-    upgrade = subparsers.add_parser("upgrade", help="Upgrade QCFractal database.")
+    upgrade = subparsers.add_parser("upgrade", help="Upgrade QCFractal database.", parents=[base_parser])
 
     #####################################
     # upgrade-config subcommand
     #####################################
-    upgrade_config = subparsers.add_parser("upgrade-config", help="Upgrade a QCFractal configuration file.")
+    upgrade_config = subparsers.add_parser(
+        "upgrade-config", help="Upgrade a QCFractal configuration file.", parents=[base_parser]
+    )
 
     #####################################
     # info subcommand
     #####################################
-    info = subparsers.add_parser("info", help="Manage users and permissions on a QCFractal server instance.")
+    info = subparsers.add_parser(
+        "info", help="Manage users and permissions on a QCFractal server instance.", parents=[base_parser]
+    )
     info.add_argument(
         "category", nargs="?", default="config", choices=["config", "alembic"], help="The config category to show."
     )
@@ -170,20 +184,20 @@ def parse_args() -> argparse.Namespace:
     #####################################
     # user subcommand
     #####################################
-    user = subparsers.add_parser("user", help="Manage users for this instance")
+    user = subparsers.add_parser("user", help="Manage users for this instance", parents=[base_parser])
 
     # user sub-subcommands
     user_subparsers = user.add_subparsers(dest="user_command")
 
     # user list
-    user_subparsers.add_parser("list", help="List information about all users")
+    user_subparsers.add_parser("list", help="List information about all users", parents=[base_parser])
 
     # user info
-    user_info = user_subparsers.add_parser("info", help="Show information about a user")
+    user_info = user_subparsers.add_parser("info", help="Show information about a user", parents=[base_parser])
     user_info.add_argument("username", default=None, type=str, help="The username to display information about.")
 
     # user add
-    user_add = user_subparsers.add_parser("add", help="Add a user to the QCFractal server.")
+    user_add = user_subparsers.add_parser("add", help="Add a user to the QCFractal server.", parents=[base_parser])
     user_add.add_argument("username", default=None, type=str, help="The username to add.")
     user_add.add_argument(
         "--password",
@@ -200,7 +214,9 @@ def parse_args() -> argparse.Namespace:
     user_add.add_argument("--email", default=None, type=str, help="Email of the user (optional)")
 
     # user modify
-    user_modify = user_subparsers.add_parser("modify", help="Change a user's password or permissions.")
+    user_modify = user_subparsers.add_parser(
+        "modify", help="Change a user's password or permissions.", parents=[base_parser]
+    )
     user_modify.add_argument("username", default=None, type=str, help="The username to modify.")
 
     user_modify.add_argument(
@@ -225,31 +241,33 @@ def parse_args() -> argparse.Namespace:
     )
 
     # user delete
-    user_delete = user_subparsers.add_parser("delete", help="Delete a user.")
+    user_delete = user_subparsers.add_parser("delete", help="Delete a user.", parents=[base_parser])
     user_delete.add_argument("username", default=None, type=str, help="The username to delete/remove")
     user_delete.add_argument("--no-prompt", action="store_true", help="Do not prompt for confirmation")
 
     #####################################
     # role subcommand
     #####################################
-    role = subparsers.add_parser("role", help="Manage roles for this instance")
+    role = subparsers.add_parser("role", help="Manage roles for this instance", parents=[base_parser])
 
     # user sub-subcommands
     role_subparsers = role.add_subparsers(dest="role_command")
 
     # role list
-    role_subparsers.add_parser("list", help="List all role names")
+    role_subparsers.add_parser("list", help="List all role names", parents=[base_parser])
 
     # role info
-    role_subparsers.add_parser("info", help="Get information about a role")
+    role_subparsers.add_parser("info", help="Get information about a role", parents=[base_parser])
 
     # role reset
-    role_subparsers.add_parser("reset", help="Reset all the original roles to their defaults")
+    role_subparsers.add_parser("reset", help="Reset all the original roles to their defaults", parents=[base_parser])
 
     #####################################
     # backup subcommand
     #####################################
-    backup = subparsers.add_parser("backup", help="Creates a postgres backup file of the current database.")
+    backup = subparsers.add_parser(
+        "backup", help="Creates a postgres backup file of the current database.", parents=[base_parser]
+    )
     backup.add_argument(
         "--filename",
         default=None,
@@ -260,7 +278,7 @@ def parse_args() -> argparse.Namespace:
     #####################################
     # restore subcommand
     #####################################
-    restore = subparsers.add_parser("restore", help="Restores the database from a backup file.")
+    restore = subparsers.add_parser("restore", help="Restores the database from a backup file.", parents=[base_parser])
     restore.add_argument("filename", default=None, type=str, help="The filename to restore from.")
 
     args = parser.parse_args()
