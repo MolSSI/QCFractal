@@ -344,10 +344,10 @@ class UserORM(Base):
 
     username = Column(String, nullable=False, index=True, unique=True)  # indexed and unique
     password = Column(LargeBinary, nullable=False)
-    enabled = Column(Boolean, nullable=False, default=True)
-    fullname = Column(String, nullable=False, default="")
-    organization = Column(String, nullable=False, default="")
-    email = Column(String, nullable=False, default="")
+    enabled = Column(Boolean, nullable=False, server_default="true")
+    fullname = Column(String, nullable=False, server_default="")
+    organization = Column(String, nullable=False, server_default="")
+    email = Column(String, nullable=False, server_default="")
 
 
 class RoleORM(Base):
