@@ -39,6 +39,7 @@ if TYPE_CHECKING:  # pragma: no cover
         ComputeResponse,
         KeywordGETResponse,
         MoleculeGETResponse,
+        OptimizationGETResponse,
         ProcedureGETResponse,
         QueryObjectId,
         QueryListStr,
@@ -791,6 +792,60 @@ class FractalClient(object):
             },
         }
         response = self._automodel_request("procedure", "get", payload, full_return=True)
+
+        if not include:
+            for result in response.data:
+                result.__dict__["client"] = self
+
+        if full_return:
+            return response
+        else:
+            return response.data
+
+    def query_optimizations(
+        self,
+        id: QueryObjectId = None,
+        status: QueryStr = None,
+        limit: Optional[int] = None,
+        skip: int = 0,
+        include: QueryListStr = None,
+        full_return: bool = False,
+    ) -> Union[ProcedureGETResponse, OptimizationGETResponse, List[Dict[str, Any]]]:
+        """Queries Procedures from the server.
+
+        Parameters
+        ----------
+        id
+            Queries the Procedure ``id`` field.
+        status
+            Queries the Procedure ``status`` field. By default, only return completed tasks
+        limit
+            The maximum number of Procedures to query
+        skip
+            The number of Procedures to skip in the query, used during pagination
+        include
+            Filters the returned fields, will return a dictionary rather than an object.
+        full_return
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        :
+            Returns a List of found RecordResult's without include, or a
+            dictionary of results with include.
+        """
+
+        if status is None and id is None:
+            status = [RecordStatusEnum.complete]
+
+        payload = {
+            "meta": {"limit": limit, "skip": skip, "include": include},
+            "data": {
+                "id": make_list(id),
+                "status": make_list(status),
+            },
+        }
+        response = self._automodel_request("optimization", "get", payload, full_return=True)
 
         if not include:
             for result in response.data:
