@@ -31,6 +31,7 @@ class RecordStatusEnum(str, Enum):
     running = "running"
     error = "error"
     cancelled = "cancelled"
+    deleted = "deleted"
 
     @classmethod
     def _missing_(cls, name):
