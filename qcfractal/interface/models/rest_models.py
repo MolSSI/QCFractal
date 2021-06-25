@@ -23,7 +23,6 @@ from .common_models import (
 from .task_models import (
     SingleProcedureSpecification,
     OptimizationProcedureSpecification,
-    TaskStatusEnum,
     TaskRecord,
     ManagerStatusEnum,
 )
@@ -713,7 +712,7 @@ class TaskQueueGETBody(ProtoModel):
         program: Optional[List[str]] = Field(
             None, description="Tasks will be searched based on the program responsible for executing this task."
         )
-        status: Optional[List[TaskStatusEnum]] = Field(
+        status: Optional[List[RecordStatusEnum]] = Field(
             None,
             description="Tasks will be search based on where they are in the compute pipeline. See the "
             ":class:`RecordStatusEnum` for valid statuses.",

@@ -213,7 +213,7 @@ class TaskQueueSocket:
                     .filter(BaseResultORM.status == RecordStatusEnum.waiting)
                     .filter(TaskQueueORM.required_programs.contained_by(available_programs))
                     .filter(*q)
-                    .order_by(TaskQueueORM.priority.desc(), TaskQueueORM.created_on.asc())
+                    .order_by(TaskQueueORM.priority.desc(), TaskQueueORM.created_on)
                     .limit(new_limit)
                     .with_for_update(skip_locked=True)
                 )

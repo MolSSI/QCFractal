@@ -10,7 +10,7 @@ from typing import Any, Dict, List
 
 import numpy as np
 
-from ..interface.models import TorsionDriveRecord, Molecule, TaskStatusEnum
+from ..interface.models import TorsionDriveRecord, Molecule, RecordStatusEnum
 from .service_util import BaseService, TaskManager
 
 __all__ = ["TorsionDriveService"]
@@ -133,7 +133,7 @@ class TorsionDriveService(BaseService):
         _check_td()
         from torsiondrive import td_api
 
-        self.status = TaskStatusEnum.running
+        self.status = RecordStatusEnum.running
 
         # Check if tasks are done
         if self.task_manager.done() is False:
@@ -174,7 +174,7 @@ class TorsionDriveService(BaseService):
 
         # All done
         if len(next_tasks) == 0:
-            self.status = TaskStatusEnum.complete
+            self.status = RecordStatusEnum.complete
             self.update_output()
             return True
 

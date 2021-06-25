@@ -11,7 +11,6 @@ from pydantic import Field, constr, validator
 from .common_models import Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
 from .model_utils import recursive_normalizer
 from .records import RecordBase, RecordStatusEnum
-from .task_models import TaskStatusEnum
 
 
 class ScanTypeEnum(str, Enum):
@@ -290,7 +289,8 @@ class GridOptimizationRecord(RecordBase):
             "computed_points": len(self.grid_optimizations),
             "complete_tasks": sum(x.status == RecordStatusEnum.complete for x in flat_history),
             "incomplete_tasks": sum(
-                (x.status == RecordStatusEnum.incomplete) or (x.status == TaskStatusEnum.running) for x in flat_history
+                (x.status == RecordStatusEnum.incomplete) or (x.status == RecordStatusEnum.running)
+                for x in flat_history
             ),
             "error_tasks": sum(x.status == RecordStatusEnum.error for x in flat_history),
         }

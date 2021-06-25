@@ -11,7 +11,7 @@ from concurrent.futures import ProcessPoolExecutor
 import pytest
 
 import qcfractal.interface as ptl
-from qcfractal.interface.models import TaskStatusEnum, RecordStatusEnum, ManagerStatusEnum
+from qcfractal.interface.models import RecordStatusEnum, ManagerStatusEnum
 from qcfractal import qc_queue as queue, testing
 from ..testing import caplog_handler_at_level
 

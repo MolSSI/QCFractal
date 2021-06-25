@@ -8,7 +8,7 @@ import pytest
 import warnings
 
 import qcfractal.interface as ptl
-from qcfractal.interface.models import RecordStatusEnum, TaskStatusEnum
+from qcfractal.interface.models import RecordStatusEnum
 from qcfractal.interface.models import GridOptimizationInput
 from qcfractal.testing import run_services, using_geometric, using_rdkit
 
@@ -84,12 +84,12 @@ def test_service_manipulation(torsiondrive_fixture):
     ret = spin_up_test(run_service=False, initial_molecule=[hooh])
 
     service = client.query_services(procedure_id=ret.ids)[0]
-    assert service["status"] == TaskStatusEnum.waiting
+    assert service["status"] == RecordStatusEnum.waiting
 
     client.modify_services("restart", id=service["id"])
 
     service = client.query_services(procedure_id=ret.ids)[0]
-    assert service["status"] == TaskStatusEnum.running
+    assert service["status"] == RecordStatusEnum.running
 
 
 def test_service_torsiondrive_single(torsiondrive_fixture):
@@ -270,7 +270,7 @@ def test_service_iterate_error(torsiondrive_fixture):
     status = client.query_services(procedure_id=ret.ids)
     assert len(status) == 1
 
-    assert status[0]["status"] == TaskStatusEnum.error
+    assert status[0]["status"] == RecordStatusEnum.error
     assert "Error iterating service" in status[0]["error"]["error_message"]
 
     # Test that the error is propagated to the procedure
@@ -292,7 +292,7 @@ def test_service_torsiondrive_compute_error(torsiondrive_fixture):
     status = client.query_services(procedure_id=ret.ids)
     assert len(status) == 1
 
-    assert status[0]["status"] == TaskStatusEnum.error
+    assert status[0]["status"] == RecordStatusEnum.error
     assert "All tasks" in status[0]["error"]["error_message"]
 
 
@@ -365,7 +365,7 @@ def test_service_gridoptimization_single_opt(fractal_test_server):
     assert r is False
     result = client.query_procedures(id=ret.ids)[0]
     assert result.grid_optimizations.keys() == {'"preoptimization"'}
-    assert result.status == TaskStatusEnum.running
+    assert result.status == RecordStatusEnum.running
 
     r = run_services(fractal_test_server, periodics, max_iter=1)
     assert r is False
@@ -374,13 +374,13 @@ def test_service_gridoptimization_single_opt(fractal_test_server):
     assert status["total_points"] == 5
     assert status["complete_tasks"] == 2
     assert result.grid_optimizations.keys() == {'"preoptimization"', "[1, 0]"}
-    assert result.status == TaskStatusEnum.running
+    assert result.status == RecordStatusEnum.running
 
     r = run_services(fractal_test_server, periodics, max_iter=1)
     assert r is False
     result = client.query_procedures(id=ret.ids)[0]
     assert result.grid_optimizations.keys() == {'"preoptimization"', "[1, 0]", "[0, 0]", "[1, 1]"}
-    assert result.status == TaskStatusEnum.running
+    assert result.status == RecordStatusEnum.running
 
     r = run_services(fractal_test_server, periodics, max_iter=6)
     assert r is True
