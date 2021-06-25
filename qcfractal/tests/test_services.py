@@ -26,7 +26,7 @@ def test_service_torsiondrive_service_incomplete(torsiondrive_fixture):
     result = client.query_procedures(id=ret.ids)[0]
     assert len(result.final_energy_dict) == 0
     assert len(result.optimization_history) == 0
-    assert result.status == RecordStatusEnum.incomplete
+    assert result.status == RecordStatusEnum.waiting
 
     # Update the service
     periodics._update_services()
@@ -115,6 +115,8 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
     opt = result.get_history(0)[0]
     assert opt.protocols.trajectory == "initial_and_final"
     assert len(opt.trajectory) == 2
+
+    assert len(client.query_services(procedure_id=ret.ids)) == 0
 
 
 @pytest.mark.slow
@@ -292,8 +294,10 @@ def test_service_torsiondrive_compute_error(torsiondrive_fixture):
     status = client.query_services(procedure_id=ret.ids)
     assert len(status) == 1
 
-    assert status[0]["status"] == RecordStatusEnum.error
-    assert "All tasks" in status[0]["error"]["error_message"]
+    proc_status = client.query_procedures(ret.ids)
+    assert len(proc_status) == 1
+    assert proc_status[0].status == RecordStatusEnum.error
+    assert "Some task(s) did not complete successfully"
 
 
 def test_service_torsiondrive_visualization(torsiondrive_fixture):

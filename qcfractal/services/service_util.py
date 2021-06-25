@@ -3,23 +3,28 @@ Utilities and base functions for Services.
 """
 
 import abc
-import logging
 import datetime
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from qcelemental.models import ComputeError
 
-from ..interface.models import ObjectId, ProtoModel, PriorityEnum, RecordStatusEnum
-from ..interface.models.rest_models import TaskQueuePOSTBody
+from ..interface.models import (
+    ObjectId,
+    ProtoModel,
+    PriorityEnum,
+    RecordStatusEnum,
+    AllProcedureSpecifications,
+    Molecule,
+)
 
 
 class TaskManager(ProtoModel):
 
-    storage_socket: Optional[Any] = None
+    storage_socket: Any
 
     required_tasks: Dict[str, str] = {}
     tag: Optional[str] = None
-    priority: PriorityEnum = PriorityEnum.high
+    priority: PriorityEnum = PriorityEnum.normal
 
     class Config(ProtoModel.Config):
         allow_mutation = True
@@ -30,33 +35,19 @@ class TaskManager(ProtoModel):
         Check if requested tasks are complete.
         """
 
-        logger = logging.getLogger(__name__)
-
         if len(self.required_tasks) == 0:
             return True
 
-        task_query = self.storage_socket.get_procedures(
+        task_query = self.storage_socket.procedure.get(
             id=list(self.required_tasks.values()), include=["status", "error"]
         )
 
-        status_values = set(x["status"] for x in task_query["data"])
+        status_values = set(x["status"] for x in task_query)
         if status_values == {RecordStatusEnum.complete}:
             return True
 
         elif RecordStatusEnum.error in status_values:
-            for x in task_query["data"]:
-                if x["status"] != RecordStatusEnum.error:
-                    continue
-
-            logger.debug("Error in service compute as follows:")
-            tasks = self.storage_socket.get_queue()["data"]
-            for x in tasks:
-                if "error" not in x:
-                    continue
-
-                logger.debug(x["error"]["error_message"])
-
-            raise KeyError("All tasks did not execute successfully.")
+            raise RuntimeError("All tasks did not execute successfully.")
         else:
             return False
 
@@ -67,36 +58,29 @@ class TaskManager(ProtoModel):
 
         ret = {}
         for k, id in self.required_tasks.items():
-            ret[k] = self.storage_socket.get_procedures(id=id)["data"][0]
+            ret[k] = self.storage_socket.procedure.get(id=[id])[0]
 
         return ret
 
-    def submit_tasks(self, procedure_type: str, tasks: Dict[str, Any]) -> bool:
+    def submit_tasks(self, task_inputs: Dict[str, Tuple[Molecule, AllProcedureSpecifications]]):
         """
         Submits new tasks to the queue and provides a waiter until there are done.
         """
-        procedure_parser = get_procedure_parser(procedure_type, self.storage_socket)
 
         required_tasks = {}
 
         # Add in all new tasks
-        for key, packet in tasks.items():
-            packet["meta"].update({"tag": self.tag, "priority": self.priority})
-            # print("Check tag and priority:", packet)
-            packet = TaskQueuePOSTBody(**packet)
+        for key, (molecule, spec) in task_inputs.items():
 
-            # Turn packet into a full task, if there are duplicates, get the ID
-            r = procedure_parser.submit_tasks(packet)
+            meta, added_ids = self.storage_socket.procedure.create([molecule], spec)
 
-            if len(r["meta"]["errors"]):
-                raise KeyError("Problem submitting task: {}.".format(errors))
+            if not meta.success:
+                raise RuntimeError("Problem submitting task: {}.".format(meta.error_string))
 
             # print("Submission:", r["data"])
-            required_tasks[key] = r["data"]["ids"][0]
+            required_tasks[key] = added_ids[0]
 
         self.required_tasks = required_tasks
-
-        return True
 
 
 class BaseService(ProtoModel, abc.ABC):

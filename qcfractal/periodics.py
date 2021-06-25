@@ -134,74 +134,14 @@ class FractalPeriodics:
         it is used in testing where this function is run manually
         """
 
-        # Grab current services
-        current_services = self.storage_socket.get_services(status=RecordStatusEnum.running)["data"]
-
-        # Grab new services if we have open slots
-        open_slots = max(0, self.max_active_services - len(current_services))
-        if open_slots > 0:
-            new_services = self.storage_socket.get_services(status=RecordStatusEnum.waiting, limit=open_slots)["data"]
-            current_services.extend(new_services)
-            if len(new_services):
-                self.logger.info(f"Starting {len(new_services)} new services.")
-
-        self.logger.debug(f"Updating {len(current_services)} services.")
-
-        # Loop over the services and iterate
-        running_services = 0
-        completed_services = []
-        for data in current_services:
-
-            # TODO HACK: remove task_id from 'output'. This is contained in services
-            # created in previous versions. Doing this now, but should do a db migration
-            # at some point
-            if "output" in data:
-                data["output"].pop("task_id", None)
-
-            # Attempt to iteration and get message
-            service = None
-            try:
-                service = construct_service(self.storage_socket, data)
-            except Exception:
-                error_message = "Error constructing service. This is pretty bad!:\n{}".format(traceback.format_exc())
-                self.logger.critical(error_message)
-                continue
-
-            try:
-                finished = service.iterate()
-            except Exception:
-                error_message = "Error iterating service with id={}:\n{}".format(service.id, traceback.format_exc())
-                self.logger.error(error_message)
-                service.status = RecordStatusEnum.error
-
-                # TODO: HACK HACK
-                # Service itself should be responsible for this (maybe in base class?)
-                service.output.__dict__["status"] = RecordStatusEnum.error
-
-                service.error = ComputeError(error_type="iteration_error", error_message=error_message)
-                self.storage_socket.update_service_status(RecordStatusEnum.error, id=service.id)
-                finished = False
-
-            self.storage_socket.update_services([service])
-
-            if finished is not False:
-                # Add results to procedures, remove complete_ids
-                completed_services.append(service)
-            else:
-                running_services += 1
-
-        if len(completed_services):
-            self.logger.info(f"Completed {len(completed_services)} services.")
-
+        self.logger.debug(f"Updating services.")
+        n_running = self.storage_socket.service.iterate_services()
         self.logger.debug(f"Done updating services.")
-
-        # Add new procedures and services
-        self.storage_socket.services_completed(completed_services)
 
         # Set up the next run of this function
         self.scheduler.enter(self.service_frequency, 3, self._update_services)
 
-        return running_services
+        return n_running
 
     def start(self) -> None:
         """

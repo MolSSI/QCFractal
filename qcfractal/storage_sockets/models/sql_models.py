@@ -31,7 +31,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
 
 from qcfractal.interface.models import ManagerStatusEnum, PriorityEnum, CompressionEnum, ObjectId
-from qcfractal.storage_sockets.models.sql_base import Base, MsgpackExt
+from qcfractal.storage_sockets.models.sql_base import Base, MsgpackExt, PlainMsgpackExt
 
 
 class AccessLogORM(Base):
@@ -321,25 +321,23 @@ class ServiceQueueORM(Base):
     __tablename__ = "service_queue"
 
     id = Column(Integer, primary_key=True)
-
     tag = Column(String, default=None)
-    hash_index = Column(String, nullable=False)
 
     procedure_id = Column(Integer, ForeignKey("base_result.id"), unique=True)
-    procedure_obj = relationship("BaseResultORM", lazy="joined")
+    procedure_obj = relationship(
+        "BaseResultORM", lazy="select", innerjoin=True, back_populates="service_obj"
+    )  # user inner join, since not nullable
 
     priority = Column(Integer, default=int(PriorityEnum.normal))
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
-    modified_on = Column(DateTime, default=datetime.datetime.utcnow)
 
-    extra = Column(MsgpackExt)
+    service_state = Column(PlainMsgpackExt)
 
     tasks_obj = relationship(ServiceQueueTasks, lazy="joined", cascade="all, delete-orphan")
 
     __table_args__ = (
         Index("ix_service_queue_tag", "tag"),
         Index("ix_service_queue_waiting_sort", text("priority desc, created_on")),
-        Index("ix_service_queue_hash_index", "hash_index"),
     )
 
 

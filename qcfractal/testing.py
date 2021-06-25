@@ -24,7 +24,7 @@ from .config import FractalConfig, update_nested_dict
 
 import qcfractal.interface as ptl
 from .interface import FractalClient
-from .interface.models import TorsionDriveInput
+from .interface.models import TorsionDriveInput, RecordStatusEnum
 from .postgres_harness import TemporaryPostgres
 from .qc_queue import build_queue_adapter, QueueManager
 from .snowflake import FractalSnowflake
@@ -581,7 +581,7 @@ def torsiondrive_fixture(fractal_test_server):
 
     # Geometric options
     torsiondrive_options = {
-        "initial_molecule": mol_ret[0],
+        "initial_molecule": [mol_ret[0]],
         "keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [90]},
         "optimization_spec": {
             "program": "geometric",
@@ -602,8 +602,8 @@ def torsiondrive_fixture(fractal_test_server):
 
         if ret.meta.n_inserted:  # In case test already submitted
             compute_key = ret.data.ids[0]
-            service = client.query_services(procedure_id=compute_key)[0]
-            assert "WAITING" in service["status"]
+            service = client.query_procedures(compute_key)[0]
+            assert service.status == RecordStatusEnum.waiting
 
         if run_service:
             finished = run_services(fractal_test_server, periodics)

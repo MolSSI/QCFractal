@@ -164,11 +164,13 @@ class TorsionDriveService(BaseService):
         # The torsiondrive package uses print, so capture that using
         # contextlib
         td_stdout = io.StringIO()
-        with contextlib.redirect_stdout(td_stdout):
-            td_api.update_state(self.torsiondrive_state, task_results)
+        td_api.update_state(self.torsiondrive_state, task_results)
+        print("*" * 100)
+        print(self.torsiondrive_state)
+        print("*" * 100)
 
-            # Create new tasks from the current state
-            next_tasks = td_api.next_jobs_from_state(self.torsiondrive_state, verbose=True)
+        # Create new tasks from the current state
+        next_tasks = td_api.next_jobs_from_state(self.torsiondrive_state, verbose=True)
 
         self.stdout += "\n" + td_stdout.getvalue()
 

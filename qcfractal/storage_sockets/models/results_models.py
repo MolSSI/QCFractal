@@ -71,8 +71,11 @@ class BaseResultORM(Base):
     # Carry-ons
     provenance = Column(JSON)
 
-    # Related tasks. The foreign key is in the task_queue table
+    # Related task. The foreign key is in the task_queue table
     task_obj = relationship("TaskQueueORM", back_populates="base_result_obj", uselist=False)
+
+    # Related service. The foreign key is in the service_queue table
+    service_obj = relationship("ServiceQueueORM", back_populates="procedure_obj", uselist=False)
 
     __table_args__ = (
         Index("ix_base_result_status", "status"),
@@ -437,10 +440,8 @@ class TorsionDriveProcedureORM(BaseResultORM):
     def __init__(self, **kwargs):
         kwargs.setdefault("version", 1)
         self.procedure = "torsiondrive"
-        self.program = "torsiondrive"
         super().__init__(**kwargs)
 
-    program = Column(String(100), nullable=False)
     keywords = Column(JSON)
     qc_spec = Column(JSON)
 
@@ -462,7 +463,7 @@ class TorsionDriveProcedureORM(BaseResultORM):
         cascade="all, delete-orphan",  # backref="torsiondrive_procedure",
         order_by=OptimizationHistory.position,
         collection_class=ordering_list("position"),
-        lazy="selectin",
+        lazy="select",
     )
 
     @hybrid_property
@@ -496,18 +497,7 @@ class TorsionDriveProcedureORM(BaseResultORM):
 
         return ret
 
-    @optimization_history.setter
-    def optimization_history(self, dict_values):
-        """A private copy of the opt history as a dict
-        Key: list of optimization procedures"""
-
-        return dict_values
-
-    __table_args__ = (
-        Index("ix_torsion_drive_program", "program"),  # todo: needed for procedures?
-        # WARNING - these are not autodetected by alembic
-        CheckConstraint("program = LOWER(program)", name="ck_torsiondrive_procedure_program_lower"),
-    )
+    __table_args__ = ()
 
     __mapper_args__ = {
         "polymorphic_identity": "torsiondrive_procedure",
@@ -515,23 +505,12 @@ class TorsionDriveProcedureORM(BaseResultORM):
         "polymorphic_load": "selectin",
     }
 
-    def update_relations(self, initial_molecule=None, optimization_history=None, **kwarg):
+    def dict(self):
+        d = BaseResultORM.dict(self)
 
-        # update torsion molecule relation
-        self._update_many_to_many(
-            TorsionInitMol.__table__, "torsion_id", "molecule_id", self.id, initial_molecule, self.initial_molecule
-        )
-
-        self.optimization_history_obj = []
-        for key in optimization_history:
-            for opt_id in optimization_history[key]:
-                opt_history = OptimizationHistory(torsion_id=int(self.id), opt_id=int(opt_id), key=key)
-                self.optimization_history_obj.append(opt_history)
-
-        # No need for the following because the session is committed with parent save
-        # session.add_all(self.optimization_history_obj)
-        # session.add(self)
-        # session.commit()
+        # Always include optimization history
+        d["optimization_history"] = self.optimization_history
+        return d
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

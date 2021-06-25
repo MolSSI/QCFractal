@@ -51,6 +51,10 @@ from ..interface.models.rest_models import (
     ManagerInfoGETResponse,
     OptimizationGETBody,
     OptimizationGETResponse,
+    ServiceQueueGETBody,
+    ServiceQueueGETResponse,
+    ServiceQueuePOSTBody,
+    ServiceQueuePOSTResponse,
     TaskQueueGETBody,
     TaskQueueGETResponse,
     TaskQueuePOSTBody,
@@ -819,7 +823,7 @@ def modify_task_v1():
 
 @main.route("/service_queue", methods=["GET"])
 @check_access
-def get_service_queue():
+def query_service_queue_v1():
     body_model, response_model = rest_model("service_queue", "get")
     body = parse_bodymodel(body_model)
 
@@ -834,40 +838,19 @@ def get_service_queue():
 def post_service_queue():
     """Posts new services to the service queue."""
 
-    body_model, response_model = rest_model("service_queue", "post")
-    body = parse_bodymodel(body_model)
+    body = parse_bodymodel(ServiceQueuePOSTBody)
 
-    new_services = []
-    for service_input in body.data:
-        # Add all the molecules specified (or check that specified IDs exist)
-        mol_list = make_list(service_input.initial_molecule)
+    meta, ids = storage_socket.service.create(body.data)
 
-        meta, molecule_ids = storage_socket.molecule.add_mixed(mol_list)
-        if not meta.success:
-            err_msg = "Error adding initial molecules:\n" + meta.error_string
-            raise RuntimeError(err_msg)
+    duplicate_ids = [ids[i] for i in meta.existing_idx]
+    submitted_ids = [ids[i] for i in meta.inserted_idx]
+    meta_old = convert_post_response_metadata(meta, duplicate_ids)
 
-        molecules = storage_socket.molecule.get(molecule_ids)
-        if not isinstance(service_input.initial_molecule, list):
-            molecules = molecules[0]
+    resp = TaskQueuePOSTResponse(
+        meta=meta_old, data={"ids": ids, "submitted": submitted_ids, "existing": duplicate_ids}
+    )
 
-        # Update the input and build a service object
-        service_input = service_input.copy(update={"initial_molecule": molecules})
-        new_services.append(
-            initialize_service(
-                storage_socket,
-                service_input,
-                tag=body.meta.tag,
-                priority=body.meta.priority,
-            )
-        )
-
-    ret = storage_socket.add_services(new_services)
-    ret["data"] = {"ids": ret["data"], "existing": ret["meta"]["duplicates"]}
-    ret["data"]["submitted"] = list(set(ret["data"]["ids"]) - set(ret["meta"]["duplicates"]))
-    response = response_model(**ret)
-
-    return SerializedResponse(response)
+    return SerializedResponse(resp)
 
 
 @main.route("/service_queue", methods=["PUT"])
