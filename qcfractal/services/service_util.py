@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 from qcelemental.models import ComputeError
 
-from ..interface.models import ObjectId, ProtoModel, PriorityEnum, RecordStatusEnum, TaskStatusEnum
+from ..interface.models import ObjectId, ProtoModel, PriorityEnum, RecordStatusEnum
 from ..interface.models.rest_models import TaskQueuePOSTBody
 
 
@@ -123,7 +123,7 @@ class BaseService(ProtoModel, abc.ABC):
     task_priority: PriorityEnum
     task_manager: TaskManager = TaskManager()
 
-    status: str = TaskStatusEnum.waiting
+    status: str = RecordStatusEnum.waiting
     error: Optional[ComputeError] = None
     stdout: str = ""
     tag: Optional[str] = None

@@ -41,7 +41,6 @@ from .task_models import (
     ManagerStatusEnum,
     PythonComputeSpec,
     TaskRecord,
-    TaskStatusEnum,
     PriorityEnum,
     SingleProcedureSpecification,
     OptimizationProcedureSpecification,

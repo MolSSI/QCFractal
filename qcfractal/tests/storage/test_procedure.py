@@ -7,7 +7,7 @@ All tests should be atomic, that is create and cleanup their data
 import logging
 from ...testing import load_procedure_data, caplog_handler_at_level
 from ...storage_sockets.models import BaseResultORM
-from qcfractal.interface.models import ObjectId, RecordStatusEnum, TaskStatusEnum, ManagerStatusEnum
+from qcfractal.interface.models import ObjectId, RecordStatusEnum, ManagerStatusEnum
 
 fake_manager_1 = {
     "cluster": "test_cluster",
@@ -79,11 +79,11 @@ def test_procedure_basic(storage_socket):
     assert procs[2]["manager_name"] == "manager_2"
     assert procs[3]["manager_name"] == "manager_2"
     assert procs[4]["manager_name"] == "manager_1"
-    assert procs[0]["status"] == TaskStatusEnum.running
-    assert procs[1]["status"] == TaskStatusEnum.running
-    assert procs[2]["status"] == TaskStatusEnum.running
-    assert procs[3]["status"] == TaskStatusEnum.running
-    assert procs[4]["status"] == TaskStatusEnum.running
+    assert procs[0]["status"] == RecordStatusEnum.running
+    assert procs[1]["status"] == RecordStatusEnum.running
+    assert procs[2]["status"] == RecordStatusEnum.running
+    assert procs[3]["status"] == RecordStatusEnum.running
+    assert procs[4]["status"] == RecordStatusEnum.running
 
     # Return results
     # The ids returned from create() are the result ids, but the managers return task ids
@@ -140,7 +140,7 @@ def test_procedure_wrong_manager_return(storage_socket, caplog):
 
     assert len(procs) == 1
     assert procs[0]["manager_name"] == "manager_1"
-    assert procs[0]["status"] == TaskStatusEnum.running
+    assert procs[0]["status"] == RecordStatusEnum.running
 
 
 def test_procedure_nonexist_task(storage_socket, caplog):

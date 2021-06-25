@@ -13,7 +13,6 @@ import sqlalchemy
 import sqlalchemy.exc
 
 import qcfractal.interface as ptl
-from qcfractal.interface.models import TaskStatusEnum
 from qcfractal.services.services import TorsionDriveService
 
 bad_id1 = "99999000"
@@ -511,7 +510,7 @@ def test_dataset_add_delete_cascade(storage_socket):
 #    service_data = {
 #        "tag": "tag1 tag2",
 #        "hash_index": "123",
-#        "status": TaskStatusEnum.waiting,
+#        "status": RecordStatusEnum.waiting,
 #        "optimization_program": "gaussian",
 #        # extra fields
 #        "torsiondrive_state": {},
@@ -527,7 +526,7 @@ def test_dataset_add_delete_cascade(storage_socket):
 #    ret = storage_socket.add_services([service])
 #    assert len(ret["data"]) == 1
 #
-#    ret = storage_socket.get_services(procedure_id=ret["data"][0], status=TaskStatusEnum.waiting)
+#    ret = storage_socket.get_services(procedure_id=ret["data"][0], status=RecordStatusEnum.waiting)
 #    assert ret["data"][0]["hash_index"] == service_data["hash_index"]
 #
 #    # attributes in extra fields
@@ -542,7 +541,7 @@ def test_dataset_add_delete_cascade(storage_socket):
 #    ret_count = storage_socket.update_services([py_obj])
 #    assert ret_count == 1
 #
-#    ret = storage_socket.get_services(procedure_id=ret["data"][0]["procedure_id"], status=TaskStatusEnum.waiting)
+#    ret = storage_socket.get_services(procedure_id=ret["data"][0]["procedure_id"], status=RecordStatusEnum.waiting)
 #    assert ret["data"][0]["task_priority"] == py_obj.task_priority
 
 

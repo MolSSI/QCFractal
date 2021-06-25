@@ -12,7 +12,7 @@ import logging
 import time
 import weakref
 from datetime import datetime, timedelta
-from qcfractal.interface.models import ManagerStatusEnum, TaskStatusEnum, ComputeError
+from qcfractal.interface.models import ManagerStatusEnum, ComputeError
 from .storage_sockets.sqlalchemy_socket import SQLAlchemySocket
 from .process_runner import ProcessBase, InterruptableSleep, SleepInterrupted
 
@@ -135,12 +135,12 @@ class FractalPeriodics:
         """
 
         # Grab current services
-        current_services = self.storage_socket.get_services(status=TaskStatusEnum.running)["data"]
+        current_services = self.storage_socket.get_services(status=RecordStatusEnum.running)["data"]
 
         # Grab new services if we have open slots
         open_slots = max(0, self.max_active_services - len(current_services))
         if open_slots > 0:
-            new_services = self.storage_socket.get_services(status=TaskStatusEnum.waiting, limit=open_slots)["data"]
+            new_services = self.storage_socket.get_services(status=RecordStatusEnum.waiting, limit=open_slots)["data"]
             current_services.extend(new_services)
             if len(new_services):
                 self.logger.info(f"Starting {len(new_services)} new services.")
@@ -172,14 +172,14 @@ class FractalPeriodics:
             except Exception:
                 error_message = "Error iterating service with id={}:\n{}".format(service.id, traceback.format_exc())
                 self.logger.error(error_message)
-                service.status = TaskStatusEnum.error
+                service.status = RecordStatusEnum.error
 
                 # TODO: HACK HACK
                 # Service itself should be responsible for this (maybe in base class?)
-                service.output.__dict__["status"] = TaskStatusEnum.error
+                service.output.__dict__["status"] = RecordStatusEnum.error
 
                 service.error = ComputeError(error_type="iteration_error", error_message=error_message)
-                self.storage_socket.update_service_status(TaskStatusEnum.error, id=service.id)
+                self.storage_socket.update_service_status(RecordStatusEnum.error, id=service.id)
                 finished = False
 
             self.storage_socket.update_services([service])

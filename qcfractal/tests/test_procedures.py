@@ -8,7 +8,7 @@ from qcelemental.util import parse_version
 
 import qcengine as qcng
 import qcfractal.interface as ptl
-from qcfractal.interface.models import RecordStatusEnum, TaskStatusEnum
+from qcfractal.interface.models import RecordStatusEnum
 from qcfractal import testing
 
 

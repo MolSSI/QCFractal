@@ -30,7 +30,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import text
 
-from qcfractal.interface.models import ManagerStatusEnum, PriorityEnum, TaskStatusEnum, CompressionEnum, ObjectId
+from qcfractal.interface.models import ManagerStatusEnum, PriorityEnum, CompressionEnum, ObjectId
 from qcfractal.storage_sockets.models.sql_base import Base, MsgpackExt
 
 
@@ -291,11 +291,11 @@ class TaskQueueORM(Base):
     # rows, but if there is an index matching the ORDER BY, the first n rows
     # can be retrieved directly, without scanning the remainder at all.
     __table_args__ = (
-        Index("ix_task_queue_created_on", "created_on"),
+        Index("ix_task_queue_tag", "tag"),
         Index("ix_task_queue_manager", "manager"),
         Index("ix_task_queue_required_programs", "required_programs"),
         Index("ix_task_queue_base_result_id", "base_result_id"),
-        Index("ix_task_waiting_sort", text("priority desc,  created_on")),
+        Index("ix_task_queue_waiting_sort", text("priority desc, created_on")),
         # WARNING - these are not autodetected by alembic
         CheckConstraint(
             "required_programs::text = LOWER(required_programs::text)", name="ck_task_queue_requirements_lower"
@@ -312,7 +312,6 @@ class ServiceQueueORM(Base):
 
     id = Column(Integer, primary_key=True)
 
-    status = Column(Enum(TaskStatusEnum), default=TaskStatusEnum.waiting)
     tag = Column(String, default=None)
     hash_index = Column(String, nullable=False)
 
@@ -326,10 +325,8 @@ class ServiceQueueORM(Base):
     extra = Column(MsgpackExt)
 
     __table_args__ = (
-        Index("ix_service_queue_status", "status"),
-        Index("ix_service_queue_priority", "priority"),
-        Index("ix_service_queue_modified_on", "modified_on"),
-        Index("ix_service_queue_status_tag_hash", "status", "tag"),
+        Index("ix_service_queue_tag", "tag"),
+        Index("ix_service_queue_waiting_sort", text("priority desc, created_on")),
         Index("ix_service_queue_hash_index", "hash_index"),
     )
 

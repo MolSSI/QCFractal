@@ -8,7 +8,7 @@ from typing import Dict, Set
 import numpy as np
 
 from .. import __version__ as qcfractal_version
-from ..interface.models import GridOptimizationRecord, Molecule, TaskStatusEnum
+from ..interface.models import GridOptimizationRecord, Molecule
 from .service_util import BaseService, expand_ndimensional_grid
 
 __all__ = ["GridOptimizationService"]
@@ -124,7 +124,7 @@ class GridOptimizationService(BaseService):
 
     def iterate(self):
 
-        self.status = TaskStatusEnum.running
+        self.status = RecordStatusEnum.running
 
         # Special pre-optimization iteration
         if self.iteration == -2:
@@ -199,7 +199,7 @@ class GridOptimizationService(BaseService):
 
         # All done
         if len(next_tasks) == 0:
-            self.status = TaskStatusEnum.complete
+            self.status = RecordStatusEnum.complete
             self.update_output()
             return True
 

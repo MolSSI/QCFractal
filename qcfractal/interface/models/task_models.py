@@ -7,32 +7,6 @@ from pydantic import Field, validator, constr
 from .common_models import ObjectId, ProtoModel, AtomicResultProtocols, OptimizationProtocols
 
 
-class TaskStatusEnum(str, Enum):
-    """
-    The state of a Task object. The states which are available are a finite set.
-    """
-
-    running = "running"
-    waiting = "waiting"
-    error = "error"
-    complete = "complete"
-
-    @classmethod
-    def _missing_(cls, name):
-        """Attempts to find the correct status in a case-insensitive way
-
-        If a string being converted to a TaskStatusEnum is missing, then this function
-        will convert the case and try to find the appropriate status.
-        """
-        name = name.lower()
-
-        # Search this way rather than doing 'in' since we are comparing
-        # a string to an enum
-        for status in cls:
-            if name == status:
-                return status
-
-
 class ManagerStatusEnum(str, Enum):
     """
     The state of a Queue Manager. The states which are available are a finite set.

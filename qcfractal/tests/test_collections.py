@@ -12,7 +12,7 @@ import pytest
 import qcelemental as qcel
 
 import qcfractal.interface as ptl
-from qcfractal.interface.models import RecordStatusEnum, TaskStatusEnum
+from qcfractal.interface.models import RecordStatusEnum
 from qcfractal.interface.collections.dataset_view import HDF5View
 from qcfractal import testing
 from qcfractal.testing import df_compare, live_fractal_or_skip

@@ -11,7 +11,7 @@ import pytest
 from sqlalchemy.orm import joinedload
 
 import qcfractal.interface as ptl
-from qcfractal.interface.models import TaskStatusEnum, RecordStatusEnum
+from qcfractal.interface.models import RecordStatusEnum
 from qcfractal.services.services import TorsionDriveService
 from qcfractal.storage_sockets.models import (
     KVStoreORM,
@@ -166,7 +166,6 @@ def test_services(session_fixture):
     service_data = {
         "tag": "tag1 tag2",
         "hash_index": "123",
-        "status": TaskStatusEnum.complete,
         "optimization_program": "gaussian",
         # extra fields
         "torsiondrive_state": {},

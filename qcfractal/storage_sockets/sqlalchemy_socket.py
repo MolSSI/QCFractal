@@ -503,24 +503,6 @@ class SQLAlchemySocket:
 
         return count
 
-    #    def is_queue_empty(self):
-    #        with self.session_scope() as session:
-    #            query1 = session.query(TaskQueueORM).filter(and_(TaskQueueORM.status == TaskStatusEnum.running,
-    #                                                             TaskQueueORM.status == TaskStatusEnum.waiting))
-    #
-    #            count1 = get_count_fast(query1)
-    #
-    #            # No need to
-    #            if count1 > 0:
-    #                return False
-    #
-    #            query2 = session.query(ServiceQueueORM).filter(or_(ServiceQueueORM.status == TaskStatusEnum.running,
-    #                                                               ServiceQueueORM.status == TaskStatusEnum.waiting))
-    #
-    #            count2 = get_count_fast(query2)
-    #
-    #        return count2 == 0
-
     def set_completed_watch(self, mp_queue):
         self._completed_queue = mp_queue
 
