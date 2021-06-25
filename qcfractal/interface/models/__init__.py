@@ -45,5 +45,6 @@ from .task_models import (
     SingleProcedureSpecification,
     OptimizationProcedureSpecification,
     AllProcedureSpecifications,
+    AllServiceSpecifications,
 )
 from .torsiondrive import TorsionDriveInput, TorsionDriveRecord

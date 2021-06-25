@@ -129,4 +129,9 @@ class OptimizationProcedureSpecification(ProtoModel):
     priority: PriorityEnum = Field(PriorityEnum.normal)
 
 
+# TODO - find a better place for this
+from .torsiondrive import TorsionDriveInput
+from .gridoptimization import GridOptimizationInput
+
 AllProcedureSpecifications = Union[SingleProcedureSpecification, OptimizationProcedureSpecification]
+AllServiceSpecifications = Union[TorsionDriveInput, GridOptimizationInput]
