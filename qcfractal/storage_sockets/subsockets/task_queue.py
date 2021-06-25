@@ -28,7 +28,7 @@ class TaskQueueSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
         self._logger = logging.getLogger(__name__)
-        self._user_limit = core_socket.qcf_config.response_limits.task
+        self._user_limit = core_socket.qcf_config.response_limits.task_queue
         self._manager_limit = core_socket.qcf_config.response_limits.manager_task
 
     def add_orm(
