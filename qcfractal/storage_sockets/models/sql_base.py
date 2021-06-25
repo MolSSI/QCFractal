@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import msgpack
+
 from qcfractal.interface.models import ObjectId
 from qcelemental.util import msgpackext_dumps, msgpackext_loads
 from sqlalchemy import and_, inspect, Integer
@@ -36,6 +38,26 @@ class MsgpackExt(TypeDecorator):
             return value
         else:
             return msgpackext_loads(value)
+
+
+class PlainMsgpackExt(TypeDecorator):
+    """Converts JSON-like data to msgpack using standard msgpack
+
+    This does not support NumPy"""
+
+    impl = BYTEA
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+        else:
+            return msgpack.dumps(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        else:
+            return msgpack.loads(value)
 
 
 @as_declarative()

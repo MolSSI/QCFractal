@@ -14,6 +14,7 @@ from ..visualization import scatter_plot
 from .common_models import Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
 from .model_utils import recursive_normalizer
 from .records import RecordBase, RecordStatusEnum
+from .task_models import PriorityEnum
 
 
 class TDKeywords(ProtoModel):
@@ -100,11 +101,9 @@ class TorsionDriveInput(ProtoModel):
         "optimization.",
     )
 
-    @validator("initial_molecule", pre=True)
-    def check_initial_molecules(cls, v):
-        if isinstance(v, (str, dict, Molecule)):
-            v = [v]
-        return v
+    tag: Optional[str] = Field(None)
+
+    priority: PriorityEnum = Field(PriorityEnum.normal)
 
 
 class TorsionDriveRecord(RecordBase):
@@ -205,8 +204,7 @@ class TorsionDriveRecord(RecordBase):
             "computed_points": len(self.optimization_history),
             "complete_tasks": sum(x.status == RecordStatusEnum.complete for x in flat_history),
             "incomplete_tasks": sum(
-                (x.status == RecordStatusEnum.incomplete) or (x.status == RecordStatusEnum.running)
-                for x in flat_history
+                (x.status == RecordStatusEnum.waiting) or (x.status == RecordStatusEnum.running) for x in flat_history
             ),
             "error_tasks": sum(x.status == RecordStatusEnum.error for x in flat_history),
         }
@@ -315,9 +313,10 @@ class TorsionDriveRecord(RecordBase):
             map_id_key = self._get_min_optimization_map()
 
             opt_ids = list(map_id_key.keys())
-            results = self.client.custom_query("optimization", "final_molecule", {"optimization_ids": opt_ids})
 
-            ret = {map_id_key[opt_id]: mol_record for opt_id, mol_record in results.items()}
+            procs = self.client.query_optimizations(id=opt_ids, include=["id", "final_molecule_obj"])
+
+            ret = {map_id_key[p["id"]]: Molecule(**p["final_molecule_obj"]) for p in procs}
 
             self.cache["final_molecules"] = ret
 

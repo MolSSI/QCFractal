@@ -149,9 +149,9 @@ class ServerLogSocket:
             task_stats = {"columns": ["result_type", "status", "count"], "rows": [list(r) for r in task_query]}
 
             service_query = (
-                session.query(BaseResultORM.result_type, ServiceQueueORM.status, func.count(ServiceQueueORM.id))
+                session.query(BaseResultORM.result_type, BaseResultORM.status, func.count(ServiceQueueORM.id))
                 .join(BaseResultORM, BaseResultORM.id == ServiceQueueORM.procedure_id)
-                .group_by(BaseResultORM.result_type, ServiceQueueORM.status)
+                .group_by(BaseResultORM.result_type, BaseResultORM.status)
                 .all()
             )
             service_stats = {"columns": ["result_type", "status", "count"], "rows": [list(r) for r in service_query]}

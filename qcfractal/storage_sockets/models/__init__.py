@@ -26,6 +26,7 @@ from .sql_models import (
     QueueManagerORM,
     ServerStatsLogORM,
     ServiceQueueORM,
+    ServiceQueueTasks,
     TaskQueueORM,
     UserORM,
     RoleORM,

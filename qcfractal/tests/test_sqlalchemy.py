@@ -301,46 +301,46 @@ def test_optimization_procedure(session_fixture, molecules_H4O2):
     assert proc.trajectory_obj
 
 
-def test_torsiondrive_procedure(session_fixture):
-    """
-    Torsiondrive procedure
-    """
-
-    storage_socket, session = session_fixture
-    assert session.query(TorsionDriveProcedureORM).count() == 0
-
-    water = ptl.data.get_molecule("water_dimer_minima.psimol")
-    meta, ret = storage_socket.molecule.add([water])
-    assert meta.success
-    assert meta.n_inserted == 1
-
-    data1 = {
-        "keywords": None,
-        "program": "p9",
-        "qc_spec": {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"},
-        "status": RecordStatusEnum.complete,
-        "protocols": {},
-    }
-
-    torj_proc = TorsionDriveProcedureORM(**data1)
-    session.add(torj_proc)
-    session.commit()
-
-    # Add optimization_history
-
-    data1["initial_molecule"] = ret[0]
-    opt_proc = OptimizationProcedureORM(**data1)
-    opt_proc2 = OptimizationProcedureORM(**data1)
-    session.add_all([opt_proc, opt_proc2])
-    session.commit()
-    assert opt_proc.id
-
-    opt_hist = OptimizationHistory(torsion_id=torj_proc.id, opt_id=opt_proc.id, key="20")
-    opt_hist2 = OptimizationHistory(torsion_id=torj_proc.id, opt_id=opt_proc2.id, key="20")
-    torj_proc.optimization_history_obj = [opt_hist, opt_hist2]
-    session.commit()
-    torj_proc = session.query(TorsionDriveProcedureORM).options(joinedload("optimization_history_obj")).first()
-    assert torj_proc.optimization_history == {"20": [str(opt_proc.id), str(opt_proc2.id)]}
+# def test_torsiondrive_procedure(session_fixture):
+#    """
+#    Torsiondrive procedure
+#    """
+#
+#    storage_socket, session = session_fixture
+#    assert session.query(TorsionDriveProcedureORM).count() == 0
+#
+#    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+#    meta, ret = storage_socket.molecule.add([water])
+#    assert meta.success
+#    assert meta.n_inserted == 1
+#
+#    data1 = {
+#        "keywords": None,
+#        "program": "p9",
+#        "qc_spec": {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"},
+#        "status": RecordStatusEnum.complete,
+#        "protocols": {},
+#    }
+#
+#    torj_proc = TorsionDriveProcedureORM(**data1)
+#    session.add(torj_proc)
+#    session.commit()
+#
+#    # Add optimization_history
+#
+#    data1["initial_molecule"] = ret[0]
+#    opt_proc = OptimizationProcedureORM(**data1)
+#    opt_proc2 = OptimizationProcedureORM(**data1)
+#    session.add_all([opt_proc, opt_proc2])
+#    session.commit()
+#    assert opt_proc.id
+#
+#    opt_hist = OptimizationHistory(torsion_id=torj_proc.id, opt_id=opt_proc.id, key="20")
+#    opt_hist2 = OptimizationHistory(torsion_id=torj_proc.id, opt_id=opt_proc2.id, key="20")
+#    torj_proc.optimization_history_obj = [opt_hist, opt_hist2]
+#    session.commit()
+#    torj_proc = session.query(TorsionDriveProcedureORM).options(joinedload("optimization_history_obj")).first()
+#    assert torj_proc.optimization_history == {"20": [str(opt_proc.id), str(opt_proc2.id)]}
 
 
 def test_results_pagination(session_fixture, molecules_H4O2, kw_fixtures):
