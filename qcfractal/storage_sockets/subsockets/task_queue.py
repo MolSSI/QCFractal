@@ -204,12 +204,12 @@ class TaskQueueSocket:
                 #        we want to then verify the versions
 
                 # We do a plain .join() because we are querying, and then also supplying contains_eager() so that
-                # the BaseResultORM.task_obj gets populated
+                # the TaskQueueORM.base_result_obj gets populated
                 # See https://docs-sqlalchemy.readthedocs.io/ko/latest/orm/loading_relationships.html#routing-explicit-joins-statements-into-eagerly-loaded-collections
                 query = (
-                    session.query(BaseResultORM)
-                    .join(BaseResultORM.task_obj)
-                    .options(contains_eager(BaseResultORM.task_obj))
+                    session.query(TaskQueueORM)
+                    .join(TaskQueueORM.base_result_obj)  # Joins a BaseResultORM
+                    .options(contains_eager(TaskQueueORM.base_result_obj))
                     .filter(BaseResultORM.status == RecordStatusEnum.waiting)
                     .filter(TaskQueueORM.required_programs.contained_by(available_programs))
                     .filter(*q)
@@ -221,15 +221,15 @@ class TaskQueueSocket:
                 new_items = query.all()
 
                 # Update all the task records to reflect this manager claiming them
-                for base_result in new_items:
-                    base_result.status = RecordStatusEnum.running
-                    base_result.manager_name = manager_name
-                    base_result.modified_on = dt.utcnow()
+                for task_orm in new_items:
+                    task_orm.base_result_obj.status = RecordStatusEnum.running
+                    task_orm.base_result_obj.manager_name = manager_name
+                    task_orm.base_result_obj.modified_on = dt.utcnow()
 
                 session.flush()
 
                 # Store in dict form for returning
-                found.extend([base_result.task_obj.dict() for base_result in new_items])
+                found.extend([task_orm.dict() for task_orm in new_items])
 
         return found
 
