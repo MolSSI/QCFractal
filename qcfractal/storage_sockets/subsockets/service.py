@@ -2,19 +2,14 @@ from __future__ import annotations
 
 import logging
 
-import sqlalchemy.orm.attributes
-from sqlalchemy.orm import selectinload, load_only, contains_eager
+from sqlalchemy.orm import selectinload, contains_eager
 from qcfractal.interface.models import (
     ObjectId,
-    KVStore,
     AllServiceSpecifications,
     InsertMetadata,
     RecordStatusEnum,
 )
 from qcfractal.storage_sockets.models import BaseResultORM, ServiceQueueORM
-from qcfractal.storage_sockets.storage_utils import get_metadata_template
-from qcfractal.storage_sockets.sqlalchemy_socket import format_query, calculate_limit
-from qcfractal.storage_sockets.sqlalchemy_common import insert_general
 
 from typing import TYPE_CHECKING
 
@@ -23,17 +18,13 @@ from .services import BaseServiceHandler, TorsionDriveHandler
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
-    from typing import List, Dict, Union, Optional, Sequence, Tuple
-
-
-from sqlalchemy import event
+    from typing import List, Dict, Optional, Sequence, Tuple
 
 
 class ServiceSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
         self._logger = logging.getLogger(__name__)
-        self._limit = core_socket.qcf_config.response_limits.service_queue
         self._max_active_services = core_socket.qcf_config.max_active_services
 
         self.torsiondrive = TorsionDriveHandler(core_socket)
@@ -41,62 +32,6 @@ class ServiceSocket:
         self.handler_map: Dict[str, BaseServiceHandler] = {
             "torsiondrive": self.torsiondrive,
         }
-
-    def add_orm(
-        self, services: List[ServiceQueueORM], *, session: Optional[Session] = None
-    ) -> Tuple[InsertMetadata, List[ObjectId]]:
-        """
-        Adds TaskQueueORM to the database, taking into account duplicates
-
-        The session is flushed at the end of this function.
-
-        Parameters
-        ----------
-        services
-            ORM objects to add to the database
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
-
-        Returns            inserted_idx = [orm_idx_map[i][0] for i in meta.inserted_idx]
-        -------
-        :
-            Metadata showing what was added, and a list of returned task ids. These will be in the
-            same order as the inputs, and may correspond to newly-inserted ORMs or to existing data.
-
-        """
-
-        # We don't add if a task already exists for a given base_result_id, or if the status of that base_result
-        # is anything other than 'incomplete'
-
-        base_result_ids = [x.procedure_id for x in services]
-        statuses = self._core_socket.service.get(base_result_ids, include=["status"], session=session)
-
-        # Convert the dict returned from procedure.get into a flat list
-        statuses_lst = [x["status"] for x in statuses]
-
-        # TODO - logic will need to be adjusted with new statuses
-        # If the task is complete, no need to create the task
-        # We will mark these as "existing"
-        # We let this re-create tasks for other status like "error", but that should only be needed in rare bug-induced
-        # circumstances
-        orm_idx_map = [(idx, x) for idx, x in enumerate(services) if statuses_lst[idx] != RecordStatusEnum.complete]
-        incorrect_status_idx = [idx for idx, x in enumerate(services) if statuses_lst[idx] == RecordStatusEnum.complete]
-
-        orm_to_add = [x[1] for x in orm_idx_map]
-
-        with self._core_socket.optional_session(session) as session:
-            meta, ids = insert_general(session, orm_to_add, (ServiceQueueORM.procedure_id,), (ServiceQueueORM.id,))
-
-            # Adjust the indices in the metadata
-            inserted_idx = [orm_idx_map[i][0] for i in meta.inserted_idx]
-            existing_idx = [orm_idx_map[i][0] for i in meta.existing_idx]
-            errors = [(orm_idx_map[i][0], msg) for i, msg in meta.errors]
-            existing_idx.extend(incorrect_status_idx)
-
-            new_meta = InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx, errors=errors)
-
-            return new_meta, [x[0] for x in ids]
 
     def create(
         self, specifications: Sequence[AllServiceSpecifications], *, session: Optional[Session] = None
@@ -149,67 +84,6 @@ class ServiceSocket:
                 session.commit()
 
         return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx, errors=errors), ids  # type: ignore
-
-    def get(
-        self,
-        id: Union[List[str], str] = None,
-        procedure_id: Union[List[str], str] = None,
-        hash_index: Union[List[str], str] = None,
-        status: str = None,
-        limit: int = None,
-        skip: int = 0,
-        return_json=True,
-    ):
-        """
-
-        Parameters
-        ----------
-        id / hash_index : List[str] or str, optional
-            service id
-        procedure_id : List[str] or str, optional
-            procedure_id for the specific procedure
-        status : str, optional
-            status of the record queried for
-        limit : Optional[int], optional
-            maximum number of results to return
-            if 'limit' is greater than the global setting self._max_limit,
-            the self._max_limit will be returned instead
-            (This is to avoid overloading the server)
-        skip : int, optional
-            skip the first 'skip' resaults. Used to paginate
-            Default is 0
-        return_json : bool, deafult is True
-            Return the results as a list of json instead of objects
-
-        Returns
-        -------
-        Dict[str, Any]
-            Dict with keys: data, meta. Data is the objects found
-        """
-
-        # TODO this function is used by the periodics class, for which the limit shouldn't apply
-        limit = calculate_limit(self._limit, limit)
-        meta = get_metadata_template()
-        query = format_query(ServiceQueueORM, id=id, hash_index=hash_index, procedure_id=procedure_id, status=status)
-
-        with self._core_socket.session_scope() as session:
-            data = (
-                session.query(ServiceQueueORM)
-                .filter(*query)
-                .order_by(ServiceQueueORM.priority.desc(), ServiceQueueORM.created_on)
-                .limit(limit)
-                .offset(skip)
-                .all()
-            )
-            data = [x.to_dict() for x in data]
-
-        meta["n_found"] = len(data)
-        meta["success"] = True
-
-        # except Exception as err:
-        #     meta['error_description'] = str(err)
-
-        return {"data": data, "meta": meta}
 
     @staticmethod
     def tasks_done(service_orm: ServiceQueueORM) -> Tuple[bool, bool]:

@@ -153,16 +153,15 @@ class ResponseLimitConfig(ConfigBase):
     Limits on the number of records returned per query. This can be specified per object (molecule, etc)
     """
 
+    record: int = Field(2000, description="Limit on the number of calculation records returned")
     molecule: int = Field(5000, description="Limit on the number of molecules returned")
     output_store: int = Field(100, description="Limit on the number of program outputs returned")
     manager: int = Field(5000, description="Limit on the number of manager records to return")
     manager_log: int = Field(10000, description="Limit on the number of manager log records to return")
-    result: int = Field(2000, description="Limit on the number of computation records to return")
     keyword: int = Field(1000, description="Limit on the number of keywords to return")
     collection: int = Field(25, description="Limit on the number of collections to return")
     task_queue: int = Field(1000, description="Limit on the number of tasks to return")
     service_queue: int = Field(1000, description="Limit on the number of service queuetasks to return")
-    service: int = Field(1000, description="Limit on the number of service to return")
     manager_task: int = Field(200, description="Limit on the number of tasks a single manager can pull down")
     wavefunction: int = Field(25, description="Limit on the number of wavefunctions to return")
     server_logs: int = Field(25, description="Limit on the number of server log records to return")

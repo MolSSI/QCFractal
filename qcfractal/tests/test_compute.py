@@ -218,7 +218,7 @@ def test_queue_error(fractal_test_server):
     # Pull from database, raw JSON
     storage_socket = SQLAlchemySocket(fractal_test_server._qcf_config)
     queue_ret = storage_socket.task_queue.query(status=[RecordStatusEnum.error])[1]
-    result = storage_socket.procedure.query(id=compute_ret.ids)[1][0]
+    result = storage_socket.record.query(id=compute_ret.ids)[1][0]
 
     assert len(queue_ret) == 1
     assert result["status"] == RecordStatusEnum.error
