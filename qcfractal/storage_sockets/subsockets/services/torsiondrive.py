@@ -16,8 +16,10 @@ from sqlalchemy.orm import joinedload, load_only, selectinload
 from ..procedures import helpers
 
 __td_spec = find_spec("torsiondrive")
-__td_api_spec = find_spec("torsiondrive.td_api")
+
 if __td_spec is not None:
+    __td_api_spec = find_spec("torsiondrive.td_api")
+
     torsiondrive = __td_spec.loader.load_module()
     td_api = __td_api_spec.loader.load_module()
 
