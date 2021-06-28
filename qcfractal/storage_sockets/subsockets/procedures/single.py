@@ -177,7 +177,7 @@ class SingleResultHandler(BaseProcedureHandler):
             all_tasks.append(task)
 
         # Add all tasks to the database. Also flushes the session
-        return self._core_socket.task_queue.add_orm(all_tasks, session=session)
+        return self._core_socket.procedure.add_task_orm(all_tasks, session=session)
 
     def update_completed(self, session: Session, task_orm: TaskQueueORM, manager_name: str, result: AtomicResult):
         #####################################

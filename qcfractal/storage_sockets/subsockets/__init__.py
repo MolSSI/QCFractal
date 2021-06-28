@@ -8,7 +8,5 @@ from .procedure import ProcedureSocket
 from .role import RoleSocket
 from .server_log import ServerLogSocket
 from .service import ServiceSocket
-from .task_queue import TaskQueueSocket
-from .service_queue import ServiceQueueSocket
 from .user import UserSocket
 from .wavefunction import WavefunctionSocket

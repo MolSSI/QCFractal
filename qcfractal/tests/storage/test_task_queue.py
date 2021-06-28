@@ -27,12 +27,12 @@ def test_task_nonexist_manager_claim(storage_socket):
     _, ids = storage_socket.procedure.create([molecule_1], input_spec_1)
 
     # Some random manager tries to claim the task
-    claimed = storage_socket.task_queue.claim("some_manager", {"psi4": None, "rdkit": None, "geometric": None})
+    claimed = storage_socket.procedure.claim_tasks("some_manager", {"psi4": None, "rdkit": None, "geometric": None})
     assert len(claimed) == 0
 
     #  Create it to make sure that it would actually claim the task
     assert storage_socket.manager.update(name="some_manager", **fake_manager_1)
-    claimed = storage_socket.task_queue.claim("some_manager", {"psi4": None, "rdkit": None, "geometric": None})
+    claimed = storage_socket.procedure.claim_tasks("some_manager", {"psi4": None, "rdkit": None, "geometric": None})
     assert len(claimed) == 1
 
 
@@ -48,12 +48,12 @@ def test_task_inactive_manager_claim(storage_socket):
     assert storage_socket.manager.update(name="some_manager", **fake_manager_1)
     storage_socket.manager.deactivate(name=["some_manager"])
 
-    claimed = storage_socket.task_queue.claim("some_manager", {"psi4": None, "rdkit": None, "geometric": None})
+    claimed = storage_socket.procedure.claim_tasks("some_manager", {"psi4": None, "rdkit": None, "geometric": None})
     assert len(claimed) == 0
 
     # Manually set to active to make sure it can be claimed
     assert storage_socket.manager.update(name="some_manager", status=ManagerStatusEnum.active)
-    claimed = storage_socket.task_queue.claim("some_manager", {"psi4": None, "rdkit": None, "geometric": None})
+    claimed = storage_socket.procedure.claim_tasks("some_manager", {"psi4": None, "rdkit": None, "geometric": None})
     assert len(claimed) == 1
 
 
@@ -70,8 +70,8 @@ def test_task_ordering_time(storage_socket):
 
     assert storage_socket.manager.update(name="some_manager", **fake_manager_1)
 
-    queue_id1 = storage_socket.task_queue.claim("some_manager", {"psi4": None}, limit=1)[0]["base_result_id"]
-    queue_id2 = storage_socket.task_queue.claim("some_manager", {"psi4": None}, limit=1)[0]["base_result_id"]
+    queue_id1 = storage_socket.procedure.claim_tasks("some_manager", {"psi4": None}, limit=1)[0]["base_result_id"]
+    queue_id2 = storage_socket.procedure.claim_tasks("some_manager", {"psi4": None}, limit=1)[0]["base_result_id"]
 
     assert queue_id1 == int(ids_1[0])
     assert queue_id2 == int(ids_2[0])
@@ -93,9 +93,9 @@ def test_queue_ordering_priority(storage_socket):
 
     assert storage_socket.manager.update(name="some_manager", **fake_manager_1)
 
-    queue_id1 = storage_socket.task_queue.claim("some_manager", {"psi4": None}, limit=1)[0]["base_result_id"]
-    queue_id2 = storage_socket.task_queue.claim("some_manager", {"psi4": None}, limit=1)[0]["base_result_id"]
-    queue_id3 = storage_socket.task_queue.claim("some_manager", {"psi4": None}, limit=1)[0]["base_result_id"]
+    queue_id1 = storage_socket.procedure.claim_tasks("some_manager", {"psi4": None}, limit=1)[0]["base_result_id"]
+    queue_id2 = storage_socket.procedure.claim_tasks("some_manager", {"psi4": None}, limit=1)[0]["base_result_id"]
+    queue_id3 = storage_socket.procedure.claim_tasks("some_manager", {"psi4": None}, limit=1)[0]["base_result_id"]
 
     assert queue_id1 == int(ids_2[0])
     assert queue_id2 == int(ids_1[0])
@@ -118,17 +118,17 @@ def test_queue_order_procedure_priority(storage_socket):
 
     assert storage_socket.manager.update(name="some_manager", **fake_manager_1)
 
-    assert len(storage_socket.task_queue.claim("some_manager", {"rdkit": None}, limit=1)) == 0
-    assert len(storage_socket.task_queue.claim("some_manager", {"rdkit": None, "geom": None}, limit=1)) == 0
-    assert len(storage_socket.task_queue.claim("some_manager", {"prog1": None, "geometric": None}, limit=1)) == 0
+    assert len(storage_socket.procedure.claim_tasks("some_manager", {"rdkit": None}, limit=1)) == 0
+    assert len(storage_socket.procedure.claim_tasks("some_manager", {"rdkit": None, "geom": None}, limit=1)) == 0
+    assert len(storage_socket.procedure.claim_tasks("some_manager", {"prog1": None, "geometric": None}, limit=1)) == 0
 
-    queue_id1 = storage_socket.task_queue.claim("some_manager", {"psi4": None, "geometric": None}, limit=1)[0][
+    queue_id1 = storage_socket.procedure.claim_tasks("some_manager", {"psi4": None, "geometric": None}, limit=1)[0][
         "base_result_id"
     ]
-    queue_id2 = storage_socket.task_queue.claim("some_manager", {"psi4": None, "geometric": None}, limit=1)[0][
+    queue_id2 = storage_socket.procedure.claim_tasks("some_manager", {"psi4": None, "geometric": None}, limit=1)[0][
         "base_result_id"
     ]
-    queue_id3 = storage_socket.task_queue.claim("some_manager", {"psi4": None, "geometric": None}, limit=1)[0][
+    queue_id3 = storage_socket.procedure.claim_tasks("some_manager", {"psi4": None, "geometric": None}, limit=1)[0][
         "base_result_id"
     ]
 

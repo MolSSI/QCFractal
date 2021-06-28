@@ -324,7 +324,7 @@ class TorsionDriveHandler(BaseServiceHandler):
             # Add the output to the base procedure
             td_orm.stdout = self._core_socket.output_store.add([stdout])[0]
 
-        return self._core_socket.service_queue.add_orm(new_services, session=session)
+        return self._core_socket.service.add_task_orm(new_services, session=session)
 
     def iterate(self, session: Session, td_service_orm: ServiceQueueORM) -> bool:
         if td_service_orm.procedure_obj.status not in [RecordStatusEnum.running, RecordStatusEnum.waiting]:
@@ -341,7 +341,7 @@ class TorsionDriveHandler(BaseServiceHandler):
         td_service_state = td_service_orm.service_state
 
         # Check if tasks are done (should be checked already)
-        assert self._core_socket.service.tasks_done(td_service_orm) == (True, True)
+        assert self._core_socket.service.subtasks_done(td_service_orm) == (True, True)
 
         # Sort by position
         # Fully sorting by the key is not important since that ends up being a key in the dict
