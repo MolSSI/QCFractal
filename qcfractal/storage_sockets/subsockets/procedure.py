@@ -138,7 +138,7 @@ class ProcedureSocket:
         # Create procedures and tasks in the same session
         # This will be committed only at the end
         with self._core_socket.optional_session(session) as session:
-            meta, ids = procedure_handler.create_procedures(session, valid_molecule_ids, specification)
+            meta, ids = procedure_handler.create_records(session, valid_molecule_ids, specification)
 
             if not meta.success:
                 # The above should always succeed if the model was validated. If not, that is

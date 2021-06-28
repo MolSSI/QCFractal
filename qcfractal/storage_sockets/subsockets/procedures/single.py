@@ -80,7 +80,7 @@ class SingleResultHandler(BaseProcedureHandler):
         #####################################
         pass
 
-    def create_procedures(
+    def create_records(
         self,
         session: Session,
         molecule_ids: Sequence[int],

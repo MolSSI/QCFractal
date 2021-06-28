@@ -42,7 +42,7 @@ class BaseProcedureHandler(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def create_procedures(
+    def create_records(
         self,
         session: Session,
         molecule_ids: Sequence[int],
