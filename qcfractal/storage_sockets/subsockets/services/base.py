@@ -35,7 +35,7 @@ class BaseServiceHandler(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def create_services(
+    def create_tasks(
         self, session: Session, service_orm: Sequence[_ORM_T], tag: Optional[str], priority: PriorityEnum
     ) -> Tuple[InsertMetadata, List[ObjectId]]:
         pass
@@ -57,27 +57,7 @@ class BaseServiceHandler(abc.ABC):
         """
         pass
 
-    @staticmethod
-    def tasks_done(service_orm: ServiceQueueORM) -> bool:
-        """
-        Check if requested tasks are complete.
-        """
-
-        tasks = service_orm.tasks_obj
-
-        if len(tasks) == 0:
-            return True
-
-        status_values = set(x.procedure_obj.status for x in tasks)
-
-        if RecordStatusEnum.waiting in status_values:
-            return False
-        elif RecordStatusEnum.running in status_values:
-            return False
-        else:
-            return True
-
-    def submit_tasks(
+    def submit_subtasks(
         self,
         session: Session,
         service_orm: ServiceQueueORM,

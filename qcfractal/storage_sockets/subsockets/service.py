@@ -126,7 +126,7 @@ class ServiceSocket:
                     )
 
                     assert all(x.procedure == specification.procedure for x in new_orm)
-                    service_meta, _ = service_handler.create_services(
+                    service_meta, _ = service_handler.create_tasks(
                         session, new_orm, specification.tag, specification.priority
                     )
 

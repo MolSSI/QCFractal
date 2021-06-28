@@ -64,7 +64,7 @@ class TorsionDriveHandler(BaseServiceHandler):
         BaseServiceHandler.__init__(self, core_socket)
 
     def add_orm(
-        self, torsiondrives: Sequence[TorsionDriveProcedureORM], *, session: Optional[Session] = None
+        self, td_orms: Sequence[TorsionDriveProcedureORM], *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, List[ObjectId]]:
         """
         Adds TorsionDriveProcedureORM to the database, taking into account duplicates
@@ -73,7 +73,7 @@ class TorsionDriveHandler(BaseServiceHandler):
 
         Parameters
         ----------
-        torsiondrives
+        td_orms
             ORM objects to add to the database
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
@@ -88,7 +88,7 @@ class TorsionDriveHandler(BaseServiceHandler):
 
         # TODO - HACK
         # need to get the hash (for now)
-        for td in torsiondrives:
+        for td in td_orms:
             r = TorsionDriveRecord(
                 initial_molecule=[x.id for x in td.initial_molecule_obj],
                 keywords=td.keywords,
@@ -102,7 +102,7 @@ class TorsionDriveHandler(BaseServiceHandler):
 
         with self._core_socket.optional_session(session) as session:
             meta, orm = insert_general(
-                session, torsiondrives, (TorsionDriveProcedureORM.hash_index,), (TorsionDriveProcedureORM.id,)
+                session, td_orms, (TorsionDriveProcedureORM.hash_index,), (TorsionDriveProcedureORM.id,)
             )
         return meta, [x[0] for x in orm]
 
@@ -232,7 +232,7 @@ class TorsionDriveHandler(BaseServiceHandler):
 
         return insert_meta, td_ids
 
-    def create_services(
+    def create_tasks(
         self,
         session: Session,
         td_orms: Sequence[TorsionDriveProcedureORM],
@@ -379,7 +379,7 @@ class TorsionDriveHandler(BaseServiceHandler):
         if len(next_tasks) == 0:
             td_service_orm.procedure_obj.status = RecordStatusEnum.complete
         else:
-            self.submit_optimization_tasks(session, td_service_state, td_service_orm, next_tasks)
+            self.submit_optimization_subtasks(session, td_service_state, td_service_orm, next_tasks)
 
         # Update the torsiondrive procedure itself
         min_positions = {}
@@ -407,7 +407,7 @@ class TorsionDriveHandler(BaseServiceHandler):
         # Return True to indicate that this service has successfully completed
         return len(next_tasks) == 0
 
-    def submit_optimization_tasks(
+    def submit_optimization_subtasks(
         self, session: Session, td_service_state: Dict[str, Any], td_service_orm: ServiceQueueORM, task_dict
     ):
         new_tasks = []
@@ -442,7 +442,7 @@ class TorsionDriveHandler(BaseServiceHandler):
                     )
                 )
 
-        added_ids = self.submit_tasks(session, td_service_orm, new_tasks)
+        added_ids = self.submit_subtasks(session, td_service_orm, new_tasks)
 
         # Update history
         for id, (task_info, _, _) in zip(added_ids, new_tasks):

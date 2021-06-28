@@ -41,7 +41,7 @@ class FailedOperationHandler(BaseProcedureHandler):
     def validate_input(self, spec):
         raise RuntimeError("validate_input is not available for FailedOperationHandler")
 
-    def create_procedures(self, session, molecule_ids, spec):
+    def create_records(self, session, molecule_ids, spec):
         raise RuntimeError("parse_input is not available for FailedOperationHandler")
 
     def create_tasks(self, session, proc_orm, tag, priority):
