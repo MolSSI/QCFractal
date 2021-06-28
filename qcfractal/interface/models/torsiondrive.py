@@ -240,7 +240,7 @@ class TorsionDriveRecord(RecordBase):
             # Grab procedures
             needed_ids = [x for v in self.optimization_history.values() for x in v]
             objects = []
-            query_limit = self.client.query_limits["result"]
+            query_limit = self.client.query_limits["record"]
             for i in range(0, len(needed_ids), query_limit):
                 objects.extend(self.client.query_procedures(id=needed_ids[i : i + query_limit]))
             procedures = {v.id: v for v in objects}

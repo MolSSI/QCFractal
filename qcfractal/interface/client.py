@@ -1210,7 +1210,6 @@ class FractalClient(object):
         self,
         id: Optional["QueryObjectId"] = None,
         procedure_id: Optional["QueryObjectId"] = None,
-        hash_index: Optional["QueryStr"] = None,
         status: Optional["QueryStr"] = None,
         limit: Optional[int] = None,
         skip: int = 0,
@@ -1224,8 +1223,6 @@ class FractalClient(object):
             Queries the Services ``id`` field.
         procedure_id : QueryObjectId, optional
             Queries the Services ``procedure_id`` field, or the ObjectId of the procedure associated with the service.
-        hash_index : QueryStr, optional
-            Queries the Services ``procedure_id`` field.
         status : QueryStr, optional
             Queries the Services ``status`` field.
         limit : Optional[int], optional
@@ -1243,7 +1240,7 @@ class FractalClient(object):
         """
         payload = {
             "meta": {"limit": limit, "skip": skip},
-            "data": {"id": id, "procedure_id": procedure_id, "hash_index": hash_index, "status": status},
+            "data": {"id": make_list(id), "procedure_id": make_list(procedure_id), "status": make_list(status)},
         }
         return self._automodel_request("service_queue", "get", payload, full_return=full_return)
 

@@ -29,8 +29,8 @@ def test_procedure_single_query(storage_socket):
     assert storage_socket.manager.update(name="manager_2", **fake_manager_2)
 
     # Managers claim some of the tasks
-    storage_socket.task_queue.claim("manager_1", fake_program_info, 50, ["for_manager_1"])
-    storage_socket.task_queue.claim("manager_2", fake_program_info, 50, ["for_manager_2"])
+    storage_socket.procedure.claim_tasks("manager_1", fake_program_info, 50, ["for_manager_1"])
+    storage_socket.procedure.claim_tasks("manager_2", fake_program_info, 50, ["for_manager_2"])
 
     # Return some of the results
     # The ids returned from create() are the result ids, but the managers return task ids

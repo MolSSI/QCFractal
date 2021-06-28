@@ -139,7 +139,7 @@ class ManagerSocket:
             # For the manager, also reset any orphaned tasks that belong to that manager
             # (could also do this in one call to reset_status, but without logging n_incomplete)
             for dead_name in deactivated_names:
-                n_incomplete = self._core_socket.task_queue.reset_status(
+                n_incomplete = self._core_socket.procedure.reset_tasks(
                     manager=[dead_name], reset_running=True, session=session
                 )
                 self._logger.info(

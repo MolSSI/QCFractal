@@ -551,10 +551,10 @@ def test_reset_task_blocks(storage_socket):
     """
 
     with pytest.raises(ValueError):
-        storage_socket.task_queue.reset_status(reset_running=True)
+        storage_socket.procedure.reset_tasks(reset_running=True)
 
     with pytest.raises(ValueError):
-        storage_socket.task_queue.reset_status(reset_error=True)
+        storage_socket.procedure.reset_tasks(reset_error=True)
 
 
 def test_collections_include_exclude(storage_socket):
