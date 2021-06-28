@@ -27,14 +27,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 # pydantic classes
 from qcfractal.interface.models import (
     GridOptimizationRecord,
-    KeywordSet,
-    Molecule,
-    ObjectId,
     OptimizationRecord,
-    ResultRecord,
-    TaskRecord,
     TorsionDriveRecord,
-    KVStore,
     prepare_basis,
 )
 
@@ -54,13 +48,11 @@ from qcfractal.storage_sockets.models import (
     VersionsORM,
     WavefunctionStoreORM,
 )
-from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
 from .models import Base
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from ..services.service_util import BaseService
     from ..config import FractalConfig
 
 # for version checking
@@ -231,6 +223,7 @@ class SQLAlchemySocket:
             KeywordsSocket,
             MoleculeSocket,
             CollectionSocket,
+            RecordSocket,
             ProcedureSocket,
             ServiceSocket,
             WavefunctionSocket,
@@ -246,6 +239,7 @@ class SQLAlchemySocket:
         self.keywords = KeywordsSocket(self)
         self.molecule = MoleculeSocket(self)
         self.collection = CollectionSocket(self)
+        self.record = RecordSocket(self)
         self.procedure = ProcedureSocket(self)
         self.service = ServiceSocket(self)
         self.wavefunction = WavefunctionSocket(self)
@@ -534,31 +528,3 @@ class SQLAlchemySocket:
         self, collection: Optional[str] = None, name: Optional[str] = None, col_id: Optional[int] = None
     ) -> bool:
         return self.collection.delete(collection, name, col_id)
-
-    # ~~~~~~~~ Services ~~~~~~~~~~~~~
-
-    def add_services(self, service_list: List["BaseService"]):
-        return self.service.add(service_list)
-
-    def get_services(
-        self,
-        id: Union[List[str], str] = None,
-        procedure_id: Union[List[str], str] = None,
-        hash_index: Union[List[str], str] = None,
-        status: str = None,
-        limit: int = None,
-        skip: int = 0,
-        return_json=True,
-    ):
-        return self.service.get(id, procedure_id, hash_index, status, limit, skip, return_json)
-
-    def update_services(self, records_list: List["BaseService"]) -> int:
-        return self.service.update(records_list)
-
-    def update_service_status(
-        self, status: str, id: Union[List[str], str] = None, procedure_id: Union[List[str], str] = None
-    ) -> int:
-        return self.service.update_status(status, id, procedure_id)
-
-    def services_completed(self, records_list: List["BaseService"]) -> int:
-        return self.service.completed(records_list)

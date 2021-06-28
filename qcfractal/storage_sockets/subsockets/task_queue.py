@@ -59,7 +59,7 @@ class TaskQueueSocket:
 
         # Check for incompatible statuses
         base_result_ids = [x.base_result_id for x in tasks]
-        statuses = self._core_socket.procedure.get(base_result_ids, include=["status"], session=session)
+        statuses = self._core_socket.record.get(base_result_ids, include=["status"], session=session)
 
         # This is an error. These should have been checked before calling this function
         if any(x["status"] == RecordStatusEnum.complete for x in statuses):

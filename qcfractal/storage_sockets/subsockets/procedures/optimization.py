@@ -43,7 +43,7 @@ class OptimizationHandler(BaseProcedureHandler):
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
         self._logger = logging.getLogger(__name__)
-        self._limit = core_socket.qcf_config.response_limits.result
+        self._limit = core_socket.qcf_config.response_limits.record
 
         BaseProcedureHandler.__init__(self)
 

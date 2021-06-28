@@ -31,7 +31,7 @@ def _check_td():
 
 from .base import BaseServiceHandler
 from ...models import ServiceQueueORM, TorsionDriveProcedureORM, MoleculeORM, OptimizationHistory
-from ...sqlalchemy_common import insert_general, get_query_proj_columns, get_count
+from ...sqlalchemy_common import insert_general, get_query_proj_columns
 from ....interface.models import (
     ObjectId,
     PriorityEnum,
@@ -39,17 +39,16 @@ from ....interface.models import (
     TorsionDriveRecord,
     Molecule,
     RecordStatusEnum,
-    ProtoModel,
     OptimizationProcedureSpecification,
 )
 
-from typing import TYPE_CHECKING, Dict, Optional, Any, List
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from ...sqlalchemy_socket import SQLAlchemySocket
     from ....interface.models import InsertMetadata
-    from typing import List, Tuple, Sequence
+    from typing import List, Tuple, Sequence, Dict, Optional, Any
 
     TorsionDriveProcedureDict = Dict[str, Any]
 
@@ -60,7 +59,7 @@ class TorsionDriveHandler(BaseServiceHandler):
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
         self._logger = logging.getLogger(__name__)
-        self._limit = core_socket.qcf_config.response_limits.result
+        self._limit = core_socket.qcf_config.response_limits.record
 
         BaseServiceHandler.__init__(self, core_socket)
 

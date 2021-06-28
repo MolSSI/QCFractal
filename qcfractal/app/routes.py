@@ -704,7 +704,7 @@ def query_procedure_v1():
     body_model, response_model = rest_model("procedure", "get")
     body = parse_bodymodel(body_model)
 
-    meta, ret = storage_socket.procedure.query(**{**body.data.dict(), **body.meta.dict()})
+    meta, ret = storage_socket.record.query(**{**body.data.dict(), **body.meta.dict()})
 
     # Remove result_type. This isn't used right now and is missing from the model
     for r in ret:
@@ -824,11 +824,10 @@ def modify_task_v1():
 @main.route("/service_queue", methods=["GET"])
 @check_access
 def query_service_queue_v1():
-    body_model, response_model = rest_model("service_queue", "get")
-    body = parse_bodymodel(body_model)
+    body = parse_bodymodel(ServiceQueueGETBody)
 
-    ret = storage_socket.get_services(**{**body.data.dict(), **body.meta.dict()})
-    response = response_model(**ret)
+    ret = storage_socket.service_queue.query(**{**body.data.dict(), **body.meta.dict()})
+    response = ServiceQueueGETResponse(**ret)
 
     return SerializedResponse(response)
 
