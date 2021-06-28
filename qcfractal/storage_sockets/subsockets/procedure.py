@@ -202,7 +202,7 @@ class ProcedureSocket:
             return ret
 
     def create(
-        self, molecules: List[Molecule], specification: AllProcedureSpecifications
+        self, molecules: List[Molecule], specification: AllProcedureSpecifications, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, List[Optional[ObjectId]]]:
         """
         Create procedures as well as tasks
@@ -236,7 +236,7 @@ class ProcedureSocket:
 
         # Create procedures and tasks in the same session
         # This will be committed only at the end
-        with self._core_socket.session_scope() as session:
+        with self._core_socket.optional_session(session) as session:
             meta, ids = procedure_handler.create_procedures(session, valid_molecule_ids, specification)
 
             if not meta.success:
