@@ -382,7 +382,7 @@ class OptimizationHandler(BaseProcedureHandler):
         """
 
         if len(id) > self._limit:
-            raise RuntimeError(f"Request for {len(id)} single results is over the limit of {self._limit}")
+            raise RuntimeError(f"Request for {len(id)} optimization records is over the limit of {self._limit}")
 
         # TODO - int id
         int_id = [int(x) for x in id]
