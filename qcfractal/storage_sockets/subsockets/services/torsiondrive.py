@@ -340,7 +340,7 @@ class TorsionDriveHandler(BaseServiceHandler):
             td_service_orm.procedure_obj.status = RecordStatusEnum.running
 
         # Load the state from the service_state column
-        td_service_state = td_service_orm.service_state
+        service_state = td_service_orm.service_state
 
         # Check if tasks are done (should be checked already)
         assert self._core_socket.service.subtasks_done(td_service_orm) == (True, True)
@@ -372,8 +372,8 @@ class TorsionDriveHandler(BaseServiceHandler):
         # The torsiondrive package uses print, so capture that using contextlib
         td_stdout = io.StringIO()
         with contextlib.redirect_stdout(td_stdout):
-            td_api.update_state(td_service_state["torsiondrive_state"], task_results)
-            next_tasks = td_api.next_jobs_from_state(td_service_state["torsiondrive_state"], verbose=True)
+            td_api.update_state(service_state["torsiondrive_state"], task_results)
+            next_tasks = td_api.next_jobs_from_state(service_state["torsiondrive_state"], verbose=True)
 
         stdout_append = "\n" + td_stdout.getvalue()
 
@@ -381,12 +381,12 @@ class TorsionDriveHandler(BaseServiceHandler):
         if len(next_tasks) == 0:
             td_service_orm.procedure_obj.status = RecordStatusEnum.complete
         else:
-            self.submit_optimization_subtasks(session, td_service_state, td_service_orm, next_tasks)
+            self.submit_optimization_subtasks(session, service_state, td_service_orm, next_tasks)
 
         # Update the torsiondrive procedure itself
         min_positions = {}
         final_energy = {}
-        for k, v in td_service_state["torsiondrive_state"]["grid_status"].items():
+        for k, v in service_state["torsiondrive_state"]["grid_status"].items():
             energies = [x[2] for x in v]
             idx = energies.index(min(energies))
             key = json.dumps(td_api.grid_id_from_string(k))
@@ -403,7 +403,7 @@ class TorsionDriveHandler(BaseServiceHandler):
         # Set the new service state. We must then mark it as modified
         # so that SQLAlchemy can pick up changes. This is because SQLAlchemy
         # cannot track mutations in nested dicts
-        td_service_orm.service_state = td_service_state
+        td_service_orm.service_state = service_state
         sqlalchemy.orm.attributes.flag_modified(td_service_orm, "service_state")
 
         # Return True to indicate that this service has successfully completed
