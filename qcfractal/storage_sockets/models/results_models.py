@@ -318,10 +318,8 @@ class GridOptimizationProcedureORM(BaseResultORM):
     def __init__(self, **kwargs):
         kwargs.setdefault("version", 1)
         kwargs.setdefault("procedure", "gridoptimization")
-        kwargs.setdefault("program", "qcfractal")
         super().__init__(**kwargs)
 
-    program = Column(String(100), nullable=False)
     keywords = Column(JSON)
     qc_spec = Column(JSON)
 
@@ -340,9 +338,8 @@ class GridOptimizationProcedureORM(BaseResultORM):
 
     grid_optimizations_obj = relationship(
         GridOptimizationAssociation,
-        lazy="selectin",
+        lazy="select",
         cascade="all, delete-orphan",
-        backref="grid_optimization_procedure",
     )
 
     @hybrid_property
@@ -373,29 +370,20 @@ class GridOptimizationProcedureORM(BaseResultORM):
 
         return ret
 
-    @grid_optimizations.setter
-    def grid_optimizations(self, dict_values):
+    def dict(self):
+        d = BaseResultORM.dict(self)
 
-        return dict_values
+        # Always include grid optimizations field
+        d["grid_optimizations"] = self.grid_optimizations
+        return d
 
-    __table_args__ = (
-        Index("ix_grid_optmization_program", "program"),  # todo: needed for procedures?
-        # WARNING - these are not autodetected by alembic
-        CheckConstraint("program = LOWER(program)", name="ck_grid_optimization_procedure_program_lower"),
-    )
+    __table_args__ = ()
 
     __mapper_args__ = {
         "polymorphic_identity": "grid_optimization_procedure",
         # to have separate select when querying BaseResultsORM
         "polymorphic_load": "selectin",
     }
-
-    def update_relations(self, grid_optimizations=None, **kwarg):
-
-        self.grid_optimizations_obj = []
-        for key, opt_id in grid_optimizations.items():
-            obj = GridOptimizationAssociation(grid_opt_id=int(self.id), opt_id=int(opt_id), key=key)
-            self.grid_optimizations_obj.append(obj)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

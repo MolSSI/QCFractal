@@ -4,13 +4,14 @@ A model for GridOptimization
 import copy
 import json
 from enum import Enum
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union, Optional
 
 from pydantic import Field, constr, validator
 
 from .common_models import Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
 from .model_utils import recursive_normalizer
 from .records import RecordBase, RecordStatusEnum
+from .task_models import PriorityEnum
 
 
 class ScanTypeEnum(str, Enum):
@@ -127,6 +128,10 @@ class GridOptimizationInput(ProtoModel):
         description="The specification for each of the quantum chemistry calculations run in each geometry "
         "optimization.",
     )
+
+    tag: Optional[str] = Field(None)
+
+    priority: PriorityEnum = Field(PriorityEnum.normal)
 
 
 class GridOptimizationRecord(RecordBase):
@@ -289,8 +294,7 @@ class GridOptimizationRecord(RecordBase):
             "computed_points": len(self.grid_optimizations),
             "complete_tasks": sum(x.status == RecordStatusEnum.complete for x in flat_history),
             "incomplete_tasks": sum(
-                (x.status == RecordStatusEnum.incomplete) or (x.status == RecordStatusEnum.running)
-                for x in flat_history
+                (x.status == RecordStatusEnum.waiting) or (x.status == RecordStatusEnum.running) for x in flat_history
             ),
             "error_tasks": sum(x.status == RecordStatusEnum.error for x in flat_history),
         }

@@ -5,6 +5,7 @@ from .collections_models import CollectionORM, DatasetORM, ReactionDatasetORM
 # Results and procedures ORMs
 from .results_models import (
     BaseResultORM,
+    GridOptimizationAssociation,
     GridOptimizationProcedureORM,
     OptimizationHistory,
     OptimizationProcedureORM,
