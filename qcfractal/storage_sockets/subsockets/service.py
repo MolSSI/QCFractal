@@ -22,7 +22,7 @@ from qcfractal.storage_sockets.sqlalchemy_common import (
 
 from typing import TYPE_CHECKING
 
-from .services import BaseServiceHandler, TorsionDriveHandler
+from .services import BaseServiceHandler, TorsionDriveHandler, GridOptimizationHandler
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -40,9 +40,11 @@ class ServiceSocket:
         self._max_active_services = core_socket.qcf_config.max_active_services
 
         self.torsiondrive = TorsionDriveHandler(core_socket)
+        self.gridoptimization = GridOptimizationHandler(core_socket)
 
         self.handler_map: Dict[str, BaseServiceHandler] = {
             "torsiondrive": self.torsiondrive,
+            "gridoptimization": self.gridoptimization,
         }
 
     def add_task_orm(
@@ -211,6 +213,8 @@ class ServiceSocket:
                     # If the service has successfully completed, delete the entry from the Service Queue
                     if completed:
                         session.delete(service_orm)
+                        session.commit()
+                        self._core_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.complete)
                 else:
                     # At least one of the tasks was not successful. Therefore, mark the service as an error
                     service_orm.procedure_obj.status = RecordStatusEnum.error
@@ -227,7 +231,8 @@ class ServiceSocket:
                         f"Service {service_orm.id} marked as errored. Some tasks did not complete successfully"
                     )
 
-                session.commit()
+                    session.commit()
+                    self._core_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.error)
 
             # Should we start more?
             running_count = (

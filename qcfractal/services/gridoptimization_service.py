@@ -83,7 +83,7 @@ class GridOptimizationService(BaseService):
         opt_template["meta"].update(output.optimization_spec.dict())
         meta["optimization_template"] = json.dumps(opt_template)
 
-        # Move around geometric data
+        # Move around optimization program
         meta["optimization_program"] = output.optimization_spec.program
         meta["hash_index"] = output.hash_index
 
