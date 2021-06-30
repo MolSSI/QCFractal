@@ -17,7 +17,7 @@ from ..interface.models import (
     UserInfo,
     ObjectId,
 )
-from ..services import initialize_service
+
 from ..exceptions import UserReportableError, AuthenticationFailure
 
 from ..interface.models.rest_models import (
