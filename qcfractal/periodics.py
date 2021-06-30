@@ -24,9 +24,6 @@ if TYPE_CHECKING:
     from .config import FractalConfig
 
 
-from .services import construct_service
-
-
 class FractalPeriodics:
     """
     Periodic tasks required by QCFractal

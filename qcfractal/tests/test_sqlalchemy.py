@@ -12,7 +12,6 @@ from sqlalchemy.orm import joinedload
 
 import qcfractal.interface as ptl
 from qcfractal.interface.models import RecordStatusEnum
-from qcfractal.services.services import TorsionDriveService
 from qcfractal.storage_sockets.models import (
     KVStoreORM,
     MoleculeORM,
@@ -142,59 +141,6 @@ def test_molecule_sql(session_fixture):
         molecule_hash=water_mol.molecule_hash, molecular_formula=water_mol.molecular_formula
     )
     assert len(one_mol.all()) == 1
-
-
-def test_services(session_fixture):
-
-    storage_socket, session = session_fixture
-    assert session.query(OptimizationProcedureORM).count() == 0
-
-    water = ptl.data.get_molecule("water_dimer_minima.psimol")
-    meta, ret = storage_socket.molecule.add([water])
-    assert meta.success
-    assert meta.n_inserted == 1
-
-    proc_data = {
-        "initial_molecule": ret[0],
-        "keywords": None,
-        "program": "p7",
-        "qc_spec": {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"},
-        "status": RecordStatusEnum.complete,
-        "protocols": {},
-    }
-
-    service_data = {
-        "tag": "tag1 tag2",
-        "hash_index": "123",
-        "optimization_program": "gaussian",
-        # extra fields
-        "torsiondrive_state": {},
-        "dihedral_template": "1",  # Not realistic?
-        "optimization_template": "2",  # Not realistic?
-        "molecule_template": "",
-        "storage_socket": storage_socket,
-        "task_priority": 0,
-    }
-
-    procedure = OptimizationProcedureORM(**proc_data)
-    session.add(procedure)
-    session.commit()
-    assert procedure.id
-
-    service_pydantic = TorsionDriveService(**service_data)
-
-    doc = ServiceQueueORM(**service_pydantic.dict(include=set(ServiceQueueORM.__dict__.keys())))
-    doc.extra = service_pydantic.dict(exclude=set(ServiceQueueORM.__dict__.keys()))
-    doc.procedure_id = procedure.id
-    doc.priority = doc.priority.value  # Special case where we need the value not the enum
-    session.add(doc)
-    session.commit()
-
-    session.delete(doc)
-    session.delete(procedure)
-    session.commit()
-
-    assert session.query(ServiceQueueORM).count() == 0
 
 
 def test_results_sql(session_fixture, molecules_H4O2, kw_fixtures):
