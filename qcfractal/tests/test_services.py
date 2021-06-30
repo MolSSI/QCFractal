@@ -83,13 +83,13 @@ def test_service_manipulation(torsiondrive_fixture):
 
     ret = spin_up_test(run_service=False, initial_molecule=[hooh])
 
-    service = client.query_services(procedure_id=ret.ids)[0]
-    assert service["status"] == RecordStatusEnum.waiting
+    service = client.query_procedures(ret.ids)[0]
+    assert service.status == RecordStatusEnum.waiting
 
-    client.modify_services("restart", id=service["id"])
+    client.modify_services("restart", procedure_id=ret.ids)
 
-    service = client.query_services(procedure_id=ret.ids)[0]
-    assert service["status"] == RecordStatusEnum.running
+    service = client.query_procedures(ret.ids)[0]
+    assert service.status == RecordStatusEnum.waiting
 
 
 def test_service_torsiondrive_single(torsiondrive_fixture):
@@ -272,14 +272,11 @@ def test_service_iterate_error(torsiondrive_fixture):
     status = client.query_services(procedure_id=ret.ids)
     assert len(status) == 1
 
-    assert status[0]["status"] == RecordStatusEnum.error
-    assert "Error iterating service" in status[0]["error"]["error_message"]
-
     # Test that the error is propagated to the procedure
     proc_status = client.query_procedures(ret.ids)
     assert len(proc_status) == 1
     assert proc_status[0].status == RecordStatusEnum.error
-    assert "Error iterating service" in proc_status[0].get_error().error_message
+    assert "Error in first iteration of service" in proc_status[0].get_error().error_message
 
 
 def test_service_torsiondrive_compute_error(torsiondrive_fixture):

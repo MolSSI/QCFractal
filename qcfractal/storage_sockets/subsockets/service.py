@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 
 from sqlalchemy import and_
 from sqlalchemy.orm import selectinload, load_only, contains_eager
@@ -208,7 +209,21 @@ class ServiceSocket:
                     continue
 
                 if successful:
-                    completed = self.handler_map[service_type].iterate(session, service_orm)
+
+                    try:
+                        completed = self.handler_map[service_type].iterate(session, service_orm)
+                    except Exception as err:
+                        error = {
+                            "error_type": "service_iteration_error",
+                            "error_message": "Error iterating service: " + str(err),
+                        }
+
+                        service_orm.procedure_obj.error = self._core_socket.output_store.replace(
+                            service_orm.procedure_obj.error, error, session=session
+                        )
+                        service_orm.procedure_obj.status = RecordStatusEnum.error
+                        session.commit()
+                        self._core_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.error)
 
                     # If the service has successfully completed, delete the entry from the Service Queue
                     if completed:
@@ -225,10 +240,6 @@ class ServiceSocket:
                     }
                     service_orm.procedure_obj.error = self._core_socket.output_store.replace(
                         service_orm.procedure_obj.error, error, session=session
-                    )
-
-                    self._logger.info(
-                        f"Service {service_orm.id} marked as errored. Some tasks did not complete successfully"
                     )
 
                     session.commit()
@@ -265,7 +276,22 @@ class ServiceSocket:
 
                     for service_orm in new_services:
                         service_type = service_orm.procedure_obj.procedure
-                        self.handler_map[service_type].iterate(session, service_orm)
+
+                        try:
+                            self.handler_map[service_type].iterate(session, service_orm)
+                        except Exception as err:
+                            error = {
+                                "error_type": "service_iteration_error",
+                                "error_message": "Error in first iteration of service: " + str(err),
+                            }
+
+                            service_orm.procedure_obj.error = self._core_socket.output_store.replace(
+                                service_orm.procedure_obj.error, error, session=session
+                            )
+
+                            service_orm.procedure_obj.status = RecordStatusEnum.error
+                            session.commit()
+                            self._core_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.error)
 
         return running_count
 
@@ -416,3 +442,58 @@ class ServiceSocket:
 
         meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
         return meta, result_dicts
+
+    def reset_tasks(
+        self,
+        id: Optional[List[str]] = None,
+        procedure_id: Optional[List[str]] = None,
+        *,
+        session: Optional[Session] = None,
+    ) -> int:
+        """
+        Reset the status of tasks to waiting
+
+        Parameters
+        ----------
+        id : Optional[Union[str, List[str]]], optional
+            The id of the task to modify
+        procedure_id : Optional[Union[str, List[str]]], optional
+            The id of the base result to modify
+
+        Returns
+        -------
+        int
+            Updated count
+        """
+
+        if all(x is None for x in [id, procedure_id]):
+            raise ValueError("All query fields are None, reset_tasks must specify queries.")
+
+        query = []
+        if id:
+            query.append(ServiceQueueORM.id.in_(id))
+        if procedure_id:
+            query.append(BaseResultORM.id.in_(procedure_id))
+
+        with self._core_socket.optional_session(session) as session:
+            results = (
+                session.query(BaseResultORM)
+                .join(BaseResultORM.service_obj)
+                .filter(*query)
+                .filter(BaseResultORM.status == RecordStatusEnum.error)
+                .with_for_update()
+                .all()
+            )
+
+            for r in results:
+                r.status = RecordStatusEnum.waiting
+                r.modified_on = datetime.utcnow()
+
+                # Also reset the subtasks
+                subtasks = r.service_obj.tasks_obj
+                subtask_ids = [x.procedure_id for x in subtasks]
+                self._core_socket.procedure.reset_tasks(
+                    base_result=subtask_ids, reset_running=False, reset_error=True, session=session
+                )
+
+            return len(results)

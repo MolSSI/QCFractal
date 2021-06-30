@@ -654,8 +654,8 @@ class ProcedureSocket:
             # nothing to do
             return 0
 
-        if sum(x is not None for x in [id, base_result, manager]) == 0:
-            raise ValueError("All query fields are None, reset_status must specify queries.")
+        if all(x is None for x in [id, base_result, manager]):
+            raise ValueError("All query fields are None, reset_stasks must specify queries.")
 
         status = []
         if reset_running:
@@ -675,16 +675,10 @@ class ProcedureSocket:
 
         # Must have status + something, checking above as well (being paranoid)
         if len(query) < 2:
-            raise ValueError("All query fields are None, reset_status must specify queries.")
+            raise ValueError("All query fields are None, reset_tasks must specify queries.")
 
         with self._core_socket.optional_session(session) as session:
-            results = (
-                session.query(BaseResultORM)
-                .join(TaskQueueORM, TaskQueueORM.base_result_id == BaseResultORM.id)
-                .filter(*query)
-                .with_for_update()
-                .all()
-            )
+            results = session.query(BaseResultORM).join(BaseResultORM.task_obj).filter(*query).with_for_update().all()
 
             for r in results:
                 r.status = RecordStatusEnum.waiting
