@@ -356,11 +356,13 @@ class TorsionDriveRecord(RecordBase):
 
             # combine the ids into one query
             opt_ids = list(map_id_key.keys())
-            results = self.client.custom_query("optimization", "final_result", {"optimization_ids": opt_ids})
 
-            for opt_id, grad_result_record in results.items():
-                k = map_id_key[opt_id]
-                ret[k] = grad_result_record
+            # TODO - custom endpoint for this again
+            results = self.client.query_optimizations(opt_ids, include=["*", "trajectory_obj"])
+
+            for opt in results:
+                k = map_id_key[opt["id"]]
+                ret[k] = opt["trajectory_obj"][-1]
 
             self.cache["final_results"] = ret
 
