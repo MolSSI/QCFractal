@@ -51,6 +51,8 @@ from ..interface.models.rest_models import (
     ManagerInfoGETResponse,
     OptimizationGETBody,
     OptimizationGETResponse,
+    ServiceQueuePUTBody,
+    ServiceQueuePUTResponse,
     ServiceQueueGETBody,
     ServiceQueueGETResponse,
     ServiceQueuePOSTBody,
@@ -849,7 +851,7 @@ def post_service_queue():
     submitted_ids = [ids[i] for i in meta.inserted_idx]
     meta_old = convert_post_response_metadata(meta, duplicate_ids)
 
-    resp = TaskQueuePOSTResponse(
+    resp = ServiceQueuePOSTResponse(
         meta=meta_old, data={"ids": ids, "submitted": submitted_ids, "existing": duplicate_ids}
     )
 
@@ -861,19 +863,18 @@ def post_service_queue():
 def put_service_queue():
     """Modifies services in the service queue"""
 
-    body_model, response_model = rest_model("service_queue", "put")
-    body = parse_bodymodel(body_model)
+    body = parse_bodymodel(ServiceQueuePUTBody)
 
     if (body.data.id is None) and (body.data.procedure_id is None):
         return jsonify(msg="Id or ProcedureId must be specified."), 400
 
     if body.meta.operation == "restart":
-        updates = storage_socket.update_service_status("running", **body.data.dict())
+        updates = storage_socket.service.reset_tasks(**body.data.dict())
         data = {"n_updated": updates}
     else:
         return jsonify(msg="Operation '{operation}' is not valid."), 400
 
-    response = response_model(data=data, meta={"errors": [], "success": True, "error_description": False})
+    response = ServiceQueuePUTResponse(data=data, meta={"errors": [], "success": True, "error_description": False})
 
     return SerializedResponse(response)
 
