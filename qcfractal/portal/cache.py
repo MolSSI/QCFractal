@@ -4,7 +4,7 @@
 
 import os
 import json
-import bz2
+import lzma
 import dbm
 import time
 
@@ -15,7 +15,6 @@ from .collections.collection_utils import collection_factory
 
 
 
-# TODO: consider lzma, zstd compression instead of bz2 for faster read at the cost of perhaps slower write
 class PortalCache:
     def __init__(self, client, cachedir, max_memcache_size):
         self.client = client
@@ -74,7 +73,7 @@ class PortalCache:
 
         # add to fs cache
         if db is not None:
-            db[id] = bz2.compress(record.to_json().encode("utf-8"))
+            db[id] = lzma.compress(record.to_json().encode("utf-8"))
 
     def get(self, id: Union[List[str], str]) -> Dict[str, "Record"]:
         if self.cachefile:
@@ -108,7 +107,7 @@ class PortalCache:
         if db is not None:
             record = db.get(id, None)
             if record is not None:
-                rec = record_factory(json.loads(bz2.decompress(record).decode()), client=self.client)
+                rec = record_factory(json.loads(lzma.decompress(record).decode()), client=self.client)
 
                 # add to memcache
                 self.memcache[id] = rec
