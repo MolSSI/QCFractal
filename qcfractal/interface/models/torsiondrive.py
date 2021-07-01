@@ -17,7 +17,7 @@ from .records import RecordBase, RecordStatusEnum
 from .task_models import PriorityEnum
 
 
-class TDKeywords(ProtoModel):
+class TorsionDriveKeywords(ProtoModel):
     """
     TorsionDriveRecord options
     """
@@ -87,7 +87,7 @@ class TorsionDriveInput(ProtoModel):
         description="The Molecule(s) to begin the TorsionDrive with. This can either be an existing Molecule in "
         "the database (through its :class:`ObjectId`) or a fully specified :class:`Molecule` model.",
     )
-    keywords: TDKeywords = Field(
+    keywords: TorsionDriveKeywords = Field(
         ..., description="TorsionDrive-specific input arguments to pass into the TorsionDrive Procedure"
     )
     optimization_spec: OptimizationSpecification = Field(
@@ -129,7 +129,9 @@ class TorsionDriveRecord(RecordBase):
 
     # Input data
     initial_molecule: List[ObjectId] = Field(..., description="Id(s) of the initial molecule(s) in the database.")
-    keywords: TDKeywords = Field(..., description="The TorsionDrive-specific input arguments used for this operation.")
+    keywords: TorsionDriveKeywords = Field(
+        ..., description="The TorsionDrive-specific input arguments used for this operation."
+    )
     optimization_spec: OptimizationSpecification = Field(
         ...,
         description="The settings which describe how the energy optimizations at each step of the torsion "

@@ -3,39 +3,43 @@ Procedure for a gridoptimization service
 """
 from __future__ import annotations
 
-import io
 import json
 import logging
-import contextlib
 import numpy as np
 from datetime import datetime
 
 import sqlalchemy.orm.attributes
-from sqlalchemy import and_, or_
-from sqlalchemy.orm import joinedload, load_only, selectinload
-from ..procedures import helpers
+from sqlalchemy.orm import load_only, selectinload
 
 from .... import __version__ as qcfractal_version
 from .base import BaseServiceHandler
 from ...models import ServiceQueueORM, GridOptimizationProcedureORM, MoleculeORM, GridOptimizationAssociation
 from ...sqlalchemy_common import insert_general, get_query_proj_columns
 from ....interface.models import (
+    ProtoModel,
     ObjectId,
     PriorityEnum,
-    GridOptimizationInput,
-    GridOptimizationRecord,
     Molecule,
     RecordStatusEnum,
     OptimizationProcedureSpecification,
 )
 
-from typing import TYPE_CHECKING
+from ....interface.models.gridoptimization import (
+    ScanDimension,
+    StepTypeEnum,
+    GridOptimizationKeywords,
+    GridOptimizationInput,
+    GridOptimizationRecord,
+)
+
+
+from typing import TYPE_CHECKING, List, Tuple
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from ...sqlalchemy_socket import SQLAlchemySocket
     from ....interface.models import InsertMetadata
-    from typing import List, Tuple, Sequence, Dict, Optional, Any, Set, Union
+    from typing import Sequence, Dict, Optional, Any, Set, Union
 
     GridOptimizationProcedureDict = Dict[str, Any]
 
@@ -87,7 +91,7 @@ def expand_ndimensional_grid(
     return connections
 
 
-def serialize_key(key: Union[str, int, Tuple[int]]) -> str:
+def serialize_key(key: Union[str, Sequence[int]]) -> str:
     """Serializes the key to map to the internal keys.
 
     Parameters
@@ -102,69 +106,53 @@ def serialize_key(key: Union[str, int, Tuple[int]]) -> str:
         The internal key value.
     """
 
-    # TODO - there was the ability to handle float here before?
-    assert not isinstance(key, float)
-
-    if isinstance(key, int):
-        key = (int(key),)
-    elif isinstance(key, list):
-        key = tuple(key)
-
     return json.dumps(key)
 
 
-def deserialize_key(key: str) -> Union[str, Tuple[int]]:
-    """Unpacks a string key to a python object.
+def deserialize_key(key: str) -> Union[str, Tuple[int, ...]]:
+    """Deserializes a map key"""
 
-    Parameters
-    ----------
-    key : str
-        The input key
-
-    Returns
-    -------
-    Tuple[int]
-        The unpacked key.
-    """
-    data = json.loads(key)
-    if data == "preoptimization":
-        return data
+    r = json.loads(key)
+    if isinstance(r, str):
+        return r
     else:
-        return tuple(data)
+        return tuple(r)
 
 
-def calculate_starting_grid(scans, molecule):
+def calculate_starting_grid(scans: Sequence[ScanDimension], molecule: Molecule) -> List[int]:
     starting_grid = []
     for scan in scans:
 
         # Find closest index
-        if scan["step_type"] == "absolute":
-            m = molecule.measure(scan["indices"])
-        elif scan["step_type"] == "relative":
+        if scan.step_type == StepTypeEnum.absolute:
+            m = molecule.measure(scan.indices)
+        elif scan.step_type == StepTypeEnum.relative:
             m = 0
         else:
-            raise KeyError("'step_type' of '{}' not understood.".format(scan["step_type"]))
+            raise KeyError("'step_type' of '{}' not understood.".format(scan.step_type))
 
-        idx = np.abs(np.array(scan["steps"]) - m).argmin()
-        starting_grid.append(int(idx))
+        idx = np.abs(np.array(scan.steps) - m).argmin()
+        starting_grid.append(int(idx))  # converts from numpy int type
 
-    return tuple(starting_grid)
+    return starting_grid
 
 
-def get_scan_dimensions(scan_keywords) -> Tuple[float, ...]:
+class GridOptimizationServiceState(ProtoModel):
     """
-    Returns the overall dimensions of the scan.
-
-    Returns
-    -------
-    Tuple[float, ...]
-        The size of each dimension in the scan.
+    This represents the current state of a torsiondrive service which is stored in the 'extra' field
     """
-    ret = []
-    for scan in scan_keywords:
-        ret.append(len(scan.steps))
 
-    return tuple(ret)
+    class Config(ProtoModel.Config):
+        allow_mutation = True
+        validate_assignment = True
+
+    iteration: int
+    complete: List[Tuple[int, ...]]
+    dimensions: tuple
+
+    # These are stored as JSON (ie, dict encoded into a string)
+    optimization_template: str
+    constraint_template: str
 
 
 class GridOptimizationHandler(BaseServiceHandler):
@@ -297,24 +285,7 @@ class GridOptimizationHandler(BaseServiceHandler):
     def create_records(
         self, session: Session, service_input: GridOptimizationInput
     ) -> Tuple[InsertMetadata, List[ObjectId]]:
-        """
-        Creates a gridoptimization procedure and its associated service
 
-        Parameters
-        ----------
-        session
-            An existing SQLAlchemy session to use
-        service_input
-            Input to a gridoptimization calculation
-
-        Returns
-        -------
-        :
-            Metadata about which gridoptimization inputs are duplicates or newly-added, and a list of
-            IDs corresponding to all the given gridoptimization procedures (both existing and newly-added).
-            This will be in the same order as the inputs
-
-        """
         meta, mol_ids = self._core_socket.molecule.add_mixed([service_input.initial_molecule])
 
         # TODO - int id
@@ -327,6 +298,11 @@ class GridOptimizationHandler(BaseServiceHandler):
         gridopt_orm.optimization_spec = service_input.optimization_spec.dict()
         gridopt_orm.qc_spec = service_input.qc_spec.dict()
         gridopt_orm.initial_molecule_obj = initial_molecule_orm
+
+        # Set this to be the same as the initial molecule for now
+        # (initial molecule = what we gave, starting molecule = what we are actually starting
+        #  with, taking into account preoptimization)
+        # This may change during the first iteration(s)
         gridopt_orm.starting_molecule_obj = initial_molecule_orm
 
         gridopt_orm.provenance = {
@@ -336,7 +312,7 @@ class GridOptimizationHandler(BaseServiceHandler):
         }
 
         gridopt_orm.final_energy_dict = {}
-        gridopt_orm.starting_grid = (0,)
+        gridopt_orm.starting_grid = []
         gridopt_orm.protocols = {}
         gridopt_orm.extras = {}
 
@@ -352,25 +328,6 @@ class GridOptimizationHandler(BaseServiceHandler):
         tag: Optional[str],
         priority: PriorityEnum,
     ) -> Tuple[InsertMetadata, List[ObjectId]]:
-        """
-        Creates services for gridoptimization procedures
-
-        Parameters
-        ----------
-        session
-            An existing SQLAlchemy session to use
-        tag
-            Tag associated with the new services (and all their tasks)
-        priority
-            The priority associated with the new services (and all their tasks)
-
-        Returns
-        -------
-        :
-            Metadata about which services are duplicates or newly-added, and a list of IDs corresponding to all
-            the services for the given procedure IDs. If there was an error for a particular id,
-            then the returned ID will be None.
-        """
 
         new_services = []
 
@@ -378,13 +335,19 @@ class GridOptimizationHandler(BaseServiceHandler):
         for idx, gridopt_orm in enumerate(gridopt_orms):
             service_state = {}
 
-            # Build dihedral template
+            # Completed seeds
+            service_state["complete"] = []
+
+            # Read in the keywords from the database. Converting to the pydantic
+            # model is mostly for ergonomics
+            keywords = GridOptimizationKeywords(**gridopt_orm.keywords)
+
+            # Build constraint template
             constraint_template = []
-            for scan in gridopt_orm.keywords["scans"]:
-                tmp = {"type": scan["type"], "indices": scan["indices"]}
+            for scan in keywords.scans:
+                tmp = {"type": scan.type, "indices": scan.indices}
                 constraint_template.append(tmp)
 
-            service_state["complete"] = []
             service_state["constraint_template"] = json.dumps(constraint_template)
 
             # Build optimization template
@@ -396,23 +359,20 @@ class GridOptimizationHandler(BaseServiceHandler):
             }
 
             opt_template.update(gridopt_orm.optimization_spec)
-            service_state["optimization_template"] = json.dumps({"meta": opt_template})
+            service_state["optimization_template"] = json.dumps(opt_template)
 
-            # Move around optimization program
-            service_state["optimization_program"] = gridopt_orm.optimization_spec["program"]
+            # The number of steps along each axis
+            service_state["dimensions"] = tuple(len(x.steps) for x in keywords.scans)
 
-            # Hard coded data, # TODO? This was marked with a todo for unknown reasons
-            service_state["dimensions"] = tuple(len(x["steps"]) for x in gridopt_orm.keywords["scans"])
-
-            if gridopt_orm.keywords["preoptimization"]:
+            if keywords.preoptimization:
                 service_state["iteration"] = -2
-                gridopt_orm.starting_grid = tuple(0 for _ in service_state["dimensions"])
+                gridopt_orm.starting_grid = []
             else:
-                initial_molecule_dict = gridopt_orm.initial_molecule_obj.dict()
-                initial_molecule = Molecule(**initial_molecule_dict)
+                initial_molecule = gridopt_orm.initial_molecule_obj.to_model(Molecule)
 
                 service_state["iteration"] = 0
-                gridopt_orm.starting_grid = calculate_starting_grid(gridopt_orm.keywords["scans"], initial_molecule)
+
+                gridopt_orm.starting_grid = calculate_starting_grid(keywords.scans, initial_molecule)
 
             # Now create the service ORM
             svc_orm = ServiceQueueORM()
@@ -431,109 +391,100 @@ class GridOptimizationHandler(BaseServiceHandler):
 
         return self._core_socket.service.add_task_orm(new_services, session=session)
 
-    def iterate(self, session: Session, gridopt_service_orm: ServiceQueueORM) -> bool:
-        if gridopt_service_orm.procedure_obj.status not in [RecordStatusEnum.running, RecordStatusEnum.waiting]:
+    def iterate(self, session: Session, service_orm: ServiceQueueORM) -> bool:
+        gridopt_orm = service_orm.procedure_obj
+        keywords = GridOptimizationKeywords(**gridopt_orm.keywords)
+
+        if gridopt_orm.status not in [RecordStatusEnum.running, RecordStatusEnum.waiting]:
             # This is a programmer error
             raise RuntimeError(
-                f"Grid Optimization {gridopt_service_orm.id}/Base result {gridopt_service_orm.procedure_id} has status {gridopt_service_orm.procedure_obj.status} - cannot iterate with that status!"
+                f"Grid Optimization {service_orm.id}/Base result {gridopt_orm.id} has status {gridopt_orm.status} - cannot iterate with that status!"
             )
 
         # Is this the first iteration?
-        if gridopt_service_orm.procedure_obj.status == RecordStatusEnum.waiting:
-            gridopt_service_orm.procedure_obj.status = RecordStatusEnum.running
+        if gridopt_orm.status == RecordStatusEnum.waiting:
+            gridopt_orm.status = RecordStatusEnum.running
 
         # Load the state from the service_state column
-        service_state = gridopt_service_orm.service_state
-
-        # Check if tasks are done (should be checked already)
-        assert self._core_socket.service.subtasks_done(gridopt_service_orm) == (True, True)
+        service_state = GridOptimizationServiceState(**service_orm.service_state)
 
         # Special preoptimization iterations
-        if service_state["iteration"] == -2:
-            new_opt = json.loads(service_state["optimization_template"])
-            new_opt["data"] = gridopt_service_orm.procedure_obj.initial_molecule_obj.dict()
+        if service_state.iteration == -2:
+            new_opt_spec = json.loads(service_state.optimization_template)
 
             new_task = (
                 {"key": "initial_opt"},
-                Molecule(**new_opt["data"]),
-                OptimizationProcedureSpecification(**new_opt["meta"]),
+                gridopt_orm.initial_molecule_obj.to_model(Molecule),
+                OptimizationProcedureSpecification(**new_opt_spec),
             )
 
-            added_ids = self.submit_subtasks(session, gridopt_service_orm, [new_task])
+            added_ids = self.submit_subtasks(session, service_orm, [new_task])
 
             # Add to the association table for the grid opt ORM
             opt_assoc = GridOptimizationAssociation()
             opt_assoc.opt_id = added_ids[0]
-            opt_assoc.grid_opt_id = gridopt_service_orm.procedure_obj.id
+            opt_assoc.grid_opt_id = gridopt_orm.id
             opt_assoc.key = serialize_key("preoptimization")
 
-            gridopt_service_orm.procedure_obj.grid_optimizations_obj.append(opt_assoc)
+            gridopt_orm.grid_optimizations_obj.append(opt_assoc)
 
-            service_state["iteration"] = -1
+            service_state.iteration = -1
             finished = False
 
-        elif service_state["iteration"] == -1:
+        elif service_state.iteration == -1:
 
-            complete_tasks = gridopt_service_orm.tasks_obj
+            complete_tasks = service_orm.tasks_obj
 
             if len(complete_tasks) != 1:
                 raise RuntimeError(f"Expected one complete task for preoptimization, but got {len(complete_tasks)}")
 
-            starting_molecule_dict = complete_tasks[0].procedure_obj.final_molecule_obj.dict()
-            starting_molecule = Molecule(**starting_molecule_dict)
+            starting_molecule = complete_tasks[0].procedure_obj.final_molecule_obj.to_model(Molecule)
 
-            # Assign the true starting molecule to the procedure
-            gridopt_service_orm.procedure_obj.starting_molecule = starting_molecule.id
+            # Assign the true starting molecule and grid to the grid optimization record
+            gridopt_orm.starting_molecule = starting_molecule.id
+            gridopt_orm.starting_grid = calculate_starting_grid(keywords.scans, starting_molecule)
 
-            # And the starting grid
-            gridopt_service_orm.procedure_obj.starting_grid = calculate_starting_grid(
-                gridopt_service_orm.procedure_obj.keywords["scans"], starting_molecule
-            )
+            opt_key = serialize_key(gridopt_orm.starting_grid)
+            self.submit_optimization_subtasks(session, service_state, service_orm, {opt_key: starting_molecule})
 
-            opt_key = serialize_key(gridopt_service_orm.procedure_obj.starting_grid)
-            self.submit_optimization_subtasks(session, service_state, gridopt_service_orm, {opt_key: starting_molecule})
-
-            service_state["iteration"] = 1
+            # Skips the normal 0th iteration
+            service_state.iteration = 1
 
             finished = False
 
         # Special start iteration
-        elif service_state["iteration"] == 0:
+        elif service_state.iteration == 0:
 
-            starting_molecule_dict = gridopt_service_orm.procedure_obj.starting_molecule_obj.dict()
-            starting_molecule = Molecule(**starting_molecule_dict)
+            # Remember we set starting_molecule to initial_molecule
+            starting_molecule = gridopt_orm.starting_molecule_obj.to_model(Molecule)
+            opt_key = serialize_key(gridopt_orm.starting_grid)
+            self.submit_optimization_subtasks(session, service_state, service_orm, {opt_key: starting_molecule})
 
-            opt_key = serialize_key(gridopt_service_orm.procedure_obj.starting_grid)
-            self.submit_optimization_subtasks(session, service_state, gridopt_service_orm, {opt_key: starting_molecule})
-
-            service_state["iteration"] = 1
+            service_state.iteration = 1
 
             finished = False
 
         else:
             # Obtain complete tasks and figure out future tasks
-            complete_tasks = gridopt_service_orm.tasks_obj
+            complete_tasks = service_orm.tasks_obj
 
             # Maps keys to Molecule (for the next iteration)
             molecule_map = {}
 
             for task in complete_tasks:
                 key = task.extras["key"]
-                gridopt_service_orm.procedure_obj.final_energy_dict[key] = task.procedure_obj.energies[-1]
+                gridopt_orm.final_energy_dict[key] = task.procedure_obj.energies[-1]
 
-                final_molecule_dict = task.procedure_obj.final_molecule_obj.dict()
-                molecule_map[key] = Molecule(**final_molecule_dict)
+                molecule_map[key] = task.procedure_obj.final_molecule_obj.to_model(Molecule)
 
             # Build out the new set of seeds
-            complete_seeds = set(tuple(deserialize_key(k.extras["key"])) for k in complete_tasks)
+            complete_seeds = set(deserialize_key(k.extras["key"]) for k in complete_tasks)
 
-            # Little weirdness here since we can't store a set type
-            complete = set(tuple(x) for x in service_state["complete"])
-            complete |= complete_seeds
-            service_state["complete"] = list(complete)
+            # Store what we have already completed
+            service_state.complete = set(service_state.complete) | complete_seeds
 
             # Compute new points
-            new_points_list = expand_ndimensional_grid(service_state["dimensions"], complete_seeds, complete)
+            new_points_list = expand_ndimensional_grid(service_state.dimensions, complete_seeds, service_state.complete)
 
             next_tasks = {}
             for new_points in new_points_list:
@@ -544,20 +495,20 @@ class GridOptimizationHandler(BaseServiceHandler):
 
             # If no tasks are left, we are all done
             if len(next_tasks) == 0:
-                gridopt_service_orm.procedure_obj.status = RecordStatusEnum.complete
+                gridopt_orm.status = RecordStatusEnum.complete
                 finished = True
             else:
-                self.submit_optimization_subtasks(session, service_state, gridopt_service_orm, next_tasks)
+                self.submit_optimization_subtasks(session, service_state, service_orm, next_tasks)
                 finished = False
 
         # Set the new service state. We must then mark it as modified
         # so that SQLAlchemy can pick up changes. This is because SQLAlchemy
         # cannot track mutations in nested dicts
-        gridopt_service_orm.service_state = service_state
-        sqlalchemy.orm.attributes.flag_modified(gridopt_service_orm, "service_state")
+        service_orm.service_state = service_state.dict()
+        sqlalchemy.orm.attributes.flag_modified(service_orm, "service_state")
 
         # Also mark the final energy dict as being changed
-        sqlalchemy.orm.attributes.flag_modified(gridopt_service_orm.procedure_obj, "final_energy_dict")
+        sqlalchemy.orm.attributes.flag_modified(gridopt_orm, "final_energy_dict")
 
         # Return True to indicate that this service has successfully completed
         return finished
@@ -565,25 +516,24 @@ class GridOptimizationHandler(BaseServiceHandler):
     def submit_optimization_subtasks(
         self,
         session: Session,
-        service_state: Dict[str, Any],
-        gridopt_service_orm: ServiceQueueORM,
+        service_state: GridOptimizationServiceState,
+        gridopt_orm: ServiceQueueORM,
         task_dict: Dict[str, Molecule],
     ):
         new_tasks = []
 
-        starting_molecule_dict = gridopt_service_orm.procedure_obj.starting_molecule_obj.dict()
-        starting_molecule = Molecule(**starting_molecule_dict)
+        starting_molecule = gridopt_orm.procedure_obj.starting_molecule_obj.to_model(Molecule)
 
         for key, mol in task_dict.items():
             # Create an optimization input based on the new geometry and the optimization template
-            new_opt = json.loads(service_state["optimization_template"])
+            new_opt_spec = json.loads(service_state.optimization_template)
 
             # Construct constraints
-            constraints = json.loads(service_state["constraint_template"])
+            constraints = json.loads(service_state.constraint_template)
 
             scan_indices = deserialize_key(key)
 
-            for con_num, scan in enumerate(gridopt_service_orm.procedure_obj.keywords["scans"]):
+            for con_num, scan in enumerate(gridopt_orm.procedure_obj.keywords["scans"]):
                 idx = scan_indices[con_num]
                 if scan["step_type"] == "absolute":
                     constraints[con_num]["value"] = scan["steps"][idx]
@@ -591,19 +541,19 @@ class GridOptimizationHandler(BaseServiceHandler):
                     constraints[con_num]["value"] = scan["steps"][idx] + starting_molecule.measure(scan["indices"])
 
             # update the constraints
-            new_opt["meta"]["keywords"].setdefault("constraints", {})
-            new_opt["meta"]["keywords"]["constraints"].setdefault("set", [])
-            new_opt["meta"]["keywords"]["constraints"]["set"].extend(constraints)
+            new_opt_spec["keywords"].setdefault("constraints", {})
+            new_opt_spec["keywords"]["constraints"].setdefault("set", [])
+            new_opt_spec["keywords"]["constraints"]["set"].extend(constraints)
 
             new_tasks.append(
                 (
                     {"key": key},
                     mol,
-                    OptimizationProcedureSpecification(**new_opt["meta"]),
+                    OptimizationProcedureSpecification(**new_opt_spec),
                 )
             )
 
-        added_ids = self.submit_subtasks(session, gridopt_service_orm, new_tasks)
+        added_ids = self.submit_subtasks(session, gridopt_orm, new_tasks)
 
         # Update association
         for id, (task_info, _, _) in zip(added_ids, new_tasks):
@@ -611,7 +561,7 @@ class GridOptimizationHandler(BaseServiceHandler):
 
             opt_assoc = GridOptimizationAssociation()
             opt_assoc.opt_id = id
-            opt_assoc.grid_opt_id = gridopt_service_orm.procedure_obj.id
+            opt_assoc.grid_opt_id = gridopt_orm.procedure_obj.id
             opt_assoc.key = key
 
-            gridopt_service_orm.procedure_obj.grid_optimizations_obj.append(opt_assoc)
+            gridopt_orm.procedure_obj.grid_optimizations_obj.append(opt_assoc)

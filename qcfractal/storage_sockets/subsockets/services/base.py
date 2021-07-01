@@ -5,7 +5,7 @@ Base class for computation procedure handlers
 from __future__ import annotations
 
 import abc
-from ....interface.models import AllServiceSpecifications, RecordStatusEnum
+from ....interface.models import AllServiceSpecifications
 from ...models import ServiceQueueTasks
 
 from typing import TYPE_CHECKING
@@ -45,11 +45,6 @@ class BaseServiceHandler(abc.ABC):
         """
         Run the next iteration of a service
 
-        Parameters
-        ----------
-        session
-        service_orm
-
         Returns
         -------
         :
@@ -73,7 +68,7 @@ class BaseServiceHandler(abc.ABC):
             if not meta.success:
                 raise RuntimeError("Problem submitting task: {}.".format(meta.error_string))
 
-            service_task = ServiceQueueTasks(procedure_id=added_ids[0], service_id=service_orm.id, extras=key)
+            service_task = ServiceQueueTasks(procedure_id=added_ids[0], service_id=service_orm.id, extras=key)  # type: ignore
             service_orm.tasks_obj.append(service_task)
             all_added_ids.append(added_ids[0])
 

@@ -5,8 +5,7 @@ Base class for computation procedure handlers
 from __future__ import annotations
 
 import abc
-from ....interface.models import AllProcedureSpecifications, AllResultTypes, AllInputTypes, Molecule
-from sqlalchemy.orm import selectinload
+from ....interface.models import AllProcedureSpecifications, AllResultTypes
 
 from typing import TYPE_CHECKING
 
@@ -14,7 +13,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from ...models import Base, TaskQueueORM
     from ....interface.models import InsertMetadata, ObjectId, PriorityEnum
-    from typing import Sequence, Tuple, List, Optional, TypeVar, Type
+    from typing import Sequence, Tuple, List, Optional, TypeVar
 
     _ORM_T = TypeVar("_ORM_T", bound=Base)
 

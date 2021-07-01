@@ -11,9 +11,7 @@ from importlib.util import find_spec
 from datetime import datetime
 
 import sqlalchemy.orm.attributes
-from sqlalchemy import and_, or_
-from sqlalchemy.orm import joinedload, load_only, selectinload
-from ..procedures import helpers
+from sqlalchemy.orm import load_only, selectinload
 
 __td_spec = find_spec("torsiondrive")
 
@@ -35,14 +33,15 @@ from .base import BaseServiceHandler
 from ...models import ServiceQueueORM, TorsionDriveProcedureORM, MoleculeORM, OptimizationHistory
 from ...sqlalchemy_common import insert_general, get_query_proj_columns
 from ....interface.models import (
+    ProtoModel,
     ObjectId,
     PriorityEnum,
-    TorsionDriveInput,
-    TorsionDriveRecord,
     Molecule,
     RecordStatusEnum,
     OptimizationProcedureSpecification,
 )
+
+from ....interface.models.torsiondrive import TorsionDriveInput, TorsionDriveRecord, TorsionDriveKeywords
 
 from typing import TYPE_CHECKING
 
@@ -53,6 +52,23 @@ if TYPE_CHECKING:
     from typing import List, Tuple, Sequence, Dict, Optional, Any
 
     TorsionDriveProcedureDict = Dict[str, Any]
+
+
+class TorsionDriveServiceState(ProtoModel):
+    """
+    This represents the current state of a torsiondrive service which is stored in the 'extra' field
+    """
+
+    class Config(ProtoModel.Config):
+        allow_mutation = True
+        validate_assignment = True
+
+    torsiondrive_state = {}
+
+    # These are stored as JSON (ie, dict encoded into a string)
+    optimization_template: str
+    molecule_template: str
+    dihedral_template: str
 
 
 class TorsionDriveHandler(BaseServiceHandler):
@@ -184,24 +200,7 @@ class TorsionDriveHandler(BaseServiceHandler):
     def create_records(
         self, session: Session, service_input: TorsionDriveInput
     ) -> Tuple[InsertMetadata, List[ObjectId]]:
-        """
-        Creates a torsiondrive procedure and its associated service
 
-        Parameters
-        ----------
-        session
-            An existing SQLAlchemy session to use
-        service_input
-            Input to a torsiondrive calculation
-
-        Returns
-        -------
-        :
-            Metadata about which torsiondrive inputs are duplicates or newly-added, and a list of
-            IDs corresponding to all the given torsiondrive procedures (both existing and newly-added).
-            This will be in the same order as the inputs
-
-        """
         meta, mol_ids = self._core_socket.molecule.add_mixed(service_input.initial_molecule)
 
         # TODO - int id
@@ -241,31 +240,17 @@ class TorsionDriveHandler(BaseServiceHandler):
         tag: Optional[str],
         priority: PriorityEnum,
     ) -> Tuple[InsertMetadata, List[ObjectId]]:
-        """
-        Creates services for torsiondrive procedures
-
-        Parameters
-        ----------
-        session
-            An existing SQLAlchemy session to use
-        tag
-            Tag associated with the new services (and all their tasks)
-        priority
-            The priority associated with the new services (and all their tasks)
-
-        Returns
-        -------
-        :
-            Metadata about which services are duplicates or newly-added, and a list of IDs corresponding to all
-            the services for the given procedure IDs. If there was an error for a particular id,
-            then the returned ID will be None.
-        """
 
         new_services = []
 
         # Go over the input ids in order
         for idx, td_orm in enumerate(td_orms):
             service_state = {}
+            service_state["torsiondrive_state"] = {}
+
+            # Read in the keywords from the database. Converting to the pydantic
+            # model is mostly for ergonomics
+            keywords = TorsionDriveKeywords(**td_orm.keywords)
 
             # Create a template from the first initial molecule
             # We will assume all molecules only differ by geometry
@@ -280,20 +265,20 @@ class TorsionDriveHandler(BaseServiceHandler):
             td_stdout = io.StringIO()
             with contextlib.redirect_stdout(td_stdout):
                 service_state["torsiondrive_state"] = td_api.create_initial_state(
-                    dihedrals=td_orm.keywords["dihedrals"],
-                    grid_spacing=td_orm.keywords["grid_spacing"],
+                    dihedrals=keywords.dihedrals,
+                    grid_spacing=keywords.grid_spacing,
                     elements=molecule_template["symbols"],
                     init_coords=[x.geometry.tolist() for x in td_orm.initial_molecule_obj],
-                    dihedral_ranges=td_orm.keywords["dihedral_ranges"],
-                    energy_decrease_thresh=td_orm.keywords["energy_decrease_thresh"],
-                    energy_upper_limit=td_orm.keywords["energy_upper_limit"],
+                    dihedral_ranges=keywords.dihedral_ranges,
+                    energy_decrease_thresh=keywords.energy_decrease_thresh,
+                    energy_upper_limit=keywords.energy_upper_limit,
                 )
 
             stdout = td_stdout.getvalue()
 
             # Build dihedral template
             dihedral_template = []
-            for idx in td_orm.keywords["dihedrals"]:
+            for idx in keywords.dihedrals:
                 tmp = {"type": "dihedral", "indices": idx}
                 dihedral_template.append(tmp)
 
@@ -307,10 +292,7 @@ class TorsionDriveHandler(BaseServiceHandler):
                 "priority": priority,
             }
             opt_template.update(td_orm.optimization_spec)
-            service_state["optimization_template"] = json.dumps({"meta": opt_template})
-
-            # Move around geometric data
-            service_state["optimization_program"] = td_orm.optimization_spec["program"]
+            service_state["optimization_template"] = json.dumps(opt_template)
 
             # Now create the service ORM
             svc_orm = ServiceQueueORM()
@@ -328,27 +310,27 @@ class TorsionDriveHandler(BaseServiceHandler):
 
         return self._core_socket.service.add_task_orm(new_services, session=session)
 
-    def iterate(self, session: Session, td_service_orm: ServiceQueueORM) -> bool:
-        if td_service_orm.procedure_obj.status not in [RecordStatusEnum.running, RecordStatusEnum.waiting]:
+    def iterate(self, session: Session, service_orm: ServiceQueueORM) -> bool:
+
+        td_orm = service_orm.procedure_obj
+
+        if td_orm.status not in [RecordStatusEnum.running, RecordStatusEnum.waiting]:
             # This is a programmer error
             raise RuntimeError(
-                f"Torsion drive {td_service_orm.id}/Base result {td_service_orm.procedure_id} has status {td_service_orm.procedure_obj.status} - cannot iterate with that status!"
+                f"Torsion drive {service_orm.id}/Base result {td_orm.id} has status {td_orm.status} - cannot iterate with that status!"
             )
 
         # Is this the first iteration?
-        if td_service_orm.procedure_obj.status == RecordStatusEnum.waiting:
-            td_service_orm.procedure_obj.status = RecordStatusEnum.running
+        if td_orm.status == RecordStatusEnum.waiting:
+            td_orm.status = RecordStatusEnum.running
 
         # Load the state from the service_state column
-        service_state = td_service_orm.service_state
-
-        # Check if tasks are done (should be checked already)
-        assert self._core_socket.service.subtasks_done(td_service_orm) == (True, True)
+        service_state = TorsionDriveServiceState(**service_orm.service_state)
 
         # Sort by position
         # Fully sorting by the key is not important since that ends up being a key in the dict
         # All that matters is that position 1 for a particular key comes before position 2, etc
-        complete_tasks = sorted(td_service_orm.tasks_obj, key=lambda x: x.extras["position"])
+        complete_tasks = sorted(service_orm.tasks_obj, key=lambda x: x.extras["position"])
 
         # Populate task results needed by the torsiondrive package
         task_results = {}
@@ -365,52 +347,56 @@ class TorsionDriveHandler(BaseServiceHandler):
             mol_ids = [initial_id, final_id]
             mol_data = self._core_socket.molecule.get(id=mol_ids, include=["geometry"], session=session)
 
+            # Use plain lists rather than numpy arrays
             initial_mol_geom = mol_data[0]["geometry"].tolist()
             final_mol_geom = mol_data[1]["geometry"].tolist()
+
             task_results[td_api_key].append((initial_mol_geom, final_mol_geom, proc_obj.energies[-1]))
 
         # The torsiondrive package uses print, so capture that using contextlib
         td_stdout = io.StringIO()
         with contextlib.redirect_stdout(td_stdout):
-            td_api.update_state(service_state["torsiondrive_state"], task_results)
-            next_tasks = td_api.next_jobs_from_state(service_state["torsiondrive_state"], verbose=True)
+            td_api.update_state(service_state.torsiondrive_state, task_results)
+            next_tasks = td_api.next_jobs_from_state(service_state.torsiondrive_state, verbose=True)
 
         stdout_append = "\n" + td_stdout.getvalue()
 
         # If no tasks are left, we are all done
         if len(next_tasks) == 0:
-            td_service_orm.procedure_obj.status = RecordStatusEnum.complete
+            td_orm.status = RecordStatusEnum.complete
         else:
-            self.submit_optimization_subtasks(session, service_state, td_service_orm, next_tasks)
+            self.submit_optimization_subtasks(session, service_state, service_orm, next_tasks)
 
         # Update the torsiondrive procedure itself
         min_positions = {}
         final_energy = {}
-        for k, v in service_state["torsiondrive_state"]["grid_status"].items():
+        for k, v in service_state.torsiondrive_state["grid_status"].items():
             energies = [x[2] for x in v]
             idx = energies.index(min(energies))
             key = json.dumps(td_api.grid_id_from_string(k))
             min_positions[key] = idx
             final_energy[key] = energies[idx]
 
-        td_service_orm.procedure_obj.minimum_positions = min_positions
-        td_service_orm.procedure_obj.final_energy_dict = final_energy
+        td_orm.minimum_positions = min_positions
+        td_orm.final_energy_dict = final_energy
 
-        td_service_orm.procedure_obj.stdout = self._core_socket.output_store.append(
-            td_service_orm.procedure_obj.stdout, stdout_append, session=session
-        )
+        td_orm.stdout = self._core_socket.output_store.append(td_orm.stdout, stdout_append, session=session)
 
         # Set the new service state. We must then mark it as modified
         # so that SQLAlchemy can pick up changes. This is because SQLAlchemy
         # cannot track mutations in nested dicts
-        td_service_orm.service_state = service_state
-        sqlalchemy.orm.attributes.flag_modified(td_service_orm, "service_state")
+        service_orm.service_state = service_state.dict()
+        sqlalchemy.orm.attributes.flag_modified(service_orm, "service_state")
 
         # Return True to indicate that this service has successfully completed
         return len(next_tasks) == 0
 
     def submit_optimization_subtasks(
-        self, session: Session, td_service_state: Dict[str, Any], td_service_orm: ServiceQueueORM, task_dict
+        self,
+        session: Session,
+        service_state: TorsionDriveServiceState,
+        td_orm: ServiceQueueORM,
+        task_dict: Dict[str, Any],
     ):
         new_tasks = []
 
@@ -418,43 +404,43 @@ class TorsionDriveHandler(BaseServiceHandler):
             for position, geometry in enumerate(geometries):
 
                 # Create an optimization input based on the new geometry and the optimization template
-                new_opt = json.loads(td_service_state["optimization_template"])
+                new_opt_spec = json.loads(service_state.optimization_template)
 
                 # Construct constraints
-                constraints = json.loads(td_service_state["dihedral_template"])
+                constraints = json.loads(service_state.dihedral_template)
+
                 grid_id = td_api.grid_id_from_string(td_api_key)
                 for con_num, k in enumerate(grid_id):
                     constraints[con_num]["value"] = k
 
                 # update the constraints
-                new_opt["meta"]["keywords"].setdefault("constraints", {})
-                new_opt["meta"]["keywords"]["constraints"].setdefault("set", [])
-                new_opt["meta"]["keywords"]["constraints"]["set"].extend(constraints)
+                new_opt_spec["keywords"].setdefault("constraints", {})
+                new_opt_spec["keywords"]["constraints"].setdefault("set", [])
+                new_opt_spec["keywords"]["constraints"]["set"].extend(constraints)
 
                 # Build new molecule
-                mol = json.loads(td_service_state["molecule_template"])
+                mol = json.loads(service_state.molecule_template)
                 mol["geometry"] = geometry
-                new_opt["data"] = mol
 
                 new_tasks.append(
                     (
                         {"td_api_key": td_api_key, "position": position},
-                        Molecule(**new_opt["data"]),
-                        OptimizationProcedureSpecification(**new_opt["meta"]),
+                        Molecule(**mol),
+                        OptimizationProcedureSpecification(**new_opt_spec),
                     )
                 )
 
-        added_ids = self.submit_subtasks(session, td_service_orm, new_tasks)
+        added_ids = self.submit_subtasks(session, td_orm, new_tasks)
 
         # Update history
         for id, (task_info, _, _) in zip(added_ids, new_tasks):
             td_api_key = task_info["td_api_key"]
             opt_key = json.dumps(td_api.grid_id_from_string(td_api_key))
 
-            opt_history = OptimizationHistory(torsion_id=int(td_service_orm.procedure_obj.id), opt_id=id, key=opt_key)
-            td_service_orm.procedure_obj.optimization_history_obj.append(opt_history)
+            opt_history = OptimizationHistory(torsion_id=int(td_orm.procedure_obj.id), opt_id=id, key=opt_key)
+            td_orm.procedure_obj.optimization_history_obj.append(opt_history)
 
         # Add positions to the association table
         # I don't always trust databases to ensure the order is always correct
-        for idx, obj in enumerate(td_service_orm.procedure_obj.optimization_history_obj):
+        for idx, obj in enumerate(td_orm.procedure_obj.optimization_history_obj):
             obj.position = idx

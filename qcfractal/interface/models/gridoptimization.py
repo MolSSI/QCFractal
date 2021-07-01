@@ -80,7 +80,7 @@ class ScanDimension(ProtoModel):
         return v
 
 
-class GOKeywords(ProtoModel):
+class GridOptimizationKeywords(ProtoModel):
     """
     GridOptimizationRecord options.
     """
@@ -119,7 +119,7 @@ class GridOptimizationInput(ProtoModel):
         description="The Molecule to begin the Grid Optimization with. This can either be an existing Molecule in "
         "the database (through its :class:`ObjectId`) or a fully specified :class:`Molecule` model.",
     )
-    keywords: GOKeywords = Field(..., description="The keyword options to run the Grid Optimization.")
+    keywords: GridOptimizationKeywords = Field(..., description="The keyword options to run the Grid Optimization.")
     optimization_spec: OptimizationSpecification = Field(
         ..., description="The specification to run the underlying optimization through at each grid point."
     )
@@ -161,7 +161,7 @@ class GridOptimizationRecord(RecordBase):
 
     # Input data
     initial_molecule: ObjectId = Field(..., description="Id of the initial molecule in the database.")
-    keywords: GOKeywords = Field(..., description="The keywords for this Grid Optimization.")
+    keywords: GridOptimizationKeywords = Field(..., description="The keywords for this Grid Optimization.")
     optimization_spec: OptimizationSpecification = Field(
         ..., description="The specification of each geometry optimization."
     )

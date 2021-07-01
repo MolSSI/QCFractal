@@ -224,6 +224,7 @@ class ServiceSocket:
                         service_orm.procedure_obj.status = RecordStatusEnum.error
                         session.commit()
                         self._core_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.error)
+                        continue
 
                     # If the service has successfully completed, delete the entry from the Service Queue
                     if completed:

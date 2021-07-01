@@ -13,7 +13,7 @@ from ..models import (
     TorsionDriveInput,
     RecordStatusEnum,
 )
-from ..models.torsiondrive import TDKeywords
+from ..models.torsiondrive import TorsionDriveKeywords
 from ..visualization import custom_plot
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
@@ -27,7 +27,7 @@ class TDEntry(ProtoModel):
 
     name: str
     initial_molecules: Set[ObjectId]
-    td_keywords: TDKeywords
+    td_keywords: TorsionDriveKeywords
     attributes: Dict[str, Any]
     object_map: Dict[str, ObjectId] = {}
 
@@ -139,7 +139,7 @@ class TorsionDriveDataset(BaseProcedureDataset):
 
         # Build new objects
         molecule_ids = self.client.add_molecules(initial_molecules)
-        td_keywords = TDKeywords(
+        td_keywords = TorsionDriveKeywords(
             dihedrals=dihedrals,
             grid_spacing=grid_spacing,
             dihedral_ranges=dihedral_ranges,
