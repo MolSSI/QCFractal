@@ -12,14 +12,12 @@ from sqlalchemy.ext.hybrid import HYBRID_PROPERTY
 from sqlalchemy.orm import object_session
 from sqlalchemy.types import TypeDecorator
 
-# from sqlalchemy.ext.orderinglist import ordering_list
-# from sqlalchemy.ext.associationproxy import association_proxy
-# from sqlalchemy.dialects.postgresql import aggregate_order_by
-
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import str, Any
+    from typing import str, Any, TypeVar, Type, Dict
+
+    _T = TypeVar("_T")
 
 
 class MsgpackExt(TypeDecorator):
@@ -122,6 +120,26 @@ class Base:
                 d[k] = [x.dict() if isinstance(x, Base) else x for x in v]
 
         return d
+
+    def to_model(self, as_type: Type[_T]) -> _T:
+        """
+        Converts this ORM to a particular type
+
+        This will convert this ORM to a type that has matching columns. For example,
+        MoleculeORM to a Molecule
+
+        Parameters
+        ----------
+        as_type
+            Type to convert to
+
+        Returns
+        -------
+        :
+            An object of type Type
+        """
+
+        return as_type(**self.dict())
 
     @classmethod
     def _get_fieldnames_with_DB_ids_(cls):
