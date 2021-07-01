@@ -387,9 +387,6 @@ class PortalClient:
         self,
         collection_type: str,
         name: str,
-        full_return: bool = False,
-        include: "QueryListStr" = None,  # TODO: WHAT ARE THESE FOR?
-        exclude: "QueryListStr" = None,  # TODO: WHAT ARE THESE FOR?
     ) -> "Collection":
         """Returns a given collection from the server.
 
@@ -399,12 +396,6 @@ class PortalClient:
             The collection type.
         name : str
             The name of the collection.
-        full_return : bool, optional
-            If True, returns the full server response.
-        include : QueryListStr, optional
-            Return only these columns.
-        exclude : QueryListStr, optional
-            Return all but these columns.
         Returns
         -------
         Collection
@@ -413,20 +404,9 @@ class PortalClient:
         """
 
         payload = {"meta": {}, "data": {"collection": collection_type, "name": name}}
-        # if include is None and exclude is None:
-        #    if collection_type.lower() in ["dataset", "reactiondataset"]:  # XXX
-        #        payload["meta"]["exclude"] = ["contributed_values", "records"]
-        # else:
-        #    payload["meta"]["include"] = include
-        #    payload["meta"]["exclude"] = exclude
-
-        payload["meta"]["include"] = include
-        payload["meta"]["exclude"] = exclude
 
         print("{} : '{}' || {}".format(collection_type, name, self.address))
         response = self._automodel_request("collection", "get", payload, full_return=True)
-        if full_return:
-            return response
 
         # Watching for nothing found
         if len(response.data):
@@ -434,10 +414,38 @@ class PortalClient:
         else:
             raise KeyError("Collection '{}:{}' not found.".format(collection_type, name))
 
-    def get_molecules(self):
+    def get_molecules(
+        self,
+        id: "QueryObjectId",
+        missing_ok: bool = False,
+    ) -> Union[List["Record"], "Record"]:
+        """Get molecules by id.
+
+        Uses the client's own caching for performance.
+
+        Parameters
+        ----------
+        id : QueryObjectId
+            Queries the record ``id`` field.
+            Multiple ids can be included in a list; result records will be returned in the same order.
+        missing_ok : bool
+            If True, return ``None`` for ids with no associated result.
+            If False, raise ``KeyError`` for an id with no result on the server.
+
+        Returns
+        -------
+        records : Union[List[Record], Record]
+            If `id` is a list of ids, then a list of records will be returned in the same order.
+            If `id` is a single id, then only that record will be returned.
+
+        """
         pass
 
-    def get_records(self, id: "QueryObjectId") -> Union[List["Record"], "Record"]:
+    def get_records(
+        self,
+        id: "QueryObjectId",
+        missing_ok: bool = False,
+    ) -> Union[List["Record"], "Record"]:
         """Get result records by id.
 
         This is used by collections to retrieve their results when demanded.
@@ -449,7 +457,8 @@ class PortalClient:
             Queries the record ``id`` field.
             Multiple ids can be included in a list; result records will be returned in the same order.
         missing_ok : bool
-            If True,
+            If True, return ``None`` for ids with no associated result.
+            If False, raise ``KeyError`` for an id with no result on the server.
 
         Returns
         -------
@@ -537,11 +546,7 @@ class PortalClient:
     def get_keywords(
         self,
         id: Optional["QueryObjectId"] = None,
-        *,
-        hash_index: Optional["QueryStr"] = None,
-        limit: Optional[int] = None,
-        skip: int = 0,
-        full_return: bool = False,
+        missing_ok: bool = False,
     ) -> Union["KeywordGETResponse", List["KeywordSet"]]:
         """Obtains KeywordSets from the server using keyword ids.
 
@@ -549,14 +554,6 @@ class PortalClient:
         ----------
         id : QueryObjectId, optional
             A list of ids to query.
-        hash_index : QueryStr, optional
-            The hash index to look up
-        limit : Optional[int], optional
-            The maximum number of keywords to query
-        skip : int, optional
-            The number of keywords to skip in the query, used during pagination
-        full_return : bool, optional
-            Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
@@ -564,8 +561,8 @@ class PortalClient:
             The requested KeywordSet objects.
         """
 
-        payload = {"meta": {}, "data": {"id": id, "hash_index": hash_index}}
-        return self._automodel_request("keyword", "get", payload, full_return=full_return)
+        payload = {"meta": {}, "data": {"id": id}}
+        return self._automodel_request("keyword", "get", payload)
 
     # TODO: grab this one from Ben's `next` branch
     # TODO: we would want to cache these
