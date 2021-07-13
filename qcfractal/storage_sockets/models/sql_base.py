@@ -25,6 +25,10 @@ class MsgpackExt(TypeDecorator):
 
     impl = BYTEA
 
+    # I believe caching is only used when, for example, you filter by a column. But we
+    # shouldn't ever do that with msgpack
+    cache_ok = False
+
     def process_bind_param(self, value, dialect):
         if value is None:
             return value
@@ -44,6 +48,10 @@ class PlainMsgpackExt(TypeDecorator):
     This does not support NumPy"""
 
     impl = BYTEA
+
+    # I believe caching is only used when, for example, you filter by a column. But we
+    # shouldn't ever do that with msgpack
+    cache_ok = False
 
     def process_bind_param(self, value, dialect):
         if value is None:
