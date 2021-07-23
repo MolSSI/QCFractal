@@ -805,7 +805,7 @@ class BaseProcedureDataset(Collection):
             desc="{} || {} ".format(specification.rjust(pad), self._client.address),
         ):
             chunk_ids = query_ids[i : i + self._client.query_limit]
-            procedures.extend(self._client.get_record(id=chunk_ids))
+            procedures.extend(self._client.get_records(id=chunk_ids))
 
         proc_lookup = {x.id: x for x in procedures}
 
