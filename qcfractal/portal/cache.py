@@ -8,7 +8,9 @@ import lzma
 import dbm
 import time
 
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Any
+
+from qcelemental.models import Molecule
 
 from .records import record_factory
 from .collections.collection_utils import collection_factory
@@ -45,74 +47,103 @@ class PortalCache:
 
         self.memcache = MemCache(maxsize=max_memcache_size)
 
-    def put(self, record: Union[List[Dict], Dict]):
+    def put(self, items: List[Any], entity_type: str):
+        """Put a list of items into the cache.
+
+        See `entity_type` for allowed values.
+
+        Parameters
+        ----------
+        items : List[Any]
+            List of objects to cache.
+        entity_type : str
+            Type of entity; one of `molecule`, `record`.
+
+        """
+        if entity_type not in ('molecule', 'record'):
+            raise ValueError("`entity_type` must be one of `molecule`, `record`")
+
         if self.cachefile:
             with dbm.open(self.cachefile, 'c') as db:
-                self._put(record, db)
+                self._put(items, entity_type, db)
         else:
-            self._put(record)
+            self._put(items, entity_type)
 
-    def _put(self, record, db=None):
-        if isinstance(record, list):
-            for rec in record:
-                self._put_single(rec, db)
-        elif record is None:
-            return
-        else:
-            self._put_single(record, db)
+    def _put(self, items, entity_type, db=None):
+        for item in items:
+            self._put_single(item, entity_type, db)
 
-    def _put_single(self, record, db=None):
-        id = record.id
+    def _put_single(self, item, entity_type, db=None):
+        key = f"{entity_type}-{item.id}"
 
         # if we already have this in memcache, no further action
-        if id in self.memcache:
+        if key in self.memcache:
             return
 
         # add to memcache
-        self.memcache[id] = record
+        self.memcache[key] = item
 
         # add to fs cache
         if db is not None:
-            db[id] = lzma.compress(record.to_json().encode("utf-8"))
+            db[id] = lzma.compress(item.to_json().encode("utf-8"))
 
-    def get(self, id: Union[List[str], str]) -> Dict[str, "Record"]:
+    def get(self, ids: List[str], entity_type: str) -> Dict[str, Any]:
+        """Get a list of items out of the cache.
+
+        See `entity_type` for allowed values.
+
+        Parameters
+        ----------
+        ids: List[str]
+            List of objects to retrieve from cache.
+        entity_type : str
+            Type of entity; one of `molecule`, `record`.
+
+        Returns
+        -------
+
+        """
+        if entity_type not in ('molecule', 'record'):
+            raise ValueError("`entity_type` must be one of `molecule`, `record`")
+
         if self.cachefile:
             with dbm.open(self.cachefile, 'r') as db:
-                return self._get(id, db)
+                return self._get(ids, entity_type, db)
         else:
-            return self._get(id)
+            return self._get(ids, entity_type)
 
-    def _get(self, id, db=None):
-        if isinstance(id, list):
-            records = {}
-            for i in id:
-                rec = self._get_single(str(i), db)
-                if rec is not None:
-                    records[i] = rec
-            return records
-        elif id is None:
-            return {}
-        else:
-            return {id: self._get_single(str(id), db)}
+    def _get(self, ids, entity_type, db=None):
+        items = {}
+        for i in ids:
+            item = self._get_single(str(i), entity_type, db)
+            if item is not None:
+                items[i] = item
+        return items 
 
-    def _get_single(self, id, db=None):
+    def _get_single(self, id, entity_type, db=None):
+        key = f"{entity_type}-{id}"
+
         # first check memcache (fast)
         # if found, return
-        record = self.memcache.get(id, None)
-        if record is not None:
-            return record
+        item = self.memcache.get(key, None)
+        if item is not None:
+            return item 
 
         # check fs cache (slower)
         # return if found, otherwise return None
         if db is not None:
-            record = db.get(id, None)
-            if record is not None:
-                rec = record_factory(json.loads(lzma.decompress(record).decode()), client=self.client)
+            item = db.get(id, None)
+            if item is not None:
+                if entity_type == "molecule":
+                    item = Molecule.from_data(json.loads(lzma.decompress(item).decode()))
+
+                elif entity_type == "record":
+                    item = record_factory(json.loads(lzma.decompress(item).decode()), client=self.client)
 
                 # add to memcache
-                self.memcache[id] = rec
+                self.memcache[key] = item
 
-                return rec
+                return item
             else:
                 return
 
@@ -142,9 +173,8 @@ class MemCache:
 
     def __setitem__(self, key, value):
 
-        self.garbage_collect()
-        
         # check size; if we're beyond, chop least-recently-used value
+        self.garbage_collect()
         self.data[key] = {'value': value, 'last_used': time.time()}
 
     def __getitem__(self, key):

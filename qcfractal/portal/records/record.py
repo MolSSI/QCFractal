@@ -9,7 +9,7 @@ from pydantic import Field, constr, validator
 import qcelemental as qcel
 from qcelemental.models.results import AtomicResultProtocols
 
-from ...interface.models import ObjectId, ProtoModel, KVStore
+from ...interface.models import ObjectId, ProtoModel, KVStore, RecordStatusEnum
 from ...interface.models.model_utils import prepare_basis
 
 
@@ -70,18 +70,6 @@ class QCSpecification(ProtoModel):
     @validator("method")
     def _check_method(cls, v):
         return v.lower()
-
-
-class RecordStatusEnum(str, Enum):
-    """
-    The state of a record object.
-    The states which are available are a finite set.
-    """
-
-    complete = "COMPLETE"
-    incomplete = "INCOMPLETE"
-    running = "RUNNING"
-    error = "ERROR"
 
 
 class Record(abc.ABC):
