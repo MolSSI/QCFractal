@@ -2,6 +2,7 @@ from collections import defaultdict
 import re
 import os
 import copy
+from contextlib import contextmanager
 
 import requests
 
@@ -12,6 +13,7 @@ from pydantic import ValidationError
 import pandas as pd
 
 from ..interface.models.rest_models import rest_model
+from ..interface.models import RecordStatusEnum
 from .collections import collection_factory, collections_name_map
 from .records import record_factory, record_name_map
 from .cache import PortalCache
@@ -414,6 +416,49 @@ class PortalClient:
         else:
             raise KeyError("Collection '{}:{}' not found.".format(collection_type, name))
 
+    def _get_with_cache(self, func, id, missing_ok, entity_type):
+
+        original_id = copy.deepcopy(id)
+        id = make_list(id)
+
+        # pass through the cache first
+        # remove any ids that were found in cache
+        cached = self._cache.get(id, entity_type=entity_type)
+        for i in cached:
+            id.remove(i)
+
+        # if all ids found in cache, no need to go further
+        if len(id) == 0:
+            if isinstance(original_id, list):
+                return [cached[i] for i in original_id]
+            else:
+                return cached[original_id]
+
+        payload = {
+            "data": {"id": id},
+        }
+
+        results, to_cache = func(payload)
+
+        self._cache.put(to_cache, entity_type=entity_type)
+
+        # combine cached records with queried results
+        results.update(cached)
+
+        # check that we have results for all ids asked for
+        missing = set(make_list(original_id)) - set(results.keys())
+
+        if missing and not missing_ok:
+            raise KeyError(f"No objects found for `id`: {missing}")
+
+        # order the results by input id list
+        if isinstance(original_id, list):
+            ordered = [results.get(i, None) for i in original_id]
+        else:
+            ordered = results.get(original_id, None)
+
+        return ordered
+
     def get_molecules(
         self,
         id: "QueryObjectId",
@@ -439,7 +484,15 @@ class PortalClient:
             If `id` is a single id, then only that record will be returned.
 
         """
-        pass
+
+        def get_mols(payload):
+            mols = self._automodel_request("molecule", "get", payload)
+            results = {mol.id: mol for mol in mols}
+            to_cache = mols
+
+            return results, to_cache
+
+        return self._get_with_cache(get_mols, id, missing_ok, entity_type="molecule")
 
     def get_records(
         self,
@@ -467,49 +520,15 @@ class PortalClient:
             If `id` is a single id, then only that record will be returned.
 
         """
-        original_id = copy.deepcopy(id)
 
-        # passthrough the cache first
-        # if id is specified
-        cached_records = self._cache.get(id)
+        def get_records(payload):
+            records = self._automodel_request("procedure", "get", payload)
+            results = {res["id"]: record_factory(res, client=self) for res in results}
+            to_cache = [record for record in records if record.status == RecordStatusEnum.complete]
 
-        if isinstance(id, list):
-            # if we were given a list of ids, remove any that were found in cache
-            for i in cached_records:
-                id.remove(i)
+            return results, to_cache
 
-            # if all ids found in cache, no need to go further
-            if len(id) == 0:
-                return [cached_records[i] for i in original_id]
-
-        elif len(cached_records) == 1:
-            # no need to query at all if only one id asked for, and was found in cache
-            return cached_records[id]
-
-        # TODO: make id always a list, use `make_list`
-        payload = {
-            "meta": {},
-            "data": {
-                "id": id,
-            },
-        }
-
-        results = self._automodel_request("procedure", "get", payload)
-        results = {res["id"]: record_factory(res, client=self) for res in results}
-
-        # TODO: could put the "only complete" logic into the cache itself as a policy
-        self._cache.put([record for record in results.values() if record.status == "COMPLETE"])
-
-        # combine cached records with queried results
-        results.update(cached_records)
-
-        # order the results by input id list
-        if isinstance(original_id, list):
-            ordered = [results[i] for i in original_id]
-        else:
-            ordered = results[original_id]
-
-        return ordered
+        return self._get_with_cache(get_records, id, missing_ok, entity_type="record")
 
     def _get_outputs(self, id: "QueryObjectId") -> Union[List[Dict[str, Any]], Dict[str, Any]]:
         """Get output_store items by id.
@@ -560,9 +579,25 @@ class PortalClient:
         List[KeywordSet]
             The requested KeywordSet objects.
         """
+        original_id = copy.deepcopy(id)
+        id = make_list(id)
 
         payload = {"meta": {}, "data": {"id": id}}
-        return self._automodel_request("keyword", "get", payload)
+        results = self._automodel_request("keyword", "get", payload)
+
+        # check that we have results for all ids asked for
+        missing = set(make_list(original_id)) - set(results.keys())
+
+        if missing and not missing_ok:
+            raise KeyError(f"No objects found for `id`: {missing}")
+
+        # order the results by input id list
+        if isinstance(original_id, list):
+            ordered = [results.get(i, None) for i in original_id]
+        else:
+            ordered = results.get(original_id, None)
+
+        return ordered
 
     # TODO: grab this one from Ben's `next` branch
     # TODO: we would want to cache these
