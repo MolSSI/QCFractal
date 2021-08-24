@@ -27,11 +27,11 @@ from .task_models import (
     ManagerStatusEnum,
 )
 from .task_models import PriorityEnum
-from .records import SingleResultRecord, OptimizationRecord, RecordStatusEnum
+from .records import SinglePointRecord, OptimizationRecord, RecordStatusEnum
 from .gridoptimization import GridOptimizationInput, GridOptimizationRecord
 from .torsiondrive import TorsionDriveInput, TorsionDriveRecord
 
-AllRecordTypes = Union[SingleResultRecord, OptimizationRecord, TorsionDriveRecord, GridOptimizationRecord]
+AllRecordTypes = Union[SinglePointRecord, OptimizationRecord, TorsionDriveRecord, GridOptimizationRecord]
 
 ### Utility functions
 
@@ -746,7 +746,7 @@ class TaskQueueGETBody(ProtoModel):
             None,
             description="The exact Id of the Result which this Task is linked to. If this is set as a "
             "search condition, there is no reason to set anything else as this will be unique in the "
-            "database, if it exists. See also :class:`SingleResultRecord`.",
+            "database, if it exists. See also :class:`SinglePointRecord`.",
         )
         tag: Optional[List[str]] = Field(None, description="Tasks will be searched based on their associated tag.")
         manager: Optional[List[str]] = Field(
@@ -799,7 +799,7 @@ class TaskQueuePUTBody(ProtoModel):
             None,
             description="The exact Id of a result which this Task is slated to write to. If this is set as a "
             "search condition, there is no reason to set anything else as this will be unique in the "
-            "database, if it exists. See also :class:`SingleResultRecord`.",
+            "database, if it exists. See also :class:`SinglePointRecord`.",
         )
         new_tag: Optional[str] = Field(
             None,
