@@ -287,6 +287,240 @@ class PortalClient:
         else:
             return None
 
+    def _get_with_cache(self, func, id, missing_ok, entity_type):
+
+        original_id = copy.deepcopy(id)
+        id = make_list(id)
+
+        # pass through the cache first
+        # remove any ids that were found in cache
+        cached = self._cache.get(id, entity_type=entity_type)
+        for i in cached:
+            id.remove(i)
+
+        # if all ids found in cache, no need to go further
+        if len(id) == 0:
+            if isinstance(original_id, list):
+                return [cached[i] for i in original_id]
+            else:
+                return cached[original_id]
+
+        payload = {
+            "data": {"id": id},
+        }
+
+        results, to_cache = func(payload)
+
+        self._cache.put(to_cache, entity_type=entity_type)
+
+        # combine cached records with queried results
+        results.update(cached)
+
+        # check that we have results for all ids asked for
+        missing = set(make_list(original_id)) - set(results.keys())
+
+        if missing and not missing_ok:
+            raise KeyError(f"No objects found for `id`: {missing}")
+
+        # order the results by input id list
+        if isinstance(original_id, list):
+            ordered = [results.get(i, None) for i in original_id]
+        else:
+            ordered = results.get(original_id, None)
+
+        return ordered
+
+    def _query_cache(self):
+        pass
+
+    ### KVStore / OutputStore section
+
+    def _get_outputs(self, id: "QueryObjectId") -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+        """Get output_store items by id.
+
+        Parameters
+        ----------
+        id : QueryObjectId
+            Queries the KVStore by key.
+            Multiple ids can be included in a list; KVStore items will be returned in the same order.
+
+        Returns
+        -------
+        results : Union[List[Dict[str, Any]], Dict[str, Any]]
+            If `id` is a list of ids, then a list of items will be returned in the same order.
+            If `id` is a single id, then only that item will be returned.
+
+        """
+        # TODO: consider utilizing the client cache for these
+
+        payload = {
+            "meta": {},
+            "data": {
+                "id": id,
+            },
+        }
+
+        results = self._automodel_request("kvstore", "get", payload)
+
+        if isinstance(id, list):
+            return [results[i] for i in id]
+        else:
+            return results[id]
+
+    ### Molecule section
+
+    def get_molecules(
+        self,
+        id: "QueryObjectId",
+        missing_ok: bool = False,
+    ) -> Union[List["Molecule"], "Molecule"]:
+        """Get molecules by id.
+
+        Uses the client's own caching for performance.
+
+        Parameters
+        ----------
+        id : QueryObjectId
+            Queries the record ``id`` field.
+            Multiple ids can be included in a list; result records will be returned in the same order.
+        missing_ok : bool
+            If True, return ``None`` for ids with no associated result.
+            If False, raise ``KeyError`` for an id with no result on the server.
+
+        Returns
+        -------
+        records : Union[List[Record], Record]
+            If `id` is a list of ids, then a list of records will be returned in the same order.
+            If `id` is a single id, then only that record will be returned.
+
+        """
+
+        def get_mols(payload):
+            mols = self._automodel_request("molecule", "get", payload)
+            results = {mol.id: mol for mol in mols}
+            to_cache = mols
+
+            return results, to_cache
+
+        return self._get_with_cache(get_mols, id, missing_ok, entity_type="molecule")
+
+    # TODO: we would like more fields to be queryable via the REST API for mols
+    #       e.g. symbols/elements. Unless these are indexed might not be performant.
+    # TODO: for query methods, hands tied to what the REST API exposes
+    def query_molecules(
+        self,
+        molecule_hash: Optional["QueryStr"] = None,
+        molecular_formula: Optional["QueryStr"] = None,
+        limit: Optional[int] = None,
+        skip: int = 0,
+        paginate: bool = False,
+    ) -> List["Molecule"]:
+        """Query molecules by attributes.
+
+        All matching molecules, up to the lower of `limit` or the server's
+        maximum result count, will be returned.
+
+        Parameters
+        ----------
+        molecule_hash : QueryStr, optional
+            Queries the Molecule ``molecule_hash`` field.
+        molecular_formula : QueryStr, optional
+            Queries the Molecule ``molecular_formula`` field. Molecular formulas are case-sensitive.
+            Molecular formulas are not order-sensitive (e.g. "H2O == OH2 != Oh2").
+        limit : Optional[int], optional
+            The maximum number of Molecules to query.
+        skip : int, optional
+            The number of Molecules to skip in the query, used during pagination
+
+        """
+        payload = {
+            "meta": {"limit": limit, "skip": skip},
+            "data": {"molecule_hash": molecule_hash, "molecular_formula": molecular_formula},
+        }
+        molecules = self._automodel_request("molecule", "get", payload)
+
+        # cache results
+        self._cache.put(molecules, entity_type="molecule")
+
+        return molecules
+
+    def add_molecules(self, molecules: List["Molecule"]) -> List[str]:
+        """Adds molecules to the server.
+
+        Parameters
+        ----------
+        molecules : List[Molecule]
+            A list of Molecules to add to the server.
+
+        Returns
+        -------
+        List[str]
+            A list of Molecule ids in `molecules` order;
+            `None` given for molecules that fail to add.
+
+        """
+        return self._automodel_request("molecule", "post", {"meta": {}, "data": molecules})
+
+    ### Keywords section
+
+    def get_keywords(
+        self,
+        id: Optional["QueryObjectId"] = None,
+        missing_ok: bool = False,
+    ) -> Union["KeywordGETResponse", List["KeywordSet"]]:
+        """Obtains KeywordSets from the server using keyword ids.
+
+        Parameters
+        ----------
+        id : QueryObjectId, optional
+            A list of ids to query.
+
+        Returns
+        -------
+        List[KeywordSet]
+            The requested KeywordSet objects.
+        """
+        original_id = copy.deepcopy(id)
+        id = make_list(id)
+
+        payload = {"meta": {}, "data": {"id": id}}
+        results = self._automodel_request("keyword", "get", payload)
+
+        # check that we have results for all ids asked for
+        missing = set(make_list(original_id)) - set(results.keys())
+
+        if missing and not missing_ok:
+            raise KeyError(f"No objects found for `id`: {missing}")
+
+        # order the results by input id list
+        if isinstance(original_id, list):
+            ordered = [results.get(i, None) for i in original_id]
+        else:
+            ordered = results.get(original_id, None)
+
+        return ordered
+
+    # TODO: make this invisible?
+    # one of our goals initially was to make keyword handling an implementation detail for the server
+    def add_keywords(self, keywords: List["KeywordSet"], full_return: bool = False) -> List[str]:
+        """Adds KeywordSets to the server.
+
+        Parameters
+        ----------
+        keywords : List[KeywordSet]
+            A list of KeywordSets to add.
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        List[str]
+            A list of KeywordSet id's in the sent order, can be None where issues occured.
+        """
+        return self._automodel_request("keyword", "post", {"meta": {}, "data": keywords}, full_return=full_return)
+
+    ### Collections section
+
     def list_collections(
         self,
         collection_type: Optional[str] = None,
@@ -416,83 +650,60 @@ class PortalClient:
         else:
             raise KeyError("Collection '{}:{}' not found.".format(collection_type, name))
 
-    def _get_with_cache(self, func, id, missing_ok, entity_type):
-
-        original_id = copy.deepcopy(id)
-        id = make_list(id)
-
-        # pass through the cache first
-        # remove any ids that were found in cache
-        cached = self._cache.get(id, entity_type=entity_type)
-        for i in cached:
-            id.remove(i)
-
-        # if all ids found in cache, no need to go further
-        if len(id) == 0:
-            if isinstance(original_id, list):
-                return [cached[i] for i in original_id]
-            else:
-                return cached[original_id]
-
-        payload = {
-            "data": {"id": id},
-        }
-
-        results, to_cache = func(payload)
-
-        self._cache.put(to_cache, entity_type=entity_type)
-
-        # combine cached records with queried results
-        results.update(cached)
-
-        # check that we have results for all ids asked for
-        missing = set(make_list(original_id)) - set(results.keys())
-
-        if missing and not missing_ok:
-            raise KeyError(f"No objects found for `id`: {missing}")
-
-        # order the results by input id list
-        if isinstance(original_id, list):
-            ordered = [results.get(i, None) for i in original_id]
-        else:
-            ordered = results.get(original_id, None)
-
-        return ordered
-
-    def get_molecules(
-        self,
-        id: "QueryObjectId",
-        missing_ok: bool = False,
-    ) -> Union[List["Molecule"], "Molecule"]:
-        """Get molecules by id.
-
-        Uses the client's own caching for performance.
+    # TODO: make this just take collections themselves, not dicts
+    def add_collection(
+        self, collection: Dict[str, Any], overwrite: bool = False, full_return: bool = False
+    ) -> Union["CollectionGETResponse", List["ObjectId"]]:
+        """Adds a new Collection to the server.
 
         Parameters
         ----------
-        id : QueryObjectId
-            Queries the record ``id`` field.
-            Multiple ids can be included in a list; result records will be returned in the same order.
-        missing_ok : bool
-            If True, return ``None`` for ids with no associated result.
-            If False, raise ``KeyError`` for an id with no result on the server.
+        collection : Dict[str, Any]
+            The full collection data representation.
+        overwrite : bool, optional
+            Overwrites the collection if it already exists in the database, used for updating collection.
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
-        records : Union[List[Record], Record]
-            If `id` is a list of ids, then a list of records will be returned in the same order.
-            If `id` is a single id, then only that record will be returned.
+        List[ObjectId]
+            The ObjectId's of the added collection.
 
         """
+        # Can take in either molecule or lists
 
-        def get_mols(payload):
-            mols = self._automodel_request("molecule", "get", payload)
-            results = {mol.id: mol for mol in mols}
-            to_cache = mols
+        if overwrite and ("id" not in collection or collection["id"] == "local"):
+            raise KeyError("Attempting to overwrite collection, but no server ID found (cannot use 'local').")
 
-            return results, to_cache
+        payload = {"meta": {"overwrite": overwrite}, "data": collection}
+        return self._automodel_request("collection", "post", payload, full_return=full_return)
 
-        return self._get_with_cache(get_mols, id, missing_ok, entity_type="molecule")
+    def delete_collection(self, collection_type: str, name: str) -> None:
+        """Deletes a given collection from the server.
+
+        Parameters
+        ----------
+        collection_type : str
+            The collection type to be deleted
+        name : str
+            The name of the collection to be deleted
+
+        Returns
+        -------
+        None
+        """
+        collection = self.get_collection(collection_type, name)
+        self._automodel_request(f"collection/{collection.data.id}", "delete", payload={"meta": {}})
+
+        return ordered
+
+    ### Results section
+
+    # TODO: grab this one from Ben's `next` branch
+    # TODO: we would want to cache these
+    def get_wavefunctions(self):
+        pass
 
     def get_records(
         self,
@@ -529,129 +740,6 @@ class PortalClient:
             return results, to_cache
 
         return self._get_with_cache(get_records, id, missing_ok, entity_type="record")
-
-    def _get_outputs(self, id: "QueryObjectId") -> Union[List[Dict[str, Any]], Dict[str, Any]]:
-        """Get output_store items by id.
-
-        Parameters
-        ----------
-        id : QueryObjectId
-            Queries the KVStore by key.
-            Multiple ids can be included in a list; KVStore items will be returned in the same order.
-
-        Returns
-        -------
-        results : Union[List[Dict[str, Any]], Dict[str, Any]]
-            If `id` is a list of ids, then a list of items will be returned in the same order.
-            If `id` is a single id, then only that item will be returned.
-
-        """
-        # TODO: consider utilizing the client cache for these
-
-        payload = {
-            "meta": {},
-            "data": {
-                "id": id,
-            },
-        }
-
-        results = self._automodel_request("kvstore", "get", payload)
-
-        if isinstance(id, list):
-            return [results[i] for i in id]
-        else:
-            return results[id]
-
-    def get_keywords(
-        self,
-        id: Optional["QueryObjectId"] = None,
-        missing_ok: bool = False,
-    ) -> Union["KeywordGETResponse", List["KeywordSet"]]:
-        """Obtains KeywordSets from the server using keyword ids.
-
-        Parameters
-        ----------
-        id : QueryObjectId, optional
-            A list of ids to query.
-
-        Returns
-        -------
-        List[KeywordSet]
-            The requested KeywordSet objects.
-        """
-        original_id = copy.deepcopy(id)
-        id = make_list(id)
-
-        payload = {"meta": {}, "data": {"id": id}}
-        results = self._automodel_request("keyword", "get", payload)
-
-        # check that we have results for all ids asked for
-        missing = set(make_list(original_id)) - set(results.keys())
-
-        if missing and not missing_ok:
-            raise KeyError(f"No objects found for `id`: {missing}")
-
-        # order the results by input id list
-        if isinstance(original_id, list):
-            ordered = [results.get(i, None) for i in original_id]
-        else:
-            ordered = results.get(original_id, None)
-
-        return ordered
-
-    # TODO: grab this one from Ben's `next` branch
-    # TODO: we would want to cache these
-    def get_wavefunctions(self):
-        pass
-
-    def get_tasks(
-        self,
-        id: "QueryObjectId",
-    ):
-        pass
-
-    # TODO: we would like more fields to be queryable via the REST API for mols
-    #       e.g. symbols/elements. Unless these are indexed might not be performant.
-    # TODO: for query methods, hands tied to what the REST API exposes
-    def query_molecules(
-        self,
-        molecule_hash: Optional["QueryStr"] = None,
-        molecular_formula: Optional["QueryStr"] = None,
-        limit: Optional[int] = None,
-        skip: int = 0,
-        paginate: bool = False,
-    ) -> List["Molecule"]:
-        """Query molecules by attributes.
-
-        All matching molecules, up to the lower of `limit` or the server's
-        maximum result count, will be returned.
-
-        Parameters
-        ----------
-        molecule_hash : QueryStr, optional
-            Queries the Molecule ``molecule_hash`` field.
-        molecular_formula : QueryStr, optional
-            Queries the Molecule ``molecular_formula`` field. Molecular formulas are case-sensitive.
-            Molecular formulas are not order-sensitive (e.g. "H2O == OH2 != Oh2").
-        limit : Optional[int], optional
-            The maximum number of Molecules to query.
-        skip : int, optional
-            The number of Molecules to skip in the query, used during pagination
-
-        """
-        payload = {
-            "meta": {"limit": limit, "skip": skip},
-            "data": {"molecule_hash": molecule_hash, "molecular_formula": molecular_formula},
-        }
-        molecules = self._automodel_request("molecule", "get", payload)
-
-        # cache results
-        self._cache.put(molecules, entity_type="molecule")
-
-        return molecules
-
-    def _query_cache(self):
-        pass
 
     # TODO: expand REST API to allow more queryables from Record datamodel fields
     def query_singlepoint(
@@ -721,6 +809,9 @@ class PortalClient:
             self._cache.put(results, entity_type="record")
 
         return results
+
+    def query_reactions():
+        ...
 
     def query_optimizations(
         self,
@@ -820,6 +911,121 @@ class PortalClient:
         return self._automodel_request("service_queue", "get", payload, full_return=full_return)
         pass
 
+    def query_gridoptimizations():
+        ...
+
+    ### Compute section
+
+    def add_singlepoints(
+        self,
+        program: str = None,
+        method: str = None,
+        basis: Optional[str] = None,
+        driver: str = None,
+        keywords: Optional["ObjectId"] = None,
+        molecule: Union["ObjectId", "Molecule", List[Union["ObjectId", "Molecule"]]] = None,
+        *,
+        priority: Optional[str] = None,
+        protocols: Optional[Dict[str, Any]] = None,
+        tag: Optional[str] = None,
+        full_return: bool = False,
+    ) -> "ComputeResponse":
+        """
+        Adds a "single" compute to the server.
+
+        Parameters
+        ----------
+        program : str, optional
+            The computational program to execute the result with (e.g., "rdkit", "psi4").
+        method : str, optional
+            The computational method to use (e.g., "B3LYP", "PBE")
+        basis : Optional[str], optional
+            The basis to apply to the computation (e.g., "cc-pVDZ", "6-31G")
+        driver : str, optional
+            The primary result that the compute will aquire {"energy", "gradient", "hessian", "properties"}
+        keywords : Optional['ObjectId'], optional
+            The KeywordSet ObjectId to use with the given compute
+        molecule : Union['ObjectId', 'Molecule', List[Union['ObjectId', 'Molecule']]], optional
+            The Molecules or Molecule ObjectId's to compute with the above methods
+        priority : Optional[str], optional
+            The priority of the job {"HIGH", "MEDIUM", "LOW"}. Default is "MEDIUM".
+        protocols : Optional[Dict[str, Any]], optional
+            Protocols for store more or less data per field. Current valid
+            protocols: {'wavefunction'}
+        tag : Optional[str], optional
+            The computational tag to add to your compute, managers can optionally only pull
+            based off the string tags. These tags are arbitrary, but several examples are to
+            use "large", "medium", "small" to denote the size of the job or "project1", "project2"
+            to denote different projects.
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        ComputeResponse
+            An object that contains the submitted ObjectIds of the new compute. This object has the following fields:
+              - ids: The ObjectId's of the task in the order of input molecules
+              - submitted: A list of ObjectId's that were submitted to the compute queue
+              - existing: A list of ObjectId's of tasks already in the database
+
+        Raises
+        ------
+        ValueError
+            Description
+        """
+
+        # Scan the input
+        if program is None:
+            raise ValueError("Program must be specified for the computation.")
+        if method is None:
+            raise ValueError("Method must be specified for the computation.")
+        if driver is None:
+            raise ValueError("Driver must be specified for the computation.")
+        if molecule is None:
+            raise ValueError("Molecule must be specified for the computation.")
+
+        # Always a list
+        if not isinstance(molecule, list):
+            molecule = [molecule]
+
+        if protocols is None:
+            protocols = {}
+
+        payload = {
+            "meta": {
+                "procedure": "single",
+                "driver": driver,
+                "program": program,
+                "method": method,
+                "basis": basis,
+                "keywords": keywords,
+                "protocols": protocols,
+                "tag": tag,
+                "priority": priority,
+            },
+            "data": molecule,
+        }
+
+        return self._automodel_request("task_queue", "post", payload, full_return=full_return)
+
+    def add_reactions(self):
+        ...
+
+    def add_optimizations(self):
+        ...
+
+    def add_torsiondrives(self):
+        pass
+
+    def add_gridoptimizations(self):
+        pass
+
+    def get_tasks(
+        self,
+        id: "QueryObjectId",
+    ):
+        pass
+
     def query_tasks(
         self,
         id: Optional["QueryObjectId"] = None,
@@ -891,45 +1097,218 @@ class PortalClient:
 
         return self._automodel_request("task_queue", "get", payload, full_return=full_return)
 
-    # TODO: make this just take collections themselves, not dicts
-    def add_collection(
-        self, collection: Dict[str, Any], overwrite: bool = False, full_return: bool = False
-    ) -> Union["CollectionGETResponse", List["ObjectId"]]:
-        """Adds a new Collection to the server.
+    def modify_tasks(
+        self,  # lgtm [py/similar-function]
+        operation: str,
+        base_result: "QueryObjectId",
+        id: Optional["QueryObjectId"] = None,
+        new_tag: Optional[str] = None,
+        new_priority: Optional[int] = None,
+        full_return: bool = False,
+    ) -> int:
+        """Summary
 
         Parameters
         ----------
-        collection : Dict[str, Any]
-            The full collection data representation.
-        overwrite : bool, optional
-            Overwrites the collection if it already exists in the database, used for updating collection.
+        operation : str
+            The operation to perform on the selected tasks. Valid operations are:
+             - `restart` - Restarts a task by moving its status from 'ERROR' to 'WAITING'
+             - `regenerate` - Regenerates a missing task
+             - `modify` - Modify a tasks tag or priority
+        base_result : QueryObjectId
+            The id of the result that the task is associated with.
+        id : QueryObjectId, optional
+            The id of the individual task to restart. As a note querying tasks via their id is rarely performed and
+            is often an internal quantity.
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
-        List[ObjectId]
-            The ObjectId's of the added collection.
-
+        int
+            The number of modified tasks.
         """
-        # Can take in either molecule or lists
+        operation = operation.lower()
+        valid_ops = {"restart", "regenerate", "modify"}
 
-        if overwrite and ("id" not in collection or collection["id"] == "local"):
-            raise KeyError("Attempting to overwrite collection, but no server ID found (cannot use 'local').")
+        if operation not in valid_ops:
+            raise ValueError(f"Operation '{operation}' is not available, valid operations are: {valid_ops}")
 
-        payload = {"meta": {"overwrite": overwrite}, "data": collection}
-        return self._automodel_request("collection", "post", payload, full_return=full_return)
+        # make sure priority is valid
+        if new_priority is not None:
+            new_priority = PriorityEnum(new_priority).value
 
-    # TODO: consider how we want to submit compute at the client level
-    #
-    def add_records(self):
-        pass
+        payload = {
+            "meta": {"operation": operation},
+            "data": {"id": id, "base_result": base_result, "new_tag": new_tag, "new_priority": new_priority},
+        }
 
-    def add_optimizations(self):
-        pass
+        return self._automodel_request("task_queue", "put", payload, full_return=full_return)
 
-    def add_torsiondrives(self):
-        pass
+    def query_services(
+        self,
+        id: Optional["QueryObjectId"] = None,
+        procedure_id: Optional["QueryObjectId"] = None,
+        hash_index: Optional["QueryStr"] = None,
+        status: Optional["QueryStr"] = None,
+        limit: Optional[int] = None,
+        skip: int = 0,
+        full_return: bool = False,
+    ) -> Union["ServiceQueueGETResponse", List[Dict[str, Any]]]:
+        """Checks the status of services in the Fractal queue.
 
-    def add_gridoptimizations(self):
-        pass
+        Parameters
+        ----------
+        id : QueryObjectId, optional
+            Queries the Services ``id`` field.
+        procedure_id : QueryObjectId, optional
+            Queries the Services ``procedure_id`` field, or the ObjectId of the procedure associated with the service.
+        hash_index : QueryStr, optional
+            Queries the Services ``procedure_id`` field.
+        status : QueryStr, optional
+            Queries the Services ``status`` field.
+        limit : Optional[int], optional
+            The maximum number of Services to query
+        skip : int, optional
+            The number of Services to skip in the query, used during pagination
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        List[Dict[str, Any]]
+            A dictionary of each match that contains the current status
+            and, if an error has occurred, the error message.
+        """
+        payload = {
+            "meta": {"limit": limit, "skip": skip},
+            "data": {"id": id, "procedure_id": procedure_id, "hash_index": hash_index, "status": status},
+        }
+        return self._automodel_request("service_queue", "get", payload, full_return=full_return)
+
+    def modify_services(
+        self,
+        operation: str,
+        id: Optional["QueryObjectId"] = None,
+        procedure_id: Optional["QueryObjectId"] = None,
+        full_return: bool = False,
+    ) -> int:
+        """Checks the status of services in the Fractal queue.
+
+        Parameters
+        ----------
+        operation : str
+            The operation to perform on the selected tasks. Valid operations are:
+             - `restart` - Restarts a task by moving its status from 'ERROR'/'WAITING' to 'RUNNING'
+        id : QueryObjectId, optional
+            Queries the Services ``id`` field.
+        procedure_id : QueryObjectId, optional
+            Queries the Services ``procedure_id`` field, or the ObjectId of the procedure associated with the service.
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        int
+            The number of modified tasks.
+        """
+        operation = operation.lower()
+        valid_ops = {"restart"}
+
+        if operation not in valid_ops:
+            raise ValueError(f"Operation '{operation}' is not available, valid operations are: {valid_ops}")
+
+        payload = {"meta": {"operation": operation}, "data": {"id": id, "procedure_id": procedure_id}}
+
+        return self._automodel_request("service_queue", "put", payload, full_return=full_return)
+
+    def query_managers(
+        self,
+        name: Optional["QueryStr"] = None,
+        status: Optional["QueryStr"] = "ACTIVE",
+        limit: Optional[int] = None,
+        skip: int = 0,
+        full_return: bool = False,
+    ) -> Dict[str, Any]:
+        """Obtains information about compute managers attached to this Fractal instance
+
+        Parameters
+        ----------
+        name : QueryStr, optional
+            Queries the managers name.
+        status : QueryStr, optional
+            Queries the manager's ``status`` field. Default is to search for only ACTIVE managers
+        limit : Optional[int], optional
+            The maximum number of managers to query
+        skip : int, optional
+            The number of managers to skip in the query, used during pagination
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        List[Dict[str, Any]]
+            A dictionary of each match that contains all the information for each manager
+        """
+        payload = {
+            "meta": {"limit": limit, "skip": skip},
+            "data": {"name": name, "status": status},
+        }
+        return self._automodel_request("manager", "get", payload, full_return=full_return)
+
+    # -------------------------------------------------------------------------
+    # ------------------   Advanced Queries -----------------------------------
+    # -------------------------------------------------------------------------
+
+    def custom_query(
+        self,
+        object_name: str,
+        query_type: str,
+        data: Dict[str, Any],
+        limit: Optional[int] = None,
+        skip: int = 0,
+        meta: Dict[str, Any] = None,
+        include: Optional["QueryListStr"] = None,
+        full_return: bool = False,
+    ) -> Any:
+        """Custom queries that are supported by the REST APIs.
+
+        Parameters
+        ----------
+        object_name : str
+            Object name like optimization, datasets, etc (TODO: add more)
+        query_type : str
+            The required query within the given class
+        data : Dict[str, Any]
+            a dictionary of the keys to be used in the query
+        limit : Optional[int], optional
+            The maximum number of Procedures to query
+        skip : int, optional
+            The number of Procedures to skip in the query, used during pagination
+        meta : Dict[str, Any], optional
+            Additional metadata keys to specify
+        include : Optional['QueryListStr'], optional
+            Filters the returned fields, will return a dictionary rather than an object.
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        Any
+        In the form of Dict[str, Any] (TODO)
+        """
+
+        payload = {"meta": {"limit": limit, "skip": skip, "include": include}, "data": data}
+        if meta:
+            payload["meta"].update(meta)
+
+        if query_type:
+            addr = f"{object_name}/{query_type}"
+        else:
+            addr = object_name
+        response = self._automodel_request(addr, "get", payload, full_return=True)
+
+        if full_return:
+            return response
+        else:
+            return response.data
