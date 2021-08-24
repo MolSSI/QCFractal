@@ -689,64 +689,6 @@ class BaseProcedureDataset(Collection):
 
         return mapper
 
-    def _check_entry_exists(self, name):
-        """
-        Checks if an entry exists or not.
-        """
-
-        if name.lower() in self.data.records:
-            raise KeyError(f"Record {name} already in the dataset.")
-
-    def _add_entry(self, name, record, save):
-        """
-        Adds an entry to the records
-        """
-
-        self._check_entry_exists(name)
-        self.data.records[name] = record
-
-    def _get_entry(self, name: str) -> Any:
-        """Obtains an entry from the Dataset
-
-        Parameters
-        ----------
-        name : str
-            The record name to pull from.
-
-        Returns
-        -------
-        Record
-            The requested entry.
-        """
-        try:
-            return self.data.records[name.lower()]
-        except KeyError:
-            raise KeyError(f"Could not find entry name '{name}' in the dataset.")
-
-    def _get_record(self, name: str, specification: str) -> Any:
-        """Pulls an individual computational record of the requested name and column.
-
-        Parameters
-        ----------
-        name : str
-            The index name to pull the record of.
-        specification : str
-            The name of specification to pull the record of.
-
-        Returns
-        -------
-        Any
-            The requested Record
-
-        """
-        spec = self.get_spec(specification)
-        rec_id = self.get_entry(name).object_map.get(spec.name, None)
-
-        if rec_id is None:
-            raise KeyError(f"Could not find a record for ({name}: {specification}).")
-
-        return self._client._query_procedures(id=rec_id)[0]
-
     def compute(
         self, specification: str, subset: Set[str] = None, tag: Optional[str] = None, priority: Optional[str] = None
     ) -> int:
@@ -796,7 +738,11 @@ class BaseProcedureDataset(Collection):
 
         return submitted
 
-    def _query(self, specification: str, series: bool = False, pad: int = 0) -> Union[Dict, pd.Series]:
+    def _query(
+            self,
+            specification: str,
+            series: bool = False,
+            pad: int = 0) -> Union[Dict, pd.Series]:
         """Queries a given specification from the server.
 
         Parameters
