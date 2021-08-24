@@ -11,7 +11,6 @@ from qcelemental.util import get_base_docs
 
 from .common_models import AllResultTypes, KeywordSet, Molecule, ObjectId, ProtoModel, KVStore
 from .gridoptimization import GridOptimizationInput
-from .records import SingleResultRecord
 from .task_models import PriorityEnum, TaskRecord
 from .torsiondrive import TorsionDriveInput
 
@@ -642,12 +641,9 @@ class ResultGETBody(ProtoModel):
 
 class ResultGETResponse(ProtoModel):
     meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
-    # Either a record or dict depending if projection
-    data: Union[List[SingleResultRecord], List[Dict[str, Any]]] = Field(
+    data: List[Dict[str, Optional[Any]]] = Field(
         ...,
-        description="Results found from the query. This is a list of :class:`SingleResultRecord` in most cases, however, "
-        "if a projection was specified in the GET request, then a dict is returned with mappings based "
-        "on the projection.",
+        description="Results found from the query."
     )
 
     @validator("data", pre=True)
