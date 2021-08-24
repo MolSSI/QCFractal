@@ -463,7 +463,7 @@ class PortalClient:
         self,
         id: "QueryObjectId",
         missing_ok: bool = False,
-    ) -> Union[List["Record"], "Record"]:
+    ) -> Union[List["Molecule"], "Molecule"]:
         """Get molecules by id.
 
         Uses the client's own caching for performance.
@@ -601,44 +601,147 @@ class PortalClient:
 
     # TODO: grab this one from Ben's `next` branch
     # TODO: we would want to cache these
-    def _get_wavefunctions(self):
+    def get_wavefunctions(self):
         pass
 
-    def query_molecules(self):
-        pass
-
-    # TODO: would like to merge the functionality of
-    #       `query_result`, `query_procedure`, `query_service`.
-    #       perhaps just `query_record`?
-    # TODO: populate the kwargs on this with queryables from Record datamodel fields
-    def query_records(self, ids: Union[List, "QueryObjectId", int]):
-        pass
-
-    def query_optimizations(self):
-        pass
-
-    def query_torsiondrives(self):
-        pass
-
-    def _query_procedures(
+    def get_tasks(
         self,
-        created_on,
-        modified_on,
-        procedure: Optional["QueryStr"] = None,
+        id: "QueryObjectId",
+    ):
+        pass
+
+    # TODO: we would like more fields to be queryable via the REST API for mols
+    #       e.g. symbols/elements. Unless these are indexed might not be performant.
+    # TODO: for query methods, hands tied to what the REST API exposes
+    def query_molecules(
+        self,
+        molecule_hash: Optional["QueryStr"] = None,
+        molecular_formula: Optional["QueryStr"] = None,
+        limit: Optional[int] = None,
+        skip: int = 0,
+        paginate: bool = False,
+    ) -> List["Molecule"]:
+        """Query molecules by attributes.
+
+        All matching molecules, up to the lower of `limit` or the server's
+        maximum result count, will be returned.
+
+        Parameters
+        ----------
+        molecule_hash : QueryStr, optional
+            Queries the Molecule ``molecule_hash`` field.
+        molecular_formula : QueryStr, optional
+            Queries the Molecule ``molecular_formula`` field. Molecular formulas are case-sensitive.
+            Molecular formulas are not order-sensitive (e.g. "H2O == OH2 != Oh2").
+        limit : Optional[int], optional
+            The maximum number of Molecules to query.
+        skip : int, optional
+            The number of Molecules to skip in the query, used during pagination
+
+        """
+        payload = {
+            "meta": {"limit": limit, "skip": skip},
+            "data": {"molecule_hash": molecule_hash, "molecular_formula": molecular_formula},
+        }
+        molecules = self._automodel_request("molecule", "get", payload)
+
+        # cache results
+        self._cache.put(molecules, entity_type="molecule")
+
+        return molecules
+
+    def _query_cache(self):
+        pass
+
+    # TODO: expand REST API to allow more queryables from Record datamodel fields
+    def query_singlepoint(
+        self,
+        program: Optional["QueryStr"] = None,
+        molecule: Optional["QueryObjectId"] = None,
+        driver: Optional["QueryStr"] = None,
+        method: Optional["QueryStr"] = None,
+        basis: Optional["QueryStr"] = None,
+        keywords: Optional["QueryObjectId"] = None,
         status: "QueryStr" = "COMPLETE",
         limit: Optional[int] = None,
         skip: int = 0,
         include: Optional["QueryListStr"] = None,
-        full_return: bool = False,
-    ) -> Union["ProcedureGETResponse", List[Dict[str, Any]]]:
+    ) -> Union[List["SinglePointtRecord"], List[Dict[str, Any]]]:
+        """Queries SinglePointRecords from the server.
+
+        Parameters
+        ----------
+        program : QueryStr, optional
+            Queries the SinglePointRecord ``program`` field.
+        molecule : QueryObjectId, optional
+            Queries the SinglePointRecord ``molecule`` field.
+        driver : QueryStr, optional
+            Queries the SinglePointRecord ``driver`` field.
+        method : QueryStr, optional
+            Queries the SinglePointRecord ``method`` field.
+        basis : QueryStr, optional
+            Queries the SinglePointRecord ``basis`` field.
+        keywords : QueryObjectId, optional
+            Queries the SinglePointRecord ``keywords`` field.
+        status : QueryStr, optional
+            Queries the SinglePointRecord ``status`` field.
+        limit : Optional[int], optional
+            The maximum number of SinglePointRecords to query
+        skip : int, optional
+            The number of SinglePointRecords to skip in the query, used during pagination
+        include : QueryListStr, optional
+            Filters the returned fields, will return a dictionary rather than an object.
+
+        Returns
+        -------
+        Union[List[SinglePointRecord], List[Dict[str, Any]]]
+            Returns a List of found SinglePointRecords without include,
+            or a List of dictionaries with `include`.
+        """
+        payload = {
+            "meta": {"limit": limit, "skip": skip, "include": include},
+            "data": {
+                "program": program,
+                "molecule": molecule,
+                "driver": driver,
+                "method": method,
+                "basis": basis,
+                "keywords": keywords,
+                "status": status,
+            },
+        }
+        results = self._automodel_request("result", "get", payload)
+
+        # Add references back to the client
+        if not include:
+            for result in results:
+                result.__dict__["client"] = self
+
+            # cache results if we aren't customizing the field set
+            self._cache.put(results, entity_type="record")
+
+        return results
+
+    def query_optimizations(
+        self,
+        procedure: Optional["QueryStr"] = None,
+        program: Optional["QueryStr"] = None,
+        hash_index: Optional["QueryStr"] = None,
+        status: "QueryStr" = "COMPLETE",
+        limit: Optional[int] = None,
+        skip: int = 0,
+        include: Optional["QueryListStr"] = None,
+    ) -> Union[List["OptimizationRecord"], List[Dict[str, Any]]]:
         """Queries Procedures from the server.
 
         Parameters
         ----------
-        task_id : QueryObjectId, optional
-            Queries the Procedure ``task_id`` field.
         procedure : QueryStr, optional
             Queries the Procedure ``procedure`` field.
+        program : QueryStr, optional
+            Queries the Procedure ``program`` field.
+        hash_index : QueryStr, optional
+            Queries the Procedure ``hash_index`` field.
         status : QueryStr, optional
             Queries the Procedure ``status`` field.
         limit : Optional[int], optional
@@ -647,9 +750,6 @@ class PortalClient:
             The number of Procedures to skip in the query, used during pagination
         include : QueryListStr, optional
             Filters the returned fields, will return a dictionary rather than an object.
-        full_return : bool, optional
-            Returns the full server response if True that contains additional metadata.
-            Disables use of client cache.
 
         Returns
         -------
@@ -657,44 +757,68 @@ class PortalClient:
             Returns a List of found RecordResult's without include, or a
             dictionary of results with include.
         """
-        # passthrough the cache first
-        # if id is specified
-        if not full_return:
-            procs = self._cache.get(id)
 
-            if isinstance(id, list):
-                for i in procs:
-                    id.remove(i)
-            else:
-                id = None
-
-        # NOTE: is there a way to query the server with this kind of structure,
-        #       but only get back object ids or perhaps hash_indices?
-        #       This would allow our cache to be fairly dumb on this side, just a kv store
         payload = {
             "meta": {"limit": limit, "skip": skip, "include": include},
             "data": {
-                "id": id,
-                "task_id": task_id,
                 "program": program,
                 "procedure": procedure,
                 "hash_index": hash_index,
                 "status": status,
             },
         }
-        response = self._automodel_request("procedure", "get", payload, full_return=True)
+        optimizations = self._automodel_request("procedure", "get", payload)
 
         if not include:
-            for ind in range(len(response.data)):
-                response.data[ind] = record_factory(response.data[ind])
+            for ind in range(len(optimizations)):
+                optimizations[ind] = record_factory(optimizations[ind], client=self)
 
-        if full_return:
-            return response
-        else:
-            # NOTE: no particular order returned here
-            # could put the "only complete" logic into the cache itself as a policy
-            self._cache.put([proc for proc in response.data if proc.status == "COMPLETE"])
-            return response.data + list(procs.values())
+            # cache optimizations if we aren't customizing the field set
+            self._cache.put(optimizations, entity_type="record")
+
+        return optimizations
+
+    def query_torsiondrives(
+        self,
+        id: Optional["QueryObjectId"] = None,
+        procedure_id: Optional["QueryObjectId"] = None,
+        hash_index: Optional["QueryStr"] = None,
+        status: Optional["QueryStr"] = None,
+        limit: Optional[int] = None,
+        skip: int = 0,
+        full_return: bool = False,
+    ) -> Union["ServiceQueueGETResponse", List[Dict[str, Any]]]:
+        """Checks the status of services in the Fractal queue.
+
+        Parameters
+        ----------
+        id : QueryObjectId, optional
+            Queries the Services ``id`` field.
+        procedure_id : QueryObjectId, optional
+            Queries the Services ``procedure_id`` field, or the ObjectId of the procedure associated with the service.
+        hash_index : QueryStr, optional
+            Queries the Services ``procedure_id`` field.
+        status : QueryStr, optional
+            Queries the Services ``status`` field.
+        limit : Optional[int], optional
+            The maximum number of Services to query
+        skip : int, optional
+            The number of Services to skip in the query, used during pagination
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        List[Dict[str, Any]]
+            A dictionary of each match that contains the current status
+            and, if an error has occurred, the error message.
+        """
+        payload = {
+            "meta": {"limit": limit, "skip": skip},
+            "data": {"id": id, "procedure_id": procedure_id, "hash_index": hash_index, "status": status},
+        }
+        return self._automodel_request("service_queue", "get", payload, full_return=full_return)
+        pass
 
     def query_tasks(
         self,
