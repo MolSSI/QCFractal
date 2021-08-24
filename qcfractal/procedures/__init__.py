@@ -4,13 +4,13 @@ Import file for procedures
 
 from typing import Union, List
 
-from .single import SingleResultTasks
+from .single import SinglePointTasks
 from .optimization import OptimizationTasks
 from .failure import FailedOperationHandler
 
-supported_procedures = Union[SingleResultTasks, OptimizationTasks]
+supported_procedures = Union[SinglePointTasks, OptimizationTasks]
 __procedure_map = {
-    "single": SingleResultTasks,
+    "single": SinglePointTasks,
     "optimization": OptimizationTasks,
     "failed_operation": FailedOperationHandler,
 }
@@ -34,7 +34,7 @@ def get_procedure_parser(procedure_type: str, storage) -> supported_procedures:
     Returns
     -------
     A parser class corresponding to the procedure_type:
-        'single' --> SingleResultTasks
+        'single' --> SinglePointTasks
         'optimization' --> OptimizationTasks
     """
 

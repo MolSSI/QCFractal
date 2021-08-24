@@ -11,6 +11,7 @@ from qcelemental.util import get_base_docs
 
 from .common_models import AllResultTypes, KeywordSet, Molecule, ObjectId, ProtoModel, KVStore
 from .gridoptimization import GridOptimizationInput
+from .records import SinglePointRecord
 from .task_models import PriorityEnum, TaskRecord
 from .torsiondrive import TorsionDriveInput
 
