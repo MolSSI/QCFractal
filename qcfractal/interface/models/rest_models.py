@@ -641,13 +641,7 @@ class ResultGETBody(ProtoModel):
 
 class ResultGETResponse(ProtoModel):
     meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
-    # Either a record or dict depending if projection
-    data: Union[List[SingleResultRecord], List[Dict[str, Any]]] = Field(
-        ...,
-        description="Results found from the query. This is a list of :class:`SingleResultRecord` in most cases, however, "
-        "if a projection was specified in the GET request, then a dict is returned with mappings based "
-        "on the projection.",
-    )
+    data: List[Dict[str, Optional[Any]]] = Field(..., description="Results found from the query.")
 
 
 register_model("result", "GET", ResultGETBody, ResultGETResponse)
