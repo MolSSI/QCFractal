@@ -753,7 +753,7 @@ class TaskQueueGETBody(ProtoModel):
             None,
             description="The exact Id of the Result which this Task is linked to. If this is set as a "
             "search condition, there is no reason to set anything else as this will be unique in the "
-            "database, if it exists. See also :class:`SingleResultRecord`.",
+            "database, if it exists. See also :class:`SinglePointRecord`.",
         )
         tag: QueryStr = Field(None, description="Tasks will be searched based on their associated tag.")
         manager: QueryStr = Field(
@@ -826,7 +826,7 @@ class TaskQueuePUTBody(ProtoModel):
             None,
             description="The exact Id of a result which this Task is slated to write to. If this is set as a "
             "search condition, there is no reason to set anything else as this will be unique in the "
-            "database, if it exists. See also :class:`SingleResultRecord`.",
+            "database, if it exists. See also :class:`SinglePointRecord`.",
         )
         new_tag: Optional[str] = Field(
             None,
@@ -1122,7 +1122,7 @@ class OptimizationFinalMoleculeBody(ProtoModel):
 class ResultResponse(ProtoModel):
     meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
     # Either a record or dict depending if projection
-    data: Union[Dict[str, SingleResultRecord], Dict[str, Any]] = Field(
+    data: Union[Dict[str, SinglePointRecord], Dict[str, Any]] = Field(
         ..., description="A List of Results found from the query per optimization id."
     )
 
@@ -1130,7 +1130,7 @@ class ResultResponse(ProtoModel):
 class ListResultResponse(ProtoModel):
     meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
     # Either a record or dict depending if projection
-    data: Union[Dict[str, List[SingleResultRecord]], Dict[str, Any]] = Field(
+    data: Union[Dict[str, List[SinglePointRecord]], Dict[str, Any]] = Field(
         ..., description="A List of Results found from the query per optimization id."
     )
 

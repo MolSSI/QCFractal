@@ -3,7 +3,7 @@ from typing import List, Optional, Set, Union
 from sqlalchemy import Integer, inspect
 from sqlalchemy.sql import bindparam, text
 
-from qcfractal.interface.models import Molecule, SingleResultRecord
+from qcfractal.interface.models import Molecule, SinglePointRecord
 from qcfractal.storage_sockets.models import MoleculeORM, ResultORM
 
 QUERY_CLASSES = set()
@@ -330,7 +330,7 @@ class OptimizationQueries(QueryBase):
             if key not in ret:
                 ret[key] = []
 
-            ret[key].append(SingleResultRecord(**rec))
+            ret[key].append(SinglePointRecord(**rec))
 
         return ret
 
@@ -372,7 +372,7 @@ class OptimizationQueries(QueryBase):
         for rec in query_result:
             self._remove_excluded_keys(rec)
             key = rec.pop("opt_id")
-            ret[key] = SingleResultRecord(**rec)
+            ret[key] = SinglePointRecord(**rec)
 
         return ret
 
