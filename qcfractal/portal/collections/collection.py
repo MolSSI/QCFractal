@@ -207,13 +207,16 @@ class Collection(abc.ABC):
     @classmethod
     def from_dict(cls, data: Dict[str, Any], client: "FractalClient" = None) -> "Collection":
         """Creates a new Collection instance from a dict representation.
+
         Allows roundtrips from `Collection.to_dict`.
+
         Parameters
         ----------
         data : Dict[str, Any]
             A dict to create a new Collection instance from.
         client : FractalClient, optional
             A FractalClient connected to a server.
+
         Returns
         -------
         Collection
@@ -239,8 +242,10 @@ class Collection(abc.ABC):
     @classmethod
     def from_json(cls, jsondata: Optional[str] = None, filename: Optional[str] = None, client: "FractalClient" = None) -> "Collection":
         """Creates a new Collection instance from a JSON string.
+
         Allows roundtrips from `Collection.to_json`.
         One of `jsondata` or `filename` must be provided.
+
         Parameters
         ----------
         jsondata : str, Optional, Default: None
@@ -249,6 +254,7 @@ class Collection(abc.ABC):
             The filename to read JSON data from.
         client : FractalClient, optional
             A FractalClient connected to a server.
+
         Returns
         -------
         Collection
@@ -268,8 +274,8 @@ class Collection(abc.ABC):
         return cls.from_dict(data, client)
 
     def to_dict(self):
-        """
-        Returns a copy of the current Collection data as a Python dict.
+        """Return a copy of the current Collection data as a Python dict.
+
         Returns
         -------
         ret : dict
@@ -279,13 +285,16 @@ class Collection(abc.ABC):
         return copy.deepcopy(datadict)
 
     def to_json(self, filename: Optional[str] = None):
-        """
+        """Return JSON string representation of the Collection.
+
         If a filename is provided, dumps the file to disk.
         Otherwise returns data as a JSON string.
+
         Parameters
         ----------
         filename : str, Optional, Default: None
             The filename to write JSON data to.
+
         Returns
         -------
         ret : dict
