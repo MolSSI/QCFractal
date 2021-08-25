@@ -499,23 +499,31 @@ class PortalClient:
         List[KeywordSet]
             The requested KeywordSet objects.
         """
-        original_id = copy.deepcopy(id)
-        id = make_list(id)
+        str_id = make_str(id)
+        ids = make_list(str_id)
 
-        payload = {"meta": {}, "data": {"id": id}}
-        results = self._automodel_request("keyword", "get", payload)
+        # workaround since keywords don't have thier own id field set
+        # otherwise we could do this all in one API query
+        results = {}
+        for i in ids:
+            payload = {"meta": {}, "data": {"id": i}}
+            result = self._automodel_request("keyword", "get", payload)
+            if result:
+                results[i] = result[0]
+            else:
+                results[i] = None
 
         # check that we have results for all ids asked for
-        missing = set(make_list(original_id)) - set(results.keys())
+        missing = set(make_list(str_id)) - set(results.keys())
 
         if missing and not missing_ok:
             raise KeyError(f"No objects found for `id`: {missing}")
 
         # order the results by input id list
-        if isinstance(original_id, list):
-            ordered = [results.get(i, None) for i in original_id]
+        if isinstance(id, list):
+            ordered = [results.get(i, None) for i in str_id]
         else:
-            ordered = results.get(original_id, None)
+            ordered = results.get(str_id, None)
 
         return ordered
 
@@ -669,9 +677,8 @@ class PortalClient:
         else:
             raise KeyError("Collection '{}:{}' not found.".format(collection_type, name))
 
-    # TODO: make this just take collections themselves, not dicts
     def add_collection(
-        self, collection: Dict[str, Any], overwrite: bool = False, full_return: bool = False
+        self, collection: "Collection", overwrite: bool = False
     ) -> Union["CollectionGETResponse", List["ObjectId"]]:
         """Adds a new Collection to the server.
 
@@ -681,22 +688,18 @@ class PortalClient:
             The full collection data representation.
         overwrite : bool, optional
             Overwrites the collection if it already exists in the database, used for updating collection.
-        full_return : bool, optional
-            Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
-        List[ObjectId]
-            The ObjectId's of the added collection.
+        ObjectId
+            The ObjectId of the added collection.
 
         """
-        # Can take in either molecule or lists
-
-        if overwrite and ("id" not in collection or collection["id"] == "local"):
+        if overwrite and collection.id == "local":
             raise KeyError("Attempting to overwrite collection, but no server ID found (cannot use 'local').")
 
-        payload = {"meta": {"overwrite": overwrite}, "data": collection}
-        return self._automodel_request("collection", "post", payload, full_return=full_return)
+        payload = {"meta": {"overwrite": overwrite}, "data": collection.to_dict()}
+        return self._automodel_request("collection", "post", payload)
 
     def delete_collection(self, collection_type: str, name: str) -> None:
         """Deletes a given collection from the server.
@@ -753,8 +756,8 @@ class PortalClient:
 
         def get_records(payload):
             records = self._automodel_request("procedure", "get", payload)
-            results = {res["id"]: record_factory(res, client=self) for res in results}
-            to_cache = [record for record in records if record.status == RecordStatusEnum.complete]
+            results = {res["id"]: record_factory(res, client=self) for res in records}
+            to_cache = [record for record in results.values() if record.status == RecordStatusEnum.complete]
 
             return results, to_cache
 
