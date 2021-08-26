@@ -313,23 +313,12 @@ class PortalClient:
 
         # pass through the cache first
         # remove any ids that were found in cache
-        cached = self._cache.get(ids, entity_type=entity_type)
-
-        if include is not None:
-            if "id" not in include:
-                include.append("id")
-
-        # if we have some field filtering, apply filter to cached items
-        # want these as dictionary forms
-        if include is not None:
-            converted = {}
-            for i, item in cached.items():
-                converted_item = {}
-                itemd = item.dict()
-                for field in include:
-                    converted_item[field] = itemd[field]
-                converted[i] = converted_item
-            cached = converted
+        # if `include` filters passed, don't use cache, just query DB, as it's often faster
+        # for a few fields
+        if include is None:
+            cached = self._cache.get(ids, entity_type=entity_type)
+        else:
+            cached = {}
 
         for i in cached:
             ids.remove(i)
@@ -342,13 +331,16 @@ class PortalClient:
                 return cached[str_id]
 
         # molecule getting does *not* support "include"
-        if include is not None:
+        if include is None:
             payload = {
-                "meta": {"include": include},
                 "data": {"id": ids},
             }
         else:
+            if "id" not in include:
+                include.append("id")
+
             payload = {
+                "meta": {"include": include},
                 "data": {"id": ids},
             }
 
