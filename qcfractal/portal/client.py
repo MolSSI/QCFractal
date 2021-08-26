@@ -306,13 +306,30 @@ class PortalClient:
         else:
             return None
 
-    def _get_with_cache(self, func, id, missing_ok, entity_type):
+    def _get_with_cache(self, func, id, missing_ok, entity_type, include=None):
         str_id = make_str(id)
         ids = make_list(str_id)
         
         # pass through the cache first
         # remove any ids that were found in cache
         cached = self._cache.get(ids, entity_type=entity_type)
+
+        if include is not None:
+            if 'id' not in include:
+                include.append('id')
+
+        # if we have some field filtering, apply filter to cached items
+        # want these as dictionary forms
+        if include is not None:
+            converted = {}
+            for i, item in cached.items():
+                converted_item = {}
+                itemd = item.dict()
+                for field in include:
+                    converted_item[field] = itemd[field]
+                converted[i] = converted_item
+            cached = converted
+
         for i in cached:
             ids.remove(i)
         
@@ -323,13 +340,22 @@ class PortalClient:
             else:
                 return cached[str_id]
         
-        payload = {
-            "data": {"id": ids},
-        }
+        # molecule getting does *not* support "include"
+        if include is not None:
+            payload = {
+                "meta": {"include": include},
+                "data": {"id": ids},
+            }
+        else:
+            payload = {
+                "data": {"id": ids},
+            }
         
         results, to_cache = func(payload)
         
-        self._cache.put(to_cache, entity_type=entity_type)
+        # we only cache if no field filtering was done
+        if include is None:
+            self._cache.put(to_cache, entity_type=entity_type)
         
         # combine cached records with queried results
         results.update(cached)
@@ -345,7 +371,7 @@ class PortalClient:
             ordered = [results.get(i, None) for i in str_id]
         else:
             ordered = results.get(str_id, None)
-        
+
         return ordered
 
     def _query_cache(self):
@@ -727,10 +753,11 @@ class PortalClient:
         pass
 
     def get_records(
-            self, 
-            id: "QueryObjectId",
-            missing_ok: bool = False,
-            ) -> Union[List["Record"], "Record"]:
+        self, 
+        id: "QueryObjectId",
+        missing_ok: bool = False,
+        include: Optional["QueryListStr"] = None,
+    ) -> Union[List["Record"], "Record"]:
         """Get result records by id.
 
         This is used by collections to retrieve their results when demanded.
@@ -744,24 +771,34 @@ class PortalClient:
         missing_ok : bool
             If True, return ``None`` for ids with no associated result.
             If False, raise ``KeyError`` for an id with no result on the server.
+        include : QueryListStr, optional
+            Filters the returned fields, will return a dictionary rather than an object.
 
         Returns
         -------
-        records : Union[List[Record], Record]
+        records : Union[List[Record], Record, List[Dict[str, Any]], Dict[str, Any]]
             If `id` is a list of ids, then a list of records will be returned in the same order.
             If `id` is a single id, then only that record will be returned.
+            If `include` set, then all records will be dictionaries with only those fields and 'id'.
 
         """
 
         def get_records(payload):
             records = self._automodel_request("procedure", "get", payload)
-            results = {res['id']: record_factory(res, client=self) for res in records}
-            to_cache = [record for record in results.values()
-                        if record.status == RecordStatusEnum.complete]
+
+            # if `include` filter set, we must return dicts for each record
+            if ("meta" in payload) and ("include" in payload["meta"]):
+                results = {res['id']: res for res in records}
+                to_cache = []
+            else:
+                results = {res['id']: record_factory(res, client=self) for res in records}
+                to_cache = [record for record in results.values()
+                            if record.status == RecordStatusEnum.complete]
 
             return results, to_cache
 
-        return self._get_with_cache(get_records, id, missing_ok, entity_type="record")
+        return self._get_with_cache(get_records, id, missing_ok,
+                                    entity_type="record", include=include)
 
     # TODO: expand REST API to allow more queryables from Record datamodel fields
     def query_singlepoint(
@@ -796,7 +833,7 @@ class PortalClient:
         status : QueryStr, optional
             Queries the SinglePointRecord ``status`` field.
         limit : Optional[int], optional
-            The maximum number of SinglePointRecords to query
+            The maximum number of SinglePointRecords to query, up to server's own query limit.
         skip : int, optional
             The number of SinglePointRecords to skip in the query, used during pagination
         include : QueryListStr, optional
@@ -824,8 +861,7 @@ class PortalClient:
 
         # Add references back to the client
         if not include:
-            for result in results:
-                result.__dict__["client"] = self
+            results = [record_factory(res, client=self) for res in results]
 
             # cache results if we aren't customizing the field set
             self._cache.put(results, entity_type="record")
