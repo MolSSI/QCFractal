@@ -84,10 +84,7 @@ class PortalCache:
 
         # add to fs cache
         if db is not None:
-            if entity_type == "molecule":
-                db[key] = lzma.compress(item.json().encode("utf-8"))
-            elif entity_type == "record":
-                db[key] = lzma.compress(item.to_json().encode("utf-8"))
+            db[key] = lzma.compress(item.json().encode("utf-8"))
 
     def get(self, ids: List[str], entity_type: str) -> Dict[str, Any]:
         """Get a list of items out of the cache.
