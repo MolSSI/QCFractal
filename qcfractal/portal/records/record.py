@@ -255,6 +255,9 @@ class Record(abc.ABC):
         datadict = self._data.dict()
         return copy.deepcopy(datadict)
 
+    # alias for to_json, for duck-typing parity with pydantic
+    dict = to_dict
+
     def to_json(self, filename: Optional[str] = None) -> str:
         """Returns the current Record data as JSON.
 
@@ -278,6 +281,9 @@ class Record(abc.ABC):
                 open_file.write(jsondata)
         else:
             return jsondata
+
+    # alias for to_json, for duck-typing parity with pydantic
+    json = to_json
 
     @property
     def status(self):

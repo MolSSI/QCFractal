@@ -19,7 +19,7 @@ class SinglePointRecord(Record):
     """
 
     _SpecModel = SinglePointSpecification
-    _type = "singleresult"
+    _type = "single"
 
     class _DataModel(Record._DataModel):
         # Classdata

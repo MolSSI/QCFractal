@@ -571,11 +571,22 @@ class Collection(abc.ABC):
         elif isinstance(status, list):
             status = [s.lower() for s in status]
 
-        records = self[spec_names]
+        if isinstance(spec_names, list):
+            pad = max(map(len, spec_names))
+            records = {sp: self._query(sp, pad=pad, include=["status"]) for sp in spec_names}
+        else:
+            return self._query(spec_names, include=["status"])
 
-        status_data = pd.DataFrame(records).applymap(
-            lambda x: x.status.value if (isinstance(x, Record) and hasattr(x.status, "value")) else None
-        )
+        def get_status(record):
+            if isinstance(record, dict):
+                if hasattr(record["status"], "value"):
+                    return record["status"].value
+                else:
+                    return record["status"]
+            else:
+                return None
+
+        status_data = pd.DataFrame(records).applymap(get_status)
 
         # apply filters
         if status is not None:
@@ -726,7 +737,13 @@ class BaseProcedureDataset(Collection):
 
         return submitted
 
-    def _query(self, specification: str, series: bool = False, pad: int = 0) -> Union[Dict, pd.Series]:
+    def _query(
+        self,
+        specification: str,
+        series: bool = False,
+        pad: int = 0,
+        include: Optional["QueryListStr"] = None,
+    ) -> Union[Dict, pd.Series]:
         """Queries a given specification from the server.
 
         Parameters
@@ -737,6 +754,8 @@ class BaseProcedureDataset(Collection):
             If True, return a `pandas.Series`.
         pad : int
             Spaces to pad spec names in progress output
+        include : QueryListStr, optional
+            Filters the returned fields, will return a dictionary rather than an object.
 
         Returns
         -------
@@ -756,9 +775,12 @@ class BaseProcedureDataset(Collection):
             desc="{} || {} ".format(specification.rjust(pad), self._client.address),
         ):
             chunk_ids = query_ids[i : i + self._client.query_limit]
-            procedures.extend(self._client.get_records(id=chunk_ids))
+            procedures.extend(self._client.get_records(id=chunk_ids, include=include))
 
-        proc_lookup = {x.id: x for x in procedures}
+        if include is not None:
+            proc_lookup = {x["id"]: x for x in procedures}
+        else:
+            proc_lookup = {x.id: x for x in procedures}
 
         data = {}
         for name, oid in mapper.items():
