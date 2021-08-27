@@ -157,6 +157,9 @@ class Collection(abc.ABC):
         return f"<{self}>"
 
     def __getitem__(self, spec: Union[List[str], str]):
+        return self._get_records_for_spec(spec)
+
+    def _get_records_for_spec(self, spec: Union[List[str], str]):
         if isinstance(spec, list):
             pad = max(map(len, spec))
             return {sp: self._query(sp, pad=pad) for sp in spec}
@@ -571,11 +574,7 @@ class Collection(abc.ABC):
         elif isinstance(status, list):
             status = [s.lower() for s in status]
 
-        if isinstance(spec_names, list):
-            pad = max(map(len, spec_names))
-            records = {sp: self._query(sp, pad=pad, include=["status"]) for sp in spec_names}
-        else:
-            return self._query(spec_names, include=["status"])
+        records = self._get_records_for_spec(spec_names)
 
         def get_status(record):
             if isinstance(record, dict):
@@ -762,10 +761,7 @@ class BaseProcedureDataset(Collection):
         Union[Dict, pd.Series]
             Records collected from the server.
         """
-        # Try to get the specification, will exception if not found.
-        spec = self.get_spec(specification)
-
-        mapper = self._get_procedure_ids(spec.name)
+        mapper = self._get_procedure_ids(specification)
         query_ids = list(mapper.values())
 
         # Chunk up the queries
