@@ -9,14 +9,33 @@ import numpy as np
 import pandas as pd
 from qcelemental import constants
 
-from ..models import Molecule, ProtoModel
-from ..util import replace_dict_keys
-from .collection_utils import nCr, register_collection
+from ...interface.models import Molecule, ProtoModel
+from ...interface.util import replace_dict_keys
+from .collection_utils import register_collection
 from .dataset import Dataset
 
 if TYPE_CHECKING:  # pragma: no cover
     from .. import FractalClient
     from ..models import ComputeResponse
+
+
+def nCr(n: int, r: int) -> int:
+    """
+    Compute the binomial coefficient n! / (k! * (n-k)!)
+
+    Parameters
+    ----------
+    n : int
+        Number of samples
+    r : int
+        Denominator
+
+    Returns
+    -------
+    ret : int
+        Value
+    """
+    return math.factorial(n) / math.factorial(r) / math.factorial(n - r)
 
 
 class _ReactionTypeEnum(str, Enum):
@@ -71,7 +90,7 @@ class ReactionDataset(Dataset):
         ds_type = ds_type.lower()
         super().__init__(name, client=client, ds_type=ds_type, **kwargs)
 
-    class DataModel(Dataset.DataModel):
+    class _DataModel(Dataset._DataModel):
 
         ds_type: _ReactionTypeEnum = _ReactionTypeEnum.rxn
         records: Optional[List[ReactionEntry]] = None

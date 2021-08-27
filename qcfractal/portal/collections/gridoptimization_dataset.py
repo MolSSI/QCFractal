@@ -3,8 +3,8 @@ QCPortal Database ODM
 """
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
-from ..models import GridOptimizationInput, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
-from ..models.gridoptimization import GOKeywords
+from ...interface.models import GridOptimizationInput, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
+from ...interface.models.gridoptimization import GOKeywords
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
 
@@ -31,13 +31,13 @@ class GOEntrySpecification(ProtoModel):
 
 
 class GridOptimizationDataset(BaseProcedureDataset):
-    class DataModel(BaseProcedureDataset.DataModel):
+    class _DataModel(BaseProcedureDataset._DataModel):
 
         records: Dict[str, GOEntry] = {}
         history: Set[str] = set()
         specs: Dict[str, GOEntrySpecification] = {}
 
-        class Config(BaseProcedureDataset.DataModel.Config):
+        class Config(BaseProcedureDataset._DataModel.Config):
             pass
 
     def _internal_compute_add(self, spec: Any, entry: Any, tag: str, priority: str) -> ObjectId:

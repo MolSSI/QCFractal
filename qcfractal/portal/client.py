@@ -14,7 +14,7 @@ import pandas as pd
 
 from ..interface.models.rest_models import rest_model
 from ..interface.models import RecordStatusEnum
-from .collections import collection_factory, collections_name_map
+from .collections import Collection, collection_factory, collections_name_map
 from .records import record_factory, record_name_map
 from .cache import PortalCache
 
@@ -696,13 +696,13 @@ class PortalClient:
             raise KeyError("Collection '{}:{}' not found.".format(collection_type, name))
 
     def add_collection(
-        self, collection: "Collection", overwrite: bool = False
+        self, collection: Collection, overwrite: bool = False
     ) -> Union["CollectionGETResponse", List["ObjectId"]]:
         """Adds a new Collection to the server.
 
         Parameters
         ----------
-        collection : Dict[str, Any]
+        collection :
             The full collection data representation.
         overwrite : bool, optional
             Overwrites the collection if it already exists in the database, used for updating collection.
@@ -793,7 +793,7 @@ class PortalClient:
                                     entity_type="record", include=include)
 
     # TODO: expand REST API to allow more queryables from Record datamodel fields
-    def query_singlepoint(
+    def query_singlepoints(
         self,
         program: Optional["QueryStr"] = None,
         molecule: Optional["QueryObjectId"] = None,
@@ -860,7 +860,9 @@ class PortalClient:
 
         return results 
 
-    def query_reactions():
+    def query_reactions(
+            self,
+            ):
         ...
 
     def query_optimizations(

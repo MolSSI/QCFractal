@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import pandas as pd
 
-from ..models import ObjectId, OptimizationSpecification, ProtoModel, QCSpecification, TorsionDriveInput
-from ..models.torsiondrive import TDKeywords
-from ..visualization import custom_plot
+from ...interface.models import ObjectId, OptimizationSpecification, ProtoModel, QCSpecification, TorsionDriveInput
+from ...interface.models.torsiondrive import TDKeywords
+from ...interface.visualization import custom_plot
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
 
@@ -33,13 +33,13 @@ class TDEntrySpecification(ProtoModel):
 
 
 class TorsionDriveDataset(BaseProcedureDataset):
-    class DataModel(BaseProcedureDataset.DataModel):
+    class _DataModel(BaseProcedureDataset._DataModel):
 
         records: Dict[str, TDEntry] = {}
         history: Set[str] = set()
         specs: Dict[str, TDEntrySpecification] = {}
 
-        class Config(BaseProcedureDataset.DataModel.Config):
+        class Config(BaseProcedureDataset._DataModel.Config):
             pass
 
     def _internal_compute_add(self, spec: Any, entry: Any, tag: str, priority: str) -> ObjectId:

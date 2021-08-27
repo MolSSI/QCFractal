@@ -105,6 +105,13 @@ class Dataset(Collection):
         history_keys: Tuple[str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords")
 
     def _apply_remappings(self, datadict):
+        """This is a collection of temprorary shims applied
+        to the datamodel after it is initialized.
+
+        Eventually, the datamodel should be upgraded and database should be migrated to
+        make these changes part of the datamodel itself.
+
+        """
         datadict['records'] = {record['name']: MoleculeEntry(**record) for record in (datadict['records'])}
 
         datadict['specs'] = dict()
@@ -148,9 +155,99 @@ class Dataset(Collection):
         # Load contributed columns
         #self._column_metadata: Dict[str, Any] = {}
 
+    def _get_procedure_ids(
+            self,
+            specification: str,
+            sieve: Optional[List[str]] = None
+        ) -> Dict[str, "ObjectId"]:
+        """Get a mapping of record names to its object ID in the database.
 
-    def _query(self, spec):
-        pass
+        Parameters
+        ----------
+        spec : str
+            The specification name to get mapping for.
+        sieve : Optional[List[str]], optional
+            List of record names to restrict the mapping to.
+
+        Returns
+        -------
+        Dict[str, ObjectId]
+            A dictionary of identifier to id mappings.
+
+        """
+        # Try to get the specification, will exception if not found.
+        spec = self.get_spec(specification)
+
+        mapper = {}
+        for rec in self._data.records.values():
+            if sieve and rec.name not in sieve:
+                continue
+
+            try:
+                td_id = rec.object_map[spec.name]
+                mapper[rec.name] = td_id
+            except KeyError:
+                pass
+
+        return mapper
+
+    def _query(
+            self,
+            specification: str,
+            series: bool = False,
+            pad: int = 0,
+            include: Optional["QueryListStr"] = None,
+        ) -> Union[Dict, pd.Series]:
+        """Queries a given specification from the server.
+
+        Parameters
+        ----------
+        specification : str
+            The specification name to query.
+        series : bool
+            If True, return a `pandas.Series`.
+        pad : int
+            Spaces to pad spec names in progress output
+        include : QueryListStr, optional
+            Filters the returned fields, will return a dictionary rather than an object.
+
+        Returns
+        -------
+        Union[Dict, pd.Series]
+            Records collected from the server.
+
+        """
+        # Try to get the specification, will exception if not found.
+        spec = self.get_spec(specification)
+
+        mapper = self._get_procedure_ids(spec.name)
+        query_ids = list(mapper.values())
+
+        # Chunk up the queries
+        procedures: List[Dict[str, Any]] = []
+        for i in tqdm(
+            range(0, len(query_ids), self._client.query_limit),
+            desc="{} || {} ".format(specification.rjust(pad), self._client.address),
+        ):
+            chunk_ids = query_ids[i : i + self._client.query_limit]
+            procedures.extend(self._client.get_records(id=chunk_ids, include=include))
+
+        if include is not None:
+            proc_lookup = {x['id']: x for x in procedures}
+        else:
+            proc_lookup = {x.id: x for x in procedures}
+
+        data = {}
+        for name, oid in mapper.items():
+            try:
+                data[name] = proc_lookup[oid]
+            except KeyError:
+                data[name] = None
+
+        if series:
+            return pd.Series(data)
+        else:
+            return data
 
     def _pre_sync_prep(self, client: "PortalClient") -> None:
         pass
