@@ -1,8 +1,11 @@
 from collections import defaultdict
-import re
+from tabulate import tabulate
+
+from datetime import datetime
+import json
 import os
-import copy
-from contextlib import contextmanager
+from pkg_resources import parse_version
+from . import __version__
 
 import requests
 
@@ -13,10 +16,30 @@ from pydantic import ValidationError
 import pandas as pd
 
 from ..interface.models.rest_models import rest_model
-from ..interface.models import RecordStatusEnum
+from ..interface.models import RecordStatusEnum, ManagerStatusEnum, PriorityEnum
 from .collections import Collection, collection_factory, collections_name_map
-from .records import record_factory, record_name_map
+from .records import record_factory
 from .cache import PortalCache
+
+if TYPE_CHECKING:  # pragma: no cover
+    from .collections.collection import Collection
+    from ..interface.models import (
+        KeywordSet,
+        Molecule,
+        ObjectId,
+        TaskRecord,
+    )
+    from ..interface.models.rest_models import (
+        CollectionGETResponse,
+        ComputeResponse,
+        KeywordGETResponse,
+        QueryObjectId,
+        QueryListStr,
+        QueryStr,
+        ServiceQueueGETResponse,
+        TaskQueueGETResponse,
+        WavefunctionStoreGETResponse,
+    )
 
 
 _T = TypeVar("_T")
@@ -27,17 +50,6 @@ _ssl_error_msg = (
     "If you trust the server you are connecting to, try 'PortalClient(... verify=False)'"
 )
 _connection_error_msg = "\n\nCould not connect to server {}, please check the address and try again."
-
-
-def _version_list(version):
-    version_match = re.search(r"\d+\.\d+\.\d+", version)
-    if version_match is None:
-        raise ValueError(
-            f"Could not read version of form XX.YY.ZZ from {version}. There is something very "
-            f"malformed about the version string. Please report this to the Fractal developers."
-        )
-    version = version_match.group(0)
-    return [int(x) for x in version.split(".")]
 
 
 def make_list(obj: Optional[Union[_T, Sequence[_T]]]) -> Optional[List[_T]]:
@@ -129,7 +141,9 @@ class PortalClient:
         self.address = address
         self.username = username
         self._verify = verify
+
         self._headers: Dict[str, str] = {}
+        self._headers["User-Agent"] = f"qcportal/{__version__}"
         self.encoding = "msgpack-ext"
 
         # Mode toggle for network error testing, not public facing
@@ -142,13 +156,8 @@ class PortalClient:
             requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
         if (username is not None) or (password is not None):
-            self._headers["Authorization"] = json.dumps({"username": username, "password": password})
+            self._get_JWT_token(username, password)
 
-        from . import __version__  # Import here to avoid circular import
-        from . import _isportal
-
-        self._headers["Content-Type"] = f"application/{self.encoding}"
-        self._headers["User-Agent"] = f"qcportal/{__version__}"
 
         self._request_counter: DefaultDict[Tuple[str, str], int] = defaultdict(int)
 
@@ -158,37 +167,19 @@ class PortalClient:
         self.server_info = self._automodel_request("information", "get", {}, full_return=True).dict()
 
         self.server_name = self.server_info["name"]
-        self.query_limit: int = self.server_info["query_limit"]
+        self.query_limits = self.server_info["query_limits"]
 
-        if _isportal:
-            try:
-                server_version_min_client = _version_list(self.server_info["client_lower_version_limit"])[:2]
-                server_version_max_client = _version_list(self.server_info["client_upper_version_limit"])[:2]
-            except KeyError:
-                server_ver_str = ".".join([str(i) for i in self.server_info["version"]])
-                raise IOError(
-                    f"The Server at {self.address}, version {self.server_info['version']} does not report "
-                    f"what Client versions it accepts! It can be almost asserted your Client is too new for "
-                    f"the Server you are connecting to. Please downgrade your Client with "
-                    f"the one of following commands (pip or conda):"
-                    f"\n\t- pip install qcportal=={server_ver_str}"
-                    f"\n\t- conda install -c conda-forge qcportal=={server_ver_str}"
-                    f"\n(Only MAJOR.MINOR versions are checked)"
-                )
-            client_version = _version_list(__version__)[:2]
-            if not server_version_min_client <= client_version <= server_version_max_client:
-                client_ver_str = ".".join([str(i) for i in client_version])
-                server_version_min_str = ".".join([str(i) for i in server_version_min_client])
-                server_version_max_str = ".".join([str(i) for i in server_version_max_client])
-                raise IOError(
-                    f"This Client of version {client_ver_str} does not fall within the Server's allowed "
-                    f"Client versions of [{server_version_min_str}, {server_version_max_str}] at "
-                    f"Server address: {self.address}. Please change your Client version with one of the "
-                    f"following commands:"
-                    f"\n\t- pip install qcportal=={server_version_max_str}.*"
-                    f"\n\t- conda install -c conda-forge qcportal=={server_version_max_str}.*"
-                    f"\n(Only MAJOR.MINOR versions are checked and shown)"
-                )
+        server_version_min_client = parse_version(self.server_info["client_lower_version_limit"])
+        server_version_max_client = parse_version(self.server_info["client_upper_version_limit"])
+
+        client_version = parse_version(__version__)
+
+        if not server_version_min_client <= client_version <= server_version_max_client:
+            raise RuntimeError(
+                f"This client version {str(client_version)} does not fall within the server's allowed "
+                f"client versions of [{str(server_version_min_client)}, {str(server_version_max_client)}]."
+                f"You may need to upgrade or downgrade"
+            )
 
         self._cache = PortalCache(self, cachedir=cache, max_memcache_size=max_memcache_size)
 
@@ -220,6 +211,44 @@ class PortalClient:
         # postprocess due to raw spacing above
         return "\n".join([substr.strip() for substr in output.split("\n")])
 
+    @property
+    def encoding(self) -> str:
+        return self._encoding
+
+    @encoding.setter
+    def encoding(self, encoding: str):
+        self._encoding = encoding
+        self._headers["Content-Type"] = f"application/{self.encoding}"
+
+    def _get_JWT_token(self, username: str, password: str) -> None:
+
+        try:
+            ret = requests.post(
+                self.address + "login", json={"username": username, "password": password}, verify=self._verify
+            )
+        except requests.exceptions.SSLError:
+            raise ConnectionRefusedError(_ssl_error_msg) from None
+        except requests.exceptions.ConnectionError:
+            raise ConnectionRefusedError(_connection_error_msg.format(self.address)) from None
+
+        if ret.status_code == 200:
+            self.refresh_token = ret.json()["refresh_token"]
+            self._headers["Authorization"] = f'Bearer {ret.json()["access_token"]}'
+        else:
+            raise ConnectionRefusedError("Authentication failed, wrong username or password.")
+
+    def _refresh_JWT_token(self) -> None:
+
+        ret = requests.post(
+            self.address + "refresh", headers={"Authorization": f"Bearer {self.refresh_token}"}, verify=self._verify
+        )
+
+        if ret.status_code == 200:
+            self._headers["Authorization"] = f'Bearer {ret.json()["access_token"]}'
+        else:  # shouldn't happen unless user is blacklisted
+            raise ConnectionRefusedError("Unable to refresh JWT authorization token! " "This is a server issue!!")
+
+
     def _request(
         self,
         method: str,
@@ -228,6 +257,7 @@ class PortalClient:
         data: Optional[str] = None,
         noraise: bool = False,
         timeout: Optional[int] = None,
+        retry: Optional[bool] = True,
     ) -> requests.Response:
 
         addr = self.address + service
@@ -252,8 +282,18 @@ class PortalClient:
         except requests.exceptions.ConnectionError:
             raise ConnectionRefusedError(_connection_error_msg.format(self.address)) from None
 
+        # If JWT token expired, automatically renew it and retry once
+        if retry and (r.status_code == 401) and "Token has expired" in r.json()["msg"]:
+            self._refresh_JWT_token()
+            return self._request(method, service, data=data, noraise=noraise, timeout=timeout, retry=False)
+
         if (r.status_code != 200) and (not noraise):
-            raise IOError("Server communication failure. Reason: {}".format(r.reason))
+            try:
+                msg = r.json()["msg"]
+            except:
+                msg = r.reason
+
+            raise IOError("Server communication failure. Code: {}, Reason: {}".format(r.status_code, msg))
 
         return r
 
@@ -267,7 +307,7 @@ class PortalClient:
         name : str
             The name of the REST endpoint
         rest : str
-            The method to use on the REST endpoint: GET, POST, PUT, DELETE
+            The type of the REST endpoint
         payload : Dict[str, Any]
             The input dictionary
         full_return : bool, optional
@@ -367,8 +407,19 @@ class PortalClient:
 
         return ordered
 
+    # TODO - needed?
     def _query_cache(self):
         pass
+
+    def server_information(self) -> Dict[str, Any]:
+        """Pull down various data on the connected server.
+
+        Returns
+        -------
+        Dict[str, str]
+            Server information.
+        """
+        return json.loads(json.dumps(self.server_info))
 
     ### KVStore / OutputStore section
 
@@ -408,7 +459,7 @@ class PortalClient:
 
     def get_molecules(
         self,
-        id: "QueryObjectId",
+        id: QueryObjectId,
         missing_ok: bool = False,
     ) -> Union[List["Molecule"], "Molecule"]:
         """Get molecules by id.
@@ -607,8 +658,6 @@ class PortalClient:
             Prints output as table to screen; if `as_list=True`,
             returns list of output content instead.
         """
-        from tabulate import tabulate
-
         # preprocess inputs
         if tag is not None:
             if isinstance(tag, str):
@@ -736,18 +785,54 @@ class PortalClient:
         collection = self.get_collection(collection_type, name)
         self._automodel_request(f"collection/{collection.data.id}", "delete", payload={"meta": {}})
 
-        return ordered
-
     ### Results section
 
-    # TODO: grab this one from Ben's `next` branch
+    # TODO: Grabbed the raw version from `next`. Needs fixing up
     # TODO: we would want to cache these
-    def get_wavefunctions(self):
-        pass
+    def get_wavefunctions(
+        self,
+        id: ObjectId,
+        include: QueryListStr = None,
+        full_return: bool = False,
+    ) -> Union[WavefunctionStoreGETResponse, Dict[str, Any]]:
+        """Queries ResultRecords from the server.
+
+        Parameters
+        ----------
+        id
+            Queries the Result ``id`` field.
+        include
+            Filters the returned fields
+        full_return
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        :
+            Returns a List of found Wavefunction data
+        """
+
+        payload = {
+            "meta": {"include": include},
+            "data": {
+                "id": id,
+            },
+        }
+        response = self._automodel_request("wavefunctionstore", "get", payload, full_return=True)
+
+        # Add references back to the client
+        if not include:
+            for result in response.data:
+                result.__dict__["client"] = self
+
+        if full_return:
+            return response
+        else:
+            return response.data
 
     def get_records(
         self,
-        id: "QueryObjectId",
+        id: QueryObjectId,
         missing_ok: bool = False,
         include: Optional["QueryListStr"] = None,
     ) -> Union[List["Record"], "Record"]:
@@ -794,17 +879,17 @@ class PortalClient:
     # TODO: expand REST API to allow more queryables from Record datamodel fields
     def query_singlepoints(
         self,
-        program: Optional["QueryStr"] = None,
-        molecule: Optional["QueryObjectId"] = None,
-        driver: Optional["QueryStr"] = None,
-        method: Optional["QueryStr"] = None,
-        basis: Optional["QueryStr"] = None,
-        keywords: Optional["QueryObjectId"] = None,
-        status: "QueryStr" = "COMPLETE",
+        program: QueryStr = None,
+        molecule: QueryObjectId = None,
+        driver: QueryStr = None,
+        method: QueryStr = None,
+        basis: QueryStr = None,
+        keywords: QueryObjectId = None,
+        status: "QueryStr" = None,
         limit: Optional[int] = None,
         skip: int = 0,
         include: Optional["QueryListStr"] = None,
-    ) -> Union[List["SinglePointtRecord"], List[Dict[str, Any]]]:
+    ) -> Union[List["SinglePointRecord"], List[Dict[str, Any]]]:
         """Queries SinglePointRecords from the server.
 
         Parameters
@@ -836,16 +921,20 @@ class PortalClient:
             Returns a List of found SinglePointRecords without include,
             or a List of dictionaries with `include`.
         """
+
+        if status is None and id is None:
+            status = [RecordStatusEnum.complete]
+
         payload = {
             "meta": {"limit": limit, "skip": skip, "include": include},
             "data": {
-                "program": program,
-                "molecule": molecule,
-                "driver": driver,
-                "method": method,
-                "basis": basis,
-                "keywords": keywords,
-                "status": status,
+                "program": make_list(program),
+                "molecule": make_list(molecule),
+                "driver": make_list(driver),
+                "method": make_list(method),
+                "basis": make_list(basis),
+                "keywords": make_list(keywords),
+                "status": make_list(status),
             },
         }
         results = self._automodel_request("result", "get", payload)
@@ -866,10 +955,8 @@ class PortalClient:
 
     def query_optimizations(
         self,
-        procedure: Optional["QueryStr"] = None,
         program: Optional["QueryStr"] = None,
-        hash_index: Optional["QueryStr"] = None,
-        status: "QueryStr" = "COMPLETE",
+        status: "QueryStr" = None,
         limit: Optional[int] = None,
         skip: int = 0,
         include: Optional["QueryListStr"] = None,
@@ -878,12 +965,6 @@ class PortalClient:
 
         Parameters
         ----------
-        procedure : QueryStr, optional
-            Queries the Procedure ``procedure`` field.
-        program : QueryStr, optional
-            Queries the Procedure ``program`` field.
-        hash_index : QueryStr, optional
-            Queries the Procedure ``hash_index`` field.
         status : QueryStr, optional
             Queries the Procedure ``status`` field.
         limit : Optional[int], optional
@@ -900,16 +981,16 @@ class PortalClient:
             dictionary of results with include.
         """
 
+        if status is None:
+            status = [RecordStatusEnum.complete]
+
         payload = {
             "meta": {"limit": limit, "skip": skip, "include": include},
             "data": {
-                "program": program,
-                "procedure": procedure,
-                "hash_index": hash_index,
-                "status": status,
+                "status": make_list(status),
             },
         }
-        optimizations = self._automodel_request("procedure", "get", payload)
+        optimizations = self._automodel_request("optimization", "get", payload)
 
         if not include:
             for ind in range(len(optimizations)):
@@ -938,8 +1019,6 @@ class PortalClient:
             Queries the Services ``id`` field.
         procedure_id : QueryObjectId, optional
             Queries the Services ``procedure_id`` field, or the ObjectId of the procedure associated with the service.
-        hash_index : QueryStr, optional
-            Queries the Services ``procedure_id`` field.
         status : QueryStr, optional
             Queries the Services ``status`` field.
         limit : Optional[int], optional
@@ -957,12 +1036,12 @@ class PortalClient:
         """
         payload = {
             "meta": {"limit": limit, "skip": skip},
-            "data": {"id": id, "procedure_id": procedure_id, "hash_index": hash_index, "status": status},
+            "data": {"id": id, "procedure_id": procedure_id, "status": status},
         }
         return self._automodel_request("service_queue", "get", payload, full_return=full_return)
         pass
 
-    def query_gridoptimizations():
+    def query_gridoptimizations(self):
         ...
 
     ### Compute section
@@ -993,7 +1072,7 @@ class PortalClient:
         basis : Optional[str], optional
             The basis to apply to the computation (e.g., "cc-pVDZ", "6-31G")
         driver : str, optional
-            The primary result that the compute will aquire {"energy", "gradient", "hessian", "properties"}
+            The primary result that the compute will acquire {"energy", "gradient", "hessian", "properties"}
         keywords : Optional['ObjectId'], optional
             The KeywordSet ObjectId to use with the given compute
         molecule : Union['ObjectId', 'Molecule', List[Union['ObjectId', 'Molecule']]], optional
@@ -1079,13 +1158,12 @@ class PortalClient:
 
     def query_tasks(
         self,
-        id: Optional["QueryObjectId"] = None,
-        hash_index: Optional["QueryStr"] = None,
-        program: Optional["QueryStr"] = None,
-        status: Optional["QueryStr"] = None,
-        base_result: Optional["QueryStr"] = None,
-        tag: Optional["QueryStr"] = None,
-        manager: Optional["QueryStr"] = None,
+        id: QueryObjectId = None,
+        program: QueryStr = None,
+        status: QueryStr = None,
+        base_result: QueryStr = None,
+        tag: QueryStr = None,
+        manager: QueryStr = None,
         limit: Optional[int] = None,
         skip: int = 0,
         include: Optional["QueryListStr"] = None,
@@ -1097,8 +1175,6 @@ class PortalClient:
         ----------
         id : QueryObjectId, optional
             Queries the Tasks ``id`` field.
-        hash_index : QueryStr, optional
-            Queries the Tasks ``hash_index`` field.
         program : QueryStr, optional
             Queries the Tasks ``program`` field.
         status : QueryStr, optional
@@ -1127,7 +1203,7 @@ class PortalClient:
         Examples
         --------
 
-        >>> client.query_tasks(id="5bd35af47b878715165f8225",include=["status"])
+        >>> client.query_tasks(id="12345",include=["status"])
         [{"status": "WAITING"}]
 
 
@@ -1136,13 +1212,12 @@ class PortalClient:
         payload = {
             "meta": {"limit": limit, "skip": skip, "include": include},
             "data": {
-                "id": id,
-                "hash_index": hash_index,
-                "program": program,
-                "status": status,
-                "base_result": base_result,
-                "tag": tag,
-                "manager": manager,
+                "id": make_list(id),
+                "program": make_list(program),
+                "status": make_list(status),
+                "base_result": make_list(base_result),
+                "tag": make_list(tag),
+                "manager": make_list(manager),
             },
         }
 
@@ -1200,7 +1275,6 @@ class PortalClient:
         self,
         id: Optional["QueryObjectId"] = None,
         procedure_id: Optional["QueryObjectId"] = None,
-        hash_index: Optional["QueryStr"] = None,
         status: Optional["QueryStr"] = None,
         limit: Optional[int] = None,
         skip: int = 0,
@@ -1214,8 +1288,6 @@ class PortalClient:
             Queries the Services ``id`` field.
         procedure_id : QueryObjectId, optional
             Queries the Services ``procedure_id`` field, or the ObjectId of the procedure associated with the service.
-        hash_index : QueryStr, optional
-            Queries the Services ``procedure_id`` field.
         status : QueryStr, optional
             Queries the Services ``status`` field.
         limit : Optional[int], optional
@@ -1233,7 +1305,7 @@ class PortalClient:
         """
         payload = {
             "meta": {"limit": limit, "skip": skip},
-            "data": {"id": id, "procedure_id": procedure_id, "hash_index": hash_index, "status": status},
+            "data": {"id": make_list(id), "procedure_id": make_list(procedure_id), "status": make_list(status)},
         }
         return self._automodel_request("service_queue", "get", payload, full_return=full_return)
 
@@ -1275,8 +1347,8 @@ class PortalClient:
 
     def query_managers(
         self,
-        name: Optional["QueryStr"] = None,
-        status: Optional["QueryStr"] = "ACTIVE",
+        name: QueryStr = None,
+        status: QueryStr = None,
         limit: Optional[int] = None,
         skip: int = 0,
         full_return: bool = False,
@@ -1301,65 +1373,93 @@ class PortalClient:
         List[Dict[str, Any]]
             A dictionary of each match that contains all the information for each manager
         """
+
+        if status is None and name is None:
+            status = [ManagerStatusEnum.active]
+
         payload = {
             "meta": {"limit": limit, "skip": skip},
-            "data": {"name": name, "status": status},
+            "data": {"name": make_list(name), "status": make_list(status)},
         }
         return self._automodel_request("manager", "get", payload, full_return=full_return)
 
-    # -------------------------------------------------------------------------
-    # ------------------   Advanced Queries -----------------------------------
-    # -------------------------------------------------------------------------
-
-    def custom_query(
+    def query_server_stats(
         self,
-        object_name: str,
-        query_type: str,
-        data: Dict[str, Any],
+        before: Optional[datetime] = None,
+        after: Optional[datetime] = None,
         limit: Optional[int] = None,
         skip: int = 0,
-        meta: Dict[str, Any] = None,
-        include: Optional["QueryListStr"] = None,
         full_return: bool = False,
-    ) -> Any:
-        """Custom queries that are supported by the REST APIs.
+    ) -> Dict[str, Any]:
+        """Obtains individual entries in the server stats logs"""
+
+        payload = {
+            "meta": {"limit": limit, "skip": skip},
+            "data": {"before": before, "after": after},
+        }
+        return self._automodel_request("server_stats", "get", payload, full_return=full_return)
+
+    def query_access_log(
+        self,
+        access_type: QueryStr = None,
+        access_method: QueryStr = None,
+        before: Optional[datetime] = None,
+        after: Optional[datetime] = None,
+        limit: Optional[int] = None,
+        skip: int = 0,
+        full_return: bool = False,
+    ) -> Dict[str, Any]:
+        """Obtains individual entries in the access logs"""
+
+        payload = {
+            "meta": {"limit": limit, "skip": skip},
+            "data": {
+                "access_type": make_list(access_type),
+                "access_method": make_list(access_method),
+                "before": before,
+                "after": after,
+            },
+        }
+        return self._automodel_request("access/log", "get", payload, full_return=full_return)
+
+    def query_error_log(
+        self,
+        id: QueryObjectId = None,
+        user: QueryStr = None,
+        before: Optional[datetime] = None,
+        after: Optional[datetime] = None,
+        limit: Optional[int] = None,
+        skip: int = 0,
+        full_return: bool = False,
+    ) -> Dict[str, Any]:
+        """Obtains individual entries in the access logs"""
+
+        payload = {
+            "meta": {"limit": limit, "skip": skip},
+            "data": {"id": make_list(id), "user": make_list(user), "before": before, "after": after},
+        }
+        return self._automodel_request("error", "get", payload, full_return=full_return)
+
+    def query_access_summary(
+        self,
+        group_by: str = "day",
+        before: Optional[datetime] = None,
+        after: Optional[datetime] = None,
+    ) -> Dict[str, Any]:
+        """Obtains daily summaries of accesses
 
         Parameters
         ----------
-        object_name : str
-            Object name like optimization, datasets, etc (TODO: add more)
-        query_type : str
-            The required query within the given class
-        data : Dict[str, Any]
-            a dictionary of the keys to be used in the query
-        limit : Optional[int], optional
-            The maximum number of Procedures to query
-        skip : int, optional
-            The number of Procedures to skip in the query, used during pagination
-        meta : Dict[str, Any], optional
-            Additional metadata keys to specify
-        include : Optional['QueryListStr'], optional
-            Filters the returned fields, will return a dictionary rather than an object.
-        full_return : bool, optional
-            Returns the full server response if True that contains additional metadata.
-
-        Returns
-        -------
-        Any
-        In the form of Dict[str, Any] (TODO)
+        group_by
+            How to group the data. Valid options are "user", "hour", "day", "country", "subdivision"
+        before
+            Query for log entries with a timestamp before a specific time
+        after
+            Query for log entries with a timestamp after a specific time
         """
 
-        payload = {"meta": {"limit": limit, "skip": skip, "include": include}, "data": data}
-        if meta:
-            payload["meta"].update(meta)
-
-        if query_type:
-            addr = f"{object_name}/{query_type}"
-        else:
-            addr = object_name
-        response = self._automodel_request(addr, "get", payload, full_return=True)
-
-        if full_return:
-            return response
-        else:
-            return response.data
+        payload = {
+            "meta": {},
+            "data": {"group_by": group_by, "before": before, "after": after},
+        }
+        return self._automodel_request("access/summary", "get", payload, full_return=False)
