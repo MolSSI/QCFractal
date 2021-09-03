@@ -135,7 +135,7 @@ class Record(abc.ABC):
 
         # Compute status
         manager_name: Optional[str] = Field(None, description="Name of the Queue Manager which generated this record.")
-        status: RecordStatusEnum = Field(RecordStatusEnum.incomplete, description=str(RecordStatusEnum.__doc__))
+        status: RecordStatusEnum = Field(..., description=str(RecordStatusEnum.__doc__))
         modified_on: datetime.datetime = Field(
             None, description="Last time the data this record points to was modified."
         )

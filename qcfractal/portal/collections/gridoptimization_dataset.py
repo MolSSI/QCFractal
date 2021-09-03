@@ -4,13 +4,13 @@ QCPortal Database ODM
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
 from ...interface.models import GridOptimizationInput, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
-from ...interface.models.gridoptimization import GOKeywords
+from ...interface.models.gridoptimization import GridOptimizationKeywords
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
 
 if TYPE_CHECKING:  # pragma: no cover
-    from ..models.gridoptimization import ScanDimension
-    from ..models import Molecule
+    from ...interface.models.gridoptimization import ScanDimension
+    from ...interface.models import Molecule
 
 
 class GOEntry(ProtoModel):
@@ -18,7 +18,7 @@ class GOEntry(ProtoModel):
 
     name: str
     initial_molecule: ObjectId
-    go_keywords: GOKeywords
+    go_keywords: GridOptimizationKeywords
     attributes: Dict[str, Any]  # Might be overloaded key types
     object_map: Dict[str, ObjectId] = {}
 
@@ -115,7 +115,7 @@ class GridOptimizationDataset(BaseProcedureDataset):
 
         # Build new objects
         molecule_id = self.client.add_molecules([initial_molecule])[0]
-        go_keywords = GOKeywords(scans=scans, preoptimization=preoptimization)
+        go_keywords = GridOptimizationKeywords(scans=scans, preoptimization=preoptimization)
 
         record = GOEntry(name=name, initial_molecule=molecule_id, go_keywords=go_keywords, attributes=attributes)
         self._add_entry(name, record, save)
