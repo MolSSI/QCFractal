@@ -15,7 +15,7 @@ from sqlalchemy.types import TypeDecorator
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import str, Any, TypeVar, Type, Dict
+    from typing import str, Any, TypeVar, Type, Dict, Optional, Iterable
 
     _T = TypeVar("_T")
 
@@ -100,7 +100,7 @@ class Base:
 
         return ret
 
-    def dict(self) -> Dict[str, Any]:
+    def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         """
         Converts the ORM to a dictionary
 
@@ -115,6 +115,10 @@ class Base:
 
         d = self.__dict__.copy()
         d.pop("_sa_instance_state")
+
+        if exclude is not None:
+            for k in exclude:
+                d.pop(k)
 
         if len(d) == 0:
             raise RuntimeError(

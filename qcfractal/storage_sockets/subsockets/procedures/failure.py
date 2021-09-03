@@ -61,15 +61,17 @@ class FailedOperationHandler(BaseProcedureHandler):
         error = fail_result.get("error", _default_error)
 
         base_result = task_orm.base_result_obj
-        base_result.error = self._core_socket.output_store.replace(base_result.error, error, session=session)
 
         # Get the rest of the outputs
         # This is stored in "input_data" (I know...)
+        stdout = None
+        stderr = None
+
         if inp_data is not None:
             stdout = inp_data.get("stdout", None)
             stderr = inp_data.get("stderr", None)
-            base_result.stdout = self._core_socket.output_store.replace(base_result.stdout, stdout, session=session)
-            base_result.stderr = self._core_socket.output_store.replace(base_result.stderr, stderr, session=session)
+
+        self._core_socket.procedure.update_outputs(session, base_result, stdout=stdout, stderr=stderr, error=error)
 
         # Change the status on the base result
         base_result.status = RecordStatusEnum.error

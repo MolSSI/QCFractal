@@ -292,6 +292,7 @@ class SingleResultHandler(BaseProcedureHandler):
         driver: Optional[Iterable[str]] = None,
         method: Optional[Iterable[str]] = None,
         basis: Optional[Iterable[str]] = None,
+        keywords: Optional[Iterable[ObjectId]] = None,
         molecule: Optional[Iterable[ObjectId]] = None,
         manager: Optional[Iterable[str]] = None,
         status: Optional[Iterable[RecordStatusEnum]] = None,
@@ -320,6 +321,8 @@ class SingleResultHandler(BaseProcedureHandler):
             Query based on method
         basis
             Query based on basis
+        keywords
+            Query based on keywords
         molecule
             Query based on molecule
         manager
@@ -369,6 +372,9 @@ class SingleResultHandler(BaseProcedureHandler):
         if basis is not None:
             # Since basis can be null.....
             and_query.append(or_(ResultORM.basis == x for x in basis))
+        if keywords is not None:
+            # Since keywords can be null.....
+            and_query.append(or_(ResultORM.keywords == x for x in keywords))
         if manager is not None:
             and_query.append(ResultORM.manager_name.in_(manager))
         if molecule is not None:

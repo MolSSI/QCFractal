@@ -37,8 +37,8 @@ from .procedures import BaseProcedureHandler, FailedOperationHandler, SingleResu
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
-    from qcfractal.interface.models import ObjectId, AllResultTypes, Molecule
-    from typing import List, Dict, Tuple, Optional, Any, Iterable, Sequence
+    from qcfractal.interface.models import ObjectId, AllResultTypes, Molecule, KVStore
+    from typing import List, Dict, Tuple, Optional, Any, Iterable, Sequence, Union
 
     TaskDict = Dict[str, Any]
 
@@ -101,6 +101,39 @@ class ProcedureSocket:
         with self._core_socket.optional_session(session) as session:
             meta, ids = insert_general(session, tasks, (TaskQueueORM.base_result_id,), (TaskQueueORM.id,))
             return meta, [x[0] for x in ids]
+
+    def update_outputs(
+        self,
+        session: Session,
+        base_record_orm: BaseResultORM,
+        *,
+        stdout: Optional[Union[Dict, str, KVStore]] = None,
+        stderr: Optional[Union[Dict, str, KVStore]] = None,
+        error: Optional[Union[Dict, str, KVStore]] = None,
+    ):
+        """
+        Add outputs (stdout, stderr, error) to a base record, and delete the old one if it exists
+        """
+
+        to_delete = []
+        if base_record_orm.stdout is not None:
+            to_delete.append(base_record_orm.stdout)
+            base_record_orm.stdout = None
+        if base_record_orm.stderr is not None:
+            to_delete.append(base_record_orm.stderr)
+            base_record_orm.stderr = None
+        if base_record_orm.error is not None:
+            to_delete.append(base_record_orm.error)
+            base_record_orm.error = None
+
+        if stdout is not None:
+            base_record_orm.stdout = self._core_socket.output_store.add([stdout], session=session)[0]
+        if stderr is not None:
+            base_record_orm.stderr = self._core_socket.output_store.add([stderr], session=session)[0]
+        if error is not None:
+            base_record_orm.error = self._core_socket.output_store.add([error], session=session)[0]
+
+        self._core_socket.output_store.delete(to_delete, session=session)
 
     def create(
         self, molecules: List[Molecule], specification: AllProcedureSpecifications, *, session: Optional[Session] = None
@@ -230,8 +263,6 @@ class ProcedureSocket:
                     # Is the task in the running state
                     # If so, do not attempt to modify the task queue. Just move on
                     if task_orm.base_result_obj.status != RecordStatusEnum.running:
-                        print("*" * 100)
-                        print(task_orm.base_result_obj.status)
                         self._logger.warning(
                             f"Task {task_id}/base result {base_result_id} is not in the running state."
                         )
@@ -398,6 +429,7 @@ class ProcedureSocket:
                     session.query(BaseResultORM)
                     .filter(BaseResultORM.id == record_id)
                     .options(joinedload(BaseResultORM.task_obj))
+                    .with_for_update()
                     .one_or_none()
                 )
 
@@ -527,8 +559,9 @@ class ProcedureSocket:
 
                 session.flush()
 
-                # Store in dict form for returning
-                found.extend([task_orm.dict() for task_orm in new_items])
+                # Store in dict form for returning,
+                # but no need to store the info from the base_result_obj
+                found.extend([task_orm.dict(exclude=["base_result_obj"]) for task_orm in new_items])
 
         return found
 
