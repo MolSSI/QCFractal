@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import defaultdict
 from tabulate import tabulate
 
@@ -158,7 +159,6 @@ class PortalClient:
         if (username is not None) or (password is not None):
             self._get_JWT_token(username, password)
 
-
         self._request_counter: DefaultDict[Tuple[str, str], int] = defaultdict(int)
 
         ### Define all attributes before this line
@@ -247,7 +247,6 @@ class PortalClient:
             self._headers["Authorization"] = f'Bearer {ret.json()["access_token"]}'
         else:  # shouldn't happen unless user is blacklisted
             raise ConnectionRefusedError("Unable to refresh JWT authorization token! " "This is a server issue!!")
-
 
     def _request(
         self,

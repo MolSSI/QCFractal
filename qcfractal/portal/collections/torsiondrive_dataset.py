@@ -6,13 +6,13 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 import pandas as pd
 
 from ...interface.models import ObjectId, OptimizationSpecification, ProtoModel, QCSpecification, TorsionDriveInput
-from ...interface.models.torsiondrive import TDKeywords
+from ...interface.models.torsiondrive import TorsionDriveKeywords
 from ...interface.visualization import custom_plot
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
 
 if TYPE_CHECKING:  # pragma: no cover
-    from ..models import Molecule
+    from ...interface.models import Molecule
 
 
 class TDEntry(ProtoModel):
@@ -20,7 +20,7 @@ class TDEntry(ProtoModel):
 
     name: str
     initial_molecules: Set[ObjectId]
-    td_keywords: TDKeywords
+    td_keywords: TorsionDriveKeywords
     attributes: Dict[str, Any]
     object_map: Dict[str, ObjectId] = {}  # NOTE: needs a better name
 
@@ -128,7 +128,7 @@ class TorsionDriveDataset(BaseProcedureDataset):
 
         # Build new objects
         molecule_ids = self.client.add_molecules(initial_molecules)
-        td_keywords = TDKeywords(
+        td_keywords = TorsionDriveKeywords(
             dihedrals=dihedrals,
             grid_spacing=grid_spacing,
             dihedral_ranges=dihedral_ranges,

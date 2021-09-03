@@ -621,6 +621,10 @@ class ResultGETBody(ProtoModel):
             None,
             description="Results will be searched to match specified basis sets which were used to compute the values.",
         )
+        keywords: Optional[List[ObjectId]] = Field(
+            None,
+            description="Results will be searched based on which :class:`KeywordSet` was used to run the computation.",
+        )
         status: Optional[List[RecordStatusEnum]] = Field(
             [RecordStatusEnum.complete],
             description="Results will be searched based on where they are in the compute pipeline. See the "
