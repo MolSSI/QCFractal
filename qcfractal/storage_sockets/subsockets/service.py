@@ -218,9 +218,7 @@ class ServiceSocket:
                             "error_message": "Error iterating service: " + str(err),
                         }
 
-                        service_orm.procedure_obj.error = self._core_socket.output_store.replace(
-                            service_orm.procedure_obj.error, error, session=session
-                        )
+                        self._core_socket.procedure.update_outputs(session, service_orm.procedure_obj, error=error)
                         service_orm.procedure_obj.status = RecordStatusEnum.error
                         session.commit()
                         self._core_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.error)
@@ -239,9 +237,8 @@ class ServiceSocket:
                         "error_type": "service_iteration_error",
                         "error_message": "Some task(s) did not complete successfully",
                     }
-                    service_orm.procedure_obj.error = self._core_socket.output_store.replace(
-                        service_orm.procedure_obj.error, error, session=session
-                    )
+
+                    self._core_socket.procedure.update_outputs(session, service_orm.procedure_obj, error=error)
 
                     session.commit()
                     self._core_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.error)
@@ -286,9 +283,7 @@ class ServiceSocket:
                                 "error_message": "Error in first iteration of service: " + str(err),
                             }
 
-                            service_orm.procedure_obj.error = self._core_socket.output_store.replace(
-                                service_orm.procedure_obj.error, error, session=session
-                            )
+                            self._core_socket.procedure.update_outputs(session, service_orm.procedure_obj, error=error)
 
                             service_orm.procedure_obj.status = RecordStatusEnum.error
                             session.commit()
