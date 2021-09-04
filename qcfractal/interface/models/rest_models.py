@@ -696,9 +696,7 @@ class ProcedureGETBody(ProtoModel):
 
 class ProcedureGETResponse(ProtoModel):
     meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
-    data: List[Dict[str, Any]] = Field(
-        ..., description="The list of Procedure specs found based on the query."
-    )
+    data: List[Dict[str, Any]] = Field(..., description="The list of Procedure specs found based on the query.")
 
 
 class OptimizationGETBody(ProtoModel):
