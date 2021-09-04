@@ -5,51 +5,17 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 from __future__ import annotations
 
 import os
-import contextlib
-
-try:
-    from sqlalchemy import create_engine, and_, or_, case, func, exc, event
-    from sqlalchemy.exc import IntegrityError
-    from sqlalchemy.orm import sessionmaker, with_polymorphic
-    from sqlalchemy.sql.expression import desc
-    from sqlalchemy.sql.expression import case as expression_case
-    from sqlalchemy.pool import NullPool
-except ImportError:
-    raise ImportError(
-        "SQLAlchemy_socket requires sqlalchemy, please install this python " "module or try a different db_socket."
-    )
+from sqlalchemy import create_engine, exc, event
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import NullPool
 
 import logging
-from collections.abc import Iterable
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Union, Iterable
 
-# pydantic classes
-from qcfractal.interface.models import (
-    GridOptimizationRecord,
-    OptimizationRecord,
-    TorsionDriveRecord,
-    prepare_basis,
-)
+from qcfractal.interface.models import prepare_basis
 
-from qcfractal.storage_sockets.models import (
-    BaseResultORM,
-    CollectionORM,
-    GridOptimizationProcedureORM,
-    KVStoreORM,
-    MoleculeORM,
-    OptimizationProcedureORM,
-    QueueManagerLogORM,
-    QueueManagerORM,
-    ResultORM,
-    ServiceQueueORM,
-    TaskQueueORM,
-    TorsionDriveProcedureORM,
-    VersionsORM,
-    WavefunctionStoreORM,
-)
-
-from .models import Base
+from qcfractal.storage_sockets.models import VersionsORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -59,16 +25,6 @@ if TYPE_CHECKING:
 import qcelemental
 import qcfractal
 import qcengine
-
-
-_null_keys = {"basis", "keywords"}
-_id_keys = {"id", "molecule", "keywords", "procedure_id"}
-_lower_func = lambda x: x.lower()
-_prepare_keys = {"program": _lower_func, "basis": prepare_basis, "method": _lower_func, "procedure": _lower_func}
-
-
-def dict_from_tuple(keys, values):
-    return [dict(zip(keys, row)) for row in values]
 
 
 def calculate_limit(max_limit: int, given_limit: Optional[int]):
@@ -88,6 +44,10 @@ def format_query(ORMClass, **query: Union[None, str, int, Iterable[int], Iterabl
     """
     Formats a query into a SQLAlchemy format.
     """
+
+    _null_keys = {"basis", "keywords"}
+    _lower_func = lambda x: x.lower()
+    _prepare_keys = {"program": _lower_func, "basis": prepare_basis, "method": _lower_func, "procedure": _lower_func}
 
     ret = []
     for k, v in query.items():
@@ -128,20 +88,6 @@ def get_count_fast(query):
     # count_q = query.statement.with_only_columns([func.count()]).order_by(None)
     # count = query.session.execute(count_q).scalar()
     return query.count()
-
-
-def get_procedure_class(record):
-
-    if isinstance(record, OptimizationRecord):
-        procedure_class = OptimizationProcedureORM
-    elif isinstance(record, TorsionDriveRecord):
-        procedure_class = TorsionDriveProcedureORM
-    elif isinstance(record, GridOptimizationRecord):
-        procedure_class = GridOptimizationProcedureORM
-    else:
-        raise TypeError("Procedure of type {} is not valid or supported yet.".format(type(record)))
-
-    return procedure_class
 
 
 class SQLAlchemySocket:
@@ -328,46 +274,6 @@ class SQLAlchemySocket:
 
         return ver
 
-    def _clear_db(self, db_name: str = None):
-        """Dangerous, make sure you are deleting the right DB"""
-
-        self.logger.warning("SQL: Clearing database '{}' and dropping all tables.".format(db_name))
-
-        # drop all tables that it knows about
-        Base.metadata.drop_all(self.engine)
-
-        # create the tables again
-        Base.metadata.create_all(self.engine)
-
-        # self.client.drop_database(db_name)
-
-    def _delete_DB_data(self, db_name):
-        """TODO: needs more testing"""
-
-        with self.session_scope() as session:
-            # Metadata
-            session.query(VersionsORM).delete(synchronize_session=False)
-            # Task and services
-            session.query(TaskQueueORM).delete(synchronize_session=False)
-            session.query(QueueManagerLogORM).delete(synchronize_session=False)
-            session.query(QueueManagerORM).delete(synchronize_session=False)
-            session.query(ServiceQueueORM).delete(synchronize_session=False)
-
-            # Collections
-            session.query(CollectionORM).delete(synchronize_session=False)
-
-            # Records
-            session.query(TorsionDriveProcedureORM).delete(synchronize_session=False)
-            session.query(GridOptimizationProcedureORM).delete(synchronize_session=False)
-            session.query(OptimizationProcedureORM).delete(synchronize_session=False)
-            session.query(ResultORM).delete(synchronize_session=False)
-            session.query(WavefunctionStoreORM).delete(synchronize_session=False)
-            session.query(BaseResultORM).delete(synchronize_session=False)
-
-            # Auxiliary tables
-            session.query(KVStoreORM).delete(synchronize_session=False)
-            session.query(MoleculeORM).delete(synchronize_session=False)
-
     def get_query_projection(self, className, query, *, limit=None, skip=0, include=None, exclude=None):
 
         table_name = className.__tablename__
@@ -485,16 +391,6 @@ class SQLAlchemySocket:
 
         return rdata, n_found
 
-    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    def get_total_count(self, className, **kwargs):
-
-        with self.session_scope() as session:
-            query = session.query(className).filter(**kwargs)
-            count = get_count_fast(query)
-
-        return count
-
     def set_completed_watch(self, mp_queue):
         self._completed_queue = mp_queue
 
@@ -502,25 +398,3 @@ class SQLAlchemySocket:
         if self._completed_queue is not None:
             # Don't want to block here. Just put it in the queue and move on
             self._completed_queue.put((int(base_result_id), status), block=False)
-
-    # ~~~~~~~~~~~~~~~~~ Collections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
-
-    def add_collection(self, data: Dict[str, Any], overwrite: bool = False):
-        return self.collection.add(data, overwrite)
-
-    def get_collections(
-        self,
-        collection: Optional[str] = None,
-        name: Optional[str] = None,
-        col_id: Optional[int] = None,
-        limit: Optional[int] = None,
-        include: Optional[List[str]] = None,
-        exclude: Optional[List[str]] = None,
-        skip: int = 0,
-    ) -> Dict[str, Any]:
-        return self.collection.get(collection, name, col_id, limit, include, exclude, skip)
-
-    def del_collection(
-        self, collection: Optional[str] = None, name: Optional[str] = None, col_id: Optional[int] = None
-    ) -> bool:
-        return self.collection.delete(collection, name, col_id)
