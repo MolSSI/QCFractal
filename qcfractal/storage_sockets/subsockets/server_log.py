@@ -42,6 +42,53 @@ class ServerLogSocket:
         self._access_log_limit = core_socket.qcf_config.response_limits.access_logs
         self._server_log_limit = core_socket.qcf_config.response_limits.server_logs
 
+        # Set up access logging
+        self._access_log_enabled = core_socket.qcf_config.log_access
+
+        if self._access_log_enabled:
+            geo_file_path = core_socket.qcf_config.geo_file_path
+            self._geoip2_reader = None
+
+            if geo_file_path:
+                try:
+                    import geoip2.database
+
+                    self._geoip2_reader = geoip2.database.Reader(geo_file_path)
+                    self._logger.info(f"Successfully initialized geoip2 with {geo_file_path}.")
+
+                except ImportError:
+                    self._logger.warning(
+                        f"Cannot import geoip2 module. To use API access logging, you need "
+                        f"to install it manually using `pip install geoip2`"
+                    )
+                except FileNotFoundError:
+                    self._logger.warning(
+                        f"GeoIP cities file cannot be read from {geo_file_path}.\n"
+                        f"Make sure to manually download the file from: \n"
+                        f"https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz\n"
+                        f"Then, set the geo_file_path in qcfractal_config.yaml in your base_folder."
+                    )
+
+    def _get_geoip2_data(self, ip_address: str) -> Dict[str, Any]:
+        out: Dict[str, Any] = {}
+
+        if not self._geoip2_reader:
+            return out
+
+        try:
+            loc_data = self._geoip2_reader.city(ip_address)
+            out["city"] = loc_data.city.name
+            out["country"] = loc_data.country.name
+            out["country_code"] = loc_data.country.iso_code
+            out["ip_lat"] = str(loc_data.location.latitude)
+            out["ip_long"] = str(loc_data.location.longitude)
+            out["postal_code"] = loc_data.postal.code
+            out["subdivision"] = loc_data.subdivisions.most_specific.name
+        except:
+            pass
+
+        return out
+
     def save_access(self, log_data: AccessLogDict, *, session: Optional[Session] = None) -> int:
         """
         Saves information about an access to the database
@@ -60,8 +107,14 @@ class ServerLogSocket:
             The id of the newly-created log entry
         """
 
+        if self._access_log_enabled is not True:
+            return 0
+
+        # Obtain all the information we can from the GeoIP database
+        ip_data = self._get_geoip2_data(log_data["ip_address"])
+
         with self._core_socket.optional_session(session) as session:
-            log = AccessLogORM(**log_data)  # type: ignore
+            log = AccessLogORM(**log_data, **ip_data)  # type: ignore
             session.add(log)
             session.flush()
             return log.id
