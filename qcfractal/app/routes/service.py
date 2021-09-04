@@ -1,14 +1,14 @@
 from flask import jsonify
 
 from qcfractal.app import storage_socket
-from qcfractal.app.new_routes.helpers import (
+from qcfractal.app.routes.helpers import (
     parse_bodymodel,
     convert_get_response_metadata,
     SerializedResponse,
     convert_post_response_metadata,
 )
-from qcfractal.app.new_routes.main import main
-from qcfractal.app.new_routes.permissions import check_access
+from qcfractal.app.routes.main import main
+from qcfractal.app.routes.permissions import check_access
 from qcfractal.interface.models.rest_models import (
     ServiceQueueGETBody,
     ServiceQueueGETResponse,

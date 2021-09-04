@@ -2,9 +2,9 @@ from flask import current_app
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.app import storage_socket
-from qcfractal.app.new_routes.helpers import SerializedResponse, parse_bodymodel, convert_get_response_metadata
-from qcfractal.app.new_routes.main import main
-from qcfractal.app.new_routes.permissions import check_access
+from qcfractal.app.routes.helpers import SerializedResponse, parse_bodymodel, convert_get_response_metadata
+from qcfractal.app.routes.main import main
+from qcfractal.app.routes.permissions import check_access
 from qcfractal.interface.models.rest_models import (
     AccessLogGETBody,
     AccessLogGETResponse,

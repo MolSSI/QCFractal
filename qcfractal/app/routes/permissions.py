@@ -13,7 +13,7 @@ from flask_jwt_extended import (
 from werkzeug.exceptions import Forbidden, BadRequest
 
 from qcfractal.app import storage_socket
-from qcfractal.app.new_routes.main import main
+from qcfractal.app.routes.main import main
 from qcfractal.exceptions import AuthenticationFailure
 from qcfractal.interface.models import UserInfo
 from qcfractal.policyuniverse import Policy

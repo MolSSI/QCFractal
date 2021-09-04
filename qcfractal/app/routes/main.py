@@ -7,7 +7,7 @@ from qcelemental.util import deserialize
 from werkzeug.exceptions import BadRequest, InternalServerError, HTTPException
 
 from qcfractal.app import storage_socket
-from qcfractal.app.new_routes.helpers import _valid_encodings, SerializedResponse
+from qcfractal.app.routes.helpers import _valid_encodings, SerializedResponse
 from qcfractal.exceptions import UserReportableError, AuthenticationFailure
 
 main = Blueprint("main", __name__)

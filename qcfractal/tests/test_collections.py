@@ -11,7 +11,7 @@ import pandas as pd
 import pytest
 import qcelemental as qcel
 
-import qcfractal.app.new_routes.collections
+import qcfractal.app.routes.collections
 import qcfractal.interface as ptl
 from qcfractal.interface.models import RecordStatusEnum
 from qcfractal.interface.collections.dataset_view import HDF5View
