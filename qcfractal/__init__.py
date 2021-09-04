@@ -24,6 +24,3 @@ from .qc_queue import QueueManager
 
 # from .server import FractalServer
 from .snowflake import FractalSnowflake
-
-# Import modules
-from .storage_sockets import storage_socket_factory

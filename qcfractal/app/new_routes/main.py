@@ -6,7 +6,7 @@ from flask import Blueprint, g, request, current_app, jsonify
 from qcelemental.util import deserialize
 from werkzeug.exceptions import BadRequest, InternalServerError, HTTPException
 
-from qcfractal.app import api_logger, storage_socket
+from qcfractal.app import storage_socket
 from qcfractal.app.new_routes.helpers import _valid_encodings, SerializedResponse
 from qcfractal.exceptions import UserReportableError, AuthenticationFailure
 
@@ -48,6 +48,8 @@ def before_request_func():
 @main.after_request
 def after_request_func(response: SerializedResponse):
 
+    _logging_param_counts = {"id"}
+
     # Determine the time the request took
     # g here refers to flask.g
     request_duration = time.time() - g.request_start
@@ -70,9 +72,25 @@ def after_request_func(response: SerializedResponse):
         if "data" in extra_params:
             extra_params["data"] = {k: v for k, v in extra_params["data"].items() if v is not None}
 
-        extra_params = json.dumps(extra_params)
+        # What we are going to log to the DB
+        log = {}
+        log["access_type"] = request.path[1:]  # remove /
+        log["access_method"] = request.method  # GET or POST
 
-        log = api_logger.get_api_access_log(request=request, extra_params=extra_params)
+        # get the real IP address behind a proxy or ngnix
+        real_ip = request.headers.get("X-Real-IP", None)
+
+        # The IP address is the last address listed in access_route, which
+        # comes from the X-FORWARDED-FOR header
+        # (If access_route is empty, use the original request ip)
+        if real_ip is None:
+            real_ip = request.access_route[-1] if len(request.access_route) > 0 else request.remote_addr
+
+        log["ip_address"] = real_ip
+        log["user_agent"] = request.headers["User-Agent"]
+
+        # TODO: ???
+        log["extra_params"] = json.dumps(extra_params)
 
         log["request_duration"] = request_duration
         log["user"] = g.user if "user" in g else None
@@ -131,6 +149,3 @@ def handle_userreport_error(error):
 def handle_auth_error(error):
     # This handles Authentication errors (invalid user, password, etc)
     return jsonify(msg=str(error)), 401
-
-
-_logging_param_counts = {"id"}
