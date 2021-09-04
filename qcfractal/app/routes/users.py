@@ -1,8 +1,8 @@
 from flask import jsonify, request, current_app
 
 from qcfractal.app import storage_socket
-from qcfractal.app.new_routes.main import main
-from qcfractal.app.new_routes.permissions import check_access
+from qcfractal.app.routes.main import main
+from qcfractal.app.routes.permissions import check_access
 
 
 @main.route("/role", methods=["GET"])

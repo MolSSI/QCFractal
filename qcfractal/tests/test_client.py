@@ -5,7 +5,7 @@ Tests the interface portal adapter to the REST API
 import numpy as np
 import pytest
 
-import qcfractal.app.new_routes.collections
+import qcfractal.app.routes.collections
 import qcfractal.interface as ptl
 
 valid_encodings = ["json", "json-ext", "msgpack-ext"]
