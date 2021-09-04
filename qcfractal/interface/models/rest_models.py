@@ -685,7 +685,7 @@ class ProcedureGETBody(ProtoModel):
             None, description="Procedures will be searched based on the name of the procedure."
         )
         status: Optional[List[RecordStatusEnum]] = Field(
-            [RecordStatusEnum.complete],
+            None,
             description="Procedures will be searched based on where they are in the compute pipeline. See the "
             ":class:`RecordStatusEnum` for valid statuses.",
         )
@@ -696,7 +696,7 @@ class ProcedureGETBody(ProtoModel):
 
 class ProcedureGETResponse(ProtoModel):
     meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
-    data: List[Union[AllRecordTypes, Dict[str, Any]]] = Field(
+    data: List[Dict[str, Any]] = Field(
         ..., description="The list of Procedure specs found based on the query."
     )
 
