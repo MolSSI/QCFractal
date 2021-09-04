@@ -11,6 +11,7 @@ import pandas as pd
 import pytest
 import qcelemental as qcel
 
+import qcfractal.app.new_routes.collections
 import qcfractal.interface as ptl
 from qcfractal.interface.models import RecordStatusEnum
 from qcfractal.interface.collections.dataset_view import HDF5View
@@ -33,7 +34,7 @@ def check_requests_monitor(client, request, request_made=True, kind="get"):
 
 
 def handle_dataset_fixture_params(client, ds_type, ds, fractal_compute_server, request):
-    ds = client.get_collection(ds_type, ds.name)
+    ds = qcfractal.app.new_routes.collections.get_collection(ds_type, ds.name)
     if request.param == "no_view":
         ds._disable_view = True
     elif request.param == "download_view":
@@ -76,7 +77,7 @@ def gradient_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
     client = fractal_compute_server.client()
 
     try:
-        ds = client.get_collection("Dataset", "ds_gradient")
+        ds = qcfractal.app.new_routes.collections.get_collection("Dataset", "ds_gradient")
     except KeyError:
         testing.check_has_module("psi4")
 
@@ -348,7 +349,7 @@ def contributed_dataset_fixture(fractal_compute_server, tmp_path_factory, reques
     """Fixture for testing rich contributed datasets with many properties and molecules of different sizes"""
     client = fractal_compute_server.client()
     try:
-        ds = client.get_collection("Dataset", "ds_contributed")
+        ds = qcfractal.app.new_routes.collections.get_collection("Dataset", "ds_contributed")
     except KeyError:
 
         # Build a dataset
@@ -609,7 +610,7 @@ def reactiondataset_dftd3_fixture_fixture(fractal_compute_server, tmp_path_facto
     client = fractal_compute_server.client()
 
     try:
-        ds = client.get_collection("ReactionDataset", ds_name)
+        ds = qcfractal.app.new_routes.collections.get_collection("ReactionDataset", ds_name)
     except KeyError:
         testing.check_has_module("psi4")
         testing.check_has_module("dftd3")
@@ -842,7 +843,7 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
 
     # Save the DB and overwrite the result, reacquire via client
     ds.save()
-    ds = client.get_collection("reactiondataset", ds_name)
+    ds = qcfractal.app.new_routes.collections.get_collection("reactiondataset", ds_name)
 
     with pytest.raises(KeyError):
         ds.compute("SCF", "STO-3G", stoich="nocp")  # Should be 'default' not 'nocp'
@@ -895,7 +896,7 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     ds.add_keywords("df", "psi4", ptl.models.KeywordSet(values={"scf_type": "df"}))
 
     ds.save()
-    ds = client.get_collection("reactiondataset", "dataset_options")
+    ds = qcfractal.app.new_routes.collections.get_collection("reactiondataset", "dataset_options")
 
     # Compute, should default to direct options
     r = ds.compute("SCF", "STO-3G")
@@ -913,7 +914,7 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     assert ds.list_records(keywords="DIRECT").shape[0] == 1
 
     # Check saved history
-    ds = client.get_collection("reactiondataset", "dataset_options")
+    ds = qcfractal.app.new_routes.collections.get_collection("reactiondataset", "dataset_options")
     assert ds.list_records().shape[0] == 2
     assert {"df", "direct"} == set(ds.list_records().reset_index()["keywords"])
 
@@ -926,7 +927,7 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
 def qm3_fixture(request, tmp_path_factory):
     # Connect to the QCArchive
     client = live_fractal_or_skip()
-    ds = client.get_collection("Dataset", "QM3")
+    ds = qcfractal.app.new_routes.collections.get_collection("Dataset", "QM3")
     ds._disable_query_limit = True
 
     # Trim down dataset for faster test
@@ -950,7 +951,7 @@ def qm3_fixture(request, tmp_path_factory):
 def s22_fixture(request, tmp_path_factory):
     # Connect to the QCArchive
     client = live_fractal_or_skip()
-    ds = client.get_collection("ReactionDataset", "S22")
+    ds = qcfractal.app.new_routes.collections.get_collection("ReactionDataset", "S22")
     ds._disable_query_limit = True
 
     # Trim down dataset for faster test
@@ -1182,7 +1183,7 @@ def test_view_download_mock(gradient_dataset_fixture, tmp_path_factory):
 
         with open(path, "rb") as f:
             m.get(fake_url, body=f)
-            ds = client.get_collection("Dataset", ds.name)
+            ds = qcfractal.app.new_routes.collections.get_collection("Dataset", ds.name)
             ds.download(verify=False)
 
             # Check main functions run
@@ -1245,10 +1246,10 @@ def test_collection_query(fractal_compute_server):
     cols = client.list_collections()
     assert ("Dataset", "CAPITAL") in cols.index
 
-    ds = client.get_collection("dataset", "capital")
+    ds = qcfractal.app.new_routes.collections.get_collection("dataset", "capital")
     assert ds.name == "CAPITAL"
 
-    ds = client.get_collection("DATAset", "CAPital")
+    ds = qcfractal.app.new_routes.collections.get_collection("DATAset", "CAPital")
     assert ds.name == "CAPITAL"
 
 
@@ -1279,7 +1280,7 @@ def test_missing_collection(fractal_compute_server):
 
     client = fractal_compute_server.client()
     with pytest.raises(KeyError):
-        client.get_collection("reactiondataset", "_waffles_")
+        qcfractal.app.new_routes.collections.get_collection("reactiondataset", "_waffles_")
 
 
 @pytest.mark.slow
@@ -1329,7 +1330,7 @@ def test_torsiondrive_dataset(fractal_compute_server):
 
     fractal_compute_server.await_services(max_iter=7)
 
-    ds = client.get_collection("torsiondrivedataset", "testing")
+    ds = qcfractal.app.new_routes.collections.get_collection("torsiondrivedataset", "testing")
     ds.query("spec1")
 
     # Add another fake set, should instantly return
@@ -1466,7 +1467,7 @@ def test_get_collection_no_records(ds_class, fractal_compute_server):
     ds = ds_class(f"tnr_{ds_class.__name__}", client=client)
     ds.save()
 
-    ds = client.get_collection(ds_class.__name__, ds.name)
+    ds = qcfractal.app.new_routes.collections.get_collection(ds_class.__name__, ds.name)
     assert ds.data.records is None
 
 
@@ -1491,7 +1492,7 @@ def test_get_collection_no_records_ds(fractal_compute_server):
     ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
     ds.save()
 
-    ds = client.get_collection("dataset", ds.name)
+    ds = qcfractal.app.new_routes.collections.get_collection("dataset", ds.name)
     assert ds.data.records is None
     ds.get_entries()
     assert len(ds.data.records) == 1
@@ -1540,7 +1541,9 @@ def test_collection_metadata(fractal_compute_server):
     ds.data.metadata["data_points"] = 133_885
     ds.save()
 
-    assert client.get_collection("dataset", ds.name).data.metadata["data_points"] == 133_885
+    assert (
+        qcfractal.app.new_routes.collections.get_collection("dataset", ds.name).data.metadata["data_points"] == 133_885
+    )
 
 
 def test_list_collection_tags(fractal_compute_server):
@@ -1585,12 +1588,12 @@ def test_delete_collection(fractal_compute_server):
 
     dsid = ds.data.id
 
-    client.delete_collection("dataset", ds.name)
+    qcfractal.app.new_routes.collections.delete_collection("dataset", ds.name)
     assert ds.name.lower() not in client.list_collections(collection_type="dataset", aslist=True)
 
     # Fails at get_collection
     with pytest.raises(KeyError):
-        client.delete_collection("dataset", ds.name)
+        qcfractal.app.new_routes.collections.delete_collection("dataset", ds.name)
 
     # Test DELETE failure specifically
     with pytest.raises(IOError):

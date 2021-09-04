@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import os
 import sys
+
 from flask import Flask
 import multiprocessing
 
 from .config import config
 
-# from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 import logging
 
@@ -51,7 +51,6 @@ api_logger = _FlaskAPILogger()
 view_handler = _FlaskViewHandler()
 
 jwt = JWTManager()
-# cors = CORS()
 
 
 def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
@@ -69,7 +68,6 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     # Read in and store the qcfractal configuration for later use
     app.config["QCFRACTAL_CONFIG"] = qcfractal_config
 
-    # cors.init_app(app)
     jwt.init_app(app)
 
     # Initialize the database socket, API logger, and view handler
@@ -87,10 +85,27 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
 
     # logger.debug("Adding blueprints..")
 
-    # The main application entry
-    from .routes import main
+    # Register all the routes in the other files
+    from .new_routes import (
+        collections,
+        keywords,
+        main,
+        manager,
+        manager_info,
+        molecule,
+        optimization,
+        output_store,
+        permissions,
+        records,
+        server_info,
+        service,
+        singlepoint,
+        tasks,
+        users,
+        wavefunction,
+    )
 
-    app.register_blueprint(main)
+    app.register_blueprint(main.main)
 
     return app
 
