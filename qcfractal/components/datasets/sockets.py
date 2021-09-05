@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import logging
-from qcfractal.storage_sockets.models import CollectionORM, DatasetORM, ReactionDatasetORM
+from qcfractal.components.datasets.reaction.db_models import ReactionDatasetORM
+from qcfractal.components.datasets.singlepoint.db_models import DatasetORM
+from qcfractal.components.datasets.db_models import CollectionORM
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 from qcfractal.storage_sockets.sqlalchemy_socket import format_query, calculate_limit
 
@@ -24,7 +26,7 @@ def get_collection_class(collection_type):
     return collection_class
 
 
-class CollectionSocket:
+class DatasetSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
         self._logger = logging.getLogger(__name__)

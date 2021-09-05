@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy import orm
 from sqlalchemy.dialects import postgresql
 from qcfractal.storage_sockets.models.sql_base import MsgpackExt
-from qcfractal.storage_sockets.models.collections_models import ContributedValuesORM
+from qcfractal.components.datasets.db_models import ContributedValuesORM
 
 import numpy as np
 

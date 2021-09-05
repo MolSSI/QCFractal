@@ -9,8 +9,9 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.orm.session import Session
 
-from qcfractal.storage_sockets.models import CollectionORM, DatasetORM, ReactionDatasetORM
-
+from qcfractal.components.datasets.reaction.db_models import ReactionDatasetORM
+from qcfractal.components.datasets.singlepoint.db_models import DatasetORM
+from qcfractal.components.datasets.db_models import CollectionORM
 
 # revision identifiers, used by Alembic.
 revision = "129ff3ce9247"
