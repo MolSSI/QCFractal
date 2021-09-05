@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.sql import table, column
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm.session import Session
-from qcfractal.storage_sockets.models.sql_models import PlainMsgpackExt, MsgpackExt
+from qcfractal.storage_sockets.models.sql_base import PlainMsgpackExt, MsgpackExt
 
 # revision identifiers, used by Alembic.
 revision = "651954cbdec6"

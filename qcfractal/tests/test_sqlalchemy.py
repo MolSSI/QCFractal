@@ -12,9 +12,7 @@ from sqlalchemy.orm import joinedload
 
 import qcfractal.interface as ptl
 from qcfractal.interface.models import RecordStatusEnum
-from qcfractal.storage_sockets.models import (
-    ServiceQueueORM,
-)
+from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.records.torsiondrive.db_models import OptimizationHistory, TorsionDriveProcedureORM
 from qcfractal.components.records.optimization.db_models import Trajectory, OptimizationProcedureORM

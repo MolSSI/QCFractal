@@ -13,7 +13,7 @@ from sqlalchemy.orm import load_only, selectinload
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.records.base_handlers import BaseServiceHandler
-from qcfractal.storage_sockets.models import ServiceQueueORM
+from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.records.gridoptimization.db_models import (
     GridOptimizationAssociation,
     GridOptimizationProcedureORM,

@@ -12,8 +12,8 @@ from qcfractal.interface.models import (
     RecordStatusEnum,
     QueryMetadata,
 )
-from qcfractal.storage_sockets.models import ServiceQueueORM
-from ...components.records.db_models import BaseResultORM
+from qcfractal.components.services.db_models import ServiceQueueORM
+from qcfractal.components.records.db_models import BaseResultORM
 from qcfractal.storage_sockets.sqlalchemy_socket import calculate_limit
 
 from qcfractal.storage_sockets.sqlalchemy_common import (
@@ -24,9 +24,9 @@ from qcfractal.storage_sockets.sqlalchemy_common import (
 
 from typing import TYPE_CHECKING
 
-from ...components.records.base_handlers import BaseServiceHandler
-from ...components.records.torsiondrive.handlers import TorsionDriveHandler
-from ...components.records.gridoptimization.handlers import GridOptimizationHandler
+from qcfractal.components.records.base_handlers import BaseServiceHandler
+from qcfractal.components.records.torsiondrive.handlers import TorsionDriveHandler
+from qcfractal.components.records.gridoptimization.handlers import GridOptimizationHandler
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session

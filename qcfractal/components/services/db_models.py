@@ -1,37 +1,11 @@
-"""
-Basic ORM models of the QCFractal database
-
-Note: avoid circular import here by including the name of the class
-in relations and foreign keys are a string (see TaskQueueORM.base_result_obj)
-"""
-
 import datetime
 
-# from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import (
-    JSON,
-    Column,
-    DateTime,
-    ForeignKey,
-    Index,
-    Integer,
-    String,
-)
-
+from sqlalchemy import Column, Integer, ForeignKey, JSON, String, DateTime, Index, text
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import text
 
 from qcfractal.interface.models import PriorityEnum
-from qcfractal.storage_sockets.models.sql_base import Base, MsgpackExt, PlainMsgpackExt
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+from qcfractal.storage_sockets.models import Base
+from qcfractal.storage_sockets.models.sql_base import PlainMsgpackExt
 
 
 class ServiceQueueTasks(Base):
@@ -67,6 +41,3 @@ class ServiceQueueORM(Base):
         Index("ix_service_queue_tag", "tag"),
         Index("ix_service_queue_waiting_sort", text("priority desc, created_on")),
     )
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
