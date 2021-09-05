@@ -14,7 +14,6 @@ from .results_models import (
     ResultORM,
     TorsionDriveProcedureORM,
     Trajectory,
-    WavefunctionStoreORM,
 )
 
 # ORM general models

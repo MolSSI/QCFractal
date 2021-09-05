@@ -7,4 +7,3 @@ from .role import RoleSocket
 from .server_log import ServerLogSocket
 from .service import ServiceSocket
 from .user import UserSocket
-from .wavefunction import WavefunctionSocket
