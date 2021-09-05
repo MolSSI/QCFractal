@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from sqlalchemy.orm import load_only
 from qcfractal.interface.models import WavefunctionProperties, ObjectId
-from qcfractal.storage_sockets.models import WavefunctionStoreORM
+from qcfractal.components.wavefunction.db_models import WavefunctionStoreORM
 from qcfractal.storage_sockets.sqlalchemy_common import get_query_proj_columns
 
 from typing import TYPE_CHECKING

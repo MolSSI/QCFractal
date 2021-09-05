@@ -26,8 +26,8 @@ from qcfractal.storage_sockets.models import (
     TorsionDriveProcedureORM,
     Trajectory,
     VersionsORM,
-    WavefunctionStoreORM,
 )
+from qcfractal.components.wavefunction.db_models import WavefunctionStoreORM
 from qcfractal.components.outputstore.db_models import KVStoreORM
 from qcfractal.components.molecule.db_models import MoleculeORM
 
