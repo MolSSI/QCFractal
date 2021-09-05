@@ -8,9 +8,7 @@ from sqlalchemy import and_, func, text
 from sqlalchemy.orm import load_only
 import qcfractal
 from qcfractal.interface.models import QueryMetadata
-from qcfractal.storage_sockets.models import (
-    CollectionORM,
-)
+from qcfractal.components.datasets.db_models import CollectionORM
 from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.records.db_models import BaseResultORM

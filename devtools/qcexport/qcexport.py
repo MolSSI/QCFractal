@@ -9,10 +9,9 @@ from sqlalchemy.orm import make_transient, Load
 from sqlalchemy import inspect
 
 from qcfractal.storage_sockets.models import (
-    CollectionORM,
-    DatasetORM,
     QueueManagerORM,
 )
+from qcfractal.components.collections.db_models import CollectionORM
 from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.records.optimization.db_models import Trajectory, OptimizationProcedureORM
@@ -25,7 +24,7 @@ from qcfractal.components.wavefunction.db_models import WavefunctionStoreORM
 from qcfractal.components.outputstore.db_models import KVStoreORM
 from qcfractal.components.molecule.db_models import MoleculeORM
 
-from qcfractal.storage_sockets.models.collections_models import DatasetEntryORM
+from qcfractal.components.datasets.singlepoint.db_models import DatasetEntryORM, DatasetORM
 from qcfractal.components.records.torsiondrive.db_models import TorsionInitMol, TorsionDriveProcedureORM
 from qcfractal.components.records.gridoptimization.db_models import GridOptimizationAssociation, \
     GridOptimizationProcedureORM

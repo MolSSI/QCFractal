@@ -5,7 +5,7 @@ Tests the interface portal adapter to the REST API
 import numpy as np
 import pytest
 
-import qcfractal.app.routes.collections
+import qcfractal.components.collections.routes
 import qcfractal.interface as ptl
 
 valid_encodings = ["json", "json-ext", "msgpack-ext"]
@@ -99,7 +99,7 @@ def test_collection_portal(fractal_test_server, encoding):
     print(ret)
 
     # Test get
-    get_db = qcfractal.app.new_routes.collections.get_collection(db["collection"], db["name"], full_return=True)
+    get_db = qcfractal.components.collections.routes.get_collection(db["collection"], db["name"], full_return=True)
     db_id = get_db.data[0].pop("id")
 
     # got a default values when created
@@ -130,5 +130,5 @@ def test_collection_portal(fractal_test_server, encoding):
     # Finally test that we can overwrite
     db["id"] = db_id
     r = client.add_collection(db, overwrite=True)
-    get_db = qcfractal.app.new_routes.collections.get_collection(db["collection"], db["name"], full_return=True)
+    get_db = qcfractal.components.collections.routes.get_collection(db["collection"], db["name"], full_return=True)
     assert get_db.data[0]["array"] == ["6789"]
