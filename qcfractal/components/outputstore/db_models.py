@@ -1,12 +1,12 @@
 from sqlalchemy import Column, Integer, Enum, JSON, LargeBinary
 
 from qcfractal.interface.models import CompressionEnum, ObjectId
-from qcfractal.db_socket import Base
+from qcfractal.db_socket import BaseORM
 
 from typing import Dict, Any, Optional, Iterable
 
 
-class KVStoreORM(Base):
+class KVStoreORM(BaseORM):
     """TODO: rename to"""
 
     __tablename__ = "kv_store"
@@ -19,7 +19,7 @@ class KVStoreORM(Base):
 
     def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
 
-        d = Base.dict(self, exclude)
+        d = BaseORM.dict(self, exclude)
 
         # Old way: store a plain string or dict in "value"
         # New way: store (possibly) compressed output in "data"

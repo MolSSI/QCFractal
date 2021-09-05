@@ -5,10 +5,10 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 from qcfractal.interface.models import PriorityEnum
-from qcfractal.db_socket import Base, MsgpackExt
+from qcfractal.db_socket import BaseORM, MsgpackExt
 
 
-class TaskQueueORM(Base):
+class TaskQueueORM(BaseORM):
     """A queue of tasks corresponding to a procedure
 
     Notes: don't sort query results without having the index sorted

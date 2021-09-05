@@ -4,12 +4,12 @@ from sqlalchemy import Column, Integer, ForeignKey, DateTime, Float, Index, Stri
 from sqlalchemy.orm import relationship
 
 from qcfractal.interface.models import ManagerStatusEnum, ObjectId
-from qcfractal.db_socket import Base
+from qcfractal.db_socket import BaseORM
 
 from typing import Optional, Iterable, Dict, Any
 
 
-class QueueManagerLogORM(Base):
+class QueueManagerLogORM(BaseORM):
 
     __tablename__ = "queue_manager_logs"
 
@@ -31,7 +31,7 @@ class QueueManagerLogORM(Base):
     __table_args__ = (Index("ix_queue_manager_log_timestamp", "timestamp"),)
 
 
-class QueueManagerORM(Base):
+class QueueManagerORM(BaseORM):
     """ """
 
     __tablename__ = "queue_manager"
@@ -75,7 +75,7 @@ class QueueManagerORM(Base):
 
     def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
 
-        d = Base.dict(self, exclude)
+        d = BaseORM.dict(self, exclude)
         # TODO: Are passwords stored anywhere else? Other kinds of passwords?
         if "configuration" in d and isinstance(d["configuration"], dict) and "server" in d["configuration"]:
             d["configuration"]["server"].pop("password", None)

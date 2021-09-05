@@ -1,9 +1,9 @@
 from sqlalchemy import Column, Integer, String, JSON, Boolean, Index, ForeignKey
 
-from qcfractal.db_socket import Base, MsgpackExt
+from qcfractal.db_socket import BaseORM, MsgpackExt
 
 
-class CollectionORM(Base):
+class CollectionORM(BaseORM):
     """
     A base collection class of precomuted workflows such as datasets, ..
 
@@ -64,7 +64,7 @@ class DatasetMixin:
     history = Column(JSON)
 
 
-class ContributedValuesORM(Base):
+class ContributedValuesORM(BaseORM):
     """One group of a contibuted values per dataset
     Each dataset can have multiple rows in this table"""
 

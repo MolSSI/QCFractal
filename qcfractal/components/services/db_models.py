@@ -4,10 +4,10 @@ from sqlalchemy import Column, Integer, ForeignKey, JSON, String, DateTime, Inde
 from sqlalchemy.orm import relationship
 
 from qcfractal.interface.models import PriorityEnum
-from qcfractal.db_socket import Base, PlainMsgpackExt
+from qcfractal.db_socket import BaseORM, PlainMsgpackExt
 
 
-class ServiceQueueTasks(Base):
+class ServiceQueueTasks(BaseORM):
     __tablename__ = "service_queue_tasks"
 
     service_id = Column(Integer, ForeignKey("service_queue.id", ondelete="cascade"), primary_key=True)
@@ -17,7 +17,7 @@ class ServiceQueueTasks(Base):
     extras = Column(JSON)
 
 
-class ServiceQueueORM(Base):
+class ServiceQueueORM(BaseORM):
 
     __tablename__ = "service_queue"
 

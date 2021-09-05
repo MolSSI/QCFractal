@@ -1,13 +1,13 @@
 from sqlalchemy import Column, Integer, String, JSON, Float, Boolean, Index
 
 from qcfractal.interface.models import ObjectId
-from qcfractal.db_socket.base_orm import Base
+from qcfractal.db_socket.base_orm import BaseORM
 from qcfractal.db_socket.column_types import MsgpackExt
 
 from typing import Dict, Any, Optional, Iterable
 
 
-class MoleculeORM(Base):
+class MoleculeORM(BaseORM):
     """
     The molecule DB collection is managed by pymongo, so far
     """
@@ -59,7 +59,7 @@ class MoleculeORM(Base):
 
     def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
 
-        d = Base.dict(self, exclude)
+        d = BaseORM.dict(self, exclude)
 
         # TODO - remove this eventually
         # right now, a lot of code depends on these fields not being here

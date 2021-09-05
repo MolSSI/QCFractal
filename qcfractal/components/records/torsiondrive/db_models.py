@@ -5,11 +5,11 @@ from sqlalchemy.orm import column_property, relationship
 
 from qcfractal.components.molecule.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseResultORM
-from qcfractal.db_socket import Base
+from qcfractal.db_socket import BaseORM
 from typing import Optional, Iterable, Any, Dict
 
 
-class OptimizationHistory(Base):
+class OptimizationHistory(BaseORM):
     """Association table for many to many"""
 
     __tablename__ = "optimization_history"
@@ -23,7 +23,7 @@ class OptimizationHistory(Base):
     # optimization_obj = relationship(OptimizationProcedureORM, lazy="joined")
 
 
-class TorsionInitMol(Base):
+class TorsionInitMol(BaseORM):
     """
     Association table for many to many relation
     """

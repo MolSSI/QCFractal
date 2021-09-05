@@ -1,6 +1,6 @@
 from __future__ import annotations
 from ..interface.models.query_meta import InsertMetadata, DeleteMetadata, QueryMetadata
-from qcfractal.db_socket import Base
+from qcfractal.db_socket import BaseORM
 from sqlalchemy import tuple_, and_, or_
 from sqlalchemy.orm import load_only, selectinload
 import logging
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     import sqlalchemy.orm.session
     from typing import Sequence, List, Tuple, Union, Any, TypeVar, Type, Dict, Generator, Optional, Iterable
 
-    _ORM_T = TypeVar("_ORM_T", bound=Base)
+    _ORM_T = TypeVar("_ORM_T", bound=BaseORM)
     _T = TypeVar("_T")
     TupleSequence = Union[Sequence[Tuple[_T, ...]], Generator[Tuple[_T, ...], None, None]]
 
@@ -132,7 +132,7 @@ def form_query_filter(cols: Sequence[InstrumentedAttribute], values: Sequence[Tu
         return tuple_(*cols).in_(values)
 
 
-def get_values(orm: Base, cols: Sequence[InstrumentedAttribute]) -> Tuple:
+def get_values(orm: BaseORM, cols: Sequence[InstrumentedAttribute]) -> Tuple:
     """
     Obtains values from an ORM object based on attributes
 

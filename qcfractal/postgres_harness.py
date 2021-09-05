@@ -15,7 +15,7 @@ import psycopg2
 import psycopg2.errors
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from qcfractal.db_socket import Base
+from qcfractal.db_socket import BaseORM
 from .components.serverinfo.db_models import VersionsORM
 from .components.permissions.db_models import RoleORM
 from qcfractal.components.permissions.role_socket import default_roles
@@ -573,7 +573,7 @@ class PostgresHarness:
         engine = create_engine(uri, echo=False, pool_size=1)
 
         try:
-            Base.metadata.create_all(engine)
+            BaseORM.metadata.create_all(engine)
         except Exception as e:
             raise RuntimeError(f"SQLAlchemy Connection Error\n{str(e)}")
 

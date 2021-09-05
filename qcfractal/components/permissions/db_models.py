@@ -1,10 +1,10 @@
 from sqlalchemy import Column, Integer, ForeignKey, String, LargeBinary, Boolean, JSON
 from sqlalchemy.orm import relationship
 
-from qcfractal.db_socket import Base
+from qcfractal.db_socket import BaseORM
 
 
-class UserORM(Base):
+class UserORM(BaseORM):
 
     __tablename__ = "user"
 
@@ -20,7 +20,7 @@ class UserORM(Base):
     email = Column(String, nullable=False, server_default="")
 
 
-class RoleORM(Base):
+class RoleORM(BaseORM):
 
     __tablename__ = "role"
 

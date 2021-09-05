@@ -7,7 +7,7 @@ from qcfractal.components.molecule.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseResultORM
 from qcfractal.components.wavefunction.db_models import WavefunctionStoreORM
 from qcfractal.interface.models import DriverEnum, ObjectId
-from qcfractal.db_socket import Base, MsgpackExt
+from qcfractal.db_socket import BaseORM, MsgpackExt
 
 from typing import Optional, Dict, Any, Iterable
 
@@ -81,7 +81,7 @@ class ResultORM(BaseResultORM):
 
     def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
 
-        d = Base.dict(self, exclude)
+        d = BaseORM.dict(self, exclude)
 
         # TODO - INT ID should not be done
         if "id" in d:
