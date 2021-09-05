@@ -13,11 +13,11 @@ from qcexport_extra_collection import _add_collection
 
 from qcfractal.storage_sockets.models import (
     CollectionORM,
-    QueueManagerORM,
     OptimizationProcedureORM,
     GridOptimizationProcedureORM,
     TorsionDriveProcedureORM
 )
+from qcfractal.components.managers.db_models import QueueManagerORM
 
 
 def _add_procedure_mixin(procedure_table, orm_obj, src_info, session_dest, session_src, new_pk_map, options, indent):

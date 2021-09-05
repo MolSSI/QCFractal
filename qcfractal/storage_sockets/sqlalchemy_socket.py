@@ -168,13 +168,13 @@ class SQLAlchemySocket:
         from ..components.keywords.sockets import KeywordsSocket
         from ..components.permissions.sockets import UserSocket, RoleSocket
         from ..components.serverinfo.sockets import ServerInfoSocket
+        from ..components.managers.sockets import ManagerSocket
 
         from qcfractal.storage_sockets.subsockets import (
             CollectionSocket,
             RecordSocket,
             ProcedureSocket,
             ServiceSocket,
-            ManagerSocket,
         )
 
         self.server_log = ServerInfoSocket(self)
