@@ -20,7 +20,7 @@ from qcfractal.components.records.db_models import BaseResultORM
 from qcfractal.components.managers.db_models import QueueManagerLogORM, QueueManagerORM
 from qcfractal.components.serverinfo.db_models import AccessLogORM, ServerStatsLogORM, VersionsORM
 from qcfractal.components.keywords.db_models import KeywordsORM
-from qcfractal.components.wavefunction.db_models import WavefunctionStoreORM
+from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
 from qcfractal.components.outputstore.db_models import KVStoreORM
 from qcfractal.components.molecule.db_models import MoleculeORM
 

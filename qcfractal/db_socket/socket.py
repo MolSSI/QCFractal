@@ -151,7 +151,7 @@ class SQLAlchemySocket:
         # Create/initialize the subsockets
         from ..components.molecule.sockets import MoleculeSocket
         from ..components.outputstore.sockets import OutputStoreSocket
-        from ..components.wavefunction.sockets import WavefunctionSocket
+        from ..components.wavefunctions.sockets import WavefunctionSocket
         from ..components.keywords.sockets import KeywordsSocket
         from ..components.permissions.sockets import UserSocket, RoleSocket
         from ..components.serverinfo.sockets import ServerInfoSocket

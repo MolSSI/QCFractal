@@ -78,7 +78,7 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     # Register all the routes in the other files
     from ..components.molecule import routes
     from ..components.outputstore import routes
-    from ..components.wavefunction import routes
+    from ..components.wavefunctions import routes
     from ..components.keywords import routes
     from ..components.permissions import routes
     from ..components.serverinfo import routes
