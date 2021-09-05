@@ -15,5 +15,5 @@ from ...components.records.db_models import BaseResultORM
 from .sql_models import (
     ServiceQueueORM,
     ServiceQueueTasks,
-    TaskQueueORM,
 )
+from ...components.tasks.db_models import TaskQueueORM

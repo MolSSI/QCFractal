@@ -12,7 +12,7 @@ from qcfractal.interface.models import (
     RecordStatusEnum,
     FailedOperation,
 )
-from qcfractal.storage_sockets.models import TaskQueueORM
+from qcfractal.components.tasks.db_models import TaskQueueORM
 
 from typing import TYPE_CHECKING
 

@@ -170,10 +170,10 @@ class SQLAlchemySocket:
         from ..components.serverinfo.sockets import ServerInfoSocket
         from ..components.managers.sockets import ManagerSocket
         from ..components.records.sockets import RecordSocket
+        from ..components.tasks.sockets import TaskSocket
 
         from qcfractal.storage_sockets.subsockets import (
             CollectionSocket,
-            ProcedureSocket,
             ServiceSocket,
         )
 
@@ -183,7 +183,7 @@ class SQLAlchemySocket:
         self.molecule = MoleculeSocket(self)
         self.collection = CollectionSocket(self)
         self.record = RecordSocket(self)
-        self.procedure = ProcedureSocket(self)
+        self.procedure = TaskSocket(self)  # TODO: RENAME ME
         self.service = ServiceSocket(self)
         self.wavefunction = WavefunctionSocket(self)
         self.manager = ManagerSocket(self)
