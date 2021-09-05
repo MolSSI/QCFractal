@@ -14,7 +14,6 @@ import qcfractal.interface as ptl
 from qcfractal.interface.models import RecordStatusEnum
 from qcfractal.storage_sockets.models import (
     KVStoreORM,
-    MoleculeORM,
     OptimizationHistory,
     OptimizationProcedureORM,
     ResultORM,
@@ -23,6 +22,7 @@ from qcfractal.storage_sockets.models import (
     TorsionDriveProcedureORM,
     Trajectory,
 )
+from qcfractal.components.molecule.db_models import MoleculeORM
 
 
 @pytest.fixture(scope="function")

@@ -30,7 +30,8 @@ def _check_td():
 
 
 from .base import BaseServiceHandler
-from ...models import ServiceQueueORM, TorsionDriveProcedureORM, MoleculeORM, OptimizationHistory
+from ...models import ServiceQueueORM, TorsionDriveProcedureORM, OptimizationHistory
+from ....components.molecule.db_models import MoleculeORM
 from ...sqlalchemy_common import insert_general, get_query_proj_columns
 from ....interface.models import (
     ProtoModel,

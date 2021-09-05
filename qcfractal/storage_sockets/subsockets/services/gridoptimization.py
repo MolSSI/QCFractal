@@ -13,7 +13,8 @@ from sqlalchemy.orm import load_only, selectinload
 
 from .... import __version__ as qcfractal_version
 from .base import BaseServiceHandler
-from ...models import ServiceQueueORM, GridOptimizationProcedureORM, MoleculeORM, GridOptimizationAssociation
+from ...models import ServiceQueueORM, GridOptimizationProcedureORM, GridOptimizationAssociation
+from ....components.molecule.db_models import MoleculeORM
 from ...sqlalchemy_common import insert_general, get_query_proj_columns
 from ....interface.models import (
     ProtoModel,

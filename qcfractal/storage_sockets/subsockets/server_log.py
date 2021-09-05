@@ -13,12 +13,12 @@ from qcfractal.storage_sockets.models import (
     InternalErrorLogORM,
     ServerStatsLogORM,
     CollectionORM,
-    MoleculeORM,
     BaseResultORM,
     KVStoreORM,
     TaskQueueORM,
     ServiceQueueORM,
 )
+from qcfractal.components.molecule.db_models import MoleculeORM
 from qcfractal.storage_sockets.sqlalchemy_socket import calculate_limit
 from qcfractal.storage_sockets.sqlalchemy_common import get_query_proj_columns, get_count
 

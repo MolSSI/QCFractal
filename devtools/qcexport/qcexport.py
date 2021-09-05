@@ -14,7 +14,6 @@ from qcfractal.storage_sockets.models import (
     CollectionORM,
     DatasetORM,
     GridOptimizationProcedureORM,
-    MoleculeORM,
     KeywordsORM,
     KVStoreORM,
     OptimizationProcedureORM,
@@ -30,6 +29,7 @@ from qcfractal.storage_sockets.models import (
     VersionsORM,
     WavefunctionStoreORM,
 )
+from qcfractal.components.molecule.db_models import MoleculeORM
 
 from qcfractal.storage_sockets.models.collections_models import DatasetEntryORM
 from qcfractal.storage_sockets.models.results_models import GridOptimizationAssociation, TorsionInitMol
