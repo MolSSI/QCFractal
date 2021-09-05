@@ -7,7 +7,9 @@ from qcfractal.components.molecule.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseResultORM
 from qcfractal.components.wavefunction.db_models import WavefunctionStoreORM
 from qcfractal.interface.models import DriverEnum, ObjectId
-from qcfractal.storage_sockets.models import MsgpackExt, Base
+from qcfractal.db_socket import Base, MsgpackExt
+
+from typing import Optional, Dict, Any, Iterable
 
 
 class ResultORM(BaseResultORM):
@@ -77,9 +79,9 @@ class ResultORM(BaseResultORM):
         "polymorphic_load": "selectin",
     }
 
-    def dict(self):
+    def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
 
-        d = Base.dict(self)
+        d = Base.dict(self, exclude)
 
         # TODO - INT ID should not be done
         if "id" in d:

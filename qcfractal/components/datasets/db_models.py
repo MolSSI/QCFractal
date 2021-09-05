@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, JSON, Boolean, Index, ForeignKey
 
-from qcfractal.storage_sockets.models import Base, MsgpackExt
+from qcfractal.db_socket import Base, MsgpackExt
 
 
 class CollectionORM(Base):

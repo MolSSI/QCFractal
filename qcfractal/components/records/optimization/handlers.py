@@ -14,8 +14,7 @@ from qcfractal.components.records.base_handlers import BaseProcedureHandler
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.records.optimization.db_models import Trajectory, OptimizationProcedureORM
 from qcfractal.components.records.singlepoint.db_models import ResultORM
-from qcfractal.storage_sockets.sqlalchemy_common import insert_general, get_query_proj_columns, get_count
-from qcfractal.storage_sockets.sqlalchemy_socket import calculate_limit
+from qcfractal.db_socket.helpers import insert_general, get_query_proj_columns, get_count, calculate_limit
 from qcfractal.interface.models import (
     ObjectId,
     OptimizationRecord,
@@ -30,7 +29,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+    from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.interface.models import AtomicResult, OptimizationProcedureSpecification, InsertMetadata
     from typing import List, Optional, Tuple, Dict, Any, Sequence, Iterable
 

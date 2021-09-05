@@ -1,11 +1,11 @@
 from __future__ import annotations
 from ..interface.models.query_meta import InsertMetadata, DeleteMetadata, QueryMetadata
-from qcfractal.storage_sockets.models import Base
+from qcfractal.db_socket import Base
 from sqlalchemy import tuple_, and_, or_
 from sqlalchemy.orm import load_only, selectinload
 import logging
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.attributes import InstrumentedAttribute
@@ -865,3 +865,16 @@ def _get_general_proj_batch(
     # Only return the second part (ie, not the index)
     # Also sort first by index
     return [x[1] for x in sorted(ret)]
+
+
+def calculate_limit(max_limit: int, given_limit: Optional[int]):
+    """Get the allowed limit on results to return for a particular or type of object
+
+    If 'given_limit' is given (ie, by the user), this will return min(limit, max_limit)
+    where max_limit is the set value for the table/type of object
+    """
+
+    if given_limit is None:
+        return max_limit
+
+    return min(given_limit, max_limit)

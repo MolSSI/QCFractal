@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 
 from qcfractal.components.datasets.db_models import CollectionORM, DatasetMixin, ContributedValuesORM
 from qcfractal.components.datasets.singlepoint.db_models import DatasetORM
-from qcfractal.storage_sockets.models import Base
+from qcfractal.db_socket import Base
 
 
 class ReactionDatasetEntryORM(Base):

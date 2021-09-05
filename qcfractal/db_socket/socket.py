@@ -26,19 +26,6 @@ import qcfractal
 import qcengine
 
 
-def calculate_limit(max_limit: int, given_limit: Optional[int]):
-    """Get the allowed limit on results to return for a particular or type of object
-
-    If 'given_limit' is given (ie, by the user), this will return min(limit, max_limit)
-    where max_limit is the set value for the table/type of object
-    """
-
-    if given_limit is None:
-        return max_limit
-
-    return min(given_limit, max_limit)
-
-
 def format_query(ORMClass, **query: Union[None, str, int, Iterable[int], Iterable[str]]) -> List[Any]:
     """
     Formats a query into a SQLAlchemy format.

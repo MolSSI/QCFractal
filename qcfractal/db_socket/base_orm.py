@@ -1,69 +1,18 @@
 from __future__ import annotations
 
-import msgpack
-
 from qcfractal.interface.models import ObjectId
-from qcelemental.util import msgpackext_dumps, msgpackext_loads
 from sqlalchemy import and_, inspect, Integer
-from sqlalchemy.dialects.postgresql import BYTEA
 from sqlalchemy.ext.associationproxy import ASSOCIATION_PROXY
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.ext.hybrid import HYBRID_PROPERTY
 from sqlalchemy.orm import object_session
-from sqlalchemy.types import TypeDecorator
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import str, Any, TypeVar, Type, Dict, Optional, Iterable
+    from typing import Any, TypeVar, Type, Dict, Optional, Iterable
 
     _T = TypeVar("_T")
-
-
-class MsgpackExt(TypeDecorator):
-    """Converts JSON-like data to msgpack with full NumPy Array support."""
-
-    impl = BYTEA
-
-    # I believe caching is only used when, for example, you filter by a column. But we
-    # shouldn't ever do that with msgpack
-    cache_ok = False
-
-    def process_bind_param(self, value, dialect):
-        if value is None:
-            return value
-        else:
-            return msgpackext_dumps(value)
-
-    def process_result_value(self, value, dialect):
-        if value is None:
-            return value
-        else:
-            return msgpackext_loads(value)
-
-
-class PlainMsgpackExt(TypeDecorator):
-    """Converts JSON-like data to msgpack using standard msgpack
-
-    This does not support NumPy"""
-
-    impl = BYTEA
-
-    # I believe caching is only used when, for example, you filter by a column. But we
-    # shouldn't ever do that with msgpack
-    cache_ok = False
-
-    def process_bind_param(self, value, dialect):
-        if value is None:
-            return value
-        else:
-            return msgpack.dumps(value)
-
-    def process_result_value(self, value, dialect):
-        if value is None:
-            return value
-        else:
-            return msgpack.loads(value)
 
 
 @as_declarative()

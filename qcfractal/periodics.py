@@ -13,7 +13,7 @@ import time
 import weakref
 from datetime import datetime, timedelta
 from qcfractal.interface.models import ManagerStatusEnum, ComputeError
-from .storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+from .db_socket.socket import SQLAlchemySocket
 from .process_runner import ProcessBase, InterruptableSleep, SleepInterrupted
 
 from typing import TYPE_CHECKING

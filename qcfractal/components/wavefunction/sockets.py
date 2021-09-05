@@ -4,13 +4,13 @@ import logging
 from sqlalchemy.orm import load_only
 from qcfractal.interface.models import WavefunctionProperties, ObjectId
 from qcfractal.components.wavefunction.db_models import WavefunctionStoreORM
-from qcfractal.storage_sockets.sqlalchemy_common import get_query_proj_columns
+from qcfractal.db_socket.helpers import get_query_proj_columns
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+    from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import Dict, Iterable, List, Optional, Sequence, Any
 
     WavefunctionDict = Dict[str, Any]

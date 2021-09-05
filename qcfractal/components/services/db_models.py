@@ -4,8 +4,7 @@ from sqlalchemy import Column, Integer, ForeignKey, JSON, String, DateTime, Inde
 from sqlalchemy.orm import relationship
 
 from qcfractal.interface.models import PriorityEnum
-from qcfractal.storage_sockets.models import Base
-from qcfractal.storage_sockets.models.sql_base import PlainMsgpackExt
+from qcfractal.db_socket import Base, PlainMsgpackExt
 
 
 class ServiceQueueTasks(Base):

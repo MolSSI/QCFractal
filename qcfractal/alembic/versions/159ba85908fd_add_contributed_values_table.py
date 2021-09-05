@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy import orm
 from sqlalchemy.dialects import postgresql
-from qcfractal.storage_sockets.models.sql_base import MsgpackExt
+from qcfractal.db_socket.column_types import MsgpackExt
 from qcfractal.components.datasets.db_models import ContributedValuesORM
 
 import numpy as np

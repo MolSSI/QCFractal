@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 from sqlalchemy import Column, Integer, Boolean
 
 from qcfractal.interface.models import ObjectId
-from qcfractal.storage_sockets.models import Base, MsgpackExt
+from qcfractal.db_socket import Base, MsgpackExt
+from typing import Optional, Any, Dict, Iterable
 
 
 class WavefunctionStoreORM(Base):
@@ -35,9 +38,9 @@ class WavefunctionStoreORM(Base):
     # Extras
     extras = Column(MsgpackExt, nullable=True)
 
-    def dict(self):
+    def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
 
-        d = Base.dict(self)
+        d = Base.dict(self, exclude)
 
         # TODO - INT ID should not be done
         if "id" in d:

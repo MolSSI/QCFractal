@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+    from qcfractal.db_socket.socket import SQLAlchemySocket
 
 # A generic error message if the FailedOperation doesn't contain one
 _default_error = {"error_type": "not_supplied", "error_message": "No error message found on task."}

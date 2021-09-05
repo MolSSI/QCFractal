@@ -6,7 +6,7 @@ from qcfractal.app.routes.helpers import parse_bodymodel, SerializedResponse
 from qcfractal.app.routes.main import main
 from qcfractal.app.routes.permissions import check_access
 from qcfractal.interface.models import rest_model
-from qcfractal.storage_sockets.storage_utils import add_metadata_template
+from qcfractal.components.datasets.storage_utils import add_metadata_template
 
 
 @main.route("/collection", methods=["GET"])

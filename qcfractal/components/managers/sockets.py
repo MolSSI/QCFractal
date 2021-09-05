@@ -7,14 +7,13 @@ from sqlalchemy import or_, and_, update
 from sqlalchemy.orm import load_only, selectinload
 from qcfractal.interface.models import ObjectId, ManagerStatusEnum, QueryMetadata
 from qcfractal.components.managers.db_models import QueueManagerLogORM, QueueManagerORM
-from qcfractal.storage_sockets.sqlalchemy_socket import calculate_limit
-from qcfractal.storage_sockets.sqlalchemy_common import get_query_proj_columns, get_count
+from qcfractal.db_socket.helpers import get_query_proj_columns, get_count, calculate_limit
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+    from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import List, Iterable, Optional, Sequence, Sequence, Dict, Any, Tuple
 
     ManagerDict = Dict[str, Any]

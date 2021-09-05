@@ -29,7 +29,7 @@ from .postgres_harness import TemporaryPostgres
 from .qc_queue import build_queue_adapter, QueueManager
 from .snowflake import FractalSnowflake
 from .periodics import FractalPeriodics
-from .storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+from .db_socket.socket import SQLAlchemySocket
 
 ## For mock flask responses
 # from requests_mock_flask import add_flask_app_to_mock

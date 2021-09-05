@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, ForeignKey, String, LargeBinary, Boolean, JSON
 from sqlalchemy.orm import relationship
 
-from qcfractal.storage_sockets.models import Base
+from qcfractal.db_socket import Base
 
 
 class UserORM(Base):

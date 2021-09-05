@@ -11,8 +11,8 @@ from .config import config
 from flask_jwt_extended import JWTManager
 import logging
 
-from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
-from qcfractal.storage_sockets import ViewHandler
+from qcfractal.db_socket.socket import SQLAlchemySocket
+from qcfractal.db_socket import ViewHandler
 from qcfractal.process_runner import ProcessBase
 
 from typing import TYPE_CHECKING

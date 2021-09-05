@@ -10,13 +10,13 @@ from sqlalchemy.orm import joinedload, selectinload, contains_eager, load_only
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.records.db_models import BaseResultORM
 
-from qcfractal.storage_sockets.sqlalchemy_common import (
+from qcfractal.db_socket.helpers import (
     insert_general,
     get_query_proj_columns,
     get_count,
 )
 
-from qcfractal.storage_sockets.sqlalchemy_socket import calculate_limit
+from qcfractal.db_socket.helpers import calculate_limit
 
 from qcfractal.interface.models import (
     PriorityEnum,
@@ -37,7 +37,7 @@ from qcfractal.components.records.optimization.handlers import OptimizationHandl
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+    from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.interface.models import ObjectId, AllResultTypes, Molecule, KVStore
     from typing import List, Dict, Tuple, Optional, Any, Iterable, Sequence, Union
 
