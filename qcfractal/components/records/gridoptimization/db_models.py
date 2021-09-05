@@ -6,12 +6,12 @@ from sqlalchemy.orm import relationship
 
 from qcfractal.components.molecule.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseResultORM
-from qcfractal.db_socket import Base
+from qcfractal.db_socket import BaseORM
 
 from typing import Dict, Any, Optional, Iterable
 
 
-class GridOptimizationAssociation(Base):
+class GridOptimizationAssociation(BaseORM):
     """Association table for many to many"""
 
     __tablename__ = "grid_optimization_association"

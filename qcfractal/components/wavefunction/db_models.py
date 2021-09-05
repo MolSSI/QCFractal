@@ -3,11 +3,11 @@ from __future__ import annotations
 from sqlalchemy import Column, Integer, Boolean
 
 from qcfractal.interface.models import ObjectId
-from qcfractal.db_socket import Base, MsgpackExt
+from qcfractal.db_socket import BaseORM, MsgpackExt
 from typing import Optional, Any, Dict, Iterable
 
 
-class WavefunctionStoreORM(Base):
+class WavefunctionStoreORM(BaseORM):
 
     __tablename__ = "wavefunction_store"
 
@@ -40,7 +40,7 @@ class WavefunctionStoreORM(Base):
 
     def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
 
-        d = Base.dict(self, exclude)
+        d = BaseORM.dict(self, exclude)
 
         # TODO - INT ID should not be done
         if "id" in d:

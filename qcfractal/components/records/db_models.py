@@ -6,10 +6,10 @@ from sqlalchemy.orm import relationship
 
 from qcfractal.components.outputstore.db_models import KVStoreORM
 from qcfractal.interface.models import RecordStatusEnum
-from qcfractal.db_socket import Base, MsgpackExt
+from qcfractal.db_socket import BaseORM, MsgpackExt
 
 
-class BaseResultORM(Base):
+class BaseResultORM(BaseORM):
     """
     Abstract Base class for ResultORMs and ProcedureORMs
     """

@@ -7,12 +7,12 @@ from sqlalchemy.orm import relationship, column_property
 from qcfractal.components.molecule.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseResultORM
 from qcfractal.interface.models import ObjectId
-from qcfractal.db_socket import Base
+from qcfractal.db_socket import BaseORM
 
 from typing import Iterable, Dict, Any, Optional
 
 
-class Trajectory(Base):
+class Trajectory(BaseORM):
     """Association table for many to many"""
 
     __tablename__ = "opt_result_association"
@@ -84,7 +84,7 @@ class OptimizationProcedureORM(BaseResultORM):
 
     def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
 
-        d = Base.dict(self, exclude)
+        d = BaseORM.dict(self, exclude)
 
         # TODO - INT ID should not be done
         if "id" in d:

@@ -19,13 +19,13 @@ from qcfractal.db_socket.socket import SQLAlchemySocket
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from qcfractal.db_socket import Base
+    from qcfractal.db_socket import BaseORM
     from qcfractal.components.services.db_models import ServiceQueueTasks, ServiceQueueORM
     from qcfractal.components.tasks.db_models import TaskQueueORM
     from qcfractal.interface.models import InsertMetadata, ObjectId, PriorityEnum
     from typing import Sequence, Tuple, List, Optional, TypeVar
 
-    _ORM_T = TypeVar("_ORM_T", bound=Base)
+    _ORM_T = TypeVar("_ORM_T", bound=BaseORM)
 
 
 class BaseProcedureHandler(abc.ABC):

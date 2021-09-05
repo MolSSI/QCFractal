@@ -1,12 +1,12 @@
 from sqlalchemy import Column, Integer, String, JSON, Boolean, Index
 
 from qcfractal.interface.models import ObjectId
-from qcfractal.db_socket import Base
+from qcfractal.db_socket import BaseORM
 
 from typing import Dict, Any, Optional, Iterable
 
 
-class KeywordsORM(Base):
+class KeywordsORM(BaseORM):
     """
     KeywordsORM are unique for a specific program and name
     """
@@ -25,7 +25,7 @@ class KeywordsORM(Base):
 
     def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
 
-        d = Base.dict(self, exclude)
+        d = BaseORM.dict(self, exclude)
 
         # TODO - INT ID should not be done
         if "id" in d:

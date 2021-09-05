@@ -3,10 +3,10 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
 from qcfractal.components.datasets.db_models import CollectionORM, DatasetMixin, ContributedValuesORM
-from qcfractal.db_socket import Base
+from qcfractal.db_socket import BaseORM
 
 
-class DatasetEntryORM(Base):
+class DatasetEntryORM(BaseORM):
     """Association table for many to many"""
 
     __tablename__ = "dataset_entry"

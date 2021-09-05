@@ -2,10 +2,10 @@ import datetime
 
 from sqlalchemy import Column, Integer, DateTime, String, Float, BigInteger, JSON, Index
 
-from qcfractal.db_socket import Base
+from qcfractal.db_socket import BaseORM
 
 
-class AccessLogORM(Base):
+class AccessLogORM(BaseORM):
     __tablename__ = "access_log"
 
     id = Column(Integer, primary_key=True)
@@ -40,7 +40,7 @@ class AccessLogORM(Base):
     subdivision = Column(String)
 
 
-class InternalErrorLogORM(Base):
+class InternalErrorLogORM(BaseORM):
     __tablename__ = "internal_error_log"
 
     id = Column(Integer, primary_key=True)
@@ -54,7 +54,7 @@ class InternalErrorLogORM(Base):
     request_body = Column(String)
 
 
-class ServerStatsLogORM(Base):
+class ServerStatsLogORM(BaseORM):
     __tablename__ = "server_stats_log"
 
     id = Column(Integer, primary_key=True)
@@ -81,7 +81,7 @@ class ServerStatsLogORM(Base):
     __table_args__ = (Index("ix_server_stats_log_timestamp", "timestamp"),)
 
 
-class VersionsORM(Base):
+class VersionsORM(BaseORM):
     __tablename__ = "versions"
 
     id = Column(Integer, primary_key=True)

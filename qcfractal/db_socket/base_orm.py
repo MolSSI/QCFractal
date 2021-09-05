@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 @as_declarative()
-class Base:
+class BaseORM:
     """Base declarative class of all ORM models"""
 
     db_related_fields = ["result_type", "base_result_id", "_trajectory", "collection_type", "lname"]
@@ -75,10 +75,10 @@ class Base:
             )
 
         for k, v in d.items():
-            if isinstance(v, Base):
+            if isinstance(v, BaseORM):
                 d[k] = v.dict()
             elif isinstance(v, list):
-                d[k] = [x.dict() if isinstance(x, Base) else x for x in v]
+                d[k] = [x.dict() if isinstance(x, BaseORM) else x for x in v]
 
         return d
 
