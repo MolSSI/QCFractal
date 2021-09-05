@@ -166,6 +166,7 @@ class SQLAlchemySocket:
         from ..components.outputstore.sockets import OutputStoreSocket
         from ..components.wavefunction.sockets import WavefunctionSocket
         from ..components.keywords.sockets import KeywordsSocket
+        from ..components.permissions.sockets import UserSocket, RoleSocket
 
         from qcfractal.storage_sockets.subsockets import (
             ServerLogSocket,
@@ -174,8 +175,6 @@ class SQLAlchemySocket:
             ProcedureSocket,
             ServiceSocket,
             ManagerSocket,
-            UserSocket,
-            RoleSocket,
         )
 
         self.server_log = ServerLogSocket(self)

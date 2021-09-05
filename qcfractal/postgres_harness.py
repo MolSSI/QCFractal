@@ -15,8 +15,9 @@ import psycopg2
 import psycopg2.errors
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from qcfractal.storage_sockets.models import Base, VersionsORM, RoleORM
-from qcfractal.storage_sockets.subsockets.role import default_roles
+from qcfractal.storage_sockets.models import Base, VersionsORM
+from .components.permissions.db_models import RoleORM
+from qcfractal.components.permissions.role_socket import default_roles
 
 from .config import DatabaseConfig
 from .port_util import find_open_port, is_port_inuse
