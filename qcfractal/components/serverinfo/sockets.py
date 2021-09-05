@@ -31,17 +31,17 @@ if TYPE_CHECKING:
 
 
 class ServerInfoSocket:
-    def __init__(self, core_socket: SQLAlchemySocket):
-        self._core_socket = core_socket
+    def __init__(self, root_socket: SQLAlchemySocket):
+        self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._access_log_limit = core_socket.qcf_config.response_limits.access_logs
-        self._server_log_limit = core_socket.qcf_config.response_limits.server_logs
+        self._access_log_limit = root_socket.qcf_config.response_limits.access_logs
+        self._server_log_limit = root_socket.qcf_config.response_limits.server_logs
 
         # Set up access logging
-        self._access_log_enabled = core_socket.qcf_config.log_access
+        self._access_log_enabled = root_socket.qcf_config.log_access
 
         if self._access_log_enabled:
-            geo_file_path = core_socket.qcf_config.geo_file_path
+            geo_file_path = root_socket.qcf_config.geo_file_path
             self._geoip2_reader = None
 
             if geo_file_path:
@@ -108,7 +108,7 @@ class ServerInfoSocket:
         # Obtain all the information we can from the GeoIP database
         ip_data = self._get_geoip2_data(log_data["ip_address"])
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             log = AccessLogORM(**log_data, **ip_data)  # type: ignore
             session.add(log)
             session.flush()
@@ -133,7 +133,7 @@ class ServerInfoSocket:
         """
 
         log = InternalErrorLogORM(**error_data, qcfractal_version=qcfractal.__version__)  # type: ignore
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             session.add(log)
             session.flush()
             return log.id
@@ -155,10 +155,10 @@ class ServerInfoSocket:
         """
 
         table_list = [CollectionORM, MoleculeORM, BaseResultORM, KVStoreORM, AccessLogORM, InternalErrorLogORM]
-        db_name = self._core_socket.qcf_config.database.database_name
+        db_name = self.root_socket.qcf_config.database.database_name
 
         table_counts = {}
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             # total size of the database
             db_size = session.execute(text("SELECT pg_database_size(:dbname)"), {"dbname": db_name}).scalar()
 
@@ -276,7 +276,7 @@ class ServerInfoSocket:
         if after:
             and_query.append(ServerStatsLogORM.timestamp >= after)
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             query = (
                 session.query(ServerStatsLogORM).filter(and_(*and_query)).order_by(ServerStatsLogORM.timestamp.desc())
             )
@@ -379,7 +379,7 @@ class ServerInfoSocket:
         if after:
             and_query.append(AccessLogORM.access_date >= after)
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             query = session.query(AccessLogORM).filter(and_(*and_query)).order_by(AccessLogORM.access_date.desc())
             query = query.options(load_only(*load_cols))
             n_found = get_count(query)
@@ -429,7 +429,7 @@ class ServerInfoSocket:
             and_query.append(AccessLogORM.access_date >= after)
 
         result_dict = defaultdict(list)
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             if group_by == "user":
                 group_col = AccessLogORM.user.label("group_col")
             elif group_by == "day":
@@ -544,7 +544,7 @@ class ServerInfoSocket:
         if after:
             and_query.append(InternalErrorLogORM.error_date >= after)
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             query = (
                 session.query(InternalErrorLogORM)
                 .filter(and_(*and_query))

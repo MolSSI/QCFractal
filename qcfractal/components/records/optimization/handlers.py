@@ -41,10 +41,10 @@ class OptimizationHandler(BaseProcedureHandler):
     Optimization task manipulation
     """
 
-    def __init__(self, core_socket: SQLAlchemySocket):
-        self._core_socket = core_socket
+    def __init__(self, root_socket: SQLAlchemySocket):
+        self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._limit = core_socket.qcf_config.response_limits.record
+        self._limit = root_socket.qcf_config.response_limits.record
 
         BaseProcedureHandler.__init__(self)
 
@@ -80,7 +80,7 @@ class OptimizationHandler(BaseProcedureHandler):
             r = OptimizationRecord(**d)
             opt.hash_index = r.get_hash_index()
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             meta, orm = insert_general(
                 session, optimizations, (OptimizationProcedureORM.hash_index,), (OptimizationProcedureORM.id,)
             )
@@ -122,7 +122,7 @@ class OptimizationHandler(BaseProcedureHandler):
         if qc_keywords is not None:
             # The keywords passed in may contain the entire KeywordSet.
             # But the QCSpec will only hold the ID
-            meta, qc_keywords_ids = self._core_socket.keywords.add_mixed([qc_keywords], session=session)
+            meta, qc_keywords_ids = self.root_socket.keywords.add_mixed([qc_keywords], session=session)
 
             if meta.success is False or qc_keywords_ids[0] is None:
                 raise KeyError("Could not find requested KeywordsSet from id key.")
@@ -171,7 +171,7 @@ class OptimizationHandler(BaseProcedureHandler):
 
             # TODO - Also fix if made not nullable
             if qc_keywords_id is not None:
-                qc_keywords = self._core_socket.keywords.get([qc_keywords_id], session=session)[0]["values"]
+                qc_keywords = self.root_socket.keywords.get([qc_keywords_id], session=session)[0]["values"]
             else:
                 qc_keywords = {}
 
@@ -214,7 +214,7 @@ class OptimizationHandler(BaseProcedureHandler):
             all_tasks.append(task)
 
         # Add all tasks to the database. Also flushes the session
-        return self._core_socket.task.add_task_orm(all_tasks, session=session)
+        return self.root_socket.task.add_task_orm(all_tasks, session=session)
 
     def update_completed(
         self,
@@ -232,9 +232,9 @@ class OptimizationHandler(BaseProcedureHandler):
         assert isinstance(result_orm, OptimizationProcedureORM)
 
         # Get the outputs
-        helpers.retrieve_outputs(self._core_socket, session, result, result_orm)
+        helpers.retrieve_outputs(self.root_socket, session, result, result_orm)
 
-        meta, mol_ids = self._core_socket.molecules.add(
+        meta, mol_ids = self.root_socket.molecules.add(
             [result.initial_molecule, result.final_molecule], session=session
         )
 
@@ -246,7 +246,7 @@ class OptimizationHandler(BaseProcedureHandler):
 
         # use the QCSpec stored in the db rather than figure it out from the qcelemental model
         trajectory_orm = self.parse_trajectory(session, result.trajectory, result_orm.qc_spec, manager_name)
-        meta, trajectory_ids = self._core_socket.task.single.add_orm(trajectory_orm, session=session)
+        meta, trajectory_ids = self.root_socket.task.single.add_orm(trajectory_orm, session=session)
 
         # Optimizations can have overlapping trajectories
         # An unhandled case is where the gradient is actually a requested calculation elsewhere
@@ -304,7 +304,7 @@ class OptimizationHandler(BaseProcedureHandler):
 
         # Add all molecules at once
         molecules = [x.molecule for x in results]
-        _, mol_ids = self._core_socket.molecules.add(molecules, session=session)
+        _, mol_ids = self.root_socket.molecules.add(molecules, session=session)
 
         ret = []
         for v, mol_id in zip(results, mol_ids):
@@ -317,11 +317,11 @@ class OptimizationHandler(BaseProcedureHandler):
             r.keywords = qc_spec["keywords"] if "keywords" in qc_spec else None
             r.molecule = int(mol_id)  # TODO - INT ID
 
-            wfn_id, wfn_info = helpers.wavefunction_helper(self._core_socket, session, v.wavefunction)
+            wfn_id, wfn_info = helpers.wavefunction_helper(self.root_socket, session, v.wavefunction)
             r.wavefunction = wfn_info
             r.wavefunction_data_id = wfn_id
 
-            helpers.retrieve_outputs(self._core_socket, session, v, r)
+            helpers.retrieve_outputs(self.root_socket, session, v, r)
 
             r.version = 1
             r.extras = v.extras
@@ -391,7 +391,7 @@ class OptimizationHandler(BaseProcedureHandler):
 
         load_cols, load_rels = get_query_proj_columns(OptimizationProcedureORM, include, exclude)
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             query = (
                 session.query(OptimizationProcedureORM)
                 .filter(OptimizationProcedureORM.id.in_(unique_ids))
@@ -490,7 +490,7 @@ class OptimizationHandler(BaseProcedureHandler):
         if modified_after is not None:
             and_query.append(OptimizationProcedureORM.modified_on > modified_after)
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             query = session.query(OptimizationProcedureORM).filter(and_(*and_query))
             query = query.options(load_only(*load_cols))
 

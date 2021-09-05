@@ -163,12 +163,12 @@ class GridOptimizationServiceState(ProtoModel):
 class GridOptimizationHandler(BaseServiceHandler):
     """A handler for gridoptimization services"""
 
-    def __init__(self, core_socket: SQLAlchemySocket):
-        self._core_socket = core_socket
+    def __init__(self, root_socket: SQLAlchemySocket):
+        self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._limit = core_socket.qcf_config.response_limits.record
+        self._limit = root_socket.qcf_config.response_limits.record
 
-        BaseServiceHandler.__init__(self, core_socket)
+        BaseServiceHandler.__init__(self, root_socket)
 
     def add_orm(
         self, gridopt_orms: Sequence[GridOptimizationProcedureORM], *, session: Optional[Session] = None
@@ -208,7 +208,7 @@ class GridOptimizationHandler(BaseServiceHandler):
             )
             gridopt.hash_index = r.get_hash_index()
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             meta, orm = insert_general(
                 session, gridopt_orms, (GridOptimizationProcedureORM.hash_index,), (GridOptimizationProcedureORM.id,)
             )
@@ -263,7 +263,7 @@ class GridOptimizationHandler(BaseServiceHandler):
 
         load_cols, load_rels = get_query_proj_columns(GridOptimizationProcedureORM, include, exclude)
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             query = (
                 session.query(GridOptimizationProcedureORM)
                 .filter(GridOptimizationProcedureORM.id.in_(unique_ids))
@@ -291,7 +291,7 @@ class GridOptimizationHandler(BaseServiceHandler):
         self, session: Session, service_input: GridOptimizationInput
     ) -> Tuple[InsertMetadata, List[ObjectId]]:
 
-        meta, mol_ids = self._core_socket.molecules.add_mixed([service_input.initial_molecule])
+        meta, mol_ids = self.root_socket.molecules.add_mixed([service_input.initial_molecule])
 
         # TODO - int id
         mol_id = int(mol_ids[0])
@@ -392,9 +392,9 @@ class GridOptimizationHandler(BaseServiceHandler):
 
             # Add the output to the base procedure
             # TODO Add info to output
-            # gridopt_orm.stdout = self._core_socket.output_store.add([stdout])[0]
+            # gridopt_orm.stdout = self.root_socket.output_store.add([stdout])[0]
 
-        return self._core_socket.services.add_task_orm(new_services, session=session)
+        return self.root_socket.services.add_task_orm(new_services, session=session)
 
     def iterate(self, session: Session, service_orm: ServiceQueueORM) -> bool:
         gridopt_orm = service_orm.procedure_obj

@@ -37,14 +37,14 @@ if TYPE_CHECKING:
 
 
 class ServiceSocket:
-    def __init__(self, core_socket: SQLAlchemySocket):
-        self._core_socket = core_socket
+    def __init__(self, root_socket: SQLAlchemySocket):
+        self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._user_service_limit = core_socket.qcf_config.response_limits.service_queue
-        self._max_active_services = core_socket.qcf_config.max_active_services
+        self._user_service_limit = root_socket.qcf_config.response_limits.service_queue
+        self._max_active_services = root_socket.qcf_config.max_active_services
 
-        self.torsiondrive = TorsionDriveHandler(core_socket)
-        self.gridoptimization = GridOptimizationHandler(core_socket)
+        self.torsiondrive = TorsionDriveHandler(root_socket)
+        self.gridoptimization = GridOptimizationHandler(root_socket)
 
         self.handler_map: Dict[str, BaseServiceHandler] = {
             "torsiondrive": self.torsiondrive,
@@ -79,7 +79,7 @@ class ServiceSocket:
 
         # Check for incompatible statuses
         base_result_ids = [x.procedure_id for x in services]
-        statuses = self._core_socket.records.get(base_result_ids, include=["status"], session=session)
+        statuses = self.root_socket.records.get(base_result_ids, include=["status"], session=session)
 
         # TODO - logic will need to be adjusted with new statuses
         # This is an error. These should have been checked before calling this function
@@ -88,7 +88,7 @@ class ServiceSocket:
                 "Cannot add ServiceQueueORM for a procedure that is already complete. This is a programmer error"
             )
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             meta, ids = insert_general(session, services, (ServiceQueueORM.procedure_id,), (ServiceQueueORM.id,))
 
             return meta, [x[0] for x in ids]
@@ -103,7 +103,7 @@ class ServiceSocket:
         errors = []
         ids = []
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             for idx, specification in enumerate(specifications):
                 service_handler = self.handler_map[specification.procedure]
 
@@ -185,7 +185,7 @@ class ServiceSocket:
 
     def iterate_services(self, *, session: Optional[Session] = None) -> int:
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
 
             # We do a plain .join() because we are querying, and then also supplying contains_eager() so that
             # the ServiceQueueORM.procedure_obj gets populated
@@ -221,17 +221,17 @@ class ServiceSocket:
                             "error_message": "Error iterating service: " + str(err),
                         }
 
-                        self._core_socket.task.update_outputs(session, service_orm.procedure_obj, error=error)
+                        self.root_socket.task.update_outputs(session, service_orm.procedure_obj, error=error)
                         service_orm.procedure_obj.status = RecordStatusEnum.error
                         session.commit()
-                        self._core_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.error)
+                        self.root_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.error)
                         continue
 
                     # If the service has successfully completed, delete the entry from the Service Queue
                     if completed:
                         session.delete(service_orm)
                         session.commit()
-                        self._core_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.complete)
+                        self.root_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.complete)
                 else:
                     # At least one of the tasks was not successful. Therefore, mark the service as an error
                     service_orm.procedure_obj.status = RecordStatusEnum.error
@@ -241,10 +241,10 @@ class ServiceSocket:
                         "error_message": "Some task(s) did not complete successfully",
                     }
 
-                    self._core_socket.task.update_outputs(session, service_orm.procedure_obj, error=error)
+                    self.root_socket.task.update_outputs(session, service_orm.procedure_obj, error=error)
 
                     session.commit()
-                    self._core_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.error)
+                    self.root_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.error)
 
             # Should we start more?
             running_count = (
@@ -286,11 +286,11 @@ class ServiceSocket:
                                 "error_message": "Error in first iteration of service: " + str(err),
                             }
 
-                            self._core_socket.task.update_outputs(session, service_orm.procedure_obj, error=error)
+                            self.root_socket.task.update_outputs(session, service_orm.procedure_obj, error=error)
 
                             service_orm.procedure_obj.status = RecordStatusEnum.error
                             session.commit()
-                            self._core_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.error)
+                            self.root_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.error)
 
         return running_count
 
@@ -330,7 +330,7 @@ class ServiceSocket:
             List of the found tasks
         """
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             if len(id) > self._user_service_limit:
                 raise RuntimeError(f"Request for {len(id)} services is over the limit of {self._user_service_limit}")
 
@@ -428,7 +428,7 @@ class ServiceSocket:
         if program:
             and_query.append(ServiceQueueORM.required_programs.has_any(program))
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             query = (
                 session.query(ServiceQueueORM)
                 .join(ServiceQueueORM.procedure_obj)
@@ -474,7 +474,7 @@ class ServiceSocket:
         if procedure_id:
             query.append(BaseResultORM.id.in_(procedure_id))
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             results = (
                 session.query(BaseResultORM)
                 .join(BaseResultORM.service_obj)
@@ -491,7 +491,7 @@ class ServiceSocket:
                 # Also reset the subtasks
                 subtasks = r.service_obj.tasks_obj
                 subtask_ids = [x.procedure_id for x in subtasks]
-                self._core_socket.task.reset_tasks(
+                self.root_socket.task.reset_tasks(
                     base_result=subtask_ids, reset_running=False, reset_error=True, session=session
                 )
 

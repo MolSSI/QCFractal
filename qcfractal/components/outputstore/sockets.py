@@ -15,10 +15,10 @@ if TYPE_CHECKING:
 
 
 class OutputStoreSocket:
-    def __init__(self, core_socket: SQLAlchemySocket):
-        self._core_socket = core_socket
+    def __init__(self, root_socket: SQLAlchemySocket):
+        self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._limit = core_socket.qcf_config.response_limits.output_store
+        self._limit = root_socket.qcf_config.response_limits.output_store
 
     @staticmethod
     def output_to_orm(output: KVStore) -> KVStoreORM:
@@ -53,7 +53,7 @@ class OutputStoreSocket:
 
         output_ids = []
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             for output in outputs:
                 if isinstance(output, KVStore):
                     kv_obj = output
@@ -104,7 +104,7 @@ class OutputStoreSocket:
         int_id = [int(x) for x in id]
         unique_ids = list(set(int_id))
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             results = session.query(KVStoreORM).filter(KVStoreORM.id.in_(unique_ids)).yield_per(50)
             result_map = {r.id: r.dict() for r in results}
 
@@ -137,7 +137,7 @@ class OutputStoreSocket:
             The number of deleted outputs
         """
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             return session.query(KVStoreORM).filter(KVStoreORM.id.in_(id)).delete()
 
     def append(self, id: Optional[ObjectId], to_append: str, *, session: Optional[Session] = None) -> ObjectId:
@@ -166,7 +166,7 @@ class OutputStoreSocket:
             this will represent the ID of the new output object
         """
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             if id is None:
                 kv = KVStore.compress(to_append)
                 return self.add([kv], session=session)[0]

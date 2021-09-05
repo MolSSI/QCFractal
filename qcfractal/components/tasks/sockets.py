@@ -45,17 +45,17 @@ if TYPE_CHECKING:
 
 
 class TaskSocket:
-    def __init__(self, core_socket: SQLAlchemySocket):
-        self._core_socket = core_socket
+    def __init__(self, root_socket: SQLAlchemySocket):
+        self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
 
-        self._user_task_limit = core_socket.qcf_config.response_limits.task_queue
-        self._manager_task_limit = core_socket.qcf_config.response_limits.manager_task
+        self._user_task_limit = root_socket.qcf_config.response_limits.task_queue
+        self._manager_task_limit = root_socket.qcf_config.response_limits.manager_task
 
         # Subsubsockets/handlers
-        self.single = SingleResultHandler(core_socket)
-        self.optimization = OptimizationHandler(core_socket)
-        self.failure = FailedOperationHandler(core_socket)
+        self.single = SingleResultHandler(root_socket)
+        self.optimization = OptimizationHandler(root_socket)
+        self.failure = FailedOperationHandler(root_socket)
 
         self.handler_map: Dict[str, BaseProcedureHandler] = {
             "single": self.single,
@@ -91,7 +91,7 @@ class TaskSocket:
 
         # Check for incompatible statuses
         base_result_ids = [x.base_result_id for x in tasks]
-        statuses = self._core_socket.records.get(base_result_ids, include=["status"], session=session)
+        statuses = self.root_socket.records.get(base_result_ids, include=["status"], session=session)
 
         # This is an error. These should have been checked before calling this function
         if any(x["status"] == RecordStatusEnum.complete for x in statuses):
@@ -99,7 +99,7 @@ class TaskSocket:
                 "Cannot add TaskQueueORM for a procedure that is already complete. This is a programmer error"
             )
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             meta, ids = insert_general(session, tasks, (TaskQueueORM.base_result_id,), (TaskQueueORM.id,))
             return meta, [x[0] for x in ids]
 
@@ -128,13 +128,13 @@ class TaskSocket:
             base_record_orm.error = None
 
         if stdout is not None:
-            base_record_orm.stdout = self._core_socket.outputstore.add([stdout], session=session)[0]
+            base_record_orm.stdout = self.root_socket.outputstore.add([stdout], session=session)[0]
         if stderr is not None:
-            base_record_orm.stderr = self._core_socket.outputstore.add([stderr], session=session)[0]
+            base_record_orm.stderr = self.root_socket.outputstore.add([stderr], session=session)[0]
         if error is not None:
-            base_record_orm.error = self._core_socket.outputstore.add([error], session=session)[0]
+            base_record_orm.error = self.root_socket.outputstore.add([error], session=session)[0]
 
-        self._core_socket.outputstore.delete(to_delete, session=session)
+        self.root_socket.outputstore.delete(to_delete, session=session)
 
     def create(
         self, molecules: List[Molecule], specification: AllProcedureSpecifications, *, session: Optional[Session] = None
@@ -160,7 +160,7 @@ class TaskSocket:
 
         # Add all the molecules stored in the 'data' member
         # This should apply to all procedures
-        molecule_meta, molecule_ids = self._core_socket.molecules.add_mixed(molecules)
+        molecule_meta, molecule_ids = self.root_socket.molecules.add_mixed(molecules)
 
         # Only do valid molecule ids (ie, not None in the returned list)
         # These would correspond to errors
@@ -171,7 +171,7 @@ class TaskSocket:
 
         # Create procedures and tasks in the same session
         # This will be committed only at the end
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             meta, ids = procedure_handler.create_records(session, valid_molecule_ids, specification)
 
             if not meta.success:
@@ -231,7 +231,7 @@ class TaskSocket:
 
         # Obtain all ORM for the task queue at once
         # Can be expensive, but probably faster than one-by-one
-        with self._core_socket.session_scope() as session:
+        with self.root_socket.session_scope() as session:
             task_success = 0
             task_failures = 0
             task_totals = len(results.items())
@@ -281,7 +281,7 @@ class TaskSocket:
                     elif result.success is False and isinstance(result, FailedOperation):
                         self.failure.update_completed(session, task_orm, manager_name, result)
                         session.commit()
-                        self._core_socket.notify_completed_watch(base_result_id, RecordStatusEnum.error)
+                        self.root_socket.notify_completed_watch(base_result_id, RecordStatusEnum.error)
 
                         task_failures += 1
 
@@ -293,7 +293,7 @@ class TaskSocket:
 
                         self.failure.update_completed(session, task_orm, manager_name, failed_op)
                         session.commit()
-                        self._core_socket.notify_completed_watch(base_result_id, RecordStatusEnum.error)
+                        self.root_socket.notify_completed_watch(base_result_id, RecordStatusEnum.error)
 
                         self._logger.error(msg)
                         task_failures += 1
@@ -306,7 +306,7 @@ class TaskSocket:
                         # Delete the task from the task queue since it is completed
                         session.delete(task_orm)
                         session.commit()
-                        self._core_socket.notify_completed_watch(base_result_id, RecordStatusEnum.complete)
+                        self.root_socket.notify_completed_watch(base_result_id, RecordStatusEnum.complete)
 
                         task_success += 1
 
@@ -321,7 +321,7 @@ class TaskSocket:
 
                     self.failure.update_completed(session, task_orm, manager_name, failed_op)
                     session.commit()
-                    self._core_socket.notify_completed_watch(base_result_id, RecordStatusEnum.error)
+                    self.root_socket.notify_completed_watch(base_result_id, RecordStatusEnum.error)
 
                     self._logger.error(msg)
                     task_failures += 1
@@ -333,7 +333,7 @@ class TaskSocket:
         )
 
         # Update manager logs
-        self._core_socket.managers.update(manager_name, completed=task_totals, failures=task_failures)
+        self.root_socket.managers.update(manager_name, completed=task_totals, failures=task_failures)
 
     def get_tasks(
         self,
@@ -371,7 +371,7 @@ class TaskSocket:
             List of the found tasks
         """
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             if len(id) > self._user_task_limit:
                 raise RuntimeError(f"Request for {len(id)} tasks is over the limit of {self._user_task_limit}")
 
@@ -423,7 +423,7 @@ class TaskSocket:
 
         task_ids: List[Optional[ObjectId]] = []
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             # Slow, but this shouldn't be called too often
             for record_id in id:
                 record = (
@@ -503,8 +503,8 @@ class TaskSocket:
         else:
             tag_queries = [()]
 
-        with self._core_socket.optional_session(session) as session:
-            manager = self._core_socket.managers.get(
+        with self.root_socket.optional_session(session) as session:
+            manager = self.root_socket.managers.get(
                 [manager_name], include=["status"], missing_ok=True, session=session
             )
             if manager[0] is None:
@@ -638,7 +638,7 @@ class TaskSocket:
         if program:
             and_query.append(TaskQueueORM.required_programs.has_any(program))
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             query = (
                 session.query(TaskQueueORM)
                 .join(TaskQueueORM.base_result_obj)
@@ -711,7 +711,7 @@ class TaskSocket:
         if len(query) < 2:
             raise ValueError("All query fields are None, reset_tasks must specify queries.")
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             results = session.query(BaseResultORM).join(BaseResultORM.task_obj).filter(*query).with_for_update().all()
 
             for r in results:
@@ -762,7 +762,7 @@ class TaskSocket:
         if base_result is not None:
             and_query.append(TaskQueueORM.base_result_id.in_(base_result))
 
-        with self._core_socket.session_scope() as session:
+        with self.root_socket.session_scope() as session:
             to_update = (
                 session.query(TaskQueueORM)
                 .join(TaskQueueORM.base_result_obj)

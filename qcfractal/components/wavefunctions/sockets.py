@@ -17,10 +17,10 @@ if TYPE_CHECKING:
 
 
 class WavefunctionSocket:
-    def __init__(self, core_socket: SQLAlchemySocket):
-        self._core_socket = core_socket
+    def __init__(self, root_socket: SQLAlchemySocket):
+        self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._limit = core_socket.qcf_config.response_limits.wavefunction
+        self._limit = root_socket.qcf_config.response_limits.wavefunction
 
     @staticmethod
     def wavefunction_to_orm(wfn: WavefunctionProperties) -> WavefunctionStoreORM:
@@ -56,7 +56,7 @@ class WavefunctionSocket:
 
         wfn_ids = []
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             for wfn in wavefunctions:
                 wfn_orm = self.wavefunction_to_orm(wfn)
                 session.add(wfn_orm)
@@ -108,7 +108,7 @@ class WavefunctionSocket:
 
         load_cols, _ = get_query_proj_columns(WavefunctionStoreORM, include, exclude)
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             results = (
                 session.query(WavefunctionStoreORM)
                 .filter(WavefunctionStoreORM.id.in_(unique_ids))
@@ -147,7 +147,7 @@ class WavefunctionSocket:
             The number of deleted wavefunctions
         """
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             return session.query(WavefunctionStoreORM).filter(WavefunctionStoreORM.id.in_(id)).delete()
 
     def replace(

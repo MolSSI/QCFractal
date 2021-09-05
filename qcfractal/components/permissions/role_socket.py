@@ -61,8 +61,8 @@ default_roles = {
 
 
 class RoleSocket:
-    def __init__(self, core_socket: SQLAlchemySocket):
-        self._core_socket = core_socket
+    def __init__(self, root_socket: SQLAlchemySocket):
+        self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
 
     @staticmethod
@@ -89,7 +89,7 @@ class RoleSocket:
         """
         Get information about all roles
         """
-        with self._core_socket.session_scope() as session:
+        with self.root_socket.session_scope() as session:
             roles = session.query(RoleORM).order_by(RoleORM.id.asc()).all()
             return [self._role_orm_to_model(x) for x in roles]
 
@@ -97,7 +97,7 @@ class RoleSocket:
         """
         Get information about a particular role
         """
-        with self._core_socket.session_scope() as session:
+        with self.root_socket.session_scope() as session:
             role = self._get_internal(session, rolename)
             return self._role_orm_to_model(role)
 
@@ -118,7 +118,7 @@ class RoleSocket:
         """
 
         rolename = rolename.lower()
-        with self._core_socket.session_scope() as session:
+        with self.root_socket.session_scope() as session:
             try:
                 role = RoleORM(rolename=rolename, permissions=permissions)  # type: ignore
                 session.add(role)
@@ -141,7 +141,7 @@ class RoleSocket:
         if rolename == "admin":
             raise UserManagementError("Cannot modify the admin role")
 
-        with self._core_socket.session_scope() as session:
+        with self.root_socket.session_scope() as session:
             role = self._get_internal(session, rolename)
             role.permissions = permissions
 
@@ -159,7 +159,7 @@ class RoleSocket:
         """
 
         try:
-            with self._core_socket.session_scope() as session:
+            with self.root_socket.session_scope() as session:
                 role = self._get_internal(session, rolename)
                 session.delete(role)
         except IntegrityError:
@@ -172,7 +172,7 @@ class RoleSocket:
         If a role does not exist, it will be created. Manually-created roles will be left alone.
         """
 
-        with self._core_socket.session_scope() as session:
+        with self.root_socket.session_scope() as session:
             for rolename, permissions in default_roles.items():
                 role_data = session.query(RoleORM).filter(RoleORM.rolename == rolename).one_or_none()
                 if role_data is None:
