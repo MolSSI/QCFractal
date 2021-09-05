@@ -18,8 +18,6 @@ from .results_models import (
 
 # ORM general models
 from .sql_models import (
-    QueueManagerLogORM,
-    QueueManagerORM,
     ServiceQueueORM,
     ServiceQueueTasks,
     TaskQueueORM,
