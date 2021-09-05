@@ -76,12 +76,12 @@ class TorsionDriveServiceState(ProtoModel):
 class TorsionDriveHandler(BaseServiceHandler):
     """A handler for torsiondrive services"""
 
-    def __init__(self, core_socket: SQLAlchemySocket):
-        self._core_socket = core_socket
+    def __init__(self, root_socket: SQLAlchemySocket):
+        self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._limit = core_socket.qcf_config.response_limits.record
+        self._limit = root_socket.qcf_config.response_limits.record
 
-        BaseServiceHandler.__init__(self, core_socket)
+        BaseServiceHandler.__init__(self, root_socket)
 
     def add_orm(
         self, td_orms: Sequence[TorsionDriveProcedureORM], *, session: Optional[Session] = None
@@ -120,7 +120,7 @@ class TorsionDriveHandler(BaseServiceHandler):
             )
             td.hash_index = r.get_hash_index()
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             meta, orm = insert_general(
                 session, td_orms, (TorsionDriveProcedureORM.hash_index,), (TorsionDriveProcedureORM.id,)
             )
@@ -175,7 +175,7 @@ class TorsionDriveHandler(BaseServiceHandler):
 
         load_cols, load_rels = get_query_proj_columns(TorsionDriveProcedureORM, include, exclude)
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             query = (
                 session.query(TorsionDriveProcedureORM)
                 .filter(TorsionDriveProcedureORM.id.in_(unique_ids))
@@ -203,7 +203,7 @@ class TorsionDriveHandler(BaseServiceHandler):
         self, session: Session, service_input: TorsionDriveInput
     ) -> Tuple[InsertMetadata, List[ObjectId]]:
 
-        meta, mol_ids = self._core_socket.molecules.add_mixed(service_input.initial_molecule)
+        meta, mol_ids = self.root_socket.molecules.add_mixed(service_input.initial_molecule)
 
         # TODO - int id
         mol_ids = [int(x) for x in mol_ids]
@@ -308,9 +308,9 @@ class TorsionDriveHandler(BaseServiceHandler):
             new_services.append(svc_orm)
 
             # Add the output to the base procedure
-            td_orm.stdout = self._core_socket.outputstore.add([stdout])[0]
+            td_orm.stdout = self.root_socket.outputstore.add([stdout])[0]
 
-        return self._core_socket.services.add_task_orm(new_services, session=session)
+        return self.root_socket.services.add_task_orm(new_services, session=session)
 
     def iterate(self, session: Session, service_orm: ServiceQueueORM) -> bool:
 
@@ -347,7 +347,7 @@ class TorsionDriveHandler(BaseServiceHandler):
             initial_id = proc_obj.initial_molecule
             final_id = proc_obj.final_molecule
             mol_ids = [initial_id, final_id]
-            mol_data = self._core_socket.molecules.get(id=mol_ids, include=["geometry"], session=session)
+            mol_data = self.root_socket.molecules.get(id=mol_ids, include=["geometry"], session=session)
 
             # Use plain lists rather than numpy arrays
             initial_mol_geom = mol_data[0]["geometry"].tolist()
@@ -382,7 +382,7 @@ class TorsionDriveHandler(BaseServiceHandler):
         td_orm.minimum_positions = min_positions
         td_orm.final_energy_dict = final_energy
 
-        td_orm.stdout = self._core_socket.outputstore.append(td_orm.stdout, stdout_append, session=session)
+        td_orm.stdout = self.root_socket.outputstore.append(td_orm.stdout, stdout_append, session=session)
 
         # Set the new service state. We must then mark it as modified
         # so that SQLAlchemy can pick up changes. This is because SQLAlchemy

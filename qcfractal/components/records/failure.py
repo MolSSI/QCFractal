@@ -30,8 +30,8 @@ class FailedOperationHandler(BaseProcedureHandler):
     This handles FailedOperation byt copying any info from that class that might be useful.
     """
 
-    def __init__(self, core_socket: SQLAlchemySocket):
-        self._core_socket = core_socket
+    def __init__(self, root_socket: SQLAlchemySocket):
+        self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
 
         BaseProcedureHandler.__init__(self)
@@ -69,7 +69,7 @@ class FailedOperationHandler(BaseProcedureHandler):
             stdout = inp_data.get("stdout", None)
             stderr = inp_data.get("stderr", None)
 
-        self._core_socket.task.update_outputs(session, base_result, stdout=stdout, stderr=stderr, error=error)
+        self.root_socket.task.update_outputs(session, base_result, stdout=stdout, stderr=stderr, error=error)
 
         # Change the status on the base result
         base_result.status = RecordStatusEnum.error

@@ -20,10 +20,10 @@ if TYPE_CHECKING:
 
 
 class KeywordsSocket:
-    def __init__(self, core_socket: SQLAlchemySocket):
-        self._core_socket = core_socket
+    def __init__(self, root_socket: SQLAlchemySocket):
+        self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._limit = core_socket.qcf_config.response_limits.keyword
+        self._limit = root_socket.qcf_config.response_limits.keyword
 
     @staticmethod
     def keywords_to_orm(keywords: Union[KeywordDict, KeywordSet]) -> KeywordsORM:
@@ -67,7 +67,7 @@ class KeywordsSocket:
 
         kw_orm = [self.keywords_to_orm(x) for x in keywords]
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             meta, added_ids = insert_general(session, kw_orm, (KeywordsORM.hash_index,), (KeywordsORM.id,))
 
         # insert_general should always succeed or raise exception
@@ -113,7 +113,7 @@ class KeywordsSocket:
         int_id = [int(x) for x in id]
         unique_ids = list(set(int_id))
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             results = session.query(KeywordsORM).filter(KeywordsORM.id.in_(unique_ids)).yield_per(500)
             result_map = {r.id: r.dict() for r in results}
 
@@ -156,7 +156,7 @@ class KeywordsSocket:
             x if isinstance(x, int) else self.keywords_to_orm(x) for x in keyword_data_2
         ]
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             meta, all_ids = insert_mixed_general(
                 session, KeywordsORM, keyword_orm, KeywordsORM.id, (KeywordsORM.hash_index,), (KeywordsORM.id,)
             )
@@ -186,5 +186,5 @@ class KeywordsSocket:
         # TODO - INT ID
         id_lst = [(int(x),) for x in id]
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             return delete_general(session, KeywordsORM, (KeywordsORM.id,), id_lst)

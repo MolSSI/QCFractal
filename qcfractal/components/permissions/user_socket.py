@@ -30,8 +30,8 @@ def _generate_password() -> str:
 
 
 class UserSocket:
-    def __init__(self, core_socket: SQLAlchemySocket):
-        self._core_socket = core_socket
+    def __init__(self, root_socket: SQLAlchemySocket):
+        self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
 
     @staticmethod
@@ -96,9 +96,9 @@ class UserSocket:
         # Role is not directly a part of the ORM
         user_dict = user_info.dict(exclude={"role"})
 
-        with self._core_socket.session_scope() as session:
+        with self.root_socket.session_scope() as session:
             # Will raise exception if role does not exist
-            role = self._core_socket.roles._get_internal(session, user_info.role)
+            role = self.root_socket.roles._get_internal(session, user_info.role)
 
             hashed_pw = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
 
@@ -117,7 +117,7 @@ class UserSocket:
         """
 
         username = username.lower()
-        with self._core_socket.session_scope() as session:
+        with self.root_socket.session_scope() as session:
             user = session.query(UserORM).filter_by(username=username).one_or_none()
             return user is not None
 
@@ -140,7 +140,7 @@ class UserSocket:
             Permissions available to that user.
         """
 
-        with self._core_socket.session_scope() as session:
+        with self.root_socket.session_scope() as session:
             try:
                 user = self._get_internal(session, username)
             except UserManagementError as e:
@@ -185,7 +185,7 @@ class UserSocket:
         if len(password) == 0:
             raise UserManagementError("Provided password is empty")
 
-        with self._core_socket.session_scope() as session:
+        with self.root_socket.session_scope() as session:
             user = self._get_internal(session, username)
             user.password = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
 
@@ -208,7 +208,7 @@ class UserSocket:
         """
 
         password = _generate_password()
-        with self._core_socket.session_scope() as session:
+        with self.root_socket.session_scope() as session:
             user = self._get_internal(session, username)
             user.password = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
 
@@ -227,7 +227,7 @@ class UserSocket:
         """
 
         try:
-            with self._core_socket.session_scope() as session:
+            with self.root_socket.session_scope() as session:
                 user = self._get_internal(session, username)
                 session.delete(user)
         except IntegrityError:
@@ -250,7 +250,7 @@ class UserSocket:
             Dict of user permissions
         """
 
-        with self._core_socket.session_scope() as session:
+        with self.root_socket.session_scope() as session:
             user = self._get_internal(session, username)
             return user.role_obj.permissions
 
@@ -272,7 +272,7 @@ class UserSocket:
             Enable changing sensitive columns (enabled & role)
         """
 
-        with self._core_socket.session_scope() as session:
+        with self.root_socket.session_scope() as session:
             user = self._get_internal(session, user_info.username)
 
             user.fullname = user_info.fullname
@@ -280,7 +280,7 @@ class UserSocket:
             user.email = user_info.email
 
             if as_admin is True:
-                role = self._core_socket.roles._get_internal(session, user_info.role)
+                role = self.root_socket.roles._get_internal(session, user_info.role)
 
                 user.enabled = user_info.enabled
                 user.role_id = role.id
@@ -292,7 +292,7 @@ class UserSocket:
         Returns all info for a user, except (hashed) password
         """
 
-        with self._core_socket.session_scope() as session:
+        with self.root_socket.session_scope() as session:
             user = self._get_internal(session, username)
             return self._orm_to_model(user)
 
@@ -301,6 +301,6 @@ class UserSocket:
         Get information about all users
         """
 
-        with self._core_socket.session_scope() as session:
+        with self.root_socket.session_scope() as session:
             all_users = session.query(UserORM).order_by(UserORM.id.desc()).all()
             return [self._orm_to_model(x) for x in all_users]

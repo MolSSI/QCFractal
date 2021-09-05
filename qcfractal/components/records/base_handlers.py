@@ -139,8 +139,8 @@ class BaseProcedureHandler(abc.ABC):
 
 
 class BaseServiceHandler(abc.ABC):
-    def __init__(self, core_socket: SQLAlchemySocket):
-        self._core_socket = core_socket
+    def __init__(self, root_socket: SQLAlchemySocket):
+        self.root_socket = root_socket
 
     @abc.abstractmethod
     def verify_input(self, data):
@@ -181,7 +181,7 @@ class BaseServiceHandler(abc.ABC):
         all_added_ids = []
 
         for key, molecule, spec in task_inputs:
-            meta, added_ids = self._core_socket.task.create([molecule], spec, session=session)
+            meta, added_ids = self.root_socket.task.create([molecule], spec, session=session)
 
             if not meta.success:
                 raise RuntimeError("Problem submitting task: {}.".format(meta.error_string))

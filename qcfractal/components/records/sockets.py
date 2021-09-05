@@ -20,10 +20,10 @@ if TYPE_CHECKING:
 
 
 class RecordSocket:
-    def __init__(self, core_socket: SQLAlchemySocket):
-        self._core_socket = core_socket
+    def __init__(self, root_socket: SQLAlchemySocket):
+        self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._limit = core_socket.qcf_config.response_limits.record
+        self._limit = root_socket.qcf_config.response_limits.record
 
     def query(
         self,
@@ -97,7 +97,7 @@ class RecordSocket:
         if modified_after is not None:
             and_query.append(BaseResultORM.modified_on > modified_after)
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             query = session.query(BaseResultORM).filter(and_(*and_query))
             query = query.options(load_only(*load_cols))
             n_found = get_count(query)
@@ -157,7 +157,7 @@ class RecordSocket:
 
         load_cols, load_rels = get_query_proj_columns(BaseResultORM, include, exclude)
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             query = session.query(BaseResultORM).filter(BaseResultORM.id.in_(unique_ids)).options(load_only(*load_cols))
 
             for r in load_rels:

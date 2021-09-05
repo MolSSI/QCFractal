@@ -21,11 +21,11 @@ if TYPE_CHECKING:
 
 
 class ManagerSocket:
-    def __init__(self, core_socket: SQLAlchemySocket):
-        self._core_socket = core_socket
+    def __init__(self, root_socket: SQLAlchemySocket):
+        self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._manager_limit = core_socket.qcf_config.response_limits.manager
-        self._manager_log_limit = core_socket.qcf_config.response_limits.manager_log
+        self._manager_limit = root_socket.qcf_config.response_limits.manager
+        self._manager_log_limit = root_socket.qcf_config.response_limits.manager_log
 
     def update(self, name: str, *, session: Optional[Session] = None, **kwargs):
         """
@@ -54,7 +54,7 @@ class ManagerSocket:
 
         upd = {key: kwargs[key] for key in QueueManagerORM.__dict__.keys() if key in kwargs}
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             manager_query = session.query(QueueManagerORM).filter_by(name=name)
             if manager_query.count() > 0:  # existing
                 upd.update(inc_count, modified_on=datetime.utcnow())
@@ -131,14 +131,14 @@ class ManagerSocket:
             .returning(QueueManagerORM.name)
         )
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             deactivated_names = session.execute(stmt).fetchall()
             deactivated_names = [x[0] for x in deactivated_names]
 
             # For the manager, also reset any orphaned tasks that belong to that manager
             # (could also do this in one call to reset_status, but without logging n_incomplete)
             for dead_name in deactivated_names:
-                n_incomplete = self._core_socket.task.reset_tasks(
+                n_incomplete = self.root_socket.task.reset_tasks(
                     manager=[dead_name], reset_running=True, session=session
                 )
                 self._logger.info(
@@ -193,7 +193,7 @@ class ManagerSocket:
         unique_names = list(set(name))
         load_cols, load_rels = get_query_proj_columns(QueueManagerORM, include, exclude)
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             query = (
                 session.query(QueueManagerORM)
                 .filter(QueueManagerORM.name.in_(unique_names))
@@ -291,7 +291,7 @@ class ManagerSocket:
         if modified_after is not None:
             and_query.append(QueueManagerORM.modified_on > modified_after)
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             query = session.query(QueueManagerORM).filter(and_(*and_query))
             query = query.options(load_only(*load_cols))
             n_found = get_count(query)
@@ -356,7 +356,7 @@ class ManagerSocket:
 
         load_cols, _ = get_query_proj_columns(QueueManagerLogORM, include, exclude)
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             query = session.query(QueueManagerLogORM).filter(and_(*and_query))
             query = query.options(load_only(*load_cols))
             n_found = get_count(query)

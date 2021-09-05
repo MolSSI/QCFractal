@@ -32,10 +32,10 @@ class SingleResultHandler(BaseProcedureHandler):
     This is a single quantum calculation, unique by program, driver, method, basis, keywords, molecule.
     """
 
-    def __init__(self, core_socket: SQLAlchemySocket):
-        self._core_socket = core_socket
+    def __init__(self, root_socket: SQLAlchemySocket):
+        self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._limit = core_socket.qcf_config.response_limits.record
+        self._limit = root_socket.qcf_config.response_limits.record
 
         BaseProcedureHandler.__init__(self)
 
@@ -70,7 +70,7 @@ class SingleResultHandler(BaseProcedureHandler):
             ResultORM.molecule,
         )
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             meta, orm = insert_general(session, results, dedup_cols, (ResultORM.id,))
             return meta, [x[0] for x in orm]
 
@@ -96,7 +96,7 @@ class SingleResultHandler(BaseProcedureHandler):
         # Handle keywords, which may be None
         if spec.keywords is not None:
             # QCSpec will only hold the ID
-            meta, qc_keywords_ids = self._core_socket.keywords.add_mixed([spec.keywords], session=session)
+            meta, qc_keywords_ids = self.root_socket.keywords.add_mixed([spec.keywords], session=session)
 
             if meta.success is False or qc_keywords_ids[0] is None:
                 raise KeyError("Could not find requested KeywordsSet from id key.")
@@ -177,7 +177,7 @@ class SingleResultHandler(BaseProcedureHandler):
             all_tasks.append(task)
 
         # Add all tasks to the database. Also flushes the session
-        return self._core_socket.task.add_task_orm(all_tasks, session=session)
+        return self.root_socket.task.add_task_orm(all_tasks, session=session)
 
     def update_completed(self, session: Session, task_orm: TaskQueueORM, manager_name: str, result: AtomicResult):
         #####################################
@@ -189,19 +189,19 @@ class SingleResultHandler(BaseProcedureHandler):
         assert isinstance(result_orm, ResultORM)
 
         # Get the outputs
-        helpers.retrieve_outputs(self._core_socket, session, result, result_orm)
+        helpers.retrieve_outputs(self.root_socket, session, result, result_orm)
 
         # Store Wavefunction data
         # Save the old id for later deletion
         old_wfn_id = result_orm.wavefunction_data_id
 
-        wfn_id, wfn_info = helpers.wavefunction_helper(self._core_socket, session, result.wavefunction)
+        wfn_id, wfn_info = helpers.wavefunction_helper(self.root_socket, session, result.wavefunction)
         result_orm.wavefunction_data_id = wfn_id
         result_orm.wavefunction = wfn_info
 
         # Now we can delete the old wavefunction (if it existed)
         if old_wfn_id is not None:
-            self._core_socket.wavefunctions.delete([old_wfn_id], session=session)
+            self.root_socket.wavefunctions.delete([old_wfn_id], session=session)
 
         # Double check to make sure everything is consistent
         assert result_orm.method == result.model.method
@@ -268,7 +268,7 @@ class SingleResultHandler(BaseProcedureHandler):
 
         load_cols, load_rels = get_query_proj_columns(ResultORM, include, exclude)
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             query = session.query(ResultORM).filter(ResultORM.id.in_(unique_ids)).options(load_only(*load_cols))
 
             for r in load_rels:
@@ -390,7 +390,7 @@ class SingleResultHandler(BaseProcedureHandler):
         if modified_after is not None:
             and_query.append(ResultORM.modified_on > modified_after)
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             query = session.query(ResultORM).filter(and_(*and_query))
             query = query.options(load_only(*load_cols))
 

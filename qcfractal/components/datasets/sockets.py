@@ -28,10 +28,10 @@ def get_collection_class(collection_type):
 
 
 class DatasetSocket:
-    def __init__(self, core_socket: SQLAlchemySocket):
-        self._core_socket = core_socket
+    def __init__(self, root_socket: SQLAlchemySocket):
+        self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._limit = core_socket.qcf_config.response_limits.collection
+        self._limit = root_socket.qcf_config.response_limits.collection
 
     def add(self, data: Dict[str, Any], overwrite: bool = False):
         """Add (or update) a collection to the database.
@@ -82,7 +82,7 @@ class DatasetSocket:
 
         update_fields["extra"] = data  # todo: check for sql injection
 
-        with self._core_socket.session_scope() as session:
+        with self.root_socket.session_scope() as session:
 
             try:
                 if overwrite:
@@ -155,7 +155,7 @@ class DatasetSocket:
         query = format_query(collection_class, lname=name, collection=collection, id=col_id)
 
         # try:
-        rdata, meta["n_found"] = self._core_socket.get_query_projection(
+        rdata, meta["n_found"] = self.root_socket.get_query_projection(
             collection_class, query, include=include, exclude=exclude, limit=limit, skip=skip
         )
 
@@ -199,6 +199,6 @@ class DatasetSocket:
         if col_id is not None:
             filter_spec["id"] = col_id
 
-        with self._core_socket.session_scope() as session:
+        with self.root_socket.session_scope() as session:
             count = session.query(CollectionORM).filter_by(**filter_spec).delete(synchronize_session=False)
         return count

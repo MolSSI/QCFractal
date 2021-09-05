@@ -27,10 +27,10 @@ if TYPE_CHECKING:
 
 
 class MoleculeSocket:
-    def __init__(self, core_socket: SQLAlchemySocket):
-        self._core_socket = core_socket
+    def __init__(self, root_socket: SQLAlchemySocket):
+        self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._limit = core_socket.qcf_config.response_limits.molecule
+        self._limit = root_socket.qcf_config.response_limits.molecule
 
     @staticmethod
     def molecule_to_orm(molecule: Molecule) -> MoleculeORM:
@@ -89,7 +89,7 @@ class MoleculeSocket:
 
         molecule_orm = [self.molecule_to_orm(x) for x in molecules]
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             meta, added_ids = insert_general(session, molecule_orm, (MoleculeORM.molecule_hash,), (MoleculeORM.id,))
 
         # insert_general should always succeed or raise exception
@@ -136,7 +136,7 @@ class MoleculeSocket:
             If missing_ok is True, then this list will contain None where the molecule was missing.
         """
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             if len(id) > self._limit:
                 raise RuntimeError(f"Request for {len(id)} molecules is over the limit of {self._limit}")
 
@@ -193,7 +193,7 @@ class MoleculeSocket:
             x if isinstance(x, int) else self.molecule_to_orm(x) for x in molecule_data_2
         ]
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             meta, all_ids = insert_mixed_general(
                 session, MoleculeORM, molecule_orm, MoleculeORM.id, (MoleculeORM.molecule_hash,), (MoleculeORM.id,)
             )
@@ -223,7 +223,7 @@ class MoleculeSocket:
         # TODO - INT ID
         id_lst = [(int(x),) for x in id]
 
-        with self._core_socket.optional_session(session) as session:
+        with self.root_socket.optional_session(session) as session:
             return delete_general(session, MoleculeORM, (MoleculeORM.id,), id_lst)
 
     def query(
@@ -291,7 +291,7 @@ class MoleculeSocket:
         if id is not None:
             and_query.append(MoleculeORM.id.in_(id))
 
-        with self._core_socket.optional_session(session, True) as session:
+        with self.root_socket.optional_session(session, True) as session:
             query = session.query(MoleculeORM).filter(and_(*and_query))
             query = query.options(load_only(*load_cols))
             n_found = get_count(query)
