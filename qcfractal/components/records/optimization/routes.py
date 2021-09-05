@@ -9,7 +9,7 @@ from qcfractal.interface.models.rest_models import OptimizationGETBody, Optimiza
 def query_optimization_v1():
     body = parse_bodymodel(OptimizationGETBody)
 
-    meta, ret = storage_socket.procedure.optimization.query(**{**body.data.dict(), **body.meta.dict()})
+    meta, ret = storage_socket.task.optimization.query(**{**body.data.dict(), **body.meta.dict()})
 
     # Remove result_type. This isn't used right now and is missing from the model
     for r in ret:

@@ -221,7 +221,7 @@ class ServiceSocket:
                             "error_message": "Error iterating service: " + str(err),
                         }
 
-                        self._core_socket.procedure.update_outputs(session, service_orm.procedure_obj, error=error)
+                        self._core_socket.task.update_outputs(session, service_orm.procedure_obj, error=error)
                         service_orm.procedure_obj.status = RecordStatusEnum.error
                         session.commit()
                         self._core_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.error)
@@ -241,7 +241,7 @@ class ServiceSocket:
                         "error_message": "Some task(s) did not complete successfully",
                     }
 
-                    self._core_socket.procedure.update_outputs(session, service_orm.procedure_obj, error=error)
+                    self._core_socket.task.update_outputs(session, service_orm.procedure_obj, error=error)
 
                     session.commit()
                     self._core_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.error)
@@ -286,7 +286,7 @@ class ServiceSocket:
                                 "error_message": "Error in first iteration of service: " + str(err),
                             }
 
-                            self._core_socket.procedure.update_outputs(session, service_orm.procedure_obj, error=error)
+                            self._core_socket.task.update_outputs(session, service_orm.procedure_obj, error=error)
 
                             service_orm.procedure_obj.status = RecordStatusEnum.error
                             session.commit()
@@ -491,7 +491,7 @@ class ServiceSocket:
                 # Also reset the subtasks
                 subtasks = r.service_obj.tasks_obj
                 subtask_ids = [x.procedure_id for x in subtasks]
-                self._core_socket.procedure.reset_tasks(
+                self._core_socket.task.reset_tasks(
                     base_result=subtask_ids, reset_running=False, reset_error=True, session=session
                 )
 

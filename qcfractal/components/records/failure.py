@@ -69,7 +69,7 @@ class FailedOperationHandler(BaseProcedureHandler):
             stdout = inp_data.get("stdout", None)
             stderr = inp_data.get("stderr", None)
 
-        self._core_socket.procedure.update_outputs(session, base_result, stdout=stdout, stderr=stderr, error=error)
+        self._core_socket.task.update_outputs(session, base_result, stdout=stdout, stderr=stderr, error=error)
 
         # Change the status on the base result
         base_result.status = RecordStatusEnum.error

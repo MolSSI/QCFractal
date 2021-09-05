@@ -217,7 +217,7 @@ def test_queue_error(fractal_test_server):
 
     # Pull from database, raw JSON
     storage_socket = SQLAlchemySocket(fractal_test_server._qcf_config)
-    queue_ret = storage_socket.procedure.query_tasks(status=[RecordStatusEnum.error])[1]
+    queue_ret = storage_socket.task.query_tasks(status=[RecordStatusEnum.error])[1]
     result = storage_socket.record.query(id=compute_ret.ids)[1][0]
 
     assert len(queue_ret) == 1
@@ -362,12 +362,12 @@ def test_queue_query_manager(fractal_test_server):
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2).ids[0]
     ret3 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol3).ids[0]
 
-    storage_socket.procedure.claim_tasks(manager_name, {"rdkit": None}, limit=1)[0]
+    storage_socket.task.claim_tasks(manager_name, {"rdkit": None}, limit=1)[0]
     tasks_manager = client.query_tasks(manager=manager_name)
     assert len(tasks_manager) == 1
     assert tasks_manager[0].base_result == ret1
 
-    storage_socket.procedure.claim_tasks(manager_name, {"rdkit": None}, limit=1)[0]
-    storage_socket.procedure.claim_tasks(manager_name, {"rdkit": None}, limit=1)[0]
+    storage_socket.task.claim_tasks(manager_name, {"rdkit": None}, limit=1)[0]
+    storage_socket.task.claim_tasks(manager_name, {"rdkit": None}, limit=1)[0]
     tasks_manager = client.query_tasks(manager=manager_name)
     assert len(tasks_manager) == 3
