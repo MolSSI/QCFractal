@@ -76,20 +76,7 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     # logger.debug("Adding blueprints..")
 
     # Register all the routes in the other files
-    from ..components.molecule import routes
-    from ..components.outputstore import routes
-    from ..components.wavefunction import routes
-    from ..components.keywords import routes
-    from ..components.permissions import routes
-    from ..components.serverinfo import routes
-    from ..components.managers import routes
-    from ..components.records import routes
-    from ..components.tasks import routes
 
-    from .routes import collections
-    from .routes import manager
-    from .routes import permissions
-    from .routes import service
     from .routes import main
 
     app.register_blueprint(main.main)

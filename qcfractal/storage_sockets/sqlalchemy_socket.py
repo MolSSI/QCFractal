@@ -171,10 +171,10 @@ class SQLAlchemySocket:
         from ..components.managers.sockets import ManagerSocket
         from ..components.records.sockets import RecordSocket
         from ..components.tasks.sockets import TaskSocket
+        from ..components.services.sockets import ServiceSocket
 
         from qcfractal.storage_sockets.subsockets import (
             CollectionSocket,
-            ServiceSocket,
         )
 
         self.server_log = ServerInfoSocket(self)

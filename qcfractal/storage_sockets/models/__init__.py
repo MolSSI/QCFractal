@@ -12,8 +12,5 @@ from ...components.records.singlepoint.db_models import ResultORM
 from ...components.records.db_models import BaseResultORM
 
 # ORM general models
-from .sql_models import (
-    ServiceQueueORM,
-    ServiceQueueTasks,
-)
+from ...components.services.db_models import ServiceQueueTasks, ServiceQueueORM
 from ...components.tasks.db_models import TaskQueueORM

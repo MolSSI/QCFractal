@@ -12,8 +12,8 @@ from qcfractal.storage_sockets.models import (
     CollectionORM,
     DatasetORM,
     QueueManagerORM,
-    ServiceQueueORM,
 )
+from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.records.optimization.db_models import Trajectory, OptimizationProcedureORM
 from qcfractal.components.records.singlepoint.db_models import ResultORM
