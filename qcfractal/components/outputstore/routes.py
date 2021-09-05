@@ -9,7 +9,7 @@ from qcfractal.interface.models.rest_models import KVStoreGETBody, ResponseGETMe
 @check_access
 def query_kvstore_v1():
     body = parse_bodymodel(KVStoreGETBody)
-    ret = storage_socket.output_store.get(body.data.id, missing_ok=True)
+    ret = storage_socket.outputstore.get(body.data.id, missing_ok=True)
 
     # REST API currently expects a dict {id: KVStore dict}
     # But socket returns a list of KVStore dict

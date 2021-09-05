@@ -91,7 +91,7 @@ class TaskSocket:
 
         # Check for incompatible statuses
         base_result_ids = [x.base_result_id for x in tasks]
-        statuses = self._core_socket.record.get(base_result_ids, include=["status"], session=session)
+        statuses = self._core_socket.records.get(base_result_ids, include=["status"], session=session)
 
         # This is an error. These should have been checked before calling this function
         if any(x["status"] == RecordStatusEnum.complete for x in statuses):
@@ -128,13 +128,13 @@ class TaskSocket:
             base_record_orm.error = None
 
         if stdout is not None:
-            base_record_orm.stdout = self._core_socket.output_store.add([stdout], session=session)[0]
+            base_record_orm.stdout = self._core_socket.outputstore.add([stdout], session=session)[0]
         if stderr is not None:
-            base_record_orm.stderr = self._core_socket.output_store.add([stderr], session=session)[0]
+            base_record_orm.stderr = self._core_socket.outputstore.add([stderr], session=session)[0]
         if error is not None:
-            base_record_orm.error = self._core_socket.output_store.add([error], session=session)[0]
+            base_record_orm.error = self._core_socket.outputstore.add([error], session=session)[0]
 
-        self._core_socket.output_store.delete(to_delete, session=session)
+        self._core_socket.outputstore.delete(to_delete, session=session)
 
     def create(
         self, molecules: List[Molecule], specification: AllProcedureSpecifications, *, session: Optional[Session] = None
@@ -160,7 +160,7 @@ class TaskSocket:
 
         # Add all the molecules stored in the 'data' member
         # This should apply to all procedures
-        molecule_meta, molecule_ids = self._core_socket.molecule.add_mixed(molecules)
+        molecule_meta, molecule_ids = self._core_socket.molecules.add_mixed(molecules)
 
         # Only do valid molecule ids (ie, not None in the returned list)
         # These would correspond to errors
@@ -333,7 +333,7 @@ class TaskSocket:
         )
 
         # Update manager logs
-        self._core_socket.manager.update(manager_name, completed=task_totals, failures=task_failures)
+        self._core_socket.managers.update(manager_name, completed=task_totals, failures=task_failures)
 
     def get_tasks(
         self,
@@ -504,7 +504,7 @@ class TaskSocket:
             tag_queries = [()]
 
         with self._core_socket.optional_session(session) as session:
-            manager = self._core_socket.manager.get(
+            manager = self._core_socket.managers.get(
                 [manager_name], include=["status"], missing_ok=True, session=session
             )
             if manager[0] is None:

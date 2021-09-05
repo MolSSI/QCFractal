@@ -23,7 +23,7 @@ from qcfractal.interface.models.rest_models import (
 def query_service_queue_v1():
     body = parse_bodymodel(ServiceQueueGETBody)
 
-    meta, data = storage_socket.service.query_tasks(**{**body.data.dict(), **body.meta.dict()})
+    meta, data = storage_socket.services.query_tasks(**{**body.data.dict(), **body.meta.dict()})
 
     # Convert the new metadata format to the old format
     meta_old = convert_get_response_metadata(meta, missing=[])
@@ -40,7 +40,7 @@ def post_service_queue():
 
     body = parse_bodymodel(ServiceQueuePOSTBody)
 
-    meta, ids = storage_socket.service.create(body.data)
+    meta, ids = storage_socket.services.create(body.data)
 
     duplicate_ids = [ids[i] for i in meta.existing_idx]
     submitted_ids = [ids[i] for i in meta.inserted_idx]
@@ -64,7 +64,7 @@ def put_service_queue():
         return jsonify(msg="Id or ProcedureId must be specified."), 400
 
     if body.meta.operation == "restart":
-        updates = storage_socket.service.reset_tasks(**body.data.dict())
+        updates = storage_socket.services.reset_tasks(**body.data.dict())
         data = {"n_updated": updates}
     else:
         return jsonify(msg="Operation '{operation}' is not valid."), 400

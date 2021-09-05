@@ -20,7 +20,7 @@ def query_manager_v1():
     """Gets manager information about managers"""
 
     body = parse_bodymodel(ManagerInfoGETBody)
-    meta, managers = storage_socket.manager.query(**{**body.data.dict(), **body.meta.dict()})
+    meta, managers = storage_socket.managers.query(**{**body.data.dict(), **body.meta.dict()})
     meta_old = convert_get_response_metadata(meta, missing=[])
     response = ManagerInfoGETResponse(meta=meta_old, data=managers)
     return SerializedResponse(response)
@@ -59,7 +59,7 @@ def queue_manager_claim_v1():
         }
     )
     # Update manager logs
-    storage_socket.manager.update(name, submitted=len(new_tasks), **body.meta.dict())
+    storage_socket.managers.update(name, submitted=len(new_tasks), **body.meta.dict())
 
     return SerializedResponse(response)
 
@@ -105,14 +105,14 @@ def queue_manager_modify_v1():
     name = _get_name_from_metadata(body.meta)
     op = body.data.operation
     if op == "startup":
-        storage_socket.manager.update(
+        storage_socket.managers.update(
             name, status=ManagerStatusEnum.active, configuration=body.data.configuration, **body.meta.dict(), log=True
         )
         # current_app.logger.info("QueueManager: New active manager {} detected.".format(name))
 
     elif op == "shutdown":
         nshutdown = storage_socket.task.reset_tasks(manager=[name], reset_running=True)
-        storage_socket.manager.update(
+        storage_socket.managers.update(
             name, returned=nshutdown, status=ManagerStatusEnum.inactive, **body.meta.dict(), log=True
         )
 
@@ -121,7 +121,7 @@ def queue_manager_modify_v1():
         ret = {"nshutdown": nshutdown}
 
     elif op == "heartbeat":
-        storage_socket.manager.update(name, status=ManagerStatusEnum.active, **body.meta.dict(), log=True)
+        storage_socket.managers.update(name, status=ManagerStatusEnum.active, **body.meta.dict(), log=True)
         # current_app.logger.debug("QueueManager: Heartbeat of manager {} detected.".format(name))
 
     else:

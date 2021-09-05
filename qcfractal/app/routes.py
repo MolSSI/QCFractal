@@ -108,7 +108,7 @@ def after_request_func(response: SerializedResponse):
         if isinstance(response.response, (bytes, str)):
             log["response_bytes"] = len(response.response)
 
-        storage_socket.server_log.save_access(log)
+        storage_socket.serverinfo.save_access(log)
 
     return response
 
@@ -136,7 +136,7 @@ def handle_internal_error(error):
     }
 
     # Log it to the internal error table
-    err_id = storage_socket.server_log.save_error(error_log)
+    err_id = storage_socket.serverinfo.save_error(error_log)
 
     msg = error.description + f"  **Refer to internal error id {err_id} when asking your admin**"
     return jsonify(msg=msg), error.code
@@ -190,7 +190,7 @@ def check_access(fn):
         # load read permissions from DB if not read
         global _read_permissions
         if not _read_permissions:
-            _read_permissions = storage_socket.role.get("read").permissions
+            _read_permissions = storage_socket.roles.get("read").permissions
 
         # if read is allowed without login, use read_permissions
         # otherwise, check logged-in permissions
@@ -264,7 +264,7 @@ def register():
 
     # add returns the password. Raises exception on error
     # Exceptions should be handled property by the flask errorhandlers
-    pw = storage_socket.user.add(user_info, password=password)
+    pw = storage_socket.users.add(user_info, password=password)
     if password is None or len(password) == 0:
         return jsonify(msg="New user created!"), 201
     else:
@@ -291,7 +291,7 @@ def login():
     # Raises exceptions on error
     # Also raises AuthenticationFailure if the user is invalid or the password is incorrect
     # This should be handled properly by the flask errorhandlers
-    permissions = storage_socket.user.verify(username, password)
+    permissions = storage_socket.users.verify(username, password)
 
     access_token = create_access_token(identity=username, additional_claims={"permissions": permissions})
     # expires_delta=datetime.timedelta(days=3))
@@ -303,7 +303,7 @@ def login():
 @jwt_required(refresh=True)
 def refresh():
     username = get_jwt_identity()
-    permissions = storage_socket.user.get_permissions(username)
+    permissions = storage_socket.users.get_permissions(username)
     ret = {"access_token": create_access_token(identity=username, additional_claims={"permissions": permissions})}
     return jsonify(ret), 200
 
@@ -320,7 +320,7 @@ def fresh_login():
     # Raises exceptions on error
     # Also raises AuthenticationFailure if the user is invalid or the password is incorrect
     # This should be handled properly by the flask errorhandlers
-    permissions = storage_socket.user.verify(username, password)
+    permissions = storage_socket.users.verify(username, password)
 
     access_token = create_access_token(
         identity=username, additionalclaims={"permissions": permissions.dict()}, fresh=True

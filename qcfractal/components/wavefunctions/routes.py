@@ -15,7 +15,7 @@ def get_wavefunction_v1():
     # NOTE - this only supports one wavefunction at a time
     body = parse_bodymodel(WavefunctionStoreGETBody)
 
-    ret = storage_socket.wavefunction.get([body.data.id], include=body.meta.include, missing_ok=True)
+    ret = storage_socket.wavefunctions.get([body.data.id], include=body.meta.include, missing_ok=True)
     nfound = len(ret)
     if nfound > 0:
         meta_missing = []

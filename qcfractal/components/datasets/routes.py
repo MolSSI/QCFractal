@@ -23,7 +23,7 @@ def get_collection(collection_id: int = None, view_function: str = None):
         body_model, response_model = rest_model("collection", "get")
         body = parse_bodymodel(body_model)
 
-        cols = storage_socket.collection.get(**body.data.dict(), include=body.meta.include, exclude=body.meta.exclude)
+        cols = storage_socket.datasets.get(**body.data.dict(), include=body.meta.include, exclude=body.meta.exclude)
         response = response_model(**cols)
 
     # Get specific collection
@@ -31,7 +31,7 @@ def get_collection(collection_id: int = None, view_function: str = None):
         body_model, response_model = rest_model("collection", "get")
 
         body = parse_bodymodel(body_model)
-        cols = storage_socket.collection.get(
+        cols = storage_socket.datasets.get(
             **body.data.dict(), col_id=int(collection_id), include=body.meta.include, exclude=body.meta.exclude
         )
         response = response_model(**cols)
@@ -86,7 +86,7 @@ def post_collection(collection_id: int = None, view_function: str = None):
 
         return SerializedResponse(response)
 
-    ret = storage_socket.collection.add(body.data.dict(), overwrite=body.meta.overwrite)
+    ret = storage_socket.datasets.add(body.data.dict(), overwrite=body.meta.overwrite)
     response = response_model(**ret)
 
     return SerializedResponse(response)
@@ -97,7 +97,7 @@ def post_collection(collection_id: int = None, view_function: str = None):
 @check_access
 def delete_collection(collection_id: int, view_function: str):
     body_model, response_model = rest_model(f"collection/{collection_id}", "delete")
-    ret = storage_socket.collection.delete(col_id=collection_id)
+    ret = storage_socket.datasets.delete(col_id=collection_id)
     if ret == 0:
         return jsonify(msg="Collection does not exist."), 404
     else:

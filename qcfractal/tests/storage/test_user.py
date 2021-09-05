@@ -16,22 +16,22 @@ def test_user_basic(storage_socket):
         email="george@example.com",
         organization="My Org",
     )
-    pw = storage_socket.user.add(uinfo, password="oldpw")
-    assert storage_socket.user.exists("george")
+    pw = storage_socket.users.add(uinfo, password="oldpw")
+    assert storage_socket.users.exists("george")
     assert pw == "oldpw"
 
     # Raises exception on verification error
-    storage_socket.user.verify("george", "oldpw")
+    storage_socket.users.verify("george", "oldpw")
 
     with pytest.raises(AuthenticationFailure, match=r"Incorrect password"):
-        storage_socket.user.verify("george", "badpw")
+        storage_socket.users.verify("george", "badpw")
 
     # Do we get the same data back?
-    uinfo2 = storage_socket.user.get("george")
+    uinfo2 = storage_socket.users.get("george")
     assert uinfo2 == uinfo
 
-    storage_socket.user.delete("george")
-    assert storage_socket.user.exists("george") is False
+    storage_socket.users.delete("george")
+    assert storage_socket.users.exists("george") is False
 
 
 def test_user_delete(storage_socket):
@@ -43,14 +43,14 @@ def test_user_delete(storage_socket):
         email="george@example.com",
         organization="My Org",
     )
-    storage_socket.user.add(uinfo)
+    storage_socket.users.add(uinfo)
 
     # Raises exception on error
-    storage_socket.user.delete("george")
-    assert storage_socket.user.exists("george") == False
+    storage_socket.users.delete("george")
+    assert storage_socket.users.exists("george") == False
 
     with pytest.raises(UserManagementError, match=r"User.*not found"):
-        storage_socket.user.delete("george")
+        storage_socket.users.delete("george")
 
 
 def test_user_duplicates(storage_socket):
@@ -63,37 +63,37 @@ def test_user_duplicates(storage_socket):
         email="george@example.com",
         organization="My Org",
     )
-    storage_socket.user.add(uinfo, password="oldpw")
+    storage_socket.users.add(uinfo, password="oldpw")
 
     # Duplicate should result in an exception
     # Note the spaces on the end. These should be stripped
     # And the username should be converted to lowercase
     uinfo2 = UserInfo(username="George  ", role="read", enabled=True)
     with pytest.raises(UserManagementError, match=r"User.*already exists"):
-        storage_socket.user.add(uinfo2, "shortpw")
+        storage_socket.users.add(uinfo2, "shortpw")
 
 
 def test_unknown_user(storage_socket):
-    assert storage_socket.user.exists("geoff") is False
+    assert storage_socket.users.exists("geoff") is False
 
     with pytest.raises(UserManagementError, match=r"User.*not found"):
-        storage_socket.user.get("geoff")
+        storage_socket.users.get("geoff")
 
     with pytest.raises(AuthenticationFailure, match=r"User.*not found"):
-        storage_socket.user.verify("geoff", "a password")
+        storage_socket.users.verify("geoff", "a password")
 
     with pytest.raises(UserManagementError, match=r"User.*not found"):
-        storage_socket.user.reset_password("geoff")
+        storage_socket.users.reset_password("geoff")
 
     with pytest.raises(UserManagementError, match=r"User.*not found"):
-        storage_socket.user.change_password("geoff", "a password")
+        storage_socket.users.change_password("geoff", "a password")
 
     with pytest.raises(UserManagementError, match=r"User.*not found"):
-        storage_socket.user.delete("geoff")
+        storage_socket.users.delete("geoff")
 
     uinfo = UserInfo(username="geoff", role="read", fullname="Test user", email="george@example.com", enabled=True)
     with pytest.raises(UserManagementError, match=r"User.*not found"):
-        storage_socket.user.modify(uinfo, False)
+        storage_socket.users.modify(uinfo, False)
 
 
 def test_user_change_password(storage_socket):
@@ -105,19 +105,19 @@ def test_user_change_password(storage_socket):
         email="george@example.com",
         organization="My Org",
     )
-    old_pw = storage_socket.user.add(uinfo, "oldpw")
+    old_pw = storage_socket.users.add(uinfo, "oldpw")
     assert old_pw == "oldpw"
 
-    storage_socket.user.verify("george", "oldpw")
+    storage_socket.users.verify("george", "oldpw")
 
     # update password...
-    storage_socket.user.change_password("george", password="newpw")
+    storage_socket.users.change_password("george", password="newpw")
 
     # Raises exception on failure
-    storage_socket.user.verify("george", "newpw")
+    storage_socket.users.verify("george", "newpw")
 
     with pytest.raises(AuthenticationFailure, match=r"Incorrect password"):
-        storage_socket.user.verify("george", "oldpw")
+        storage_socket.users.verify("george", "oldpw")
 
 
 def test_user_password_generation(storage_socket):
@@ -129,15 +129,15 @@ def test_user_password_generation(storage_socket):
         email="george@example.com",
         organization="My Org",
     )
-    gen_pw = storage_socket.user.add(uinfo)
-    storage_socket.user.verify("george", gen_pw)
+    gen_pw = storage_socket.users.add(uinfo)
+    storage_socket.users.verify("george", gen_pw)
 
     ## update password...
-    gen_pw_2 = storage_socket.user.reset_password("george")
-    storage_socket.user.verify("george", gen_pw_2)
+    gen_pw_2 = storage_socket.users.reset_password("george")
+    storage_socket.users.verify("george", gen_pw_2)
 
     with pytest.raises(AuthenticationFailure, match=r"Incorrect password"):
-        storage_socket.user.verify("george", gen_pw)
+        storage_socket.users.verify("george", gen_pw)
 
 
 def test_user_modify_admin(storage_socket):
@@ -150,12 +150,12 @@ def test_user_modify_admin(storage_socket):
         email="george@example.com",
         organization="My Org",
     )
-    gen_pw = storage_socket.user.add(uinfo)
+    gen_pw = storage_socket.users.add(uinfo)
 
     uinfo2 = UserInfo(username="george", role="admin", fullname="Test user 2", email="test@example.com", enabled=False)
-    storage_socket.user.modify(uinfo2, True)
+    storage_socket.users.modify(uinfo2, True)
 
-    assert storage_socket.user.get("george") == uinfo2
+    assert storage_socket.users.get("george") == uinfo2
 
 
 def test_user_modify_noadmin(storage_socket):
@@ -168,7 +168,7 @@ def test_user_modify_noadmin(storage_socket):
         email="george@example.com",
         organization="My Org",
     )
-    storage_socket.user.add(uinfo)
+    storage_socket.users.add(uinfo)
 
     uinfo2 = UserInfo(
         username="george",
@@ -178,9 +178,9 @@ def test_user_modify_noadmin(storage_socket):
         email="george2@example.com",
         organization="My Other Org",
     )
-    storage_socket.user.modify(uinfo2, False)
+    storage_socket.users.modify(uinfo2, False)
 
-    db_user = storage_socket.user.get("george")
+    db_user = storage_socket.users.get("george")
     assert db_user.enabled == uinfo.enabled
     assert db_user.role == uinfo.role
     assert db_user.fullname == uinfo2.fullname
@@ -199,15 +199,15 @@ def test_user_permissions(storage_socket, role):
         email="george@example.com",
         organization="My Org",
     )
-    gen_pw = storage_socket.user.add(uinfo)
+    gen_pw = storage_socket.users.add(uinfo)
 
-    user_perms = storage_socket.user.get_permissions("george")
+    user_perms = storage_socket.users.get_permissions("george")
 
     # Also can get permissions from user.verify
-    assert user_perms == storage_socket.user.verify("george", gen_pw)
+    assert user_perms == storage_socket.users.verify("george", gen_pw)
 
     # Now get the permissions from the role socket
-    role_model = storage_socket.role.get(role)
+    role_model = storage_socket.roles.get(role)
     assert role_model.permissions == user_perms
 
 
@@ -222,10 +222,10 @@ def test_user_list(storage_socket):
             email=f"george{i}@example.com",
             organization=f"My Org {i}",
         )
-        storage_socket.user.add(uinfo)
+        storage_socket.users.add(uinfo)
         all_users.append(uinfo)
 
-    user_lst = storage_socket.user.list()
+    user_lst = storage_socket.users.list()
 
     # Sort both lists by username
     all_users = sorted(all_users, key=lambda x: x.username)

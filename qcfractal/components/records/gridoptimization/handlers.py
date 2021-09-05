@@ -291,7 +291,7 @@ class GridOptimizationHandler(BaseServiceHandler):
         self, session: Session, service_input: GridOptimizationInput
     ) -> Tuple[InsertMetadata, List[ObjectId]]:
 
-        meta, mol_ids = self._core_socket.molecule.add_mixed([service_input.initial_molecule])
+        meta, mol_ids = self._core_socket.molecules.add_mixed([service_input.initial_molecule])
 
         # TODO - int id
         mol_id = int(mol_ids[0])
@@ -394,7 +394,7 @@ class GridOptimizationHandler(BaseServiceHandler):
             # TODO Add info to output
             # gridopt_orm.stdout = self._core_socket.output_store.add([stdout])[0]
 
-        return self._core_socket.service.add_task_orm(new_services, session=session)
+        return self._core_socket.services.add_task_orm(new_services, session=session)
 
     def iterate(self, session: Session, service_orm: ServiceQueueORM) -> bool:
         gridopt_orm = service_orm.procedure_obj

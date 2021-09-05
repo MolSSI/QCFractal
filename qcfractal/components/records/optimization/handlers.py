@@ -234,7 +234,7 @@ class OptimizationHandler(BaseProcedureHandler):
         # Get the outputs
         helpers.retrieve_outputs(self._core_socket, session, result, result_orm)
 
-        meta, mol_ids = self._core_socket.molecule.add(
+        meta, mol_ids = self._core_socket.molecules.add(
             [result.initial_molecule, result.final_molecule], session=session
         )
 
@@ -304,7 +304,7 @@ class OptimizationHandler(BaseProcedureHandler):
 
         # Add all molecules at once
         molecules = [x.molecule for x in results]
-        _, mol_ids = self._core_socket.molecule.add(molecules, session=session)
+        _, mol_ids = self._core_socket.molecules.add(molecules, session=session)
 
         ret = []
         for v, mol_id in zip(results, mol_ids):

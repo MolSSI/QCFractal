@@ -79,7 +79,7 @@ class ServiceSocket:
 
         # Check for incompatible statuses
         base_result_ids = [x.procedure_id for x in services]
-        statuses = self._core_socket.record.get(base_result_ids, include=["status"], session=session)
+        statuses = self._core_socket.records.get(base_result_ids, include=["status"], session=session)
 
         # TODO - logic will need to be adjusted with new statuses
         # This is an error. These should have been checked before calling this function

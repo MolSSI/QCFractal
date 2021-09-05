@@ -37,20 +37,20 @@ def test_collections_add(storage_socket):
         "group": "default",
     }
 
-    ret = storage_socket.collection.add(db)
+    ret = storage_socket.datasets.add(db)
 
     assert ret["meta"]["n_inserted"] == 1
 
-    ret = storage_socket.collection.get(collection, name)
+    ret = storage_socket.datasets.get(collection, name)
 
     assert ret["meta"]["success"] is True
     assert ret["meta"]["n_found"] == 1
     assert db["something"] == ret["data"][0]["something"]
 
-    ret = storage_socket.collection.delete(collection, name)
+    ret = storage_socket.datasets.delete(collection, name)
     assert ret == 1
 
-    ret = storage_socket.collection.get(collection, "bleh")
+    ret = storage_socket.datasets.get(collection, "bleh")
     # assert len(ret["meta"]["missing"]) == 1
     assert ret["meta"]["n_found"] == 0
 
@@ -69,11 +69,11 @@ def test_collections_overwrite(storage_socket):
         "group": "default",
     }
 
-    ret = storage_socket.collection.add(db)
+    ret = storage_socket.datasets.add(db)
 
     assert ret["meta"]["n_inserted"] == 1
 
-    ret = storage_socket.collection.get(collection, name)
+    ret = storage_socket.datasets.get(collection, name)
     assert ret["meta"]["n_found"] == 1
 
     view_url = "fooRL"
@@ -88,10 +88,10 @@ def test_collections_overwrite(storage_socket):
         "view_url": view_url,
         "array2": ["54321"],
     }
-    ret = storage_socket.collection.add(db_update, overwrite=True)
+    ret = storage_socket.datasets.add(db_update, overwrite=True)
     assert ret["meta"]["success"] == True
 
-    ret = storage_socket.collection.get(collection, name)
+    ret = storage_socket.datasets.get(collection, name)
     assert ret["meta"]["n_found"] == 1
 
     # Check to make sure the field were replaced and not updated
@@ -105,7 +105,7 @@ def test_collections_overwrite(storage_socket):
     assert db_result["view_url"] == view_url
     assert db_update["something"] == db_result["something"]
 
-    ret = storage_socket.collection.delete(collection, name)
+    ret = storage_socket.datasets.delete(collection, name)
     assert ret == 1
 
 
@@ -119,7 +119,7 @@ def test_dataset_add_delete_cascade(storage_socket):
     # Add two waters
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
     water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
-    _, mol_insert = storage_socket.molecule.add([water, water2])
+    _, mol_insert = storage_socket.molecules.add([water, water2])
 
     db = {
         "collection": collection,
@@ -143,15 +143,15 @@ def test_dataset_add_delete_cascade(storage_socket):
         },
     }
 
-    ret = storage_socket.collection.add(db.copy())
+    ret = storage_socket.datasets.add(db.copy())
     # print(ret["meta"]["error_description"])
     assert ret["meta"]["n_inserted"] == 1, ret["meta"]["error_description"]
 
-    ret = storage_socket.collection.get(collection=collection, name=name)
+    ret = storage_socket.datasets.get(collection=collection, name=name)
     assert ret["meta"]["success"] is True
     assert len(ret["data"][0]["records"]) == 2
 
-    ret = storage_socket.collection.get(collection=collection, name=name, include=["records"])
+    ret = storage_socket.datasets.get(collection=collection, name=name, include=["records"])
     assert ret["meta"]["success"] is True
 
     db["contributed_values"] = {
@@ -173,10 +173,10 @@ def test_dataset_add_delete_cascade(storage_socket):
         },
     }
 
-    ret = storage_socket.collection.add(db.copy(), overwrite=True)
+    ret = storage_socket.datasets.add(db.copy(), overwrite=True)
     assert ret["meta"]["n_inserted"] == 1
 
-    ret = storage_socket.collection.get(collection=collection, name=name)
+    ret = storage_socket.datasets.get(collection=collection, name=name)
     assert ret["meta"]["success"] is True
     assert len(ret["data"][0]["contributed_values"].keys()) == 2
 
@@ -186,28 +186,28 @@ def test_dataset_add_delete_cascade(storage_socket):
     db["collection"] = collection2
     db.pop("records")
 
-    ret = storage_socket.collection.add(db.copy())
+    ret = storage_socket.datasets.add(db.copy())
     assert ret["meta"]["n_inserted"] == 1
 
-    ret = storage_socket.collection.get(collection=collection2, name=name2)
+    ret = storage_socket.datasets.get(collection=collection2, name=name2)
     assert ret["meta"]["success"] is True
     assert len(ret["data"][0]["contributed_values"].keys()) == 2
     assert len(ret["data"][0]["records"]) == 0
 
     # cleanup
     # Can't delete molecule when datasets reference it (no cascade)
-    ret = storage_socket.molecule.delete(mol_insert)
+    ret = storage_socket.molecules.delete(mol_insert)
     assert not ret.success
     assert ret.n_errors == 2
     for e in ret.errors:
         assert "Attempting to delete resulted in error" in e[1]
 
     # should cascade delete entries and records when dataset is deleted
-    assert storage_socket.collection.delete(collection=collection, name=name) == 1
-    assert storage_socket.collection.delete(collection=collection2, name=name2) == 1
+    assert storage_socket.datasets.delete(collection=collection, name=name) == 1
+    assert storage_socket.datasets.delete(collection=collection2, name=name2) == 1
 
     # Now okay to delete molecules
-    ret = storage_socket.molecule.delete(mol_insert)
+    ret = storage_socket.molecules.delete(mol_insert)
     assert ret.success
 
 
@@ -232,7 +232,7 @@ def test_collections_include_exclude(storage_socket):
     # Add two waters
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
     water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
-    _, mol_insert = storage_socket.molecule.add([water, water2])
+    _, mol_insert = storage_socket.molecules.add([water, water2])
 
     db = {
         "collection": collection,
@@ -255,19 +255,19 @@ def test_collections_include_exclude(storage_socket):
         "group": "default",
     }
 
-    ret = storage_socket.collection.add(db)
+    ret = storage_socket.datasets.add(db)
     assert ret["meta"]["n_inserted"] == 1
 
-    ret = storage_socket.collection.add(db2)
+    ret = storage_socket.datasets.add(db2)
     assert ret["meta"]["n_inserted"] == 1
 
-    ret = storage_socket.collection.get(collection=collection, name=name)
+    ret = storage_socket.datasets.get(collection=collection, name=name)
     assert ret["meta"]["success"] is True
     assert len(ret["data"]) == 1
     # print('All: ', ret["data"])
 
     include = {"records", "name"}
-    ret = storage_socket.collection.get(collection=collection, name=name, include=include)
+    ret = storage_socket.datasets.get(collection=collection, name=name, include=include)
     assert ret["meta"]["success"] is True
     assert len(ret["data"]) == 1
     assert set(ret["data"][0].keys()) == include
@@ -275,13 +275,13 @@ def test_collections_include_exclude(storage_socket):
     # print('With projection: ', ret["data"])
 
     include = {"records", "name"}
-    ret = storage_socket.collection.get(collection=collection, name="none_existing", include=include)
+    ret = storage_socket.datasets.get(collection=collection, name="none_existing", include=include)
     assert ret["meta"]["success"] is True
     assert len(ret["data"]) == 0
     # print('With projection: ', ret["data"])
 
     include = {"records", "name", "id"}
-    ret = storage_socket.collection.get(collection=collection, name=name2, include=include)
+    ret = storage_socket.datasets.get(collection=collection, name=name2, include=include)
     assert ret["meta"]["success"] is True
     assert len(ret["data"]) == 1
     assert set(ret["data"][0].keys()) == include
@@ -289,11 +289,11 @@ def test_collections_include_exclude(storage_socket):
     # print('With projection: ', ret["data"])
 
     exclude = {"records", "name"}
-    ret = storage_socket.collection.get(collection=collection, name=name, exclude=exclude)
+    ret = storage_socket.datasets.get(collection=collection, name=name, exclude=exclude)
     assert ret["meta"]["success"] is True
     assert len(ret["data"]) == 1
     assert len(set(ret["data"][0].keys()) & exclude) == 0
 
     # cleanup
-    storage_socket.collection.delete(collection=collection, name=name)
-    storage_socket.collection.delete(collection=collection, name=name2)
+    storage_socket.datasets.delete(collection=collection, name=name)
+    storage_socket.datasets.delete(collection=collection, name=name2)

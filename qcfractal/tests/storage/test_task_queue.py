@@ -31,7 +31,7 @@ def test_task_nonexist_manager_claim(storage_socket):
     assert len(claimed) == 0
 
     #  Create it to make sure that it would actually claim the task
-    assert storage_socket.manager.update(name="some_manager", **fake_manager_1)
+    assert storage_socket.managers.update(name="some_manager", **fake_manager_1)
     claimed = storage_socket.task.claim_tasks("some_manager", {"psi4": None, "rdkit": None, "geometric": None})
     assert len(claimed) == 1
 
@@ -45,14 +45,14 @@ def test_task_inactive_manager_claim(storage_socket):
 
     _, ids = storage_socket.task.create([molecule_1], input_spec_1)
 
-    assert storage_socket.manager.update(name="some_manager", **fake_manager_1)
-    storage_socket.manager.deactivate(name=["some_manager"])
+    assert storage_socket.managers.update(name="some_manager", **fake_manager_1)
+    storage_socket.managers.deactivate(name=["some_manager"])
 
     claimed = storage_socket.task.claim_tasks("some_manager", {"psi4": None, "rdkit": None, "geometric": None})
     assert len(claimed) == 0
 
     # Manually set to active to make sure it can be claimed
-    assert storage_socket.manager.update(name="some_manager", status=ManagerStatusEnum.active)
+    assert storage_socket.managers.update(name="some_manager", status=ManagerStatusEnum.active)
     claimed = storage_socket.task.claim_tasks("some_manager", {"psi4": None, "rdkit": None, "geometric": None})
     assert len(claimed) == 1
 
@@ -68,7 +68,7 @@ def test_task_ordering_time(storage_socket):
     _, ids_1 = storage_socket.task.create([molecule_1], input_spec_1)
     _, ids_2 = storage_socket.task.create([molecule_2], input_spec_2)
 
-    assert storage_socket.manager.update(name="some_manager", **fake_manager_1)
+    assert storage_socket.managers.update(name="some_manager", **fake_manager_1)
 
     queue_id1 = storage_socket.task.claim_tasks("some_manager", {"psi4": None}, limit=1)[0]["base_result_id"]
     queue_id2 = storage_socket.task.claim_tasks("some_manager", {"psi4": None}, limit=1)[0]["base_result_id"]
@@ -91,7 +91,7 @@ def test_queue_ordering_priority(storage_socket):
     _, ids_2 = storage_socket.task.create([molecule_2], input_spec_2)
     _, ids_3 = storage_socket.task.create([molecule_3], input_spec_3)
 
-    assert storage_socket.manager.update(name="some_manager", **fake_manager_1)
+    assert storage_socket.managers.update(name="some_manager", **fake_manager_1)
 
     queue_id1 = storage_socket.task.claim_tasks("some_manager", {"psi4": None}, limit=1)[0]["base_result_id"]
     queue_id2 = storage_socket.task.claim_tasks("some_manager", {"psi4": None}, limit=1)[0]["base_result_id"]
@@ -116,7 +116,7 @@ def test_queue_order_procedure_priority(storage_socket):
     _, ids_2 = storage_socket.task.create([molecule_2], input_spec_2)
     _, ids_3 = storage_socket.task.create([molecule_3], input_spec_3)
 
-    assert storage_socket.manager.update(name="some_manager", **fake_manager_1)
+    assert storage_socket.managers.update(name="some_manager", **fake_manager_1)
 
     assert len(storage_socket.task.claim_tasks("some_manager", {"rdkit": None}, limit=1)) == 0
     assert len(storage_socket.task.claim_tasks("some_manager", {"rdkit": None, "geom": None}, limit=1)) == 0

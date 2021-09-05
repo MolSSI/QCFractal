@@ -32,7 +32,7 @@ def molecules_H4O2(storage_socket):
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
     water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
 
-    meta, ret = storage_socket.molecule.add([water, water2])
+    meta, ret = storage_socket.molecules.add([water, water2])
 
     yield ret
 
@@ -84,7 +84,7 @@ def test_old_kvstore(session_fixture):
     session.commit()
 
     # Now query through the interface
-    q_dict = storage_socket.output_store.get([log.id])[0]
+    q_dict = storage_socket.outputstore.get([log.id])[0]
     q = ptl.models.KVStore(**q_dict)
     assert q.data.decode() == input_str
     assert q.compression is ptl.models.CompressionEnum.none
@@ -109,11 +109,11 @@ def test_molecule_sql(session_fixture):
     water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
 
     # Add MoleculeORM
-    meta, ret = storage_socket.molecule.add([water, water2])
+    meta, ret = storage_socket.molecules.add([water, water2])
     assert meta.success
     assert meta.n_inserted == 2
 
-    meta, ret = storage_socket.molecule.query()
+    meta, ret = storage_socket.molecules.query()
     assert meta.n_returned == 2
 
     # Use the ORM class

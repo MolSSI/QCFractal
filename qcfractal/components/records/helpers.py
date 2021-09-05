@@ -87,5 +87,5 @@ def wavefunction_helper(
 
     wavefunction_save = {k: wfn_dict[k] for k in available_keys}
     wfn_prop = WavefunctionProperties(**wavefunction_save)
-    wfn_data_id = storage_socket.wavefunction.add([wfn_prop], session=session)[0]
+    wfn_data_id = storage_socket.wavefunctions.add([wfn_prop], session=session)[0]
     return wfn_data_id, info_dict

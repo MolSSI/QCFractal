@@ -21,14 +21,14 @@ def test_molecules_basic(storage_socket):
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
 
     # Add once
-    meta, ids = storage_socket.molecule.add([water])
+    meta, ids = storage_socket.molecules.add([water])
     assert meta.success
     assert meta.n_inserted == 1
     assert meta.n_existing == 0
     assert meta.inserted_idx == [0]
 
     # Now get the molecule by id
-    mols = storage_socket.molecule.get(ids)
+    mols = storage_socket.molecules.get(ids)
     mols = [to_molecule(x) for x in mols]
     assert len(mols) == 1
     assert mols[0].get_hash() == water.get_hash()
@@ -38,21 +38,21 @@ def test_molecules_basic(storage_socket):
     assert mols[0].validated
 
     # Try to add again
-    meta, ids2 = storage_socket.molecule.add([water])
+    meta, ids2 = storage_socket.molecules.add([water])
     assert meta.success
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
     assert meta.existing_idx == [0]
 
     # Delete the molecule
-    meta = storage_socket.molecule.delete(ids)
+    meta = storage_socket.molecules.delete(ids)
     assert meta.success
     assert meta.n_deleted == 1
     assert meta.deleted_idx == [0]
 
     # Make sure it is gone
     # This should return a list containing only None
-    mols = storage_socket.molecule.get(ids, missing_ok=True)
+    mols = storage_socket.molecules.get(ids, missing_ok=True)
     assert mols == [None]
 
 
@@ -64,7 +64,7 @@ def test_molecules_add_with_id(storage_socket):
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
     water = water.copy(update={"id": bad_id})
 
-    meta, ids = storage_socket.molecule.add([water])
+    meta, ids = storage_socket.molecules.add([water])
     assert meta.success
     assert meta.n_inserted == 1
     assert meta.n_existing == 0
@@ -73,10 +73,10 @@ def test_molecules_add_with_id(storage_socket):
 
     # Getting by the old id shouldn't work
     with pytest.raises(RuntimeError, match=r"Could not find all requested molecule records"):
-        storage_socket.molecule.get([bad_id], missing_ok=False)
+        storage_socket.molecules.get([bad_id], missing_ok=False)
 
     # Getting by the new id shouldn't work
-    mols = storage_socket.molecule.get(ids, missing_ok=False)
+    mols = storage_socket.molecules.get(ids, missing_ok=False)
     assert mols[0]["id"] == ids[0]
     assert to_molecule(mols[0]).compare(water)
 
@@ -86,7 +86,7 @@ def test_molecules_add_duplicates_1(storage_socket):
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
     hooh = ptl.data.get_molecule("hooh.json")
 
-    meta, ids = storage_socket.molecule.add([water, hooh, water, hooh, hooh])
+    meta, ids = storage_socket.molecules.add([water, hooh, water, hooh, hooh])
     assert meta.success
     assert meta.n_inserted == 2
     assert meta.n_existing == 3
@@ -97,7 +97,7 @@ def test_molecules_add_duplicates_1(storage_socket):
     assert ids[1] == ids[4]
 
     # Test in a different order
-    meta, ids = storage_socket.molecule.add([hooh, hooh, water, water, hooh])
+    meta, ids = storage_socket.molecules.add([hooh, hooh, water, water, hooh])
     assert meta.success
     assert meta.n_inserted == 0
     assert meta.n_existing == 5
@@ -113,12 +113,12 @@ def test_molecules_get_duplicates(storage_socket):
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
     hooh = ptl.data.get_molecule("hooh.json")
 
-    meta, ids = storage_socket.molecule.add([water, hooh])
+    meta, ids = storage_socket.molecules.add([water, hooh])
     assert meta.success
     assert meta.n_inserted == 2
 
     id1, id2 = ids
-    mols = storage_socket.molecule.get([id1, id2, id1, id2, id1])
+    mols = storage_socket.molecules.get([id1, id2, id1, id2, id1])
     mols = [to_molecule(x) for x in mols]
     assert len(mols) == 5
     assert mols[0].compare(mols[2])
@@ -129,7 +129,7 @@ def test_molecules_get_duplicates(storage_socket):
     assert mols[1].id == mols[3].id
 
     # Try getting in a different order
-    mols = storage_socket.molecule.get([id2, id1, id1, id1, id2])
+    mols = storage_socket.molecules.get([id2, id1, id1, id1, id2])
     mols = [to_molecule(x) for x in mols]
     assert len(mols) == 5
     assert mols[0].compare(mols[4])
@@ -143,10 +143,10 @@ def test_molecules_get_duplicates(storage_socket):
 def test_molecules_delete_nonexist(storage_socket):
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
-    meta, ids = storage_socket.molecule.add([water])
+    meta, ids = storage_socket.molecules.add([water])
     assert meta.success
 
-    meta = storage_socket.molecule.delete([456, ids[0], ids[0], 123, 789])
+    meta = storage_socket.molecules.delete([456, ids[0], ids[0], 123, 789])
     assert meta.success
     assert meta.n_deleted == 1
     assert meta.n_missing == 4
@@ -158,16 +158,16 @@ def test_molecules_get_nonexist(storage_socket):
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
     hooh = ptl.data.get_molecule("hooh.json")
 
-    meta, ids = storage_socket.molecule.add([water, hooh])
+    meta, ids = storage_socket.molecules.add([water, hooh])
     assert meta.success
 
     id1, id2 = ids
-    meta = storage_socket.molecule.delete([id1])
+    meta = storage_socket.molecules.delete([id1])
     assert meta.success
 
     # We now have one molecule in the database and one that has been deleted
     # Try to get both with missing_ok = True. This should have None in the returned list
-    mols = storage_socket.molecule.get([id1, id2, id1, id2], missing_ok=True)
+    mols = storage_socket.molecules.get([id1, id2, id1, id2], missing_ok=True)
     assert len(mols) == 4
     assert mols[0] is None
     assert mols[2] is None
@@ -176,7 +176,7 @@ def test_molecules_get_nonexist(storage_socket):
 
     # Now try with missing_ok = False. This should raise an exception
     with pytest.raises(RuntimeError, match=r"Could not find all requested molecule records"):
-        storage_socket.molecule.get([id1, id2, id1, id2], missing_ok=False)
+        storage_socket.molecules.get([id1, id2, id1, id2], missing_ok=False)
 
 
 def test_molecules_add_mixed_1(storage_socket):
@@ -185,7 +185,7 @@ def test_molecules_add_mixed_1(storage_socket):
     hooh = ptl.data.get_molecule("hooh.json")
     ne4 = ptl.data.get_molecule("neon_tetramer.psimol")
 
-    meta, ids = storage_socket.molecule.add_mixed([hooh, water, hooh, water, water, ne4])
+    meta, ids = storage_socket.molecules.add_mixed([hooh, water, hooh, water, water, ne4])
     assert meta.success
     assert meta.n_inserted == 3
     assert meta.n_existing == 3
@@ -195,7 +195,7 @@ def test_molecules_add_mixed_1(storage_socket):
     assert meta.inserted_idx == [0, 1, 5]
     assert meta.existing_idx == [2, 3, 4]
 
-    meta, ids = storage_socket.molecule.add_mixed([ids[0], ids[0], ids[1], ids[1], ids[0]])
+    meta, ids = storage_socket.molecules.add_mixed([ids[0], ids[0], ids[1], ids[1], ids[0]])
     assert meta.success
     assert meta.n_inserted == 0
     assert meta.n_existing == 5
@@ -210,17 +210,17 @@ def test_molecules_add_mixed_2(storage_socket):
     hooh = ptl.data.get_molecule("hooh.json")
     ne4 = ptl.data.get_molecule("neon_tetramer.psimol")
 
-    meta, ids = storage_socket.molecule.add([water])
+    meta, ids = storage_socket.molecules.add([water])
     assert meta.success
 
-    meta, new_ids = storage_socket.molecule.add_mixed([hooh, ids[0]])
+    meta, new_ids = storage_socket.molecules.add_mixed([hooh, ids[0]])
     assert meta.success
     assert meta.n_inserted == 1
     assert meta.n_existing == 1
     assert ids[0] == new_ids[1]
 
     # Try with duplicates, including a duplicate specified by molecule and by id
-    meta, new_ids_2 = storage_socket.molecule.add_mixed([ne4, hooh, ids[0], new_ids[0], water, ids[0]])
+    meta, new_ids_2 = storage_socket.molecules.add_mixed([ne4, hooh, ids[0], new_ids[0], water, ids[0]])
     assert meta.success
     assert meta.n_inserted == 1
     assert meta.n_existing == 5
@@ -231,7 +231,7 @@ def test_molecules_add_mixed_2(storage_socket):
     assert new_ids_2[4] == ids[0]
     assert new_ids_2[5] == ids[0]
 
-    mols = storage_socket.molecule.get([ids[0], new_ids[0], new_ids[1]], missing_ok=False)
+    mols = storage_socket.molecules.get([ids[0], new_ids[0], new_ids[1]], missing_ok=False)
     mols = [to_molecule(x) for x in mols]
     assert mols[0].compare(water)
     assert mols[1].compare(hooh)
@@ -243,10 +243,10 @@ def test_molecules_add_mixed_bad_1(storage_socket):
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
     hooh = ptl.data.get_molecule("hooh.json")
 
-    meta, ids = storage_socket.molecule.add([water])
+    meta, ids = storage_socket.molecules.add([water])
     assert meta.success
 
-    meta, new_ids = storage_socket.molecule.add_mixed([hooh, 12345, 67890, water])
+    meta, new_ids = storage_socket.molecules.add_mixed([hooh, 12345, 67890, water])
     assert not meta.success
     assert meta.n_inserted == 1
     assert meta.n_existing == 1
@@ -264,7 +264,7 @@ def test_molecules_query(storage_socket):
     added_mols = [water, hooh]
     added_mols = sorted(added_mols, key=lambda x: x.get_hash())
 
-    meta, ids = storage_socket.molecule.add(added_mols)
+    meta, ids = storage_socket.molecules.add(added_mols)
     assert meta.success
     assert meta.inserted_idx == [0, 1]
 
@@ -273,7 +273,7 @@ def test_molecules_query(storage_socket):
     #################################################
 
     # Query by id
-    meta, mols = storage_socket.molecule.query(id=ids)
+    meta, mols = storage_socket.molecules.query(id=ids)
     mols = [to_molecule(x) for x in mols]
     mols = sorted(mols, key=lambda x: x.get_hash())
     assert meta.success
@@ -282,7 +282,7 @@ def test_molecules_query(storage_socket):
     assert mols[1].compare(added_mols[1])
 
     # Query by hash
-    meta, mols = storage_socket.molecule.query(molecule_hash=[water.get_hash(), hooh.get_hash()])
+    meta, mols = storage_socket.molecules.query(molecule_hash=[water.get_hash(), hooh.get_hash()])
     mols = [to_molecule(x) for x in mols]
     mols = sorted(mols, key=lambda x: x.get_hash())
     assert meta.success
@@ -293,7 +293,7 @@ def test_molecules_query(storage_socket):
     assert mols[1].compare(added_mols[1])
 
     # Query by formula
-    meta, mols = storage_socket.molecule.query(molecular_formula=["H4O2", "H2O2"])
+    meta, mols = storage_socket.molecules.query(molecular_formula=["H4O2", "H2O2"])
     mols = [to_molecule(x) for x in mols]
     mols = sorted(mols, key=lambda x: x.get_hash())
     assert meta.success
@@ -302,7 +302,7 @@ def test_molecules_query(storage_socket):
     assert mols[1].compare(added_mols[1])
 
     # Queries should be intersections
-    meta, mols = storage_socket.molecule.query(molecular_formula=["H4O2", "H2O2"], molecule_hash=[water.get_hash()])
+    meta, mols = storage_socket.molecules.query(molecular_formula=["H4O2", "H2O2"], molecule_hash=[water.get_hash()])
     mols = [to_molecule(x) for x in mols]
     assert meta.success
     assert meta.n_returned == 1
@@ -315,54 +315,54 @@ def test_molecules_query_limit(storage_socket):
 
     added_mols = [water, hooh]
 
-    meta, ids = storage_socket.molecule.add(added_mols)
+    meta, ids = storage_socket.molecules.add(added_mols)
     assert meta.success
 
     # Query by hash
     all_found = []
 
-    meta, mols = storage_socket.molecule.query(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1)
+    meta, mols = storage_socket.molecules.query(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1)
     assert meta.success
     assert meta.n_returned == 1
     assert len(mols) == 1
     all_found.extend(mols)
 
-    meta, mols = storage_socket.molecule.query(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1, skip=1)
+    meta, mols = storage_socket.molecules.query(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1, skip=1)
     assert meta.success
     assert meta.n_returned == 1
     assert len(mols) == 1
     all_found.extend(mols)
 
     # Asking for more molecules than there are
-    meta, mols = storage_socket.molecule.query(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1, skip=2)
+    meta, mols = storage_socket.molecules.query(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1, skip=2)
     assert meta.success
     assert meta.n_returned == 0
     assert len(mols) == 0
 
 
 def test_molecules_get_empty(storage_socket):
-    assert storage_socket.molecule.get([]) == []
+    assert storage_socket.molecules.get([]) == []
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
-    _, ids = storage_socket.molecule.add([water])
+    _, ids = storage_socket.molecules.add([water])
     assert len(ids) == 1
 
-    assert storage_socket.molecule.get([]) == []
+    assert storage_socket.molecules.get([]) == []
 
 
 def test_molecules_query_empty(storage_socket):
-    assert storage_socket.molecule.query()[1] == []
+    assert storage_socket.molecules.query()[1] == []
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
-    _, ids = storage_socket.molecule.add([water])
+    _, ids = storage_socket.molecules.add([water])
     assert len(ids) == 1
 
     # Empty everything = return all
-    meta, mols = storage_socket.molecule.query()
+    meta, mols = storage_socket.molecules.query()
     assert meta.n_found == 1
     assert mols[0]["id"] == ids[0]
 
     # Empty lists will constrain the results to be empty
-    meta, mols = storage_socket.molecule.query(id=[])
+    meta, mols = storage_socket.molecules.query(id=[])
     assert meta.n_found == 0
     assert mols == []

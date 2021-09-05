@@ -49,8 +49,8 @@ def test_server_log(storage_results):
     # Add something to double check the test
     mol_names = ["water_dimer_minima.psimol", "water_dimer_stretch.psimol", "water_dimer_stretch2.psimol"]
 
-    storage_results.server_log.update_stats()
-    _, ret = storage_results.server_log.query_stats(limit=1)
+    storage_results.serverinfo.update_stats()
+    _, ret = storage_results.serverinfo.query_stats(limit=1)
     assert ret[0]["db_table_size"] > 0
     assert ret[0]["db_total_size"] > 0
 
@@ -60,26 +60,26 @@ def test_server_log(storage_results):
 
     # Check queries
     now = datetime.utcnow()
-    meta, ret = storage_results.server_log.query_stats(after=now)
+    meta, ret = storage_results.serverinfo.query_stats(after=now)
     assert meta.success
     assert meta.n_returned == 0
     assert meta.n_found == 0
     assert len(ret) == 0
 
-    meta, ret = storage_results.server_log.query_stats(before=now)
+    meta, ret = storage_results.serverinfo.query_stats(before=now)
     assert meta.success
     assert meta.n_returned > 0
     assert meta.n_found > 0
     assert len(ret) > 0
 
     # Make sure we are sorting correctly
-    storage_results.server_log.update_stats()
-    meta, ret = storage_results.server_log.query_stats(limit=1)
+    storage_results.serverinfo.update_stats()
+    meta, ret = storage_results.serverinfo.query_stats(limit=1)
     assert meta.success
     assert meta.n_found > 1
     assert meta.n_returned == 1
     assert ret[0]["timestamp"] > now
 
     # Test get last stats
-    ret2 = storage_results.server_log.get_latest_stats()
+    ret2 = storage_results.serverinfo.get_latest_stats()
     assert ret[0] == ret2

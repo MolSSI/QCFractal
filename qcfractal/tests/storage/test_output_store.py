@@ -18,9 +18,9 @@ def test_kvstore_basic_str(storage_socket, compression, compression_level):
     kv = KVStore.compress(input_str, compression, compression_level)
 
     # Add both as the KVStore and as the plain str
-    added_ids = storage_socket.output_store.add([kv, input_str])
+    added_ids = storage_socket.outputstore.add([kv, input_str])
 
-    r = storage_socket.output_store.get(added_ids, missing_ok=False)
+    r = storage_socket.outputstore.get(added_ids, missing_ok=False)
     assert len(r) == 2
     kv1 = KVStore(**r[0])
     kv2 = KVStore(**r[1])
@@ -49,9 +49,9 @@ def test_kvstore_basic_json(storage_socket, compression, compression_level):
     kv = KVStore.compress(input_dict, compression, compression_level)
 
     # Add both as the KVStore and as the plain dict
-    added_ids = storage_socket.output_store.add([kv, input_dict])
+    added_ids = storage_socket.outputstore.add([kv, input_dict])
 
-    r = storage_socket.output_store.get(added_ids, missing_ok=False)
+    r = storage_socket.outputstore.get(added_ids, missing_ok=False)
     assert len(r) == 2
     kv1 = KVStore(**r[0])
     kv2 = KVStore(**r[1])
@@ -79,14 +79,14 @@ def test_kvstore_replace(storage_socket, compression, compression_level):
     input_str = "This is some input " * 20
 
     # Add twice
-    added_ids = storage_socket.output_store.add([input_str, input_str])
+    added_ids = storage_socket.outputstore.add([input_str, input_str])
 
     new_str = "Some new stuff just came in" * 10
     new_kv = KVStore.compress(new_str, compression, compression_level)
 
-    new_id_1 = storage_socket.output_store.replace(added_ids[0], new_kv)
-    new_id_2 = storage_socket.output_store.replace(added_ids[1], new_str)
-    r = storage_socket.output_store.get([new_id_1, new_id_2], missing_ok=False)
+    new_id_1 = storage_socket.outputstore.replace(added_ids[0], new_kv)
+    new_id_2 = storage_socket.outputstore.replace(added_ids[1], new_str)
+    r = storage_socket.outputstore.get([new_id_1, new_id_2], missing_ok=False)
 
     kv1 = KVStore(**r[0])
     kv2 = KVStore(**r[1])
@@ -104,7 +104,7 @@ def test_kvstore_replace(storage_socket, compression, compression_level):
         assert kv1.compression_level == compression_level
 
     # Old ones should have been deleted
-    r = storage_socket.output_store.get(added_ids, missing_ok=True)
+    r = storage_socket.outputstore.get(added_ids, missing_ok=True)
     assert all(x is None for x in r)
 
 
@@ -115,9 +115,9 @@ def test_kvstore_replace_new(storage_socket):
 
     input_str = "This is some input " * 20
 
-    added_id = storage_socket.output_store.replace(None, input_str)
+    added_id = storage_socket.outputstore.replace(None, input_str)
 
-    r = storage_socket.output_store.get([added_id], missing_ok=False)
+    r = storage_socket.outputstore.get([added_id], missing_ok=False)
 
     kv1 = KVStore(**r[0])
 
@@ -132,15 +132,15 @@ def test_kvstore_replace_none(storage_socket):
 
     input_str = "This is some input " * 20
 
-    added_id = storage_socket.output_store.add([input_str])[0]
+    added_id = storage_socket.outputstore.add([input_str])[0]
 
     # Replace with nothing
-    new_id_1 = storage_socket.output_store.replace(added_id, None)
+    new_id_1 = storage_socket.outputstore.replace(added_id, None)
 
     assert new_id_1 is None
 
     # Old ones should have been deleted
-    r = storage_socket.output_store.get([added_id], missing_ok=True)
+    r = storage_socket.outputstore.get([added_id], missing_ok=True)
     assert all(x is None for x in r)
 
 
@@ -153,8 +153,8 @@ def test_kvstore_replace_badid(storage_socket):
 
     input_str = "This is some input " * 20
 
-    added_id = storage_socket.output_store.replace(1234, input_str)
-    r = storage_socket.output_store.get([added_id], missing_ok=False)
+    added_id = storage_socket.outputstore.replace(1234, input_str)
+    r = storage_socket.outputstore.get([added_id], missing_ok=False)
     kv1 = KVStore(**r[0])
 
     assert ObjectId(kv1.id) == added_id
@@ -171,13 +171,13 @@ def test_kvstore_append(storage_socket, compression, compression_level):
     input_str = "This is some input " * 20
     kv = KVStore.compress(input_str, compression, compression_level)
 
-    added_id = storage_socket.output_store.add([kv])[0]
+    added_id = storage_socket.outputstore.add([kv])[0]
 
     app_str = "This needs to be appended" * 10
-    app_id_1 = storage_socket.output_store.append(added_id, app_str)
+    app_id_1 = storage_socket.outputstore.append(added_id, app_str)
 
     assert app_id_1 == added_id
-    r = storage_socket.output_store.get([app_id_1], missing_ok=False)
+    r = storage_socket.outputstore.get([app_id_1], missing_ok=False)
 
     kv1 = KVStore(**r[0])
 
@@ -199,9 +199,9 @@ def test_kvstore_append_new(storage_socket):
 
     input_str = "This is some input " * 20
 
-    added_id = storage_socket.output_store.append(None, input_str)
+    added_id = storage_socket.outputstore.append(None, input_str)
 
-    r = storage_socket.output_store.get([added_id], missing_ok=False)
+    r = storage_socket.outputstore.get([added_id], missing_ok=False)
     kv1 = KVStore(**r[0])
 
     assert ObjectId(kv1.id) == added_id
@@ -218,4 +218,4 @@ def test_kvstore_append_badid(storage_socket):
     input_str = "This is some input " * 20
 
     with pytest.raises(RuntimeError, match="Cannot append to output"):
-        storage_socket.output_store.append(1234, input_str)
+        storage_socket.outputstore.append(1234, input_str)
