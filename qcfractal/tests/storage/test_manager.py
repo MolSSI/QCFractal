@@ -17,31 +17,31 @@ def test_manager_basic(storage_socket):
         "tag": "test_tag",
         "status": ManagerStatusEnum.active,
     }
-    assert storage_socket.manager.update(name="first_manager", **manager_info)
-    ret = storage_socket.manager.get(name=["first_manager"])
+    assert storage_socket.managers.update(name="first_manager", **manager_info)
+    ret = storage_socket.managers.get(name=["first_manager"])
     assert all(ret[0][k] == v for k, v in manager_info.items())
 
     # Updating with submitted,completed,failures should add, rather than replace
-    assert storage_socket.manager.update(name="first_manager", submitted=100, completed=200, failures=300, log=True)
-    assert storage_socket.manager.update(name="first_manager", submitted=50, completed=100, failures=150, log=True)
-    ret = storage_socket.manager.get(name=["first_manager"], include=["*", "logs_obj"])
+    assert storage_socket.managers.update(name="first_manager", submitted=100, completed=200, failures=300, log=True)
+    assert storage_socket.managers.update(name="first_manager", submitted=50, completed=100, failures=150, log=True)
+    ret = storage_socket.managers.get(name=["first_manager"], include=["*", "logs_obj"])
     assert ret[0]["submitted"] == 150
     assert ret[0]["completed"] == 300
     assert ret[0]["failures"] == 450
     assert len(ret[0]["logs_obj"]) == 2
 
     # If we don't want log, they shouldn't be there
-    ret = storage_socket.manager.get(name=["first_manager"])
+    ret = storage_socket.managers.get(name=["first_manager"])
     assert "logs_obj" not in ret[0]
 
 
 def test_manager_get_nonexist(storage_socket):
 
-    ret = storage_socket.manager.get(name=["manager_does_not_exist"], missing_ok=True)
+    ret = storage_socket.managers.get(name=["manager_does_not_exist"], missing_ok=True)
     assert ret == [None]
 
     with pytest.raises(RuntimeError, match=r"Could not find all requested manager records"):
-        storage_socket.manager.get(name=["manager_does_not_exist"])
+        storage_socket.managers.get(name=["manager_does_not_exist"])
 
 
 def test_manager_deactivate_name(storage_socket):
@@ -54,21 +54,21 @@ def test_manager_deactivate_name(storage_socket):
         "tag": "test_tag",
         "status": ManagerStatusEnum.active,
     }
-    assert storage_socket.manager.update(name="first_manager", **manager_info)
-    ret = storage_socket.manager.get(name=["first_manager"])
+    assert storage_socket.managers.update(name="first_manager", **manager_info)
+    ret = storage_socket.managers.get(name=["first_manager"])
     assert ret[0]["status"] == ManagerStatusEnum.active
 
     # Deactivate nothing?
-    n = storage_socket.manager.deactivate(name=["first_manager_nonexist"])
+    n = storage_socket.managers.deactivate(name=["first_manager_nonexist"])
     assert n == []
-    ret = storage_socket.manager.get(name=["first_manager"])
+    ret = storage_socket.managers.get(name=["first_manager"])
     assert ret[0]["status"] == ManagerStatusEnum.active
 
     # Now deactivate a real manager
-    n = storage_socket.manager.deactivate(name=["first_manager"])
+    n = storage_socket.managers.deactivate(name=["first_manager"])
     assert n == ["first_manager"]
 
-    ret = storage_socket.manager.get(name=["first_manager"])
+    ret = storage_socket.managers.get(name=["first_manager"])
     assert ret[0]["status"] == ManagerStatusEnum.inactive
 
 
@@ -82,20 +82,20 @@ def test_manager_deactivate_time(storage_socket):
         "tag": "test_tag",
         "status": ManagerStatusEnum.active,
     }
-    assert storage_socket.manager.update(name="first_manager", **manager_info)
-    ret = storage_socket.manager.get(name=["first_manager"])
+    assert storage_socket.managers.update(name="first_manager", **manager_info)
+    ret = storage_socket.managers.get(name=["first_manager"])
     assert ret[0]["status"] == ManagerStatusEnum.active
 
     # Deactivate nothing (modified_before is an hour ago)
-    n = storage_socket.manager.deactivate(modified_before=datetime.utcnow() - timedelta(seconds=3600))
+    n = storage_socket.managers.deactivate(modified_before=datetime.utcnow() - timedelta(seconds=3600))
     assert n == []
-    ret = storage_socket.manager.get(name=["first_manager"])
+    ret = storage_socket.managers.get(name=["first_manager"])
     assert ret[0]["status"] == ManagerStatusEnum.active
 
     # Now deactivate real managers
-    n = storage_socket.manager.deactivate(modified_before=datetime.utcnow())
+    n = storage_socket.managers.deactivate(modified_before=datetime.utcnow())
     assert n == ["first_manager"]
-    ret = storage_socket.manager.get(name=["first_manager"])
+    ret = storage_socket.managers.get(name=["first_manager"])
     assert ret[0]["status"] == ManagerStatusEnum.inactive
 
 
@@ -114,14 +114,14 @@ def test_manager_query(storage_socket):
     ]
 
     for i, m in enumerate(manager_info):
-        assert storage_socket.manager.update(name=f"first_manager{i}", **m)
+        assert storage_socket.managers.update(name=f"first_manager{i}", **m)
 
-    meta, ret = storage_socket.manager.query(name=["first_manager0", "first_manager1"])
+    meta, ret = storage_socket.managers.query(name=["first_manager0", "first_manager1"])
     assert meta.success
     assert meta.n_returned == 2
     assert len(ret) == 2
 
-    meta, ret = storage_socket.manager.query(name=["first_manager0"], include=["cluster"])
+    meta, ret = storage_socket.managers.query(name=["first_manager0"], include=["cluster"])
     assert meta.success
     assert meta.n_returned == 1
     assert len(ret) == 1
@@ -130,7 +130,7 @@ def test_manager_query(storage_socket):
     # we only asked for cluster. id is also returned automatically
     assert set(ret[0].keys()) == {"cluster", "id"}
 
-    meta, ret = storage_socket.manager.query(
+    meta, ret = storage_socket.managers.query(
         hostname=["test_hostname0"], include=["name", "uuid"], modified_before=datetime.utcnow()
     )
     assert meta.success

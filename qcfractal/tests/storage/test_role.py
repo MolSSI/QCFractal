@@ -11,16 +11,16 @@ from qcfractal.components.permissions.role_socket import default_roles
 def test_role_defaults(storage_socket):
     # Test that default roles are created
     for rolename, permissions in default_roles.items():
-        r = storage_socket.role.get(rolename)
+        r = storage_socket.roles.get(rolename)
         assert r.permissions == permissions
 
 
 def test_role_nonexist(storage_socket):
     with pytest.raises(UserManagementError, match=r"Role.*does not exist"):
-        storage_socket.role.get("doesntexist")
+        storage_socket.roles.get("doesntexist")
 
     with pytest.raises(UserManagementError, match=r"Role.*does not exist"):
-        storage_socket.role.modify("doesntexist", "{}")
+        storage_socket.roles.modify("doesntexist", "{}")
 
 
 def test_role_add(storage_socket):
@@ -32,19 +32,19 @@ def test_role_add(storage_socket):
         ]
     }
 
-    storage_socket.role.add("molecule_admin", new_perms)
+    storage_socket.roles.add("molecule_admin", new_perms)
 
-    rinfo = storage_socket.role.get("molecule_admin")
+    rinfo = storage_socket.roles.get("molecule_admin")
     assert rinfo.permissions == new_perms
 
     # Raises exception on error
-    storage_socket.role.delete("molecule_admin")
+    storage_socket.roles.delete("molecule_admin")
 
 
 def test_role_modify_admin(storage_socket):
     # The admin role should not be modifiable
     with pytest.raises(UserManagementError, match=r"Cannot modify the admin role"):
-        storage_socket.role.modify("admin", "{}")
+        storage_socket.roles.modify("admin", "{}")
 
 
 def test_role_modify(storage_socket):
@@ -55,9 +55,9 @@ def test_role_modify(storage_socket):
         ]
     }
 
-    storage_socket.role.modify("read", new_perms)
+    storage_socket.roles.modify("read", new_perms)
 
-    rinfo = storage_socket.role.get("read")
+    rinfo = storage_socket.roles.get("read")
     assert rinfo.permissions == new_perms
 
 
@@ -70,14 +70,14 @@ def test_role_delete(storage_socket):
         email="george@example.com",
         organization="My Org",
     )
-    storage_socket.user.add(uinfo, password="oldpw")
+    storage_socket.users.add(uinfo, password="oldpw")
 
     with pytest.raises(UserManagementError, match=r"Role could not be deleted"):
-        storage_socket.role.delete("read")
+        storage_socket.roles.delete("read")
 
     # If we delete the user, we should be able to delete the role
-    storage_socket.user.delete("george")
-    storage_socket.role.delete("read")
+    storage_socket.users.delete("george")
+    storage_socket.roles.delete("read")
 
 
 def test_role_list(storage_socket):
@@ -89,10 +89,10 @@ def test_role_list(storage_socket):
         ]
     }
 
-    storage_socket.role.add("molecule_admin", new_perms)
+    storage_socket.roles.add("molecule_admin", new_perms)
 
     # Now get all the roles
-    role_lst = storage_socket.role.list()
+    role_lst = storage_socket.roles.list()
 
     role_lst = sorted(role_lst, key=lambda x: x.rolename)
 
@@ -115,19 +115,19 @@ def test_role_reset(storage_socket):
         ]
     }
 
-    storage_socket.role.modify("read", new_perms)
-    rinfo = storage_socket.role.get("read")
+    storage_socket.roles.modify("read", new_perms)
+    rinfo = storage_socket.roles.get("read")
     assert rinfo.permissions == new_perms
 
     # Also delete
-    storage_socket.role.delete("monitor")
+    storage_socket.roles.delete("monitor")
     with pytest.raises(UserManagementError, match=r"Role.*does not exist"):
-        storage_socket.role.get("monitor")
+        storage_socket.roles.get("monitor")
 
     # Now reset
-    storage_socket.role.reset_defaults()
+    storage_socket.roles.reset_defaults()
 
     # Was the deleted role recreated, and the permissions fixed?
     for rolename, permissions in default_roles.items():
-        rinfo = storage_socket.role.get(rolename)
+        rinfo = storage_socket.roles.get(rolename)
         assert rinfo.permissions == default_roles[rolename]

@@ -52,10 +52,10 @@ def fractal_test_secure_server(temporary_database):
         # Get a storage socket and add the roles/users/passwords
         storage = server.get_storage_socket()
         for k, v in _roles.items():
-            storage.role.add(k, permissions=v)
+            storage.roles.add(k, permissions=v)
         for k, v in _users.items():
             uinfo = ptl.models.UserInfo(username=k, fullname="Ms. Test User", enabled=True, role=v["role"])
-            storage.user.add(uinfo, password=v["pw"])
+            storage.users.add(uinfo, password=v["pw"])
         yield server
 
 
@@ -74,10 +74,10 @@ def fractal_test_secure_server_read(temporary_database):
         # Get a storage socket and add the roles/users/passwords
         storage = server.get_storage_socket()
         for k, v in _roles.items():
-            storage.role.add(k, permissions=v)
+            storage.roles.add(k, permissions=v)
         for k, v in _users.items():
             uinfo = ptl.models.UserInfo(username=k, fullname="Ms. Test User", enabled=True, role=v["role"])
-            storage.user.add(uinfo, password=v["pw"])
+            storage.users.add(uinfo, password=v["pw"])
         yield server
 
 

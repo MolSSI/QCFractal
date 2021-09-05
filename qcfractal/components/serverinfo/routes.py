@@ -41,7 +41,7 @@ def query_access_log_v1():
     """
 
     body = parse_bodymodel(AccessLogGETBody)
-    meta, logs = storage_socket.server_log.query_access_logs(**{**body.data.dict(), **body.meta.dict()})
+    meta, logs = storage_socket.serverinfo.query_access_logs(**{**body.data.dict(), **body.meta.dict()})
     response = AccessLogGETResponse(meta=convert_get_response_metadata(meta, missing=[]), data=logs)
     return SerializedResponse(response)
 
@@ -54,7 +54,7 @@ def get_server_stats():
     """
 
     body = parse_bodymodel(ServerStatsGETBody)
-    meta, logs = storage_socket.server_log.query_stats(**{**body.data.dict(), **body.meta.dict()})
+    meta, logs = storage_socket.serverinfo.query_stats(**{**body.data.dict(), **body.meta.dict()})
     response = ServerStatsGETResponse(meta=convert_get_response_metadata(meta, missing=[]), data=logs)
     return SerializedResponse(response)
 
@@ -67,7 +67,7 @@ def query_access_summary_v1():
     """
 
     body = parse_bodymodel(AccessSummaryGETBody)
-    summary = storage_socket.server_log.query_access_summary(**{**body.data.dict()})
+    summary = storage_socket.serverinfo.query_access_summary(**{**body.data.dict()})
     response = AccessSummaryGETResponse(data=summary)
     return SerializedResponse(response)
 
@@ -80,6 +80,6 @@ def query_internal_error_log_v1():
     """
 
     body = parse_bodymodel(InternalErrorLogGETBody)
-    meta, logs = storage_socket.server_log.query_error_logs(**{**body.data.dict(), **body.meta.dict()})
+    meta, logs = storage_socket.serverinfo.query_error_logs(**{**body.data.dict(), **body.meta.dict()})
     response = InternalErrorLogGETResponse(meta=convert_get_response_metadata(meta, missing=[]), data=logs)
     return SerializedResponse(response)

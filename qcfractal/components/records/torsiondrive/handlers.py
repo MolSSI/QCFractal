@@ -203,7 +203,7 @@ class TorsionDriveHandler(BaseServiceHandler):
         self, session: Session, service_input: TorsionDriveInput
     ) -> Tuple[InsertMetadata, List[ObjectId]]:
 
-        meta, mol_ids = self._core_socket.molecule.add_mixed(service_input.initial_molecule)
+        meta, mol_ids = self._core_socket.molecules.add_mixed(service_input.initial_molecule)
 
         # TODO - int id
         mol_ids = [int(x) for x in mol_ids]
@@ -308,9 +308,9 @@ class TorsionDriveHandler(BaseServiceHandler):
             new_services.append(svc_orm)
 
             # Add the output to the base procedure
-            td_orm.stdout = self._core_socket.output_store.add([stdout])[0]
+            td_orm.stdout = self._core_socket.outputstore.add([stdout])[0]
 
-        return self._core_socket.service.add_task_orm(new_services, session=session)
+        return self._core_socket.services.add_task_orm(new_services, session=session)
 
     def iterate(self, session: Session, service_orm: ServiceQueueORM) -> bool:
 
@@ -347,7 +347,7 @@ class TorsionDriveHandler(BaseServiceHandler):
             initial_id = proc_obj.initial_molecule
             final_id = proc_obj.final_molecule
             mol_ids = [initial_id, final_id]
-            mol_data = self._core_socket.molecule.get(id=mol_ids, include=["geometry"], session=session)
+            mol_data = self._core_socket.molecules.get(id=mol_ids, include=["geometry"], session=session)
 
             # Use plain lists rather than numpy arrays
             initial_mol_geom = mol_data[0]["geometry"].tolist()
@@ -382,7 +382,7 @@ class TorsionDriveHandler(BaseServiceHandler):
         td_orm.minimum_positions = min_positions
         td_orm.final_energy_dict = final_energy
 
-        td_orm.stdout = self._core_socket.output_store.append(td_orm.stdout, stdout_append, session=session)
+        td_orm.stdout = self._core_socket.outputstore.append(td_orm.stdout, stdout_append, session=session)
 
         # Set the new service state. We must then mark it as modified
         # so that SQLAlchemy can pick up changes. This is because SQLAlchemy

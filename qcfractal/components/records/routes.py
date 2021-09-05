@@ -18,7 +18,7 @@ def query_procedure_v1():
     body_model, response_model = rest_model("procedure", "get")
     body = parse_bodymodel(body_model)
 
-    meta, ret = storage_socket.record.query(**{**body.data.dict(), **body.meta.dict()})
+    meta, ret = storage_socket.records.query(**{**body.data.dict(), **body.meta.dict()})
 
     # Remove result_type. This isn't used right now and is missing from the model
     for r in ret:

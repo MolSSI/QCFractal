@@ -98,7 +98,7 @@ class UserSocket:
 
         with self._core_socket.session_scope() as session:
             # Will raise exception if role does not exist
-            role = self._core_socket.role._get_internal(session, user_info.role)
+            role = self._core_socket.roles._get_internal(session, user_info.role)
 
             hashed_pw = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
 
@@ -280,7 +280,7 @@ class UserSocket:
             user.email = user_info.email
 
             if as_admin is True:
-                role = self._core_socket.role._get_internal(session, user_info.role)
+                role = self._core_socket.roles._get_internal(session, user_info.role)
 
                 user.enabled = user_info.enabled
                 user.role_id = role.id

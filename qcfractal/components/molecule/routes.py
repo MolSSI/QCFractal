@@ -18,7 +18,7 @@ from qcfractal.interface.models.rest_models import (
 @check_access
 def query_molecule_v1():
     body = parse_bodymodel(MoleculeGETBody)
-    meta, molecules = storage_socket.molecule.query(**body.data.dict(), **body.meta.dict())
+    meta, molecules = storage_socket.molecules.query(**body.data.dict(), **body.meta.dict())
 
     # Convert the new metadata format to the old format
     meta_old = convert_get_response_metadata(meta, missing=[])
@@ -30,7 +30,7 @@ def query_molecule_v1():
 @check_access
 def add_molecule_v1():
     body = parse_bodymodel(MoleculePOSTBody)
-    meta, ret = storage_socket.molecule.add(body.data)
+    meta, ret = storage_socket.molecules.add(body.data)
 
     # Convert new metadata format to old
     duplicate_ids = [ret[i] for i in meta.existing_idx]

@@ -25,8 +25,8 @@ def test_procedure_single_query(storage_socket):
     all_ids = ids1 + ids2 + ids3
 
     # Create the fake managers in the database
-    assert storage_socket.manager.update(name="manager_1", **fake_manager_1)
-    assert storage_socket.manager.update(name="manager_2", **fake_manager_2)
+    assert storage_socket.managers.update(name="manager_1", **fake_manager_1)
+    assert storage_socket.managers.update(name="manager_2", **fake_manager_2)
 
     # Managers claim some of the tasks
     storage_socket.task.claim_tasks("manager_1", fake_program_info, 50, ["for_manager_1"])

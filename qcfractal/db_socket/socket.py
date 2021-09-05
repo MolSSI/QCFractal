@@ -161,18 +161,18 @@ class SQLAlchemySocket:
         from ..components.services.sockets import ServiceSocket
         from ..components.datasets.sockets import DatasetSocket
 
-        self.server_log = ServerInfoSocket(self)
-        self.output_store = OutputStoreSocket(self)
+        self.serverinfo = ServerInfoSocket(self)
+        self.outputstore = OutputStoreSocket(self)
         self.keywords = KeywordsSocket(self)
-        self.molecule = MoleculeSocket(self)
-        self.collection = DatasetSocket(self)
-        self.record = RecordSocket(self)
+        self.molecules = MoleculeSocket(self)
+        self.datasets = DatasetSocket(self)
+        self.records = RecordSocket(self)
         self.task = TaskSocket(self)
-        self.service = ServiceSocket(self)
-        self.wavefunction = WavefunctionSocket(self)
-        self.manager = ManagerSocket(self)
-        self.user = UserSocket(self)
-        self.role = RoleSocket(self)
+        self.services = ServiceSocket(self)
+        self.wavefunctions = WavefunctionSocket(self)
+        self.managers = ManagerSocket(self)
+        self.users = UserSocket(self)
+        self.roles = RoleSocket(self)
 
     def __str__(self) -> str:
         return f"<SQLAlchemySocket: address='{self.uri}`>"

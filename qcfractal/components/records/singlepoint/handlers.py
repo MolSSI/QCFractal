@@ -201,7 +201,7 @@ class SingleResultHandler(BaseProcedureHandler):
 
         # Now we can delete the old wavefunction (if it existed)
         if old_wfn_id is not None:
-            self._core_socket.wavefunction.delete([old_wfn_id], session=session)
+            self._core_socket.wavefunctions.delete([old_wfn_id], session=session)
 
         # Double check to make sure everything is consistent
         assert result_orm.method == result.model.method

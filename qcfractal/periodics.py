@@ -93,7 +93,7 @@ class FractalPeriodics:
         Updates various server statistics (number of results, etc)
         """
         self.logger.info("Updating server stats in the database")
-        self.storage_socket.server_log.update_stats()
+        self.storage_socket.serverinfo.update_stats()
 
         # Set up the next run of this function
         self.scheduler.enter(self.server_stats_frequency, 1, self._update_server_stats)
@@ -110,7 +110,7 @@ class FractalPeriodics:
         manager_window = self.manager_max_missed_heartbeats * self.manager_heartbeat_frequency
         dt = datetime.utcnow() - timedelta(seconds=manager_window)
 
-        dead_managers = self.storage_socket.manager.deactivate(modified_before=dt, reason="missing heartbeat")
+        dead_managers = self.storage_socket.managers.deactivate(modified_before=dt, reason="missing heartbeat")
 
         if dead_managers:
             self.logger.info(f"Deactivated {len(dead_managers)} managers due to missing heartbeats")
@@ -132,7 +132,7 @@ class FractalPeriodics:
         """
 
         self.logger.debug(f"Updating services.")
-        n_running = self.storage_socket.service.iterate_services()
+        n_running = self.storage_socket.services.iterate_services()
         self.logger.debug(f"Done updating services.")
 
         # Set up the next run of this function
