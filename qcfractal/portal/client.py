@@ -574,7 +574,7 @@ class PortalClient:
         # otherwise we could do this all in one API query
         results = {}
         for i in ids:
-            payload = {"meta": {}, "data": {"id": i}}
+            payload = {"meta": {}, "data": {"id": [i]}}
             result = self._automodel_request("keyword", "get", payload)
             if result:
                 results[i] = result[0]
