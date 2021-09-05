@@ -1,5 +1,7 @@
 # ORM Base
 # Collections ORMs
+from .sql_base import Base, MsgpackExt
+
 from .collections_models import CollectionORM, DatasetORM, ReactionDatasetORM
 
 # Results and procedures ORMs
@@ -14,14 +16,12 @@ from .results_models import (
     Trajectory,
     WavefunctionStoreORM,
 )
-from .sql_base import Base, MsgpackExt
 
 # ORM general models
 from .sql_models import (
     AccessLogORM,
     InternalErrorLogORM,
     KeywordsORM,
-    KVStoreORM,
     QueueManagerLogORM,
     QueueManagerORM,
     ServerStatsLogORM,

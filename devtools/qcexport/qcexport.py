@@ -15,7 +15,6 @@ from qcfractal.storage_sockets.models import (
     DatasetORM,
     GridOptimizationProcedureORM,
     KeywordsORM,
-    KVStoreORM,
     OptimizationProcedureORM,
     QueueManagerLogORM,
     QueueManagerORM,
@@ -29,6 +28,7 @@ from qcfractal.storage_sockets.models import (
     VersionsORM,
     WavefunctionStoreORM,
 )
+from qcfractal.components.outputstore.db_models import KVStoreORM
 from qcfractal.components.molecule.db_models import MoleculeORM
 
 from qcfractal.storage_sockets.models.collections_models import DatasetEntryORM
