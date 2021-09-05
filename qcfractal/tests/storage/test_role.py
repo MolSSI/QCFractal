@@ -5,7 +5,7 @@ Tests for the user and role subsockets
 import pytest
 from qcfractal.exceptions import UserManagementError
 from qcfractal.interface.models import RoleInfo, UserInfo
-from qcfractal.storage_sockets.subsockets.role import default_roles
+from qcfractal.components.permissions.role_socket import default_roles
 
 
 def test_role_defaults(storage_socket):

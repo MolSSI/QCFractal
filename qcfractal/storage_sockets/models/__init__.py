@@ -26,7 +26,6 @@ from .sql_models import (
     ServiceQueueORM,
     ServiceQueueTasks,
     TaskQueueORM,
-    UserORM,
-    RoleORM,
     VersionsORM,
 )
+from ...components.permissions.db_models import UserORM, RoleORM

@@ -4,11 +4,11 @@ import logging
 import secrets
 import bcrypt
 from sqlalchemy.exc import IntegrityError
-from qcfractal.storage_sockets.models import UserORM
-from qcfractal.storage_sockets.subsockets import RoleSocket
+from qcfractal.components.permissions.db_models import UserORM
 from qcfractal.exceptions import AuthenticationFailure, UserManagementError
 from qcfractal.interface.models import UserInfo
 
+from .role_socket import RoleSocket
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:

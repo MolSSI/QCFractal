@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from sqlalchemy.exc import IntegrityError
 from qcfractal.exceptions import UserManagementError
-from qcfractal.storage_sockets.models import RoleORM
+from qcfractal.components.permissions.db_models import RoleORM
 from qcfractal.interface.models import RoleInfo
 
 from typing import TYPE_CHECKING

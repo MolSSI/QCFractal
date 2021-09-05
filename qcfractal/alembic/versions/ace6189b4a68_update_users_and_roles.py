@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.sql import table, column
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm.session import Session
-from qcfractal.storage_sockets.subsockets.role import default_roles
+from qcfractal.components.permissions.role_socket import default_roles
 import logging
 
 # revision identifiers, used by Alembic.
