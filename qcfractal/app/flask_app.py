@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import os
 import sys
+import importlib
 
-from flask import Flask
+from flask import Flask, Blueprint
 import multiprocessing
 
 from .config import config
@@ -43,6 +44,8 @@ view_handler = _FlaskViewHandler()
 
 jwt = JWTManager()
 
+main = Blueprint("main", __name__)
+
 
 def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     config_name = qcfractal_config.flask.config_name
@@ -73,26 +76,12 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = qcfractal_config.flask.jwt_access_token_expires
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = qcfractal_config.flask.jwt_refresh_token_expires
 
-    # logger.debug("Adding blueprints..")
+    # Register all the routes in the other files.
+    # Must be done before registering the blueprint
+    importlib.import_module("qcfractal.components.all_routes")
+    importlib.import_module("qcfractal.app.routes")
 
-    # Register all the routes in the other files
-    from ..components.molecule import routes
-    from ..components.outputstore import routes
-    from ..components.wavefunctions import routes
-    from ..components.keywords import routes
-    from ..components.permissions import routes
-    from ..components.serverinfo import routes
-    from ..components.managers import routes
-    from ..components.records import routes
-    from ..components.tasks import routes
-    from ..components.services import routes
-    from ..components.datasets import routes
-
-    from .routes import permissions
-
-    from .routes import main
-
-    app.register_blueprint(main.main)
+    app.register_blueprint(main)
 
     return app
 

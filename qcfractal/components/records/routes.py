@@ -1,14 +1,15 @@
-from qcfractal.app import storage_socket
-from qcfractal.app.routes.helpers import parse_bodymodel, convert_get_response_metadata, SerializedResponse
-from qcfractal.app.routes.main import main
-from qcfractal.app.routes.permissions import check_access
+from qcfractal.app import main, storage_socket
+from qcfractal.app.helpers import parse_bodymodel, convert_get_response_metadata, SerializedResponse
+from qcfractal.app.routes import check_access
 from qcfractal.interface.models import rest_model
 
+# These are used by the flask app. The flask app will
+# import this file, which will cause all the routes in these
+# subdirectories to be registered with the blueprint
 from .singlepoint import routes
 from .optimization import routes
-
-# from .gridoptimization import routes
-# from .torsiondrive import routes
+from .gridoptimization import routes
+from .torsiondrive import routes
 
 
 @main.route("/procedure", methods=["GET"])
