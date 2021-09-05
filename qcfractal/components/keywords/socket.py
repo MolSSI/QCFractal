@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from qcfractal.storage_sockets.models import KeywordsORM
+from qcfractal.components.keywords.db_models import KeywordsORM
 from qcfractal.interface.models import KeywordSet, InsertMetadata, DeleteMetadata, ObjectId
 from qcfractal.storage_sockets.sqlalchemy_common import (
     insert_general,

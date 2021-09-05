@@ -20,7 +20,6 @@ from .results_models import (
 from .sql_models import (
     AccessLogORM,
     InternalErrorLogORM,
-    KeywordsORM,
     QueueManagerLogORM,
     QueueManagerORM,
     ServerStatsLogORM,

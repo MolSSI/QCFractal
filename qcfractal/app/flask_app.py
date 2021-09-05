@@ -79,10 +79,10 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     from ..components.molecule import routes
     from ..components.outputstore import routes
     from ..components.wavefunction import routes
+    from ..components.keywords import routes
 
     from .routes import collections
     from .routes import collections
-    from .routes import keywords
     from .routes import manager
     from .routes import manager_info
     from .routes import optimization

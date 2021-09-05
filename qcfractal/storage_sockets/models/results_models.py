@@ -22,7 +22,7 @@ from sqlalchemy.orm import column_property, relationship
 from qcfractal.components.wavefunction.db_models import WavefunctionStoreORM
 from qcfractal.interface.models import DriverEnum, RecordStatusEnum, ObjectId
 from qcfractal.storage_sockets.models.sql_base import Base, MsgpackExt
-from qcfractal.storage_sockets.models.sql_models import KeywordsORM
+from qcfractal.components.keywords.db_models import KeywordsORM
 from qcfractal.components.outputstore.db_models import KVStoreORM
 from qcfractal.components.molecule.db_models import MoleculeORM
 

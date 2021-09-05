@@ -165,10 +165,10 @@ class SQLAlchemySocket:
         from ..components.molecule.socket import MoleculeSocket
         from ..components.outputstore.socket import OutputStoreSocket
         from ..components.wavefunction.socket import WavefunctionSocket
+        from ..components.keywords.socket import KeywordsSocket
 
         from qcfractal.storage_sockets.subsockets import (
             ServerLogSocket,
-            KeywordsSocket,
             CollectionSocket,
             RecordSocket,
             ProcedureSocket,
