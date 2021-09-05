@@ -162,10 +162,10 @@ class SQLAlchemySocket:
             raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}") from None
 
         # Create/initialize the subsockets
-        from ..components.molecule.socket import MoleculeSocket
-        from ..components.outputstore.socket import OutputStoreSocket
-        from ..components.wavefunction.socket import WavefunctionSocket
-        from ..components.keywords.socket import KeywordsSocket
+        from ..components.molecule.sockets import MoleculeSocket
+        from ..components.outputstore.sockets import OutputStoreSocket
+        from ..components.wavefunction.sockets import WavefunctionSocket
+        from ..components.keywords.sockets import KeywordsSocket
 
         from qcfractal.storage_sockets.subsockets import (
             ServerLogSocket,
