@@ -7,23 +7,19 @@ from __future__ import annotations
 import abc
 
 from qcelemental.models import Molecule
-from sqlalchemy.orm import Session
 
 from qcfractal.interface.models import (
     AllProcedureSpecifications,
     AllResultTypes,
     AllServiceSpecifications,
-    InsertMetadata,
-    ObjectId,
-    PriorityEnum,
 )
-from typing import TYPE_CHECKING, Tuple, List, Sequence, Optional, Dict, Any
+from typing import TYPE_CHECKING, Dict, Any
 
-from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+from qcfractal.db_socket.socket import SQLAlchemySocket
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from qcfractal.storage_sockets.models import Base
+    from qcfractal.db_socket import Base
     from qcfractal.components.services.db_models import ServiceQueueTasks, ServiceQueueORM
     from qcfractal.components.tasks.db_models import TaskQueueORM
     from qcfractal.interface.models import InsertMetadata, ObjectId, PriorityEnum

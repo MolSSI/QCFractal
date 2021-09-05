@@ -1,7 +1,10 @@
 from sqlalchemy import Column, Integer, String, JSON, Float, Boolean, Index
 
 from qcfractal.interface.models import ObjectId
-from qcfractal.storage_sockets.models.sql_base import Base, MsgpackExt
+from qcfractal.db_socket.base_orm import Base
+from qcfractal.db_socket.column_types import MsgpackExt
+
+from typing import Dict, Any, Optional, Iterable
 
 
 class MoleculeORM(Base):
@@ -54,9 +57,9 @@ class MoleculeORM(Base):
 
     __table_args__ = (Index("ix_molecule_hash", "molecule_hash", unique=False),)
 
-    def dict(self):
+    def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
 
-        d = Base.dict(self)
+        d = Base.dict(self, exclude)
 
         # TODO - remove this eventually
         # right now, a lot of code depends on these fields not being here

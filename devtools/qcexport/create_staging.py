@@ -10,7 +10,7 @@ import io
 import psycopg2
 import qcexport
 
-from qcfractal.storage_sockets import storage_socket_factory
+from qcfractal.db_socket import storage_socket_factory
 
 def create_destination_db(full_uri):
     '''Creates an empty database

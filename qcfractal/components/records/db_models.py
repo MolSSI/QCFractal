@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 
 from qcfractal.components.outputstore.db_models import KVStoreORM
 from qcfractal.interface.models import RecordStatusEnum
-from qcfractal.storage_sockets.models import Base, MsgpackExt
+from qcfractal.db_socket import Base, MsgpackExt
 
 
 class BaseResultORM(Base):

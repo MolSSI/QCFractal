@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from qcfractal.components.keywords.db_models import KeywordsORM
 from qcfractal.interface.models import KeywordSet, InsertMetadata, DeleteMetadata, ObjectId
-from qcfractal.storage_sockets.sqlalchemy_common import (
+from qcfractal.db_socket.helpers import (
     insert_general,
     delete_general,
     insert_mixed_general,
@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+    from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import List, Sequence, Union, Dict, Any, Tuple, Optional
 
     KeywordDict = Dict[str, Any]

@@ -11,6 +11,8 @@ import qcfractal
 
 
 # revision identifiers, used by Alembic.
+import qcfractal.db_socket.column_types
+
 revision = "1bd2f7711e68"
 down_revision = "a2f76bb7be65"
 branch_labels = None
@@ -22,23 +24,23 @@ def upgrade():
     op.create_table(
         "wavefunction_store",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("basis", qcfractal.storage_sockets.models.sql_base.MsgpackExt(), nullable=False),
+        sa.Column("basis", qcfractal.db_socket.column_types.MsgpackExt(), nullable=False),
         sa.Column("restricted", sa.Boolean(), nullable=False),
-        sa.Column("h_core_a", qcfractal.storage_sockets.models.sql_base.MsgpackExt(), nullable=True),
-        sa.Column("h_core_b", qcfractal.storage_sockets.models.sql_base.MsgpackExt(), nullable=True),
-        sa.Column("h_effective_a", qcfractal.storage_sockets.models.sql_base.MsgpackExt(), nullable=True),
-        sa.Column("h_effective_b", qcfractal.storage_sockets.models.sql_base.MsgpackExt(), nullable=True),
-        sa.Column("scf_orbitals_a", qcfractal.storage_sockets.models.sql_base.MsgpackExt(), nullable=True),
-        sa.Column("scf_orbitals_b", qcfractal.storage_sockets.models.sql_base.MsgpackExt(), nullable=True),
-        sa.Column("scf_density_a", qcfractal.storage_sockets.models.sql_base.MsgpackExt(), nullable=True),
-        sa.Column("scf_density_b", qcfractal.storage_sockets.models.sql_base.MsgpackExt(), nullable=True),
-        sa.Column("scf_fock_a", qcfractal.storage_sockets.models.sql_base.MsgpackExt(), nullable=True),
-        sa.Column("scf_fock_b", qcfractal.storage_sockets.models.sql_base.MsgpackExt(), nullable=True),
-        sa.Column("scf_eigenvalues_a", qcfractal.storage_sockets.models.sql_base.MsgpackExt(), nullable=True),
-        sa.Column("scf_eigenvalues_b", qcfractal.storage_sockets.models.sql_base.MsgpackExt(), nullable=True),
-        sa.Column("scf_occupations_a", qcfractal.storage_sockets.models.sql_base.MsgpackExt(), nullable=True),
-        sa.Column("scf_occupations_b", qcfractal.storage_sockets.models.sql_base.MsgpackExt(), nullable=True),
-        sa.Column("extras", qcfractal.storage_sockets.models.sql_base.MsgpackExt(), nullable=True),
+        sa.Column("h_core_a", qcfractal.db_socket.column_types.MsgpackExt(), nullable=True),
+        sa.Column("h_core_b", qcfractal.db_socket.column_types.MsgpackExt(), nullable=True),
+        sa.Column("h_effective_a", qcfractal.db_socket.column_types.MsgpackExt(), nullable=True),
+        sa.Column("h_effective_b", qcfractal.db_socket.column_types.MsgpackExt(), nullable=True),
+        sa.Column("scf_orbitals_a", qcfractal.db_socket.column_types.MsgpackExt(), nullable=True),
+        sa.Column("scf_orbitals_b", qcfractal.db_socket.column_types.MsgpackExt(), nullable=True),
+        sa.Column("scf_density_a", qcfractal.db_socket.column_types.MsgpackExt(), nullable=True),
+        sa.Column("scf_density_b", qcfractal.db_socket.column_types.MsgpackExt(), nullable=True),
+        sa.Column("scf_fock_a", qcfractal.db_socket.column_types.MsgpackExt(), nullable=True),
+        sa.Column("scf_fock_b", qcfractal.db_socket.column_types.MsgpackExt(), nullable=True),
+        sa.Column("scf_eigenvalues_a", qcfractal.db_socket.column_types.MsgpackExt(), nullable=True),
+        sa.Column("scf_eigenvalues_b", qcfractal.db_socket.column_types.MsgpackExt(), nullable=True),
+        sa.Column("scf_occupations_a", qcfractal.db_socket.column_types.MsgpackExt(), nullable=True),
+        sa.Column("scf_occupations_b", qcfractal.db_socket.column_types.MsgpackExt(), nullable=True),
+        sa.Column("extras", qcfractal.db_socket.column_types.MsgpackExt(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
     op.add_column("result", sa.Column("wavefunction_data_id", sa.Integer(), nullable=True))

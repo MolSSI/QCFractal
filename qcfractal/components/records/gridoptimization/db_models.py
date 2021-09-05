@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 from sqlalchemy import Column, Integer, ForeignKey, String, JSON
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
 from qcfractal.components.molecule.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseResultORM
-from qcfractal.storage_sockets.models import Base
+from qcfractal.db_socket import Base
+
+from typing import Dict, Any, Optional, Iterable
 
 
 class GridOptimizationAssociation(Base):
@@ -84,8 +88,9 @@ class GridOptimizationProcedureORM(BaseResultORM):
 
         return ret
 
-    def dict(self):
-        d = BaseResultORM.dict(self)
+    def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+
+        d = BaseResultORM.dict(self, exclude)
 
         # Always include grid optimizations field
         d["grid_optimizations"] = self.grid_optimizations

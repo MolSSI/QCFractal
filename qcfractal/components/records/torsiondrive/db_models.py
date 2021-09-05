@@ -5,7 +5,8 @@ from sqlalchemy.orm import column_property, relationship
 
 from qcfractal.components.molecule.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseResultORM
-from qcfractal.storage_sockets.models import Base
+from qcfractal.db_socket import Base
+from typing import Optional, Iterable, Any, Dict
 
 
 class OptimizationHistory(Base):
@@ -112,8 +113,8 @@ class TorsionDriveProcedureORM(BaseResultORM):
         "polymorphic_load": "selectin",
     }
 
-    def dict(self):
-        d = BaseResultORM.dict(self)
+    def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        d = BaseResultORM.dict(self, exclude)
 
         # Always include optimization history
         d["optimization_history"] = self.optimization_history

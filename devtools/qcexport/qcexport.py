@@ -8,7 +8,7 @@ from qcexport_extra import extra_children_map
 from sqlalchemy.orm import make_transient, Load
 from sqlalchemy import inspect
 
-from qcfractal.storage_sockets.models import (
+from qcfractal.db_socket.models import (
     QueueManagerORM,
 )
 from qcfractal.components.collections.db_models import CollectionORM

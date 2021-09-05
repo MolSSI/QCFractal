@@ -16,10 +16,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
-    from qcfractal.components.tasks.db_models import TaskQueueORM
+    from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.components.records.db_models import BaseResultORM
-    from typing import Optional, Union, Dict, Tuple, Any, Sequence, List
+    from typing import Optional, Dict, Tuple, Any
 
 
 logger = logging.getLogger(__name__)

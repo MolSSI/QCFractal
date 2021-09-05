@@ -2,7 +2,7 @@ import datetime
 
 from sqlalchemy import Column, Integer, DateTime, String, Float, BigInteger, JSON, Index
 
-from qcfractal.storage_sockets.models import Base
+from qcfractal.db_socket import Base
 
 
 class AccessLogORM(Base):

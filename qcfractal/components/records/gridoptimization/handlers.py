@@ -19,7 +19,7 @@ from qcfractal.components.records.gridoptimization.db_models import (
     GridOptimizationProcedureORM,
 )
 from qcfractal.components.molecule.db_models import MoleculeORM
-from qcfractal.storage_sockets.sqlalchemy_common import insert_general, get_query_proj_columns
+from qcfractal.db_socket.helpers import insert_general, get_query_proj_columns
 from qcfractal.interface.models import (
     ProtoModel,
     ObjectId,
@@ -42,7 +42,7 @@ from typing import TYPE_CHECKING, List, Tuple
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+    from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.interface.models import InsertMetadata
     from typing import Sequence, Dict, Optional, Any, Set, Union
 

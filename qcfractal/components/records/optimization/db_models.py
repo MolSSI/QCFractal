@@ -1,3 +1,4 @@
+from __future__ import annotations
 from sqlalchemy import Column, Integer, ForeignKey, String, JSON, select, func, Index, CheckConstraint
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlalchemy.ext.orderinglist import ordering_list
@@ -6,7 +7,9 @@ from sqlalchemy.orm import relationship, column_property
 from qcfractal.components.molecule.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseResultORM
 from qcfractal.interface.models import ObjectId
-from qcfractal.storage_sockets.models import Base
+from qcfractal.db_socket import Base
+
+from typing import Iterable, Dict, Any, Optional
 
 
 class Trajectory(Base):
@@ -79,9 +82,9 @@ class OptimizationProcedureORM(BaseResultORM):
         CheckConstraint("program = LOWER(program)", name="ck_optimization_procedure_program_lower"),
     )
 
-    def dict(self):
+    def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
 
-        d = Base.dict(self)
+        d = Base.dict(self, exclude)
 
         # TODO - INT ID should not be done
         if "id" in d:

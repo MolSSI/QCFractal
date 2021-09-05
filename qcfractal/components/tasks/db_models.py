@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 from qcfractal.interface.models import PriorityEnum
-from qcfractal.storage_sockets.models import Base, MsgpackExt
+from qcfractal.db_socket import Base, MsgpackExt
 
 
 class TaskQueueORM(Base):

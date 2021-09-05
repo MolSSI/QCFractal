@@ -14,12 +14,12 @@ from qcfractal.interface.models import (
 )
 from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.records.db_models import BaseResultORM
-from qcfractal.storage_sockets.sqlalchemy_socket import calculate_limit
 
-from qcfractal.storage_sockets.sqlalchemy_common import (
+from qcfractal.db_socket.helpers import (
     insert_general,
     get_query_proj_columns,
     get_count,
+    calculate_limit,
 )
 
 from typing import TYPE_CHECKING
@@ -30,7 +30,7 @@ from qcfractal.components.records.gridoptimization.handlers import GridOptimizat
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+    from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import List, Dict, Optional, Sequence, Tuple, Any, Sequence, Iterable
 
     ServiceQueueDict = Dict[str, Any]
