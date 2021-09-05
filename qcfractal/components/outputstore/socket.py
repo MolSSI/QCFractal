@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from qcfractal.storage_sockets.models import KVStoreORM
+from qcfractal.components.outputstore.db_models import KVStoreORM
 from qcfractal.interface.models import KVStore, ObjectId, CompressionEnum
 
 from typing import TYPE_CHECKING

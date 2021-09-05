@@ -13,7 +13,6 @@ from sqlalchemy.orm import joinedload
 import qcfractal.interface as ptl
 from qcfractal.interface.models import RecordStatusEnum
 from qcfractal.storage_sockets.models import (
-    KVStoreORM,
     OptimizationHistory,
     OptimizationProcedureORM,
     ResultORM,
@@ -22,6 +21,7 @@ from qcfractal.storage_sockets.models import (
     TorsionDriveProcedureORM,
     Trajectory,
 )
+from qcfractal.components.outputstore.db_models import KVStoreORM
 from qcfractal.components.molecule.db_models import MoleculeORM
 
 

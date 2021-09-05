@@ -77,24 +77,23 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
 
     # Register all the routes in the other files
     from ..components.molecule import routes
+    from ..components.outputstore import routes
 
-    from .routes import (
-        collections,
-        keywords,
-        main,
-        manager,
-        manager_info,
-        optimization,
-        output_store,
-        permissions,
-        records,
-        server_info,
-        service,
-        singlepoint,
-        tasks,
-        users,
-        wavefunction,
-    )
+    from .routes import collections
+    from .routes import collections
+    from .routes import keywords
+    from .routes import manager
+    from .routes import manager_info
+    from .routes import optimization
+    from .routes import permissions
+    from .routes import records
+    from .routes import server_info
+    from .routes import service
+    from .routes import singlepoint
+    from .routes import tasks
+    from .routes import users
+    from .routes import wavefunction
+    from .routes import main
 
     app.register_blueprint(main.main)
 

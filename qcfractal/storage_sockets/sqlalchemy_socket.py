@@ -163,10 +163,10 @@ class SQLAlchemySocket:
 
         # Create/initialize the subsockets
         from qcfractal.components.molecule.socket import MoleculeSocket
+        from qcfractal.components.outputstore.socket import OutputStoreSocket
 
         from qcfractal.storage_sockets.subsockets import (
             ServerLogSocket,
-            OutputStoreSocket,
             KeywordsSocket,
             CollectionSocket,
             RecordSocket,

@@ -1,7 +1,6 @@
 from .collection import CollectionSocket
 from .keywords import KeywordsSocket
 from .manager import ManagerSocket
-from .output_store import OutputStoreSocket
 from .record import RecordSocket
 from .procedure import ProcedureSocket
 from .role import RoleSocket

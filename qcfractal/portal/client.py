@@ -443,7 +443,7 @@ class PortalClient:
         payload = {
             "meta": {},
             "data": {
-                "id": id,
+                "id": make_list(id),
             },
         }
 
