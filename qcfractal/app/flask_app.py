@@ -81,15 +81,14 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     from ..components.wavefunction import routes
     from ..components.keywords import routes
     from ..components.permissions import routes
+    from ..components.serverinfo import routes
 
-    from .routes import collections
     from .routes import collections
     from .routes import manager
     from .routes import manager_info
     from .routes import optimization
     from .routes import permissions
     from .routes import records
-    from .routes import server_info
     from .routes import service
     from .routes import singlepoint
     from .routes import tasks

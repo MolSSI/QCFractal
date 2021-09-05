@@ -167,9 +167,9 @@ class SQLAlchemySocket:
         from ..components.wavefunction.sockets import WavefunctionSocket
         from ..components.keywords.sockets import KeywordsSocket
         from ..components.permissions.sockets import UserSocket, RoleSocket
+        from ..components.serverinfo.sockets import ServerInfoSocket
 
         from qcfractal.storage_sockets.subsockets import (
-            ServerLogSocket,
             CollectionSocket,
             RecordSocket,
             ProcedureSocket,
@@ -177,7 +177,7 @@ class SQLAlchemySocket:
             ManagerSocket,
         )
 
-        self.server_log = ServerLogSocket(self)
+        self.server_log = ServerInfoSocket(self)
         self.output_store = OutputStoreSocket(self)
         self.keywords = KeywordsSocket(self)
         self.molecule = MoleculeSocket(self)
@@ -254,7 +254,7 @@ class SQLAlchemySocket:
         """Check the stored versions of elemental and fractal"""
 
         # TODO - circular import
-        from qcfractal.storage_sockets.models import VersionsORM
+        from ..components.serverinfo.db_models import VersionsORM
 
         with self.session_scope() as session:
             db_ver = session.query(VersionsORM).order_by(VersionsORM.created_on.desc())

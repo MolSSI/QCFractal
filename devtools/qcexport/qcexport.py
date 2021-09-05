@@ -9,7 +9,6 @@ from sqlalchemy.orm import make_transient, Load
 from sqlalchemy import inspect
 
 from qcfractal.storage_sockets.models import (
-    AccessLogORM,
     BaseResultORM,
     CollectionORM,
     DatasetORM,
@@ -18,14 +17,13 @@ from qcfractal.storage_sockets.models import (
     QueueManagerLogORM,
     QueueManagerORM,
     ResultORM,
-    ServerStatsLogORM,
     ServiceQueueORM,
     QueueManagerORM,
     TaskQueueORM,
     TorsionDriveProcedureORM,
     Trajectory,
-    VersionsORM,
 )
+from qcfractal.components.serverinfo.db_models import AccessLogORM, ServerStatsLogORM, VersionsORM
 from qcfractal.components.keywords.db_models import KeywordsORM
 from qcfractal.components.wavefunction.db_models import WavefunctionStoreORM
 from qcfractal.components.outputstore.db_models import KVStoreORM

@@ -9,14 +9,12 @@ from sqlalchemy.orm import load_only
 import qcfractal
 from qcfractal.interface.models import QueryMetadata
 from qcfractal.storage_sockets.models import (
-    AccessLogORM,
-    InternalErrorLogORM,
-    ServerStatsLogORM,
     CollectionORM,
     BaseResultORM,
     TaskQueueORM,
     ServiceQueueORM,
 )
+from qcfractal.components.serverinfo.db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM
 from qcfractal.components.outputstore.db_models import KVStoreORM
 from qcfractal.components.molecule.db_models import MoleculeORM
 from qcfractal.storage_sockets.sqlalchemy_socket import calculate_limit
@@ -35,7 +33,7 @@ if TYPE_CHECKING:
     AccessLogSummaryDict = Dict[str, Any]
 
 
-class ServerLogSocket:
+class ServerInfoSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
         self._logger = logging.getLogger(__name__)
