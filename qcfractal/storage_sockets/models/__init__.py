@@ -22,7 +22,6 @@ from .sql_models import (
     InternalErrorLogORM,
     KeywordsORM,
     KVStoreORM,
-    MoleculeORM,
     QueueManagerLogORM,
     QueueManagerORM,
     ServerStatsLogORM,

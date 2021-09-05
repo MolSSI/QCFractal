@@ -5,7 +5,7 @@ import qcelemental
 
 from sqlalchemy import and_
 from sqlalchemy.orm import load_only
-from qcfractal.storage_sockets.models import MoleculeORM
+from qcfractal.components.molecule.db_models import MoleculeORM
 from qcfractal.interface.models import Molecule, ObjectId, InsertMetadata, DeleteMetadata, QueryMetadata
 from qcfractal.storage_sockets.sqlalchemy_socket import calculate_limit
 from qcfractal.storage_sockets.sqlalchemy_common import (

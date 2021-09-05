@@ -15,7 +15,6 @@ from typing import TYPE_CHECKING, Any, List, Optional, Union, Iterable
 
 from qcfractal.interface.models import prepare_basis
 
-from qcfractal.storage_sockets.models import VersionsORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -163,11 +162,12 @@ class SQLAlchemySocket:
             raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}") from None
 
         # Create/initialize the subsockets
+        from qcfractal.components.molecule.socket import MoleculeSocket
+
         from qcfractal.storage_sockets.subsockets import (
             ServerLogSocket,
             OutputStoreSocket,
             KeywordsSocket,
-            MoleculeSocket,
             CollectionSocket,
             RecordSocket,
             ProcedureSocket,
@@ -253,6 +253,9 @@ class SQLAlchemySocket:
 
     def check_lib_versions(self):
         """Check the stored versions of elemental and fractal"""
+
+        # TODO - circular import
+        from qcfractal.storage_sockets.models import VersionsORM
 
         with self.session_scope() as session:
             db_ver = session.query(VersionsORM).order_by(VersionsORM.created_on.desc())
