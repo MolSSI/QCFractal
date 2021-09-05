@@ -23,7 +23,8 @@ from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from qcfractal.storage_sockets.models import Base, TaskQueueORM, ServiceQueueORM, ServiceQueueTasks
+    from qcfractal.storage_sockets.models import Base, ServiceQueueORM, ServiceQueueTasks
+    from qcfractal.components.tasks.db_models import TaskQueueORM
     from qcfractal.interface.models import InsertMetadata, ObjectId, PriorityEnum
     from typing import Sequence, Tuple, List, Optional, TypeVar
 

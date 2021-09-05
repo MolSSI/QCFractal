@@ -10,9 +10,9 @@ import qcfractal
 from qcfractal.interface.models import QueryMetadata
 from qcfractal.storage_sockets.models import (
     CollectionORM,
-    TaskQueueORM,
     ServiceQueueORM,
 )
+from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.records.db_models import BaseResultORM
 from qcfractal.components.serverinfo.db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM
 from qcfractal.components.outputstore.db_models import KVStoreORM

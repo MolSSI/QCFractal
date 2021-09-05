@@ -84,12 +84,12 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     from ..components.serverinfo import routes
     from ..components.managers import routes
     from ..components.records import routes
+    from ..components.tasks import routes
 
     from .routes import collections
     from .routes import manager
     from .routes import permissions
     from .routes import service
-    from .routes import tasks
     from .routes import main
 
     app.register_blueprint(main.main)

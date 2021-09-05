@@ -7,9 +7,7 @@ import logging
 from sqlalchemy import and_
 from sqlalchemy.orm import joinedload, selectinload, contains_eager, load_only
 
-from qcfractal.storage_sockets.models import (
-    TaskQueueORM,
-)
+from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.records.db_models import BaseResultORM
 
 from qcfractal.storage_sockets.sqlalchemy_common import (
@@ -46,7 +44,7 @@ if TYPE_CHECKING:
     TaskDict = Dict[str, Any]
 
 
-class ProcedureSocket:
+class TaskSocket:
     def __init__(self, core_socket: SQLAlchemySocket):
         self._core_socket = core_socket
         self._logger = logging.getLogger(__name__)

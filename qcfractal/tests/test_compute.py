@@ -7,7 +7,7 @@ import pytest
 import qcfractal.interface as ptl
 from qcfractal.interface.models import RecordStatusEnum
 from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
-from qcfractal.storage_sockets.models import TaskQueueORM
+from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.testing import using_psi4, using_rdkit, using_geometric
 
 bad_id1 = "99999999998"

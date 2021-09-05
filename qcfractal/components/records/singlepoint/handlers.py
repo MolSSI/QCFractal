@@ -10,7 +10,7 @@ from sqlalchemy.orm import load_only, selectinload
 
 from qcfractal.components.records import helpers
 from qcfractal.components.records.base_handlers import BaseProcedureHandler
-from qcfractal.storage_sockets.models import TaskQueueORM
+from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.records.singlepoint.db_models import ResultORM
 from qcfractal.storage_sockets.sqlalchemy_common import insert_general, get_query_proj_columns, get_count
 from qcfractal.storage_sockets.sqlalchemy_socket import calculate_limit
