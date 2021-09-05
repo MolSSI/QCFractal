@@ -88,7 +88,6 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     from ..components.services import routes
     from ..components.datasets import routes
 
-    from .routes import manager
     from .routes import permissions
 
     from .routes import main
