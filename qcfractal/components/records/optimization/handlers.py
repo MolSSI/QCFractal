@@ -214,7 +214,7 @@ class OptimizationHandler(BaseProcedureHandler):
             all_tasks.append(task)
 
         # Add all tasks to the database. Also flushes the session
-        return self._core_socket.procedure.add_task_orm(all_tasks, session=session)
+        return self._core_socket.task.add_task_orm(all_tasks, session=session)
 
     def update_completed(
         self,
@@ -246,7 +246,7 @@ class OptimizationHandler(BaseProcedureHandler):
 
         # use the QCSpec stored in the db rather than figure it out from the qcelemental model
         trajectory_orm = self.parse_trajectory(session, result.trajectory, result_orm.qc_spec, manager_name)
-        meta, trajectory_ids = self._core_socket.procedure.single.add_orm(trajectory_orm, session=session)
+        meta, trajectory_ids = self._core_socket.task.single.add_orm(trajectory_orm, session=session)
 
         # Optimizations can have overlapping trajectories
         # An unhandled case is where the gradient is actually a requested calculation elsewhere

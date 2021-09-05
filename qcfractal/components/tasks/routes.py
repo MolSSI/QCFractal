@@ -29,7 +29,7 @@ def query_task_v1():
     if "base_result" in data:
         data["base_result_id"] = data.pop("base_result")
 
-    meta, tasks = storage_socket.procedure.query_tasks(**{**data, **body.meta.dict()})
+    meta, tasks = storage_socket.task.query_tasks(**{**data, **body.meta.dict()})
 
     # Convert the new metadata format to the old format
     meta_old = convert_get_response_metadata(meta, missing=[])
@@ -47,7 +47,7 @@ def query_task_v1():
 @check_access
 def add_task_v1():
     body = parse_bodymodel(TaskQueuePOSTBody)
-    meta, ids = storage_socket.procedure.create(body.data, body.meta)
+    meta, ids = storage_socket.task.create(body.data, body.meta)
 
     # Convert to the old response type
     duplicate_ids = [ids[i] for i in meta.existing_idx]
@@ -74,7 +74,7 @@ def modify_task_v1():
         d = body.data.dict()
         d.pop("new_tag", None)
         d.pop("new_priority", None)
-        tasks_updated = storage_socket.procedure.reset_tasks(**d, reset_error=True)
+        tasks_updated = storage_socket.task.reset_tasks(**d, reset_error=True)
         data = {"n_updated": tasks_updated}
     elif body.meta.operation == "regenerate":
 
@@ -84,11 +84,11 @@ def modify_task_v1():
         else:
             new_priority = body.data.new_priority
 
-        task_ids = storage_socket.procedure.regenerate_tasks(body.data.base_result, new_tag, new_priority)
+        task_ids = storage_socket.task.regenerate_tasks(body.data.base_result, new_tag, new_priority)
         data = {"n_updated": len(task_ids) - task_ids.count(None)}
 
     elif body.meta.operation == "modify":
-        tasks_updated = storage_socket.procedure.modify_tasks(
+        tasks_updated = storage_socket.task.modify_tasks(
             id=body.data.id,
             base_result=body.data.base_result,
             new_tag=body.data.new_tag,

@@ -39,7 +39,7 @@ def storage_results(storage_socket):
 
     for proc in proc_inputs:
         inp, mol, _ = load_procedure_data(proc)
-        storage_socket.procedure.create([mol], inp)
+        storage_socket.task.create([mol], inp)
 
     yield storage_socket
 

@@ -9,7 +9,7 @@ from qcfractal.interface.models.rest_models import ResultGETBody, ResultGETRespo
 def query_result_v1():
 
     body = parse_bodymodel(ResultGETBody)
-    meta, results = storage_socket.procedure.single.query(**{**body.data.dict(), **body.meta.dict()})
+    meta, results = storage_socket.task.single.query(**{**body.data.dict(), **body.meta.dict()})
 
     # Remove result_type. This isn't used right now and is missing from the model
     for r in results:
