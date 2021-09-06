@@ -217,10 +217,10 @@ def test_reset_task_blocks(storage_socket):
     """
 
     with pytest.raises(ValueError):
-        storage_socket.task.reset_tasks(reset_running=True)
+        storage_socket.tasks.reset_tasks(reset_running=True)
 
     with pytest.raises(ValueError):
-        storage_socket.task.reset_tasks(reset_error=True)
+        storage_socket.tasks.reset_tasks(reset_error=True)
 
 
 def test_collections_include_exclude(storage_socket):

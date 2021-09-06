@@ -167,7 +167,7 @@ class SQLAlchemySocket:
         self.molecules = MoleculeSocket(self)
         self.datasets = DatasetSocket(self)
         self.records = RecordSocket(self)
-        self.task = TaskSocket(self)
+        self.tasks = TaskSocket(self)
         self.services = ServiceSocket(self)
         self.wavefunctions = WavefunctionSocket(self)
         self.managers = ManagerSocket(self)

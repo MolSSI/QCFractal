@@ -19,9 +19,9 @@ def test_procedure_single_query(storage_socket):
     input_spec_2 = input_spec_2.copy(update={"tag": "for_manager_1"})
     input_spec_3 = input_spec_3.copy(update={"tag": "for_manager_2"})
 
-    _, ids1 = storage_socket.task.create([molecule_1], input_spec_1)
-    _, ids2 = storage_socket.task.create([molecule_2], input_spec_2)
-    _, ids3 = storage_socket.task.create([molecule_3], input_spec_3)
+    _, ids1 = storage_socket.tasks.create([molecule_1], input_spec_1)
+    _, ids2 = storage_socket.tasks.create([molecule_2], input_spec_2)
+    _, ids3 = storage_socket.tasks.create([molecule_3], input_spec_3)
     all_ids = ids1 + ids2 + ids3
 
     # Create the fake managers in the database
@@ -29,37 +29,37 @@ def test_procedure_single_query(storage_socket):
     assert storage_socket.managers.update(name="manager_2", **fake_manager_2)
 
     # Managers claim some of the tasks
-    storage_socket.task.claim_tasks("manager_1", fake_program_info, 50, ["for_manager_1"])
-    storage_socket.task.claim_tasks("manager_2", fake_program_info, 50, ["for_manager_2"])
+    storage_socket.tasks.claim_tasks("manager_1", fake_program_info, 50, ["for_manager_1"])
+    storage_socket.tasks.claim_tasks("manager_2", fake_program_info, 50, ["for_manager_2"])
 
     # Return some of the results
     # The ids returned from create() are the result ids, but the managers return task ids
-    procs = storage_socket.task.single.get(all_ids, include=["*", "task_obj"])
+    procs = storage_socket.tasks.single.get(all_ids, include=["*", "task_obj"])
     task_ids = [x["task_obj"]["id"] for x in procs]
 
-    storage_socket.task.update_completed("manager_1", {task_ids[0]: result_data_1})
+    storage_socket.tasks.update_completed("manager_1", {task_ids[0]: result_data_1})
 
     # Now finally test the queries
-    meta, procs = storage_socket.task.single.query(id=ids1)
+    meta, procs = storage_socket.tasks.single.query(id=ids1)
     assert meta.n_returned == 1
     assert procs[0]["id"] == str(all_ids[0])
 
     # Manager is assigned to the result when a manager claims it
-    meta, procs = storage_socket.task.single.query(manager=["manager_1"])
+    meta, procs = storage_socket.tasks.single.query(manager=["manager_1"])
     assert meta.n_returned == 2
     assert int(procs[0]["id"]) in all_ids[0:2]
     assert int(procs[1]["id"]) in all_ids[0:2]
 
-    meta, procs = storage_socket.task.single.query(
+    meta, procs = storage_socket.tasks.single.query(
         created_before=datetime.utcnow(), status=[RecordStatusEnum.waiting, RecordStatusEnum.running]
     )
     assert meta.n_returned == 2
     assert procs[0]["id"] == str(all_ids[1])
     assert procs[1]["id"] == str(all_ids[2])
 
-    meta, procs = storage_socket.task.single.query(created_after=datetime.utcnow())
+    meta, procs = storage_socket.tasks.single.query(created_after=datetime.utcnow())
     assert meta.n_returned == 0
 
-    meta, procs = storage_socket.task.single.query(status=[RecordStatusEnum.complete], include=["*", "stdout_obj"])
+    meta, procs = storage_socket.tasks.single.query(status=[RecordStatusEnum.complete], include=["*", "stdout_obj"])
     assert meta.n_returned == 1
     assert len(procs[0]["stdout_obj"]) > 1
