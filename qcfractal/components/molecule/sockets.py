@@ -17,6 +17,7 @@ from qcfractal.db_socket.helpers import (
 )
 
 from typing import TYPE_CHECKING
+from qcfractal.exceptions import MissingDataError
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -158,7 +159,7 @@ class MoleculeSocket:
             ret = [result_map.get(x, None) for x in int_id]
 
             if missing_ok is False and None in ret:
-                raise RuntimeError("Could not find all requested molecule records")
+                raise MissingDataError("Could not find all requested molecule records")
 
             return ret
 

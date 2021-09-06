@@ -69,6 +69,7 @@ class SerializedResponse(Response):
 
         # TODO: support other content types? We would need to check the Accept header
         content_type = "application/msgpack-ext"
+        content_type = "application/json"
         encoding = _valid_encodings[content_type]
         response = serialize(response, encoding)
         super(SerializedResponse, self).__init__(response, content_type=content_type, **kwargs)
