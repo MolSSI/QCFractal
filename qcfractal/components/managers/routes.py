@@ -45,7 +45,7 @@ def queue_manager_claim_v1():
     name = _get_name_from_metadata(body.meta)
 
     # Grab new tasks and write out
-    new_tasks = storage_socket.task.claim_tasks(name, body.meta.programs, limit=body.data.limit, tag=body.meta.tag)
+    new_tasks = storage_socket.tasks.claim_tasks(name, body.meta.programs, limit=body.data.limit, tag=body.meta.tag)
     response = QueueManagerGETResponse(
         **{
             "meta": {
@@ -71,7 +71,7 @@ def queue_manager_return_v1():
 
     body = parse_bodymodel(QueueManagerPOSTBody)
     manager_name = _get_name_from_metadata(body.meta)
-    storage_socket.task.update_completed(manager_name, body.data)
+    storage_socket.tasks.update_completed(manager_name, body.data)
 
     response = QueueManagerPOSTResponse(
         **{
@@ -111,7 +111,7 @@ def queue_manager_modify_v1():
         # current_app.logger.info("QueueManager: New active manager {} detected.".format(name))
 
     elif op == "shutdown":
-        nshutdown = storage_socket.task.reset_tasks(manager=[name], reset_running=True)
+        nshutdown = storage_socket.tasks.reset_tasks(manager=[name], reset_running=True)
         storage_socket.managers.update(
             name, returned=nshutdown, status=ManagerStatusEnum.inactive, **body.meta.dict(), log=True
         )

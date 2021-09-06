@@ -47,18 +47,18 @@ def test_procedure_basic(storage_socket):
     input_spec_4 = input_spec_4.copy(update={"tag": "for_manager_2"})
     input_spec_5 = input_spec_5.copy(update={"tag": "for_manager_1"})
 
-    _, ids1 = storage_socket.task.create([molecule_1], input_spec_1)
-    _, ids2 = storage_socket.task.create([molecule_2], input_spec_2)
-    _, ids3 = storage_socket.task.create([molecule_3], input_spec_3)
-    _, ids4 = storage_socket.task.create([molecule_4], input_spec_4)
-    _, ids5 = storage_socket.task.create([molecule_5], input_spec_5)
+    _, ids1 = storage_socket.tasks.create([molecule_1], input_spec_1)
+    _, ids2 = storage_socket.tasks.create([molecule_2], input_spec_2)
+    _, ids3 = storage_socket.tasks.create([molecule_3], input_spec_3)
+    _, ids4 = storage_socket.tasks.create([molecule_4], input_spec_4)
+    _, ids5 = storage_socket.tasks.create([molecule_5], input_spec_5)
     all_ids = ids1 + ids2 + ids3 + ids4 + ids5
 
     procs = storage_socket.records.get(all_ids, include=["*", "task_obj"])
     task_ids = [x["task_obj"]["id"] for x in procs]
 
     # Should have created tasks
-    tasks = storage_socket.task.get_tasks(task_ids)
+    tasks = storage_socket.tasks.get_tasks(task_ids)
     assert len(tasks) == 5
     assert all("psi4" in t["required_programs"] for t in tasks)
     assert all("geometric" in t["required_programs"] for t in tasks[3:])
@@ -68,8 +68,8 @@ def test_procedure_basic(storage_socket):
     assert storage_socket.managers.update(name="manager_2", **fake_manager_2)
 
     # Managers claim the tasks
-    storage_socket.task.claim_tasks("manager_1", fake_program_info, 50, ["for_manager_1"])
-    storage_socket.task.claim_tasks("manager_2", fake_program_info, 50, ["for_manager_2"])
+    storage_socket.tasks.claim_tasks("manager_1", fake_program_info, 50, ["for_manager_1"])
+    storage_socket.tasks.claim_tasks("manager_2", fake_program_info, 50, ["for_manager_2"])
 
     # Tasks should be assigned correctly
     procs = storage_socket.records.get(all_ids, include=["*", "task_obj"])
@@ -87,14 +87,14 @@ def test_procedure_basic(storage_socket):
 
     # Return results
     # The ids returned from create() are the result ids, but the managers return task ids
-    storage_socket.task.update_completed("manager_1", {task_ids[0]: result_data_1})
-    storage_socket.task.update_completed("manager_1", {task_ids[1]: result_data_2})
-    storage_socket.task.update_completed("manager_2", {task_ids[2]: result_data_3})
-    storage_socket.task.update_completed("manager_2", {task_ids[3]: result_data_4})
-    storage_socket.task.update_completed("manager_1", {task_ids[4]: result_data_5})
+    storage_socket.tasks.update_completed("manager_1", {task_ids[0]: result_data_1})
+    storage_socket.tasks.update_completed("manager_1", {task_ids[1]: result_data_2})
+    storage_socket.tasks.update_completed("manager_2", {task_ids[2]: result_data_3})
+    storage_socket.tasks.update_completed("manager_2", {task_ids[3]: result_data_4})
+    storage_socket.tasks.update_completed("manager_1", {task_ids[4]: result_data_5})
 
     # Two tasks were failures. Those tasks should be the only ones remaining in the task queue
-    tasks = storage_socket.task.get_tasks(task_ids, missing_ok=True)
+    tasks = storage_socket.tasks.get_tasks(task_ids, missing_ok=True)
     assert len(tasks) == 5
     assert tasks.count(None) == 3
     assert tasks[2]["base_result_id"] == ids3[0]
@@ -120,19 +120,19 @@ def test_procedure_wrong_manager_return(storage_socket, caplog):
     #
     input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_benzene_energy_1")
 
-    _, ids = storage_socket.task.create([molecule_1], input_spec_1)
+    _, ids = storage_socket.tasks.create([molecule_1], input_spec_1)
 
     # Create the fake managers in the database
     assert storage_socket.managers.update(name="manager_1", **fake_manager_1)
     assert storage_socket.managers.update(name="manager_2", **fake_manager_2)
 
     # Manager should claim the task
-    claimed = storage_socket.task.claim_tasks("manager_1", fake_program_info)
+    claimed = storage_socket.tasks.claim_tasks("manager_1", fake_program_info)
     assert len(claimed) == 1
 
     # The other manager returns the results
     with caplog_handler_at_level(caplog, logging.WARNING):
-        storage_socket.task.update_completed("manager_2", {ids[0]: result_data_1})
+        storage_socket.tasks.update_completed("manager_2", {ids[0]: result_data_1})
         assert "belongs to manager_1, not manager manager_2" in caplog.text
 
     # The task should still be running, assigned to the other manager
@@ -155,7 +155,7 @@ def test_procedure_nonexist_task(storage_socket, caplog):
 
     # Try returning something
     with caplog_handler_at_level(caplog, logging.WARNING):
-        storage_socket.task.update_completed("manager_1", {12345: result_data_1})
+        storage_socket.tasks.update_completed("manager_1", {12345: result_data_1})
         assert "does not exist in the task queue" in caplog.text
 
 
@@ -166,7 +166,7 @@ def test_procedure_base_already_complete(storage_socket, caplog):
     #
 
     input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_benzene_energy_1")
-    _, ids = storage_socket.task.create([molecule_1], input_spec_1)
+    _, ids = storage_socket.tasks.create([molecule_1], input_spec_1)
 
     # Create the fake manager in the database
     assert storage_socket.managers.update(name="manager_1", **fake_manager_1)
@@ -177,7 +177,7 @@ def test_procedure_base_already_complete(storage_socket, caplog):
 
     # Try returning something
     with caplog_handler_at_level(caplog, logging.WARNING):
-        storage_socket.task.update_completed("manager_1", {ids[0]: result_data_1})
+        storage_socket.tasks.update_completed("manager_1", {ids[0]: result_data_1})
         assert "is not in the running state" in caplog.text
 
 
@@ -186,9 +186,9 @@ def test_procedure_get(storage_socket):
     input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_benzene_opt")
     input_spec_3, molecule_3, result_data_3 = load_procedure_data("rdkit_water_energy")
 
-    _, ids1 = storage_socket.task.create([molecule_1], input_spec_1)
-    _, ids2 = storage_socket.task.create([molecule_2], input_spec_2)
-    _, ids3 = storage_socket.task.create([molecule_3], input_spec_3)
+    _, ids1 = storage_socket.tasks.create([molecule_1], input_spec_1)
+    _, ids2 = storage_socket.tasks.create([molecule_2], input_spec_2)
+    _, ids3 = storage_socket.tasks.create([molecule_3], input_spec_3)
 
     # notice the order
     procs = storage_socket.records.get(id=ids3 + ids1 + ids2)
@@ -201,7 +201,7 @@ def test_procedure_get_empty(storage_socket):
     assert storage_socket.records.get([]) == []
 
     input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_benzene_energy_1")
-    _, ids1 = storage_socket.task.create([molecule_1], input_spec_1)
+    _, ids1 = storage_socket.tasks.create([molecule_1], input_spec_1)
 
     assert storage_socket.records.get([]) == []
 
@@ -220,11 +220,11 @@ def test_procedure_query(storage_socket):
     input_spec_4 = input_spec_4.copy(update={"tag": "for_manager_2"})
     input_spec_5 = input_spec_5.copy(update={"tag": "for_manager_3"})
 
-    _, ids1 = storage_socket.task.create([molecule_1], input_spec_1)
-    _, ids2 = storage_socket.task.create([molecule_2], input_spec_2)
-    _, ids3 = storage_socket.task.create([molecule_3], input_spec_3)
-    _, ids4 = storage_socket.task.create([molecule_4], input_spec_4)
-    _, ids5 = storage_socket.task.create([molecule_5], input_spec_5)
+    _, ids1 = storage_socket.tasks.create([molecule_1], input_spec_1)
+    _, ids2 = storage_socket.tasks.create([molecule_2], input_spec_2)
+    _, ids3 = storage_socket.tasks.create([molecule_3], input_spec_3)
+    _, ids4 = storage_socket.tasks.create([molecule_4], input_spec_4)
+    _, ids5 = storage_socket.tasks.create([molecule_5], input_spec_5)
     all_ids = ids1 + ids2 + ids3 + ids4 + ids5
 
     # Create the fake managers in the database
@@ -232,17 +232,17 @@ def test_procedure_query(storage_socket):
     assert storage_socket.managers.update(name="manager_2", **fake_manager_2)
 
     # Managers claim some of the tasks
-    storage_socket.task.claim_tasks("manager_1", fake_program_info, 50, ["for_manager_1"])
-    storage_socket.task.claim_tasks("manager_2", fake_program_info, 50, ["for_manager_2"])
+    storage_socket.tasks.claim_tasks("manager_1", fake_program_info, 50, ["for_manager_1"])
+    storage_socket.tasks.claim_tasks("manager_2", fake_program_info, 50, ["for_manager_2"])
 
     # Return some of the results
     # The ids returned from create() are the result ids, but the managers return task ids
     procs = storage_socket.records.get(all_ids, include=["*", "task_obj"])
     task_ids = [x["task_obj"]["id"] for x in procs]
 
-    storage_socket.task.update_completed("manager_1", {task_ids[0]: result_data_1})
-    storage_socket.task.update_completed("manager_1", {task_ids[1]: result_data_2})
-    storage_socket.task.update_completed("manager_2", {task_ids[2]: result_data_3})
+    storage_socket.tasks.update_completed("manager_1", {task_ids[0]: result_data_1})
+    storage_socket.tasks.update_completed("manager_1", {task_ids[1]: result_data_2})
+    storage_socket.tasks.update_completed("manager_2", {task_ids[2]: result_data_3})
 
     # Now finally test the queries
     meta, procs = storage_socket.records.query(id=ids1)
@@ -268,7 +268,7 @@ def test_procedure_query_empty(storage_socket):
     assert meta.n_returned == 0
 
     input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_benzene_energy_1")
-    _, ids1 = storage_socket.task.create([molecule_1], input_spec_1)
+    _, ids1 = storage_socket.tasks.create([molecule_1], input_spec_1)
 
     meta, procs = storage_socket.records.query()
     assert meta.n_returned == 1
@@ -289,50 +289,50 @@ def test_procedure_create_existing(storage_socket):
     input_spec_3, molecule_3, result_data_3 = load_procedure_data("psi4_peroxide_opt_fail_optiter")
     input_spec_4, molecule_4, result_data_4 = load_procedure_data("psi4_peroxide_energy_wfn")
 
-    _, ids1 = storage_socket.task.create([molecule_1], input_spec_1)
-    _, ids2 = storage_socket.task.create([molecule_2], input_spec_2)
-    _, ids3 = storage_socket.task.create([molecule_3], input_spec_3)
+    _, ids1 = storage_socket.tasks.create([molecule_1], input_spec_1)
+    _, ids2 = storage_socket.tasks.create([molecule_2], input_spec_2)
+    _, ids3 = storage_socket.tasks.create([molecule_3], input_spec_3)
     all_ids = ids1 + ids2 + ids3
 
     # Should have created tasks
-    meta, tasks = storage_socket.task.query_tasks(base_result_id=all_ids)
+    meta, tasks = storage_socket.tasks.query_tasks(base_result_id=all_ids)
     assert meta.n_found == 3
 
     # Create the fake managers in the database
     assert storage_socket.managers.update(name="manager_1", **fake_manager_1)
 
     # Managers claim the tasks
-    storage_socket.task.claim_tasks("manager_1", fake_program_info, 50)
+    storage_socket.tasks.claim_tasks("manager_1", fake_program_info, 50)
 
     # Attempt to recreate. Should not do anything
-    meta_1, new_ids_1 = storage_socket.task.create([molecule_1], input_spec_1)
-    meta_2, new_ids_2 = storage_socket.task.create([molecule_2], input_spec_2)
-    meta_3, new_ids_3 = storage_socket.task.create([molecule_3], input_spec_3)
+    meta_1, new_ids_1 = storage_socket.tasks.create([molecule_1], input_spec_1)
+    meta_2, new_ids_2 = storage_socket.tasks.create([molecule_2], input_spec_2)
+    meta_3, new_ids_3 = storage_socket.tasks.create([molecule_3], input_spec_3)
     assert meta_1.n_existing == 1
     assert meta_2.n_existing == 1
     assert meta_3.n_existing == 1
-    meta, tasks = storage_socket.task.query_tasks(base_result_id=all_ids)
+    meta, tasks = storage_socket.tasks.query_tasks(base_result_id=all_ids)
     assert meta.n_found == 3
 
     # Return results
     # The ids returned from create() are the result ids, but the managers return task ids
     procs = storage_socket.records.get(all_ids, include=["*", "task_obj"])
     task_ids = [x["task_obj"]["id"] for x in procs]
-    storage_socket.task.update_completed("manager_1", {task_ids[0]: result_data_1})
-    storage_socket.task.update_completed("manager_1", {task_ids[1]: result_data_2})
-    storage_socket.task.update_completed("manager_1", {task_ids[2]: result_data_3})
+    storage_socket.tasks.update_completed("manager_1", {task_ids[0]: result_data_1})
+    storage_socket.tasks.update_completed("manager_1", {task_ids[1]: result_data_2})
+    storage_socket.tasks.update_completed("manager_1", {task_ids[2]: result_data_3})
 
     # Tasks for the successful ones shouldn't exist now
     # One was a failure
-    meta, tasks = storage_socket.task.query_tasks(base_result_id=all_ids)
+    meta, tasks = storage_socket.tasks.query_tasks(base_result_id=all_ids)
     assert meta.n_found == 1
 
     # If I recreate the calculations, nothing should have changed
     # Add a new one as well
-    meta_1, new_ids_1 = storage_socket.task.create([molecule_1], input_spec_1)
-    meta_2, new_ids_2 = storage_socket.task.create([molecule_2], input_spec_2)
-    meta_3, new_ids_3 = storage_socket.task.create([molecule_3], input_spec_3)
-    meta_4, new_ids_4 = storage_socket.task.create([molecule_4], input_spec_4)
+    meta_1, new_ids_1 = storage_socket.tasks.create([molecule_1], input_spec_1)
+    meta_2, new_ids_2 = storage_socket.tasks.create([molecule_2], input_spec_2)
+    meta_3, new_ids_3 = storage_socket.tasks.create([molecule_3], input_spec_3)
+    meta_4, new_ids_4 = storage_socket.tasks.create([molecule_4], input_spec_4)
     assert meta_1.n_existing == 1
     assert meta_2.n_existing == 1
     assert meta_3.n_existing == 1
@@ -340,8 +340,8 @@ def test_procedure_create_existing(storage_socket):
 
     # Tasks for the completed computations should not have been recreated
     # (this query does not add the fourth calc we just added)
-    meta, tasks = storage_socket.task.query_tasks(base_result_id=all_ids)
+    meta, tasks = storage_socket.tasks.query_tasks(base_result_id=all_ids)
     assert meta.n_found == 1
 
-    meta, tasks = storage_socket.task.query_tasks(base_result_id=[new_ids_4])
+    meta, tasks = storage_socket.tasks.query_tasks(base_result_id=[new_ids_4])
     assert meta.n_found == 1

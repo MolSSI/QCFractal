@@ -58,7 +58,7 @@ def retrieve_outputs(
         logger.warning(f"Found uncompressed error for result id {result.id}")
         error = KVStore(data=result.error)
 
-    storage_socket.task.update_outputs(session, base_result, stdout=stdout, stderr=stderr, error=error)
+    storage_socket.tasks.update_outputs(session, base_result, stdout=stdout, stderr=stderr, error=error)
 
 
 def wavefunction_helper(
