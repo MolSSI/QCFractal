@@ -1,10 +1,13 @@
 import json
 import time
 import traceback
+import msgpack
 from functools import wraps
 from urllib.parse import urlparse
 
-from flask import g, request, current_app, jsonify
+import pydantic
+
+from flask import g, request, current_app, jsonify, Response
 from flask_jwt_extended import (
     verify_jwt_in_request,
     get_jwt,
@@ -13,7 +16,7 @@ from flask_jwt_extended import (
     create_refresh_token,
     jwt_required,
 )
-from qcelemental.util import deserialize
+from qcelemental.util import serialize, deserialize
 from werkzeug.exceptions import BadRequest, InternalServerError, HTTPException, Forbidden
 
 from qcfractal.app import main, storage_socket
@@ -21,6 +24,7 @@ from qcfractal.app.helpers import _valid_encodings, SerializedResponse
 from qcfractal.exceptions import UserReportableError, AuthenticationFailure
 from qcfractal.interface.models import UserInfo
 from qcfractal.policyuniverse import Policy
+from typing import Optional, Type, Callable, Union
 
 
 @main.before_request
@@ -33,12 +37,16 @@ def before_request_func():
     # g here refers to flask.g
     g.request_start = time.time()
 
+    # The rest of this function is only for old endpoints
+    if request.path.startswith("/v1/"):
+        return
+
     # default to "application/json"
     content_type = request.headers.get("Content-Type", "application/json")
     encoding = _valid_encodings.get(content_type, None)
 
     if encoding is None:
-        raise BadRequest(f"Did not understand 'Content-Type {content_type}")
+        raise BadRequest(f"Did not understand Content-Type {content_type}")
 
     try:
         # Check to see if we have a json that is encoded as bytes rather than a string
@@ -55,10 +63,73 @@ def before_request_func():
         raise BadRequest(f"Could not deserialize body. {e}")
 
 
+def _deserialize(data: Union[bytes, str], content_type: str, model):
+    if content_type == "application/msgpack":
+        data = msgpack.loads(data)
+        return pydantic.parse_obj_as(model, data)
+    elif content_type == "application/json":
+        return pydantic.parse_raw_as(model, data, content_type=content_type)
+    else:
+        raise RuntimeError(f"Unknown content type for deserialization: {content_type}")
+
+
+def _serialize(data, content_type: str):
+    # TODO - replace/vendor in qcelemental stuff here
+    if content_type == "application/msgpack":
+        return serialize(data, "msgpack")
+    elif content_type == "application/json":
+        return serialize(data, "json")
+    else:
+        raise RuntimeError(f"Unknown content type for serialization: {content_type}")
+
+
+def wrap_route(body_model: Optional[Type], query_model: Optional[Type[pydantic.BaseModel]] = None) -> Callable:
+    def decorate(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            content_type = request.headers.get("Content-Type")
+
+            # Find an appropriate return type (from the "Accept" header)
+            # Flask helpfully parses this for us
+            # By default, use plain json
+            # possible_types = ['application/msgpack', 'application/json']
+            possible_types = ["application/json"]
+            accept_type = request.accept_mimetypes.best_match(possible_types, "application/json")
+
+            # 1.) The body is stored in request.data
+            if body_model is not None:
+                if content_type is None:
+                    raise BadRequest("No Content-Type specified")
+
+                if not request.data:
+                    raise BadRequest("Expected body, but it is empty")
+
+                try:
+                    request.validated_data = _deserialize(request.data, content_type, body_model)
+                except Exception as e:
+                    raise BadRequest("Invalid body: " + str(e))
+
+            # 2.) Query parameters are in request.args
+            if query_model is not None:
+                try:
+                    request.validated_args = query_model(**request.args.to_dict(False))
+                except Exception as e:
+                    raise BadRequest("Invalid request arguments: " + str(e))
+
+            # Now call the function, and validate the output
+            ret = fn(*args, **kwargs)
+
+            # Serialize the output
+            serialized = _serialize(ret, accept_type)
+            return Response(serialized, content_type=accept_type)
+
+        return wrapper
+
+    return decorate
+
+
 @main.after_request
 def after_request_func(response: SerializedResponse):
-
-    _logging_param_counts = {"id"}
 
     # Determine the time the request took
     # g here refers to flask.g
@@ -73,15 +144,6 @@ def after_request_func(response: SerializedResponse):
 
     log_access = current_app.config["QCFRACTAL_CONFIG"].log_access
     if log_access and request.method == "GET" and request.path not in exclude_uris:
-        extra_params = request.data.copy()
-        if _logging_param_counts:
-            for key in _logging_param_counts:
-                if "data" in extra_params and extra_params["data"].get(key, None):
-                    extra_params["data"][key] = len(extra_params["data"][key])
-
-        if "data" in extra_params:
-            extra_params["data"] = {k: v for k, v in extra_params["data"].items() if v is not None}
-
         # What we are going to log to the DB
         log = {}
         log["access_type"] = request.path[1:]  # remove /
@@ -98,9 +160,6 @@ def after_request_func(response: SerializedResponse):
 
         log["ip_address"] = real_ip
         log["user_agent"] = request.headers["User-Agent"]
-
-        # TODO: ???
-        log["extra_params"] = json.dumps(extra_params)
 
         log["request_duration"] = request_duration
         log["user"] = g.user if "user" in g else None

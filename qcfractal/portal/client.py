@@ -1,5 +1,7 @@
 from __future__ import annotations
 from collections import defaultdict
+
+import pydantic
 from tabulate import tabulate
 
 from datetime import datetime
@@ -10,26 +12,29 @@ from . import __version__
 
 import requests
 
-from typing import TYPE_CHECKING, Any, DefaultDict, Dict, List, Optional, Tuple, Union, TypeVar, Sequence
+from typing import TYPE_CHECKING, Any, DefaultDict, Dict, List, Optional, Tuple, Union, TypeVar, Sequence, Iterable
 from pathlib import Path
 
 from pydantic import ValidationError
+from qcelemental.util import serialize, deserialize
 import pandas as pd
 
 from ..interface.models.rest_models import rest_model
-from ..interface.models import RecordStatusEnum, ManagerStatusEnum, PriorityEnum
+from ..interface.models import RecordStatusEnum, ManagerStatusEnum, PriorityEnum, InsertMetadata
+from .rest_models import GetParameters
 from .collections import Collection, collection_factory, collections_name_map
 from .records import record_factory
 from .cache import PortalCache
 
+from ..interface.models import (
+    KeywordSet,
+    Molecule,
+    ObjectId,
+    TaskRecord,
+)
+
 if TYPE_CHECKING:  # pragma: no cover
     from .collections.collection import Collection
-    from ..interface.models import (
-        KeywordSet,
-        Molecule,
-        ObjectId,
-        TaskRecord,
-    )
     from ..interface.models.rest_models import (
         CollectionGETResponse,
         ComputeResponse,
@@ -145,7 +150,8 @@ class PortalClient:
 
         self._headers: Dict[str, str] = {}
         self._headers["User-Agent"] = f"qcportal/{__version__}"
-        self.encoding = "msgpack-ext"
+        self._timeout = 60
+        self.encoding = "json"
 
         # Mode toggle for network error testing, not public facing
         self._mock_network_error = False
@@ -219,6 +225,7 @@ class PortalClient:
     def encoding(self, encoding: str):
         self._encoding = encoding
         self._headers["Content-Type"] = f"application/{self.encoding}"
+        self._headers["Accept"] = f"application/{self.encoding}"
 
     def _get_JWT_token(self, username: str, password: str) -> None:
 
@@ -339,6 +346,86 @@ class PortalClient:
         else:
             return response.data
 
+    def _request2(
+        self,
+        method: str,
+        endpoint: str,
+        *,
+        body: Optional[Union[bytes, str]] = None,
+        query_params: Optional[Dict[str, Any]] = None,
+        retry: Optional[bool] = True,
+    ) -> requests.Response:
+
+        addr = self.address + endpoint
+        kwargs = {"data": body, "headers": self._headers, "verify": self._verify, "timeout": self._timeout}
+
+        if query_params:
+            kwargs["params"] = query_params
+
+        try:
+            if method == "get":
+                r = requests.get(addr, **kwargs)
+            elif method == "post":
+                r = requests.post(addr, **kwargs)
+            elif method == "put":
+                r = requests.put(addr, **kwargs)
+            elif method == "delete":
+                r = requests.delete(addr, **kwargs)
+            else:
+                raise KeyError("Method not understood: '{}'".format(method))
+        except requests.exceptions.SSLError:
+            raise ConnectionRefusedError(_ssl_error_msg) from None
+        except requests.exceptions.ConnectionError:
+            raise ConnectionRefusedError(_connection_error_msg.format(self.address)) from None
+
+        # If JWT token expired, automatically renew it and retry once
+        if retry and (r.status_code == 401) and "Token has expired" in r.json()["msg"]:
+            self._refresh_JWT_token()
+            return self._request2(method, endpoint, body=body, retry=False)
+
+        if r.status_code != 200:
+            try:
+                msg = r.json()["msg"]
+            except:
+                msg = r.reason
+
+            raise IOError("Server communication failure. Code: {}, Reason: {}".format(r.status_code, msg))
+
+        return r
+
+    def _auto_request(
+        self,
+        method: str,
+        endpoint: str,
+        body_model,
+        query_model,
+        body: Optional[Dict[str, Any]] = None,
+        query_params: Optional[Dict[str, Any]] = None,
+    ) -> Any:
+
+        if body_model is not None and body is None:
+            raise RuntimeError("Payload specified, but no body model")
+        if body_model is None and body is not None:
+            raise RuntimeError("Payload not specified, but required")
+
+        serialized_body = None
+        if body_model is not None:
+            parsed_body = pydantic.parse_obj_as(body_model, body)
+            serialized_body = serialize(parsed_body, self.encoding)
+
+        parsed_query_params = None
+        if query_model is not None:
+            parsed_query_params = pydantic.parse_obj_as(query_model, query_params).dict()
+
+        r = self._request2(method, endpoint, body=serialized_body, query_params=parsed_query_params)
+        encoding = r.headers["Content-Type"].split("/")[1]
+        if encoding == "json":
+            response = deserialize(r.content.decode(), encoding)
+        else:
+            response = deserialize(r.content, encoding)
+
+        return response
+
     @property
     def cache(self):
         if self._cache.cachedir is not None:
@@ -458,9 +545,11 @@ class PortalClient:
 
     def get_molecules(
         self,
-        id: QueryObjectId,
+        id: Sequence[ObjectId],
+        include: Optional[Iterable[str]] = None,
+        exclude: Optional[Iterable[str]] = None,
         missing_ok: bool = False,
-    ) -> Union[List["Molecule"], "Molecule"]:
+    ) -> Union[List[Optional[Molecule]], List[Optional[Dict[str, Any]]]]:
         """Get molecules by id.
 
         Uses the client's own caching for performance.
@@ -482,14 +571,15 @@ class PortalClient:
 
         """
 
-        def get_mols(payload):
-            mols = self._automodel_request("molecule", "get", payload)
-            results = {mol.id: mol for mol in mols}
-            to_cache = mols
+        query_params = {"id": make_list(id), "include": include, "exclude": exclude, "missing_ok": missing_ok}
+        mols = self._auto_request("get", "v1/molecule", None, GetParameters, None, query_params)
 
-            return results, to_cache
-
-        return self._get_with_cache(get_mols, id, missing_ok, entity_type="molecule")
+        if include is None and exclude is None:
+            mols = pydantic.parse_obj_as(List[Optional[Molecule]], mols)
+        if isinstance(id, Sequence):
+            return mols
+        else:
+            return mols[0]
 
     # TODO: we would like more fields to be queryable via the REST API for mols
     #       e.g. symbols/elements. Unless these are indexed might not be performant.
@@ -546,7 +636,16 @@ class PortalClient:
             `None` given for molecules that fail to add.
 
         """
-        return self._automodel_request("molecule", "post", {"meta": {}, "data": molecules})
+        mols = self._auto_request(
+            "post",
+            "v1/molecule",
+            List[Molecule],
+            None,
+            Tuple[InsertMetadata, List[ObjectId]],
+            make_list(molecules),
+            None,
+        )
+        return mols
 
     ### Keywords section
 

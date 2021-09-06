@@ -21,3 +21,7 @@ class AuthenticationFailure(UserReportableError):
 
 class ValidationError(UserReportableError):
     pass
+
+
+class MissingDataError(UserReportableError):
+    pass
