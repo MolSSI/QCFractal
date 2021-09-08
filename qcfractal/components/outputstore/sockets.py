@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from qcfractal.components.outputstore.db_models import KVStoreORM
 from qcfractal.interface.models import KVStore, ObjectId, CompressionEnum
+from qcfractal.db_socket.helpers import get_general
 
 from typing import TYPE_CHECKING
 
@@ -101,20 +102,10 @@ class OutputStoreSocket:
             raise RuntimeError(f"Request for {len(id)} outputs is over the limit of {self._limit}")
 
         # TODO - int id
-        int_id = [int(x) for x in id]
-        unique_ids = list(set(int_id))
+        int_id = [str(x) for x in id]
 
         with self.root_socket.optional_session(session, True) as session:
-            results = session.query(KVStoreORM).filter(KVStoreORM.id.in_(unique_ids)).yield_per(50)
-            result_map = {r.id: r.dict() for r in results}
-
-        # Put into the requested order
-        ret = [result_map.get(x, None) for x in int_id]
-
-        if missing_ok is False and None in ret:
-            raise RuntimeError("Could not find all requested KVStore records")
-
-        return ret
+            return get_general(session, KVStoreORM, KVStoreORM.id, int_id, None, None, missing_ok)
 
     def delete(self, id: Sequence[int], *, session: Optional[Session] = None) -> int:
         """

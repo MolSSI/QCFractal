@@ -44,15 +44,9 @@ def get_molecule_v1(id: Optional[int] = None):
     # If an id was specified in the url (molecule/1234) then use that
     # Otherwise, grab from the query parameters
     if id is not None:
-        return storage_socket.molecules.get(
-            [id], include=args.include, exclude=args.exclude, missing_ok=args.missing_ok
-        )[0]
+        return storage_socket.molecules.get([id], args.include, args.exclude, args.missing_ok)[0]
     else:
-        ids = args.id
-        if not ids:
-            return []
-
-        return storage_socket.molecules.get(ids, include=args.include, exclude=args.exclude, missing_ok=args.missing_ok)
+        return storage_socket.molecules.get(args.id, args.include, args.exclude, args.missing_ok)
 
 
 @main.route("/v1/molecule", methods=["POST"])
