@@ -16,15 +16,15 @@ from typing import TYPE_CHECKING, Any, DefaultDict, Dict, List, Optional, Tuple,
 from pathlib import Path
 
 from pydantic import ValidationError
-from qcelemental.util import serialize, deserialize
 import pandas as pd
 
 from ..interface.models.rest_models import rest_model
-from ..interface.models import RecordStatusEnum, ManagerStatusEnum, PriorityEnum, InsertMetadata
-from .rest_models import GetParameters
+from ..interface.models import RecordStatusEnum, ManagerStatusEnum, PriorityEnum, InsertMetadata, KVStore
+from .rest_models import GetParameters, SimpleGetParameters
 from .collections import Collection, collection_factory, collections_name_map
 from .records import record_factory
 from .cache import PortalCache
+from .serialization import serialize, deserialize
 
 from ..interface.models import (
     KeywordSet,
@@ -151,7 +151,7 @@ class PortalClient:
         self._headers: Dict[str, str] = {}
         self._headers["User-Agent"] = f"qcportal/{__version__}"
         self._timeout = 60
-        self.encoding = "json"
+        self.encoding = "application/json"
 
         # Mode toggle for network error testing, not public facing
         self._mock_network_error = False
@@ -221,11 +221,15 @@ class PortalClient:
     def encoding(self) -> str:
         return self._encoding
 
+    @property
+    def _old_encoding(self) -> str:
+        return self.encoding.split("/")[1]
+
     @encoding.setter
     def encoding(self, encoding: str):
         self._encoding = encoding
-        self._headers["Content-Type"] = f"application/{self.encoding}"
-        self._headers["Accept"] = f"application/{self.encoding}"
+        self._headers["Content-Type"] = encoding
+        self._headers["Accept"] = encoding
 
     def _get_JWT_token(self, username: str, password: str) -> None:
 
@@ -337,7 +341,7 @@ class PortalClient:
         except ValidationError as exc:
             raise TypeError(str(exc))
 
-        r = self._request(rest, name, data=payload.serialize(self.encoding), timeout=timeout)
+        r = self._request(rest, name, data=payload.serialize(self._old_encoding), timeout=timeout)
         encoding = r.headers["Content-Type"].split("/")[1]
         response = response_model.parse_raw(r.content, encoding=encoding)
 
@@ -418,13 +422,7 @@ class PortalClient:
             parsed_query_params = pydantic.parse_obj_as(query_model, query_params).dict()
 
         r = self._request2(method, endpoint, body=serialized_body, query_params=parsed_query_params)
-        encoding = r.headers["Content-Type"].split("/")[1]
-        if encoding == "json":
-            response = deserialize(r.content.decode(), encoding)
-        else:
-            response = deserialize(r.content, encoding)
-
-        return response
+        return deserialize(r.content, r.headers["Content-Type"])
 
     @property
     def cache(self):
@@ -509,7 +507,9 @@ class PortalClient:
 
     ### KVStore / OutputStore section
 
-    def _get_outputs(self, id: "QueryObjectId") -> Union[List[Dict[str, Any]], Dict[str, Any]]:
+    def _get_outputs(
+        self, id: Sequence[ObjectId], missing_ok: bool = False
+    ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
         """Get output_store items by id.
 
         Parameters
@@ -527,19 +527,15 @@ class PortalClient:
         """
         # TODO: consider utilizing the client cache for these
 
-        payload = {
-            "meta": {},
-            "data": {
-                "id": make_list(id),
-            },
-        }
+        query_params = {"id": make_list(id), "missing_ok": missing_ok}
 
-        results = self._automodel_request("kvstore", "get", payload)
+        outputs = self._auto_request("get", "v1/outputstore", None, SimpleGetParameters, None, query_params)
+        outputs = [KVStore(**x) if x is not None else None for x in outputs]
 
-        if isinstance(id, list):
-            return [results[i] for i in id]
+        if isinstance(id, Sequence):
+            return outputs
         else:
-            return results[id]
+            return outputs[0]
 
     ### Molecule section
 

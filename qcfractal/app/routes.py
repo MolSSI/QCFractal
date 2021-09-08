@@ -1,7 +1,5 @@
-import json
 import time
 import traceback
-import msgpack
 from functools import wraps
 from urllib.parse import urlparse
 
@@ -16,15 +14,16 @@ from flask_jwt_extended import (
     create_refresh_token,
     jwt_required,
 )
-from qcelemental.util import serialize, deserialize
 from werkzeug.exceptions import BadRequest, InternalServerError, HTTPException, Forbidden
 
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import _valid_encodings, SerializedResponse
+from qcfractal.portal.serialization import deserialize, serialize
 from qcfractal.exceptions import UserReportableError, AuthenticationFailure
 from qcfractal.interface.models import UserInfo
 from qcfractal.policyuniverse import Policy
-from typing import Optional, Type, Callable, Union
+from typing import Optional, Type, Callable
+import qcelemental
 
 
 @main.before_request
@@ -56,31 +55,11 @@ def before_request_func():
             blob = request.data
 
         if blob:
-            request.data = deserialize(blob, encoding)
+            request.data = qcelemental.util.deserialize(blob, encoding)
         else:
             request.data = None
     except Exception as e:
         raise BadRequest(f"Could not deserialize body. {e}")
-
-
-def _deserialize(data: Union[bytes, str], content_type: str, model):
-    if content_type == "application/msgpack":
-        data = msgpack.loads(data)
-        return pydantic.parse_obj_as(model, data)
-    elif content_type == "application/json":
-        return pydantic.parse_raw_as(model, data, content_type=content_type)
-    else:
-        raise RuntimeError(f"Unknown content type for deserialization: {content_type}")
-
-
-def _serialize(data, content_type: str):
-    # TODO - replace/vendor in qcelemental stuff here
-    if content_type == "application/msgpack":
-        return serialize(data, "msgpack")
-    elif content_type == "application/json":
-        return serialize(data, "json")
-    else:
-        raise RuntimeError(f"Unknown content type for serialization: {content_type}")
 
 
 def wrap_route(body_model: Optional[Type], query_model: Optional[Type[pydantic.BaseModel]] = None) -> Callable:
@@ -93,7 +72,7 @@ def wrap_route(body_model: Optional[Type], query_model: Optional[Type[pydantic.B
             # Flask helpfully parses this for us
             # By default, use plain json
             # possible_types = ['application/msgpack', 'application/json']
-            possible_types = ["application/json"]
+            possible_types = ["application/msgpack", "application/json"]
             accept_type = request.accept_mimetypes.best_match(possible_types, "application/json")
 
             # 1.) The body is stored in request.data
@@ -105,7 +84,8 @@ def wrap_route(body_model: Optional[Type], query_model: Optional[Type[pydantic.B
                     raise BadRequest("Expected body, but it is empty")
 
                 try:
-                    request.validated_data = _deserialize(request.data, content_type, body_model)
+                    deserialized_data = deserialize(request.data, content_type)
+                    request.validated_data = pydantic.parse_obj_as(deserialized_data, body_model)
                 except Exception as e:
                     raise BadRequest("Invalid body: " + str(e))
 
@@ -120,7 +100,7 @@ def wrap_route(body_model: Optional[Type], query_model: Optional[Type[pydantic.B
             ret = fn(*args, **kwargs)
 
             # Serialize the output
-            serialized = _serialize(ret, accept_type)
+            serialized = serialize(ret, accept_type)
             return Response(serialized, content_type=accept_type)
 
         return wrapper

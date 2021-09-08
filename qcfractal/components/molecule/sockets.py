@@ -13,6 +13,7 @@ from qcfractal.db_socket.helpers import (
     insert_general,
     delete_general,
     insert_mixed_general,
+    get_general,
     calculate_limit,
 )
 
@@ -137,31 +138,14 @@ class MoleculeSocket:
             If missing_ok is True, then this list will contain None where the molecule was missing.
         """
 
+        if len(id) > self._limit:
+            raise RuntimeError(f"Request for {len(id)} molecules is over the limit of {self._limit}")
+
+        # TODO - int id
+        int_id = [str(x) for x in id]
+
         with self.root_socket.optional_session(session, True) as session:
-            if len(id) > self._limit:
-                raise RuntimeError(f"Request for {len(id)} molecules is over the limit of {self._limit}")
-
-            # TODO - int id
-            int_id = [int(x) for x in id]
-            unique_ids = list(set(int_id))
-
-            load_cols, _ = get_query_proj_columns(MoleculeORM, include, exclude)
-
-            results = (
-                session.query(MoleculeORM)
-                .filter(MoleculeORM.id.in_(unique_ids))
-                .options(load_only(*load_cols))
-                .yield_per(500)
-            )
-            result_map = {r.id: r.dict() for r in results}
-
-            # Put into the requested order
-            ret = [result_map.get(x, None) for x in int_id]
-
-            if missing_ok is False and None in ret:
-                raise MissingDataError("Could not find all requested molecule records")
-
-            return ret
+            return get_general(session, MoleculeORM, MoleculeORM.id, int_id, include, exclude, missing_ok)
 
     def add_mixed(
         self, molecule_data: Sequence[Union[ObjectId, Molecule]], *, session: Optional[Session] = None
