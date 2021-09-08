@@ -1,5 +1,6 @@
 from __future__ import annotations
 from ..interface.models.query_meta import InsertMetadata, DeleteMetadata, QueryMetadata
+from ..exceptions import MissingDataError
 from qcfractal.db_socket import BaseORM
 from sqlalchemy import tuple_, and_, or_
 from sqlalchemy.orm import load_only, selectinload
@@ -21,6 +22,19 @@ if TYPE_CHECKING:
 batchsize = 200
 
 logger = logging.getLogger(__name__)
+
+
+def calculate_limit(max_limit: int, given_limit: Optional[int]):
+    """Get the allowed limit on results to return for a particular or type of object
+
+    If 'given_limit' is given (ie, by the user), this will return min(limit, max_limit)
+    where max_limit is the set value for the table/type of object
+    """
+
+    if given_limit is None:
+        return max_limit
+
+    return min(given_limit, max_limit)
 
 
 def get_count(query):
@@ -283,80 +297,17 @@ def insert_mixed_general(
     return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx, errors=errors), all_ret  # type: ignore
 
 
-# def query_general(
-#        session: sqlalchemy.orm.session.Session,
-#        orm_type: Type[_ORM_T],
-#        search_values: Iterable[Tuple[InstrumentedAttribute, Optional[Iterable[Any]]]],
-#        include: Optional[Iterable[str]] = None,
-#        exclude: Optional[Iterable[str]] = None,
-#        limit: int = None,
-#        skip: int = 0,
-# ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
-#    """
-#
-#    Parameters
-#    ----------
-#    session
-#        An existing SQLAlchemy session to use for querying/adding/updating/deleting
-#    orm_type
-#        ORM to search for (MoleculeORM, etc)
-#    search_values
-#        Pairs of columns to list of values to search for. Each column will search for the
-#        specified values using the SQL 'IN' operator.
-#    include
-#        Which fields of the orm to return. Default is to return all fields, but no relationships.
-#    exclude
-#        Remove these fields from the return. Default is to return all fields, but no relationships.
-#    limit
-#        Limit the number of results. If None, the server limit will be used.
-#        This limit will not be respected if greater than the configured limit of the server.
-#    skip
-#        Skip this many results from the total list of matches. The limit will apply after skipping,
-#        allowing for pagination.
-#    session
-#        An existing SQLAlchemy session to use. If None, one will be created
-#
-#    Returns
-#    -------
-#    :
-#        Metadata about the results of the query, and a list of procedure data (as dictionaries)
-#    """
-#
-#    load_cols, load_rels = get_query_proj_columns(orm_type, include, exclude)
-#
-#    # We combine all the search criteria using AND
-#    and_query = []
-#    for col, values in search_values:
-#        if values is not None:
-#            and_query.append(col.in_(values))
-#
-#    query = session.query(orm_type).filter(and_(*and_query))
-#
-#    # Only load the specified columns into the ORM
-#    # Only these will be present in the dictionary
-#    query = query.options(load_only(*load_cols))
-#
-#    for rel in load_rels:
-#        query = query.options(selectinload(rel))
-#
-#    n_found = get_count(query)
-#    results = query.limit(limit).offset(skip).yield_per(500)
-#
-#    result_dicts = [x.dict() for x in results]
-#
-#    meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts)) # type: ignore
-#    return meta, result_dicts
-
-
 def get_general(
     session: sqlalchemy.orm.session.Session,
     orm_type: Type[_ORM_T],
-    search_cols: Sequence[InstrumentedAttribute],
-    search_values: Sequence[Sequence[Any]],
-    missing_ok: bool = False,
-) -> List[Optional[_ORM_T]]:
+    search_col: InstrumentedAttribute,
+    search_values: Sequence[Any],
+    include: Optional[Sequence[str]],
+    exclude: Optional[Sequence[str]],
+    missing_ok: bool,
+) -> List[Optional[Dict[str, Any]]]:
     """
-    Perform a general query based on a single column
+    Perform a query for records based on a unique id
 
     For a list of search values, obtain all the records, in input order. This function wraps a simple query
     to make sure that the returned ORM are in the same order as the input, and to optionally check that
@@ -368,10 +319,14 @@ def get_general(
         An existing SQLAlchemy session to use for querying/adding/updating/deleting
     orm_type
         ORM to search for (MoleculeORM, etc)
-    search_cols
-        The columns to use for searching the database (typically (TableORM.id,) or similar)
+    include
+        Which columns to include in the return. If specified, other columns will be excluded
+    exclude
+        Do not return these columns
+    search_col
+        The column to use for searching the database (typically TableORM.id or similar)
     search_values
-        Values of the search column to search for, in order. Typically a list of Tuples
+        Values of the search column to search for, in order
     missing_ok
         If False, an exception is raised if one of the values is missing. Else, None is returned in the list
         in place of the missing data
@@ -385,149 +340,25 @@ def get_general(
         the order of the search_values
     """
 
-    n_search_values = len(search_values)
-
-    # Return early if not given anything
-    if n_search_values == 0:
+    if len(search_values) == 0:
         return []
 
-    all_ret = []
+    unique_values = list(set(search_values))
+    load_cols, _ = get_query_proj_columns(orm_type, include, exclude)
 
-    for start in range(0, n_search_values, batchsize):
-        ret = _get_general_batch(session, orm_type, search_cols, search_values[start : start + batchsize], missing_ok)
-        all_ret.extend(ret)
+    results = session.query(orm_type).filter(search_col.in_(unique_values)).options(load_only(*load_cols)).all()
 
-    return all_ret
+    col_name = search_col.key
+    result_list = [r.dict() for r in results]
+    result_map = {r[col_name]: r for r in result_list}
 
+    # Put into the requested order
+    ret = [result_map.get(x, None) for x in search_values]
 
-def get_general_proj(
-    session: sqlalchemy.orm.session.Session,
-    search_cols: Sequence[InstrumentedAttribute],
-    search_values: Sequence[Sequence[Any]],
-    returning: Sequence[InstrumentedAttribute],
-    missing_ok: bool = False,
-) -> List[Optional[Tuple]]:
-    """
-    Perform a general query based on a single column, returning only specified columns
+    if missing_ok is False and None in ret:
+        raise MissingDataError("Could not find all requested records")
 
-    For a list of search values, obtain all the records, in input order. This function wraps a simple query
-    to make sure that the returned data is in the same order as the input, and to optionally check that
-    all required records exist.
-
-    Parameters
-    ----------
-    session
-        An existing SQLAlchemy session to use for querying/adding/updating/deleting
-    search_cols
-        The columns to use for searching the database (typically (TableORM.id,) or similar)
-    search_values
-        Values of the search column to search for, in order. Typically a list of Tuples
-    returning
-        What columns to return. This is usually in the form of [TableORM.id, TableORM.col2, etc]
-    missing_ok
-        If False, an exception is raised if one of the values is missing. Else, None is returned in the list
-        in place of the missing data
-
-    Returns
-    -------
-    :
-        A list of requested data in the same order as the search_values parameter.
-        If the record does not exist and missing_ok is True, then the missing entry will be None, still maintaining
-        the order of the search_values
-    """
-
-    n_search_values = len(search_values)
-
-    # Return early if not given anything
-    if n_search_values == 0:
-        return []
-
-    all_ret: List[Optional[Tuple]] = []
-
-    for start in range(0, n_search_values, batchsize):
-        ret = _get_general_proj_batch(
-            session, search_cols, search_values[start : start + batchsize], returning, missing_ok
-        )
-        all_ret.extend(ret)
-
-    return all_ret
-
-
-def get_general_proj_dict(
-    session: sqlalchemy.orm.session.Session,
-    search_cols: Sequence[InstrumentedAttribute],
-    search_values: Sequence[Sequence[Any]],
-    returning: Sequence[InstrumentedAttribute],
-    missing_ok: bool = False,
-) -> List[Dict[str, Any]]:
-    """
-    Perform a general query based on a single column, returning only specified columns as a dictionary
-
-    For a list of search values, obtain all the records, in input order. This function wraps a simple query
-    to make sure that the returned data is in the same order as the input, and to optionally check that
-    all required records exist.
-
-    This function returns a list of dictionaries, where the key is the name of the column.
-
-    Parameters
-    ----------
-    session
-        An existing SQLAlchemy session to use for querying/adding/updating/deleting
-    search_cols
-        The columns to use for searching the database (typically (TableORM.id,) or similar)
-    search_values
-        Values of the search column to search for, in order. Typically a list of Tuples
-    returning
-        What columns to return. This is usually in the form of [TableORM.id, TableORM.col2, etc]
-    missing_ok
-        If False, an exception is raised if one of the values is missing. Else, None is returned in the list
-        in place of the missing data
-
-    Returns
-    -------
-    :
-        A list of requested data in the same order as the search_values parameter.
-        If the record does not exist and missing_ok is True, then the missing entry will be None, still maintaining
-        the order of the search_values
-    """
-
-    data_as_tuple = get_general_proj(session, search_cols, search_values, returning, missing_ok)
-    col_names = tuple(x.key for x in returning)
-    return [dict(zip(col_names, d)) if d is not None else None for d in data_as_tuple]
-
-
-# def exists_general(
-#    session: sqlalchemy.orm.session.Session,
-#    orm_type: Type[_ORM_T],
-#    search_cols: Sequence[InstrumentedAttribute],
-#    search_values: Sequence[Sequence[Any]],
-# ) -> List[bool]:
-#    """
-#    Determine if rows exist in the database
-#
-#    This will see if the specified entries exist in the database, and return a list of boolean
-#    (in the same order of ``search_values``) specifying True if the row was found, or False if it wasn't.
-#
-#    Parameters
-#    ----------
-#    session
-#        An existing SQLAlchemy session to use for querying/adding/updating/deleting
-#    orm_type
-#        ORM to search for (MoleculeORM, etc)
-#    search_cols
-#        The columns to use for searching the database (typically (TableORM.id,) or similar)
-#    search_values
-#        Values of the search column to search for, in order. Typically a list of Tuples
-#
-#    Returns
-#    -------
-#    :
-#        A list where each entry corresponds to a single search value. This will be in the order
-#        of ``search_values``
-#    """
-#
-#    exists = get_general_proj(session, orm_type, search_cols, search_values, (literal(True),), True)
-#    return [x is not None for x in exists]
+    return ret
 
 
 def delete_general(
@@ -744,137 +575,3 @@ def _insert_mixed_general_batch(
 
     # Sort the return (remember it is a list of tuples) which will sort by index (the first element)
     return inserted_idx, existing_idx, errors, [x[1] for x in sorted(all_ret)]
-
-
-def _get_general_batch(
-    session: sqlalchemy.orm.session.Session,
-    orm_type: Type[_ORM_T],
-    search_cols: Sequence[InstrumentedAttribute],
-    search_values: Sequence[Sequence[Any]],
-    missing_ok: bool = False,
-) -> List[Optional[_ORM_T]]:
-    """
-    Gets a batch of data from the database. See documentation for get_general
-
-    Not meant for general use - should only be called from get_general
-    """
-
-    # Return early if not given anything
-    if len(search_values) == 0:
-        return []
-
-    # Find and partition all duplicates in the list
-    search_values_unique_map = map_duplicates(search_values)
-
-    # Actually perform the query here
-    query_filter = form_query_filter(search_cols, search_values_unique_map.keys())
-    query_results = session.query(orm_type).filter(query_filter).all()
-
-    # Partition each result into two tuples
-    # The first tuple is the value of the search columns
-    # The second tuple is the data to return
-    existing_results = [(get_values(x, search_cols), x) for x in query_results]
-
-    # Determine which of the search values we are missing, and what are the original indices of those missing values
-    search_values_found = set(x[0] for x in existing_results)
-    search_values_missing = set(search_values) - search_values_found
-    missing_idx = [search_values_unique_map[x] for x in search_values_missing]
-
-    # If missing data is not ok, raise an exception
-    if len(missing_idx) > 0 and missing_ok is False:
-        scols = [x.key for x in search_cols]
-        raise RuntimeError(
-            f"Could not find all requested records. orm_type={orm_type.__name__}, search_col={scols}, search_values={search_values}. Missing indices: {missing_idx}"
-        )
-
-    # Now create a list of (idx, return_data) from our unique map and query results
-    ret: List[Tuple[int, Optional[_ORM_T]]] = []
-
-    for sv, r in existing_results:
-        idxs = search_values_unique_map[sv]
-        ret.extend((idx, r) for idx in idxs)
-
-    # And everything we didn't find
-    for idxs in missing_idx:
-        ret.extend((idx, None) for idx in idxs)
-
-    # Sanity check. All indices are accounted for
-    assert set(x[0] for x in ret) == set(range(len(search_values)))
-
-    # Only return the second part (ie, not the index)
-    # Also sort first by index
-    return [x[1] for x in sorted(ret)]
-
-
-def _get_general_proj_batch(
-    session: sqlalchemy.orm.session.Session,
-    search_cols: Sequence[InstrumentedAttribute],
-    search_values: Sequence[Sequence[Any]],
-    returning: Sequence[InstrumentedAttribute],
-    missing_ok: bool = False,
-) -> List[Optional[Tuple]]:
-    """
-    Gets a batch of data from the database, returning only selected columns. See documentation for get_general_proj
-
-    Not meant for general use - should only be called from get_general_proj
-    """
-
-    # Return early if not given anything
-    if len(search_values) == 0:
-        return []
-
-    # Find and partition all duplicates in the list
-    search_values_unique_map = map_duplicates(search_values)
-
-    # We query for both the return values and what we are searching for
-    query_filter = form_query_filter(search_cols, search_values_unique_map.keys())
-    query_results = session.query(*search_cols, *returning).filter(query_filter).all()
-
-    # Partition each result into two tuples
-    # The first tuple is the value of the search columns
-    # The second tuple is the data to return
-    n_search_cols = len(search_cols)
-    existing_results = [(x[:n_search_cols], x[n_search_cols:]) for x in query_results]
-
-    # Determine which of the search values we are missing, and what are the original indices of those missing values
-    search_values_found = set(x[0] for x in existing_results)
-    search_values_missing = set(search_values) - search_values_found
-    missing_idx = [search_values_unique_map[x] for x in search_values_missing]
-
-    # If missing data is not ok, raise an exception
-    if len(missing_idx) > 0 and missing_ok is False:
-        scols = [x.key for x in search_cols]
-        raise RuntimeError(
-            f"Could not find all requested records. search_col={scols}, search_values={search_values}. Missing indices: {missing_idx}"
-        )
-
-    # Now create a list of (idx, return_data) from our unique map and query results
-    ret: List[Tuple[int, Optional[Tuple]]] = []
-
-    for sv, r in existing_results:
-        idxs = search_values_unique_map[sv]
-        ret.extend((idx, r) for idx in idxs)
-
-    # And everything we didn't find
-    for idxs in missing_idx:
-        ret.extend((idx, None) for idx in idxs)
-
-    # Sanity check. All indices are accounted for
-    assert set(x[0] for x in ret) == set(range(len(search_values)))
-
-    # Only return the second part (ie, not the index)
-    # Also sort first by index
-    return [x[1] for x in sorted(ret)]
-
-
-def calculate_limit(max_limit: int, given_limit: Optional[int]):
-    """Get the allowed limit on results to return for a particular or type of object
-
-    If 'given_limit' is given (ie, by the user), this will return min(limit, max_limit)
-    where max_limit is the set value for the table/type of object
-    """
-
-    if given_limit is None:
-        return max_limit
-
-    return min(given_limit, max_limit)
