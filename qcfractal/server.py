@@ -302,7 +302,9 @@ class FractalServer:
         self.app = tornado.web.Application(endpoints, **app_settings)
         self.endpoints = set([v[0].replace("/", "", 1) for v in endpoints])
 
-        self.http_server = tornado.httpserver.HTTPServer(self.app, ssl_options=ssl_ctx)
+        self.http_server = tornado.httpserver.HTTPServer(
+            self.app, ssl_options=ssl_ctx, max_buffer_size=250 * 1048576, max_body_size=250 * 1048576
+        )
 
         self.http_server.listen(self.port)
 
