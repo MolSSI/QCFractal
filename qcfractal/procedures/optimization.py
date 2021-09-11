@@ -153,8 +153,10 @@ class OptimizationTasks(BaseTasks):
             all_opt_records[idx] = r
 
         # Now generate all the tasks, but only for results that don't exist already
+        new_opt_records = [o for o in all_opt_records if o.id not in existing_ids]
+        new_molecules = [m for m, r in zip(valid_molecules, all_opt_records) if r.id not in existing_ids]
         self.create_tasks(
-            all_opt_records, valid_molecules, [qc_keywords] * len(all_opt_records), tag=tag, priority=priority
+            new_opt_records, new_molecules, [qc_keywords] * len(new_molecules), tag=tag, priority=priority
         )
 
         # Keep the returned result id list in the same order as the input molecule list
