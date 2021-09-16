@@ -1032,6 +1032,7 @@ class Dataset(Collection):
                 keywords_alias = self.data.default_keywords[program]
                 keywords = self.data.alias_keywords[program][keywords_alias]
         else:
+            keywords = keywords.lower()
             if (program not in self.data.alias_keywords) or (keywords not in self.data.alias_keywords[program]):
                 raise KeyError("KeywordSet alias '{}' not found for program '{}'.".format(keywords, program))
 
