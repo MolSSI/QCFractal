@@ -155,14 +155,14 @@ class ResultORM(BaseResultORM):
     )
 
     __table_args__ = (
-        # TODO: optimize indexes
-        # A multicolumn GIN index can be used with query conditions that involve any subset of
-        # the index's columns. Unlike B-tree or GiST, index search effectiveness is the same
-        # regardless of which index column(s) the query conditions use.
-        # Index('ix_result_combined', "program", "driver", "method", "basis",
-        #       "keywords", postgresql_using='gin'),  # gin index
-        # Index('ix_results_molecule', 'molecule'),  # b-tree index
+        # We use simple multi-column constraint, then add hash indices to the various columns
         UniqueConstraint("program", "driver", "method", "basis", "keywords", "molecule", name="uix_results_keys"),
+        Index("ix_results_program", "program"),
+        Index("ix_results_driver", "driver"),
+        Index("ix_results_method", "method"),
+        Index("ix_results_basis", "basis"),
+        Index("ix_results_keywords", "keywords"),
+        Index("ix_results_molecule", "molecule"),
     )
 
     __mapper_args__ = {

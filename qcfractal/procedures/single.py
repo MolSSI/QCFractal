@@ -116,8 +116,10 @@ class SingleResultTasks(BaseTasks):
             all_result_records[idx] = r
 
         # Now generate all the tasks, but only for results that don't exist already
+        new_result_records = [r for r in all_result_records if r.id not in existing_ids]
+        new_molecules = [m for m, r in zip(valid_molecules, all_result_records) if r.id not in existing_ids]
         self.create_tasks(
-            all_result_records, valid_molecules, [keywords] * len(all_result_records), tag=tag, priority=priority
+            new_result_records, new_molecules, [keywords] * len(new_molecules), tag=tag, priority=priority
         )
 
         # Keep the returned result id list in the same order as the input molecule list
