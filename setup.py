@@ -46,8 +46,8 @@ if __name__ == "__main__":
             "pyarrow >=0.15.0",
             #            'double-conversion >=3.0.0',
             # QCArchive depends
-            "qcengine>=0.11.0",
-            "qcelemental>=0.13.1",
+            "qcengine>=0.11.0,<0.20",
+            "qcelemental>=0.13.1,<0.23",
         ],
         entry_points={
             "console_scripts": [
