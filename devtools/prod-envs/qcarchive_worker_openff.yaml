@@ -13,7 +13,7 @@ dependencies:
   - dftd3
   - gcp
   - rdkit
-  - qcengine >=0.15.0
+  - qcengine >=0.15.0,<0.20
     
     # Procedures
   - geometric

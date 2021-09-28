@@ -52,5 +52,5 @@ dependencies:
   - openmmforcefields >=0.8.0
 
 #   QCArchive includes
-  - qcengine >=0.17.0
-  - qcelemental >=0.17.0
+  - qcengine >=0.17.0,<0.20
+  - qcelemental >=0.17.0,<0.23

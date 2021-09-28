@@ -11,7 +11,7 @@ dependencies:
   - psi4::psi4 >=1.3.0
   - psi4::dftd3
   - rdkit
-  - qcengine >=0.13.0
+  - qcengine >=0.13.0,<0.20
     
     # Procedures
   - geometric
