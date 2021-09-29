@@ -78,7 +78,7 @@ def test_plot_dataset_groupby(S22Fixture, kind, groupby):
 
 @using_plotly
 def test_plot_qca_examples(S22Fixture):
-    """ Tests plotting examples from QCArchiveExamples/basic_examples/reaction_dataset.ipynb"""
+    """Tests plotting examples from QCArchiveExamples/basic_examples/reaction_dataset.ipynb"""
     client, S22 = S22Fixture
     fig = S22.visualize(method=["B3LYP", "B3LYP-D3", "B3LYP-D3M"], basis=["def2-tzvp"], groupby="D3").to_dict()
     assert "S22" in fig["layout"]["title"]["text"]

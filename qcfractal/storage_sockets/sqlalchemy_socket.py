@@ -3,7 +3,7 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 """
 
 try:
-    from sqlalchemy import create_engine, or_, case, func
+    from sqlalchemy import create_engine, and_, or_, case, func
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
     from sqlalchemy.sql.expression import desc
@@ -34,8 +34,12 @@ from qcfractal.interface.models import (
     TaskRecord,
     TaskStatusEnum,
     TorsionDriveRecord,
+    KVStore,
+    CompressionEnum,
     prepare_basis,
 )
+from qcfractal.interface.models.records import RecordStatusEnum
+
 from qcfractal.storage_sockets.db_queries import QUERY_CLASSES
 from qcfractal.storage_sockets.models import (
     AccessLogORM,
@@ -153,7 +157,7 @@ def get_collection_class(collection_type):
 
 class SQLAlchemySocket:
     """
-        SQLAlcehmy QCDB wrapper class.
+    SQLAlcehmy QCDB wrapper class.
     """
 
     def __init__(
@@ -318,8 +322,8 @@ class SQLAlchemySocket:
 
     def get_limit(self, limit: Optional[int]) -> int:
         """Get the allowed limit on results to return in queries based on the
-         given `limit`. If this number is greater than the
-         SQLAlchemySocket.max_limit then the max_limit will be returned instead.
+        given `limit`. If this number is greater than the
+        SQLAlchemySocket.max_limit then the max_limit will be returned instead.
         """
 
         return limit if limit is not None and limit < self._max_limit else self._max_limit
@@ -457,7 +461,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-            Query results dict:
+            Dict[str,Any]:
+                Query result dictionary with keys:
                 data: returned data by the query (variable format)
                 meta:
                     success: True or False
@@ -493,41 +498,40 @@ class SQLAlchemySocket:
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logs (KV store) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def add_kvstore(self, blobs_list: List[Any]):
+    def add_kvstore(self, outputs: List[KVStore]):
         """
         Adds to the key/value store table.
 
         Parameters
         ----------
-        blobs_list : List[Any]
-            A list of data blobs to add.
+        outputs : List[Any]
+            A list of KVStore objects add.
 
         Returns
         -------
-        TYPE
-
-            Description
+        Dict[str, Any]
+            Dictionary with keys data and meta, data is the ids of added blobs
         """
 
         meta = add_metadata_template()
-        blob_ids = []
+        output_ids = []
         with self.session_scope() as session:
-            for blob in blobs_list:
-                if blob is None:
-                    blob_ids.append(None)
+            for output in outputs:
+                if output is None:
+                    output_ids.append(None)
                     continue
 
-                doc = KVStoreORM(value=blob)
-                session.add(doc)
+                entry = KVStoreORM(**output.dict())
+                session.add(entry)
                 session.commit()
-                blob_ids.append(str(doc.id))
+                output_ids.append(str(entry.id))
                 meta["n_inserted"] += 1
 
         meta["success"] = True
 
-        return {"data": blob_ids, "meta": meta}
+        return {"data": output_ids, "meta": meta}
 
-    def get_kvstore(self, id: List[str] = None, limit: int = None, skip: int = 0):
+    def get_kvstore(self, id: List[ObjectId] = None, limit: int = None, skip: int = 0):
         """
         Pulls from the key/value store table.
 
@@ -535,14 +539,14 @@ class SQLAlchemySocket:
         ----------
         id : List[str]
             A list of ids to query
-        limit : int, optional
+        limit : Optional[int], optional
             Maximum number of results to return.
-        skip : int, optional
+        skip : Optional[int], optional
             skip the `skip` results
         Returns
         -------
-        TYPE
-            Description
+        Dict[str, Any]
+            Dictionary with keys data and meta, data is a key-value dictionary of found key-value stored items.
         """
 
         meta = get_metadata_template()
@@ -553,9 +557,20 @@ class SQLAlchemySocket:
 
         meta["success"] = True
 
-        # meta['error_description'] = str(err)
+        data = {}
+        # TODO - after migrating everything, remove the 'value' column in the table
+        for d in rdata:
+            val = d.pop("value")
+            if d["data"] is None:
+                # Set the data field to be the string or dictionary
+                d["data"] = val
 
-        data = {d["id"]: d["value"] for d in rdata}
+                # Remove these and let the model handle the defaults
+                d.pop("compression")
+                d.pop("compression_level")
+
+            # The KVStore constructor can handle conversion of strings and dictionaries
+            data[d["id"]] = KVStore(**d)
 
         return {"data": data, "meta": meta}
 
@@ -600,6 +615,8 @@ class SQLAlchemySocket:
         id_mols_list = tmp["data"]
         meta["errors"].extend(tmp["meta"]["errors"])
 
+        # TODO - duplicate ids get removed on the line below. Some
+        # code may depend on this behavior, so careful changing it
         inv_id_mols = {v: k for k, v in id_mols.items()}
 
         for mol in id_mols_list:
@@ -625,8 +642,8 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        data : dict of molecule-like JSON objects
-            A {key: molecule} dictionary of molecules to input.
+        molecules : List[Molecule]
+            A List of molecule objects to add.
 
         Returns
         -------
@@ -758,7 +775,9 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        values : str or list of strs
+        id : str or List[str], optional
+            ids of molecules, can use the hash parameter instead
+        molecule_hash : str or List[str]
             The hash of a molecule.
 
         Returns
@@ -781,12 +800,12 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-         data
+        keywords_set : List[KeywordSet]
             A list of KeywordSets to be inserted.
 
         Returns
         -------
-            A dict with keys: 'data' and 'meta'
+        Dict[str, Any]
             (see add_metadata_template())
             The 'data' part is a list of ids of the inserted options
             data['duplicates'] has the duplicate entries
@@ -836,11 +855,11 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        id : list or str
+        id : List[str] or str
             Ids of the keywords
-        hash_index : list or str
+        hash_index : List[str] or str
             hash index of keywords
-        limit : int, optional
+        limit : Optional[int], optional
             Maximum number of results to return.
             If this number is greater than the SQLAlchemySocket.max_limit then
             the max_limit will be returned instead.
@@ -952,7 +971,8 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        data : dict, which should inlcude at least:
+        data : Dict[str, Any]
+            should inlcude at least(keys):
             collection : str (immutable)
             name : str (immutable)
 
@@ -961,6 +981,7 @@ class SQLAlchemySocket:
 
         Returns
         -------
+        Dict[str, Any]
         A dict with keys: 'data' and 'meta'
             (see add_metadata_template())
             The 'data' part is the id of the inserted document or none
@@ -1051,7 +1072,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-        A dict with keys: 'data' and 'meta'
+        Dict[str, Any]
+            A dict with keys: 'data' and 'meta'
             The data is a list of the collections found
         """
 
@@ -1122,8 +1144,8 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        data : list of dict
-            Each dict must have:
+        data : List[ResultRecord]
+            Each dict in the list must have:
             program, driver, method, basis, options, molecule
             Where molecule is the molecule id in the DB
             In addition, it should have the other attributes that it needs
@@ -1131,20 +1153,24 @@ class SQLAlchemySocket:
 
         Returns
         -------
+        Dict[str, Any]
             Dict with keys: data, meta
-            Data is the ids of the inserted/updated/existing docs
+            Data is the ids of the inserted/updated/existing docs, in the same order as the
+            input record_list
         """
+
         meta = add_metadata_template()
-        # putting the placeholder for all the ids, since some can be duplicate, and some will only have ids after add operation.
-        result_ids = ["placeholder"] * len(record_list)
 
         results_list = []
-        existing_res = {}
+        duplicates_list = []
+
+        # Stores indices referring to elements in record_list
         new_record_idx, duplicates_idx = [], []
-        conds = []
+
         # creating condition for a multi-value select
+        # This can be used to query for multiple results in a single query
         conds = [
-            (
+            and_(
                 ResultORM.program == res.program,
                 ResultORM.driver == res.driver,
                 ResultORM.method == res.method,
@@ -1152,29 +1178,38 @@ class SQLAlchemySocket:
                 ResultORM.keywords == res.keywords,
                 ResultORM.molecule == res.molecule,
             )
-            for res in results_list
+            for res in record_list
         ]
 
         with self.session_scope() as session:
-            docs = (
-                session.query(
-                    ResultORM.program,
-                    ResultORM.driver,
-                    ResultORM.method,
-                    ResultORM.basis,
-                    ResultORM.keywords,
-                    ResultORM.molecule,
-                    ResultORM.id,
+            # Query for all existing
+            # TODO: RACE CONDITION: Records could be inserted between this query and inserting later
+
+            existing_results = {}
+
+            for cond in conds:
+                doc = (
+                    session.query(
+                        ResultORM.program,
+                        ResultORM.driver,
+                        ResultORM.method,
+                        ResultORM.basis,
+                        ResultORM.keywords,
+                        ResultORM.molecule,
+                        ResultORM.id,
+                    )
+                    .filter(cond)
+                    .one_or_none()
                 )
-                .filter(or_(*conds))
-                .all()
-            )
-            # adding all the found items to a dictionary
-            existing_res = {
-                (doc.program, doc.driver, doc.method, doc.basis, doc.keywords, str(doc.molecule)): doc for doc in docs
-            }
+
+                if doc is not None:
+                    existing_results[
+                        (doc.program, doc.driver, doc.method, doc.basis, doc.keywords, str(doc.molecule))
+                    ] = doc
+
+            # Loop over all (input) records, keeping track each record's index in the list
             for i, result in enumerate(record_list):
-                # constructing an index from record_list to compare against found items(existing_res)
+                # constructing an index from the record compare against items existing_results
                 idx = (
                     result.program,
                     result.driver.value,
@@ -1183,31 +1218,61 @@ class SQLAlchemySocket:
                     int(result.keywords) if result.keywords else None,
                     result.molecule,
                 )
-                if existing_res.get(idx) is None:
-                    # if no found items, construct an object
+
+                if idx not in existing_results:
+                    # Does not exist in the database. Construct a new ResultORM
                     doc = ResultORM(**result.dict(exclude={"id"}))
-                    existing_res[idx] = doc
-                    # add the object to the list which goes for adding and commiting to database.
+
+                    # Store in existing_results in case later records are duplicates
+                    existing_results[idx] = doc
+
+                    # add the object to the list for later adding and committing to database.
                     results_list.append(doc)
-                    # identifying the index of new items in the returned result ids, for future update.
+
+                    # Store the index of this record (in record_list) as a new_record
                     new_record_idx.append(i)
                     meta["n_inserted"] += 1
                 else:
-                    doc = existing_res.get(idx)
-                    # identifying the index of duplicate items
+                    # This result already exists in the database
+                    doc = existing_results[idx]
+
+                    # Store the index of this record (in record_list) as a new_record
                     duplicates_idx.append(i)
-                    meta["duplicates"].append(doc)
+
+                    # Store the entire object. Since this may be a duplicate of a record
+                    # added in a previous iteration of the loop, and the data hasn't been added/committed
+                    # to the database, the id may not be known here
+                    duplicates_list.append(doc)
 
             session.add_all(results_list)
             session.commit()
-            meta["duplicates"] = [str(doc.id) for doc in meta["duplicates"]]
 
-            for i, idx in enumerate(new_record_idx):
-                # setting the new records returned id from commit operation
-                result_ids[idx] = str(results_list[i].id)
-            for i, idx in enumerate(duplicates_idx):
-                # setting the duplicate items, either found in the database or provided more than once in the input
-                result_ids[idx] = meta["duplicates"][i]
+            # At this point, all ids should be known. So store only the ids in the returned metadata
+            meta["duplicates"] = [str(doc.id) for doc in duplicates_list]
+
+            # Construct the ID list to return (in the same order as the input data)
+            # Use a placeholder for all, and we will fill later
+            result_ids = [None] * len(record_list)
+
+            # At this point:
+            #     results_list: ORM objects for all newly-added results
+            #     new_record_idx: indices (referring to record_list) of newly-added results
+            #     duplicates_idx: indices (referring to record_list) of results that already existed
+            #
+            # results_list and new_record_idx are in the same order
+            # (ie, the index stored at new_record_idx[0] refers to some element of record_list. That
+            # newly-added ResultORM is located at results_list[0])
+            #
+            # Similarly, duplicates_idx and meta["duplicates"] are in the same order
+
+            for idx, new_result in zip(new_record_idx, results_list):
+                result_ids[idx] = str(new_result.id)
+
+            # meta["duplicates"] only holds ids at this point
+            for idx, existing_result_id in zip(duplicates_idx, meta["duplicates"]):
+                result_ids[idx] = existing_result_id
+
+        assert None not in result_ids
 
         meta["success"] = True
 
@@ -1298,7 +1363,7 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        id : str or list
+        id : str or List[str]
         program : str
         method : str
         basis : str
@@ -1307,31 +1372,36 @@ class SQLAlchemySocket:
         driver : str
         keywords : str
             The id of the option in the DB
-        task_id: str or list
+        task_id: str or List[str]
             id or a list of ids of tasks
-        manager_id: str or list
+        manager_id: str or List[str]
             id or a list of ids of queue_mangers
-        status : bool, default is 'COMPLETE'
+        status : bool, optional
             The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
-        include : list/set/tuple, default is None
+            Default is 'COMPLETE'
+        include : Optional[List[str]], optional
             The fields to return, default to return all
-        exclude : list/set/tuple, default is None
+        exclude : Optional[List[str]], optional
             The fields to not return, default to return all
-        limit : int, default is None
+        limit : Optional[int], optional
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
             the self._max_limit will be returned instead
             (This is to avoid overloading the server)
-        skip : int, default is 0
+        skip : int, optional
             skip the first 'skip' results. Used to paginate
-        return_json : bool, default is True
+            Default is 0
+        return_json : bool, optional
             Return the results as a list of json inseated of objects
-        with_ids : bool, default is True
+            default is True
+        with_ids : bool, optional
             Include the ids in the returned objects/dicts
+            default is True
 
         Returns
         -------
-        Dict with keys: data, meta
+        Dict[str, Any]
+            Dict with keys: data, meta
             Data is the objects found
         """
 
@@ -1369,14 +1439,16 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        task_id : str or list
+        task_id : str or List[str]
 
-        return_json : bool, default is True
+        return_json : bool, optional
             Return the results as a list of json inseated of objects
+            Default is True
 
         Returns
         -------
-        Dict with keys: data, meta
+        Dict[str, Any]
+            Dict with keys: data, meta
             Data is the objects found
         """
 
@@ -1406,7 +1478,7 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        ids : list of str
+        ids : List[str]
             The Ids of the results to be deleted
 
         Returns
@@ -1436,8 +1508,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-        TYPE
-            Description
+        Dict[str, Any]
+            Dict with keys data and meta, where data represent the blob_ids of inserted wavefuction data blobs.
         """
 
         meta = add_metadata_template()
@@ -1465,7 +1537,7 @@ class SQLAlchemySocket:
         exclude: Optional[List[str]] = None,
         limit: int = None,
         skip: int = 0,
-    ):
+    ) -> Dict[str, Any]:
         """
         Pulls from the wavefunction key/value store table.
 
@@ -1473,17 +1545,21 @@ class SQLAlchemySocket:
         ----------
         id : List[str], optional
             A list of ids to query
-        include : Dict[str, bool], optional
-            Description
+        include : Optional[List[str]], optional
+            The fields to return, default to return all
+        exclude : Optional[List[str]], optional
+            The fields to not return, default to return all
         limit : int, optional
             Maximum number of results to return.
+            Default is set to 0
         skip : int, optional
-            skip the `skip` results
+            Skips a number of results in the query, used for pagination
+            Default is set to 0
 
         Returns
         -------
-        TYPE
-            Description
+        Dict[str, Any]
+            Dictionary with keys data and meta, where data is the found wavefunction items
         """
 
         meta = get_metadata_template()
@@ -1506,18 +1582,16 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        data : list of dict
+        record_list : List["BaseRecord"]
             Each dict must have:
             procedure, program, keywords, qc_meta, hash_index
             In addition, it should have the other attributes that it needs
             to store
-        update_existing : bool (default False)
-            Update existing results
 
         Returns
         -------
-            Dict with keys: data, meta
-            Data is the ids of the inserted/updated/existing docs
+        Dict[str, Any]
+            Dictionary with keys data and meta, data is the ids of the inserted/updated/existing docs
         """
 
         meta = add_metadata_template()
@@ -1570,33 +1644,37 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        id : str or list
+        id : str or List[str]
         procedure : str
         program : str
         hash_index : str
-        task_id : str or list
-        status : bool, default is 'COMPLETE'
+        task_id : str or List[str]
+        status : bool, optional
             The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
-        include : list/set/tuple of keys, default is None
+            Default is 'COMPLETE'
+        include : Optional[List[str]], optional
             The fields to return, default to return all
-        exclude : list/set/tuple of keys, default is None
+        exclude : Optional[List[str]], optional
             The fields to not return, default to return all
-        limit : int, default is None
+        limit : Optional[int], optional
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
             the self._max_limit will be returned instead
             (This is to avoid overloading the server)
-        skip : int, default is 0
+        skip : int, optional
             skip the first 'skip' resaults. Used to paginate
-        return_json : bool, deafult is True
+            Default is 0
+        return_json : bool, optional
             Return the results as a list of json inseated of objects
-        with_ids : bool, default is True
+            Default is True
+        with_ids : bool, optional
             Include the ids in the returned objects/dicts
+            Default is True
 
         Returns
         -------
-        Dict with keys: data, meta
-            Data is the objects found
+        Dict[str, Any]
+            Dict with keys: data and meta. Data is the objects found
         """
 
         meta = get_metadata_template()
@@ -1695,7 +1773,7 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        ids : list of str
+        ids : List[str]
             The Ids of the results to be deleted
 
         Returns
@@ -1725,16 +1803,16 @@ class SQLAlchemySocket:
 
     def add_services(self, service_list: List["BaseService"]):
         """
-        Add services from a given dict.
+        Add services from a given list of dict.
 
         Parameters
         ----------
-        data : list of dict
-
+        services_list : List[Dict[str, Any]]
+            List of services to be added
         Returns
         -------
-            Dict with keys: data, meta
-            Data is the hash_index of the inserted/existing docs
+        Dict[str, Any]
+            Dict with keys: data, meta. Data is the hash_index of the inserted/existing docs
         """
 
         meta = add_metadata_template()
@@ -1789,24 +1867,27 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        id / hash_index : List of str or str
-            service id / hash_index that ran the results
-        projection : list/set/tuple of keys, default is None
-            The fields to return, default to return all
-        limit : int, default is None
+        id / hash_index : List[str] or str, optional
+            service id
+        procedure_id : List[str] or str, optional
+            procedure_id for the specific procedure
+        status : str, optional
+            status of the record queried for
+        limit : Optional[int], optional
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
             the self._max_limit will be returned instead
             (This is to avoid overloading the server)
-        skip : int, default is 0
+        skip : int, optional
             skip the first 'skip' resaults. Used to paginate
+            Default is 0
         return_json : bool, deafult is True
             Return the results as a list of json instead of objects
 
         Returns
         -------
-        Dict with keys: data, meta
-            Data is the objects found
+        Dict[str, Any]
+            Dict with keys: data, meta. Data is the objects found
         """
 
         meta = get_metadata_template()
@@ -1839,12 +1920,13 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        id
-        updates
+        records_list: List[Dict[str, Any]]
+            List of Service items to be updated using their id
 
         Returns
         -------
-            if operation is succesful
+        int
+            number of updated services
         """
 
         updated_count = 0
@@ -1869,6 +1951,17 @@ class SQLAlchemySocket:
 
             procedure = service.output
             procedure.__dict__["id"] = service.procedure_id
+
+            # Copy the stdout/error from the service itself to its procedure
+            if service.stdout:
+                stdout = KVStore(data=service.stdout)
+                stdout_id = self.add_kvstore([stdout])["data"][0]
+                procedure.__dict__["stdout"] = stdout_id
+            if service.error:
+                error = KVStore(data=service.error.dict())
+                error_id = self.add_kvstore([error])["data"][0]
+                procedure.__dict__["error"] = error_id
+
             self.update_procedures([procedure])
 
             updated_count += 1
@@ -1878,6 +1971,24 @@ class SQLAlchemySocket:
     def update_service_status(
         self, status: str, id: Union[List[str], str] = None, procedure_id: Union[List[str], str] = None
     ) -> int:
+        """
+        Update the status of the existing services in the database.
+
+        Raises an exception if any of the ids are invalid.
+        Parameters
+        ----------
+        status : str
+            The input status string ready to replace the previous status
+        id : Optional[Union[List[str], str]], optional
+            ids of all the services requested to be updated, by default None
+        procedure_id : Optional[Union[List[str], str]], optional
+            procedure_ids for the specific procedures, by default None
+
+        Returns
+        -------
+        int
+            1 indicating that the status update was successful
+        """
 
         if (id is None) and (procedure_id is None):
             raise KeyError("id or procedure_id must not be None.")
@@ -1901,7 +2012,19 @@ class SQLAlchemySocket:
         return 1
 
     def services_completed(self, records_list: List["BaseService"]) -> int:
+        """
+        Delete the services which are completed from the database.
 
+        Parameters
+        ----------
+        records_list : List["BaseService"]
+            List of Service objects which are completed.
+
+        Returns
+        -------
+        int
+            Number of deleted active services from database.
+        """
         done = 0
         for service in records_list:
             if service.id is None:
@@ -1932,12 +2055,9 @@ class SQLAlchemySocket:
         (with result.status='INCOMPLETE' as the default)
         The default task.status is 'WAITING'
 
-        Duplicate tasks sould be a rare case.
-        Hooks are merged if the task already exists
-
         Parameters
         ----------
-        data : list of tasks (dict)
+        data : List[TaskRecord]
             A task is a dict, with the following fields:
             - hash_index: idx, not used anymore
             - spec: dynamic field (dict-like), can have any structure
@@ -1949,7 +2069,8 @@ class SQLAlchemySocket:
 
         Returns
         -------
-        dict (data and meta)
+        Dict[str, Any]
+            Dictionary with keys data and meta.
             'data' is a list of the IDs of the tasks IN ORDER, including
             duplicates. An errored task has 'None' in its ID
             meta['duplicates'] has the duplicate tasks
@@ -2011,11 +2132,13 @@ class SQLAlchemySocket:
         return ret
 
     def queue_get_next(
-        self, manager, available_programs, available_procedures, limit=100, tag=None, as_json=True
+        self, manager, available_programs, available_procedures, limit=100, tag=None
     ) -> List[TaskRecord]:
-        """Done in a transaction"""
+        """Obtain tasks for a manager
 
-        # Figure out query, tagless has no requirements
+        Given tags and available programs/procedures on the manager, obtain
+        waiting tasks to run.
+        """
 
         proc_filt = TaskQueueORM.procedure.in_([p.lower() for p in available_procedures])
         none_filt = TaskQueueORM.procedure == None  # lgtm [py/test-equals-none]
@@ -2024,8 +2147,6 @@ class SQLAlchemySocket:
         if tag is not None:
             if isinstance(tag, str):
                 tag = [tag]
-            # task_order = expression_case([(TaskQueueORM.tag == t, num) for num, t in enumerate(tag)])
-            # order_by.append(task_order)
 
         order_by.extend([TaskQueueORM.priority.desc(), TaskQueueORM.created_on])
         queries = []
@@ -2038,35 +2159,57 @@ class SQLAlchemySocket:
             query = format_query(TaskQueueORM, status=TaskStatusEnum.waiting, program=available_programs)
             query.append((or_(proc_filt, none_filt)))
             queries.append(query)
+
         new_limit = limit
-        ids = []
         found = []
+        update_count = 0
+
+        update_fields = {"status": TaskStatusEnum.running, "modified_on": dt.utcnow(), "manager": manager}
         with self.session_scope() as session:
             for q in queries:
+
+                # Have we found all we needed to find
                 if new_limit == 0:
                     break
-                query = session.query(TaskQueueORM).filter(*q).order_by(*order_by).limit(new_limit)
-                # from sqlalchemy.dialects import postgresql
-                # print(query.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
-                new_items = query.all()
-                found.extend(new_items)
-                new_limit = limit - len(new_items)
-                ids.extend([x.id for x in new_items])
-            update_fields = {"status": TaskStatusEnum.running, "modified_on": dt.utcnow(), "manager": manager}
-            # # Bulk update operation in SQL
-            update_count = (
-                session.query(TaskQueueORM)
-                .filter(TaskQueueORM.id.in_(ids))
-                .update(update_fields, synchronize_session=False)
-            )
 
-            if as_json:
-                # avoid another trip to the DB to get the updated values, set them here
-                found = [TaskRecord(**task.to_dict(exclude=update_fields.keys()), **update_fields) for task in found]
-            session.commit()
+                # with_for_update locks the rows. skip_locked=True makes it skip already-locked rows
+                # (possibly from another process)
+                query = (
+                    session.query(TaskQueueORM)
+                    .filter(*q)
+                    .order_by(*order_by)
+                    .limit(new_limit)
+                    .with_for_update(skip_locked=True)
+                )
+
+                new_items = query.all()
+                new_ids = [x.id for x in new_items]
+
+                # Update all the task records to reflect this manager claiming them
+                update_count += (
+                    session.query(TaskQueueORM)
+                    .filter(TaskQueueORM.id.in_(new_ids))
+                    .update(update_fields, synchronize_session=False)
+                )
+
+                # After commiting, the row locks are released
+                session.commit()
+
+                # How many more do we have to query
+                new_limit = limit - len(new_items)
+
+                # I would assume this is always true. If it isn't,
+                # that would be really bad, and lead to an infinite loop
+                assert new_limit >= 0
+
+                # Store in dict form for returning. We will add the updated fields later
+                found.extend([task.to_dict(exclude=update_fields.keys()) for task in new_items])
+
+            # avoid another trip to the DB to get the updated values, set them here
+            found = [TaskRecord(**task, **update_fields) for task in found]
 
         if update_count != len(found):
-            self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
+            self.logger.warning("QUEUE: Number of found tasks does not match the number of updated tasks.")
 
         return found
 
@@ -2090,33 +2233,35 @@ class SQLAlchemySocket:
         TODO: check what query keys are needs
         Parameters
         ----------
-        id : list
+        id : Optional[List[str]], optional
             Ids of the tasks
-        Hash_index
-        status : bool, default is None (find all)
+        Hash_index: Optional[List[str]], optional,
+            hash_index of service, not used
+        program, list of str or str, optional
+        status : Optional[bool], optional (find all)
             The status of the task: 'COMPLETE', 'RUNNING', 'WAITING', or 'ERROR'
-        base_result: str (optional)
+        base_result: Optional[str], optional
             base_result id
-        include : list/set/tuple of keys, default is None
+        include : Optional[List[str]], optional
             The fields to return, default to return all
-        exclude : list/set/tuple of keys, default is None
+        exclude : Optional[List[str]], optional
             The fields to not return, default to return all
-        limit : int, default is None
+        limit : Optional[int], optional
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
             the self._max_limit will be returned instead
             (This is to avoid overloading the server)
-        skip : int, default is None 0
-            skip the first 'skip' resaults. Used to paginate
-        return_json : bool, deafult is True
-            Return the results as a list of json inseated of objects
-        with_ids : bool, default is True
-            Include the ids in the returned objects/dicts
+        skip : int, optional
+            skip the first 'skip' results. Used to paginate, default is 0
+        return_json : bool, optional
+            Return the results as a list of json inseated of objects, deafult is True
+        with_ids : bool, optional
+            Include the ids in the returned objects/dicts, default is True
 
         Returns
         -------
-        Dict with keys: data, meta
-            Data is the objects found
+        Dict[str, Any]
+            Dict with keys: data, meta. Data is the objects found
         """
 
         meta = get_metadata_template()
@@ -2149,17 +2294,20 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        id : list of str
+        id : List[str]
             List of the task Ids in the DB
-        limit : int (optional)
+        limit : Optional[int], optional
             max number of returned tasks. If limit > max_limit, max_limit
             will be returned instead (safe query)
-        as_json : bool
-            Return tasks as JSON
+        skip : int, optional
+            skip the first 'skip' results. Used to paginate, default is 0
+        as_json : bool, optioanl
+            Return tasks as JSON, default is True
 
         Returns
         -------
-        list of the found tasks
+        List[TaskRecord]
+            List of the found tasks
         """
 
         with self.session_scope() as session:
@@ -2179,13 +2327,13 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        task_ids : list
+        task_ids : List[str]
             IDs of the tasks to mark as COMPLETE
 
         Returns
         -------
         int
-            Updated count
+            number of TaskRecord objects marked as COMPLETE, and deleted from the database consequtively.
         """
 
         if not task_ids:
@@ -2215,10 +2363,20 @@ class SQLAlchemySocket:
 
         return tasks_c
 
-    def queue_mark_error(self, data: List[Tuple[int, str]]):
-        """update the given tasks as errored
+    def queue_mark_error(self, data: List[Tuple[int, Dict[str, str]]]):
+        """
+        update the given tasks as errored
         Mark the corresponding result/procedure as Errored
 
+        Parameters
+        ----------
+        data : List[Tuple[int, Dict[str, str]]]
+            List of task ids and their error messages desired to be assigned to them.
+
+        Returns
+        -------
+        int
+            Number of tasks updated as errored.
         """
 
         if not data:
@@ -2226,7 +2384,7 @@ class SQLAlchemySocket:
 
         task_ids = []
         with self.session_scope() as session:
-            # Make sure retuened results are in the same order as the task ids
+            # Make sure returned results are in the same order as the task ids
             # SQL queries change the order when using "in"
             data_dict = {item[0]: item[1] for item in data}
             sorted_data = {key: data_dict[key] for key in sorted(data_dict.keys())}
@@ -2244,7 +2402,7 @@ class SQLAlchemySocket:
                 .all()
             )
 
-            for (task_id, msg), task_obj, base_result in zip(sorted_data.items(), task_objects, base_results):
+            for (task_id, error_dict), task_obj, base_result in zip(sorted_data.items(), task_objects, base_results):
 
                 task_ids.append(task_id)
                 # update task
@@ -2255,9 +2413,11 @@ class SQLAlchemySocket:
                 base_result.status = TaskStatusEnum.error
                 base_result.manager_name = task_obj.manager
                 base_result.modified_on = dt.utcnow()
-                base_result.error_obj = KVStoreORM(value=msg)
 
-                # session.add(task_obj)
+                # Compress error dicts here. Should be fast, since errors are small
+                err = KVStore.compress(error_dict, CompressionEnum.lzma, 1)
+                err_id = self.add_kvstore([err])["data"][0]
+                base_result.error = err_id
 
             session.commit()
 
@@ -2277,9 +2437,9 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        id : Union[str, List[str]], optional
+        id : Optional[Union[str, List[str]]], optional
             The id of the task to modify
-        base_result : Union[str, List[str]], optional
+        base_result : Optional[Union[str, List[str]]], optional
             The id of the base result to modify
         manager : Optional[str], optional
             The manager name to reset the status of
@@ -2294,6 +2454,7 @@ class SQLAlchemySocket:
         int
             Updated count
         """
+
         if not (reset_running or reset_error):
             # nothing to do
             return 0
@@ -2318,7 +2479,7 @@ class SQLAlchemySocket:
             task_ids = session.query(TaskQueueORM.id).filter(*query)
             session.query(BaseResultORM).filter(TaskQueueORM.base_result_id == BaseResultORM.id).filter(
                 TaskQueueORM.id.in_(task_ids)
-            ).update(dict(status="INCOMPLETE", modified_on=dt.utcnow()), synchronize_session=False)
+            ).update(dict(status=RecordStatusEnum.incomplete, modified_on=dt.utcnow()), synchronize_session=False)
 
             updated = (
                 session.query(TaskQueueORM)
@@ -2328,12 +2489,103 @@ class SQLAlchemySocket:
 
         return updated
 
-    def del_tasks(self, id: Union[str, list]):
-        """Delete a task from the queue. Use with cautious
+    def reset_base_result_status(
+        self,
+        id: Union[str, List[str]] = None,
+    ) -> int:
+        """
+        Reset the status of a base result to "incomplete". Will only work if the
+        status is not complete.
+
+        This should be rarely called. Handle with care!
 
         Parameters
         ----------
-        id : str or list
+        id : Optional[Union[str, List[str]]], optional
+            The id of the base result to modify
+
+        Returns
+        -------
+        int
+            Number of base results modified
+        """
+
+        query = format_query(BaseResultORM, id=id)
+        update_dict = {"status": RecordStatusEnum.incomplete, "modified_on": dt.utcnow()}
+
+        with self.session_scope() as session:
+            updated = (
+                session.query(BaseResultORM)
+                .filter(*query)
+                .filter(BaseResultORM.status != RecordStatusEnum.complete)
+                .update(update_dict, synchronize_session=False)
+            )
+
+        return updated
+
+    def queue_modify_tasks(
+        self,
+        id: Union[str, List[str]] = None,
+        base_result: Union[str, List[str]] = None,
+        new_tag: Optional[str] = None,
+        new_priority: Optional[int] = None,
+    ):
+        """
+        Modifies the tag and priority of tasks.
+
+        This will only modify if the status is not running
+
+        Parameters
+        ----------
+        id : Optional[Union[str, List[str]]], optional
+            The id of the task to modify
+        base_result : Optional[Union[str, List[str]]], optional
+            The id of the base result to modify
+        new_tag : Optional[str], optional
+            New tag to assign to the given tasks
+        new_priority: int, optional
+            New priority to assign to the given tasks
+
+        Returns
+        -------
+        int
+            Updated count
+        """
+
+        if new_tag is None and new_priority is None:
+            # nothing to do
+            return 0
+
+        if sum(x is not None for x in [id, base_result]) == 0:
+            raise ValueError("All query fields are None, modify_task must specify queries.")
+
+        query = format_query(TaskQueueORM, id=id, base_result_id=base_result)
+
+        update_dict = {}
+        if new_tag is not None:
+            update_dict["tag"] = new_tag
+        if new_priority is not None:
+            update_dict["priority"] = new_priority
+
+        update_dict["modified_on"] = dt.utcnow()
+
+        with self.session_scope() as session:
+            updated = (
+                session.query(TaskQueueORM)
+                .filter(*query)
+                .filter(TaskQueueORM.status != TaskStatusEnum.running)
+                .update(update_dict, synchronize_session=False)
+            )
+
+        return updated
+
+    def del_tasks(self, id: Union[str, list]):
+        """
+        Delete a task from the queue. Use with cautious
+
+        Parameters
+        ----------
+        id : str or List
             Ids of the tasks to delete
         Returns
         -------
@@ -2353,12 +2605,13 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        record_list : list of TaskRecords
+        record_list : List[TaskRecords]
+            List of task records to be copied
 
         Returns
         -------
-            Dict with keys: data, meta
-            Data is the ids of the inserted/updated/existing docs
+        Dict[str, Any]
+            Dict with keys: data, meta. Data is the ids of the inserted/updated/existing docs
         """
 
         meta = add_metadata_template()
@@ -2475,12 +2728,12 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        record_list : list of dict of managers data
-
+        record_list : List[Dict[str, Any]]
+            list of dict of managers data
         Returns
         -------
-            Dict with keys: data, meta
-            Data is the ids of the inserted/updated/existing docs
+        Dict[str, Any]
+            Dict with keys: data, meta. Data is the ids of the inserted/updated/existing docs
         """
 
         meta = add_metadata_template()
@@ -2538,15 +2791,15 @@ class SQLAlchemySocket:
         ----------
         username : str
             New user's username
-        password : str, optional
+        password : Optional[str], optional
             The user's password. If None, a new password will be generated.
-        permissions : list of str, optional
+        permissions : Optional[List[str]], optional
             The associated permissions of a user ['read', 'write', 'compute', 'queue', 'admin']
         overwrite: bool, optional
             Overwrite the user if it already exists.
         Returns
         -------
-        tuple
+        Tuple[bool, str]
             A tuple of (success flag, password)
         """
 
@@ -2598,7 +2851,7 @@ class SQLAlchemySocket:
 
         Returns
         -------
-        tuple
+        Tuple[bool, str]
             A tuple of (success flag, failure string)
 
         Examples
@@ -2658,16 +2911,16 @@ class SQLAlchemySocket:
         ----------
         username : str
             The username
-        password : str, optional
+        password : Optional[str], optional
             The user's new password. If None, the password will not be updated. Excludes reset_password.
         reset_password: bool, optional
-            Reset the user's password to a new autogenerated one.
-        permissions : list of str, optional
+            Reset the user's password to a new autogenerated one. The default is False.
+        permissions : Optional[List[str]], optional
             The associated permissions of a user ['read', 'write', 'compute', 'queue', 'admin']
 
         Returns
         -------
-        tuple
+        Tuple[bool, str]
             A tuple of (success flag, message)
         """
 
@@ -2756,12 +3009,13 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        record_list : list of dict of managers data
+        record_list : Dict[str, Any]
+            List of dict of managers data
 
         Returns
         -------
-            Dict with keys: data, meta
-            Data is the ids of the inserted/updated/existing docs
+        Dict[str, Any]
+            Dict with keys: data, meta. Data is the ids of the inserted/updated/existing docs
         """
 
         meta = add_metadata_template()

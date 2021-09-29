@@ -337,7 +337,7 @@ def test_gradient_dataset_records_args(gradient_dataset_fixture):
 
 @pytest.fixture(scope="module", params=["download_view", "no_view", "remote_view"])
 def contributed_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
-    """ Fixture for testing rich contributed datasets with many properties and molecules of different sizes"""
+    """Fixture for testing rich contributed datasets with many properties and molecules of different sizes"""
     client = ptl.FractalClient(fractal_compute_server)
     try:
         ds = client.get_collection("Dataset", "ds_contributed")
@@ -475,7 +475,7 @@ def test_dataset_contributed_mixed_values(contributed_dataset_fixture):
 
 
 def test_dataset_compute_response(fractal_compute_server):
-    """ Tests that the full compute response is returned when calling Dataset.compute """
+    """Tests that the full compute response is returned when calling Dataset.compute"""
     client = ptl.FractalClient(fractal_compute_server)
 
     # Build a dataset
@@ -494,6 +494,31 @@ def test_dataset_compute_response(fractal_compute_server):
     client.query_limit = 1
     response = ds.compute("HF", "sto-3g")
     assert len(response.ids) == 2
+
+
+@testing.using_psi4
+def test_dataset_protocols(fractal_compute_server):
+    """Tests using protocols with dataset compute."""
+    client = ptl.FractalClient(fractal_compute_server)
+
+    # Build basis dataset
+    ds = ptl.collections.Dataset("protocol_dataset", client, default_program="psi4", default_driver="energy")
+
+    ds.add_entry("He1", ptl.Molecule.from_data("He 0 0 0\n--\nHe 0 0 2.2"))
+    ds.save()
+
+    # compute the wavefunction
+    response = ds.compute(method="hf", basis="sto-3g", protocols={"wavefunction": "orbitals_and_eigenvalues"})
+
+    # await the result and check for orbitals
+    fractal_compute_server.await_results()
+
+    result = client.query_results(id=response.ids)[0]
+    orbitals = result.get_wavefunction("orbitals_a")
+    assert orbitals.shape == (2, 2)
+
+    basis = result.get_wavefunction("basis")
+    assert basis.name.lower() == "sto-3g"
 
 
 def test_reactiondataset_check_state(fractal_compute_server):
@@ -939,7 +964,7 @@ def s22_fixture(request, tmp_path_factory):
 
 @pytest.mark.slow
 def test_qm3_list_select(qm3_fixture):
-    """ tests list_values and get_values with multiple selections on the method and basis field """
+    """tests list_values and get_values with multiple selections on the method and basis field"""
     client, ds = qm3_fixture
 
     methods = {"b3lyp", "pbe"}
@@ -961,7 +986,7 @@ def test_qm3_list_select(qm3_fixture):
 
 @pytest.mark.slow
 def test_s22_list_select(s22_fixture):
-    """ tests list_values and get_values with multiple selections on the method and basis field """
+    """tests list_values and get_values with multiple selections on the method and basis field"""
     client, ds = s22_fixture
 
     methods = {"b3lyp", "pbe"}
@@ -998,7 +1023,7 @@ def test_rds_rxn(fractal_compute_server):
 
 
 def assert_list_get_values(ds):
-    """ Tests that the output of list_values can be used as input to get_values"""
+    """Tests that the output of list_values can be used as input to get_values"""
     columns = ds.list_values().reset_index()
     all_specs_unique = len(columns.drop("name", axis=1).drop_duplicates()) == len(columns.drop("name", axis=1))
     for row in columns.to_dict("records"):
@@ -1043,7 +1068,7 @@ def test_s22_list_get_values(s22_fixture):
 
 
 def assert_view_identical(ds):
-    """ Tests if get_values, list_values, get_entries, and get_molecules return the same result with/out a view"""
+    """Tests if get_values, list_values, get_entries, and get_molecules return the same result with/out a view"""
 
     ds._disable_view = True
     list_ds = ds.list_values(force=True)
@@ -1250,7 +1275,6 @@ def test_missing_collection(fractal_compute_server):
 
 
 @pytest.mark.slow
-@pytest.mark.xfail(reason="Flaky on Travis CI, see #427.")
 @testing.using_torsiondrive
 @testing.using_geometric
 @testing.using_rdkit
@@ -1273,17 +1297,18 @@ def test_torsiondrive_dataset(fractal_compute_server):
 
     ncompute = ds.compute("spec1")
     assert ncompute == 2
-    assert ds.status("spec1")["Spec1"].sum() == 2  # Might have completed from previous run.
+    assert ds.status("Spec1")["Spec1"].sum() == 2
 
     ds.save()
 
     fractal_compute_server.await_services(max_iter=1)
 
     # Check status
+    ds.query("Spec1", force=True)
     status_basic = ds.status()
-    assert status_basic.loc("COMPLETE", "Spec1") == 1
+    assert status_basic.loc["RUNNING", "Spec1"] == 2
     status_spec = ds.status("Spec1")
-    assert status_basic.loc("COMPLETE", "Spec1") == 1
+    assert status_basic.loc["RUNNING", "Spec1"] == 2
 
     status_detail = ds.status("Spec1", detail=True)
     assert status_detail.loc["hooh2", "Complete Tasks"] == 1

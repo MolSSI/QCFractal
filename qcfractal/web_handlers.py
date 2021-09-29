@@ -71,6 +71,12 @@ class APIHandler(tornado.web.RequestHandler):
     def on_finish(self):
 
         exclude_uris = ["/task_queue", "/service_queue", "/queue_manager"]
+
+        # No associated data, so skip all of this
+        # (maybe caused by not using portal or not using the REST API correctly?)
+        if self.data is None:
+            return
+
         if self.api_logger and self.request.method == "GET" and self.request.uri not in exclude_uris:
 
             extra_params = self.data.copy()
@@ -135,9 +141,7 @@ class InformationHandler(APIHandler):
     _required_auth = "read"
 
     def get(self):
-        """
-
-        """
+        """ """
 
         self.logger.info("GET: Information")
 

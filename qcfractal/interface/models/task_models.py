@@ -1,20 +1,11 @@
 import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from pydantic import Field, validator
 from qcelemental.models import ComputeError
 
 from .common_models import ObjectId, ProtoModel
-
-
-class DBRef(ProtoModel):
-    """
-    Database locator reference object. Identifies an exact record in a database.
-    """
-
-    ref: str = Field(..., description="The name of the table which the Database entry exists")
-    id: ObjectId = Field(..., description="The Database assigned Id of the entry in the ``ref`` table.")
 
 
 class TaskStatusEnum(str, Enum):
@@ -89,9 +80,6 @@ class TaskRecord(ProtoModel):
     # Link back to the base Result
     base_result: ObjectId = Field(
         ..., description="Reference to the output Result from this Task as it exists within the database."
-    )
-    error: Optional[ComputeError] = Field(
-        None, description="The error thrown when trying to execute this task, if one was thrown at all."
     )
 
     # Modified data

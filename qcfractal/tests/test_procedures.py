@@ -153,8 +153,11 @@ def test_procedure_optimization_single(fractal_compute_server):
 
         # Check individual elements
         for ind in range(len(opt_result.trajectory)):
+            assert traj[ind].program == "psi4"
+
             # Check keywords went through
             assert traj[ind].provenance.creator.lower() == "psi4"
+            assert int(traj[ind].keywords) == int(kw_id)
             assert "SCF QUADRUPOLE XY" in traj[ind].extras["qcvars"]
             assert "WIBERG_LOWDIN_INDICES" in traj[ind].extras["qcvars"]
 

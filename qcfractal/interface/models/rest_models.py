@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from pydantic import Field, constr, root_validator, validator
 from qcelemental.util import get_base_docs
 
-from .common_models import KeywordSet, Molecule, ObjectId, ProtoModel
+from .common_models import KeywordSet, Molecule, ObjectId, ProtoModel, KVStore
 from .gridoptimization import GridOptimizationInput
 from .records import ResultRecord
 from .task_models import PriorityEnum, TaskRecord
@@ -274,14 +274,12 @@ class KVStoreGETBody(ProtoModel):
         id: QueryObjectId = Field(None, description="Id of the Key/Value Storage object to get.")
 
     meta: EmptyMeta = Field({}, description=common_docs[EmptyMeta])
-    data: Data = Field(
-        ..., description="Data of the KV Get field: consists of a dict for Id of the Key/Value object to fetch."
-    )
+    data: Data = Field(..., description="Data of the KV Get field: consists of Id of the Key/Value object to fetch.")
 
 
 class KVStoreGETResponse(ProtoModel):
     meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
-    data: Dict[str, Any] = Field(..., description="The entries of Key/Value object requested.")
+    data: Dict[str, KVStore] = Field(..., description="The entries of Key/Value object requested.")
 
 
 register_model("kvstore", "GET", KVStoreGETBody, KVStoreGETResponse)
@@ -837,6 +835,14 @@ class TaskQueuePUTBody(ProtoModel):
             description="The exact Id of a result which this Task is slated to write to. If this is set as a "
             "search condition, there is no reason to set anything else as this will be unique in the "
             "database, if it exists. See also :class:`ResultRecord`.",
+        )
+        new_tag: Optional[str] = Field(
+            None,
+            description="Change the tag of an existing or regenerated task to be this value",
+        )
+        new_priority: Union[str, int, None] = Field(
+            None,
+            description="Change the priority of an existing or regenerated task to this value",
         )
 
     class Meta(ProtoModel):

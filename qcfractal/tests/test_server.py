@@ -122,7 +122,7 @@ def test_bad_collection_post(test_server):
 
 
 def test_bad_view_endpoints(test_server):
-    """ Tests that certain misspellings of the view endpoints result in 404s """
+    """Tests that certain misspellings of the view endpoints result in 404s"""
     addr = test_server.get_address()
 
     assert requests.get(addr + "collection//value").status_code == 404

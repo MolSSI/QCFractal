@@ -23,8 +23,7 @@ def _get_future(future):
 
 
 class ParslAdapter(BaseAdapter):
-    """An Adapter for Parsl.
-    """
+    """An Adapter for Parsl."""
 
     def __init__(self, client: Any, logger: Optional[logging.Logger] = None, **kwargs):
         BaseAdapter.__init__(self, client, logger, **kwargs)

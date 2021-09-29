@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+import re
 from typing import Any, Dict, List, Optional, Union
 
 import psycopg2
@@ -13,7 +14,7 @@ from sqlalchemy.orm import sessionmaker
 from qcfractal.storage_sockets.models import Base, VersionsORM
 
 from .config import FractalConfig
-from .util import find_port, is_port_open
+from .port_util import find_port, is_port_open
 
 
 class PostgresHarness:
@@ -199,7 +200,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
     def create_tables(self):
         """Create database tables using SQLAlchemy models"""
 
-        uri = self.config.database_uri()
+        uri = self.config.database_uri(safe=False)
         self.logger(f"Creating tables for database: {uri}")
         engine = create_engine(uri, echo=False, pool_size=1)
 
@@ -214,7 +215,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
     def update_db_version(self):
         """Update current version of QCFractal in the DB"""
 
-        uri = self.config.database_uri()
+        uri = self.config.database_uri(safe=False)
 
         engine = create_engine(uri, echo=False, pool_size=1)
         session = sessionmaker(bind=engine)()
@@ -289,7 +290,11 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
             )  # yapf: disable
 
             if not (("server started" in start_status["stdout"]) or ("server starting" in start_status["stdout"])):
-                raise ValueError(f"Could not start the PostgreSQL server. Error below:\n\n{start_status['stderr']}")
+                with open(str(self.config.database_path / self.config.database.logfile)) as log_f:
+                    log_contents = log_f.read()
+                raise ValueError(
+                    f"Could not start the PostgreSQL server. Error below:\n\n{start_status['stderr']}\n\nLog contents:\n\n{log_contents}"
+                )
 
             # Check that we are alive
             for x in range(10):
@@ -309,9 +314,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         return True
 
     def shutdown(self) -> Any:
-        """Shutsdown the current postgres instance.
-
-        """
+        """Shutsdown the current postgres instance."""
 
         self._check_psql()
 
@@ -319,8 +322,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         return ret
 
     def initialize_postgres(self) -> None:
-        """Initializes and starts the current postgres instance.
-        """
+        """Initializes and starts the current postgres instance."""
 
         self._check_psql()
 
@@ -337,6 +339,15 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         if self.config.database.port != 5432:
             assert "#port = 5432" in psql_conf
             psql_conf = psql_conf.replace("#port = 5432", f"port = {self.config.database.port}")
+
+            # Change the location of the socket file
+            # Some OSs/Linux distributions will use a directory not writeable by a normal user
+            psql_conf = re.sub(
+                r"#?unix_socket_directories =.*",
+                f"unix_socket_directories = '{self.config.database_path}'",
+                psql_conf,
+                re.M,
+            )
 
             psql_conf_file.write_text(psql_conf)
 
@@ -356,7 +367,8 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         self.logger("\nDatabase server successfully started!")
 
     def alembic_commands(self) -> List[str]:
-        return [shutil.which("alembic"), "-c", self._alembic_ini, "-x", "uri=" + self.config.database_uri()]
+        db_uri = self.config.database_uri(safe=False)
+        return [shutil.which("alembic"), "-c", self._alembic_ini, "-x", "uri=" + db_uri]
 
     def init_database(self) -> None:
 

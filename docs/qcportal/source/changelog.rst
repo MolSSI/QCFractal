@@ -15,6 +15,54 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+
+0.15.6 / 2021-06-06
+-------------------
+
+Some minor fixes and additions to the user interface
+
+- (:pr:`672`) Adds ability to add compute specs to only a subset of entries in a Dataset
+- (:pr:`673`) Allow for selecting by status in dataset get_records()
+- (:pr:`678`) Fixes errors related to str vs. bytes in collection views
+- (:pr:`679`) Fix incorrect status reporting in collections
+
+0.15.3 / 2021-03-15
+-------------------
+
+Similar to the previous release, this this release focused on core QCFractal issues. The previous
+release should be compatible with newer QCFractal instances.
+
+
+0.15.0 / 2020-11-11
+-------------------
+
+Similar to the previous release, this this release focused on core QCFractal issues. The previous
+release should be compatible with newer QCFractal instances.
+
+Bug Fixes
++++++++++
+
+- (:pr:`626`) Fix printing of client version during version check failure
+- (:pr:`638`) Fix incorrect error in datasets
+
+
+0.14.0 / 2020-09-30
+-------------------
+
+This release focused on core QCFractal issues and therefore QCPortal was not
+modified much, other than a few minor bugfixes.
+
+New Features
+++++++++++++
+
+- (:pr:`597`) Add ability to query managers
+- (:pr:`612`) Adds KVStore compression, which is reflected in a change to ``get_kvstore``
+
+Bug Fixes
++++++++++
+- (:pr:`586`) Fixed an issue with status() with collections
+
+
 0.13.1 / 2020-02-18
 -------------------
 

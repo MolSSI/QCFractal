@@ -1,33 +1,39 @@
 TorsionDrive Dataset
 ====================
+:class:`TorsionDriveDatasets <qcfractal.interface.collections.TorsionDriveDataset>`
+host the results of TorsionDrive computations. Each row of the
+:class:`TorsionDriveDataset <qcfractal.interface.collections.TorsionDriveDataset>` 
+is comprised of an ``Entry`` which contains a list of starting molecules for the
+``TorsionDrive``, a specific set of dihedral angles (zero-indexed),
+and the angular scan resolution. Each column represents a particular property detail 
+pertinent to the corresponding ``TorsionDrive`` ``Entry``.
+The :class:`TorsionDriveDataset <qcfractal.interface.collections.TorsionDriveDataset>` 
+is a procedure-style dataset within which, the :term:`ObjectId` for
+each ``TorsionDrive`` computation is recorded as metadata.
 
-See also the `QCArchive example <https://qcarchivetutorials.readthedocs.io/en/latest/basic_examples/torsiondrive_datasets.html>`_ for TorsionDrive datasets.
+For additional details about :class:`TorsionDriveDatasets <qcfractal.interface.collections.TorsionDriveDataset>`
+see `here <https://qcarchivetutorials.readthedocs.io/en/latest/basic_examples/torsiondrive_datasets.html>`_.
 
-TorsionDriveDatasets are sets of TorsionDrive computations where the primary
-index a set of starting molecules and each column is represented by a new
-TorsionDrive specification. This Dataset is a procedure-style dataset where a
-record of the :term:`ObjectId` of each TorsionDrive computation are recorded
-in the metadata.
+Querying the Data
+-----------------
 
-Querying
---------
+Statistics and Visualization
+----------------------------
 
-Visualizing
------------
+Creating the Datasets
+---------------------
 
-Creating
---------
-
-A empty TorsionDriveDataset can be constructed by choosing a dataset name.
+A empty instance of the :class:`TorsionDriveDataset <qcfractal.interface.collections.TorsionDriveDataset>` 
+object (here, named ``My Torsions``) can be constructed as
 
 .. code-block:: python
 
-    client = ptl.FractalClient("localhost:7777")
-    ds = ptl.collections.TorsionDriveDataset("My Torsions")
+    >>> client = ptl.FractalClient("localhost:7777")
+    >>> ds = ptl.collections.TorsionDriveDataset("My Torsions")
 
 
-Computing
----------
+Computational Tasks
+-------------------
 
 API
 ---

@@ -1,14 +1,14 @@
 Overview
 ========
 
-Collections are an organizational objects that keep track of collections of
-results, compute new results, and provide helper functions for analysis and visualization.
+Collections are organizational objects that keep track of or compute new results, 
+and provide helper functions for analysis and visualization.
 
 
 Collections querying
 ---------------------
 
-Once a :class:`FractalClient <qcportal.FractalClient>` has been created, the client can query a list of all
+Once a :class:`FractalClient <qcportal.FractalClient>` has been created, it can query a list of all
 collections currently held on the server.
 
 .. code-block:: python
@@ -29,8 +29,8 @@ Available collections
 Below is a complete list of collection types available from QCPortal.
 All collections support the possibility of computing with and comparing multiple methods.
 
-* :doc:`collection-dataset` - A collection for a set of molecules and their computed properties.
-* :doc:`collection-reactiondataset` - A collection for chemical reactions and intermolecular interactions.
-* :doc:`collection-optimization` - A collection for geometry optimization of a set of molecules.
-* :doc:`collection-torsiondrive` - A collection for the TorsionDrive pipeline.
+* :doc:`collection-dataset` - A collection of molecular sets and their computed properties.
+* :doc:`collection-reactiondataset` - A collection of chemical reactions and intermolecular interactions.
+* :doc:`collection-optimization` - A collection of geometry optimization results for molecular sets.
+* :doc:`collection-torsiondrive` - A collection of TorsionDrive pipeline data.
 

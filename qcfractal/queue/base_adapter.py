@@ -10,8 +10,7 @@ from typing import Any, Callable, Dict, Hashable, List, Optional, Tuple
 
 
 class BaseAdapter(abc.ABC):
-    """A BaseAdapter for wrapping compute engines
-    """
+    """A BaseAdapter for wrapping compute engines"""
 
     def __init__(
         self,

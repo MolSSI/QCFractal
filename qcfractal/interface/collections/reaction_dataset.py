@@ -230,9 +230,9 @@ class ReactionDataset(Dataset):
         force : bool, optional
             Data is typically cached, forces a new query if True
 
-       Returns
-       -------
-       DataFrame
+        Returns
+        ------
+        DataFrame
            A DataFrame of values with columns corresponding to methods and rows corresponding to reaction entries.
            Contributed (native=False) columns are marked with "(contributed)" and may include units in square brackets
            if their units differ in dimensionality from the ReactionDataset's default units.

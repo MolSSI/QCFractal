@@ -10,7 +10,6 @@ from sqlalchemy import (
     Index,
     Integer,
     String,
-    Table,
     UniqueConstraint,
     func,
     select,
@@ -27,14 +26,13 @@ from qcfractal.storage_sockets.models.sql_models import KeywordsORM, KVStoreORM,
 
 class BaseResultORM(Base):
     """
-        Abstract Base class for ResultORMs and ProcedureORMs
+    Abstract Base class for ResultORMs and ProcedureORMs
     """
 
     __tablename__ = "base_result"
 
     # for SQL
     result_type = Column(String)  # for inheritance
-    task_id = Column(String)  # TODO: not used, for back compatibility
 
     # Base identification
     id = Column(Integer, primary_key=True)
@@ -42,10 +40,9 @@ class BaseResultORM(Base):
     manager_name = Column(String, ForeignKey("queue_manager.name", ondelete="SET NULL"), nullable=True)
 
     hash_index = Column(String)  # TODO
-    procedure = Column(String(100))  # TODO: may remove
-    # program = Column(String(100))  # moved to subclasses
+    procedure = Column(String(100), nullable=False)  # TODO: may remove
     version = Column(Integer)
-    protocols = Column(JSONB)
+    protocols = Column(JSONB, nullable=False)
 
     # Extra fields
     extras = Column(MsgpackExt)
@@ -76,6 +73,10 @@ class BaseResultORM(Base):
     __table_args__ = (
         Index("ix_base_result_status", "status"),
         Index("ix_base_result_type", "result_type"),  # todo: needed?
+        Index("ix_base_result_stdout", "stdout", unique=True),
+        Index("ix_base_result_stderr", "stderr", unique=True),
+        Index("ix_base_result_error", "error", unique=True),
+        Index("ix_base_result_hash_index", "hash_index", unique=False),
     )
 
     __mapper_args__ = {"polymorphic_on": "result_type"}
@@ -118,7 +119,7 @@ class WavefunctionStoreORM(Base):
 
 class ResultORM(BaseResultORM):
     """
-        Hold the result of an atomic single calculation
+    Hold the result of an atomic single calculation
     """
 
     __tablename__ = "result"
@@ -130,7 +131,7 @@ class ResultORM(BaseResultORM):
     driver = Column(String(100), Enum(DriverEnum), nullable=False)
     method = Column(String(100), nullable=False)  # example "uff"
     basis = Column(String(100))
-    molecule = Column(Integer, ForeignKey("molecule.id"))
+    molecule = Column(Integer, ForeignKey("molecule.id"), nullable=False)
     molecule_obj = relationship(MoleculeORM, lazy="select")
 
     # This is a special case where KeywordsORM are denormalized intentionally as they are part of the
@@ -154,14 +155,14 @@ class ResultORM(BaseResultORM):
     )
 
     __table_args__ = (
-        # TODO: optimize indexes
-        # A multicolumn GIN index can be used with query conditions that involve any subset of
-        # the index's columns. Unlike B-tree or GiST, index search effectiveness is the same
-        # regardless of which index column(s) the query conditions use.
-        # Index('ix_result_combined', "program", "driver", "method", "basis",
-        #       "keywords", postgresql_using='gin'),  # gin index
-        # Index('ix_results_molecule', 'molecule'),  # b-tree index
+        # We use simple multi-column constraint, then add hash indices to the various columns
         UniqueConstraint("program", "driver", "method", "basis", "keywords", "molecule", name="uix_results_keys"),
+        Index("ix_results_program", "program"),
+        Index("ix_results_driver", "driver"),
+        Index("ix_results_method", "method"),
+        Index("ix_results_basis", "basis"),
+        Index("ix_results_keywords", "keywords"),
+        Index("ix_results_molecule", "molecule"),
     )
 
     __mapper_args__ = {
@@ -176,7 +177,7 @@ class ResultORM(BaseResultORM):
 
 class ProcedureMixin:
     """
-        A procedure mixin to be used by specific procedure types
+    A procedure mixin to be used by specific procedure types
     """
 
     program = Column(String(100), nullable=False)
@@ -200,18 +201,9 @@ class Trajectory(Base):
     # trajectory_obj = relationship(ResultORM, lazy="noload")
 
 
-# # association table for many to many relation
-# opt_result_association = Table('opt_result_association', Base.metadata,
-#     Column('opt_id', Integer, ForeignKey('optimization_procedure.id', ondelete="CASCADE")),
-#     Column('result_id', Integer, ForeignKey('result.id', ondelete="CASCADE")),
-#     Column('position', Integer)
-#     # PrimaryKeyConstraint('opt_id', 'result_id')
-# )
-
-
 class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
     """
-        An Optimization  procedure
+    An Optimization  procedure
     """
 
     __tablename__ = "optimization_procedure"
@@ -224,7 +216,7 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
         super().__init__(**kwargs)
 
     schema_version = Column(Integer, default=1)
-    initial_molecule = Column(Integer, ForeignKey("molecule.id"))
+    initial_molecule = Column(Integer, ForeignKey("molecule.id"), nullable=False)
     initial_molecule_obj = relationship(MoleculeORM, lazy="select", foreign_keys=initial_molecule)
 
     # # Results
@@ -313,7 +305,7 @@ class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
         super().__init__(**kwargs)
 
     # Input data
-    initial_molecule = Column(Integer, ForeignKey("molecule.id"))
+    initial_molecule = Column(Integer, ForeignKey("molecule.id"), nullable=False)
     initial_molecule_obj = relationship(MoleculeORM, lazy="select", foreign_keys=initial_molecule)
 
     optimization_spec = Column(JSON)
@@ -398,18 +390,22 @@ class OptimizationHistory(Base):
     # optimization_obj = relationship(OptimizationProcedureORM, lazy="joined")
 
 
-# association table for many to many relation
-torsion_init_mol_association = Table(
-    "torsion_init_mol_association",
-    Base.metadata,
-    Column("torsion_id", Integer, ForeignKey("torsiondrive_procedure.id", ondelete="CASCADE")),
-    Column("molecule_id", Integer, ForeignKey("molecule.id", ondelete="CASCADE")),
-)
+class TorsionInitMol(Base):
+    """
+    Association table for many to many relation
+    """
+
+    __tablename__ = "torsion_init_mol_association"
+
+    torsion_id = Column(
+        "torsion_id", Integer, ForeignKey("torsiondrive_procedure.id", ondelete="cascade"), primary_key=True
+    )
+    molecule_id = Column("molecule_id", Integer, ForeignKey("molecule.id", ondelete="cascade"), primary_key=True)
 
 
 class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
     """
-        A torsion drive  procedure
+    A torsion drive  procedure
     """
 
     __tablename__ = "torsiondrive_procedure"
@@ -426,14 +422,10 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
 
     # ids of the many to many relation
     initial_molecule = column_property(
-        select([func.array_agg(torsion_init_mol_association.c.molecule_id)]).where(
-            torsion_init_mol_association.c.torsion_id == id
-        )
+        select([func.array_agg(TorsionInitMol.molecule_id)]).where(TorsionInitMol.torsion_id == id)
     )
     # actual objects relation M2M, never loaded here
-    initial_molecule_obj = relationship(
-        MoleculeORM, secondary=torsion_init_mol_association, uselist=True, lazy="noload"
-    )
+    initial_molecule_obj = relationship(MoleculeORM, secondary=TorsionInitMol.__table__, uselist=True, lazy="noload")
 
     optimization_spec = Column(JSON)
 
@@ -499,7 +491,7 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
 
         # update torsion molecule relation
         self._update_many_to_many(
-            torsion_init_mol_association, "torsion_id", "molecule_id", self.id, initial_molecule, self.initial_molecule
+            TorsionInitMol.__table__, "torsion_id", "molecule_id", self.id, initial_molecule, self.initial_molecule
         )
 
         self.optimization_history_obj = []

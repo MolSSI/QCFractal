@@ -76,9 +76,9 @@ def parse_args():
     start = subparsers.add_parser("start", help="Starts a QCFractal server instance.")
     start.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
-    # Allow port and logfile to be altered on the fly
+    # Allow some config settings to be altered via the command line
     fractal_args = start.add_argument_group("Server Settings")
-    for field in ["port", "logfile"]:
+    for field in ["port", "logfile", "loglevel", "cprofile"]:
         cli_name = "--" + field.replace("_", "-")
         fractal_args.add_argument(cli_name, **FractalServerSettings.help_info(field))
 
@@ -170,10 +170,6 @@ def parse_args():
 
     user_remove = user_subparsers.add_parser("remove", help="Remove a user.")
     user_remove.add_argument("username", default=None, type=str, help="The username to remove.")
-
-    # Dashboard
-    dashboard = subparsers.add_parser("dashboard", help="Launches a Dashboard for the server (beta).")
-    dashboard.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     # Backup
     backup = subparsers.add_parser("backup", help="Creates a postgres backup file of the current database.")
@@ -326,8 +322,8 @@ def server_start(args, config):
     # check if db not current, ask for upgrade
 
     print("Starting a QCFractal server.\n")
-
     print(f"QCFractal server base folder: {config.base_folder}")
+
     # Build an optional adapter
     if args["local_manager"]:
         ncores = args["local_manager"]
@@ -363,6 +359,9 @@ def server_start(args, config):
     else:
         logfile = str(config.base_path / config.fractal.logfile)
 
+    print("\n>>> Logging to " + logfile)
+    print(">>> Loglevel: " + config.fractal.loglevel.upper())
+
     print("\n>>> Checking the PostgreSQL connection...")
     psql = PostgresHarness(config, quiet=False, logger=print)
 
@@ -390,6 +389,7 @@ def server_start(args, config):
             view_path=config.view_path,
             # Log options
             logfile_prefix=logfile,
+            loglevel=config.fractal.loglevel,
             log_apis=config.fractal.log_apis,
             geo_file_path=config.geo_file_path(),
             # Queue options
@@ -486,17 +486,6 @@ def server_user(args, config):
         sys.exit(1)
 
 
-def server_dashboard(args, config):
-    standard_command_startup("dashboard", config)
-
-    from ..dashboard import app
-
-    print("\n>>> Starting dashboard...")
-    app.server.config["FRACTAL_CONFIG"] = config
-
-    app.run_server(debug=True)
-
-
 def server_backup(args, config):
     psql = standard_command_startup("backup", config)
 
@@ -583,6 +572,16 @@ def main(args=None):
 
     config = FractalConfig(**config_args)
 
+    # If desired, enable profiling
+    if config.fractal.cprofile is not None:
+        print("!" * 80)
+        print(f"! Enabling profiling via cProfile. Outputting data file to {config.fractal.cprofile}")
+        print("!" * 80)
+        import cProfile
+
+        pr = cProfile.Profile()
+        pr.enable()
+
     # Merge files
     if command != "init":
         if not config.base_path.exists():
@@ -593,10 +592,15 @@ def main(args=None):
             sys.exit(1)
 
         file_dict = FractalConfig(**yaml.load(config.config_file_path.read_text(), Loader=yaml.FullLoader)).dict()
-        config_dict = config.dict(skip_defaults=True)
+        config_dict = config.dict(exclude_unset=True)
 
         # Only fractal options can be changed by user input parameters
         file_dict["fractal"] = {**file_dict.pop("fractal"), **config_dict.pop("fractal")}
+
+        # base_folder is global (outside of fractal, database, etc).
+        # Should be included here, just for debugging and printing purposes (as its only purpose
+        # was to read the config_file above)
+        file_dict["base_folder"] = config.base_folder
 
         config = FractalConfig(**file_dict)
 
@@ -610,12 +614,18 @@ def main(args=None):
         server_upgrade(args, config)
     elif command == "user":
         server_user(args, config)
-    elif command == "dashboard":
-        server_dashboard(args, config)
     elif command == "backup":
         server_backup(args, config)
     elif command == "restore":
         server_restore(args, config)
+
+    # Everything finished. If profiling is enabled, write out the
+    # data file
+    if config.fractal.cprofile is not None:
+        print(f"! Writing profiling data to {config.fractal.cprofile}")
+        print("! Read using the Stats class of the pstats package")
+        pr.disable()
+        pr.dump_stats(config.fractal.cprofile)
 
 
 if __name__ == "__main__":

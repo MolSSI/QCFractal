@@ -1,15 +1,15 @@
 Add/Query Objects
 =================
 
-``Molecule``, ``KeywordSet``, ``Collection``, and ``KVStore`` objects are
-always added/queried directly to the server unlike compute objects as this
-particular set of structures are not acted upon by the server itself.
+Unlike the ``Compute`` object, the ``Molecule``, ``KeywordSet``, ``Collection``, and ``KVStore``
+objects are always added/queried directly to the server instances as these structures
+are not acted upon by the server itself.
 
-Adding Objects
---------------
+Adding Objects to the Server
+----------------------------
 
-Adding objects to the server uses the ``client.add_*`` commands and takes in a
-list of objects to add and returns the :term:`ObjectId` of the object.
+A list of objects can be added to the server via ``client.add_*`` commands
+which return the :term:`ObjectId` of the object instance.
 
 .. code-block:: python
 
@@ -17,7 +17,8 @@ list of objects to add and returns the :term:`ObjectId` of the object.
     >>> data = client.add_molecules([helium])
     ['5b882c957b87878925ffaf22']
 
-Adding the same molecule again will not add a new molecule and will always return the same :term:`ObjectId`:
+Any attempt to add the same molecule again will not proceed and the same :term:`ObjectId`
+will always be returned:
 
 .. code-block:: python
 
@@ -25,24 +26,26 @@ Adding the same molecule again will not add a new molecule and will always retur
     >>> data = client.add_molecules([helium, helium])
     ['5b882c957b87878925ffaf22', '5b882c957b87878925ffaf22']
 
-The order of :term:`ObjectId` returned is identical to the order of molecules added.
+Note that the order of :term:`ObjectId`'s are identical to the order of molecules
+in the input list.
 
 .. note::
 
-    The :term:`ObjectId` changes and is unique to a particular database.
+    The :term:`ObjectId` can change between object instances but 
+    it is unique within a particular database.
 
-Querying Objects
-----------------
+Querying Objects from the Server
+--------------------------------
 
-Each objects has a set of fields that can be queried to obtain the objects in
+Each server object has a set of fields that can be queried to obtain the object instances in
 addition to their :term:`ObjectId`. All queries will return a list of objects.
 
-Molecules
----------
+Interacting with Molecules on the Server
+----------------------------------------
 
-As an example, we can use a molecule that comes with QCPortal and adds it to
-the database as shown. Please note that the Molecule ID (a :term:`ObjectId`)
-shown below will not be the same as your result and is unique to every
+As an example, we can use a molecule that comes with QCPortal and add it to
+the database. Please note that the Molecule ID (a :term:`ObjectId`)
+shown below will not be the same as your result and will be unique for each
 database.
 
 .. code-block:: python

@@ -20,8 +20,7 @@ def _get_future(future):
 
 
 class ExecutorAdapter(BaseAdapter):
-    """A Queue Adapter for Python Executors
-    """
+    """A Queue Adapter for Python Executors"""
 
     def __repr__(self):
 
@@ -66,8 +65,7 @@ class ExecutorAdapter(BaseAdapter):
 
 
 class DaskAdapter(ExecutorAdapter):
-    """A Queue Adapter for Dask
-    """
+    """A Queue Adapter for Dask"""
 
     def __repr__(self):
 

@@ -87,7 +87,7 @@ def test_molecule_count_queries(torsiondrive_fixture, fractal_compute_server):
 
 
 def test_torsiondrive_initial_final_molecule(torsiondrive_fixture, fractal_compute_server):
-    """ With single initial molecule in torsion proc"""
+    """With single initial molecule in torsion proc"""
 
     torsion, client = torsiondrive_fixture
 
@@ -122,7 +122,7 @@ def test_torsiondrive_initial_final_molecule(torsiondrive_fixture, fractal_compu
 
 
 def test_torsiondrive_return_results(torsiondrive_fixture, fractal_compute_server):
-    """ With single initial molecule in torsion proc"""
+    """With single initial molecule in torsion proc"""
 
     torsion, client = torsiondrive_fixture
 
@@ -133,7 +133,7 @@ def test_torsiondrive_return_results(torsiondrive_fixture, fractal_compute_serve
 
 
 def test_optimization_best_results(torsiondrive_fixture, fractal_compute_server):
-    """ Test return best optimization proc results in one query"""
+    """Test return best optimization proc results in one query"""
 
     torsion, client = torsiondrive_fixture
 
@@ -148,7 +148,7 @@ def test_optimization_best_results(torsiondrive_fixture, fractal_compute_server)
 
 
 def test_optimization_all_results(torsiondrive_fixture, fractal_compute_server):
-    """ Test return best optimization proc results in one query"""
+    """Test return best optimization proc results in one query"""
 
     torsion, client = torsiondrive_fixture
 
@@ -165,7 +165,7 @@ def test_optimization_all_results(torsiondrive_fixture, fractal_compute_server):
 
 
 def test_optimization_initial_molecules(torsiondrive_fixture, fractal_compute_server):
-    """ Test return best optimization proc results in one query"""
+    """Test return best optimization proc results in one query"""
 
     torsion, client = torsiondrive_fixture
 
@@ -180,7 +180,7 @@ def test_optimization_initial_molecules(torsiondrive_fixture, fractal_compute_se
 
 
 def test_optimization_final_molecules(torsiondrive_fixture, fractal_compute_server):
-    """ Test return best optimization proc results in one query"""
+    """Test return best optimization proc results in one query"""
 
     torsion, client = torsiondrive_fixture
 
