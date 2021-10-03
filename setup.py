@@ -59,10 +59,11 @@ if __name__ == "__main__":
         extras_require={
             "api_logging": ["geoip2"],
             "docs": [
-                "sphinx==1.2.3",  # autodoc was broken in 1.3.1
-                "sphinxcontrib-napoleon",
+                "sphinx",
+                "sphinx-automodapi",
                 "sphinx_rtd_theme",
-                "numpydoc",
+                "nbsphinx",
+                "ipython",
             ],
             "lint": ["black", "isort"],
             "tests": ["pytest", "pytest-cov", "requests-mock"],

@@ -1,0 +1,45 @@
+name: Build and Deploy Docs
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  deploy_docs:
+    runs-on: ubuntu-latest
+        
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install pandoc
+        run: sudo apt install -y pandoc
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install package
+        shell: bash -l {0}
+        run: |
+          python -m pip install .[docs]
+
+      - name: Build Documentation
+        run: |
+          cd docs/qcfractal
+          make html
+
+      - name: Test Build Documentation for Portal
+        run: |
+          cd docs/qcportal
+          make html
+
+      - name: GitHub Pages Deploy
+        uses: JamesIves/github-pages-deploy-action@4.1.1
+        if: github.event_name == 'push'
+        with:
+          branch: gh-pages
+          folder: docs/qcfractal/build/html
