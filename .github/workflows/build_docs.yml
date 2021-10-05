@@ -41,5 +41,8 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@4.1.1
         if: github.event_name == 'push'
         with:
-          branch: gh-pages
+          token: ${{ secrets.QCABOT_PAT }}
+          repository-name: MolSSI/QCArchiveWebsite
+          branch: gh-pages-2
+          target-folder: projects/qcfractal
           folder: docs/qcfractal/build/html
