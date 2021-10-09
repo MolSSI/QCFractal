@@ -6,6 +6,7 @@ import shutil
 import pathlib
 import subprocess
 import tempfile
+import importlib
 import time
 import re
 import logging
@@ -566,6 +567,9 @@ class PostgresHarness:
         """
         Creates the actual database and tables for use by this QCFractal instance
         """
+
+        # Register all classes that derive from the BaseORM
+        importlib.import_module("qcfractal.components.register_all")
 
         # create the tables via sqlalchemy
         uri = self.config.uri
