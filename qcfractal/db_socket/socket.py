@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, List, Optional, Union, Iterable
 
 from qcfractal.interface.models import prepare_basis
-
+from ..components.serverinfo.db_models import VersionsORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -236,9 +236,6 @@ class SQLAlchemySocket:
 
     def check_lib_versions(self):
         """Check the stored versions of elemental and fractal"""
-
-        # TODO - circular import
-        from ..components.serverinfo.db_models import VersionsORM
 
         with self.session_scope() as session:
             db_ver = session.query(VersionsORM).order_by(VersionsORM.created_on.desc())
