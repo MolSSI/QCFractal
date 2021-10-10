@@ -1,1 +1,1 @@
-from .common import GetParameters, SimpleGetParameters
+from .common import GetParameters, SimpleGetParameters, DeleteParameters
