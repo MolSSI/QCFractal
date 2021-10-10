@@ -4,7 +4,7 @@ from sqlalchemy import Column, String, Integer, ForeignKey, Enum, DateTime, JSON
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
-from qcfractal.components.outputstore.db_models import KVStoreORM
+from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.interface.models import RecordStatusEnum
 from qcfractal.db_socket import BaseORM, MsgpackExt
 
@@ -31,19 +31,19 @@ class BaseResultORM(BaseORM):
 
     # Extra fields
     extras = Column(MsgpackExt)
-    stdout = Column(Integer, ForeignKey("kv_store.id"))
+    stdout = Column(Integer, ForeignKey("output_store.id"))
     stdout_obj = relationship(
-        KVStoreORM, lazy="select", foreign_keys=stdout, cascade="all, delete-orphan", single_parent=True
+        OutputStoreORM, lazy="select", foreign_keys=stdout, cascade="all, delete-orphan", single_parent=True
     )
 
-    stderr = Column(Integer, ForeignKey("kv_store.id"))
+    stderr = Column(Integer, ForeignKey("output_store.id"))
     stderr_obj = relationship(
-        KVStoreORM, lazy="select", foreign_keys=stderr, cascade="all, delete-orphan", single_parent=True
+        OutputStoreORM, lazy="select", foreign_keys=stderr, cascade="all, delete-orphan", single_parent=True
     )
 
-    error = Column(Integer, ForeignKey("kv_store.id"))
+    error = Column(Integer, ForeignKey("output_store.id"))
     error_obj = relationship(
-        KVStoreORM, lazy="select", foreign_keys=error, cascade="all, delete-orphan", single_parent=True
+        OutputStoreORM, lazy="select", foreign_keys=error, cascade="all, delete-orphan", single_parent=True
     )
 
     # Compute status

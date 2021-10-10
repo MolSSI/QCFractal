@@ -25,7 +25,7 @@ from ..interface.models import (
     PriorityEnum,
     InsertMetadata,
     DeleteMetadata,
-    KVStore,
+    OutputStore,
 )
 from .rest_models import GetParameters, SimpleGetParameters, DeleteParameters
 from .collections import Collection, collection_factory, collections_name_map
@@ -518,32 +518,35 @@ class PortalClient:
         """
         return json.loads(json.dumps(self.server_info))
 
-    ### KVStore / OutputStore section
-
     def _get_outputs(
-        self, id: Sequence[ObjectId], missing_ok: bool = False
-    ) -> Union[List[Dict[str, Any]], Dict[str, Any]]:
-        """Get output_store items by id.
+        self,
+        id: Union[int, Sequence[int]],
+        missing_ok: bool = False,
+    ) -> Union[Optional[OutputStore], List[Optional[OutputStore]]]:
+        """Obtains outputs from the server via output ids
+
+        Note: This is the id of the output, not of the calculation record.
 
         Parameters
         ----------
-        id : QueryObjectId
-            Queries the KVStore by key.
-            Multiple ids can be included in a list; KVStore items will be returned in the same order.
+        id
+            An id or list of ids to query.
+        missing_ok
+            If True, return ``None`` for ids that were not found on the server.
+            If False, raise ``KeyError`` if any ids were not found on the server.
 
         Returns
         -------
-        results : Union[List[Dict[str, Any]], Dict[str, Any]]
-            If `id` is a list of ids, then a list of items will be returned in the same order.
-            If `id` is a single id, then only that item will be returned.
-
+        :
+            The requested outputs, in the same order as the requested ids.
+            If given a list of ids, the return value will be a list.
+            Otherwise, it will be a single output.
         """
-        # TODO: consider utilizing the client cache for these
 
         query_params = {"id": make_list(id), "missing_ok": missing_ok}
-
-        outputs = self._auto_request("get", "v1/outputstore", None, SimpleGetParameters, None, query_params)
-        outputs = [KVStore(**x) if x is not None else None for x in outputs]
+        outputs = self._auto_request(
+            "get", "v1/output", None, SimpleGetParameters, List[Optional[OutputStore]], None, query_params
+        )
 
         if isinstance(id, Sequence):
             return outputs

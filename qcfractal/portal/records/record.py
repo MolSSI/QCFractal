@@ -9,7 +9,7 @@ from pydantic import Field, constr, validator
 import qcelemental as qcel
 from qcelemental.models.results import AtomicResultProtocols
 
-from ...interface.models import ObjectId, ProtoModel, KVStore, RecordStatusEnum
+from ...interface.models import ObjectId, ProtoModel, OutputStore, RecordStatusEnum
 from ...interface.models.model_utils import prepare_basis
 
 
@@ -106,7 +106,7 @@ class Record(abc.ABC):
             description="The Id of the stdout data stored in the database which was used to generate this record from the "
             "various programs which were called in the process.",
         )
-        stdout_obj: Optional[KVStore] = Field(
+        stdout_obj: Optional[OutputStore] = Field(
             None,
             description="The full stdout data stored in the database which was used to generate this record from the "
             "various programs which were called in the process.",
@@ -116,7 +116,7 @@ class Record(abc.ABC):
             description="The Id of the stderr data stored in the database which was used to generate this record from the "
             "various programs which were called in the process.",
         )
-        stderr_obj: Optional[KVStore] = Field(
+        stderr_obj: Optional[OutputStore] = Field(
             None,
             description="The full stderr data stored in the database which was used to generate this record from the "
             "various programs which were called in the process.",
@@ -127,7 +127,7 @@ class Record(abc.ABC):
             "process of carrying out the process this record targets. If no errors were raised, this field "
             "will be empty.",
         )
-        error_obj: Optional[KVStore] = Field(
+        error_obj: Optional[OutputStore] = Field(
             None,
             description="The full error output stored in the database which was used to generate this record from the "
             "various programs which were called in the process.",
@@ -306,7 +306,7 @@ class Record(abc.ABC):
         # will need to handle case of task key being present or not
         pass
 
-    def _kvstore_get(self, field_name):
+    def _outputstore_get(self, field_name):
 
         oid = self._data.__dict__[field_name]
         if oid is None:
@@ -326,17 +326,17 @@ class Record(abc.ABC):
         if self._data.stdout_obj is not None:
             return self._data.stdout_obj
         else:
-            return self._kvstore_get("stdout")
+            return self._outputstore_get("stdout")
 
     @property
     def stderr(self):
         """The STDERR contents for this record, if it exists."""
-        return self._kvstore_get("stderr")
+        return self._outputstore_get("stderr")
 
     @property
     def error(self):
         """The error traceback contents for this record, if it exists."""
-        return self._kvstore_get("error")
+        return self._outputstore_get("error")
 
     @property
     def procedure(self):
