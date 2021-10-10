@@ -37,7 +37,7 @@ from .db_socket.socket import SQLAlchemySocket
 # import responses
 
 # Valid client encodings
-valid_encodings = ["json", "json-ext", "msgpack-ext"]
+valid_encodings = ["json", "msgpack"]
 
 
 def pytest_addoption(parser):

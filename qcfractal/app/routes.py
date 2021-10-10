@@ -1,10 +1,11 @@
 import time
 import traceback
 from functools import wraps
+from typing import Optional, Type, Callable
 from urllib.parse import urlparse
 
 import pydantic
-
+import qcelemental
 from flask import g, request, current_app, jsonify, Response
 from flask_jwt_extended import (
     verify_jwt_in_request,
@@ -18,12 +19,10 @@ from werkzeug.exceptions import BadRequest, InternalServerError, HTTPException, 
 
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import _valid_encodings, SerializedResponse
-from qcfractal.portal.serialization import deserialize, serialize
 from qcfractal.exceptions import UserReportableError, AuthenticationFailure
 from qcfractal.interface.models import UserInfo
 from qcfractal.policyuniverse import Policy
-from typing import Optional, Type, Callable
-import qcelemental
+from qcfractal.portal.serialization import deserialize, serialize
 
 
 @main.before_request
@@ -71,9 +70,13 @@ def wrap_route(body_model: Optional[Type], query_model: Optional[Type[pydantic.B
             # Find an appropriate return type (from the "Accept" header)
             # Flask helpfully parses this for us
             # By default, use plain json
-            # possible_types = ['application/msgpack', 'application/json']
-            possible_types = ["application/msgpack", "application/json"]
+            possible_types = ["text/html", "application/msgpack", "application/json"]
             accept_type = request.accept_mimetypes.best_match(possible_types, "application/json")
+
+            # If text/html is first, then this is probably a browser. Send json, as most browsers
+            # will accept that
+            if accept_type == "text/html":
+                accept_type = "application/json"
 
             # 1.) The body is stored in request.data
             if body_model is not None:
@@ -85,7 +88,7 @@ def wrap_route(body_model: Optional[Type], query_model: Optional[Type[pydantic.B
 
                 try:
                     deserialized_data = deserialize(request.data, content_type)
-                    request.validated_data = pydantic.parse_obj_as(deserialized_data, body_model)
+                    request.validated_data = pydantic.parse_obj_as(body_model, deserialized_data)
                 except Exception as e:
                     raise BadRequest("Invalid body: " + str(e))
 
