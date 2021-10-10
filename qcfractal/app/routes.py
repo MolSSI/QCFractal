@@ -88,14 +88,14 @@ def wrap_route(body_model: Optional[Type], query_model: Optional[Type[pydantic.B
 
                 try:
                     deserialized_data = deserialize(request.data, content_type)
-                    request.validated_data = pydantic.parse_obj_as(body_model, deserialized_data)
+                    g.validated_data = pydantic.parse_obj_as(body_model, deserialized_data)
                 except Exception as e:
                     raise BadRequest("Invalid body: " + str(e))
 
             # 2.) Query parameters are in request.args
             if query_model is not None:
                 try:
-                    request.validated_args = query_model(**request.args.to_dict(False))
+                    g.validated_args = query_model(**request.args.to_dict(False))
                 except Exception as e:
                     raise BadRequest("Invalid request arguments: " + str(e))
 
