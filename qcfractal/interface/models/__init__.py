@@ -14,7 +14,7 @@ from .common_models import (
     FailedOperation,
     KeywordSet,
     CompressionEnum,
-    KVStore,
+    OutputStore,
     Molecule,
     MoleculeIdentifiers,
     ObjectId,

@@ -85,7 +85,7 @@ class CompressionEnum(str, Enum):
     lzma = "lzma"
 
 
-class KVStore(ProtoModel):
+class OutputStore(ProtoModel):
     """
     Storage of outputs and error messages, with optional compression
     """

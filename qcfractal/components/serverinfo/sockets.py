@@ -13,7 +13,7 @@ from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.records.db_models import BaseResultORM
 from qcfractal.components.serverinfo.db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM
-from qcfractal.components.outputstore.db_models import KVStoreORM
+from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.molecule.db_models import MoleculeORM
 from qcfractal.db_socket.helpers import get_query_proj_columns, get_count, calculate_limit
 
@@ -154,7 +154,7 @@ class ServerInfoSocket:
             The ID of the newly-created statistics entry
         """
 
-        table_list = [CollectionORM, MoleculeORM, BaseResultORM, KVStoreORM, AccessLogORM, InternalErrorLogORM]
+        table_list = [CollectionORM, MoleculeORM, BaseResultORM, OutputStoreORM, AccessLogORM, InternalErrorLogORM]
         db_name = self.root_socket.qcf_config.database.database_name
 
         table_counts = {}
@@ -216,7 +216,7 @@ class ServerInfoSocket:
                 "collection_count": table_counts[CollectionORM.__tablename__],
                 "molecule_count": table_counts[MoleculeORM.__tablename__],
                 "result_count": table_counts[BaseResultORM.__tablename__],
-                "kvstore_count": table_counts[KVStoreORM.__tablename__],
+                "kvstore_count": table_counts[OutputStoreORM.__tablename__],
                 "access_count": table_counts[AccessLogORM.__tablename__],
                 "error_count": table_counts[InternalErrorLogORM.__tablename__],
                 "task_queue_status": task_stats,

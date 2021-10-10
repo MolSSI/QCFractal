@@ -38,7 +38,7 @@ from qcfractal.components.records.optimization.handlers import OptimizationHandl
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcfractal.interface.models import ObjectId, AllResultTypes, Molecule, KVStore
+    from qcfractal.interface.models import ObjectId, AllResultTypes, Molecule, OutputStore
     from typing import List, Dict, Tuple, Optional, Any, Iterable, Sequence, Union
 
     TaskDict = Dict[str, Any]
@@ -108,9 +108,9 @@ class TaskSocket:
         session: Session,
         base_record_orm: BaseResultORM,
         *,
-        stdout: Optional[Union[Dict, str, KVStore]] = None,
-        stderr: Optional[Union[Dict, str, KVStore]] = None,
-        error: Optional[Union[Dict, str, KVStore]] = None,
+        stdout: Optional[Union[Dict, str, OutputStore]] = None,
+        stderr: Optional[Union[Dict, str, OutputStore]] = None,
+        error: Optional[Union[Dict, str, OutputStore]] = None,
     ):
         """
         Add outputs (stdout, stderr, error) to a base record, and delete the old one if it exists

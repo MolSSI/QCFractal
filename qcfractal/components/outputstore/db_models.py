@@ -1,15 +1,13 @@
-from sqlalchemy import Column, Integer, Enum, JSON, LargeBinary
-
-from qcfractal.interface.models import CompressionEnum, ObjectId
-from qcfractal.db_socket import BaseORM
-
 from typing import Dict, Any, Optional, Iterable
 
+from sqlalchemy import Column, Integer, Enum, JSON, LargeBinary
 
-class KVStoreORM(BaseORM):
-    """TODO: rename to"""
+from qcfractal.db_socket import BaseORM
+from qcfractal.interface.models import CompressionEnum
 
-    __tablename__ = "kv_store"
+
+class OutputStoreORM(BaseORM):
+    __tablename__ = "output_store"
 
     id = Column(Integer, primary_key=True)
     compression = Column(Enum(CompressionEnum), nullable=True)
@@ -33,9 +31,5 @@ class KVStoreORM(BaseORM):
             # Remove these and let the model handle the defaults
             d.pop("compression")
             d.pop("compression_level")
-
-        # TODO - INT ID should not be done
-        if "id" in d:
-            d["id"] = ObjectId(d["id"])
 
         return d

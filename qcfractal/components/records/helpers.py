@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 from qcfractal.interface.models import (
-    KVStore,
+    OutputStore,
     AllResultTypes,
     WavefunctionProperties,
 )
@@ -39,24 +39,24 @@ def retrieve_outputs(
     stderr = result.extras.pop("_qcfractal_compressed_stderr", None)
     error = result.extras.pop("_qcfractal_compressed_error", None)
 
-    # Create KVStore objects from these
+    # Create OutputStore objects from these
     if stdout is not None:
-        stdout = KVStore(**stdout)
+        stdout = OutputStore(**stdout)
     if stderr is not None:
-        stderr = KVStore(**stderr)
+        stderr = OutputStore(**stderr)
     if error is not None:
-        error = KVStore(**error)
+        error = OutputStore(**error)
 
     # This shouldn't happen, but if they aren't compressed, check for uncompressed
     if stdout is None and result.stdout is not None:
         logger.warning(f"Found uncompressed stdout for result id {result.id}")
-        stdout = KVStore(data=result.stdout)
+        stdout = OutputStore(data=result.stdout)
     if stderr is None and result.stderr is not None:
         logger.warning(f"Found uncompressed stderr for result id {result.id}")
-        stderr = KVStore(data=result.stderr)
+        stderr = OutputStore(data=result.stderr)
     if error is None and result.error is not None:
         logger.warning(f"Found uncompressed error for result id {result.id}")
-        error = KVStore(data=result.error)
+        error = OutputStore(data=result.error)
 
     storage_socket.tasks.update_outputs(session, base_result, stdout=stdout, stderr=stderr, error=error)
 

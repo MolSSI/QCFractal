@@ -18,7 +18,7 @@ from .common_models import (
     Molecule,
     ObjectId,
     ProtoModel,
-    KVStore,
+    OutputStore,
 )
 from .task_models import (
     SingleProcedureSpecification,
@@ -279,24 +279,6 @@ class InformationGETResponse(ProtoModel):
 
 
 register_model("information", "GET", InformationGETBody, InformationGETResponse)
-
-### KVStore
-
-
-class KVStoreGETBody(ProtoModel):
-    class Data(ProtoModel):
-        id: Optional[List[ObjectId]] = Field(None, description="Id of the Key/Value Storage object to get.")
-
-    meta: EmptyMeta = Field({}, description=common_docs[EmptyMeta])
-    data: Data = Field(..., description="Data of the KV Get field: consists of Id of the Key/Value object to fetch.")
-
-
-class KVStoreGETResponse(ProtoModel):
-    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
-    data: Dict[str, KVStore] = Field(..., description="The entries of Key/Value object requested.")
-
-
-register_model("kvstore", "GET", KVStoreGETBody, KVStoreGETResponse)
 
 ### Molecule response
 

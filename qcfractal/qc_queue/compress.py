@@ -3,7 +3,7 @@ Helpers for compressing data to send back to the server
 """
 
 from typing import Union, Optional, Dict
-from ..interface.models import KVStore, CompressionEnum
+from ..interface.models import OutputStore, CompressionEnum
 from qcelemental.models import AtomicResult, OptimizationResult
 
 
@@ -23,13 +23,13 @@ def _compress_common(
     extras = result.extras
     update = {}
     if stdout is not None:
-        extras["_qcfractal_compressed_stdout"] = KVStore.compress(stdout, compression, compression_level)
+        extras["_qcfractal_compressed_stdout"] = OutputStore.compress(stdout, compression, compression_level)
         update["stdout"] = None
     if stderr is not None:
-        extras["_qcfractal_compressed_stderr"] = KVStore.compress(stderr, compression, compression_level)
+        extras["_qcfractal_compressed_stderr"] = OutputStore.compress(stderr, compression, compression_level)
         update["stderr"] = None
     if error is not None:
-        extras["_qcfractal_compressed_error"] = KVStore.compress(error, compression, compression_level)
+        extras["_qcfractal_compressed_error"] = OutputStore.compress(error, compression, compression_level)
         update["error"] = None
 
     update["extras"] = extras

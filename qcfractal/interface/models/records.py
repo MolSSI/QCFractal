@@ -203,11 +203,9 @@ class RecordBase(ProtoModel, abc.ABC):
 
         return True
 
-    ### KVStore Getters
-
-    def _kvstore_getter(self, field_name):
+    def _output_getter(self, field_name):
         """
-        Internal KVStore getting object
+        Internal OutputStore getter
         """
         self.check_client()
 
@@ -218,7 +216,7 @@ class RecordBase(ProtoModel, abc.ABC):
         if field_name not in self.cache:
             # Decompress here, rather than later
             # that way, it is decompressed in the cache
-            kv = self.client.query_kvstore([oid])[oid]
+            kv = self.client.query_output([oid])[oid]
 
             if field_name == "error":
                 self.cache[field_name] = kv.get_json()
@@ -228,17 +226,17 @@ class RecordBase(ProtoModel, abc.ABC):
         return self.cache[field_name]
 
     def get_stdout(self) -> Optional[str]:
-        """Pulls the stdout from the denormalized KVStore and returns it to the user.
+        """Pulls the stdout from the denormalized OutputStore and returns it to the user.
 
         Returns
         -------
         Optional[str]
             The requested stdout, none if no stdout present.
         """
-        return self._kvstore_getter("stdout")
+        return self._output_getter("stdout")
 
     def get_stderr(self) -> Optional[str]:
-        """Pulls the stderr from the denormalized KVStore and returns it to the user.
+        """Pulls the stderr from the denormalized OutputStore and returns it to the user.
 
         Returns
         -------
@@ -246,17 +244,17 @@ class RecordBase(ProtoModel, abc.ABC):
             The requested stderr, none if no stderr present.
         """
 
-        return self._kvstore_getter("stderr")
+        return self._output_getter("stderr")
 
     def get_error(self) -> Optional[qcel.models.ComputeError]:
-        """Pulls the stderr from the denormalized KVStore and returns it to the user.
+        """Pulls the stderr from the denormalized OutputStore and returns it to the user.
 
         Returns
         -------
         Optional[qcel.models.ComputeError]
             The requested compute error, none if no error present.
         """
-        value = self._kvstore_getter("error")
+        value = self._output_getter("error")
         if value:
             return qcel.models.ComputeError(**value)
         else:
