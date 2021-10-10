@@ -3,13 +3,16 @@ Tests the keywords subsocket
 """
 
 import pytest
-import qcfractal.interface as ptl
+
+from qcfractal.db_socket import SQLAlchemySocket
+from qcfractal.exceptions import MissingDataError
+from qcfractal.interface.models import KeywordSet
 
 
-def test_keywords_basic(storage_socket):
-    kw1 = ptl.models.KeywordSet(values={"o": 5})
-    kw2 = ptl.models.KeywordSet(values={"o": 6})
-    kw3 = ptl.models.KeywordSet(values={"o": 7})
+def test_keywords_socket_basic(storage_socket: SQLAlchemySocket):
+    kw1 = KeywordSet(values={"o": 5})
+    kw2 = KeywordSet(values={"o": 6})
+    kw3 = KeywordSet(values={"o": 7})
 
     meta, added_ids = storage_socket.keywords.add([kw1, kw2, kw3])
     assert len(added_ids) == 3
@@ -25,7 +28,7 @@ def test_keywords_basic(storage_socket):
     assert ret[2]["id"] == added_ids[2]
 
     # Should be able to create objects
-    kw = [ptl.models.KeywordSet(**x) for x in ret]
+    kw = [KeywordSet(**x) for x in ret]
     assert kw[0].hash_index == ret[0]["hash_index"]
     assert kw[1].hash_index == ret[1]["hash_index"]
     assert kw[2].hash_index == ret[2]["hash_index"]
@@ -42,18 +45,23 @@ def test_keywords_basic(storage_socket):
     assert meta.success
     assert meta.n_deleted == 1
 
+    # Deleted keywords are no longer available
+    ret = storage_socket.keywords.get([added_ids[0], added_ids[1]], missing_ok=True)
+    assert ret[0] is None
+    assert ret[1]["id"] == added_ids[1]
 
-def test_keywords_add_duplicate(storage_socket):
+
+def test_keywords_socket_add_duplicate(storage_socket: SQLAlchemySocket):
 
     # kw1 == kw2 == kw3 == kw5 == kw7
     # kw4 and kw6 are unique
-    kw1 = ptl.models.KeywordSet(values={"o": 5, "f": 1.111111111111111})
-    kw2 = ptl.models.KeywordSet(values={"o": 5, "f": 1.111111111111111})
-    kw3 = ptl.models.KeywordSet(values={"o": 5, "f": 1.111111111121111}, exact_floats=False)
-    kw4 = ptl.models.KeywordSet(values={"o": 5, "f": 1.111111111121111}, exact_floats=True)
-    kw5 = ptl.models.KeywordSet(values={"O": 5, "f": 1.111111111121111})
-    kw6 = ptl.models.KeywordSet(values={"O": 5, "f": 1.111111111121111}, lowercase=False)
-    kw7 = ptl.models.KeywordSet(values={"O": 5, "f": 1.111111111121111})
+    kw1 = KeywordSet(values={"o": 5, "f": 1.111111111111111})
+    kw2 = KeywordSet(values={"o": 5, "f": 1.111111111111111})
+    kw3 = KeywordSet(values={"o": 5, "f": 1.111111111121111}, exact_floats=False)
+    kw4 = KeywordSet(values={"o": 5, "f": 1.111111111121111}, exact_floats=True)
+    kw5 = KeywordSet(values={"O": 5, "f": 1.111111111121111})
+    kw6 = KeywordSet(values={"O": 5, "f": 1.111111111121111}, lowercase=False)
+    kw7 = KeywordSet(values={"O": 5, "f": 1.111111111121111})
 
     meta, ret = storage_socket.keywords.add([kw1, kw2, kw3, kw4, kw5, kw6, kw7])
     assert meta.success
@@ -71,14 +79,27 @@ def test_keywords_add_duplicate(storage_socket):
     assert meta.n_existing == 7
     assert ret2 == list(reversed(ret))
 
+    # add again in a different order, and with an extra
+    kw8 = KeywordSet(values={"[": 5, "f": 1.111111111111111})
+    meta, ret2 = storage_socket.keywords.add([kw7, kw6, kw5, kw8, kw4, kw3, kw2, kw1])
+    assert meta.n_inserted == 1
+    assert meta.n_existing == 7
+    assert ret2[0] == ret[6]
+    assert ret2[1] == ret[5]
+    assert ret2[2] == ret[4]
+    assert ret2[4] == ret[3]
+    assert ret2[5] == ret[2]
+    assert ret2[6] == ret[1]
+    assert ret2[7] == ret[0]
 
-def test_keywords_add_mixed_1(storage_socket):
+
+def test_keywords_socket_add_mixed_1(storage_socket: SQLAlchemySocket):
 
     # kw1 == kw7
     # kw4 is unique
-    kw1 = ptl.models.KeywordSet(values={"o": 5, "f": 1.111111111111111})
-    kw4 = ptl.models.KeywordSet(values={"o": 5, "f": 1.111111111121111}, exact_floats=True)
-    kw7 = ptl.models.KeywordSet(values={"O": 5, "f": 1.111111111121111})
+    kw1 = KeywordSet(values={"o": 5, "f": 1.111111111111111})
+    kw4 = KeywordSet(values={"o": 5, "f": 1.111111111121111}, exact_floats=True)
+    kw7 = KeywordSet(values={"O": 5, "f": 1.111111111121111})
 
     meta, ret = storage_socket.keywords.add_mixed([kw1])
     assert meta.success
@@ -92,9 +113,9 @@ def test_keywords_add_mixed_1(storage_socket):
     assert meta.existing_idx == [0, 2, 3, 4]
 
 
-def test_keywords_add_mixed_bad(storage_socket):
-    kw1 = ptl.models.KeywordSet(values={"o": 5, "f": 1.111111111111111})
-    kw6 = ptl.models.KeywordSet(values={"O": 5, "f": 1.111111111121111}, lowercase=False)
+def test_keywords_socket_add_mixed_bad(storage_socket: SQLAlchemySocket):
+    kw1 = KeywordSet(values={"o": 5, "f": 1.111111111111111})
+    kw6 = KeywordSet(values={"O": 5, "f": 1.111111111121111}, lowercase=False)
 
     meta, ret = storage_socket.keywords.add_mixed([kw1])
     assert meta.success
@@ -112,8 +133,8 @@ def test_keywords_add_mixed_bad(storage_socket):
     assert "KeywordsORM object with id=12345 was not found" in meta.errors[0][1]
 
 
-def test_keywords_delete_nonexist(storage_socket):
-    kw1 = ptl.models.KeywordSet(values={"o": 5, "f": 1.111111111111111})
+def test_keywords_socket_delete_nonexist(storage_socket: SQLAlchemySocket):
+    kw1 = KeywordSet(values={"o": 5, "f": 1.111111111111111})
     meta, ids = storage_socket.keywords.add([kw1])
     assert meta.n_inserted == 1
 
@@ -125,9 +146,9 @@ def test_keywords_delete_nonexist(storage_socket):
     assert meta.deleted_idx == [1]
 
 
-def test_keywords_get_nonexist(storage_socket):
-    kw1 = ptl.models.KeywordSet(values={"o": 5, "f": 1.111111111111111})
-    kw6 = ptl.models.KeywordSet(values={"O": 5, "f": 1.111111111121111}, lowercase=False)
+def test_keywords_socket_get_nonexist(storage_socket: SQLAlchemySocket):
+    kw1 = KeywordSet(values={"o": 5, "f": 1.111111111111111})
+    kw6 = KeywordSet(values={"O": 5, "f": 1.111111111121111}, lowercase=False)
     meta, ids = storage_socket.keywords.add([kw1, kw6])
     assert meta.n_inserted == 2
 
@@ -143,13 +164,13 @@ def test_keywords_get_nonexist(storage_socket):
     assert kw[3] is None
 
     # Now try with missing_ok = False. This should raise an exception
-    with pytest.raises(RuntimeError, match=r"Could not find all requested keywords records"):
+    with pytest.raises(MissingDataError, match=r"Could not find all requested records"):
         storage_socket.keywords.get([ids[0], ids[1], ids[1], ids[0]], missing_ok=False)
 
 
-def test_keywords_get_empty(storage_socket):
-    kw1 = ptl.models.KeywordSet(values={"o": 5, "f": 1.111111111111111})
-    kw6 = ptl.models.KeywordSet(values={"O": 5, "f": 1.111111111121111}, lowercase=False)
+def test_keywords_socket_get_empty(storage_socket: SQLAlchemySocket):
+    kw1 = KeywordSet(values={"o": 5, "f": 1.111111111111111})
+    kw6 = KeywordSet(values={"O": 5, "f": 1.111111111121111}, lowercase=False)
     meta, ids = storage_socket.keywords.add([kw1, kw6])
     assert meta.n_inserted == 2
 

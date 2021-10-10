@@ -1,38 +1,32 @@
+from typing import List, Optional
+
+from flask import g
+
 from qcfractal.app import main, storage_socket
-from qcfractal.app.helpers import parse_bodymodel, SerializedResponse, convert_post_response_metadata
-from qcfractal.app.routes import check_access
-from qcfractal.interface.models.rest_models import (
-    KeywordGETBody,
-    ResponseGETMeta,
-    KeywordGETResponse,
-    KeywordPOSTBody,
-    KeywordPOSTResponse,
-)
+from qcfractal.app.helpers import get_helper, delete_helper
+from qcfractal.app.routes import check_access, wrap_route
+from qcfractal.interface.models import KeywordSet
+from qcfractal.portal.rest_models import SimpleGetParameters, DeleteParameters
 
 
-@main.route("/keyword", methods=["GET"])
+@main.route("/v1/keyword", methods=["GET"])
+@main.route("/v1/keyword/<int:id>", methods=["GET"])
+@wrap_route(None, SimpleGetParameters)
 @check_access
-def query_keywords_v1():
-    body = parse_bodymodel(KeywordGETBody)
-
-    ret = storage_socket.keywords.get(body.data.id, missing_ok=True)
-    missing_id = [x for x, y in zip(body.data.id, ret) if y is None]
-    meta = ResponseGETMeta(n_found=len(ret), missing=missing_id, errors=[], error_description=False, success=True)
-    response = KeywordGETResponse(meta=meta, data=ret)
-
-    return SerializedResponse(response)
+def get_keywords_v1(id: Optional[int] = None):
+    return get_helper(id, g.validated_args.id, g.validated_args.missing_ok, storage_socket.keywords.get)
 
 
-@main.route("/keyword", methods=["POST"])
+@main.route("/v1/keyword", methods=["POST"])
+@wrap_route(List[KeywordSet], None)
 @check_access
 def add_keywords_v1():
+    return storage_socket.keywords.add(g.validated_data)
 
-    body = parse_bodymodel(KeywordPOSTBody)
-    meta, ret = storage_socket.keywords.add(body.data)
 
-    # Convert new metadata format to old
-    duplicate_ids = [ret[i] for i in meta.existing_idx]
-    meta_old = convert_post_response_metadata(meta, duplicate_ids)
-
-    response = KeywordPOSTResponse(meta=meta_old, data=ret)
-    return SerializedResponse(response)
+@main.route("/v1/keyword", methods=["DELETE"])
+@main.route("/v1/keyword/<int:id>", methods=["DELETE"])
+@wrap_route(None, DeleteParameters)
+@check_access
+def delete_keywords_v1(id: Optional[int] = None):
+    return delete_helper(id, g.validated_args.id, storage_socket.keywords.delete)

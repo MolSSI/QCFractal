@@ -312,7 +312,7 @@ class KeywordSet(ProtoModel):
     A key:value storage object for Keywords.
     """
 
-    id: Optional[ObjectId] = Field(
+    id: Optional[int] = Field(
         None, description="The Id of this object, will be automatically assigned when added to the database."
     )
     hash_index: str = Field(
