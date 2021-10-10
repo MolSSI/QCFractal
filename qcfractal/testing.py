@@ -37,7 +37,7 @@ from .db_socket.socket import SQLAlchemySocket
 # import responses
 
 # Valid client encodings
-valid_encodings = ["json", "msgpack"]
+valid_encodings = ["application/json", "application/msgpack"]
 
 
 def pytest_addoption(parser):
@@ -513,13 +513,15 @@ def fractal_test_server(temporary_database):
         yield server
 
 
-@pytest.fixture(scope="function")
-def fractal_test_client(fractal_test_server):
+@pytest.fixture(scope="function", params=valid_encodings)
+def fractal_test_client(fractal_test_server, request):
     """
     A client connected to a fractal test server
     """
 
-    yield fractal_test_server.client()
+    client = fractal_test_server.client()
+    client.encoding = request.param
+    yield client
 
 
 @pytest.fixture(scope="function")
