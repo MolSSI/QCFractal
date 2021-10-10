@@ -25,3 +25,7 @@ class ValidationError(UserReportableError):
 
 class MissingDataError(UserReportableError):
     pass
+
+
+class LimitExceededError(UserReportableError):
+    pass
