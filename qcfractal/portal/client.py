@@ -19,8 +19,15 @@ from pydantic import ValidationError
 import pandas as pd
 
 from ..interface.models.rest_models import rest_model
-from ..interface.models import RecordStatusEnum, ManagerStatusEnum, PriorityEnum, InsertMetadata, KVStore
-from .rest_models import GetParameters, SimpleGetParameters
+from ..interface.models import (
+    RecordStatusEnum,
+    ManagerStatusEnum,
+    PriorityEnum,
+    InsertMetadata,
+    DeleteMetadata,
+    KVStore,
+)
+from .rest_models import GetParameters, SimpleGetParameters, DeleteParameters
 from .collections import Collection, collection_factory, collections_name_map
 from .records import record_factory
 from .cache import PortalCache
@@ -56,6 +63,10 @@ _ssl_error_msg = (
     "If you trust the server you are connecting to, try 'PortalClient(... verify=False)'"
 )
 _connection_error_msg = "\n\nCould not connect to server {}, please check the address and try again."
+
+
+class PortalRequestError(Exception):
+    pass
 
 
 def make_list(obj: Optional[Union[_T, Sequence[_T]]]) -> Optional[List[_T]]:
@@ -393,7 +404,7 @@ class PortalClient:
             except:
                 msg = r.reason
 
-            raise IOError("Server communication failure. Code: {}, Reason: {}".format(r.status_code, msg))
+            raise PortalRequestError("Request failed. Code: {}, Reason: {}".format(r.status_code, msg))
 
         return r
 
@@ -403,6 +414,7 @@ class PortalClient:
         endpoint: str,
         body_model,
         query_model,
+        response_model,
         body: Optional[Dict[str, Any]] = None,
         query_params: Optional[Dict[str, Any]] = None,
     ) -> Any:
@@ -422,7 +434,8 @@ class PortalClient:
             parsed_query_params = pydantic.parse_obj_as(query_model, query_params).dict()
 
         r = self._request2(method, endpoint, body=serialized_body, query_params=parsed_query_params)
-        return deserialize(r.content, r.headers["Content-Type"])
+        d = deserialize(r.content, r.headers["Content-Type"])
+        return pydantic.parse_obj_as(response_model, d)
 
     @property
     def cache(self):
@@ -621,7 +634,7 @@ class PortalClient:
         """Add molecules to the server.
 
         Parameters
-        ----------
+        ?
         molecules : List[Molecule]
             A list of Molecules to add to the server.
 
@@ -647,67 +660,87 @@ class PortalClient:
 
     def get_keywords(
         self,
-        id: Optional["QueryObjectId"] = None,
+        id: Union[int, Sequence[int]],
         missing_ok: bool = False,
-    ) -> Union["KeywordGETResponse", List["KeywordSet"]]:
-        """Obtains KeywordSets from the server using keyword ids.
+    ) -> Union[Optional[KeywordSet], List[Optional[KeywordSet]]]:
+        """Obtains keywords from the server via keyword ids
 
         Parameters
         ----------
-        id : QueryObjectId, optional
-            A list of ids to query.
+        id
+            An id or list of ids to query.
+        missing_ok
+            If True, return ``None`` for ids that were not found on the server.
+            If False, raise ``KeyError`` if any ids were not found on the server.
 
         Returns
         -------
-        List[KeywordSet]
-            The requested KeywordSet objects.
+        :
+            The requested keywords, in the same order as the requested ids.
+            If given a list of ids, the return value will be a list.
+            Otherwise, it will be a single KeywordSet.
         """
-        str_id = make_str(id)
-        ids = make_list(str_id)
 
-        # workaround since keywords don't have thier own id field set
-        # otherwise we could do this all in one API query
-        results = {}
-        for i in ids:
-            payload = {"meta": {}, "data": {"id": [i]}}
-            result = self._automodel_request("keyword", "get", payload)
-            if result:
-                results[i] = result[0]
-            else:
-                results[i] = None
+        query_params = {"id": make_list(id), "missing_ok": missing_ok}
+        keywords = self._auto_request(
+            "get", "v1/keyword", None, SimpleGetParameters, List[Optional[KeywordSet]], None, query_params
+        )
 
-        # check that we have results for all ids asked for
-        missing = set(make_list(str_id)) - set(results.keys())
-
-        if missing and not missing_ok:
-            raise KeyError(f"No objects found for `id`: {missing}")
-
-        # order the results by input id list
-        if isinstance(id, list):
-            ordered = [results.get(i, None) for i in str_id]
+        if isinstance(id, Sequence):
+            return keywords
         else:
-            ordered = results.get(str_id, None)
+            return keywords[0]
 
-        return ordered
+    def _add_keywords(
+        self, keywords: Sequence[KeywordSet], full_return: bool = False
+    ) -> Union[List[int], Tuple[InsertMetadata, List[int]]]:
+        """Adds keywords to the server
 
-    # TODO: make this invisible?
-    # one of our goals initially was to make keyword handling an implementation detail for the server
-    def add_keywords(self, keywords: List["KeywordSet"], full_return: bool = False) -> List[str]:
-        """Adds KeywordSets to the server.
+        This function is not expected to be used by end users
 
         Parameters
         ----------
-        keywords : List[KeywordSet]
-            A list of KeywordSets to add.
-        full_return : bool, optional
-            Returns the full server response if True that contains additional metadata.
+        keywords
+            A KeywordSet or list of KeywordSet to add to the server.
+        full_return
+            If True, return additional metadata about the insertion. The return will be a tuple
+            of (metadata, ids)
 
         Returns
         -------
-        List[str]
-            A list of KeywordSet id's in the sent order, can be None where issues occured.
+        :
+            A list of KeywordSet ids that were added or existing on the server, in the
+            same order as specified in the keywords parameter. If full_return is True,
+            this function will return a tuple containing metadata and the ids.
         """
-        return self._automodel_request("keyword", "post", {"meta": {}, "data": keywords}, full_return=full_return)
+
+        ret = self._auto_request(
+            "post", "v1/keyword", List[KeywordSet], None, Tuple[InsertMetadata, List[int]], make_list(keywords), None
+        )
+
+        if full_return:
+            return ret
+        else:
+            return ret[1]
+
+    def _delete_keywords(self, id: Union[int, Sequence[int]]) -> DeleteMetadata:
+        """Deletes keywords from the server
+
+        This will not delete any keywords that are in use
+
+        Parameters
+        ----------
+        id
+            An id or list of ids to query.
+
+        Returns
+        -------
+        :
+            Metadata about what was deleted
+        """
+
+        query_params = {"id": make_list(id)}
+        return self._auto_request("delete", "v1/keyword", None, DeleteParameters, DeleteMetadata, None, query_params)
 
     ### Collections section
 

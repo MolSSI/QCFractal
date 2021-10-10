@@ -1,34 +1,17 @@
-from sqlalchemy import Column, Integer, String, JSON, Boolean, Index
+from sqlalchemy import Column, Integer, String, JSON, Boolean, UniqueConstraint
 
-from qcfractal.interface.models import ObjectId
 from qcfractal.db_socket import BaseORM
-
-from typing import Dict, Any, Optional, Iterable
 
 
 class KeywordsORM(BaseORM):
-    """
-    KeywordsORM are unique for a specific program and name
-    """
-
     __tablename__ = "keywords"
 
     id = Column(Integer, primary_key=True)
     hash_index = Column(String, nullable=False)
-    values = Column(JSON)
+    values = Column(JSON, nullable=False)
 
-    lowercase = Column(Boolean, default=True)
-    exact_floats = Column(Boolean, default=False)
+    lowercase = Column(Boolean, nullable=False, default=True)
+    exact_floats = Column(Boolean, nullable=False, default=False)
     comments = Column(String)
 
-    __table_args__ = (Index("ix_keywords_hash_index", "hash_index", unique=True),)
-
-    def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-
-        d = BaseORM.dict(self, exclude)
-
-        # TODO - INT ID should not be done
-        if "id" in d:
-            d["id"] = ObjectId(d["id"])
-
-        return d
+    __table_args__ = (UniqueConstraint("hash_index", name="ux_keywords_hash_index"),)

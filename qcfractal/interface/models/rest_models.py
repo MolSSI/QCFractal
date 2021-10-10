@@ -347,48 +347,6 @@ class MoleculePOSTResponse(ProtoModel):
 
 register_model("molecule", "POST", MoleculePOSTBody, MoleculePOSTResponse)
 
-### Keywords
-
-
-class KeywordGETBody(ProtoModel):
-    class Data(ProtoModel):
-        id: Optional[List[ObjectId]] = None
-
-    meta: EmptyMeta = Field({}, description=common_docs[EmptyMeta])
-    data: Data = Field(
-        ...,
-        description="The formal query for a Keyword fetch, contains ``id`` for the object to fetch.",
-    )
-
-
-class KeywordGETResponse(ProtoModel):
-    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
-    data: List[KeywordSet] = Field(
-        ..., description="The :class:`KeywordSet` found from in the database based on the query."
-    )
-
-
-register_model("keyword", "GET", KeywordGETBody, KeywordGETResponse)
-
-
-class KeywordPOSTBody(ProtoModel):
-    meta: EmptyMeta = Field(
-        {}, description="There is no metadata with this, so an empty metadata is sent for completion."
-    )
-    data: List[KeywordSet] = Field(..., description="The list of :class:`KeywordSet` objects to add to the database.")
-
-
-class KeywordPOSTResponse(ProtoModel):
-    data: List[ObjectId] = Field(
-        ...,
-        description="The Ids assigned to the added :class:`KeywordSet` objects. In the event of duplicates, the Id "
-        "will be the one already found in the database.",
-    )
-    meta: ResponsePOSTMeta = Field(..., description=common_docs[ResponsePOSTMeta])
-
-
-register_model("keyword", "POST", KeywordPOSTBody, KeywordPOSTResponse)
-
 ### Collections
 
 
