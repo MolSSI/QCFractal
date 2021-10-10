@@ -10,7 +10,7 @@ import logging.handlers
 from concurrent.futures import ProcessPoolExecutor
 from .qc_queue import QueueManager
 
-from .interface import FractalClient
+from .portal import PortalClient
 from .postgres_harness import TemporaryPostgres
 from .port_util import find_open_port
 from .config import FractalConfig, DatabaseConfig, update_nested_dict
@@ -25,32 +25,32 @@ if TYPE_CHECKING:
     from typing import Dict, Any, Sequence, Optional, Set
 
 
-def attempt_client_connect(uri: str, **client_args) -> FractalClient:
+def attempt_client_connect(uri: str, **client_args) -> PortalClient:
     """
-    Attempt to obtain a FractalClient for a host and port
+    Attempt to obtain a PortalClient for a host and port
 
     This will make several attempts in case the server hasn't been completely booted yet
 
-    If a connection is successful, the FractalClient is returned. Otherwise an exception
-    is raised representing the exception raised from the last attempt at FractalClient construction.
+    If a connection is successful, the PortalClient is returned. Otherwise an exception
+    is raised representing the exception raised from the last attempt at PortalClient construction.
 
     Parameters
     ----------
     uri: str
         URI to the rest server (ie, http://127.0.0.1:1234)
     **client_args
-        Additional arguments to pass to the FractalClient constructor
+        Additional arguments to pass to the PortalClient constructor
 
     Returns
     -------
-    FractalClient
+    PortalClient
         A client connected to the given host and port
     """
 
     # Try to connect 20 times (~2 seconds). If it fails after that, raise the last exception
     for i in range(21):
         try:
-            return FractalClient(uri, **client_args)
+            return PortalClient(uri, **client_args)
         except Exception:
             if i == 20:
                 # Out of attempts. Just give the last exception
@@ -287,9 +287,9 @@ class FractalSnowflake:
 
         return True
 
-    def client(self) -> FractalClient:
+    def client(self) -> PortalClient:
         """
-        Obtain a FractalClient connected to this server
+        Obtain a PortalClient connected to this server
         """
 
         return attempt_client_connect(self.get_uri())

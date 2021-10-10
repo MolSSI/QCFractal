@@ -36,7 +36,8 @@ from .db_socket.socket import SQLAlchemySocket
 # import requests_mock
 # import responses
 
-### Addon testing capabilities
+# Valid client encodings
+valid_encodings = ["json", "json-ext", "msgpack-ext"]
 
 
 def pytest_addoption(parser):
@@ -510,6 +511,15 @@ def fractal_test_server(temporary_database):
     db_config = temporary_database.config
     with TestingSnowflake(db_config, start_flask=True) as server:
         yield server
+
+
+@pytest.fixture(scope="function")
+def fractal_test_client(fractal_test_server):
+    """
+    A client connected to a fractal test server
+    """
+
+    yield fractal_test_server.client()
 
 
 @pytest.fixture(scope="function")
