@@ -1,10 +1,12 @@
-from typing import List
+from __future__ import annotations
+
+from typing import List, Optional, Callable
 
 from flask import request, current_app, Response
 from qcelemental.util import serialize
 from werkzeug.exceptions import BadRequest
 
-from qcfractal.interface.models import QueryMetadata, InsertMetadata
+from qcfractal.interface.models import QueryMetadata, InsertMetadata, DeleteMetadata
 from qcfractal.interface.models.rest_models import ResponseGETMeta, ResponsePOSTMeta
 
 _valid_encodings = {
@@ -73,3 +75,40 @@ class SerializedResponse(Response):
         encoding = _valid_encodings[content_type]
         response = serialize(response, encoding)
         super(SerializedResponse, self).__init__(response, content_type=content_type, **kwargs)
+
+
+def get_helper(id: Optional[int], id_args: Optional[List[int]], missing_ok: bool, func: Callable):
+    """
+    A general helper for calling a get_* function of a component
+
+    All these functions share the same signature and have the same behavior, so we can
+    handle that in a common function
+    """
+
+    # If an empty list was specified in the query params, it won't be sent
+    # and the id member of the args will be None
+    if id is None and id_args is None:
+        return []
+
+    # If an id was specified in the url (keyword/1234) then use that
+    # Otherwise, grab from the query parameters
+    if id is not None:
+        return func([id], missing_ok=missing_ok)[0]
+    else:
+        return func(id_args, missing_ok=missing_ok)
+
+
+def delete_helper(id: Optional[int], id_args: Optional[List[int]], func: Callable) -> DeleteMetadata:
+    """
+    A general helper for calling a delete_* function of a component
+
+    All these functions share the same signature and have the same behavior, so we can
+    handle that in a common function
+    """
+
+    # If an id was specified in the url (keyword/1234) then use that
+    # Otherwise, grab from the query parameters
+    if id is not None:
+        return func([id])
+    else:
+        return func(id_args)
