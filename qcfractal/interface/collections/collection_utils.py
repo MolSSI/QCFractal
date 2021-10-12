@@ -99,6 +99,10 @@ def composition_planner(program=None, method=None, basis=None, driver=None, keyw
 
     base = {"program": program, "method": method, "basis": basis, "driver": driver, "keywords": keywords}
 
+    # HACK: shortcut these. See issue #688
+    if method.lower() in ["b97-d3bj", "b97m-d3bj", "wb97m-d3bj"]:
+        return [base]
+
     if ("-d3" in method.lower()) and ("dftd3" != program.lower()) and ("hessian" != driver.lower()):
         dftd3keys = {"program": "dftd3", "method": method, "basis": None, "driver": driver, "keywords": None}
         base["method"] = method.lower().split("-d3")[0]
