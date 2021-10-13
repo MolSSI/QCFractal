@@ -2,7 +2,7 @@ from __future__ import annotations
 from ..interface.models.query_meta import InsertMetadata, DeleteMetadata, QueryMetadata
 from ..exceptions import MissingDataError
 from qcfractal.db_socket import BaseORM
-from sqlalchemy import tuple_, and_, or_
+from sqlalchemy import tuple_, and_, or_, func, select
 from sqlalchemy.orm import load_only, selectinload
 import logging
 
@@ -50,6 +50,16 @@ def get_count(query):
     # count_q = query.statement.with_only_columns([func.count()]).order_by(None)
     # count = query.session.execute(count_q).scalar()
     return query.count()
+
+
+def get_count_2(session, stmt):
+    """
+    Returns a total count of an sql query statement
+
+    This should be used before any limit/skip options are incorporated into the query
+    """
+
+    return session.scalar(select(func.count()).select_from(stmt))
 
 
 def get_query_proj_columns(
