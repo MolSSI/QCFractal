@@ -16,6 +16,7 @@ from .common_models import (
     CompressionEnum,
     KVStore,
     Molecule,
+    MoleculeIdentifiers,
     ObjectId,
     OptimizationInput,
     OptimizationResult,
@@ -32,7 +33,7 @@ from .common_models import (
     RoleInfo,
 )
 
-from .query_meta import InsertMetadata, DeleteMetadata, QueryMetadata
+from .query_meta import InsertMetadata, DeleteMetadata, QueryMetadata, UpdateMetadata
 from .gridoptimization import GridOptimizationInput, GridOptimizationRecord
 from .model_builder import build_procedure
 from .model_utils import hash_dictionary, json_encoders, prepare_basis
