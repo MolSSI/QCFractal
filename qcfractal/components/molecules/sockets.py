@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import logging
-import qcelemental
+from typing import TYPE_CHECKING
 
-from sqlalchemy import and_
+from qcelemental.molutil import order_molecular_formula
 from sqlalchemy.orm import load_only
-from qcfractal.components.molecule.db_models import MoleculeORM
-from qcfractal.interface.models import Molecule, ObjectId, InsertMetadata, DeleteMetadata, QueryMetadata
+from sqlalchemy.orm.attributes import flag_modified
+from sqlalchemy.sql import select, and_, or_
+
+from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.db_socket.helpers import (
-    get_count,
+    get_count_2,
     get_query_proj_columns,
     insert_general,
     delete_general,
@@ -16,9 +18,15 @@ from qcfractal.db_socket.helpers import (
     get_general,
     calculate_limit,
 )
-
-from typing import TYPE_CHECKING
-from qcfractal.exceptions import MissingDataError
+from qcfractal.exceptions import LimitExceededError, MissingDataError
+from qcfractal.interface.models import (
+    Molecule,
+    MoleculeIdentifiers,
+    InsertMetadata,
+    DeleteMetadata,
+    QueryMetadata,
+    UpdateMetadata,
+)
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -41,33 +49,30 @@ class MoleculeSocket:
         if molecule.validated is False:
             molecule = Molecule(**molecule.dict(), validate=True)
 
-        mol_dict = molecule.dict(exclude={"id", "validated"})
-
-        # TODO: can set them as defaults in the sql_models, not here
-        mol_dict["fix_com"] = True
-        mol_dict["fix_orientation"] = True
+        mol_dict = molecule.dict(exclude={"id", "validated", "fix_com", "fix_orientation"})
 
         # Build these quantities fresh from what is actually stored
         mol_dict["molecule_hash"] = molecule.get_hash()
-        mol_dict["molecular_formula"] = molecule.get_molecular_formula()
 
-        mol_dict["identifiers"] = {
-            "molecule_hash": mol_dict["molecule_hash"],
-            "molecular_formula": mol_dict["molecular_formula"],
-        }
+        mol_dict.setdefault("identifiers", dict())
+        mol_dict["identifiers"]["molecule_hash"] = mol_dict["molecule_hash"]
+        mol_dict["identifiers"]["molecular_formula"] = molecule.get_molecular_formula()
+
+        mol_dict["fix_com"] = True
+        mol_dict["fix_orientation"] = True
 
         return MoleculeORM(**mol_dict)  # type: ignore
 
     def add(
         self, molecules: Sequence[Molecule], *, session: Optional[Session] = None
-    ) -> Tuple[InsertMetadata, List[ObjectId]]:
+    ) -> Tuple[InsertMetadata, List[int]]:
         """
         Add molecules to the database
 
         This checks if the molecule already exists in the database via its hash. If so, it returns
         the existing id, otherwise it will insert it and return the new id.
 
-        Changes are not committed to to the database, but they are flushed.
+        If session is specified, changes are not committed to to the database, but the session is flushed.
 
         Parameters
         ----------
@@ -94,15 +99,12 @@ class MoleculeSocket:
         with self.root_socket.optional_session(session) as session:
             meta, added_ids = insert_general(session, molecule_orm, (MoleculeORM.molecule_hash,), (MoleculeORM.id,))
 
-        # insert_general should always succeed or raise exception
-        assert meta.success
-
-        # Added ids are a list of tuple, with each tuple only having one value
-        return meta, [ObjectId(x[0]) for x in added_ids]
+        # added_ids is a list of tuple, with each tuple only having one value. Flatten that out
+        return meta, [x[0] for x in added_ids]
 
     def get(
         self,
-        id: Sequence[ObjectId],
+        id: Sequence[int],
         include: Optional[Sequence[str]] = None,
         exclude: Optional[Sequence[str]] = None,
         missing_ok: bool = False,
@@ -139,17 +141,14 @@ class MoleculeSocket:
         """
 
         if len(id) > self._limit:
-            raise RuntimeError(f"Request for {len(id)} molecules is over the limit of {self._limit}")
-
-        # TODO - int id
-        int_id = [str(x) for x in id]
+            raise LimitExceededError(f"Request for {len(id)} molecules is over the limit of {self._limit}")
 
         with self.root_socket.optional_session(session, True) as session:
-            return get_general(session, MoleculeORM, MoleculeORM.id, int_id, include, exclude, missing_ok)
+            return get_general(session, MoleculeORM, MoleculeORM.id, id, include, exclude, None, missing_ok)
 
     def add_mixed(
-        self, molecule_data: Sequence[Union[ObjectId, Molecule]], *, session: Optional[Session] = None
-    ) -> Tuple[InsertMetadata, List[Optional[ObjectId]]]:
+        self, molecule_data: Sequence[Union[int, Molecule]], *, session: Optional[Session] = None
+    ) -> Tuple[InsertMetadata, List[Optional[int]]]:
         """
         Add a mixed format molecule specification to the database.
 
@@ -171,11 +170,8 @@ class MoleculeSocket:
             is used, it will be flushed before returning from this function.
         """
 
-        # TODO - INT ID
-        molecule_data_2 = [int(x) if isinstance(x, (int, str, ObjectId)) else x for x in molecule_data]
-
         molecule_orm: List[Union[int, MoleculeORM]] = [
-            x if isinstance(x, int) else self.molecule_to_orm(x) for x in molecule_data_2
+            x if isinstance(x, int) else self.molecule_to_orm(x) for x in molecule_data
         ]
 
         with self.root_socket.optional_session(session) as session:
@@ -183,11 +179,10 @@ class MoleculeSocket:
                 session, MoleculeORM, molecule_orm, MoleculeORM.id, (MoleculeORM.molecule_hash,), (MoleculeORM.id,)
             )
 
-        # all_ids is a list of Tuples
-        # TODO - INT ID
-        return meta, [ObjectId(x[0]) if x is not None else None for x in all_ids]
+        # added_ids is a list of tuple, with each tuple only having one value. Flatten that out
+        return meta, [x[0] if x is not None else None for x in all_ids]
 
-    def delete(self, id: List[ObjectId], *, session: Optional[Session] = None) -> DeleteMetadata:
+    def delete(self, id: Sequence[int], *, session: Optional[Session] = None) -> DeleteMetadata:
         """
         Removes molecules from the database based on id
 
@@ -205,17 +200,17 @@ class MoleculeSocket:
             Information about what was deleted and any errors that occurred
         """
 
-        # TODO - INT ID
-        id_lst = [(int(x),) for x in id]
+        id_lst = [(x,) for x in id]
 
         with self.root_socket.optional_session(session) as session:
             return delete_general(session, MoleculeORM, (MoleculeORM.id,), id_lst)
 
     def query(
         self,
-        id: Optional[Iterable[ObjectId]] = None,
+        id: Optional[Iterable[int]] = None,
         molecule_hash: Optional[Iterable[str]] = None,
         molecular_formula: Optional[Iterable[str]] = None,
+        identifiers: Optional[Dict[str, Iterable[Any]]] = None,
         include: Optional[Iterable[str]] = None,
         exclude: Optional[Iterable[str]] = None,
         limit: Optional[int] = None,
@@ -237,6 +232,8 @@ class MoleculeSocket:
             Query for molecules based on its hash
         molecular_formula
             Query for molecules based on molecular formula
+        identifiers
+            Query based on identifiers. Dictionary is identifier name -> value
         include
             Which fields of the molecule to return. Default is to return all fields.
         exclude
@@ -259,7 +256,7 @@ class MoleculeSocket:
         if molecular_formula is not None:
             try:
                 # Make sure the molecular formaulae are in the proper element order
-                molecular_formula = [qcelemental.molutil.order_molecular_formula(form) for form in molecular_formula]
+                molecular_formula = [order_molecular_formula(form) for form in molecular_formula]
             except ValueError:
                 # Probably, the user provided an invalid chemical formula
                 pass
@@ -269,19 +266,108 @@ class MoleculeSocket:
         load_cols, _ = get_query_proj_columns(MoleculeORM, include, exclude)
 
         and_query = []
-        if molecular_formula is not None:
-            and_query.append(MoleculeORM.molecular_formula.in_(molecular_formula))
-        if molecule_hash is not None:
-            and_query.append(MoleculeORM.molecule_hash.in_(molecule_hash))
         if id is not None:
             and_query.append(MoleculeORM.id.in_(id))
+        if molecule_hash is not None:
+            and_query.append(MoleculeORM.molecule_hash.in_(molecule_hash))
+        if molecular_formula is not None:
+            # Add it to the identifiers query
+            if identifiers is None:
+                identifiers = {"molecular_formula": molecular_formula}
+            else:
+                identifiers["molecular_formula"] = molecular_formula
+        if identifiers is not None:
+            for i_name, i_values in identifiers.items():
+                or_query = []
+                for v in i_values:
+                    or_query.append(MoleculeORM.identifiers.contains({i_name: v}))
+                and_query.append(or_(*or_query))
 
         with self.root_socket.optional_session(session, True) as session:
-            query = session.query(MoleculeORM).filter(and_(*and_query))
-            query = query.options(load_only(*load_cols))
-            n_found = get_count(query)
-            results = query.limit(limit).offset(skip).yield_per(500)
+            stmt = select(MoleculeORM).where(and_(*and_query))
+            stmt = stmt.options(load_only(*load_cols))
+            n_found = get_count_2(session, stmt)
+            stmt = stmt.limit(limit).offset(skip)
+            results = session.execute(stmt).scalars().all()
             result_dicts = [x.dict() for x in results]
 
         meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
         return meta, result_dicts
+
+    def modify(
+        self,
+        id: int,
+        name: Optional[str] = None,
+        comment: Optional[str] = None,
+        identifiers: Optional[MoleculeIdentifiers] = None,
+        overwrite_identifiers: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ) -> UpdateMetadata:
+        """
+        Modify molecule information in the database
+
+        This is only capable of updating the name, comment, and identifiers fields (except molecule_hash
+        and molecular formula).
+
+        If a molecule with that id does not exist, an exception is raised
+
+        If session is specified, changes are not committed to to the database, but the session is flushed.
+
+        Parameters
+        ----------
+        id
+            Molecule ID of the molecule to modify
+        name
+            New name for the molecule. If None, name is not changed.
+        comment
+            New comment for the molecule. If None, comment is not changed
+        identifiers
+            A new set of identifiers for the molecule
+        overwrite_identifiers
+            If True, the identifiers of the molecule are set to be those given exactly (ie, identifiers
+            that exist in the DB but not in the new set will be removed). Otherwise, the new set of
+            identifiers is merged into the existing ones. Note that molecule_hash and molecular_formula
+            are never removed.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the modification/update.
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            stmt = select(MoleculeORM).where(or_(MoleculeORM.id == id)).with_for_update()
+            stmt = stmt.options(
+                load_only(MoleculeORM.id, MoleculeORM.name, MoleculeORM.comment, MoleculeORM.identifiers)
+            )
+            mol = session.execute(stmt).scalar_one_or_none()
+
+            if mol is None:
+                raise MissingDataError(f"Molecule with id {id} not found in the database")
+
+            if name is not None:
+                mol.name = name
+            if comment is not None:
+                mol.comment = comment
+            if identifiers is not None:
+                id_dict = identifiers.dict()
+                id_dict["molecule_hash"] = mol.identifiers["molecule_hash"]
+                id_dict["molecular_formula"] = mol.identifiers["molecular_formula"]
+
+                # Changing identifiers is a bit sensitive, so validate again
+                identifiers = MoleculeIdentifiers(**id_dict)
+
+                if overwrite_identifiers:
+                    # Always keep hash & formula
+                    mol.identifiers = identifiers.dict()
+                else:
+                    mol.identifiers.update(identifiers.dict())
+
+                    # sqlalchemy cannot track changes in json
+                    flag_modified(mol, "identifiers")
+
+        return UpdateMetadata(updated_idx=[0])  # type: ignore

@@ -280,55 +280,6 @@ class InformationGETResponse(ProtoModel):
 
 register_model("information", "GET", InformationGETBody, InformationGETResponse)
 
-### Molecule response
-
-
-class MoleculeGETBody(ProtoModel):
-    class Data(ProtoModel):
-        id: Optional[List[ObjectId]] = Field(None, description="Exact Id of the Molecule to fetch from the database.")
-        molecule_hash: Optional[List[str]] = Field(
-            None,
-            description="Hash of the Molecule to search for in the database. Can be computed from the Molecule object "
-            "directly without direct access to the Database itself.",
-        )
-        molecular_formula: Optional[List[str]] = Field(
-            None,
-            description="Query is made based on simple molecular formula. This is based on just the formula itself and "
-            "contains no connectivity information.",
-        )
-
-    meta: QueryMeta = Field(QueryMeta(), description=common_docs[QueryMeta])
-    data: Data = Field(
-        ...,
-        description="Data fields for a Molecule query.",  # Because Data is internal, this may not document sufficiently
-    )
-
-
-class MoleculeGETResponse(ProtoModel):
-    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
-    data: List[Molecule] = Field(..., description="The List of Molecule objects found by the query.")
-
-
-register_model("molecule", "GET", MoleculeGETBody, MoleculeGETResponse)
-
-
-class MoleculePOSTBody(ProtoModel):
-    meta: EmptyMeta = Field({}, description=common_docs[EmptyMeta])
-    data: List[Molecule] = Field(..., description="A list of :class:`Molecule` objects to add to the Database.")
-
-
-class MoleculePOSTResponse(ProtoModel):
-    meta: ResponsePOSTMeta = Field(..., description=common_docs[ResponsePOSTMeta])
-    data: List[ObjectId] = Field(
-        ...,
-        description="A list of Id's assigned to the Molecule objects passed in which serves as a unique identifier "
-        "in the database. If the Molecule was already in the database, then the Id returned is its "
-        "existing Id (entries are not duplicated).",
-    )
-
-
-register_model("molecule", "POST", MoleculePOSTBody, MoleculePOSTResponse)
-
 ### Collections
 
 

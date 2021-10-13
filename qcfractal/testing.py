@@ -182,6 +182,17 @@ def load_procedure_data(name: str):
     return input_type(**data["input"]), molecule, result_type(**data["result"])
 
 
+def load_molecule_data(name: str) -> Molecule:
+    """
+    Loads a molecule object for use in testing
+    """
+
+    my_path = os.path.dirname(os.path.abspath(__file__))
+    data_path = os.path.join(my_path, "tests", "molecule_data")
+    file_path = os.path.join(data_path, name + ".json")
+    return Molecule.from_file(file_path)
+
+
 @contextmanager
 def caplog_handler_at_level(caplog_fixture, level, logger=None):
     """

@@ -14,7 +14,7 @@ from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.records.db_models import BaseResultORM
 from qcfractal.components.serverinfo.db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM
 from qcfractal.components.outputstore.db_models import OutputStoreORM
-from qcfractal.components.molecule.db_models import MoleculeORM
+from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.db_socket.helpers import get_query_proj_columns, get_count, calculate_limit
 
 from typing import TYPE_CHECKING

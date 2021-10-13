@@ -27,7 +27,8 @@ from ..interface.models import (
     DeleteMetadata,
     OutputStore,
 )
-from .rest_models import GetParameters, SimpleGetParameters, DeleteParameters
+from .rest_models import GetParameters, SimpleGetParameters, DeleteParameters, MoleculeQueryBody, MoleculeModifyBody
+from ..interface.models.query_meta import QueryMetadata, UpdateMetadata
 from .collections import Collection, collection_factory, collections_name_map
 from .records import record_factory
 from .cache import PortalCache
@@ -36,6 +37,7 @@ from .serialization import serialize, deserialize
 from ..interface.models import (
     KeywordSet,
     Molecule,
+    MoleculeIdentifiers,
     ObjectId,
     TaskRecord,
 )
@@ -384,6 +386,8 @@ class PortalClient:
                 r = requests.post(addr, **kwargs)
             elif method == "put":
                 r = requests.put(addr, **kwargs)
+            elif method == "patch":
+                r = requests.patch(addr, **kwargs)
             elif method == "delete":
                 r = requests.delete(addr, **kwargs)
             else:
@@ -557,37 +561,32 @@ class PortalClient:
 
     def get_molecules(
         self,
-        id: Sequence[ObjectId],
-        include: Optional[Iterable[str]] = None,
-        exclude: Optional[Iterable[str]] = None,
+        id: Union[int, Sequence[int]],
         missing_ok: bool = False,
-    ) -> Union[List[Optional[Molecule]], List[Optional[Dict[str, Any]]]]:
-        """Get molecules by id.
-
-        Uses the client's own caching for performance.
+    ) -> Union[Optional[Molecule], List[Optional[Molecule]]]:
+        """Obtains molecules from the server via molecule ids
 
         Parameters
         ----------
-        id : QueryObjectId
-            Queries the record ``id`` field.
-            Multiple ids can be included in a list; result records will be returned in the same order.
-        missing_ok : bool
-            If True, return ``None`` for ids with no associated result.
-            If False, raise ``KeyError`` for an id with no result on the server.
+        id
+            An id or list of ids to query.
+        missing_ok
+            If True, return ``None`` for ids that were not found on the server.
+            If False, raise ``KeyError`` if any ids were not found on the server.
 
         Returns
         -------
-        records : Union[List[Record], Record]
-            If `id` is a list of ids, then a list of records will be returned in the same order.
-            If `id` is a single id, then only that record will be returned.
-
+        :
+            The requested molecules, in the same order as the requested ids.
+            If given a list of ids, the return value will be a list.
+            Otherwise, it will be a single Molecule.
         """
 
-        query_params = {"id": make_list(id), "include": include, "exclude": exclude, "missing_ok": missing_ok}
-        mols = self._auto_request("get", "v1/molecule", None, GetParameters, None, query_params)
+        query_params = {"id": make_list(id), "missing_ok": missing_ok}
+        mols = self._auto_request(
+            "get", "v1/molecule", None, SimpleGetParameters, List[Optional[Molecule]], None, query_params
+        )
 
-        if include is None and exclude is None:
-            mols = pydantic.parse_obj_as(List[Optional[Molecule]], mols)
         if isinstance(id, Sequence):
             return mols
         else:
@@ -595,69 +594,141 @@ class PortalClient:
 
     # TODO: we would like more fields to be queryable via the REST API for mols
     #       e.g. symbols/elements. Unless these are indexed might not be performant.
-    # TODO: for query methods, hands tied to what the REST API exposes
+    # TODO: what was paginate: bool = False for?
     def query_molecules(
         self,
-        molecule_hash: Optional["QueryStr"] = None,
-        molecular_formula: Optional["QueryStr"] = None,
+        molecule_hash: Optional[Union[str, Iterable[str]]] = None,
+        molecular_formula: Optional[Union[str, Iterable[str]]] = None,
+        identifiers: Optional[Dict[str, Union[str, List[str]]]] = None,
         limit: Optional[int] = None,
         skip: int = 0,
-        paginate: bool = False,
-    ) -> List["Molecule"]:
+    ) -> List[Molecule]:
         """Query molecules by attributes.
 
         All matching molecules, up to the lower of `limit` or the server's
         maximum result count, will be returned.
 
+        The return list will be in an indeterminate order
+
         Parameters
         ----------
-        molecule_hash : QueryStr, optional
-            Queries the Molecule ``molecule_hash`` field.
-        molecular_formula : QueryStr, optional
-            Queries the Molecule ``molecular_formula`` field. Molecular formulas are case-sensitive.
+        molecule_hash
+            Queries molecules by hash
+        molecular_formula
+            Queries molecules by molecular formula
             Molecular formulas are not order-sensitive (e.g. "H2O == OH2 != Oh2").
-        limit : Optional[int], optional
+        identifiers
+            Additional identifiers to search for (smiles, etc)
+        limit
             The maximum number of Molecules to query.
-        skip : int, optional
+        skip
             The number of Molecules to skip in the query, used during pagination
-
         """
-        payload = {
-            "meta": {"limit": limit, "skip": skip},
-            "data": {"molecule_hash": molecule_hash, "molecular_formula": molecular_formula},
+
+        query_body = {
+            "molecule_hash": make_list(molecule_hash),
+            "molecular_formula": make_list(molecular_formula),
+            "limit": limit,
+            "skip": skip,
         }
-        molecules = self._automodel_request("molecule", "get", payload)
 
-        # cache results
-        self._cache.put(molecules, entity_type="molecule")
+        if identifiers is not None:
+            query_body["identifiers"] = {k: make_list(v) for k, v in identifiers.items()}
 
-        return molecules
+        meta, molecules = self._auto_request(
+            "post", "v1/molecule/query", MoleculeQueryBody, None, Tuple[QueryMetadata, List[Molecule]], query_body, None
+        )
+        return meta, molecules
 
-    def add_molecules(self, molecules: List["Molecule"]) -> List[str]:
+    def add_molecules(self, molecules: List[Molecule]) -> List[str]:
         """Add molecules to the server.
 
         Parameters
-        ?
-        molecules : List[Molecule]
+        molecules
             A list of Molecules to add to the server.
 
         Returns
         -------
-        List[str]
-            A list of Molecule ids in `molecules` order;
-            `None` given for molecules that fail to add.
-
+        :
+            A list of Molecule ids in the same order as the `molecules` parameter.
         """
+
         mols = self._auto_request(
             "post",
             "v1/molecule",
             List[Molecule],
             None,
-            Tuple[InsertMetadata, List[ObjectId]],
+            Tuple[InsertMetadata, List[int]],
             make_list(molecules),
             None,
         )
         return mols
+
+    def modify_molecule(
+        self,
+        id: int,
+        name: Optional[str] = None,
+        comment: Optional[str] = None,
+        identifiers: Optional[Union[Dict[str, Any], MoleculeIdentifiers]] = None,
+        overwrite_identifiers: bool = False,
+    ) -> UpdateMetadata:
+        """
+        Modify molecules on the server
+
+        This is only capable of updating the name, comment, and identifiers fields (except molecule_hash
+        and molecular formula).
+
+        If a molecule with that id does not exist, an exception is raised
+
+        Parameters
+        ----------
+        id
+            Molecule ID of the molecule to modify
+        name
+            New name for the molecule. If None, name is not changed.
+        comment
+            New comment for the molecule. If None, comment is not changed
+        identifiers
+            A new set of identifiers for the molecule
+        overwrite_identifiers
+            If True, the identifiers of the molecule are set to be those given exactly (ie, identifiers
+            that exist in the DB but not in the new set will be removed). Otherwise, the new set of
+            identifiers is merged into the existing ones. Note that molecule_hash and molecular_formula
+            are never removed.
+
+        Returns
+        -------
+        :
+            Metadata about the modification/update.
+        """
+
+        payload = {
+            "name": name,
+            "comment": comment,
+            "identifiers": identifiers,
+            "overwrite_identifiers": overwrite_identifiers,
+        }
+
+        return self._auto_request("patch", f"v1/molecule/{id}", MoleculeModifyBody, None, UpdateMetadata, payload, None)
+
+    def delete_molecules(self, id: Union[int, Sequence[int]]) -> DeleteMetadata:
+        """Deletes molecules from the server
+
+        This will not delete any keywords that are in use
+
+        Parameters
+        ----------
+        id
+            An id or list of ids to query.
+
+        Returns
+        -------
+        :
+            Metadata about what was deleted
+        """
+
+        query_params = {"id": make_list(id)}
+        return self._auto_request("delete", "v1/molecule", None, DeleteParameters, DeleteMetadata, None, query_params)
 
     ### Keywords section
 

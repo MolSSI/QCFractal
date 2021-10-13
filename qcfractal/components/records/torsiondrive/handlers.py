@@ -32,7 +32,7 @@ def _check_td():
 from qcfractal.components.records.base_handlers import BaseServiceHandler
 from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.records.torsiondrive.db_models import OptimizationHistory, TorsionDriveProcedureORM
-from qcfractal.components.molecule.db_models import MoleculeORM
+from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.db_socket.helpers import insert_general, get_query_proj_columns
 from qcfractal.interface.models import (
     ProtoModel,
