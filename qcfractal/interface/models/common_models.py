@@ -28,6 +28,8 @@ from qcelemental.models import (
     OptimizationResult,
 )
 
+from qcelemental.models.molecule import Identifiers as MoleculeIdentifiers
+
 from qcelemental.models.procedures import OptimizationProtocols
 from qcelemental.models.results import AtomicResultProtocols, WavefunctionProperties
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer

@@ -216,30 +216,73 @@ class QueryMetadata:
         return dataclasses.asdict(self)
 
 
-# @dataclass
-# class UpsertMetadata:
-#    """
-#    Metadata returned by upsert_* functions
-#    """
-#
-#    # Integers in errors, inserted, existing are indices in the input/output list
-#    error_description: Optional[bool] = None
-#    errors: List[Tuple[int, str]] = dataclasses.field(default_factory=list)
-#    inserted_idx: List[int] = dataclasses.field(default_factory=list)  # inserted into the db
-#    updated_idx: List[int] = dataclasses.field(default_factory=list)  # existing and updated
-#
-#    @property
-#    def n_inserted(self):
-#        return len(self.inserted_idx)
-#
-#    @property
-#    def n_updated(self):
-#        return len(self.updated_idx)
-#
-#    @property
-#    def error_idx(self):
-#        return [x[0] for x in self.errors]
-#
-#    @property
-#    def success(self):
-#        return self.error_description is None and len(self.errors) == 0
+@dataclass
+class UpdateMetadata:
+    """
+    Metadata returned by update functions
+    """
+
+    # Integers in errors, updated_idx
+    error_description: Optional[str] = None
+    errors: List[Tuple[int, str]] = dataclasses.field(default_factory=list)
+    updated_idx: List[int] = dataclasses.field(default_factory=list)  # inserted into the db
+
+    @property
+    def n_updated(self):
+        return len(self.updated_idx)
+
+    @property
+    def n_errors(self):
+        return len(self.errors)
+
+    @property
+    def error_idx(self):
+        return [x[0] for x in self.errors]
+
+    @property
+    def success(self):
+        return self.error_description is None and len(self.errors) == 0
+
+    @property
+    def error_string(self):
+        s = ""
+        if self.error_description:
+            s += self.error_description + "\n"
+        s += "\n".join(f"    Index {x}: {y}" for x, y in self.errors)
+        return s
+
+    @validator("errors", "updated_idx", pre=True)
+    def sort_fields(cls, v):
+        return sorted(v)
+
+    @root_validator(pre=False, skip_on_failure=True)
+    def check_all_indices(cls, values):
+        # Test that all indices are accounted for and that the same index doesn't show up in
+        # inserted_idx, existing_idx, or errors
+        upd_idx = set(values["updated_idx"])
+        error_idx = set(x[0] for x in values["errors"])
+
+        if not upd_idx.isdisjoint(error_idx):
+            intersection = upd_idx.intersection(error_idx)
+            raise ValueError(f"updated_idx and error_idx are not disjoint: intersection={intersection}")
+
+        all_idx = upd_idx | error_idx
+
+        # Skip the rest if we don't have any data
+        if len(all_idx) == 0:
+            return values
+
+        # Are all the indices accounted for?
+        all_possible = set(range(max(all_idx) + 1))
+        if all_idx != all_possible:
+            missing = all_possible - all_idx
+            raise ValueError(f"All indices are not accounted for. Max is {max(all_idx)} and we are missing {missing}")
+
+        return values
+
+    def dict(self) -> Dict[str, Any]:
+        """
+        Returns the information from this dataclass as a dictionary
+        """
+
+        return dataclasses.asdict(self)
