@@ -2,7 +2,7 @@
 # (ie, this file is imported, which causes all the routes
 # to be registered with the blueprint)
 
-from .molecule import db_models, routes
+from .molecules import db_models, routes
 from .outputstore import db_models, routes
 from .wavefunctions import db_models, routes
 from .keywords import db_models, routes

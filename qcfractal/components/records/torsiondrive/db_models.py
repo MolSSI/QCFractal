@@ -3,7 +3,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.orm import column_property, relationship
 
-from qcfractal.components.molecule.db_models import MoleculeORM
+from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseResultORM
 from qcfractal.db_socket import BaseORM
 from typing import Optional, Iterable, Any, Dict

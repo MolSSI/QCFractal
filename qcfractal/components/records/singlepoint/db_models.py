@@ -3,7 +3,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 from qcfractal.components.keywords.db_models import KeywordsORM
-from qcfractal.components.molecule.db_models import MoleculeORM
+from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseResultORM
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
 from qcfractal.interface.models import DriverEnum, ObjectId

@@ -149,7 +149,7 @@ class SQLAlchemySocket:
             raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}") from None
 
         # Create/initialize the subsockets
-        from ..components.molecule.sockets import MoleculeSocket
+        from ..components.molecules.sockets import MoleculeSocket
         from ..components.outputstore.sockets import OutputStoreSocket
         from ..components.wavefunctions.sockets import WavefunctionSocket
         from ..components.keywords.sockets import KeywordsSocket
