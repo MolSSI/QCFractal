@@ -34,13 +34,7 @@ from .records import record_factory
 from .cache import PortalCache
 from .serialization import serialize, deserialize
 
-from ..interface.models import (
-    KeywordSet,
-    Molecule,
-    MoleculeIdentifiers,
-    ObjectId,
-    TaskRecord,
-)
+from ..interface.models import KeywordSet, Molecule, MoleculeIdentifiers, ObjectId, TaskRecord, WavefunctionProperties
 
 if TYPE_CHECKING:  # pragma: no cover
     from .collections.collection import Collection
@@ -986,50 +980,47 @@ class PortalClient:
         collection = self.get_collection(collection_type, name)
         self._automodel_request(f"collection/{collection.data.id}", "delete", payload={"meta": {}})
 
-    ### Results section
-
-    # TODO: Grabbed the raw version from `next`. Needs fixing up
     # TODO: we would want to cache these
     def get_wavefunctions(
         self,
-        id: ObjectId,
-        include: QueryListStr = None,
-        full_return: bool = False,
-    ) -> Union[WavefunctionStoreGETResponse, Dict[str, Any]]:
-        """Queries ResultRecords from the server.
+        id: Union[int, Sequence[int]],
+        missing_ok: bool = False,
+    ) -> Union[Optional[WavefunctionProperties], List[Optional[WavefunctionProperties]]]:
+        """Obtains wavefunction data from the server via wavefunction ids
+
+        Note: This is the id of the wavefunction, not of the calculation record.
 
         Parameters
         ----------
         id
-            Queries the Result ``id`` field.
-        include
-            Filters the returned fields
-        full_return
-            Returns the full server response if True that contains additional metadata.
+            An id or list of ids to query.
+        missing_ok
+            If True, return ``None`` for ids that were not found on the server.
+            If False, raise ``KeyError`` if any ids were not found on the server.
 
         Returns
         -------
         :
-            Returns a List of found Wavefunction data
+            The requested wavefunctions, in the same order as the requested ids.
+            If given a list of ids, the return value will be a list.
+            Otherwise, it will be a single output.
         """
 
-        payload = {
-            "meta": {"include": include},
-            "data": {
-                "id": id,
-            },
-        }
-        response = self._automodel_request("wavefunctionstore", "get", payload, full_return=True)
+        query_params = {"id": make_list(id), "missing_ok": missing_ok}
+        wfns = self._auto_request(
+            "get",
+            "v1/wavefunction",
+            None,
+            SimpleGetParameters,
+            List[Optional[WavefunctionProperties]],
+            None,
+            query_params,
+        )
 
-        # Add references back to the client
-        if not include:
-            for result in response.data:
-                result.__dict__["client"] = self
-
-        if full_return:
-            return response
+        if isinstance(id, Sequence):
+            return wfns
         else:
-            return response.data
+            return wfns[0]
 
     def get_records(
         self,

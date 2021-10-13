@@ -20,6 +20,7 @@ import pytest
 import qcengine as qcng
 import requests
 from qcelemental.models import Molecule
+from qcelemental.models.results import WavefunctionProperties
 from .config import FractalConfig, update_nested_dict
 
 import qcfractal.interface as ptl
@@ -191,6 +192,20 @@ def load_molecule_data(name: str) -> Molecule:
     data_path = os.path.join(my_path, "tests", "molecule_data")
     file_path = os.path.join(data_path, name + ".json")
     return Molecule.from_file(file_path)
+
+
+def load_wavefunction_data(name: str) -> WavefunctionProperties:
+    """
+    Loads a wavefunction object for use in testing
+    """
+
+    my_path = os.path.dirname(os.path.abspath(__file__))
+    data_path = os.path.join(my_path, "tests", "wavefunction_data")
+    file_path = os.path.join(data_path, name + ".json")
+
+    with open(file_path, "r") as f:
+        data = json.load(f)
+    return WavefunctionProperties(**data)
 
 
 @contextmanager
