@@ -29,9 +29,8 @@ from .common_models import (
     WavefunctionProperties,
     AllInputTypes,
     AllResultTypes,
-    UserInfo,
-    RoleInfo,
 )
+from ...portal.models.permissions import RoleInfo, UserInfo
 
 from .query_meta import InsertMetadata, DeleteMetadata, QueryMetadata, UpdateMetadata
 from .gridoptimization import GridOptimizationInput, GridOptimizationRecord
