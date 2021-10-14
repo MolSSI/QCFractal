@@ -128,7 +128,7 @@ class SQLAlchemySocket:
                     "attempting to check out in pid %s" % (connection_record.info["pid"], pid)
                 )
 
-        self.Session = sessionmaker(bind=self.engine)
+        self.Session = sessionmaker(bind=self.engine, future=True)
 
         # check version compatibility
         db_ver = self.check_lib_versions()
