@@ -58,6 +58,17 @@ class TDKeywords(ProtoModel):
         super().__init__(**recursive_normalizer(kwargs))
 
 
+    def dict(self, *args, **kwargs):
+        ret = super().dict(*args, **kwargs)
+
+        # For hash compatibility
+        if len(ret["additional_keywords"]) == 0:
+            ret.pop("additional_keywords")
+
+        return ret
+
+
+
 _td_constr = constr(strip_whitespace=True, regex="torsiondrive")
 _qcfractal_constr = constr(strip_whitespace=True, regex="qcfractal")
 
