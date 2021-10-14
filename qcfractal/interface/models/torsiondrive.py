@@ -50,13 +50,11 @@ class TDKeywords(ProtoModel):
         "minimum energy is -9.9 , then a new task starting with energy -9.8 will be skipped.",
     )
     additional_keywords: Dict[str, Any] = Field(
-        {},
-        description="Additional keywords to add to the torsiondrive's optimization runs"
+        {}, description="Additional keywords to add to the torsiondrive's optimization runs"
     )
 
     def __init__(self, **kwargs):
         super().__init__(**recursive_normalizer(kwargs))
-
 
     def dict(self, *args, **kwargs):
         ret = super().dict(*args, **kwargs)
@@ -66,7 +64,6 @@ class TDKeywords(ProtoModel):
             ret.pop("additional_keywords")
 
         return ret
-
 
 
 _td_constr = constr(strip_whitespace=True, regex="torsiondrive")

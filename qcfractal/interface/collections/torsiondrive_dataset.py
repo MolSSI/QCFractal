@@ -135,7 +135,7 @@ class TorsionDriveDataset(BaseProcedureDataset):
             dihedral_ranges=dihedral_ranges,
             energy_decrease_thresh=energy_decrease_thresh,
             energy_upper_limit=energy_upper_limit,
-            additional_keywords=additional_keywords
+            additional_keywords=additional_keywords,
         )
 
         entry = TDEntry(name=name, initial_molecules=molecule_ids, td_keywords=td_keywords, attributes=attributes)
