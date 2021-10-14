@@ -34,7 +34,15 @@ from .records import record_factory
 from .cache import PortalCache
 from .serialization import serialize, deserialize
 
-from ..interface.models import KeywordSet, Molecule, MoleculeIdentifiers, ObjectId, TaskRecord, WavefunctionProperties
+from ..interface.models import (
+    KeywordSet,
+    Molecule,
+    MoleculeIdentifiers,
+    ObjectId,
+    TaskRecord,
+    WavefunctionProperties,
+)
+from .models.permissions import RoleInfo, UserInfo
 
 if TYPE_CHECKING:  # pragma: no cover
     from .collections.collection import Collection
@@ -433,7 +441,11 @@ class PortalClient:
 
         r = self._request2(method, endpoint, body=serialized_body, query_params=parsed_query_params)
         d = deserialize(r.content, r.headers["Content-Type"])
-        return pydantic.parse_obj_as(response_model, d)
+
+        if response_model is None:
+            return None
+        else:
+            return pydantic.parse_obj_as(response_model, d)
 
     @property
     def cache(self):
@@ -1655,3 +1667,12 @@ class PortalClient:
             "data": {"group_by": group_by, "before": before, "after": after},
         }
         return self._automodel_request("access/summary", "get", payload, full_return=False)
+
+    def add_role(self, rolename: str, permissions: Dict[str, Any]):
+        """
+        Adds a role with permissions to the server
+
+        If not successful, an exception is raised.
+        """
+        payload = {"rolename": rolename, "permissions": permissions}
+        return self._auto_request("post", "v1/role", RoleInfo, None, None, payload, None)

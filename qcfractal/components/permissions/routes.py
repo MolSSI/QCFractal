@@ -1,39 +1,31 @@
-from flask import jsonify, request, current_app
+from flask import jsonify, request, current_app, g
 
 from qcfractal.app import main, storage_socket
-from qcfractal.app.routes import check_access
+from qcfractal.app.routes import check_access, wrap_route
+from qcfractal.portal.models.permissions import RoleInfo, UserInfo
 
 
-@main.route("/role", methods=["GET"])
+@main.route("/v1/role", methods=["GET"])
+@wrap_route(None, None)
 @check_access
 def list_roles_v1():
-    roles = storage_socket.roles.list()
-    # TODO - SerializedResponse?
-    r = [x.dict() for x in roles]
-    return jsonify(roles), 200
+    return storage_socket.roles.list()
 
 
-@main.route("/role/<string:rolename>", methods=["GET"])
+@main.route("/v1/role/<string:rolename>", methods=["GET"])
+@wrap_route(None, None)
 @check_access
 def get_role_v1(rolename: str):
-
-    role = storage_socket.roles.get(rolename)
-    # TODO - SerializedResponse?
-    return jsonify(role.dict()), 200
+    return storage_socket.roles.get(rolename)
 
 
-@main.route("/role/<string:rolename>", methods=["POST"])
+@main.route("/v1/role", methods=["POST"])
+@wrap_route(RoleInfo, None)
 @check_access
 def add_role_v1():
-    rolename = request.json["rolename"]
-    permissions = request.json["permissions"]
-
-    try:
-        storage_socket.roles.add(rolename, permissions)
-        return jsonify({"msg": "New role created!"}), 201
-    except Exception as e:
-        current_app.logger.warning(f"Error creating role {rolename}: {str(e)}")
-        return jsonify({"msg": "Error creating role"}), 400
+    rolename = g.validated_data.rolename
+    permissions = g.validated_data.permissions
+    storage_socket.roles.add(rolename, permissions)
 
 
 @main.route("/role", methods=["PUT"])

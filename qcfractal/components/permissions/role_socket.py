@@ -1,17 +1,21 @@
 from __future__ import annotations
 
 import logging
-from sqlalchemy.exc import IntegrityError
-from qcfractal.exceptions import UserManagementError
-from qcfractal.components.permissions.db_models import RoleORM
-from qcfractal.interface.models import RoleInfo
-
 from typing import TYPE_CHECKING
 
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.sql import select
+
+from qcfractal.components.permissions.db_models import RoleORM
+from qcfractal.exceptions import UserManagementError
+from qcfractal.portal.models.permissions import is_valid_rolename
+
 if TYPE_CHECKING:
-    from typing import Dict, List
+    from typing import Dict, List, Any, Optional
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
+
+    RoleInfoDict = Dict[str, Any]
 
 """
 Default roles are:
@@ -65,12 +69,6 @@ class RoleSocket:
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
 
-    @staticmethod
-    def _role_orm_to_model(role_orm: RoleORM) -> RoleInfo:
-        d = role_orm.dict()
-        d.pop("id", None)
-        return RoleInfo(**d)
-
     def _get_internal(self, session: Session, rolename: str) -> RoleORM:
         """
         Returns a RoleORM for the given rolename, or raises an exception if it does not exist
@@ -78,54 +76,69 @@ class RoleSocket:
         The returned ORM is attached to the session
         """
 
-        rolename = rolename.lower()
-        orm = session.query(RoleORM).filter(RoleORM.rolename == rolename).one_or_none()
+        is_valid_rolename(rolename)
+
+        stmt = select(RoleORM).where(RoleORM.rolename == rolename)
+        orm = session.execute(stmt).scalar_one_or_none()
         if orm is None:
             raise UserManagementError(f"Role {rolename} does not exist")
 
         return orm
 
-    def list(self) -> List[RoleInfo]:
+    def list(self, *, session: Optional[Session] = None) -> List[RoleInfoDict]:
         """
         Get information about all roles
-        """
-        with self.root_socket.session_scope() as session:
-            roles = session.query(RoleORM).order_by(RoleORM.id.asc()).all()
-            return [self._role_orm_to_model(x) for x in roles]
-
-    def get(self, rolename: str) -> RoleInfo:
-        """
-        Get information about a particular role
-        """
-        with self.root_socket.session_scope() as session:
-            role = self._get_internal(session, rolename)
-            return self._role_orm_to_model(role)
-
-    def add(self, rolename: str, permissions: Dict) -> None:
-        """
-        Adds a new role.
 
         Parameters
         ----------
-        rolename : str
-        permissions : Dict
-            Examples:
-                permissions = {
-                "Statement": [
-                    {"Effect": "Allow","Action": "*","Resource": "*"},
-                    {"Effect": "Deny","Action": "GET","Resource": "user"},
-                ]}
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
+        """
+        with self.root_socket.optional_session(session, True) as session:
+            stmt = select(RoleORM).order_by(RoleORM.id.asc())
+            roles = session.execute(stmt).scalars().all()
+            return [r.dict() for r in roles]
+
+    def get(self, rolename: str, *, session: Optional[Session] = None) -> RoleInfoDict:
+        """
+        Get information about a particular role
+
+        Parameters
+        ----------
+        rolename
+            Name of the role
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
+        """
+        with self.root_socket.optional_session(session, True) as session:
+            role = self._get_internal(session, rolename)
+            return role.dict()
+
+    def add(self, rolename: str, permissions: Dict, *, session: Optional[Session] = None) -> None:
+        """
+        Adds a new role.
+
+        An exception is raised if the role already exists.
+
+        Parameters
+        ----------
+        rolename
+            Name of the new role
+        permissions
+            Permissions for the new role
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
         """
 
-        rolename = rolename.lower()
-        with self.root_socket.session_scope() as session:
-            try:
+        try:
+            with self.root_socket.optional_session(session) as session:
                 role = RoleORM(rolename=rolename, permissions=permissions)  # type: ignore
                 session.add(role)
-            except IntegrityError as err:
-                raise UserManagementError(f"Role {rolename} already exists")
+        except IntegrityError:
+            raise UserManagementError(f"Role {rolename} already exists")
 
-    def modify(self, rolename: str, permissions: Dict) -> None:
+    def modify(self, rolename: str, permissions: Dict[str, Any], *, session: Optional[Session] = None) -> None:
         """
         Update role's permissions.
 
@@ -135,20 +148,22 @@ class RoleSocket:
             The name of the role to update
         permissions
             The new permissions to be associated with that role
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
         """
 
         # Cannot change admin role
         if rolename == "admin":
             raise UserManagementError("Cannot modify the admin role")
 
-        with self.root_socket.session_scope() as session:
+        with self.root_socket.optional_session(session) as session:
             role = self._get_internal(session, rolename)
             role.permissions = permissions
 
-    def delete(self, rolename: str):
+    def delete(self, rolename: str, *, session: Optional[Session] = None):
         """
         Delete role.
-
 
         This will raise an exception if the role does not exist or is being referenced from somewhere else.
 
@@ -156,25 +171,29 @@ class RoleSocket:
         ----------
         rolename
             The role name to delete
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
         """
 
         try:
-            with self.root_socket.session_scope() as session:
+            with self.root_socket.optional_session(session) as session:
                 role = self._get_internal(session, rolename)
                 session.delete(role)
         except IntegrityError:
             raise UserManagementError("Role could not be deleted. Likely it is being referenced somewhere")
 
-    def reset_defaults(self) -> None:
+    def reset_defaults(self, *, session: Optional[Session] = None) -> None:
         """
         Reset the permissions of the default roles back to their original values
 
         If a role does not exist, it will be created. Manually-created roles will be left alone.
         """
 
-        with self.root_socket.session_scope() as session:
+        with self.root_socket.optional_session(session) as session:
             for rolename, permissions in default_roles.items():
-                role_data = session.query(RoleORM).filter(RoleORM.rolename == rolename).one_or_none()
+                stmt = select(RoleORM).where(RoleORM.rolename == rolename)
+                role_data = session.execute(stmt).scalar_one_or_none()
                 if role_data is None:
                     role_data = RoleORM(rolename=rolename, permissions=permissions)  # type: ignore
                     session.add(role_data)

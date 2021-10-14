@@ -8,6 +8,7 @@ import requests
 
 import qcfractal
 import qcfractal.interface as ptl
+import qcfractal.portal.models.permissions
 from qcfractal.testing import TestingSnowflake
 
 
@@ -54,7 +55,9 @@ def fractal_test_secure_server(temporary_database):
         for k, v in _roles.items():
             storage.roles.add(k, permissions=v)
         for k, v in _users.items():
-            uinfo = ptl.models.UserInfo(username=k, fullname="Ms. Test User", enabled=True, role=v["role"])
+            uinfo = qcfractal.portal.models.permissions.UserInfo(
+                username=k, fullname="Ms. Test User", enabled=True, role=v["role"]
+            )
             storage.users.add(uinfo, password=v["pw"])
         yield server
 
@@ -76,7 +79,9 @@ def fractal_test_secure_server_read(temporary_database):
         for k, v in _roles.items():
             storage.roles.add(k, permissions=v)
         for k, v in _users.items():
-            uinfo = ptl.models.UserInfo(username=k, fullname="Ms. Test User", enabled=True, role=v["role"])
+            uinfo = qcfractal.portal.models.permissions.UserInfo(
+                username=k, fullname="Ms. Test User", enabled=True, role=v["role"]
+            )
             storage.users.add(uinfo, password=v["pw"])
         yield server
 

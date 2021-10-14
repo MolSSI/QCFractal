@@ -19,7 +19,15 @@ class AuthenticationFailure(UserReportableError):
     pass
 
 
-class ValidationError(UserReportableError):
+class InvalidUsernameError(UserManagementError):
+    pass
+
+
+class InvalidRolenameError(UserManagementError):
+    pass
+
+
+class InvalidPasswordError(UserManagementError):
     pass
 
 

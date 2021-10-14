@@ -20,7 +20,7 @@ from werkzeug.exceptions import BadRequest, InternalServerError, HTTPException, 
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import _valid_encodings, SerializedResponse
 from qcfractal.exceptions import UserReportableError, AuthenticationFailure
-from qcfractal.interface.models import UserInfo
+from qcfractal.portal.models.permissions import UserInfo
 from qcfractal.policyuniverse import Policy
 from qcfractal.portal.serialization import deserialize, serialize
 

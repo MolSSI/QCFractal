@@ -19,7 +19,7 @@ import qcfractal
 from ..config import read_configuration, FractalConfig, FlaskConfig
 from ..postgres_harness import PostgresHarness
 from ..db_socket.socket import SQLAlchemySocket
-from ..interface.models import UserInfo, RoleInfo
+from ..portal.models.permissions import RoleInfo, UserInfo
 from ..periodics import PeriodicsProcess
 from ..app.gunicorn_app import GunicornProcess
 from ..process_runner import ProcessRunner

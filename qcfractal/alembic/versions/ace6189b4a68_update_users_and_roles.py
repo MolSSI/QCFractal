@@ -28,7 +28,7 @@ def upgrade():
         sa.Column("rolename", sa.String(), nullable=False),
         sa.Column("permissions", sa.JSON(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("rolename"),
+        sa.UniqueConstraint("rolename", name="ux_role_rolename"),
     )
 
     # Create some temporary tables for updating
@@ -74,7 +74,7 @@ def upgrade():
     op.add_column("user", sa.Column("role_id", sa.Integer(), nullable=True))
 
     op.drop_constraint("user_username_key", "user", type_="unique")
-    op.create_index(op.f("ix_user_username"), "user", ["username"], unique=True)
+    op.create_unique_constraint("ux_user_username", "user", ["username"])
     op.create_foreign_key(None, "user", "role", ["role_id"], ["id"])
 
     # For all users, determine what the new role should be
