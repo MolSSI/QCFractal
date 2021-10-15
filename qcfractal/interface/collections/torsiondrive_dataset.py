@@ -127,6 +127,9 @@ class TorsionDriveDataset(BaseProcedureDataset):
         if attributes is None:
             attributes = {}
 
+        if additional_keywords is None:
+            additional_keywords = {}
+
         # Build new objects
         molecule_ids = self.client.add_molecules(initial_molecules)
         td_keywords = TDKeywords(
