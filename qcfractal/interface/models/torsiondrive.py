@@ -50,7 +50,7 @@ class TDKeywords(ProtoModel):
         "minimum energy is -9.9 , then a new task starting with energy -9.8 will be skipped.",
     )
     additional_keywords: Optional[Dict[str, Any]] = Field(
-        None, description="Additional keywords to add to the torsiondrive's optimization runs"
+        {}, description="Additional keywords to add to the torsiondrive's optimization runs"
     )
 
     def __init__(self, **kwargs):
