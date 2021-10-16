@@ -5,8 +5,8 @@ from flask import g
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper, delete_helper
 from qcfractal.app.routes import check_access, wrap_route
-from qcfractal.interface.models import Molecule
-from qcfractal.portal.rest_models import SimpleGetParameters, DeleteParameters, MoleculeQueryBody, MoleculeModifyBody
+from qcfractal.portal.common_rest import SimpleGetParameters, DeleteParameters
+from qcfractal.portal.components.molecules import Molecule, MoleculeQueryBody, MoleculeModifyBody
 
 
 @main.route("/v1/molecule", methods=["GET"])

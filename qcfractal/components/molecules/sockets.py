@@ -19,9 +19,8 @@ from qcfractal.db_socket.helpers import (
     calculate_limit,
 )
 from qcfractal.exceptions import LimitExceededError, MissingDataError
-from qcfractal.interface.models import (
-    Molecule,
-    MoleculeIdentifiers,
+from qcfractal.portal.components.molecules import Molecule, MoleculeIdentifiers
+from qcfractal.portal.metadata_models import (
     InsertMetadata,
     DeleteMetadata,
     QueryMetadata,

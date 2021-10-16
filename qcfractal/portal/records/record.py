@@ -9,7 +9,8 @@ from pydantic import Field, constr, validator
 import qcelemental as qcel
 from qcelemental.models.results import AtomicResultProtocols
 
-from ...interface.models import ObjectId, ProtoModel, OutputStore, RecordStatusEnum
+from ...interface.models import ObjectId, ProtoModel, RecordStatusEnum
+from ..components.outputstore import OutputStore
 from ...interface.models.model_utils import prepare_basis
 
 

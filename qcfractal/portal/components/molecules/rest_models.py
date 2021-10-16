@@ -1,7 +1,7 @@
 from typing import Optional, List, Dict
 
-from .common import QueryParametersBase, BaseModel
-from qcfractal.interface.models import MoleculeIdentifiers
+from qcfractal.portal.common_rest import QueryParametersBase, BaseModel
+from qcfractal.portal.components.molecules import MoleculeIdentifiers
 
 
 class MoleculeQueryBody(QueryParametersBase):

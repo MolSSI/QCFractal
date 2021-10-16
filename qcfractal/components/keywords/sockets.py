@@ -11,7 +11,8 @@ from qcfractal.db_socket.helpers import (
     insert_mixed_general,
 )
 from qcfractal.exceptions import LimitExceededError
-from qcfractal.interface.models import KeywordSet, InsertMetadata, DeleteMetadata
+from qcfractal.portal.metadata_models import InsertMetadata, DeleteMetadata
+from qcfractal.portal.components.keywords import KeywordSet
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -67,6 +68,9 @@ class KeywordsSocket:
         # valid KeywordSet object should be insertable into the database
         ###############################################################################
 
+        # Make sure the hashes are correct
+        for k in keywords:
+            k.build_index()
         kw_orm = [self.keywords_to_orm(x) for x in keywords]
 
         with self.root_socket.optional_session(session) as session:

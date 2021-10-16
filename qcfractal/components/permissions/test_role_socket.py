@@ -7,7 +7,7 @@ import pytest
 from qcfractal.components.permissions.role_socket import default_roles
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.exceptions import UserManagementError
-from qcfractal.portal.models.permissions import RoleInfo, UserInfo
+from qcfractal.portal.components.permissions import RoleInfo, UserInfo
 
 
 def test_role_socket_defaults(storage_socket: SQLAlchemySocket):

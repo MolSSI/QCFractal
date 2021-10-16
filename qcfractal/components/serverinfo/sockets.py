@@ -7,7 +7,7 @@ from datetime import datetime
 from sqlalchemy import and_, func, text
 from sqlalchemy.orm import load_only
 import qcfractal
-from qcfractal.interface.models import QueryMetadata
+from qcfractal.portal.metadata_models import QueryMetadata
 from qcfractal.components.datasets.db_models import CollectionORM
 from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM

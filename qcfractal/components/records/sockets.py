@@ -5,7 +5,8 @@ import logging
 from qcfractal.components.records.db_models import BaseResultORM
 from sqlalchemy import and_
 from sqlalchemy.orm import selectinload, load_only
-from qcfractal.interface.models import RecordStatusEnum, QueryMetadata
+from qcfractal.interface.models import RecordStatusEnum
+from qcfractal.portal.metadata_models import QueryMetadata
 from qcfractal.db_socket.helpers import get_query_proj_columns, get_count, calculate_limit
 
 from typing import TYPE_CHECKING

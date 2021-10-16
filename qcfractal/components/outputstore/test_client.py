@@ -5,7 +5,7 @@ Tests the keywords subsocket
 import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.interface.models import CompressionEnum, OutputStore
+from qcfractal.portal.components.outputstore import CompressionEnum, OutputStore
 from qcfractal.portal import PortalClient
 from qcfractal.portal.client import PortalRequestError
 

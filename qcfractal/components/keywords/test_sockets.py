@@ -6,7 +6,7 @@ import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.exceptions import MissingDataError
-from qcfractal.interface.models import KeywordSet
+from qcfractal.portal.components.keywords import KeywordSet
 
 
 def test_keywords_socket_basic(storage_socket: SQLAlchemySocket):
@@ -175,3 +175,43 @@ def test_keywords_socket_get_empty(storage_socket: SQLAlchemySocket):
     assert meta.n_inserted == 2
 
     assert storage_socket.keywords.get([]) == []
+
+
+def test_keywords_socket_add_incorrect_hash_1(storage_socket: SQLAlchemySocket):
+    # Adding keywords with an incorrect hash
+
+    kw1 = KeywordSet(values={"o": 5})
+    hash1 = kw1.hash_index
+
+    meta, added_ids_1 = storage_socket.keywords.add([kw1])
+    assert len(added_ids_1) == 1
+
+    # Changing values is possible, but then the hash wouldn't match
+    kw1.values["p"] = 100
+
+    # Adds it, even though the hash is the same on our end
+    meta, added_ids_2 = storage_socket.keywords.add([kw1])
+    assert len(added_ids_2) == 1
+
+    ret = storage_socket.keywords.get(added_ids_1 + added_ids_2)
+    assert ret[0]["hash_index"] == hash1
+    assert ret[1]["hash_index"] != hash1
+
+
+def test_keywords_socket_add_incorrect_hash_2(storage_socket: SQLAlchemySocket):
+    # Adding keywords with an incorrect hash
+
+    kw1 = KeywordSet(values={"o": 5})
+
+    meta, added_ids_1 = storage_socket.keywords.add([kw1])
+    assert len(added_ids_1) == 1
+
+    # Change the value of the hash
+    kw2 = KeywordSet(**kw1.dict(exclude={"hash_index"}), hash_index="12345678")
+
+    # Is a duplicate, even though hash is different
+    meta, added_ids_2 = storage_socket.keywords.add([kw2])
+    assert len(added_ids_2) == 1
+    assert meta.n_inserted == 0
+    assert meta.n_existing == 1
+    assert added_ids_1 == added_ids_2

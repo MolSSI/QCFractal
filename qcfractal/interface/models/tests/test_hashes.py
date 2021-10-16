@@ -2,7 +2,8 @@ import json
 
 import pytest
 
-from ..common_models import KeywordSet, Molecule
+from ..common_models import Molecule
+from qcfractal.portal.components.keywords.models import KeywordSet
 from ..gridoptimization import GridOptimizationRecord
 from ..records import OptimizationRecord, ResultRecord
 from ..torsiondrive import TorsionDriveRecord

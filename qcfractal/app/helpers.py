@@ -6,7 +6,7 @@ from flask import request, current_app, Response
 from qcelemental.util import serialize
 from werkzeug.exceptions import BadRequest
 
-from qcfractal.interface.models import QueryMetadata, InsertMetadata, DeleteMetadata
+from qcfractal.portal.metadata_models import QueryMetadata, InsertMetadata, DeleteMetadata
 from qcfractal.interface.models.rest_models import ResponseGETMeta, ResponsePOSTMeta
 
 _valid_encodings = {

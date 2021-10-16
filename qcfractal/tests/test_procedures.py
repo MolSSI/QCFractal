@@ -8,6 +8,7 @@ from qcelemental.util import parse_version
 
 import qcengine as qcng
 import qcfractal.interface as ptl
+import qcfractal.portal.components.keywords.models
 from qcfractal.interface.models import RecordStatusEnum
 from qcfractal import testing
 
@@ -26,7 +27,7 @@ def test_compute_queue_stack(fractal_test_server):
 
     hydrogen_mol_id, helium_mol_id = client.add_molecules([hydrogen, helium])
 
-    kw = ptl.models.KeywordSet(**{"values": {"e_convergence": 1.0e-8}})
+    kw = qcfractal.portal.components.keywords.models.KeywordSet(**{"values": {"e_convergence": 1.0e-8}})
     kw_id = client.add_keywords([kw])[0]
 
     # Add compute
@@ -115,7 +116,9 @@ def test_procedure_optimization_single(fractal_test_server):
     client = fractal_test_server.client()
     mol_ret = client.add_molecules([hydrogen])
 
-    kw = ptl.models.KeywordSet(values={"scf_properties": ["quadrupole", "wiberg_lowdin_indices"]})
+    kw = qcfractal.portal.components.keywords.models.KeywordSet(
+        values={"scf_properties": ["quadrupole", "wiberg_lowdin_indices"]}
+    )
     kw_id = client.add_keywords([kw])[0]
 
     # Add compute

@@ -8,12 +8,11 @@ from sqlalchemy.orm import selectinload, load_only, contains_eager
 from qcfractal.interface.models import (
     ObjectId,
     AllServiceSpecifications,
-    InsertMetadata,
     RecordStatusEnum,
-    QueryMetadata,
 )
 from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.records.db_models import BaseResultORM
+from qcfractal.portal.metadata_models import InsertMetadata, QueryMetadata
 
 from qcfractal.db_socket.helpers import (
     insert_general,

@@ -10,12 +10,12 @@ from sqlalchemy.sql import select
 
 from qcfractal.components.permissions.db_models import UserORM
 from qcfractal.exceptions import AuthenticationFailure, UserManagementError
-from qcfractal.portal.models.permissions import UserInfo, is_valid_password, is_valid_username
+from qcfractal.portal.components.permissions.models import UserInfo, is_valid_password, is_valid_username
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from typing import Optional, List, Dict, Any, Union
+    from typing import Optional, List, Dict, Any
 
     UserInfoDict = Dict[str, Any]
 

@@ -6,7 +6,7 @@ import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.exceptions import MissingDataError
-from qcfractal.interface.models import WavefunctionProperties
+from qcfractal.portal.components.wavefunctions.models import WavefunctionProperties
 from qcfractal.testing import load_wavefunction_data
 
 

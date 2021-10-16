@@ -6,11 +6,10 @@ from __future__ import annotations
 
 import logging
 from qcfractal.interface.models import (
-    OutputStore,
     AllResultTypes,
-    WavefunctionProperties,
 )
-
+from qcfractal.portal.components.outputstore import OutputStore
+from qcfractal.portal.components.wavefunctions import WavefunctionProperties
 
 from typing import TYPE_CHECKING
 

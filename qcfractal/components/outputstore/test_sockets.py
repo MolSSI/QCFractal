@@ -6,7 +6,7 @@ import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.exceptions import MissingDataError
-from qcfractal.interface.models import CompressionEnum, OutputStore
+from qcfractal.portal.components.outputstore import CompressionEnum, OutputStore
 
 
 @pytest.mark.parametrize("compression", CompressionEnum)

@@ -4,7 +4,7 @@ Tests the keywords subsocket
 
 import pytest
 
-from qcfractal.interface.models import KeywordSet
+from qcfractal.portal.components.keywords import KeywordSet
 from qcfractal.portal import PortalClient
 from qcfractal.portal.client import PortalRequestError
 
