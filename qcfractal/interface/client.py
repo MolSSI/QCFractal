@@ -27,13 +27,13 @@ if TYPE_CHECKING:  # pragma: no cover
     from .collections.collection import Collection
     from .models import (
         GridOptimizationInput,
-        KeywordSet,
         Molecule,
         ObjectId,
         ResultRecord,
         TaskRecord,
         TorsionDriveInput,
     )
+    from ..portal.components.keywords import KeywordSet
     from .models.rest_models import (
         CollectionGETResponse,
         ComputeResponse,

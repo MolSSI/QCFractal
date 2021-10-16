@@ -7,6 +7,7 @@ import pytest
 
 import qcfractal.components.collections.routes
 import qcfractal.interface as ptl
+import qcfractal.portal.components.keywords.models
 
 valid_encodings = ["json", "json-ext", "msgpack-ext"]
 
@@ -42,7 +43,7 @@ def test_client_keywords(fractal_test_server, encoding):
     client = fractal_test_server.client()
     client._set_encoding(encoding)
 
-    opt = ptl.models.KeywordSet(values={"one": "fish", "two": encoding})
+    opt = qcfractal.portal.components.keywords.models.KeywordSet(values={"one": "fish", "two": encoding})
 
     # Test add
     ret = client.add_keywords([opt])
@@ -59,9 +60,9 @@ def test_client_duplicate_keywords(fractal_test_server, encoding):
     client._set_encoding(encoding)
 
     key_name = f"key-{encoding}"
-    opt1 = ptl.models.KeywordSet(values={key_name: 1})
-    opt2 = ptl.models.KeywordSet(values={key_name: 2})
-    opt3 = ptl.models.KeywordSet(values={key_name: 3})
+    opt1 = qcfractal.portal.components.keywords.models.KeywordSet(values={key_name: 1})
+    opt2 = qcfractal.portal.components.keywords.models.KeywordSet(values={key_name: 2})
+    opt3 = qcfractal.portal.components.keywords.models.KeywordSet(values={key_name: 3})
 
     # Test add
     ret = client.add_keywords([opt1, opt1])

@@ -13,14 +13,15 @@ from qcfractal.components.records.base_handlers import BaseProcedureHandler
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.records.singlepoint.db_models import ResultORM
 from qcfractal.db_socket.helpers import insert_general, get_query_proj_columns, get_count, calculate_limit
-from qcfractal.interface.models import ObjectId, RecordStatusEnum, PriorityEnum, AtomicInput, QueryMetadata
+from qcfractal.interface.models import ObjectId, RecordStatusEnum, PriorityEnum, AtomicInput
+from qcfractal.portal.metadata_models import InsertMetadata, QueryMetadata
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcfractal.interface.models import AtomicResult, SingleProcedureSpecification, InsertMetadata
+    from qcfractal.interface.models import AtomicResult, SingleProcedureSpecification
     from typing import List, Optional, Tuple, Dict, Any, Sequence, Iterable
 
     SingleProcedureDict = Dict[str, Any]

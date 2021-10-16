@@ -5,7 +5,8 @@ from datetime import datetime
 
 from sqlalchemy import or_, and_, update
 from sqlalchemy.orm import load_only, selectinload
-from qcfractal.interface.models import ObjectId, ManagerStatusEnum, QueryMetadata
+from qcfractal.interface.models import ObjectId, ManagerStatusEnum
+from qcfractal.portal.metadata_models import QueryMetadata
 from qcfractal.components.managers.db_models import QueueManagerLogORM, QueueManagerORM
 from qcfractal.db_socket.helpers import get_query_proj_columns, get_count, calculate_limit
 

@@ -23,7 +23,8 @@ from .collection_utils import composition_planner, register_collection
 
 if TYPE_CHECKING:  # pragma: no cover
     from .. import FractalClient
-    from ..models import KeywordSet, Molecule, ResultRecord
+    from ..models import Molecule, ResultRecord
+    from ...portal.components.keywords.models import KeywordSet
     from . import DatasetView
 
 

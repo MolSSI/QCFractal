@@ -8,7 +8,7 @@ from sqlalchemy.sql import select
 
 from qcfractal.components.permissions.db_models import RoleORM
 from qcfractal.exceptions import UserManagementError
-from qcfractal.portal.models.permissions import is_valid_rolename
+from qcfractal.portal.components.permissions.models import is_valid_rolename
 
 if TYPE_CHECKING:
     from typing import Dict, List, Any, Optional

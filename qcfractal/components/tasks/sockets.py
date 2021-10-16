@@ -23,11 +23,10 @@ from qcfractal.interface.models import (
     ManagerStatusEnum,
     FailedOperation,
     RecordStatusEnum,
-    InsertMetadata,
     AllProcedureSpecifications,
-    QueryMetadata,
 )
 
+from qcfractal.portal.metadata_models import InsertMetadata, QueryMetadata
 from typing import TYPE_CHECKING
 
 from qcfractal.components.records.base_handlers import BaseProcedureHandler
@@ -38,7 +37,8 @@ from qcfractal.components.records.optimization.handlers import OptimizationHandl
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcfractal.interface.models import ObjectId, AllResultTypes, Molecule, OutputStore
+    from qcfractal.interface.models import ObjectId, AllResultTypes, Molecule
+    from qcfractal.portal.components.outputstore import OutputStore
     from typing import List, Dict, Tuple, Optional, Any, Iterable, Sequence, Union
 
     TaskDict = Dict[str, Any]

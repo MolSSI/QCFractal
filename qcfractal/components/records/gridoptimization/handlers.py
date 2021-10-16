@@ -43,7 +43,7 @@ from typing import TYPE_CHECKING, List, Tuple
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcfractal.interface.models import InsertMetadata
+    from qcfractal.portal.metadata_models import InsertMetadata
     from typing import Sequence, Dict, Optional, Any, Set, Union
 
     GridOptimizationProcedureDict = Dict[str, Any]

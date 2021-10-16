@@ -13,6 +13,7 @@ import qcelemental as qcel
 
 import qcfractal.components.collections.routes
 import qcfractal.interface as ptl
+import qcfractal.portal.components.keywords.models
 from qcfractal.interface.models import RecordStatusEnum
 from qcfractal import testing
 from qcfractal.testing import df_compare, live_fractal_or_skip
@@ -122,7 +123,9 @@ def gradient_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
         ds.add_contributed_values(contrib_all_details)
         ds.add_contributed_values(contrib_no_details)
 
-        ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={}), default=True)
+        ds.add_keywords(
+            "scf_default", "psi4", qcfractal.portal.components.keywords.models.KeywordSet(values={}), default=True
+        )
         ds.save()
 
         ds.compute("HF", "sto-3g")
@@ -542,7 +545,7 @@ def test_reactiondataset_check_state(fractal_compute_server):
 
     ds.save()
 
-    ds.add_keywords("default", "psi4", ptl.models.KeywordSet(values={"a": 5}))
+    ds.add_keywords("default", "psi4", qcfractal.portal.components.keywords.models.KeywordSet(values={"a": 5}))
 
     with pytest.raises(ValueError):
         ds.get_records("SCF", "STO-3G")
@@ -620,7 +623,12 @@ def reactiondataset_dftd3_fixture_fixture(fractal_compute_server, tmp_path_facto
         HeDimer = ptl.Molecule.from_data([[2, 0, 0, -1.412], [2, 0, 0, 1.412]], dtype="numpy", units="bohr", frags=[1])
         ds.add_ie_rxn("HeDimer", HeDimer, attributes={"r": 4})
         ds.set_default_program("psi4")
-        ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={"e_convergence": 1.0e-10}), default=True)
+        ds.add_keywords(
+            "scf_default",
+            "psi4",
+            qcfractal.portal.components.keywords.models.KeywordSet(values={"e_convergence": 1.0e-10}),
+            default=True,
+        )
 
         ds.save()
 
@@ -784,7 +792,12 @@ def test_dataset_dftd3(reactiondataset_dftd3_fixture_fixture):
         HeDimer = rxn_ds.get_molecules(subset="HeDimer").iloc[0, 0]
         ds.add_entry("HeDimer", HeDimer)
         ds.set_default_program(rxn_ds.data.default_program)
-        ds.add_keywords("scf_default", rxn_ds.data.default_program, ptl.models.KeywordSet(values={}), default=True)
+        ds.add_keywords(
+            "scf_default",
+            rxn_ds.data.default_program,
+            qcfractal.portal.components.keywords.models.KeywordSet(values={}),
+            default=True,
+        )
 
         ds.save()
 
@@ -891,8 +904,13 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     ds.set_default_program("Psi4")
 
     ds.add_ie_rxn("He2", mol1)
-    ds.add_keywords("direct", "psi4", ptl.models.KeywordSet(values={"scf_type": "direct"}), default=True)
-    ds.add_keywords("df", "psi4", ptl.models.KeywordSet(values={"scf_type": "df"}))
+    ds.add_keywords(
+        "direct",
+        "psi4",
+        qcfractal.portal.components.keywords.models.KeywordSet(values={"scf_type": "direct"}),
+        default=True,
+    )
+    ds.add_keywords("df", "psi4", qcfractal.portal.components.keywords.models.KeywordSet(values={"scf_type": "df"}))
 
     ds.save()
     ds = qcfractal.components.collections.routes.get_collection("reactiondataset", "dataset_options")
@@ -1022,7 +1040,12 @@ def test_rds_rxn(fractal_compute_server):
     ds.add_rxn("HeDimer1", stoichiometry={"default": [(HeDimer1, 0.0)]})
     ds.add_rxn("HeDimer2", stoichiometry={"default": [(HeDimer2, 1.0), (HeDimer1, -1.0)]})
     ds.set_default_program("psi4")
-    ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={"e_convergence": 1.0e-10}), default=True)
+    ds.add_keywords(
+        "scf_default",
+        "psi4",
+        qcfractal.portal.components.keywords.models.KeywordSet(values={"e_convergence": 1.0e-10}),
+        default=True,
+    )
 
     ds.save()
 
@@ -1358,9 +1381,9 @@ def test_torsiondrive_dataset(fractal_compute_server):
 def test_dataset_list_keywords(fractal_compute_server):
     client = fractal_compute_server.client()
 
-    kw1 = ptl.models.KeywordSet(values={"foo": True})
-    kw2 = ptl.models.KeywordSet(values={"foo": False})
-    kw3 = ptl.models.KeywordSet(values={"foo": 13})
+    kw1 = qcfractal.portal.components.keywords.models.KeywordSet(values={"foo": True})
+    kw2 = qcfractal.portal.components.keywords.models.KeywordSet(values={"foo": False})
+    kw3 = qcfractal.portal.components.keywords.models.KeywordSet(values={"foo": 13})
     ds = ptl.collections.Dataset("test_dataset_list_keywords", client)
 
     ds.add_keywords(alias="p1_k1", program="p1", keyword=kw1)

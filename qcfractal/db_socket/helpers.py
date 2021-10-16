@@ -1,5 +1,5 @@
 from __future__ import annotations
-from ..interface.models.query_meta import InsertMetadata, DeleteMetadata, QueryMetadata
+from qcfractal.portal.metadata_models import InsertMetadata, DeleteMetadata
 from ..exceptions import MissingDataError
 from qcfractal.db_socket import BaseORM
 from sqlalchemy import tuple_, and_, or_, func, select

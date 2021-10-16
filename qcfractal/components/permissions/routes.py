@@ -2,7 +2,7 @@ from flask import jsonify, request, current_app, g
 
 from qcfractal.app import main, storage_socket
 from qcfractal.app.routes import check_access, wrap_route
-from qcfractal.portal.models.permissions import RoleInfo, UserInfo
+from qcfractal.portal.components.permissions import RoleInfo
 
 
 @main.route("/v1/role", methods=["GET"])

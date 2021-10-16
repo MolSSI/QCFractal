@@ -11,6 +11,8 @@ import pytest
 from sqlalchemy.orm import joinedload
 
 import qcfractal.interface as ptl
+import qcfractal.portal.components.keywords.models
+import qcfractal.portal.components.outputstore.models
 from qcfractal.interface.models import RecordStatusEnum
 from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
@@ -39,12 +41,12 @@ def molecules_H4O2(storage_socket):
 
 @pytest.fixture
 def kw_fixtures(storage_socket):
-    kw1 = ptl.models.KeywordSet(**{"values": {"something": "kwfixture"}})
+    kw1 = qcfractal.portal.components.keywords.models.KeywordSet(**{"values": {"something": "kwfixture"}})
     _, ret = storage_socket.keywords.add([kw1])
     yield list(ret)
 
 
-@pytest.mark.parametrize("compression", ptl.models.CompressionEnum)
+@pytest.mark.parametrize("compression", qcfractal.portal.components.outputstore.models.CompressionEnum)
 @pytest.mark.parametrize("compression_level", [None, 1, 5])
 def test_kvstore(session_fixture, compression, compression_level):
 
@@ -52,7 +54,7 @@ def test_kvstore(session_fixture, compression, compression_level):
     assert session.query(KVStoreORM).count() == 0
 
     input_str = "This is some input " * 10
-    kv = ptl.models.OutputStore.compress(input_str, compression, compression_level)
+    kv = qcfractal.portal.components.outputstore.models.OutputStore.compress(input_str, compression, compression_level)
     log = KVStoreORM(**kv.dict())
     session.add(log)
     session.commit()
@@ -61,7 +63,7 @@ def test_kvstore(session_fixture, compression, compression_level):
 
     # TODO - remove the exclude once all data is migrated in DB
     # (there will be no "value" in the ORM anymore
-    kv2 = ptl.models.OutputStore(**q.to_dict(exclude=["value"]))
+    kv2 = qcfractal.portal.components.outputstore.models.OutputStore(**q.to_dict(exclude=["value"]))
     assert kv2.get_string() == input_str
     assert kv2.compression is compression
 
@@ -85,9 +87,9 @@ def test_old_kvstore(session_fixture):
 
     # Now query through the interface
     q_dict = storage_socket.outputstore.get([log.id])[0]
-    q = ptl.models.OutputStore(**q_dict)
+    q = qcfractal.portal.components.outputstore.models.OutputStore(**q_dict)
     assert q.data.decode() == input_str
-    assert q.compression is ptl.models.CompressionEnum.none
+    assert q.compression is qcfractal.portal.components.outputstore.models.CompressionEnum.none
     assert q.compression_level == 0
 
 

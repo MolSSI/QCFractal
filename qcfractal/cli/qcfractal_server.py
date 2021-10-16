@@ -8,7 +8,6 @@ import shutil
 import sys
 import textwrap
 import logging
-import multiprocessing
 import yaml
 import time
 import signal
@@ -19,11 +18,10 @@ import qcfractal
 from ..config import read_configuration, FractalConfig, FlaskConfig
 from ..postgres_harness import PostgresHarness
 from ..db_socket.socket import SQLAlchemySocket
-from ..portal.models.permissions import RoleInfo, UserInfo
+from qcfractal.portal.components.permissions import RoleInfo, UserInfo
 from ..periodics import PeriodicsProcess
 from ..app.gunicorn_app import GunicornProcess
 from ..process_runner import ProcessRunner
-from .cli_utils import install_signal_handlers
 
 
 class EndProcess(RuntimeError):

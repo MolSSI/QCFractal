@@ -6,7 +6,7 @@ import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.exceptions import UserManagementError, AuthenticationFailure, InvalidPasswordError, InvalidUsernameError
-from qcfractal.portal.models.permissions import UserInfo, is_valid_password
+from qcfractal.portal.components.permissions.models import UserInfo, is_valid_password
 
 invalid_usernames = ["\x00", "ab\x00cd", "1234", "a user", ""]
 invalid_passwords = ["\x00", "abcd\x00efgh", "abcd", "1", ""]

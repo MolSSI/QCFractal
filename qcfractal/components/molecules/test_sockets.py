@@ -6,7 +6,7 @@ import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.exceptions import MissingDataError
-from qcfractal.interface.models import Molecule, MoleculeIdentifiers
+from qcfractal.portal.components.molecules import Molecule, MoleculeIdentifiers
 from qcfractal.testing import load_molecule_data
 
 

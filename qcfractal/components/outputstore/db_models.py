@@ -3,7 +3,7 @@ from typing import Dict, Any, Optional, Iterable
 from sqlalchemy import Column, Integer, Enum, JSON, LargeBinary
 
 from qcfractal.db_socket import BaseORM
-from qcfractal.interface.models import CompressionEnum
+from qcfractal.portal.components.outputstore.models import CompressionEnum
 
 
 class OutputStoreORM(BaseORM):

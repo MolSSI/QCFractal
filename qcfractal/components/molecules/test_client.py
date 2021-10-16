@@ -4,7 +4,7 @@ Tests the molecule subsocket
 
 import pytest
 
-from qcfractal.interface.models import Molecule, MoleculeIdentifiers
+from qcfractal.portal.components.molecules import Molecule, MoleculeIdentifiers
 from qcfractal.portal import PortalClient
 from qcfractal.portal.client import PortalRequestError
 from qcfractal.testing import load_molecule_data

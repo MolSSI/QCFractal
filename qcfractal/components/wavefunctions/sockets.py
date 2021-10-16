@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
 from qcfractal.db_socket.helpers import get_general
 from qcfractal.exceptions import LimitExceededError
-from qcfractal.interface.models import WavefunctionProperties
+from qcfractal.portal.components.wavefunctions.models import WavefunctionProperties
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session

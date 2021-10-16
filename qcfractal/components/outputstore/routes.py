@@ -4,7 +4,7 @@ from flask import g
 
 from qcfractal.app import main, storage_socket
 from qcfractal.app.routes import check_access, wrap_route
-from qcfractal.portal.rest_models import SimpleGetParameters
+from qcfractal.portal.common_rest import SimpleGetParameters
 from qcfractal.app.helpers import get_helper
 
 

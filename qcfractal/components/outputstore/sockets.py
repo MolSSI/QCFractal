@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.db_socket.helpers import get_general
 from qcfractal.exceptions import LimitExceededError, MissingDataError
-from qcfractal.interface.models import OutputStore, CompressionEnum
+from qcfractal.portal.components.outputstore import CompressionEnum, OutputStore
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session

@@ -22,15 +22,15 @@ from qcfractal.interface.models import (
     OptimizationResult,
     OptimizationInput,
     PriorityEnum,
-    QueryMetadata,
 )
 
+from qcfractal.portal.metadata_models import QueryMetadata, InsertMetadata
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcfractal.interface.models import AtomicResult, OptimizationProcedureSpecification, InsertMetadata
+    from qcfractal.interface.models import AtomicResult, OptimizationProcedureSpecification
     from typing import List, Optional, Tuple, Dict, Any, Sequence, Iterable
 
     OptimizationProcedureDict = Dict[str, Any]

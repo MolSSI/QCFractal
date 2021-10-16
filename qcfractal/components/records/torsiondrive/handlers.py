@@ -44,13 +44,13 @@ from qcfractal.interface.models import (
 )
 
 from qcfractal.interface.models.torsiondrive import TorsionDriveInput, TorsionDriveRecord, TorsionDriveKeywords
+from qcfractal.portal.metadata_models import InsertMetadata
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcfractal.interface.models import InsertMetadata
     from typing import List, Tuple, Sequence, Dict, Optional, Any
 
     TorsionDriveProcedureDict = Dict[str, Any]
