@@ -4,7 +4,7 @@
 
 """
 
-from qcfractal.policyuniverse.statement import Statement
+from .statement import Statement
 
 # NotPrincipal
 statement01 = dict(
