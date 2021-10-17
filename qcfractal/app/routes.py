@@ -21,7 +21,7 @@ from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import _valid_encodings, SerializedResponse
 from qcfractal.exceptions import UserReportableError, AuthenticationFailure
 from qcfractal.portal.components.permissions.models import UserInfo
-from qcfractal.policyuniverse import Policy
+from qcfractal.components.permissions.policyuniverse import Policy
 from qcfractal.portal.serialization import deserialize, serialize
 
 

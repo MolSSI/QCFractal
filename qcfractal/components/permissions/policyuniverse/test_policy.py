@@ -4,7 +4,7 @@
 
 """
 
-from qcfractal.policyuniverse.policy import Policy
+from .policy import Policy
 
 
 policy01 = dict(
