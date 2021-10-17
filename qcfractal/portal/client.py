@@ -12,7 +12,20 @@ from . import __version__
 
 import requests
 
-from typing import TYPE_CHECKING, Any, DefaultDict, Dict, List, Optional, Tuple, Union, TypeVar, Sequence, Iterable
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    DefaultDict,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    TypeVar,
+    Sequence,
+    Iterable,
+    Type,
+)
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -43,7 +56,7 @@ from ..interface.models import (
     TaskRecord,
 )
 from .components.keywords import KeywordSet
-from qcfractal.portal.components.permissions import RoleInfo
+from qcfractal.portal.components.permissions import UserInfo, PortalUser, RoleInfo
 
 if TYPE_CHECKING:  # pragma: no cover
     from .collections.collection import Collection
@@ -419,10 +432,10 @@ class PortalClient:
         endpoint: str,
         body_model,
         query_model,
-        response_model,
+        response_model: Type[_T],
         body: Optional[Dict[str, Any]] = None,
         query_params: Optional[Dict[str, Any]] = None,
-    ) -> Any:
+    ) -> _T:
 
         if body_model is not None and body is None:
             raise RuntimeError("Payload specified, but no body model")
@@ -1667,11 +1680,63 @@ class PortalClient:
         }
         return self._automodel_request("access/summary", "get", payload, full_return=False)
 
-    def add_role(self, rolename: str, permissions: Dict[str, Any]):
+    def list_roles(self) -> List[RoleInfo]:
+        """
+        List all user roles on the server
+        """
+
+        return self._auto_request("get", "v1/role", None, None, List[RoleInfo], None, None)
+
+    def get_role(self, rolename: str) -> RoleInfo:
+        """
+        Get information about a role on the server
+        """
+
+        return self._auto_request("get", f"v1/role/{rolename}", None, None, RoleInfo, None, None)
+
+    def add_role(self, role_info: RoleInfo) -> None:
         """
         Adds a role with permissions to the server
 
         If not successful, an exception is raised.
         """
-        payload = {"rolename": rolename, "permissions": permissions}
-        return self._auto_request("post", "v1/role", RoleInfo, None, None, payload, None)
+
+        return self._auto_request("post", "v1/role", RoleInfo, None, None, role_info.dict(), None)
+
+    def modify_role(self, role_info: RoleInfo) -> RoleInfo:
+        """
+        Modifies a role on the server
+        """
+
+        return self._auto_request(
+            "put", f"v1/role/{role_info.rolename}", RoleInfo, None, RoleInfo, role_info.dict(), None
+        )
+
+    def delete_role(self, rolename: str) -> None:
+        return self._auto_request("delete", f"v1/role/{rolename}", None, None, None, None, None)
+
+    def list_users(self) -> List[PortalUser]:
+        """
+        List all user roles on the server
+        """
+
+        user_list = self._auto_request("get", "v1/user", None, None, List[UserInfo], None, None)
+
+        # Convert UserInfo -> PortalUser
+        return [PortalUser(self, u) for u in user_list]
+
+    def _get_user(self, username: str) -> UserInfo:
+        """
+        Get information about a role on the server
+        """
+
+        return self._auto_request("get", f"v1/user/{username}", None, None, UserInfo, None, None)
+
+    def get_user(self, username: str) -> PortalUser:
+        """
+        Get information about a user on the server
+
+        This returns a full-featured object that allows for changing info about the user
+        """
+
+        return PortalUser(self, self._get_user(username))

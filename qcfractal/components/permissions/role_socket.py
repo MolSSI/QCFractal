@@ -138,7 +138,7 @@ class RoleSocket:
         except IntegrityError:
             raise UserManagementError(f"Role {role_info.rolename} already exists")
 
-    def modify(self, role_info: RoleInfo, *, session: Optional[Session] = None) -> None:
+    def modify(self, role_info: RoleInfo, *, session: Optional[Session] = None) -> RoleInfoDict:
         """
         Update role's permissions.
 
@@ -158,6 +158,8 @@ class RoleSocket:
         with self.root_socket.optional_session(session) as session:
             role = self._get_internal(session, role_info.rolename)
             role.permissions = role_info.permissions.dict()
+            session.commit()
+            return self.get(role_info.rolename, session=session)
 
     def delete(self, rolename: str, *, session: Optional[Session] = None):
         """

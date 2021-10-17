@@ -24,6 +24,8 @@ from qcfractal.portal.components.permissions.models import UserInfo
 from qcfractal.components.permissions.policyuniverse import Policy
 from qcfractal.portal.serialization import deserialize, serialize
 
+_read_permissions = {}
+
 
 @main.before_request
 def before_request_func():
@@ -232,7 +234,7 @@ def check_access(fn):
         # load read permissions from DB if not read
         global _read_permissions
         if not _read_permissions:
-            _read_permissions = storage_socket.roles.get("read").permissions
+            _read_permissions = storage_socket.roles.get("read")["permissions"]
 
         # if read is allowed without login, use read_permissions
         # otherwise, check logged-in permissions
@@ -249,7 +251,7 @@ def check_access(fn):
         try:
             # host_url = request.host_url
             identity = get_jwt_identity() or "anonymous"
-            resource = urlparse(request.url).path.split("/")[1]
+            resource = urlparse(request.url).path.split("/")[2]
             context = {
                 "Principal": identity,
                 "Action": request.method,
@@ -262,55 +264,57 @@ def check_access(fn):
             policy = Policy(permissions)
             if not policy.evaluate(context):
                 if not Policy(_read_permissions).evaluate(context):
-                    return Forbidden(f"User {identity} is not authorized to access '{resource}' resource.")
+                    raise Forbidden(f"User {identity} is not authorized to access '{resource}'")
 
-            # Store the user in the global app/request context
+            # Store the user and role in the global app/request context
             g.user = identity
 
+        except Forbidden:
+            raise
         except Exception as e:
             current_app.logger.info("Error in evaluating JWT permissions: \n" + str(e))
-            return BadRequest("Error in evaluating JWT permissions")
+            raise BadRequest("Error in evaluating JWT permissions")
 
         return fn(*args, **kwargs)
 
     return wrapper
 
 
-@main.route("/register", methods=["POST"])
-def register():
-    if request.is_json:
-        username = request.json["username"]
-        password = request.json["password"]
-        fullname = request.json["fullname"]
-        email = request.json["email"]
-        organization = request.json["organization"]
-    else:
-        username = request.form["username"]
-        password = request.form["password"]
-        fullname = request.form["fullname"]
-        email = request.form["email"]
-        organization = request.form["organization"]
-
-    role = "read"
-    try:
-        user_info = UserInfo(
-            username=username,
-            enabled=True,
-            fullname=fullname,
-            email=email,
-            organization=organization,
-            role=role,
-        )
-    except Exception as e:
-        return jsonify(msg=f"Invalid user information: {str(e)}"), 500
-
-    # add returns the password. Raises exception on error
-    # Exceptions should be handled property by the flask errorhandlers
-    pw = storage_socket.users.add(user_info, password=password)
-    if password is None or len(password) == 0:
-        return jsonify(msg="New user created!"), 201
-    else:
-        return jsonify(msg="New user created! Password is '{pw}'"), 201
+# @main.route("/register", methods=["POST"])
+# def register():
+#    if request.is_json:
+#        username = request.json["username"]
+#        password = request.json["password"]
+#        fullname = request.json["fullname"]
+#        email = request.json["email"]
+#        organization = request.json["organization"]
+#    else:
+#        username = request.form["username"]
+#        password = request.form["password"]
+#        fullname = request.form["fullname"]
+#        email = request.form["email"]
+#        organization = request.form["organization"]
+#
+#    role = "read"
+#    try:
+#        user_info = UserInfo(
+#            username=username,
+#            enabled=True,
+#            fullname=fullname,
+#            email=email,
+#            organization=organization,
+#            role=role,
+#        )
+#    except Exception as e:
+#        return jsonify(msg=f"Invalid user information: {str(e)}"), 500
+#
+#    # add returns the password. Raises exception on error
+#    # Exceptions should be handled property by the flask errorhandlers
+#    pw = storage_socket.users.add(user_info, password=password)
+#    if password is None or len(password) == 0:
+#        return jsonify(msg="New user created!"), 201
+#    else:
+#        return jsonify(msg="New user created! Password is '{pw}'"), 201
 
 
 @main.route("/login", methods=["POST"])
@@ -345,8 +349,12 @@ def login():
 @jwt_required(refresh=True)
 def refresh():
     username = get_jwt_identity()
-    permissions = storage_socket.users.get_permissions(username)
-    ret = {"access_token": create_access_token(identity=username, additional_claims={"permissions": permissions})}
+    role, permissions = storage_socket.users.get_permissions(username)
+    ret = {
+        "access_token": create_access_token(
+            identity=username, additional_claims={"role": role, "permissions": permissions}
+        )
+    }
     return jsonify(ret), 200
 
 
@@ -365,6 +373,6 @@ def fresh_login():
     permissions = storage_socket.users.verify(username, password)
 
     access_token = create_access_token(
-        identity=username, additionalclaims={"permissions": permissions.dict()}, fresh=True
+        identity=username, additional_claims={"permissions": permissions.dict()}, fresh=True
     )
     return jsonify(msg="Fresh login succeeded!", access_token=access_token), 200

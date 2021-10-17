@@ -506,28 +506,27 @@ def server_user(args, config):
 
         update = {}
         if args.fullname is not None:
-            update["fullname"] = args.fullname
+            u["fullname"] = args.fullname
         if args.organization is not None:
-            update["organization"] = args.organization
+            u["organization"] = args.organization
         if args.email is not None:
-            update["email"] = args.email
+            u["email"] = args.email
         if args.role is not None:
-            update["role"] = args.role
+            u["role"] = args.role
 
         # Enable/disable are separate on the command line
         if args.enable is True:
-            update["enabled"] = True
+            u["enabled"] = True
         if args.disable is True:
-            update["enabled"] = False
+            u["enabled"] = False
 
-        u2 = u.copy(update=update)
-        print(f"Updating information for user {u2.username}")
-        storage.users.modify(u2, as_admin=True)
+        print(f"Updating information for user {u['username']}")
+        storage.users.modify(UserInfo(**u), as_admin=True)
 
         # Passwords are handled separately
         if args.reset_password is True:
             print(f"Resetting password...")
-            pw = storage.users.reset_password(u.username)
+            pw = storage.users.reset_password(u["username"])
             print("New password is below")
             print("-" * 80)
             print(pw)
