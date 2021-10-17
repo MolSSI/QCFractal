@@ -8,7 +8,7 @@ from sqlalchemy.sql import select
 
 from qcfractal.components.permissions.db_models import RoleORM
 from qcfractal.exceptions import UserManagementError
-from qcfractal.portal.components.permissions.models import is_valid_rolename
+from qcfractal.portal.components.permissions import RoleInfo, is_valid_rolename
 
 if TYPE_CHECKING:
     from typing import Dict, List, Any, Optional
@@ -114,7 +114,7 @@ class RoleSocket:
             role = self._get_internal(session, rolename)
             return role.dict()
 
-    def add(self, rolename: str, permissions: Dict, *, session: Optional[Session] = None) -> None:
+    def add(self, role_info: RoleInfo, *, session: Optional[Session] = None) -> None:
         """
         Adds a new role.
 
@@ -122,44 +122,42 @@ class RoleSocket:
 
         Parameters
         ----------
-        rolename
-            Name of the new role
-        permissions
-            Permissions for the new role
+        role_info
+            Data about the new role
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed before returning from this function.
         """
 
+        is_valid_rolename(role_info.rolename)
+
         try:
             with self.root_socket.optional_session(session) as session:
-                role = RoleORM(rolename=rolename, permissions=permissions)  # type: ignore
+                role = RoleORM(rolename=role_info.rolename, permissions=role_info.permissions.dict())  # type: ignore
                 session.add(role)
         except IntegrityError:
-            raise UserManagementError(f"Role {rolename} already exists")
+            raise UserManagementError(f"Role {role_info.rolename} already exists")
 
-    def modify(self, rolename: str, permissions: Dict[str, Any], *, session: Optional[Session] = None) -> None:
+    def modify(self, role_info: RoleInfo, *, session: Optional[Session] = None) -> None:
         """
         Update role's permissions.
 
         Parameters
         ----------
-        rolename
-            The name of the role to update
-        permissions
-            The new permissions to be associated with that role
+        role_info
+            Data about the role (new permissions)
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed before returning from this function.
         """
 
         # Cannot change admin role
-        if rolename == "admin":
+        if role_info.rolename == "admin":
             raise UserManagementError("Cannot modify the admin role")
 
         with self.root_socket.optional_session(session) as session:
-            role = self._get_internal(session, rolename)
-            role.permissions = permissions
+            role = self._get_internal(session, role_info.rolename)
+            role.permissions = role_info.permissions.dict()
 
     def delete(self, rolename: str, *, session: Optional[Session] = None):
         """

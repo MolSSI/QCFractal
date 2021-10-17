@@ -32,6 +32,20 @@ def test_user_socket_add_get(storage_socket: SQLAlchemySocket):
     assert UserInfo(**uinfo2) == uinfo
 
 
+def test_user_socket_add_duplicate(storage_socket: SQLAlchemySocket):
+    uinfo = UserInfo(
+        username="george",
+        role="read",
+        enabled=True,
+    )
+    storage_socket.users.add(uinfo, password="oldpw123")
+
+    # Duplicate should result in an exception
+    uinfo2 = UserInfo(username="george", role="read", enabled=True)
+    with pytest.raises(UserManagementError, match=r"User.*already exists"):
+        storage_socket.users.add(uinfo2, "newpw123")
+
+
 def test_user_socket_add_with_id(storage_socket: SQLAlchemySocket):
     # Should not be able to add a user with the id set
     uinfo = UserInfo(
@@ -71,20 +85,6 @@ def test_user_socket_list(storage_socket: SQLAlchemySocket):
     assert d1 == d2
 
 
-def test_user_socket_add_duplicate(storage_socket: SQLAlchemySocket):
-    uinfo = UserInfo(
-        username="george",
-        role="read",
-        enabled=True,
-    )
-    storage_socket.users.add(uinfo, password="oldpw123")
-
-    # Duplicate should result in an exception
-    uinfo2 = UserInfo(username="george", role="read", enabled=True)
-    with pytest.raises(UserManagementError, match=r"User.*already exists"):
-        storage_socket.users.add(uinfo2, "newpw123")
-
-
 def test_user_socket_delete(storage_socket: SQLAlchemySocket):
     uinfo = UserInfo(
         username="george",
@@ -98,9 +98,6 @@ def test_user_socket_delete(storage_socket: SQLAlchemySocket):
 
     with pytest.raises(UserManagementError, match=r"User.*not found"):
         storage_socket.users.get("george")
-
-    with pytest.raises(UserManagementError, match=r"User.*not found"):
-        storage_socket.users.delete("george")
 
 
 @pytest.mark.parametrize("username", ["geoff", "George", "george_"])
