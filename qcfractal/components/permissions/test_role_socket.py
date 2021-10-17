@@ -6,8 +6,10 @@ import pytest
 
 from qcfractal.components.permissions.role_socket import default_roles
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.exceptions import UserManagementError
+from qcfractal.exceptions import UserManagementError, InvalidRolenameError
 from qcfractal.portal.components.permissions import RoleInfo, UserInfo
+
+invalid_rolenames = ["\x00", "ab\x00cd", "1234", "a user", ""]
 
 
 def test_role_socket_defaults(storage_socket: SQLAlchemySocket):
@@ -17,66 +19,65 @@ def test_role_socket_defaults(storage_socket: SQLAlchemySocket):
         assert r["permissions"] == permissions
 
 
-def test_role_socket_nonexist(storage_socket: SQLAlchemySocket):
-    with pytest.raises(UserManagementError, match=r"Role.*does not exist"):
-        storage_socket.roles.get("doesntexist")
+def test_role_socket_add_get(storage_socket: SQLAlchemySocket):
+    new_role = RoleInfo(
+        rolename="new_role",
+        permissions={
+            "Statement": [
+                {"Effect": "Allow", "Action": "GET", "Resource": "something"},
+                {"Effect": "Allow", "Action": "*", "Resource": ["something_else"]},
+            ]
+        },
+    )
 
-    with pytest.raises(UserManagementError, match=r"Role.*does not exist"):
-        storage_socket.roles.modify("doesntexist", "{}")
+    storage_socket.roles.add(new_role)
 
-
-def test_role_socket_add(storage_socket: SQLAlchemySocket):
-    # Try adding a new role that can read anything but only modify molecules
-    new_perms = {
-        "Statement": [
-            {"Effect": "Allow", "Action": "GET", "Resource": "*"},
-            {"Effect": "Allow", "Action": "*", "Resource": ["molecule"]},
-        ]
-    }
-
-    storage_socket.roles.add("molecule_admin", new_perms)
-
-    rinfo = storage_socket.roles.get("molecule_admin")
-    assert rinfo["permissions"] == new_perms
-
-    # Raises exception on error
-    storage_socket.roles.delete("molecule_admin")
+    rinfo = storage_socket.roles.get("new_role")
+    assert RoleInfo(**rinfo) == new_role
 
 
 def test_role_socket_add_duplicate(storage_socket: SQLAlchemySocket):
+    new_role = RoleInfo(
+        rolename="new_role",
+        permissions={
+            "Statement": [
+                {"Effect": "Allow", "Action": "GET", "Resource": "something"},
+                {"Effect": "Allow", "Action": "*", "Resource": ["something_else"]},
+            ]
+        },
+    )
 
-    # Try adding a new role that can read anything but only modify molecules
-    new_perms = {
-        "Statement": [
-            {"Effect": "Allow", "Action": "GET", "Resource": "*"},
-            {"Effect": "Allow", "Action": "*", "Resource": ["molecule"]},
-        ]
-    }
-
-    storage_socket.roles.add("molecule_admin", new_perms)
+    storage_socket.roles.add(new_role)
 
     with pytest.raises(UserManagementError, match=r"Role.*already exists"):
-        storage_socket.roles.add("molecule_admin", new_perms)
+        storage_socket.roles.add(new_role)
 
 
-def test_role_socket_modify_admin(storage_socket: SQLAlchemySocket):
-    # The admin role should not be modifiable
-    with pytest.raises(UserManagementError, match=r"Cannot modify the admin role"):
-        storage_socket.roles.modify("admin", "{}")
+def test_role_socket_list(storage_socket: SQLAlchemySocket):
+    new_role = RoleInfo(
+        rolename="new_role",
+        permissions={
+            "Statement": [
+                {"Effect": "Allow", "Action": "GET", "Resource": "something"},
+                {"Effect": "Allow", "Action": "*", "Resource": ["something_else"]},
+            ]
+        },
+    )
 
+    storage_socket.roles.add(new_role)
 
-def test_role_socket_modify(storage_socket: SQLAlchemySocket):
-    new_perms = {
-        "Statement": [
-            {"Effect": "Allow", "Action": "GET", "Resource": "*"},
-            {"Effect": "Allow", "Action": "*", "Resource": ["molecule"]},
-        ]
-    }
+    # Now get all the roles
+    role_lst = storage_socket.roles.list()
+    role_lst_models = [RoleInfo(**x) for x in role_lst]
 
-    storage_socket.roles.modify("read", new_perms)
+    role_lst_models = sorted(role_lst_models, key=lambda x: x.rolename)
 
-    rinfo = storage_socket.roles.get("read")
-    assert rinfo["permissions"] == new_perms
+    # Build a list of the expected roles (default roles + the one we added)
+    expected = [RoleInfo(rolename=k, permissions=v) for k, v in default_roles.items()]
+    expected.append(new_role)
+    expected = sorted(expected, key=lambda x: x.rolename)
+
+    assert role_lst_models == expected
 
 
 def test_role_socket_delete(storage_socket: SQLAlchemySocket):
@@ -97,48 +98,83 @@ def test_role_socket_delete(storage_socket: SQLAlchemySocket):
     storage_socket.users.delete("george")
     storage_socket.roles.delete("read")
 
+    with pytest.raises(UserManagementError):
+        storage_socket.roles.get("read")
 
-def test_role_socket_list(storage_socket: SQLAlchemySocket):
-    # Try adding a new role that can read anything but only modify molecules
-    new_perms = {
-        "Statement": [
-            {"Effect": "Allow", "Action": "GET", "Resource": "*"},
-            {"Effect": "Allow", "Action": "*", "Resource": ["molecule"]},
-        ]
-    }
 
-    storage_socket.roles.add("molecule_admin", new_perms)
+def test_role_socket_nonexist(storage_socket: SQLAlchemySocket):
+    mod_role = RoleInfo(
+        rolename="doesntexist",
+        permissions={
+            "Statement": [
+                {"Effect": "Allow", "Action": "GET", "Resource": "something"},
+                {"Effect": "Allow", "Action": "*", "Resource": ["something_else"]},
+            ]
+        },
+    )
 
-    # Now get all the roles
-    role_lst = storage_socket.roles.list()
-    role_lst_models = [RoleInfo(**x) for x in role_lst]
+    with pytest.raises(UserManagementError, match=r"Role.*does not exist"):
+        storage_socket.roles.get("doesntexist")
 
-    role_lst_models = sorted(role_lst_models, key=lambda x: x.rolename)
+    with pytest.raises(UserManagementError, match=r"Role.*does not exist"):
+        storage_socket.roles.modify(mod_role)
 
-    # Build a list of the expected roles (default roles + the one we added)
-    expected = [RoleInfo(rolename=k, permissions=v) for k, v in default_roles.items()]
-    expected.append(RoleInfo(rolename="molecule_admin", permissions=new_perms))
-    expected = sorted(expected, key=lambda x: x.rolename)
+    with pytest.raises(UserManagementError, match=r"Role.*does not exist"):
+        storage_socket.roles.delete("doesntexist")
 
-    assert role_lst_models == expected
+
+def test_role_socket_modify_admin(storage_socket: SQLAlchemySocket):
+    # The admin role should not be modifiable
+    mod_role = RoleInfo(
+        rolename="admin",
+        permissions={
+            "Statement": [
+                {"Effect": "Allow", "Action": "GET", "Resource": "something"},
+                {"Effect": "Allow", "Action": "*", "Resource": ["something_else"]},
+            ]
+        },
+    )
+
+    with pytest.raises(UserManagementError, match=r"Cannot modify the admin role"):
+        storage_socket.roles.modify(mod_role)
+
+
+def test_role_socket_modify(storage_socket: SQLAlchemySocket):
+    mod_role = RoleInfo(
+        rolename="read",
+        permissions={
+            "Statement": [
+                {"Effect": "Allow", "Action": "GET", "Resource": "something"},
+                {"Effect": "Allow", "Action": "*", "Resource": ["something_else"]},
+            ]
+        },
+    )
+
+    storage_socket.roles.modify(mod_role)
+
+    rinfo = storage_socket.roles.get("read")
+    assert rinfo["permissions"] == mod_role.permissions.dict()
 
 
 def test_role_socket_reset(storage_socket: SQLAlchemySocket):
     # Test resetting the roles to their defaults
 
     # Modify something
-    new_perms = {
-        "Statement": [
-            {"Effect": "Allow", "Action": "*", "Resource": "*"},
-            {"Effect": "Allow", "Action": "Deny", "Resource": ["molecule"]},
-        ]
-    }
+    mod_role = RoleInfo(
+        rolename="read",
+        permissions={
+            "Statement": [
+                {"Effect": "Allow", "Action": "GET", "Resource": "something"},
+                {"Effect": "Allow", "Action": "*", "Resource": ["something_else"]},
+            ]
+        },
+    )
 
-    storage_socket.roles.modify("read", new_perms)
+    storage_socket.roles.modify(mod_role)
     rinfo = storage_socket.roles.get("read")
-    assert rinfo["permissions"] == new_perms
+    assert rinfo["permissions"] == mod_role.permissions.dict()
 
-    # Also delete
+    # Also delete something
     storage_socket.roles.delete("monitor")
     with pytest.raises(UserManagementError, match=r"Role.*does not exist"):
         storage_socket.roles.get("monitor")
@@ -150,3 +186,26 @@ def test_role_socket_reset(storage_socket: SQLAlchemySocket):
     for rolename, permissions in default_roles.items():
         rinfo = storage_socket.roles.get(rolename)
         assert rinfo["permissions"] == default_roles[rolename]
+
+
+@pytest.mark.parametrize("rolename", invalid_rolenames)
+def test_role_socket_use_invalid_rolename(storage_socket: SQLAlchemySocket, rolename: str):
+    # Normally, RoleInfo prevents bad rolenames. But the socket also checks, as a last resort
+    # So we have to bypass the RoleInfo check with construct()
+    new_role = RoleInfo.construct(
+        rolename=rolename,
+        permissions={
+            "Statement": [
+                {"Effect": "Allow", "Action": "GET", "Resource": "something"},
+            ]
+        },
+    )
+
+    with pytest.raises(InvalidRolenameError):
+        storage_socket.roles.add(new_role)
+
+    with pytest.raises(InvalidRolenameError):
+        storage_socket.roles.get(rolename)
+
+    with pytest.raises(InvalidRolenameError):
+        storage_socket.roles.modify(new_role)

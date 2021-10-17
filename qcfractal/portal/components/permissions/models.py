@@ -1,26 +1,8 @@
-from typing import Dict, Optional
+from typing import Optional, Union, List
 
 from pydantic import BaseModel, Field, validator, constr
 
 from qcfractal.exceptions import InvalidPasswordError, InvalidUsernameError, InvalidRolenameError
-
-
-# class PermissionsStatement(BaseModel):
-#   """
-#   A statment of permissions for a role
-#   """
-#
-#   Effect: str = Field(..., description="The effect of the permission (Allow, Deny)")
-#   Resource: Union[str, List[str]] = Field(..., description="The resource this permission applies to. Usually the first part of the path (molecules, keywords, etc). May be '*' to apply to all.")
-#   Action: Union[str, List[str]] = Field(..., description="The actions this permission applies to (GET, POST, etc). May be '*' to apply to all.")
-#
-#
-# class PermissionsInfo(BaseModel):
-#   """
-#   Permissions assigned to a role
-#   """
-#
-#   Statement: List[PermissionsStatement] = Field(..., description="Permission statements")
 
 
 def is_valid_password(password: str) -> None:
@@ -73,13 +55,47 @@ def is_valid_rolename(rolename: str) -> None:
         raise InvalidRolenameError("Rolename cannot be all numbers")
 
 
+class PolicyStatement(BaseModel):
+    """
+    A statment of permissions for a role
+    """
+
+    Effect: str = Field(..., description="The effect of the permission (Allow, Deny)")
+    Action: Union[str, List[str]] = Field(
+        ..., description="The actions this permission applies to (GET, POST, etc). May be '*' to apply to all."
+    )
+    Resource: Union[str, List[str]] = Field(
+        ...,
+        description="The resource this permission applies to. Usually the first part of the path (molecules, "
+        "keywords, etc). May be '*' to apply to all.",
+    )
+
+
+class PermissionsPolicy(BaseModel):
+    """
+    Permissions assigned to a role
+    """
+
+    Statement: List[PolicyStatement] = Field(..., description="Permission statements")
+
+
 class RoleInfo(BaseModel):
     """
     Information about a role
     """
 
     rolename: str = Field(..., description="The name of the role")
-    permissions: Dict = Field(..., description="The permissions associated with this role")
+    permissions: PermissionsPolicy = Field(..., description="The permissions associated with this role")
+
+    @validator("rolename", pre=True)
+    def _valid_rolename(cls, v):
+        """Makes sure the username is a valid string"""
+
+        try:
+            is_valid_rolename(v)
+            return v
+        except Exception as e:
+            raise ValueError(str(e))
 
 
 class UserInfo(BaseModel):
