@@ -2,13 +2,20 @@ from flask import jsonify, request, current_app, g
 
 from qcfractal.app import main, storage_socket
 from qcfractal.app.routes import check_access, wrap_route
-from qcfractal.portal.components.permissions import RoleInfo
+from qcfractal.portal.components.permissions import UserInfo, RoleInfo
+from qcfractal.exceptions import InconsistentUpdateError, SecurityNotEnabledError
+
+
+def assert_security_enabled():
+    if not current_app.config["QCFRACTAL_CONFIG"].enable_security:
+        raise SecurityNotEnabledError("This functionality is not available if security is not enabled on the server")
 
 
 @main.route("/v1/role", methods=["GET"])
 @wrap_route(None, None)
 @check_access
 def list_roles_v1():
+    assert_security_enabled()
     return storage_socket.roles.list()
 
 
@@ -16,6 +23,7 @@ def list_roles_v1():
 @wrap_route(None, None)
 @check_access
 def get_role_v1(rolename: str):
+    assert_security_enabled()
     return storage_socket.roles.get(rolename)
 
 
@@ -23,33 +31,56 @@ def get_role_v1(rolename: str):
 @wrap_route(RoleInfo, None)
 @check_access
 def add_role_v1():
-    rolename = g.validated_data.rolename
-    permissions = g.validated_data.permissions
-    storage_socket.roles.add(rolename, permissions)
+    assert_security_enabled()
+    return storage_socket.roles.add(g.validated_data)
 
 
-@main.route("/role", methods=["PUT"])
+@main.route("/v1/role/<string:rolename>", methods=["PUT"])
+@wrap_route(RoleInfo, None)
 @check_access
-def update_role_v1():
-    rolename = request.json["rolename"]
-    permissions = request.json["permissions"]
+def modify_role_v1(rolename: str):
+    assert_security_enabled()
+    role_info = g.validated_data
+    if rolename != role_info.rolename:
+        raise InconsistentUpdateError(f"Cannot update role at {rolename} with role info for {role_info.rolename}")
 
-    try:
-        storage_socket.roles.update(rolename, permissions)
-        return jsonify({"msg": "Role was updated!"}), 200
-    except Exception as e:
-        current_app.logger.warning(f"Error updating role {rolename}: {str(e)}")
-        return jsonify({"msg": "Failed to update role"}), 400
+    return storage_socket.roles.modify(role_info)
 
 
-@main.route("/role", methods=["DELETE"])
+@main.route("/v1/role/<string:rolename>", methods=["DELETE"])
+@wrap_route(None, None)
 @check_access
-def delete_role_v1():
-    rolename = request.json["rolename"]
+def delete_role_v1(rolename: str):
+    assert_security_enabled()
+    return storage_socket.roles.delete(rolename)
 
-    try:
-        storage_socket.roles.delete(rolename)
-        return jsonify({"msg": "Role was deleted!"}), 200
-    except Exception as e:
-        current_app.logger.warning(f"Error deleting role {rolename}: {str(e)}")
-        return jsonify({"msg": "Failed to delete role!"}), 400
+
+@main.route("/v1/user", methods=["GET"])
+@wrap_route(None, None)
+@check_access
+def list_users_v1():
+    # assert_security_enabled()
+    return storage_socket.users.list()
+
+
+@main.route("/v1/user/<string:username>", methods=["GET"])
+@wrap_route(None, None)
+@check_access
+def get_user_v1(username: str):
+    # assert_security_enabled()
+    return storage_socket.users.get(username)
+
+
+@main.route("/v1/user/<string:username>", methods=["PUT"])
+@wrap_route(UserInfo, None)
+@check_access
+def modify_user_v1(username: str):
+    # assert_security_enabled()
+
+    user_info = g.validated_data
+    if username != user_info.username:
+        raise InconsistentUpdateError(f"Cannot update user at {username} with user info for {user_info.username}")
+
+    # If you have access to this endpoint, then you should be an admin, at least as far
+    # as user management is concerned
+    return storage_socket.users.modify(user_info, as_admin=True)

@@ -27,6 +27,14 @@ class InvalidRolenameError(UserManagementError):
     pass
 
 
+class InconsistentUpdateError(UserManagementError):
+    pass
+
+
+class SecurityNotEnabledError(UserManagementError):
+    pass
+
+
 class InvalidPasswordError(UserManagementError):
     pass
 

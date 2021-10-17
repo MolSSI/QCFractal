@@ -1,8 +1,13 @@
-from typing import Optional, Union, List
+from __future__ import annotations
+
+from typing import Optional, Union, List, TYPE_CHECKING
 
 from pydantic import BaseModel, Field, validator, constr
 
 from qcfractal.exceptions import InvalidPasswordError, InvalidUsernameError, InvalidRolenameError
+
+if TYPE_CHECKING:
+    from qcfractal.portal import PortalClient
 
 
 def is_valid_password(password: str) -> None:
@@ -103,6 +108,9 @@ class UserInfo(BaseModel):
     Information about a user
     """
 
+    class Config:
+        validate_assignment = True
+
     # id may be None when used for initial creation
     id: Optional[int] = Field(None, description="The id of the user")
     username: str = Field(..., description="The username of this user")
@@ -121,3 +129,52 @@ class UserInfo(BaseModel):
             return v
         except Exception as e:
             raise ValueError(str(e))
+
+
+class PortalUser:
+    def __init__(self, client: PortalClient, user_info: UserInfo):
+        self._client = client
+        self._user_info = user_info
+
+    def _refresh(self):
+        self._user_info = self._client._get_user(self._user_info.username)
+
+    def _update_on_server(self):
+        updated = self._client._auto_request(
+            "put", f"v1/user/{self._user_info.username}", UserInfo, None, UserInfo, self._user_info.dict(), None
+        )
+        self._user_info = updated
+
+    @property
+    def username(self) -> str:
+        return self._user_info.username
+
+    @property
+    def role(self) -> str:
+        return self._user_info.role
+
+    @property
+    def enabled(self) -> bool:
+        return self._user_info.enabled
+
+    @enabled.setter
+    def enabled(self, new_enabled: bool):
+        self._user_info.enabled = new_enabled
+        self._update_on_server()
+
+    @property
+    def fullname(self) -> str:
+        return self._user_info.fullname
+
+    @fullname.setter
+    def fullname(self, new_fullname):
+        self._user_info.fullname = new_fullname
+        self._update_on_server()
+
+    @property
+    def organization(self) -> str:
+        return self._user_info.organization
+
+    @property
+    def email(self) -> str:
+        return self._user_info.fullname

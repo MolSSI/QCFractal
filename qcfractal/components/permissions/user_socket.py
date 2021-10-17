@@ -11,11 +11,12 @@ from sqlalchemy.sql import select
 from qcfractal.components.permissions.db_models import UserORM
 from qcfractal.exceptions import AuthenticationFailure, UserManagementError
 from qcfractal.portal.components.permissions import UserInfo, is_valid_password, is_valid_username
+from qcfractal.portal.metadata_models import UpdateMetadata
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from typing import Optional, List, Dict, Any
+    from typing import Optional, List, Dict, Any, Tuple
 
     UserInfoDict = Dict[str, Any]
 
@@ -106,7 +107,7 @@ class UserSocket:
             user = self._get_internal(session, username)
             return user.dict()
 
-    def get_permissions(self, username: str, *, session: Optional[Session] = None) -> Dict[str, Any]:
+    def get_permissions(self, username: str, *, session: Optional[Session] = None) -> Tuple[str, Dict[str, Any]]:
         """
         Obtain the permissions of a user.
 
@@ -127,7 +128,7 @@ class UserSocket:
 
         with self.root_socket.optional_session(session, True) as session:
             user = self._get_internal(session, username)
-            return user.role_obj.permissions
+            return user.role_obj.rolename, user.role_obj.permissions
 
     def add(self, user_info: UserInfo, password: Optional[str] = None, *, session: Optional[Session] = None) -> str:
         """
@@ -196,7 +197,7 @@ class UserSocket:
         Returns
         --------
         :
-            Permissions available to that user.
+            The role and permissions available to that user.
         """
 
         is_valid_password(password)

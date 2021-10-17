@@ -6,16 +6,15 @@ import time
 import pytest
 import requests
 
-import qcfractal
-import qcfractal.interface as ptl
-import qcfractal.portal.components.permissions.models
+from qcfractal.portal.client import PortalClient, PortalRequestError
+from qcfractal.portal.components.permissions import RoleInfo, UserInfo
 from qcfractal.testing import TestingSnowflake
 
 
 _users = {
-    "read": {"pw": "hello", "role": "read"},
-    "write": {"pw": "something", "role": "submit"},
-    "admin": {"pw": "something", "role": "admin"},
+    "read": {"pw": "hello1234", "role": "read"},
+    "write": {"pw": "something123", "role": "submit"},
+    "admin": {"pw": "something123", "role": "admin"},
 }
 
 _roles = {
@@ -53,11 +52,9 @@ def fractal_test_secure_server(temporary_database):
         # Get a storage socket and add the roles/users/passwords
         storage = server.get_storage_socket()
         for k, v in _roles.items():
-            storage.roles.add(k, permissions=v)
+            storage.roles.add(RoleInfo(rolename=k, permissions=v))
         for k, v in _users.items():
-            uinfo = qcfractal.portal.components.permissions.models.UserInfo(
-                username=k, fullname="Ms. Test User", enabled=True, role=v["role"]
-            )
+            uinfo = UserInfo(username=k, fullname="Ms. Test User", enabled=True, role=v["role"])
             storage.users.add(uinfo, password=v["pw"])
         yield server
 
@@ -77,20 +74,17 @@ def fractal_test_secure_server_read(temporary_database):
         # Get a storage socket and add the roles/users/passwords
         storage = server.get_storage_socket()
         for k, v in _roles.items():
-            storage.roles.add(k, permissions=v)
+            storage.roles.add(RoleInfo(rolename=k, permissions=v))
         for k, v in _users.items():
-            uinfo = qcfractal.portal.components.permissions.models.UserInfo(
-                username=k, fullname="Ms. Test User", enabled=True, role=v["role"]
-            )
+            uinfo = UserInfo(username=k, fullname="Ms. Test User", enabled=True, role=v["role"])
             storage.users.add(uinfo, password=v["pw"])
         yield server
 
 
 def test_security_auth_decline_none(fractal_test_secure_server):
-    with pytest.raises(IOError) as excinfo:
+    with pytest.raises(PortalRequestError, match=r"Missing Authorization Header"):
         client = fractal_test_secure_server.client()
-        client.query_molecules(id=[])
-    assert "missing authorization header" in str(excinfo.value).lower()
+        client.query_molecules(molecule_hash=[])
 
 
 def test_security_auth_bad_ssl(fractal_test_secure_server):
@@ -98,49 +92,42 @@ def test_security_auth_bad_ssl(fractal_test_secure_server):
         address = fractal_test_secure_server.get_uri()
         address = address.replace("http", "https")
 
-        client = ptl.FractalClient.from_file(
-            {
-                "address": address,
-                "username": "write",
-                "password": _users["write"]["pw"],
-                "verify": True,
-            }
+        client = PortalClient(
+            address=address,
+            username="write",
+            password=_users["write"]["pw"],
+            verify=True,
         )
-        client.query_molecules(id=[])
+        client.query_molecules(molecule_hash=[])
 
     assert "ssl handshake" in str(excinfo.value).lower()
     assert "verify=false" in str(excinfo.value).lower()
 
 
 def test_security_auth_decline_bad_user(fractal_test_secure_server):
-    with pytest.raises(IOError) as excinfo:
-        client = ptl.FractalClient.from_file(
-            {
-                "address": fractal_test_secure_server.get_uri(),
-                "username": "hello",
-                "password": "something",
-                "verify": False,
-            }
+    with pytest.raises(ConnectionRefusedError, match=r"Authentication failed"):
+        client = PortalClient(
+            address=fractal_test_secure_server.get_uri(),
+            username="hello",
+            password="something",
+            verify=False,
         )
-        r = client.query_molecules(id=[])
-    assert "authentication failed" in str(excinfo.value).lower()
+        client.query_molecules(molecule_hash=[])
 
 
 def test_security_auth_accept(fractal_test_secure_server):
 
     address = fractal_test_secure_server.get_uri()
-    client = ptl.FractalClient(address=address, username="write", password=_users["write"]["pw"])
+    client = PortalClient(address=address, username="write", password=_users["write"]["pw"])
 
-    r = client.add_molecules([])
-    r = client.query_molecules(id=[])
+    client.add_molecules([])
+    client.query_molecules(molecule_hash=[])
 
 
 def test_security_auth_refresh(fractal_test_secure_server):
 
     address = fractal_test_secure_server.get_uri()
-    client = ptl.FractalClient(address=address, username="write", password=_users["write"]["pw"])
-    client._set_encoding("json")
-
+    client = PortalClient(address=address, username="write", password=_users["write"]["pw"])
     client.add_molecules([])
 
     assert client.refresh_token
@@ -148,7 +135,7 @@ def test_security_auth_refresh(fractal_test_secure_server):
     time.sleep(3)
 
     # Manually try to do this (to work around FractalClient doing automatic refreshing)
-    r = requests.post(client.address + "molecule", json={"data": [], "meta": {}}, headers=client._headers)
+    r = requests.post(client.address + "v1/molecule", json=[], headers=client._headers)
 
     assert r.status_code == 401
     assert "Token has expired" in r.json()["msg"]
@@ -168,6 +155,5 @@ def test_security_auth_allow_read(fractal_test_secure_server_read):
 def test_security_auth_allow_read_block_add(fractal_test_secure_server_read):
     client = fractal_test_secure_server_read.client()
 
-    with pytest.raises(IOError) as excinfo:
-        client.add_molecules([ptl.Molecule.from_data("He 0 0 0")])
-    assert "forbidden" in str(excinfo.value).lower()
+    with pytest.raises(PortalRequestError, match=r"Forbidden"):
+        client.add_molecules([])
