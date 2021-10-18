@@ -56,7 +56,7 @@ from ..interface.models import (
     TaskRecord,
 )
 from .components.keywords import KeywordSet
-from qcfractal.portal.components.permissions import UserInfo, PortalUser, RoleInfo
+from qcfractal.portal.components.permissions import PortalUser, UserInfo, RoleInfo, is_valid_username
 
 if TYPE_CHECKING:  # pragma: no cover
     from .collections.collection import Collection
@@ -72,6 +72,8 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 _T = TypeVar("_T")
+_U = TypeVar("_U")
+_V = TypeVar("_V")
 
 
 _ssl_error_msg = (
@@ -430,17 +432,18 @@ class PortalClient:
         self,
         method: str,
         endpoint: str,
-        body_model,
-        query_model,
-        response_model: Type[_T],
-        body: Optional[Dict[str, Any]] = None,
-        query_params: Optional[Dict[str, Any]] = None,
-    ) -> _T:
+        body_model: Optional[Type[_T]],
+        query_model: Optional[Type[_U]],
+        response_model: Optional[Type[_V]],
+        body: Optional[Union[_T, Dict[str, Any]]] = None,
+        query_params: Optional[Union[_U, Dict[str, Any]]] = None,
+    ) -> _V:
 
-        if body_model is not None and body is None:
-            raise RuntimeError("Payload specified, but no body model")
         if body_model is None and body is not None:
-            raise RuntimeError("Payload not specified, but required")
+            raise RuntimeError("Body data not specified, but required")
+
+        if query_model is None and query_params is not None:
+            raise RuntimeError("Query parameters not specified, but required")
 
         serialized_body = None
         if body_model is not None:
@@ -1701,42 +1704,73 @@ class PortalClient:
         If not successful, an exception is raised.
         """
 
-        return self._auto_request("post", "v1/role", RoleInfo, None, None, role_info.dict(), None)
-
-    def modify_role(self, role_info: RoleInfo) -> RoleInfo:
-        """
-        Modifies a role on the server
-        """
-
-        return self._auto_request(
-            "put", f"v1/role/{role_info.rolename}", RoleInfo, None, RoleInfo, role_info.dict(), None
-        )
+        return self._auto_request("post", "v1/role", RoleInfo, None, None, role_info, None)
 
     def delete_role(self, rolename: str) -> None:
         return self._auto_request("delete", f"v1/role/{rolename}", None, None, None, None, None)
 
-    def list_users(self) -> List[PortalUser]:
+    def list_users(self) -> List[UserInfo]:
         """
         List all user roles on the server
         """
 
-        user_list = self._auto_request("get", "v1/user", None, None, List[UserInfo], None, None)
+        return self._auto_request("get", "v1/user", None, None, List[UserInfo], None, None)
 
-        # Convert UserInfo -> PortalUser
-        return [PortalUser(self, u) for u in user_list]
-
-    def _get_user(self, username: str) -> UserInfo:
-        """
-        Get information about a role on the server
-        """
-
-        return self._auto_request("get", f"v1/user/{username}", None, None, UserInfo, None, None)
-
-    def get_user(self, username: str) -> PortalUser:
+    def get_user(self, username: Optional[str] = None, as_admin: bool = False) -> PortalUser:
         """
         Get information about a user on the server
 
-        This returns a full-featured object that allows for changing info about the user
+        If the username is not supplied, then info about the currently logged-in user is obtained
+
+        Parameters
+        ----------
+        username
+            The username to get info about
+        as_admin
+            If True, then fetch the user from the admin user management endpoint. This is the default
+            if requesting a user other than the currently logged-in user
+
+        Returns
+        -------
+        :
+            Information about the user
         """
 
-        return PortalUser(self, self._get_user(username))
+        if username is None:
+            username = self.username
+
+        # Check client side so we can bail early
+        is_valid_username(username)
+
+        if username != self.username:
+            as_admin = True
+
+        if as_admin is False:
+            # For the currently logged-in user, use the "me" endpoint. The other endpoint is
+            # restricted to admins
+            uinfo = self._auto_request("get", f"v1/me", None, None, UserInfo, None, None)
+
+            if uinfo.username != self.username:
+                raise RuntimeError(
+                    f"Inconsistent username - client is {self.username} but logged in as {uinfo.username}"
+                )
+        else:
+            uinfo = self._auto_request("get", f"v1/user/{username}", None, None, UserInfo, None, None)
+
+        return PortalUser(client=self, as_admin=as_admin, **uinfo.dict())
+
+    def add_user(self, user_info: UserInfo, password: Optional[str] = None) -> str:
+        if user_info.id is not None:
+            raise RuntimeError("Cannot add user when user_info contains an id")
+
+        return self._auto_request(
+            "post", "v1/user", Tuple[UserInfo, Optional[str]], None, None, (user_info, password), None
+        )
+
+    def delete_user(self, username: str) -> None:
+        is_valid_username(username)
+
+        if username == self.username:
+            raise RuntimeError("Cannot delete your own user!")
+
+        return self._auto_request("delete", f"v1/user/{username}", None, None, None, None, None)

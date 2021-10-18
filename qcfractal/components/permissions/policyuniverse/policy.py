@@ -38,14 +38,14 @@ class Policy(object):
         return allowed
 
     def evaluate(self, context):
-        logger.debug(f"context: {context}")
+        # logger.debug(f"context: {context}")
 
         try:
             allow = False
             for statement in self.statements:
-                logger.debug(f"statement: {statement.statement}")
+                # logger.debug(f"statement: {statement.statement}")
                 passed = statement.evaluate(context)
-                logger.debug(f"passed: {passed}")
+                # logger.debug(f"passed: {passed}")
                 if passed is True:  # has access according to this statement
                     allow = True
                 elif passed is False:  # denied, end and return false
@@ -55,5 +55,5 @@ class Policy(object):
 
             return allow
         except Exception as err:
-            logger.error(f"Error in evaluate policy: {str(err)}")
+            # logger.error(f"Error in evaluate policy: {str(err)}")
             return False

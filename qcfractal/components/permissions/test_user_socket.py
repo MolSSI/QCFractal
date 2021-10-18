@@ -126,7 +126,7 @@ def test_user_socket_use_unknown_user(storage_socket: SQLAlchemySocket, username
         storage_socket.users.change_password(username, "a password")
 
     with pytest.raises(UserManagementError, match=r"User.*not found"):
-        storage_socket.users.reset_password(username)
+        storage_socket.users.change_password(username, None)
 
     with pytest.raises(UserManagementError, match=r"User.*not found"):
         storage_socket.users.delete(username)
@@ -199,7 +199,7 @@ def test_user_socket_password_generation(storage_socket: SQLAlchemySocket):
     is_valid_password(gen_pw)
     storage_socket.users.verify("george", gen_pw)
 
-    gen_pw_2 = storage_socket.users.reset_password("george")
+    gen_pw_2 = storage_socket.users.change_password("george", None)
     storage_socket.users.verify("george", gen_pw_2)
     is_valid_password(gen_pw)
 
@@ -301,7 +301,7 @@ def test_user_socket_use_invalid_username(storage_socket: SQLAlchemySocket, user
         storage_socket.users.change_password(username, "a_password")
 
     with pytest.raises(InvalidUsernameError):
-        storage_socket.users.reset_password(username)
+        storage_socket.users.change_password(username, None)
 
     with pytest.raises(InvalidUsernameError):
         storage_socket.users.delete(username)

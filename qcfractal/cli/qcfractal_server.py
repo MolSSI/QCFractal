@@ -526,14 +526,14 @@ def server_user(args, config):
         # Passwords are handled separately
         if args.reset_password is True:
             print(f"Resetting password...")
-            pw = storage.users.reset_password(u["username"])
+            pw = storage.users.change_password(u["username"], None)
             print("New password is below")
             print("-" * 80)
             print(pw)
             print("-" * 80)
         elif args.password is not None:
             print("Setting the password...")
-            storage.users.change_password(u.username, args.password)
+            storage.users.change_password(u["username"], args.password)
 
     if user_command == "delete":
         u = storage.users.get(args.username)

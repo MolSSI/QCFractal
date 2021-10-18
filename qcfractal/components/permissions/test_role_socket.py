@@ -96,9 +96,7 @@ def test_role_socket_delete(storage_socket: SQLAlchemySocket):
 
     # If we delete the user, we should be able to delete the role
     storage_socket.users.delete("george")
-    r = storage_socket.roles.delete("read")
-    assert r.success
-    assert r.deleted_idx == [0]
+    storage_socket.roles.delete("read")
 
     with pytest.raises(UserManagementError):
         storage_socket.roles.get("read")
@@ -152,9 +150,7 @@ def test_role_socket_modify(storage_socket: SQLAlchemySocket):
         },
     )
 
-    r = storage_socket.roles.modify(mod_role)
-    assert r.success
-    assert r.updated_idx == [0]
+    storage_socket.roles.modify(mod_role)
 
     rinfo = storage_socket.roles.get("read")
     assert rinfo["permissions"] == mod_role.permissions.dict()

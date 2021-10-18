@@ -36,23 +36,27 @@ default_roles = {
     "read": {
         "Statement": [
             {"Effect": "Allow", "Action": "GET", "Resource": "*"},
+            {"Effect": "Allow", "Action": "PUT", "Resource": "me"},
             {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager", "role", "access", "error"]},
         ]
     },
     "monitor": {
         "Statement": [
             {"Effect": "Allow", "Action": "GET", "Resource": "*"},
+            {"Effect": "Allow", "Action": "PUT", "Resource": "me"},
             {"Effect": "Deny", "Action": "*", "Resource": ["user", "role"]},
         ]
     },
     "compute": {
         "Statement": [
+            {"Effect": "Allow", "Action": ["GET", "PUT"], "Resource": "me"},
             {"Effect": "Allow", "Action": "*", "Resource": ["queue_manager"]},
         ]
     },
     "submit": {
         "Statement": [
             {"Effect": "Allow", "Action": "GET", "Resource": "*"},
+            {"Effect": "Allow", "Action": "PUT", "Resource": "me"},
             {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager", "role", "access", "error"]},
             {
                 "Effect": "Allow",
@@ -161,7 +165,7 @@ class RoleSocket:
             session.commit()
             return self.get(role_info.rolename, session=session)
 
-    def delete(self, rolename: str, *, session: Optional[Session] = None):
+    def delete(self, rolename: str, *, session: Optional[Session] = None) -> None:
         """
         Delete role.
 
