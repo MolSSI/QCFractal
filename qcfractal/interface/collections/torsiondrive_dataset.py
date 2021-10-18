@@ -92,6 +92,7 @@ class TorsionDriveDataset(BaseProcedureDataset):
         dihedral_ranges: Optional[List[Tuple[int, int]]] = None,
         energy_decrease_thresh: Optional[float] = None,
         energy_upper_limit: Optional[float] = None,
+        additional_keywords: Optional[Dict[str, Any]] = None,
         attributes: Dict[str, Any] = None,
         save: bool = True,
     ) -> None:
@@ -112,6 +113,8 @@ class TorsionDriveDataset(BaseProcedureDataset):
             The threshold of energy decrease to trigger activating grid points
         energy_upper_limit: Optional[float]
             The upper limit of energy relative to current global minimum to trigger activating grid points
+        additional_keywords : Dict[str, Any], optional
+            Additional keywords to add to the torsiondrive's optimization runs
         attributes : Dict[str, Any], optional
             Additional attributes and descriptions for the entry
         save : bool, optional
@@ -124,6 +127,9 @@ class TorsionDriveDataset(BaseProcedureDataset):
         if attributes is None:
             attributes = {}
 
+        if additional_keywords is None:
+            additional_keywords = {}
+
         # Build new objects
         molecule_ids = self.client.add_molecules(initial_molecules)
         td_keywords = TDKeywords(
@@ -132,6 +138,7 @@ class TorsionDriveDataset(BaseProcedureDataset):
             dihedral_ranges=dihedral_ranges,
             energy_decrease_thresh=energy_decrease_thresh,
             energy_upper_limit=energy_upper_limit,
+            additional_keywords=additional_keywords,
         )
 
         entry = TDEntry(name=name, initial_molecules=molecule_ids, td_keywords=td_keywords, attributes=attributes)

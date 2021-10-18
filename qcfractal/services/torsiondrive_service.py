@@ -113,6 +113,11 @@ class TorsionDriveService(BaseService):
             "meta": {"procedure": "optimization", "qc_spec": output.qc_spec.dict(), "tag": meta.pop("tag", None)}
         }
         opt_template["meta"].update(output.optimization_spec.dict())
+
+        # allows for injection of e.g. additional constraints for
+        # optimizations created by torsiondrive service
+        opt_template["meta"]["keywords"].update(service_input.keywords.additional_keywords)
+
         meta["optimization_template"] = json.dumps(opt_template)
 
         # Move around geometric data
