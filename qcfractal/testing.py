@@ -28,17 +28,63 @@ from .interface import FractalClient
 from .interface.models import TorsionDriveInput, RecordStatusEnum
 from .postgres_harness import TemporaryPostgres
 from .qc_queue import build_queue_adapter, QueueManager
-from .snowflake import FractalSnowflake
+from .snowflake import FractalSnowflake, attempt_client_connect
 from .periodics import FractalPeriodics
 from .db_socket.socket import SQLAlchemySocket
-
-## For mock flask responses
-# from requests_mock_flask import add_flask_app_to_mock
-# import requests_mock
-# import responses
+from .portal.components.permissions import UserInfo
+from .portal import PortalClient
 
 # Valid client encodings
 valid_encodings = ["application/json", "application/msgpack"]
+
+
+_test_users = {
+    "admin_user": {
+        "pw": "something123",
+        "info": {
+            "role": "admin",
+            "fullname": "Mrs. Admin User",
+            "organization": "QCF Testing",
+            "email": "admin@example.com",
+        },
+    },
+    "read_user": {
+        "pw": "something123",
+        "info": {
+            "role": "read",
+            "fullname": "Mr. Read User",
+            "organization": "QCF Testing",
+            "email": "read@example.com",
+        },
+    },
+    "monitor_user": {
+        "pw": "something123",
+        "info": {
+            "role": "monitor",
+            "fullname": "Mr. Monitor User",
+            "organization": "QCF Testing",
+            "email": "monitor@example.com",
+        },
+    },
+    "compute_user": {
+        "pw": "something123",
+        "info": {
+            "role": "compute",
+            "fullname": "Mr. Compute User",
+            "organization": "QCF Testing",
+            "email": "compute@example.com",
+        },
+    },
+    "submit_user": {
+        "pw": "something123",
+        "info": {
+            "role": "submit",
+            "fullname": "Mrs. Submit User",
+            "organization": "QCF Testing",
+            "email": "submit@example.com",
+        },
+    },
+}
 
 
 def pytest_addoption(parser):
@@ -516,6 +562,13 @@ class TestingSnowflake(FractalSnowflake):
         if self._compute_proc.is_alive():
             self._compute_proc.stop()
 
+    def client(self, username=None, password=None):
+        return attempt_client_connect(
+            self.get_uri(),
+            username=username,
+            password=password,
+        )
+
 
 @pytest.fixture(scope="function")
 def fractal_stopped_test_server(temporary_database):
@@ -548,6 +601,45 @@ def fractal_test_client(fractal_test_server, request):
     client = fractal_test_server.client()
     client.encoding = request.param
     yield client
+
+
+@pytest.fixture(scope="function")
+def fractal_test_secure_server(temporary_database):
+    """
+    A QCFractal snowflake server with authorization/authentication enabled
+    """
+
+    db_config = temporary_database.config
+    flask_config = {"jwt_access_token_expires": 1}  # expire tokens in 1 second
+    extra_config = {"enable_security": True, "allow_unauthenticated_read": False, "flask": flask_config}
+
+    with TestingSnowflake(db_config, start_flask=True, extra_config=extra_config) as server:
+        # Get a storage socket and add the roles/users/passwords
+        storage = server.get_storage_socket()
+        for k, v in _test_users.items():
+            uinfo = UserInfo(username=k, enabled=True, **v["info"])
+            storage.users.add(uinfo, password=v["pw"])
+        yield server
+
+
+@pytest.fixture(scope="function")
+def fractal_test_secure_server_read(temporary_database):
+    """
+    A QCFractal snowflake server with authorization/authentication enabled, but allowing
+    unauthenticated read
+    """
+
+    db_config = temporary_database.config
+    flask_config = {"jwt_access_token_expires": 1}  # expire tokens in 1 second
+    extra_config = {"enable_security": True, "allow_unauthenticated_read": True, "flask": flask_config}
+
+    with TestingSnowflake(db_config, start_flask=True, extra_config=extra_config) as server:
+        # Get a storage socket and add the roles/users/passwords
+        storage = server.get_storage_socket()
+        for k, v in _test_users.items():
+            uinfo = UserInfo(username=k, fullname="Ms. Test User", enabled=True, role=v["role"])
+            storage.users.add(uinfo, password=v["pw"])
+        yield server
 
 
 @pytest.fixture(scope="function")

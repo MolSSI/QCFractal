@@ -212,23 +212,18 @@ def check_access(fn):
         Call the route (fn) if allowed to access the url using the given
         permissions in the JWT token in the request headers
 
-        1- If no security (JWT_ENABLED=False), always allow
-        2- If JWT_ENABLED:
-            if read allowed (allow_read=True), use the default read permissions
+        1- If no security (enable_security is False), always allow
+        2- If enable_security:
+            if read allowed (allow_unauthenticated_read=True), use the default read permissions
             otherwise, check against the logged-in user permissions
             from the headers' JWT token
         """
 
-        # current_app.logger.debug(f"JWT_ENABLED: {current_app.config['JWT_ENABLED']}")
-        # current_app.logger.debug(f"ALLOW_UNAUTHENTICATED_READ: {current_app.config['ALLOW_UNAUTHENTICATED_READ']}")
-        # current_app.logger.debug(f"SECRET_KEY: {current_app.secret_key}")
-        # current_app.logger.debug(f"SECRET_KEY: {current_app.config['SECRET_KEY']}")
-        # current_app.logger.debug(f"JWT_SECRET_KEY: {current_app.config['JWT_SECRET_KEY']}")
-        # current_app.logger.debug(f"JWT_ACCESS_TOKEN_EXPIRES: {current_app.config['JWT_ACCESS_TOKEN_EXPIRES']}")
-        # current_app.logger.debug(f"JWT_REFRESH_TOKEN_EXPIRES: {current_app.config['JWT_REFRESH_TOKEN_EXPIRES']}")
+        security_enabled = current_app.config["QCFRACTAL_CONFIG"].enable_security
+        allow_unauthenticated_read = current_app.config["QCFRACTAL_CONFIG"].allow_unauthenticated_read
 
         # if no auth required, always allowed
-        if not current_app.config["JWT_ENABLED"]:
+        if not security_enabled:
             return fn(*args, **kwargs)
 
         # load read permissions from DB if not read
@@ -238,19 +233,21 @@ def check_access(fn):
 
         # if read is allowed without login, use read_permissions
         # otherwise, check logged-in permissions
-        if current_app.config["ALLOW_UNAUTHENTICATED_READ"]:
+        if allow_unauthenticated_read:
             # don't raise exception if no JWT is found
             verify_jwt_in_request(optional=True)
         else:
             # read JWT token from request headers
             verify_jwt_in_request(optional=False)
 
-        claims = get_jwt()
-        permissions = claims.get("permissions", {})
-
         try:
-            # host_url = request.host_url
-            identity = get_jwt_identity() or "anonymous"
+            claims = get_jwt()
+            permissions = claims.get("permissions", {})
+
+            identity = get_jwt_identity()  # may be None
+
+            # Pull the second part of the URL (ie, /v1/molecule -> molecule)
+            # We will consistently ignore the version prefix
             resource = urlparse(request.url).path.split("/")[2]
             context = {
                 "Principal": identity,
@@ -259,14 +256,16 @@ def check_access(fn):
                 # "IpAddress": request.remote_addr,
                 # "AccessTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
             }
-            current_app.logger.info(f"Permissions: {permissions}")
-            current_app.logger.info(f"Context: {context}")
             policy = Policy(permissions)
             if not policy.evaluate(context):
+                # If that doesn't work, but we allow unauthenticated read, then try that
+                if not allow_unauthenticated_read:
+                    raise Forbidden(f"User {identity} is not authorized to access '{resource}'")
+
                 if not Policy(_read_permissions).evaluate(context):
                     raise Forbidden(f"User {identity} is not authorized to access '{resource}'")
 
-            # Store the user and role in the global app/request context
+            # Store the user in the global app/request context
             g.user = identity
 
         except Forbidden:
