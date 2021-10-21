@@ -18,6 +18,7 @@ from .periodics import PeriodicsProcess
 from .app.flask_app import FlaskProcess
 from .process_runner import ProcessBase, ProcessRunner
 from .interface.models import RecordStatusEnum
+from .exceptions import AuthenticationFailure
 
 from typing import TYPE_CHECKING
 
@@ -47,16 +48,19 @@ def attempt_client_connect(uri: str, **client_args) -> PortalClient:
         A client connected to the given host and port
     """
 
-    # Try to connect 20 times (~2 seconds). If it fails after that, raise the last exception
-    for i in range(21):
+    # Try to connect 40 times (~2 seconds). If it fails after that, raise the last exception
+    for i in range(41):
         try:
             return PortalClient(uri, **client_args)
-        except Exception:
-            if i == 20:
+
+        except ConnectionRefusedError:
+            if i == 40:
                 # Out of attempts. Just give the last exception
                 raise
             else:
-                time.sleep(0.2)
+                time.sleep(0.1)
+        except Exception:
+            raise
 
     raise RuntimeError("PROGRAMMER ERROR - should never get here")
 

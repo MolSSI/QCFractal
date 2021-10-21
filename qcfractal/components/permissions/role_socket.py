@@ -49,6 +49,7 @@ default_roles = {
     },
     "compute": {
         "Statement": [
+            {"Effect": "Allow", "Action": ["GET"], "Resource": "information"},
             {"Effect": "Allow", "Action": ["GET", "PUT"], "Resource": "me"},
             {"Effect": "Allow", "Action": "*", "Resource": ["queue_manager"]},
         ]
@@ -142,6 +143,8 @@ class RoleSocket:
         except IntegrityError:
             raise UserManagementError(f"Role {role_info.rolename} already exists")
 
+        self._logger.info(f"Role {role_info.rolename} added")
+
     def modify(self, role_info: RoleInfo, *, session: Optional[Session] = None) -> RoleInfoDict:
         """
         Update role's permissions.
@@ -163,6 +166,8 @@ class RoleSocket:
             role = self._get_internal(session, role_info.rolename)
             role.permissions = role_info.permissions.dict()
             session.commit()
+
+            self._logger.info(f"Role {role_info.rolename} modified")
             return self.get(role_info.rolename, session=session)
 
     def delete(self, rolename: str, *, session: Optional[Session] = None) -> None:
@@ -187,6 +192,8 @@ class RoleSocket:
         except IntegrityError:
             raise UserManagementError("Role could not be deleted. Likely it is being referenced somewhere")
 
+        self._logger.info(f"Role {rolename} deleted")
+
     def reset_defaults(self, *, session: Optional[Session] = None) -> None:
         """
         Reset the permissions of the default roles back to their original values
@@ -203,3 +210,5 @@ class RoleSocket:
                     session.add(role_data)
                 else:
                     role_data.permissions = permissions
+
+        self._logger.warning(f"Reset all roles to defaults")

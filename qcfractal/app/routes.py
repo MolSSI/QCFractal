@@ -183,6 +183,7 @@ def handle_internal_error(error):
     err_id = storage_socket.serverinfo.save_error(error_log)
 
     msg = error.description + f"  **Refer to internal error id {err_id} when asking your admin**"
+    # return jsonify(traceback.format_exc())
     return jsonify(msg=msg), error.code
 
 

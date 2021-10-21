@@ -499,15 +499,18 @@ class TestingSnowflake(FractalSnowflake):
         )
 
         if create_users:
-            # Get a storage socket and add the roles/users/passwords
-            storage = self.get_storage_socket()
-            for k, v in _test_users.items():
-                uinfo = UserInfo(username=k, enabled=True, **v["info"])
-                storage.users.add(uinfo, password=v["pw"])
+            self.create_users()
 
-        # Always start the flask process
+        # Start the flask process if requested
         if start_flask:
             self.start_flask()
+
+    def create_users(self):
+        # Get a storage socket and add the roles/users/passwords
+        storage = self.get_storage_socket()
+        for k, v in _test_users.items():
+            uinfo = UserInfo(username=k, enabled=True, **v["info"])
+            storage.users.add(uinfo, password=v["pw"])
 
     def get_storage_socket(self) -> SQLAlchemySocket:
         """
@@ -544,10 +547,6 @@ class TestingSnowflake(FractalSnowflake):
         """
         if not self._flask_proc.is_alive():
             self._flask_proc.start()
-
-            # Wait until it is alive
-            # (This will attempt client connects until it is ready)
-            self.client()
 
     def stop_flask(self) -> None:
         """

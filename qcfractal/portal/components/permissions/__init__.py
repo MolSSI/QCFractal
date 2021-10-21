@@ -1,6 +1,5 @@
 from .models import (
     UserInfo,
-    PortalUser,
     RoleInfo,
     PermissionsPolicy,
     is_valid_rolename,

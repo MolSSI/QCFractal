@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Union, List, Any, TYPE_CHECKING
+from typing import Optional, Union, List
 
 from pydantic import BaseModel, Field, validator, constr, Extra
 
@@ -111,7 +111,7 @@ class UserInfo(BaseModel):
 
     # id may be None when used for initial creation
     id: Optional[int] = Field(None, allow_mutation=False, description="The id of the user")
-    username: str = Field(..., allow_mutation=True, description="The username of this user")
+    username: str = Field(..., allow_mutation=False, description="The username of this user")
     role: str = Field(..., description="The role this user belongs to")
     enabled: bool = Field(..., description="Whether this user is enabled or not")
     fullname: constr(max_length=128) = Field("", description="The full name or description of the user")
@@ -128,79 +128,12 @@ class UserInfo(BaseModel):
         except Exception as e:
             raise ValueError(str(e))
 
+    @validator("role", pre=True)
+    def _valid_rolename(cls, v):
+        """Makes sure the rolename is a valid string"""
 
-class PortalRole(RoleInfo):
-    client: Any  # TODO - circular reference to PortalClient
-
-    @property
-    def _url_base(self):
-        return f"v1/role{self.rolename}"
-
-    def update_on_server(self):
-        updated = self.client._auto_request("put", self._url_base, RoleInfo, None, RoleInfo, RoleInfo.dict(self), None)
-
-        for f in RoleInfo.__fields__:
-            self.__dict__[f] = getattr(updated, f)
-
-
-class PortalUser(UserInfo):
-    client: Any  # TODO - circular reference to PortalClient
-    as_admin: bool = False
-
-    @property
-    def is_current_user(self):
-        return self.client.username == self.username
-
-    @property
-    def _url_base(self):
-        # Access /user if we are trying to change another user, or if
-        # we are explicitly trying to be an admin
-        if self.as_admin or not self.is_current_user:
-            return f"v1/user/{self.username}"
-        else:
-            return "v1/me"
-
-    def update_on_server(self):
-        updated = self.client._auto_request("put", self._url_base, UserInfo, None, UserInfo, UserInfo.dict(self), None)
-
-        for f in UserInfo.__fields__:
-            self.__dict__[f] = getattr(updated, f)
-
-    def change_password(self, new_password: Optional[str]) -> str:
-        """
-        Changes a user's password on the server
-
-        If `new_password` is None, then a new password will be generated and returned by this function.
-
-        Parameters
-        ----------
-        new_password
-            The new password for the user. If None, one will be generated
-
-        Returns
-        -------
-        :
-            If a new password was given, will return None. Otherwise,
-        """
-
-        # Check client-side and bail early if it's not a valid password
-        if new_password is not None:
-            is_valid_password(new_password)
-
-        return self.client._auto_request(
-            "put", f"{self._url_base}/password", Optional[str], None, str, new_password, None
-        )
-
-    def reset_password(self) -> str:
-        """
-        Resets a user's password, and returns the new password
-
-        Equivalent to `change_password(None)`
-
-        Returns
-        -------
-        :
-            The newly-generated password for the user
-        """
-
-        return self.change_password(None)
+        try:
+            is_valid_rolename(v)
+            return v
+        except Exception as e:
+            raise ValueError(str(e))

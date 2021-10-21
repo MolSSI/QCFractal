@@ -1,11 +1,13 @@
-from flask import jsonify, request, current_app, g
+from typing import Optional, Tuple
 
+from flask import current_app, g
 from werkzeug.exceptions import BadRequest
+
 from qcfractal.app import main, storage_socket
 from qcfractal.app.routes import check_access, wrap_route
-from qcfractal.portal.components.permissions import UserInfo, RoleInfo
 from qcfractal.exceptions import InconsistentUpdateError, SecurityNotEnabledError
-from typing import Optional, Tuple
+from qcfractal.portal.components.permissions import UserInfo, RoleInfo
+
 
 ###################################################################
 # We have two user endpoints
@@ -91,7 +93,7 @@ def list_users_v1():
 @main.route("/v1/user", methods=["POST"])
 @wrap_route(Tuple[UserInfo, Optional[str]], None)
 @check_access
-def add_user_v1(username: str):
+def add_user_v1():
 
     user_info, password = g.validated_data
 
@@ -155,12 +157,36 @@ def delete_user_v1(username: str):
 @check_access
 def get_my_user_v1():
     assert_security_enabled()
+
+    # Get the logged-in user
     username = g.get("user", None)
 
     if username is None:
         raise BadRequest("No current user - not logged in")
 
     return storage_socket.users.get(g.user)
+
+
+@main.route("/v1/me", methods=["PUT"])
+@wrap_route(UserInfo, None)
+@check_access
+def modify_my_user_v1():
+    assert_security_enabled()
+
+    # Get the logged-in user
+    username = g.get("user", None)
+
+    if username is None:
+        raise BadRequest("No current user - not logged in")
+
+    current_app.logger.info(f"Modifying my user {username}")
+
+    user_info = g.validated_data
+    if username != user_info.username:
+        raise InconsistentUpdateError(f"Trying to update own user {username} with user info for {user_info.username}")
+
+    # This endpoint is not for admins
+    return storage_socket.users.modify(user_info, as_admin=False)
 
 
 @main.route("/v1/me/password", methods=["PUT"])
@@ -176,4 +202,4 @@ def change_my_password_v1():
     new_password = g.validated_data
 
     # Returns the password (new or generated)
-    return storage_socket.users.reset_password(username, new_password)
+    return storage_socket.users.change_password(username, new_password)

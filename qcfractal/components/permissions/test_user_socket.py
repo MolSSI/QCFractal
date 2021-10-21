@@ -115,7 +115,7 @@ def test_user_socket_use_unknown_user(storage_socket: SQLAlchemySocket, username
     with pytest.raises(UserManagementError, match=r"User.*not found"):
         storage_socket.users.get_permissions(username)
 
-    with pytest.raises(AuthenticationFailure, match=r"User.*not found"):
+    with pytest.raises(AuthenticationFailure, match=r"Incorrect username or password"):
         storage_socket.users.verify(username, "a password")
 
     with pytest.raises(UserManagementError, match=r"User.*not found"):
@@ -165,6 +165,25 @@ def test_user_socket_verify_user(storage_socket: SQLAlchemySocket, username: str
         storage_socket.users.verify(guess, gen_pw)
 
 
+@pytest.mark.parametrize("username", ["simple", "ABC1234", "ÃØ©þꝎꟇ"])
+@pytest.mark.parametrize("guess", ["Simple", "simple!", "ABC%1234", "ÃØ©þꝎB"])
+def test_user_socket_verify_user_disabled(storage_socket: SQLAlchemySocket, username: str, guess: str):
+    uinfo = UserInfo(
+        username=username,
+        role="read",
+        enabled=True,
+    )
+
+    gen_pw = storage_socket.users.add(uinfo)
+    storage_socket.users.verify(username, gen_pw)
+
+    uinfo.enabled = False
+    storage_socket.users.modify(uinfo, as_admin=True)
+
+    with pytest.raises(AuthenticationFailure):
+        storage_socket.users.verify(guess, gen_pw)
+
+
 def test_user_socket_change_password(storage_socket: SQLAlchemySocket):
     uinfo = UserInfo(
         username="george",
@@ -183,7 +202,7 @@ def test_user_socket_change_password(storage_socket: SQLAlchemySocket):
     # Raises exception on failure
     storage_socket.users.verify("george", "newpw123")
 
-    with pytest.raises(AuthenticationFailure, match=r"Incorrect password"):
+    with pytest.raises(AuthenticationFailure):
         storage_socket.users.verify("george", "oldpw123")
 
 
@@ -203,7 +222,7 @@ def test_user_socket_password_generation(storage_socket: SQLAlchemySocket):
     storage_socket.users.verify("george", gen_pw_2)
     is_valid_password(gen_pw)
 
-    with pytest.raises(AuthenticationFailure, match=r"Incorrect password"):
+    with pytest.raises(AuthenticationFailure):
         storage_socket.users.verify("george", gen_pw)
 
 
