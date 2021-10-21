@@ -9,40 +9,40 @@ from qcfractal.portal import PortalClient
 from qcfractal.portal.client import PortalRequestError
 
 
-def test_keywords_client_basic(fractal_test_client: PortalClient):
+def test_keywords_client_basic(snowflake_client: PortalClient):
     kw1 = KeywordSet(values={"o": 5})
     kw2 = KeywordSet(values={"o": 6})
     kw3 = KeywordSet(values={"o": 7})
 
-    meta, added_ids = fractal_test_client._add_keywords([kw1, kw2, kw3], full_return=True)
+    meta, added_ids = snowflake_client._add_keywords([kw1, kw2, kw3], full_return=True)
     assert len(added_ids) == 3
     assert meta.n_inserted == 3
     assert meta.inserted_idx == [0, 1, 2]
 
-    ret = fractal_test_client.get_keywords(added_ids)
+    ret = snowflake_client.get_keywords(added_ids)
     assert ret[0].id == added_ids[0]
     assert ret[1].id == added_ids[1]
     assert ret[2].id == added_ids[2]
 
     # Should return a single KeywordSet
-    ret = fractal_test_client.get_keywords(added_ids[0])
+    ret = snowflake_client.get_keywords(added_ids[0])
     assert isinstance(ret, KeywordSet)
     assert ret.id == added_ids[0]
 
     # Delete two
-    meta = fractal_test_client._delete_keywords(added_ids[:2])
+    meta = snowflake_client._delete_keywords(added_ids[:2])
     assert meta.success
     assert meta.n_deleted == 2
     assert meta.deleted_idx == [0, 1]
 
     # Deleted keywords are no longer available
-    ret = fractal_test_client.get_keywords(added_ids[:3], missing_ok=True)
+    ret = snowflake_client.get_keywords(added_ids[:3], missing_ok=True)
     assert ret[0] is None
     assert ret[1] is None
     assert ret[2].id == added_ids[2]
 
 
-def test_keywords_client_add_duplicate(fractal_test_client: PortalClient):
+def test_keywords_client_add_duplicate(snowflake_client: PortalClient):
     # kw1 == kw2 == kw3 == kw5 == kw7
     # kw4 and kw6 are unique
     kw1 = KeywordSet(values={"o": 5, "f": 1.111111111111111})
@@ -53,7 +53,7 @@ def test_keywords_client_add_duplicate(fractal_test_client: PortalClient):
     kw6 = KeywordSet(values={"O": 5, "f": 1.111111111121111}, lowercase=False)
     kw7 = KeywordSet(values={"O": 5, "f": 1.111111111121111})
 
-    meta, ret = fractal_test_client._add_keywords([kw1, kw2, kw3, kw4, kw5, kw6, kw7], full_return=True)
+    meta, ret = snowflake_client._add_keywords([kw1, kw2, kw3, kw4, kw5, kw6, kw7], full_return=True)
     assert meta.success
     assert meta.n_inserted == 3
     assert meta.existing_idx == [1, 2, 4, 6]
@@ -65,7 +65,7 @@ def test_keywords_client_add_duplicate(fractal_test_client: PortalClient):
 
     # add again in a different order, and with an extra
     kw8 = KeywordSet(values={"q": 5, "f": 1.111111111111111})
-    meta, ret2 = fractal_test_client._add_keywords([kw7, kw6, kw5, kw8, kw4, kw3, kw2, kw1], full_return=True)
+    meta, ret2 = snowflake_client._add_keywords([kw7, kw6, kw5, kw8, kw4, kw3, kw2, kw1], full_return=True)
     assert meta.n_inserted == 1
     assert meta.n_existing == 7
     assert ret2[0] == ret[6]
@@ -77,12 +77,12 @@ def test_keywords_client_add_duplicate(fractal_test_client: PortalClient):
     assert ret2[7] == ret[0]
 
 
-def test_keywords_client_delete_nonexist(fractal_test_client: PortalClient):
+def test_keywords_client_delete_nonexist(snowflake_client: PortalClient):
     kw1 = KeywordSet(values={"o": 5, "f": 1.111111111111111})
-    meta, ids = fractal_test_client._add_keywords([kw1], full_return=True)
+    meta, ids = snowflake_client._add_keywords([kw1], full_return=True)
     assert meta.n_inserted == 1
 
-    meta = fractal_test_client._delete_keywords([456, ids[0], ids[0], 123, 789])
+    meta = snowflake_client._delete_keywords([456, ids[0], ids[0], 123, 789])
     assert meta.success
     assert meta.n_deleted == 1
     assert meta.n_missing == 4
@@ -90,19 +90,19 @@ def test_keywords_client_delete_nonexist(fractal_test_client: PortalClient):
     assert meta.deleted_idx == [1]
 
 
-def test_keywords_client_get_nonexist(fractal_test_client: PortalClient):
+def test_keywords_client_get_nonexist(snowflake_client: PortalClient):
     kw1 = KeywordSet(values={"o": 5, "f": 1.111111111111111})
     kw6 = KeywordSet(values={"O": 5, "f": 1.111111111121111}, lowercase=False)
-    meta, ids = fractal_test_client._add_keywords([kw1, kw6], full_return=True)
+    meta, ids = snowflake_client._add_keywords([kw1, kw6], full_return=True)
     assert meta.n_inserted == 2
 
-    meta = fractal_test_client._delete_keywords([ids[0]])
+    meta = snowflake_client._delete_keywords([ids[0]])
     assert meta.success
     assert meta.n_deleted == 1
 
     # We now have one keyword set in the database and one that has been deleted
     # Try to get both with missing_ok = True. This should have None in the returned list
-    kw = fractal_test_client.get_keywords([ids[0], ids[1], ids[1], ids[0]], missing_ok=True)
+    kw = snowflake_client.get_keywords([ids[0], ids[1], ids[1], ids[0]], missing_ok=True)
     assert len(kw) == 4
     assert kw[0] is None
     assert kw[3] is None
@@ -111,13 +111,13 @@ def test_keywords_client_get_nonexist(fractal_test_client: PortalClient):
 
     # Now try with missing_ok = False. This should raise an exception
     with pytest.raises(PortalRequestError, match=r"Could not find all requested records"):
-        fractal_test_client.get_keywords([ids[0], ids[1], ids[1], ids[0]], missing_ok=False)
+        snowflake_client.get_keywords([ids[0], ids[1], ids[1], ids[0]], missing_ok=False)
 
 
-def test_keywords_client_get_empty(fractal_test_client: PortalClient):
+def test_keywords_client_get_empty(snowflake_client: PortalClient):
     kw1 = KeywordSet(values={"o": 5, "f": 1.111111111111111})
     kw6 = KeywordSet(values={"O": 5, "f": 1.111111111121111}, lowercase=False)
-    meta, ids = fractal_test_client._add_keywords([kw1, kw6], full_return=True)
+    meta, ids = snowflake_client._add_keywords([kw1, kw6], full_return=True)
     assert meta.n_inserted == 2
 
-    assert fractal_test_client.get_keywords([]) == []
+    assert snowflake_client.get_keywords([]) == []

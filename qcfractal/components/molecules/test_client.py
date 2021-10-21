@@ -10,24 +10,24 @@ from qcfractal.portal.client import PortalRequestError
 from qcfractal.testing import load_molecule_data
 
 
-def test_molecules_client_basic(fractal_test_client: PortalClient):
+def test_molecules_client_basic(snowflake_client: PortalClient):
     water = load_molecule_data("water_dimer_minima")
 
     # Add once
-    meta, ids = fractal_test_client.add_molecules([water])
+    meta, ids = snowflake_client.add_molecules([water])
     assert meta.success
     assert meta.n_inserted == 1
     assert meta.n_existing == 0
     assert meta.inserted_idx == [0]
 
     # Now get the molecule by id
-    mols = fractal_test_client.get_molecules(ids)
+    mols = snowflake_client.get_molecules(ids)
     assert len(mols) == 1
     assert mols[0].get_hash() == water.get_hash()
     assert water == mols[0]
 
     # Get as a single id
-    mol = fractal_test_client.get_molecules(ids[0])
+    mol = snowflake_client.get_molecules(ids[0])
     assert isinstance(mol, Molecule)
     assert water == mol
 
@@ -35,25 +35,25 @@ def test_molecules_client_basic(fractal_test_client: PortalClient):
     assert mols[0].validated
 
     # Try to add again
-    meta, ids2 = fractal_test_client.add_molecules([water])
+    meta, ids2 = snowflake_client.add_molecules([water])
     assert meta.success
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
     assert meta.existing_idx == [0]
 
     # Delete the molecule
-    meta = fractal_test_client.delete_molecules(ids)
+    meta = snowflake_client.delete_molecules(ids)
     assert meta.success
     assert meta.n_deleted == 1
     assert meta.deleted_idx == [0]
 
     # Make sure it is gone
     # This should return a list containing only None
-    mols = fractal_test_client.get_molecules(ids, missing_ok=True)
+    mols = snowflake_client.get_molecules(ids, missing_ok=True)
     assert mols == [None]
 
 
-def test_molecules_client_add_with_id(fractal_test_client: PortalClient):
+def test_molecules_client_add_with_id(snowflake_client: PortalClient):
     # Adding with an id already set is ok - the returned id may not
     # be the same
 
@@ -61,7 +61,7 @@ def test_molecules_client_add_with_id(fractal_test_client: PortalClient):
     water = load_molecule_data("water_dimer_minima")
     water = water.copy(update={"id": bad_id})
 
-    meta, ids = fractal_test_client.add_molecules([water])
+    meta, ids = snowflake_client.add_molecules([water])
     assert meta.success
     assert meta.n_inserted == 1
     assert meta.n_existing == 0
@@ -70,20 +70,20 @@ def test_molecules_client_add_with_id(fractal_test_client: PortalClient):
 
     ## Getting by the old id shouldn't work
     with pytest.raises(PortalRequestError, match=r"Could not find all requested records"):
-        fractal_test_client.get_molecules([bad_id], missing_ok=False)
+        snowflake_client.get_molecules([bad_id], missing_ok=False)
 
     ## Getting by the new id should work
-    mols = fractal_test_client.get_molecules(ids, missing_ok=False)
+    mols = snowflake_client.get_molecules(ids, missing_ok=False)
     assert mols[0].id == ids[0]
     assert mols[0] == water
 
 
-def test_molecules_client_add_duplicates_1(fractal_test_client: PortalClient):
+def test_molecules_client_add_duplicates_1(snowflake_client: PortalClient):
     # Tests various ways of adding duplicate molecules
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
 
-    meta, ids = fractal_test_client.add_molecules([water, hooh, water, hooh, hooh])
+    meta, ids = snowflake_client.add_molecules([water, hooh, water, hooh, hooh])
     assert meta.success
     assert meta.n_inserted == 2
     assert meta.n_existing == 3
@@ -94,7 +94,7 @@ def test_molecules_client_add_duplicates_1(fractal_test_client: PortalClient):
     assert ids[1] == ids[4]
 
     # Test in a different order
-    meta, ids = fractal_test_client.add_molecules([hooh, hooh, water, water, hooh])
+    meta, ids = snowflake_client.add_molecules([hooh, hooh, water, water, hooh])
     assert meta.success
     assert meta.n_inserted == 0
     assert meta.n_existing == 5
@@ -105,17 +105,17 @@ def test_molecules_client_add_duplicates_1(fractal_test_client: PortalClient):
     assert ids[2] == ids[3]
 
 
-def test_molecules_client_get_duplicates(fractal_test_client: PortalClient):
+def test_molecules_client_get_duplicates(snowflake_client: PortalClient):
     # Tests various ways of getting duplicate molecules
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
 
-    meta, ids = fractal_test_client.add_molecules([water, hooh])
+    meta, ids = snowflake_client.add_molecules([water, hooh])
     assert meta.success
     assert meta.n_inserted == 2
 
     id1, id2 = ids
-    mols = fractal_test_client.get_molecules([id1, id2, id1, id2, id1])
+    mols = snowflake_client.get_molecules([id1, id2, id1, id2, id1])
     assert len(mols) == 5
     assert mols[0] == mols[2]
     assert mols[0] == mols[4]
@@ -125,7 +125,7 @@ def test_molecules_client_get_duplicates(fractal_test_client: PortalClient):
     assert mols[1].id == mols[3].id
 
     # Try getting in a different order
-    mols = fractal_test_client.get_molecules([id2, id1, id1, id1, id2])
+    mols = snowflake_client.get_molecules([id2, id1, id1, id1, id2])
     assert len(mols) == 5
     assert mols[0] == mols[4]
     assert mols[1] == mols[2]
@@ -135,13 +135,13 @@ def test_molecules_client_get_duplicates(fractal_test_client: PortalClient):
     assert mols[1].id == mols[3].id
 
 
-def test_molecules_client_delete_nonexist(fractal_test_client: PortalClient):
+def test_molecules_client_delete_nonexist(snowflake_client: PortalClient):
 
     water = load_molecule_data("water_dimer_minima")
-    meta, ids = fractal_test_client.add_molecules([water])
+    meta, ids = snowflake_client.add_molecules([water])
     assert meta.success
 
-    meta = fractal_test_client.delete_molecules([456, ids[0], ids[0], 123, 789])
+    meta = snowflake_client.delete_molecules([456, ids[0], ids[0], 123, 789])
     assert meta.success
     assert meta.n_deleted == 1
     assert meta.n_missing == 4
@@ -149,20 +149,20 @@ def test_molecules_client_delete_nonexist(fractal_test_client: PortalClient):
     assert meta.deleted_idx == [1]
 
 
-def test_molecules_client_get_nonexist(fractal_test_client: PortalClient):
+def test_molecules_client_get_nonexist(snowflake_client: PortalClient):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
 
-    meta, ids = fractal_test_client.add_molecules([water, hooh])
+    meta, ids = snowflake_client.add_molecules([water, hooh])
     assert meta.success
 
     id1, id2 = ids
-    meta = fractal_test_client.delete_molecules([id1])
+    meta = snowflake_client.delete_molecules([id1])
     assert meta.success
 
     # We now have one molecule in the database and one that has been deleted
     # Try to get both with missing_ok = True. This should have None in the returned list
-    mols = fractal_test_client.get_molecules([id1, id2, id1, id2], missing_ok=True)
+    mols = snowflake_client.get_molecules([id1, id2, id1, id2], missing_ok=True)
     assert len(mols) == 4
     assert mols[0] is None
     assert mols[2] is None
@@ -171,10 +171,10 @@ def test_molecules_client_get_nonexist(fractal_test_client: PortalClient):
 
     # Now try with missing_ok = False. This should raise an exception
     with pytest.raises(PortalRequestError, match=r"Could not find all requested records"):
-        fractal_test_client.get_molecules([id1, id2, id1, id2], missing_ok=False)
+        snowflake_client.get_molecules([id1, id2, id1, id2], missing_ok=False)
 
 
-def test_molecules_client_query(fractal_test_client: PortalClient):
+def test_molecules_client_query(snowflake_client: PortalClient):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
 
@@ -185,7 +185,7 @@ def test_molecules_client_query(fractal_test_client: PortalClient):
     added_mols = [water, hooh]
     added_mols = sorted(added_mols, key=lambda x: x.get_hash())
 
-    meta, ids = fractal_test_client.add_molecules(added_mols)
+    meta, ids = snowflake_client.add_molecules(added_mols)
     assert meta.success
     assert meta.inserted_idx == [0, 1]
 
@@ -194,7 +194,7 @@ def test_molecules_client_query(fractal_test_client: PortalClient):
     #################################################
 
     # Query by hash
-    meta, mols = fractal_test_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()])
+    meta, mols = snowflake_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()])
     mols = sorted(mols, key=lambda x: x.get_hash())
     assert meta.success
     assert meta.n_returned == 2
@@ -204,7 +204,7 @@ def test_molecules_client_query(fractal_test_client: PortalClient):
     assert mols[1] == added_mols[1]
 
     # Query by formula
-    meta, mols = fractal_test_client.query_molecules(molecular_formula=["H4O2", "H2O2"])
+    meta, mols = snowflake_client.query_molecules(molecular_formula=["H4O2", "H2O2"])
     mols = sorted(mols, key=lambda x: x.get_hash())
     assert meta.success
     assert meta.n_returned == 2
@@ -212,82 +212,80 @@ def test_molecules_client_query(fractal_test_client: PortalClient):
     assert mols[1] == added_mols[1]
 
     # Query by identifiers
-    meta, mols = fractal_test_client.query_molecules(identifiers={"smiles": ["smiles_str"]})
+    meta, mols = snowflake_client.query_molecules(identifiers={"smiles": ["smiles_str"]})
     assert meta.success
     assert meta.n_returned == 1
     assert mols[0] == added_mols[0]
 
     # Queries should be intersections
-    meta, mols = fractal_test_client.query_molecules(
-        molecular_formula=["H4O2", "H2O2"], molecule_hash=[water.get_hash()]
-    )
+    meta, mols = snowflake_client.query_molecules(molecular_formula=["H4O2", "H2O2"], molecule_hash=[water.get_hash()])
     assert meta.success
     assert meta.n_returned == 1
     assert mols[0] == water
 
 
-def test_molecules_client_query_limit(fractal_test_client: PortalClient):
+def test_molecules_client_query_limit(snowflake_client: PortalClient):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
 
     added_mols = [water, hooh]
 
-    meta, ids = fractal_test_client.add_molecules(added_mols)
+    meta, ids = snowflake_client.add_molecules(added_mols)
     assert meta.success
 
-    meta, mols = fractal_test_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1)
+    meta, mols = snowflake_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1)
     assert meta.success
     assert meta.n_returned == 1
     assert len(mols) == 1
 
-    meta, mols = fractal_test_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1, skip=1)
+    meta, mols = snowflake_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1, skip=1)
     assert meta.success
     assert meta.n_returned == 1
     assert len(mols) == 1
 
     # Asking for more molecules than there are
-    meta, mols = fractal_test_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1, skip=2)
+    meta, mols = snowflake_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1, skip=2)
     assert meta.success
     assert meta.n_returned == 0
     assert len(mols) == 0
 
 
-def test_molecules_client_get_empty(fractal_test_client: PortalClient):
-    assert fractal_test_client.get_molecules([]) == []
+def test_molecules_client_get_empty(snowflake_client: PortalClient):
+    assert snowflake_client.get_molecules([]) == []
 
     water = load_molecule_data("water_dimer_minima")
-    _, ids = fractal_test_client.add_molecules([water])
+    _, ids = snowflake_client.add_molecules([water])
     assert len(ids) == 1
 
-    assert fractal_test_client.get_molecules([]) == []
+    assert snowflake_client.get_molecules([]) == []
 
 
-def test_molecules_client_query_empty(fractal_test_client: PortalClient):
-    assert fractal_test_client.query_molecules()[1] == []
+def test_molecules_client_query_empty(snowflake_client: PortalClient):
+    assert snowflake_client.query_molecules()[1] == []
 
     water = load_molecule_data("water_dimer_minima")
-    _, ids = fractal_test_client.add_molecules([water])
+    _, ids = snowflake_client.add_molecules([water])
     assert len(ids) == 1
 
     # Empty everything = return all
-    meta, mols = fractal_test_client.query_molecules()
+    meta, mols = snowflake_client.query_molecules()
     assert meta.n_found == 1
     assert mols[0].id == ids[0]
 
     # Empty lists will constrain the results to be empty
-    meta, mols = fractal_test_client.query_molecules(molecule_hash=[])
+    meta, mols = snowflake_client.query_molecules(molecule_hash=[])
     assert meta.n_found == 0
     assert mols == []
 
 
-def test_molecules_client_modify(fractal_test_client: PortalClient):
+def test_molecules_client_modify(snowflake_client: PortalClient):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
 
-    _, ids = fractal_test_client.add_molecules([water, hooh])
+    _, ids = snowflake_client.add_molecules([water, hooh])
     assert len(ids) == 2
 
-    meta = fractal_test_client.modify_molecule(
+    meta = snowflake_client.modify_molecule(
         ids[0],
         name="water_dimer",
         comment="This is a comment",
@@ -300,7 +298,7 @@ def test_molecules_client_modify(fractal_test_client: PortalClient):
     assert meta.updated_idx == [0]
 
     # Did it actually update?
-    mols = fractal_test_client.get_molecules(ids)
+    mols = snowflake_client.get_molecules(ids)
     assert mols[0].name == "water_dimer"
     assert mols[0].comment == "This is a comment"
     assert mols[0].identifiers.smiles == "madeupsmiles"
@@ -311,7 +309,7 @@ def test_molecules_client_modify(fractal_test_client: PortalClient):
     assert mols[0].identifiers.molecular_formula == water.get_molecular_formula()
 
     # Now try with overwrite_identifiers = True
-    meta = fractal_test_client.modify_molecule(
+    meta = snowflake_client.modify_molecule(
         ids[0],
         name="water_dimer 2",
         identifiers=MoleculeIdentifiers(smiles="madeupsmiles2", inchikey="madeupinchikey"),
@@ -321,7 +319,7 @@ def test_molecules_client_modify(fractal_test_client: PortalClient):
     assert meta.updated_idx == [0]
 
     # Did it actually update?
-    mols = fractal_test_client.get_molecules(ids)
+    mols = snowflake_client.get_molecules(ids)
     assert mols[0].name == "water_dimer 2"
     assert mols[0].comment == "This is a comment"
     assert mols[0].identifiers.smiles == "madeupsmiles2"
@@ -333,14 +331,14 @@ def test_molecules_client_modify(fractal_test_client: PortalClient):
     assert mols[0].identifiers.molecular_formula == water.get_molecular_formula()
 
 
-def test_molecules_client_update_nonexist(fractal_test_client: PortalClient):
+def test_molecules_client_update_nonexist(snowflake_client: PortalClient):
     water = load_molecule_data("water_dimer_minima")
 
-    _, ids = fractal_test_client.add_molecules([water])
+    _, ids = snowflake_client.add_molecules([water])
     assert len(ids) == 1
 
     with pytest.raises(PortalRequestError, match=r"Molecule with id.*not found in the database"):
-        fractal_test_client.modify_molecule(
+        snowflake_client.modify_molecule(
             9999,
             name="water_dimer",
             comment="This is a comment",
