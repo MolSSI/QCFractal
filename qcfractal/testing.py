@@ -458,15 +458,30 @@ class TestingSnowflake(FractalSnowflake):
     By default, the periodics and worker subprocesses are not started.
     """
 
-    def __init__(self, database_config, start_flask=True, extra_config=None):
+    def __init__(
+        self,
+        database_config,
+        encoding: str,
+        start_flask=True,
+        create_users=False,
+        enable_security=False,
+        allow_unauthenticated_read=False,
+    ):
+
+        self._encoding = encoding
 
         # Tighten the service frequency for tests
         # Also disable connection pooling in the storage socket
         # (which can leave db connections open, causing problems when we go to delete
         # the database)
-        if extra_config is None:
-            extra_config = {}
+        # Have a short token expiration (in case enable_security is True)
+        extra_config = {}
 
+        flask_config = {"jwt_access_token_expires": 1}  # expire tokens in 1 second
+
+        extra_config["enable_security"] = enable_security
+        extra_config["allow_unauthenticated_read"] = allow_unauthenticated_read
+        extra_config["flask"] = flask_config
         extra_config["service_frequency"] = 5
         extra_config["loglevel"] = "DEBUG"
         extra_config["heartbeat_frequency"] = 3
@@ -482,6 +497,13 @@ class TestingSnowflake(FractalSnowflake):
             flask_config="testing",
             extra_config=extra_config,
         )
+
+        if create_users:
+            # Get a storage socket and add the roles/users/passwords
+            storage = self.get_storage_socket()
+            for k, v in _test_users.items():
+                uinfo = UserInfo(username=k, enabled=True, **v["info"])
+                storage.users.add(uinfo, password=v["pw"])
 
         # Always start the flask process
         if start_flask:
@@ -562,88 +584,104 @@ class TestingSnowflake(FractalSnowflake):
         if self._compute_proc.is_alive():
             self._compute_proc.stop()
 
-    def client(self, username=None, password=None):
-        return attempt_client_connect(
+    def client(self, username=None, password=None) -> PortalClient:
+        """
+        Obtain a client connected to this snowflake
+
+        Parameters
+        ----------
+        username
+            The username to connect as
+        password
+            The password to use
+
+        Returns
+        -------
+        :
+            A PortalClient that is connected to this snowflake
+        """
+        client = attempt_client_connect(
             self.get_uri(),
             username=username,
             password=password,
         )
+        client.encoding = self._encoding
+        return client
 
 
-@pytest.fixture(scope="function")
-def fractal_stopped_test_server(temporary_database):
+@pytest.fixture(scope="function", params=valid_encodings)
+def stopped_snowflake(temporary_database, request):
     """
     A QCFractal snowflake server used for testing, but with nothing started by default
     """
 
     db_config = temporary_database.config
-    with TestingSnowflake(db_config, start_flask=False) as server:
+    with TestingSnowflake(db_config, encoding=request.param, start_flask=False) as server:
         yield server
 
 
 @pytest.fixture(scope="function")
-def fractal_test_server(temporary_database):
+def snowflake(stopped_snowflake):
     """
     A QCFractal snowflake server used for testing
     """
 
-    db_config = temporary_database.config
-    with TestingSnowflake(db_config, start_flask=True) as server:
-        yield server
+    stopped_snowflake.start_flask()
+    yield stopped_snowflake
 
 
 @pytest.fixture(scope="function", params=valid_encodings)
-def fractal_test_client(fractal_test_server, request):
-    """
-    A client connected to a fractal test server
-    """
-
-    client = fractal_test_server.client()
-    client.encoding = request.param
-    yield client
-
-
-@pytest.fixture(scope="function")
-def fractal_test_secure_server(temporary_database):
+def secure_snowflake(temporary_database, request):
     """
     A QCFractal snowflake server with authorization/authentication enabled
     """
 
     db_config = temporary_database.config
-    flask_config = {"jwt_access_token_expires": 1}  # expire tokens in 1 second
-    extra_config = {"enable_security": True, "allow_unauthenticated_read": False, "flask": flask_config}
-
-    with TestingSnowflake(db_config, start_flask=True, extra_config=extra_config) as server:
-        # Get a storage socket and add the roles/users/passwords
-        storage = server.get_storage_socket()
-        for k, v in _test_users.items():
-            uinfo = UserInfo(username=k, enabled=True, **v["info"])
-            storage.users.add(uinfo, password=v["pw"])
+    with TestingSnowflake(
+        db_config,
+        encoding=request.param,
+        start_flask=True,
+        create_users=True,
+        enable_security=True,
+        allow_unauthenticated_read=False,
+    ) as server:
         yield server
 
 
-@pytest.fixture(scope="function")
-def fractal_test_secure_server_read(temporary_database):
+@pytest.fixture(scope="function", params=valid_encodings)
+def secure_snowflake_allow_read(temporary_database, request):
     """
     A QCFractal snowflake server with authorization/authentication enabled, but allowing
     unauthenticated read
     """
 
     db_config = temporary_database.config
-    flask_config = {"jwt_access_token_expires": 1}  # expire tokens in 1 second
-    extra_config = {"enable_security": True, "allow_unauthenticated_read": True, "flask": flask_config}
-
-    with TestingSnowflake(db_config, start_flask=True, extra_config=extra_config) as server:
-        # Get a storage socket and add the roles/users/passwords
-        storage = server.get_storage_socket()
-        for k, v in _test_users.items():
-            uinfo = UserInfo(username=k, fullname="Ms. Test User", enabled=True, role=v["role"])
-            storage.users.add(uinfo, password=v["pw"])
+    with TestingSnowflake(
+        db_config,
+        encoding=request.param,
+        start_flask=True,
+        create_users=True,
+        enable_security=True,
+        allow_unauthenticated_read=True,
+    ) as server:
         yield server
 
 
 @pytest.fixture(scope="function")
-def test_server(temporary_database):
+def snowflake_client(snowflake):
+    """
+    A client connected to a testing snowflake
+
+    This is for a simple snowflake (no security, no compute) because a lot
+    of tests will use this. Other tests will need to use a different fixture
+    and manually call client() there
+    """
+
+    yield snowflake.client()
+
+
+@pytest.fixture(scope="function")
+def old_test_server(temporary_database):
     """
     A QCFractal server with no compute attached, and with security disabled
     """
