@@ -11,12 +11,11 @@ from sqlalchemy.sql import select
 from qcfractal.components.permissions.db_models import UserORM
 from qcfractal.exceptions import AuthenticationFailure, UserManagementError
 from qcfractal.portal.components.permissions import UserInfo, is_valid_password, is_valid_username
-from qcfractal.portal.metadata_models import UpdateMetadata
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from typing import Optional, List, Dict, Any, Tuple
+    from typing import Optional, List, Dict, Any
 
     UserInfoDict = Dict[str, Any]
 
@@ -177,6 +176,7 @@ class UserSocket:
         except IntegrityError:
             raise UserManagementError(f"User {user_info.username} already exists")
 
+        self._logger.info(f"User {user_info.username} added")
         return password
 
     def verify(self, username: str, password: str, *, session: Optional[Session] = None) -> Dict[str, Any]:
@@ -208,7 +208,7 @@ class UserSocket:
                 user = self._get_internal(session, username)
             except UserManagementError as e:
                 # Turn missing user into an Authentication error
-                raise AuthenticationFailure(str(e))
+                raise AuthenticationFailure("Incorrect username or password")
 
             if not user.enabled:
                 raise AuthenticationFailure(f"User {username} is disabled.")
@@ -223,7 +223,7 @@ class UserSocket:
                 raise UserManagementError("Password decryption failure, please contact your system administrator.")
 
             if pwcheck is False:
-                raise AuthenticationFailure("Incorrect password")
+                raise AuthenticationFailure("Incorrect username or password")
 
             return user.role_obj.permissions
 
@@ -268,6 +268,9 @@ class UserSocket:
                 user.role_id = role.id
 
             session.commit()
+
+            self._logger.info(f"User {user_info.username} modified")
+
             return self.get(user_info.username, session=session)
 
     def change_password(self, username: str, password: Optional[str], *, session: Optional[Session] = None) -> str:
@@ -301,6 +304,7 @@ class UserSocket:
             user = self._get_internal(session, username)
             user.password = _hash_password(password)
 
+        self._logger.info(f"Password for {username} modified")
         return password
 
     def delete(self, username: str, *, session: Optional[Session] = None) -> None:
@@ -324,3 +328,5 @@ class UserSocket:
                 session.delete(user)
         except IntegrityError:
             raise UserManagementError("User could not be deleted. Likely it is being referenced somewhere")
+
+        self._logger.info(f"User {username} deleted")

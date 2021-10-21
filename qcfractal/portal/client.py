@@ -47,6 +47,7 @@ from qcfractal.portal.metadata_models import QueryMetadata, UpdateMetadata
 from .collections import Collection, collection_factory, collections_name_map
 from .records import record_factory
 from .cache import PortalCache
+from qcfractal.exceptions import AuthenticationFailure
 from .serialization import serialize, deserialize
 
 from ..interface.models import (
@@ -56,7 +57,13 @@ from ..interface.models import (
     TaskRecord,
 )
 from .components.keywords import KeywordSet
-from qcfractal.portal.components.permissions import PortalUser, UserInfo, RoleInfo, is_valid_username
+from qcfractal.portal.components.permissions import (
+    UserInfo,
+    RoleInfo,
+    is_valid_username,
+    is_valid_password,
+    is_valid_rolename,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from .collections.collection import Collection
@@ -275,7 +282,7 @@ class PortalClient:
             self.refresh_token = ret.json()["refresh_token"]
             self._headers["Authorization"] = f'Bearer {ret.json()["access_token"]}'
         else:
-            raise ConnectionRefusedError("Authentication failed, wrong username or password.")
+            raise AuthenticationFailure(ret.json()["msg"])
 
     def _refresh_JWT_token(self) -> None:
 
@@ -1695,6 +1702,7 @@ class PortalClient:
         Get information about a role on the server
         """
 
+        is_valid_rolename(rolename)
         return self._auto_request("get", f"v1/role/{rolename}", None, None, RoleInfo, None, None)
 
     def add_role(self, role_info: RoleInfo) -> None:
@@ -1704,9 +1712,39 @@ class PortalClient:
         If not successful, an exception is raised.
         """
 
+        is_valid_rolename(role_info.rolename)
         return self._auto_request("post", "v1/role", RoleInfo, None, None, role_info, None)
 
+    def modify_role(self, role_info: RoleInfo) -> RoleInfo:
+        """
+        Modifies the permissions of a role on the server
+
+        If not successful, an exception is raised.
+
+        Returns
+        -------
+        :
+            A copy of the role as it now appears on the server
+        """
+
+        is_valid_rolename(role_info.rolename)
+        return self._auto_request("put", f"v1/role/{role_info.rolename}", RoleInfo, None, RoleInfo, role_info, None)
+
     def delete_role(self, rolename: str) -> None:
+        """
+        Deletes a role from the server
+
+        This will not delete any role to which a user is assigned
+
+        Will raise an exception on error
+
+        Parameters
+        ----------
+        rolename
+            Name of the role to delete
+
+        """
+        is_valid_rolename(rolename)
         return self._auto_request("delete", f"v1/role/{rolename}", None, None, None, None, None)
 
     def list_users(self) -> List[UserInfo]:
@@ -1716,7 +1754,7 @@ class PortalClient:
 
         return self._auto_request("get", "v1/user", None, None, List[UserInfo], None, None)
 
-    def get_user(self, username: Optional[str] = None, as_admin: bool = False) -> PortalUser:
+    def get_user(self, username: Optional[str] = None, as_admin: bool = False) -> UserInfo:
         """
         Get information about a user on the server
 
@@ -1739,6 +1777,9 @@ class PortalClient:
         if username is None:
             username = self.username
 
+        if username is None:
+            raise PortalRequestError("Cannot get user - not logged in?")
+
         # Check client side so we can bail early
         is_valid_username(username)
 
@@ -1757,15 +1798,110 @@ class PortalClient:
         else:
             uinfo = self._auto_request("get", f"v1/user/{username}", None, None, UserInfo, None, None)
 
-        return PortalUser(client=self, as_admin=as_admin, **uinfo.dict())
+        return uinfo
 
     def add_user(self, user_info: UserInfo, password: Optional[str] = None) -> str:
+        """
+        Adds a user to the server
+
+        Parameters
+        ----------
+        user_info
+            Info about the user to add
+        password
+            The user's password. If None, then one will be generated
+
+        Returns
+        -------
+        :
+            The password of the user (either the same as the supplied password, or the
+            server-generated one)
+
+        """
+
+        is_valid_username(user_info.username)
+        is_valid_rolename(user_info.role)
+
+        if password is not None:
+            is_valid_password(password)
+
         if user_info.id is not None:
             raise RuntimeError("Cannot add user when user_info contains an id")
 
         return self._auto_request(
-            "post", "v1/user", Tuple[UserInfo, Optional[str]], None, None, (user_info, password), None
+            "post", "v1/user", Tuple[UserInfo, Optional[str]], None, str, (user_info, password), None
         )
+
+    def modify_user(self, user_info: UserInfo, as_admin: bool = False) -> UserInfo:
+        """
+        Modifies a user on the server
+
+        The user is determined by the username field of the input UserInfo, although the id
+        and username are checked for consistency.
+
+        Depending on the current user's permissions, some fields may not be updatable.
+
+
+
+        Parameters
+        ----------
+        user_info
+            Updated information for a user
+        as_admin
+            If True, then attempt to modify fields that are only modifiable by an admin (enabled, role).
+            This is the default if requesting a user other than the currently logged-in user.
+
+        Returns
+        -------
+        :
+            The updated user information as it appears on the server
+        """
+
+        is_valid_username(user_info.username)
+        is_valid_rolename(user_info.role)
+
+        if as_admin or (user_info.username != self.username):
+            url = f"v1/user/{user_info.username}"
+        else:
+            url = "v1/me"
+
+        return self._auto_request("put", url, UserInfo, None, UserInfo, user_info, None)
+
+    def change_user_password(self, username: Optional[str] = None, new_password: Optional[str] = None) -> str:
+        """
+        Change a users password
+
+        If the username is not specified, then the current logged-in user is used.
+
+        If the password is not specified, then one is automatically generated by the server.
+
+        Parameters
+        ----------
+        username
+            The name of the user whose password to change. If None, then use the currently logged-in user
+        new_password
+            Password to change to. If None, let the server generate one.
+
+        Returns
+        -------
+        :
+            The new password (either the same as the supplied one, or the server generated one
+        """
+
+        if username is None:
+            username = self.username
+
+        is_valid_username(username)
+
+        if new_password is not None:
+            is_valid_password(new_password)
+
+        if username == self.username:
+            url = "v1/me/password"
+        else:
+            url = f"v1/user/{username}/password"
+
+        return self._auto_request("put", url, Optional[str], None, str, new_password, None)
 
     def delete_user(self, username: str) -> None:
         is_valid_username(username)
