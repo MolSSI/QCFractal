@@ -1,8 +1,7 @@
 name: qcarchive
 channels:
   - defaults
-  - omnia
-  - psi4/label/dev
+  - psi4
   - conda-forge
 dependencies:
   - pip
@@ -40,17 +39,17 @@ dependencies:
   - requests-mock
 
 #   Environment specific includes
-  - psi4>1.4a2.dev700,<1.4a2
-  - gau2grid=2.0.3
+  - psi4 >=1.4.1
+  - gau2grid
   - rdkit
   - geometric >=0.9.3
   - torsiondrive
   - dftd3
-  - openforcefield >=0.7.1
-  - openforcefields >=1.2.0
-  - openmm >=7.4.2
+  - openff-toolkit >=0.10.0
+  - openff-forcefields >=2.0.0
+  - openmm >=7.6.0
   - openmmforcefields >=0.8.0
 
 #   QCArchive includes
-  - qcengine >=0.17.0,<0.20
-  - qcelemental >=0.17.0,<0.23
+  - qcengine >=0.20
+  - qcelemental >=0.23

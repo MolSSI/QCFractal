@@ -39,12 +39,21 @@ jobs:
           ulimit -a
 
       - name: Configure conda
-        uses: conda-incubator/setup-miniconda@v2
+        uses: conda-incubator/setup-miniconda@v2.1.1
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: qcarchive
           environment-file: devtools/conda-envs/${{ matrix.environ }}.yaml
+
+          channels: conda-forge,psi4,defaults
+
           auto-activate-base: false
+          auto-update-conda: true
+          show-channel-urls: true
+          mamba-version: "*"
+          miniforge-version: latest
+          miniforge-variant: Mambaforge
+          use-mamba: true
 
       - name: Environment Information
         shell: bash -l {0}

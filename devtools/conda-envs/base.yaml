@@ -38,5 +38,5 @@ dependencies:
   - requests-mock
 
 #   QCArchive includes
-  - qcengine >=0.17.0,<0.20
-  - qcelemental >=0.17.0,<0.23
+  - qcengine >=0.20
+  - qcelemental >=0.23
