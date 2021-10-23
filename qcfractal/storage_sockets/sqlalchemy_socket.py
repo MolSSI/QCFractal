@@ -1224,7 +1224,8 @@ class SQLAlchemySocket:
                     doc = ResultORM(**result.dict(exclude={"id", "properties"}))
 
                     # Keep properties as JSON (PR #694)
-                    doc.properties = result.properties.dict(encoding="json")
+                    if result.properties is not None:
+                        doc.properties = result.properties.dict(encoding="json")
 
                     # Store in existing_results in case later records are duplicates
                     existing_results[idx] = doc
@@ -1318,7 +1319,9 @@ class SQLAlchemySocket:
 
                 # must use json encoding to remove numpy arrays of properties
                 data = result.dict(exclude={"id", "properties"})
-                data["properties"] = result.properties.dict(encoding="json")
+
+                if result.properties is not None:
+                    data["properties"] = result.properties.dict(encoding="json")
 
                 # retrieve the found item
                 found_db = found_dict[result.id]
