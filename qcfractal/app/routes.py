@@ -181,9 +181,14 @@ def handle_internal_error(error):
     # Log it to the internal error table
     err_id = storage_socket.serverinfo.save_error(error_log)
 
-    msg = error.description + f"  **Refer to internal error id {err_id} when asking your admin**"
-    # return jsonify(traceback.format_exc())
-    return jsonify(msg=msg), error.code
+    # Should we hide the error from the user?
+    hide = current_app.config["QCFRACTAL_CONFIG"].hide_internal_errors
+
+    if hide:
+        msg = error.description + f"  **Refer to internal error id {err_id} when asking your admin**"
+        return jsonify(msg=msg), error.code
+    else:
+        return jsonify(traceback.format_exc())
 
 
 @main.errorhandler(HTTPException)

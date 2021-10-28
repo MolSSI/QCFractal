@@ -229,6 +229,14 @@ class FractalConfig(ConfigBase):
         "INFO", description="Level of logging to enable (debug, info, warning, error, critical). Case insensitive"
     )
 
+    hide_internal_errors: bool = Field(
+        True,
+        description="If True, internal errors will only be reported as an error "
+        "number to the user. If False, the entire error/backtrace "
+        "will be sent (which could rarely contain sensitive info). "
+        "In either case, errors will be stored in the database",
+    )
+
     # Periodics
     statistics_frequency: int = Field(
         3600, description="The frequency at which to update servre statistics (in seconds)"
