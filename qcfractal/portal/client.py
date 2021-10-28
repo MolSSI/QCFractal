@@ -205,11 +205,10 @@ class PortalClient:
 
         ### Define all attributes before this line
 
-        # Try to connect and pull general data
-        self.server_info = self._automodel_request("information", "get", {}, full_return=True).dict()
-
+        # Try to connect and pull the server info
+        self.server_info = self.get_server_information()
         self.server_name = self.server_info["name"]
-        self.query_limits = self.server_info["query_limits"]
+        self.response_limits = self.server_info["response_limits"]
 
         server_version_min_client = parse_version(self.server_info["client_lower_version_limit"])
         server_version_max_client = parse_version(self.server_info["client_upper_version_limit"])
@@ -540,15 +539,17 @@ class PortalClient:
     def _query_cache(self):
         pass
 
-    def server_information(self) -> Dict[str, Any]:
-        """Pull down various data on the connected server.
+    def get_server_information(self) -> Dict[str, Any]:
+        """Request general information about the server
 
         Returns
         -------
-        Dict[str, str]
+        :
             Server information.
         """
-        return json.loads(json.dumps(self.server_info))
+
+        # Request the info, and store here for later use
+        return self._auto_request("get", "v1/information", None, None, Dict[str, Any], None, None)
 
     def _get_outputs(
         self,
