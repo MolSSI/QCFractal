@@ -62,7 +62,7 @@ def before_request_func():
         raise BadRequest(f"Could not deserialize body. {e}")
 
 
-def wrap_route(body_model: Optional[Type], query_model: Optional[Type[pydantic.BaseModel]] = None) -> Callable:
+def wrap_route(body_model: Optional[Type], url_params_model: Optional[Type[pydantic.BaseModel]] = None) -> Callable:
     def decorate(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
@@ -89,14 +89,14 @@ def wrap_route(body_model: Optional[Type], query_model: Optional[Type[pydantic.B
 
                 try:
                     deserialized_data = deserialize(request.data, content_type)
-                    g.validated_data = pydantic.parse_obj_as(body_model, deserialized_data)
+                    kwargs["body_data"] = pydantic.parse_obj_as(body_model, deserialized_data)
                 except Exception as e:
                     raise BadRequest("Invalid body: " + str(e))
 
             # 2.) Query parameters are in request.args
-            if query_model is not None:
+            if url_params_model is not None:
                 try:
-                    g.validated_args = query_model(**request.args.to_dict(False))
+                    kwargs["url_params"] = url_params_model(**request.args.to_dict(False))
                 except Exception as e:
                     raise BadRequest("Invalid request arguments: " + str(e))
 
@@ -169,9 +169,11 @@ def handle_internal_error(error):
     headers = dict(request.headers.items())
     headers.pop("Authorization", None)
 
+    tb = traceback.format_exc()
+
     user = g.user if "user" in g else None
     error_log = {
-        "error_text": traceback.format_exc(),
+        "error_text": tb,
         "user": user,
         "request_path": request.full_path,
         "request_headers": str(headers),
@@ -188,7 +190,7 @@ def handle_internal_error(error):
         msg = error.description + f"  **Refer to internal error id {err_id} when asking your admin**"
         return jsonify(msg=msg), error.code
     else:
-        return jsonify(traceback.format_exc())
+        return jsonify(msg=tb), error.code
 
 
 @main.errorhandler(HTTPException)

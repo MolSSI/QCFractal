@@ -484,6 +484,7 @@ class TestingSnowflake(FractalSnowflake):
         extra_config["flask"] = flask_config
         extra_config["service_frequency"] = 5
         extra_config["loglevel"] = "DEBUG"
+        extra_config["hide_internal_errors"] = False
         extra_config["heartbeat_frequency"] = 3
         extra_config["heartbeat_max_missed"] = 2
         extra_config["database"] = {"pool_size": 0}

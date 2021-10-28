@@ -46,9 +46,9 @@ def list_roles_v1():
 @main.route("/v1/role", methods=["POST"])
 @wrap_route(RoleInfo, None)
 @check_access
-def add_role_v1():
+def add_role_v1(body_data: RoleInfo):
     assert_security_enabled()
-    return storage_socket.roles.add(g.validated_data)
+    return storage_socket.roles.add(body_data)
 
 
 @main.route("/v1/role/<string:rolename>", methods=["GET"])
@@ -62,13 +62,13 @@ def get_role_v1(rolename: str):
 @main.route("/v1/role/<string:rolename>", methods=["PUT"])
 @wrap_route(RoleInfo, None)
 @check_access
-def modify_role_v1(rolename: str):
+def modify_role_v1(rolename: str, *, body_data: RoleInfo):
     assert_security_enabled()
-    role_info = g.validated_data
-    if rolename != role_info.rolename:
-        raise InconsistentUpdateError(f"Cannot update role at {rolename} with role info for {role_info.rolename}")
+    body_data = body_data
+    if rolename != body_data.rolename:
+        raise InconsistentUpdateError(f"Cannot update role at {rolename} with role info for {body_data.rolename}")
 
-    return storage_socket.roles.modify(role_info)
+    return storage_socket.roles.modify(body_data)
 
 
 @main.route("/v1/role/<string:rolename>", methods=["DELETE"])
@@ -93,9 +93,9 @@ def list_users_v1():
 @main.route("/v1/user", methods=["POST"])
 @wrap_route(Tuple[UserInfo, Optional[str]], None)
 @check_access
-def add_user_v1():
+def add_user_v1(body_data: Tuple[UserInfo, Optional[str]]):
 
-    user_info, password = g.validated_data
+    user_info, password = body_data
 
     assert_security_enabled()
     return storage_socket.users.add(user_info, password)
@@ -112,29 +112,27 @@ def get_user_v1(username: str):
 @main.route("/v1/user/<string:username>", methods=["PUT"])
 @wrap_route(UserInfo, None)
 @check_access
-def modify_user_v1(username: str):
+def modify_user_v1(username: str, *, body_data: UserInfo):
     assert_security_enabled()
 
     current_app.logger.info(f"Modifying user {username}")
 
-    user_info = g.validated_data
-    if username != user_info.username:
-        raise InconsistentUpdateError(f"Cannot update user at {username} with user info for {user_info.username}")
+    if username != body_data.username:
+        raise InconsistentUpdateError(f"Cannot update user at {username} with user info for {body_data.username}")
 
     # If you have access to this endpoint, then you should be an admin, at least as far
     # as user management is concerned
-    return storage_socket.users.modify(user_info, as_admin=True)
+    return storage_socket.users.modify(body_data, as_admin=True)
 
 
 @main.route("/v1/user/<string:username>/password", methods=["PUT"])
 @wrap_route(Optional[str], None)
 @check_access
-def change_password_v1(username: str):
+def change_password_v1(username: str, *, body_data: Optional[str]):
     assert_security_enabled()
-    new_password = g.validated_data
 
     # Returns the password (new or generated)
-    return storage_socket.users.change_password(username, new_password)
+    return storage_socket.users.change_password(username, password=body_data)
 
 
 @main.route("/v1/user/<string:username>", methods=["DELETE"])
@@ -170,7 +168,7 @@ def get_my_user_v1():
 @main.route("/v1/me", methods=["PUT"])
 @wrap_route(UserInfo, None)
 @check_access
-def modify_my_user_v1():
+def modify_my_user_v1(body_data: UserInfo):
     assert_security_enabled()
 
     # Get the logged-in user
@@ -181,25 +179,22 @@ def modify_my_user_v1():
 
     current_app.logger.info(f"Modifying my user {username}")
 
-    user_info = g.validated_data
-    if username != user_info.username:
-        raise InconsistentUpdateError(f"Trying to update own user {username} with user info for {user_info.username}")
+    if username != body_data.username:
+        raise InconsistentUpdateError(f"Trying to update own user {username} with user info for {body_data.username}")
 
     # This endpoint is not for admins
-    return storage_socket.users.modify(user_info, as_admin=False)
+    return storage_socket.users.modify(body_data, as_admin=False)
 
 
 @main.route("/v1/me/password", methods=["PUT"])
 @wrap_route(Optional[str], None)
 @check_access
-def change_my_password_v1():
+def change_my_password_v1(body_data: Optional[str]):
     assert_security_enabled()
     username = g.get("user", None)
 
     if username is None:
         raise BadRequest("No current user - not logged in")
 
-    new_password = g.validated_data
-
     # Returns the password (new or generated)
-    return storage_socket.users.change_password(username, new_password)
+    return storage_socket.users.change_password(username, password=body_data)
