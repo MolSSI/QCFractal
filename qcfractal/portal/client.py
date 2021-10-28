@@ -439,7 +439,7 @@ class PortalClient:
         method: str,
         endpoint: str,
         body_model: Optional[Type[_T]],
-        query_model: Optional[Type[_U]],
+        url_params_model: Optional[Type[_U]],
         response_model: Optional[Type[_V]],
         body: Optional[Union[_T, Dict[str, Any]]] = None,
         query_params: Optional[Union[_U, Dict[str, Any]]] = None,
@@ -448,7 +448,7 @@ class PortalClient:
         if body_model is None and body is not None:
             raise RuntimeError("Body data not specified, but required")
 
-        if query_model is None and query_params is not None:
+        if url_params_model is None and query_params is not None:
             raise RuntimeError("Query parameters not specified, but required")
 
         serialized_body = None
@@ -457,8 +457,8 @@ class PortalClient:
             serialized_body = serialize(parsed_body, self.encoding)
 
         parsed_query_params = None
-        if query_model is not None:
-            parsed_query_params = pydantic.parse_obj_as(query_model, query_params).dict()
+        if url_params_model is not None:
+            parsed_query_params = pydantic.parse_obj_as(url_params_model, query_params).dict()
 
         r = self._request2(method, endpoint, body=serialized_body, query_params=parsed_query_params)
         d = deserialize(r.content, r.headers["Content-Type"])
