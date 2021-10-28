@@ -1,35 +1,22 @@
 from typing import Optional, List
 
-from pydantic import BaseModel, validator
+from pydantic import validator
+from qcfractal.portal.common_rest import validate_list_to_single, RestModelBase
 
 
-class UserGetParameters(BaseModel):
+class UserGetParameters(RestModelBase):
     username: Optional[List[str]] = None
     missing_ok: Optional[bool] = False
 
-    # Query parameters can be specified multiple times. Therefore, we will always
-    # convert them to a list in flask. But that means we have to convert them
-    # to single values here
     @validator("missing_ok", pre=True)
     def validate_lists(cls, v, field):
-        if isinstance(v, list):
-            # take the last value, if specified multiple times
-            return v[-1]
-        else:
-            return v
+        return validate_list_to_single(v)
 
 
-class RoleGetParameters(BaseModel):
+class RoleGetParameters(RestModelBase):
     rolename: Optional[List[str]] = None
     missing_ok: Optional[bool] = False
 
-    # Query parameters can be specified multiple times. Therefore, we will always
-    # convert them to a list in flask. But that means we have to convert them
-    # to single values here
     @validator("missing_ok", pre=True)
-    def validate_lists(cls, v, field):
-        if isinstance(v, list):
-            # take the last value, if specified multiple times
-            return v[-1]
-        else:
-            return v
+    def validate_lists(cls, v):
+        return validate_list_to_single(v)

@@ -40,7 +40,7 @@ from ..interface.models import (
 
 from .metadata_models import InsertMetadata, DeleteMetadata
 from .components.outputstore import OutputStore
-from .common_rest import SimpleGetParameters, DeleteParameters
+from .common_rest import CommonGetURLParameters, CommonDeleteURLParameters
 from .components.molecules import MoleculeQueryBody, MoleculeModifyBody
 from .components.wavefunctions.models import WavefunctionProperties
 from qcfractal.portal.metadata_models import QueryMetadata, UpdateMetadata
@@ -577,7 +577,7 @@ class PortalClient:
 
         query_params = {"id": make_list(id), "missing_ok": missing_ok}
         outputs = self._auto_request(
-            "get", "v1/output", None, SimpleGetParameters, List[Optional[OutputStore]], None, query_params
+            "get", "v1/output", None, CommonGetURLParameters, List[Optional[OutputStore]], None, query_params
         )
 
         if isinstance(id, Sequence):
@@ -612,7 +612,7 @@ class PortalClient:
 
         query_params = {"id": make_list(id), "missing_ok": missing_ok}
         mols = self._auto_request(
-            "get", "v1/molecule", None, SimpleGetParameters, List[Optional[Molecule]], None, query_params
+            "get", "v1/molecule", None, CommonGetURLParameters, List[Optional[Molecule]], None, query_params
         )
 
         if isinstance(id, Sequence):
@@ -756,7 +756,9 @@ class PortalClient:
         """
 
         query_params = {"id": make_list(id)}
-        return self._auto_request("delete", "v1/molecule", None, DeleteParameters, DeleteMetadata, None, query_params)
+        return self._auto_request(
+            "delete", "v1/molecule", None, CommonDeleteURLParameters, DeleteMetadata, None, query_params
+        )
 
     ### Keywords section
 
@@ -785,7 +787,7 @@ class PortalClient:
 
         query_params = {"id": make_list(id), "missing_ok": missing_ok}
         keywords = self._auto_request(
-            "get", "v1/keyword", None, SimpleGetParameters, List[Optional[KeywordSet]], None, query_params
+            "get", "v1/keyword", None, CommonGetURLParameters, List[Optional[KeywordSet]], None, query_params
         )
 
         if isinstance(id, Sequence):
@@ -842,7 +844,9 @@ class PortalClient:
         """
 
         query_params = {"id": make_list(id)}
-        return self._auto_request("delete", "v1/keyword", None, DeleteParameters, DeleteMetadata, None, query_params)
+        return self._auto_request(
+            "delete", "v1/keyword", None, CommonDeleteURLParameters, DeleteMetadata, None, query_params
+        )
 
     ### Collections section
 
@@ -1045,7 +1049,7 @@ class PortalClient:
             "get",
             "v1/wavefunction",
             None,
-            SimpleGetParameters,
+            CommonGetURLParameters,
             List[Optional[WavefunctionProperties]],
             None,
             query_params,

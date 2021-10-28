@@ -5,13 +5,13 @@ from flask import g
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper, delete_helper
 from qcfractal.app.routes import check_access, wrap_route
-from qcfractal.portal.common_rest import SimpleGetParameters, DeleteParameters
+from qcfractal.portal.common_rest import CommonGetURLParameters, CommonDeleteURLParameters
 from qcfractal.portal.components.molecules import Molecule, MoleculeQueryBody, MoleculeModifyBody
 
 
 @main.route("/v1/molecule", methods=["GET"])
 @main.route("/v1/molecule/<int:id>", methods=["GET"])
-@wrap_route(None, SimpleGetParameters)
+@wrap_route(None, CommonGetURLParameters)
 @check_access
 def get_molecules_v1(id: Optional[int] = None):
     return get_helper(id, g.validated_args.id, g.validated_args.missing_ok, storage_socket.molecules.get)
@@ -19,7 +19,7 @@ def get_molecules_v1(id: Optional[int] = None):
 
 @main.route("/v1/molecule", methods=["DELETE"])
 @main.route("/v1/molecule/<int:id>", methods=["DELETE"])
-@wrap_route(None, DeleteParameters)
+@wrap_route(None, CommonDeleteURLParameters)
 @check_access
 def delete_molecules_v1(id: Optional[int] = None):
     return delete_helper(id, g.validated_args.id, storage_socket.molecules.delete)
