@@ -4,10 +4,11 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 
 from __future__ import annotations
 
+import os
 import contextlib
 
 try:
-    from sqlalchemy import create_engine, and_, or_, case, func, exc
+    from sqlalchemy import create_engine, and_, or_, case, func, exc, event
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
     from sqlalchemy.sql.expression import desc
@@ -187,6 +188,22 @@ class SQLAlchemySocket:
         self.logger.info(
             "Connected SQLAlchemy to DB dialect {} with driver {}".format(self.engine.dialect.name, self.engine.driver)
         )
+
+        # Handle multiprocessing w/ sqlalchemy
+        # https://docs.sqlalchemy.org/en/14/core/pooling.html#using-connection-pools-with-multiprocessing-or-os-fork
+        @event.listens_for(self.engine, "connect")
+        def connect(dbapi_connection, connection_record):
+            connection_record.info["pid"] = os.getpid()
+
+        @event.listens_for(self.engine, "checkout")
+        def checkout(dbapi_connection, connection_record, connection_proxy):
+            pid = os.getpid()
+            if connection_record.info["pid"] != pid:
+                connection_record.dbapi_connection = connection_proxy.dbapi_connection = None
+                raise exc.DisconnectionError(
+                    "Connection record belongs to pid %s, "
+                    "attempting to check out in pid %s" % (connection_record.info["pid"], pid)
+                )
 
         self.Session = sessionmaker(bind=self.engine)
 

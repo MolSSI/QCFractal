@@ -4,7 +4,7 @@ import sys
 import logging.handlers
 import gunicorn.app.base
 from gunicorn.glogging import Logger as GLogger
-from .flask_app import create_qcfractal_flask_app
+from .flask_app import create_qcfractal_flask_app, storage_socket
 from ..process_runner import ProcessBase
 
 from typing import TYPE_CHECKING
@@ -15,6 +15,22 @@ if TYPE_CHECKING:
 #####################################################
 # See https://docs.gunicorn.org/en/stable/custom.html
 #####################################################
+
+
+def post_fork_cleanup(server, worker):
+    """
+    Do some cleanup after forking inside gunicorn
+
+    We use synchronous workers, which are spawned via fork(). Howver,
+    this would cause multiple processes to share the same db connections.
+    We must dispose of them (from the global storage_socket object).
+
+    https://docs.sqlalchemy.org/en/14/core/pooling.html#using-connection-pools-with-multiprocessing-or-os-fork
+    """
+
+    storage_socket.engine.dispose()
+
+
 class FractalGunicornLogger(GLogger):
     def setup(self, cfg):
         # The base constructor messes with logging. So undo the important parts
@@ -49,6 +65,7 @@ class FractalGunicornApp(gunicorn.app.base.BaseApplication):
             "timeout": self.qcfractal_config.flask.worker_timeout,
             "loglevel": self.qcfractal_config.loglevel,
             "logger_class": FractalGunicornLogger,
+            "post_fork": post_fork_cleanup,
         }
 
         for key, value in config.items():
