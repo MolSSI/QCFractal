@@ -178,6 +178,11 @@ class FlaskConfig(ConfigBase):
 
     config_name: str = Field("production", description="Flask configuration to use (default, debug, production, etc)")
     num_workers: int = Field(1, description="Number of workers to spawn in Gunicorn")
+    worker_timeout: int = Field(
+        120,
+        description="If the master process does not hear from a worker for the given amount of time (in seconds),"
+        "kill it. This effectively limits the time a worker has to respond to a request",
+    )
     host: str = Field("127.0.0.1", description="The IP address or hostname to bind to")
     port: int = Field(7777, description="The port on which to run the REST interface.")
 

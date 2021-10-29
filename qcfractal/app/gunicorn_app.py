@@ -46,6 +46,7 @@ class FractalGunicornApp(gunicorn.app.base.BaseApplication):
         config = {
             "bind": f"{bind}:{port}",
             "workers": self.qcfractal_config.flask.num_workers,
+            "timeout": self.qcfractal_config.flask.worker_timeout,
             "loglevel": self.qcfractal_config.loglevel,
             "logger_class": FractalGunicornLogger,
         }
