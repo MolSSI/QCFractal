@@ -210,7 +210,7 @@ class SingleResultHandler(BaseProcedureHandler):
 
         # Single-result specific fields
         result_orm.return_result = result.return_result
-        result_orm.properties = result.properties.dict()
+        result_orm.properties = result.properties.dict(encoding="json")
 
         # Now set the rest of the info
         result_orm.extras = result.extras

@@ -326,7 +326,7 @@ class OptimizationHandler(BaseProcedureHandler):
             r.version = 1
             r.extras = v.extras
             r.return_result = v.return_result
-            r.properties = v.properties.dict()
+            r.properties = v.properties.dict(encoding="json")
             r.provenance = v.provenance.dict()
             r.protocols = v.protocols.dict()
 
