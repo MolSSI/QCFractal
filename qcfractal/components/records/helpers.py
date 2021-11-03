@@ -5,7 +5,7 @@ Base class for computation procedures
 from __future__ import annotations
 
 import logging
-from ....interface.models import (
+from qcfractal.interface.models import (
     KVStore,
     AllResultTypes,
     WavefunctionProperties,
@@ -16,8 +16,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from ...sqlalchemy_socket import SQLAlchemySocket
-    from ...models import BaseResultORM, TaskQueueORM
+    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+    from qcfractal.storage_sockets.models import TaskQueueORM
+    from qcfractal.components.records.db_models import BaseResultORM
     from typing import Optional, Union, Dict, Tuple, Any, Sequence, List
 
 

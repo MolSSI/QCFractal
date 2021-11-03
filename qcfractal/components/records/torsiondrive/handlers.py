@@ -29,11 +29,12 @@ def _check_td():
         )
 
 
-from .base import BaseServiceHandler
-from ...models import ServiceQueueORM, TorsionDriveProcedureORM, OptimizationHistory
-from ....components.molecule.db_models import MoleculeORM
-from ...sqlalchemy_common import insert_general, get_query_proj_columns
-from ....interface.models import (
+from qcfractal.components.records.base_handlers import BaseServiceHandler
+from qcfractal.storage_sockets.models import ServiceQueueORM
+from qcfractal.components.records.torsiondrive.db_models import OptimizationHistory, TorsionDriveProcedureORM
+from qcfractal.components.molecule.db_models import MoleculeORM
+from qcfractal.storage_sockets.sqlalchemy_common import insert_general, get_query_proj_columns
+from qcfractal.interface.models import (
     ProtoModel,
     ObjectId,
     PriorityEnum,
@@ -42,14 +43,14 @@ from ....interface.models import (
     OptimizationProcedureSpecification,
 )
 
-from ....interface.models.torsiondrive import TorsionDriveInput, TorsionDriveRecord, TorsionDriveKeywords
+from qcfractal.interface.models.torsiondrive import TorsionDriveInput, TorsionDriveRecord, TorsionDriveKeywords
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from ...sqlalchemy_socket import SQLAlchemySocket
-    from ....interface.models import InsertMetadata
+    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+    from qcfractal.interface.models import InsertMetadata
     from typing import List, Tuple, Sequence, Dict, Optional, Any
 
     TorsionDriveProcedureDict = Dict[str, Any]

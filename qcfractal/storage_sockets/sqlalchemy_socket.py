@@ -169,10 +169,10 @@ class SQLAlchemySocket:
         from ..components.permissions.sockets import UserSocket, RoleSocket
         from ..components.serverinfo.sockets import ServerInfoSocket
         from ..components.managers.sockets import ManagerSocket
+        from ..components.records.sockets import RecordSocket
 
         from qcfractal.storage_sockets.subsockets import (
             CollectionSocket,
-            RecordSocket,
             ProcedureSocket,
             ServiceSocket,
         )

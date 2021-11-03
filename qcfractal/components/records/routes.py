@@ -4,6 +4,12 @@ from qcfractal.app.routes.main import main
 from qcfractal.app.routes.permissions import check_access
 from qcfractal.interface.models import rest_model
 
+from .singlepoint import routes
+from .optimization import routes
+
+# from .gridoptimization import routes
+# from .torsiondrive import routes
+
 
 @main.route("/procedure", methods=["GET"])
 @check_access

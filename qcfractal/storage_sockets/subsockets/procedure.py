@@ -8,9 +8,9 @@ from sqlalchemy import and_
 from sqlalchemy.orm import joinedload, selectinload, contains_eager, load_only
 
 from qcfractal.storage_sockets.models import (
-    BaseResultORM,
     TaskQueueORM,
 )
+from qcfractal.components.records.db_models import BaseResultORM
 
 from qcfractal.storage_sockets.sqlalchemy_common import (
     insert_general,
@@ -32,7 +32,10 @@ from qcfractal.interface.models import (
 
 from typing import TYPE_CHECKING
 
-from .procedures import BaseProcedureHandler, FailedOperationHandler, SingleResultHandler, OptimizationHandler
+from qcfractal.components.records.base_handlers import BaseProcedureHandler
+from qcfractal.components.records.failure import FailedOperationHandler
+from qcfractal.components.records.singlepoint.handlers import SingleResultHandler
+from qcfractal.components.records.optimization.handlers import OptimizationHandler
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session

@@ -6,7 +6,7 @@ All tests should be atomic, that is create and cleanup their data
 
 import logging
 from ...testing import load_procedure_data, caplog_handler_at_level
-from ...storage_sockets.models import BaseResultORM
+from ...components.records.db_models import BaseResultORM
 from qcfractal.interface.models import ObjectId, RecordStatusEnum, ManagerStatusEnum
 
 fake_manager_1 = {
