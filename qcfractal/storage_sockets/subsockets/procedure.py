@@ -1,27 +1,41 @@
 from __future__ import annotations
 
+from datetime import datetime as dt
+import traceback
 import logging
-from sqlalchemy.orm import with_polymorphic
 from qcfractal.storage_sockets.models import (
     BaseResultORM,
+    TaskQueueORM,
     OptimizationProcedureORM,
     TorsionDriveProcedureORM,
     GridOptimizationProcedureORM,
 )
-from qcfractal.interface.models import TaskStatusEnum
-from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
+from sqlalchemy.orm import joinedload, selectinload, load_only
+from qcfractal.interface.models import (
+    TaskStatusEnum,
+    FailedOperation,
+    RecordStatusEnum,
+    InsertMetadata,
+    AllProcedureSpecifications,
+)
+from qcfractal.storage_sockets.storage_utils import get_metadata_template
+from ..sqlalchemy_common import get_query_proj_columns
 from qcfractal.storage_sockets.sqlalchemy_socket import (
     format_query,
-    get_count_fast,
-    get_procedure_class,
     calculate_limit,
 )
 
 from typing import TYPE_CHECKING
 
+from .procedures import BaseProcedureHandler, FailedOperationHandler, SingleResultHandler, OptimizationHandler
+
 if TYPE_CHECKING:
+    from sqlalchemy.orm.session import Session
     from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
-    from typing import List, Dict, Union
+    from qcfractal.interface.models import ObjectId, AllResultTypes, Molecule
+    from typing import List, Dict, Union, Tuple, Optional, Sequence, Any
+
+    ProcedureDict = Dict[str, Any]
 
 
 class ProcedureSocket:
@@ -30,56 +44,18 @@ class ProcedureSocket:
         self._logger = logging.getLogger(__name__)
         self._limit = core_socket.qcf_config.response_limits.result
 
-    def add(self, record_list: List["BaseRecord"]):
-        """
-        Add procedures from a given dict. The dict should have all the required
-        keys of a result.
+        # Subsubsockets/handlers
+        self.single = SingleResultHandler(core_socket)
+        self.optimization = OptimizationHandler(core_socket)
+        self.failure = FailedOperationHandler(core_socket)
 
-        Parameters
-        ----------
-        record_list : List["BaseRecord"]
-            Each dict must have:
-            procedure, program, keywords, qc_meta, hash_index
-            In addition, it should have the other attributes that it needs
-            to store
+        self.handler_map: Dict[str, BaseProcedureHandler] = {
+            "single": self.single,
+            "optimization": self.optimization,
+            "failure": self.failure,
+        }
 
-        Returns
-        -------
-        Dict[str, Any]
-            Dictionary with keys data and meta, data is the ids of the inserted/updated/existing docs
-        """
-
-        meta = add_metadata_template()
-
-        if not record_list:
-            return {"data": [], "meta": meta}
-
-        procedure_class = get_procedure_class(record_list[0])
-
-        procedure_ids = []
-        with self._core_socket.session_scope() as session:
-            for procedure in record_list:
-                doc = session.query(procedure_class).filter_by(hash_index=procedure.hash_index)
-
-                if get_count_fast(doc) == 0:
-                    data = procedure.dict(exclude={"id"})
-                    proc_db = procedure_class(**data)
-                    session.add(proc_db)
-                    session.commit()
-                    proc_db.update_relations(**data)
-                    session.commit()
-                    procedure_ids.append(str(proc_db.id))
-                    meta["n_inserted"] += 1
-                else:
-                    id = str(doc.first().id)
-                    meta["duplicates"].append(id)  # TODO
-                    procedure_ids.append(id)
-        meta["success"] = True
-
-        ret = {"data": procedure_ids, "meta": meta}
-        return ret
-
-    def get(
+    def query(
         self,
         id: Union[str, List] = None,
         procedure: str = None,
@@ -178,78 +154,259 @@ class ProcedureSocket:
 
         return {"data": data, "meta": meta}
 
-    def update(self, records_list: List["BaseRecord"]):
+    def get(
+        self,
+        id: Sequence[ObjectId],
+        include_outputs: bool = False,
+        include_wavefunction: bool = False,
+        include_task: bool = False,
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
+        missing_ok: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Optional[ProcedureDict]]:
         """
-        TODO: needs to be of specific type
-        """
+        Obtain results of single computations from with specified IDs from an existing session
 
-        updated_count = 0
-        with self._core_socket.session_scope() as session:
-            for procedure in records_list:
+        The returned information will be in order of the given ids
 
-                className = get_procedure_class(procedure)
-                # join_table = get_procedure_join(procedure)
-                # Must have ID
-                if procedure.id is None:
-                    self._core_socket.logger.error(
-                        "No procedure id found on update (hash_index={}), skipping.".format(procedure.hash_index)
-                    )
-                    continue
-
-                proc_db = session.query(className).filter_by(id=procedure.id).first()
-
-                data = procedure.dict(exclude={"id"})
-                proc_db.update_relations(**data)
-
-                for attr, val in data.items():
-                    setattr(proc_db, attr, val)
-
-                # session.add(proc_db)
-
-                # Upsert relations (insert or update)
-                # needs primarykeyconstraint on the table keys
-                # for result_id in procedure.trajectory:
-                #     statement = postgres_insert(opt_result_association)\
-                #         .values(opt_id=procedure.id, result_id=result_id)\
-                #         .on_conflict_do_update(
-                #             index_elements=[opt_result_association.c.opt_id, opt_result_association.c.result_id],
-                #             set_=dict(result_id=result_id))
-                #     session.execute(statement)
-
-                session.commit()
-
-                # Should only be done after committing
-                if procedure.status in [TaskStatusEnum.complete, TaskStatusEnum.error]:
-                    self._core_socket.notify_completed_watch(procedure.id, procedure.status)
-                updated_count += 1
-
-        # session.commit()  # save changes, takes care of inheritance
-
-        return updated_count
-
-    def delete(self, ids: List[str]):
-        """
-        Removes results from the database using their ids
-        (Should be cautious! other tables maybe referencing results)
+        If missing_ok is False, then any ids that are missing in the database will raise an exception. Otherwise,
+        the corresponding entry in the returned list of results will be None.
 
         Parameters
         ----------
-        ids : List[str]
-            The Ids of the results to be deleted
+        session
+            An existing SQLAlchemy session to get data from
+        id
+            A list or other sequence of result IDs
+        include_outputs
+            If True, include the full calculation outputs (stdout, stderr, error) in the returned dictionary
+        include_wavefunction
+            If True, include the full wavefunction data in the returned dictionary
+        include_task
+            If True, include all info about the task in the returned dictionary
+        include
+            Which fields of the result to return. Default is to return all fields.
+        exclude
+            Remove these fields from the return. Default is to return all fields.
+        missing_ok
+           If set to True, then missing results will be tolerated, and the returned list of
+           Molecules will contain None for the corresponding IDs that were not found.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
 
         Returns
         -------
-        int
-            number of results deleted
+        :
+            Single result information as a dictionary in the same order as the given ids.
+            If missing_ok is True, then this list will contain None where the molecule was missing.
         """
 
+        if len(id) > self._limit:
+            raise RuntimeError(f"Request for {len(id)} single results is over the limit of {self._limit}")
+
+        # TODO - int id
+        int_id = [int(x) for x in id]
+        unique_ids = list(set(int_id))
+
+        load_cols = get_query_proj_columns(BaseResultORM, include, exclude)
+
+        with self._core_socket.optional_session(session, True) as session:
+            query = session.query(BaseResultORM).filter(BaseResultORM.id.in_(unique_ids)).options(load_only(*load_cols))
+
+            if include_outputs:
+                query = query.options(
+                    selectinload(
+                        BaseResultORM.stdout_obj,
+                        BaseResultORM.stderr_obj,
+                        BaseResultORM.error_obj,
+                    )
+                )
+            if include_wavefunction:
+                query = query.options(selectinload(BaseResultORM.wavefunction_data_obj))
+            if include_task:
+                query = query.options(selectinload(BaseResultORM.task_obj))
+
+            results = query.yield_per(100)
+            result_map = {r.id: r.dict() for r in results}
+
+            # Put into the requested order
+            ret = [result_map.get(x, None) for x in int_id]
+
+            if missing_ok is False and None in ret:
+                raise RuntimeError("Could not find all requested single result records")
+
+            return ret
+
+    def create(
+        self, molecules: List[Molecule], specification: AllProcedureSpecifications
+    ) -> Tuple[InsertMetadata, List[Optional[ObjectId]]]:
+
+        # The existence of the procedure should have been checked by the pydantic model
+        procedure_handler = self.handler_map[specification.procedure]
+
+        # Verify the procedure. Will raise exception  on error
+        procedure_handler.verify_input(specification)
+
+        # Add all the molecules stored in the 'data' member
+        # This should apply to all procedures
+        molecule_meta, molecule_ids = self._core_socket.molecule.add_mixed(molecules)
+
+        # Only do valid molecule ids (ie, not None in the returned list)
+        # These would correspond to errors
+
+        # TODO - INT ID
+        valid_molecule_ids = [int(x) for x in molecule_ids if x is not None]
+        valid_molecule_idx = [idx for idx, x in enumerate(molecule_ids) if x is not None]
+
         with self._core_socket.session_scope() as session:
-            procedures = session.query(BaseResultORM).filter(BaseResultORM.id.in_(ids)).all()
+            meta, ids = procedure_handler.create(session, valid_molecule_ids, specification)
 
-            # delete through session to delete correctly from base_result
-            for proc in procedures:
-                session.delete(proc)
-            # session.commit()
-            count = len(procedures)
+        # Place None in the ids list where molecules were None
+        for idx, x in enumerate(molecule_ids):
+            if x is None:
+                ids.insert(idx, None)
 
-        return count
+        # Now adjust the index lists in the metadata to correspond to the original molecule order
+        inserted_idx = [valid_molecule_idx[x] for x in meta.inserted_idx]
+        existing_idx = [valid_molecule_idx[x] for x in meta.existing_idx]
+        errors = [(valid_molecule_idx[x], msg) for x, msg in meta.errors] + molecule_meta.errors
+
+        return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx, errors=errors), ids  # type: ignore
+
+    def update_completed(self, manager_name: str, results: Dict[ObjectId, AllResultTypes]):
+        """
+        Insert data from completed calculations into the database
+
+        Parameters
+        ----------
+        manager_name
+            The name of the manager submitting the results
+        results
+            Results (in QCSchema format), with the task_id as the key
+        """
+
+        all_task_ids = list(int(x) for x in results.keys())
+
+        self._logger.info("Task Queue: Received completed tasks from {}.".format(manager_name))
+        self._logger.info("            Task ids: " + " ".join(str(x) for x in all_task_ids))
+
+        # Obtain all ORM for the task queue at once
+        # Can be expensive, but probably faster than one-by-one
+        with self._core_socket.session_scope() as session:
+            task_success = 0
+            task_failures = 0
+            task_totals = len(results.items())
+
+            for task_id, result in results.items():
+                # We load one at a time. This works well with 'with_for_update'
+                # which will do row locking. This lock is released on commit or rollback
+
+                task_orm: Optional[TaskQueueORM] = (
+                    session.query(TaskQueueORM)
+                    .filter(TaskQueueORM.id == task_id)
+                    .options(joinedload(TaskQueueORM.base_result_obj))
+                    .with_for_update()
+                    .one_or_none()
+                )
+
+                # Does the task exist?
+                if task_orm is None:
+                    self._logger.warning(f"Task id {task_id} does not exist in the task queue.")
+                    task_failures += 1
+                    continue
+
+                base_result_id = task_orm.base_result_id
+
+                try:
+                    #################################################################
+                    # Perform some checks for consistency
+                    #################################################################
+                    # Is the task in the running state
+                    # If so, do not attempt to modify the task queue. Just move on
+                    if task_orm.status != TaskStatusEnum.running:
+                        self._logger.warning(f"Task id {task_id} is not in the running state.")
+                        task_failures += 1
+
+                    # Is the base result already marked complete? if so, this is a problem
+                    # This should never happen, so log at level of "error"
+                    if task_orm.base_result_obj.status == RecordStatusEnum.complete:
+                        self._logger.error(f"Base result {base_result_id} (task id {task_id}) is already complete!")
+
+                        # Go ahead and delete the task
+                        session.delete(task_orm)
+                        session.commit()
+                        task_failures += 1
+
+                    # Was the manager that sent the data the one that was assigned?
+                    # If so, do not attempt to modify the task queue. Just move on
+                    elif task_orm.manager != manager_name:
+                        self._logger.warning(
+                            f"Task id {task_id} belongs to {task_orm.manager}, not manager {manager_name}"
+                        )
+                        task_failures += 1
+
+                    # Failed task returning FailedOperation
+                    elif result.success is False and isinstance(result, FailedOperation):
+                        self.failure.update_completed(session, task_orm, manager_name, result)
+
+                        # Update the task object
+                        task_orm.status = TaskStatusEnum.error
+                        task_orm.modified_on = task_orm.base_result_obj.modified_on
+                        session.commit()
+                        self._core_socket.notify_completed_watch(base_result_id, RecordStatusEnum.error)
+
+                        task_failures += 1
+
+                    elif result.success is not True:
+                        # QCEngine should always return either FailedOperation, or some result with success == True
+                        msg = f"Unexpected return from manager for task {task_id} base result {base_result_id}: Returned success != True, but not a FailedOperation"
+                        error = {"error_type": "internal_fractal_error", "error_message": msg}
+                        failed_op = FailedOperation(error=error, success=False)
+
+                        self.failure.update_completed(session, task_orm, manager_name, failed_op)
+                        task_orm.status = TaskStatusEnum.error
+                        task_orm.modified_on = dt.utcnow()
+                        session.commit()
+                        self._core_socket.notify_completed_watch(base_result_id, RecordStatusEnum.error)
+
+                        self._logger.error(msg)
+                        task_failures += 1
+
+                    # Manager returned a full, successful result
+                    else:
+                        parser = self.handler_map[task_orm.parser]
+                        parser.update_completed(session, task_orm, manager_name, result)
+
+                        # Delete the task from the task queue since it is completed
+                        session.delete(task_orm)
+                        session.commit()
+                        self._core_socket.notify_completed_watch(base_result_id, RecordStatusEnum.complete)
+
+                        task_success += 1
+
+                except Exception:
+                    # We have no idea what was added or is pending for removal
+                    # So rollback the transaction to the most recent commit
+                    session.rollback()
+
+                    msg = "Internal FractalServer Error:\n" + traceback.format_exc()
+                    error = {"error_type": "internal_fractal_error", "error_message": msg}
+                    failed_op = FailedOperation(error=error, success=False)
+
+                    self.failure.update_completed(session, task_orm, manager_name, failed_op)
+                    session.commit()
+                    self._core_socket.notify_completed_watch(base_result_id, RecordStatusEnum.error)
+
+                    self._logger.error(msg)
+                    task_failures += 1
+
+        self._logger.info(
+            "Task Queue: Processed {} complete tasks ({} successful, {} failed).".format(
+                task_totals, task_success, task_failures
+            )
+        )
+
+        # Update manager logs
+        self._core_socket.manager.update(manager_name, completed=task_totals, failures=task_failures)

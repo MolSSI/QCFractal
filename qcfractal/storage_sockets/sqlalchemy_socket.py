@@ -602,12 +602,6 @@ class SQLAlchemySocket:
 
     # ~~~~~~~~~~~~~~~~~ Results ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
 
-    def add_results(self, record_list: List[ResultRecord]):
-        return self.result.add(record_list)
-
-    def update_results(self, record_list: List[ResultRecord]):
-        return self.result.update(record_list)
-
     def get_results(
         self,
         id: Union[str, List] = None,
@@ -650,10 +644,6 @@ class SQLAlchemySocket:
         return self.result.delete(ids)
 
     # ~~~~~~~~~~~~~~~~~~ Procedures ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    def add_procedures(self, record_list: List["BaseRecord"]):
-        return self.procedure.add(record_list)
-
     def get_procedures(
         self,
         id: Union[str, List] = None,
@@ -670,7 +660,7 @@ class SQLAlchemySocket:
         return_json=True,
         with_ids=True,
     ):
-        return self.procedure.get(
+        return self.procedure.query(
             id,
             procedure,
             program,
@@ -688,9 +678,6 @@ class SQLAlchemySocket:
 
     def update_procedures(self, records_list: List["BaseRecord"]):
         return self.procedure.update(records_list)
-
-    def del_procedures(self, ids: List[str]):
-        return self.procedure.delete(ids)
 
     # ~~~~~~~~ Services ~~~~~~~~~~~~~
 

@@ -2,7 +2,6 @@
 Explicit tests for queue manipulation.
 """
 
-import contextlib
 import datetime
 import logging
 import re
@@ -13,21 +12,7 @@ import pytest
 
 import qcfractal.interface as ptl
 from qcfractal import qc_queue as queue, testing
-
-
-@contextlib.contextmanager
-def caplog_handler_at_level(caplog_fixture, level, logger=None):
-    """
-    Helper function to set the caplog fixture's handler to a certain level as well, otherwise it wont be captured
-
-    e.g. if caplog.set_level(logging.INFO) but caplog.handler is at logging.CRITICAL, anything below CRITICAL wont be
-    captured.
-    """
-    starting_handler_level = caplog_fixture.handler.level
-    caplog_fixture.handler.setLevel(level)
-    with caplog_fixture.at_level(level, logger=logger):
-        yield
-    caplog_fixture.handler.setLevel(starting_handler_level)
+from ..testing import caplog_handler_at_level
 
 
 @pytest.fixture(scope="function")

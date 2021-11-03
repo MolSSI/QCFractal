@@ -4,125 +4,42 @@ Tests the database wrappers
 All tests should be atomic, that is create and cleanup their data
 """
 
-from datetime import datetime
-from time import time
-
-import numpy as np
 import pytest
-import sqlalchemy
-import sqlalchemy.exc
+from datetime import datetime
 
-import qcfractal.interface as ptl
-from qcfractal.interface.models import TaskStatusEnum
-from qcfractal.services.services import TorsionDriveService
+from .test_procedure import load_procedure_data
 
 
 @pytest.fixture(scope="function")
 def storage_results(storage_socket):
-    mol_names = [
-        "water_dimer_minima.psimol",
-        "water_dimer_stretch.psimol",
-        "water_dimer_stretch2.psimol",
-        "neon_tetramer.psimol",
+
+    proc_inputs = [
+        "psi4_benzene_energy_1",
+        "psi4_fluoroethane_wfn",
+        "psi4_peroxide_energy_fail_kw",
+        "psi4_water_gradient",
+        "rdkit_water_gradient",
+        "psi4_benzene_energy_2",
+        "psi4_methane_gradient_fail_iter",
+        "psi4_peroxide_energy_fail_method",
+        "psi4_water_hessian",
+        "psi4_benzene_energy_3",
+        "psi4_methane_opt_fail_qcmethod",
+        "psi4_peroxide_energy_wfn",
+        "psi4_water_opt_fail_scfiter",
+        "psi4_benzene_opt",
+        "psi4_methane_opt_sometraj",
+        "psi4_peroxide_opt_fail_optiter",
+        "rdkit_benzene_energy",
+        "psi4_fluoroethane_opt_notraj",
+        "psi4_peroxide_energy_fail_basis",
+        "psi4_water_energy",
+        "rdkit_water_energy",
     ]
 
-    molecules = []
-    for mol_name in mol_names:
-        mol = ptl.data.get_molecule(mol_name)
-        molecules.append(mol)
-
-    meta, mol_insert = storage_socket.molecule.add(molecules)
-    assert meta.success
-
-    kw1 = ptl.models.KeywordSet(**{"values": {}})
-    kwid1 = storage_socket.keywords.add([kw1])[1][0]
-
-    page1 = ptl.models.ResultRecord(
-        **{
-            "molecule": mol_insert[0],
-            "method": "M1",
-            "basis": "B1",
-            "keywords": kwid1,
-            "program": "P1",
-            "driver": "energy",
-            "return_result": 5,
-            "hash_index": 0,
-            "status": "COMPLETE",
-        }
-    )
-
-    page2 = ptl.models.ResultRecord(
-        **{
-            "molecule": mol_insert[1],
-            "method": "M1",
-            "basis": "B1",
-            "keywords": kwid1,
-            "program": "P1",
-            "driver": "energy",
-            "return_result": 10,
-            "hash_index": 1,
-            "status": "COMPLETE",
-        }
-    )
-
-    page3 = ptl.models.ResultRecord(
-        **{
-            "molecule": mol_insert[0],
-            "method": "M1",
-            "basis": "B1",
-            "keywords": kwid1,
-            "program": "P2",
-            "driver": "gradient",
-            "return_result": 15,
-            "hash_index": 2,
-            "status": "COMPLETE",
-        }
-    )
-
-    page4 = ptl.models.ResultRecord(
-        **{
-            "molecule": mol_insert[0],
-            "method": "M2",
-            "basis": "B1",
-            "keywords": kwid1,
-            "program": "P2",
-            "driver": "gradient",
-            "return_result": 15,
-            "hash_index": 3,
-            "status": "COMPLETE",
-        }
-    )
-
-    page5 = ptl.models.ResultRecord(
-        **{
-            "molecule": mol_insert[1],
-            "method": "M2",
-            "basis": "B1",
-            "keywords": kwid1,
-            "program": "P1",
-            "driver": "gradient",
-            "return_result": 20,
-            "hash_index": 4,
-            "status": "COMPLETE",
-        }
-    )
-
-    page6 = ptl.models.ResultRecord(
-        **{
-            "molecule": mol_insert[1],
-            "method": "M3",
-            "basis": "B1",
-            "keywords": None,
-            "program": "P1",
-            "driver": "gradient",
-            "return_result": 20,
-            "hash_index": 5,
-            "status": "COMPLETE",
-        }
-    )
-
-    results_insert = storage_socket.add_results([page1, page2, page3, page4, page5, page6])
-    assert results_insert["meta"]["n_inserted"] == 6
+    for proc in proc_inputs:
+        inp, mol, _ = load_procedure_data(proc)
+        storage_socket.procedure.create([mol], inp)
 
     yield storage_socket
 
@@ -131,9 +48,6 @@ def test_server_log(storage_results):
 
     # Add something to double check the test
     mol_names = ["water_dimer_minima.psimol", "water_dimer_stretch.psimol", "water_dimer_stretch2.psimol"]
-
-    molecules = [ptl.data.get_molecule(mol_name) for mol_name in mol_names]
-    storage_results.molecule.add(molecules)
 
     storage_results.server_log.update_stats()
     _, ret = storage_results.server_log.query_stats(limit=1)

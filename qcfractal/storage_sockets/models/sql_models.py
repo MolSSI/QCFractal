@@ -284,8 +284,10 @@ class TaskQueueORM(Base):
         self.base_result_id = int(val)
 
     # can reference ResultORMs or any ProcedureORM
-    base_result_id = Column(Integer, ForeignKey("base_result.id", ondelete="cascade"), unique=True)
-    base_result_obj = relationship("BaseResultORM", lazy="select")  # or lazy='joined'
+    base_result_id = Column(Integer, ForeignKey("base_result.id", ondelete="cascade"), unique=True, nullable=False)
+    base_result_obj = relationship(
+        "BaseResultORM", lazy="select", innerjoin=True, back_populates="task_obj"
+    )  # user inner join, since not nullable
 
     # An important special case is ORDER BY in combination with LIMIT n: an
     # explicit sort will have to process all the data to identify the first n

@@ -1,0 +1,129 @@
+{
+    "input": {
+        "procedure": "single",
+        "driver": "energy",
+        "program": "rdkit",
+        "method": "uff",
+        "basis": "",
+        "keywords": {},
+        "protocols": {}
+    },
+    "molecule": {
+        "schema_name": "qcschema_molecule",
+        "schema_version": 2,
+        "validated": true,
+        "symbols": [
+            "O",
+            "H",
+            "H"
+        ],
+        "geometry": [
+            0.0,
+            0.0,
+            0.22166487,
+            0.0,
+            1.43090062,
+            -0.8866595,
+            0.0,
+            -1.43090062,
+            -0.8866595
+        ],
+        "name": "H2O",
+        "molecular_charge": 0.0,
+        "molecular_multiplicity": 1,
+        "connectivity": [
+            [
+                0,
+                1,
+                1.0
+            ],
+            [
+                0,
+                2,
+                1.0
+            ]
+        ],
+        "fix_com": false,
+        "fix_orientation": false,
+        "provenance": {
+            "creator": "QCElemental",
+            "version": "v0.19.0",
+            "routine": "qcelemental.molparse.from_string"
+        }
+    },
+    "result": {
+        "id": null,
+        "schema_name": "qcschema_output",
+        "schema_version": 1,
+        "molecule": {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "O",
+                "H",
+                "H"
+            ],
+            "geometry": [
+                0.0,
+                0.0,
+                0.22166487,
+                0.0,
+                1.43090062,
+                -0.8866595,
+                0.0,
+                -1.43090062,
+                -0.8866595
+            ],
+            "name": "H2O",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "connectivity": [
+                [
+                    0,
+                    1,
+                    1.0
+                ],
+                [
+                    0,
+                    2,
+                    1.0
+                ]
+            ],
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.19.0",
+                "routine": "qcelemental.molparse.from_string"
+            }
+        },
+        "driver": "energy",
+        "model": {
+            "method": "uff",
+            "basis": ""
+        },
+        "keywords": {},
+        "protocols": {},
+        "extras": {},
+        "provenance": {
+            "creator": "rdkit",
+            "version": "2020.09.3",
+            "routine": "rdkit.Chem.AllChem.UFFGetMoleculeForceField",
+            "wall_time": 0.0005323886871337891,
+            "username": "ben",
+            "qcengine_version": "v0.18.0",
+            "cpu": "Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz",
+            "hostname": "mobilefort"
+        },
+        "properties": {
+            "return_energy": 0.0004499905296686705
+        },
+        "wavefunction": null,
+        "return_result": 0.0004499905296686705,
+        "stdout": null,
+        "stderr": null,
+        "success": true,
+        "error": null
+    }
+}

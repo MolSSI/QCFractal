@@ -19,12 +19,10 @@ from .common_models import (
     ObjectId,
     ProtoModel,
     KVStore,
-    AtomicResultProtocols,
-    OptimizationProtocols,
 )
 from .gridoptimization import GridOptimizationInput
 from .records import ResultRecord
-from .task_models import PriorityEnum, TaskRecord, TaskStatusEnum
+from .task_models import SingleProcedureSpecification, OptimizationProcedureSpecification, TaskStatusEnum, TaskRecord
 from .torsiondrive import TorsionDriveInput
 
 ### Utility functions
@@ -779,42 +777,8 @@ class TaskQueueGETResponse(ProtoModel):
 register_model("task_queue", "GET", TaskQueueGETBody, TaskQueueGETResponse)
 
 
-class TaskQueueSinglePOSTBodyMeta(ProtoModel):
-    procedure: constr(to_lower=True, regex="single") = Field("single")
-    driver: constr(to_lower=True)
-    program: constr(to_lower=True)
-    method: constr(to_lower=True)
-    basis: Optional[constr(to_lower=True)] = Field(None)
-    keywords: Optional[Union[ObjectId, Dict[str, Any]]] = Field(None)
-    protocols: AtomicResultProtocols = Field(AtomicResultProtocols())
-    tag: Optional[str] = Field(None)
-    priority: PriorityEnum = Field(PriorityEnum.NORMAL)
-
-    @validator("priority", pre=True)
-    def munge_priority(cls, v):
-        if isinstance(v, str):
-            v = PriorityEnum[v.upper()]
-        return v
-
-
-class TaskQueueOptimizationPOSTBodyMeta(ProtoModel):
-    procedure: constr(to_lower=True, regex="optimization") = Field("optimization")
-    program: constr(to_lower=True)
-    keywords: Dict[str, Any] = Field(default_factory=dict)
-    qc_spec: Dict[str, Any]
-    protocols: OptimizationProtocols = Field(OptimizationProtocols())
-    tag: Optional[str] = Field(None)
-    priority: PriorityEnum = Field(PriorityEnum.NORMAL)
-
-    @validator("priority", pre=True)
-    def munge_priority(cls, v):
-        if isinstance(v, str):
-            v = PriorityEnum[v.upper()]
-        return v
-
-
 class TaskQueuePOSTBody(ProtoModel):
-    meta: Union[TaskQueueSinglePOSTBodyMeta, TaskQueueOptimizationPOSTBodyMeta]
+    meta: Union[SingleProcedureSpecification, OptimizationProcedureSpecification]
     data: List[Union[ObjectId, Molecule]] = Field(
         ...,
         description="The list of either Molecule objects or Molecule Id's (those already in the database) to submit as "
