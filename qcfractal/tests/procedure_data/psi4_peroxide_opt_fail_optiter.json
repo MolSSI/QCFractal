@@ -1,0 +1,271 @@
+{
+    "input": {
+        "procedure": "optimization",
+        "program": "geometric",
+        "keywords": {
+            "maxiter": 2,
+            "program": "psi4"
+        },
+        "qc_spec": {
+            "driver": "gradient",
+            "method": "b3lyp",
+            "basis": "6-31g",
+            "keywords": {
+                "maxiter": 2
+            },
+            "program": "psi4"
+        },
+        "protocols": {}
+    },
+    "molecule": {
+        "schema_name": "qcschema_molecule",
+        "schema_version": 2,
+        "validated": true,
+        "symbols": [
+            "O",
+            "O",
+            "H",
+            "H"
+        ],
+        "geometry": [
+            0.0,
+            1.39367302,
+            -0.09977754,
+            0.0,
+            -1.39367302,
+            -0.09977754,
+            1.5476857,
+            1.54390624,
+            0.79746442,
+            -1.5476857,
+            -1.54390624,
+            0.79746442
+        ],
+        "name": "H2O2",
+        "molecular_charge": 0.0,
+        "molecular_multiplicity": 1,
+        "connectivity": [
+            [
+                0,
+                1,
+                1.0
+            ],
+            [
+                0,
+                2,
+                1.0
+            ],
+            [
+                1,
+                3,
+                1.0
+            ]
+        ],
+        "fix_com": false,
+        "fix_orientation": false,
+        "provenance": {
+            "creator": "QCElemental",
+            "version": "v0.19.0",
+            "routine": "qcelemental.molparse.from_string"
+        }
+    },
+    "result": {
+        "id": null,
+        "input_data": {
+            "id": null,
+            "hash_index": null,
+            "schema_name": "qcschema_optimization_output",
+            "schema_version": 1,
+            "keywords": {
+                "maxiter": 2,
+                "program": "psi4"
+            },
+            "extras": {},
+            "protocols": {},
+            "input_specification": {
+                "schema_name": "qcschema_input",
+                "schema_version": 1,
+                "driver": "gradient",
+                "model": {
+                    "method": "b3lyp",
+                    "basis": "6-31g"
+                },
+                "keywords": {
+                    "maxiter": 2
+                },
+                "extras": {}
+            },
+            "initial_molecule": {
+                "schema_name": "qcschema_molecule",
+                "schema_version": 2,
+                "validated": true,
+                "symbols": [
+                    "O",
+                    "O",
+                    "H",
+                    "H"
+                ],
+                "geometry": [
+                    0.0,
+                    1.39367302,
+                    -0.09977754,
+                    0.0,
+                    -1.39367302,
+                    -0.09977754,
+                    1.5476857,
+                    1.54390624,
+                    0.79746442,
+                    -1.5476857,
+                    -1.54390624,
+                    0.79746442
+                ],
+                "name": "H2O2",
+                "molecular_charge": 0.0,
+                "molecular_multiplicity": 1,
+                "connectivity": [
+                    [
+                        0,
+                        1,
+                        1.0
+                    ],
+                    [
+                        0,
+                        2,
+                        1.0
+                    ],
+                    [
+                        1,
+                        3,
+                        1.0
+                    ]
+                ],
+                "fix_com": false,
+                "fix_orientation": false,
+                "provenance": {
+                    "creator": "QCElemental",
+                    "version": "v0.19.0",
+                    "routine": "qcelemental.molparse.from_string"
+                }
+            },
+            "provenance": {
+                "creator": "geomeTRIC",
+                "routine": "geometric.run_json.geometric_run_json",
+                "version": "0.9.7.2",
+                "cpu": "Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz",
+                "hostname": "mobilefort",
+                "username": "ben",
+                "qcengine_version": "v0.18.0",
+                "wall_time": 1.059544324874878
+            },
+            "trajectory": [
+                {
+                    "id": null,
+                    "input_data": {
+                        "schema_name": "qcschema_input",
+                        "schema_version": 1,
+                        "driver": "gradient",
+                        "model": {
+                            "method": "b3lyp",
+                            "basis": "6-31g"
+                        },
+                        "keywords": {
+                            "maxiter": 2
+                        },
+                        "extras": {
+                            "_qcengine_local_config": {
+                                "ncores": 4,
+                                "nnodes": 1,
+                                "memory": 4.308,
+                                "scratch_directory": null,
+                                "retries": 2,
+                                "mpiexec_command": null,
+                                "use_mpiexec": false,
+                                "cores_per_rank": 1
+                            }
+                        },
+                        "molecule": {
+                            "schema_name": "qcschema_molecule",
+                            "schema_version": 2,
+                            "validated": true,
+                            "symbols": [
+                                "O",
+                                "O",
+                                "H",
+                                "H"
+                            ],
+                            "geometry": [
+                                0.0,
+                                1.39367302,
+                                -0.09977754,
+                                0.0,
+                                -1.39367302,
+                                -0.09977754,
+                                1.5476857,
+                                1.54390624,
+                                0.79746442,
+                                -1.5476857,
+                                -1.54390624,
+                                0.79746442
+                            ],
+                            "name": "H2O2",
+                            "molecular_charge": 0.0,
+                            "molecular_multiplicity": 1,
+                            "connectivity": [
+                                [
+                                    0,
+                                    1,
+                                    1.0
+                                ],
+                                [
+                                    0,
+                                    2,
+                                    1.0
+                                ],
+                                [
+                                    1,
+                                    3,
+                                    1.0
+                                ]
+                            ],
+                            "fix_com": true,
+                            "fix_orientation": true,
+                            "provenance": {
+                                "creator": "QCElemental",
+                                "version": "v0.19.0",
+                                "routine": "qcelemental.molparse.from_string"
+                            }
+                        },
+                        "provenance": {
+                            "cpu": "Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz",
+                            "hostname": "mobilefort",
+                            "username": "ben",
+                            "qcengine_version": "v0.18.0",
+                            "wall_time": 1.0503873825073242,
+                            "creator": "QCEngine",
+                            "version": "v0.18.0"
+                        }
+                    },
+                    "success": false,
+                    "error": {
+                        "error_type": "unknown_error",
+                        "error_message": "QCEngine Unknown Error: Traceback (most recent call last):\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/schema_wrapper.py\", line 411, in run_qcschema\n    ret_data = run_json_qcschema(input_model.dict(), clean, False, keep_wfn=keep_wfn)\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/schema_wrapper.py\", line 558, in run_json_qcschema\n    val, wfn = methods_dict_[json_data[\"driver\"]](method, **kwargs)\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/driver.py\", line 717, in gradient\n    wfn = procedures['gradient'][lowername](lowername, molecule=molecule, **kwargs)\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/procrouting/proc.py\", line 2356, in run_scf_gradient\n    ref_wfn = run_scf(name, **kwargs)\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/procrouting/proc.py\", line 2261, in run_scf\n    scf_wfn = scf_helper(name, post_scf=False, **kwargs)\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/procrouting/proc.py\", line 1541, in scf_helper\n    e_scf = scf_wfn.compute_energy()\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/procrouting/scf_proc/scf_iterator.py\", line 93, in scf_compute_energy\n    raise e\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/procrouting/scf_proc/scf_iterator.py\", line 86, in scf_compute_energy\n    self.iterations()\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/procrouting/scf_proc/scf_iterator.py\", line 464, in scf_iterate\n    raise SCFConvergenceError(\"\"\"SCF iterations\"\"\", self.iteration_, self, Ediff, Dnorm)\npsi4.driver.p4util.exceptions.SCFConvergenceError: Could not converge SCF iterations in 2 iterations.\n",
+                        "extras": null
+                    },
+                    "extras": null
+                }
+            ],
+            "energies": [
+                null
+            ],
+            "final_molecule": null,
+            "stdout": "12 internal coordinates being used (instead of 12 Cartesians)\nInternal coordinate system (atoms numbered from 1):\nDistance 1-2\nDistance 1-3\nDistance 2-4\nAngle 2-1-3\nAngle 1-2-4\nDihedral 3-1-2-4\nTranslation-X 1-4\nTranslation-Y 1-4\nTranslation-Z 1-4\nRotation-A 1-4\nRotation-B 1-4\nRotation-C 1-4\n<class 'geometric.internal.Distance'> : 3\n<class 'geometric.internal.Angle'> : 2\n<class 'geometric.internal.Dihedral'> : 1\n<class 'geometric.internal.TranslationX'> : 1\n<class 'geometric.internal.TranslationY'> : 1\n<class 'geometric.internal.TranslationZ'> : 1\n<class 'geometric.internal.RotationA'> : 1\n<class 'geometric.internal.RotationB'> : 1\n<class 'geometric.internal.RotationC'> : 1\n"
+        },
+        "success": false,
+        "error": {
+            "error_type": "unknown",
+            "error_message": "geomeTRIC run_json error:\nTraceback (most recent call last):\n  File \"/home/ben/miniconda3/envs/qca_next/lib/python3.7/site-packages/geometric/run_json.py\", line 214, in geometric_run_json\n    geometric.optimize.Optimize(coords, M, IC, engine, None, params)\n  File \"/home/ben/miniconda3/envs/qca_next/lib/python3.7/site-packages/geometric/optimize.py\", line 1331, in Optimize\n    return optimizer.optimizeGeometry()\n  File \"/home/ben/miniconda3/envs/qca_next/lib/python3.7/site-packages/geometric/optimize.py\", line 1293, in optimizeGeometry\n    self.calcEnergyForce()\n  File \"/home/ben/miniconda3/envs/qca_next/lib/python3.7/site-packages/geometric/optimize.py\", line 1002, in calcEnergyForce\n    spcalc = self.engine.calc(self.X, self.dirname)\n  File \"/home/ben/miniconda3/envs/qca_next/lib/python3.7/site-packages/geometric/engine.py\", line 873, in calc\n    return self.calc_new(coords, dirname)\n  File \"/home/ben/miniconda3/envs/qca_next/lib/python3.7/site-packages/geometric/engine.py\", line 865, in calc_new\n    raise QCEngineAPIEngineError(\"QCEngineAPI computation did not execute correctly. Message: \" + ret[\"error\"][\"error_message\"])\ngeometric.errors.QCEngineAPIEngineError: QCEngineAPI computation did not execute correctly. Message: QCEngine Unknown Error: Traceback (most recent call last):\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/schema_wrapper.py\", line 411, in run_qcschema\n    ret_data = run_json_qcschema(input_model.dict(), clean, False, keep_wfn=keep_wfn)\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/schema_wrapper.py\", line 558, in run_json_qcschema\n    val, wfn = methods_dict_[json_data[\"driver\"]](method, **kwargs)\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/driver.py\", line 717, in gradient\n    wfn = procedures['gradient'][lowername](lowername, molecule=molecule, **kwargs)\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/procrouting/proc.py\", line 2356, in run_scf_gradient\n    ref_wfn = run_scf(name, **kwargs)\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/procrouting/proc.py\", line 2261, in run_scf\n    scf_wfn = scf_helper(name, post_scf=False, **kwargs)\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/procrouting/proc.py\", line 1541, in scf_helper\n    e_scf = scf_wfn.compute_energy()\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/procrouting/scf_proc/scf_iterator.py\", line 93, in scf_compute_energy\n    raise e\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/procrouting/scf_proc/scf_iterator.py\", line 86, in scf_compute_energy\n    self.iterations()\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/procrouting/scf_proc/scf_iterator.py\", line 464, in scf_iterate\n    raise SCFConvergenceError(\"\"\"SCF iterations\"\"\", self.iteration_, self, Ediff, Dnorm)\npsi4.driver.p4util.exceptions.SCFConvergenceError: Could not converge SCF iterations in 2 iterations.\n\n",
+            "extras": null
+        },
+        "extras": null
+    }
+}

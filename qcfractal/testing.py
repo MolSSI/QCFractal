@@ -4,6 +4,7 @@ Contains testing infrastructure for QCFractal.
 
 import os
 import pkgutil
+import json
 import signal
 import logging
 import subprocess
@@ -138,6 +139,61 @@ using_unix = pytest.mark.skipif(
 )
 
 ### Generic helpers
+
+
+def load_procedure_data(name: str):
+    """
+    Loads pre-computed/dummy procedure data from the test directory
+
+    Parameters
+    ----------
+    name
+        The name of the file to load (without the json extension)
+
+    Returns
+    -------
+    :
+        A tuple of input data, molecule, and output data
+
+    """
+
+    my_path = os.path.dirname(os.path.abspath(__file__))
+    data_path = os.path.join(my_path, "tests", "procedure_data")
+    file_path = os.path.join(data_path, name + ".json")
+    with open(file_path, "r") as f:
+        data = json.load(f)
+
+    procedure = data["input"]["procedure"]
+    if procedure == "single":
+        input_type = ptl.models.SingleProcedureSpecification
+        result_type = ptl.models.AtomicResult
+    elif procedure == "optimization":
+        input_type = ptl.models.OptimizationProcedureSpecification
+        result_type = ptl.models.OptimizationResult
+    else:
+        raise RuntimeError(f"Unknown procedure '{procedure}' in test!")
+
+    if data["result"]["success"] is not True:
+        result_type = ptl.models.FailedOperation
+
+    molecule = Molecule(**data["molecule"])
+
+    return input_type(**data["input"]), molecule, result_type(**data["result"])
+
+
+@contextmanager
+def caplog_handler_at_level(caplog_fixture, level, logger=None):
+    """
+    Helper function to set the caplog fixture's handler to a certain level as well, otherwise it wont be captured
+
+    e.g. if caplog.set_level(logging.INFO) but caplog.handler is at logging.CRITICAL, anything below CRITICAL wont be
+    captured.
+    """
+    starting_handler_level = caplog_fixture.handler.level
+    caplog_fixture.handler.setLevel(level)
+    with caplog_fixture.at_level(level, logger=logger):
+        yield
+    caplog_fixture.handler.setLevel(starting_handler_level)
 
 
 @contextmanager

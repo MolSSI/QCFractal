@@ -11,6 +11,7 @@ from sqlalchemy import (
     Integer,
     String,
     UniqueConstraint,
+    CheckConstraint,
     func,
     select,
 )
@@ -69,6 +70,9 @@ class BaseResultORM(Base):
 
     # Carry-ons
     provenance = Column(JSON)
+
+    # Related tasks. The foreign key is in the task_queue table
+    task_obj = relationship("TaskQueueORM", back_populates="base_result_obj", uselist=False)
 
     __table_args__ = (
         Index("ix_base_result_status", "status"),
@@ -167,12 +171,19 @@ class ResultORM(BaseResultORM):
     __table_args__ = (
         # We use simple multi-column constraint, then add hash indices to the various columns
         UniqueConstraint("program", "driver", "method", "basis", "keywords", "molecule", name="uix_results_keys"),
+        # Enforce lowercase on some fields
+        # This does not actually change the text to lowercase, but will fail to insert anything not lowercase
+        # WARNING - these are not autodetected by alembic
         Index("ix_results_program", "program"),
         Index("ix_results_driver", "driver"),
         Index("ix_results_method", "method"),
         Index("ix_results_basis", "basis"),
         Index("ix_results_keywords", "keywords"),
         Index("ix_results_molecule", "molecule"),
+        CheckConstraint("program = LOWER(program)", name="ck_result_program_lower"),
+        CheckConstraint("driver = LOWER(driver)", name="ck_result_driver_lower"),
+        CheckConstraint("method = LOWER(method)", name="ck_result_method_lower"),
+        CheckConstraint("basis = LOWER(basis)", name="ck_result_basis_lower"),
     )
 
     __mapper_args__ = {
@@ -181,18 +192,15 @@ class ResultORM(BaseResultORM):
         "polymorphic_load": "selectin",
     }
 
+    def dict(self):
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        d = Base.dict(self)
 
+        # TODO - INT ID should not be done
+        if "id" in d:
+            d["id"] = ObjectId(d["id"])
 
-class ProcedureMixin:
-    """
-    A procedure mixin to be used by specific procedure types
-    """
-
-    program = Column(String(100), nullable=False)
-    keywords = Column(JSON)
-    qc_spec = Column(JSON)
+        return d
 
 
 # ================== Types of ProcedureORMs ================== #
@@ -211,7 +219,7 @@ class Trajectory(Base):
     # trajectory_obj = relationship(ResultORM, lazy="noload")
 
 
-class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
+class OptimizationProcedureORM(BaseResultORM):
     """
     An Optimization  procedure
     """
@@ -226,6 +234,11 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
         super().__init__(**kwargs)
 
     schema_version = Column(Integer, default=1)
+
+    program = Column(String(100), nullable=False)
+    keywords = Column(JSON)
+    qc_spec = Column(JSON)
+
     initial_molecule = Column(Integer, ForeignKey("molecule.id"), nullable=False)
     initial_molecule_obj = relationship(MoleculeORM, lazy="select", foreign_keys=initial_molecule)
 
@@ -257,7 +270,11 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
         "polymorphic_load": "selectin",
     }
 
-    __table_args__ = (Index("ix_optimization_program", "program"),)  # todo: needed for procedures?
+    __table_args__ = (
+        Index("ix_optimization_program", "program"),  # todo: needed for procedures?
+        # WARNING - these are not autodetected by alembic
+        CheckConstraint("program = LOWER(program)", name="ck_optimization_procedure_program_lower"),
+    )
 
     def update_relations(self, trajectory=None, **kwarg):
 
@@ -302,7 +319,7 @@ class GridOptimizationAssociation(Base):
     # optimization_obj = relationship(OptimizationProcedureORM, lazy="joined")
 
 
-class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
+class GridOptimizationProcedureORM(BaseResultORM):
 
     __tablename__ = "grid_optimization_procedure"
 
@@ -313,6 +330,10 @@ class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
         kwargs.setdefault("procedure", "gridoptimization")
         kwargs.setdefault("program", "qcfractal")
         super().__init__(**kwargs)
+
+    program = Column(String(100), nullable=False)
+    keywords = Column(JSON)
+    qc_spec = Column(JSON)
 
     # Input data
     initial_molecule = Column(Integer, ForeignKey("molecule.id"), nullable=False)
@@ -367,7 +388,11 @@ class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
 
         return dict_values
 
-    __table_args__ = (Index("ix_grid_optmization_program", "program"),)  # todo: needed for procedures?
+    __table_args__ = (
+        Index("ix_grid_optmization_program", "program"),  # todo: needed for procedures?
+        # WARNING - these are not autodetected by alembic
+        CheckConstraint("program = LOWER(program)", name="ck_grid_optimization_procedure_program_lower"),
+    )
 
     __mapper_args__ = {
         "polymorphic_identity": "grid_optimization_procedure",
@@ -413,7 +438,7 @@ class TorsionInitMol(Base):
     molecule_id = Column("molecule_id", Integer, ForeignKey("molecule.id", ondelete="cascade"), primary_key=True)
 
 
-class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
+class TorsionDriveProcedureORM(BaseResultORM):
     """
     A torsion drive  procedure
     """
@@ -428,7 +453,9 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
         self.program = "torsiondrive"
         super().__init__(**kwargs)
 
-    # input data (along with the mixin)
+    program = Column(String(100), nullable=False)
+    keywords = Column(JSON)
+    qc_spec = Column(JSON)
 
     # ids of the many to many relation
     initial_molecule = column_property(
@@ -489,7 +516,11 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
 
         return dict_values
 
-    __table_args__ = (Index("ix_torsion_drive_program", "program"),)  # todo: needed for procedures?
+    __table_args__ = (
+        Index("ix_torsion_drive_program", "program"),  # todo: needed for procedures?
+        # WARNING - these are not autodetected by alembic
+        CheckConstraint("program = LOWER(program)", name="ck_torsiondrive_procedure_program_lower"),
+    )
 
     __mapper_args__ = {
         "polymorphic_identity": "torsiondrive_procedure",

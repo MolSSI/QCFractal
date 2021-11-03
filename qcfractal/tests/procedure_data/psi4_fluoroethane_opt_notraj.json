@@ -1,0 +1,333 @@
+{
+    "input": {
+        "procedure": "optimization",
+        "program": "geometric",
+        "keywords": {
+            "reset": true,
+            "coordsys": "tric",
+            "program": "psi4"
+        },
+        "qc_spec": {
+            "driver": "gradient",
+            "method": "b3lyp",
+            "basis": "6-31g",
+            "keywords": {},
+            "program": "psi4"
+        },
+        "protocols": {
+            "trajectory": "none"
+        }
+    },
+    "molecule": {
+        "schema_name": "qcschema_molecule",
+        "schema_version": 2,
+        "validated": true,
+        "symbols": [
+            "C",
+            "C",
+            "F",
+            "H",
+            "H",
+            "H",
+            "H",
+            "H"
+        ],
+        "geometry": [
+            0.0,
+            1.05390026,
+            0.0,
+            2.13501258,
+            -0.82505443,
+            0.0,
+            -2.31170197,
+            -0.22487741,
+            0.0,
+            -0.01266117,
+            2.25822272,
+            1.68261214,
+            -0.01266117,
+            2.25822272,
+            -1.68261214,
+            3.93913411,
+            0.17290994,
+            0.0,
+            2.04071524,
+            -2.01898339,
+            1.67580913,
+            2.04071524,
+            -2.01898339,
+            -1.67580913
+        ],
+        "name": "C2FH5",
+        "molecular_charge": 0.0,
+        "molecular_multiplicity": 1,
+        "connectivity": [
+            [
+                0,
+                2,
+                1.0
+            ],
+            [
+                0,
+                3,
+                1.0
+            ],
+            [
+                0,
+                4,
+                1.0
+            ],
+            [
+                0,
+                1,
+                1.0
+            ],
+            [
+                1,
+                5,
+                1.0
+            ],
+            [
+                1,
+                6,
+                1.0
+            ],
+            [
+                1,
+                7,
+                1.0
+            ]
+        ],
+        "fix_com": false,
+        "fix_orientation": false,
+        "provenance": {
+            "creator": "QCElemental",
+            "version": "v0.19.0",
+            "routine": "qcelemental.molparse.from_string"
+        }
+    },
+    "result": {
+        "id": null,
+        "hash_index": null,
+        "schema_name": "qcschema_optimization_output",
+        "schema_version": 1,
+        "keywords": {
+            "reset": true,
+            "coordsys": "tric",
+            "program": "psi4"
+        },
+        "extras": {},
+        "protocols": {
+            "trajectory": "none"
+        },
+        "input_specification": {
+            "schema_name": "qcschema_input",
+            "schema_version": 1,
+            "driver": "gradient",
+            "model": {
+                "method": "b3lyp",
+                "basis": "6-31g"
+            },
+            "keywords": {},
+            "extras": {}
+        },
+        "initial_molecule": {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "C",
+                "F",
+                "H",
+                "H",
+                "H",
+                "H",
+                "H"
+            ],
+            "geometry": [
+                0.0,
+                1.05390026,
+                0.0,
+                2.13501258,
+                -0.82505443,
+                0.0,
+                -2.31170197,
+                -0.22487741,
+                0.0,
+                -0.01266117,
+                2.25822272,
+                1.68261214,
+                -0.01266117,
+                2.25822272,
+                -1.68261214,
+                3.93913411,
+                0.17290994,
+                0.0,
+                2.04071524,
+                -2.01898339,
+                1.67580913,
+                2.04071524,
+                -2.01898339,
+                -1.67580913
+            ],
+            "name": "C2FH5",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "connectivity": [
+                [
+                    0,
+                    2,
+                    1.0
+                ],
+                [
+                    0,
+                    3,
+                    1.0
+                ],
+                [
+                    0,
+                    4,
+                    1.0
+                ],
+                [
+                    0,
+                    1,
+                    1.0
+                ],
+                [
+                    1,
+                    5,
+                    1.0
+                ],
+                [
+                    1,
+                    6,
+                    1.0
+                ],
+                [
+                    1,
+                    7,
+                    1.0
+                ]
+            ],
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.19.0",
+                "routine": "qcelemental.molparse.from_string"
+            }
+        },
+        "provenance": {
+            "creator": "geomeTRIC",
+            "version": "0.9.7.2",
+            "routine": "geometric.run_json.geometric_run_json",
+            "wall_time": 12.82517671585083,
+            "username": "ben",
+            "qcengine_version": "v0.18.0",
+            "cpu": "Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz",
+            "hostname": "mobilefort"
+        },
+        "final_molecule": {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "C",
+                "F",
+                "H",
+                "H",
+                "H",
+                "H",
+                "H"
+            ],
+            "geometry": [
+                -0.007467421197096662,
+                1.1019920770158556,
+                0.0,
+                2.1251894684118673,
+                -0.808832590052083,
+                0.0,
+                -2.396990808746455,
+                -0.22278366013202283,
+                0.0,
+                0.02161916395642069,
+                2.2990343012554506,
+                1.6867565052068327,
+                0.02161916395642069,
+                2.2990343012554506,
+                -1.6867565052068327,
+                3.9576430730895606,
+                0.15751708882923085,
+                0.0,
+                2.0244827246817154,
+                -2.014925801922545,
+                1.6766222618092113,
+                2.0244827246817154,
+                -2.014925801922545,
+                -1.6766222618092113
+            ],
+            "name": "C2FH5",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "connectivity": [
+                [
+                    0,
+                    2,
+                    1.0
+                ],
+                [
+                    0,
+                    3,
+                    1.0
+                ],
+                [
+                    0,
+                    4,
+                    1.0
+                ],
+                [
+                    0,
+                    1,
+                    1.0
+                ],
+                [
+                    1,
+                    5,
+                    1.0
+                ],
+                [
+                    1,
+                    6,
+                    1.0
+                ],
+                [
+                    1,
+                    7,
+                    1.0
+                ]
+            ],
+            "fix_com": true,
+            "fix_orientation": true,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.19.0",
+                "routine": "qcelemental.molparse.from_string"
+            }
+        },
+        "trajectory": [],
+        "energies": [
+            -179.01839068938028,
+            -179.02004587280518,
+            -179.0201749085515,
+            -179.02019501045396,
+            -179.02019599497436
+        ],
+        "stdout": "24 internal coordinates being used (instead of 24 Cartesians)\nInternal coordinate system (atoms numbered from 1):\nDistance 1-2\nDistance 1-3\nDistance 1-4\nDistance 1-5\nDistance 2-6\nDistance 2-7\nDistance 2-8\nAngle 2-1-3\nAngle 2-1-4\nAngle 2-1-5\nAngle 3-1-4\nAngle 3-1-5\nAngle 4-1-5\nAngle 1-2-6\nAngle 1-2-7\nAngle 1-2-8\nAngle 6-2-7\nAngle 6-2-8\nAngle 7-2-8\nDihedral 3-1-2-6\nDihedral 3-1-2-7\nDihedral 3-1-2-8\nDihedral 4-1-2-6\nDihedral 4-1-2-7\nDihedral 4-1-2-8\nDihedral 5-1-2-6\nDihedral 5-1-2-7\nDihedral 5-1-2-8\nTranslation-X 1-8\nTranslation-Y 1-8\nTranslation-Z 1-8\nRotation-A 1-8\nRotation-B 1-8\nRotation-C 1-8\n<class 'geometric.internal.Distance'> : 7\n<class 'geometric.internal.Angle'> : 12\n<class 'geometric.internal.Dihedral'> : 9\n<class 'geometric.internal.TranslationX'> : 1\n<class 'geometric.internal.TranslationY'> : 1\n<class 'geometric.internal.TranslationZ'> : 1\n<class 'geometric.internal.RotationA'> : 1\n<class 'geometric.internal.RotationB'> : 1\n<class 'geometric.internal.RotationC'> : 1\nStep    0 : Gradient = 1.474e-02/3.445e-02 (rms/max) Energy = -179.0183906894\nHessian Eigenvalues: 2.30000e-02 5.00000e-02 5.00000e-02 ... 3.48139e-01 3.48139e-01 4.59547e-01\nStep    1 : Displace = \u001b[0m2.326e-02\u001b[0m/\u001b[0m5.287e-02\u001b[0m (rms/max) Trust = 1.000e-01 (=) Grad = \u001b[0m3.719e-03\u001b[0m/\u001b[0m9.332e-03\u001b[0m (rms/max) E (change) = -179.0200458728 (\u001b[0m-1.655e-03\u001b[0m) Quality = \u001b[0m0.884\u001b[0m\nHessian Eigenvalues: 2.30000e-02 4.99455e-02 5.00000e-02 ... 3.47661e-01 3.48139e-01 4.16672e-01\nStep    2 : Displace = \u001b[0m6.109e-03\u001b[0m/\u001b[0m9.287e-03\u001b[0m (rms/max) Trust = 1.414e-01 (\u001b[92m+\u001b[0m) Grad = \u001b[0m1.455e-03\u001b[0m/\u001b[0m3.532e-03\u001b[0m (rms/max) E (change) = -179.0201749086 (\u001b[0m-1.290e-04\u001b[0m) Quality = \u001b[0m1.164\u001b[0m\nHessian Eigenvalues: 2.30000e-02 4.68508e-02 5.00000e-02 ... 3.48139e-01 3.49126e-01 4.28637e-01\nStep    3 : Displace = \u001b[0m2.853e-03\u001b[0m/\u001b[0m4.279e-03\u001b[0m (rms/max) Trust = 2.000e-01 (\u001b[92m+\u001b[0m) Grad = \u001b[92m2.710e-04\u001b[0m/\u001b[0m5.525e-04\u001b[0m (rms/max) E (change) = -179.0201950105 (\u001b[0m-2.010e-05\u001b[0m) Quality = \u001b[0m1.044\u001b[0m\nHessian Eigenvalues: 2.30000e-02 3.58427e-02 5.00000e-02 ... 3.48139e-01 3.51207e-01 3.97975e-01\nStep    4 : Displace = \u001b[92m7.841e-04\u001b[0m/\u001b[92m1.406e-03\u001b[0m (rms/max) Trust = 2.828e-01 (\u001b[92m+\u001b[0m) Grad = \u001b[92m1.255e-04\u001b[0m/\u001b[92m2.623e-04\u001b[0m (rms/max) E (change) = -179.0201959950 (\u001b[92m-9.845e-07\u001b[0m) Quality = \u001b[0m0.437\u001b[0m\nConverged! =D\n",
+        "stderr": null,
+        "success": true,
+        "error": null
+    }
+}

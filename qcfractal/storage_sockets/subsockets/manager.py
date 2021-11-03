@@ -92,7 +92,7 @@ class ManagerSocket:
         name: Optional[Iterable[str]] = None,
         modified_before: Optional[datetime] = None,
         *,
-        reason: str = '(none given)',
+        reason: str = "(none given)",
         session: Optional[Session] = None,
     ) -> List[str]:
         """Marks managers as inactive
@@ -138,8 +138,12 @@ class ManagerSocket:
 
             # For the manager, also reset any orphaned tasks that belong to that manager
             for dead_name in deactivated_names:
-                n_incomplete = self._core_socket.task.reset_status(manager=dead_name, reset_running=True, session=session)
-                self._logger.info(f"Deactivated manager {dead_name}. Reason: {reason}. Recycling {n_incomplete} incomplete tasks.")
+                n_incomplete = self._core_socket.task.reset_status(
+                    manager=dead_name, reset_running=True, session=session
+                )
+                self._logger.info(
+                    f"Deactivated manager {dead_name}. Reason: {reason}. Recycling {n_incomplete} incomplete tasks."
+                )
 
         return deactivated_names
 

@@ -17,3 +17,7 @@ class UserManagementError(UserReportableError):
 
 class AuthenticationFailure(UserReportableError):
     pass
+
+
+class ValidationError(UserReportableError):
+    pass

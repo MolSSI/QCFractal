@@ -116,7 +116,7 @@ class FractalPeriodics:
         dead_managers = self.storage_socket.manager.deactivate(modified_before=dt, reason="missing heartbeat")
 
         if dead_managers:
-            self.logger.info(f"Heartbeat was missing from {len(dead_managers)}, so they were deactivated")
+            self.logger.info(f"Deactivated {len(dead_managers)} managers due to missing heartbeats")
 
         # Set up the next run of this function
         self.scheduler.enter(self.manager_heartbeat_frequency, 2, self._check_manager_heartbeats)

@@ -1,0 +1,148 @@
+{
+    "input": {
+        "procedure": "single",
+        "driver": "energy",
+        "program": "psi4",
+        "method": "b3lyp",
+        "basis": "sto-0g",
+        "keywords": {},
+        "protocols": {}
+    },
+    "molecule": {
+        "schema_name": "qcschema_molecule",
+        "schema_version": 2,
+        "validated": true,
+        "symbols": [
+            "O",
+            "O",
+            "H",
+            "H"
+        ],
+        "geometry": [
+            0.0,
+            1.39367302,
+            -0.09977754,
+            0.0,
+            -1.39367302,
+            -0.09977754,
+            1.5476857,
+            1.54390624,
+            0.79746442,
+            -1.5476857,
+            -1.54390624,
+            0.79746442
+        ],
+        "name": "H2O2",
+        "molecular_charge": 0.0,
+        "molecular_multiplicity": 1,
+        "connectivity": [
+            [
+                0,
+                1,
+                1.0
+            ],
+            [
+                0,
+                2,
+                1.0
+            ],
+            [
+                1,
+                3,
+                1.0
+            ]
+        ],
+        "fix_com": false,
+        "fix_orientation": false,
+        "provenance": {
+            "creator": "QCElemental",
+            "version": "v0.19.0",
+            "routine": "qcelemental.molparse.from_string"
+        }
+    },
+    "result": {
+        "id": null,
+        "input_data": {
+            "id": null,
+            "schema_name": "qcschema_input",
+            "schema_version": 1,
+            "molecule": {
+                "schema_name": "qcschema_molecule",
+                "schema_version": 2,
+                "validated": true,
+                "symbols": [
+                    "O",
+                    "O",
+                    "H",
+                    "H"
+                ],
+                "geometry": [
+                    0.0,
+                    1.39367302,
+                    -0.09977754,
+                    0.0,
+                    -1.39367302,
+                    -0.09977754,
+                    1.5476857,
+                    1.54390624,
+                    0.79746442,
+                    -1.5476857,
+                    -1.54390624,
+                    0.79746442
+                ],
+                "name": "H2O2",
+                "molecular_charge": 0.0,
+                "molecular_multiplicity": 1,
+                "connectivity": [
+                    [
+                        0,
+                        1,
+                        1.0
+                    ],
+                    [
+                        0,
+                        2,
+                        1.0
+                    ],
+                    [
+                        1,
+                        3,
+                        1.0
+                    ]
+                ],
+                "fix_com": false,
+                "fix_orientation": false,
+                "provenance": {
+                    "creator": "QCElemental",
+                    "version": "v0.19.0",
+                    "routine": "qcelemental.molparse.from_string"
+                }
+            },
+            "driver": "energy",
+            "model": {
+                "method": "b3lyp",
+                "basis": "sto-0g"
+            },
+            "keywords": {},
+            "protocols": {},
+            "extras": {},
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.19.0",
+                "routine": "qcelemental.models.results",
+                "cpu": "Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz",
+                "hostname": "mobilefort",
+                "username": "ben",
+                "qcengine_version": "v0.18.0",
+                "wall_time": 0.42247819900512695
+            }
+        },
+        "success": false,
+        "error": {
+            "error_type": "unknown_error",
+            "error_message": "QCEngine Unknown Error: Traceback (most recent call last):\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/schema_wrapper.py\", line 411, in run_qcschema\n    ret_data = run_json_qcschema(input_model.dict(), clean, False, keep_wfn=keep_wfn)\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/schema_wrapper.py\", line 558, in run_json_qcschema\n    val, wfn = methods_dict_[json_data[\"driver\"]](method, **kwargs)\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/driver.py\", line 576, in energy\n    wfn = procedures['energy'][lowername](lowername, molecule=molecule, **kwargs)\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/procrouting/proc.py\", line 2261, in run_scf\n    scf_wfn = scf_helper(name, post_scf=False, **kwargs)\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/procrouting/proc.py\", line 1435, in scf_helper\n    base_wfn = core.Wavefunction.build(scf_molecule, core.get_global_option('BASIS'))\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/p4util/python_helpers.py\", line 122, in _core_wavefunction_build\n    basis = core.BasisSet.build(mol, \"ORBITAL\", basis)\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/p4util/python_helpers.py\", line 87, in _pybuild_basis\n    return_atomlist=return_atomlist)\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/qcdb/libmintsbasisset.py\", line 680, in pyconstruct\n    verbose=verbose)\n  File \"/home/ben/miniconda3/envs/qca_next/lib//python3.7/site-packages/psi4/driver/qcdb/libmintsbasisset.py\", line 898, in construct\n    (at + 1, key, text2))\npsi4.driver.qcdb.exceptions.BasisSetNotFound: BasisSet::construct: Unable to find a basis set for atom 1 for key BASIS among:\n  Shell Entries: ['O']\n  Basis Sets: [('STO-0G', 'STO-0G', None)]\n  File Path: /tmp/tmpv9jrr12j_psi_scratch/tmp7rya2hmw, /tmp/tmpv9jrr12j_psi_scratch/tmp7rya2hmw, /home/ben/miniconda3/envs/qca_next/share/psi4/basis\n  Input Blocks: \n\n",
+            "extras": null
+        },
+        "extras": null
+    }
+}

@@ -5,7 +5,7 @@ from sqlalchemy import or_, and_
 from sqlalchemy.orm import load_only
 from datetime import datetime as dt
 from qcfractal.storage_sockets.models import BaseResultORM, TaskQueueORM
-from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
+from qcfractal.storage_sockets.storage_utils import add_metadata_template
 from qcfractal.storage_sockets.sqlalchemy_socket import format_query, calculate_limit
 from qcfractal.storage_sockets.sqlalchemy_common import insert_general, get_query_proj_columns, get_count
 from qcfractal.interface.models import TaskRecord, RecordStatusEnum, TaskStatusEnum, ObjectId
@@ -27,6 +27,34 @@ class TaskSocket:
         self._logger = logging.getLogger(__name__)
         self._user_limit = core_socket.qcf_config.response_limits.task
         self._manager_limit = core_socket.qcf_config.response_limits.manager_task
+
+    def add_orm(
+        self, tasks: List[TaskQueueORM], *, session: Optional[Session] = None
+    ) -> Tuple[InsertMetadata, List[ObjectId]]:
+        """
+        Adds TaskQueueORM to the database, taking into account duplicates
+
+        The session is flushed at the end of this function.
+
+        Parameters
+        ----------
+        tasks
+            ORM objects to add to the database
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata showing what was added, and a list of returned task ids. These will be in the
+            same order as the inputs, and may correspond to newly-inserted ORMs or to existing data.
+
+        """
+
+        with self._core_socket.optional_session(session) as session:
+            meta, orm = insert_general(session, tasks, (TaskQueueORM.base_result_id,), (TaskQueueORM.id,))
+            return meta, [x[0] for x in orm]
 
     def add(self, data: List[TaskRecord]):
         """Submit a list of tasks to the queue.
@@ -111,36 +139,6 @@ class TaskSocket:
 
         ret = {"data": results, "meta": meta}
         return ret
-
-    def add_orm(
-        self, tasks: List[TaskQueueORM], *, session: Optional[Session] = None
-    ) -> Tuple[InsertMetadata, List[ObjectId]]:
-        """
-        Adds TaskQueueORM to the database, taking into account duplicates
-
-        The session is flushed at the end of this function.
-
-        Parameters
-        ----------
-        session
-            An exist SQLAlchemy session to use
-        tasks
-            ORM objects to add to the database
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
-
-        Returns
-        -------
-        :
-            Metadata showing what was added, and a list of returned task ids. These will be in the
-            same order as the inputs, and may correspond to newly-inserted ORMs or to existing data.
-
-        """
-
-        with self._core_socket.optional_session(session) as session:
-            meta, orm = insert_general(session, tasks, (TaskQueueORM.base_result_id,), (TaskQueueORM.id,))
-            return meta, [x[0] for x in orm]
 
     def get(
         self,
@@ -471,7 +469,7 @@ class TaskSocket:
         reset_running: bool = False,
         reset_error: bool = False,
         *,
-        session: Optional[Session] = None
+        session: Optional[Session] = None,
     ) -> int:
         """
         Reset the status of the tasks that a manager owns from Running to Waiting
@@ -638,8 +636,5 @@ class TaskSocket:
         task_ids = [id] if isinstance(id, (int, str)) else id
         with self._core_socket.session_scope() as session:
             count = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(task_ids)).delete()
-            print("*" * 100)
-            print(task_ids)
-            print(count)
 
         return count

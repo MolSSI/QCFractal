@@ -1,10 +1,10 @@
 import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
-from pydantic import Field, validator
+from pydantic import Field, validator, constr
 
-from .common_models import ObjectId, ProtoModel
+from .common_models import ObjectId, ProtoModel, AtomicResultProtocols, OptimizationProtocols
 
 
 class TaskStatusEnum(str, Enum):
@@ -111,3 +111,40 @@ class TaskRecord(ProtoModel):
         if v:
             v = v.lower()
         return v
+
+
+class SingleProcedureSpecification(ProtoModel):
+    procedure: constr(to_lower=True, regex="single") = Field("single")
+    driver: constr(to_lower=True)
+    program: constr(to_lower=True)
+    method: constr(to_lower=True)
+    basis: Optional[constr(to_lower=True)] = Field(None)
+    keywords: Optional[Union[ObjectId, Dict[str, Any]]] = Field(None)
+    protocols: AtomicResultProtocols = Field(AtomicResultProtocols())
+    tag: Optional[str] = Field(None)
+    priority: PriorityEnum = Field(PriorityEnum.NORMAL)
+
+    @validator("priority", pre=True)
+    def munge_priority(cls, v):
+        if isinstance(v, str):
+            v = PriorityEnum[v.upper()]
+        return v
+
+
+class OptimizationProcedureSpecification(ProtoModel):
+    procedure: constr(to_lower=True, regex="optimization") = Field("optimization")
+    program: constr(to_lower=True)
+    keywords: Dict[str, Any] = Field(default_factory=dict)
+    qc_spec: Dict[str, Any]
+    protocols: OptimizationProtocols = Field(OptimizationProtocols())
+    tag: Optional[str] = Field(None)
+    priority: PriorityEnum = Field(PriorityEnum.NORMAL)
+
+    @validator("priority", pre=True)
+    def munge_priority(cls, v):
+        if isinstance(v, str):
+            v = PriorityEnum[v.upper()]
+        return v
+
+
+AllProcedureSpecifications = Union[SingleProcedureSpecification, OptimizationProcedureSpecification]

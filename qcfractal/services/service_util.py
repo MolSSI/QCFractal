@@ -12,7 +12,8 @@ from qcelemental.models import ComputeError
 
 from ..interface.models import ObjectId, ProtoModel, PriorityEnum
 from ..interface.models.rest_models import TaskQueuePOSTBody
-from ..procedures import get_procedure_parser
+
+# from ..procedures import get_procedure_parser
 
 
 class TaskManager(ProtoModel):
