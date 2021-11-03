@@ -44,7 +44,7 @@ class TaskQueueORM(Base):
         Index("ix_task_queue_manager", "manager"),
         Index("ix_task_queue_required_programs", "required_programs"),
         Index("ix_task_queue_base_result_id", "base_result_id"),
-        Index("ix_task_queue_waiting_sort", text("priority desc, created_on")),
+        Index("ix_task_queue_waiting_sort", priority.desc(), created_on),
         # WARNING - these are not autodetected by alembic
         CheckConstraint(
             "required_programs::text = LOWER(required_programs::text)", name="ck_task_queue_requirements_lower"

@@ -39,5 +39,5 @@ class ServiceQueueORM(Base):
 
     __table_args__ = (
         Index("ix_service_queue_tag", "tag"),
-        Index("ix_service_queue_waiting_sort", text("priority desc, created_on")),
+        Index("ix_service_queue_waiting_sort", priority.desc(), created_on),
     )
