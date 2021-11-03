@@ -12,11 +12,11 @@ Handles special relationships
 from qcexport_extra_collection import _add_collection
 
 from qcfractal.storage_sockets.models import (
-    CollectionORM,
-    OptimizationProcedureORM,
-    GridOptimizationProcedureORM,
-    TorsionDriveProcedureORM
+    CollectionORM
 )
+from qcfractal.components.records.torsiondrive.db_models import TorsionDriveProcedureORM
+from qcfractal.components.records.gridoptimization.db_models import GridOptimizationProcedureORM
+from qcfractal.components.records.optimization.db_models import OptimizationProcedureORM
 from qcfractal.components.managers.db_models import QueueManagerORM
 
 

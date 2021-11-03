@@ -9,12 +9,14 @@ from datetime import datetime
 from sqlalchemy import and_
 from sqlalchemy.orm import selectinload, load_only
 
-from . import helpers
-from .base import BaseProcedureHandler
-from ...models import TaskQueueORM, OptimizationProcedureORM, ResultORM, Trajectory
-from ...sqlalchemy_common import insert_general, get_query_proj_columns, get_count
-from ...sqlalchemy_socket import calculate_limit
-from ....interface.models import (
+from qcfractal.components.records import helpers
+from qcfractal.components.records.base_handlers import BaseProcedureHandler
+from qcfractal.storage_sockets.models import TaskQueueORM
+from qcfractal.components.records.optimization.db_models import Trajectory, OptimizationProcedureORM
+from qcfractal.components.records.singlepoint.db_models import ResultORM
+from qcfractal.storage_sockets.sqlalchemy_common import insert_general, get_query_proj_columns, get_count
+from qcfractal.storage_sockets.sqlalchemy_socket import calculate_limit
+from qcfractal.interface.models import (
     ObjectId,
     OptimizationRecord,
     RecordStatusEnum,
@@ -28,8 +30,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from ...sqlalchemy_socket import SQLAlchemySocket
-    from ....interface.models import AtomicResult, OptimizationProcedureSpecification, InsertMetadata
+    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+    from qcfractal.interface.models import AtomicResult, OptimizationProcedureSpecification, InsertMetadata
     from typing import List, Optional, Tuple, Dict, Any, Sequence, Iterable
 
     OptimizationProcedureDict = Dict[str, Any]

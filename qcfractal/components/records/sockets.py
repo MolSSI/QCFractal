@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from qcfractal.storage_sockets.models import BaseResultORM
+from qcfractal.components.records.db_models import BaseResultORM
 from sqlalchemy import and_
 from sqlalchemy.orm import selectinload, load_only
 from qcfractal.interface.models import RecordStatusEnum, QueryMetadata
-from ..sqlalchemy_common import get_query_proj_columns, get_count
+from qcfractal.storage_sockets.sqlalchemy_common import get_query_proj_columns, get_count
 from qcfractal.storage_sockets.sqlalchemy_socket import calculate_limit
 
 from typing import TYPE_CHECKING

@@ -9,18 +9,15 @@ from sqlalchemy.orm import make_transient, Load
 from sqlalchemy import inspect
 
 from qcfractal.storage_sockets.models import (
-    BaseResultORM,
     CollectionORM,
     DatasetORM,
-    GridOptimizationProcedureORM,
-    OptimizationProcedureORM,
     QueueManagerORM,
-    ResultORM,
     ServiceQueueORM,
     TaskQueueORM,
-    TorsionDriveProcedureORM,
-    Trajectory,
 )
+from qcfractal.components.records.optimization.db_models import Trajectory, OptimizationProcedureORM
+from qcfractal.components.records.singlepoint.db_models import ResultORM
+from qcfractal.components.records.db_models import BaseResultORM
 from qcfractal.components.managers.db_models import QueueManagerLogORM, QueueManagerORM
 from qcfractal.components.serverinfo.db_models import AccessLogORM, ServerStatsLogORM, VersionsORM
 from qcfractal.components.keywords.db_models import KeywordsORM
@@ -29,7 +26,9 @@ from qcfractal.components.outputstore.db_models import KVStoreORM
 from qcfractal.components.molecule.db_models import MoleculeORM
 
 from qcfractal.storage_sockets.models.collections_models import DatasetEntryORM
-from qcfractal.storage_sockets.models.results_models import GridOptimizationAssociation, TorsionInitMol
+from qcfractal.components.records.torsiondrive.db_models import TorsionInitMol, TorsionDriveProcedureORM
+from qcfractal.components.records.gridoptimization.db_models import GridOptimizationAssociation, \
+    GridOptimizationProcedureORM
 
 _all_orm = [
     AccessLogORM,

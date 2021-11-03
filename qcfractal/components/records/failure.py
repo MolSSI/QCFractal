@@ -7,20 +7,18 @@ from __future__ import annotations
 import logging
 from datetime import datetime as dt
 
-from .base import BaseProcedureHandler
-from ....interface.models import (
+from qcfractal.components.records.base_handlers import BaseProcedureHandler
+from qcfractal.interface.models import (
     RecordStatusEnum,
     FailedOperation,
 )
-from ...models import TaskQueueORM
+from qcfractal.storage_sockets.models import TaskQueueORM
 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from ...sqlalchemy_socket import SQLAlchemySocket
-    from typing import Optional
-
+    from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
 
 # A generic error message if the FailedOperation doesn't contain one
 _default_error = {"error_type": "not_supplied", "error_message": "No error message found on task."}
