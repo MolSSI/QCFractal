@@ -38,15 +38,13 @@ if __name__ == "__main__":
             "alembic",
             "psycopg2",
             "qcelemental>=0.23",
-            "geoip2",
+            "qcengine>=0.20",
             # QCPortal dependencies
             "requests",
             "tqdm",
             "plotly",
             "pandas",
             "tabulate",
-            "h5py",
-            "qcengine>=0.20",
         ],
         entry_points={
             "console_scripts": [
@@ -56,12 +54,13 @@ if __name__ == "__main__":
             "pytest11": ["qcfractal_testing=qcfractal.testing"],
         },
         extras_require={
-            "api_logging": ["geoip2"],
+            "geoip": ["geoip2"],
             "docs": [
-                "sphinx==1.2.3",  # autodoc was broken in 1.3.1
-                "sphinxcontrib-napoleon",
+                "sphinx",
+                "sphinx-automodapi",
                 "sphinx_rtd_theme",
-                "numpydoc",
+                "nbsphinx",
+                "ipython",
             ],
             "lint": ["black"],
             "tests": ["pytest", "pytest-cov", "codecov", "mypy"],
