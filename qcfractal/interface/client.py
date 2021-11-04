@@ -18,7 +18,8 @@ from pydantic import ValidationError
 
 from .collections import collection_factory, collections_name_map
 from .models.records import RecordStatusEnum
-from .models.task_models import PriorityEnum, ManagerStatusEnum
+from .models.task_models import PriorityEnum
+from ..portal.components.managers import ManagerStatusEnum
 from .models.rest_models import AllRecordTypes, rest_model
 
 if TYPE_CHECKING:  # pragma: no cover

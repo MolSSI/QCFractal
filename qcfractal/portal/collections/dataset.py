@@ -1257,7 +1257,7 @@ class _Dataset(Collection):
                 )
 
                 ids.extend(ret.ids)
-                submitted.extend(ret.submitted)
+                submitted.extend(ret.claimed)
                 existing.extend(ret.existing)
 
             qhistory = history.copy()

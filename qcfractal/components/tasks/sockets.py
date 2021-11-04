@@ -20,11 +20,11 @@ from qcfractal.db_socket.helpers import calculate_limit
 
 from qcfractal.interface.models import (
     PriorityEnum,
-    ManagerStatusEnum,
     FailedOperation,
     RecordStatusEnum,
     AllProcedureSpecifications,
 )
+from qcfractal.portal.components.managers import ManagerStatusEnum
 
 from qcfractal.portal.metadata_models import InsertMetadata, QueryMetadata
 from typing import TYPE_CHECKING
@@ -134,7 +134,7 @@ class TaskSocket:
         if error is not None:
             base_record_orm.error = self.root_socket.outputstore.add([error], session=session)[0]
 
-        self.root_socket.outputstore.delete(to_delete, session=session)
+        # self.root_socket.outputstore.delete(to_delete, session=session)
 
     def create(
         self, molecules: List[Molecule], specification: AllProcedureSpecifications, *, session: Optional[Session] = None

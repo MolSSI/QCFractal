@@ -2,33 +2,9 @@ import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import Field, validator, constr
+from pydantic import Field, constr
 
 from .common_models import ObjectId, ProtoModel, AtomicResultProtocols, OptimizationProtocols
-
-
-class ManagerStatusEnum(str, Enum):
-    """
-    The state of a Queue Manager. The states which are available are a finite set.
-    """
-
-    active = "active"
-    inactive = "inactive"
-
-    @classmethod
-    def _missing_(cls, name):
-        """Attempts to find the correct status in a case-insensitive way
-
-        If a string being converted to a ManagerStatusEnum is missing, then this function
-        will convert the case and try to find the appropriate status.
-        """
-        name = name.lower()
-
-        # Search this way rather than doing 'in' since we are comparing
-        # a string to an enum
-        for status in cls:
-            if name == status:
-                return status
 
 
 class PriorityEnum(int, Enum):

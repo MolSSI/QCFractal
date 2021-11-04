@@ -31,7 +31,8 @@ from .snowflake import FractalSnowflake, attempt_client_connect
 from .periodics import FractalPeriodics
 from .db_socket.socket import SQLAlchemySocket
 from .portal.components.permissions import UserInfo
-from .portal import PortalClient
+from .portal import PortalClient, ManagerClient
+from .portal.components.managers import ManagerName
 
 # Path to this file (directory only)
 _my_path = os.path.dirname(os.path.abspath(__file__))
@@ -629,6 +630,34 @@ class TestingSnowflake(FractalSnowflake):
             username=username,
             password=password,
         )
+        client.encoding = self._encoding
+        return client
+
+    def manager_client(self, name_data: ManagerName, username=None, password=None) -> ManagerClient:
+        """
+        Obtain a manager client connected to this snowflake
+
+        Parameters
+        ----------
+        username
+            The username to connect as
+        password
+            The password to use
+
+        Returns
+        -------
+        :
+            A PortalClient that is connected to this snowflake
+        """
+
+        attempt_client_connect(
+            self.get_uri(),
+            username=username,
+            password=password,
+        )
+
+        # Now that we know it's up, create a manager client
+        client = ManagerClient(name_data, self.get_uri(), username=username, password=password)
         client.encoding = self._encoding
         return client
 

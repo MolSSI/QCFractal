@@ -45,3 +45,9 @@ class MissingDataError(UserReportableError):
 
 class LimitExceededError(UserReportableError):
     pass
+
+
+class ComputeManagerError(UserReportableError):
+    def __init__(self, msg: str, shutdown: bool):
+        UserReportableError.__init__(self, msg)
+        self.shutdown = shutdown

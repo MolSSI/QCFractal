@@ -48,6 +48,21 @@ class CommonGetURLParameters(RestModelBase):
         return validate_list_to_single(v)
 
 
+class CommonGetURLParametersName(RestModelBase):
+    """
+    Common URL parameters for get_ functions
+
+    This version is for get_ with string arguments (as opposed to int ids)
+    """
+
+    name: Optional[List[str]] = None
+    missing_ok: Optional[bool] = False
+
+    @validator("missing_ok", pre=True)
+    def validate_lists(cls, v):
+        return validate_list_to_single(v)
+
+
 class QueryParametersBase(RestModelBase):
     """
     Common parameters for query_* functions, with out include/exclude

@@ -33,7 +33,6 @@ from .model_utils import hash_dictionary, json_encoders, prepare_basis
 from .records import OptimizationRecord, SinglePointRecord, RecordStatusEnum
 from .rest_models import ComputeResponse, rest_model
 from .task_models import (
-    ManagerStatusEnum,
     PythonComputeSpec,
     TaskRecord,
     PriorityEnum,
@@ -42,4 +41,5 @@ from .task_models import (
     AllProcedureSpecifications,
     AllServiceSpecifications,
 )
+from ...portal.components.managers import ManagerStatusEnum
 from .torsiondrive import TorsionDriveInput, TorsionDriveRecord
