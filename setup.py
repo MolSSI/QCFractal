@@ -25,30 +25,28 @@ if __name__ == "__main__":
         python_requires=">=3.7",
         install_requires=[
             # Core dependencies
-            "numpy >=1.17",
+            "numpy",
             "msgpack",
             "flask",
             "flask_jwt_extended",
             "gunicorn",
-            "requests",
             "pyyaml",
             "pydantic",
             "pyarrow",
             "bcrypt",
-            "cryptography",
-            # Storage dependencies
             "sqlalchemy >=1.4",
             "alembic",
             "psycopg2",
+            "qcelemental>=0.23",
+            "geoip2",
             # QCPortal dependencies
+            "requests",
             "tqdm",
             "plotly",
             "pandas",
             "tabulate",
             "h5py",
-            # QCArchive depends
             "qcengine>=0.20",
-            "qcelemental>=0.23",
         ],
         entry_points={
             "console_scripts": [
