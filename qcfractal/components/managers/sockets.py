@@ -2,15 +2,16 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-
-from sqlalchemy import or_, and_, update
-from sqlalchemy.orm import load_only, selectinload
-from qcfractal.interface.models import ObjectId, ManagerStatusEnum
-from qcfractal.portal.metadata_models import QueryMetadata
-from qcfractal.components.managers.db_models import QueueManagerLogORM, QueueManagerORM
-from qcfractal.db_socket.helpers import get_query_proj_columns, get_count, calculate_limit
-
 from typing import TYPE_CHECKING
+
+from sqlalchemy import and_, update, select
+from sqlalchemy.orm import load_only, selectinload
+
+from qcfractal.components.managers.db_models import ComputeManagerLogORM, ComputeManagerORM
+from qcfractal.db_socket.helpers import get_query_proj_columns, get_count, calculate_limit, get_count_2, get_general
+from qcfractal.exceptions import ComputeManagerError
+from qcfractal.portal.components.managers import ManagerStatusEnum, ManagerName
+from qcfractal.portal.metadata_models import QueryMetadata
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -28,64 +29,115 @@ class ManagerSocket:
         self._manager_limit = root_socket.qcf_config.response_limits.manager
         self._manager_log_limit = root_socket.qcf_config.response_limits.manager_log
 
-    def update(self, name: str, *, session: Optional[Session] = None, **kwargs):
+    @staticmethod
+    def save_snapshot(orm: ComputeManagerORM):
         """
-        Updates information for a queue manager in the database
-
-        TODO - needs a bit of work when we get to task and queue management polishing: It's too wishy washy
-
-        Parameters
-        ----------
-        name
-            The name of the manager to update
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+        Saves the statistics of a manager to its log
         """
 
-        do_log = kwargs.pop("log", False)
+        log_orm = ComputeManagerLogORM(
+            claimed=orm.claimed,
+            successes=orm.successes,
+            failures=orm.failures,
+            rejected=orm.rejected,
+            total_worker_walltime=orm.total_worker_walltime,
+            total_task_walltime=orm.total_task_walltime,
+            active_tasks=orm.active_tasks,
+            active_cores=orm.active_cores,
+            active_memory=orm.active_memory,
+            timestamp=orm.modified_on,
+        )  # type: ignore
 
-        inc_count = {
-            # Increment relevant data
-            "submitted": QueueManagerORM.submitted + kwargs.pop("submitted", 0),
-            "completed": QueueManagerORM.completed + kwargs.pop("completed", 0),
-            "returned": QueueManagerORM.returned + kwargs.pop("returned", 0),
-            "failures": QueueManagerORM.failures + kwargs.pop("failures", 0),
-        }
+        orm.log.append(log_orm)
 
-        upd = {key: kwargs[key] for key in QueueManagerORM.__dict__.keys() if key in kwargs}
+    def activate(
+        self,
+        name_data: ManagerName,
+        manager_version: str,
+        qcengine_version: str,
+        username: Optional[str],
+        programs: Dict[str, Optional[str]],
+        tags: List[str],
+        *,
+        session: Optional[Session] = None,
+    ) -> int:
+        """
+        Activates a new manager on the server
+        """
+
+        # Strip out empty tags and programs
+        tags = [x.lower() for x in tags if len(x) > 0]
+        programs = {k.lower(): v for k, v in programs.items() if len(k) > 0}
+
+        if len(tags) == 0:
+            raise ComputeManagerError("Manager does not have any tags assigned. Use '*' to match all tags", True)
+        if len(programs) == 0:
+            raise ComputeManagerError("Manager does not have any programs available", True)
+
+        tags = list(dict.fromkeys(tags))  # remove duplicates, maintaining order (in python 3.6+)
+
+        manager_orm = ComputeManagerORM(
+            name=name_data.fullname,
+            cluster=name_data.cluster,
+            hostname=name_data.hostname,
+            username=username,
+            tags=tags,
+            status=ManagerStatusEnum.active,
+            manager_version=manager_version,
+            qcengine_version=qcengine_version,
+            programs=programs,
+        )  # type: ignore
 
         with self.root_socket.optional_session(session) as session:
-            manager_query = session.query(QueueManagerORM).filter_by(name=name)
-            if manager_query.count() > 0:  # existing
-                upd.update(inc_count, modified_on=datetime.utcnow())
-                num_updated = manager_query.update(upd)
-            else:
-                # Manager did not exist, so create it
-                manager = QueueManagerORM(name=name, **upd)  # type: ignore
-                session.add(manager)
-                session.flush()
-                num_updated = 1
+            stmt = select(ComputeManagerORM).where(ComputeManagerORM.name == name_data.fullname)
+            count = get_count_2(session, stmt)
 
-            if do_log:
-                # Pull again in case it was updated
-                manager = session.query(QueueManagerORM).filter_by(name=name).first()
+            if count > 0:
+                self._logger.warning(f"Cannot activate duplicate manager: {name_data.fullname}")
+                raise ComputeManagerError("A manager with this name already exists", True)
 
-                manager_log = QueueManagerLogORM(
-                    manager_id=manager.id,
-                    completed=manager.completed,
-                    submitted=manager.submitted,
-                    failures=manager.failures,
-                    total_worker_walltime=manager.total_worker_walltime,
-                    total_task_walltime=manager.total_task_walltime,
-                    active_tasks=manager.active_tasks,
-                    active_cores=manager.active_cores,
-                    active_memory=manager.active_memory,
+            session.add(manager_orm)
+            session.flush()
+            return manager_orm.id
+
+    def update_resource_stats(
+        self,
+        name: str,
+        total_worker_walltime: float,
+        total_task_walltime: float,
+        active_tasks: int,
+        active_cores: int,
+        active_memory: float,
+        *,
+        session: Optional[Session] = None,
+    ):
+
+        with self.root_socket.optional_session(session) as session:
+            stmt = (
+                select(ComputeManagerORM)
+                .options(selectinload(ComputeManagerORM.log))
+                .where(ComputeManagerORM.name == name)
+                .with_for_update(skip_locked=False)
+            )
+            manager: Optional[ComputeManagerORM] = session.execute(stmt).scalar_one_or_none()
+
+            if manager is None:
+                raise ComputeManagerError(
+                    f"Cannot update resource stats for manager {name} - does not exist", shutdown=True
+                )
+            if manager.status != ManagerStatusEnum.active:
+                raise ComputeManagerError(
+                    f"Cannot update resource stats for manager {name} - is not active", shutdown=True
                 )
 
-                session.add(manager_log)
+            manager.total_worker_walltime = total_worker_walltime
+            manager.total_task_walltime = (total_task_walltime,)
+            manager.active_tasks = active_tasks
+            manager.active_cores = active_cores
+            manager.active_memory = active_memory
+            manager.modified_on = datetime.utcnow()
 
-        return num_updated == 1
+            self.save_snapshot(manager)
 
     def deactivate(
         self,
@@ -96,6 +148,8 @@ class ManagerSocket:
         session: Optional[Session] = None,
     ) -> List[str]:
         """Marks managers as inactive
+
+        If both name and modified_before are specified, managers that match both conditions will be deactivated.
 
         Parameters
         ----------
@@ -118,26 +172,25 @@ class ManagerSocket:
         if not name and not modified_before:
             return []
 
-        now = datetime.now()
-        query_or = []
+        now = datetime.utcnow()
+        query_and = []
         if name:
-            query_or.append(QueueManagerORM.name.in_(name))
+            query_and.append(ComputeManagerORM.name.in_(name))
         if modified_before:
-            query_or.append(QueueManagerORM.modified_on < modified_before)
+            query_and.append(ComputeManagerORM.modified_on < modified_before)
 
         stmt = (
-            update(QueueManagerORM)
-            .where((QueueManagerORM.status == ManagerStatusEnum.active) & (or_(*query_or)))
+            update(ComputeManagerORM)
+            .where(and_(ComputeManagerORM.status == ManagerStatusEnum.active, and_(*query_and)))
             .values(status=ManagerStatusEnum.inactive, modified_on=now)
-            .returning(QueueManagerORM.name)
+            .returning(ComputeManagerORM.name)
         )
 
         with self.root_socket.optional_session(session) as session:
             deactivated_names = session.execute(stmt).fetchall()
             deactivated_names = [x[0] for x in deactivated_names]
 
-            # For the manager, also reset any orphaned tasks that belong to that manager
-            # (could also do this in one call to reset_status, but without logging n_incomplete)
+            # For the manager, also reset any now-orphaned tasks that belonged to that manager
             for dead_name in deactivated_names:
                 n_incomplete = self.root_socket.tasks.reset_tasks(
                     manager=[dead_name], reset_running=True, session=session
@@ -162,7 +215,7 @@ class ManagerSocket:
 
         Names for managers are unique, since they include a UUID.
 
-        The returned molecule ORMs will be in order of the given names
+        The returned manager ORMs will be in order of the given names
 
         If missing_ok is False, then any manager names that are missing in the database will raise an exception.
         Otherwise, the corresponding entry in the returned list of manager info will be None.
@@ -191,36 +244,20 @@ class ManagerSocket:
         if len(name) > self._manager_limit:
             raise RuntimeError(f"Request for {len(name)} managers is over the limit of {self._manager_limit}")
 
-        unique_names = list(set(name))
-        load_cols, load_rels = get_query_proj_columns(QueueManagerORM, include, exclude)
+        # By default, exclude the server logs from the returned dict
+        default_exclude = {"log"}
 
         with self.root_socket.optional_session(session, True) as session:
-            query = (
-                session.query(QueueManagerORM)
-                .filter(QueueManagerORM.name.in_(unique_names))
-                .options(load_only(*load_cols))
+            return get_general(
+                session, ComputeManagerORM, ComputeManagerORM.name, name, include, exclude, default_exclude, missing_ok
             )
-
-            for r in load_rels:
-                query = query.options(selectinload(r))
-
-            results = query.yield_per(500)
-            result_map = {r.name: r.dict() for r in results}
-
-        # Put into the requested order
-        ret = [result_map.get(x, None) for x in name]
-
-        if missing_ok is False and None in ret:
-            raise RuntimeError("Could not find all requested manager records")
-
-        return ret
 
     def query(
         self,
-        id: Optional[Iterable[ObjectId]] = None,
+        id: Optional[Iterable[int]] = None,
         name: Optional[Iterable[str]] = None,
-        hostname: Optional[Iterable[str]] = None,
         cluster: Optional[Iterable[str]] = None,
+        hostname: Optional[Iterable[str]] = None,
         status: Optional[Iterable[ManagerStatusEnum]] = None,
         modified_before: Optional[datetime] = None,
         modified_after: Optional[datetime] = None,
@@ -269,97 +306,39 @@ class ManagerSocket:
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of Molecule that were found in the database.
+            Metadata about the results of the query, and a list of manager data that were found in the database.
         """
 
         limit = calculate_limit(self._manager_limit, limit)
 
-        load_cols, _ = get_query_proj_columns(QueueManagerORM, include, exclude)
+        # By default, exclude the server logs from the returned dict
+        default_exclude = {"log"}
+
+        load_cols, load_rels = get_query_proj_columns(ComputeManagerORM, include, exclude, default_exclude)
 
         and_query = []
         if id is not None:
-            and_query.append(QueueManagerORM.id.in_(id))
+            and_query.append(ComputeManagerORM.id.in_(id))
         if name is not None:
-            and_query.append(QueueManagerORM.name.in_(name))
+            and_query.append(ComputeManagerORM.name.in_(name))
         if hostname is not None:
-            and_query.append(QueueManagerORM.hostname.in_(hostname))
+            and_query.append(ComputeManagerORM.hostname.in_(hostname))
         if cluster is not None:
-            and_query.append(QueueManagerORM.cluster.in_(cluster))
+            and_query.append(ComputeManagerORM.cluster.in_(cluster))
         if status is not None:
-            and_query.append(QueueManagerORM.status.in_(status))
+            and_query.append(ComputeManagerORM.status.in_(status))
         if modified_before is not None:
-            and_query.append(QueueManagerORM.modified_on < modified_before)
+            and_query.append(ComputeManagerORM.modified_on < modified_before)
         if modified_after is not None:
-            and_query.append(QueueManagerORM.modified_on > modified_after)
+            and_query.append(ComputeManagerORM.modified_on > modified_after)
 
         with self.root_socket.optional_session(session, True) as session:
-            query = session.query(QueueManagerORM).filter(and_(*and_query))
+            query = session.query(ComputeManagerORM).filter(and_(*and_query))
             query = query.options(load_only(*load_cols))
-            n_found = get_count(query)
-            results = query.limit(limit).offset(skip).all()
-            result_dicts = [x.dict() for x in results]
 
-        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
-        return meta, result_dicts
+            if ComputeManagerORM.log in load_rels:
+                query = query.options(selectinload(ComputeManagerORM.log))
 
-    def query_logs(
-        self,
-        manager_id: Iterable[ObjectId],
-        before: Optional[datetime] = None,
-        after: Optional[datetime] = None,
-        include: Optional[Iterable[str]] = None,
-        exclude: Optional[Iterable[str]] = None,
-        limit=None,
-        skip=0,
-        *,
-        session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[ManagerLogDict]]:
-        """
-        General query of managers in the database
-
-        All search criteria are merged via 'and'. Therefore, records will only
-        be found that match all the criteria.
-
-        Parameters
-        ----------
-        manager_id
-            Query for log entries with these manager IDs
-        before
-            Query for log entries with a timestamp before a specific time
-        after
-            Query for log entries with a timestamp after a specific time
-        include
-            Which fields of the manager log to return. Default is to return all fields.
-        exclude
-            Remove these fields from the return. Default is to return all fields.
-        limit
-            Limit the number of results. If None, the server limit will be used.
-            This limit will not be respected if greater than the configured limit of the server.
-        skip
-            Skip this many results from the total list of matches. The limit will apply after skipping,
-            allowing for pagination.
-        session
-            An existing SQLAlchemy session to use. If None, one will be created
-
-        Returns
-        -------
-        :
-            Metadata about the results of the query, and a list of Molecule that were found in the database.
-        """
-
-        limit = calculate_limit(self._manager_log_limit, limit)
-
-        and_query = [QueueManagerLogORM.manager_id.in_(manager_id)]
-        if before is not None:
-            and_query.append(QueueManagerLogORM.timestamp < before)
-        if after is not None:
-            and_query.append(QueueManagerLogORM.timestamp > after)
-
-        load_cols, _ = get_query_proj_columns(QueueManagerLogORM, include, exclude)
-
-        with self.root_socket.optional_session(session, True) as session:
-            query = session.query(QueueManagerLogORM).filter(and_(*and_query))
-            query = query.options(load_only(*load_cols))
             n_found = get_count(query)
             results = query.limit(limit).offset(skip).all()
             result_dicts = [x.dict() for x in results]

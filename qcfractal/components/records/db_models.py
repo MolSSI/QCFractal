@@ -22,7 +22,7 @@ class BaseResultORM(BaseORM):
     # Base identification
     id = Column(Integer, primary_key=True)
     # ondelete="SET NULL": when manger is deleted, set this field to None
-    manager_name = Column(String, ForeignKey("queue_manager.name", ondelete="SET NULL"), nullable=True)
+    manager_name = Column(String, ForeignKey("compute_manager.name", ondelete="SET NULL"), nullable=True)
 
     hash_index = Column(String)  # TODO
     procedure = Column(String(100), nullable=False)  # TODO: may remove

@@ -34,9 +34,9 @@ import pandas as pd
 from ..interface.models.rest_models import rest_model
 from ..interface.models import (
     RecordStatusEnum,
-    ManagerStatusEnum,
     PriorityEnum,
 )
+from .components.managers import ManagerStatusEnum, ManagerQueryBody, ComputeManager
 
 from .metadata_models import InsertMetadata, DeleteMetadata
 from .components.outputstore import OutputStore
@@ -47,7 +47,7 @@ from .components.serverinfo import (
     ServerStatsQueryParameters,
     DeleteBeforeDateParameters,
 )
-from .common_rest import CommonGetURLParameters, CommonDeleteURLParameters
+from .common_rest import CommonGetURLParametersName, CommonGetURLParameters, CommonDeleteURLParameters
 from .components.molecules import MoleculeQueryBody, MoleculeModifyBody
 from .components.wavefunctions.models import WavefunctionProperties
 from qcfractal.portal.metadata_models import QueryMetadata, UpdateMetadata
@@ -147,7 +147,7 @@ def make_str(obj: Optional[Union[_T, Sequence[_T]]]) -> Optional[List[_T]]:
 class PortalClient:
     def __init__(
         self,
-        address: Union[str, "FractalServer"] = "api.qcarchive.molssi.org:443",
+        address: str = "api.qcarchive.molssi.org:443",
         username: Optional[str] = None,
         password: Optional[str] = None,
         verify: bool = True,
@@ -179,12 +179,7 @@ class PortalClient:
 
         """
 
-        if hasattr(address, "get_address"):
-            # We are a FractalServer-like object
-            verify = address.client_verify
-            address = address.get_address()
-
-        if "http" not in address:
+        if not address.startswith("http://") and not address.startswith("https://"):
             address = "https://" + address
 
         # If we are `http`, ignore all SSL directives
@@ -1594,43 +1589,107 @@ class PortalClient:
 
         return self._automodel_request("service_queue", "put", payload, full_return=full_return)
 
+    def get_managers(
+        self,
+        name: Union[str, Sequence[str]],
+        missing_ok: bool = False,
+    ) -> Union[Optional[ComputeManager], List[Optional[ComputeManager]]]:
+        """Obtains manager information from the server via name
+
+        Parameters
+        ----------
+        name
+            A manager name or list of names
+        missing_ok
+            If True, return ``None`` for managers that were not found on the server.
+            If False, raise ``KeyError`` if any managers were not found on the server.
+
+        Returns
+        -------
+        :
+            The requested managers, in the same order as the requested ids.
+            If given a list of ids, the return value will be a list.
+            Otherwise, it will be a single manager.
+        """
+
+        url_params = {"name": make_list(name), "missing_ok": missing_ok}
+        managers = self._auto_request(
+            "get", "v1/manager", None, CommonGetURLParametersName, List[Optional[ComputeManager]], None, url_params
+        )
+
+        if isinstance(name, Sequence):
+            return managers
+        else:
+            return managers[0]
+
     def query_managers(
         self,
-        name: QueryStr = None,
+        id: Optional[Union[int, Iterable[int]]] = None,
+        name: Optional[Union[str, Iterable[str]]] = None,
+        cluster: Optional[Union[str, Iterable[str]]] = None,
+        hostname: Optional[Union[str, Iterable[str]]] = None,
         status: QueryStr = None,
+        modified_before: Optional[datetime] = None,
+        modified_after: Optional[datetime] = None,
+        include_log: bool = False,
         limit: Optional[int] = None,
         skip: int = 0,
-        full_return: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> Tuple[QueryMetadata, Dict[str, Any]]:
         """Obtains information about compute managers attached to this Fractal instance
 
         Parameters
         ----------
-        name : QueryStr, optional
-            Queries the managers name.
-        status : QueryStr, optional
-            Queries the manager's ``status`` field. Default is to search for only ACTIVE managers
-        limit : Optional[int], optional
+        id
+            ID assigned to the manager (this is not the UUID. This should be used very rarely).
+        name
+            Queries the managers name
+        cluster
+            Queries the managers cluster
+        hostname
+            Queries the managers hostname
+        status
+            Queries the manager's status field
+        modified_before
+            Query for managers last modified before a certain time
+        modified_after
+            Query for managers last modified after a certain time
+        include_log
+            If True, include the log entries for the manager
+        limit
             The maximum number of managers to query
-        skip : int, optional
+        skip
             The number of managers to skip in the query, used during pagination
-        full_return : bool, optional
-            Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
-        List[Dict[str, Any]]
-            A dictionary of each match that contains all the information for each manager
+        :
+            Metadata about the query results, and a list of dictionaries with information matching the specified query.
         """
 
-        if status is None and name is None:
-            status = [ManagerStatusEnum.active]
-
-        payload = {
-            "meta": {"limit": limit, "skip": skip},
-            "data": {"name": make_list(name), "status": make_list(status)},
+        query_body = {
+            "id": make_list(id),
+            "name": make_list(name),
+            "cluster": make_list(cluster),
+            "hostname": make_list(hostname),
+            "status": make_list(status),
+            "modified_before": modified_before,
+            "modified_after": modified_after,
+            "limit": limit,
+            "skip": skip,
         }
-        return self._automodel_request("manager", "get", payload, full_return=full_return)
+
+        if include_log:
+            query_body["include"] = ["*", "log"]
+
+        return self._auto_request(
+            "post",
+            "v1/manager/query",
+            ManagerQueryBody,
+            None,
+            Tuple[QueryMetadata, List[ComputeManager]],
+            query_body,
+            None,
+        )
 
     def query_server_stats(
         self,

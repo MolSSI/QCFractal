@@ -19,7 +19,7 @@ from werkzeug.exceptions import BadRequest, InternalServerError, HTTPException, 
 
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import _valid_encodings, SerializedResponse
-from qcfractal.exceptions import UserReportableError, AuthenticationFailure
+from qcfractal.exceptions import UserReportableError, AuthenticationFailure, ComputeManagerError
 from qcfractal.app.policyuniverse import Policy
 from qcfractal.portal.serialization import deserialize, serialize
 
@@ -210,6 +210,13 @@ def handle_userreport_error(error):
 def handle_auth_error(error):
     # This handles Authentication errors (invalid user, password, etc)
     return jsonify(msg=str(error)), 401
+
+
+@main.errorhandler(ComputeManagerError)
+def handle_compute_manager_error(error: ComputeManagerError):
+    # This handles errors with compute managers
+    # This is needed to tell managers that they should shutdown
+    return jsonify(msg=str(error), shutdown=error.shutdown), 400
 
 
 def check_access(fn):

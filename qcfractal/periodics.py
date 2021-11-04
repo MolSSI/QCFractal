@@ -12,7 +12,8 @@ import logging
 import time
 import weakref
 from datetime import datetime, timedelta
-from qcfractal.interface.models import ManagerStatusEnum, ComputeError
+from qcfractal.interface.models import ComputeError
+from .portal.components.managers import ManagerStatusEnum
 from .db_socket.socket import SQLAlchemySocket
 from .process_runner import ProcessBase, InterruptableSleep, SleepInterrupted
 
