@@ -18,7 +18,7 @@ dependencies:
   - cryptography
 
   # Storage dependencies
-  - alembic
+  - conda-forge::alembic
   - psycopg2 >=2.7
   - postgresql
   - sqlalchemy >=1.3,<1.4
@@ -44,5 +44,5 @@ dependencies:
   - parsl ==1.0.0
 
 #   QCArchive includes
-  - qcengine >=0.20
-  - qcelemental >=0.23
+  - qcengine >=0.20,<0.21
+  - qcelemental >=0.23,<0.24
