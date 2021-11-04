@@ -1,0 +1,53 @@
+name: Core Tests
+
+on:
+  push:
+    branches:
+      - master
+      - next
+  pull_request:
+    branches:
+      - master
+      - next
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        
+    steps:
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Clone the repository
+        uses: actions/checkout@v2
+
+      - name: Clone MaxMind test db
+        uses: actions/checkout@v2
+        with:
+          repository: maxmind/MaxMind-DB
+          path: qcfractal/tests/MaxMind-DB
+
+      - name: Install postgres
+        run: sudo apt update && sudo apt install postgresql postgresql-contrib
+ 
+      - name: Install package
+        shell: bash -l {0}
+        run: |
+          pip install -e .[tests]
+
+      - name: Run tests
+        shell: bash -l {0}
+        run: |
+          pytest -vs --cov=qcfractal --cov-report=xml qcfractal
+
+      - name: Code coverage
+        uses: codecov/codecov-action@v1
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: true
