@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 # for version checking
 import qcelemental
 import qcfractal
-import qcengine
 
 
 def format_query(ORMClass, **query: Union[None, str, int, Iterable[int], Iterable[str]]) -> List[Any]:
@@ -244,9 +243,9 @@ class SQLAlchemySocket:
             if db_ver.count() == 0:
                 elemental_version = qcelemental.__version__
                 fractal_version = qcfractal.__version__
-                engine_version = qcengine.__version__
                 current = VersionsORM(
-                    elemental_version=elemental_version, fractal_version=fractal_version, engine_version=engine_version
+                    elemental_version=elemental_version,
+                    fractal_version=fractal_version,
                 )
                 session.add(current)
                 session.commit()

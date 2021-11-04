@@ -17,7 +17,6 @@ from contextlib import contextmanager
 import numpy as np
 import pandas as pd
 import pytest
-import qcengine as qcng
 import requests
 from qcelemental.models import Molecule
 from qcelemental.models.results import WavefunctionProperties
@@ -157,7 +156,7 @@ if _programs["dask"]:
 else:
     _programs["dask.distributed"] = False
 
-_programs["dftd3"] = "dftd3" in qcng.list_available_programs()
+_programs["dftd3"] = False
 
 
 def has_module(name):

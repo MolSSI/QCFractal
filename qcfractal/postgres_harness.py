@@ -383,7 +383,7 @@ class PostgresHarness:
         """Update current version of QCFractal that is stored in the database
 
         This does not actually perform the upgrade, but will store the current versions of the software stack
-        (qcengine, qcelemental, qcfractal) into the database
+        (qcelemental, qcfractal) into the database
         """
 
         uri = self.config.uri
@@ -392,18 +392,14 @@ class PostgresHarness:
         try:
             import qcfractal
             import qcelemental
-            import qcengine
 
             elemental_version = qcelemental.__version__
             fractal_version = qcfractal.__version__
-            engine_version = qcengine.__version__
 
             self._logger.info(
                 f"Updating current version of QCFractal in DB: {uri} \n" f"to version {qcfractal.__version__}"
             )
-            current_ver = VersionsORM(
-                elemental_version=elemental_version, fractal_version=fractal_version, engine_version=engine_version
-            )
+            current_ver = VersionsORM(elemental_version=elemental_version, fractal_version=fractal_version)
             session.add(current_ver)
             session.commit()
         except Exception as e:

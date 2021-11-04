@@ -90,4 +90,3 @@ class VersionsORM(BaseORM):
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
     elemental_version = Column(String, nullable=False)
     fractal_version = Column(String, nullable=False)
-    engine_version = Column(String)

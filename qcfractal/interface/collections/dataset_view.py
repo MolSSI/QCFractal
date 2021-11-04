@@ -11,7 +11,8 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, List, NoReturn, Optional,
 
 import numpy as np
 import pandas as pd
-import h5py
+
+# import h5py
 from qcelemental.util.serialization import deserialize, serialize
 
 from ..models import Molecule, ObjectId
