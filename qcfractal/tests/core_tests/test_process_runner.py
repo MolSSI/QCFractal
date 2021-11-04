@@ -14,18 +14,22 @@ from qcfractal.app.flask_app import FlaskProcess
 from qcfractal.app.gunicorn_app import GunicornProcess
 from qcfractal.snowflake import SnowflakeComputeProcess
 
+# TODO - re-enable SnowflakeComputeProcess
+# _test_base_classes = [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess]
+_test_base_classes = [PeriodicsProcess, FlaskProcess, GunicornProcess]
 
-@pytest.mark.parametrize("test_base_class", [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
-def test_quick_stop(fractal_stopped_test_server, test_base_class):
+
+@pytest.mark.parametrize("test_base_class", _test_base_classes)
+def test_quick_stop(stopped_snowflake, test_base_class):
     """
     Tests that quickly starting then stopping a process is ok
     """
 
     # Snowflake compute requires running flask
     if test_base_class is SnowflakeComputeProcess:
-        fractal_stopped_test_server._flask_proc.start()
+        stopped_snowflake._flask_proc.start()
 
-    config = fractal_stopped_test_server._qcf_config
+    config = stopped_snowflake._qcf_config
     obj = test_base_class(config)
     runner = ProcessRunner(f"process_runner_{test_base_class.__name__}", obj, start=False)
     runner.start()
@@ -33,17 +37,17 @@ def test_quick_stop(fractal_stopped_test_server, test_base_class):
     assert runner.is_alive() is False
 
 
-@pytest.mark.parametrize("test_base_class", [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
-def test_normal_stop(fractal_stopped_test_server, test_base_class):
+@pytest.mark.parametrize("test_base_class", _test_base_classes)
+def test_normal_stop(stopped_snowflake, test_base_class):
     """
     Tests that stopping the process after 5 seconds is ok
     """
 
     # Snowflake compute requires running flask
     if test_base_class is SnowflakeComputeProcess:
-        fractal_stopped_test_server.start_flask()
+        stopped_snowflake.start_flask()
 
-    config = fractal_stopped_test_server._qcf_config
+    config = stopped_snowflake._qcf_config
     obj = test_base_class(config)
     runner = ProcessRunner(f"process_runner_{test_base_class.__name__}", obj, start=False)
     runner.start()
@@ -53,8 +57,8 @@ def test_normal_stop(fractal_stopped_test_server, test_base_class):
     assert runner.exitcode() == 0
 
 
-@pytest.mark.parametrize("test_base_class", [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
-def test_stop_in_setup(fractal_stopped_test_server, test_base_class):
+@pytest.mark.parametrize("test_base_class", _test_base_classes)
+def test_stop_in_setup(stopped_snowflake, test_base_class):
     """
     Tests that stopping the process while it is still in setup
     """
@@ -70,9 +74,9 @@ def test_stop_in_setup(fractal_stopped_test_server, test_base_class):
 
     # Snowflake compute requires running flask
     if test_base_class is SnowflakeComputeProcess:
-        fractal_stopped_test_server.start_flask()
+        stopped_snowflake.start_flask()
 
-    config = fractal_stopped_test_server._qcf_config
+    config = stopped_snowflake._qcf_config
     obj = MockClass(config)
     runner = ProcessRunner(f"process_runner_{test_base_class.__name__}", obj, start=False)
     runner.start()
@@ -83,8 +87,8 @@ def test_stop_in_setup(fractal_stopped_test_server, test_base_class):
     assert runner.exitcode() == 0
 
 
-@pytest.mark.parametrize("test_base_class", [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
-def test_stop_in_run(fractal_stopped_test_server, test_base_class):
+@pytest.mark.parametrize("test_base_class", _test_base_classes)
+def test_stop_in_run(stopped_snowflake, test_base_class):
     """
     Tests that stopping the process while it is in the run step
     """
@@ -99,9 +103,9 @@ def test_stop_in_run(fractal_stopped_test_server, test_base_class):
 
     # Snowflake compute requires running flask
     if test_base_class is SnowflakeComputeProcess:
-        fractal_stopped_test_server.start_flask()
+        stopped_snowflake.start_flask()
 
-    config = fractal_stopped_test_server._qcf_config
+    config = stopped_snowflake._qcf_config
     obj = MockClass(config)
     runner = ProcessRunner(f"process_runner_{test_base_class.__name__}", obj, start=False)
     runner.start()
@@ -112,8 +116,8 @@ def test_stop_in_run(fractal_stopped_test_server, test_base_class):
     assert runner.exitcode() == 0
 
 
-@pytest.mark.parametrize("test_base_class", [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
-def test_hang_in_setup(fractal_stopped_test_server, test_base_class):
+@pytest.mark.parametrize("test_base_class", _test_base_classes)
+def test_hang_in_setup(stopped_snowflake, test_base_class):
     """
     Tests that stopping the process while it is hanging in setup
     """
@@ -133,9 +137,9 @@ def test_hang_in_setup(fractal_stopped_test_server, test_base_class):
 
     # Snowflake compute requires running flask
     if test_base_class is SnowflakeComputeProcess:
-        fractal_stopped_test_server.start_flask()
+        stopped_snowflake.start_flask()
 
-    config = fractal_stopped_test_server._qcf_config
+    config = stopped_snowflake._qcf_config
     obj = MockClass(config)
     runner = ProcessRunner(f"process_runner_{test_base_class.__name__}", obj, start=False)
     runner.start()
@@ -146,8 +150,8 @@ def test_hang_in_setup(fractal_stopped_test_server, test_base_class):
     assert runner.exitcode() != 0
 
 
-@pytest.mark.parametrize("test_base_class", [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
-def test_hang_in_run(fractal_stopped_test_server, test_base_class):
+@pytest.mark.parametrize("test_base_class", _test_base_classes)
+def test_hang_in_run(stopped_snowflake, test_base_class):
     """
     Tests that stopping the process while it is hanging in run
     """
@@ -166,9 +170,9 @@ def test_hang_in_run(fractal_stopped_test_server, test_base_class):
 
     # Snowflake compute requires running flask
     if test_base_class is SnowflakeComputeProcess:
-        fractal_stopped_test_server.start_flask()
+        stopped_snowflake.start_flask()
 
-    config = fractal_stopped_test_server._qcf_config
+    config = stopped_snowflake._qcf_config
     obj = MockClass(config)
     runner = ProcessRunner(f"process_runner_{test_base_class.__name__}", obj, start=False)
     runner.start()
@@ -179,8 +183,8 @@ def test_hang_in_run(fractal_stopped_test_server, test_base_class):
     assert runner.exitcode() != 0
 
 
-@pytest.mark.parametrize("test_base_class", [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
-def test_exception_in_setup(fractal_stopped_test_server, test_base_class):
+@pytest.mark.parametrize("test_base_class", _test_base_classes)
+def test_exception_in_setup(stopped_snowflake, test_base_class):
     """
     Tests that raising an exception during setup() stops the process, returning non-zero exit code
     """
@@ -195,9 +199,9 @@ def test_exception_in_setup(fractal_stopped_test_server, test_base_class):
 
     # Snowflake compute requires running flask
     if test_base_class is SnowflakeComputeProcess:
-        fractal_stopped_test_server.start_flask()
+        stopped_snowflake.start_flask()
 
-    config = fractal_stopped_test_server._qcf_config
+    config = stopped_snowflake._qcf_config
     obj = MockClass(config)
     runner = ProcessRunner(f"process_runner_{test_base_class.__name__}", obj, start=False)
     runner.start()
@@ -207,8 +211,8 @@ def test_exception_in_setup(fractal_stopped_test_server, test_base_class):
     assert runner.exitcode() != 0
 
 
-@pytest.mark.parametrize("test_base_class", [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess])
-def test_exception_in_run(fractal_stopped_test_server, test_base_class):
+@pytest.mark.parametrize("test_base_class", _test_base_classes)
+def test_exception_in_run(stopped_snowflake, test_base_class):
     """
     Tests that raising an exception during run() stops the process, returning non-zero exit code
     """
@@ -222,9 +226,9 @@ def test_exception_in_run(fractal_stopped_test_server, test_base_class):
 
     # Snowflake compute requires running flask
     if test_base_class is SnowflakeComputeProcess:
-        fractal_stopped_test_server.start_flask()
+        stopped_snowflake.start_flask()
 
-    config = fractal_stopped_test_server._qcf_config
+    config = stopped_snowflake._qcf_config
     obj = MockClass(config)
     runner = ProcessRunner(f"process_runner_{test_base_class.__name__}", obj, start=False)
     runner.start()
