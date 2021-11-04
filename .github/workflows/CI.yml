@@ -44,9 +44,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
           activate-environment: qcarchive
           environment-file: devtools/conda-envs/${{ matrix.environ }}.yaml
-
-          channels: conda-forge,psi4,defaults
-
           auto-activate-base: false
           auto-update-conda: true
           show-channel-urls: true
