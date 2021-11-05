@@ -15,6 +15,22 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.15.7 / 2021-11-05
+-------------------
+
+Some minor additions/fixes, mostly to improve performance of some operations
+and to prevent consistency issues. The database migrations in (:pr:`676`) have
+been thoroughly tested, however please backup you database before ugrading!
+
+- (:pr:`683`) Fixes issue with keyword aliases not being compared case-insensitive
+- (:pr:`685`) Fixes issues with duplicate calculations, large client bodies, and efficiency of certain searches
+- (:pr:`686`) Pins qcelemental/qcengine versions
+- (:pr:`691`) Fix for some dftd3 calculations not working due to composition_planner
+- (:pr:`693`) Allow for additional keywords in torsiondrive optimizations
+- (:pr:`694`) Support (and pin) QCElemental v0.23 and QCEngine 0.20
+
+
+
 0.15.6 / 2021-06-06
 -------------------
 
