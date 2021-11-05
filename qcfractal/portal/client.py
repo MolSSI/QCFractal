@@ -398,15 +398,15 @@ class PortalClient:
         endpoint: str,
         *,
         body: Optional[Union[bytes, str]] = None,
-        query_params: Optional[Dict[str, Any]] = None,
+        url_params: Optional[Dict[str, Any]] = None,
         retry: Optional[bool] = True,
     ) -> requests.Response:
 
         addr = self.address + endpoint
         kwargs = {"data": body, "headers": self._headers, "verify": self._verify, "timeout": self._timeout}
 
-        if query_params:
-            kwargs["params"] = query_params
+        if url_params:
+            kwargs["params"] = url_params
 
         try:
             if method == "get":
@@ -449,13 +449,13 @@ class PortalClient:
         url_params_model: Optional[Type[_U]],
         response_model: Optional[Type[_V]],
         body: Optional[Union[_T, Dict[str, Any]]] = None,
-        query_params: Optional[Union[_U, Dict[str, Any]]] = None,
+        url_params: Optional[Union[_U, Dict[str, Any]]] = None,
     ) -> _V:
 
         if body_model is None and body is not None:
             raise RuntimeError("Body data not specified, but required")
 
-        if url_params_model is None and query_params is not None:
+        if url_params_model is None and url_params is not None:
             raise RuntimeError("Query parameters not specified, but required")
 
         serialized_body = None
@@ -463,11 +463,11 @@ class PortalClient:
             parsed_body = pydantic.parse_obj_as(body_model, body)
             serialized_body = serialize(parsed_body, self.encoding)
 
-        parsed_query_params = None
+        parsed_url_params = None
         if url_params_model is not None:
-            parsed_query_params = pydantic.parse_obj_as(url_params_model, query_params).dict()
+            parsed_url_params = pydantic.parse_obj_as(url_params_model, url_params).dict()
 
-        r = self._request2(method, endpoint, body=serialized_body, query_params=parsed_query_params)
+        r = self._request2(method, endpoint, body=serialized_body, url_params=parsed_url_params)
         d = deserialize(r.content, r.headers["Content-Type"])
 
         if response_model is None:
@@ -583,9 +583,9 @@ class PortalClient:
             Otherwise, it will be a single output.
         """
 
-        query_params = {"id": make_list(id), "missing_ok": missing_ok}
+        url_params = {"id": make_list(id), "missing_ok": missing_ok}
         outputs = self._auto_request(
-            "get", "v1/output", None, CommonGetURLParameters, List[Optional[OutputStore]], None, query_params
+            "get", "v1/output", None, CommonGetURLParameters, List[Optional[OutputStore]], None, url_params
         )
 
         if isinstance(id, Sequence):
@@ -618,9 +618,9 @@ class PortalClient:
             Otherwise, it will be a single Molecule.
         """
 
-        query_params = {"id": make_list(id), "missing_ok": missing_ok}
+        url_params = {"id": make_list(id), "missing_ok": missing_ok}
         mols = self._auto_request(
-            "get", "v1/molecule", None, CommonGetURLParameters, List[Optional[Molecule]], None, query_params
+            "get", "v1/molecule", None, CommonGetURLParameters, List[Optional[Molecule]], None, url_params
         )
 
         if isinstance(id, Sequence):
@@ -738,14 +738,14 @@ class PortalClient:
             Metadata about the modification/update.
         """
 
-        payload = {
+        body = {
             "name": name,
             "comment": comment,
             "identifiers": identifiers,
             "overwrite_identifiers": overwrite_identifiers,
         }
 
-        return self._auto_request("patch", f"v1/molecule/{id}", MoleculeModifyBody, None, UpdateMetadata, payload, None)
+        return self._auto_request("patch", f"v1/molecule/{id}", MoleculeModifyBody, None, UpdateMetadata, body, None)
 
     def delete_molecules(self, id: Union[int, Sequence[int]]) -> DeleteMetadata:
         """Deletes molecules from the server
@@ -763,9 +763,9 @@ class PortalClient:
             Metadata about what was deleted
         """
 
-        query_params = {"id": make_list(id)}
+        url_params = {"id": make_list(id)}
         return self._auto_request(
-            "delete", "v1/molecule", None, CommonDeleteURLParameters, DeleteMetadata, None, query_params
+            "delete", "v1/molecule", None, CommonDeleteURLParameters, DeleteMetadata, None, url_params
         )
 
     ### Keywords section
@@ -793,9 +793,9 @@ class PortalClient:
             Otherwise, it will be a single KeywordSet.
         """
 
-        query_params = {"id": make_list(id), "missing_ok": missing_ok}
+        url_params = {"id": make_list(id), "missing_ok": missing_ok}
         keywords = self._auto_request(
-            "get", "v1/keyword", None, CommonGetURLParameters, List[Optional[KeywordSet]], None, query_params
+            "get", "v1/keyword", None, CommonGetURLParameters, List[Optional[KeywordSet]], None, url_params
         )
 
         if isinstance(id, Sequence):
@@ -851,9 +851,9 @@ class PortalClient:
             Metadata about what was deleted
         """
 
-        query_params = {"id": make_list(id)}
+        url_params = {"id": make_list(id)}
         return self._auto_request(
-            "delete", "v1/keyword", None, CommonDeleteURLParameters, DeleteMetadata, None, query_params
+            "delete", "v1/keyword", None, CommonDeleteURLParameters, DeleteMetadata, None, url_params
         )
 
     ### Collections section
@@ -1052,7 +1052,7 @@ class PortalClient:
             Otherwise, it will be a single output.
         """
 
-        query_params = {"id": make_list(id), "missing_ok": missing_ok}
+        url_params = {"id": make_list(id), "missing_ok": missing_ok}
         wfns = self._auto_request(
             "get",
             "v1/wavefunction",
@@ -1060,7 +1060,7 @@ class PortalClient:
             CommonGetURLParameters,
             List[Optional[WavefunctionProperties]],
             None,
-            query_params,
+            url_params,
         )
 
         if isinstance(id, Sequence):
