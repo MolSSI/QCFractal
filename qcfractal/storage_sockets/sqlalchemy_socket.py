@@ -1221,7 +1221,11 @@ class SQLAlchemySocket:
 
                 if idx not in existing_results:
                     # Does not exist in the database. Construct a new ResultORM
-                    doc = ResultORM(**result.dict(exclude={"id"}))
+                    doc = ResultORM(**result.dict(exclude={"id", "properties"}))
+
+                    # Keep properties as JSON (PR #694)
+                    if result.properties is not None:
+                        doc.properties = result.properties.dict(encoding="json")
 
                     # Store in existing_results in case later records are duplicates
                     existing_results[idx] = doc
@@ -1313,7 +1317,12 @@ class SQLAlchemySocket:
                     self.logger.error("Attempted update without ID, skipping")
                     continue
 
-                data = result.dict(exclude={"id"})
+                # must use json encoding to remove numpy arrays of properties
+                data = result.dict(exclude={"id", "properties"})
+
+                if result.properties is not None:
+                    data["properties"] = result.properties.dict(encoding="json")
+
                 # retrieve the found item
                 found_db = found_dict[result.id]
 
