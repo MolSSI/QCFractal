@@ -63,22 +63,28 @@ def get_count_2(session, stmt):
 
 
 def get_query_proj_columns(
-    orm_type: Type[_ORM_T], include: Optional[Iterable[str]] = None, exclude: Optional[Iterable[str]] = None
+    orm_type: Type[_ORM_T],
+    include: Optional[Iterable[str]] = None,
+    exclude: Optional[Iterable[str]] = None,
+    default_exclude: Optional[Iterable[str]] = None,
 ) -> Tuple[Tuple[InstrumentedAttribute, ...], Tuple[InstrumentedAttribute, ...]]:
 
     columns, relationships = orm_type.get_col_types_2()
 
-    # If include is none, then include all the columns, but not relationships
+    default_entries = columns | relationships
+
+    if default_exclude:
+        default_entries -= set(default_exclude)
+
+    # By default, include all columns and relationships
     if include is None:
-        ret = columns.copy()
+        ret = default_entries.copy()
+    elif "*" in include:
+        ret = (set(include) | default_entries) - {"*"}
     else:
         ret = set(include)
 
-    # If "default" in the include list, then add in all the fields
-    if "*" in ret:
-        ret.update(columns)
-
-    if exclude is not None:
+    if exclude:
         ret -= set(exclude)
 
     # Split out which ones are columns and which are attributes
@@ -314,6 +320,7 @@ def get_general(
     search_values: Sequence[Any],
     include: Optional[Sequence[str]],
     exclude: Optional[Sequence[str]],
+    default_exclude: Optional[Sequence[str]],
     missing_ok: bool,
 ) -> List[Optional[Dict[str, Any]]]:
     """
@@ -322,6 +329,8 @@ def get_general(
     For a list of search values, obtain all the records, in input order. This function wraps a simple query
     to make sure that the returned ORM are in the same order as the input, and to optionally check that
     all required records exist.
+
+    Relationships that are to be loaded will be loaded via selectinload.
 
     Parameters
     ----------
@@ -333,6 +342,9 @@ def get_general(
         Which columns to include in the return. If specified, other columns will be excluded
     exclude
         Do not return these columns
+    default_exclude
+        If include is None, then all columns are returned, except for these columns, which are
+        excluded by default.
     search_col
         The column to use for searching the database (typically TableORM.id or similar)
     search_values
@@ -353,10 +365,23 @@ def get_general(
     if len(search_values) == 0:
         return []
 
-    unique_values = list(set(search_values))
-    load_cols, _ = get_query_proj_columns(orm_type, include, exclude)
+    # We must make sure the column we are searching for is included
+    if include is not None:
+        include = set(include) | {search_col.key}
+    if exclude is not None:
+        exclude = set(exclude) - {search_col.key}
 
-    results = session.query(orm_type).filter(search_col.in_(unique_values)).options(load_only(*load_cols)).all()
+    unique_values = list(set(search_values))
+    load_cols, load_rels = get_query_proj_columns(orm_type, include, exclude, default_exclude)
+
+    stmt = select(orm_type).filter(search_col.in_(unique_values))
+    stmt = stmt.options(load_only(*load_cols))
+
+    if load_rels:
+        loads = [selectinload(x) for x in load_rels]
+        stmt = stmt.options(*loads)
+
+    results = session.execute(stmt).scalars().all()
 
     col_name = search_col.key
     result_list = [r.dict() for r in results]
