@@ -36,6 +36,10 @@ def before_request_func():
     # g here refers to flask.g
     g.request_start = time.time()
 
+    g.request_bytes = None
+    if request.data:
+        g.request_bytes = len(request.data)
+
     # The rest of this function is only for old endpoints
     if request.path.startswith("/v1/"):
         return
@@ -119,15 +123,8 @@ def after_request_func(response: SerializedResponse):
     # g here refers to flask.g
     request_duration = time.time() - g.request_start
 
-    exclude_uris = ["/task_queue", "/service_queue", "/queue_manager"]
-
-    # No associated data, so skip all of this
-    # (maybe caused by not using portal or not using the REST API correctly?)
-    if request.data is None:
-        return response
-
     log_access = current_app.config["QCFRACTAL_CONFIG"].log_access
-    if log_access and request.method == "GET" and request.path not in exclude_uris:
+    if log_access:
         # What we are going to log to the DB
         log = {}
         log["access_type"] = request.path[1:]  # remove /
@@ -144,6 +141,9 @@ def after_request_func(response: SerializedResponse):
 
         log["ip_address"] = real_ip
         log["user_agent"] = request.headers["User-Agent"]
+
+        if g.request_bytes:
+            log["request_bytes"] = g.request_bytes
 
         log["request_duration"] = request_duration
         log["user"] = g.user if "user" in g else None

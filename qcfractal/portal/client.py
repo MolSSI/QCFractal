@@ -40,6 +40,13 @@ from ..interface.models import (
 
 from .metadata_models import InsertMetadata, DeleteMetadata
 from .components.outputstore import OutputStore
+from .components.serverinfo import (
+    AccessLogQueryParameters,
+    AccessLogQuerySummaryParameters,
+    ErrorLogQueryParameters,
+    ServerStatsQueryParameters,
+    DeleteBeforeDateParameters,
+)
 from .common_rest import CommonGetURLParameters, CommonDeleteURLParameters
 from .components.molecules import MoleculeQueryBody, MoleculeModifyBody
 from .components.wavefunctions.models import WavefunctionProperties
@@ -1620,15 +1627,23 @@ class PortalClient:
         after: Optional[datetime] = None,
         limit: Optional[int] = None,
         skip: int = 0,
-        full_return: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
         """Obtains individual entries in the server stats logs"""
 
-        payload = {
-            "meta": {"limit": limit, "skip": skip},
-            "data": {"before": before, "after": after},
-        }
-        return self._automodel_request("server_stats", "get", payload, full_return=full_return)
+        url_params = {"before": before, "after": after, "limit": limit, "skip": skip}
+        return self._auto_request(
+            "get",
+            "v1/server_stats",
+            None,
+            ServerStatsQueryParameters,
+            Tuple[QueryMetadata, List[Dict[str, Any]]],
+            None,
+            url_params,
+        )
+
+    def delete_server_stats(self, before: datetime):
+        url_params = {"before": before}
+        return self._auto_request("delete", "v1/server_stats", None, DeleteBeforeDateParameters, int, None, url_params)
 
     def query_access_log(
         self,
@@ -1638,38 +1653,65 @@ class PortalClient:
         after: Optional[datetime] = None,
         limit: Optional[int] = None,
         skip: int = 0,
-        full_return: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> Tuple[QueryMetadata, Dict[str, Any]]:
         """Obtains individual entries in the access logs"""
 
-        payload = {
-            "meta": {"limit": limit, "skip": skip},
-            "data": {
-                "access_type": make_list(access_type),
-                "access_method": make_list(access_method),
-                "before": before,
-                "after": after,
-            },
+        url_params = {
+            "access_type": make_list(access_type),
+            "access_method": make_list(access_method),
+            "before": before,
+            "after": after,
+            "limit": limit,
+            "skip": skip,
         }
-        return self._automodel_request("access/log", "get", payload, full_return=full_return)
+
+        return self._auto_request(
+            "get",
+            "v1/access",
+            None,
+            AccessLogQueryParameters,
+            Tuple[QueryMetadata, List[Dict[str, Any]]],
+            None,
+            url_params,
+        )
+
+    def delete_access_log(self, before: datetime):
+        url_params = {"before": before}
+        return self._auto_request("delete", "v1/access", None, DeleteBeforeDateParameters, int, None, url_params)
 
     def query_error_log(
         self,
         id: QueryObjectId = None,
-        user: QueryStr = None,
+        username: QueryStr = None,
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
         limit: Optional[int] = None,
         skip: int = 0,
-        full_return: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> Tuple[QueryMetadata, Dict[str, Any]]:
         """Obtains individual entries in the access logs"""
 
-        payload = {
-            "meta": {"limit": limit, "skip": skip},
-            "data": {"id": make_list(id), "user": make_list(user), "before": before, "after": after},
+        url_params = {
+            "id": make_list(id),
+            "username": make_list(username),
+            "before": before,
+            "after": after,
+            "limit": limit,
+            "skip": skip,
         }
-        return self._automodel_request("error", "get", payload, full_return=full_return)
+
+        return self._auto_request(
+            "get",
+            "v1/server_error",
+            None,
+            ErrorLogQueryParameters,
+            Tuple[QueryMetadata, List[Dict[str, Any]]],
+            None,
+            url_params,
+        )
+
+    def delete_error_log(self, before: datetime):
+        url_params = {"before": before}
+        return self._auto_request("delete", "v1/server_error", None, DeleteBeforeDateParameters, int, None, url_params)
 
     def query_access_summary(
         self,
@@ -1689,11 +1731,15 @@ class PortalClient:
             Query for log entries with a timestamp after a specific time
         """
 
-        payload = {
-            "meta": {},
-            "data": {"group_by": group_by, "before": before, "after": after},
+        url_params = {
+            "group_by": group_by,
+            "before": before,
+            "after": after,
         }
-        return self._automodel_request("access/summary", "get", payload, full_return=False)
+
+        return self._auto_request(
+            "get", "v1/access/summary", None, AccessLogQuerySummaryParameters, Dict[str, Any], None, url_params
+        )
 
     def list_roles(self) -> List[RoleInfo]:
         """

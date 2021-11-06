@@ -1,6 +1,7 @@
 import datetime
 
-from sqlalchemy import Column, Integer, DateTime, String, Float, BigInteger, JSON, Index
+from sqlalchemy import Column, Integer, DateTime, String, Float, BigInteger, JSON, Index, CHAR
+from sqlalchemy.dialects.postgresql import INET
 
 from qcfractal.db_socket import BaseORM
 
@@ -9,11 +10,12 @@ class AccessLogORM(BaseORM):
     __tablename__ = "access_log"
 
     id = Column(Integer, primary_key=True)
-    access_date = Column(DateTime, default=datetime.datetime.utcnow, index=True)
+    access_date = Column(DateTime, nullable=False, default=datetime.datetime.utcnow, index=True)
     access_method = Column(String, nullable=False)
     access_type = Column(String, nullable=False, index=True)
 
     request_duration = Column(Float)
+    request_bytes = Column(BigInteger)
     response_bytes = Column(BigInteger)
 
     # Because logging happens every request, we store the user as a string
@@ -27,25 +29,23 @@ class AccessLogORM(BaseORM):
     extra_params = Column(String)
 
     # user info
-    ip_address = Column(String)
+    ip_address = Column(INET)
     user_agent = Column(String)
 
     # extra computed geo data
-    city = Column(String)
-    country = Column(String)
-    country_code = Column(String)
-    ip_lat = Column(String)
-    ip_long = Column(String)
-    postal_code = Column(String)
+    country_code = Column(CHAR(2))
     subdivision = Column(String)
+    city = Column(String)
+    ip_lat = Column(Float)
+    ip_long = Column(Float)
 
 
 class InternalErrorLogORM(BaseORM):
     __tablename__ = "internal_error_log"
 
     id = Column(Integer, primary_key=True)
-    error_date = Column(DateTime, default=datetime.datetime.utcnow, index=True)
-    qcfractal_version = Column(String)
+    error_date = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    qcfractal_version = Column(String, nullable=False)
     error_text = Column(String)
     user = Column(String)
 
@@ -53,20 +53,22 @@ class InternalErrorLogORM(BaseORM):
     request_headers = Column(String)
     request_body = Column(String)
 
+    __table_args__ = (Index("ix_internal_error_log_error_date", "error_date"),)
+
 
 class ServerStatsLogORM(BaseORM):
     __tablename__ = "server_stats_log"
 
     id = Column(Integer, primary_key=True)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    timestamp = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
 
     # Raw counts
     collection_count = Column(Integer)
-    molecule_count = Column(Integer)
-    result_count = Column(Integer)
-    kvstore_count = Column(Integer)
-    access_count = Column(Integer)
-    error_count = Column(Integer)
+    molecule_count = Column(BigInteger)
+    result_count = Column(BigInteger)
+    outputstore_count = Column(BigInteger)
+    access_count = Column(BigInteger)
+    error_count = Column(BigInteger)
 
     # Task & service queue status
     task_queue_status = Column(JSON)

@@ -3,21 +3,21 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from sqlalchemy import and_, func, text
+from sqlalchemy import and_, func, text, select, delete
 from sqlalchemy.orm import load_only
+
 import qcfractal
-from qcfractal.portal.metadata_models import QueryMetadata
 from qcfractal.components.datasets.db_models import CollectionORM
-from qcfractal.components.services.db_models import ServiceQueueORM
-from qcfractal.components.tasks.db_models import TaskQueueORM
+from qcfractal.components.molecules.db_models import MoleculeORM
+from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.records.db_models import BaseResultORM
 from qcfractal.components.serverinfo.db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM
-from qcfractal.components.outputstore.db_models import OutputStoreORM
-from qcfractal.components.molecules.db_models import MoleculeORM
-from qcfractal.db_socket.helpers import get_query_proj_columns, get_count, calculate_limit
-
-from typing import TYPE_CHECKING
+from qcfractal.components.services.db_models import ServiceQueueORM
+from qcfractal.components.tasks.db_models import TaskQueueORM
+from qcfractal.db_socket.helpers import get_query_proj_columns, get_count_2, calculate_limit
+from qcfractal.portal.metadata_models import QueryMetadata
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -72,19 +72,17 @@ class ServerInfoSocket:
 
         try:
             loc_data = self._geoip2_reader.city(ip_address)
-            out["city"] = loc_data.city.name
-            out["country"] = loc_data.country.name
             out["country_code"] = loc_data.country.iso_code
-            out["ip_lat"] = str(loc_data.location.latitude)
-            out["ip_long"] = str(loc_data.location.longitude)
-            out["postal_code"] = loc_data.postal.code
             out["subdivision"] = loc_data.subdivisions.most_specific.name
+            out["city"] = loc_data.city.name
+            out["ip_lat"] = loc_data.location.latitude
+            out["ip_long"] = loc_data.location.longitude
         except:
             pass
 
         return out
 
-    def save_access(self, log_data: AccessLogDict, *, session: Optional[Session] = None) -> int:
+    def save_access(self, log_data: AccessLogDict, *, session: Optional[Session] = None) -> None:
         """
         Saves information about an access to the database
 
@@ -95,11 +93,6 @@ class ServerInfoSocket:
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed before returning from this function.
-
-        Returns
-        -------
-        :
-            The id of the newly-created log entry
         """
 
         if self._access_log_enabled is not True:
@@ -111,8 +104,6 @@ class ServerInfoSocket:
         with self.root_socket.optional_session(session) as session:
             log = AccessLogORM(**log_data, **ip_data)  # type: ignore
             session.add(log)
-            session.flush()
-            return log.id
 
     def save_error(self, error_data: ErrorLogDict, *, session: Optional[Session] = None) -> int:
         """
@@ -138,7 +129,7 @@ class ServerInfoSocket:
             session.flush()
             return log.id
 
-    def update_stats(self, *, session: Optional[Session] = None) -> int:
+    def update_server_stats(self, *, session: Optional[Session] = None):
         """
         Obtains some statistics about the server and stores them in the database
 
@@ -147,11 +138,6 @@ class ServerInfoSocket:
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed before returning from this function.
-
-        Returns
-        -------
-        :
-            The ID of the newly-created statistics entry
         """
 
         table_list = [CollectionORM, MoleculeORM, BaseResultORM, OutputStoreORM, AccessLogORM, InternalErrorLogORM]
@@ -187,7 +173,6 @@ class ServerInfoSocket:
             }
 
             # Task queue and Service queue status
-            # TODO - kind of pointless now?
             task_query = (
                 session.query(BaseResultORM.procedure, BaseResultORM.status, func.count(TaskQueueORM.id))
                 .join(BaseResultORM, BaseResultORM.id == TaskQueueORM.base_result_id)
@@ -216,7 +201,7 @@ class ServerInfoSocket:
                 "collection_count": table_counts[CollectionORM.__tablename__],
                 "molecule_count": table_counts[MoleculeORM.__tablename__],
                 "result_count": table_counts[BaseResultORM.__tablename__],
-                "kvstore_count": table_counts[OutputStoreORM.__tablename__],
+                "outputstore_count": table_counts[OutputStoreORM.__tablename__],
                 "access_count": table_counts[AccessLogORM.__tablename__],
                 "error_count": table_counts[InternalErrorLogORM.__tablename__],
                 "task_queue_status": task_stats,
@@ -229,10 +214,257 @@ class ServerInfoSocket:
 
             log = ServerStatsLogORM(**data)  # type: ignore
             session.add(log)
-            session.flush()
-            return log.id
 
-    def query_stats(
+    def query_access_log(
+        self,
+        access_type: Optional[Iterable[str]] = None,
+        access_method: Optional[Iterable[str]] = None,
+        username: Optional[Iterable[str]] = None,
+        before: Optional[datetime] = None,
+        after: Optional[datetime] = None,
+        include: Optional[Iterable[str]] = None,
+        exclude: Optional[Iterable[str]] = None,
+        limit: int = None,
+        skip: int = 0,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[QueryMetadata, List[AccessLogDict]]:
+        """
+        General query of server access logs
+
+        All search criteria are merged via 'and'. Therefore, records will only
+        be found that match all the criteria.
+
+        The entries will be returned in chronological order, with the most
+        recent being first.
+
+        Parameters
+        ----------
+        access_type
+            Type of access to query (typically related to the endpoint)
+        access_method
+            The method of access (GET, POST)
+        username
+            The name of the user that made the request
+        before
+            Query for log entries with a timestamp before a specific time
+        after
+            Query for log entries with a timestamp after a specific time
+        include
+            Which fields of the access log return. Default is to return all fields.
+        exclude
+            Remove these fields from the return. Default is to return all fields.
+        limit
+            Limit the number of results. If None, the server limit will be used.
+            This limit will not be respected if greater than the configured limit of the server.
+        skip
+            Skip this many results from the total list of matches. The limit will apply after skipping,
+            allowing for pagination.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of access log dictionaries
+        """
+
+        limit = calculate_limit(self._access_log_limit, limit)
+
+        load_cols, _ = get_query_proj_columns(AccessLogORM, include, exclude)
+
+        and_query = []
+        if access_type:
+            and_query.append(AccessLogORM.access_type.in_(access_type))
+        if access_method:
+            access_method = [x.upper() for x in access_method]
+            and_query.append(AccessLogORM.access_method.in_(access_method))
+        if username:
+            and_query.append(AccessLogORM.user.in_(username))
+        if before:
+            and_query.append(AccessLogORM.access_date <= before)
+        if after:
+            and_query.append(AccessLogORM.access_date >= after)
+
+        with self.root_socket.optional_session(session, True) as session:
+            stmt = select(AccessLogORM).where(and_(*and_query)).order_by(AccessLogORM.access_date.desc())
+            stmt = stmt.options(load_only(*load_cols))
+            n_found = get_count_2(session, stmt)
+            stmt = stmt.limit(limit).offset(skip)
+            results = session.execute(stmt).scalars().all()
+            result_dicts = [x.dict() for x in results]
+
+        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
+        return meta, result_dicts
+
+    def query_access_summary(
+        self,
+        group_by: str = "day",
+        before: Optional[datetime] = None,
+        after: Optional[datetime] = None,
+        *,
+        session: Optional[Session] = None,
+    ) -> AccessLogSummaryDict:
+        """
+        General query of server access logs, returning aggregate data
+
+        All search criteria are merged via 'and'. Therefore, records will only
+        be found that match all the criteria.
+
+        Parameters
+        ----------
+        group_by
+            How to group the data. Valid options are "hour", "day", "country", "subdivision"
+        before
+            Query for log entries with a timestamp before a specific time
+        after
+            Query for log entries with a timestamp after a specific time
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of dictionaries containing summary data
+        """
+
+        group_by = group_by.lower()
+
+        and_query = []
+        if before:
+            and_query.append(AccessLogORM.access_date < before)
+        if after:
+            and_query.append(AccessLogORM.access_date > after)
+
+        result_dict = defaultdict(list)
+        with self.root_socket.optional_session(session, True) as session:
+            if group_by == "user":
+                group_col = AccessLogORM.user.label("group_col")
+            elif group_by == "day":
+                group_col = func.to_char(AccessLogORM.access_date, "YYYY-MM-DD").label("group_col")
+            elif group_by == "hour":
+                group_col = func.to_char(AccessLogORM.access_date, "YYYY-MM-DD HH24").label("group_col")
+            elif group_by == "country":
+                group_col = AccessLogORM.country_code.label("group_col")
+            elif group_by == "subdivision":
+                group_col = AccessLogORM.subdivision.label("group_col")
+            else:
+                raise RuntimeError(f"Unknown group_by: {group_by}")
+
+            stmt = select(
+                group_col,
+                AccessLogORM.access_type,
+                AccessLogORM.access_method,
+                func.count(AccessLogORM.id),
+                func.min(AccessLogORM.request_duration),
+                func.percentile_disc(0.25).within_group(AccessLogORM.request_duration),
+                func.percentile_disc(0.5).within_group(AccessLogORM.request_duration),
+                func.percentile_disc(0.75).within_group(AccessLogORM.request_duration),
+                func.percentile_disc(0.95).within_group(AccessLogORM.request_duration),
+                func.max(AccessLogORM.request_duration),
+                func.min(AccessLogORM.response_bytes),
+                func.percentile_disc(0.25).within_group(AccessLogORM.response_bytes),
+                func.percentile_disc(0.5).within_group(AccessLogORM.response_bytes),
+                func.percentile_disc(0.75).within_group(AccessLogORM.response_bytes),
+                func.percentile_disc(0.95).within_group(AccessLogORM.response_bytes),
+                func.max(AccessLogORM.response_bytes),
+            )
+
+            stmt = stmt.where(and_(*and_query)).group_by(
+                AccessLogORM.access_type, AccessLogORM.access_method, "group_col"
+            )
+
+            results = session.execute(stmt).all()
+
+            # What comes out is a tuple in order of the specified columns
+            # We group into a dictionary where the key is the date, and the value
+            # is a dictionary with the rest of the information
+            for row in results:
+                d = {
+                    "access_type": row[1],
+                    "access_method": row[2],
+                    "count": row[3],
+                    "request_duration_info": row[4:10],
+                    "response_bytes_info": row[10:16],
+                }
+                result_dict[row[0]].append(d)
+
+        # replace None with "_none_"
+        if None in result_dict:
+            if "_none_" in result_dict:
+                raise RuntimeError("Key _none_ already exists. Weird username or country?")
+            result_dict["_none_"] = result_dict.pop(None)
+
+        return dict(result_dict)
+
+    def query_error_log(
+        self,
+        id: Optional[Iterable[int]] = None,
+        username: Optional[Iterable[str]] = None,
+        before: Optional[datetime] = None,
+        after: Optional[datetime] = None,
+        limit: int = None,
+        skip: int = 0,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[QueryMetadata, List[AccessLogDict]]:
+        """
+        General query of server internal error logs
+
+        All search criteria are merged via 'and'. Therefore, records will only
+        be found that match all the criteria.
+
+        The entries will be returned in chronological order, with the most
+        recent being first.
+
+        Parameters
+        ----------
+        id
+            Query based on the error id
+        username
+            Query for errors from a given user name
+        before
+            Query for log entries with a timestamp before a specific time
+        after
+            Query for log entries with a timestamp after a specific time
+        limit
+            Limit the number of results. If None, the server limit will be used.
+            This limit will not be respected if greater than the configured limit of the server.
+        skip
+            Skip this many results from the total list of matches. The limit will apply after skipping,
+            allowing for pagination.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of error dictionaries that were found in the database.
+        """
+
+        limit = calculate_limit(self._access_log_limit, limit)
+
+        and_query = []
+        if id:
+            and_query.append(InternalErrorLogORM.id.in_(id))
+        if username:
+            and_query.append(InternalErrorLogORM.user.in_(username))
+        if before:
+            and_query.append(InternalErrorLogORM.error_date < before)
+        if after:
+            and_query.append(InternalErrorLogORM.error_date > after)
+
+        with self.root_socket.optional_session(session, True) as session:
+            stmt = select(InternalErrorLogORM).where(and_(*and_query)).order_by(InternalErrorLogORM.error_date.desc())
+            n_found = get_count_2(session, stmt)
+            stmt = stmt.limit(limit).offset(skip)
+            results = session.execute(stmt).scalars().all()
+            result_dicts = [x.dict() for x in results]
+
+        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
+        return meta, result_dicts
+
+    def query_server_stats(
         self,
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
@@ -272,288 +504,73 @@ class ServerInfoSocket:
 
         and_query = []
         if before:
-            and_query.append(ServerStatsLogORM.timestamp <= before)
+            and_query.append(ServerStatsLogORM.timestamp < before)
         if after:
-            and_query.append(ServerStatsLogORM.timestamp >= after)
+            and_query.append(ServerStatsLogORM.timestamp > after)
 
         with self.root_socket.optional_session(session, True) as session:
-            query = (
-                session.query(ServerStatsLogORM).filter(and_(*and_query)).order_by(ServerStatsLogORM.timestamp.desc())
-            )
-            n_found = get_count(query)
-            results = query.limit(limit).offset(skip).all()
+            stmt = select(ServerStatsLogORM).filter(and_(*and_query)).order_by(ServerStatsLogORM.timestamp.desc())
+            n_found = get_count_2(session, stmt)
+            stmt = stmt.limit(limit).offset(skip)
+            results = session.execute(stmt).scalars().all()
             result_dicts = [x.dict() for x in results]
 
         meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
         return meta, result_dicts
 
-    def get_latest_stats(self, *, session: Optional[Session] = None) -> ServerStatsDict:
+    def delete_access_logs(self, before: datetime, *, session: Optional[Session] = None) -> int:
         """
-        Obtain the latest statistics for the server
-
-        If none are found, the server is updated and the new results returned
+        Deletes access logs that were created before a certain date & time
 
         Parameters
         ----------
-        session
-            An existing SQLAlchemy session to use. If None, one will be created
-
-        Returns
-        -------
-        :
-            A dictionary containing the latest server stats
-        """
-
-        meta, stats = self.query_stats(limit=1, session=session)
-        if meta.n_returned == 0:
-            # we don't have any?
-            self.update_stats()
-
-            meta, stats = self.query_stats(limit=1, session=session)
-            if meta.n_returned == 0:
-                raise RuntimeError("No stats available and none could be created?")
-            return stats[0]
-        else:
-            return stats[0]
-
-    def query_access_logs(
-        self,
-        access_type: Optional[List[str]] = None,
-        access_method: Optional[List[str]] = None,
-        before: Optional[datetime] = None,
-        after: Optional[datetime] = None,
-        include: Optional[Iterable[str]] = None,
-        exclude: Optional[Iterable[str]] = None,
-        limit: int = None,
-        skip: int = 0,
-        *,
-        session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[AccessLogDict]]:
-        """
-        General query of server access logs
-
-        All search criteria are merged via 'and'. Therefore, records will only
-        be found that match all the criteria.
-
-        Parameters
-        ----------
-        access_type
-            Type of access to query (typically related to the endpoint)
-        access_method
-            The method of access (GET, POST)
         before
-            Query for log entries with a timestamp before a specific time
-        after
-            Query for log entries with a timestamp after a specific time
-        include
-            Which fields of the access log return. Default is to return all fields.
-        exclude
-            Remove these fields from the return. Default is to return all fields.
-        limit
-            Limit the number of results. If None, the server limit will be used.
-            This limit will not be respected if greater than the configured limit of the server.
-        skip
-            Skip this many results from the total list of matches. The limit will apply after skipping,
-            allowing for pagination.
-        session
-            An existing SQLAlchemy session to use. If None, one will be created
+            Delete access logs before this time
 
         Returns
         -------
-        :
-            Metadata about the results of the query, and a list of Molecule that were found in the database.
+            The number of deleted entries
         """
 
-        limit = calculate_limit(self._access_log_limit, limit)
+        with self.root_socket.optional_session(session, False) as session:
+            stmt = delete(AccessLogORM).where(AccessLogORM.access_date < before)
+            r = session.execute(stmt)
+            return r.rowcount
 
-        load_cols, _ = get_query_proj_columns(AccessLogORM, include, exclude)
-
-        and_query = []
-        if access_type:
-            and_query.append(AccessLogORM.access_type.in_(access_type))
-        if access_method:
-            access_method = [x.upper() for x in access_method]
-            and_query.append(AccessLogORM.access_method.in_(access_method))
-        if before:
-            and_query.append(AccessLogORM.access_date <= before)
-        if after:
-            and_query.append(AccessLogORM.access_date >= after)
-
-        with self.root_socket.optional_session(session, True) as session:
-            query = session.query(AccessLogORM).filter(and_(*and_query)).order_by(AccessLogORM.access_date.desc())
-            query = query.options(load_only(*load_cols))
-            n_found = get_count(query)
-            results = query.limit(limit).offset(skip).all()
-            result_dicts = [x.dict() for x in results]
-
-        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
-        return meta, result_dicts
-
-    def query_access_summary(
-        self,
-        group_by: str = "day",
-        before: Optional[datetime] = None,
-        after: Optional[datetime] = None,
-        *,
-        session: Optional[Session] = None,
-    ) -> AccessLogSummaryDict:
+    def delete_error_logs(self, before: datetime, *, session: Optional[Session] = None) -> int:
         """
-        General query of server access logs
-
-        All search criteria are merged via 'and'. Therefore, records will only
-        be found that match all the criteria.
+        Deletes error entries that were created before a certain date & time
 
         Parameters
         ----------
-        group_by
-            How to group the data. Valid options are "hour", "day", "country", "subdivision"
         before
-            Query for log entries with a timestamp before a specific time
-        after
-            Query for log entries with a timestamp after a specific time
-        session
-            An existing SQLAlchemy session to use. If None, one will be created
+            Delete error entries before this time
 
         Returns
         -------
-        :
-            Metadata about the results of the query, and a list of Molecule that were found in the database.
+            The number of deleted entries
         """
 
-        group_by = group_by.lower()
+        with self.root_socket.optional_session(session, False) as session:
+            stmt = delete(InternalErrorLogORM).where(InternalErrorLogORM.error_date < before)
+            r = session.execute(stmt)
+            return r.rowcount
 
-        and_query = []
-        if before:
-            and_query.append(AccessLogORM.access_date <= before)
-        if after:
-            and_query.append(AccessLogORM.access_date >= after)
-
-        result_dict = defaultdict(list)
-        with self.root_socket.optional_session(session, True) as session:
-            if group_by == "user":
-                group_col = AccessLogORM.user.label("group_col")
-            elif group_by == "day":
-                group_col = func.to_char(AccessLogORM.access_date, "YYYY-MM-DD").label("group_col")
-            elif group_by == "hour":
-                group_col = func.to_char(AccessLogORM.access_date, "YYYY-MM-DD HH24").label("group_col")
-            elif group_by == "country":
-                group_col = AccessLogORM.country.label("group_col")
-            elif group_by == "subdivision":
-                group_col = AccessLogORM.subdivision.label("group_col")
-            else:
-                raise RuntimeError(f"Unknown group_by: {group_by}")
-
-            query = session.query(
-                group_col,
-                AccessLogORM.access_type,
-                AccessLogORM.access_method,
-                func.count(AccessLogORM.id),
-                func.min(AccessLogORM.request_duration),
-                func.percentile_disc(0.25).within_group(AccessLogORM.request_duration),
-                func.percentile_disc(0.5).within_group(AccessLogORM.request_duration),
-                func.percentile_disc(0.75).within_group(AccessLogORM.request_duration),
-                func.percentile_disc(0.95).within_group(AccessLogORM.request_duration),
-                func.max(AccessLogORM.request_duration),
-                func.min(AccessLogORM.response_bytes),
-                func.percentile_disc(0.25).within_group(AccessLogORM.response_bytes),
-                func.percentile_disc(0.5).within_group(AccessLogORM.response_bytes),
-                func.percentile_disc(0.75).within_group(AccessLogORM.response_bytes),
-                func.percentile_disc(0.95).within_group(AccessLogORM.response_bytes),
-                func.max(AccessLogORM.response_bytes),
-            )
-            query = query.filter(and_(*and_query)).group_by(
-                AccessLogORM.access_type, AccessLogORM.access_method, "group_col"
-            )
-
-            results = query.all()
-
-            # What comes out is a tuple in order of the specified columns
-            # We group into a dictionary where the key is the date, and the value
-            # is a dictionary with the rest of the information
-            for row in results:
-                d = {
-                    "access_type": row[1],
-                    "access_method": row[2],
-                    "count": row[3],
-                    "request_duration_info": row[4:10],
-                    "response_bytes_info": row[10:16],
-                }
-                result_dict[row[0]].append(d)
-
-        # replace None with "_none_"
-        if None in result_dict:
-            if "_none_" in result_dict:
-                raise RuntimeError("Key _none_ already exists. Weird username or country?")
-            result_dict["_none_"] = result_dict.pop(None)
-
-        return dict(result_dict)
-
-    def query_error_logs(
-        self,
-        id: Optional[List[int]] = None,
-        user: Optional[List[str]] = None,
-        before: Optional[datetime] = None,
-        after: Optional[datetime] = None,
-        limit: int = None,
-        skip: int = 0,
-        *,
-        session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[AccessLogDict]]:
+    def delete_server_stats(self, before: datetime, *, session: Optional[Session] = None) -> int:
         """
-        General query of server internal error logs
-
-        All search criteria are merged via 'and'. Therefore, records will only
-        be found that match all the criteria.
+        Deletes server statistics that were created before a certain date & time
 
         Parameters
         ----------
-        id
-            Query based on the error id
-        user
-            Query for errors from a given user
         before
-            Query for log entries with a timestamp before a specific time
-        after
-            Query for log entries with a timestamp after a specific time
-        limit
-            Limit the number of results. If None, the server limit will be used.
-            This limit will not be respected if greater than the configured limit of the server.
-        skip
-            Skip this many results from the total list of matches. The limit will apply after skipping,
-            allowing for pagination.
-        session
-            An existing SQLAlchemy session to use. If None, one will be created
+            Delete server stats before this time
 
         Returns
         -------
-        :
-            Metadata about the results of the query, and a list of Molecule that were found in the database.
+            The number of deleted entries
         """
 
-        limit = calculate_limit(self._access_log_limit, limit)
-
-        load_cols, _ = get_query_proj_columns(InternalErrorLogORM)
-
-        and_query = []
-        if id:
-            and_query.append(InternalErrorLogORM.id.in_(id))
-        if user:
-            and_query.append(InternalErrorLogORM.user.in_(user))
-        if before:
-            and_query.append(InternalErrorLogORM.error_date <= before)
-        if after:
-            and_query.append(InternalErrorLogORM.error_date >= after)
-
-        with self.root_socket.optional_session(session, True) as session:
-            query = (
-                session.query(InternalErrorLogORM)
-                .filter(and_(*and_query))
-                .order_by(InternalErrorLogORM.error_date.desc())
-            )
-            query = query.options(load_only(*load_cols))
-            n_found = get_count(query)
-            results = query.limit(limit).offset(skip).all()
-            result_dicts = [x.dict() for x in results]
-
-        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
-        return meta, result_dicts
+        with self.root_socket.optional_session(session, False) as session:
+            stmt = delete(ServerStatsLogORM).where(ServerStatsLogORM.timestamp < before)
+            r = session.execute(stmt)
+            return r.rowcount
