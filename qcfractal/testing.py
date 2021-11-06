@@ -34,6 +34,9 @@ from .db_socket.socket import SQLAlchemySocket
 from .portal.components.permissions import UserInfo
 from .portal import PortalClient
 
+# Path to this file (directory only)
+_my_path = os.path.dirname(os.path.abspath(__file__))
+
 # Valid client encodings
 valid_encodings = ["application/json", "application/msgpack"]
 
@@ -205,8 +208,7 @@ def load_procedure_data(name: str):
 
     """
 
-    my_path = os.path.dirname(os.path.abspath(__file__))
-    data_path = os.path.join(my_path, "tests", "procedure_data")
+    data_path = os.path.join(_my_path, "tests", "procedure_data")
     file_path = os.path.join(data_path, name + ".json")
     with open(file_path, "r") as f:
         data = json.load(f)
@@ -234,8 +236,7 @@ def load_molecule_data(name: str) -> Molecule:
     Loads a molecule object for use in testing
     """
 
-    my_path = os.path.dirname(os.path.abspath(__file__))
-    data_path = os.path.join(my_path, "tests", "molecule_data")
+    data_path = os.path.join(_my_path, "tests", "molecule_data")
     file_path = os.path.join(data_path, name + ".json")
     return Molecule.from_file(file_path)
 
@@ -245,13 +246,30 @@ def load_wavefunction_data(name: str) -> WavefunctionProperties:
     Loads a wavefunction object for use in testing
     """
 
-    my_path = os.path.dirname(os.path.abspath(__file__))
-    data_path = os.path.join(my_path, "tests", "wavefunction_data")
+    data_path = os.path.join(_my_path, "tests", "wavefunction_data")
     file_path = os.path.join(data_path, name + ".json")
 
     with open(file_path, "r") as f:
         data = json.load(f)
     return WavefunctionProperties(**data)
+
+
+def load_ip_test_data():
+    """
+    Loads data for testing IP logging
+    """
+
+    file_path = os.path.join(_my_path, "tests", "MaxMind-DB", "source-data", "GeoIP2-City-Test.json")
+
+    with open(file_path, "r") as f:
+        d = json.load(f)
+
+    # Stored as a list containing a dictionary with one key. Convert to a regular dict
+    ret = {}
+    for x in d:
+        ret.update(x)
+
+    return ret
 
 
 @contextmanager
@@ -441,6 +459,8 @@ def storage_socket(temporary_database):
     cfg_dict["loglevel"] = "DEBUG"
     cfg_dict["database"] = temporary_database.config.dict()
     cfg_dict["database"]["pool_size"] = 0
+    cfg_dict["log_access"] = True
+    cfg_dict["geo_file_path"] = os.path.join(_my_path, "tests", "MaxMind-DB", "test-data", "GeoIP2-City-Test.mmdb")
     qcf_config = FractalConfig(**cfg_dict)
 
     socket = SQLAlchemySocket(qcf_config)
@@ -466,6 +486,7 @@ class TestingSnowflake(FractalSnowflake):
         create_users=False,
         enable_security=False,
         allow_unauthenticated_read=False,
+        log_access=True,
     ):
 
         self._encoding = encoding
@@ -488,6 +509,10 @@ class TestingSnowflake(FractalSnowflake):
         extra_config["heartbeat_frequency"] = 3
         extra_config["heartbeat_max_missed"] = 2
         extra_config["database"] = {"pool_size": 0}
+        extra_config["log_access"] = log_access
+        extra_config["geo_file_path"] = os.path.join(
+            _my_path, "tests", "MaxMind-DB", "test-data", "GeoIP2-City-Test.mmdb"
+        )
 
         FractalSnowflake.__init__(
             self,
