@@ -271,7 +271,7 @@ def test_user_client_no_modify_me(secure_snowflake_allow_read: TestingSnowflake)
     """
     client = secure_snowflake_allow_read.client()
 
-    with pytest.raises(PortalRequestError, match=r"not logged in"):
+    with pytest.raises(RuntimeError, match=r"not logged in"):
         client.get_user()
 
     uinfo = UserInfo(username="read_user", role="read", fullname="New Full Name", enabled=True)

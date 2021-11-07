@@ -98,7 +98,14 @@ _connection_error_msg = "\n\nCould not connect to server {}, please check the ad
 
 
 class PortalRequestError(Exception):
-    pass
+    def __init__(self, msg: str, status_code: int, details: Dict[str, Any]):
+        Exception.__init__(self, msg)
+        self.msg = msg
+        self.status_code = status_code
+        self.details = details
+
+    def __str__(self):
+        return f"Portal request error: {self.msg} (HTTP status {self.status_code})"
 
 
 def make_list(obj: Optional[Union[_T, Sequence[_T]]]) -> Optional[List[_T]]:
@@ -433,11 +440,15 @@ class PortalClient:
 
         if r.status_code != 200:
             try:
-                msg = r.json()["msg"]
+                # For many errors returned by our code, the error details are returned as json
+                # with the error message stored under "msg"
+                details = r.json()
             except:
-                msg = r.reason
+                # If this error comes from, ie, the web server or something else, then
+                # we have to use 'reason'
+                details = {"msg": r.reason}
 
-            raise PortalRequestError("Request failed. Code: {}, Reason: {}".format(r.status_code, msg))
+            raise PortalRequestError(f"Request failed: {details['msg']}", r.status_code, details)
 
         return r
 
@@ -1829,7 +1840,7 @@ class PortalClient:
             username = self.username
 
         if username is None:
-            raise PortalRequestError("Cannot get user - not logged in?")
+            raise RuntimeError("Cannot get user - not logged in?")
 
         # Check client side so we can bail early
         is_valid_username(username)
