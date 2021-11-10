@@ -43,7 +43,7 @@ class TorsionDriveProcedureORM(BaseResultORM):
 
     __tablename__ = "torsiondrive_procedure"
 
-    id = Column(Integer, ForeignKey("base_result.id", ondelete="cascade"), primary_key=True)
+    id = Column(Integer, ForeignKey(BaseResultORM.id, ondelete="cascade"), primary_key=True)
 
     def __init__(self, **kwargs):
         kwargs.setdefault("version", 1)
@@ -108,8 +108,7 @@ class TorsionDriveProcedureORM(BaseResultORM):
     __table_args__ = ()
 
     __mapper_args__ = {
-        "polymorphic_identity": "torsiondrive_procedure",
-        # to have separate select when querying BaseResultsORM
+        "polymorphic_identity": "torsiondrive",
         "polymorphic_load": "selectin",
     }
 

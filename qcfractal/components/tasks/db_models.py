@@ -1,11 +1,12 @@
 import datetime
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index, text, CheckConstraint
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index, text, CheckConstraint, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 from qcfractal.interface.models import PriorityEnum
 from qcfractal.db_socket import BaseORM, MsgpackExt
+from qcfractal.components.records.db_models import BaseResultORM
 
 
 class TaskQueueORM(BaseORM):
@@ -25,14 +26,13 @@ class TaskQueueORM(BaseORM):
     tag = Column(String, default=None)
     required_programs = Column(JSONB, nullable=False)
     priority = Column(Integer, default=PriorityEnum.normal)
-    manager = Column(String, ForeignKey("queue_manager.name", ondelete="SET NULL"), default=None)
 
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
 
     # can reference ResultORMs or any ProcedureORM
-    base_result_id = Column(Integer, ForeignKey("base_result.id", ondelete="cascade"), unique=True, nullable=False)
-    base_result_obj = relationship(
-        "BaseResultORM", lazy="select", innerjoin=True, back_populates="task_obj"
+    record_id = Column(Integer, ForeignKey(BaseResultORM.id, ondelete="cascade"), nullable=False)
+    record = relationship(
+        BaseResultORM, lazy="select", innerjoin=True, back_populates="task"
     )  # user inner join, since not nullable
 
     # An important special case is ORDER BY in combination with LIMIT n: an
@@ -41,10 +41,9 @@ class TaskQueueORM(BaseORM):
     # can be retrieved directly, without scanning the remainder at all.
     __table_args__ = (
         Index("ix_task_queue_tag", "tag"),
-        Index("ix_task_queue_manager", "manager"),
         Index("ix_task_queue_required_programs", "required_programs"),
-        Index("ix_task_queue_base_result_id", "base_result_id"),
         Index("ix_task_queue_waiting_sort", priority.desc(), created_on),
+        UniqueConstraint("record_id", name="ux_task_queue_record_id"),
         # WARNING - these are not autodetected by alembic
         CheckConstraint(
             "required_programs::text = LOWER(required_programs::text)", name="ck_task_queue_requirements_lower"

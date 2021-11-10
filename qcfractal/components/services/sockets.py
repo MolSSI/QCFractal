@@ -162,12 +162,12 @@ class ServiceSocket:
             the second will always be False
         """
 
-        tasks = service_orm.tasks_obj
+        tasks = service_orm.tasks
 
         if len(tasks) == 0:
             return True, True
 
-        status_values = set(x.procedure_obj.status for x in tasks)
+        status_values = set(x.record.status for x in tasks)
 
         # Waiting or running = not finished
         if RecordStatusEnum.waiting in status_values:
@@ -187,12 +187,12 @@ class ServiceSocket:
         with self.root_socket.optional_session(session) as session:
 
             # We do a plain .join() because we are querying, and then also supplying contains_eager() so that
-            # the ServiceQueueORM.procedure_obj gets populated
+            # the ServiceQueueORM.record gets populated
             # See https://docs-sqlalchemy.readthedocs.io/ko/latest/orm/loading_relationships.html#routing-explicit-joins-statements-into-eagerly-loaded-collections
             services = (
                 session.query(ServiceQueueORM)
-                .join(ServiceQueueORM.procedure_obj)  # Joins a BaseResultORM
-                .options(contains_eager(ServiceQueueORM.procedure_obj))
+                .join(ServiceQueueORM.record)  # Joins a BaseResultORM
+                .options(contains_eager(ServiceQueueORM.record))
                 .filter(BaseResultORM.status == RecordStatusEnum.running)
                 .all()
             )
@@ -203,7 +203,7 @@ class ServiceSocket:
                 self._logger.info(f"Found {len(services)} running services.")
 
             for service_orm in services:
-                service_type = service_orm.procedure_obj.procedure
+                service_type = service_orm.record.record_type
 
                 finished, successful = self.subtasks_done(service_orm)
 
@@ -220,8 +220,8 @@ class ServiceSocket:
                             "error_message": "Error iterating service: " + str(err),
                         }
 
-                        self.root_socket.tasks.update_outputs(session, service_orm.procedure_obj, error=error)
-                        service_orm.procedure_obj.status = RecordStatusEnum.error
+                        self.root_socket.tasks.update_outputs(session, service_orm.record, error=error)
+                        service_orm.record.status = RecordStatusEnum.error
                         session.commit()
                         self.root_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.error)
                         continue
@@ -233,14 +233,14 @@ class ServiceSocket:
                         self.root_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.complete)
                 else:
                     # At least one of the tasks was not successful. Therefore, mark the service as an error
-                    service_orm.procedure_obj.status = RecordStatusEnum.error
+                    service_orm.record.status = RecordStatusEnum.error
 
                     error = {
                         "error_type": "service_iteration_error",
                         "error_message": "Some task(s) did not complete successfully",
                     }
 
-                    self.root_socket.tasks.update_outputs(session, service_orm.procedure_obj, error=error)
+                    self.root_socket.tasks.update_outputs(session, service_orm.record, error=error)
 
                     session.commit()
                     self.root_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.error)
@@ -248,7 +248,7 @@ class ServiceSocket:
             # Should we start more?
             running_count = (
                 session.query(ServiceQueueORM)
-                .join(ServiceQueueORM.procedure_obj)  # Joins a BaseResultORM
+                .join(ServiceQueueORM.record)  # Joins a BaseResultORM
                 .filter(BaseResultORM.status == RecordStatusEnum.running)
                 .count()
             )
@@ -261,8 +261,8 @@ class ServiceSocket:
             if new_service_count > 0:
                 new_services = (
                     session.query(ServiceQueueORM)
-                    .join(ServiceQueueORM.procedure_obj)  # Joins a BaseResultORM
-                    .options(contains_eager(ServiceQueueORM.procedure_obj))
+                    .join(ServiceQueueORM.record)  # Joins a BaseResultORM
+                    .options(contains_eager(ServiceQueueORM.record))
                     .filter(BaseResultORM.status == RecordStatusEnum.waiting)
                     .order_by(ServiceQueueORM.priority.desc(), ServiceQueueORM.created_on)
                     .limit(new_service_count)
@@ -275,7 +275,7 @@ class ServiceSocket:
                     self._logger.info(f"Attempting to start {len(new_services)} services")
 
                     for service_orm in new_services:
-                        service_type = service_orm.procedure_obj.procedure
+                        service_type = service_orm.record.procedure
 
                         try:
                             self.handler_map[service_type].iterate(session, service_orm)
@@ -285,9 +285,9 @@ class ServiceSocket:
                                 "error_message": "Error in first iteration of service: " + str(err),
                             }
 
-                            self.root_socket.tasks.update_outputs(session, service_orm.procedure_obj, error=error)
+                            self.root_socket.tasks.update_outputs(session, service_orm.record, error=error)
 
-                            service_orm.procedure_obj.status = RecordStatusEnum.error
+                            service_orm.record.status = RecordStatusEnum.error
                             session.commit()
                             self.root_socket.notify_completed_watch(service_orm.procedure_id, RecordStatusEnum.error)
 
@@ -430,7 +430,7 @@ class ServiceSocket:
         with self.root_socket.optional_session(session, True) as session:
             query = (
                 session.query(ServiceQueueORM)
-                .join(ServiceQueueORM.procedure_obj)
+                .join(ServiceQueueORM.record)
                 .filter(and_(*and_query))
                 .options(load_only(*load_cols))
             )
@@ -476,7 +476,7 @@ class ServiceSocket:
         with self.root_socket.optional_session(session) as session:
             results = (
                 session.query(BaseResultORM)
-                .join(BaseResultORM.service_obj)
+                .join(BaseResultORM.service)
                 .filter(*query)
                 .filter(BaseResultORM.status == RecordStatusEnum.error)
                 .with_for_update()
@@ -488,7 +488,7 @@ class ServiceSocket:
                 r.modified_on = datetime.utcnow()
 
                 # Also reset the subtasks
-                subtasks = r.service_obj.tasks_obj
+                subtasks = r.service.tasks
                 subtask_ids = [x.procedure_id for x in subtasks]
                 self.root_socket.tasks.reset_tasks(
                     base_result=subtask_ids, reset_running=False, reset_error=True, session=session

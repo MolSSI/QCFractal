@@ -174,20 +174,20 @@ class ServerInfoSocket:
 
             # Task queue and Service queue status
             task_query = (
-                session.query(BaseResultORM.procedure, BaseResultORM.status, func.count(TaskQueueORM.id))
-                .join(BaseResultORM, BaseResultORM.id == TaskQueueORM.base_result_id)
-                .group_by(BaseResultORM.procedure, BaseResultORM.status)
+                session.query(BaseResultORM.record_type, BaseResultORM.status, func.count(TaskQueueORM.id))
+                .join(BaseResultORM, BaseResultORM.id == TaskQueueORM.record_id)
+                .group_by(BaseResultORM.record_type, BaseResultORM.status)
                 .all()
             )
-            task_stats = {"columns": ["result_type", "status", "count"], "rows": [list(r) for r in task_query]}
+            task_stats = {"columns": ["record_type", "status", "count"], "rows": [list(r) for r in task_query]}
 
             service_query = (
-                session.query(BaseResultORM.result_type, BaseResultORM.status, func.count(ServiceQueueORM.id))
-                .join(BaseResultORM, BaseResultORM.id == ServiceQueueORM.procedure_id)
-                .group_by(BaseResultORM.result_type, BaseResultORM.status)
+                session.query(BaseResultORM.record_type, BaseResultORM.status, func.count(ServiceQueueORM.id))
+                .join(BaseResultORM, BaseResultORM.id == ServiceQueueORM.record_id)
+                .group_by(BaseResultORM.record_type, BaseResultORM.status)
                 .all()
             )
-            service_stats = {"columns": ["result_type", "status", "count"], "rows": [list(r) for r in service_query]}
+            service_stats = {"columns": ["record_type", "status", "count"], "rows": [list(r) for r in service_query]}
 
             # Calculate combined table info
             table_size = 0
@@ -200,7 +200,7 @@ class ServerInfoSocket:
             data = {
                 "collection_count": table_counts[CollectionORM.__tablename__],
                 "molecule_count": table_counts[MoleculeORM.__tablename__],
-                "result_count": table_counts[BaseResultORM.__tablename__],
+                "record_count": table_counts[BaseResultORM.__tablename__],
                 "outputstore_count": table_counts[OutputStoreORM.__tablename__],
                 "access_count": table_counts[AccessLogORM.__tablename__],
                 "error_count": table_counts[InternalErrorLogORM.__tablename__],
