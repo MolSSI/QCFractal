@@ -19,7 +19,7 @@ class ResultORM(BaseResultORM):
 
     __tablename__ = "result"
 
-    id = Column(Integer, ForeignKey("base_result.id", ondelete="CASCADE"), primary_key=True)
+    id = Column(Integer, ForeignKey(BaseResultORM.id, ondelete="CASCADE"), primary_key=True)
 
     # uniquely identifying a result
     program = Column(String(100), nullable=False)  # example "rdkit", is it the same as program in keywords?
@@ -74,8 +74,7 @@ class ResultORM(BaseResultORM):
     )
 
     __mapper_args__ = {
-        "polymorphic_identity": "result",
-        # to have separate select when querying BaseResultsORM
+        "polymorphic_identity": "singlepoint",
         "polymorphic_load": "selectin",
     }
 

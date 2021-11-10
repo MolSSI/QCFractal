@@ -20,6 +20,17 @@ class CompressionEnum(str, Enum):
     lzma = "lzma"
 
 
+class OutputTypeEnum(str, Enum):
+    """
+    What type of data is stored
+    """
+
+    other = "other"
+    stdout = "stdout"
+    stderr = "stderr"
+    error = "error"
+
+
 class OutputStore(ProtoModel):
     """
     Storage of outputs and error messages, with optional compression

@@ -1,19 +1,24 @@
 from typing import Dict, Any, Optional, Iterable
 
-from sqlalchemy import Column, Integer, Enum, JSON, LargeBinary
+from sqlalchemy import Column, Integer, Enum, JSON, LargeBinary, ForeignKey, Index
 
 from qcfractal.db_socket import BaseORM
-from qcfractal.portal.components.outputstore.models import CompressionEnum
+from qcfractal.portal.components.outputstore.models import CompressionEnum, OutputTypeEnum
 
 
 class OutputStoreORM(BaseORM):
     __tablename__ = "output_store"
 
     id = Column(Integer, primary_key=True)
+    record_history_id = Column(Integer, ForeignKey("record_compute_history.id", ondelete="CASCADE"), nullable=False)
+
+    output_type = Column(Enum(OutputTypeEnum), nullable=False)
     compression = Column(Enum(CompressionEnum), nullable=True)
     compression_level = Column(Integer, nullable=True)
     value = Column(JSON, nullable=True)
     data = Column(LargeBinary, nullable=True)
+
+    __table_args__ = (Index("ix_output_store_record_history_id", "record_history_id"),)
 
     def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
 

@@ -712,7 +712,7 @@ class TaskSocket:
             raise ValueError("All query fields are None, reset_tasks must specify queries.")
 
         with self.root_socket.optional_session(session) as session:
-            results = session.query(BaseResultORM).join(BaseResultORM.task_obj).filter(*query).with_for_update().all()
+            results = session.query(BaseResultORM).join(BaseResultORM.task).filter(*query).with_for_update().all()
 
             for r in results:
                 r.status = RecordStatusEnum.waiting
@@ -765,7 +765,7 @@ class TaskSocket:
         with self.root_socket.session_scope() as session:
             to_update = (
                 session.query(TaskQueueORM)
-                .join(TaskQueueORM.base_result_obj)
+                .join(TaskQueueORM.record)
                 .filter(and_(*and_query))
                 .filter(BaseResultORM.status != RecordStatusEnum.running)
                 .all()

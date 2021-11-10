@@ -32,7 +32,7 @@ class OptimizationProcedureORM(BaseResultORM):
 
     __tablename__ = "optimization_procedure"
 
-    id = Column(Integer, ForeignKey("base_result.id", ondelete="cascade"), primary_key=True)
+    id = Column(Integer, ForeignKey(BaseResultORM.id, ondelete="cascade"), primary_key=True)
 
     def __init__(self, **kwargs):
         kwargs.setdefault("version", 1)
@@ -71,8 +71,7 @@ class OptimizationProcedureORM(BaseResultORM):
     )
 
     __mapper_args__ = {
-        "polymorphic_identity": "optimization_procedure",
-        # to have separate select when querying BaseResultsORM
+        "polymorphic_identity": "optimization",
         "polymorphic_load": "selectin",
     }
 

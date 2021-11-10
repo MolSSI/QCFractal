@@ -65,7 +65,7 @@ class ServerStatsLogORM(BaseORM):
     # Raw counts
     collection_count = Column(Integer)
     molecule_count = Column(BigInteger)
-    result_count = Column(BigInteger)
+    record_count = Column(BigInteger)
     outputstore_count = Column(BigInteger)
     access_count = Column(BigInteger)
     error_count = Column(BigInteger)

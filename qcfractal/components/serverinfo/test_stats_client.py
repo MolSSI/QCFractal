@@ -27,7 +27,7 @@ def test_serverinfo_client_query_stats(storage_socket: SQLAlchemySocket, snowfla
 
     assert stats[0]["molecule_count"] == 0
     assert stats[0]["outputstore_count"] == 0
-    assert stats[0]["result_count"] == 0
+    assert stats[0]["record_count"] == 0
 
     # Force saving the stats again
     storage_socket.serverinfo.update_server_stats()
