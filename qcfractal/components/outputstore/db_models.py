@@ -28,6 +28,9 @@ class OutputStoreORM(BaseORM):
         # New way: store (possibly) compressed output in "data"
         val = d.pop("value")
 
+        # Also remove the record history id - not useful to end users
+        d.pop("record_history_id")
+
         # If stored the old way, convert to the new way
         if d["data"] is None:
             # Set the data field to be the string or dictionary

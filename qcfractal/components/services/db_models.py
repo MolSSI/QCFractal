@@ -27,7 +27,7 @@ class ServiceQueueORM(BaseORM):
 
     record_id = Column(Integer, ForeignKey(BaseResultORM.id))
     record = relationship(
-        BaseResultORM, lazy="select", innerjoin=True, back_populates="service"
+        BaseResultORM, lazy="select", innerjoin=True, back_populates="service", uselist=False
     )  # user inner join, since not nullable
 
     priority = Column(Integer, default=int(PriorityEnum.normal))

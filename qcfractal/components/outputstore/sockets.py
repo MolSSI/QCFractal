@@ -26,51 +26,6 @@ class OutputStoreSocket:
     def output_to_orm(output: OutputStore) -> OutputStoreORM:
         return OutputStoreORM(**output.dict())  # type: ignore
 
-    def add(self, outputs: Sequence[Union[OutputStore, str, Dict]], *, session: Optional[Session] = None) -> List[int]:
-        """
-        Inserts output data into the database
-
-        Since all entries are always inserted, we don't need to return any
-        metadata like other types of insertions
-
-        If session is specified, changes are not committed to to the database, but the session is flushed.
-
-        Parameters
-        ----------
-        outputs
-            A sequence of output store to add. This can be a string or dictionary, which will be converted
-            to a OutputStore object, or a OutputStore object itself
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
-
-        Returns
-        -------
-        :
-            A list of all newly-inserted IDs
-        """
-
-        # Outputs are always added, so we don't use the general function
-
-        # Since outputs can be relatively large, we don't explicitly create
-        # a list of ORMs (one for each output). We only go one at a time
-
-        output_ids = []
-
-        with self.root_socket.optional_session(session) as session:
-            for output in outputs:
-                if isinstance(output, OutputStore):
-                    kv_obj = output
-                else:
-                    kv_obj = OutputStore.compress(output, CompressionEnum.lzma, 1)
-
-                output_orm = self.output_to_orm(kv_obj)
-                session.add(output_orm)
-                session.flush()
-                output_ids.append(output_orm.id)
-
-        return output_ids
-
     def get(
         self, id: Sequence[int], missing_ok: bool = False, *, session: Optional[Session] = None
     ) -> List[Optional[OutputDict]]:
@@ -107,11 +62,9 @@ class OutputStoreSocket:
         with self.root_socket.optional_session(session, True) as session:
             return get_general(session, OutputStoreORM, OutputStoreORM.id, id, None, None, None, missing_ok)
 
-    def append(self, id: Optional[int], to_append: str, *, session: Optional[Session] = None) -> int:
+    def append(self, id: int, to_append: str, *, session: Optional[Session] = None) -> None:
         """
         Appends data to an output
-
-        If the id is None, then one will be created.
 
         If the id does not exist, an exception will be raised
 
@@ -124,29 +77,18 @@ class OutputStoreSocket:
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed before returning from this function.
-
-        Returns
-        -------
-        :
-            The ID of the output store. This is the same as the input if specified. If the input is None, then
-            this will represent the ID of the new output object
         """
 
         with self.root_socket.optional_session(session) as session:
-            if id is None:
-                kv = OutputStore.compress(to_append)
-                return self.add([kv], session=session)[0]
-            else:
-                output = session.query(OutputStoreORM).where(OutputStoreORM.id == id).one_or_none()
+            output = session.query(OutputStoreORM).where(OutputStoreORM.id == id).one_or_none()
 
-                if output is None:
-                    raise MissingDataError(f"Cannot append to output {id} - does not exist!")
+            if output is None:
+                raise MissingDataError(f"Cannot append to output {id} - does not exist!")
 
-                kv = OutputStore(**output.dict())
-                s = kv.get_string() + to_append
-                new_orm = self.output_to_orm(OutputStore.compress(s, output.compression, output.compression_level))
-                output.data = new_orm.data
-                output.value = new_orm.value
-                output.compression = new_orm.compression
-                output.compression_level = new_orm.compression_level
-                return output.id
+            kv = OutputStore(**output.dict())
+            s = kv.get_string() + to_append
+            new_orm = self.output_to_orm(OutputStore.compress(s, output.compression, output.compression_level))
+            output.data = new_orm.data
+            output.value = new_orm.value
+            output.compression = new_orm.compression
+            output.compression_level = new_orm.compression_level

@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship, column_property
 
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseResultORM
+from qcfractal.components.records.singlepoint.db_models import ResultORM
 from qcfractal.interface.models import ObjectId
 from qcfractal.db_socket import BaseORM
 
@@ -18,7 +19,7 @@ class Trajectory(BaseORM):
     __tablename__ = "opt_result_association"
 
     opt_id = Column(Integer, ForeignKey("optimization_procedure.id", ondelete="cascade"), primary_key=True)
-    result_id = Column(Integer, ForeignKey("result.id", ondelete="cascade"), primary_key=True)
+    result_id = Column(Integer, ForeignKey(ResultORM.id, ondelete="cascade"), primary_key=True)
     position = Column(Integer, primary_key=True)
     # Index('opt_id', 'result_id', unique=True)
 
@@ -45,12 +46,12 @@ class OptimizationProcedureORM(BaseResultORM):
     keywords = Column(JSON)
     qc_spec = Column(JSON)
 
-    initial_molecule = Column(Integer, ForeignKey("molecule.id"), nullable=False)
+    initial_molecule = Column(Integer, ForeignKey(MoleculeORM.id), nullable=False)
     initial_molecule_obj = relationship(MoleculeORM, lazy="select", foreign_keys=initial_molecule)
 
     # # Results
     energies = Column(JSON)  # Column(ARRAY(Float))
-    final_molecule = Column(Integer, ForeignKey("molecule.id"))
+    final_molecule = Column(Integer, ForeignKey(MoleculeORM.id))
     final_molecule_obj = relationship(MoleculeORM, lazy="select", foreign_keys=final_molecule)
 
     # ids, calculated not stored in this table

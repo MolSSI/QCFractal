@@ -1,90 +1,90 @@
 """
-Base class for computation procedures
+Helpers for parsing or manipulating records
 """
 
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
+
+from qcfractal.components.outputstore.sockets import OutputStoreSocket
+from qcfractal.components.records.db_models import RecordComputeHistoryORM
+from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
+from qcfractal.components.wavefunctions.sockets import WavefunctionSocket
 from qcfractal.interface.models import (
     AllResultTypes,
 )
-from qcfractal.portal.components.outputstore import OutputStore
+from qcfractal.portal.components.outputstore import OutputStore, OutputTypeEnum, CompressionEnum
 from qcfractal.portal.components.wavefunctions import WavefunctionProperties
 
-from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
-    from sqlalchemy.orm.session import Session
-    from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcfractal.components.records.db_models import BaseResultORM
-    from typing import Optional, Dict, Tuple, Any
-
+    from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-_wfn_return_names = set(WavefunctionProperties._return_results_names)
 _wfn_all_fields = set(WavefunctionProperties.__fields__.keys())
 
 
-def retrieve_outputs(
-    storage_socket: SQLAlchemySocket, session: Session, result: AllResultTypes, base_result: BaseResultORM
-):
+def create_compute_history_entry(
+    result: AllResultTypes,
+) -> RecordComputeHistoryORM:
     """
-    Retrieves (possibly compressed) outputs from a result (AtomicResult, OptimizationResult)
+    Retrieves status and (possibly compressed) outputs from a result, and creates
+    a record computation history entry
     """
+
+    history_orm = RecordComputeHistoryORM()
+    history_orm.status = "complete" if result.success else "error"
+    history_orm.provenance = result.provenance.dict()
 
     # Get the compressed outputs if they exist
-    stdout = result.extras.pop("_qcfractal_compressed_stdout", None)
-    stderr = result.extras.pop("_qcfractal_compressed_stderr", None)
-    error = result.extras.pop("_qcfractal_compressed_error", None)
+    compressed_output = result.extras.pop("_qcfractal_compressed_outputs", None)
 
-    # Create OutputStore objects from these
-    if stdout is not None:
-        stdout = OutputStore(**stdout)
-    if stderr is not None:
-        stderr = OutputStore(**stderr)
-    if error is not None:
-        error = OutputStore(**error)
+    if compressed_output is not None:
+        all_outputs = [OutputStore(**x) for x in compressed_output]
 
-    # This shouldn't happen, but if they aren't compressed, check for uncompressed
-    if stdout is None and result.stdout is not None:
-        logger.warning(f"Found uncompressed stdout for result id {result.id}")
-        stdout = OutputStore(data=result.stdout)
-    if stderr is None and result.stderr is not None:
-        logger.warning(f"Found uncompressed stderr for result id {result.id}")
-        stderr = OutputStore(data=result.stderr)
-    if error is None and result.error is not None:
-        logger.warning(f"Found uncompressed error for result id {result.id}")
-        error = OutputStore(data=result.error)
+    else:
+        all_outputs = []
 
-    storage_socket.tasks.update_outputs(session, base_result, stdout=stdout, stderr=stderr, error=error)
+        # This shouldn't happen, but if they aren't compressed, check for uncompressed
+        if result.stdout is not None:
+            logger.warning(f"Found uncompressed stdout for record id {result.id}")
+            stdout = OutputStore.compress(
+                OutputTypeEnum.stdout, result.stdout, compression_type=CompressionEnum.lzma, compression_level=1
+            )
+            all_outputs.append(stdout)
+        if result.stderr is not None:
+            logger.warning(f"Found uncompressed stderr for record id {result.id}")
+            stderr = OutputStore.compress(
+                OutputTypeEnum.stderr, result.stderr, compression_type=CompressionEnum.lzma, compression_level=1
+            )
+            all_outputs.append(stderr)
+        if result.error is not None:
+            logger.warning(f"Found uncompressed error for record id {result.id}")
+            error = OutputStore.compress(
+                OutputTypeEnum.error, result.error.dict(), compression_type=CompressionEnum.lzma, compression_level=1
+            )
+            all_outputs.append(error)
+
+    history_orm.outputs = [OutputStoreSocket.output_to_orm(x) for x in all_outputs]
+
+    return history_orm
 
 
-def wavefunction_helper(
-    storage_socket: SQLAlchemySocket, session: Session, wavefunction: Optional[WavefunctionProperties]
-) -> Tuple[Optional[int], Optional[Dict[str, Any]]]:
+def wavefunction_helper(wavefunction: Optional[WavefunctionProperties]) -> Optional[WavefunctionStoreORM]:
+
     if wavefunction is None:
-        return None, None
+        return None
 
     wfn_dict = wavefunction.dict()
-    available = set(wfn_dict.keys()) - {"restricted", "basis"}
-    return_map = {k: wfn_dict[k] for k in wfn_dict.keys() & _wfn_return_names}
-
-    # Dictionary contains metadata about the wavefunction. It is stored with the result, not
-    # in the wavefunction_store table
-    info_dict = {
-        "available": list(available),
-        "restricted": wavefunction.restricted,
-        "return_map": return_map,
-    }
+    available_keys = set(wfn_dict.keys())
 
     # Extra fields are trimmed as we have a column *per* wavefunction structure.
-    available_keys = wfn_dict.keys() - _wfn_return_names
-    if available_keys > _wfn_all_fields:
-        logger.warning(f"Too much wavefunction data for result, removing extra data.")
+    extra_fields = available_keys - _wfn_all_fields
+    if extra_fields:
+        logger.warning(f"Too much wavefunction data for result, removing extra data: {extra_fields}")
         available_keys &= _wfn_all_fields
 
     wavefunction_save = {k: wfn_dict[k] for k in available_keys}
     wfn_prop = WavefunctionProperties(**wavefunction_save)
-    wfn_data_id = storage_socket.wavefunctions.add([wfn_prop], session=session)[0]
-    return wfn_data_id, info_dict
+    return WavefunctionSocket.wavefunction_to_orm(wfn_prop)

@@ -1,6 +1,6 @@
 from typing import Dict, Any, Optional, Iterable
 
-from sqlalchemy import Column, Integer, Boolean, String
+from sqlalchemy import Column, Integer, Boolean, String, ForeignKey, UniqueConstraint
 
 from qcfractal.db_socket import BaseORM, MsgpackExt
 
@@ -10,6 +10,7 @@ class WavefunctionStoreORM(BaseORM):
     __tablename__ = "wavefunction_store"
 
     id = Column(Integer, primary_key=True)
+    record_id = Column(Integer, ForeignKey("singlepoint_record.id", ondelete="CASCADE"), nullable=False)
 
     # Sparsity is very cheap
     basis = Column(MsgpackExt, nullable=False)
@@ -44,6 +45,8 @@ class WavefunctionStoreORM(BaseORM):
     eigenvalues_b = Column(String)
     occupations_a = Column(String)
     occupations_b = Column(String)
+
+    __table_args__ = (UniqueConstraint("record_id", name="ux_wavefunction_store_record_id"),)
 
     def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
 

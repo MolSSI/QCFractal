@@ -286,3 +286,50 @@ class UpdateMetadata:
         """
 
         return dataclasses.asdict(self)
+
+
+@dataclass
+class TaskReturnMetadata:
+    """
+    Metadata returned to managers that have sent completed tasks back to the server
+    """
+
+    # Integers in errors, accepted_ids are task ids
+    error_description: Optional[str] = None
+    rejected_info: List[Tuple[int, str]] = dataclasses.field(default_factory=list)
+    accepted_ids: List[int] = dataclasses.field(default_factory=list)  # Accepted by the server
+
+    @property
+    def n_accepted(self):
+        return len(self.accepted_ids)
+
+    @property
+    def n_rejected(self):
+        return len(self.rejected_ids)
+
+    @property
+    def rejected_ids(self):
+        return [x[0] for x in self.rejected_info]
+
+    @property
+    def success(self):
+        return self.error_description is None
+
+    @property
+    def error_string(self):
+        s = ""
+        if self.error_description:
+            s += self.error_description + "\n"
+        s += "\n".join(f"    Task id {x}: {y}" for x, y in self.rejected_info)
+        return s
+
+    @validator("rejected_info", "accepted_ids", pre=True)
+    def sort_fields(cls, v):
+        return sorted(v)
+
+    def dict(self) -> Dict[str, Any]:
+        """
+        Returns the information from this dataclass as a dictionary
+        """
+
+        return dataclasses.asdict(self)

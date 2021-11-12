@@ -1,0 +1,268 @@
+"""
+Tests the tasks socket with respect to misbehaving managers
+"""
+
+import logging
+import pytest
+from datetime import datetime
+from qcfractal.exceptions import ComputeManagerError
+from qcfractal.db_socket import SQLAlchemySocket
+from qcfractal.portal.components.managers import ManagerName
+from qcfractal.testing import load_procedure_data, caplog_handler_at_level
+from qcfractal.interface.models import RecordStatusEnum, PriorityEnum
+
+
+def test_task_socket_return_manager_noexist(storage_socket: SQLAlchemySocket):
+    # Manager that returns data does not exist
+
+    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
+    storage_socket.managers.activate(
+        name_data=mname1,
+        manager_version="v2.0",
+        qcengine_version="v1.0",
+        username="bill",
+        programs={"psi4": None, "qchem": "v3.0"},
+        tags=["tag1"],
+        configuration={"key": "value"},
+    )
+
+    input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
+    meta, id = storage_socket.records.singlepoint.add(input_spec, [molecule], "tag1", PriorityEnum.normal)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
+
+    with pytest.raises(ComputeManagerError, match="does not exist") as err:
+        storage_socket.tasks.update_completed(
+            "missing_manager",
+            {tasks[0]["id"]: result_data},
+        )
+
+    assert err.value.shutdown is True
+
+    # Task should still be running
+    sp_records = storage_socket.records.get(id, include=["*", "task", "compute_history"])
+    assert sp_records[0]["status"] == RecordStatusEnum.running
+    assert sp_records[0]["manager_name"] == mname1.fullname
+    assert sp_records[0]["task"] is not None
+    assert sp_records[0]["compute_history"] == []
+
+
+def test_task_socket_return_manager_inactive(storage_socket: SQLAlchemySocket):
+    # Manager that returns data does not exist
+
+    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
+    storage_socket.managers.activate(
+        name_data=mname1,
+        manager_version="v2.0",
+        qcengine_version="v1.0",
+        username="bill",
+        programs={"psi4": None, "qchem": "v3.0"},
+        tags=["tag1"],
+        configuration={"key": "value"},
+    )
+
+    input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
+    meta, id = storage_socket.records.singlepoint.add(input_spec, [molecule], "tag1", PriorityEnum.normal)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
+
+    storage_socket.managers.deactivate([mname1.fullname])
+
+    with pytest.raises(ComputeManagerError, match="is not active") as err:
+        storage_socket.tasks.update_completed(
+            mname1.fullname,
+            {tasks[0]["id"]: result_data},
+        )
+
+    assert err.value.shutdown
+
+
+def test_task_socket_return_manager_wrongmanager(storage_socket: SQLAlchemySocket):
+    # Manager returns data for a record that it hasn't claimed (or was stolen from it)
+
+    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
+    mname2 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="2345-6789-0123-4567")
+    storage_socket.managers.activate(
+        name_data=mname1,
+        manager_version="v2.0",
+        qcengine_version="v1.0",
+        username="bill",
+        programs={"psi4": None, "qchem": "v3.0"},
+        tags=["tag1"],
+        configuration={"key": "value"},
+    )
+
+    storage_socket.managers.activate(
+        name_data=mname2,
+        manager_version="v2.0",
+        qcengine_version="v1.0",
+        username="bill",
+        programs={"psi4": None, "qchem": "v3.0"},
+        tags=["tag1"],
+        configuration={"key": "value"},
+    )
+
+    input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
+    meta, id = storage_socket.records.singlepoint.add(input_spec, [molecule], "tag1", PriorityEnum.normal)
+
+    # Manager 1 claims tasks
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
+
+    # Manager 2 tries to return it
+    rmeta = storage_socket.tasks.update_completed(
+        mname2.fullname,
+        {tasks[0]["id"]: result_data},
+    )
+
+    assert rmeta.n_accepted == 0
+    assert rmeta.n_rejected == 1
+    assert rmeta.rejected_info[0][0] == tasks[0]["id"]
+    assert rmeta.rejected_info[0][1] == "Task is claimed by another manager"
+
+    # But it didn't do anything
+    # Task should still be running
+    sp_records = storage_socket.records.get(id, include=["*", "task", "compute_history"])
+    assert sp_records[0]["status"] == RecordStatusEnum.running
+    assert sp_records[0]["manager_name"] == mname1.fullname
+    assert sp_records[0]["task"] is not None
+    assert sp_records[0]["compute_history"] == []
+
+    # Make sure manager info was updated
+    manager = storage_socket.managers.get([mname2.fullname])
+    assert manager[0]["successes"] == 0
+    assert manager[0]["failures"] == 0
+    assert manager[0]["rejected"] == 1
+
+
+def test_task_socket_return_manager_badid(storage_socket: SQLAlchemySocket, caplog):
+    # Manager returns data for a record that doesn't exist
+
+    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
+    storage_socket.managers.activate(
+        name_data=mname1,
+        manager_version="v2.0",
+        qcengine_version="v1.0",
+        username="bill",
+        programs={"psi4": None, "qchem": "v3.0"},
+        tags=["tag1"],
+        configuration={"key": "value"},
+    )
+
+    input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
+
+    # Should be logged
+    with caplog_handler_at_level(caplog, logging.WARNING):
+        rmeta = storage_socket.tasks.update_completed(
+            mname1.fullname,
+            {123: result_data},
+        )
+        assert "does not exist in the task queue" in caplog.text
+
+    assert rmeta.n_accepted == 0
+    assert rmeta.n_rejected == 1
+    assert rmeta.rejected_info[0][0] == 123
+    assert rmeta.rejected_info[0][1] == "Task does not exist in the task queue"
+
+    # Make sure manager info was updated
+    manager = storage_socket.managers.get([mname1.fullname])
+    assert manager[0]["successes"] == 0
+    assert manager[0]["failures"] == 0
+    assert manager[0]["rejected"] == 1
+
+
+def test_task_socket_return_manager_badstatus_1(storage_socket: SQLAlchemySocket, caplog):
+    # Manager returns data for a record that is not running
+
+    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
+    storage_socket.managers.activate(
+        name_data=mname1,
+        manager_version="v2.0",
+        qcengine_version="v1.0",
+        username="bill",
+        programs={"psi4": None, "qchem": "v3.0"},
+        tags=["tag1"],
+        configuration={"key": "value"},
+    )
+
+    input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
+    meta, id = storage_socket.records.singlepoint.add(input_spec, [molecule], "tag1", PriorityEnum.normal)
+
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
+
+    storage_socket.tasks.reset_tasks([tasks[0]["id"]], reset_running=True)
+
+    with caplog_handler_at_level(caplog, logging.WARNING):
+        rmeta = storage_socket.tasks.update_completed(
+            mname1.fullname,
+            {tasks[0]["id"]: result_data},
+        )
+        assert "not in a running state" in caplog.text
+
+    assert rmeta.n_accepted == 0
+    assert rmeta.n_rejected == 1
+    assert rmeta.rejected_info[0][0] == tasks[0]["id"]
+    assert rmeta.rejected_info[0][1] == "Task is not in a running state"
+
+    # Record should still be waiting
+    sp_records = storage_socket.records.get(id, include=["*", "task", "compute_history"])
+    assert sp_records[0]["status"] == RecordStatusEnum.waiting
+    assert sp_records[0]["manager_name"] is None
+    assert sp_records[0]["task"] is not None
+    assert sp_records[0]["compute_history"] == []
+
+    # Make sure manager info was updated
+    manager = storage_socket.managers.get([mname1.fullname])
+    assert manager[0]["successes"] == 0
+    assert manager[0]["failures"] == 0
+    assert manager[0]["rejected"] == 1
+
+
+def test_task_socket_return_manager_badstatus_2(storage_socket: SQLAlchemySocket, caplog):
+    # Manager returns data for a record that completed (and therefore not in the task queue)
+
+    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
+    storage_socket.managers.activate(
+        name_data=mname1,
+        manager_version="v2.0",
+        qcengine_version="v1.0",
+        username="bill",
+        programs={"psi4": None, "qchem": "v3.0"},
+        tags=["tag1"],
+        configuration={"key": "value"},
+    )
+
+    input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
+    meta, id = storage_socket.records.singlepoint.add(input_spec, [molecule], "tag1", PriorityEnum.normal)
+
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
+
+    storage_socket.tasks.update_completed(
+        mname1.fullname,
+        {tasks[0]["id"]: result_data},
+    )
+
+    time_1 = datetime.utcnow()
+
+    with caplog_handler_at_level(caplog, logging.WARNING):
+        rmeta = storage_socket.tasks.update_completed(
+            mname1.fullname,
+            {tasks[0]["id"]: result_data},
+        )
+        assert "does not exist in the task queue" in caplog.text
+
+    assert rmeta.n_accepted == 0
+    assert rmeta.n_rejected == 1
+    assert rmeta.rejected_info[0][0] == tasks[0]["id"]
+    assert rmeta.rejected_info[0][1] == "Task does not exist in the task queue"
+
+    # Record should be complete
+    sp_records = storage_socket.records.get(id, include=["*", "task", "compute_history"])
+    assert sp_records[0]["status"] == RecordStatusEnum.complete
+    assert sp_records[0]["manager_name"] == mname1.fullname
+    assert sp_records[0]["task"] is None
+    assert len(sp_records[0]["compute_history"]) == 1
+    assert sp_records[0]["modified_on"] < time_1
+
+    # Make sure manager info was updated
+    manager = storage_socket.managers.get([mname1.fullname])
+    assert manager[0]["successes"] == 1  # from the first submission
+    assert manager[0]["failures"] == 0
+    assert manager[0]["rejected"] == 1
