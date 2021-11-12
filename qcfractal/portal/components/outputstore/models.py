@@ -36,10 +36,11 @@ class OutputStore(ProtoModel):
     Storage of outputs and error messages, with optional compression
     """
 
-    id: int = Field(
-        None, description="Id of the object on the database. This is assigned automatically by the database."
+    id: Optional[int] = Field(
+        None, description="ID of the object on the database. This is assigned automatically by the database."
     )
 
+    output_type: OutputTypeEnum = Field(..., description="The type of output this is (stdout, error, etc)")
     compression: CompressionEnum = Field(CompressionEnum.none, description="Compression method (such as gzip)")
     compression_level: int = Field(0, description="Level of compression (typically 0-9)")
     data: bytes = Field(..., description="Compressed raw data of output/errors, etc")
@@ -96,6 +97,7 @@ class OutputStore(ProtoModel):
     @classmethod
     def compress(
         cls,
+        output_type: OutputTypeEnum,
         input_data: Union[Dict[str, str], str],
         compression_type: CompressionEnum = CompressionEnum.none,
         compression_level: Optional[int] = None,
@@ -141,7 +143,9 @@ class OutputStore(ProtoModel):
             # Shouldn't ever happen, unless we change CompressionEnum but not the rest of this function
             raise TypeError("Unknown compression type??")
 
-        return cls(data=data, compression=compression_type, compression_level=compression_level)
+        return cls(
+            output_type=output_type, data=data, compression=compression_type, compression_level=compression_level
+        )
 
     def get_string(self):
         """

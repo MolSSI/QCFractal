@@ -35,9 +35,7 @@ class TaskQueueORM(BaseORM):
 
     # can reference ResultORMs or any ProcedureORM
     record_id = Column(Integer, ForeignKey(BaseResultORM.id, ondelete="cascade"), nullable=False)
-    record = relationship(
-        BaseResultORM, lazy="select", innerjoin=True, back_populates="task"
-    )  # user inner join, since not nullable
+    record = relationship(BaseResultORM, lazy="select", back_populates="task", uselist=False)
 
     # An important special case is ORDER BY in combination with LIMIT n: an
     # explicit sort will have to process all the data to identify the first n

@@ -20,6 +20,8 @@ class RecordComputeHistoryORM(BaseORM):
     modified_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
     provenance = Column(JSON)
 
+    outputs = relationship("OutputStoreORM", lazy="select")
+
     __table_args__ = (
         Index("ix_record_compute_history_record_id", "record_id"),
         Index("ix_record_compute_history_manager_name", "manager_name"),

@@ -22,7 +22,7 @@ from qcelemental.models import Molecule
 from qcelemental.models.results import WavefunctionProperties
 from .config import FractalConfig, update_nested_dict
 
-import qcfractal.interface as ptl
+from qcfractal.portal.components.records import SinglePointInput, SinglePointSpecification, AtomicResult
 from .interface import FractalClient
 from .interface.models import TorsionDriveInput, RecordStatusEnum
 from .postgres_harness import TemporaryPostgres
@@ -215,9 +215,10 @@ def load_procedure_data(name: str):
 
     procedure = data["input"]["procedure"]
     if procedure == "single":
-        input_type = ptl.models.SingleProcedureSpecification
-        result_type = ptl.models.AtomicResult
+        input_type = SinglePointSpecification
+        result_type = AtomicResult
     elif procedure == "optimization":
+        raise RuntimeError("TODO")
         input_type = ptl.models.OptimizationProcedureSpecification
         result_type = ptl.models.OptimizationResult
     else:
