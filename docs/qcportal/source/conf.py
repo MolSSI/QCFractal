@@ -10,11 +10,12 @@ import datetime
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('../../..'))
+sys.path.insert(0, os.path.abspath("../../.."))
 import qcfractal
 
 # A little magic to make interface look like qcportal
 import qcfractal.interface as qcportal
+
 sys.modules["qcportal"] = qcportal
 
 # -- Path setup --------------------------------------------------------------
@@ -30,14 +31,14 @@ sys.modules["qcportal"] = qcportal
 
 # -- Project information -----------------------------------------------------
 
-project = 'QCPortal'
-copyright = f'2018-{datetime.datetime.today().year}, The Molecular Sciences Software Institute'
-author = 'The QCArchive Development Team'
+project = "QCPortal"
+copyright = f"2018-{datetime.datetime.today().year}, The Molecular Sciences Software Institute"
+author = "The QCArchive Development Team"
 
 # The short X.Y version
-version = "5" #qcfractal.__version__
+version = "5"  # qcfractal.__version__
 # The full version, including alpha/beta/rc tags
-release = "5" #qcfractal.__version__
+release = "5"  # qcfractal.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -50,19 +51,19 @@ release = "5" #qcfractal.__version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.doctest',
-    'sphinx.ext.todo',
-    'sphinx.ext.coverage',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.extlinks',
-    'sphinx_automodapi.automodapi',
-    'sphinx_automodapi.automodsumm',
-    'nbsphinx',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.doctest",
+    "sphinx.ext.todo",
+    "sphinx.ext.coverage",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.extlinks",
+    "sphinx_automodapi.automodapi",
+    "sphinx_automodapi.automodsumm",
+    "nbsphinx",
 ]
 
 napoleon_google_docstring = False
@@ -70,16 +71,16 @@ napoleon_use_param = False
 napoleon_use_ivar = True
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
 # source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # Abbreviations
 rst_epilog = """
@@ -104,10 +105,10 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path .
-exclude_patterns = ['.ipynb_checkpoints/*']
+exclude_patterns = [".ipynb_checkpoints/*"]
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'default'
+pygments_style = "default"
 
 
 # -- Keywords for HTML output -------------------------------------------------
@@ -117,9 +118,10 @@ pygments_style = 'default'
 #
 try:
     import qcarchive_sphinx_theme
-    html_theme = 'qcarchive_sphinx_theme'
+
+    html_theme = "qcarchive_sphinx_theme"
 except ModuleNotFoundError:
-    html_theme = 'sphinx_rtd_theme'
+    html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -130,7 +132,7 @@ except ModuleNotFoundError:
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -146,7 +148,7 @@ html_static_path = ['_static']
 # -- Keywords for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'QCPortaldoc'
+htmlhelp_basename = "QCPortaldoc"
 
 
 # -- Keywords for LaTeX output ------------------------------------------------
@@ -155,15 +157,12 @@ latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     #
     # 'papersize': 'letterpaper',
-
     # The font size ('10pt', '11pt' or '12pt').
     #
     # 'pointsize': '10pt',
-
     # Additional stuff for the LaTeX preamble.
     #
     # 'preamble': '',
-
     # Latex figure (float) alignment
     #
     # 'figure_align': 'htbp',
@@ -173,8 +172,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'QCPortal.tex', 'QCPortal Documentation',
-     'The QCArchive Development Team', 'manual'),
+    (master_doc, "QCPortal.tex", "QCPortal Documentation", "The QCArchive Development Team", "manual"),
 ]
 
 
@@ -182,10 +180,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'qcportal', 'QCPortal Documentation',
-     [author], 1)
-]
+man_pages = [(master_doc, "qcportal", "QCPortal Documentation", [author], 1)]
 
 
 # -- Keywords for Texinfo output ----------------------------------------------
@@ -194,26 +189,30 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'QCPortal', 'QCPortal Documentation',
-     author, 'QCPortal', 'One line description of project.',
-     'Miscellaneous'),
+    (
+        master_doc,
+        "QCPortal",
+        "QCPortal Documentation",
+        author,
+        "QCPortal",
+        "One line description of project.",
+        "Miscellaneous",
+    ),
 ]
-
 
 
 # -- Extension configuration -------------------------------------------------
 
 extlinks = {
-    'issue': ('https://github.com/MolSSI/QCPortal/issues/%s', 'GH#'),
-    'pr': ('https://github.com/MolSSI/QCPortal/pull/%s', 'GH#')
+    "issue": ("https://github.com/MolSSI/QCPortal/issues/%s", "GH#"),
+    "pr": ("https://github.com/MolSSI/QCPortal/pull/%s", "GH#"),
 }
-
 
 
 # -- Keywords for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
-#intersphinx_mapping = {'python': ('https://docs.python.org/3.7', None),
+# intersphinx_mapping = {'python': ('https://docs.python.org/3.7', None),
 #                       'numpy': ('https://docs.scipy.org/doc/numpy/', None),
 #                       'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
 #                       'matplotlib': ('https://matplotlib.org/', None),
@@ -226,4 +225,4 @@ extlinks = {
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
-html_context = {'extra_js_files': ["https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"]}
+html_context = {"extra_js_files": ["https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"]}

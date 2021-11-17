@@ -1,5 +1,5 @@
-'''Import/Export of QCArchive data
-'''
+"""Import/Export of QCArchive data
+"""
 
 from dataclasses import dataclass
 import typing
@@ -65,34 +65,36 @@ _table_orm_map = {orm.__tablename__: orm for orm in _all_orm}
 
 
 class RowKeyValues:
-    '''Generates and stores information about primary and foreign keys of a table
-    '''
+    """Generates and stores information about primary and foreign keys of a table"""
+
     @dataclass(order=True)
     class PKInfo:
-        '''Holds information about a row's primary key.
+        """Holds information about a row's primary key.
 
         Holds the column names and the values of the primary key columns.
         These are lists in order to handle composite primary keys
-        '''
+        """
+
         table: str
         columns: list
         values: list
 
     @dataclass(order=True)
     class FKInfo:
-        '''Holds information about a row's foreign key.
+        """Holds information about a row's foreign key.
 
         For a single foreign key, holds the source and destination/foreign table names and columns. Also
         holds the value in the source row.
-        '''
+        """
+
         src_table: str
         src_column: str
         dest_table: str
         dest_column: str
-        value: 'typing.Any'
+        value: "typing.Any"
 
     def __init__(self, orm_obj):
-        '''Generates primary and foreign key info given an ORM object'''
+        """Generates primary and foreign key info given an ORM object"""
 
         self.orm_type = type(orm_obj)
         insp = inspect(self.orm_type)
@@ -139,19 +141,19 @@ class RowKeyValues:
             fk.value = getattr(orm_obj, fk.src_column)
 
     def is_composite_primary(self):
-        '''Returns True if this represents a composite primary key'''
+        """Returns True if this represents a composite primary key"""
         return len(self.primary_key.columns) > 1
 
     def as_lookup_key(self):
-        '''Return a unique string representing the primary key
+        """Return a unique string representing the primary key
 
         This is used as a key to a dictionary to store already-copied data.
-        '''
+        """
         return repr(self.orm_type) + repr(self.primary_key)
 
     def remove_primary_key(self, orm_obj):
-        '''Remove primary key values that are integers and not part of
-           a composite primary key'''
+        """Remove primary key values that are integers and not part of
+        a composite primary key"""
 
         if type(orm_obj) != self.orm_type:
             raise RuntimeError("Removing primary keys of type f{type(orm_obj)} but I can only handle {self.orm_type}")
@@ -165,8 +167,8 @@ class RowKeyValues:
                 setattr(orm_obj, pk, None)
 
 
-def _add_children(orm_obj, session_dest, session_src, new_pk_map, options, row_key_info, indent=''):
-    '''Given an ORM object, adds the dependent data (through foreign keys)
+def _add_children(orm_obj, session_dest, session_src, new_pk_map, options, row_key_info, indent=""):
+    """Given an ORM object, adds the dependent data (through foreign keys)
 
     Finds all the foreign keys for the object, and adds the dependent data to the DB.
     It then fixes the values of the foreign keys in the ORM object to match the newly-inserted data.
@@ -187,7 +189,7 @@ def _add_children(orm_obj, session_dest, session_src, new_pk_map, options, row_k
         Information about the row's primary and foreign keys
     indent : str
         Prefix to add to all printed output lines
-    '''
+    """
 
     for fk_info in row_key_info.foreign_keys:
         # Data in that column may be empty/null
@@ -196,10 +198,9 @@ def _add_children(orm_obj, session_dest, session_src, new_pk_map, options, row_k
 
         print(indent + "+ Handling child: ")
         print(
-            indent +
-            f"  - {fk_info.src_table}.{fk_info.src_column}:{fk_info.value}  ->  {fk_info.dest_table}.{fk_info.dest_column}"
+            indent
+            + f"  - {fk_info.src_table}.{fk_info.src_column}:{fk_info.value}  ->  {fk_info.dest_table}.{fk_info.dest_column}"
         )
-
 
         # We need to load from the db (from the foreign/destination table) given the column and value
         #    in the foreign key info
@@ -210,21 +211,23 @@ def _add_children(orm_obj, session_dest, session_src, new_pk_map, options, row_k
         #       we can check new_pk_map here using the info from the foreign key to see if it
         #       was already done. However, the hit rate would generally be low, and might be error
         #       prone, especially with esoteric cases.
-        new_info = _general_copy(table_name=fk_info.dest_table,
-                                 session_dest=session_dest,
-                                 session_src=session_src,
-                                 new_pk_map=new_pk_map,
-                                 options=options,
-                                 filter_by=fk_query,
-                                 single=True,
-                                 indent=indent + '  ')
+        new_info = _general_copy(
+            table_name=fk_info.dest_table,
+            session_dest=session_dest,
+            session_src=session_src,
+            new_pk_map=new_pk_map,
+            options=options,
+            filter_by=fk_query,
+            single=True,
+            indent=indent + "  ",
+        )
 
         # Now set the foreign keys to point to the new id
         setattr(orm_obj, fk_info.src_column, new_info[fk_info.dest_column])
 
 
 def _add_tasks_and_services(base_result_id, session_dest, session_src, new_pk_map, options, indent):
-    '''Adds entries in the task_queue and service_queue given something deriving from base_result
+    """Adds entries in the task_queue and service_queue given something deriving from base_result
 
     Should only be called after adding the result or procedure.
 
@@ -242,49 +245,55 @@ def _add_tasks_and_services(base_result_id, session_dest, session_src, new_pk_ma
         Various options to be passed into the internal functions
     indent : str
         Prefix to add to all printed output lines
-    '''
+    """
 
     print(indent + f"$ Adding task & service queue entries for base_result_id = {base_result_id}")
 
     # Add anything from the task queue corresponding to the given base result id
     # (if calculation is completed, task is deleted)
-    _general_copy(table_name='task_queue',
-                  session_dest=session_dest,
-                  session_src=session_src,
-                  new_pk_map=new_pk_map,
-                  options=options,
-                  filter_by={'base_result_id': base_result_id},
-                  indent=indent + '  ')
+    _general_copy(
+        table_name="task_queue",
+        session_dest=session_dest,
+        session_src=session_src,
+        new_pk_map=new_pk_map,
+        options=options,
+        filter_by={"base_result_id": base_result_id},
+        indent=indent + "  ",
+    )
 
     # Do the same for the services queue
-    #if int(base_result_id) == 17761750:
+    # if int(base_result_id) == 17761750:
     #    breakpoint()
-    _general_copy(table_name='service_queue',
-                  session_dest=session_dest,
-                  session_src=session_src,
-                  new_pk_map=new_pk_map,
-                  options=options,
-                  filter_by={'procedure_id': base_result_id},
-                  indent=indent + '  ')
+    _general_copy(
+        table_name="service_queue",
+        session_dest=session_dest,
+        session_src=session_src,
+        new_pk_map=new_pk_map,
+        options=options,
+        filter_by={"procedure_id": base_result_id},
+        indent=indent + "  ",
+    )
 
 
-def _general_copy(table_name,
-                  session_dest,
-                  session_src,
-                  new_pk_map,
-                  options,
-                  filter_by=None,
-                  filter_in=None,
-                  order_by=None,
-                  limit=None,
-                  single=False,
-                  indent=''):
-    ''' 
+def _general_copy(
+    table_name,
+    session_dest,
+    session_src,
+    new_pk_map,
+    options,
+    filter_by=None,
+    filter_in=None,
+    order_by=None,
+    limit=None,
+    single=False,
+    indent="",
+):
+    """
     Given queries, copies all results of the query from session_src to session_dest
 
     Adds data to session_dest, keeping a map of newly-added info and fixing foreign keys
     to match newly-inserted data.
-    
+
     Called recursively to add dependent data through foreign keys.
 
     Parameters
@@ -311,7 +320,7 @@ def _general_copy(table_name,
         If true, expect only one returned record. If not, raise an exception
     indent : str
         Prefix to add to all printed output lines
-    '''
+    """
 
     orm_type = _table_orm_map[table_name]
 
@@ -336,13 +345,13 @@ def _general_copy(table_name,
 
     if limit is not None:
         if single and limit != 1:
-            raise RuntimeError(f'Limit = {limit} but single return is specified')
+            raise RuntimeError(f"Limit = {limit} but single return is specified")
         query = query.limit(limit)
     elif single:
         limit = 1
 
     # Disable all relationship loading
-    query = query.options(Load(orm_type).noload('*'))
+    query = query.options(Load(orm_type).noload("*"))
 
     data = query.all()
     return_info = []
@@ -366,12 +375,11 @@ def _general_copy(table_name,
         # real_orm_type should never be BaseResultORM
         assert real_orm_type != BaseResultORM
 
-        print(indent +
-              f'* Copying {table_name} {str(src_rck.primary_key.columns)} = {str(src_rck.primary_key.values)}')
+        print(indent + f"* Copying {table_name} {str(src_rck.primary_key.columns)} = {str(src_rck.primary_key.values)}")
 
         if real_orm_type != orm_type:
-            print(indent + f'& But actually using table {real_table_name}')
-            
+            print(indent + f"& But actually using table {real_table_name}")
+
         ############################################################
         ############################################################
         ## TODO - If working with an existing db, do lookups here ##
@@ -382,7 +390,7 @@ def _general_copy(table_name,
 
         src_lookup_key = src_rck.as_lookup_key()
         if src_lookup_key in new_pk_map:
-            print(indent + f'  - Already previously done')
+            print(indent + f"  - Already previously done")
             return_info.append(new_pk_map[src_lookup_key])
             continue
 
@@ -390,18 +398,17 @@ def _general_copy(table_name,
         src_info = d.to_dict()
 
         # Loop through foreign keys and recursively add those
-        _add_children(d, session_dest, session_src, new_pk_map, options, src_rck, indent + '  ')
+        _add_children(d, session_dest, session_src, new_pk_map, options, src_rck, indent + "  ")
 
         # Remove the primary key. We will generate a new one on adding
         src_rck.remove_primary_key(d)
 
         # Truncate KV store entries by default
         # (but can be overridden)
-        if table_name == 'kv_store':
-            truncate_kv_store = options.get('truncate_kv_store', True)
+        if table_name == "kv_store":
+            truncate_kv_store = options.get("truncate_kv_store", True)
             if truncate_kv_store:
                 d.value = str(d.value)[:2000]
-            
 
         # Now add it to the session
         # and obtain the key info
@@ -409,15 +416,18 @@ def _general_copy(table_name,
         session_dest.commit()
 
         dest_rck = RowKeyValues(d)
-        print(indent + f'! adding {real_table_name} {str(src_rck.primary_key.values)} = {str(dest_rck.primary_key.values)}')
+        print(
+            indent
+            + f"! adding {real_table_name} {str(src_rck.primary_key.values)} = {str(dest_rck.primary_key.values)}"
+        )
 
         # Store the info for the entire row
         # (exception: kvstore)
         dest_info = d.to_dict()
 
         # Don't store kvstore data in the dictionary (not needed)
-        if table_name == 'kv_store':
-            dest_info.pop('value')
+        if table_name == "kv_store":
+            dest_info.pop("value")
 
         # We can't just use primary key, since foreign keys may
         # reference non-primary-keys of other tables (as long as they are unique)
@@ -435,34 +445,38 @@ def _general_copy(table_name,
         if real_orm_type in extra_children_map:
             # The function called in extra_children_map may modify the object.
             # We let the called function do that, then merge it back into the db
-            extra_children_map[real_orm_type](d, src_info, session_dest, session_src, new_pk_map, options, indent + '  ')
+            extra_children_map[real_orm_type](
+                d, src_info, session_dest, session_src, new_pk_map, options, indent + "  "
+            )
             session_dest.commit()
 
         ########################################################################
         # Now add tasks/services if this is a result/procedure
         ########################################################################
         if issubclass(real_orm_type, BaseResultORM):
-            _add_tasks_and_services(src_info['id'], session_dest, session_src, new_pk_map, options, indent + '  ')
+            _add_tasks_and_services(src_info["id"], session_dest, session_src, new_pk_map, options, indent + "  ")
 
     # If the caller specified single=True, should only be one record
     if single:
         if len(return_info) != 1:
-            raise RuntimeError(f'Wanted single record but got {len(return_info)} instead')
+            raise RuntimeError(f"Wanted single record but got {len(return_info)} instead")
         return return_info[0]
     else:
         return return_info
 
 
-def general_copy(table_name,
-                 storage_dest,
-                 storage_src,
-                 new_pk_map=None,
-                 options={},
-                 filter_by={},
-                 order_by=None,
-                 limit=None,
-                 indent=''):
-    ''' Copies data from the source db to the destination db
+def general_copy(
+    table_name,
+    storage_dest,
+    storage_src,
+    new_pk_map=None,
+    options={},
+    filter_by={},
+    order_by=None,
+    limit=None,
+    indent="",
+):
+    """Copies data from the source db to the destination db
 
     Given queries, copies all results of the query from session_src to session_dest
 
@@ -488,19 +502,21 @@ def general_copy(table_name,
         Limit the number of records returned
     indent : str
         Prefix to add to all printed output lines
-    '''
+    """
 
     if new_pk_map is None:
         new_pk_map = dict()
 
     with storage_src.session_scope() as session_src:
         with storage_dest.session_scope() as session_dest:
-            _general_copy(table_name,
-                          session_dest,
-                          session_src,
-                          new_pk_map=new_pk_map,
-                          options=options,
-                          filter_by=filter_by,
-                          order_by=order_by,
-                          limit=limit,
-                          indent=indent)
+            _general_copy(
+                table_name,
+                session_dest,
+                session_src,
+                new_pk_map=new_pk_map,
+                options=options,
+                filter_by=filter_by,
+                order_by=order_by,
+                limit=limit,
+                indent=indent,
+            )

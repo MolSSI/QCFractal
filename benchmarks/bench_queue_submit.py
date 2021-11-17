@@ -16,6 +16,7 @@ mol_trials = [1, 5, 10, 25, 50, 100, 500, 1000]
 
 COUNTER_MOL = 0
 
+
 def build_unique_mol():
     global COUNTER_MOL
     mol = qcel.models.Molecule(symbols=["He", "He"], geometry=np.random.rand(2, 3) + COUNTER_MOL, validated=True)
@@ -27,10 +28,10 @@ def create_unique_result():
 
     mol = build_unique_mol()
     ret = storage.add_molecules([mol])["data"]
-    result = ResultRecord(version='1', driver='energy', program='games', molecule=ret[0],
-                          method='test', basis='6-31g')
+    result = ResultRecord(version="1", driver="energy", program="games", molecule=ret[0], method="test", basis="6-31g")
 
     return result
+
 
 def create_unique_task():
 
@@ -46,7 +47,8 @@ def create_unique_task():
             "base_result": res[0],
         }
     )
-    return task;
+    return task
+
 
 if run_tests:
     print("Running tests...\n")
@@ -70,7 +72,6 @@ if run_tests:
     print("Running timings for add...\n")
     for trial in mol_trials:
         tasks = [create_unique_task() for x in range(trial)]
-
 
         t = time.time()
         ret = storage.queue_submit(tasks)["data"]
