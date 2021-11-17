@@ -15,6 +15,14 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.15.7 / 2021-10-13
+-------------------
+
+Some minor additions/fixes, mostly to improve performance of some operations
+and to prevent consistency issues.
+
+- (:pr:`683`) Fixes issue with keyword aliases not being compared case-insensitive
+
 
 0.15.6 / 2021-06-06
 -------------------
