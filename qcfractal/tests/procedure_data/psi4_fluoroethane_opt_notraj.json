@@ -3,9 +3,11 @@
         "procedure": "optimization",
         "program": "geometric",
         "keywords": {
-            "reset": true,
-            "coordsys": "tric",
-            "program": "psi4"
+            "values": {
+                "reset": true,
+                "coordsys": "tric",
+                "program": "psi4"
+            }
         },
         "qc_spec": {
             "driver": "gradient",

@@ -6,7 +6,9 @@
         "method": "b3lyp",
         "basis": "6-31g",
         "keywords": {
-            "e_convergence": 1e-06
+            "values": {
+                "e_convergence": 1e-06
+            }
         },
         "protocols": {}
     },

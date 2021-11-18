@@ -3,8 +3,10 @@
         "procedure": "optimization",
         "program": "geometric",
         "keywords": {
-            "maxiter": 2,
-            "program": "psi4"
+            "values": {
+                "maxiter": 2,
+                "program": "psi4"
+            }
         },
         "qc_spec": {
             "driver": "gradient",

@@ -5,7 +5,9 @@
         "program": "rdkit",
         "method": "uff",
         "basis": "",
-        "keywords": {},
+        "keywords": {
+            "values": {}
+        },
         "protocols": {}
     },
     "molecule": {

@@ -5,7 +5,9 @@
         "program": "psi4",
         "method": "b3lyp",
         "basis": "6-31g",
-        "keywords": {},
+        "keywords": {
+            "values": {}
+        },
         "protocols": {}
     },
     "molecule": {
