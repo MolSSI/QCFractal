@@ -6,7 +6,9 @@
         "method": "b3lyp",
         "basis": "sto-3g",
         "keywords": {
-            "maxiter": 2
+            "values": {
+                "maxiter": 2
+            }
         },
         "protocols": {}
     },

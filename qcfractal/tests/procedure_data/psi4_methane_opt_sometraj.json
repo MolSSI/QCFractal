@@ -3,7 +3,9 @@
         "procedure": "optimization",
         "program": "geometric",
         "keywords": {
-            "program": "psi4"
+            "values": {
+                "program": "psi4"
+            }
         },
         "qc_spec": {
             "driver": "gradient",

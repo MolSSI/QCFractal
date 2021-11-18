@@ -6,7 +6,9 @@
         "method": "b3lyp",
         "basis": "6-31g",
         "keywords": {
-            "maxiter": 100
+            "values": {
+                "maxiter": 100
+            }
         },
         "protocols": {}
     },

@@ -6,7 +6,9 @@
         "method": "b3lyp",
         "basis": "sto-0g",
         "keywords": {
-            "bad_keyword": 100
+            "values": {
+                "bad_keyword": 100
+            }
         },
         "protocols": {}
     },
