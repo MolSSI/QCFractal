@@ -3,6 +3,7 @@ from typing import Dict, Any, Optional, Iterable
 from sqlalchemy import Column, Integer, Boolean, String, ForeignKey, UniqueConstraint
 
 from qcfractal.db_socket import BaseORM, MsgpackExt
+from qcfractal.portal.components.wavefunctions import WavefunctionProperties
 
 
 class WavefunctionStoreORM(BaseORM):
@@ -48,9 +49,18 @@ class WavefunctionStoreORM(BaseORM):
 
     __table_args__ = (UniqueConstraint("record_id", name="ux_wavefunction_store_record_id"),)
 
+    @classmethod
+    def from_model(cls, wfn_model: WavefunctionProperties):
+        return cls(**wfn_model.dict())
+
     def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
 
         d = BaseORM.dict(self, exclude)
+
+        d.pop("record_id")
+
+        # Remove the id field - not present in the model
+        d.pop("id", None)
 
         # TODO - this is because the pydantic models are goofy
         return {k: v for k, v in d.items() if v is not None}

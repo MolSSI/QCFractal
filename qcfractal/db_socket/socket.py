@@ -149,8 +149,6 @@ class SQLAlchemySocket:
 
         # Create/initialize the subsockets
         from ..components.molecules.sockets import MoleculeSocket
-        from ..components.outputstore.sockets import OutputStoreSocket
-        from ..components.wavefunctions.sockets import WavefunctionSocket
         from ..components.keywords.sockets import KeywordsSocket
         from ..components.permissions.sockets import UserSocket, RoleSocket
         from ..components.serverinfo.sockets import ServerInfoSocket
@@ -161,14 +159,12 @@ class SQLAlchemySocket:
         from ..components.datasets.sockets import DatasetSocket
 
         self.serverinfo = ServerInfoSocket(self)
-        self.outputstore = OutputStoreSocket(self)
         self.keywords = KeywordsSocket(self)
         self.molecules = MoleculeSocket(self)
         self.datasets = DatasetSocket(self)
         self.records = RecordSocket(self)
         self.tasks = TaskSocket(self)
         self.services = ServiceSocket(self)
-        self.wavefunctions = WavefunctionSocket(self)
         self.managers = ManagerSocket(self)
         self.users = UserSocket(self)
         self.roles = RoleSocket(self)
