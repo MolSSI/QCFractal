@@ -3,7 +3,8 @@ from typing import Dict, Any, Optional, Iterable
 from sqlalchemy import Column, Integer, Enum, JSON, LargeBinary, ForeignKey, Index
 
 from qcfractal.db_socket import BaseORM
-from qcfractal.portal.components.outputstore.models import CompressionEnum, OutputTypeEnum
+from qcfractal.portal.components.outputstore import CompressionEnum, OutputStore
+from qcfractal.portal.components.outputstore.models import OutputTypeEnum
 
 
 class OutputStoreORM(BaseORM):
@@ -20,16 +21,19 @@ class OutputStoreORM(BaseORM):
 
     __table_args__ = (Index("ix_output_store_record_history_id", "record_history_id"),)
 
+    @classmethod
+    def from_model(cls, output_model: OutputStore):
+        return cls(**output_model.dict())
+
     def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
 
         d = BaseORM.dict(self, exclude)
 
+        d.pop("record_history_id")
+
         # Old way: store a plain string or dict in "value"
         # New way: store (possibly) compressed output in "data"
         val = d.pop("value")
-
-        # Also remove the record history id - not useful to end users
-        d.pop("record_history_id")
 
         # If stored the old way, convert to the new way
         if d["data"] is None:

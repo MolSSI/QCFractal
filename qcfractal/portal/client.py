@@ -564,40 +564,40 @@ class PortalClient:
         # Request the info, and store here for later use
         return self._auto_request("get", "v1/information", None, None, Dict[str, Any], None, None)
 
-    def _get_outputs(
-        self,
-        id: Union[int, Sequence[int]],
-        missing_ok: bool = False,
-    ) -> Union[Optional[OutputStore], List[Optional[OutputStore]]]:
-        """Obtains outputs from the server via output ids
+    # def _get_outputs(
+    #    self,
+    #    id: Union[int, Sequence[int]],
+    #    missing_ok: bool = False,
+    # ) -> Union[Optional[OutputStore], List[Optional[OutputStore]]]:
+    #    """Obtains outputs from the server via output ids
 
-        Note: This is the id of the output, not of the calculation record.
+    #    Note: This is the id of the output, not of the calculation record.
 
-        Parameters
-        ----------
-        id
-            An id or list of ids to query.
-        missing_ok
-            If True, return ``None`` for ids that were not found on the server.
-            If False, raise ``KeyError`` if any ids were not found on the server.
+    #    Parameters
+    #    ----------
+    #    id
+    #        An id or list of ids to query.
+    #    missing_ok
+    #        If True, return ``None`` for ids that were not found on the server.
+    #        If False, raise ``KeyError`` if any ids were not found on the server.
 
-        Returns
-        -------
-        :
-            The requested outputs, in the same order as the requested ids.
-            If given a list of ids, the return value will be a list.
-            Otherwise, it will be a single output.
-        """
+    #    Returns
+    #    -------
+    #    :
+    #        The requested outputs, in the same order as the requested ids.
+    #        If given a list of ids, the return value will be a list.
+    #        Otherwise, it will be a single output.
+    #    """
 
-        url_params = {"id": make_list(id), "missing_ok": missing_ok}
-        outputs = self._auto_request(
-            "get", "v1/output", None, CommonGetURLParameters, List[Optional[OutputStore]], None, url_params
-        )
+    #    url_params = {"id": make_list(id), "missing_ok": missing_ok}
+    #    outputs = self._auto_request(
+    #        "get", "v1/output", None, CommonGetURLParameters, List[Optional[OutputStore]], None, url_params
+    #    )
 
-        if isinstance(id, Sequence):
-            return outputs
-        else:
-            return outputs[0]
+    #    if isinstance(id, Sequence):
+    #        return outputs
+    #    else:
+    #        return outputs[0]
 
     ### Molecule section
 
@@ -1032,47 +1032,47 @@ class PortalClient:
         collection = self.get_collection(collection_type, name)
         self._automodel_request(f"collection/{collection.data.id}", "delete", payload={"meta": {}})
 
-    # TODO: we would want to cache these
-    def get_wavefunctions(
-        self,
-        id: Union[int, Sequence[int]],
-        missing_ok: bool = False,
-    ) -> Union[Optional[WavefunctionProperties], List[Optional[WavefunctionProperties]]]:
-        """Obtains wavefunction data from the server via wavefunction ids
+    ## TODO: we would want to cache these
+    # def get_wavefunctions(
+    #    self,
+    #    id: Union[int, Sequence[int]],
+    #    missing_ok: bool = False,
+    # ) -> Union[Optional[WavefunctionProperties], List[Optional[WavefunctionProperties]]]:
+    #    """Obtains wavefunction data from the server via wavefunction ids
 
-        Note: This is the id of the wavefunction, not of the calculation record.
+    #    Note: This is the id of the wavefunction, not of the calculation record.
 
-        Parameters
-        ----------
-        id
-            An id or list of ids to query.
-        missing_ok
-            If True, return ``None`` for ids that were not found on the server.
-            If False, raise ``KeyError`` if any ids were not found on the server.
+    #    Parameters
+    #    ----------
+    #    id
+    #        An id or list of ids to query.
+    #    missing_ok
+    #        If True, return ``None`` for ids that were not found on the server.
+    #        If False, raise ``KeyError`` if any ids were not found on the server.
 
-        Returns
-        -------
-        :
-            The requested wavefunctions, in the same order as the requested ids.
-            If given a list of ids, the return value will be a list.
-            Otherwise, it will be a single output.
-        """
+    #    Returns
+    #    -------
+    #    :
+    #        The requested wavefunctions, in the same order as the requested ids.
+    #        If given a list of ids, the return value will be a list.
+    #        Otherwise, it will be a single output.
+    #    """
 
-        url_params = {"id": make_list(id), "missing_ok": missing_ok}
-        wfns = self._auto_request(
-            "get",
-            "v1/wavefunction",
-            None,
-            CommonGetURLParameters,
-            List[Optional[WavefunctionProperties]],
-            None,
-            url_params,
-        )
+    #    url_params = {"id": make_list(id), "missing_ok": missing_ok}
+    #    wfns = self._auto_request(
+    #        "get",
+    #        "v1/wavefunction",
+    #        None,
+    #        CommonGetURLParameters,
+    #        List[Optional[WavefunctionProperties]],
+    #        None,
+    #        url_params,
+    #    )
 
-        if isinstance(id, Sequence):
-            return wfns
-        else:
-            return wfns[0]
+    #    if isinstance(id, Sequence):
+    #        return wfns
+    #    else:
+    #        return wfns[0]
 
     def get_records(
         self,

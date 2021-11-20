@@ -7,10 +7,9 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from qcfractal.components.outputstore.sockets import OutputStoreSocket
+from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.records.db_models import RecordComputeHistoryORM
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
-from qcfractal.components.wavefunctions.sockets import WavefunctionSocket
 from qcfractal.interface.models import (
     AllResultTypes,
 )
@@ -66,7 +65,7 @@ def create_compute_history_entry(
             )
             all_outputs.append(error)
 
-    history_orm.outputs = [OutputStoreSocket.output_to_orm(x) for x in all_outputs]
+    history_orm.outputs = [OutputStoreORM.from_model(x) for x in all_outputs]
 
     return history_orm
 
@@ -87,4 +86,4 @@ def wavefunction_helper(wavefunction: Optional[WavefunctionProperties]) -> Optio
 
     wavefunction_save = {k: wfn_dict[k] for k in available_keys}
     wfn_prop = WavefunctionProperties(**wavefunction_save)
-    return WavefunctionSocket.wavefunction_to_orm(wfn_prop)
+    return WavefunctionStoreORM.from_model(wfn_prop)
