@@ -29,8 +29,6 @@ class OutputStoreORM(BaseORM):
 
         d = BaseORM.dict(self, exclude)
 
-        d.pop("record_history_id")
-
         # Old way: store a plain string or dict in "value"
         # New way: store (possibly) compressed output in "data"
         val = d.pop("value")
