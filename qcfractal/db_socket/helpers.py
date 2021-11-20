@@ -318,9 +318,9 @@ def get_general(
     orm_type: Type[_ORM_T],
     search_col: InstrumentedAttribute,
     search_values: Sequence[Any],
-    include: Optional[Sequence[str]],
-    exclude: Optional[Sequence[str]],
-    default_exclude: Optional[Sequence[str]],
+    include: Optional[Iterable[str]],
+    exclude: Optional[Iterable[str]],
+    default_exclude: Optional[Iterable[str]],
     missing_ok: bool,
 ) -> List[Optional[Dict[str, Any]]]:
     """
@@ -392,6 +392,86 @@ def get_general(
 
     if missing_ok is False and None in ret:
         raise MissingDataError("Could not find all requested records")
+
+    return ret
+
+
+def get_general_multi(
+    session: sqlalchemy.orm.session.Session,
+    orm_type: Type[_ORM_T],
+    search_col: InstrumentedAttribute,
+    search_values: Sequence[Any],
+    include: Optional[Iterable[str]],
+    exclude: Optional[Iterable[str]],
+    default_exclude: Optional[Iterable[str]],
+) -> List[List[Dict[str, Any]]]:
+    """
+    Perform a query for records based on a unique id
+
+    For a list of search values, obtain all the records, in input order. This function wraps a simple query
+    to make sure that the returned ORM are in the same order as the input, and to optionally check that
+    all required records exist.
+
+    Relationships that are to be loaded will be loaded via selectinload.
+
+    This version of the function will return a list per given id
+
+    Parameters
+    ----------
+    session
+        An existing SQLAlchemy session to use for querying/adding/updating/deleting
+    orm_type
+        ORM to search for (MoleculeORM, etc)
+    include
+        Which columns to include in the return. If specified, other columns will be excluded
+    exclude
+        Do not return these columns
+    default_exclude
+        If include is None, then all columns are returned, except for these columns, which are
+        excluded by default.
+    search_col
+        The column to use for searching the database (typically TableORM.id or similar)
+    search_values
+        Values of the search column to search for, in order
+
+    Returns
+    -------
+    :
+        A list of ORM objects in the same order as the search_values parameter.
+        These ORM objects will be attached to the session.
+    """
+
+    if len(search_values) == 0:
+        return []
+
+    # We must make sure the column we are searching for is included
+    if include is not None:
+        include = set(include) | {search_col.key}
+    if exclude is not None:
+        exclude = set(exclude) - {search_col.key}
+
+    unique_values = list(set(search_values))
+    load_cols, load_rels = get_query_proj_columns(orm_type, include, exclude, default_exclude)
+
+    stmt = select(orm_type).filter(search_col.in_(unique_values))
+    stmt = stmt.options(load_only(*load_cols))
+
+    if load_rels:
+        loads = [selectinload(x) for x in load_rels]
+        stmt = stmt.options(*loads)
+
+    results = session.execute(stmt).scalars().all()
+
+    col_name = search_col.key
+    result_list = [r.dict() for r in results]
+
+    result_map = {}
+    for r in result_list:
+        result_map.setdefault(r[col_name], list())
+        result_map[r[col_name]].append(r)
+
+    # Put into the requested order
+    ret = [result_map.get(x, list()) for x in search_values]
 
     return ret
 
