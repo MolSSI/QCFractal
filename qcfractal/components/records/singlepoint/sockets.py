@@ -114,6 +114,49 @@ class SinglePointRecordSocket:
                 r = session.execute(stmt).scalar_one()
                 return InsertMetadata(existing_idx=[0]), r
 
+    def get(
+        self,
+        id: Sequence[int],
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
+        missing_ok: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Optional[SinglePointRecordDict]]:
+        """
+        Obtain a singlepoint record with specified IDs
+
+        The returned information will be in order of the given ids
+
+        If missing_ok is False, then any ids that are missing in the database will raise an exception. Otherwise,
+        the corresponding entry in the returned list of results will be None.
+
+        Parameters
+        ----------
+        id
+            A list or other sequence of record IDs
+        include
+            Which fields of the result to return. Default is to return all fields.
+        exclude
+            Remove these fields from the return. Default is to return all fields.
+        missing_ok
+           If set to True, then missing results will be tolerated, and the returned list of
+           Molecules will contain None for the corresponding IDs that were not found.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
+
+        Returns
+        -------
+        :
+            Records as a dictionary in the same order as the given ids.
+            If missing_ok is True, then this list will contain None where the molecule was missing.
+        """
+
+        default_exclude = {"wavefunction", "molecule"}
+        return self.root_socket.records.get_base(
+            ResultORM, default_exclude, id, include, exclude, missing_ok, session=session
+        )
+
     def add(
         self,
         sp_spec: SinglePointSpecification,

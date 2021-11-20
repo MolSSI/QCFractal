@@ -39,6 +39,7 @@ class OutputStore(ProtoModel):
     id: Optional[int] = Field(
         None, description="ID of the object on the database. This is assigned automatically by the database."
     )
+    record_history_id: Optional[int] = Field(None, description="The history ID this output is attached to")
 
     output_type: OutputTypeEnum = Field(..., description="The type of output this is (stdout, error, etc)")
     compression: CompressionEnum = Field(CompressionEnum.none, description="Compression method (such as gzip)")

@@ -2,12 +2,20 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from qcfractal.components.records.db_models import BaseResultORM
+from qcfractal.components.records.db_models import BaseResultORM, RecordComputeHistoryORM
+from qcfractal.components.outputstore.db_models import OutputStoreORM
 from sqlalchemy import and_, select
 from sqlalchemy.orm import selectinload, load_only
 from qcfractal.interface.models import RecordStatusEnum, FailedOperation
+from qcfractal.exceptions import MissingDataError
 from qcfractal.portal.metadata_models import QueryMetadata
-from qcfractal.db_socket.helpers import get_query_proj_columns, get_count_2, calculate_limit, get_general
+from qcfractal.db_socket.helpers import (
+    get_query_proj_columns,
+    get_count_2,
+    calculate_limit,
+    get_general,
+    get_general_multi,
+)
 
 from typing import TYPE_CHECKING
 
@@ -15,7 +23,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.interface.models import AllResultTypes
-    from typing import List, Dict, Tuple, Optional, Sequence, Any, Iterable
+    from typing import List, Dict, Tuple, Optional, Sequence, Any, Iterable, Type
 
     ProcedureDict = Dict[str, Any]
 
@@ -25,6 +33,7 @@ class RecordSocket:
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
         self._limit = root_socket.qcf_config.response_limits.record
+        self._output_limit = root_socket.qcf_config.response_limits.output_store
 
         # All the subsockets
         from .singlepoint.sockets import SinglePointRecordSocket
@@ -122,8 +131,10 @@ class RecordSocket:
         meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
         return meta, result_dicts
 
-    def get(
+    def get_base(
         self,
+        record_type: Type[BaseResultORM],
+        add_default_exclude: Optional[Iterable[str]],
         id: Sequence[int],
         include: Optional[Sequence[str]] = None,
         exclude: Optional[Sequence[str]] = None,
@@ -132,17 +143,20 @@ class RecordSocket:
         session: Optional[Session] = None,
     ) -> List[Optional[ProcedureDict]]:
         """
-        Obtain results of any kind of record with specified IDs
+        Obtain records of a specified type with specified IDs
 
-        The returned information will be in order of the given ids
+        This function allows for additional default_excludes, as well as includes/excludes
+        that pertain to the derived class rather than just the base class.
 
         If missing_ok is False, then any ids that are missing in the database will raise an exception. Otherwise,
         the corresponding entry in the returned list of results will be None.
 
         Parameters
         ----------
-        session
-            An existing SQLAlchemy session to get data from
+        record_type
+            The type of record to get (as an ORM class)
+        add_default_exclude
+            Additional default excludes to merge with the base default excludes
         id
             A list or other sequence of record IDs
         include
@@ -167,9 +181,62 @@ class RecordSocket:
         # By default, exclude the full compute history and task
         default_exclude = {"compute_history", "task"}
 
+        if add_default_exclude is not None:
+            default_exclude.update(add_default_exclude)
+
         with self.root_socket.optional_session(session, True) as session:
-            return get_general(
-                session, BaseResultORM, BaseResultORM.id, id, include, exclude, default_exclude, missing_ok
+            return get_general(session, record_type, record_type.id, id, include, exclude, default_exclude, missing_ok)
+
+    def get(
+        self,
+        id: Sequence[int],
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
+        missing_ok: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Optional[ProcedureDict]]:
+        """
+        Obtain records of any kind of record with specified IDs
+
+        The returned information will be in order of the given ids
+
+        If missing_ok is False, then any ids that are missing in the database will raise an exception. Otherwise,
+        the corresponding entry in the returned list of results will be None.
+
+        Parameters
+        ----------
+        id
+            A list or other sequence of record IDs
+        include
+            Which fields of the result to return. Default is to return all fields.
+        exclude
+            Remove these fields from the return. Default is to return all fields.
+        missing_ok
+           If set to True, then missing results will be tolerated, and the returned list of
+           Molecules will contain None for the corresponding IDs that were not found.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
+
+        Returns
+        -------
+        :
+            Records as a dictionary in the same order as the given ids.
+            If missing_ok is True, then this list will contain None where the molecule was missing.
+        """
+
+        return self.get_base(BaseResultORM, None, id, include, exclude, missing_ok, session=session)
+
+    def get_outputs(self, history_id: Sequence[int], *, session: Optional[Session] = None):
+
+        if len(history_id) > self._output_limit:
+            raise RuntimeError(
+                f"Request for {len(history_id)} output records is over the limit of {self._output_limit}"
+            )
+
+        with self.root_socket.optional_session(session, True) as session:
+            return get_general_multi(
+                session, OutputStoreORM, OutputStoreORM.record_history_id, history_id, None, None, None
             )
 
     def update_completed(self, session: Session, record_orm: BaseResultORM, result: AllResultTypes, manager_name: str):
