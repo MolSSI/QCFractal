@@ -10,7 +10,7 @@ from qcfractal.interface.models import RecordStatusEnum, FailedOperation
 from qcfractal.exceptions import MissingDataError
 from qcfractal.portal.metadata_models import QueryMetadata
 from qcfractal.db_socket.helpers import (
-    get_query_proj_columns,
+    get_query_proj_options,
     get_count_2,
     calculate_limit,
     get_general,
@@ -100,7 +100,7 @@ class RecordSocket:
 
         limit = calculate_limit(self._limit, limit)
 
-        load_cols, load_rels = get_query_proj_columns(BaseResultORM, include, exclude)
+        proj_options = get_query_proj_options(BaseResultORM, include, exclude)
 
         and_query = []
         if id is not None:
@@ -122,7 +122,7 @@ class RecordSocket:
 
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(BaseResultORM).where(*and_query)
-            stmt = stmt.options(load_only(*load_cols))
+            stmt = stmt.options(*proj_options)
             n_found = get_count_2(stmt)
             stmt = stmt.limit(limit).offset(skip)
             results = session.execute(stmt).scalars().all()
@@ -134,7 +134,6 @@ class RecordSocket:
     def get_base(
         self,
         record_type: Type[BaseResultORM],
-        add_default_exclude: Optional[Iterable[str]],
         id: Sequence[int],
         include: Optional[Sequence[str]] = None,
         exclude: Optional[Sequence[str]] = None,
@@ -155,8 +154,6 @@ class RecordSocket:
         ----------
         record_type
             The type of record to get (as an ORM class)
-        add_default_exclude
-            Additional default excludes to merge with the base default excludes
         id
             A list or other sequence of record IDs
         include
@@ -178,14 +175,8 @@ class RecordSocket:
         if len(id) > self._limit:
             raise RuntimeError(f"Request for {len(id)} records is over the limit of {self._limit}")
 
-        # By default, exclude the full compute history and task
-        default_exclude = {"compute_history", "task"}
-
-        if add_default_exclude is not None:
-            default_exclude.update(add_default_exclude)
-
         with self.root_socket.optional_session(session, True) as session:
-            return get_general(session, record_type, record_type.id, id, include, exclude, default_exclude, missing_ok)
+            return get_general(session, record_type, record_type.id, id, include, exclude, missing_ok)
 
     def get(
         self,
@@ -225,7 +216,7 @@ class RecordSocket:
             If missing_ok is True, then this list will contain None where the molecule was missing.
         """
 
-        return self.get_base(BaseResultORM, None, id, include, exclude, missing_ok, session=session)
+        return self.get_base(BaseResultORM, id, include, exclude, missing_ok, session=session)
 
     def get_outputs(self, history_id: Sequence[int], *, session: Optional[Session] = None):
 
@@ -235,9 +226,7 @@ class RecordSocket:
             )
 
         with self.root_socket.optional_session(session, True) as session:
-            return get_general_multi(
-                session, OutputStoreORM, OutputStoreORM.record_history_id, history_id, None, None, None
-            )
+            return get_general_multi(session, OutputStoreORM, OutputStoreORM.record_history_id, history_id, None, None)
 
     def update_completed(self, session: Session, record_orm: BaseResultORM, result: AllResultTypes, manager_name: str):
 

@@ -16,7 +16,7 @@ from qcfractal.portal.metadata_models import InsertMetadata, QueryMetadata
 
 from qcfractal.db_socket.helpers import (
     insert_general,
-    get_query_proj_columns,
+    get_query_proj_options,
     get_count,
     calculate_limit,
 )

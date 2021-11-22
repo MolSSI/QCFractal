@@ -16,7 +16,7 @@ from qcfractal.components.records.db_models import BaseResultORM
 from qcfractal.components.serverinfo.db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM
 from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
-from qcfractal.db_socket.helpers import get_query_proj_columns, get_count_2, calculate_limit
+from qcfractal.db_socket.helpers import get_query_proj_options, get_count_2, calculate_limit
 from qcfractal.portal.metadata_models import QueryMetadata
 
 if TYPE_CHECKING:
@@ -271,7 +271,7 @@ class ServerInfoSocket:
 
         limit = calculate_limit(self._access_log_limit, limit)
 
-        load_cols, _ = get_query_proj_columns(AccessLogORM, include, exclude)
+        proj_options = get_query_proj_options(AccessLogORM, include, exclude)
 
         and_query = []
         if access_type:
@@ -288,7 +288,7 @@ class ServerInfoSocket:
 
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(AccessLogORM).where(and_(*and_query)).order_by(AccessLogORM.access_date.desc())
-            stmt = stmt.options(load_only(*load_cols))
+            stmt = stmt.options(*proj_options)
             n_found = get_count_2(session, stmt)
             stmt = stmt.limit(limit).offset(skip)
             results = session.execute(stmt).scalars().all()

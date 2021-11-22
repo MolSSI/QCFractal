@@ -14,7 +14,7 @@ from qcfractal.components.records.base_handlers import BaseProcedureHandler
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.records.optimization.db_models import Trajectory, OptimizationProcedureORM
 from qcfractal.components.records.singlepoint.db_models import ResultORM
-from qcfractal.db_socket.helpers import insert_general, get_query_proj_columns, get_count, calculate_limit
+from qcfractal.db_socket.helpers import insert_general, get_query_proj_options, get_count, calculate_limit
 from qcfractal.interface.models import (
     ObjectId,
     OptimizationRecord,

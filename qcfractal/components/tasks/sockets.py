@@ -14,7 +14,7 @@ from qcfractal.exceptions import ComputeManagerError
 
 from qcfractal.db_socket.helpers import (
     insert_general,
-    get_query_proj_columns,
+    get_query_proj_options,
     get_count,
 )
 

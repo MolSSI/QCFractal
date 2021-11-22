@@ -1,12 +1,15 @@
 from __future__ import annotations
+
+import logging
+from functools import lru_cache
+from typing import TYPE_CHECKING, Optional
+
+from sqlalchemy import tuple_, and_, or_, func, select, inspect
+from sqlalchemy.orm import load_only, selectinload, lazyload
+
+from qcfractal.db_socket import BaseORM
 from qcfractal.portal.metadata_models import InsertMetadata, DeleteMetadata
 from ..exceptions import MissingDataError
-from qcfractal.db_socket import BaseORM
-from sqlalchemy import tuple_, and_, or_, func, select
-from sqlalchemy.orm import load_only, selectinload
-import logging
-
-from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.attributes import InstrumentedAttribute
@@ -62,42 +65,83 @@ def get_count_2(session, stmt):
     return session.scalar(select(func.count()).select_from(stmt))
 
 
-def get_query_proj_columns(
+@lru_cache(maxsize=10)
+def _get_query_proj_options(
+    orm_type: Type[_ORM_T],
+    include: Optional[Tuple[str, ...]] = None,
+    exclude: Optional[Tuple[str, ...]] = None,
+) -> List[InstrumentedAttribute, ...]:
+
+    mapper = inspect(orm_type)
+    columns = set(mapper.column_attrs.keys())
+    relationships = set(mapper.relationships.keys())
+
+    # Pull out any subrelationships we need to handle
+    # Make a map with the key being the immediate subrelationship
+    # of this orm, and the values being all the columns, subsubrelationships,
+    # etc, of that subrelationship
+    subrel_map = {}
+    if include is not None:
+        subrel_includes = [x for x in include if "." in x]
+        for s in subrel_includes:
+            base, col = s.split(".", maxsplit=1)
+            subrel_map.setdefault(base, list())
+            subrel_map[base].append(col)
+
+    # By default, don't explicitly include relationships
+    # Any query will implicitly include those with lazy=selectin, lazy=join, etc
+    if include is None:
+        # WARNING - aliasing, but that is ok
+        load = columns
+        noload_rels = set()
+    elif "*" in include:
+        load = (columns | set(include)) - {"*"}  # union with include so we get any relationships in include
+        noload_rels = set()
+    else:
+        include_set = set(include)
+        load = include_set
+        noload_rels = relationships - include_set  # don't load any relationships not specified in include
+
+    if exclude:
+        load -= set(exclude)
+
+    # Split out which ones are columns and which are relationships
+    # The relationships are only those specified explicitly in include
+    load_columns = load & columns
+    load_relationships = load & relationships
+
+    options = [load_only(*load_columns)]
+    options += [selectinload(getattr(orm_type, x)) for x in load_relationships]
+    options += [lazyload(getattr(orm_type, x)) for x in noload_rels]
+
+    # Now handle subrelationships
+    for base, cols in subrel_map.items():
+        sub_orm_relmap = mapper.relationships.get(base, None)
+        if sub_orm_relmap is not None:
+            sub_orm = sub_orm_relmap.entity.class_
+            subrel_options = _get_query_proj_options(sub_orm, tuple(cols), None)
+            options += [selectinload(getattr(orm_type, base)).options(*subrel_options)]
+
+    if len(options) == 0:
+        raise RuntimeError("No columns or relationships specified to be loaded. This is a QCFractal developer error")
+
+    return options
+
+
+def get_query_proj_options(
     orm_type: Type[_ORM_T],
     include: Optional[Iterable[str]] = None,
     exclude: Optional[Iterable[str]] = None,
-    default_exclude: Optional[Iterable[str]] = None,
-) -> Tuple[Tuple[InstrumentedAttribute, ...], Tuple[InstrumentedAttribute, ...]]:
+) -> List[InstrumentedAttribute, ...]:
+    # TODO - needs some explanation...
 
-    columns, relationships = orm_type.get_col_types_2()
+    # Wrap the include/exclude in tuples for memoization
+    if include is not None:
+        include = tuple(include)
+    if exclude is not None:
+        exclude = tuple(exclude)
 
-    default_entries = columns | relationships
-
-    if default_exclude:
-        default_entries -= set(default_exclude)
-
-    # By default, include all columns and relationships
-    if include is None:
-        ret = default_entries.copy()
-    elif "*" in include:
-        ret = (set(include) | default_entries) - {"*"}
-    else:
-        ret = set(include)
-
-    if exclude:
-        ret -= set(exclude)
-
-    # Split out which ones are columns and which are attributes
-    ret_columns = ret.intersection(columns)
-    ret_relationships = ret.intersection(relationships)
-
-    if len(ret_columns) == 0 and len(ret_relationships) == 0:
-        raise RuntimeError("No columns or relationships specified to be loaded. This is a QCFractal developer error")
-
-    def to_attr(s):
-        return tuple(getattr(orm_type, x) for x in s)
-
-    return to_attr(ret_columns), to_attr(ret_relationships)
+    return _get_query_proj_options(orm_type, include, exclude)
 
 
 def find_all_indices(lst: Sequence[_T], value: _T) -> Tuple[int, ...]:
@@ -320,7 +364,6 @@ def get_general(
     search_values: Sequence[Any],
     include: Optional[Iterable[str]],
     exclude: Optional[Iterable[str]],
-    default_exclude: Optional[Iterable[str]],
     missing_ok: bool,
 ) -> List[Optional[Dict[str, Any]]]:
     """
@@ -342,9 +385,6 @@ def get_general(
         Which columns to include in the return. If specified, other columns will be excluded
     exclude
         Do not return these columns
-    default_exclude
-        If include is None, then all columns are returned, except for these columns, which are
-        excluded by default.
     search_col
         The column to use for searching the database (typically TableORM.id or similar)
     search_values
@@ -372,14 +412,10 @@ def get_general(
         exclude = set(exclude) - {search_col.key}
 
     unique_values = list(set(search_values))
-    load_cols, load_rels = get_query_proj_columns(orm_type, include, exclude, default_exclude)
+    proj_options = get_query_proj_options(orm_type, include, exclude)
 
     stmt = select(orm_type).filter(search_col.in_(unique_values))
-    stmt = stmt.options(load_only(*load_cols))
-
-    if load_rels:
-        loads = [selectinload(x) for x in load_rels]
-        stmt = stmt.options(*loads)
+    stmt = stmt.options(*proj_options)
 
     results = session.execute(stmt).scalars().all()
 
@@ -403,7 +439,6 @@ def get_general_multi(
     search_values: Sequence[Any],
     include: Optional[Iterable[str]],
     exclude: Optional[Iterable[str]],
-    default_exclude: Optional[Iterable[str]],
 ) -> List[List[Dict[str, Any]]]:
     """
     Perform a query for records based on a unique id
@@ -426,9 +461,6 @@ def get_general_multi(
         Which columns to include in the return. If specified, other columns will be excluded
     exclude
         Do not return these columns
-    default_exclude
-        If include is None, then all columns are returned, except for these columns, which are
-        excluded by default.
     search_col
         The column to use for searching the database (typically TableORM.id or similar)
     search_values
@@ -451,14 +483,10 @@ def get_general_multi(
         exclude = set(exclude) - {search_col.key}
 
     unique_values = list(set(search_values))
-    load_cols, load_rels = get_query_proj_columns(orm_type, include, exclude, default_exclude)
+    proj_options = get_query_proj_options(orm_type, include, exclude)
 
     stmt = select(orm_type).filter(search_col.in_(unique_values))
-    stmt = stmt.options(load_only(*load_cols))
-
-    if load_rels:
-        loads = [selectinload(x) for x in load_rels]
-        stmt = stmt.options(*loads)
+    stmt = stmt.options(*proj_options)
 
     results = session.execute(stmt).scalars().all()
 

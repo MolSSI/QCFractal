@@ -55,10 +55,10 @@ class ResultORM(BaseResultORM):
 
     # uniquely identifying a result
     specification_id = Column(Integer, ForeignKey(SinglePointSpecificationORM.id), nullable=False)
-    specification = relationship(SinglePointSpecificationORM, lazy="joined")
+    specification = relationship(SinglePointSpecificationORM, lazy="selectin", uselist=False)
 
     molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), nullable=False)
-    molecule = relationship(MoleculeORM, lazy="select")
+    molecule = relationship(MoleculeORM, uselist=False)
 
     return_result = Column(MsgpackExt)
     properties = Column(JSONB)
