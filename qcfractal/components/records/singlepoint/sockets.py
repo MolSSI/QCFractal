@@ -63,7 +63,7 @@ class SinglePointRecordSocket:
 
         with self.root_socket.optional_session(session, True) as session:
             return get_general(
-                session, SinglePointSpecificationORM, SinglePointSpecificationORM.id, [id], None, None, None, missing_ok
+                session, SinglePointSpecificationORM, SinglePointSpecificationORM.id, [id], None, None, missing_ok
             )[0]
 
     def add_specification(
@@ -152,10 +152,7 @@ class SinglePointRecordSocket:
             If missing_ok is True, then this list will contain None where the molecule was missing.
         """
 
-        default_exclude = {"wavefunction", "molecule"}
-        return self.root_socket.records.get_base(
-            ResultORM, default_exclude, id, include, exclude, missing_ok, session=session
-        )
+        return self.root_socket.records.get_base(ResultORM, id, include, exclude, missing_ok, session=session)
 
     def add(
         self,
@@ -265,7 +262,7 @@ class SinglePointRecordSocket:
 
         history_orm.manager_name = manager_name
 
-        record_orm.compute_history.insert(0, history_orm)
+        record_orm.compute_history.append(history_orm)
 
         # Update the fields themselves
         record_orm.return_result = record_orm.return_result

@@ -8,7 +8,7 @@ from sqlalchemy import and_, update, select
 from sqlalchemy.orm import load_only, selectinload
 
 from qcfractal.components.managers.db_models import ComputeManagerLogORM, ComputeManagerORM
-from qcfractal.db_socket.helpers import get_query_proj_columns, get_count, calculate_limit, get_count_2, get_general
+from qcfractal.db_socket.helpers import get_query_proj_options, get_count, calculate_limit, get_count_2, get_general
 from qcfractal.exceptions import ComputeManagerError
 from qcfractal.portal.components.managers import ManagerStatusEnum, ManagerName
 from qcfractal.portal.metadata_models import QueryMetadata
@@ -244,13 +244,8 @@ class ManagerSocket:
         if len(name) > self._manager_limit:
             raise RuntimeError(f"Request for {len(name)} managers is over the limit of {self._manager_limit}")
 
-        # By default, exclude the server logs from the returned dict
-        default_exclude = {"log"}
-
         with self.root_socket.optional_session(session, True) as session:
-            return get_general(
-                session, ComputeManagerORM, ComputeManagerORM.name, name, include, exclude, default_exclude, missing_ok
-            )
+            return get_general(session, ComputeManagerORM, ComputeManagerORM.name, name, include, exclude, missing_ok)
 
     def query(
         self,
@@ -311,10 +306,7 @@ class ManagerSocket:
 
         limit = calculate_limit(self._manager_limit, limit)
 
-        # By default, exclude the server logs from the returned dict
-        default_exclude = {"log"}
-
-        load_cols, load_rels = get_query_proj_columns(ComputeManagerORM, include, exclude, default_exclude)
+        proj_options = get_query_proj_options(ComputeManagerORM, include, exclude)
 
         and_query = []
         if id is not None:
@@ -334,10 +326,7 @@ class ManagerSocket:
 
         with self.root_socket.optional_session(session, True) as session:
             query = session.query(ComputeManagerORM).filter(and_(*and_query))
-            query = query.options(load_only(*load_cols))
-
-            if ComputeManagerORM.log in load_rels:
-                query = query.options(selectinload(ComputeManagerORM.log))
+            query = query.options(*proj_options)
 
             n_found = get_count(query)
             results = query.limit(limit).offset(skip).all()

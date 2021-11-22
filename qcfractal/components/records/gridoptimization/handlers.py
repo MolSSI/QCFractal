@@ -19,7 +19,7 @@ from qcfractal.components.records.gridoptimization.db_models import (
     GridOptimizationProcedureORM,
 )
 from qcfractal.components.molecules.db_models import MoleculeORM
-from qcfractal.db_socket.helpers import insert_general, get_query_proj_columns
+from qcfractal.db_socket.helpers import insert_general, get_query_proj_options
 from qcfractal.interface.models import (
     ProtoModel,
     ObjectId,

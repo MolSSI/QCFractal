@@ -113,7 +113,7 @@ class KeywordsSocket:
             raise LimitExceededError(f"Request for {len(id)} keywords is over the limit of {self._limit}")
 
         with self.root_socket.optional_session(session, True) as session:
-            return get_general(session, KeywordsORM, KeywordsORM.id, id, None, None, None, missing_ok)
+            return get_general(session, KeywordsORM, KeywordsORM.id, id, None, None, missing_ok)
 
     def add_mixed(
         self, keyword_data: Sequence[Union[int, KeywordSet, KeywordDict]], *, session: Optional[Session] = None

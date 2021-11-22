@@ -11,7 +11,7 @@ from sqlalchemy.sql import select, and_, or_
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.db_socket.helpers import (
     get_count_2,
-    get_query_proj_columns,
+    get_query_proj_options,
     insert_general,
     delete_general,
     insert_mixed_general,
@@ -143,7 +143,7 @@ class MoleculeSocket:
             raise LimitExceededError(f"Request for {len(id)} molecules is over the limit of {self._limit}")
 
         with self.root_socket.optional_session(session, True) as session:
-            return get_general(session, MoleculeORM, MoleculeORM.id, id, include, exclude, None, missing_ok)
+            return get_general(session, MoleculeORM, MoleculeORM.id, id, include, exclude, missing_ok)
 
     def add_mixed(
         self, molecule_data: Sequence[Union[int, Molecule]], *, session: Optional[Session] = None
@@ -262,7 +262,7 @@ class MoleculeSocket:
 
         limit = calculate_limit(self._limit, limit)
 
-        load_cols, _ = get_query_proj_columns(MoleculeORM, include, exclude)
+        proj_options = get_query_proj_options(MoleculeORM, include, exclude)
 
         and_query = []
         if id is not None:
@@ -284,7 +284,7 @@ class MoleculeSocket:
 
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(MoleculeORM).where(and_(*and_query))
-            stmt = stmt.options(load_only(*load_cols))
+            stmt = stmt.options(*proj_options)
             n_found = get_count_2(session, stmt)
             stmt = stmt.limit(limit).offset(skip)
             results = session.execute(stmt).scalars().all()

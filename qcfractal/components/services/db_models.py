@@ -26,9 +26,7 @@ class ServiceQueueORM(BaseORM):
     tag = Column(String, default=None)
 
     record_id = Column(Integer, ForeignKey(BaseResultORM.id))
-    record = relationship(
-        BaseResultORM, lazy="select", innerjoin=True, back_populates="service", uselist=False
-    )  # user inner join, since not nullable
+    record = relationship(BaseResultORM, back_populates="service", uselist=False)
 
     priority = Column(Integer, default=int(PriorityEnum.normal))
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
