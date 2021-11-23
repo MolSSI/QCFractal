@@ -1,7 +1,7 @@
 import datetime
 
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index, text, CheckConstraint, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, TEXT
 from sqlalchemy.orm import relationship
 
 from qcfractal.interface.models import PriorityEnum
@@ -24,10 +24,14 @@ class TaskQueueORM(BaseORM):
 
     # others
     tag = Column(String, default=None)
-    required_programs = Column(JSONB, nullable=False)
-    priority = Column(Integer, default=PriorityEnum.normal)
 
-    created_on = Column(DateTime, default=datetime.datetime.utcnow)
+    # For some reason, this can't be array of varchar. If it is, the comparisons
+    # when claiming tasks don't work
+    required_programs = Column(ARRAY(TEXT), nullable=False)
+
+    priority = Column(Integer, default=PriorityEnum.normal, nullable=False)
+
+    created_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
 
     # can reference ResultORMs or any ProcedureORM
     record_id = Column(Integer, ForeignKey(BaseResultORM.id, ondelete="cascade"), nullable=False)
