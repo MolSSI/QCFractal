@@ -115,11 +115,9 @@ def upgrade():
 
     # Now do the required_programs column of the task_queue
     # Form this from the program and procedure columns
-    op.add_column("task_queue", sa.Column("required_programs", postgresql.JSONB(astext_type=sa.Text()), nullable=True))
-    op.execute(
-        "UPDATE task_queue SET required_programs = jsonb_build_object(program, NULL, procedure, NULL) WHERE procedure IS NOT NULL"
-    )
-    op.execute("UPDATE task_queue SET required_programs = jsonb_build_object(program, NULL) WHERE procedure IS NULL")
+    op.add_column("task_queue", sa.Column("required_programs", postgresql.ARRAY(sa.TEXT()), nullable=True))
+    op.execute("UPDATE task_queue SET required_programs = ARRAY[program, procedure] WHERE procedure IS NOT NULL")
+    op.execute("UPDATE task_queue SET required_programs = ARRAY[program] WHERE procedure IS NULL")
     op.alter_column("task_queue", "required_programs", existing_type=postgresql.JSONB, nullable=False)
     op.create_check_constraint(
         "ck_task_queue_requirements_lower",
@@ -143,6 +141,9 @@ def upgrade():
     op.drop_column("task_queue", "status")
     op.drop_column("task_queue", "parser")
     op.drop_column("task_queue", "program")
+
+    op.alter_column("task_queue", "created_on", nullable=False)
+    op.alter_column("task_queue", "priority", nullable=False)
 
     # Service Queue
     op.drop_index("ix_service_queue_modified_on", table_name="service_queue")
