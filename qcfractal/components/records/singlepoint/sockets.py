@@ -1,22 +1,23 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from qcelemental.models import AtomicInput, AtomicResult, Molecule
+from qcelemental.models.results import WavefunctionProperties
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
 from qcfractal.components.records.singlepoint.db_models import SinglePointSpecificationORM, ResultORM
+from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.tasks.db_models import TaskQueueORM
+from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
 from qcfractal.db_socket.helpers import get_general, insert_general
 from qcfractal.interface.models import RecordStatusEnum, PriorityEnum
 from qcfractal.portal.components.records.singlepoint import (
     SinglePointSpecification,
 )
 from qcfractal.portal.metadata_models import InsertMetadata
-from ..helpers import create_compute_history_entry, wavefunction_helper
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -27,7 +28,28 @@ if TYPE_CHECKING:
     SinglePointRecordDict = Dict[str, Any]
 
 
-class SinglePointRecordSocket:
+def wavefunction_helper(wavefunction: Optional[WavefunctionProperties]) -> Optional[WavefunctionStoreORM]:
+    _wfn_all_fields = set(WavefunctionProperties.__fields__.keys())
+    logger = logging.getLogger(__name__)
+
+    if wavefunction is None:
+        return None
+
+    wfn_dict = wavefunction.dict()
+    available_keys = set(wfn_dict.keys())
+
+    # Extra fields are trimmed as we have a column *per* wavefunction structure.
+    extra_fields = available_keys - _wfn_all_fields
+    if extra_fields:
+        logger.warning(f"Too much wavefunction data for result, removing extra data: {extra_fields}")
+        available_keys &= _wfn_all_fields
+
+    wavefunction_save = {k: wfn_dict[k] for k in available_keys}
+    wfn_prop = WavefunctionProperties(**wavefunction_save)
+    return WavefunctionStoreORM.from_model(wfn_prop)
+
+
+class SinglePointRecordSocket(BaseRecordSocket):
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
@@ -70,6 +92,16 @@ class SinglePointRecordSocket:
         self, sp_spec: SinglePointSpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, Optional[int]]:
         protocols_dict = sp_spec.protocols.dict(exclude_defaults=True)
+
+        # TODO - if error_correction is manually specified as the default, then it will be an empty dict
+        if "error_correction" in protocols_dict:
+            erc = protocols_dict["error_correction"]
+            pol = erc.get("policies", dict())
+            if len(pol) == 0:
+                erc.pop("policies", None)
+            if len(erc) == 0:
+                protocols_dict.pop("error_correction")
+
         basis = "" if sp_spec.basis is None else sp_spec.basis
 
         with self.root_socket.optional_session(session, False) as session:
@@ -188,6 +220,10 @@ class SinglePointRecordSocket:
             order of the input molecules in the SinglePointInput.
         """
 
+        # tags should be lowercase
+        if tag is not None:
+            tag = tag.lower()
+
         # All will have the same required programs
         required_programs = {sp_spec.program: None}
 
@@ -256,25 +292,43 @@ class SinglePointRecordSocket:
             )
             return meta, [x[0] for x in ids]
 
-    def update_completed(self, session: Session, record_orm: ResultORM, result: AtomicResult, manager_name: str):
-        # Get the outputs & status, storing in the history orm
-        history_orm = create_compute_history_entry(result)
-
-        history_orm.manager_name = manager_name
-
-        record_orm.compute_history.append(history_orm)
-
+    def update_completed(
+        self, session: Session, record_orm: ResultORM, result: AtomicResult, manager_name: str
+    ) -> None:
         # Update the fields themselves
         record_orm.return_result = record_orm.return_result
         record_orm.properties = result.properties.dict(encoding="json")
+        record_orm.wavefunction = wavefunction_helper(result.wavefunction)
         record_orm.extras = result.extras
 
-        record_orm.status = history_orm.status
-        record_orm.manager_name = manager_name
-        record_orm.modified_on = datetime.utcnow()
-        record_orm.wavefunction = wavefunction_helper(result.wavefunction)
+    def recreate_task(
+        self, record_orm: ResultORM, tag: Optional[str] = None, priority: PriorityEnum = PriorityEnum.normal
+    ) -> None:
 
-        # We have to flush to prevent a circular dependency when
-        # adding the history_orm to the "latest" field
-        session.flush()
-        record_orm.compute_history_latest = history_orm
+        spec = record_orm.specification
+        required_programs = {spec.program: None}
+
+        model = {"method": spec.method}
+        if spec.basis:
+            model["basis"] = spec.basis
+
+        qcschema_input = AtomicInput(
+            driver=spec.driver,
+            model=model,
+            molecule=record_orm.molecule.dict(),
+            keywords=spec.keywords.values,
+            protocols=spec.protocols,
+        )
+
+        task_orm = TaskQueueORM(
+            tag=tag,
+            priority=priority,
+            required_programs=required_programs,
+            spec={
+                "function": "qcengine.compute",
+                "args": [qcschema_input.dict(), spec.program],
+                "kwargs": {},
+            },
+        )
+
+        record_orm.task = task_orm

@@ -199,7 +199,9 @@ def test_singlepointrecord_socket_add_specification_same_4(storage_socket: SQLAl
         driver=SinglePointDriver.energy,
         method="b3lyp",
         basis="6-31G*",
-        protocols=AtomicResultProtocols(wavefunction="none", stdout=True),
+        protocols=AtomicResultProtocols(
+            wavefunction="none", stdout=True, error_correction={"default_policy": True, "policies": {}}
+        ),
     )
 
     meta, id = storage_socket.records.singlepoint.add_specification(spec)
@@ -218,6 +220,33 @@ def test_singlepointrecord_socket_add_specification_same_4(storage_socket: SQLAl
 
 
 def test_singlepointrecord_socket_add_specification_same_5(storage_socket: SQLAlchemySocket):
+    # Test protocols defaults (due to exclude_defaults)
+    spec = SinglePointSpecification(
+        program="prog1",
+        driver=SinglePointDriver.energy,
+        method="b3lyp",
+        basis="6-31G*",
+        protocols=AtomicResultProtocols(
+            wavefunction="none", stdout=True, error_correction={"default_policy": True, "policies": None}
+        ),
+    )
+
+    meta, id = storage_socket.records.singlepoint.add_specification(spec)
+    assert meta.inserted_idx == [0]
+
+    spec = SinglePointSpecification(
+        program="prog1",
+        driver=SinglePointDriver.energy,
+        method="b3lyp",
+        basis="6-31G*",
+    )
+
+    meta, id2 = storage_socket.records.singlepoint.add_specification(spec)
+    assert meta.existing_idx == [0]
+    assert id == id2
+
+
+def test_singlepointrecord_socket_add_specification_same_6(storage_socket: SQLAlchemySocket):
     # Test basis none, empty string
     spec = SinglePointSpecification(
         program="prog1",

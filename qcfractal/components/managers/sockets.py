@@ -12,6 +12,7 @@ from qcfractal.db_socket.helpers import get_query_proj_options, get_count, calcu
 from qcfractal.exceptions import ComputeManagerError
 from qcfractal.portal.components.managers import ManagerStatusEnum, ManagerName
 from qcfractal.portal.metadata_models import QueryMetadata
+from qcfractal.interface.models import RecordStatusEnum
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -192,8 +193,8 @@ class ManagerSocket:
 
             # For the manager, also reset any now-orphaned tasks that belonged to that manager
             for dead_name in deactivated_names:
-                n_incomplete = self.root_socket.tasks.reset_tasks(
-                    manager=[dead_name], reset_running=True, session=session
+                n_incomplete = self.root_socket.records.reset(
+                    manager_name=[dead_name], status={RecordStatusEnum.running}, session=session
                 )
                 self._logger.info(
                     f"Deactivated manager {dead_name}. Reason: {reason}. Recycling {n_incomplete} incomplete tasks."

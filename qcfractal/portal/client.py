@@ -37,6 +37,8 @@ from ..interface.models import (
     PriorityEnum,
 )
 from .components.managers import ManagerStatusEnum, ManagerQueryBody, ComputeManager
+from .components.records.singlepoint import SinglePointRecord
+from .components.records import ComputeHistoryURLParameters, ComputeHistory
 
 from .metadata_models import InsertMetadata, DeleteMetadata
 from .components.outputstore import OutputStore
@@ -47,7 +49,12 @@ from .components.serverinfo import (
     ServerStatsQueryParameters,
     DeleteBeforeDateParameters,
 )
-from .common_rest import CommonGetURLParametersName, CommonGetURLParameters, CommonDeleteURLParameters
+from .common_rest import (
+    CommonGetURLParametersName,
+    CommonGetProjURLParameters,
+    CommonGetURLParameters,
+    CommonDeleteURLParameters,
+)
 from .components.molecules import MoleculeQueryBody, MoleculeModifyBody
 from .components.wavefunctions.models import WavefunctionProperties
 from qcfractal.portal.metadata_models import QueryMetadata, UpdateMetadata
@@ -1382,212 +1389,37 @@ class PortalClient:
 
         return self._automodel_request("task_queue", "post", payload, full_return=full_return)
 
-    def add_reactions(self):
-        ...
+    def get_compute_history(self, record_id: int, include_outputs: bool = False) -> List[ComputeHistory]:
+        url_params = {"include_outputs": include_outputs}
+        return self._auto_request(
+            "get",
+            f"v1/record/{record_id}/compute_history",
+            None,
+            ComputeHistoryURLParameters,
+            List[ComputeHistory],
+            None,
+            url_params,
+        )
 
-    def add_optimizations(self):
-        ...
+    def get_singlepoint(
+        self, record_id: Union[int, Sequence[int]], missing_ok: bool = False
+    ) -> Union[Optional[SinglePointRecord], List[Optional[SinglePointRecord]]]:
+        url_params = {"id": make_list(record_id), "missing_ok": missing_ok}
+        dmodels = self._auto_request(
+            "get",
+            "v1/record/singlepoint",
+            None,
+            CommonGetProjURLParameters,
+            List[Optional[SinglePointRecord._DataModel]],
+            None,
+            url_params,
+        )
 
-    def add_torsiondrives(self):
-        pass
-
-    def add_gridoptimizations(self):
-        pass
-
-    def get_tasks(
-        self,
-        id: "QueryObjectId",
-    ):
-        pass
-
-    def query_tasks(
-        self,
-        id: QueryObjectId = None,
-        program: QueryStr = None,
-        status: QueryStr = None,
-        base_result: QueryStr = None,
-        tag: QueryStr = None,
-        manager: QueryStr = None,
-        limit: Optional[int] = None,
-        skip: int = 0,
-        include: Optional["QueryListStr"] = None,
-        full_return: bool = False,
-    ) -> Union["TaskQueueGETResponse", List["TaskRecord"], List[Dict[str, Any]]]:
-        """Checks the status of Tasks in the Fractal queue.
-
-        Parameters
-        ----------
-        id : QueryObjectId, optional
-            Queries the Tasks ``id`` field.
-        program : QueryStr, optional
-            Queries the Tasks ``program`` field.
-        status : QueryStr, optional
-            Queries the Tasks ``status`` field.
-        base_result : QueryStr, optional
-            Queries the Tasks ``base_result`` field.
-        tag : QueryStr, optional
-            Queries the Tasks ``tag`` field.
-        manager : QueryStr, optional
-            Queries the Tasks ``manager`` field.
-        limit : Optional[int], optional
-            The maximum number of Tasks to query
-        skip : int, optional
-            The number of Tasks to skip in the query, used during pagination
-        include : QueryListStr, optional
-            Filters the returned fields, will return a dictionary rather than an object.
-        full_return : bool, optional
-            Returns the full server response if True that contains additional metadata.
-
-        Returns
-        -------
-        List[Dict[str, Any]]
-            A dictionary of each match that contains the current status
-            and, if an error has occurred, the error message.
-
-        Examples
-        --------
-
-        >>> client.query_tasks(id="12345",include=["status"])
-        [{"status": "WAITING"}]
-
-
-        """
-
-        payload = {
-            "meta": {"limit": limit, "skip": skip, "include": include},
-            "data": {
-                "id": make_list(id),
-                "program": make_list(program),
-                "status": make_list(status),
-                "base_result": make_list(base_result),
-                "tag": make_list(tag),
-                "manager": make_list(manager),
-            },
-        }
-
-        return self._automodel_request("task_queue", "get", payload, full_return=full_return)
-
-    def modify_tasks(
-        self,  # lgtm [py/similar-function]
-        operation: str,
-        base_result: "QueryObjectId",
-        id: Optional["QueryObjectId"] = None,
-        new_tag: Optional[str] = None,
-        new_priority: Optional[int] = None,
-        full_return: bool = False,
-    ) -> int:
-        """Summary
-
-        Parameters
-        ----------
-        operation : str
-            The operation to perform on the selected tasks. Valid operations are:
-             - `restart` - Restarts a task by moving its status from 'ERROR' to 'WAITING'
-             - `regenerate` - Regenerates a missing task
-             - `modify` - Modify a tasks tag or priority
-        base_result : QueryObjectId
-            The id of the result that the task is associated with.
-        id : QueryObjectId, optional
-            The id of the individual task to restart. As a note querying tasks via their id is rarely performed and
-            is often an internal quantity.
-        full_return : bool, optional
-            Returns the full server response if True that contains additional metadata.
-
-        Returns
-        -------
-        int
-            The number of modified tasks.
-        """
-        operation = operation.lower()
-        valid_ops = {"restart", "regenerate", "modify"}
-
-        if operation not in valid_ops:
-            raise ValueError(f"Operation '{operation}' is not available, valid operations are: {valid_ops}")
-
-        # make sure priority is valid
-        if new_priority is not None:
-            new_priority = PriorityEnum(new_priority).value
-
-        payload = {
-            "meta": {"operation": operation},
-            "data": {"id": id, "base_result": base_result, "new_tag": new_tag, "new_priority": new_priority},
-        }
-
-        return self._automodel_request("task_queue", "put", payload, full_return=full_return)
-
-    def query_services(
-        self,
-        id: Optional["QueryObjectId"] = None,
-        procedure_id: Optional["QueryObjectId"] = None,
-        status: Optional["QueryStr"] = None,
-        limit: Optional[int] = None,
-        skip: int = 0,
-        full_return: bool = False,
-    ) -> Union["ServiceQueueGETResponse", List[Dict[str, Any]]]:
-        """Checks the status of services in the Fractal queue.
-
-        Parameters
-        ----------
-        id : QueryObjectId, optional
-            Queries the Services ``id`` field.
-        procedure_id : QueryObjectId, optional
-            Queries the Services ``procedure_id`` field, or the ObjectId of the procedure associated with the service.
-        status : QueryStr, optional
-            Queries the Services ``status`` field.
-        limit : Optional[int], optional
-            The maximum number of Services to query
-        skip : int, optional
-            The number of Services to skip in the query, used during pagination
-        full_return : bool, optional
-            Returns the full server response if True that contains additional metadata.
-
-        Returns
-        -------
-        List[Dict[str, Any]]
-            A dictionary of each match that contains the current status
-            and, if an error has occurred, the error message.
-        """
-        payload = {
-            "meta": {"limit": limit, "skip": skip},
-            "data": {"id": make_list(id), "procedure_id": make_list(procedure_id), "status": make_list(status)},
-        }
-        return self._automodel_request("service_queue", "get", payload, full_return=full_return)
-
-    def modify_services(
-        self,
-        operation: str,
-        id: Optional["QueryObjectId"] = None,
-        procedure_id: Optional["QueryObjectId"] = None,
-        full_return: bool = False,
-    ) -> int:
-        """Checks the status of services in the Fractal queue.
-
-        Parameters
-        ----------
-        operation : str
-            The operation to perform on the selected tasks. Valid operations are:
-             - `restart` - Restarts a task by moving its status from 'ERROR'/'WAITING' to 'RUNNING'
-        id : QueryObjectId, optional
-            Queries the Services ``id`` field.
-        procedure_id : QueryObjectId, optional
-            Queries the Services ``procedure_id`` field, or the ObjectId of the procedure associated with the service.
-        full_return : bool, optional
-            Returns the full server response if True that contains additional metadata.
-
-        Returns
-        -------
-        int
-            The number of modified tasks.
-        """
-        operation = operation.lower()
-        valid_ops = {"restart"}
-
-        if operation not in valid_ops:
-            raise ValueError(f"Operation '{operation}' is not available, valid operations are: {valid_ops}")
-
-        payload = {"meta": {"operation": operation}, "data": {"id": id, "procedure_id": procedure_id}}
-
-        return self._automodel_request("service_queue", "put", payload, full_return=full_return)
+        sp_records = [SinglePointRecord(self, d) for d in dmodels]
+        if isinstance(record_id, Sequence):
+            return sp_records
+        else:
+            return sp_records[0]
 
     def get_managers(
         self,

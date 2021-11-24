@@ -58,7 +58,7 @@ class BaseResultORM(BaseORM):
     compute_history = relationship(
         RecordComputeHistoryORM,
         foreign_keys=[RecordComputeHistoryORM.record_id],
-        order_by=RecordComputeHistoryORM.modified_on,
+        order_by=RecordComputeHistoryORM.modified_on.asc(),
         lazy="selectin",
     )
 

@@ -1,7 +1,13 @@
 from pydantic import BaseModel, Field, constr, validator
 from typing import Optional, Dict, Union, Any, List
 from qcfractal.portal.components.keywords import KeywordSet
-from qcelemental.models.results import AtomicResultProtocols, AtomicResult
+from qcfractal.portal.components.records.models import BaseRecord
+from qcelemental.models.results import (
+    AtomicResultProtocols,
+    AtomicResult,
+    AtomicResultProperties,
+    WavefunctionProperties,
+)
 from qcelemental.models import Molecule
 from enum import Enum
 
@@ -48,3 +54,22 @@ class SinglePointSpecification(BaseModel):
 class SinglePointInput(BaseModel):
     specification: SinglePointSpecification
     molecules: List[Union[int, Molecule]]
+
+
+class SinglePointRecord(BaseRecord):
+    class _DataModel(BaseRecord._DataModel):
+        specification_id: int
+        specification: SinglePointSpecification
+        molecule_id: int
+        molecule: Optional[Molecule]
+        return_result: Optional[Dict[str, Any]]
+        properties: Optional[AtomicResultProperties]
+        wavefunction: Optional[WavefunctionProperties] = None
+
+    @property
+    def status(self):
+        return self._data.status
+
+    @property
+    def specification(self):
+        return self._data.specification

@@ -30,7 +30,6 @@ def existing_history_id(storage_socket):
         username="bill",
         programs={"psi4": None, "qchem": "v3.0"},
         tags=["tag1"],
-        configuration={"key": "value"},
     )
 
     input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
@@ -42,7 +41,7 @@ def existing_history_id(storage_socket):
 
     # Now there should be a compute history id that we can return
     rec = storage_socket.records.get(id)
-    yield rec[0]["compute_history_latest_id"]
+    yield rec[0]["compute_history"][0]["id"]
 
 
 @pytest.mark.parametrize("compression", CompressionEnum)

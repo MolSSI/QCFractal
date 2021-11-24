@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import requests
-from qcelemental.models import Molecule
+from qcelemental.models import Molecule, FailedOperation
 from qcelemental.models.results import WavefunctionProperties
 from .config import FractalConfig, update_nested_dict
 
@@ -225,7 +225,7 @@ def load_procedure_data(name: str):
         raise RuntimeError(f"Unknown procedure '{procedure}' in test!")
 
     if data["result"]["success"] is not True:
-        result_type = ptl.models.FailedOperation
+        result_type = FailedOperation
 
     molecule = Molecule(**data["molecule"])
 

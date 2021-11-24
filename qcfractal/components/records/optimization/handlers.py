@@ -9,7 +9,7 @@ from datetime import datetime
 from sqlalchemy import and_
 from sqlalchemy.orm import selectinload, load_only
 
-from qcfractal.components.records import helpers
+import qcfractal.components.records.singlepoint.sockets
 from qcfractal.components.records.base_handlers import BaseProcedureHandler
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.records.optimization.db_models import Trajectory, OptimizationProcedureORM
@@ -317,7 +317,9 @@ class OptimizationHandler(BaseProcedureHandler):
             r.keywords = qc_spec["keywords"] if "keywords" in qc_spec else None
             r.molecule = int(mol_id)  # TODO - INT ID
 
-            wfn_id, wfn_info = helpers.wavefunction_helper(self.root_socket, session, v.wavefunction)
+            wfn_id, wfn_info = qcfractal.components.records.singlepoint.sockets.wavefunction_helper(
+                self.root_socket, session, v.wavefunction
+            )
             r.wavefunction = wfn_info
             r.wavefunction_data_id = wfn_id
 
