@@ -1,1 +1,8 @@
-from .models import SinglePointSpecification, SinglePointInput, SinglePointDriver, AtomicResultProtocols, AtomicResult
+from .models import (
+    SinglePointSpecification,
+    SinglePointInput,
+    SinglePointDriver,
+    AtomicResultProtocols,
+    AtomicResult,
+    SinglePointRecord,
+)

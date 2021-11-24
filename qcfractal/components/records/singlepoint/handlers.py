@@ -8,7 +8,7 @@ from datetime import datetime
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import load_only, selectinload
 
-from qcfractal.components.records import helpers
+import qcfractal.components.records.singlepoint.sockets
 from qcfractal.components.records.base_handlers import BaseProcedureHandler
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.records.singlepoint.db_models import ResultORM
@@ -196,7 +196,9 @@ class SingleResultHandler(BaseProcedureHandler):
         # Save the old id for later deletion
         old_wfn_id = result_orm.wavefunction_data_id
 
-        wfn_id, wfn_info = helpers.wavefunction_helper(self.root_socket, session, result.wavefunction)
+        wfn_id, wfn_info = qcfractal.components.records.singlepoint.sockets.wavefunction_helper(
+            self.root_socket, session, result.wavefunction
+        )
         result_orm.wavefunction_data_id = wfn_id
         result_orm.wavefunction = wfn_info
 

@@ -97,6 +97,78 @@ def upgrade():
     empty_kw = res.scalar()
 
     ########################################
+    # Update protocols to remove defaults and null
+    # Column is not nullable, but sometimes stores json null
+    op.execute(
+        sa.text(
+            r"""
+               UPDATE base_record
+               SET protocols = '{}'::jsonb
+               WHERE protocols = 'null'::jsonb
+               """
+        )
+    )
+
+    # Remove default wavefunction
+    op.execute(
+        sa.text(
+            r"""
+               UPDATE base_record
+               SET protocols = (protocols - 'wavefunction')
+               WHERE record_type = 'singlepoint'
+               AND protocols @> '{"wavefunction": "none"}'::jsonb;
+               """
+        )
+    )
+
+    # Remove default stdout
+    op.execute(
+        sa.text(
+            r"""
+               UPDATE base_record
+               SET protocols = (protocols - 'stdout')
+               WHERE record_type = 'singlepoint'
+               AND protocols @> '{"stdout": true}'::jsonb;
+               """
+        )
+    )
+
+    # Remove default error correction protocol
+    op.execute(
+        sa.text(
+            r"""
+               UPDATE base_record
+               SET protocols = (protocols #- '{error_correction,default_policy}')
+               WHERE record_type = 'singlepoint'
+               AND protocols @> '{"error_correction": {"default_policy": true}}'::jsonb
+               """
+        )
+    )
+
+    op.execute(
+        sa.text(
+            r"""
+               UPDATE base_record
+               SET protocols = (protocols #- '{error_correction,policies}')
+               WHERE record_type = 'singlepoint'
+               AND protocols->'error_correction'->'policies' = 'null'::jsonb
+               OR protocols->'error_correction'->'policies' = '{}'::jsonb;
+               """
+        )
+    )
+
+    op.execute(
+        sa.text(
+            r"""
+               UPDATE base_record
+               SET protocols = (protocols - 'error_correction')
+               WHERE record_type = 'singlepoint'
+               AND protocols->'error_correction' = '{}'::jsonb;
+               """
+        )
+    )
+
+    ########################################
     # Populate the singlepoint_specification table
     # Coalesce null basis set, keywords, protocols into something not null
     op.execute(

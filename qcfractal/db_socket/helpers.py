@@ -72,6 +72,13 @@ def _get_query_proj_options(
     exclude: Optional[Tuple[str, ...]] = None,
 ) -> List[InstrumentedAttribute, ...]:
 
+    # If include and exclude are both none (common occurrence), then
+    # skip all the load_only stuff
+    # Also, if we use with_polymorphic, then include and exclude must be None
+    # because the rest of this function won't work
+    if include is None and exclude is None:
+        return []
+
     mapper = inspect(orm_type)
     columns = set(mapper.column_attrs.keys())
     relationships = set(mapper.relationships.keys())

@@ -132,6 +132,7 @@ class FractalPeriodics:
         it is used in testing where this function is run manually
         """
 
+        return 0
         self.logger.debug(f"Updating services.")
         n_running = self.storage_socket.services.iterate_services()
         self.logger.debug(f"Done updating services.")
