@@ -57,7 +57,7 @@ def update_manager_v1(name: str, body_data: ManagerUpdateBody):
 @wrap_route(None, CommonGetURLParametersName)
 @check_access
 def get_managers_v1(name: Optional[str] = None, *, url_params: CommonGetURLParametersName):
-    return get_helper(name, url_params.name, url_params.missing_ok, storage_socket.managers.get)
+    return get_helper(name, url_params.name, None, None, url_params.missing_ok, storage_socket.managers.get)
 
 
 @main.route("/v1/manager/query", methods=["POST"])

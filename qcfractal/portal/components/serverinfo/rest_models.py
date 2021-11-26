@@ -6,7 +6,7 @@ from pydantic import validator
 
 from qcfractal.portal.common_rest import (
     validate_list_to_single,
-    QueryParametersProjBase,
+    QueryProjParametersBase,
     QueryParametersBase,
     RestModelBase,
 )
@@ -28,7 +28,7 @@ class DeleteBeforeDateParameters(RestModelBase):
         return validate_list_to_single(v)
 
 
-class AccessLogQueryParameters(QueryParametersProjBase):
+class AccessLogQueryParameters(QueryProjParametersBase):
     access_type: Optional[List[str]] = None
     access_method: Optional[List[str]] = None
     username: Optional[List[str]] = None
