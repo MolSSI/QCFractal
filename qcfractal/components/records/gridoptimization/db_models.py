@@ -100,5 +100,4 @@ class GridOptimizationProcedureORM(BaseResultORM):
 
     __mapper_args__ = {
         "polymorphic_identity": "gridoptimization",
-        "polymorphic_load": "selectin",
     }

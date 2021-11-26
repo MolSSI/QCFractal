@@ -71,10 +71,7 @@ class OptimizationProcedureORM(BaseResultORM):
         collection_class=ordering_list("position"),
     )
 
-    __mapper_args__ = {
-        "polymorphic_identity": "optimization",
-        "polymorphic_load": "selectin",
-    }
+    __mapper_args__ = {"polymorphic_identity": "optimization"}
 
     __table_args__ = (
         Index("ix_optimization_program", "program"),  # todo: needed for procedures?
