@@ -12,7 +12,7 @@ from qcfractal.portal.components.molecules import Molecule, MoleculeQueryBody, M
 @wrap_route(None, CommonGetURLParameters)
 @check_access
 def get_molecules_v1(id: Optional[int] = None, *, url_params: CommonGetURLParameters):
-    return get_helper(id, url_params.id, url_params.missing_ok, storage_socket.molecules.get)
+    return get_helper(id, url_params.id, None, None, url_params.missing_ok, storage_socket.molecules.get)
 
 
 @main.route("/v1/molecule", methods=["DELETE"])

@@ -12,7 +12,7 @@ from qcfractal.portal.components.keywords import KeywordSet
 @wrap_route(None, CommonGetURLParameters)
 @check_access
 def get_keywords_v1(id: Optional[int] = None, *, url_params: CommonGetURLParameters):
-    return get_helper(id, url_params.id, url_params.missing_ok, storage_socket.keywords.get)
+    return get_helper(id, url_params.id, None, None, url_params.missing_ok, storage_socket.keywords.get)
 
 
 @main.route("/v1/keyword", methods=["POST"])
