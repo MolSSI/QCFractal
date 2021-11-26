@@ -109,7 +109,6 @@ class TorsionDriveProcedureORM(BaseResultORM):
 
     __mapper_args__ = {
         "polymorphic_identity": "torsiondrive",
-        "polymorphic_load": "selectin",
     }
 
     def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:

@@ -72,5 +72,4 @@ class ResultORM(BaseResultORM):
 
     __mapper_args__ = {
         "polymorphic_identity": "singlepoint",
-        "polymorphic_load": "selectin",
     }
