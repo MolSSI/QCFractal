@@ -9,9 +9,9 @@ from datetime import datetime as dt
 
 from qcfractal.components.records.base_handlers import BaseProcedureHandler
 from qcfractal.interface.models import (
-    RecordStatusEnum,
     FailedOperation,
 )
+from qcfractal.portal.records import RecordStatusEnum
 from qcfractal.components.tasks.db_models import TaskQueueORM
 
 from typing import TYPE_CHECKING

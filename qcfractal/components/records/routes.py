@@ -4,12 +4,12 @@ from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper, delete_helper
 from qcfractal.app.routes import check_access, wrap_route
 from qcfractal.portal.common_rest import CommonGetProjURLParameters, CommonDeleteURLParameters
-from qcfractal.portal.components.records import (
+from qcfractal.portal.records import (
     RecordModifyBody,
     RecordQueryBody,
-    RecordStatusEnum,
     ComputeHistoryURLParameters,
 )
+from qcfractal.portal.records import RecordStatusEnum
 
 
 # These are used by the flask app. The flask app will
@@ -18,10 +18,6 @@ from qcfractal.portal.components.records import (
 # These are used by the flask app. The flask app will
 # import this file, which will cause all the routes in these
 # subdirectories to be registered with the blueprint
-from .singlepoint import routes
-from .optimization import routes
-from .gridoptimization import routes
-from .torsiondrive import routes
 
 
 @main.route("/v1/record", methods=["GET"])
@@ -89,7 +85,7 @@ def modify_records_v1(record_id: Optional[int] = None, *, body_data: RecordModif
 @check_access
 def query_records_v1(body_data: RecordQueryBody):
     return storage_socket.records.query(
-        id=body_data.id,
+        molecule_id=body_data.id,
         record_type=body_data.record_type,
         manager_name=body_data.manager_name,
         status=body_data.status,

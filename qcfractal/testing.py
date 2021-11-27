@@ -22,7 +22,8 @@ from qcelemental.models import Molecule, FailedOperation
 from qcelemental.models.results import WavefunctionProperties
 from .config import FractalConfig, update_nested_dict
 
-from qcfractal.portal.components.records import SinglePointInput, SinglePointSpecification, AtomicResult
+from qcfractal.portal.records.singlepoint import SinglePointSpecification
+from qcelemental.models import AtomicResult
 from .interface import FractalClient
 from .interface.models import TorsionDriveInput, RecordStatusEnum
 from .postgres_harness import TemporaryPostgres
@@ -30,9 +31,9 @@ from .qc_queue import build_queue_adapter, QueueManager
 from .snowflake import FractalSnowflake, attempt_client_connect
 from .periodics import FractalPeriodics
 from .db_socket.socket import SQLAlchemySocket
-from .portal.components.permissions import UserInfo
+from qcfractal.portal.permissions import UserInfo
 from .portal import PortalClient, ManagerClient
-from .portal.components.managers import ManagerName
+from qcfractal.portal.managers import ManagerName
 
 # Path to this file (directory only)
 _my_path = os.path.dirname(os.path.abspath(__file__))

@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.db_socket import BaseORM, MsgpackExt
-from qcfractal.interface.models import RecordStatusEnum
+from qcfractal.portal.records import RecordStatusEnum
 
 
 class RecordComputeHistoryORM(BaseORM):

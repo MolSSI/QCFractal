@@ -4,7 +4,7 @@ from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper
 from qcfractal.app.routes import check_access, wrap_route
 from qcfractal.portal.common_rest import CommonGetURLParametersName
-from qcfractal.portal.components.managers import (
+from qcfractal.portal.managers import (
     ManagerActivationBody,
     ManagerUpdateBody,
     ManagerStatusEnum,
@@ -65,7 +65,7 @@ def get_managers_v1(name: Optional[str] = None, *, url_params: CommonGetURLParam
 @check_access
 def query_managers_v1(body_data: ManagerQueryBody):
     return storage_socket.managers.query(
-        id=body_data.id,
+        manager_id=body_data.id,
         name=body_data.name,
         cluster=body_data.cluster,
         hostname=body_data.hostname,

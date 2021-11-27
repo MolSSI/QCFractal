@@ -1,6 +1,10 @@
-import datetime
+from __future__ import annotations
 
-from qcfractal.db_socket import SQLAlchemySocket
+import datetime
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from qcfractal.db_socket import SQLAlchemySocket
 
 
 def test_serverinfo_socket_save_query_error(storage_socket: SQLAlchemySocket):
@@ -43,7 +47,7 @@ def test_serverinfo_socket_save_query_error(storage_socket: SQLAlchemySocket):
         assert in_err["request_body"] == db_err["request_body"]
 
     # Query by id
-    meta, err = storage_socket.serverinfo.query_error_log(id=[id_2])
+    meta, err = storage_socket.serverinfo.query_error_log(error_id=[id_2])
     assert meta.n_found == 1
     assert err[0]["error_text"] == error_data_2["error_text"]
 

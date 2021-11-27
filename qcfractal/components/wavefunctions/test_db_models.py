@@ -1,19 +1,18 @@
 """
 Tests the wavefunction store models
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import pytest
 
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
-from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.interface.models import PriorityEnum
-from qcfractal.portal.components.managers import ManagerName
-from qcfractal.portal.components.outputstore import OutputTypeEnum, CompressionEnum, OutputStore
-from qcfractal.testing import load_procedure_data
-from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.exceptions import MissingDataError
-from qcfractal.portal.components.wavefunctions.models import WavefunctionProperties
-from qcfractal.testing import load_wavefunction_data
+from qcfractal.portal.wavefunctions import WavefunctionProperties
+from qcfractal.testing import load_procedure_data, load_wavefunction_data
+
+if TYPE_CHECKING:
+    from qcfractal.db_socket import SQLAlchemySocket
 
 
 @pytest.fixture()

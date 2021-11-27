@@ -37,11 +37,10 @@ from qcfractal.db_socket.helpers import insert_general, get_query_proj_options
 from qcfractal.interface.models import (
     ProtoModel,
     ObjectId,
-    PriorityEnum,
     Molecule,
-    RecordStatusEnum,
     OptimizationProcedureSpecification,
 )
+from qcfractal.portal.records import PriorityEnum, RecordStatusEnum
 
 from qcfractal.interface.models.torsiondrive import TorsionDriveInput, TorsionDriveRecord, TorsionDriveKeywords
 from qcfractal.portal.metadata_models import InsertMetadata
@@ -347,7 +346,7 @@ class TorsionDriveHandler(BaseServiceHandler):
             initial_id = proc_obj.initial_molecule
             final_id = proc_obj.final_molecule
             mol_ids = [initial_id, final_id]
-            mol_data = self.root_socket.molecules.get(id=mol_ids, include=["geometry"], session=session)
+            mol_data = self.root_socket.molecules.get(molecule_id=mol_ids, include=["geometry"], session=session)
 
             # Use plain lists rather than numpy arrays
             initial_mol_geom = mol_data[0]["geometry"].tolist()

@@ -2,13 +2,18 @@
 Tests the managers subsocket
 """
 
+from __future__ import annotations
+
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.exceptions import ComputeManagerError, MissingDataError
-from qcfractal.portal.components.managers import ManagerName, ManagerStatusEnum
+from qcfractal.portal.managers import ManagerName, ManagerStatusEnum
+
+if TYPE_CHECKING:
+    from qcfractal.db_socket import SQLAlchemySocket
 
 
 def test_manager_socket_activate_get(storage_socket: SQLAlchemySocket):

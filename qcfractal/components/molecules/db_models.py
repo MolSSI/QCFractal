@@ -1,10 +1,15 @@
-from typing import Dict, Any, Optional, Iterable
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, Integer, String, JSON, Float, Index, CHAR, Boolean
 from sqlalchemy.dialects.postgresql import JSONB
 
 from qcfractal.db_socket.base_orm import BaseORM
 from qcfractal.db_socket.column_types import MsgpackExt
+
+if TYPE_CHECKING:
+    from typing import Dict, Any, Optional, Iterable
 
 
 class MoleculeORM(BaseORM):

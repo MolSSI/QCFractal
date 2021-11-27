@@ -2,14 +2,19 @@
 Tests the managers client
 """
 
+from __future__ import annotations
+
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import pytest
 from pydantic import ValidationError
 
 from qcfractal.portal.client import PortalRequestError
-from qcfractal.portal.components.managers import ManagerName, ManagerStatusEnum
-from qcfractal.testing import TestingSnowflake
+from qcfractal.portal.managers import ManagerName, ManagerStatusEnum
+
+if TYPE_CHECKING:
+    from qcfractal.testing import TestingSnowflake
 
 
 def test_manager_mclient_activate(snowflake: TestingSnowflake):

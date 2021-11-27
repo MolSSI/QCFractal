@@ -1,12 +1,11 @@
 import datetime
-from typing import Optional, Iterable, Dict, Any
 
 from sqlalchemy import Column, Integer, ForeignKey, DateTime, Float, Index, String, JSON, Enum, UniqueConstraint
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
 
 from qcfractal.db_socket import BaseORM
-from qcfractal.portal.components.managers import ManagerStatusEnum
+from qcfractal.portal.managers import ManagerStatusEnum
 
 
 class ComputeManagerLogORM(BaseORM):

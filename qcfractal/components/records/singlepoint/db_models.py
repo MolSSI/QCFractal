@@ -6,7 +6,8 @@ from qcfractal.components.keywords.db_models import KeywordsORM
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseResultORM
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
-from qcfractal.db_socket import BaseORM, MsgpackExt
+from qcfractal.db_socket.base_orm import BaseORM
+from qcfractal.db_socket.column_types import MsgpackExt
 from qcfractal.interface.models import DriverEnum
 
 

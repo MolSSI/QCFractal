@@ -2,18 +2,13 @@
 Tests the wavefunction store socket
 """
 
-import pytest
-
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.exceptions import MissingDataError
-from qcfractal.portal.components.wavefunctions.models import WavefunctionProperties
-from qcfractal.testing import load_wavefunction_data
-from qcfractal.portal.components.records.singlepoint import (
+from qcfractal.portal.records.singlepoint import (
     SinglePointSpecification,
     SinglePointDriver,
-    AtomicResultProtocols,
+    SinglePointProtocols,
 )
-from qcfractal.portal.components.keywords import KeywordSet
+from qcfractal.portal.keywords import KeywordSet
 
 
 def test_singlepointrecord_socket_basic_specification(storage_socket: SQLAlchemySocket):
@@ -24,7 +19,7 @@ def test_singlepointrecord_socket_basic_specification(storage_socket: SQLAlchemy
         method="b3lyp",
         basis="6-31G*",
         keywords=KeywordSet(values={"k": "value"}),
-        protocols=AtomicResultProtocols(wavefunction="all"),
+        protocols=SinglePointProtocols(wavefunction="all"),
     )
 
     spec2 = SinglePointSpecification(
@@ -33,7 +28,7 @@ def test_singlepointrecord_socket_basic_specification(storage_socket: SQLAlchemy
         method="hf",
         basis="def2-tzvp",
         keywords=KeywordSet(values={"k": "value"}),
-        protocols=AtomicResultProtocols(wavefunction="all"),
+        protocols=SinglePointProtocols(wavefunction="all"),
     )
 
     spec3 = SinglePointSpecification(
@@ -42,7 +37,7 @@ def test_singlepointrecord_socket_basic_specification(storage_socket: SQLAlchemy
         method="hf",
         basis="def2-tzvp",
         keywords=KeywordSet(values={"k": "value"}),
-        protocols=AtomicResultProtocols(wavefunction="orbitals_and_eigenvalues"),
+        protocols=SinglePointProtocols(wavefunction="orbitals_and_eigenvalues"),
     )
 
     meta1, id1 = storage_socket.records.singlepoint.add_specification(spec1)
@@ -79,7 +74,7 @@ def test_singlepointrecord_socket_add_specification_same_0(storage_socket: SQLAl
         method="b3lyp",
         basis="6-31G*",
         keywords=KeywordSet(values={"k": "value"}),
-        protocols=AtomicResultProtocols(wavefunction="all"),
+        protocols=SinglePointProtocols(wavefunction="all"),
     )
 
     meta, id = storage_socket.records.singlepoint.add_specification(spec1)
@@ -102,7 +97,7 @@ def test_singlepointrecord_socket_add_specification_same_0(storage_socket: SQLAl
         method="b3lyp",
         basis="6-31G*",
         keywords=KeywordSet(values={"k": "value2"}),
-        protocols=AtomicResultProtocols(wavefunction="all"),
+        protocols=SinglePointProtocols(wavefunction="all"),
     )
 
     meta, id3 = storage_socket.records.singlepoint.add_specification(spec1)
@@ -120,7 +115,7 @@ def test_singlepointrecord_socket_add_specification_same_1(storage_socket: SQLAl
         method="b3lyp",
         basis="6-31G*",
         keywords=KeywordSet(values={"k": "value"}),
-        protocols=AtomicResultProtocols(wavefunction="all"),
+        protocols=SinglePointProtocols(wavefunction="all"),
     )
 
     meta, id = storage_socket.records.singlepoint.add_specification(spec)
@@ -132,7 +127,7 @@ def test_singlepointrecord_socket_add_specification_same_1(storage_socket: SQLAl
         method="b3LYP",
         basis="6-31g*",
         keywords=KeywordSet(values={"k": "value"}),
-        protocols=AtomicResultProtocols(wavefunction="all"),
+        protocols=SinglePointProtocols(wavefunction="all"),
     )
 
     meta, id2 = storage_socket.records.singlepoint.add_specification(spec)
@@ -148,7 +143,7 @@ def test_singlepointrecord_socket_add_specification_same_2(storage_socket: SQLAl
         method="b3lyp",
         basis="6-31G*",
         keywords=KeywordSet(values={}),
-        protocols=AtomicResultProtocols(wavefunction="orbitals_and_eigenvalues"),
+        protocols=SinglePointProtocols(wavefunction="orbitals_and_eigenvalues"),
     )
 
     meta, id = storage_socket.records.singlepoint.add_specification(spec)
@@ -159,7 +154,7 @@ def test_singlepointrecord_socket_add_specification_same_2(storage_socket: SQLAl
         driver=SinglePointDriver.energy,
         method="b3lyp",
         basis="6-31G*",
-        protocols=AtomicResultProtocols(wavefunction="orbitals_and_eigenvalues"),
+        protocols=SinglePointProtocols(wavefunction="orbitals_and_eigenvalues"),
     )
 
     meta, id2 = storage_socket.records.singlepoint.add_specification(spec)
@@ -174,7 +169,7 @@ def test_singlepointrecord_socket_add_specification_same_3(storage_socket: SQLAl
         driver=SinglePointDriver.energy,
         method="b3lyp",
         basis="6-31G*",
-        protocols=AtomicResultProtocols(),
+        protocols=SinglePointProtocols(),
     )
 
     meta, id = storage_socket.records.singlepoint.add_specification(spec)
@@ -199,7 +194,7 @@ def test_singlepointrecord_socket_add_specification_same_4(storage_socket: SQLAl
         driver=SinglePointDriver.energy,
         method="b3lyp",
         basis="6-31G*",
-        protocols=AtomicResultProtocols(
+        protocols=SinglePointProtocols(
             wavefunction="none", stdout=True, error_correction={"default_policy": True, "policies": {}}
         ),
     )
@@ -226,7 +221,7 @@ def test_singlepointrecord_socket_add_specification_same_5(storage_socket: SQLAl
         driver=SinglePointDriver.energy,
         method="b3lyp",
         basis="6-31G*",
-        protocols=AtomicResultProtocols(
+        protocols=SinglePointProtocols(
             wavefunction="none", stdout=True, error_correction={"default_policy": True, "policies": None}
         ),
     )
@@ -253,7 +248,7 @@ def test_singlepointrecord_socket_add_specification_same_6(storage_socket: SQLAl
         driver=SinglePointDriver.energy,
         method="b3lyp",
         basis=None,
-        protocols=AtomicResultProtocols(),
+        protocols=SinglePointProtocols(),
     )
 
     meta, id = storage_socket.records.singlepoint.add_specification(spec)
@@ -264,7 +259,7 @@ def test_singlepointrecord_socket_add_specification_same_6(storage_socket: SQLAl
         driver=SinglePointDriver.energy,
         method="b3lyp",
         basis="",
-        protocols=AtomicResultProtocols(),
+        protocols=SinglePointProtocols(),
     )
 
     meta, id2 = storage_socket.records.singlepoint.add_specification(spec)

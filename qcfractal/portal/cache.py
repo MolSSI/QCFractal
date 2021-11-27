@@ -12,7 +12,7 @@ from typing import Union, List, Dict, Any
 
 from qcelemental.models import Molecule
 
-from .records import record_factory
+from .records_ddotson import record_factory
 from .collections.collection_utils import collection_factory
 
 

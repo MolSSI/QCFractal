@@ -3,7 +3,7 @@ from flask import current_app
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.app import main, storage_socket
 from qcfractal.app.routes import check_access, wrap_route
-from qcfractal.portal.components.serverinfo import (
+from qcfractal.portal.serverinfo import (
     AccessLogQuerySummaryParameters,
     AccessLogQueryParameters,
     ServerStatsQueryParameters,
@@ -85,7 +85,7 @@ def delete_server_stats_v1(url_params: DeleteBeforeDateParameters):
 @check_access
 def query_error_log_v1(url_params: ErrorLogQueryParameters):
     return storage_socket.serverinfo.query_error_log(
-        id=url_params.id,
+        error_id=url_params.id,
         username=url_params.username,
         before=url_params.before,
         after=url_params.after,

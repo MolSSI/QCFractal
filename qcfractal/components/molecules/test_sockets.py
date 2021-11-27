@@ -2,12 +2,18 @@
 Tests the molecule subsocket
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
 
-from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.exceptions import MissingDataError
-from qcfractal.portal.components.molecules import Molecule, MoleculeIdentifiers
+from qcfractal.portal.molecules import Molecule, MoleculeIdentifiers
 from qcfractal.testing import load_molecule_data
+
+if TYPE_CHECKING:
+    from qcfractal.db_socket import SQLAlchemySocket
 
 
 def to_molecule(mol_dict) -> Molecule:
@@ -295,7 +301,7 @@ def test_molecules_socket_query(storage_socket: SQLAlchemySocket):
     #################################################
 
     # Query by id
-    meta, mols = storage_socket.molecules.query(id=ids)
+    meta, mols = storage_socket.molecules.query(molecule_id=ids)
     mols = [to_molecule(x) for x in mols]
     mols = sorted(mols, key=lambda x: x.get_hash())
     assert meta.success
@@ -415,7 +421,7 @@ def test_molecules_socket_query_empty(storage_socket: SQLAlchemySocket):
     assert mols[0]["id"] == ids[0]
 
     # Empty lists will constrain the results to be empty
-    meta, mols = storage_socket.molecules.query(id=[])
+    meta, mols = storage_socket.molecules.query(molecule_id=[])
     assert meta.n_found == 0
     assert mols == []
 

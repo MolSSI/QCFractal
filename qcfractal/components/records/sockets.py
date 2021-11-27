@@ -7,22 +7,20 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload, selectinload, with_polymorphic
-from qcfractal.portal.metadata_models import DeleteMetadata
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
-from qcfractal.components.records.db_models import RecordComputeHistoryORM, BaseResultORM
 from qcfractal.db_socket.helpers import (
     get_query_proj_options,
     get_count_2,
     calculate_limit,
     get_general,
-    get_general_multi,
     delete_general,
 )
-from qcfractal.interface.models import RecordStatusEnum, PriorityEnum, FailedOperation, AllResultTypes
-from qcfractal.portal.components.outputstore import OutputStore, OutputTypeEnum, CompressionEnum
-from qcfractal.portal.metadata_models import QueryMetadata
+from qcfractal.portal.metadata_models import DeleteMetadata, QueryMetadata
+from qcfractal.portal.outputstore import OutputStore, OutputTypeEnum, CompressionEnum
+from qcfractal.portal.records import FailedOperation, AllResultTypes, PriorityEnum, RecordStatusEnum
+from .db_models import RecordComputeHistoryORM, BaseResultORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session

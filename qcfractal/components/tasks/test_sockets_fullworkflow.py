@@ -1,14 +1,20 @@
 """
 Tests the tasks socket (claiming & returning data)
 """
+from __future__ import annotations
 
 from datetime import datetime
-from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.portal.components.managers import ManagerName
+from typing import TYPE_CHECKING
+
+from qcelemental.models import ComputeError
+
+from qcfractal.portal.managers import ManagerName
+from qcfractal.portal.outputstore import OutputTypeEnum
+from qcfractal.portal.records import FailedOperation, PriorityEnum, RecordStatusEnum
 from qcfractal.testing import load_procedure_data
-from qcfractal.interface.models import RecordStatusEnum, PriorityEnum
-from qcfractal.portal.components.outputstore import OutputTypeEnum
-from qcelemental.models import FailedOperation, ComputeError
+
+if TYPE_CHECKING:
+    from qcfractal.db_socket import SQLAlchemySocket
 
 
 def test_task_socket_fullworkflow_success(storage_socket: SQLAlchemySocket):

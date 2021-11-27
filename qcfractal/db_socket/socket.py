@@ -14,7 +14,6 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, List, Optional, Union, Iterable
 
 from qcfractal.interface.models import prepare_basis
-from ..components.serverinfo.db_models import VersionsORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -150,7 +149,8 @@ class SQLAlchemySocket:
         # Create/initialize the subsockets
         from ..components.molecules.sockets import MoleculeSocket
         from ..components.keywords.sockets import KeywordsSocket
-        from ..components.permissions.sockets import UserSocket, RoleSocket
+        from ..components.permissions.user_socket import UserSocket
+        from ..components.permissions.role_socket import RoleSocket
         from ..components.serverinfo.sockets import ServerInfoSocket
         from ..components.managers.sockets import ManagerSocket
         from ..components.records.sockets import RecordSocket
@@ -231,6 +231,9 @@ class SQLAlchemySocket:
 
     def check_lib_versions(self):
         """Check the stored versions of elemental and fractal"""
+
+        # TODO - Move me to serverinfo socket
+        from ..components.serverinfo.db_models import VersionsORM
 
         with self.session_scope() as session:
             db_ver = session.query(VersionsORM).order_by(VersionsORM.created_on.desc())

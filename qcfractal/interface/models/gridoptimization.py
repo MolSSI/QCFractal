@@ -9,9 +9,9 @@ from typing import Any, Dict, List, Tuple, Union, Optional
 from pydantic import Field, constr, validator
 
 from .common_models import Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
-from .model_utils import recursive_normalizer
-from .records import RecordBase, RecordStatusEnum
-from .task_models import PriorityEnum
+from qcfractal.portal.model_utils import recursive_normalizer
+from .records import RecordBase
+from ...portal.records import PriorityEnum, RecordStatusEnum
 
 
 class ScanTypeEnum(str, Enum):

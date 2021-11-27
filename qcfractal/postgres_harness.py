@@ -16,10 +16,6 @@ import psycopg2
 import psycopg2.errors
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from qcfractal.db_socket import BaseORM
-from .components.serverinfo.db_models import VersionsORM
-from .components.permissions.db_models import RoleORM
-from qcfractal.components.permissions.role_socket import default_roles
 
 from .config import DatabaseConfig
 from .port_util import find_open_port, is_port_inuse
@@ -399,6 +395,8 @@ class PostgresHarness:
             self._logger.info(
                 f"Updating current version of QCFractal in DB: {uri} \n" f"to version {qcfractal.__version__}"
             )
+            from .components.serverinfo.db_models import VersionsORM
+
             current_ver = VersionsORM(elemental_version=elemental_version, fractal_version=fractal_version)
             session.add(current_ver)
             session.commit()
@@ -572,6 +570,10 @@ class PostgresHarness:
         self._logger.info(f"Creating tables for database: {uri}")
         engine = create_engine(uri, echo=False, pool_size=1)
 
+        # TODO - circular import
+        from qcfractal.db_socket.base_orm import BaseORM
+        from qcfractal.components.permissions.db_models import RoleORM
+
         try:
             BaseORM.metadata.create_all(engine)
         except Exception as e:
@@ -581,6 +583,9 @@ class PostgresHarness:
         uri = self.config.uri
         engine = create_engine(uri, echo=False, pool_size=1)
         session = sessionmaker(bind=engine)()
+
+        # TODO - circular import
+        from qcfractal.components.permissions.role_socket import default_roles
 
         try:
             for rolename, permissions in default_roles.items():

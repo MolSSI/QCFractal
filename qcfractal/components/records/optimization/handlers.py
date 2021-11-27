@@ -18,11 +18,10 @@ from qcfractal.db_socket.helpers import insert_general, get_query_proj_options, 
 from qcfractal.interface.models import (
     ObjectId,
     OptimizationRecord,
-    RecordStatusEnum,
     OptimizationResult,
     OptimizationInput,
-    PriorityEnum,
 )
+from qcfractal.portal.records import PriorityEnum, RecordStatusEnum
 
 from qcfractal.portal.metadata_models import QueryMetadata, InsertMetadata
 from typing import TYPE_CHECKING

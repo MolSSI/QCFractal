@@ -5,14 +5,14 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import and_, update, select
-from sqlalchemy.orm import load_only, selectinload
+from sqlalchemy.orm import selectinload
 
-from qcfractal.components.managers.db_models import ComputeManagerLogORM, ComputeManagerORM
 from qcfractal.db_socket.helpers import get_query_proj_options, get_count, calculate_limit, get_count_2, get_general
 from qcfractal.exceptions import ComputeManagerError
-from qcfractal.portal.components.managers import ManagerStatusEnum, ManagerName
+from qcfractal.portal.records import RecordStatusEnum
+from qcfractal.portal.managers import ManagerStatusEnum, ManagerName
 from qcfractal.portal.metadata_models import QueryMetadata
-from qcfractal.interface.models import RecordStatusEnum
+from .db_models import ComputeManagerLogORM, ComputeManagerORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -250,7 +250,7 @@ class ManagerSocket:
 
     def query(
         self,
-        id: Optional[Iterable[int]] = None,
+        manager_id: Optional[Iterable[int]] = None,
         name: Optional[Iterable[str]] = None,
         cluster: Optional[Iterable[str]] = None,
         hostname: Optional[Iterable[str]] = None,
@@ -272,7 +272,7 @@ class ManagerSocket:
 
         Parameters
         ----------
-        id
+        manager_id
             Query for managers its ID
         name
             Query for managers based on manager name
@@ -310,8 +310,8 @@ class ManagerSocket:
         proj_options = get_query_proj_options(ComputeManagerORM, include, exclude)
 
         and_query = []
-        if id is not None:
-            and_query.append(ComputeManagerORM.id.in_(id))
+        if manager_id is not None:
+            and_query.append(ComputeManagerORM.id.in_(manager_id))
         if name is not None:
             and_query.append(ComputeManagerORM.name.in_(name))
         if hostname is not None:

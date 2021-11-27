@@ -1,6 +1,6 @@
 import pytest
 
-from qcfractal.portal.components.outputstore import OutputStore
+from .models import OutputStore
 
 
 def test_models_outputstore_fail():

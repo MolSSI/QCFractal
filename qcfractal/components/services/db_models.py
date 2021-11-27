@@ -3,7 +3,7 @@ import datetime
 from sqlalchemy import Column, Integer, ForeignKey, JSON, String, DateTime, Index, UniqueConstraint
 from sqlalchemy.orm import relationship
 
-from qcfractal.interface.models import PriorityEnum
+from qcfractal.portal.records import PriorityEnum
 from qcfractal.db_socket import BaseORM, PlainMsgpackExt
 from qcfractal.components.records.db_models import BaseResultORM
 

@@ -1,9 +1,14 @@
-from typing import Dict, Any, Optional, Iterable
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, Integer, Boolean, String, ForeignKey, UniqueConstraint
 
 from qcfractal.db_socket import BaseORM, MsgpackExt
-from qcfractal.portal.components.wavefunctions import WavefunctionProperties
+from qcfractal.portal.wavefunctions import WavefunctionProperties
+
+if TYPE_CHECKING:
+    from typing import Dict, Any, Optional, Iterable
 
 
 class WavefunctionStoreORM(BaseORM):

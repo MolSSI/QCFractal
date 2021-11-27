@@ -7,9 +7,9 @@ import pytest
 from datetime import datetime
 from qcfractal.exceptions import ComputeManagerError
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.portal.components.managers import ManagerName
+from qcfractal.portal.managers import ManagerName
 from qcfractal.testing import load_procedure_data, caplog_handler_at_level
-from qcfractal.interface.models import RecordStatusEnum, PriorityEnum
+from qcfractal.portal.records import PriorityEnum, RecordStatusEnum
 
 
 def test_task_socket_claim_manager_noexist(storage_socket: SQLAlchemySocket):

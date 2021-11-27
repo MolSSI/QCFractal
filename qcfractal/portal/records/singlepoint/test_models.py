@@ -1,6 +1,4 @@
-import pytest
-import json
-from .models import SinglePointSpecification, SinglePointDriver, AtomicResultProtocols
+from .models import SinglePointSpecification, SinglePointDriver
 
 
 def test_singlepoint_models_lowercase():

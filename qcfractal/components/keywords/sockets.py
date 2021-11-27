@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from qcfractal.components.keywords.db_models import KeywordsORM
 from qcfractal.db_socket.helpers import (
     get_general,
     insert_general,
@@ -11,8 +10,9 @@ from qcfractal.db_socket.helpers import (
     insert_mixed_general,
 )
 from qcfractal.exceptions import LimitExceededError
+from qcfractal.portal.keywords import KeywordSet
 from qcfractal.portal.metadata_models import InsertMetadata, DeleteMetadata
-from qcfractal.portal.components.keywords import KeywordSet
+from .db_models import KeywordsORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -80,7 +80,7 @@ class KeywordsSocket:
         return meta, [x[0] for x in added_ids]
 
     def get(
-        self, id: Sequence[int], missing_ok: bool = False, *, session: Optional[Session] = None
+        self, keywords_id: Sequence[int], missing_ok: bool = False, *, session: Optional[Session] = None
     ) -> List[Optional[KeywordDict]]:
         """
         Obtain keywords with specified IDs
@@ -94,7 +94,7 @@ class KeywordsSocket:
         ----------
         session
             An existing SQLAlchemy session to get data from
-        id
+        keywords_id
             A list or other sequence of keyword IDs
         missing_ok
            If set to True, then missing keywords will be tolerated, and the returned list of
@@ -108,12 +108,11 @@ class KeywordsSocket:
             Keyword information as a dictionary in the same order as the given ids.
             If missing_ok is True, then this list will contain None where the keywords were missing
         """
-
-        if len(id) > self._limit:
-            raise LimitExceededError(f"Request for {len(id)} keywords is over the limit of {self._limit}")
+        if len(keywords_id) > self._limit:
+            raise LimitExceededError(f"Request for {len(keywords_id)} keywords is over the limit of {self._limit}")
 
         with self.root_socket.optional_session(session, True) as session:
-            return get_general(session, KeywordsORM, KeywordsORM.id, id, None, None, missing_ok)
+            return get_general(session, KeywordsORM, KeywordsORM.id, keywords_id, None, None, missing_ok)
 
     def add_mixed(
         self, keyword_data: Sequence[Union[int, KeywordSet, KeywordDict]], *, session: Optional[Session] = None
@@ -151,13 +150,13 @@ class KeywordsSocket:
         # added_ids is a list of tuple, with each tuple only having one value. Flatten that out
         return meta, [x[0] if x is not None else None for x in all_ids]
 
-    def delete(self, id: Sequence[int], *, session: Optional[Session] = None) -> DeleteMetadata:
+    def delete(self, keywords_id: Sequence[int], *, session: Optional[Session] = None) -> DeleteMetadata:
         """
         Removes keywords from the database based on id
 
         Parameters
         ----------
-        id
+        keywords_id
             IDs of the keywords to remove
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
@@ -169,7 +168,7 @@ class KeywordsSocket:
             Information about what was deleted and any errors that occurred
         """
 
-        id_lst = [(x,) for x in id]
+        id_lst = [(x,) for x in keywords_id]
 
         with self.root_socket.optional_session(session) as session:
             return delete_general(session, KeywordsORM, (KeywordsORM.id,), id_lst)

@@ -17,7 +17,7 @@ from .config import FractalConfig, DatabaseConfig, update_nested_dict
 from .periodics import PeriodicsProcess
 from .app.flask_app import FlaskProcess
 from .process_runner import ProcessBase, ProcessRunner
-from .interface.models import RecordStatusEnum
+from .portal.records import RecordStatusEnum
 from .exceptions import AuthenticationFailure
 
 from typing import TYPE_CHECKING

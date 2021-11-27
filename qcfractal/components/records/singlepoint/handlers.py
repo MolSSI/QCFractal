@@ -13,7 +13,8 @@ from qcfractal.components.records.base_handlers import BaseProcedureHandler
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.records.singlepoint.db_models import ResultORM
 from qcfractal.db_socket.helpers import insert_general, get_query_proj_options, get_count, calculate_limit
-from qcfractal.interface.models import ObjectId, RecordStatusEnum, PriorityEnum, AtomicInput
+from qcfractal.interface.models import ObjectId, AtomicInput
+from qcfractal.portal.records import PriorityEnum, RecordStatusEnum
 from qcfractal.portal.metadata_models import InsertMetadata, QueryMetadata
 
 from typing import TYPE_CHECKING

@@ -11,8 +11,8 @@ from ..models import (
     ProtoModel,
     QCSpecification,
     TorsionDriveInput,
-    RecordStatusEnum,
 )
+from qcfractal.portal.records import RecordStatusEnum
 from ..models.torsiondrive import TorsionDriveKeywords
 from ..visualization import custom_plot
 from .collection import BaseProcedureDataset

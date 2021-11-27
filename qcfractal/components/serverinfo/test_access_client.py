@@ -1,15 +1,17 @@
-"""
-Tests the keywords subsocket
-"""
+from __future__ import annotations
+
 import ipaddress
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.portal import PortalClient
 from qcfractal.testing import TestingSnowflake, valid_encodings
 from .test_access_socket import test_ips
+
+if TYPE_CHECKING:
+    from qcfractal.db_socket import SQLAlchemySocket
+    from qcfractal.portal import PortalClient
 
 
 def test_serverinfo_client_query_access(storage_socket: SQLAlchemySocket, snowflake_client: PortalClient):
