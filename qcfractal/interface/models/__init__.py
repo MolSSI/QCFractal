@@ -2,8 +2,6 @@
 Either pull in QCEl models or local models
 """
 
-from typing import Union
-
 from . import rest_models
 from .common_models import (
     AutodocBaseSettings,
@@ -29,17 +27,17 @@ from .common_models import (
 
 from .gridoptimization import GridOptimizationInput, GridOptimizationRecord
 from .model_builder import build_procedure
-from .model_utils import hash_dictionary, json_encoders, prepare_basis
-from .records import OptimizationRecord, SinglePointRecord, RecordStatusEnum
+from qcfractal.portal.model_utils import hash_dictionary, json_encoders, prepare_basis
+from .records import OptimizationRecord, SinglePointRecord
 from .rest_models import ComputeResponse, rest_model
 from .task_models import (
     PythonComputeSpec,
     TaskRecord,
-    PriorityEnum,
     SingleProcedureSpecification,
     OptimizationProcedureSpecification,
     AllProcedureSpecifications,
     AllServiceSpecifications,
 )
-from ...portal.components.managers import ManagerStatusEnum
+from ...portal.records import PriorityEnum, RecordStatusEnum
+from ...portal.managers import ManagerStatusEnum
 from .torsiondrive import TorsionDriveInput, TorsionDriveRecord

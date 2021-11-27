@@ -8,7 +8,7 @@ from qcfractal.app.helpers import (
     convert_post_response_metadata,
 )
 from qcfractal.app.routes import check_access
-from qcfractal.interface.models import PriorityEnum
+from qcfractal.portal.records import PriorityEnum
 from qcfractal.interface.models.rest_models import (
     TaskQueueGETBody,
     TaskQueueGETResponse,

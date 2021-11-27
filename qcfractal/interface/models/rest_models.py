@@ -4,16 +4,13 @@ Models for the REST interface
 import functools
 import re
 import warnings
-from enum import Enum
 
-from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import Field, constr, root_validator, validator
 from qcelemental.util import get_base_docs
 
 from .common_models import (
-    AllResultTypes,
     Molecule,
     ObjectId,
     ProtoModel,
@@ -23,9 +20,8 @@ from .task_models import (
     OptimizationProcedureSpecification,
     TaskRecord,
 )
-from ...portal.components.managers import ManagerStatusEnum
-from .task_models import PriorityEnum
-from .records import SinglePointRecord, OptimizationRecord, RecordStatusEnum
+from ...portal.records import PriorityEnum, RecordStatusEnum
+from .records import SinglePointRecord, OptimizationRecord
 from .gridoptimization import GridOptimizationInput, GridOptimizationRecord
 from .torsiondrive import TorsionDriveInput, TorsionDriveRecord
 

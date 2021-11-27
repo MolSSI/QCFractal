@@ -6,18 +6,17 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import and_, func, text, select, delete
-from sqlalchemy.orm import load_only
 
 import qcfractal
 from qcfractal.components.datasets.db_models import CollectionORM
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.records.db_models import BaseResultORM
-from qcfractal.components.serverinfo.db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM
 from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import get_query_proj_options, get_count_2, calculate_limit
 from qcfractal.portal.metadata_models import QueryMetadata
+from .db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -399,7 +398,7 @@ class ServerInfoSocket:
 
     def query_error_log(
         self,
-        id: Optional[Iterable[int]] = None,
+        error_id: Optional[Iterable[int]] = None,
         username: Optional[Iterable[str]] = None,
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
@@ -419,7 +418,7 @@ class ServerInfoSocket:
 
         Parameters
         ----------
-        id
+        error_id
             Query based on the error id
         username
             Query for errors from a given user name
@@ -445,8 +444,8 @@ class ServerInfoSocket:
         limit = calculate_limit(self._access_log_limit, limit)
 
         and_query = []
-        if id:
-            and_query.append(InternalErrorLogORM.id.in_(id))
+        if error_id:
+            and_query.append(InternalErrorLogORM.id.in_(error_id))
         if username:
             and_query.append(InternalErrorLogORM.user.in_(username))
         if before:

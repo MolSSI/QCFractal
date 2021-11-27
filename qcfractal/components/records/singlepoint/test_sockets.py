@@ -5,20 +5,20 @@ Tests the singlepoint record socket
 from datetime import datetime
 
 import pytest
-from qcelemental.models import Molecule
 
 from qcfractal.components.records.singlepoint.db_models import ResultORM
 from qcfractal.components.wavefunctions.test_db_models import assert_wfn_equal
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.interface.models import RecordStatusEnum
-from qcfractal.portal.components.keywords import KeywordSet
-from qcfractal.portal.components.outputstore import OutputStore
-from qcfractal.portal.components.records.singlepoint import (
+from qcfractal.portal.keywords import KeywordSet
+from qcfractal.portal.molecules import Molecule
+from qcfractal.portal.outputstore import OutputStore
+from qcfractal.portal.records import RecordStatusEnum
+from qcfractal.portal.records.singlepoint import (
     SinglePointSpecification,
     SinglePointDriver,
-    AtomicResultProtocols,
+    SinglePointProtocols,
 )
-from qcfractal.portal.components.wavefunctions.models import WavefunctionProperties
+from qcfractal.portal.wavefunctions.models import WavefunctionProperties
 from qcfractal.testing import load_molecule_data, load_procedure_data
 
 _test_specs = [
@@ -28,7 +28,7 @@ _test_specs = [
         method="b3lyp",
         basis="6-31G*",
         keywords=KeywordSet(values={"k": "value"}),
-        protocols=AtomicResultProtocols(wavefunction="all"),
+        protocols=SinglePointProtocols(wavefunction="all"),
     ),
     SinglePointSpecification(
         program="Prog2",
@@ -43,14 +43,14 @@ _test_specs = [
         method="pbe0",
         basis="",
         keywords=KeywordSet(values={"o": 1, "v": 2.123}),
-        protocols=AtomicResultProtocols(stdout=False, wavefunction="orbitals_and_eigenvalues"),
+        protocols=SinglePointProtocols(stdout=False, wavefunction="orbitals_and_eigenvalues"),
     ),
     SinglePointSpecification(
         program="ProG4",
         driver=SinglePointDriver.hessian,
         method="pbe",
         basis=None,
-        protocols=AtomicResultProtocols(stdout=False, wavefunction="return_results"),
+        protocols=SinglePointProtocols(stdout=False, wavefunction="return_results"),
     ),
 ]
 
@@ -125,7 +125,7 @@ def test_singlepoint_add_same_1(storage_socket: SQLAlchemySocket):
         method="b3lyp",
         basis="6-31G*",
         keywords=KeywordSet(values={"k": "value"}),
-        protocols=AtomicResultProtocols(wavefunction="all"),
+        protocols=SinglePointProtocols(wavefunction="all"),
     )
 
     water = load_molecule_data("water_dimer_minima")
@@ -148,7 +148,7 @@ def test_singlepoint_add_same_2(storage_socket: SQLAlchemySocket):
         method="b3lyp",
         basis="6-31G*",
         keywords=KeywordSet(values={"k": "value"}),
-        protocols=AtomicResultProtocols(wavefunction="all"),
+        protocols=SinglePointProtocols(wavefunction="all"),
     )
 
     spec2 = SinglePointSpecification(
@@ -157,7 +157,7 @@ def test_singlepoint_add_same_2(storage_socket: SQLAlchemySocket):
         method="b3lYp",
         basis="6-31g*",
         keywords=KeywordSet(values={"k": "value"}),
-        protocols=AtomicResultProtocols(wavefunction="all"),
+        protocols=SinglePointProtocols(wavefunction="all"),
     )
 
     water = load_molecule_data("water_dimer_minima")
@@ -180,7 +180,7 @@ def test_singlepoint_add_same_3(storage_socket: SQLAlchemySocket):
         method="b3lyp",
         basis="6-31G*",
         keywords=KeywordSet(values={}),
-        protocols=AtomicResultProtocols(wavefunction="none"),
+        protocols=SinglePointProtocols(wavefunction="none"),
     )
 
     spec2 = SinglePointSpecification(

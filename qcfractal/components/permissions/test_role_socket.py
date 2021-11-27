@@ -1,13 +1,18 @@
 """
 Tests for the user and role subsockets
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 import pytest
 
 from qcfractal.components.permissions.role_socket import default_roles
-from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.exceptions import UserManagementError, InvalidRolenameError
-from qcfractal.portal.components.permissions import RoleInfo, UserInfo
+from qcfractal.portal.permissions import RoleInfo, UserInfo
+
+if TYPE_CHECKING:
+    from qcfractal.db_socket import SQLAlchemySocket
 
 invalid_rolenames = ["\x00", "ab\x00cd", "1234", "a user", ""]
 

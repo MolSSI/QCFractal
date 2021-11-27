@@ -1,10 +1,14 @@
-from typing import Dict, Any, Optional, Iterable
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, Integer, Enum, JSON, LargeBinary, ForeignKey, Index
 
 from qcfractal.db_socket import BaseORM
-from qcfractal.portal.components.outputstore import CompressionEnum, OutputStore
-from qcfractal.portal.components.outputstore.models import OutputTypeEnum
+from qcfractal.portal.outputstore import CompressionEnum, OutputTypeEnum, OutputStore
+
+if TYPE_CHECKING:
+    from typing import Dict, Any, Optional, Iterable
 
 
 class OutputStoreORM(BaseORM):

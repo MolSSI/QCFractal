@@ -2,11 +2,17 @@
 Tests for the user and role subsockets
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
 
-from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.exceptions import UserManagementError, AuthenticationFailure, InvalidPasswordError, InvalidUsernameError
-from qcfractal.portal.components.permissions.models import UserInfo, is_valid_password
+from qcfractal.portal.permissions.models import UserInfo, is_valid_password
+
+if TYPE_CHECKING:
+    from qcfractal.db_socket import SQLAlchemySocket
 
 invalid_usernames = ["\x00", "ab\x00cd", "1234", "a user", ""]
 invalid_passwords = ["\x00", "abcd\x00efgh", "abcd", "1", ""]

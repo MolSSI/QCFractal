@@ -1,10 +1,11 @@
-"""
-Tests the keywords subsocket
-"""
-from datetime import datetime
+from __future__ import annotations
 
-from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.portal import PortalClient
+from datetime import datetime
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from qcfractal.db_socket import SQLAlchemySocket
+    from qcfractal.portal import PortalClient
 
 
 def test_serverinfo_client_query_error(storage_socket: SQLAlchemySocket, snowflake_client: PortalClient):

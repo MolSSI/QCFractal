@@ -24,7 +24,7 @@ from .collection_utils import register_collection
 if TYPE_CHECKING:  # pragma: no cover
     from .. import PortalClient
     from ...interface.models import Molecule, SinglePointRecord
-    from ..components.keywords import KeywordSet
+    from ..keywords import KeywordSet
     from . import DatasetView
 
 

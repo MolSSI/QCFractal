@@ -2,8 +2,7 @@ from typing import Optional, Dict, Any
 
 from pydantic import Field, BaseModel
 
-from qcfractal.interface.models import hash_dictionary
-from qcfractal.interface.models.model_utils import recursive_normalizer
+from qcfractal.portal.model_utils import recursive_normalizer, hash_dictionary
 
 
 class KeywordSet(BaseModel):

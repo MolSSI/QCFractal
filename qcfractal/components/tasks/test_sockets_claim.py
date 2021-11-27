@@ -1,11 +1,16 @@
 """
 Tests the tasks socket (claiming & returning data)
 """
+from __future__ import annotations
 
-from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.interface.models import PriorityEnum
-from qcfractal.portal.components.managers import ManagerName
+from typing import TYPE_CHECKING
+
+from qcfractal.portal.managers import ManagerName
+from qcfractal.portal.records import PriorityEnum
 from qcfractal.testing import load_procedure_data
+
+if TYPE_CHECKING:
+    from qcfractal.db_socket import SQLAlchemySocket
 
 input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_water_energy")
 input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_water_gradient")

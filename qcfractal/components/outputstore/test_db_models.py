@@ -2,14 +2,20 @@
 Tests the output_store models
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
-from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.interface.models import PriorityEnum
-from qcfractal.portal.components.managers import ManagerName
-from qcfractal.portal.components.outputstore import OutputTypeEnum, CompressionEnum, OutputStore
+from qcfractal.portal.managers import ManagerName
+from qcfractal.portal.outputstore import OutputTypeEnum, CompressionEnum, OutputStore
+from qcfractal.portal.records import PriorityEnum
 from qcfractal.testing import load_procedure_data
+
+if TYPE_CHECKING:
+    from qcfractal.db_socket import SQLAlchemySocket
 
 
 @pytest.fixture()

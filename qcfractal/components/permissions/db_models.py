@@ -1,9 +1,14 @@
-from typing import Optional, Iterable, Dict, Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, Integer, ForeignKey, String, LargeBinary, Boolean, JSON, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from qcfractal.db_socket import BaseORM
+
+if TYPE_CHECKING:
+    from typing import Optional, Iterable, Dict, Any
 
 
 class UserORM(BaseORM):

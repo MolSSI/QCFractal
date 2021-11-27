@@ -23,11 +23,10 @@ from qcfractal.db_socket.helpers import insert_general, get_query_proj_options
 from qcfractal.interface.models import (
     ProtoModel,
     ObjectId,
-    PriorityEnum,
     Molecule,
-    RecordStatusEnum,
     OptimizationProcedureSpecification,
 )
+from qcfractal.portal.records import PriorityEnum, RecordStatusEnum
 
 from qcfractal.interface.models.gridoptimization import (
     ScanDimension,

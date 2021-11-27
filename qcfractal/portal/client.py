@@ -5,7 +5,6 @@ import pydantic
 from tabulate import tabulate
 
 from datetime import datetime
-import json
 import os
 from pkg_resources import parse_version
 from . import __version__
@@ -32,17 +31,13 @@ from pydantic import ValidationError
 import pandas as pd
 
 from ..interface.models.rest_models import rest_model
-from ..interface.models import (
-    RecordStatusEnum,
-    PriorityEnum,
-)
-from .components.managers import ManagerStatusEnum, ManagerQueryBody, ComputeManager
-from .components.records.singlepoint import SinglePointRecord
-from .components.records import ComputeHistoryURLParameters, ComputeHistory
+from .records.models import RecordStatusEnum
+from qcfractal.portal.managers import ManagerQueryBody, ComputeManager
+from qcfractal.portal.records.singlepoint import SinglePointRecord
+from qcfractal.portal.records import ComputeHistoryURLParameters, ComputeHistory
 
 from .metadata_models import InsertMetadata, DeleteMetadata
-from .components.outputstore import OutputStore
-from .components.serverinfo import (
+from qcfractal.portal.serverinfo import (
     AccessLogQueryParameters,
     AccessLogQuerySummaryParameters,
     ErrorLogQueryParameters,
@@ -55,23 +50,19 @@ from .common_rest import (
     CommonGetURLParameters,
     CommonDeleteURLParameters,
 )
-from .components.molecules import MoleculeQueryBody, MoleculeModifyBody
-from .components.wavefunctions.models import WavefunctionProperties
+from qcfractal.portal.molecules import Molecule, MoleculeIdentifiers, MoleculeQueryBody, MoleculeModifyBody
 from qcfractal.portal.metadata_models import QueryMetadata, UpdateMetadata
 from .collections import Collection, collection_factory, collections_name_map
-from .records import record_factory
+from .records_ddotson import record_factory
 from .cache import PortalCache
 from qcfractal.exceptions import AuthenticationFailure
 from .serialization import serialize, deserialize
 
 from ..interface.models import (
-    Molecule,
-    MoleculeIdentifiers,
     ObjectId,
-    TaskRecord,
 )
-from .components.keywords import KeywordSet
-from qcfractal.portal.components.permissions import (
+from .keywords import KeywordSet
+from qcfractal.portal.permissions import (
     UserInfo,
     RoleInfo,
     is_valid_username,
@@ -88,7 +79,6 @@ if TYPE_CHECKING:  # pragma: no cover
         QueryListStr,
         QueryStr,
         ServiceQueueGETResponse,
-        TaskQueueGETResponse,
     )
 
 
@@ -785,14 +775,14 @@ class PortalClient:
 
     def get_keywords(
         self,
-        id: Union[int, Sequence[int]],
+        keywords_id: Union[int, Sequence[int]],
         missing_ok: bool = False,
     ) -> Union[Optional[KeywordSet], List[Optional[KeywordSet]]]:
         """Obtains keywords from the server via keyword ids
 
         Parameters
         ----------
-        id
+        keywords_id
             An id or list of ids to query.
         missing_ok
             If True, return ``None`` for ids that were not found on the server.
@@ -806,12 +796,12 @@ class PortalClient:
             Otherwise, it will be a single KeywordSet.
         """
 
-        url_params = {"id": make_list(id), "missing_ok": missing_ok}
+        url_params = {"id": make_list(keywords_id), "missing_ok": missing_ok}
         keywords = self._auto_request(
             "get", "v1/keyword", None, CommonGetURLParameters, List[Optional[KeywordSet]], None, url_params
         )
 
-        if isinstance(id, Sequence):
+        if isinstance(keywords_id, Sequence):
             return keywords
         else:
             return keywords[0]
@@ -848,14 +838,14 @@ class PortalClient:
         else:
             return ret[1]
 
-    def _delete_keywords(self, id: Union[int, Sequence[int]]) -> DeleteMetadata:
+    def _delete_keywords(self, keywords_id: Union[int, Sequence[int]]) -> DeleteMetadata:
         """Deletes keywords from the server
 
         This will not delete any keywords that are in use
 
         Parameters
         ----------
-        id
+        keywords_id
             An id or list of ids to query.
 
         Returns
@@ -864,7 +854,7 @@ class PortalClient:
             Metadata about what was deleted
         """
 
-        url_params = {"id": make_list(id)}
+        url_params = {"id": make_list(keywords_id)}
         return self._auto_request(
             "delete", "v1/keyword", None, CommonDeleteURLParameters, DeleteMetadata, None, url_params
         )

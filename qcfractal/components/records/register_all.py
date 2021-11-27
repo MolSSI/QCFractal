@@ -2,7 +2,7 @@
 # (ie, this file is imported, which causes all the routes
 # to be registered with the blueprint)
 
-from .singlepoint import db_models
-from .optimization import db_models
-from .torsiondrive import db_models
-from .gridoptimization import db_models
+from .singlepoint import db_models, routes
+from .optimization import db_models, routes
+from .torsiondrive import db_models, routes
+from .gridoptimization import db_models, routes

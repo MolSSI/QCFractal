@@ -8,8 +8,8 @@ import pytest
 
 from qcfractal.exceptions import MissingDataError
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.interface.models import RecordStatusEnum, PriorityEnum
-from qcfractal.portal.components.managers import ManagerName
+from qcfractal.portal.records import PriorityEnum, RecordStatusEnum
+from qcfractal.portal.managers import ManagerName
 from qcfractal.testing import load_procedure_data
 
 mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")

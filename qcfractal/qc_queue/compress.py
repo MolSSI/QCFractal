@@ -3,7 +3,7 @@ Helpers for compressing data to send back to the server
 """
 
 from typing import Union, Optional, Dict
-from ..portal.components.outputstore import CompressionEnum, OutputStore
+from qcfractal.portal.outputstore import CompressionEnum, OutputStore
 from qcelemental.models import AtomicResult, OptimizationResult
 
 

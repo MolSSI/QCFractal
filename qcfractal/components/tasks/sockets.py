@@ -10,20 +10,21 @@ from sqlalchemy.dialects.postgresql import array
 from sqlalchemy.orm import joinedload, contains_eager
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
-from qcfractal.components.records.base_handlers import BaseProcedureHandler
 from qcfractal.components.records.db_models import BaseResultORM
+from qcfractal.components.records.base_handlers import BaseProcedureHandler
 from qcfractal.components.records.failure import FailedOperationHandler
-from qcfractal.components.records.optimization.handlers import OptimizationHandler
-from qcfractal.components.records.singlepoint.handlers import SingleResultHandler
-from qcfractal.components.tasks.db_models import TaskQueueORM
+
+# from qcfractal.components.records.optimization.handlers import OptimizationHandler
+# from qcfractal.components.records.singlepoint.handlers import SingleResultHandler
 from qcfractal.db_socket.helpers import calculate_limit
 from qcfractal.exceptions import ComputeManagerError
 from qcfractal.interface.models import (
     FailedOperation,
-    RecordStatusEnum,
 )
-from qcfractal.portal.components.managers import ManagerStatusEnum
+from qcfractal.portal.managers import ManagerStatusEnum
 from qcfractal.portal.metadata_models import TaskReturnMetadata
+from qcfractal.portal.records import RecordStatusEnum
+from .db_models import TaskQueueORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -41,17 +42,6 @@ class TaskSocket:
 
         self._user_task_limit = root_socket.qcf_config.response_limits.task_queue
         self._manager_task_limit = root_socket.qcf_config.response_limits.manager_task
-
-        # Subsubsockets/handlers
-        self.single = SingleResultHandler(root_socket)
-        self.optimization = OptimizationHandler(root_socket)
-        self.failure = FailedOperationHandler(root_socket)
-
-        self.handler_map: Dict[str, BaseProcedureHandler] = {
-            "single": self.single,
-            "optimization": self.optimization,
-            "failure": self.failure,
-        }
 
     def update_completed(self, manager_name: str, results: Dict[int, AllResultTypes]) -> TaskReturnMetadata:
         """

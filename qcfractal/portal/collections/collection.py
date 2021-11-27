@@ -12,7 +12,7 @@ from tqdm import tqdm
 import pprint
 
 from ...interface.models import ProtoModel, QCSpecification
-from ..records import Record
+from ..records_ddotson import Record
 
 if TYPE_CHECKING:  # pragma: no cover
     from .. import PortalClient

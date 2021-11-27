@@ -8,7 +8,6 @@ from sqlalchemy.orm import load_only
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.sql import select, and_, or_
 
-from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.db_socket.helpers import (
     get_count_2,
     get_query_proj_options,
@@ -19,13 +18,14 @@ from qcfractal.db_socket.helpers import (
     calculate_limit,
 )
 from qcfractal.exceptions import LimitExceededError, MissingDataError
-from qcfractal.portal.components.molecules import Molecule, MoleculeIdentifiers
 from qcfractal.portal.metadata_models import (
     InsertMetadata,
     DeleteMetadata,
     QueryMetadata,
     UpdateMetadata,
 )
+from qcfractal.portal.molecules import Molecule, MoleculeIdentifiers
+from .db_models import MoleculeORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -103,7 +103,7 @@ class MoleculeSocket:
 
     def get(
         self,
-        id: Sequence[int],
+        molecule_id: Sequence[int],
         include: Optional[Sequence[str]] = None,
         exclude: Optional[Sequence[str]] = None,
         missing_ok: bool = False,
@@ -120,7 +120,7 @@ class MoleculeSocket:
 
         Parameters
         ----------
-        id
+        molecule_id
             A list or other sequence of molecule IDs
         include
             Which fields of the molecule to return. Default is to return all fields.
@@ -139,11 +139,11 @@ class MoleculeSocket:
             If missing_ok is True, then this list will contain None where the molecule was missing.
         """
 
-        if len(id) > self._limit:
-            raise LimitExceededError(f"Request for {len(id)} molecules is over the limit of {self._limit}")
+        if len(molecule_id) > self._limit:
+            raise LimitExceededError(f"Request for {len(molecule_id)} molecules is over the limit of {self._limit}")
 
         with self.root_socket.optional_session(session, True) as session:
-            return get_general(session, MoleculeORM, MoleculeORM.id, id, include, exclude, missing_ok)
+            return get_general(session, MoleculeORM, MoleculeORM.id, molecule_id, include, exclude, missing_ok)
 
     def add_mixed(
         self, molecule_data: Sequence[Union[int, Molecule]], *, session: Optional[Session] = None
@@ -181,13 +181,13 @@ class MoleculeSocket:
         # added_ids is a list of tuple, with each tuple only having one value. Flatten that out
         return meta, [x[0] if x is not None else None for x in all_ids]
 
-    def delete(self, id: Sequence[int], *, session: Optional[Session] = None) -> DeleteMetadata:
+    def delete(self, molecule_id: Sequence[int], *, session: Optional[Session] = None) -> DeleteMetadata:
         """
         Removes molecules from the database based on id
 
         Parameters
         ----------
-        id
+        molecule_id
             IDs of the molecules to remove
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
@@ -199,14 +199,14 @@ class MoleculeSocket:
             Information about what was deleted and any errors that occurred
         """
 
-        id_lst = [(x,) for x in id]
+        id_lst = [(x,) for x in molecule_id]
 
         with self.root_socket.optional_session(session) as session:
             return delete_general(session, MoleculeORM, (MoleculeORM.id,), id_lst)
 
     def query(
         self,
-        id: Optional[Iterable[int]] = None,
+        molecule_id: Optional[Iterable[int]] = None,
         molecule_hash: Optional[Iterable[str]] = None,
         molecular_formula: Optional[Iterable[str]] = None,
         identifiers: Optional[Dict[str, Iterable[Any]]] = None,
@@ -225,7 +225,7 @@ class MoleculeSocket:
 
         Parameters
         ----------
-        id
+        molecule_id
             Query for molecules based on its ID
         molecule_hash
             Query for molecules based on its hash
@@ -265,8 +265,8 @@ class MoleculeSocket:
         proj_options = get_query_proj_options(MoleculeORM, include, exclude)
 
         and_query = []
-        if id is not None:
-            and_query.append(MoleculeORM.id.in_(id))
+        if molecule_id is not None:
+            and_query.append(MoleculeORM.id.in_(molecule_id))
         if molecule_hash is not None:
             and_query.append(MoleculeORM.molecule_hash.in_(molecule_hash))
         if molecular_formula is not None:
@@ -295,7 +295,7 @@ class MoleculeSocket:
 
     def modify(
         self,
-        id: int,
+        molecule_id: int,
         name: Optional[str] = None,
         comment: Optional[str] = None,
         identifiers: Optional[MoleculeIdentifiers] = None,
@@ -315,7 +315,7 @@ class MoleculeSocket:
 
         Parameters
         ----------
-        id
+        molecule_id
             Molecule ID of the molecule to modify
         name
             New name for the molecule. If None, name is not changed.
@@ -339,14 +339,14 @@ class MoleculeSocket:
         """
 
         with self.root_socket.optional_session(session) as session:
-            stmt = select(MoleculeORM).where(or_(MoleculeORM.id == id)).with_for_update()
+            stmt = select(MoleculeORM).where(or_(MoleculeORM.id == molecule_id)).with_for_update()
             stmt = stmt.options(
                 load_only(MoleculeORM.id, MoleculeORM.name, MoleculeORM.comment, MoleculeORM.identifiers)
             )
             mol = session.execute(stmt).scalar_one_or_none()
 
             if mol is None:
-                raise MissingDataError(f"Molecule with id {id} not found in the database")
+                raise MissingDataError(f"Molecule with id {molecule_id} not found in the database")
 
             if name is not None:
                 mol.name = name

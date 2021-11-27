@@ -2,30 +2,27 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import and_
 from sqlalchemy.orm import selectinload, load_only, contains_eager
-from qcfractal.interface.models import (
-    ObjectId,
-    AllServiceSpecifications,
-    RecordStatusEnum,
-)
-from qcfractal.components.services.db_models import ServiceQueueORM
-from qcfractal.components.records.db_models import BaseResultORM
-from qcfractal.portal.metadata_models import InsertMetadata, QueryMetadata
 
+from qcfractal.components.records.db_models import BaseResultORM
+from qcfractal.components.records.base_handlers import BaseServiceHandler
+from qcfractal.components.records.gridoptimization.handlers import GridOptimizationHandler
+from qcfractal.components.records.torsiondrive.handlers import TorsionDriveHandler
 from qcfractal.db_socket.helpers import (
     insert_general,
-    get_query_proj_options,
     get_count,
     calculate_limit,
 )
-
-from typing import TYPE_CHECKING
-
-from qcfractal.components.records.base_handlers import BaseServiceHandler
-from qcfractal.components.records.torsiondrive.handlers import TorsionDriveHandler
-from qcfractal.components.records.gridoptimization.handlers import GridOptimizationHandler
+from qcfractal.interface.models import (
+    ObjectId,
+    AllServiceSpecifications,
+)
+from qcfractal.portal.metadata_models import InsertMetadata, QueryMetadata
+from qcfractal.portal.records.models import RecordStatusEnum
+from .db_models import ServiceQueueORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session

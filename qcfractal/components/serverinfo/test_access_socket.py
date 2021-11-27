@@ -1,8 +1,14 @@
+from __future__ import annotations
+
+import datetime
 import ipaddress
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing import load_ip_test_data
+
+if TYPE_CHECKING:
+    from qcfractal.db_socket import SQLAlchemySocket
 
 # First part of the tuple is the ip address
 # second is the range, as stored in the MaxMind test JSON file

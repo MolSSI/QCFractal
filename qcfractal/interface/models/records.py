@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import abc
 import datetime
-from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 import numpy as np
@@ -15,38 +14,11 @@ from pydantic import Field, constr, validator
 
 from ..visualization import scatter_plot
 from .common_models import DriverEnum, ObjectId, ProtoModel, QCSpecification
-from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
+from qcfractal.portal.model_utils import hash_dictionary, prepare_basis, recursive_normalizer
+from ...portal.records import RecordStatusEnum
 
 if TYPE_CHECKING:
     from .common_models import Molecule
-
-
-class RecordStatusEnum(str, Enum):
-    """
-    The state of a record object. The states which are available are a finite set.
-    """
-
-    complete = "complete"
-    waiting = "waiting"
-    running = "running"
-    error = "error"
-    cancelled = "cancelled"
-    deleted = "deleted"
-
-    @classmethod
-    def _missing_(cls, name):
-        """Attempts to find the correct status in a case-insensitive way
-
-        If a string being converted to a RecordStatusEnum is missing, then this function
-        will convert the case and try to find the appropriate status.
-        """
-        name = name.lower()
-
-        # Search this way rather than doing 'in' since we are comparing
-        # a string to an enum
-        for status in cls:
-            if name == status:
-                return status
 
 
 class RecordBase(ProtoModel, abc.ABC):

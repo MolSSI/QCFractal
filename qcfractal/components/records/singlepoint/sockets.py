@@ -3,21 +3,19 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Optional
 
-from qcelemental.models import AtomicInput, AtomicResult, Molecule
-from qcelemental.models.results import WavefunctionProperties
+from qcelemental.models import AtomicInput, AtomicResult
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
-from qcfractal.components.records.singlepoint.db_models import SinglePointSpecificationORM, ResultORM
 from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
 from qcfractal.db_socket.helpers import get_general, insert_general
-from qcfractal.interface.models import RecordStatusEnum, PriorityEnum
-from qcfractal.portal.components.records.singlepoint import (
-    SinglePointSpecification,
-)
 from qcfractal.portal.metadata_models import InsertMetadata
+from qcfractal.portal.molecules import Molecule
+from qcfractal.portal.records import PriorityEnum, RecordStatusEnum
+from qcfractal.portal.records.singlepoint import WavefunctionProperties, SinglePointSpecification
+from .db_models import SinglePointSpecificationORM, ResultORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session

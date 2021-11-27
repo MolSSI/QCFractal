@@ -1,40 +1,10 @@
 import datetime
-from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
 from pydantic import Field, constr
 
 from .common_models import ObjectId, ProtoModel, AtomicResultProtocols, OptimizationProtocols
-
-
-class PriorityEnum(int, Enum):
-    """
-    The priority of a Task. Higher priority will be pulled first.
-    """
-
-    high = 2
-    normal = 1
-    low = 0
-
-    @classmethod
-    def _missing_(cls, name):
-        """Attempts to find the correct priority in a case-insensitive way
-
-        If a string being converted to a PriorityEnum is missing, then this function
-        will convert the case and try to find the appropriate priority.
-        """
-
-        if isinstance(name, int):
-            # An integer that is outside the range of valid priorities
-            return
-
-        name = name.lower()
-
-        # Search this way rather than doing 'in' since we are comparing
-        # a string to an enum
-        for status in cls:
-            if name == status.name:
-                return status
+from ...portal.records import PriorityEnum
 
 
 class PythonComputeSpec(ProtoModel):

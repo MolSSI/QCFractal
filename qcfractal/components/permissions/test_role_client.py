@@ -6,7 +6,7 @@ import pytest
 
 from qcfractal.exceptions import InvalidRolenameError
 from qcfractal.portal.client import PortalRequestError
-from qcfractal.portal.components.permissions import RoleInfo, PermissionsPolicy
+from qcfractal.portal.permissions import RoleInfo, PermissionsPolicy
 from qcfractal.testing import TestingSnowflake, _test_users
 from .role_socket import default_roles
 from .test_role_socket import invalid_rolenames

@@ -2,11 +2,17 @@
 Tests the keywords subsocket
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
 
-from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.exceptions import MissingDataError
-from qcfractal.portal.components.keywords import KeywordSet
+from qcfractal.portal.keywords import KeywordSet
+
+if TYPE_CHECKING:
+    from qcfractal.db_socket import SQLAlchemySocket
 
 
 def test_keywords_socket_basic(storage_socket: SQLAlchemySocket):

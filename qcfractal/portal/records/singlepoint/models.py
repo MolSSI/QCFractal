@@ -1,11 +1,10 @@
 from pydantic import BaseModel, Field, constr, validator
 from typing import Optional, Dict, Union, Any, List
-from qcfractal.portal.components.keywords import KeywordSet
-from qcfractal.portal.components.records.models import BaseRecord
+from qcfractal.portal.keywords import KeywordSet
+from qcfractal.portal.records import BaseRecord
 from qcelemental.models.results import (
-    AtomicResultProtocols,
-    AtomicResult,
-    AtomicResultProperties,
+    AtomicResultProtocols as SinglePointProtocols,
+    AtomicResultProperties as SinglePointProperties,
     WavefunctionProperties,
 )
 from qcelemental.models import Molecule
@@ -40,9 +39,7 @@ class SinglePointSpecification(BaseModel):
         KeywordSet(values={}),
         description="Keywords to use. Can be an ID of the keywords on the server or a KeywordSet object",
     )
-    protocols: AtomicResultProtocols = Field(
-        AtomicResultProtocols(), description=str(AtomicResultProtocols.__base_doc__)
-    )
+    protocols: SinglePointProtocols = Field(SinglePointProtocols(), description=str(SinglePointProtocols.__base_doc__))
 
     @validator("basis", pre=True)
     def _convert_basis(cls, v):
@@ -63,7 +60,7 @@ class SinglePointRecord(BaseRecord):
         molecule_id: int
         molecule: Optional[Molecule]
         return_result: Optional[Dict[str, Any]]
-        properties: Optional[AtomicResultProperties]
+        properties: Optional[SinglePointProperties]
         wavefunction: Optional[WavefunctionProperties] = None
 
     @property
