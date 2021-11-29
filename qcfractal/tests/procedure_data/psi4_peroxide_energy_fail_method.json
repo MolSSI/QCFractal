@@ -1,6 +1,6 @@
 {
     "input": {
-        "procedure": "single",
+        "record_type": "singlepoint",
         "driver": "energy",
         "program": "psi4",
         "method": "bbb9lyp",

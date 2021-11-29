@@ -3,21 +3,14 @@ from typing import Optional
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper, delete_helper
 from qcfractal.app.routes import check_access, wrap_route
-from qcfractal.portal.common_rest import CommonGetProjURLParameters, CommonDeleteURLParameters
+from qcfractal.portal.base_models import CommonGetProjURLParameters, CommonDeleteURLParameters
 from qcfractal.portal.records import (
     RecordModifyBody,
     RecordQueryBody,
+    RecordDeleteURLParameters,
     ComputeHistoryURLParameters,
 )
 from qcfractal.portal.records import RecordStatusEnum
-
-
-# These are used by the flask app. The flask app will
-# import this file, which will cause all the routes in these
-# subdirectories to be registered with the blueprint
-# These are used by the flask app. The flask app will
-# import this file, which will cause all the routes in these
-# subdirectories to be registered with the blueprint
 
 
 @main.route("/v1/record", methods=["GET"])
@@ -37,12 +30,22 @@ def get_record_history_v1(record_id: Optional[int] = None, *, url_params: Comput
     return storage_socket.records.get_history(record_id, url_params.include_outputs)
 
 
+@main.route("/v1/record/<int:record_id>/task", methods=["GET"])
+@wrap_route(None, None)
+@check_access
+def get_record_task_v1(record_id: int):
+    rec = storage_socket.records.get([record_id], include=["task"])
+    return rec[0]["task"]
+
+
 @main.route("/v1/record", methods=["DELETE"])
 @main.route("/v1/record/<int:record_id>", methods=["DELETE"])
-@wrap_route(None, CommonDeleteURLParameters)
+@wrap_route(None, RecordDeleteURLParameters)
 @check_access
-def delete_records_v1(record_id: Optional[int] = None, *, url_params: CommonDeleteURLParameters):
-    return delete_helper(record_id, url_params.id, storage_socket.records.delete)
+def delete_records_v1(record_id: Optional[int] = None, *, url_params: RecordDeleteURLParameters):
+    return delete_helper(
+        record_id, url_params.record_id, storage_socket.records.delete, soft_delete=url_params.soft_delete
+    )
 
 
 @main.route("/v1/record", methods=["PATCH"])
@@ -56,22 +59,22 @@ def modify_records_v1(record_id: Optional[int] = None, *, body_data: RecordModif
     elif body_data.record_id is not None:
         record_id = body_data.record_id
     else:
-        return
+        return {}
 
     # do all in a single session
     with storage_socket.session_scope() as session:
         if body_data.status is not None:
             if body_data.status == RecordStatusEnum.waiting:
-                storage_socket.records.reset(record_id=record_id, session=session)
+                return storage_socket.records.reset(record_id=record_id, session=session)
             if body_data.status == RecordStatusEnum.cancelled:
-                storage_socket.records.cancel(record_id=record_id, session=session)
+                return storage_socket.records.cancel(record_id=record_id, session=session)
             if body_data.status == RecordStatusEnum.deleted:
-                storage_socket.records.delete(record_id=record_id, session=session)
+                return storage_socket.records.delete(record_id=record_id, session=session)
 
             # ignore all other statuses
 
         if body_data.delete_tag or body_data.tag is not None or body_data.priority is not None:
-            storage_socket.records.modify_task(
+            return storage_socket.records.modify(
                 record_id,
                 new_tag=body_data.tag,
                 new_priority=body_data.priority,
@@ -84,17 +87,4 @@ def modify_records_v1(record_id: Optional[int] = None, *, body_data: RecordModif
 @wrap_route(RecordQueryBody, None)
 @check_access
 def query_records_v1(body_data: RecordQueryBody):
-    return storage_socket.records.query(
-        molecule_id=body_data.id,
-        record_type=body_data.record_type,
-        manager_name=body_data.manager_name,
-        status=body_data.status,
-        created_before=body_data.created_before,
-        created_after=body_data.created_after,
-        modified_before=body_data.modified_before,
-        modified_after=body_data.modified_after,
-        include=body_data.include,
-        exclude=body_data.exclude,
-        limit=body_data.limit,
-        skip=body_data.skip,
-    )
+    return storage_socket.records.query(body_data)

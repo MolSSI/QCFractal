@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+from typing import Iterable, Dict, Any, Optional
+
 from sqlalchemy import Column, Integer, ForeignKey, String, JSON, select, func, Index, CheckConstraint
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlalchemy.ext.orderinglist import ordering_list
@@ -7,10 +10,8 @@ from sqlalchemy.orm import relationship, column_property
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseResultORM
 from qcfractal.components.records.singlepoint.db_models import ResultORM
-from qcfractal.interface.models import ObjectId
 from qcfractal.db_socket import BaseORM
-
-from typing import Iterable, Dict, Any, Optional
+from qcfractal.interface.models import ObjectId
 
 
 class Trajectory(BaseORM):

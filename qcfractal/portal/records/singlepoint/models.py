@@ -1,14 +1,16 @@
-from pydantic import BaseModel, Field, constr, validator
-from typing import Optional, Dict, Union, Any, List
-from qcfractal.portal.keywords import KeywordSet
-from qcfractal.portal.records import BaseRecord
+from enum import Enum
+from typing import Optional, Union, Any, List, Literal
+
+from pydantic import BaseModel, Field, constr, validator, Extra
+from qcelemental.models import Molecule
 from qcelemental.models.results import (
     AtomicResultProtocols as SinglePointProtocols,
     AtomicResultProperties as SinglePointProperties,
     WavefunctionProperties,
 )
-from qcelemental.models import Molecule
-from enum import Enum
+
+from qcfractal.portal.keywords import KeywordSet
+from qcfractal.portal.records import BaseRecord, RecordAddBodyBase, RecordQueryBody
 
 
 class SinglePointDriver(str, Enum):
@@ -20,7 +22,10 @@ class SinglePointDriver(str, Enum):
     deferred = "deferred"
 
 
-class SinglePointSpecification(BaseModel):
+class SinglePointInputSpecification(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     program: constr(to_lower=True) = Field(
         ...,
         description="The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs"
@@ -48,25 +53,81 @@ class SinglePointSpecification(BaseModel):
         return None if v == "" else v
 
 
-class SinglePointInput(BaseModel):
-    specification: SinglePointSpecification
-    molecules: List[Union[int, Molecule]]
+class SinglePointSpecification(SinglePointInputSpecification):
+    """
+    A SinglePointSpecification as stored on the server
+
+    This is the same as the input specification, with a few ids added
+    """
+
+    id: int
+    keywords_id: int
 
 
 class SinglePointRecord(BaseRecord):
     class _DataModel(BaseRecord._DataModel):
+        record_type: Literal["singlepoint"]
         specification_id: int
         specification: SinglePointSpecification
         molecule_id: int
         molecule: Optional[Molecule]
-        return_result: Optional[Dict[str, Any]]
+        return_result: Any
         properties: Optional[SinglePointProperties]
         wavefunction: Optional[WavefunctionProperties] = None
 
-    @property
-    def status(self):
-        return self._data.status
+    # This is needed for disambiguation by pydantic
+    record_type: Literal["singlepoint"]
+    raw_data: _DataModel
+
+    def _retrieve_molecule(self):
+        self.raw_data.molecule = self.client.get_molecules([self.raw_data.molecule_id])[0]
+
+    def _retrieve_wavefunction(self):
+        self.raw_data.wavefunction = self.client._auto_request(
+            "get",
+            f"v1/record/singlepoint/{self.raw_data.id}/wavefunction",
+            None,
+            None,
+            Optional[WavefunctionProperties],
+            None,
+            None,
+        )
 
     @property
-    def specification(self):
-        return self._data.specification
+    def specification(self) -> SinglePointSpecification:
+        return self.raw_data.specification
+
+    @property
+    def molecule(self) -> Molecule:
+        if self.raw_data.molecule is None:
+            self._retrieve_molecule()
+        return self.raw_data.molecule
+
+    @property
+    def wavefunction(self) -> WavefunctionProperties:
+        if self.raw_data.wavefunction is None:
+            self._retrieve_wavefunction()
+        return self.raw_data.wavefunction
+
+
+class SinglePointAddBody(RecordAddBodyBase):
+    specification: SinglePointInputSpecification
+    molecules: List[Union[int, Molecule]]
+
+
+class SinglePointQueryBody(RecordQueryBody):
+    program: Optional[List[constr(to_lower=True)]] = None
+    driver: Optional[List[SinglePointDriver]] = None
+    method: Optional[List[constr(to_lower=True)]] = None
+    basis: Optional[List[Optional[constr(to_lower=True)]]] = None
+    keywords_id: Optional[List[int]] = None
+    molecule_id: Optional[List[int]] = None
+
+    @validator("basis")
+    def _convert_basis(cls, v):
+        # Convert empty string to None
+        # Lowercasing is handled by constr
+        if v is not None:
+            return ["" if x is None else x for x in v]
+        else:
+            return None

@@ -20,7 +20,7 @@ def test_keywords_client_basic(snowflake_client: PortalClient):
     kw2 = KeywordSet(values={"o": 6})
     kw3 = KeywordSet(values={"o": 7})
 
-    meta, added_ids = snowflake_client._add_keywords([kw1, kw2, kw3], full_return=True)
+    meta, added_ids = snowflake_client.add_keywords([kw1, kw2, kw3])
     assert len(added_ids) == 3
     assert meta.n_inserted == 3
     assert meta.inserted_idx == [0, 1, 2]
@@ -59,7 +59,7 @@ def test_keywords_client_add_duplicate(snowflake_client: PortalClient):
     kw6 = KeywordSet(values={"O": 5, "f": 1.111111111121111}, lowercase=False)
     kw7 = KeywordSet(values={"O": 5, "f": 1.111111111121111})
 
-    meta, ret = snowflake_client._add_keywords([kw1, kw2, kw3, kw4, kw5, kw6, kw7], full_return=True)
+    meta, ret = snowflake_client.add_keywords([kw1, kw2, kw3, kw4, kw5, kw6, kw7])
     assert meta.success
     assert meta.n_inserted == 3
     assert meta.existing_idx == [1, 2, 4, 6]
@@ -71,7 +71,7 @@ def test_keywords_client_add_duplicate(snowflake_client: PortalClient):
 
     # add again in a different order, and with an extra
     kw8 = KeywordSet(values={"q": 5, "f": 1.111111111111111})
-    meta, ret2 = snowflake_client._add_keywords([kw7, kw6, kw5, kw8, kw4, kw3, kw2, kw1], full_return=True)
+    meta, ret2 = snowflake_client.add_keywords([kw7, kw6, kw5, kw8, kw4, kw3, kw2, kw1])
     assert meta.n_inserted == 1
     assert meta.n_existing == 7
     assert ret2[0] == ret[6]
@@ -85,7 +85,7 @@ def test_keywords_client_add_duplicate(snowflake_client: PortalClient):
 
 def test_keywords_client_delete_nonexist(snowflake_client: PortalClient):
     kw1 = KeywordSet(values={"o": 5, "f": 1.111111111111111})
-    meta, ids = snowflake_client._add_keywords([kw1], full_return=True)
+    meta, ids = snowflake_client.add_keywords([kw1])
     assert meta.n_inserted == 1
 
     meta = snowflake_client._delete_keywords([456, ids[0], ids[0], 123, 789])
@@ -99,7 +99,7 @@ def test_keywords_client_delete_nonexist(snowflake_client: PortalClient):
 def test_keywords_client_get_nonexist(snowflake_client: PortalClient):
     kw1 = KeywordSet(values={"o": 5, "f": 1.111111111111111})
     kw6 = KeywordSet(values={"O": 5, "f": 1.111111111121111}, lowercase=False)
-    meta, ids = snowflake_client._add_keywords([kw1, kw6], full_return=True)
+    meta, ids = snowflake_client.add_keywords([kw1, kw6])
     assert meta.n_inserted == 2
 
     meta = snowflake_client._delete_keywords([ids[0]])
@@ -123,7 +123,7 @@ def test_keywords_client_get_nonexist(snowflake_client: PortalClient):
 def test_keywords_client_get_empty(snowflake_client: PortalClient):
     kw1 = KeywordSet(values={"o": 5, "f": 1.111111111111111})
     kw6 = KeywordSet(values={"O": 5, "f": 1.111111111121111}, lowercase=False)
-    meta, ids = snowflake_client._add_keywords([kw1, kw6], full_return=True)
+    meta, ids = snowflake_client.add_keywords([kw1, kw6])
     assert meta.n_inserted == 2
 
     assert snowflake_client.get_keywords([]) == []

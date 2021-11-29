@@ -10,7 +10,7 @@ from .permissions import db_models, routes
 from .serverinfo import db_models, routes
 from .managers import db_models, routes
 from .records import db_models, routes
+from .records import register_all
 from .tasks import db_models, routes
 from .services import db_models, routes
 from .datasets import register_all
-from .records import register_all

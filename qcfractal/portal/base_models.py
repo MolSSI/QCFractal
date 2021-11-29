@@ -72,7 +72,7 @@ class CommonGetURLParametersName(RestModelBase):
         return validate_list_to_single(v)
 
 
-class QueryParametersBase(RestModelBase):
+class QueryModelBase(RestModelBase):
     """
     Common parameters for query_* functions, with out include/exclude
 
@@ -87,7 +87,7 @@ class QueryParametersBase(RestModelBase):
         return validate_list_to_single(v)
 
 
-class QueryProjParametersBase(QueryParametersBase):
+class QueryProjModelBase(QueryModelBase):
     """
     Common parameters for query_* functions, with include/exclude (projection)
 

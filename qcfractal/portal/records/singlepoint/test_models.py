@@ -1,8 +1,8 @@
-from .models import SinglePointSpecification, SinglePointDriver
+from .models import SinglePointInputSpecification, SinglePointDriver
 
 
 def test_singlepoint_models_lowercase():
-    s = SinglePointSpecification(
+    s = SinglePointInputSpecification(
         program="pROg1",
         driver=SinglePointDriver.energy,
         method="b3LYP",
@@ -15,7 +15,7 @@ def test_singlepoint_models_lowercase():
 
 
 def test_singlepoint_models_basis_convert():
-    s = SinglePointSpecification(
+    s = SinglePointInputSpecification(
         program="prog1",
         driver=SinglePointDriver.energy,
         method="b3lyp",
@@ -24,7 +24,7 @@ def test_singlepoint_models_basis_convert():
 
     assert s.basis is None
 
-    s = SinglePointSpecification(
+    s = SinglePointInputSpecification(
         program="prog1",
         driver="energy",
         method="b3lyp",

@@ -8,7 +8,7 @@ from qcfractal.components.records.db_models import BaseResultORM
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
 from qcfractal.db_socket.base_orm import BaseORM
 from qcfractal.db_socket.column_types import MsgpackExt
-from qcfractal.interface.models import DriverEnum
+from qcfractal.portal.records.singlepoint import SinglePointDriver
 
 
 class SinglePointSpecificationORM(BaseORM):
@@ -18,13 +18,14 @@ class SinglePointSpecificationORM(BaseORM):
 
     # uniquely identifying a result
     program = Column(String(100), nullable=False)
-    driver = Column(Enum(DriverEnum), nullable=False)
+    driver = Column(Enum(SinglePointDriver), nullable=False)
     method = Column(String(100), nullable=False)
     basis = Column(String(100), nullable=False)
-    keywords_id = Column(Integer, ForeignKey(KeywordsORM.id), nullable=False)
-    protocols = Column(JSONB, nullable=False)
 
+    keywords_id = Column(Integer, ForeignKey(KeywordsORM.id), nullable=False)
     keywords = relationship(KeywordsORM, lazy="joined")
+
+    protocols = Column(JSONB, nullable=False)
 
     __table_args__ = (
         UniqueConstraint(

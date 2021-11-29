@@ -31,10 +31,25 @@ from pydantic import ValidationError
 import pandas as pd
 
 from ..interface.models.rest_models import rest_model
-from .records.models import RecordStatusEnum
 from qcfractal.portal.managers import ManagerQueryBody, ComputeManager
-from qcfractal.portal.records.singlepoint import SinglePointRecord
-from qcfractal.portal.records import ComputeHistoryURLParameters, ComputeHistory
+from qcfractal.portal.records.singlepoint import (
+    SinglePointRecord,
+    SinglePointAddBody,
+    SinglePointQueryBody,
+    SinglePointDriver,
+)
+from qcfractal.portal.records import (
+    ComputeHistoryURLParameters,
+    ComputeHistory,
+    RecordStatusEnum,
+    PriorityEnum,
+    RecordQueryBody,
+    RecordModifyBody,
+    RecordDeleteURLParameters,
+    AllRecordTypes,
+    AllDataModelTypes,
+)
+from qcfractal.portal.records.singlepoint import SinglePointProtocols
 
 from .metadata_models import InsertMetadata, DeleteMetadata
 from qcfractal.portal.serverinfo import (
@@ -44,7 +59,7 @@ from qcfractal.portal.serverinfo import (
     ServerStatsQueryParameters,
     DeleteBeforeDateParameters,
 )
-from .common_rest import (
+from .base_models import (
     CommonGetURLParametersName,
     CommonGetProjURLParameters,
     CommonGetURLParameters,
@@ -679,7 +694,7 @@ class PortalClient:
         )
         return meta, molecules
 
-    def add_molecules(self, molecules: List[Molecule]) -> List[str]:
+    def add_molecules(self, molecules: List[Molecule]) -> Tuple[InsertMetadata, List[int]]:
         """Add molecules to the server.
 
         Parameters
@@ -806,9 +821,7 @@ class PortalClient:
         else:
             return keywords[0]
 
-    def _add_keywords(
-        self, keywords: Sequence[KeywordSet], full_return: bool = False
-    ) -> Union[List[int], Tuple[InsertMetadata, List[int]]]:
+    def add_keywords(self, keywords: Sequence[KeywordSet]) -> Union[List[int], Tuple[InsertMetadata, List[int]]]:
         """Adds keywords to the server
 
         This function is not expected to be used by end users
@@ -829,14 +842,9 @@ class PortalClient:
             this function will return a tuple containing metadata and the ids.
         """
 
-        ret = self._auto_request(
+        return self._auto_request(
             "post", "v1/keyword", List[KeywordSet], None, Tuple[InsertMetadata, List[int]], make_list(keywords), None
         )
-
-        if full_return:
-            return ret
-        else:
-            return ret[1]
 
     def _delete_keywords(self, keywords_id: Union[int, Sequence[int]]) -> DeleteMetadata:
         """Deletes keywords from the server
@@ -1029,170 +1037,131 @@ class PortalClient:
         collection = self.get_collection(collection_type, name)
         self._automodel_request(f"collection/{collection.data.id}", "delete", payload={"meta": {}})
 
-    ## TODO: we would want to cache these
-    # def get_wavefunctions(
-    #    self,
-    #    id: Union[int, Sequence[int]],
-    #    missing_ok: bool = False,
-    # ) -> Union[Optional[WavefunctionProperties], List[Optional[WavefunctionProperties]]]:
-    #    """Obtains wavefunction data from the server via wavefunction ids
-
-    #    Note: This is the id of the wavefunction, not of the calculation record.
-
-    #    Parameters
-    #    ----------
-    #    id
-    #        An id or list of ids to query.
-    #    missing_ok
-    #        If True, return ``None`` for ids that were not found on the server.
-    #        If False, raise ``KeyError`` if any ids were not found on the server.
-
-    #    Returns
-    #    -------
-    #    :
-    #        The requested wavefunctions, in the same order as the requested ids.
-    #        If given a list of ids, the return value will be a list.
-    #        Otherwise, it will be a single output.
-    #    """
-
-    #    url_params = {"id": make_list(id), "missing_ok": missing_ok}
-    #    wfns = self._auto_request(
-    #        "get",
-    #        "v1/wavefunction",
-    #        None,
-    #        CommonGetURLParameters,
-    #        List[Optional[WavefunctionProperties]],
-    #        None,
-    #        url_params,
-    #    )
-
-    #    if isinstance(id, Sequence):
-    #        return wfns
-    #    else:
-    #        return wfns[0]
-
     def get_records(
         self,
-        id: QueryObjectId,
+        record_id: Union[int, Sequence[int]],
         missing_ok: bool = False,
-        include: Optional["QueryListStr"] = None,
-    ) -> Union[List["Record"], "Record"]:
-        """Get result records by id.
+        *,
+        include_task: bool = False,
+        include_outputs: bool = False,
+    ) -> Union[List[Optional[AllRecordTypes]], Optional[AllRecordTypes]]:
+        """Get result records by id."""
 
-        This is used by collections to retrieve their results when demanded.
-        Can reliably use the client's own caching for performance.
+        record_id = make_list(record_id)
+        if not record_id:
+            return []
 
-        Parameters
-        ----------
-        id : QueryObjectId
-            Queries the record ``id`` field.
-            Multiple ids can be included in a list; result records will be returned in the same order.
-        missing_ok : bool
-            If True, return ``None`` for ids with no associated result.
-            If False, raise ``KeyError`` for an id with no result on the server.
-        include : QueryListStr, optional
-            Filters the returned fields, will return a dictionary rather than an object.
+        url_params = {"id": make_list(record_id), "missing_ok": missing_ok}
 
-        Returns
-        -------
-        records : Union[List[Record], Record, List[Dict[str, Any]], Dict[str, Any]]
-            If `id` is a list of ids, then a list of records will be returned in the same order.
-            If `id` is a single id, then only that record will be returned.
-            If `include` set, then all records will be dictionaries with only those fields and 'id'.
+        include = set()
 
-        """
+        # We must add '*' so that all the default fields are included
+        if include_task:
+            include |= {"*", "task"}
+        if include_outputs:
+            include |= {"*", "compute_history.*", "compute_history.outputs"}
 
-        def get_records(payload):
-            records = self._automodel_request("procedure", "get", payload)
+        if include:
+            url_params["include"] = include
 
-            # if `include` filter set, we must return dicts for each record
-            if ("meta" in payload) and ("include" in payload["meta"]):
-                results = {res["id"]: res for res in records}
-                to_cache = []
-            else:
-                results = {res["id"]: record_factory(res, client=self) for res in records}
-                to_cache = [record for record in results.values() if record.status == RecordStatusEnum.complete]
+        record_data = self._auto_request(
+            "get", "v1/record", None, CommonGetProjURLParameters, List[Optional[AllDataModelTypes]], None, url_params
+        )
 
-            return results, to_cache
+        record_init = [
+            {"client": self, "record_type": data.record_type, "raw_data": data} if data is not None else None
+            for data in record_data
+        ]
+        records = pydantic.parse_obj_as(List[Optional[AllRecordTypes]], record_init)
 
-        return self._get_with_cache(get_records, id, missing_ok, entity_type="record", include=include)
+        if isinstance(record_id, Sequence):
+            return records
+        else:
+            return records[0]
 
-    # TODO: expand REST API to allow more queryables from Record datamodel fields
-    def query_singlepoints(
+    def query_records(
         self,
-        program: QueryStr = None,
-        molecule: QueryObjectId = None,
-        driver: QueryStr = None,
-        method: QueryStr = None,
-        basis: QueryStr = None,
-        keywords: QueryObjectId = None,
-        status: "QueryStr" = None,
-        limit: Optional[int] = None,
+        record_id: Optional[Iterable[int]] = None,
+        record_type: Optional[Iterable[str]] = None,
+        manager_name: Optional[Iterable[str]] = None,
+        status: Optional[Iterable[RecordStatusEnum]] = None,
+        created_before: Optional[datetime] = None,
+        created_after: Optional[datetime] = None,
+        modified_before: Optional[datetime] = None,
+        modified_after: Optional[datetime] = None,
+        limit: int = None,
         skip: int = 0,
-        include: Optional["QueryListStr"] = None,
-    ) -> Union[List["SinglePointRecord"], List[Dict[str, Any]]]:
-        """Queries SinglePointRecords from the server.
+        *,
+        include_task: bool = False,
+        include_outputs: bool = False,
+    ) -> Tuple[QueryMetadata, List[AllRecordTypes]]:
 
-        Parameters
-        ----------
-        program : QueryStr, optional
-            Queries the SinglePointRecord ``program`` field.
-        molecule : QueryObjectId, optional
-            Queries the SinglePointRecord ``molecule`` field.
-        driver : QueryStr, optional
-            Queries the SinglePointRecord ``driver`` field.
-        method : QueryStr, optional
-            Queries the SinglePointRecord ``method`` field.
-        basis : QueryStr, optional
-            Queries the SinglePointRecord ``basis`` field.
-        keywords : QueryObjectId, optional
-            Queries the SinglePointRecord ``keywords`` field.
-        status : QueryStr, optional
-            Queries the SinglePointRecord ``status`` field.
-        limit : Optional[int], optional
-            The maximum number of SinglePointRecords to query, up to server's own query limit.
-        skip : int, optional
-            The number of SinglePointRecords to skip in the query, used during pagination
-        include : QueryListStr, optional
-            Filters the returned fields, will return a dictionary rather than an object.
-
-        Returns
-        -------
-        Union[List[SinglePointRecord], List[Dict[str, Any]]]
-            Returns a List of found SinglePointRecords without include,
-            or a List of dictionaries with `include`.
-        """
-
-        if status is None and id is None:
-            status = [RecordStatusEnum.complete]
-
-        payload = {
-            "meta": {"limit": limit, "skip": skip, "include": include},
-            "data": {
-                "program": make_list(program),
-                "molecule": make_list(molecule),
-                "driver": make_list(driver),
-                "method": make_list(method),
-                "basis": make_list(basis),
-                "keywords": make_list(keywords),
-                "status": make_list(status),
-            },
+        query_data = {
+            "record_id": make_list(record_id),
+            "record_type": make_list(record_type),
+            "manager_name": make_list(manager_name),
+            "status": make_list(status),
+            "created_before": created_before,
+            "created_after": created_after,
+            "modified_before": modified_before,
+            "modified_after": modified_after,
+            "limit": limit,
+            "skip": skip,
         }
-        results = self._automodel_request("result", "get", payload)
 
-        # Add references back to the client
-        if not include:
-            results = [record_factory(res, client=self) for res in results]
+        include = set()
 
-            # cache results if we aren't customizing the field set
-            self._cache.put(results, entity_type="record")
+        # We must add '*' so that all the default fields are included
+        if include_task:
+            include |= {"*", "task"}
+        if include_outputs:
+            include |= {"*", "compute_history.*", "compute_history.outputs"}
 
-        return results
+        if include:
+            query_data["include"] = include
 
-    def query_reactions(
+        meta, record_data = self._auto_request(
+            "post",
+            "v1/record/query",
+            RecordQueryBody,
+            None,
+            Tuple[QueryMetadata, List[AllDataModelTypes]],
+            query_data,
+            None,
+        )
+
+        record_init = [{"client": self, "record_type": data.record_type, "raw_data": data} for data in record_data]
+        return meta, pydantic.parse_obj_as(List[AllRecordTypes], record_init)
+
+    def cancel_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
+        body_data = {"record_id": make_list(record_id), "status": RecordStatusEnum.cancelled}
+        return self._auto_request("patch", "/v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
+
+    def reset_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
+        body_data = {"record_id": make_list(record_id), "status": RecordStatusEnum.waiting}
+
+        return self._auto_request("patch", "/v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
+
+    def delete_records(self, record_id: Union[int, Sequence[int]], soft_delete=True) -> DeleteMetadata:
+        url_params = {"record_id": make_list(record_id), "soft_delete": soft_delete}
+        return self._auto_request(
+            "delete", "/v1/record", None, RecordDeleteURLParameters, DeleteMetadata, None, url_params
+        )
+
+    def modify_records(
         self,
-    ):
-        ...
+        record_id: Union[int, Sequence[int]],
+        new_tag: Optional[str] = None,
+        new_priority: Optional[RecordStatusEnum] = None,
+        delete_tag: bool = False,
+    ) -> UpdateMetadata:
+        body_data = {
+            "record_id": make_list(record_id),
+            "tag": new_tag,
+            "priority": new_priority,
+            "delete_tag": delete_tag,
+        }
+        return self._auto_request("patch", "/v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
     def query_optimizations(
         self,
@@ -1206,7 +1175,7 @@ class PortalClient:
 
         Parameters
         ----------
-        status : QueryStr, optional
+        status : QueryStr, option/al
             Queries the Procedure ``status`` field.
         limit : Optional[int], optional
             The maximum number of Procedures to query
@@ -1289,113 +1258,104 @@ class PortalClient:
 
     def add_singlepoints(
         self,
-        program: str = None,
-        method: str = None,
-        basis: Optional[str] = None,
-        driver: str = None,
-        keywords: Optional["ObjectId"] = None,
-        molecule: Union["ObjectId", "Molecule", List[Union["ObjectId", "Molecule"]]] = None,
-        *,
-        priority: Optional[str] = None,
-        protocols: Optional[Dict[str, Any]] = None,
+        molecules: Union[int, Molecule, List[Union[int, Molecule]]],
+        program: str,
+        driver: str,
+        method: str,
+        basis: Optional[str],
+        keywords: Optional[Union[KeywordSet, Dict[str, Any], int]] = None,
+        protocols: Optional[SinglePointProtocols] = None,
+        priority: PriorityEnum = PriorityEnum.normal,
         tag: Optional[str] = None,
-        full_return: bool = False,
-    ) -> "ComputeResponse":
+    ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds a "single" compute to the server.
 
         Parameters
         ----------
-        program : str, optional
+        molecules
+            The Molecules or Molecule ids to compute with the above methods
+        program
             The computational program to execute the result with (e.g., "rdkit", "psi4").
-        method : str, optional
-            The computational method to use (e.g., "B3LYP", "PBE")
-        basis : Optional[str], optional
-            The basis to apply to the computation (e.g., "cc-pVDZ", "6-31G")
-        driver : str, optional
+        driver
             The primary result that the compute will acquire {"energy", "gradient", "hessian", "properties"}
-        keywords : Optional['ObjectId'], optional
+        method
+            The computational method to use (e.g., "B3LYP", "PBE")
+        basis
+            The basis to apply to the computation (e.g., "cc-pVDZ", "6-31G")
+        keywords
             The KeywordSet ObjectId to use with the given compute
-        molecule : Union['ObjectId', 'Molecule', List[Union['ObjectId', 'Molecule']]], optional
-            The Molecules or Molecule ObjectId's to compute with the above methods
-        priority : Optional[str], optional
+        priority
             The priority of the job {"HIGH", "MEDIUM", "LOW"}. Default is "MEDIUM".
-        protocols : Optional[Dict[str, Any]], optional
-            Protocols for store more or less data per field. Current valid
-            protocols: {'wavefunction'}
-        tag : Optional[str], optional
+        protocols
+            Protocols for store more or less data per field
+        tag
             The computational tag to add to your compute, managers can optionally only pull
             based off the string tags. These tags are arbitrary, but several examples are to
             use "large", "medium", "small" to denote the size of the job or "project1", "project2"
             to denote different projects.
-        full_return : bool, optional
-            Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
-        ComputeResponse
-            An object that contains the submitted ObjectIds of the new compute. This object has the following fields:
-              - ids: The ObjectId's of the task in the order of input molecules
-              - submitted: A list of ObjectId's that were submitted to the compute queue
-              - existing: A list of ObjectId's of tasks already in the database
-
-        Raises
-        ------
-        ValueError
-            Description
+        :
+            A list of record ids (one per molecule) that were added or existing on the server, in the
+            same order as specified in the molecules.keywords parameter
         """
 
-        # Scan the input
-        if program is None:
-            raise ValueError("Program must be specified for the computation.")
-        if method is None:
-            raise ValueError("Method must be specified for the computation.")
-        if driver is None:
-            raise ValueError("Driver must be specified for the computation.")
-        if molecule is None:
-            raise ValueError("Molecule must be specified for the computation.")
-
-        # Always a list
-        if not isinstance(molecule, list):
-            molecule = [molecule]
-
-        if protocols is None:
-            protocols = {}
-
-        payload = {
-            "meta": {
-                "procedure": "single",
-                "driver": driver,
+        body_data = {
+            "molecules": make_list(molecules),
+            "specification": {
                 "program": program,
+                "driver": driver,
                 "method": method,
                 "basis": basis,
-                "keywords": keywords,
-                "protocols": protocols,
-                "tag": tag,
-                "priority": priority,
             },
-            "data": molecule,
+            "tag": tag,
+            "priority": priority,
         }
 
-        return self._automodel_request("task_queue", "post", payload, full_return=full_return)
+        if isinstance(keywords, dict):
+            # Turn this into a keyword set
+            keywords = KeywordSet(values=keywords)
 
-    def get_compute_history(self, record_id: int, include_outputs: bool = False) -> List[ComputeHistory]:
-        url_params = {"include_outputs": include_outputs}
+        # If these are None, then let the pydantic models handle the defaults
+        if keywords is not None:
+            body_data["specification"]["keywords"] = keywords
+        if protocols is not None:
+            body_data["specification"]["protocols"] = protocols
+
         return self._auto_request(
-            "get",
-            f"v1/record/{record_id}/compute_history",
-            None,
-            ComputeHistoryURLParameters,
-            List[ComputeHistory],
-            None,
-            url_params,
+            "post", "v1/record/singlepoint", SinglePointAddBody, None, Tuple[InsertMetadata, List[int]], body_data, None
         )
 
-    def get_singlepoint(
-        self, record_id: Union[int, Sequence[int]], missing_ok: bool = False
+    def get_singlepoints(
+        self,
+        record_id: Union[int, Sequence[int]],
+        missing_ok: bool = False,
+        *,
+        include_task: bool = False,
+        include_outputs: bool = False,
+        include_molecule: bool = False,
+        include_wavefunction: bool = False,
     ) -> Union[Optional[SinglePointRecord], List[Optional[SinglePointRecord]]]:
         url_params = {"id": make_list(record_id), "missing_ok": missing_ok}
-        dmodels = self._auto_request(
+
+        include = set()
+
+        # We must add '*' so that all the default fields are included
+        if include_molecule:
+            include |= {"*", "molecule"}
+        if include_task:
+            include |= {"*", "task"}
+        if include_outputs:
+            include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_wavefunction:
+            include |= {"*", "wavefunction"}
+
+        if include:
+            url_params["include"] = include
+
+        record_data = self._auto_request(
             "get",
             "v1/record/singlepoint",
             None,
@@ -1405,11 +1365,84 @@ class PortalClient:
             url_params,
         )
 
-        sp_records = [SinglePointRecord(self, d) for d in dmodels]
+        sp_records = [SinglePointRecord(client=self, record_type=d.record_type, raw_data=d) for d in record_data]
+
         if isinstance(record_id, Sequence):
             return sp_records
         else:
             return sp_records[0]
+
+    def query_singlepoints(
+        self,
+        record_id: Optional[Iterable[int]] = None,
+        record_type: Optional[Iterable[str]] = None,
+        manager_name: Optional[Iterable[str]] = None,
+        status: Optional[Iterable[RecordStatusEnum]] = None,
+        created_before: Optional[datetime] = None,
+        created_after: Optional[datetime] = None,
+        modified_before: Optional[datetime] = None,
+        modified_after: Optional[datetime] = None,
+        program: Optional[Iterable[str]] = None,
+        driver: Optional[Iterable[SinglePointDriver]] = None,
+        method: Optional[Iterable[str]] = None,
+        basis: Optional[Iterable[Optional[str]]] = None,
+        keywords_id: Optional[Iterable[int]] = None,
+        molecule_id: Optional[Iterable[int]] = None,
+        limit: Optional[int] = None,
+        skip: int = 0,
+        *,
+        include_task: bool = False,
+        include_outputs: bool = False,
+        include_molecule: bool = False,
+        include_wavefunction: bool = False,
+    ) -> Tuple[QueryMetadata, List[SinglePointRecord]]:
+        """Queries SinglePointRecords from the server."""
+
+        query_data = {
+            "record_id": make_list(record_id),
+            "record_type": make_list(record_type),
+            "manager_name": make_list(manager_name),
+            "status": make_list(status),
+            "program": make_list(program),
+            "driver": make_list(driver),
+            "method": make_list(method),
+            "basis": make_list(basis),
+            "keywords_id": make_list(keywords_id),
+            "molecule_id": make_list(molecule_id),
+            "created_before": created_before,
+            "created_after": created_after,
+            "modified_before": modified_before,
+            "modified_after": modified_after,
+            "limit": limit,
+            "skip": skip,
+        }
+
+        include = set()
+
+        # We must add '*' so that all the default fields are included
+        if include_task:
+            include |= {"*", "task"}
+        if include_outputs:
+            include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_molecule:
+            include |= {"*", "molecule"}
+        if include_wavefunction:
+            include |= {"*", "wavefuntion"}
+
+        if include:
+            query_data["include"] = include
+
+        meta, record_data = self._auto_request(
+            "post",
+            "v1/record/singlepoint/query",
+            SinglePointQueryBody,
+            None,
+            Tuple[QueryMetadata, List[SinglePointRecord._DataModel]],
+            query_data,
+            None,
+        )
+
+        return meta, [SinglePointRecord(client=self, record_type=x.record_type, raw_data=x) for x in record_data]
 
     def get_managers(
         self,
