@@ -114,7 +114,7 @@ def get_helper(
         return func(id_args, missing_ok=missing_ok, **kwargs)
 
 
-def delete_helper(id: Optional[int], id_args: Optional[List[int]], func: Callable) -> DeleteMetadata:
+def delete_helper(id: Optional[int], id_args: Optional[List[int]], func: Callable, **kwargs) -> DeleteMetadata:
     """
     A general helper for calling a delete_* function of a component
 
@@ -127,4 +127,4 @@ def delete_helper(id: Optional[int], id_args: Optional[List[int]], func: Callabl
     if id is not None:
         return func([id])
     else:
-        return func(id_args)
+        return func(id_args, **kwargs)

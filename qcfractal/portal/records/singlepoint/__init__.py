@@ -1,9 +1,11 @@
 from .models import (
     SinglePointSpecification,
-    SinglePointInput,
+    SinglePointInputSpecification,
     SinglePointDriver,
     SinglePointProtocols,
     SinglePointProperties,
     SinglePointRecord,
     WavefunctionProperties,
+    SinglePointAddBody,
+    SinglePointQueryBody,
 )

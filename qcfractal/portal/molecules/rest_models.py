@@ -1,10 +1,10 @@
 from typing import Optional, List, Dict
 
-from qcfractal.portal.common_rest import QueryProjParametersBase, RestModelBase
+from qcfractal.portal.base_models import QueryProjModelBase, RestModelBase
 from .models import MoleculeIdentifiers
 
 
-class MoleculeQueryBody(QueryProjParametersBase):
+class MoleculeQueryBody(QueryProjModelBase):
     id: Optional[List[int]] = None
     molecule_hash: Optional[List[str]] = None
     molecular_formula: Optional[List[str]] = None

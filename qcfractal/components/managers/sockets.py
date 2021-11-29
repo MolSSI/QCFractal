@@ -193,11 +193,9 @@ class ManagerSocket:
 
             # For the manager, also reset any now-orphaned tasks that belonged to that manager
             for dead_name in deactivated_names:
-                n_incomplete = self.root_socket.records.reset(
-                    manager_name=[dead_name], status={RecordStatusEnum.running}, session=session
-                )
+                incomplete_ids = self.root_socket.records.reset_assigned(manager_name=[dead_name], session=session)
                 self._logger.info(
-                    f"Deactivated manager {dead_name}. Reason: {reason}. Recycling {n_incomplete} incomplete tasks."
+                    f"Deactivated manager {dead_name}. Reason: {reason}. Recycling {len(incomplete_ids)} incomplete tasks."
                 )
 
         return deactivated_names

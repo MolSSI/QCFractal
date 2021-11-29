@@ -20,12 +20,16 @@ import pytest
 import requests
 from qcelemental.models import Molecule, FailedOperation
 from qcelemental.models.results import WavefunctionProperties
+
 from .config import FractalConfig, update_nested_dict
 
-from qcfractal.portal.records.singlepoint import SinglePointSpecification
+from qcfractal.portal.records.singlepoint import SinglePointInputSpecification
 from qcelemental.models import AtomicResult
+
+from .db_socket import SQLAlchemySocket
 from .interface import FractalClient
 from .interface.models import TorsionDriveInput, RecordStatusEnum
+from .portal.records import PriorityEnum, RecordStatusEnum
 from .postgres_harness import TemporaryPostgres
 from .qc_queue import build_queue_adapter, QueueManager
 from .snowflake import FractalSnowflake, attempt_client_connect
@@ -214,16 +218,16 @@ def load_procedure_data(name: str):
     with open(file_path, "r") as f:
         data = json.load(f)
 
-    procedure = data["input"]["procedure"]
-    if procedure == "single":
-        input_type = SinglePointSpecification
+    record_type = data["input"].pop("record_type")
+    if record_type == "singlepoint":
+        input_type = SinglePointInputSpecification
         result_type = AtomicResult
-    elif procedure == "optimization":
+    elif record_type == "optimization":
         raise RuntimeError("TODO")
         input_type = ptl.models.OptimizationProcedureSpecification
         result_type = ptl.models.OptimizationResult
     else:
-        raise RuntimeError(f"Unknown procedure '{procedure}' in test!")
+        raise RuntimeError(f"Unknown procedure '{record_type}' in test!")
 
     if data["result"]["success"] is not True:
         result_type = FailedOperation
@@ -966,3 +970,88 @@ def df_compare(df1, df2, sort=False):
                 return False
 
     return True
+
+
+mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
+mname2 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="2234-5678-1234-5678")
+
+
+def populate_db(storage_socket: SQLAlchemySocket):
+    """
+    Populates the db with tasks in all statuses
+    """
+
+    storage_socket.managers.activate(
+        name_data=mname1,
+        manager_version="v2.0",
+        qcengine_version="v1.0",
+        username="bill",
+        programs={"psi4": None, "qchem": "v3.0"},
+        tags=["tag2", "tag3", "tag4"],
+    )
+    storage_socket.managers.activate(
+        name_data=mname2,
+        manager_version="v2.0",
+        qcengine_version="v1.0",
+        username="bill",
+        programs={"psi4": None, "qchem": "v3.0"},
+        tags=["tag4"],
+    )
+
+    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_water_energy")
+    input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_water_gradient")
+    input_spec_3, molecule_3, result_data_3 = load_procedure_data("psi4_water_hessian")
+    input_spec_4, molecule_4, result_data_4 = load_procedure_data("psi4_methane_gradient_fail_iter")
+    input_spec_5, molecule_5, result_data_5 = load_procedure_data("psi4_benzene_energy_1")
+    input_spec_6, molecule_6, result_data_6 = load_procedure_data("psi4_benzene_energy_2")
+
+    meta, id_1 = storage_socket.records.singlepoint.add(input_spec_1, [molecule_1], "tag1", PriorityEnum.normal)
+    meta, id_2 = storage_socket.records.singlepoint.add(input_spec_2, [molecule_2], "tag2", PriorityEnum.normal)
+    meta, id_3 = storage_socket.records.singlepoint.add(input_spec_3, [molecule_3], "tag3", PriorityEnum.normal)
+    meta, id_4 = storage_socket.records.singlepoint.add(input_spec_4, [molecule_4], "tag4", PriorityEnum.normal)
+    meta, id_5 = storage_socket.records.singlepoint.add(input_spec_5, [molecule_5], "tag5", PriorityEnum.normal)
+    meta, id_6 = storage_socket.records.singlepoint.add(input_spec_6, [molecule_6], "tag6", PriorityEnum.normal)
+    all_id = id_1 + id_2 + id_3 + id_4 + id_5 + id_6
+
+    # 1 = waiting   2 = complete   3 = running
+    # 4 = error     5 = cancelled  6 = deleted
+
+    # claim only the ones we want to be complete, running, or error
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
+    assert len(tasks) == 3
+
+    # we don't send back the one we want to be 'running' still
+    storage_socket.tasks.update_completed(
+        mname1.fullname,
+        {
+            tasks[0]["id"]: result_data_2,
+            tasks[2]["id"]: result_data_4,
+        },
+    )
+
+    # Add some more entries to the history of #4 (failing)
+    for i in range(4):
+        storage_socket.records.reset(id_4)
+        tasks = storage_socket.tasks.claim_tasks(mname2.fullname)
+        assert len(tasks) == 1
+        storage_socket.tasks.update_completed(
+            mname2.fullname,
+            {
+                tasks[0]["id"]: result_data_4,
+            },
+        )
+
+    meta = storage_socket.records.cancel(id_5)
+    assert meta.n_updated == 1
+    meta = storage_socket.records.delete(id_6)
+    assert meta.n_deleted == 1
+
+    rec = storage_socket.records.get(all_id, include=["status"])
+    assert rec[0]["status"] == RecordStatusEnum.waiting
+    assert rec[1]["status"] == RecordStatusEnum.complete
+    assert rec[2]["status"] == RecordStatusEnum.running
+    assert rec[3]["status"] == RecordStatusEnum.error
+    assert rec[4]["status"] == RecordStatusEnum.cancelled
+    assert rec[5]["status"] == RecordStatusEnum.deleted
+
+    return all_id

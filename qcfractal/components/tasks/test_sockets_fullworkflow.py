@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from qcelemental.models import ComputeError
 
 from qcfractal.portal.managers import ManagerName
-from qcfractal.portal.outputstore import OutputTypeEnum
+from qcfractal.portal.outputstore import OutputTypeEnum, OutputStore, CompressionEnum
 from qcfractal.portal.records import FailedOperation, PriorityEnum, RecordStatusEnum
 from qcfractal.testing import load_procedure_data
 
@@ -238,3 +238,37 @@ def test_task_socket_fullworkflow_error_retry(storage_socket: SQLAlchemySocket):
     assert manager[0]["failures"] == 3
     assert manager[0]["rejected"] == 0
     assert manager[0]["claimed"] == 4
+
+
+def test_task_socket_compressed_outputs_success(storage_socket: SQLAlchemySocket):
+    # Need a manager to claim the tasks
+    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
+    storage_socket.managers.activate(
+        name_data=mname1,
+        manager_version="v2.0",
+        qcengine_version="v1.0",
+        username="bill",
+        programs={"psi4": None, "qchem": "v3.0"},
+        tags=["tag1"],
+    )
+
+    input_spec1, molecule1, result_data1 = load_procedure_data("psi4_benzene_energy_1")
+    meta1, id1 = storage_socket.records.singlepoint.add(input_spec1, [molecule1], "tag1", PriorityEnum.normal)
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
+
+    # Compress the outputs
+    compressed_output = OutputStore.compress(OutputTypeEnum.stdout, result_data1.stdout, CompressionEnum.lzma, 5)
+    if result_data1.extras is None:
+        result_data1.__dict__["extras"] = {}
+    result_data1.extras["_qcfractal_compressed_outputs"] = [compressed_output.dict()]
+    original_stdout = result_data1.__dict__.pop("stdout")
+
+    rmeta = storage_socket.tasks.update_completed(mname1.fullname, {tasks[0]["id"]: result_data1})
+
+    assert rmeta.n_accepted == 1
+    assert rmeta.n_rejected == 0
+    assert rmeta.accepted_ids == id1
+
+    records = storage_socket.records.get(id1, include=["*", "task", "compute_history.*", "compute_history.outputs"])
+    out = OutputStore(**records[0]["compute_history"][0]["outputs"][0])
+    assert out.get_string() == original_stdout

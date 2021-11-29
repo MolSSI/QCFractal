@@ -1,6 +1,6 @@
 {
     "input": {
-        "procedure": "single",
+        "record_type": "singlepoint",
         "driver": "gradient",
         "program": "rdkit",
         "method": "uff",

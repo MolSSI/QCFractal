@@ -3,7 +3,7 @@ from typing import Optional, List, Dict, Any
 
 from pydantic import Field, validator, constr
 
-from qcfractal.portal.common_rest import RestModelBase, QueryProjParametersBase
+from qcfractal.portal.base_models import RestModelBase, QueryProjModelBase
 from .models import ManagerName, ManagerStatusEnum
 
 
@@ -42,7 +42,7 @@ class ManagerUpdateBody(RestModelBase):
     active_memory: float
 
 
-class ManagerQueryBody(QueryProjParametersBase):
+class ManagerQueryBody(QueryProjModelBase):
     id: Optional[List[int]] = None
     name: Optional[List[str]] = None
     cluster: Optional[List[str]] = None

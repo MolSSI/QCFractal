@@ -4,16 +4,16 @@ Tests the wavefunction store socket
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.portal.records.singlepoint import (
-    SinglePointSpecification,
+    SinglePointInputSpecification,
     SinglePointDriver,
     SinglePointProtocols,
 )
 from qcfractal.portal.keywords import KeywordSet
 
 
-def test_singlepointrecord_socket_basic_specification(storage_socket: SQLAlchemySocket):
+def test_singlepoint_socket_basic_specification(storage_socket: SQLAlchemySocket):
 
-    spec1 = SinglePointSpecification(
+    spec1 = SinglePointInputSpecification(
         program="prog1",
         driver=SinglePointDriver.energy,
         method="b3lyp",
@@ -22,7 +22,7 @@ def test_singlepointrecord_socket_basic_specification(storage_socket: SQLAlchemy
         protocols=SinglePointProtocols(wavefunction="all"),
     )
 
-    spec2 = SinglePointSpecification(
+    spec2 = SinglePointInputSpecification(
         program="prog2",
         driver=SinglePointDriver.hessian,
         method="hf",
@@ -31,7 +31,7 @@ def test_singlepointrecord_socket_basic_specification(storage_socket: SQLAlchemy
         protocols=SinglePointProtocols(wavefunction="all"),
     )
 
-    spec3 = SinglePointSpecification(
+    spec3 = SinglePointInputSpecification(
         program="prog2",
         driver=SinglePointDriver.hessian,
         method="hf",
@@ -57,18 +57,21 @@ def test_singlepointrecord_socket_basic_specification(storage_socket: SQLAlchemy
     sp2 = storage_socket.records.singlepoint.get_specification(id2)
     sp3 = storage_socket.records.singlepoint.get_specification(id3)
 
-    # Keywords now have id. Remove those for comparison
-    sp1["keywords"].pop("id")
-    sp2["keywords"].pop("id")
-    sp3["keywords"].pop("id")
-    assert SinglePointSpecification(**sp1) == spec1
-    assert SinglePointSpecification(**sp2) == spec2
-    assert SinglePointSpecification(**sp3) == spec3
+    # Remove some ids that aren't in the input spec
+    for sp in [sp1, sp2, sp3]:
+        assert sp["keywords_id"] == sp["keywords"]["id"]
+        sp["keywords"].pop("id")
+        sp.pop("keywords_id")
+        sp.pop("id")
+
+    assert SinglePointInputSpecification(**sp1) == spec1
+    assert SinglePointInputSpecification(**sp2) == spec2
+    assert SinglePointInputSpecification(**sp3) == spec3
 
 
-def test_singlepointrecord_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
+def test_singlepoint_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
 
-    spec1 = SinglePointSpecification(
+    spec1 = SinglePointInputSpecification(
         program="prog1",
         driver=SinglePointDriver.energy,
         method="b3lyp",
@@ -91,7 +94,7 @@ def test_singlepointrecord_socket_add_specification_same_0(storage_socket: SQLAl
     assert id == id2
 
     # Change keywords
-    spec1 = SinglePointSpecification(
+    spec1 = SinglePointInputSpecification(
         program="prog1",
         driver=SinglePointDriver.energy,
         method="b3lyp",
@@ -107,9 +110,9 @@ def test_singlepointrecord_socket_add_specification_same_0(storage_socket: SQLAl
     assert id3 != id
 
 
-def test_singlepointrecord_socket_add_specification_same_1(storage_socket: SQLAlchemySocket):
+def test_singlepoint_socket_add_specification_same_1(storage_socket: SQLAlchemySocket):
     # Test case sensitivity
-    spec = SinglePointSpecification(
+    spec = SinglePointInputSpecification(
         program="prog1",
         driver=SinglePointDriver.energy,
         method="b3lyp",
@@ -121,7 +124,7 @@ def test_singlepointrecord_socket_add_specification_same_1(storage_socket: SQLAl
     meta, id = storage_socket.records.singlepoint.add_specification(spec)
     assert meta.inserted_idx == [0]
 
-    spec = SinglePointSpecification(
+    spec = SinglePointInputSpecification(
         program="Prog1",
         driver=SinglePointDriver.energy,
         method="b3LYP",
@@ -135,9 +138,9 @@ def test_singlepointrecord_socket_add_specification_same_1(storage_socket: SQLAl
     assert id == id2
 
 
-def test_singlepointrecord_socket_add_specification_same_2(storage_socket: SQLAlchemySocket):
+def test_singlepoint_socket_add_specification_same_2(storage_socket: SQLAlchemySocket):
     # Test keywords defaults
-    spec = SinglePointSpecification(
+    spec = SinglePointInputSpecification(
         program="prog1",
         driver=SinglePointDriver.energy,
         method="b3lyp",
@@ -149,7 +152,7 @@ def test_singlepointrecord_socket_add_specification_same_2(storage_socket: SQLAl
     meta, id = storage_socket.records.singlepoint.add_specification(spec)
     assert meta.inserted_idx == [0]
 
-    spec = SinglePointSpecification(
+    spec = SinglePointInputSpecification(
         program="prog1",
         driver=SinglePointDriver.energy,
         method="b3lyp",
@@ -162,9 +165,9 @@ def test_singlepointrecord_socket_add_specification_same_2(storage_socket: SQLAl
     assert id == id2
 
 
-def test_singlepointrecord_socket_add_specification_same_3(storage_socket: SQLAlchemySocket):
+def test_singlepoint_socket_add_specification_same_3(storage_socket: SQLAlchemySocket):
     # Test protocols defaults
-    spec = SinglePointSpecification(
+    spec = SinglePointInputSpecification(
         program="prog1",
         driver=SinglePointDriver.energy,
         method="b3lyp",
@@ -175,7 +178,7 @@ def test_singlepointrecord_socket_add_specification_same_3(storage_socket: SQLAl
     meta, id = storage_socket.records.singlepoint.add_specification(spec)
     assert meta.inserted_idx == [0]
 
-    spec = SinglePointSpecification(
+    spec = SinglePointInputSpecification(
         program="prog1",
         driver=SinglePointDriver.energy,
         method="b3lyp",
@@ -187,9 +190,9 @@ def test_singlepointrecord_socket_add_specification_same_3(storage_socket: SQLAl
     assert id == id2
 
 
-def test_singlepointrecord_socket_add_specification_same_4(storage_socket: SQLAlchemySocket):
+def test_singlepoint_socket_add_specification_same_4(storage_socket: SQLAlchemySocket):
     # Test protocols defaults (due to exclude_defaults)
-    spec = SinglePointSpecification(
+    spec = SinglePointInputSpecification(
         program="prog1",
         driver=SinglePointDriver.energy,
         method="b3lyp",
@@ -202,7 +205,7 @@ def test_singlepointrecord_socket_add_specification_same_4(storage_socket: SQLAl
     meta, id = storage_socket.records.singlepoint.add_specification(spec)
     assert meta.inserted_idx == [0]
 
-    spec = SinglePointSpecification(
+    spec = SinglePointInputSpecification(
         program="prog1",
         driver=SinglePointDriver.energy,
         method="b3lyp",
@@ -214,9 +217,9 @@ def test_singlepointrecord_socket_add_specification_same_4(storage_socket: SQLAl
     assert id == id2
 
 
-def test_singlepointrecord_socket_add_specification_same_5(storage_socket: SQLAlchemySocket):
+def test_singlepoint_socket_add_specification_same_5(storage_socket: SQLAlchemySocket):
     # Test protocols defaults (due to exclude_defaults)
-    spec = SinglePointSpecification(
+    spec = SinglePointInputSpecification(
         program="prog1",
         driver=SinglePointDriver.energy,
         method="b3lyp",
@@ -229,7 +232,7 @@ def test_singlepointrecord_socket_add_specification_same_5(storage_socket: SQLAl
     meta, id = storage_socket.records.singlepoint.add_specification(spec)
     assert meta.inserted_idx == [0]
 
-    spec = SinglePointSpecification(
+    spec = SinglePointInputSpecification(
         program="prog1",
         driver=SinglePointDriver.energy,
         method="b3lyp",
@@ -241,9 +244,9 @@ def test_singlepointrecord_socket_add_specification_same_5(storage_socket: SQLAl
     assert id == id2
 
 
-def test_singlepointrecord_socket_add_specification_same_6(storage_socket: SQLAlchemySocket):
+def test_singlepoint_socket_add_specification_same_6(storage_socket: SQLAlchemySocket):
     # Test basis none, empty string
-    spec = SinglePointSpecification(
+    spec = SinglePointInputSpecification(
         program="prog1",
         driver=SinglePointDriver.energy,
         method="b3lyp",
@@ -254,7 +257,7 @@ def test_singlepointrecord_socket_add_specification_same_6(storage_socket: SQLAl
     meta, id = storage_socket.records.singlepoint.add_specification(spec)
     assert meta.inserted_idx == [0]
 
-    spec = SinglePointSpecification(
+    spec = SinglePointInputSpecification(
         program="prog1",
         driver=SinglePointDriver.energy,
         method="b3lyp",

@@ -4,10 +4,10 @@ from typing import Optional, List
 
 from pydantic import validator
 
-from qcfractal.portal.common_rest import (
+from qcfractal.portal.base_models import (
     validate_list_to_single,
-    QueryProjParametersBase,
-    QueryParametersBase,
+    QueryProjModelBase,
+    QueryModelBase,
     RestModelBase,
 )
 
@@ -28,7 +28,7 @@ class DeleteBeforeDateParameters(RestModelBase):
         return validate_list_to_single(v)
 
 
-class AccessLogQueryParameters(QueryProjParametersBase):
+class AccessLogQueryParameters(QueryProjModelBase):
     access_type: Optional[List[str]] = None
     access_method: Optional[List[str]] = None
     username: Optional[List[str]] = None
@@ -40,7 +40,7 @@ class AccessLogQueryParameters(QueryProjParametersBase):
         return validate_list_to_single(v)
 
 
-class ErrorLogQueryParameters(QueryParametersBase):
+class ErrorLogQueryParameters(QueryModelBase):
     id: Optional[List[int]] = None
     username: Optional[List[str]] = None
     before: Optional[datetime] = None
@@ -51,7 +51,7 @@ class ErrorLogQueryParameters(QueryParametersBase):
         return validate_list_to_single(v)
 
 
-class ServerStatsQueryParameters(QueryParametersBase):
+class ServerStatsQueryParameters(QueryModelBase):
     before: Optional[datetime] = None
     after: Optional[datetime] = None
 

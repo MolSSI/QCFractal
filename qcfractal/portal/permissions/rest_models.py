@@ -1,7 +1,7 @@
 from typing import Optional, List
 
 from pydantic import validator
-from qcfractal.portal.common_rest import validate_list_to_single, RestModelBase
+from qcfractal.portal.base_models import validate_list_to_single, RestModelBase
 
 
 class UserGetParameters(RestModelBase):

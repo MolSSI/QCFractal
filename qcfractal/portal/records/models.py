@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from enum import Enum
 
-from pydantic import BaseModel, Field, Extra
+from pydantic import BaseModel, Field, Extra, validator
 import abc
 from datetime import datetime
-from qcfractal.portal.outputstore import OutputStore
+
+from qcfractal.portal.base_models import RestModelBase, QueryProjModelBase, validate_list_to_single
+from qcfractal.portal.outputstore import OutputStore, OutputTypeEnum
 from qcelemental.models.results import Provenance
-from typing import Optional, Dict, Any, List, TYPE_CHECKING
+from typing import Optional, Dict, Any, List, TYPE_CHECKING, Union
 
 if TYPE_CHECKING:
     from qcfractal.portal import PortalClient
@@ -83,6 +85,19 @@ class ComputeHistory(BaseModel):
     provenance: Optional[Provenance]
     outputs: Optional[List[OutputStore]]
 
+    def get_output(self, output_type: OutputTypeEnum) -> Optional[Union[str, Dict[str, Any]]]:
+        if not self.outputs:
+            return None
+
+        for o in self.outputs:
+            if o.output_type == output_type:
+                if o.output_type == OutputTypeEnum.error:
+                    return o.get_json()
+                else:
+                    return o.get_string()
+
+            return None
+
 
 class TaskRecord(BaseModel):
     class Config:
@@ -98,7 +113,7 @@ class TaskRecord(BaseModel):
     created_on: datetime
 
 
-class BaseRecord(abc.ABC):
+class BaseRecord(abc.ABC, BaseModel):
     class _DataModel(BaseModel):
         class Config:
             extra = Extra.forbid
@@ -106,8 +121,6 @@ class BaseRecord(abc.ABC):
             validate_assignment = True
 
         id: int
-
-        record_type: str = Field(..., description="The type of record this is (singlepoint, optimization, etc)")
 
         protocols: Optional[Dict[str, Any]] = None  # TODO- remove
 
@@ -123,16 +136,114 @@ class BaseRecord(abc.ABC):
 
         task: Optional[TaskRecord] = None
 
-    _data: _DataModel
+    class Config:
+        extra = Extra.forbid
 
-    def __init__(self, client: PortalClient, data: _DataModel):
-        self._client = client
-        self._data = data
+    client: Any
+    raw_data: _DataModel  # Meant to be overridden by derived classes
+
+    def _get_compute_history(self, include_outputs: bool = False):
+        url_params = {"include_outputs": include_outputs}
+
+        self.raw_data.compute_history = self.client._auto_request(
+            "get",
+            f"v1/record/{self.raw_data.id}/compute_history",
+            None,
+            ComputeHistoryURLParameters,
+            List[ComputeHistory],
+            None,
+            url_params,
+        )
+
+    def _retrieve_task(self):
+        self.raw_data.task = self.client._auto_request(
+            "get",
+            f"v1/record/{self.raw_data.id}/task",
+            None,
+            None,
+            Optional[TaskRecord],
+            None,
+            None,
+        )
+
+    def _get_output(self, output_type: OutputTypeEnum) -> Optional[Union[str, Dict[str, Any]]]:
+        if not self.raw_data.compute_history:
+            return None
+
+        last_computation = self.raw_data.compute_history[-1]
+        if last_computation.outputs is None:
+            self._get_compute_history(include_outputs=True)
+            last_computation = self.raw_data.compute_history[-1]
+
+        return last_computation.get_output(output_type)
 
     @property
     def compute_history(self):
-        return self._data.compute_history
+        return self.raw_data.compute_history
 
-    def _retrieve_outputs(self):
-        # Retrieve the entire compute history, including outputs
-        self._data.compute_history = self._client.get_compute_history(self._data.id, include_outputs=True)
+    @property
+    def status(self):
+        return self.raw_data.status
+
+    @property
+    def task(self):
+        if self.raw_data.task is None:
+            self._retrieve_task()
+        return self.raw_data.task
+
+    @property
+    def stdout(self) -> Optional[str]:
+        return self._get_output(OutputTypeEnum.stdout)
+
+    @property
+    def stderr(self) -> Optional[str]:
+        return self._get_output(OutputTypeEnum.stderr)
+
+    @property
+    def error(self) -> Optional[Dict[str, Any]]:
+        return self._get_output(OutputTypeEnum.error)
+
+
+class RecordAddBodyBase(RestModelBase):
+    tag: Optional[str]
+    priority: PriorityEnum = PriorityEnum.normal
+
+
+class RecordModifyBody(RestModelBase):
+    record_id: List[int]
+    status: Optional[RecordStatusEnum] = None
+    priority: Optional[PriorityEnum]
+    tag: Optional[str] = None
+    delete_tag: bool = False
+
+
+class RecordDeleteURLParameters(RestModelBase):
+    record_id: List[int]
+    soft_delete: bool
+
+    @validator("soft_delete", pre=True)
+    def validate_lists(cls, v):
+        return validate_list_to_single(v)
+
+
+class RecordQueryBody(QueryProjModelBase):
+    record_id: Optional[List[int]] = None
+    record_type: Optional[List[str]] = None
+    manager_name: Optional[List[str]] = None
+    status: Optional[List[RecordStatusEnum]] = None
+    created_before: Optional[datetime] = None
+    created_after: Optional[datetime] = None
+    modified_before: Optional[datetime] = None
+    modified_after: Optional[datetime] = None
+
+
+class ComputeHistoryURLParameters(RestModelBase):
+    """
+    URL parameters for obtaining compute history for a record
+    """
+
+    include_outputs: Optional[bool] = False
+
+    @validator("include_outputs", pre=True)
+    def validate_lists(cls, v):
+        return validate_list_to_single(v)

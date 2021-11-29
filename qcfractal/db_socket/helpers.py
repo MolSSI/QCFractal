@@ -73,15 +73,14 @@ def _get_query_proj_options(
 ) -> List[InstrumentedAttribute, ...]:
 
     # If include and exclude are both none (common occurrence), then
-    # skip all the load_only stuff
-    # Also, if we use with_polymorphic, then include and exclude must be None
-    # because the rest of this function won't work
-    if include is None and exclude is None:
+    # we can skip everything
+    if include is None and not exclude:
         return []
 
-    mapper = inspect(orm_type)
-    columns = set(mapper.column_attrs.keys())
-    relationships = set(mapper.relationships.keys())
+    if include is not None:
+        include = set(include)
+    if exclude is not None:
+        exclude = set(exclude)
 
     # Pull out any subrelationships we need to handle
     # Make a map with the key being the immediate subrelationship
@@ -90,40 +89,77 @@ def _get_query_proj_options(
     subrel_map = {}
     if include is not None:
         subrel_includes = [x for x in include if "." in x]
+
         for s in subrel_includes:
             base, col = s.split(".", maxsplit=1)
             subrel_map.setdefault(base, list())
             subrel_map[base].append(col)
 
-    # By default, don't explicitly include relationships
-    # Any query will implicitly include those with lazy=selectin, lazy=join, etc
-    if include is None:
-        # WARNING - aliasing, but that is ok
-        load = columns
-        noload_rels = set()
-    elif "*" in include:
-        load = (columns | set(include)) - {"*"}  # union with include so we get any relationships in include
-        noload_rels = set()
+    mapper = inspect(orm_type)
+
+    # We use mapper.mapper. This works for the usual ORM, as well as
+    # with_polymorphic objects
+    columns = set(mapper.mapper.column_attrs.keys())
+    relationships = set(mapper.mapper.relationships.keys())
+
+    if include is None and exclude:
+        # no include, some exclude
+        # load only the non-excluded columns
+        # skip loading excluded relationships
+        load_columns = columns - exclude
+        noload_rels = relationships & exclude
+        options = [load_only(*load_columns)]
+        options += [lazyload(getattr(orm_type, x)) for x in noload_rels]
+
+    elif "*" in include and not exclude:
+        # include has '*', no excludes
+        # We just have to possibly include some new relationships
+        load_rels = relationships & include
+        options = [selectinload(getattr(orm_type, x)) for x in load_rels]
+
+    elif "*" in include and exclude:
+        # include has '*', and we have excludes
+        # Load only non-excluded columns
+        # Add any relationship specified in include (and not in exclude)
+        # Skip loading any relationships that are excluded
+        load_columns = columns - exclude
+        load_rels = (relationships & include) - exclude
+        noload_rels = relationships & exclude
+
+        options = [load_only(*load_columns)]
+        options += [selectinload(getattr(orm_type, x)) for x in load_rels]
+        options += [lazyload(getattr(orm_type, x)) for x in noload_rels]
+
+    elif include and not exclude:
+        # Include, but with no exclude
+        load_columns = columns & include
+        load_rels = relationships & include
+        noload_rels = relationships - include
+
+        options = [load_only(*load_columns)]
+        options += [selectinload(getattr(orm_type, x)) for x in load_rels]
+        options += [lazyload(getattr(orm_type, x)) for x in noload_rels]
+
+    elif include and exclude:
+        # Both include and exclude specified
+        # Load only columns that are in include and not exclude
+        # Load only relationships that are in include and not exclude
+        # Skip loading any relationships that aren't in include (or are excluded)
+
+        load_columns = (columns & include) - exclude
+        load_rels = (relationships & include) - exclude
+        noload_rels = relationships - include + (relationships & exclude)
+
+        options = [load_only(*load_columns)]
+        options += [selectinload(getattr(orm_type, x)) for x in load_rels]
+        options += [lazyload(getattr(orm_type, x)) for x in noload_rels]
+
     else:
-        include_set = set(include)
-        load = include_set
-        noload_rels = relationships - include_set  # don't load any relationships not specified in include
-
-    if exclude:
-        load -= set(exclude)
-
-    # Split out which ones are columns and which are relationships
-    # The relationships are only those specified explicitly in include
-    load_columns = load & columns
-    load_relationships = load & relationships
-
-    options = [load_only(*load_columns)]
-    options += [selectinload(getattr(orm_type, x)) for x in load_relationships]
-    options += [lazyload(getattr(orm_type, x)) for x in noload_rels]
+        raise RuntimeError(f"QCFractal Developer Error: orm_type={orm_type} include={include} exclude={exclude}")
 
     # Now handle subrelationships
     for base, cols in subrel_map.items():
-        sub_orm_relmap = mapper.relationships.get(base, None)
+        sub_orm_relmap = mapper.mapper.relationships.get(base, None)
         if sub_orm_relmap is not None:
             sub_orm = sub_orm_relmap.entity.class_
             subrel_options = _get_query_proj_options(sub_orm, tuple(cols), None)
@@ -413,7 +449,7 @@ def get_general(
         return []
 
     # We must make sure the column we are searching for is included
-    if include is not None:
+    if include is not None and "*" not in include:
         include = set(include) | {search_col.key}
     if exclude is not None:
         exclude = set(exclude) - {search_col.key}
