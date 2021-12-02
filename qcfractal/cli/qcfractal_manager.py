@@ -739,18 +739,14 @@ def main(args=None):
         raise ValueError("Cores per task must be larger than one!")
 
     if settings.common.adapter == "pool":
-        from concurrent.futures import ProcessPoolExecutor
-
-        # TODO: Replace with passing via mp_context to ProcessPoolExecutor
-        # when python 3.6 is dead and buried
-        from multiprocessing import set_start_method
+        from multiprocessing import Pool, set_start_method
 
         set_start_method("spawn")
 
         # Error if the number of nodes per jobs is more than 1
         if settings.common.nodes_per_job > 1:
             raise ValueError("Pool adapters only run on a single local node")
-        queue_client = ProcessPoolExecutor(max_workers=settings.common.tasks_per_worker)
+        queue_client = Pool(processes=settings.common.tasks_per_worker)
 
     elif settings.common.adapter == "dask":
 
