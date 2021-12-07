@@ -341,6 +341,15 @@ def test_molecules_socket_query(storage_socket: SQLAlchemySocket):
     assert meta.n_returned == 1
     assert mols[0] == water
 
+    # Empty everything = return all
+    meta, mols = storage_socket.molecules.query()
+    assert meta.n_found == 2
+
+    # Empty lists will constrain the results to be empty
+    meta, mols = storage_socket.molecules.query(molecule_id=[])
+    assert meta.n_found == 0
+    assert mols == []
+
 
 def test_molecules_socket_query_proj(storage_socket: SQLAlchemySocket):
     water = load_molecule_data("water_dimer_minima")
@@ -406,24 +415,6 @@ def test_molecules_socket_get_empty(storage_socket: SQLAlchemySocket):
     assert len(ids) == 1
 
     assert storage_socket.molecules.get([]) == []
-
-
-def test_molecules_socket_query_empty(storage_socket: SQLAlchemySocket):
-    assert storage_socket.molecules.query()[1] == []
-
-    water = load_molecule_data("water_dimer_minima")
-    _, ids = storage_socket.molecules.add([water])
-    assert len(ids) == 1
-
-    # Empty everything = return all
-    meta, mols = storage_socket.molecules.query()
-    assert meta.n_found == 1
-    assert mols[0]["id"] == ids[0]
-
-    # Empty lists will constrain the results to be empty
-    meta, mols = storage_socket.molecules.query(molecule_id=[])
-    assert meta.n_found == 0
-    assert mols == []
 
 
 def test_molecules_socket_modify(storage_socket: SQLAlchemySocket):
