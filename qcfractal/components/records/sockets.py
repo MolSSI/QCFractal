@@ -15,6 +15,7 @@ from qcfractal.db_socket.helpers import (
     get_count_2,
     calculate_limit,
     get_general,
+    get_general_multi,
     delete_general,
 )
 from qcfractal.exceptions import UserReportableError
@@ -101,6 +102,16 @@ class BaseRecordSocket(abc.ABC):
     ) -> BaseResultORM:
         pass
 
+    @abc.abstractmethod
+    def get_children_ids(
+        self,
+        session: Session,
+        record_id: Iterable[int],
+    ) -> List[int]:
+        # NOTE - it is expected that handlers get ids
+        # for computations that are not of the correct type
+        pass
+
 
 class RecordSocket:
     def __init__(self, root_socket: SQLAlchemySocket):
@@ -111,12 +122,28 @@ class RecordSocket:
 
         # All the subsockets
         from .singlepoint.sockets import SinglePointRecordSocket
+        from .optimization.sockets import OptimizationRecordSocket
 
         self.singlepoint = SinglePointRecordSocket(root_socket)
-        # TODO - replace with proper socket
+        self.optimization = OptimizationRecordSocket(root_socket)
 
-        self._handler_map: Dict[str, BaseRecordSocket] = {"singlepoint": self.singlepoint}
-        self._handler_map_by_schema: Dict[str, BaseRecordSocket] = {"qcschema_output": self.singlepoint}
+        self._handler_map: Dict[str, BaseRecordSocket] = {
+            "singlepoint": self.singlepoint,
+            "optimization": self.optimization,
+        }
+        self._handler_map_by_schema: Dict[str, BaseRecordSocket] = {
+            "qcschema_output": self.singlepoint,
+            "qcschema_optimization_output": self.optimization,
+        }
+
+    def get_children_ids(self, session: Session, record_id: Iterable[int]) -> List[int]:
+        all_ids = []
+
+        for h in self._handler_map.values():
+            ch = h.get_children_ids(session, record_id)
+            all_ids.extend(ch)
+
+        return all_ids
 
     def query_base(
         self,
@@ -275,17 +302,26 @@ class RecordSocket:
 
         return self.get_base(wp, record_id, include, exclude, missing_ok, session=session)
 
-    def get_history(self, record_id: int, include_outputs: bool = False, *, session: Optional[Session] = None):
+    def get_history(
+        self,
+        record_id: int,
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
+        missing_ok: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ):
         with self.root_socket.optional_session(session, True) as session:
-            stmt = select(RecordComputeHistoryORM).where(RecordComputeHistoryORM.record_id == record_id)
-
-            if include_outputs:
-                stmt = stmt.options(selectinload(RecordComputeHistoryORM.outputs))
-
-            stmt = stmt.order_by(RecordComputeHistoryORM.modified_on.asc())
-
-            hist = session.execute(stmt).scalars().all()
-            return [h.dict() for h in hist]
+            hist = get_general_multi(
+                session,
+                RecordComputeHistoryORM,
+                RecordComputeHistoryORM.record_id,
+                [record_id],
+                include,
+                exclude,
+                missing_ok,
+            )
+            return sorted(hist[0], key=lambda x: x["modified_on"])
 
     def update_completed(self, session: Session, record_orm: BaseResultORM, result: AllResultTypes, manager_name: str):
 
@@ -548,6 +584,7 @@ class RecordSocket:
         self,
         record_id: Sequence[int],
         soft_delete: bool = True,
+        delete_children: bool = True,
         *,
         session: Optional[Session] = None,
     ) -> DeleteMetadata:
@@ -579,10 +616,17 @@ class RecordSocket:
             return DeleteMetadata()
 
         with self.root_socket.optional_session(session) as session:
+            all_id = list(record_id)  # convert to a list and/or copy
+            children_ids = []
+
+            if delete_children:
+                children_ids = self.get_children_ids(session, record_id)
+                all_id.extend(children_ids)
+
             if soft_delete:
                 # Can't do inner join because task may not exist
                 stmt = select(BaseResultORM).options(selectinload(BaseResultORM.task))
-                stmt = stmt.where(BaseResultORM.id.in_(record_id))
+                stmt = stmt.where(BaseResultORM.id.in_(all_id))
                 stmt = stmt.with_for_update()
                 record_orms = session.execute(stmt).scalars().all()
 
@@ -596,15 +640,26 @@ class RecordSocket:
                             session.delete(r.task)
 
                 # put in order of the input parameter
+                # We only count the top level deletions, so we are looing at
+                # record_id and not all_id
                 deleted_ids = [r.id for r in record_orms]
                 missing_ids = set(record_id) - set(deleted_ids)
                 deleted_idx = [idx for idx, rid in enumerate(record_id) if rid in deleted_ids]
                 missing_idx = [idx for idx, rid in enumerate(record_id) if rid in missing_ids]
+                n_children_deleted = len(all_id) - len(record_id)
 
-                return DeleteMetadata(deleted_idx=deleted_idx, missing_idx=list(missing_idx))
+                return DeleteMetadata(
+                    deleted_idx=deleted_idx, missing_idx=list(missing_idx), n_children_deleted=n_children_deleted
+                )
             else:
-                del_id = [(x,) for x in record_id]
-                return delete_general(session, BaseResultORM, (BaseResultORM.id,), del_id)
+                del_id_1 = [(x,) for x in record_id]
+                del_id_2 = [(x,) for x in children_ids]
+                meta = delete_general(session, BaseResultORM, (BaseResultORM.id,), del_id_1)
+                ch_meta = delete_general(session, BaseResultORM, (BaseResultORM.id,), del_id_2)
+
+                meta_dict = meta.dict()
+                meta_dict["n_children_deleted"] = ch_meta.n_deleted
+                return DeleteMetadata(**meta_dict)
 
     def modify(
         self,

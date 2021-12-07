@@ -8,7 +8,6 @@ from .models import (
     RecordModifyBody,
     RecordDeleteURLParameters,
     RecordQueryBody,
-    ComputeHistoryURLParameters,
     RecordAddBodyBase,
 )
 
@@ -19,6 +18,7 @@ AllResultTypes = Union[FailedOperation, AtomicResult, OptimizationResult]
 
 # All possible records we can get from the server
 from .singlepoint.models import SinglePointRecord
+from .optimization.models import OptimizationRecord
 
-AllRecordTypes = Union[SinglePointRecord]
-AllDataModelTypes = Union[SinglePointRecord._DataModel]
+AllRecordTypes = Union[SinglePointRecord, OptimizationRecord]
+AllDataModelTypes = Union[SinglePointRecord._DataModel, OptimizationRecord._DataModel]

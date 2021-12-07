@@ -1,22 +1,19 @@
 {
     "input": {
-        "procedure": "optimization",
         "program": "geometric",
-        "keywords": {
-            "values": {
-                "program": "psi4"
-            }
-        },
-        "qc_spec": {
-            "driver": "gradient",
+        "keywords": {},
+        "protocols": {},
+        "record_type": "optimization",
+        "singlepoint_specification": {
             "method": "b3lyp",
             "basis": "6-31g",
             "keywords": {
-                "maxiter": 2
+                "values": {
+                    "maxiter": 2
+                }
             },
             "program": "psi4"
-        },
-        "protocols": {}
+        }
     },
     "molecule": {
         "schema_name": "qcschema_molecule",

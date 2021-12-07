@@ -1,23 +1,20 @@
 {
     "input": {
-        "procedure": "optimization",
         "program": "geometric",
-        "keywords": {
-            "values": {
-                "program": "psi4"
-            }
+        "keywords": {},
+        "protocols": {
+            "trajectory": "initial_and_final"
         },
-        "qc_spec": {
-            "driver": "gradient",
+        "record_type": "optimization",
+        "singlepoint_specification": {
             "method": "b3lyp",
             "basis": "6-31g",
             "keywords": {
-                "maxiter": 1000
+                "values": {
+                    "maxiter": 1000
+                }
             },
             "program": "psi4"
-        },
-        "protocols": {
-            "trajectory": "initial_and_final"
         }
     },
     "molecule": {

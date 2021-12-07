@@ -1,0 +1,139 @@
+from typing import Optional, Union, Any, List, Dict
+
+import pydantic
+from pydantic import BaseModel, Field, constr, validator, Extra
+
+from qcfractal.portal.base_models import CommonGetProjURLParameters
+from qcelemental.models import Molecule
+from qcelemental.models.procedures import (
+    OptimizationProtocols,
+)
+
+from typing_extensions import Literal
+
+from qcfractal.portal.records import BaseRecord, RecordAddBodyBase, RecordQueryBody
+from qcfractal.portal.records.singlepoint import (
+    SinglePointRecord,
+    SinglePointSpecification,
+    SinglePointInputSpecification,
+    SinglePointDriver,
+)
+
+
+class OptimizationSinglePointInputSpecification(SinglePointInputSpecification):
+    driver: SinglePointDriver = SinglePointDriver.deferred
+
+    @pydantic.validator("driver", pre=True)
+    def force_driver(cls, v):
+        return SinglePointDriver.deferred
+
+
+class OptimizationInputSpecification(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
+    program: constr(to_lower=True) = Field(..., description="The program to use for an optimization")
+    singlepoint_specification: OptimizationSinglePointInputSpecification
+    keywords: Dict[str, Any] = Field({})
+    protocols: OptimizationProtocols = Field(OptimizationProtocols())
+
+
+class OptimizationSpecification(OptimizationInputSpecification):
+    """
+    An OptimizationSpecification as stored on the server
+
+    This is the same as the input specification, with a few ids added
+    """
+
+    id: int
+    singlepoint_specification: SinglePointSpecification
+    singlepoint_specification_id: int
+
+
+class OptimizationTrajectory(BaseModel):
+    singlepoint_record_id: int
+    optimization_record_id: int
+    singlepoint_record: Optional[SinglePointRecord._DataModel]
+
+
+class OptimizationRecord(BaseRecord):
+    class _DataModel(BaseRecord._DataModel):
+        record_type: Literal["optimization"]
+        specification_id: int
+        specification: OptimizationSpecification
+        initial_molecule_id: int
+        initial_molecule: Optional[Molecule]
+        final_molecule_id: Optional[int]
+        final_molecule: Optional[Molecule]
+        energies: Optional[List[float]]
+        trajectory: Optional[List[OptimizationTrajectory]]
+
+    # This is needed for disambiguation by pydantic
+    record_type: Literal["optimization"]
+    raw_data: _DataModel
+
+    def _retrieve_initial_molecule(self):
+        self.raw_data.initial_molecule = self.client.get_molecules([self.raw_data.initial_molecule_id])[0]
+
+    def _retrieve_final_molecule(self):
+        self.raw_data.final_molecule = self.client.get_molecules([self.raw_data.final_molecule_id])[0]
+
+    def _retrieve_trajectory(self):
+        url_params = {"include": ["*", "singlepoint_record"]}
+
+        self.raw_data.trajectory = self.client._auto_request(
+            "get",
+            f"v1/record/optimization/{self.raw_data.id}/trajectory",
+            None,
+            CommonGetProjURLParameters,
+            List[OptimizationTrajectory],
+            None,
+            url_params,
+        )
+
+    @property
+    def specification(self) -> OptimizationSpecification:
+        return self.raw_data.specification
+
+    @property
+    def initial_molecule(self) -> Molecule:
+        if self.raw_data.initial_molecule is None:
+            self._retrieve_initial_molecule()
+        return self.raw_data.initial_molecule
+
+    @property
+    def final_molecule(self) -> Molecule:
+        if self.raw_data.final_molecule is None:
+            self._retrieve_final_molecule()
+        return self.raw_data.final_molecule
+
+    @property
+    def trajectory(self) -> Molecule:
+        if self.raw_data.trajectory is None:
+            self._retrieve_trajectory()
+        traj_dm = [x.singlepoint_record for x in self.raw_data.trajectory]
+        return self.client.recordmodel_from_datamodel(traj_dm)
+
+
+class OptimizationQueryBody(RecordQueryBody):
+    program: Optional[List[str]] = None
+    singlepoint_program: Optional[List[constr(to_lower=True)]] = None
+    singlepoint_method: Optional[List[constr(to_lower=True)]] = None
+    singlepoint_basis: Optional[List[Optional[constr(to_lower=True)]]] = None
+    singlepoint_keywords_id: Optional[List[int]] = None
+    initial_molecule_id: Optional[List[int]] = None
+    final_molecule_id: Optional[List[int]] = None
+
+    @validator("singlepoint_basis")
+    def _convert_basis(cls, v):
+        # Convert empty string to None
+        # Lowercasing is handled by constr
+        if v is not None:
+            return ["" if x is None else x for x in v]
+        else:
+            return None
+
+
+class OptimizationAddBody(RecordAddBodyBase):
+    specification: OptimizationInputSpecification
+    initial_molecules: List[Union[int, Molecule]]

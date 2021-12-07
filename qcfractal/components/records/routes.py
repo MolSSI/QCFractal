@@ -8,7 +8,6 @@ from qcfractal.portal.records import (
     RecordModifyBody,
     RecordQueryBody,
     RecordDeleteURLParameters,
-    ComputeHistoryURLParameters,
 )
 from qcfractal.portal.records import RecordStatusEnum
 
@@ -24,10 +23,10 @@ def get_records_v1(record_id: Optional[int] = None, *, url_params: CommonGetProj
 
 
 @main.route("/v1/record/<int:record_id>/compute_history", methods=["GET"])
-@wrap_route(None, ComputeHistoryURLParameters)
+@wrap_route(None, CommonGetProjURLParameters)
 @check_access
-def get_record_history_v1(record_id: Optional[int] = None, *, url_params: ComputeHistoryURLParameters):
-    return storage_socket.records.get_history(record_id, url_params.include_outputs)
+def get_record_history_v1(record_id: Optional[int] = None, *, url_params: CommonGetProjURLParameters):
+    return storage_socket.records.get_history(record_id, url_params.include, url_params.exclude, url_params.missing_ok)
 
 
 @main.route("/v1/record/<int:record_id>/task", methods=["GET"])

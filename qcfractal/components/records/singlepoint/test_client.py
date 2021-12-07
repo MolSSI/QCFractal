@@ -4,34 +4,25 @@ Tests the singlepoint record socket
 
 from __future__ import annotations
 
-import inspect
-from typing import TYPE_CHECKING
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.components.records.singlepoint.db_models import ResultORM
-from qcfractal.components.wavefunctions.test_db_models import assert_wfn_equal
 from qcfractal.portal.keywords import KeywordSet
 from qcfractal.portal.molecules import Molecule
-from qcfractal.portal.outputstore import OutputStore
-from qcfractal.portal.records import RecordStatusEnum, PriorityEnum
+from qcfractal.portal.records import PriorityEnum
 from qcfractal.portal.records.singlepoint import (
     SinglePointSpecification,
     SinglePointDriver,
     SinglePointProtocols,
-    SinglePointQueryBody,
 )
-from qcfractal.portal.wavefunctions.models import WavefunctionProperties
 from qcfractal.testing import load_molecule_data, load_procedure_data
-from qcfractal.portal.managers import ManagerName, ManagerStatusEnum
-
 from .test_sockets import _test_specs
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcfractal.portal import PortalClient
-    from qcfractal.testing import TestingSnowflake
 
 
 @pytest.mark.parametrize("spec", _test_specs)
@@ -58,6 +49,8 @@ def test_singlepoint_client_add_get(snowflake_client: PortalClient, spec: Single
     recs = snowflake_client.get_singlepoints(id, include_task=True, include_molecule=True)
 
     for r in recs:
+        assert r.record_type == "singlepoint"
+        assert r.raw_data.record_type == "singlepoint"
         assert r.raw_data.specification.program == spec.program.lower()
         assert r.raw_data.specification.driver == spec.driver
         assert r.raw_data.specification.method == spec.method.lower()

@@ -45,6 +45,8 @@ if __name__ == "__main__":
             "plotly",
             "pandas",
             "tabulate",
+            # Only need for python 3.7, but no harm in always including it
+            "typing-extensions"
         ],
         entry_points={
             "console_scripts": [

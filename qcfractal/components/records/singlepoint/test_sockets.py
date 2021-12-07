@@ -2,13 +2,16 @@
 Tests the singlepoint record socket
 """
 
+from __future__ import annotations
+
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import pytest
+from qcelemental.models.results import AtomicResultProperties
 
 from qcfractal.components.records.singlepoint.db_models import ResultORM
 from qcfractal.components.wavefunctions.test_db_models import assert_wfn_equal
-from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.portal.keywords import KeywordSet
 from qcfractal.portal.molecules import Molecule
 from qcfractal.portal.outputstore import OutputStore
@@ -21,7 +24,9 @@ from qcfractal.portal.records.singlepoint import (
 )
 from qcfractal.portal.wavefunctions.models import WavefunctionProperties
 from qcfractal.testing import load_molecule_data, load_procedure_data
-from qcelemental.models.results import AtomicResultProperties
+
+if TYPE_CHECKING:
+    from qcfractal.db_socket import SQLAlchemySocket
 
 _test_specs = [
     SinglePointInputSpecification(
@@ -73,6 +78,7 @@ def test_singlepoint_socket_add_get(storage_socket: SQLAlchemySocket, spec: Sing
 
     assert len(recs) == 3
     for r in recs:
+        assert r["record_type"] == "singlepoint"
         assert r["specification"]["program"] == spec.program.lower()
         assert r["specification"]["driver"] == spec.driver
         assert r["specification"]["method"] == spec.method.lower()
@@ -440,7 +446,6 @@ def test_singlepoint_socket_query(storage_socket: SQLAlchemySocket):
     meta, sp = storage_socket.records.singlepoint.query(SinglePointQueryBody(driver=[SinglePointDriver.properties]))
     assert meta.n_found == 0
 
-    # Some empty queries
     meta, sp = storage_socket.records.singlepoint.query(SinglePointQueryBody(basis=["madeupbasis"]))
     assert meta.n_found == 0
 
@@ -484,3 +489,24 @@ def test_singlepoint_socket_recreate_task(storage_socket: SQLAlchemySocket):
     assert orig_task["spec"]["args"][0]["model"] == new_task["spec"]["args"][0]["model"]
     assert orig_task["spec"]["args"][0]["keywords"] == new_task["spec"]["args"][0]["keywords"]
     assert orig_task["spec"]["args"][0]["protocols"] == new_task["spec"]["args"][0]["protocols"]
+
+
+def test_singlepoint_socket_delete_1(storage_socket: SQLAlchemySocket):
+    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_peroxide_energy_wfn")
+    meta1, id1 = storage_socket.records.singlepoint.add(input_spec_1, [molecule_1])
+
+    with storage_socket.session_scope() as session:
+        rec_orm = session.query(ResultORM).where(ResultORM.id == id1[0]).one()
+        storage_socket.records.update_completed(session, rec_orm, result_data_1, None)
+
+    # deleting with children is ok (even though we don't have children)
+    meta = storage_socket.records.delete(id1, soft_delete=True, delete_children=True)
+    assert meta.success
+    assert meta.deleted_idx == [0]
+
+    meta = storage_socket.records.delete(id1, soft_delete=False, delete_children=True)
+    assert meta.success
+    assert meta.deleted_idx == [0]
+
+    recs = storage_socket.records.get(id1, missing_ok=True)
+    assert recs == [None]

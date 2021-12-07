@@ -61,6 +61,9 @@ class SinglePointRecordSocket(BaseRecordSocket):
         BaseRecordSocket.__init__(self, root_socket)
         self._logger = logging.getLogger(__name__)
 
+    def get_children_ids(self, session: Session, record_id: Iterable[int]) -> List[int]:
+        return []
+
     def get_specification(
         self, id: int, missing_ok: bool = False, *, session: Optional[Session] = None
     ) -> Optional[SinglePointSpecificationDict]:
@@ -335,7 +338,6 @@ class SinglePointRecordSocket(BaseRecordSocket):
                     molecule_id=mol_data["id"],
                     status=RecordStatusEnum.waiting,
                     task=task_orm,
-                    protocols={},  # TODO - remove me
                 )
 
                 all_orm.append(sp_orm)

@@ -24,7 +24,8 @@ from qcelemental.models.results import WavefunctionProperties
 from .config import FractalConfig, update_nested_dict
 
 from qcfractal.portal.records.singlepoint import SinglePointInputSpecification
-from qcelemental.models import AtomicResult
+from qcfractal.portal.records.optimization import OptimizationInputSpecification
+from qcelemental.models import OptimizationResult, AtomicResult
 
 from .db_socket import SQLAlchemySocket
 from .interface import FractalClient
@@ -223,9 +224,8 @@ def load_procedure_data(name: str):
         input_type = SinglePointInputSpecification
         result_type = AtomicResult
     elif record_type == "optimization":
-        raise RuntimeError("TODO")
-        input_type = ptl.models.OptimizationProcedureSpecification
-        result_type = ptl.models.OptimizationResult
+        input_type = OptimizationInputSpecification
+        result_type = OptimizationResult
     else:
         raise RuntimeError(f"Unknown procedure '{record_type}' in test!")
 

@@ -38,8 +38,15 @@ from qcfractal.portal.records.singlepoint import (
     SinglePointQueryBody,
     SinglePointDriver,
 )
+from qcfractal.portal.records.optimization import (
+    OptimizationProtocols,
+    OptimizationRecord,
+    OptimizationQueryBody,
+    OptimizationSinglePointInputSpecification,
+    OptimizationAddBody,
+)
+
 from qcfractal.portal.records import (
-    ComputeHistoryURLParameters,
     ComputeHistory,
     RecordStatusEnum,
     PriorityEnum,
@@ -1037,6 +1044,13 @@ class PortalClient:
         collection = self.get_collection(collection_type, name)
         self._automodel_request(f"collection/{collection.data.id}", "delete", payload={"meta": {}})
 
+    def recordmodel_from_datamodel(self, data: Sequence[Optional[AllDataModelTypes]]) -> List[Optional[AllRecordTypes]]:
+        record_init = [
+            {"client": self, "record_type": d.record_type, "raw_data": d} if d is not None else None for d in data
+        ]
+
+        return pydantic.parse_obj_as(List[Optional[AllRecordTypes]], record_init)
+
     def get_records(
         self,
         record_id: Union[int, Sequence[int]],
@@ -1047,8 +1061,7 @@ class PortalClient:
     ) -> Union[List[Optional[AllRecordTypes]], Optional[AllRecordTypes]]:
         """Get result records by id."""
 
-        record_id = make_list(record_id)
-        if not record_id:
+        if isinstance(record_id, Sequence) and not record_id:
             return []
 
         url_params = {"id": make_list(record_id), "missing_ok": missing_ok}
@@ -1065,14 +1078,16 @@ class PortalClient:
             url_params["include"] = include
 
         record_data = self._auto_request(
-            "get", "v1/record", None, CommonGetProjURLParameters, List[Optional[AllDataModelTypes]], None, url_params
+            "get",
+            "v1/record",
+            None,
+            CommonGetProjURLParameters,
+            List[Optional[AllDataModelTypes]],
+            None,
+            url_params,
         )
 
-        record_init = [
-            {"client": self, "record_type": data.record_type, "raw_data": data} if data is not None else None
-            for data in record_data
-        ]
-        records = pydantic.parse_obj_as(List[Optional[AllRecordTypes]], record_init)
+        records = self.recordmodel_from_datamodel(record_data)
 
         if isinstance(record_id, Sequence):
             return records
@@ -1130,8 +1145,7 @@ class PortalClient:
             None,
         )
 
-        record_init = [{"client": self, "record_type": data.record_type, "raw_data": data} for data in record_data]
-        return meta, pydantic.parse_obj_as(List[AllRecordTypes], record_init)
+        return meta, self.recordmodel_from_datamodel(record_data)
 
     def cancel_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
         body_data = {"record_id": make_list(record_id), "status": RecordStatusEnum.cancelled}
@@ -1162,54 +1176,6 @@ class PortalClient:
             "delete_tag": delete_tag,
         }
         return self._auto_request("patch", "/v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
-
-    def query_optimizations(
-        self,
-        program: Optional["QueryStr"] = None,
-        status: "QueryStr" = None,
-        limit: Optional[int] = None,
-        skip: int = 0,
-        include: Optional["QueryListStr"] = None,
-    ) -> Union[List["OptimizationRecord"], List[Dict[str, Any]]]:
-        """Queries Procedures from the server.
-
-        Parameters
-        ----------
-        status : QueryStr, option/al
-            Queries the Procedure ``status`` field.
-        limit : Optional[int], optional
-            The maximum number of Procedures to query
-        skip : int, optional
-            The number of Procedures to skip in the query, used during pagination
-        include : QueryListStr, optional
-            Filters the returned fields, will return a dictionary rather than an object.
-
-        Returns
-        -------
-        Union[List['RecordBase'], Dict[str, Any]]
-            Returns a List of found RecordResult's without include, or a
-            dictionary of results with include.
-        """
-
-        if status is None:
-            status = [RecordStatusEnum.complete]
-
-        payload = {
-            "meta": {"limit": limit, "skip": skip, "include": include},
-            "data": {
-                "status": make_list(status),
-            },
-        }
-        optimizations = self._automodel_request("optimization", "get", payload)
-
-        if not include:
-            for ind in range(len(optimizations)):
-                optimizations[ind] = record_factory(optimizations[ind], client=self)
-
-            # cache optimizations if we aren't customizing the field set
-            self._cache.put(optimizations, entity_type="record")
-
-        return optimizations
 
     def query_torsiondrives(
         self,
@@ -1264,7 +1230,7 @@ class PortalClient:
         method: str,
         basis: Optional[str],
         keywords: Optional[Union[KeywordSet, Dict[str, Any], int]] = None,
-        protocols: Optional[SinglePointProtocols] = None,
+        protocols: Optional[Union[SinglePointProtocols, Dict[str, Any]]] = None,
         priority: PriorityEnum = PriorityEnum.normal,
         tag: Optional[str] = None,
     ) -> Tuple[InsertMetadata, List[int]]:
@@ -1365,12 +1331,12 @@ class PortalClient:
             url_params,
         )
 
-        sp_records = [SinglePointRecord(client=self, record_type=d.record_type, raw_data=d) for d in record_data]
+        records = self.recordmodel_from_datamodel(record_data)
 
         if isinstance(record_id, Sequence):
-            return sp_records
+            return records
         else:
-            return sp_records[0]
+            return records[0]
 
     def query_singlepoints(
         self,
@@ -1442,7 +1408,171 @@ class PortalClient:
             None,
         )
 
-        return meta, [SinglePointRecord(client=self, record_type=x.record_type, raw_data=x) for x in record_data]
+        return meta, self.recordmodel_from_datamodel(record_data)
+
+    def add_optimizations(
+        self,
+        initial_molecules: Union[int, Molecule, List[Union[int, Molecule]]],
+        program: str,
+        singlepoint_specification: OptimizationSinglePointInputSpecification,
+        keywords: Optional[Union[KeywordSet, Dict[str, Any], int]] = None,
+        protocols: Optional[OptimizationProtocols] = None,
+        priority: PriorityEnum = PriorityEnum.normal,
+        tag: Optional[str] = None,
+    ) -> Tuple[InsertMetadata, List[int]]:
+        """
+        Adds optimization calculations to the server
+        """
+
+        body_data = {
+            "initial_molecules": make_list(initial_molecules),
+            "specification": {
+                "program": program,
+                "singlepoint_specification": singlepoint_specification,
+            },
+            "tag": tag,
+            "priority": priority,
+        }
+
+        # If these are None, then let the pydantic models handle the defaults
+        if keywords is not None:
+            body_data["specification"]["keywords"] = keywords
+        if protocols is not None:
+            body_data["specification"]["protocols"] = protocols
+
+        return self._auto_request(
+            "post",
+            "v1/record/optimization",
+            OptimizationAddBody,
+            None,
+            Tuple[InsertMetadata, List[int]],
+            body_data,
+            None,
+        )
+
+    def get_optimizations(
+        self,
+        record_id: Union[int, Sequence[int]],
+        missing_ok: bool = False,
+        *,
+        include_task: bool = False,
+        include_outputs: bool = False,
+        include_initial_molecule: bool = False,
+        include_final_molecule: bool = False,
+        include_trajectory: bool = False,
+    ) -> Union[Optional[SinglePointRecord], List[Optional[SinglePointRecord]]]:
+        url_params = {"id": make_list(record_id), "missing_ok": missing_ok}
+
+        include = set()
+
+        # We must add '*' so that all the default fields are included
+        if include_task:
+            include |= {"*", "task"}
+        if include_outputs:
+            include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_initial_molecule:
+            include |= {"*", "initial_molecule"}
+        if include_final_molecule:
+            include |= {"*", "final_molecule"}
+        if include_trajectory:
+            include |= {"*", "trajectory"}
+
+        if include:
+            url_params["include"] = include
+
+        record_data = self._auto_request(
+            "get",
+            "v1/record/optimization",
+            None,
+            CommonGetProjURLParameters,
+            List[Optional[OptimizationRecord._DataModel]],
+            None,
+            url_params,
+        )
+
+        records = self.recordmodel_from_datamodel(record_data)
+
+        if isinstance(record_id, Sequence):
+            return records
+        else:
+            return records[0]
+
+    def query_optimizations(
+        self,
+        record_id: Optional[Iterable[int]] = None,
+        record_type: Optional[Iterable[str]] = None,
+        manager_name: Optional[Iterable[str]] = None,
+        status: Optional[Iterable[RecordStatusEnum]] = None,
+        created_before: Optional[datetime] = None,
+        created_after: Optional[datetime] = None,
+        modified_before: Optional[datetime] = None,
+        modified_after: Optional[datetime] = None,
+        program: Optional[Iterable[str]] = None,
+        singlepoint_program: Optional[Iterable[str]] = None,
+        singlepoint_method: Optional[Iterable[str]] = None,
+        singlepoint_basis: Optional[Iterable[Optional[str]]] = None,
+        singlepoint_keywords_id: Optional[Iterable[int]] = None,
+        initial_molecule_id: Optional[Iterable[int]] = None,
+        final_molecule_id: Optional[Iterable[int]] = None,
+        limit: Optional[int] = None,
+        skip: int = 0,
+        *,
+        include_task: bool = False,
+        include_outputs: bool = False,
+        include_initial_molecule: bool = False,
+        include_final_molecule: bool = False,
+        include_trajectory: bool = False,
+    ) -> Tuple[QueryMetadata, List[SinglePointRecord]]:
+        """Queries OptimizationRecords from the server."""
+
+        query_data = {
+            "record_id": make_list(record_id),
+            "record_type": make_list(record_type),
+            "manager_name": make_list(manager_name),
+            "status": make_list(status),
+            "program": make_list(program),
+            "singlepoint_program": make_list(singlepoint_program),
+            "singlepoint_method": make_list(singlepoint_method),
+            "singlepoint_basis": make_list(singlepoint_basis),
+            "singlepoint_keywords_id": make_list(singlepoint_keywords_id),
+            "initial_molecule_id": make_list(initial_molecule_id),
+            "final_molecule_id": make_list(final_molecule_id),
+            "created_before": created_before,
+            "created_after": created_after,
+            "modified_before": modified_before,
+            "modified_after": modified_after,
+            "limit": limit,
+            "skip": skip,
+        }
+
+        include = set()
+
+        # We must add '*' so that all the default fields are included
+        if include_task:
+            include |= {"*", "task"}
+        if include_outputs:
+            include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_initial_molecule:
+            include |= {"*", "initial_molecule"}
+        if include_final_molecule:
+            include |= {"*", "final_molecule"}
+        if include_trajectory:
+            include |= {"*", "trajectory"}
+
+        if include:
+            query_data["include"] = include
+
+        meta, record_data = self._auto_request(
+            "post",
+            "v1/record/optimization/query",
+            OptimizationQueryBody,
+            None,
+            Tuple[QueryMetadata, List[OptimizationRecord._DataModel]],
+            query_data,
+            None,
+        )
+
+        return meta, self.recordmodel_from_datamodel(record_data)
 
     def get_managers(
         self,

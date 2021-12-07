@@ -41,8 +41,6 @@ class BaseResultORM(BaseORM):
     # Base identification
     id = Column(Integer, primary_key=True)
 
-    protocols = Column(JSONB, nullable=False)
-
     # Extra fields
     extras = Column(MsgpackExt)
 
@@ -72,7 +70,6 @@ class BaseResultORM(BaseORM):
         Index("ix_base_record_status", "status"),
         Index("ix_base_record_record_type", "record_type"),
         Index("ix_base_record_manager_name", "manager_name"),
-        Index("ix_base_record_protocols", "protocols", postgresql_using="gin"),
     )
 
     __mapper_args__ = {"polymorphic_on": "record_type"}
