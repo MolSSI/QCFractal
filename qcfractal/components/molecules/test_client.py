@@ -229,6 +229,15 @@ def test_molecules_client_query(snowflake_client: PortalClient):
     assert meta.n_returned == 1
     assert mols[0] == water
 
+    # Empty everything = return all
+    meta, mols = snowflake_client.query_molecules()
+    assert meta.n_found == 2
+
+    # Empty lists will constrain the results to be empty
+    meta, mols = snowflake_client.query_molecules(molecule_hash=[])
+    assert meta.n_found == 0
+    assert mols == []
+
 
 def test_molecules_client_query_limit(snowflake_client: PortalClient):
     water = load_molecule_data("water_dimer_minima")
@@ -264,24 +273,6 @@ def test_molecules_client_get_empty(snowflake_client: PortalClient):
     assert len(ids) == 1
 
     assert snowflake_client.get_molecules([]) == []
-
-
-def test_molecules_client_query_empty(snowflake_client: PortalClient):
-    assert snowflake_client.query_molecules()[1] == []
-
-    water = load_molecule_data("water_dimer_minima")
-    _, ids = snowflake_client.add_molecules([water])
-    assert len(ids) == 1
-
-    # Empty everything = return all
-    meta, mols = snowflake_client.query_molecules()
-    assert meta.n_found == 1
-    assert mols[0].id == ids[0]
-
-    # Empty lists will constrain the results to be empty
-    meta, mols = snowflake_client.query_molecules(molecule_hash=[])
-    assert meta.n_found == 0
-    assert mols == []
 
 
 def test_molecules_client_modify(snowflake_client: PortalClient):
