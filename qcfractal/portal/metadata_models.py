@@ -101,6 +101,7 @@ class DeleteMetadata:
     errors: List[Tuple[int, str]] = dataclasses.field(default_factory=list)
     deleted_idx: List[int] = dataclasses.field(default_factory=list)
     missing_idx: List[int] = dataclasses.field(default_factory=list)
+    n_children_deleted: int = 0
 
     @property
     def n_deleted(self):

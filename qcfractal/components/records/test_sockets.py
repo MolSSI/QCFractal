@@ -49,7 +49,7 @@ def test_record_socket_get_history(storage_socket: SQLAlchemySocket):
 
     assert all("outputs" not in x for x in r)
 
-    r = storage_socket.records.get_history(all_id[3], include_outputs=True)
+    r = storage_socket.records.get_history(all_id[3], include=["*", "outputs"])
     assert len(r) == 5
     assert all(x["outputs"] is not None for x in r)
 

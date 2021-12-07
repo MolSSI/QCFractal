@@ -15,7 +15,7 @@ class OptimizationHistory(BaseORM):
     __tablename__ = "optimization_history"
 
     torsion_id = Column(Integer, ForeignKey("torsiondrive_procedure.id", ondelete="cascade"), primary_key=True)
-    opt_id = Column(Integer, ForeignKey("optimization_procedure.id", ondelete="cascade"), primary_key=True)
+    opt_id = Column(Integer, ForeignKey("optimization_record.id", ondelete="cascade"), primary_key=True)
     key = Column(String, nullable=False, primary_key=True)
     position = Column(Integer, primary_key=True)
     # Index('torsion_id', 'key', unique=True)

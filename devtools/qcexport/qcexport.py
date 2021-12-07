@@ -14,7 +14,7 @@ from qcfractal.db_socket.models import (
 from qcfractal.components.collections.db_models import CollectionORM
 from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
-from qcfractal.components.records.optimization.db_models import Trajectory, OptimizationProcedureORM
+from qcfractal.components.records.optimization.db_models import OptimizationTrajectoryORM, OptimizationProcedureORM
 from qcfractal.components.records.singlepoint.db_models import ResultORM
 from qcfractal.components.records.db_models import BaseResultORM
 from qcfractal.components.managers.db_models import ComputeManagerLogORM, ComputeManagerORM
@@ -50,7 +50,7 @@ _all_orm = [
     TaskQueueORM,
     TorsionDriveProcedureORM,
     TorsionInitMol,
-    Trajectory,
+    OptimizationTrajectoryORM,
     VersionsORM,
     WavefunctionStoreORM,
 ]

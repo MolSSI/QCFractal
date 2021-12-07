@@ -1,23 +1,21 @@
 {
     "input": {
-        "procedure": "optimization",
         "program": "geometric",
         "keywords": {
-            "values": {
-                "reset": true,
-                "coordsys": "tric",
-                "program": "psi4"
-            }
-        },
-        "qc_spec": {
-            "driver": "gradient",
-            "method": "b3lyp",
-            "basis": "6-31g",
-            "keywords": {},
-            "program": "psi4"
+            "reset": true,
+            "coordsys": "tric"
         },
         "protocols": {
             "trajectory": "none"
+        },
+        "record_type": "optimization",
+        "singlepoint_specification": {
+            "method": "b3lyp",
+            "basis": "6-31g",
+            "keywords": {
+                "values": {}
+            },
+            "program": "psi4"
         }
     },
     "molecule": {

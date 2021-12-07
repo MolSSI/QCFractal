@@ -268,3 +268,31 @@ def test_singlepoint_socket_add_specification_same_6(storage_socket: SQLAlchemyS
     meta, id2 = storage_socket.records.singlepoint.add_specification(spec)
     assert meta.existing_idx == [0]
     assert id == id2
+
+
+def test_singlepoint_socket_add_specification_diff_1(storage_socket: SQLAlchemySocket):
+    # Test different protocols
+    spec = SinglePointInputSpecification(
+        program="prog1",
+        driver=SinglePointDriver.energy,
+        method="b3lyp",
+        basis=None,
+        protocols=SinglePointProtocols(),
+    )
+
+    meta, id = storage_socket.records.singlepoint.add_specification(spec)
+    assert meta.inserted_idx == [0]
+
+    spec = SinglePointInputSpecification(
+        program="prog1",
+        driver=SinglePointDriver.energy,
+        method="b3lyp",
+        basis="",
+        protocols=SinglePointProtocols(stdout=False),
+    )
+
+    meta, id2 = storage_socket.records.singlepoint.add_specification(spec)
+    assert meta.n_inserted == 1
+    assert meta.inserted_idx == [0]
+    assert meta.existing_idx == []
+    assert id != id2

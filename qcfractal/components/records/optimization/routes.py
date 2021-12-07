@@ -1,23 +1,50 @@
+from typing import Optional
+
 from qcfractal.app import main, storage_socket
-from qcfractal.app.helpers import parse_bodymodel, convert_get_response_metadata, SerializedResponse
-from qcfractal.app.routes import check_access
-from qcfractal.interface.models.rest_models import OptimizationGETBody, OptimizationGETResponse
+from qcfractal.app.helpers import get_helper
+from qcfractal.app.routes import check_access, wrap_route
+from qcfractal.portal.base_models import CommonGetProjURLParameters
+from qcfractal.portal.records.optimization import OptimizationAddBody, OptimizationQueryBody
 
 
-@main.route("/optimization", methods=["GET"])
+@main.route("/v1/record/optimization", methods=["POST"])
+@wrap_route(OptimizationAddBody, None)
 @check_access
-def query_optimization_v1():
-    body = parse_bodymodel(OptimizationGETBody)
+def add_optimization_records_v1(body_data: OptimizationAddBody):
+    return storage_socket.records.optimization.add(
+        opt_spec=body_data.specification,
+        initial_molecules=body_data.initial_molecules,
+        tag=body_data.tag,
+        priority=body_data.priority,
+    )
 
-    meta, ret = storage_socket.tasks.optimization.query(**{**body.data.dict(), **body.meta.dict()})
 
-    # Remove result_type. This isn't used right now and is missing from the model
-    for r in ret:
-        r.pop("result_type", None)
+@main.route("/v1/record/optimization", methods=["GET"])
+@main.route("/v1/record/optimization/<int:record_id>", methods=["GET"])
+@wrap_route(None, CommonGetProjURLParameters)
+@check_access
+def get_optimization_records_v1(record_id: Optional[int] = None, *, url_params: CommonGetProjURLParameters):
+    return get_helper(
+        record_id,
+        url_params.id,
+        url_params.include,
+        None,
+        url_params.missing_ok,
+        storage_socket.records.optimization.get,
+    )
 
-    # Convert the new metadata format to the old format
-    meta_old = convert_get_response_metadata(meta, missing=[])
 
-    response = OptimizationGETResponse(meta=meta_old, data=ret)
+@main.route("/v1/record/optimization/<int:record_id>/trajectory", methods=["GET"])
+@wrap_route(None, CommonGetProjURLParameters)
+@check_access
+def get_optimization_trajectory_v1(record_id: int, *, url_params: CommonGetProjURLParameters):
+    return storage_socket.records.optimization.get_trajectory(
+        record_id, url_params.include, url_params.exclude, url_params.missing_ok
+    )
 
-    return SerializedResponse(response)
+
+@main.route("/v1/record/optimization/query", methods=["POST"])
+@wrap_route(OptimizationQueryBody, None)
+@check_access
+def query_optimization_v1(body_data: OptimizationQueryBody):
+    return storage_socket.records.optimization.query(body_data)

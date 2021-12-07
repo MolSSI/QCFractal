@@ -6,7 +6,12 @@ from pydantic import BaseModel, Field, Extra, validator
 import abc
 from datetime import datetime
 
-from qcfractal.portal.base_models import RestModelBase, QueryProjModelBase, validate_list_to_single
+from qcfractal.portal.base_models import (
+    RestModelBase,
+    QueryProjModelBase,
+    CommonGetProjURLParameters,
+    validate_list_to_single,
+)
 from qcfractal.portal.outputstore import OutputStore, OutputTypeEnum
 from qcelemental.models.results import Provenance
 from typing import Optional, Dict, Any, List, TYPE_CHECKING, Union
@@ -122,8 +127,6 @@ class BaseRecord(abc.ABC, BaseModel):
 
         id: int
 
-        protocols: Optional[Dict[str, Any]] = None  # TODO- remove
-
         extras: Optional[Dict[str, Any]] = None
 
         status: RecordStatusEnum
@@ -142,14 +145,17 @@ class BaseRecord(abc.ABC, BaseModel):
     client: Any
     raw_data: _DataModel  # Meant to be overridden by derived classes
 
-    def _get_compute_history(self, include_outputs: bool = False):
-        url_params = {"include_outputs": include_outputs}
+    def _retrieve_compute_history(self, include_outputs: bool = False):
+        url_params = {}
+
+        if include_outputs:
+            url_params = {"include": ["*", "outputs"]}
 
         self.raw_data.compute_history = self.client._auto_request(
             "get",
             f"v1/record/{self.raw_data.id}/compute_history",
             None,
-            ComputeHistoryURLParameters,
+            CommonGetProjURLParameters,
             List[ComputeHistory],
             None,
             url_params,
@@ -172,7 +178,7 @@ class BaseRecord(abc.ABC, BaseModel):
 
         last_computation = self.raw_data.compute_history[-1]
         if last_computation.outputs is None:
-            self._get_compute_history(include_outputs=True)
+            self._retrieve_compute_history(include_outputs=True)
             last_computation = self.raw_data.compute_history[-1]
 
         return last_computation.get_output(output_type)
@@ -235,15 +241,3 @@ class RecordQueryBody(QueryProjModelBase):
     created_after: Optional[datetime] = None
     modified_before: Optional[datetime] = None
     modified_after: Optional[datetime] = None
-
-
-class ComputeHistoryURLParameters(RestModelBase):
-    """
-    URL parameters for obtaining compute history for a record
-    """
-
-    include_outputs: Optional[bool] = False
-
-    @validator("include_outputs", pre=True)
-    def validate_lists(cls, v):
-        return validate_list_to_single(v)

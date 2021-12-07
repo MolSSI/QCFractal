@@ -1,30 +1,63 @@
 from __future__ import annotations
 
-from typing import Iterable, Dict, Any, Optional
+from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, ForeignKey, String, JSON, select, func, Index, CheckConstraint
-from sqlalchemy.dialects.postgresql import aggregate_order_by
+from sqlalchemy import Column, Integer, ForeignKey, String, JSON, Index, CheckConstraint, UniqueConstraint
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.orderinglist import ordering_list
-from sqlalchemy.orm import relationship, column_property
+from sqlalchemy.orm import relationship
 
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseResultORM
-from qcfractal.components.records.singlepoint.db_models import ResultORM
+from qcfractal.components.records.singlepoint.db_models import SinglePointSpecificationORM, ResultORM
 from qcfractal.db_socket import BaseORM
-from qcfractal.interface.models import ObjectId
+
+if TYPE_CHECKING:
+    pass
 
 
-class Trajectory(BaseORM):
-    """Association table for many to many"""
+class OptimizationTrajectoryORM(BaseORM):
 
-    __tablename__ = "opt_result_association"
+    __tablename__ = "optimization_trajectory"
 
-    opt_id = Column(Integer, ForeignKey("optimization_procedure.id", ondelete="cascade"), primary_key=True)
-    result_id = Column(Integer, ForeignKey(ResultORM.id, ondelete="cascade"), primary_key=True)
+    optimization_record_id = Column(Integer, ForeignKey("optimization_record.id", ondelete="cascade"), primary_key=True)
+    singlepoint_record_id = Column(Integer, ForeignKey(ResultORM.id), primary_key=True)
     position = Column(Integer, primary_key=True)
-    # Index('opt_id', 'result_id', unique=True)
 
-    # trajectory_obj = relationship(ResultORM, lazy="noload")
+    singlepoint_record = relationship(ResultORM)
+    optimization_record = relationship("OptimizationProcedureORM")
+
+
+class OptimizationSpecificationORM(BaseORM):
+    __tablename__ = "optimization_specification"
+
+    id = Column(Integer, primary_key=True)
+
+    program = Column(String(100), nullable=False)
+
+    singlepoint_specification_id = Column(Integer, ForeignKey(SinglePointSpecificationORM.id), nullable=False)
+    singlepoint_specification = relationship(SinglePointSpecificationORM, lazy="selectin", uselist=False)
+
+    keywords = Column(JSONB, nullable=False)
+    protocols = Column(JSONB, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "program",
+            "singlepoint_specification_id",
+            "keywords",
+            "protocols",
+            name="ux_optimization_specification_keys",
+        ),
+        Index("ix_optimization_specification_program", "program"),
+        Index("ix_optimization_specification_singlepoint_specification_id", "singlepoint_specification_id"),
+        Index("ix_optimization_specification_keywords", "keywords"),
+        Index("ix_optimization_specification_protocols", "protocols"),
+        # Enforce lowercase on some fields
+        # This does not actually change the text to lowercase, but will fail to insert anything not lowercase
+        # WARNING - these are not autodetected by alembic
+        CheckConstraint("program = LOWER(program)", name="ck_optimization_specification_program_lower"),
+    )
 
 
 class OptimizationProcedureORM(BaseResultORM):
@@ -32,60 +65,33 @@ class OptimizationProcedureORM(BaseResultORM):
     An Optimization  procedure
     """
 
-    __tablename__ = "optimization_procedure"
+    __tablename__ = "optimization_record"
 
     id = Column(Integer, ForeignKey(BaseResultORM.id, ondelete="cascade"), primary_key=True)
 
-    def __init__(self, **kwargs):
-        kwargs.setdefault("version", 1)
-        self.procedure = "optimization"
-        super().__init__(**kwargs)
+    specification_id = Column(Integer, ForeignKey(OptimizationSpecificationORM.id), nullable=False)
+    specification = relationship(OptimizationSpecificationORM, lazy="selectin")
 
-    schema_version = Column(Integer, default=1)
+    initial_molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), nullable=False)
+    initial_molecule = relationship(MoleculeORM, lazy="select", foreign_keys=initial_molecule_id)
 
-    program = Column(String(100), nullable=False)
-    keywords = Column(JSON)
-    qc_spec = Column(JSON)
+    final_molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), nullable=True)
+    final_molecule = relationship(MoleculeORM, lazy="select", foreign_keys=final_molecule_id)
 
-    initial_molecule = Column(Integer, ForeignKey(MoleculeORM.id), nullable=False)
-    initial_molecule_obj = relationship(MoleculeORM, lazy="select", foreign_keys=initial_molecule)
+    energies = Column(JSON)
 
-    # # Results
-    energies = Column(JSON)  # Column(ARRAY(Float))
-    final_molecule = Column(Integer, ForeignKey(MoleculeORM.id))
-    final_molecule_obj = relationship(MoleculeORM, lazy="select", foreign_keys=final_molecule)
-
-    # ids, calculated not stored in this table
-    # NOTE: this won't work in SQLite since it returns ARRAYS, aggregate_order_by
-    trajectory = column_property(
-        select([func.array_agg(aggregate_order_by(Trajectory.result_id, Trajectory.position))])
-        .where(Trajectory.opt_id == id)
-        .scalar_subquery()
-    )
-
-    # array of objects (results) - Lazy - raise error of accessed
-    trajectory_obj = relationship(
-        Trajectory,
-        cascade="all, delete-orphan",
-        # backref="optimization_procedure",
-        order_by=Trajectory.position,
+    trajectory = relationship(
+        OptimizationTrajectoryORM,
+        lazy="select",
+        order_by=OptimizationTrajectoryORM.position,
         collection_class=ordering_list("position"),
+        back_populates="optimization_record",
     )
 
     __mapper_args__ = {"polymorphic_identity": "optimization"}
 
     __table_args__ = (
-        Index("ix_optimization_program", "program"),  # todo: needed for procedures?
-        # WARNING - these are not autodetected by alembic
-        CheckConstraint("program = LOWER(program)", name="ck_optimization_procedure_program_lower"),
+        Index("ix_optimization_record_specification_id", "specification_id"),
+        Index("ix_optimization_record_initial_molecule_id", "initial_molecule_id"),
+        Index("ix_optimization_record_final_molecule_id", "final_molecule_id"),
     )
-
-    def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-
-        d = BaseORM.dict(self, exclude)
-
-        # TODO - INT ID should not be done
-        if "id" in d:
-            d["id"] = ObjectId(d["id"])
-
-        return d

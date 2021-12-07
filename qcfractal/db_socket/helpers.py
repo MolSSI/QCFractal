@@ -482,6 +482,7 @@ def get_general_multi(
     search_values: Sequence[Any],
     include: Optional[Iterable[str]],
     exclude: Optional[Iterable[str]],
+    missing_ok: bool,
 ) -> List[List[Dict[str, Any]]]:
     """
     Perform a query for records based on a unique id
@@ -508,6 +509,9 @@ def get_general_multi(
         The column to use for searching the database (typically TableORM.id or similar)
     search_values
         Values of the search column to search for, in order
+    missing_ok
+        If False, an exception is raised if one of the values is missing. Else, None is returned in the list
+        in place of the missing data
 
     Returns
     -------
@@ -542,7 +546,10 @@ def get_general_multi(
         result_map[r[col_name]].append(r)
 
     # Put into the requested order
-    ret = [result_map.get(x, list()) for x in search_values]
+    ret = [result_map.get(x, None) for x in search_values]
+
+    if missing_ok is False and None in ret:
+        raise MissingDataError("Could not find all requested records")
 
     return ret
 

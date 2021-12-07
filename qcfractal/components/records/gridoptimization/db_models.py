@@ -20,7 +20,7 @@ class GridOptimizationAssociation(BaseORM):
     key = Column(String, nullable=False, primary_key=True)
 
     # not primary key
-    opt_id = Column(Integer, ForeignKey("optimization_procedure.id", ondelete="cascade"))
+    opt_id = Column(Integer, ForeignKey("optimization_record.id", ondelete="cascade"))
 
     # Index('grid_opt_id', 'key', unique=True)
 

@@ -1,5 +1,7 @@
 from enum import Enum
-from typing import Optional, Union, Any, List, Literal
+from typing import Optional, Union, Any, List
+
+from typing_extensions import Literal
 
 from pydantic import BaseModel, Field, constr, validator, Extra
 from qcelemental.models import Molecule

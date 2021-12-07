@@ -17,12 +17,17 @@ def add_singlepoint_records_v1(body_data: SinglePointAddBody):
 
 
 @main.route("/v1/record/singlepoint", methods=["GET"])
-@main.route("/v1/record/singlepoint/<int:id>", methods=["GET"])
+@main.route("/v1/record/singlepoint/<record_id>", methods=["GET"])
 @wrap_route(None, CommonGetProjURLParameters)
 @check_access
-def get_singlepoint_records_v1(id: Optional[int] = None, *, url_params: CommonGetProjURLParameters):
+def get_singlepoint_records_v1(record_id: Optional[int] = None, *, url_params: CommonGetProjURLParameters):
     return get_helper(
-        id, url_params.id, url_params.include, None, url_params.missing_ok, storage_socket.records.singlepoint.get
+        record_id,
+        url_params.id,
+        url_params.include,
+        None,
+        url_params.missing_ok,
+        storage_socket.records.singlepoint.get,
     )
 
 
