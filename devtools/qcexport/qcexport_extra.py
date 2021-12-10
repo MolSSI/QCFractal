@@ -14,7 +14,7 @@ from qcexport_extra_collection import _add_collection
 from qcfractal.components.collections.db_models import CollectionORM
 from qcfractal.components.records.torsiondrive.db_models import TorsionDriveProcedureORM
 from qcfractal.components.records.gridoptimization.db_models import GridOptimizationProcedureORM
-from qcfractal.components.records.optimization.db_models import OptimizationProcedureORM
+from qcfractal.components.records.optimization.db_models import OptimizationRecordORM
 from qcfractal.components.managers.db_models import ComputeManagerORM
 
 
@@ -113,7 +113,7 @@ def _add_queuemanager(orm_obj, src_info, session_dest, session_src, new_pk_map, 
 
 extra_children_map = {CollectionORM: _add_collection,
                       ComputeManagerORM: _add_queuemanager,
-                      OptimizationProcedureORM: _add_optimization_procedure,
+                      OptimizationRecordORM: _add_optimization_procedure,
                       GridOptimizationProcedureORM: _add_gridoptimization_procedure,
                       TorsionDriveProcedureORM: _add_torsiondrive_procedure,
                       }

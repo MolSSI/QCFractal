@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 
 from qcfractal.portal.records import PriorityEnum
 from qcfractal.db_socket import BaseORM, MsgpackExt
-from qcfractal.components.records.db_models import BaseResultORM
+from qcfractal.components.records.db_models import BaseRecordORM
 
 
 class TaskQueueORM(BaseORM):
@@ -34,8 +34,8 @@ class TaskQueueORM(BaseORM):
     created_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
 
     # can reference ResultORMs or any ProcedureORM
-    record_id = Column(Integer, ForeignKey(BaseResultORM.id, ondelete="cascade"), nullable=False)
-    record = relationship(BaseResultORM, back_populates="task", uselist=False)
+    record_id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"), nullable=False)
+    record = relationship(BaseRecordORM, back_populates="task", uselist=False)
 
     # An important special case is ORDER BY in combination with LIMIT n: an
     # explicit sort will have to process all the data to identify the first n

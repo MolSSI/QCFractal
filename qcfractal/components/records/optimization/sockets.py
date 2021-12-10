@@ -31,7 +31,7 @@ from qcfractal.portal.records.optimization import (
 )
 
 
-from .db_models import OptimizationSpecificationORM, OptimizationProcedureORM, OptimizationTrajectoryORM
+from .db_models import OptimizationSpecificationORM, OptimizationRecordORM, OptimizationTrajectoryORM
 from qcfractal.components.records.singlepoint.db_models import ResultORM, SinglePointSpecificationORM
 from qcfractal.portal.keywords import KeywordSet
 
@@ -175,7 +175,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         """
 
         return self.root_socket.records.get_base(
-            OptimizationProcedureORM, record_id, include, exclude, missing_ok, session=session
+            OptimizationRecordORM, record_id, include, exclude, missing_ok, session=session
         )
 
     def get_trajectory(
@@ -227,22 +227,22 @@ class OptimizationRecordSocket(BaseRecordSocket):
             and_query.append(SinglePointSpecificationORM.keywords_id.in_(query_data.singlepoint_keywords_id))
             need_spspec_join = True
         if query_data.initial_molecule_id is not None:
-            and_query.append(OptimizationProcedureORM.initial_molecule_id.in_(query_data.initial_molecule_id))
+            and_query.append(OptimizationRecordORM.initial_molecule_id.in_(query_data.initial_molecule_id))
         if query_data.final_molecule_id is not None:
-            and_query.append(OptimizationProcedureORM.final_molecule_id.in_(query_data.final_molecule_id))
+            and_query.append(OptimizationRecordORM.final_molecule_id.in_(query_data.final_molecule_id))
 
-        stmt = select(OptimizationProcedureORM)
+        stmt = select(OptimizationRecordORM)
 
         # If we need the singlepoint spec, we also need the optimization spec
         if need_optspec_join or need_spspec_join:
-            stmt = stmt.join(OptimizationProcedureORM.specification).options(
-                contains_eager(OptimizationProcedureORM.specification)
+            stmt = stmt.join(OptimizationRecordORM.specification).options(
+                contains_eager(OptimizationRecordORM.specification)
             )
 
         if need_spspec_join:
             stmt = stmt.join(OptimizationSpecificationORM.singlepoint_specification).options(
                 contains_eager(
-                    OptimizationProcedureORM.specification, OptimizationSpecificationORM.singlepoint_specification
+                    OptimizationRecordORM.specification, OptimizationSpecificationORM.singlepoint_specification
                 )
             )
 
@@ -250,7 +250,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
 
         return self.root_socket.records.query_base(
             stmt=stmt,
-            orm_type=OptimizationProcedureORM,
+            orm_type=OptimizationRecordORM,
             query_data=query_data,
             session=session,
         )
@@ -356,7 +356,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
                     },
                 )
 
-                opt_orm = OptimizationProcedureORM(
+                opt_orm = OptimizationRecordORM(
                     specification_id=spec_id,
                     initial_molecule_id=mol_data["id"],
                     status=RecordStatusEnum.waiting,
@@ -368,13 +368,13 @@ class OptimizationRecordSocket(BaseRecordSocket):
             meta, ids = insert_general(
                 session,
                 all_orm,
-                (OptimizationProcedureORM.specification_id, OptimizationProcedureORM.initial_molecule_id),
-                (OptimizationProcedureORM.id,),
+                (OptimizationRecordORM.specification_id, OptimizationRecordORM.initial_molecule_id),
+                (OptimizationRecordORM.id,),
             )
             return meta, [x[0] for x in ids]
 
     def update_completed(
-        self, session: Session, record_orm: OptimizationProcedureORM, result: OptimizationResult, manager_name: str
+        self, session: Session, record_orm: OptimizationRecordORM, result: OptimizationResult, manager_name: str
     ) -> None:
 
         # Add the final molecule
@@ -404,7 +404,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
 
     def recreate_task(
         self,
-        record_orm: OptimizationProcedureORM,
+        record_orm: OptimizationRecordORM,
         tag: Optional[str] = None,
         priority: PriorityEnum = PriorityEnum.normal,
     ) -> None:

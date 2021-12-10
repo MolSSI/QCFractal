@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 
 from qcfractal.components.keywords.db_models import KeywordsORM
 from qcfractal.components.molecules.db_models import MoleculeORM
-from qcfractal.components.records.db_models import BaseResultORM
+from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
 from qcfractal.db_socket.base_orm import BaseORM
 from qcfractal.db_socket.column_types import MsgpackExt
@@ -46,14 +46,14 @@ class SinglePointSpecificationORM(BaseORM):
     )
 
 
-class ResultORM(BaseResultORM):
+class ResultORM(BaseRecordORM):
     """
     Hold the result of an atomic single calculation
     """
 
     __tablename__ = "singlepoint_record"
 
-    id = Column(Integer, ForeignKey(BaseResultORM.id, ondelete="CASCADE"), primary_key=True)
+    id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="CASCADE"), primary_key=True)
 
     # uniquely identifying a result
     specification_id = Column(Integer, ForeignKey(SinglePointSpecificationORM.id), nullable=False)

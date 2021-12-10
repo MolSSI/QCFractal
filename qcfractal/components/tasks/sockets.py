@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import array
 from sqlalchemy.orm import joinedload, contains_eager
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
-from qcfractal.components.records.db_models import BaseResultORM
+from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.components.records.base_handlers import BaseProcedureHandler
 from qcfractal.components.records.failure import FailedOperationHandler
 
@@ -102,7 +102,7 @@ class TaskSocket:
                     tasks_rejected.append((task_id, "Task does not exist in the task queue"))
                     continue
 
-                record_orm: BaseResultORM = task_orm.record
+                record_orm: BaseRecordORM = task_orm.record
                 record_id = record_orm.id
 
                 # Start a nested transaction, so that we can rollback if there is an issue with
@@ -257,7 +257,7 @@ class TaskSocket:
                 # the TaskQueueORM.record gets populated
                 # See https://docs-sqlalchemy.readthedocs.io/ko/latest/orm/loading_relationships.html#routing-explicit-joins-statements-into-eagerly-loaded-collections
                 stmt = select(TaskQueueORM).join(TaskQueueORM.record).options(contains_eager(TaskQueueORM.record))
-                stmt = stmt.filter(BaseResultORM.status == RecordStatusEnum.waiting)
+                stmt = stmt.filter(BaseRecordORM.status == RecordStatusEnum.waiting)
                 stmt = stmt.filter(manager_programs.contains(TaskQueueORM.required_programs))
                 stmt = stmt.order_by(TaskQueueORM.priority.desc(), TaskQueueORM.created_on)
 

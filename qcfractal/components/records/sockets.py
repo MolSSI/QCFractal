@@ -22,7 +22,7 @@ from qcfractal.exceptions import UserReportableError
 from qcfractal.portal.metadata_models import DeleteMetadata, QueryMetadata, UpdateMetadata
 from qcfractal.portal.outputstore import OutputStore, OutputTypeEnum, CompressionEnum
 from qcfractal.portal.records import FailedOperation, PriorityEnum, RecordStatusEnum
-from .db_models import RecordComputeHistoryORM, BaseResultORM
+from .db_models import RecordComputeHistoryORM, BaseRecordORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -84,13 +84,13 @@ class BaseRecordSocket(abc.ABC):
 
     @abc.abstractmethod
     def update_completed(
-        self, session: Session, record_orm: BaseResultORM, result: AllResultTypes, manager_name: str
+        self, session: Session, record_orm: BaseRecordORM, result: AllResultTypes, manager_name: str
     ) -> None:
         pass
 
     @abc.abstractmethod
     def recreate_task(
-        self, record_orm: BaseResultORM, tag: Optional[str] = None, priority: PriorityEnum = PriorityEnum.normal
+        self, record_orm: BaseRecordORM, tag: Optional[str] = None, priority: PriorityEnum = PriorityEnum.normal
     ) -> None:
         pass
 
@@ -99,7 +99,7 @@ class BaseRecordSocket(abc.ABC):
         self,
         session: Session,
         result: AllResultTypes,
-    ) -> BaseResultORM:
+    ) -> BaseRecordORM:
         pass
 
     @abc.abstractmethod
@@ -148,7 +148,7 @@ class RecordSocket:
     def query_base(
         self,
         stmt,
-        orm_type: Type[BaseResultORM],
+        orm_type: Type[BaseRecordORM],
         query_data: RecordQueryBody,
         *,
         session: Optional[Session] = None,
@@ -189,7 +189,7 @@ class RecordSocket:
 
     def get_base(
         self,
-        orm_type: Type[BaseResultORM],
+        orm_type: Type[BaseRecordORM],
         record_id: Sequence[int],
         include: Optional[Sequence[str]] = None,
         exclude: Optional[Sequence[str]] = None,
@@ -241,9 +241,9 @@ class RecordSocket:
         # If all columns are included, then we can load
         # the data from derived classes as well.
         if (query_data.include is None or "*" in query_data.include) and not query_data.exclude:
-            wp = with_polymorphic(BaseResultORM, "*")
+            wp = with_polymorphic(BaseRecordORM, "*")
         else:
-            wp = BaseResultORM
+            wp = BaseRecordORM
 
         # The bare minimum when queried from the base record socket
         stmt = select(wp)
@@ -296,9 +296,9 @@ class RecordSocket:
         # If all columns are included, then we can load
         # the data from derived classes as well.
         if (include is None or "*" in include) and not exclude:
-            wp = with_polymorphic(BaseResultORM, "*")
+            wp = with_polymorphic(BaseRecordORM, "*")
         else:
-            wp = BaseResultORM
+            wp = BaseRecordORM
 
         return self.get_base(wp, record_id, include, exclude, missing_ok, session=session)
 
@@ -323,7 +323,7 @@ class RecordSocket:
             )
             return sorted(hist[0], key=lambda x: x["modified_on"])
 
-    def update_completed(self, session: Session, record_orm: BaseResultORM, result: AllResultTypes, manager_name: str):
+    def update_completed(self, session: Session, record_orm: BaseRecordORM, result: AllResultTypes, manager_name: str):
 
         if isinstance(result, FailedOperation) or not result.success:
             raise RuntimeError("Developer error - this function only handles successful results")
@@ -371,7 +371,7 @@ class RecordSocket:
 
         return ids
 
-    def update_failure(self, record_orm: BaseResultORM, failed_result: FailedOperation, manager_name: str):
+    def update_failure(self, record_orm: BaseRecordORM, failed_result: FailedOperation, manager_name: str):
         if not isinstance(failed_result, FailedOperation):
             raise RuntimeError("Developer error - this function only handles FailedOperation results")
 
@@ -437,9 +437,9 @@ class RecordSocket:
             return []
 
         with self.root_socket.optional_session(session) as session:
-            stmt = select(BaseResultORM).options(joinedload(BaseResultORM.task, innerjoin=True))
-            stmt = stmt.where(BaseResultORM.manager_name.in_(manager_name))
-            stmt = stmt.where(BaseResultORM.status == RecordStatusEnum.running)
+            stmt = select(BaseRecordORM).options(joinedload(BaseRecordORM.task, innerjoin=True))
+            stmt = stmt.where(BaseRecordORM.manager_name.in_(manager_name))
+            stmt = stmt.where(BaseRecordORM.status == RecordStatusEnum.running)
             stmt = stmt.with_for_update()
 
             record_orms = session.execute(stmt).scalars().all()
@@ -497,9 +497,9 @@ class RecordSocket:
 
         with self.root_socket.optional_session(session) as session:
             # Can't do inner join because task may not exist
-            stmt = select(BaseResultORM).options(selectinload(BaseResultORM.task))
-            stmt = stmt.filter(BaseResultORM.status.in_(status))
-            stmt = stmt.filter(BaseResultORM.id.in_(record_id))
+            stmt = select(BaseRecordORM).options(selectinload(BaseRecordORM.task))
+            stmt = stmt.filter(BaseRecordORM.status.in_(status))
+            stmt = stmt.filter(BaseRecordORM.id.in_(record_id))
             stmt = stmt.with_for_update()
 
             record_orms = session.execute(stmt).scalars().all()
@@ -557,9 +557,9 @@ class RecordSocket:
 
         with self.root_socket.optional_session(session) as session:
             # we can innerjoin here because all cancellable status have an associated task
-            stmt = select(BaseResultORM).options(joinedload(BaseResultORM.task, innerjoin=True))
-            stmt = stmt.where(BaseResultORM.status.in_(cancellable_status))
-            stmt = stmt.where(BaseResultORM.id.in_(record_id))
+            stmt = select(BaseRecordORM).options(joinedload(BaseRecordORM.task, innerjoin=True))
+            stmt = stmt.where(BaseRecordORM.status.in_(cancellable_status))
+            stmt = stmt.where(BaseRecordORM.id.in_(record_id))
             stmt = stmt.with_for_update()
             record_orms = session.execute(stmt).scalars().all()
 
@@ -625,8 +625,8 @@ class RecordSocket:
 
             if soft_delete:
                 # Can't do inner join because task may not exist
-                stmt = select(BaseResultORM).options(selectinload(BaseResultORM.task))
-                stmt = stmt.where(BaseResultORM.id.in_(all_id))
+                stmt = select(BaseRecordORM).options(selectinload(BaseRecordORM.task))
+                stmt = stmt.where(BaseRecordORM.id.in_(all_id))
                 stmt = stmt.with_for_update()
                 record_orms = session.execute(stmt).scalars().all()
 
@@ -654,8 +654,8 @@ class RecordSocket:
             else:
                 del_id_1 = [(x,) for x in record_id]
                 del_id_2 = [(x,) for x in children_ids]
-                meta = delete_general(session, BaseResultORM, (BaseResultORM.id,), del_id_1)
-                ch_meta = delete_general(session, BaseResultORM, (BaseResultORM.id,), del_id_2)
+                meta = delete_general(session, BaseRecordORM, (BaseRecordORM.id,), del_id_1)
+                ch_meta = delete_general(session, BaseRecordORM, (BaseRecordORM.id,), del_id_2)
 
                 meta_dict = meta.dict()
                 meta_dict["n_children_deleted"] = ch_meta.n_deleted
@@ -714,7 +714,7 @@ class RecordSocket:
             # query by status
             stmt = select(TaskQueueORM)
             stmt = stmt.join(TaskQueueORM.record)
-            stmt = stmt.where(BaseResultORM.status != RecordStatusEnum.running)
+            stmt = stmt.where(BaseRecordORM.status != RecordStatusEnum.running)
             stmt = stmt.where(TaskQueueORM.record_id.in_(record_id))
             stmt = stmt.with_for_update()
             task_orms = session.execute(stmt).scalars().all()

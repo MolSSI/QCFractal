@@ -5,16 +5,16 @@ from sqlalchemy.orm import relationship
 
 from qcfractal.portal.records import PriorityEnum
 from qcfractal.db_socket import BaseORM, PlainMsgpackExt
-from qcfractal.components.records.db_models import BaseResultORM
+from qcfractal.components.records.db_models import BaseRecordORM
 
 
 class ServiceQueueTasks(BaseORM):
     __tablename__ = "service_queue_tasks"
 
     service_id = Column(Integer, ForeignKey("service_queue.id", ondelete="cascade"), primary_key=True)
-    record_id = Column(Integer, ForeignKey(BaseResultORM.id, ondelete="cascade"), primary_key=True)
+    record_id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"), primary_key=True)
 
-    record = relationship("BaseResultORM", lazy="selectin")
+    record = relationship("BaseRecordORM", lazy="selectin")
     extras = Column(JSON)
 
 
@@ -25,8 +25,8 @@ class ServiceQueueORM(BaseORM):
     id = Column(Integer, primary_key=True)
     tag = Column(String, default=None)
 
-    record_id = Column(Integer, ForeignKey(BaseResultORM.id))
-    record = relationship(BaseResultORM, back_populates="service", uselist=False)
+    record_id = Column(Integer, ForeignKey(BaseRecordORM.id))
+    record = relationship(BaseRecordORM, back_populates="service", uselist=False)
 
     priority = Column(Integer, default=int(PriorityEnum.normal))
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
