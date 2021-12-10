@@ -4,13 +4,13 @@ from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper
 from qcfractal.app.routes import check_access, wrap_route
 from qcfractal.portal.base_models import CommonGetProjURLParameters
-from qcfractal.portal.records.singlepoint import SinglePointAddBody, SinglePointQueryBody
+from qcfractal.portal.records.singlepoint import SinglepointAddBody, SinglepointQueryBody
 
 
 @main.route("/v1/record/singlepoint", methods=["POST"])
-@wrap_route(SinglePointAddBody, None)
+@wrap_route(SinglepointAddBody, None)
 @check_access
-def add_singlepoint_records_v1(body_data: SinglePointAddBody):
+def add_singlepoint_records_v1(body_data: SinglepointAddBody):
     return storage_socket.records.singlepoint.add(
         sp_spec=body_data.specification, molecules=body_data.molecules, tag=body_data.tag, priority=body_data.priority
     )
@@ -40,7 +40,7 @@ def get_singlepoint_wavefunction_v1(record_id: int):
 
 
 @main.route("/v1/record/singlepoint/query", methods=["POST"])
-@wrap_route(SinglePointQueryBody, None)
+@wrap_route(SinglepointQueryBody, None)
 @check_access
-def query_singlepoint_v1(body_data: SinglePointQueryBody):
+def query_singlepoint_v1(body_data: SinglepointQueryBody):
     return storage_socket.records.singlepoint.query(body_data)

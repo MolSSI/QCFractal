@@ -33,7 +33,7 @@ class TaskQueueORM(BaseORM):
 
     created_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
 
-    # can reference ResultORMs or any ProcedureORM
+    # can reference SinglepointRecordORMs or any ProcedureORM
     record_id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"), nullable=False)
     record = relationship(BaseRecordORM, back_populates="task", uselist=False)
 

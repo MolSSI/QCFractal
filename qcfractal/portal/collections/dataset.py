@@ -23,7 +23,7 @@ from .collection_utils import register_collection
 
 if TYPE_CHECKING:  # pragma: no cover
     from .. import PortalClient
-    from ...interface.models import Molecule, SinglePointRecord
+    from ...interface.models import Molecule, SinglepointRecord
     from ..keywords import KeywordSet
     from . import DatasetView
 
@@ -1145,7 +1145,7 @@ class _Dataset(Collection):
         query : Dict[str, Any]
             A results query
         include : Optional[List[str]], optional
-            The attributes to return. Otherwise returns SinglePointRecord objects.
+            The attributes to return. Otherwise returns SinglepointRecord objects.
         merge : bool, optional
             Sum compound queries together, useful for mixing results
         raise_on_plan : Union[str, bool], optional
@@ -1180,7 +1180,7 @@ class _Dataset(Collection):
                 query_set["include"] = proj
 
             # Chunk up the queries
-            records: List[SinglePointRecord] = []
+            records: List[SinglepointRecord] = []
             for i in range(0, len(molecules), self._client.query_limit):
                 query_set["molecule"] = molecules[i : i + self._client.query_limit]
                 records.extend(self._client.query_results(**query_set))
@@ -1589,9 +1589,9 @@ class _Dataset(Collection):
         include: Optional[List[str]] = None,
         subset: Optional[Union[str, Set[str]]] = None,
         merge: bool = False,
-    ) -> Union[pd.DataFrame, "SinglePointRecord"]:
+    ) -> Union[pd.DataFrame, "SinglepointRecord"]:
         """
-        Queries full SinglePointRecord objects from the database.
+        Queries full SinglepointRecord objects from the database.
 
         Parameters
         ----------
@@ -1604,7 +1604,7 @@ class _Dataset(Collection):
         program : Optional[str], optional
             The program to query on
         include : Optional[List[str]], optional
-            The attributes to return. Otherwise returns SinglePointRecord objects.
+            The attributes to return. Otherwise returns SinglepointRecord objects.
         subset : Optional[Union[str, Set[str]]], optional
             The index subset to query on
         merge : bool
@@ -1613,8 +1613,8 @@ class _Dataset(Collection):
 
         Returns
         -------
-        Union[pd.DataFrame, 'SinglePointRecord']
-            Either a DataFrame of indexed SinglePointRecords or a single SinglePointRecord if a single subset string was provided.
+        Union[pd.DataFrame, 'SinglepointRecord']
+            Either a DataFrame of indexed SinglepointRecords or a single SinglepointRecord if a single subset string was provided.
         """
         name, _, history = self._default_parameters(program, method, basis, keywords)
         if len(self.list_records(**history)) == 0:

@@ -33,16 +33,16 @@ import pandas as pd
 from ..interface.models.rest_models import rest_model
 from qcfractal.portal.managers import ManagerQueryBody, ComputeManager
 from qcfractal.portal.records.singlepoint import (
-    SinglePointRecord,
-    SinglePointAddBody,
-    SinglePointQueryBody,
-    SinglePointDriver,
+    SinglepointRecord,
+    SinglepointAddBody,
+    SinglepointQueryBody,
+    SinglepointDriver,
 )
 from qcfractal.portal.records.optimization import (
     OptimizationProtocols,
     OptimizationRecord,
     OptimizationQueryBody,
-    OptimizationSinglePointInputSpecification,
+    OptimizationSinglepointInputSpecification,
     OptimizationAddBody,
 )
 
@@ -56,7 +56,7 @@ from qcfractal.portal.records import (
     AllRecordTypes,
     AllDataModelTypes,
 )
-from qcfractal.portal.records.singlepoint import SinglePointProtocols
+from qcfractal.portal.records.singlepoint import SinglepointProtocols
 
 from .metadata_models import InsertMetadata, DeleteMetadata
 from qcfractal.portal.serverinfo import (
@@ -1230,7 +1230,7 @@ class PortalClient:
         method: str,
         basis: Optional[str],
         keywords: Optional[Union[KeywordSet, Dict[str, Any], int]] = None,
-        protocols: Optional[Union[SinglePointProtocols, Dict[str, Any]]] = None,
+        protocols: Optional[Union[SinglepointProtocols, Dict[str, Any]]] = None,
         priority: PriorityEnum = PriorityEnum.normal,
         tag: Optional[str] = None,
     ) -> Tuple[InsertMetadata, List[int]]:
@@ -1291,7 +1291,7 @@ class PortalClient:
             body_data["specification"]["protocols"] = protocols
 
         return self._auto_request(
-            "post", "v1/record/singlepoint", SinglePointAddBody, None, Tuple[InsertMetadata, List[int]], body_data, None
+            "post", "v1/record/singlepoint", SinglepointAddBody, None, Tuple[InsertMetadata, List[int]], body_data, None
         )
 
     def get_singlepoints(
@@ -1303,7 +1303,7 @@ class PortalClient:
         include_outputs: bool = False,
         include_molecule: bool = False,
         include_wavefunction: bool = False,
-    ) -> Union[Optional[SinglePointRecord], List[Optional[SinglePointRecord]]]:
+    ) -> Union[Optional[SinglepointRecord], List[Optional[SinglepointRecord]]]:
         url_params = {"id": make_list(record_id), "missing_ok": missing_ok}
 
         include = set()
@@ -1326,7 +1326,7 @@ class PortalClient:
             "v1/record/singlepoint",
             None,
             CommonGetProjURLParameters,
-            List[Optional[SinglePointRecord._DataModel]],
+            List[Optional[SinglepointRecord._DataModel]],
             None,
             url_params,
         )
@@ -1349,7 +1349,7 @@ class PortalClient:
         modified_before: Optional[datetime] = None,
         modified_after: Optional[datetime] = None,
         program: Optional[Iterable[str]] = None,
-        driver: Optional[Iterable[SinglePointDriver]] = None,
+        driver: Optional[Iterable[SinglepointDriver]] = None,
         method: Optional[Iterable[str]] = None,
         basis: Optional[Iterable[Optional[str]]] = None,
         keywords_id: Optional[Iterable[int]] = None,
@@ -1361,8 +1361,8 @@ class PortalClient:
         include_outputs: bool = False,
         include_molecule: bool = False,
         include_wavefunction: bool = False,
-    ) -> Tuple[QueryMetadata, List[SinglePointRecord]]:
-        """Queries SinglePointRecords from the server."""
+    ) -> Tuple[QueryMetadata, List[SinglepointRecord]]:
+        """Queries SinglepointRecords from the server."""
 
         query_data = {
             "record_id": make_list(record_id),
@@ -1401,9 +1401,9 @@ class PortalClient:
         meta, record_data = self._auto_request(
             "post",
             "v1/record/singlepoint/query",
-            SinglePointQueryBody,
+            SinglepointQueryBody,
             None,
-            Tuple[QueryMetadata, List[SinglePointRecord._DataModel]],
+            Tuple[QueryMetadata, List[SinglepointRecord._DataModel]],
             query_data,
             None,
         )
@@ -1414,7 +1414,7 @@ class PortalClient:
         self,
         initial_molecules: Union[int, Molecule, List[Union[int, Molecule]]],
         program: str,
-        singlepoint_specification: OptimizationSinglePointInputSpecification,
+        singlepoint_specification: OptimizationSinglepointInputSpecification,
         keywords: Optional[Union[KeywordSet, Dict[str, Any], int]] = None,
         protocols: Optional[OptimizationProtocols] = None,
         priority: PriorityEnum = PriorityEnum.normal,
@@ -1460,7 +1460,7 @@ class PortalClient:
         include_initial_molecule: bool = False,
         include_final_molecule: bool = False,
         include_trajectory: bool = False,
-    ) -> Union[Optional[SinglePointRecord], List[Optional[SinglePointRecord]]]:
+    ) -> Union[Optional[SinglepointRecord], List[Optional[SinglepointRecord]]]:
         url_params = {"id": make_list(record_id), "missing_ok": missing_ok}
 
         include = set()
@@ -1522,7 +1522,7 @@ class PortalClient:
         include_initial_molecule: bool = False,
         include_final_molecule: bool = False,
         include_trajectory: bool = False,
-    ) -> Tuple[QueryMetadata, List[SinglePointRecord]]:
+    ) -> Tuple[QueryMetadata, List[SinglepointRecord]]:
         """Queries OptimizationRecords from the server."""
 
         query_data = {

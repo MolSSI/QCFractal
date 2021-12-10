@@ -13,19 +13,19 @@ from typing_extensions import Literal
 
 from qcfractal.portal.records import BaseRecord, RecordAddBodyBase, RecordQueryBody
 from qcfractal.portal.records.singlepoint import (
-    SinglePointRecord,
-    SinglePointSpecification,
-    SinglePointInputSpecification,
-    SinglePointDriver,
+    SinglepointRecord,
+    SinglepointSpecification,
+    SinglepointInputSpecification,
+    SinglepointDriver,
 )
 
 
-class OptimizationSinglePointInputSpecification(SinglePointInputSpecification):
-    driver: SinglePointDriver = SinglePointDriver.deferred
+class OptimizationSinglepointInputSpecification(SinglepointInputSpecification):
+    driver: SinglepointDriver = SinglepointDriver.deferred
 
     @pydantic.validator("driver", pre=True)
     def force_driver(cls, v):
-        return SinglePointDriver.deferred
+        return SinglepointDriver.deferred
 
 
 class OptimizationInputSpecification(BaseModel):
@@ -33,7 +33,7 @@ class OptimizationInputSpecification(BaseModel):
         extra = Extra.forbid
 
     program: constr(to_lower=True) = Field(..., description="The program to use for an optimization")
-    singlepoint_specification: OptimizationSinglePointInputSpecification
+    singlepoint_specification: OptimizationSinglepointInputSpecification
     keywords: Dict[str, Any] = Field({})
     protocols: OptimizationProtocols = Field(OptimizationProtocols())
 
@@ -46,14 +46,14 @@ class OptimizationSpecification(OptimizationInputSpecification):
     """
 
     id: int
-    singlepoint_specification: SinglePointSpecification
+    singlepoint_specification: SinglepointSpecification
     singlepoint_specification_id: int
 
 
 class OptimizationTrajectory(BaseModel):
     singlepoint_record_id: int
     optimization_record_id: int
-    singlepoint_record: Optional[SinglePointRecord._DataModel]
+    singlepoint_record: Optional[SinglepointRecord._DataModel]
 
 
 class OptimizationRecord(BaseRecord):

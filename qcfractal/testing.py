@@ -23,7 +23,7 @@ from qcelemental.models.results import WavefunctionProperties
 
 from .config import FractalConfig, update_nested_dict
 
-from qcfractal.portal.records.singlepoint import SinglePointInputSpecification
+from qcfractal.portal.records.singlepoint import SinglepointInputSpecification
 from qcfractal.portal.records.optimization import OptimizationInputSpecification
 from qcelemental.models import OptimizationResult, AtomicResult
 
@@ -221,7 +221,7 @@ def load_procedure_data(name: str):
 
     record_type = data["input"].pop("record_type")
     if record_type == "singlepoint":
-        input_type = SinglePointInputSpecification
+        input_type = SinglepointInputSpecification
         result_type = AtomicResult
     elif record_type == "optimization":
         input_type = OptimizationInputSpecification

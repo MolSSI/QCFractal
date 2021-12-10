@@ -10,17 +10,17 @@ from typing import TYPE_CHECKING
 import pytest
 from qcelemental.models.results import AtomicResultProperties
 
-from qcfractal.components.records.singlepoint.db_models import ResultORM
+from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM
 from qcfractal.components.wavefunctions.test_db_models import assert_wfn_equal
 from qcfractal.portal.keywords import KeywordSet
 from qcfractal.portal.molecules import Molecule
 from qcfractal.portal.outputstore import OutputStore
 from qcfractal.portal.records import RecordStatusEnum, PriorityEnum
 from qcfractal.portal.records.singlepoint import (
-    SinglePointInputSpecification,
-    SinglePointDriver,
-    SinglePointProtocols,
-    SinglePointQueryBody,
+    SinglepointInputSpecification,
+    SinglepointDriver,
+    SinglepointProtocols,
+    SinglepointQueryBody,
 )
 from qcfractal.portal.wavefunctions.models import WavefunctionProperties
 from qcfractal.testing import load_molecule_data, load_procedure_data
@@ -29,41 +29,41 @@ if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
 
 _test_specs = [
-    SinglePointInputSpecification(
+    SinglepointInputSpecification(
         program="prog1",
-        driver=SinglePointDriver.energy,
+        driver=SinglepointDriver.energy,
         method="b3lyp",
         basis="6-31G*",
         keywords=KeywordSet(values={"k": "value"}),
-        protocols=SinglePointProtocols(wavefunction="all"),
+        protocols=SinglepointProtocols(wavefunction="all"),
     ),
-    SinglePointInputSpecification(
+    SinglepointInputSpecification(
         program="Prog2",
-        driver=SinglePointDriver.gradient,
+        driver=SinglepointDriver.gradient,
         method="Hf",
         basis="def2-TZVP",
         keywords=KeywordSet(values={"k": "v"}),
     ),
-    SinglePointInputSpecification(
+    SinglepointInputSpecification(
         program="Prog3",
-        driver=SinglePointDriver.hessian,
+        driver=SinglepointDriver.hessian,
         method="pbe0",
         basis="",
         keywords=KeywordSet(values={"o": 1, "v": 2.123}),
-        protocols=SinglePointProtocols(stdout=False, wavefunction="orbitals_and_eigenvalues"),
+        protocols=SinglepointProtocols(stdout=False, wavefunction="orbitals_and_eigenvalues"),
     ),
-    SinglePointInputSpecification(
+    SinglepointInputSpecification(
         program="ProG4",
-        driver=SinglePointDriver.hessian,
+        driver=SinglepointDriver.hessian,
         method="pbe",
         basis=None,
-        protocols=SinglePointProtocols(stdout=False, wavefunction="return_results"),
+        protocols=SinglepointProtocols(stdout=False, wavefunction="return_results"),
     ),
 ]
 
 
 @pytest.mark.parametrize("spec", _test_specs)
-def test_singlepoint_socket_add_get(storage_socket: SQLAlchemySocket, spec: SinglePointInputSpecification):
+def test_singlepoint_socket_add_get(storage_socket: SQLAlchemySocket, spec: SinglepointInputSpecification):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
     ne4 = load_molecule_data("neon_tetramer")
@@ -131,13 +131,13 @@ def test_singlepoint_socket_add_existing_molecule(storage_socket: SQLAlchemySock
 
 
 def test_singlepoint_socket_add_same_1(storage_socket: SQLAlchemySocket):
-    spec = SinglePointInputSpecification(
+    spec = SinglepointInputSpecification(
         program="prog1",
-        driver=SinglePointDriver.energy,
+        driver=SinglepointDriver.energy,
         method="b3lyp",
         basis="6-31G*",
         keywords=KeywordSet(values={"k": "value"}),
-        protocols=SinglePointProtocols(wavefunction="all"),
+        protocols=SinglepointProtocols(wavefunction="all"),
     )
 
     water = load_molecule_data("water_dimer_minima")
@@ -154,22 +154,22 @@ def test_singlepoint_socket_add_same_1(storage_socket: SQLAlchemySocket):
 
 def test_singlepoint_socket_add_same_2(storage_socket: SQLAlchemySocket):
     # Test case sensitivity
-    spec1 = SinglePointInputSpecification(
+    spec1 = SinglepointInputSpecification(
         program="prog1",
-        driver=SinglePointDriver.energy,
+        driver=SinglepointDriver.energy,
         method="b3lyp",
         basis="6-31G*",
         keywords=KeywordSet(values={"k": "value"}),
-        protocols=SinglePointProtocols(wavefunction="all"),
+        protocols=SinglepointProtocols(wavefunction="all"),
     )
 
-    spec2 = SinglePointInputSpecification(
+    spec2 = SinglepointInputSpecification(
         program="pRog1",
-        driver=SinglePointDriver.energy,
+        driver=SinglepointDriver.energy,
         method="b3lYp",
         basis="6-31g*",
         keywords=KeywordSet(values={"k": "value"}),
-        protocols=SinglePointProtocols(wavefunction="all"),
+        protocols=SinglepointProtocols(wavefunction="all"),
     )
 
     water = load_molecule_data("water_dimer_minima")
@@ -186,18 +186,18 @@ def test_singlepoint_socket_add_same_2(storage_socket: SQLAlchemySocket):
 
 def test_singlepoint_socket_add_same_3(storage_socket: SQLAlchemySocket):
     # Test default keywords and protocols
-    spec1 = SinglePointInputSpecification(
+    spec1 = SinglepointInputSpecification(
         program="prog1",
-        driver=SinglePointDriver.energy,
+        driver=SinglepointDriver.energy,
         method="b3lyp",
         basis="6-31G*",
         keywords=KeywordSet(values={}),
-        protocols=SinglePointProtocols(wavefunction="none"),
+        protocols=SinglepointProtocols(wavefunction="none"),
     )
 
-    spec2 = SinglePointInputSpecification(
+    spec2 = SinglepointInputSpecification(
         program="prog1",
-        driver=SinglePointDriver.energy,
+        driver=SinglepointDriver.energy,
         method="b3lyp",
         basis="6-31G*",
     )
@@ -216,16 +216,16 @@ def test_singlepoint_socket_add_same_3(storage_socket: SQLAlchemySocket):
 
 def test_singlepoint_socket_add_same_4(storage_socket: SQLAlchemySocket):
     # Test None basis
-    spec1 = SinglePointInputSpecification(
+    spec1 = SinglepointInputSpecification(
         program="prog1",
-        driver=SinglePointDriver.energy,
+        driver=SinglepointDriver.energy,
         method="b3lyp",
         basis=None,
     )
 
-    spec2 = SinglePointInputSpecification(
+    spec2 = SinglepointInputSpecification(
         program="prog1",
-        driver=SinglePointDriver.energy,
+        driver=SinglepointDriver.energy,
         method="b3lyp",
         basis="",
     )
@@ -250,12 +250,12 @@ def test_singlepoint_socket_add_same_5(storage_socket: SQLAlchemySocket):
     _, kw_ids = storage_socket.keywords.add([kw])
     _, mol_ids = storage_socket.molecules.add([water])
 
-    spec1 = SinglePointInputSpecification(
-        program="prog1", driver=SinglePointDriver.energy, method="b3lyp", basis=None, keywords=kw
+    spec1 = SinglepointInputSpecification(
+        program="prog1", driver=SinglepointDriver.energy, method="b3lyp", basis=None, keywords=kw
     )
 
-    spec2 = SinglePointInputSpecification(
-        program="prog1", driver=SinglePointDriver.energy, method="b3lyp", basis="", keywords=kw_ids[0]
+    spec2 = SinglepointInputSpecification(
+        program="prog1", driver=SinglepointDriver.energy, method="b3lyp", basis="", keywords=kw_ids[0]
     )
 
     meta, id1 = storage_socket.records.singlepoint.add(spec1, [water])
@@ -281,13 +281,13 @@ def test_singlepoint_socket_update(storage_socket: SQLAlchemySocket):
     time_0 = datetime.utcnow()
 
     with storage_socket.session_scope() as session:
-        rec_orm = session.query(ResultORM).where(ResultORM.id == id1[0]).one()
+        rec_orm = session.query(SinglepointRecordORM).where(SinglepointRecordORM.id == id1[0]).one()
         storage_socket.records.update_completed(session, rec_orm, result_data_1, None)
 
-        rec_orm = session.query(ResultORM).where(ResultORM.id == id2[0]).one()
+        rec_orm = session.query(SinglepointRecordORM).where(SinglepointRecordORM.id == id2[0]).one()
         storage_socket.records.update_completed(session, rec_orm, result_data_2, None)
 
-        rec_orm = session.query(ResultORM).where(ResultORM.id == id3[0]).one()
+        rec_orm = session.query(SinglepointRecordORM).where(SinglepointRecordORM.id == id3[0]).one()
         storage_socket.records.update_completed(session, rec_orm, result_data_3, None)
 
     time_1 = datetime.utcnow()
@@ -348,7 +348,7 @@ def test_singlepoint_socket_insert(storage_socket: SQLAlchemySocket):
 
     # Typical workflow
     with storage_socket.session_scope() as session:
-        rec_orm = session.query(ResultORM).where(ResultORM.id == id2[0]).one()
+        rec_orm = session.query(SinglepointRecordORM).where(SinglepointRecordORM.id == id2[0]).one()
         storage_socket.records.update_completed(session, rec_orm, result_data_2, None)
 
     # Actually insert the whole thing. This should end up being a duplicate
@@ -406,55 +406,55 @@ def test_singlepoint_socket_query(storage_socket: SQLAlchemySocket):
     recs = storage_socket.records.singlepoint.get(id1 + id2 + id3)
 
     # query for molecule
-    meta, sp = storage_socket.records.singlepoint.query(SinglePointQueryBody(molecule_id=[recs[1]["molecule_id"]]))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(molecule_id=[recs[1]["molecule_id"]]))
     assert meta.n_found == 1
     assert sp[0]["id"] == id2[0]
 
     # query for program
-    meta, sp = storage_socket.records.singlepoint.query(SinglePointQueryBody(program=["psi4"]))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(program=["psi4"]))
     assert meta.n_found == 2
     assert {sp[0]["id"], sp[1]["id"]} == set(id1 + id2)
 
     # query for basis
-    meta, sp = storage_socket.records.singlepoint.query(SinglePointQueryBody(basis=["sTO-3g"]))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(basis=["sTO-3g"]))
     assert meta.n_found == 1
     assert sp[0]["id"] == id2[0]
 
-    meta, sp = storage_socket.records.singlepoint.query(SinglePointQueryBody(basis=[None]))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(basis=[None]))
     assert meta.n_found == 1
     assert sp[0]["id"] == id3[0]
 
-    meta, sp = storage_socket.records.singlepoint.query(SinglePointQueryBody(basis=[""]))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(basis=[""]))
     assert meta.n_found == 1
     assert sp[0]["id"] == id3[0]
 
     # query for method
-    meta, sp = storage_socket.records.singlepoint.query(SinglePointQueryBody(method=["b3lyP"]))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(method=["b3lyP"]))
     assert meta.n_found == 2
 
     # keyword id
     meta, sp = storage_socket.records.singlepoint.query(
-        SinglePointQueryBody(keywords_id=[recs[0]["specification"]["keywords_id"]])
+        SinglepointQueryBody(keywords_id=[recs[0]["specification"]["keywords_id"]])
     )
     assert meta.n_found == 3  # All have empty keywords
 
     # driver
-    meta, sp = storage_socket.records.singlepoint.query(SinglePointQueryBody(driver=[SinglePointDriver.energy]))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(driver=[SinglepointDriver.energy]))
     assert meta.n_found == 3
 
     # Some empty queries
-    meta, sp = storage_socket.records.singlepoint.query(SinglePointQueryBody(driver=[SinglePointDriver.properties]))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(driver=[SinglepointDriver.properties]))
     assert meta.n_found == 0
 
-    meta, sp = storage_socket.records.singlepoint.query(SinglePointQueryBody(basis=["madeupbasis"]))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(basis=["madeupbasis"]))
     assert meta.n_found == 0
 
     # Query by default returns everything
-    meta, sp = storage_socket.records.singlepoint.query(SinglePointQueryBody())
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody())
     assert meta.n_found == 3
 
     # Query by default (with a limit)
-    meta, sp = storage_socket.records.singlepoint.query(SinglePointQueryBody(limit=1))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(limit=1))
     assert meta.n_found == 3
     assert meta.n_returned == 1
 
@@ -496,7 +496,7 @@ def test_singlepoint_socket_delete_1(storage_socket: SQLAlchemySocket):
     meta1, id1 = storage_socket.records.singlepoint.add(input_spec_1, [molecule_1])
 
     with storage_socket.session_scope() as session:
-        rec_orm = session.query(ResultORM).where(ResultORM.id == id1[0]).one()
+        rec_orm = session.query(SinglepointRecordORM).where(SinglepointRecordORM.id == id1[0]).one()
         storage_socket.records.update_completed(session, rec_orm, result_data_1, None)
 
     # deleting with children is ok (even though we don't have children)

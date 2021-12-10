@@ -15,7 +15,7 @@ from qcfractal.components.collections.db_models import CollectionORM
 from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.records.optimization.db_models import OptimizationTrajectoryORM, OptimizationRecordORM
-from qcfractal.components.records.singlepoint.db_models import ResultORM
+from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM
 from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.components.managers.db_models import ComputeManagerLogORM, ComputeManagerORM
 from qcfractal.components.serverinfo.db_models import AccessLogORM, ServerStatsLogORM, VersionsORM
@@ -43,7 +43,7 @@ _all_orm = [
     OptimizationRecordORM,
     ComputeManagerLogORM,
     ComputeManagerORM,
-    ResultORM,
+    SinglepointRecordORM,
     ServerStatsLogORM,
     ServiceQueueORM,
     ComputeManagerORM,

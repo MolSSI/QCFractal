@@ -6,8 +6,8 @@ from typing_extensions import Literal
 from pydantic import BaseModel, Field, constr, validator, Extra
 from qcelemental.models import Molecule
 from qcelemental.models.results import (
-    AtomicResultProtocols as SinglePointProtocols,
-    AtomicResultProperties as SinglePointProperties,
+    AtomicResultProtocols as SinglepointProtocols,
+    AtomicResultProperties as SinglepointProperties,
     WavefunctionProperties,
 )
 
@@ -15,7 +15,7 @@ from qcfractal.portal.keywords import KeywordSet
 from qcfractal.portal.records import BaseRecord, RecordAddBodyBase, RecordQueryBody
 
 
-class SinglePointDriver(str, Enum):
+class SinglepointDriver(str, Enum):
     # Copied from qcelemental to add "deferred"
     energy = "energy"
     gradient = "gradient"
@@ -24,7 +24,7 @@ class SinglePointDriver(str, Enum):
     deferred = "deferred"
 
 
-class SinglePointInputSpecification(BaseModel):
+class SinglepointInputSpecification(BaseModel):
     class Config:
         extra = Extra.forbid
 
@@ -33,7 +33,7 @@ class SinglePointInputSpecification(BaseModel):
         description="The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs"
         " support all combinations of driver/method/basis.",
     )
-    driver: SinglePointDriver = Field(...)
+    driver: SinglepointDriver = Field(...)
     method: constr(to_lower=True) = Field(
         ..., description="The quantum chemistry method to evaluate (e.g., B3LYP, PBE, ...)."
     )
@@ -46,7 +46,7 @@ class SinglePointInputSpecification(BaseModel):
         KeywordSet(values={}),
         description="Keywords to use. Can be an ID of the keywords on the server or a KeywordSet object",
     )
-    protocols: SinglePointProtocols = Field(SinglePointProtocols(), description=str(SinglePointProtocols.__base_doc__))
+    protocols: SinglepointProtocols = Field(SinglepointProtocols(), description=str(SinglepointProtocols.__base_doc__))
 
     @validator("basis", pre=True)
     def _convert_basis(cls, v):
@@ -55,9 +55,9 @@ class SinglePointInputSpecification(BaseModel):
         return None if v == "" else v
 
 
-class SinglePointSpecification(SinglePointInputSpecification):
+class SinglepointSpecification(SinglepointInputSpecification):
     """
-    A SinglePointSpecification as stored on the server
+    A SinglepointSpecification as stored on the server
 
     This is the same as the input specification, with a few ids added
     """
@@ -66,15 +66,15 @@ class SinglePointSpecification(SinglePointInputSpecification):
     keywords_id: int
 
 
-class SinglePointRecord(BaseRecord):
+class SinglepointRecord(BaseRecord):
     class _DataModel(BaseRecord._DataModel):
         record_type: Literal["singlepoint"]
         specification_id: int
-        specification: SinglePointSpecification
+        specification: SinglepointSpecification
         molecule_id: int
         molecule: Optional[Molecule]
         return_result: Any
-        properties: Optional[SinglePointProperties]
+        properties: Optional[SinglepointProperties]
         wavefunction: Optional[WavefunctionProperties] = None
 
     # This is needed for disambiguation by pydantic
@@ -96,7 +96,7 @@ class SinglePointRecord(BaseRecord):
         )
 
     @property
-    def specification(self) -> SinglePointSpecification:
+    def specification(self) -> SinglepointSpecification:
         return self.raw_data.specification
 
     @property
@@ -112,14 +112,14 @@ class SinglePointRecord(BaseRecord):
         return self.raw_data.wavefunction
 
 
-class SinglePointAddBody(RecordAddBodyBase):
-    specification: SinglePointInputSpecification
+class SinglepointAddBody(RecordAddBodyBase):
+    specification: SinglepointInputSpecification
     molecules: List[Union[int, Molecule]]
 
 
-class SinglePointQueryBody(RecordQueryBody):
+class SinglepointQueryBody(RecordQueryBody):
     program: Optional[List[constr(to_lower=True)]] = None
-    driver: Optional[List[SinglePointDriver]] = None
+    driver: Optional[List[SinglepointDriver]] = None
     method: Optional[List[constr(to_lower=True)]] = None
     basis: Optional[List[Optional[constr(to_lower=True)]]] = None
     keywords_id: Optional[List[int]] = None

@@ -233,13 +233,13 @@ class RecordBase(ProtoModel, abc.ABC):
             return value
 
 
-class SinglePointRecord(RecordBase):
+class SinglepointRecord(RecordBase):
 
     # Classdata
     _hash_indices = {"driver", "method", "basis", "molecule", "keywords", "program"}
 
     # Version data
-    version: int = Field(1, description="Version of the SinglePointRecord Model which this data was created with.")
+    version: int = Field(1, description="Version of the SinglepointRecord Model which this data was created with.")
     procedure: constr(strip_whitespace=True, regex="single") = Field(
         "single", description='Procedure is fixed as "single" because this is single quantum chemistry result.'
     )
@@ -275,7 +275,7 @@ class SinglePointRecord(RecordBase):
     wavefunction_data_id: Optional[ObjectId] = Field(None, description="The id of the wavefunction")
 
     class Config(RecordBase.Config):
-        """A hash index is not used for SinglePointRecords as they can be
+        """A hash index is not used for SinglepointRecords as they can be
         uniquely determined with queryable keys.
         """
 
@@ -425,12 +425,12 @@ class OptimizationRecord(RecordBase):
         """
         return self.energies[-1]
 
-    def get_trajectory(self) -> List[SinglePointRecord]:
+    def get_trajectory(self) -> List[SinglepointRecord]:
         """Returns the Result records for each gradient evaluation in the trajectory.
 
         Returns
         -------
-        List['SinglePointRecord']
+        List['SinglepointRecord']
             A ordered list of Result record gradient computations.
 
         """

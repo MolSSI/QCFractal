@@ -17,8 +17,8 @@ from qcelemental.models import AtomicResult, OptimizationResult, FailedOperation
 AllResultTypes = Union[FailedOperation, AtomicResult, OptimizationResult]
 
 # All possible records we can get from the server
-from .singlepoint.models import SinglePointRecord
+from .singlepoint.models import SinglepointRecord
 from .optimization.models import OptimizationRecord
 
-AllRecordTypes = Union[SinglePointRecord, OptimizationRecord]
-AllDataModelTypes = Union[SinglePointRecord._DataModel, OptimizationRecord._DataModel]
+AllRecordTypes = Union[SinglepointRecord, OptimizationRecord]
+AllDataModelTypes = Union[SinglepointRecord._DataModel, OptimizationRecord._DataModel]
