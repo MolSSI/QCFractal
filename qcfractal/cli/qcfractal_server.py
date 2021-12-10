@@ -15,6 +15,7 @@ import traceback
 
 import qcfractal
 
+
 from ..config import read_configuration, FractalConfig, FlaskConfig
 from ..postgres_harness import PostgresHarness
 from ..db_socket.socket import SQLAlchemySocket
@@ -299,10 +300,6 @@ def server_init(args, config):
 
     psql.create_database()
 
-    # Adds tables, etc
-    # TODO: (right??)
-    socket = SQLAlchemySocket(config)
-
 
 def server_info(args, qcf_config):
     # Just use raw printing here, rather than going through logging
@@ -310,9 +307,9 @@ def server_info(args, qcf_config):
         print("Displaying QCFractal configuration below")
         print(dump_config(qcf_config))
     elif args.category == "alembic":
-        psql = PostgresHarness(qcf_config.database)
         print(f"Displaying QCFractal Alembic CLI configuration:\n")
-        print(" ".join(psql.alembic_commands()))
+        alembic_commands = SQLAlchemySocket.alembic_commands(qcf_config.database)
+        print(" ".join(alembic_commands))
 
 
 def server_start(args, config):
@@ -385,11 +382,10 @@ def server_start(args, config):
 def server_upgrade(args, config):
     logger = logging.getLogger(__name__)
 
-    psql = PostgresHarness(config.database)
     logger.info(f"Upgrading the postgres database at {config.database.safe_uri}")
 
     try:
-        psql.upgrade()
+        SQLAlchemySocket.upgrade_database(config.database)
     except ValueError as e:
         print(str(e))
         sys.exit(1)

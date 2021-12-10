@@ -5,6 +5,7 @@ from collections import defaultdict
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+import qcelemental
 from sqlalchemy import and_, func, text, select, delete
 
 import qcfractal
@@ -16,7 +17,7 @@ from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import get_query_proj_options, get_count_2, calculate_limit
 from qcfractal.portal.metadata_models import QueryMetadata
-from .db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM
+from .db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM, VersionsORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -80,6 +81,29 @@ class ServerInfoSocket:
             pass
 
         return out
+
+    def check_lib_versions(self):
+        """Check the stored versions of elemental and fractal"""
+
+        with self.root_socket.session_scope() as session:
+            db_ver = session.query(VersionsORM).order_by(VersionsORM.created_on.desc())
+
+            # Table exists but empty
+            if db_ver.count() == 0:
+                elemental_version = qcelemental.__version__
+                fractal_version = qcfractal.__version__
+                current = VersionsORM(
+                    elemental_version=elemental_version,
+                    fractal_version=fractal_version,
+                )
+                session.add(current)
+                session.commit()
+            else:
+                current = db_ver.first()
+
+            ver = current.to_dict(exclude=["id"])
+
+        return ver
 
     def save_access(self, log_data: AccessLogDict, *, session: Optional[Session] = None) -> None:
         """

@@ -1,26 +1,23 @@
 from __future__ import annotations
 
+import logging
 import os
-import weakref
-import shutil
 import pathlib
+import re
+import shutil
 import subprocess
 import tempfile
-import importlib
 import time
-import re
-import logging
 import urllib.parse
+import weakref
+from typing import TYPE_CHECKING
 
 import psycopg2
 import psycopg2.errors
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 from .config import DatabaseConfig
+from .db_socket.socket import SQLAlchemySocket
 from .port_util import find_open_port, is_port_inuse
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import Any, List, Optional, Tuple
@@ -177,12 +174,12 @@ class PostgresHarness:
 
         Parameters
         ----------
-        command: List[str]
+        command
             Command to run as a list of strings (see documentation for subprocess)
 
         Returns
         -------
-        Tuple[int, str, str]
+        :
             Return code, stdout, and stderr as a Tuple
         """
 
@@ -345,7 +342,7 @@ class PostgresHarness:
             self._logger.info(f"Database {self.config.database_name} does not exist. Creating...")
             cursor.execute(f"CREATE DATABASE {self.config.database_name}")
             self._logger.info(f"Database {self.config.database_name} created")
-            self._init_database()
+            SQLAlchemySocket.init_database(self.config)
         else:
             self._logger.info(f"Database {self.config.database_name} already exists, so I am leaving it alone")
 
@@ -374,50 +371,6 @@ class PostgresHarness:
             cursor.execute(f"DROP DATABASE IF EXISTS {self.config.database_name}")
         except psycopg2.OperationalError as e:
             raise RuntimeError(f"Could not delete database. Was it still open somewhere? Error: {str(e)}")
-
-    def _update_db_version(self) -> None:
-        """Update current version of QCFractal that is stored in the database
-
-        This does not actually perform the upgrade, but will store the current versions of the software stack
-        (qcelemental, qcfractal) into the database
-        """
-
-        uri = self.config.uri
-        engine = create_engine(uri, echo=False, pool_size=1)
-        session = sessionmaker(bind=engine)()
-        try:
-            import qcfractal
-            import qcelemental
-
-            elemental_version = qcelemental.__version__
-            fractal_version = qcfractal.__version__
-
-            self._logger.info(
-                f"Updating current version of QCFractal in DB: {uri} \n" f"to version {qcfractal.__version__}"
-            )
-            from .components.serverinfo.db_models import VersionsORM
-
-            current_ver = VersionsORM(elemental_version=elemental_version, fractal_version=fractal_version)
-            session.add(current_ver)
-            session.commit()
-        except Exception as e:
-            raise ValueError(f"Failed to Update DB version.\n {str(e)}")
-        finally:
-            session.close()
-
-    def upgrade(self) -> None:
-        """
-        Upgrade the database schema using the latest alembic revision.
-        """
-
-        retcode, _, _ = self._run_subprocess(self.alembic_commands() + ["upgrade", "head"])
-
-        if retcode != 0:
-            raise RuntimeError(
-                f"Failed to Upgrade the database, make sure to init the database first before being able to upgrade it."
-            )
-
-        self._update_db_version()
 
     def start(self) -> None:
         """
@@ -536,74 +489,6 @@ class PostgresHarness:
             raise
 
         self._logger.info("Postgresql instance successfully initialized and started")
-
-    def alembic_commands(self) -> List[str]:
-        """
-        Get the components of an alembic command that can be passed to _run_subprocess
-
-        This will find the almembic command and also add the uri and alembic configuration information
-        to the command line.
-
-        Returns
-        -------
-        List[str]
-            Components of an alembic command line as a list of strings
-        """
-
-        db_uri = self.config.uri
-        alembic_path = shutil.which("alembic")
-
-        if alembic_path is None:
-            raise RuntimeError("Cannot find the 'alembic' command. Is it installed?")
-        return [alembic_path, "-c", self._alembic_ini, "-x", "uri=" + db_uri]
-
-    def _init_database(self) -> None:
-        """
-        Creates the actual database and tables for use by this QCFractal instance
-        """
-
-        # Register all classes that derive from the BaseORM
-        importlib.import_module("qcfractal.components.register_all")
-
-        # create the tables via sqlalchemy
-        uri = self.config.uri
-        self._logger.info(f"Creating tables for database: {uri}")
-        engine = create_engine(uri, echo=False, pool_size=1)
-
-        # TODO - circular import
-        from qcfractal.db_socket.base_orm import BaseORM
-        from qcfractal.components.permissions.db_models import RoleORM
-
-        try:
-            BaseORM.metadata.create_all(engine)
-        except Exception as e:
-            raise RuntimeError(f"SQLAlchemy Connection Error\n{str(e)}")
-
-        # populate the roles table with defaults
-        uri = self.config.uri
-        engine = create_engine(uri, echo=False, pool_size=1)
-        session = sessionmaker(bind=engine)()
-
-        # TODO - circular import
-        from qcfractal.components.permissions.role_socket import default_roles
-
-        try:
-            for rolename, permissions in default_roles.items():
-                orm = RoleORM(rolename=rolename, permissions=permissions)
-                session.add(orm)
-            session.commit()
-        except Exception as e:
-            raise RuntimeError(f"Failed to populate default roles:\n {str(e)}")
-        finally:
-            session.close()
-
-        # update alembic_version table with the current version
-        self._logger.debug(f"Stamping Database with current version")
-        retcode, stdout, stderr = self._run_subprocess(self.alembic_commands() + ["stamp", "head"])
-
-        if retcode != 0:
-            err_msg = f"Error stamping the database with the current version:\noutput:\n{stdout}\nstderr:\n{stderr}"
-            raise RuntimeError(err_msg)
 
     def backup_database(self, filepath: str) -> None:
         """
