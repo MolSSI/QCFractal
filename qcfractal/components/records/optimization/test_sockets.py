@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.components.records.optimization.db_models import OptimizationProcedureORM
+from qcfractal.components.records.optimization.db_models import OptimizationRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.portal.keywords import KeywordSet
 from qcfractal.portal.molecules import Molecule
@@ -313,13 +313,13 @@ def test_optimization_socket_update(storage_socket: SQLAlchemySocket):
     time_0 = datetime.utcnow()
 
     with storage_socket.session_scope() as session:
-        rec_orm = session.query(OptimizationProcedureORM).where(OptimizationProcedureORM.id == id1[0]).one()
+        rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
         storage_socket.records.update_completed(session, rec_orm, result_data_1, None)
 
-        rec_orm = session.query(OptimizationProcedureORM).where(OptimizationProcedureORM.id == id2[0]).one()
+        rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id2[0]).one()
         storage_socket.records.update_completed(session, rec_orm, result_data_2, None)
 
-        rec_orm = session.query(OptimizationProcedureORM).where(OptimizationProcedureORM.id == id3[0]).one()
+        rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id3[0]).one()
         storage_socket.records.update_completed(session, rec_orm, result_data_3, None)
 
     time_1 = datetime.utcnow()
@@ -543,7 +543,7 @@ def test_optimization_socket_delete_1(storage_socket: SQLAlchemySocket, opt_file
     meta1, id1 = storage_socket.records.optimization.add(input_spec_1, [molecule_1])
 
     with storage_socket.session_scope() as session:
-        rec_orm = session.query(OptimizationProcedureORM).where(OptimizationProcedureORM.id == id1[0]).one()
+        rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
         storage_socket.records.update_completed(session, rec_orm, result_data_1, None)
 
     rec = storage_socket.records.optimization.get(id1, include=["trajectory"])
@@ -576,7 +576,7 @@ def test_optimization_socket_delete_2(storage_socket: SQLAlchemySocket, opt_file
     meta1, id1 = storage_socket.records.optimization.add(input_spec_1, [molecule_1])
 
     with storage_socket.session_scope() as session:
-        rec_orm = session.query(OptimizationProcedureORM).where(OptimizationProcedureORM.id == id1[0]).one()
+        rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
         storage_socket.records.update_completed(session, rec_orm, result_data_1, None)
 
     rec = storage_socket.records.optimization.get(id1, include=["trajectory"])

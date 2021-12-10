@@ -14,9 +14,9 @@ from qcfractal.db_socket.models import (
 from qcfractal.components.collections.db_models import CollectionORM
 from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
-from qcfractal.components.records.optimization.db_models import OptimizationTrajectoryORM, OptimizationProcedureORM
+from qcfractal.components.records.optimization.db_models import OptimizationTrajectoryORM, OptimizationRecordORM
 from qcfractal.components.records.singlepoint.db_models import ResultORM
-from qcfractal.components.records.db_models import BaseResultORM
+from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.components.managers.db_models import ComputeManagerLogORM, ComputeManagerORM
 from qcfractal.components.serverinfo.db_models import AccessLogORM, ServerStatsLogORM, VersionsORM
 from qcfractal.components.keywords.db_models import KeywordsORM
@@ -31,7 +31,7 @@ from qcfractal.components.records.gridoptimization.db_models import GridOptimiza
 
 _all_orm = [
     AccessLogORM,
-    BaseResultORM,
+    BaseRecordORM,
     CollectionORM,
     DatasetORM,
     DatasetEntryORM,
@@ -40,7 +40,7 @@ _all_orm = [
     MoleculeORM,
     KeywordsORM,
     KVStoreORM,
-    OptimizationProcedureORM,
+    OptimizationRecordORM,
     ComputeManagerLogORM,
     ComputeManagerORM,
     ResultORM,
@@ -358,8 +358,8 @@ def _general_copy(table_name,
         real_orm_type = type(d)
         real_table_name = real_orm_type.__tablename__
 
-        # real_orm_type should never be BaseResultORM
-        assert real_orm_type != BaseResultORM
+        # real_orm_type should never be BaseRecordORM
+        assert real_orm_type != BaseRecordORM
 
         print(indent +
               f'* Copying {table_name} {str(src_rck.primary_key.columns)} = {str(src_rck.primary_key.values)}')
@@ -436,7 +436,7 @@ def _general_copy(table_name,
         ########################################################################
         # Now add tasks/services if this is a result/procedure
         ########################################################################
-        if issubclass(real_orm_type, BaseResultORM):
+        if issubclass(real_orm_type, BaseRecordORM):
             _add_tasks_and_services(src_info['id'], session_dest, session_src, new_pk_map, options, indent + '  ')
 
     # If the caller specified single=True, should only be one record

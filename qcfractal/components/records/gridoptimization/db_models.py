@@ -5,7 +5,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
 from qcfractal.components.molecules.db_models import MoleculeORM
-from qcfractal.components.records.db_models import BaseResultORM
+from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.db_socket import BaseORM
 
 from typing import Dict, Any, Optional, Iterable
@@ -24,14 +24,14 @@ class GridOptimizationAssociation(BaseORM):
 
     # Index('grid_opt_id', 'key', unique=True)
 
-    # optimization_obj = relationship(OptimizationProcedureORM, lazy="joined")
+    # optimization_obj = relationship(OptimizationRecordORM, lazy="joined")
 
 
-class GridOptimizationProcedureORM(BaseResultORM):
+class GridOptimizationProcedureORM(BaseRecordORM):
 
     __tablename__ = "grid_optimization_procedure"
 
-    id = Column(Integer, ForeignKey(BaseResultORM.id, ondelete="cascade"), primary_key=True)
+    id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"), primary_key=True)
 
     def __init__(self, **kwargs):
         kwargs.setdefault("version", 1)
@@ -90,7 +90,7 @@ class GridOptimizationProcedureORM(BaseResultORM):
 
     def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
 
-        d = BaseResultORM.dict(self, exclude)
+        d = BaseRecordORM.dict(self, exclude)
 
         # Always include grid optimizations field
         d["grid_optimizations"] = self.grid_optimizations

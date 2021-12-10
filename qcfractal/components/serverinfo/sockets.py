@@ -11,7 +11,7 @@ import qcfractal
 from qcfractal.components.datasets.db_models import CollectionORM
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.outputstore.db_models import OutputStoreORM
-from qcfractal.components.records.db_models import BaseResultORM
+from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import get_query_proj_options, get_count_2, calculate_limit
@@ -139,7 +139,7 @@ class ServerInfoSocket:
             is used, it will be flushed before returning from this function.
         """
 
-        table_list = [CollectionORM, MoleculeORM, BaseResultORM, OutputStoreORM, AccessLogORM, InternalErrorLogORM]
+        table_list = [CollectionORM, MoleculeORM, BaseRecordORM, OutputStoreORM, AccessLogORM, InternalErrorLogORM]
         db_name = self.root_socket.qcf_config.database.database_name
 
         table_counts = {}
@@ -173,17 +173,17 @@ class ServerInfoSocket:
 
             # Task queue and Service queue status
             task_query = (
-                session.query(BaseResultORM.record_type, BaseResultORM.status, func.count(TaskQueueORM.id))
-                .join(BaseResultORM, BaseResultORM.id == TaskQueueORM.record_id)
-                .group_by(BaseResultORM.record_type, BaseResultORM.status)
+                session.query(BaseRecordORM.record_type, BaseRecordORM.status, func.count(TaskQueueORM.id))
+                .join(BaseRecordORM, BaseRecordORM.id == TaskQueueORM.record_id)
+                .group_by(BaseRecordORM.record_type, BaseRecordORM.status)
                 .all()
             )
             task_stats = {"columns": ["record_type", "status", "count"], "rows": [list(r) for r in task_query]}
 
             service_query = (
-                session.query(BaseResultORM.record_type, BaseResultORM.status, func.count(ServiceQueueORM.id))
-                .join(BaseResultORM, BaseResultORM.id == ServiceQueueORM.record_id)
-                .group_by(BaseResultORM.record_type, BaseResultORM.status)
+                session.query(BaseRecordORM.record_type, BaseRecordORM.status, func.count(ServiceQueueORM.id))
+                .join(BaseRecordORM, BaseRecordORM.id == ServiceQueueORM.record_id)
+                .group_by(BaseRecordORM.record_type, BaseRecordORM.status)
                 .all()
             )
             service_stats = {"columns": ["record_type", "status", "count"], "rows": [list(r) for r in service_query]}
@@ -199,7 +199,7 @@ class ServerInfoSocket:
             data = {
                 "collection_count": table_counts[CollectionORM.__tablename__],
                 "molecule_count": table_counts[MoleculeORM.__tablename__],
-                "record_count": table_counts[BaseResultORM.__tablename__],
+                "record_count": table_counts[BaseRecordORM.__tablename__],
                 "outputstore_count": table_counts[OutputStoreORM.__tablename__],
                 "access_count": table_counts[AccessLogORM.__tablename__],
                 "error_count": table_counts[InternalErrorLogORM.__tablename__],

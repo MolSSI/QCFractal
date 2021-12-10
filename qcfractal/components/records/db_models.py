@@ -28,7 +28,7 @@ class RecordComputeHistoryORM(BaseORM):
     )
 
 
-class BaseResultORM(BaseORM):
+class BaseRecordORM(BaseORM):
     """
     Abstract Base class for ResultORMs and ProcedureORMs
     """

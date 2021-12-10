@@ -4,7 +4,7 @@ from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.orm import column_property, relationship
 
 from qcfractal.components.molecules.db_models import MoleculeORM
-from qcfractal.components.records.db_models import BaseResultORM
+from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.db_socket import BaseORM
 from typing import Optional, Iterable, Any, Dict
 
@@ -20,7 +20,7 @@ class OptimizationHistory(BaseORM):
     position = Column(Integer, primary_key=True)
     # Index('torsion_id', 'key', unique=True)
 
-    # optimization_obj = relationship(OptimizationProcedureORM, lazy="joined")
+    # optimization_obj = relationship(OptimizationRecordORM, lazy="joined")
 
 
 class TorsionInitMol(BaseORM):
@@ -36,14 +36,14 @@ class TorsionInitMol(BaseORM):
     molecule_id = Column("molecule_id", Integer, ForeignKey("molecule.id", ondelete="cascade"), primary_key=True)
 
 
-class TorsionDriveProcedureORM(BaseResultORM):
+class TorsionDriveProcedureORM(BaseRecordORM):
     """
     A torsion drive  procedure
     """
 
     __tablename__ = "torsiondrive_procedure"
 
-    id = Column(Integer, ForeignKey(BaseResultORM.id, ondelete="cascade"), primary_key=True)
+    id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"), primary_key=True)
 
     def __init__(self, **kwargs):
         kwargs.setdefault("version", 1)
@@ -112,7 +112,7 @@ class TorsionDriveProcedureORM(BaseResultORM):
     }
 
     def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        d = BaseResultORM.dict(self, exclude)
+        d = BaseRecordORM.dict(self, exclude)
 
         # Always include optimization history
         d["optimization_history"] = self.optimization_history

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.components.records.optimization.db_models import OptimizationProcedureORM
+from qcfractal.components.records.optimization.db_models import OptimizationRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.portal.keywords import KeywordSet
 from qcfractal.portal.molecules import Molecule

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import and_
 from sqlalchemy.orm import selectinload, load_only, contains_eager
 
-from qcfractal.components.records.db_models import BaseResultORM
+from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.components.records.base_handlers import BaseServiceHandler
 from qcfractal.components.records.gridoptimization.handlers import GridOptimizationHandler
 from qcfractal.components.records.torsiondrive.handlers import TorsionDriveHandler
@@ -121,8 +121,8 @@ class ServiceSocket:
                     inserted_idx.append(idx)
 
                     new_orm = (
-                        session.query(BaseResultORM)
-                        .filter(BaseResultORM.id.in_(new_ids))
+                        session.query(BaseRecordORM)
+                        .filter(BaseRecordORM.id.in_(new_ids))
                         .options(selectinload("*"))
                         .all()
                     )
@@ -188,9 +188,9 @@ class ServiceSocket:
             # See https://docs-sqlalchemy.readthedocs.io/ko/latest/orm/loading_relationships.html#routing-explicit-joins-statements-into-eagerly-loaded-collections
             services = (
                 session.query(ServiceQueueORM)
-                .join(ServiceQueueORM.record)  # Joins a BaseResultORM
+                .join(ServiceQueueORM.record)  # Joins a BaseRecordORM
                 .options(contains_eager(ServiceQueueORM.record))
-                .filter(BaseResultORM.status == RecordStatusEnum.running)
+                .filter(BaseRecordORM.status == RecordStatusEnum.running)
                 .all()
             )
 
@@ -245,8 +245,8 @@ class ServiceSocket:
             # Should we start more?
             running_count = (
                 session.query(ServiceQueueORM)
-                .join(ServiceQueueORM.record)  # Joins a BaseResultORM
-                .filter(BaseResultORM.status == RecordStatusEnum.running)
+                .join(ServiceQueueORM.record)  # Joins a BaseRecordORM
+                .filter(BaseRecordORM.status == RecordStatusEnum.running)
                 .count()
             )
 
@@ -258,9 +258,9 @@ class ServiceSocket:
             if new_service_count > 0:
                 new_services = (
                     session.query(ServiceQueueORM)
-                    .join(ServiceQueueORM.record)  # Joins a BaseResultORM
+                    .join(ServiceQueueORM.record)  # Joins a BaseRecordORM
                     .options(contains_eager(ServiceQueueORM.record))
-                    .filter(BaseResultORM.status == RecordStatusEnum.waiting)
+                    .filter(BaseRecordORM.status == RecordStatusEnum.waiting)
                     .order_by(ServiceQueueORM.priority.desc(), ServiceQueueORM.created_on)
                     .limit(new_service_count)
                     .all()
@@ -416,11 +416,11 @@ class ServiceSocket:
         if procedure_id is not None:
             and_query.append(ServiceQueueORM.procedure_id.in_(procedure_id))
         if status is not None:
-            and_query.append(BaseResultORM.status.in_(status))
+            and_query.append(BaseRecordORM.status.in_(status))
         if tag is not None:
             and_query.append(ServiceQueueORM.tag.in_(tag))
         if manager is not None:
-            and_query.append(BaseResultORM.manager_name.in_(manager))
+            and_query.append(BaseRecordORM.manager_name.in_(manager))
         if program:
             and_query.append(ServiceQueueORM.required_programs.has_any(program))
 
@@ -468,14 +468,14 @@ class ServiceSocket:
         if id:
             query.append(ServiceQueueORM.id.in_(id))
         if procedure_id:
-            query.append(BaseResultORM.id.in_(procedure_id))
+            query.append(BaseRecordORM.id.in_(procedure_id))
 
         with self.root_socket.optional_session(session) as session:
             results = (
-                session.query(BaseResultORM)
-                .join(BaseResultORM.service)
+                session.query(BaseRecordORM)
+                .join(BaseRecordORM.service)
                 .filter(*query)
-                .filter(BaseResultORM.status == RecordStatusEnum.error)
+                .filter(BaseRecordORM.status == RecordStatusEnum.error)
                 .with_for_update()
                 .all()
             )

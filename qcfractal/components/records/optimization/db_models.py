@@ -8,7 +8,7 @@ from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.orm import relationship
 
 from qcfractal.components.molecules.db_models import MoleculeORM
-from qcfractal.components.records.db_models import BaseResultORM
+from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.components.records.singlepoint.db_models import SinglePointSpecificationORM, ResultORM
 from qcfractal.db_socket import BaseORM
 
@@ -25,7 +25,7 @@ class OptimizationTrajectoryORM(BaseORM):
     position = Column(Integer, primary_key=True)
 
     singlepoint_record = relationship(ResultORM)
-    optimization_record = relationship("OptimizationProcedureORM")
+    optimization_record = relationship("OptimizationRecordORM")
 
 
 class OptimizationSpecificationORM(BaseORM):
@@ -60,14 +60,14 @@ class OptimizationSpecificationORM(BaseORM):
     )
 
 
-class OptimizationProcedureORM(BaseResultORM):
+class OptimizationRecordORM(BaseRecordORM):
     """
     An Optimization  procedure
     """
 
     __tablename__ = "optimization_record"
 
-    id = Column(Integer, ForeignKey(BaseResultORM.id, ondelete="cascade"), primary_key=True)
+    id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"), primary_key=True)
 
     specification_id = Column(Integer, ForeignKey(OptimizationSpecificationORM.id), nullable=False)
     specification = relationship(OptimizationSpecificationORM, lazy="selectin")
