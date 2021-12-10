@@ -9,7 +9,7 @@ from sqlalchemy.orm import relationship
 
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseRecordORM
-from qcfractal.components.records.singlepoint.db_models import SinglePointSpecificationORM, ResultORM
+from qcfractal.components.records.singlepoint.db_models import SinglepointSpecificationORM, SinglepointRecordORM
 from qcfractal.db_socket import BaseORM
 
 if TYPE_CHECKING:
@@ -21,10 +21,10 @@ class OptimizationTrajectoryORM(BaseORM):
     __tablename__ = "optimization_trajectory"
 
     optimization_record_id = Column(Integer, ForeignKey("optimization_record.id", ondelete="cascade"), primary_key=True)
-    singlepoint_record_id = Column(Integer, ForeignKey(ResultORM.id), primary_key=True)
+    singlepoint_record_id = Column(Integer, ForeignKey(SinglepointRecordORM.id), primary_key=True)
     position = Column(Integer, primary_key=True)
 
-    singlepoint_record = relationship(ResultORM)
+    singlepoint_record = relationship(SinglepointRecordORM)
     optimization_record = relationship("OptimizationRecordORM")
 
 
@@ -35,8 +35,8 @@ class OptimizationSpecificationORM(BaseORM):
 
     program = Column(String(100), nullable=False)
 
-    singlepoint_specification_id = Column(Integer, ForeignKey(SinglePointSpecificationORM.id), nullable=False)
-    singlepoint_specification = relationship(SinglePointSpecificationORM, lazy="selectin", uselist=False)
+    singlepoint_specification_id = Column(Integer, ForeignKey(SinglepointSpecificationORM.id), nullable=False)
+    singlepoint_specification = relationship(SinglepointSpecificationORM, lazy="selectin", uselist=False)
 
     keywords = Column(JSONB, nullable=False)
     protocols = Column(JSONB, nullable=False)

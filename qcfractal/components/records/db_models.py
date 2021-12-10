@@ -30,7 +30,7 @@ class RecordComputeHistoryORM(BaseORM):
 
 class BaseRecordORM(BaseORM):
     """
-    Abstract Base class for ResultORMs and ProcedureORMs
+    Base class for all kinds of records
     """
 
     __tablename__ = "base_record"

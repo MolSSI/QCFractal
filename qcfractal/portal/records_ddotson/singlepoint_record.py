@@ -8,17 +8,17 @@ from .record import Record, QCSpecification
 from .record_utils import register_record
 
 
-class SinglePointSpecification(QCSpecification):
+class SinglepointSpecification(QCSpecification):
     pass
 
 
-class SinglePointRecord(Record):
+class SinglepointRecord(Record):
     """
     User-facing API for accessing data for a single optimization.
 
     """
 
-    _SpecModel = SinglePointSpecification
+    _SpecModel = SinglepointSpecification
     _type = "single"
 
     class _DataModel(Record._DataModel):
@@ -26,7 +26,7 @@ class SinglePointRecord(Record):
         _hash_indices = {"driver", "method", "basis", "molecule", "keywords", "program"}
 
         # Version data
-        version: int = Field(1, description="Version of the SinglePointRecord Model which this data was created with.")
+        version: int = Field(1, description="Version of the SinglepointRecord Model which this data was created with.")
         procedure: constr(strip_whitespace=True, regex="single") = Field(
             "single", description='Procedure is fixed as "single" because this is single quantum chemistry result.'
         )
@@ -66,4 +66,4 @@ class SinglePointRecord(Record):
         pass
 
 
-register_record(SinglePointRecord)
+register_record(SinglepointRecord)

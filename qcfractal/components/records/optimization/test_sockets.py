@@ -18,11 +18,11 @@ from qcfractal.portal.records import RecordStatusEnum, PriorityEnum
 from qcfractal.portal.records.optimization import (
     OptimizationInputSpecification,
     OptimizationQueryBody,
-    OptimizationSinglePointInputSpecification,
+    OptimizationSinglepointInputSpecification,
 )
 from qcfractal.portal.records.singlepoint import (
-    SinglePointDriver,
-    SinglePointProtocols,
+    SinglepointDriver,
+    SinglepointProtocols,
 )
 from qcfractal.testing import load_molecule_data, load_procedure_data
 
@@ -34,19 +34,19 @@ _test_specs = [
         program="optprog1",
         keywords={},
         protocols={"trajectory": "initial_and_final"},
-        singlepoint_specification=OptimizationSinglePointInputSpecification(
+        singlepoint_specification=OptimizationSinglepointInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
             keywords=KeywordSet(values={"k": "value"}),
-            protocols=SinglePointProtocols(wavefunction="all"),
+            protocols=SinglepointProtocols(wavefunction="all"),
         ),
     ),
     OptimizationInputSpecification(
         program="optprog2",
         keywords={"k": "v"},
         protocols={"trajectory": "none"},
-        singlepoint_specification=OptimizationSinglePointInputSpecification(
+        singlepoint_specification=OptimizationSinglepointInputSpecification(
             program="Prog2",
             method="Hf",
             basis="def2-TZVP",
@@ -56,21 +56,21 @@ _test_specs = [
     OptimizationInputSpecification(
         program="optPRog3",
         keywords={"k2": "v2"},
-        singlepoint_specification=OptimizationSinglePointInputSpecification(
+        singlepoint_specification=OptimizationSinglepointInputSpecification(
             program="Prog3",
             method="pbe0",
             basis="",
             keywords=KeywordSet(values={"o": 1, "v": 2.123}),
-            protocols=SinglePointProtocols(stdout=False, wavefunction="orbitals_and_eigenvalues"),
+            protocols=SinglepointProtocols(stdout=False, wavefunction="orbitals_and_eigenvalues"),
         ),
     ),
     OptimizationInputSpecification(
         program="OPTPROG4",
-        singlepoint_specification=OptimizationSinglePointInputSpecification(
+        singlepoint_specification=OptimizationSinglepointInputSpecification(
             program="ProG4",
             method="pbe",
             basis=None,
-            protocols=SinglePointProtocols(stdout=False, wavefunction="return_results"),
+            protocols=SinglepointProtocols(stdout=False, wavefunction="return_results"),
         ),
     ),
 ]
@@ -100,7 +100,7 @@ def test_optimization_socket_add_get(storage_socket: SQLAlchemySocket, spec: Opt
         # Test single point spec
         sp_spec = r["specification"]["singlepoint_specification"]
         assert sp_spec["driver"] == spec.singlepoint_specification.driver
-        assert sp_spec["driver"] == SinglePointDriver.deferred
+        assert sp_spec["driver"] == SinglepointDriver.deferred
         assert sp_spec["method"] == spec.singlepoint_specification.method.lower()
         assert sp_spec["basis"] == (
             spec.singlepoint_specification.basis.lower() if spec.singlepoint_specification.basis is not None else ""
@@ -119,7 +119,7 @@ def test_optimization_socket_add_get(storage_socket: SQLAlchemySocket, spec: Opt
         assert task_spec["protocols"] == spec.protocols.dict(exclude_defaults=True)
 
         # Forced to gradient int he qcschema input
-        assert task_spec["input_specification"]["driver"] == SinglePointDriver.gradient
+        assert task_spec["input_specification"]["driver"] == SinglepointDriver.gradient
         assert task_spec["input_specification"]["model"] == {
             "method": spec.singlepoint_specification.method,
             "basis": spec.singlepoint_specification.basis,
@@ -174,12 +174,12 @@ def test_optimization_socket_add_same_1(storage_socket: SQLAlchemySocket):
         program="optprog1",
         keywords={},
         protocols={"trajectory": "initial_and_final"},
-        singlepoint_specification=OptimizationSinglePointInputSpecification(
+        singlepoint_specification=OptimizationSinglepointInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
             keywords=KeywordSet(values={"k": "value"}),
-            protocols=SinglePointProtocols(wavefunction="all"),
+            protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
 
@@ -201,12 +201,12 @@ def test_optimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
         program="optprog1",
         keywords={},
         protocols={"trajectory": "initial_and_final"},
-        singlepoint_specification=OptimizationSinglePointInputSpecification(
+        singlepoint_specification=OptimizationSinglepointInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
             keywords=KeywordSet(values={"k": "value"}),
-            protocols=SinglePointProtocols(wavefunction="all"),
+            protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
 
@@ -214,12 +214,12 @@ def test_optimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
         program="opTPROg1",
         keywords={},
         protocols={"trajectory": "initial_and_final"},
-        singlepoint_specification=OptimizationSinglePointInputSpecification(
+        singlepoint_specification=OptimizationSinglepointInputSpecification(
             program="prOG1",
             method="b3LYp",
             basis="6-31g*",
             keywords=KeywordSet(values={"k": "value"}),
-            protocols=SinglePointProtocols(wavefunction="all"),
+            protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
 
@@ -241,23 +241,23 @@ def test_optimization_socket_add_same_3(storage_socket: SQLAlchemySocket):
         program="optprog1",
         keywords={},
         protocols={},
-        singlepoint_specification=OptimizationSinglePointInputSpecification(
+        singlepoint_specification=OptimizationSinglepointInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
             keywords=KeywordSet(values={"k": "value"}),
-            protocols=SinglePointProtocols(wavefunction="all"),
+            protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
 
     spec2 = OptimizationInputSpecification(
         program="optprog1",
-        singlepoint_specification=OptimizationSinglePointInputSpecification(
+        singlepoint_specification=OptimizationSinglepointInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
             keywords=KeywordSet(values={"k": "value"}),
-            protocols=SinglePointProtocols(wavefunction="all"),
+            protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
 
@@ -283,7 +283,7 @@ def test_optimization_socket_add_same_4(storage_socket: SQLAlchemySocket):
 
     spec1 = OptimizationInputSpecification(
         program="optprog1",
-        singlepoint_specification=OptimizationSinglePointInputSpecification(
+        singlepoint_specification=OptimizationSinglepointInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
@@ -394,7 +394,7 @@ def test_optimization_socket_update(storage_socket: SQLAlchemySocket):
 #
 #    # Typical workflow
 #    with storage_socket.session_scope() as session:
-#        rec_orm = session.query(ResultORM).where(ResultORM.id == id2[0]).one()
+#        rec_orm = session.query(SinglepointRecordORM).where(SinglepointRecordORM.id == id2[0]).one()
 #        storage_socket.records.update_completed(session, rec_orm, result_data_2, None)
 #
 #    # Actually insert the whole thing. This should end up being a duplicate

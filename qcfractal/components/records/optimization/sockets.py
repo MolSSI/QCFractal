@@ -18,10 +18,10 @@ from qcfractal.portal.metadata_models import InsertMetadata, QueryMetadata
 from qcfractal.portal.molecules import Molecule
 from qcfractal.portal.records import PriorityEnum, RecordStatusEnum
 from qcfractal.portal.records.singlepoint import (
-    SinglePointDriver,
+    SinglepointDriver,
     WavefunctionProperties,
-    SinglePointSpecification,
-    SinglePointInputSpecification,
+    SinglepointSpecification,
+    SinglepointInputSpecification,
 )
 from qcfractal.portal.records.optimization import (
     OptimizationInputSpecification,
@@ -32,7 +32,7 @@ from qcfractal.portal.records.optimization import (
 
 
 from .db_models import OptimizationSpecificationORM, OptimizationRecordORM, OptimizationTrajectoryORM
-from qcfractal.components.records.singlepoint.db_models import ResultORM, SinglePointSpecificationORM
+from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM, SinglepointSpecificationORM
 from qcfractal.portal.keywords import KeywordSet
 
 if TYPE_CHECKING:
@@ -97,7 +97,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         with self.root_socket.optional_session(session, False) as session:
             # Add the singlepoint specification
             # Make double sure the driver is deferred
-            opt_spec.singlepoint_specification.driver = SinglePointDriver.deferred
+            opt_spec.singlepoint_specification.driver = SinglepointDriver.deferred
             meta, sp_spec_id = self.root_socket.records.singlepoint.add_specification(
                 opt_spec.singlepoint_specification, session=session
             )
@@ -215,16 +215,16 @@ class OptimizationRecordSocket(BaseRecordSocket):
             and_query.append(OptimizationSpecificationORM.program.in_(query_data.program))
             need_optspec_join = True
         if query_data.singlepoint_program is not None:
-            and_query.append(SinglePointSpecificationORM.program.in_(query_data.singlepoint_program))
+            and_query.append(SinglepointSpecificationORM.program.in_(query_data.singlepoint_program))
             need_spspec_join = True
         if query_data.singlepoint_method is not None:
-            and_query.append(SinglePointSpecificationORM.method.in_(query_data.singlepoint_method))
+            and_query.append(SinglepointSpecificationORM.method.in_(query_data.singlepoint_method))
             need_spspec_join = True
         if query_data.singlepoint_basis is not None:
-            and_query.append(SinglePointSpecificationORM.basis.in_(query_data.singlepoint_basis))
+            and_query.append(SinglepointSpecificationORM.basis.in_(query_data.singlepoint_basis))
             need_spspec_join = True
         if query_data.singlepoint_keywords_id is not None:
-            and_query.append(SinglePointSpecificationORM.keywords_id.in_(query_data.singlepoint_keywords_id))
+            and_query.append(SinglepointSpecificationORM.keywords_id.in_(query_data.singlepoint_keywords_id))
             need_spspec_join = True
         if query_data.initial_molecule_id is not None:
             and_query.append(OptimizationRecordORM.initial_molecule_id.in_(query_data.initial_molecule_id))
@@ -398,7 +398,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         self,
         session: Session,
         result: OptimizationResult,
-    ) -> ResultORM:
+    ) -> SinglepointRecordORM:
 
         raise RuntimeError("Not yet implemented")
 

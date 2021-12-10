@@ -18,11 +18,11 @@ from qcfractal.portal.records import RecordStatusEnum, PriorityEnum
 from qcfractal.portal.records.optimization import (
     OptimizationInputSpecification,
     OptimizationQueryBody,
-    OptimizationSinglePointInputSpecification,
+    OptimizationSinglepointInputSpecification,
 )
 from qcfractal.portal.records.singlepoint import (
-    SinglePointDriver,
-    SinglePointProtocols,
+    SinglepointDriver,
+    SinglepointProtocols,
 )
 from qcfractal.testing import load_molecule_data, load_procedure_data
 
@@ -69,7 +69,7 @@ def test_optimization_client_add_get(snowflake_client: PortalClient, spec: Optim
         # Test single point spec
         sp_spec = r.raw_data.specification.singlepoint_specification
         assert sp_spec.driver == spec.singlepoint_specification.driver
-        assert sp_spec.driver == SinglePointDriver.deferred
+        assert sp_spec.driver == SinglepointDriver.deferred
         assert sp_spec.method == spec.singlepoint_specification.method.lower()
         assert sp_spec.basis == (
             spec.singlepoint_specification.basis.lower() if spec.singlepoint_specification.basis is not None else None
@@ -88,7 +88,7 @@ def test_optimization_client_add_get(snowflake_client: PortalClient, spec: Optim
         assert task_spec["protocols"] == spec.protocols.dict(exclude_defaults=True)
 
         # Forced to gradient int he qcschema input
-        assert task_spec["input_specification"]["driver"] == SinglePointDriver.gradient
+        assert task_spec["input_specification"]["driver"] == SinglepointDriver.gradient
         assert task_spec["input_specification"]["model"] == {
             "method": spec.singlepoint_specification.method,
             "basis": spec.singlepoint_specification.basis,
@@ -151,12 +151,12 @@ def test_optimization_client_add_same_1(snowflake_client: PortalClient):
         program="optprog1",
         keywords={},
         protocols={"trajectory": "initial_and_final"},
-        singlepoint_specification=OptimizationSinglePointInputSpecification(
+        singlepoint_specification=OptimizationSinglepointInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
             keywords=KeywordSet(values={"k": "value"}),
-            protocols=SinglePointProtocols(wavefunction="all"),
+            protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
 
@@ -190,12 +190,12 @@ def test_optimization_client_add_same_2(snowflake_client: PortalClient):
         program="optprog1",
         keywords={},
         protocols={"trajectory": "initial_and_final"},
-        singlepoint_specification=OptimizationSinglePointInputSpecification(
+        singlepoint_specification=OptimizationSinglepointInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
             keywords=KeywordSet(values={"k": "value"}),
-            protocols=SinglePointProtocols(wavefunction="all"),
+            protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
 
@@ -203,12 +203,12 @@ def test_optimization_client_add_same_2(snowflake_client: PortalClient):
         program="opTPROg1",
         keywords={},
         protocols={"trajectory": "initial_and_final"},
-        singlepoint_specification=OptimizationSinglePointInputSpecification(
+        singlepoint_specification=OptimizationSinglepointInputSpecification(
             program="prOG1",
             method="b3LYp",
             basis="6-31g*",
             keywords=KeywordSet(values={"k": "value"}),
-            protocols=SinglePointProtocols(wavefunction="all"),
+            protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
 
@@ -242,23 +242,23 @@ def test_optimization_client_add_same_3(snowflake_client: PortalClient):
         program="optprog1",
         keywords={},
         protocols={},
-        singlepoint_specification=OptimizationSinglePointInputSpecification(
+        singlepoint_specification=OptimizationSinglepointInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
             keywords=KeywordSet(values={"k": "value"}),
-            protocols=SinglePointProtocols(wavefunction="all"),
+            protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
 
     spec2 = OptimizationInputSpecification(
         program="optprog1",
-        singlepoint_specification=OptimizationSinglePointInputSpecification(
+        singlepoint_specification=OptimizationSinglepointInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
             keywords=KeywordSet(values={"k": "value"}),
-            protocols=SinglePointProtocols(wavefunction="all"),
+            protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
 
@@ -298,7 +298,7 @@ def test_optimization_client_add_same_4(snowflake_client: PortalClient):
 
     spec1 = OptimizationInputSpecification(
         program="optprog1",
-        singlepoint_specification=OptimizationSinglePointInputSpecification(
+        singlepoint_specification=OptimizationSinglepointInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",

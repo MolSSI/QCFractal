@@ -13,9 +13,9 @@ from qcfractal.portal.keywords import KeywordSet
 from qcfractal.portal.molecules import Molecule
 from qcfractal.portal.records import PriorityEnum
 from qcfractal.portal.records.singlepoint import (
-    SinglePointSpecification,
-    SinglePointDriver,
-    SinglePointProtocols,
+    SinglepointSpecification,
+    SinglepointDriver,
+    SinglepointProtocols,
 )
 from qcfractal.testing import load_molecule_data, load_procedure_data
 from .test_sockets import _test_specs
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 
 @pytest.mark.parametrize("spec", _test_specs)
-def test_singlepoint_client_add_get(snowflake_client: PortalClient, spec: SinglePointSpecification):
+def test_singlepoint_client_add_get(snowflake_client: PortalClient, spec: SinglepointSpecification):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
     ne4 = load_molecule_data("neon_tetramer")
@@ -114,11 +114,11 @@ def test_singlepoint_client_add_same_1(snowflake_client: PortalClient):
     meta, id1 = snowflake_client.add_singlepoints(
         [water],
         "prog1",
-        SinglePointDriver.energy,
+        SinglepointDriver.energy,
         "b3lyp",
         "6-31G*",
         KeywordSet(values={"k": "value"}),
-        SinglePointProtocols(wavefunction="all"),
+        SinglepointProtocols(wavefunction="all"),
         PriorityEnum.high,
         "tag1",
     )
@@ -128,11 +128,11 @@ def test_singlepoint_client_add_same_1(snowflake_client: PortalClient):
     meta, id2 = snowflake_client.add_singlepoints(
         [water],
         "prog1",
-        SinglePointDriver.energy,
+        SinglepointDriver.energy,
         "b3lyp",
         "6-31G*",
         KeywordSet(values={"k": "value"}),
-        SinglePointProtocols(wavefunction="all"),
+        SinglepointProtocols(wavefunction="all"),
         PriorityEnum.high,
         "tag1",
     )
@@ -149,11 +149,11 @@ def test_singlepoint_client_add_same_2(snowflake_client: PortalClient):
     meta, id1 = snowflake_client.add_singlepoints(
         [water],
         "prog1",
-        SinglePointDriver.energy,
+        SinglepointDriver.energy,
         "b3lyp",
         "6-31G*",
         KeywordSet(values={"k": "value"}),
-        SinglePointProtocols(wavefunction="all"),
+        SinglepointProtocols(wavefunction="all"),
         PriorityEnum.high,
         "tag1",
     )
@@ -163,11 +163,11 @@ def test_singlepoint_client_add_same_2(snowflake_client: PortalClient):
     meta, id2 = snowflake_client.add_singlepoints(
         [water],
         "pRog1",
-        SinglePointDriver.energy,
+        SinglepointDriver.energy,
         "b3lYp",
         "6-31g*",
         KeywordSet(values={"k": "value"}),
-        SinglePointProtocols(wavefunction="all"),
+        SinglepointProtocols(wavefunction="all"),
         PriorityEnum.high,
         "tag1",
     )
@@ -185,11 +185,11 @@ def test_singlepoint_client_add_same_3(snowflake_client: PortalClient):
     meta, id1 = snowflake_client.add_singlepoints(
         [water],
         "prog1",
-        SinglePointDriver.energy,
+        SinglepointDriver.energy,
         "b3lyp",
         "6-31G*",
         KeywordSet(values={}),
-        SinglePointProtocols(wavefunction="none"),
+        SinglepointProtocols(wavefunction="none"),
         PriorityEnum.high,
         "tag1",
     )
@@ -199,11 +199,11 @@ def test_singlepoint_client_add_same_3(snowflake_client: PortalClient):
     meta, id2 = snowflake_client.add_singlepoints(
         [water],
         "prog1",
-        SinglePointDriver.energy,
+        SinglepointDriver.energy,
         "b3lyp",
         "6-31G*",
         None,
-        SinglePointProtocols(wavefunction="none"),
+        SinglepointProtocols(wavefunction="none"),
         PriorityEnum.high,
         "tag1",
     )
@@ -221,11 +221,11 @@ def test_singlepoint_client_add_same_4(snowflake_client: PortalClient):
     meta, id1 = snowflake_client.add_singlepoints(
         [water],
         "prog1",
-        SinglePointDriver.energy,
+        SinglepointDriver.energy,
         "b3lyp",
         None,
         KeywordSet(values={}),
-        SinglePointProtocols(wavefunction="none"),
+        SinglepointProtocols(wavefunction="none"),
         PriorityEnum.high,
         "tag1",
     )
@@ -235,11 +235,11 @@ def test_singlepoint_client_add_same_4(snowflake_client: PortalClient):
     meta, id2 = snowflake_client.add_singlepoints(
         [water],
         "prog1",
-        SinglePointDriver.energy,
+        SinglepointDriver.energy,
         "b3lyp",
         "",
         KeywordSet(values={}),
-        SinglePointProtocols(wavefunction="none"),
+        SinglepointProtocols(wavefunction="none"),
         PriorityEnum.high,
         "tag1",
     )
@@ -261,7 +261,7 @@ def test_singlepoint_client_add_same_5(snowflake_client: PortalClient):
     meta, id1 = snowflake_client.add_singlepoints(
         [water],
         "prog1",
-        SinglePointDriver.energy,
+        SinglepointDriver.energy,
         "b3lyp",
         "",
         kw,
@@ -272,7 +272,7 @@ def test_singlepoint_client_add_same_5(snowflake_client: PortalClient):
     meta, id2 = snowflake_client.add_singlepoints(
         mol_ids,
         "prog1",
-        SinglePointDriver.energy,
+        SinglepointDriver.energy,
         "b3lyp",
         None,
         kw_ids[0],
@@ -325,11 +325,11 @@ def test_singlepoint_client_query(snowflake_client: PortalClient, storage_socket
     assert meta.n_found == 3  # All have empty keywords
 
     # driver
-    meta, sp = snowflake_client.query_singlepoints(driver=[SinglePointDriver.energy])
+    meta, sp = snowflake_client.query_singlepoints(driver=[SinglepointDriver.energy])
     assert meta.n_found == 3
 
     # Some empty queries
-    meta, sp = snowflake_client.query_singlepoints(driver=[SinglePointDriver.properties])
+    meta, sp = snowflake_client.query_singlepoints(driver=[SinglepointDriver.properties])
     assert meta.n_found == 0
 
     # Some empty queries

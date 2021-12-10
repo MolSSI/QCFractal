@@ -4,13 +4,13 @@ Tests the wavefunction store socket
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.portal.records.singlepoint import (
-    SinglePointInputSpecification,
-    SinglePointDriver,
-    SinglePointProtocols,
+    SinglepointInputSpecification,
+    SinglepointDriver,
+    SinglepointProtocols,
 )
 from qcfractal.portal.records.optimization import (
     OptimizationInputSpecification,
-    OptimizationSinglePointInputSpecification,
+    OptimizationSinglepointInputSpecification,
     OptimizationProtocols,
 )
 from qcfractal.portal.keywords import KeywordSet
@@ -22,12 +22,12 @@ def test_optimizationrecord_socket_basic_specification(storage_socket: SQLAlchem
         program="optprog1",
         keywords={"k": "value"},
         protocols=OptimizationProtocols(trajectory="final"),
-        singlepoint_specification=OptimizationSinglePointInputSpecification(
+        singlepoint_specification=OptimizationSinglepointInputSpecification(
             program="prog2",
             method="b3lyp",
             basis="6-31g",
             keywords=KeywordSet(values={"k2": "values2"}),
-            protocols=SinglePointProtocols(wavefunction="all"),
+            protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
 
@@ -35,13 +35,13 @@ def test_optimizationrecord_socket_basic_specification(storage_socket: SQLAlchem
         program="optprog2",
         keywords={"k": "value"},
         protocols=OptimizationProtocols(),
-        singlepoint_specification=OptimizationSinglePointInputSpecification(
+        singlepoint_specification=OptimizationSinglepointInputSpecification(
             program="prog2",
-            driver=SinglePointDriver.hessian,
+            driver=SinglepointDriver.hessian,
             method="hf",
             basis="def2-tzvp",
             keywords=KeywordSet(values={"k": "value"}),
-            protocols=SinglePointProtocols(wavefunction="all"),
+            protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
 
@@ -49,13 +49,13 @@ def test_optimizationrecord_socket_basic_specification(storage_socket: SQLAlchem
         program="optprog2",
         keywords={"k": "value"},
         protocols=OptimizationProtocols(trajectory="none"),
-        singlepoint_specification=OptimizationSinglePointInputSpecification(
+        singlepoint_specification=OptimizationSinglepointInputSpecification(
             program="prog2",
-            driver=SinglePointDriver.hessian,
+            driver=SinglepointDriver.hessian,
             method="hf",
             basis="def2-tzvp",
             keywords=KeywordSet(values={"k": "value"}),
-            protocols=SinglePointProtocols(wavefunction="orbitals_and_eigenvalues"),
+            protocols=SinglepointProtocols(wavefunction="orbitals_and_eigenvalues"),
         ),
     )
 
@@ -85,20 +85,20 @@ def test_optimizationrecord_socket_basic_specification(storage_socket: SQLAlchem
         sp["singlepoint_specification"].pop("keywords_id")
         sp["singlepoint_specification"]["keywords"].pop("id")
 
-        assert sp["singlepoint_specification"]["driver"] == SinglePointDriver.deferred
+        assert sp["singlepoint_specification"]["driver"] == SinglepointDriver.deferred
 
     assert OptimizationInputSpecification(**sp1) == spec1
     assert OptimizationInputSpecification(**sp2) == spec2
     assert OptimizationInputSpecification(**sp3) == spec3
 
 
-common_sp_spec = OptimizationSinglePointInputSpecification(
+common_sp_spec = OptimizationSinglepointInputSpecification(
     program="prog1",
-    driver=SinglePointDriver.energy,
+    driver=SinglepointDriver.energy,
     method="b3lyp",
     basis="6-31G*",
     keywords=KeywordSet(values={"k": "value"}),
-    protocols=SinglePointProtocols(),
+    protocols=SinglepointProtocols(),
 )
 
 

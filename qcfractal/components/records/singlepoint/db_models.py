@@ -8,17 +8,17 @@ from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
 from qcfractal.db_socket.base_orm import BaseORM
 from qcfractal.db_socket.column_types import MsgpackExt
-from qcfractal.portal.records.singlepoint import SinglePointDriver
+from qcfractal.portal.records.singlepoint import SinglepointDriver
 
 
-class SinglePointSpecificationORM(BaseORM):
+class SinglepointSpecificationORM(BaseORM):
     __tablename__ = "singlepoint_specification"
 
     id = Column(Integer, primary_key=True)
 
     # uniquely identifying a result
     program = Column(String(100), nullable=False)
-    driver = Column(Enum(SinglePointDriver), nullable=False)
+    driver = Column(Enum(SinglepointDriver), nullable=False)
     method = Column(String(100), nullable=False)
     basis = Column(String(100), nullable=False)
 
@@ -46,7 +46,7 @@ class SinglePointSpecificationORM(BaseORM):
     )
 
 
-class ResultORM(BaseRecordORM):
+class SinglepointRecordORM(BaseRecordORM):
     """
     Hold the result of an atomic single calculation
     """
@@ -56,8 +56,8 @@ class ResultORM(BaseRecordORM):
     id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="CASCADE"), primary_key=True)
 
     # uniquely identifying a result
-    specification_id = Column(Integer, ForeignKey(SinglePointSpecificationORM.id), nullable=False)
-    specification = relationship(SinglePointSpecificationORM, lazy="selectin", uselist=False)
+    specification_id = Column(Integer, ForeignKey(SinglepointSpecificationORM.id), nullable=False)
+    specification = relationship(SinglepointSpecificationORM, lazy="selectin", uselist=False)
 
     molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), nullable=False)
     molecule = relationship(MoleculeORM, uselist=False)

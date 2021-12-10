@@ -121,10 +121,10 @@ class RecordSocket:
         self._output_limit = root_socket.qcf_config.response_limits.output_store
 
         # All the subsockets
-        from .singlepoint.sockets import SinglePointRecordSocket
+        from .singlepoint.sockets import SinglepointRecordSocket
         from .optimization.sockets import OptimizationRecordSocket
 
-        self.singlepoint = SinglePointRecordSocket(root_socket)
+        self.singlepoint = SinglepointRecordSocket(root_socket)
         self.optimization = OptimizationRecordSocket(root_socket)
 
         self._handler_map: Dict[str, BaseRecordSocket] = {

@@ -17,22 +17,22 @@ from qcfractal.portal.molecules import Molecule
 from qcfractal.portal.records import PriorityEnum, RecordStatusEnum
 from qcfractal.portal.records.singlepoint import (
     WavefunctionProperties,
-    SinglePointSpecification,
-    SinglePointInputSpecification,
-    SinglePointQueryBody,
+    SinglepointSpecification,
+    SinglepointInputSpecification,
+    SinglepointQueryBody,
 )
-from .db_models import SinglePointSpecificationORM, ResultORM
+from .db_models import SinglepointSpecificationORM, SinglepointRecordORM
 from qcfractal.portal.keywords import KeywordSet
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from datetime import datetime
-    from qcfractal.portal.records.singlepoint import SinglePointDriver
+    from qcfractal.portal.records.singlepoint import SinglepointDriver
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, Iterable
 
-    SinglePointSpecificationDict = Dict[str, Any]
-    SinglePointRecordDict = Dict[str, Any]
+    SinglepointSpecificationDict = Dict[str, Any]
+    SinglepointRecordDict = Dict[str, Any]
 
 
 def wavefunction_helper(wavefunction: Optional[WavefunctionProperties]) -> Optional[WavefunctionStoreORM]:
@@ -56,7 +56,7 @@ def wavefunction_helper(wavefunction: Optional[WavefunctionProperties]) -> Optio
     return WavefunctionStoreORM.from_model(wfn_prop)
 
 
-class SinglePointRecordSocket(BaseRecordSocket):
+class SinglepointRecordSocket(BaseRecordSocket):
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)
         self._logger = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ class SinglePointRecordSocket(BaseRecordSocket):
 
     def get_specification(
         self, id: int, missing_ok: bool = False, *, session: Optional[Session] = None
-    ) -> Optional[SinglePointSpecificationDict]:
+    ) -> Optional[SinglepointSpecificationDict]:
         """
         Obtain a specification with the specified ID
 
@@ -94,11 +94,11 @@ class SinglePointRecordSocket(BaseRecordSocket):
 
         with self.root_socket.optional_session(session, True) as session:
             return get_general(
-                session, SinglePointSpecificationORM, SinglePointSpecificationORM.id, [id], None, None, missing_ok
+                session, SinglepointSpecificationORM, SinglepointSpecificationORM.id, [id], None, None, missing_ok
             )[0]
 
     def add_specification(
-        self, sp_spec: SinglePointInputSpecification, *, session: Optional[Session] = None
+        self, sp_spec: SinglepointInputSpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, Optional[int]]:
         protocols_dict = sp_spec.protocols.dict(exclude_defaults=True)
 
@@ -125,7 +125,7 @@ class SinglePointRecordSocket(BaseRecordSocket):
                 )
 
             stmt = (
-                insert(SinglePointSpecificationORM)
+                insert(SinglepointSpecificationORM)
                 .values(
                     program=sp_spec.program,
                     driver=sp_spec.driver,
@@ -135,7 +135,7 @@ class SinglePointRecordSocket(BaseRecordSocket):
                     protocols=protocols_dict,
                 )
                 .on_conflict_do_nothing()
-                .returning(SinglePointSpecificationORM.id)
+                .returning(SinglepointSpecificationORM.id)
             )
 
             r = session.execute(stmt).scalar_one_or_none()
@@ -143,7 +143,7 @@ class SinglePointRecordSocket(BaseRecordSocket):
                 return InsertMetadata(inserted_idx=[0]), r
             else:
                 # Specification was already existing
-                stmt = select(SinglePointSpecificationORM.id).filter_by(
+                stmt = select(SinglepointSpecificationORM.id).filter_by(
                     program=sp_spec.program,
                     driver=sp_spec.driver,
                     method=sp_spec.method,
@@ -163,7 +163,7 @@ class SinglePointRecordSocket(BaseRecordSocket):
         missing_ok: bool = False,
         *,
         session: Optional[Session] = None,
-    ) -> List[Optional[SinglePointRecordDict]]:
+    ) -> List[Optional[SinglepointRecordDict]]:
         """
         Obtain a singlepoint record with specified IDs
 
@@ -193,53 +193,57 @@ class SinglePointRecordSocket(BaseRecordSocket):
             If missing_ok is True, then this list will contain None where the molecule was missing.
         """
 
-        return self.root_socket.records.get_base(ResultORM, record_id, include, exclude, missing_ok, session=session)
+        return self.root_socket.records.get_base(
+            SinglepointRecordORM, record_id, include, exclude, missing_ok, session=session
+        )
 
     def query(
         self,
-        query_data: SinglePointQueryBody,
+        query_data: SinglepointQueryBody,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[SinglePointRecordDict]]:
+    ) -> Tuple[QueryMetadata, List[SinglepointRecordDict]]:
 
         and_query = []
         need_join = False
 
         if query_data.program is not None:
-            and_query.append(SinglePointSpecificationORM.program.in_(query_data.program))
+            and_query.append(SinglepointSpecificationORM.program.in_(query_data.program))
             need_join = True
         if query_data.driver is not None:
-            and_query.append(SinglePointSpecificationORM.driver.in_(query_data.driver))
+            and_query.append(SinglepointSpecificationORM.driver.in_(query_data.driver))
             need_join = True
         if query_data.method is not None:
-            and_query.append(SinglePointSpecificationORM.method.in_(query_data.method))
+            and_query.append(SinglepointSpecificationORM.method.in_(query_data.method))
             need_join = True
         if query_data.basis is not None:
-            and_query.append(SinglePointSpecificationORM.basis.in_(query_data.basis))
+            and_query.append(SinglepointSpecificationORM.basis.in_(query_data.basis))
             need_join = True
         if query_data.keywords_id is not None:
-            and_query.append(SinglePointSpecificationORM.keywords_id.in_(query_data.keywords_id))
+            and_query.append(SinglepointSpecificationORM.keywords_id.in_(query_data.keywords_id))
             need_join = True
         if query_data.molecule_id is not None:
-            and_query.append(ResultORM.molecule_id.in_(query_data.molecule_id))
+            and_query.append(SinglepointRecordORM.molecule_id.in_(query_data.molecule_id))
 
-        stmt = select(ResultORM)
+        stmt = select(SinglepointRecordORM)
 
         if need_join:
-            stmt = stmt.join(ResultORM.specification).options(contains_eager(ResultORM.specification))
+            stmt = stmt.join(SinglepointRecordORM.specification).options(
+                contains_eager(SinglepointRecordORM.specification)
+            )
 
         stmt = stmt.where(*and_query)
 
         return self.root_socket.records.query_base(
             stmt=stmt,
-            orm_type=ResultORM,
+            orm_type=SinglepointRecordORM,
             query_data=query_data,
             session=session,
         )
 
     def add(
         self,
-        sp_spec: SinglePointSpecification,
+        sp_spec: SinglepointSpecification,
         molecules: Sequence[Union[int, Molecule]],
         tag: Optional[str] = None,
         priority: PriorityEnum = PriorityEnum.normal,
@@ -333,7 +337,7 @@ class SinglePointRecordSocket(BaseRecordSocket):
                     },
                 )
 
-                sp_orm = ResultORM(
+                sp_orm = SinglepointRecordORM(
                     specification_id=spec_id,
                     molecule_id=mol_data["id"],
                     status=RecordStatusEnum.waiting,
@@ -343,12 +347,15 @@ class SinglePointRecordSocket(BaseRecordSocket):
                 all_orm.append(sp_orm)
 
             meta, ids = insert_general(
-                session, all_orm, (ResultORM.specification_id, ResultORM.molecule_id), (ResultORM.id,)
+                session,
+                all_orm,
+                (SinglepointRecordORM.specification_id, SinglepointRecordORM.molecule_id),
+                (SinglepointRecordORM.id,),
             )
             return meta, [x[0] for x in ids]
 
     def update_completed(
-        self, session: Session, record_orm: ResultORM, result: AtomicResult, manager_name: str
+        self, session: Session, record_orm: SinglepointRecordORM, result: AtomicResult, manager_name: str
     ) -> None:
         # Update the fields themselves
         record_orm.return_result = result.return_result
@@ -360,9 +367,9 @@ class SinglePointRecordSocket(BaseRecordSocket):
         self,
         session: Session,
         result: AtomicResult,
-    ) -> ResultORM:
+    ) -> SinglepointRecordORM:
 
-        sp_spec = SinglePointInputSpecification(
+        sp_spec = SinglepointInputSpecification(
             program=result.provenance.creator.lower(),
             driver=result.driver,
             method=result.model.method,
@@ -383,7 +390,7 @@ class SinglePointRecordSocket(BaseRecordSocket):
                 "Aborted single point insertion - could not add molecule: " + spec_meta.error_description
             )
 
-        record_orm = ResultORM()
+        record_orm = SinglepointRecordORM()
         record_orm.specification_id = spec_id
         record_orm.molecule_id = mol_ids[0]
         record_orm.status = RecordStatusEnum.complete
@@ -399,7 +406,7 @@ class SinglePointRecordSocket(BaseRecordSocket):
         return record_orm
 
     def recreate_task(
-        self, record_orm: ResultORM, tag: Optional[str] = None, priority: PriorityEnum = PriorityEnum.normal
+        self, record_orm: SinglepointRecordORM, tag: Optional[str] = None, priority: PriorityEnum = PriorityEnum.normal
     ) -> None:
 
         spec = record_orm.specification

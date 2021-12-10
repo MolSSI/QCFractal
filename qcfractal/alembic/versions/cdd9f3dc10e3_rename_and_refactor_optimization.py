@@ -53,7 +53,7 @@ def upgrade():
         unique=False,
     )
 
-    # Optimization <-> SinglePoint association (for Trajectory)
+    # Optimization <-> Singlepoint association (for Trajectory)
     op.drop_constraint("opt_result_association_result_id_fkey", "opt_result_association", type_="foreignkey")
     op.drop_constraint("opt_result_association_opt_id_fkey", "opt_result_association", type_="foreignkey")
     op.alter_column("opt_result_association", "result_id", new_column_name="singlepoint_record_id")
