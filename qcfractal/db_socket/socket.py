@@ -4,24 +4,25 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 
 from __future__ import annotations
 
+import importlib
+import logging
 import os
+import shutil
+import subprocess
+from contextlib import contextmanager
+from typing import TYPE_CHECKING
+
 from sqlalchemy import create_engine, exc, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
-import logging
-from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, List, Optional, Union, Iterable
-
+import qcfractal
 from qcfractal.interface.models import prepare_basis
 
 if TYPE_CHECKING:
+    from typing import Tuple, Any, List, Optional, Union, Iterable
     from sqlalchemy.orm.session import Session
-    from ..config import FractalConfig
-
-# for version checking
-import qcelemental
-import qcfractal
+    from ..config import FractalConfig, DatabaseConfig
 
 
 def format_query(ORMClass, **query: Union[None, str, int, Iterable[int], Iterable[str]]) -> List[Any]:
@@ -128,24 +129,6 @@ class SQLAlchemySocket:
 
         self.Session = sessionmaker(bind=self.engine, future=True)
 
-        # check version compatibility
-        db_ver = self.check_lib_versions()
-        self.logger.info(f"DB versions: {db_ver}")
-        if (not qcf_config.database.skip_version_check) and (
-            db_ver and qcfractal.__version__ != db_ver["fractal_version"]
-        ):
-            raise TypeError(
-                f"You are running QCFractal version {qcfractal.__version__} "
-                f'with an older DB version ({db_ver["fractal_version"]}). '
-                f'Please run "qcfractal-server upgrade" first before starting the server.'
-            )
-
-        # Check for compatible versions of the QCFractal database schema
-        try:
-            self.check_lib_versions()  # update version if new DB
-        except Exception as e:
-            raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}") from None
-
         # Create/initialize the subsockets
         from ..components.molecules.sockets import MoleculeSocket
         from ..components.keywords.sockets import KeywordsSocket
@@ -168,6 +151,149 @@ class SQLAlchemySocket:
         self.managers = ManagerSocket(self)
         self.users = UserSocket(self)
         self.roles = RoleSocket(self)
+
+        # check version compatibility
+        db_ver = self.serverinfo.check_lib_versions()
+        self.logger.info(f"Software versions info in database:")
+        for k, v in db_ver.items():
+            self.logger.info(f"      {k}: {v}")
+
+        if not qcf_config.database.skip_version_check and qcfractal.__version__ != db_ver["fractal_version"]:
+            raise RuntimeError(
+                f"You are running QCFractal version {qcfractal.__version__} "
+                f'with an older DB version ({db_ver["fractal_version"]}). '
+                f'Please run "qcfractal-server upgrade" first before starting the server.'
+            )
+
+    @staticmethod
+    def _run_subprocess(command: List[str]) -> Tuple[int, str, str]:
+        """
+        Runs a command using subprocess, and output stdout into the logger
+
+        Parameters
+        ----------
+        command
+            Command to run as a list of strings (see documentation for subprocess)
+
+        Returns
+        -------
+        :
+            Return code, stdout, and stderr as a Tuple
+        """
+
+        logger = logging.getLogger("SQLAlchemySocket")
+        proc = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        logger.debug("Running subprocess: " + str(command))
+        stdout = proc.stdout.decode()
+        stderr = proc.stderr.decode()
+        if len(stdout) > 0:
+            logger.info(stdout)
+        if len(stderr) > 0:
+            logger.info(stderr)
+
+        return proc.returncode, stdout, stderr
+
+    @staticmethod
+    def alembic_commands(db_config: DatabaseConfig) -> List[str]:
+        """
+        Get the components of an alembic command that can be passed to _run_subprocess
+
+        This will find the almembic command and also add the uri and alembic configuration information
+        to the command line.
+
+        Returns
+        -------
+        List[str]
+            Components of an alembic command line as a list of strings
+        """
+
+        db_uri = db_config.uri
+
+        # Find the path to the almebic ini
+
+        alembic_ini = os.path.join(qcfractal.qcfractal_topdir, "alembic.ini")
+        alembic_path = shutil.which("alembic")
+
+        if alembic_path is None:
+            raise RuntimeError("Cannot find the 'alembic' command. Is it installed?")
+        return [alembic_path, "-c", alembic_ini, "-x", "uri=" + db_uri]
+
+    @staticmethod
+    def init_database(db_config: DatabaseConfig):
+        logger = logging.getLogger("SQLAlchemySocket")
+
+        # Register all classes that derive from the BaseORM
+        importlib.import_module("qcfractal.components.register_all")
+
+        # create the tables via sqlalchemy
+        uri = db_config.uri
+        logger.info(f"Creating tables for database: {uri}")
+        engine = create_engine(uri, echo=False, pool_size=1)
+        session = sessionmaker(bind=engine)()
+
+        from qcfractal.db_socket.base_orm import BaseORM
+        from qcfractal.components.permissions.db_models import RoleORM
+        from qcfractal.components.permissions.role_socket import default_roles
+
+        try:
+            BaseORM.metadata.create_all(engine)
+        except Exception as e:
+            raise RuntimeError(f"SQLAlchemy Connection Error\n{str(e)}")
+
+        try:
+            for rolename, permissions in default_roles.items():
+                orm = RoleORM(rolename=rolename, permissions=permissions)
+                session.add(orm)
+            session.commit()
+        except Exception as e:
+            raise RuntimeError(f"Failed to populate default roles:\n {str(e)}")
+        finally:
+            session.close()
+
+        # update alembic_version table with the current version
+        logger.debug(f"Stamping Database with current version")
+        alembic_commands = SQLAlchemySocket.alembic_commands(db_config)
+        retcode, stdout, stderr = SQLAlchemySocket._run_subprocess(alembic_commands + ["stamp", "head"])
+
+        if retcode != 0:
+            err_msg = f"Error stamping the database with the current version:\noutput:\n{stdout}\nstderr:\n{stderr}"
+            raise RuntimeError(err_msg)
+
+    @staticmethod
+    def upgrade_database(db_config: DatabaseConfig) -> None:
+        """
+        Upgrade the database schema using the latest alembic revision.
+        """
+        logger = logging.getLogger("SQLAlchemySocket")
+
+        alembic_commands = SQLAlchemySocket.alembic_commands(db_config)
+        retcode, _, _ = SQLAlchemySocket._run_subprocess(alembic_commands + ["upgrade", "head"])
+
+        if retcode != 0:
+            raise RuntimeError(f"Failed to Upgrade the database")
+
+        # Now upgrade the stored version information
+        uri = db_config.uri
+        engine = create_engine(uri, echo=False, pool_size=1)
+        session = sessionmaker(bind=engine)()
+        try:
+            import qcfractal
+            import qcelemental
+
+            elemental_version = qcelemental.__version__
+            fractal_version = qcfractal.__version__
+
+            logger.info(f"Updating current version of QCFractal in DB: {uri} \n" f"to version {qcfractal.__version__}")
+
+            from ..components.serverinfo.db_models import VersionsORM
+
+            current_ver = VersionsORM(elemental_version=elemental_version, fractal_version=fractal_version)
+            session.add(current_ver)
+            session.commit()
+        except Exception as e:
+            raise ValueError(f"Failed to Update DB version.\n {str(e)}")
+        finally:
+            session.close()
 
     def __str__(self) -> str:
         return f"<SQLAlchemySocket: address='{self.uri}`>"
@@ -228,32 +354,6 @@ class SQLAlchemySocket:
             return autoflushing_scope(existing_session, read_only)
         else:
             return self.session_scope(read_only)
-
-    def check_lib_versions(self):
-        """Check the stored versions of elemental and fractal"""
-
-        # TODO - Move me to serverinfo socket
-        from ..components.serverinfo.db_models import VersionsORM
-
-        with self.session_scope() as session:
-            db_ver = session.query(VersionsORM).order_by(VersionsORM.created_on.desc())
-
-            # Table exists but empty
-            if db_ver.count() == 0:
-                elemental_version = qcelemental.__version__
-                fractal_version = qcfractal.__version__
-                current = VersionsORM(
-                    elemental_version=elemental_version,
-                    fractal_version=fractal_version,
-                )
-                session.add(current)
-                session.commit()
-            else:
-                current = db_ver.first()
-
-            ver = current.to_dict(exclude=["id"])
-
-        return ver
 
     def get_query_projection(self, className, query, *, limit=None, skip=0, include=None, exclude=None):
 

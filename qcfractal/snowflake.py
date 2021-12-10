@@ -1,26 +1,25 @@
 from __future__ import annotations
+
+import logging
+import logging.handlers
+import multiprocessing
 import os
 import tempfile
 import time
-import multiprocessing
-from queue import Empty  # Just for exception handling
 import weakref
-import logging
-import logging.handlers
 from concurrent.futures import ProcessPoolExecutor
-from .qc_queue import QueueManager
+from queue import Empty  # Just for exception handling
+from typing import TYPE_CHECKING
 
-from .portal import PortalClient
-from .postgres_harness import TemporaryPostgres
-from .port_util import find_open_port
+from .app.flask_app import FlaskProcess
 from .config import FractalConfig, DatabaseConfig, update_nested_dict
 from .periodics import PeriodicsProcess
-from .app.flask_app import FlaskProcess
-from .process_runner import ProcessBase, ProcessRunner
+from .port_util import find_open_port
+from .portal import PortalClient
 from .portal.records import RecordStatusEnum
-from .exceptions import AuthenticationFailure
-
-from typing import TYPE_CHECKING
+from .postgres_harness import TemporaryPostgres
+from .process_runner import ProcessBase, ProcessRunner
+from .qc_queue import QueueManager
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Sequence, Optional, Set

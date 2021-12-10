@@ -24,3 +24,8 @@ from .qc_queue import QueueManager
 
 # from .server import FractalServer
 from .snowflake import FractalSnowflake
+
+# The location of this file
+import os
+
+qcfractal_topdir = os.path.abspath(os.path.dirname(__file__))
