@@ -268,7 +268,9 @@ class PostgresHarness:
 
         self._logger.info(f"Database serving uri {self.config.safe_uri} appears to be up and running")
 
-    def sql_command(self, statement: str, database_name: Optional[str] = None, fail_ok: bool = False) -> Any:
+    def sql_command(
+        self, statement: str, database_name: Optional[str] = None, autocommit: bool = True, returns=True
+    ) -> Any:
         """Runs a single SQL query or statement string and returns the output
 
         Parameters
@@ -286,12 +288,14 @@ class PostgresHarness:
             uri = replace_db_in_uri(uri, database_name)
 
         conn = self.connect(uri)
+        if autocommit:
+            conn.autocommit = True
         cursor = conn.cursor()
 
         self._logger.debug(f"Executing SQL: {statement}")
-        cursor.execute(statement)
-        r = cursor.fetchall()
-        return r
+        r = cursor.execute(statement)
+        if returns:
+            return cursor.fetchall()
 
     def pg_ctl(self, cmds: List[str]) -> Tuple[int, str, str]:
         """Runs a pg_ctl command and returns its output
@@ -349,6 +353,8 @@ class PostgresHarness:
         # Check to see that everything is ok
         if not self.is_alive():
             raise RuntimeError("I created the database, but now it is not alive? Maybe check the postgres logs")
+
+        cursor.close()
 
     def delete_database(self) -> None:
         """

@@ -228,7 +228,7 @@ class SQLAlchemySocket:
         # create the tables via sqlalchemy
         uri = db_config.uri
         logger.info(f"Creating tables for database: {uri}")
-        engine = create_engine(uri, echo=False, pool_size=1)
+        engine = create_engine(uri, echo=False, poolclass=NullPool)
         session = sessionmaker(bind=engine)()
 
         from qcfractal.db_socket.base_orm import BaseORM
@@ -274,7 +274,7 @@ class SQLAlchemySocket:
 
         # Now upgrade the stored version information
         uri = db_config.uri
-        engine = create_engine(uri, echo=False, pool_size=1)
+        engine = create_engine(uri, echo=False, poolclass=NullPool)
         session = sessionmaker(bind=engine)()
         try:
             import qcfractal
