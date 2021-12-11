@@ -226,10 +226,15 @@ class RecordModifyBody(RestModelBase):
 class RecordDeleteURLParameters(RestModelBase):
     record_id: List[int]
     soft_delete: bool
+    delete_children: bool
 
-    @validator("soft_delete", pre=True)
+    @validator("soft_delete", "delete_children", pre=True)
     def validate_lists(cls, v):
         return validate_list_to_single(v)
+
+
+class RecordUndeleteURLParameters(RestModelBase):
+    record_id: List[int]
 
 
 class RecordQueryBody(QueryProjModelBase):

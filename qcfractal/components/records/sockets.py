@@ -19,10 +19,10 @@ from qcfractal.db_socket.helpers import (
     delete_general,
 )
 from qcfractal.exceptions import UserReportableError
-from qcfractal.portal.metadata_models import DeleteMetadata, QueryMetadata, UpdateMetadata
+from qcfractal.portal.metadata_models import DeleteMetadata, UndeleteMetadata, QueryMetadata, UpdateMetadata
 from qcfractal.portal.outputstore import OutputStore, OutputTypeEnum, CompressionEnum
 from qcfractal.portal.records import FailedOperation, PriorityEnum, RecordStatusEnum
-from .db_models import RecordComputeHistoryORM, BaseRecordORM
+from .db_models import RecordComputeHistoryORM, BaseRecordORM, RecordDeletionInfoORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -487,13 +487,12 @@ class RecordSocket:
             RecordStatusEnum.running,
             RecordStatusEnum.error,
             RecordStatusEnum.cancelled,
-            RecordStatusEnum.deleted,
         }
 
         if status is None:
-            status = set(RecordStatusEnum)
-
-        status = set(status) & resettable_status
+            status = resettable_status
+        else:
+            status = set(status) & resettable_status
 
         with self.root_socket.optional_session(session) as session:
             # Can't do inner join because task may not exist
@@ -510,7 +509,7 @@ class RecordSocket:
                 r.manager_name = None
 
                 # Regenerate the task if it does not exist
-                # (cancelled or deleted)
+                # (cancelled status)
                 if r.task is None:
                     handler = self._handler_map[r.record_type]
                     handler.recreate_task(r)
@@ -592,7 +591,7 @@ class RecordSocket:
         Marks a record as deleted
 
         If soft_delete is True, then the record is just marked as deleted and actually deletion may
-        happen later. Soft delete can be undone with reset_status
+        happen later. Soft delete can be undone with undelete
 
         A deleted record will not be picked up by any manager.
 
@@ -626,27 +625,37 @@ class RecordSocket:
             if soft_delete:
                 # Can't do inner join because task may not exist
                 stmt = select(BaseRecordORM).options(selectinload(BaseRecordORM.task))
+                stmt = stmt.where(BaseRecordORM.status != RecordStatusEnum.deleted)
                 stmt = stmt.where(BaseRecordORM.id.in_(all_id))
                 stmt = stmt.with_for_update()
                 record_orms = session.execute(stmt).scalars().all()
 
                 for r in record_orms:
-                    if r.status != RecordStatusEnum.deleted:
-                        r.status = RecordStatusEnum.deleted
-                        r.modified_on = datetime.utcnow()
+                    # if running, remove the assigned manager and make the old status waiting
+                    if r.status == RecordStatusEnum.running:
                         r.manager_name = None
+                        old_status = RecordStatusEnum.waiting
+                    else:
+                        old_status = r.status
 
-                        if r.task is not None:
-                            session.delete(r.task)
+                    r.status = RecordStatusEnum.deleted
+                    r.modified_on = datetime.utcnow()
+
+                    if r.task is not None:
+                        session.delete(r.task)
+
+                    d_info = RecordDeletionInfoORM(record_id=r.id, old_status=old_status, deleted_on=datetime.utcnow())
+
+                    session.add(d_info)
 
                 # put in order of the input parameter
-                # We only count the top level deletions, so we are looing at
+                # We only count the top level deletions, so we are looking at
                 # record_id and not all_id
                 deleted_ids = [r.id for r in record_orms]
                 missing_ids = set(record_id) - set(deleted_ids)
                 deleted_idx = [idx for idx, rid in enumerate(record_id) if rid in deleted_ids]
                 missing_idx = [idx for idx, rid in enumerate(record_id) if rid in missing_ids]
-                n_children_deleted = len(all_id) - len(record_id)
+                n_children_deleted = len(deleted_ids) - len(deleted_idx)
 
                 return DeleteMetadata(
                     deleted_idx=deleted_idx, missing_idx=list(missing_idx), n_children_deleted=n_children_deleted
@@ -660,6 +669,66 @@ class RecordSocket:
                 meta_dict = meta.dict()
                 meta_dict["n_children_deleted"] = ch_meta.n_deleted
                 return DeleteMetadata(**meta_dict)
+
+    def undelete(
+        self,
+        record_id: Sequence[int],
+        *,
+        session: Optional[Session] = None,
+    ) -> UndeleteMetadata:
+        """
+        Undeletes records that were soft deleted
+
+        This will always undelete children whenever possible
+
+        Parameters
+        ----------
+        record_id
+            ID of the record to undelete
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about what was undeleted
+        """
+        if len(record_id) == 0:
+            return UndeleteMetadata()
+
+        with self.root_socket.optional_session(session) as session:
+            all_id = list(record_id)  # convert to a list and/or copy
+            children_ids = self.get_children_ids(session, record_id)
+            all_id.extend(children_ids)
+
+            stmt = select(BaseRecordORM, RecordDeletionInfoORM).join(RecordDeletionInfoORM)
+            stmt = stmt.where(BaseRecordORM.id.in_(all_id))
+            stmt = stmt.where(BaseRecordORM.status == RecordStatusEnum.deleted)
+            stmt = stmt.with_for_update()
+            record_orms = session.execute(stmt).all()
+
+            for r_orm, d_orm in record_orms:
+                r_orm.status = d_orm.old_status
+                r_orm.modified_on = datetime.utcnow()
+
+                # Regenerate the task if the record was previously waiting or errored
+                if d_orm.old_status in {RecordStatusEnum.waiting, RecordStatusEnum.error}:
+                    handler = self._handler_map[r_orm.record_type]
+                    handler.recreate_task(r_orm)
+
+            # put in order of the input parameter
+            # We only count the top level deletions, so we are looking at
+            # record_id and not all_id
+            undeleted_ids = [r[0].id for r in record_orms]
+            missing_ids = set(record_id) - set(undeleted_ids)
+            undeleted_idx = [idx for idx, rid in enumerate(record_id) if rid in undeleted_ids]
+            missing_idx = [idx for idx, rid in enumerate(record_id) if rid in missing_ids]
+            n_children_undeleted = len(undeleted_ids) - len(undeleted_idx)
+
+            return UndeleteMetadata(
+                undeleted_idx=undeleted_idx, missing_idx=missing_idx, n_children_undeleted=n_children_undeleted
+            )
 
     def modify(
         self,

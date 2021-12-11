@@ -73,3 +73,11 @@ class BaseRecordORM(BaseORM):
     )
 
     __mapper_args__ = {"polymorphic_on": "record_type"}
+
+
+class RecordDeletionInfoORM(BaseORM):
+    __tablename__ = "record_deletion_info"
+
+    record_id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="CASCADE"), primary_key=True)
+    old_status = Column(Enum(RecordStatusEnum), nullable=False)
+    deleted_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)

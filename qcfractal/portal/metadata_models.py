@@ -145,17 +145,104 @@ class DeleteMetadata:
 
         if not del_idx.isdisjoint(missing_idx):
             intersection = del_idx.intersection(missing_idx)
-            raise ValueError(f"inserted_idx and missing_idx are not disjoint: intersection={intersection}")
+            raise ValueError(f"deleted_idx and missing_idx are not disjoint: intersection={intersection}")
 
         if not del_idx.isdisjoint(error_idx):
             intersection = del_idx.intersection(error_idx)
-            raise ValueError(f"inserted_idx and error_idx are not disjoint: intersection={intersection}")
+            raise ValueError(f"deleted_idx and error_idx are not disjoint: intersection={intersection}")
 
         if not missing_idx.isdisjoint(error_idx):
             intersection = missing_idx.intersection(error_idx)
             raise ValueError(f"missing_idx and error_idx are not disjoint: intersection={intersection}")
 
         all_idx = del_idx | missing_idx | error_idx
+
+        # Skip the rest if we don't have any data
+        if len(all_idx) == 0:
+            return values
+
+        # Are all the indices accounted for?
+        all_possible = set(range(max(all_idx) + 1))
+        if all_idx != all_possible:
+            missing = all_possible - all_idx
+            raise ValueError(f"All indices are not accounted for. Max is {max(all_idx)} and we are missing {missing}")
+
+        return values
+
+    def dict(self) -> Dict[str, Any]:
+        """
+        Returns the information from this dataclass as a dictionary
+        """
+
+        return dataclasses.asdict(self)
+
+
+@dataclass
+class UndeleteMetadata:
+    """
+    Metadata returned by undelete functions
+    """
+
+    # Integers in errors, missing, found are indices in the input/output list
+    error_description: Optional[str] = None
+    errors: List[Tuple[int, str]] = dataclasses.field(default_factory=list)
+    undeleted_idx: List[int] = dataclasses.field(default_factory=list)
+    missing_idx: List[int] = dataclasses.field(default_factory=list)
+    n_children_undeleted: int = 0
+
+    @property
+    def n_undeleted(self):
+        return len(self.undeleted_idx)
+
+    @property
+    def n_missing(self):
+        return len(self.missing_idx)
+
+    @property
+    def n_errors(self):
+        return len(self.errors)
+
+    @property
+    def error_idx(self):
+        return [x[0] for x in self.errors]
+
+    @property
+    def success(self):
+        return self.error_description is None and len(self.errors) == 0
+
+    @property
+    def error_string(self):
+        s = ""
+        if self.error_description:
+            s += self.error_description + "\n"
+        s += "\n".join(f"    Index {x}: {y}" for x, y in self.errors)
+        return s
+
+    @validator("errors", "undeleted_idx", "missing_idx", pre=True)
+    def sort_fields(cls, v):
+        return sorted(v)
+
+    @root_validator(pre=False, skip_on_failure=True)
+    def check_all_indices(cls, values):
+        # Test that all indices are accounted for and that the same index doesn't show up in
+        # undeleted_idx, missing_idx, or errors
+        undel_idx = set(values["undeleted_idx"])
+        missing_idx = set(values["missing_idx"])
+        error_idx = set(x[0] for x in values["errors"])
+
+        if not undel_idx.isdisjoint(missing_idx):
+            intersection = undel_idx.intersection(missing_idx)
+            raise ValueError(f"undeleted_idx and missing_idx are not disjoint: intersection={intersection}")
+
+        if not undel_idx.isdisjoint(error_idx):
+            intersection = undel_idx.intersection(error_idx)
+            raise ValueError(f"undeleted_idx and error_idx are not disjoint: intersection={intersection}")
+
+        if not missing_idx.isdisjoint(error_idx):
+            intersection = missing_idx.intersection(error_idx)
+            raise ValueError(f"missing_idx and error_idx are not disjoint: intersection={intersection}")
+
+        all_idx = undel_idx | missing_idx | error_idx
 
         # Skip the rest if we don't have any data
         if len(all_idx) == 0:
