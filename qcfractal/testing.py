@@ -403,10 +403,13 @@ def run_process(args, interrupt_after=15):
 @pytest.fixture(scope="session")
 def postgres_server(tmp_path_factory):
     """
-    A postgres server instance, not including any databases
+    A postgres server instance
+
+    This does not contain the target database, but does contain an empty template database
+    that can be used by snowflake, etc.
 
     This is built only once per session, and automatically deleted after the session. It uses
-    a pytest-proveded session-scoped temporary directory
+    a pytest-provided session-scoped temporary directory
     """
 
     logger = logging.getLogger(__name__)
@@ -416,6 +419,17 @@ def postgres_server(tmp_path_factory):
     pg_harness = tmp_pg.harness
     logger.debug(f"Using database located at {db_path} with uri {pg_harness.database_uri()}")
     assert pg_harness.is_alive(False) and not pg_harness.is_alive(True)
+
+    # Create the database, and we will use that as a template
+    # We connect to the "postgres" database, so as not to be using the database we want to copy
+    pg_harness.create_database()
+    pg_harness.sql_command(
+        f"CREATE DATABASE template_db TEMPLATE {tmp_pg.config.database_name};", database_name="postgres", returns=False
+    )
+
+    # Delete the database - we will create it from the template later
+    pg_harness.delete_database()
+
     yield pg_harness
 
     if tmp_pg:
@@ -430,11 +444,14 @@ def temporary_database(postgres_server):
     It is part of the postgres instance given by the postgres_server fixture
     """
 
-    # Make sure that the server is up, but that the database doesn't exist
-    assert postgres_server.is_alive(False) and not postgres_server.is_alive(True)
+    # Make sure that the database process is up
+    assert postgres_server.is_alive(False)
 
-    # Now create it (including creating tables)
-    postgres_server.create_database()
+    # Create the database from the template
+    db_name = postgres_server.config.database_name
+    postgres_server.sql_command(
+        f"CREATE DATABASE {db_name} TEMPLATE template_db;", database_name="postgres", returns=False
+    )
 
     try:
         yield postgres_server
