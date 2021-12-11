@@ -53,12 +53,13 @@ from qcfractal.portal.records import (
     RecordQueryBody,
     RecordModifyBody,
     RecordDeleteURLParameters,
+    RecordUndeleteURLParameters,
     AllRecordTypes,
     AllDataModelTypes,
 )
 from qcfractal.portal.records.singlepoint import SinglepointProtocols
 
-from .metadata_models import InsertMetadata, DeleteMetadata
+from .metadata_models import InsertMetadata, DeleteMetadata, UndeleteMetadata
 from qcfractal.portal.serverinfo import (
     AccessLogQueryParameters,
     AccessLogQuerySummaryParameters,
@@ -1156,10 +1157,18 @@ class PortalClient:
 
         return self._auto_request("patch", "/v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
-    def delete_records(self, record_id: Union[int, Sequence[int]], soft_delete=True) -> DeleteMetadata:
-        url_params = {"record_id": make_list(record_id), "soft_delete": soft_delete}
+    def delete_records(
+        self, record_id: Union[int, Sequence[int]], soft_delete=True, delete_children: bool = True
+    ) -> DeleteMetadata:
+        url_params = {"record_id": make_list(record_id), "soft_delete": soft_delete, "delete_children": delete_children}
         return self._auto_request(
             "delete", "/v1/record", None, RecordDeleteURLParameters, DeleteMetadata, None, url_params
+        )
+
+    def undelete_records(self, record_id: Union[int, Sequence[int]]) -> UndeleteMetadata:
+        url_params = {"record_id": make_list(record_id)}
+        return self._auto_request(
+            "post", "/v1/record/undelete", None, RecordUndeleteURLParameters, UndeleteMetadata, None, url_params
         )
 
     def modify_records(

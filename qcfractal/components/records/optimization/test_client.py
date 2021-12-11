@@ -387,3 +387,36 @@ def test_optimization_client_query(snowflake_client: PortalClient, storage_socke
     meta, opt = snowflake_client.query_optimizations(limit=1)
     assert meta.n_found == 3
     assert meta.n_returned == 1
+
+
+@pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_fluoroethane_opt_notraj"])
+def test_optimization_client_delete_1(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, opt_file: str):
+    # Deleting with deleting children
+    input_spec_1, molecule_1, result_data_1 = load_procedure_data(opt_file)
+    meta1, id1 = storage_socket.records.optimization.add(input_spec_1, [molecule_1])
+
+    with storage_socket.session_scope() as session:
+        rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
+        storage_socket.records.update_completed(session, rec_orm, result_data_1, None)
+
+    rec = storage_socket.records.optimization.get(id1, include=["trajectory"])
+    child_ids = [x["singlepoint_record_id"] for x in rec[0]["trajectory"]]
+
+    meta = snowflake_client.delete_records(id1, soft_delete=True, delete_children=True)
+    assert meta.success
+    assert meta.deleted_idx == [0]
+    assert meta.n_children_deleted == len(child_ids)
+
+    child_recs = storage_socket.records.get(child_ids)
+    assert all(x["status"] == RecordStatusEnum.deleted for x in child_recs)
+
+    meta = snowflake_client.delete_records(id1, soft_delete=False, delete_children=True)
+    assert meta.success
+    assert meta.deleted_idx == [0]
+    assert meta.n_children_deleted == len(child_ids)
+
+    recs = storage_socket.records.get(id1, missing_ok=True)
+    assert recs == [None]
+
+    child_recs = storage_socket.records.get(child_ids, missing_ok=True)
+    assert all(x is None for x in child_recs)

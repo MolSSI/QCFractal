@@ -3,13 +3,14 @@ from typing import Optional
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper, delete_helper
 from qcfractal.app.routes import check_access, wrap_route
-from qcfractal.portal.base_models import CommonGetProjURLParameters, CommonDeleteURLParameters
+from qcfractal.portal.base_models import CommonGetProjURLParameters
 from qcfractal.portal.records import (
     RecordModifyBody,
     RecordQueryBody,
     RecordDeleteURLParameters,
+    RecordUndeleteURLParameters,
+    RecordStatusEnum,
 )
-from qcfractal.portal.records import RecordStatusEnum
 
 
 @main.route("/v1/record", methods=["GET"])
@@ -47,6 +48,13 @@ def delete_records_v1(record_id: Optional[int] = None, *, url_params: RecordDele
     )
 
 
+@main.route("/v1/record/undelete", methods=["POST"])
+@wrap_route(None, RecordUndeleteURLParameters)
+@check_access
+def undelete_records_v1(url_params: RecordUndeleteURLParameters):
+    return storage_socket.records.undelete(url_params.record_id)
+
+
 @main.route("/v1/record", methods=["PATCH"])
 @main.route("/v1/record/<int:record_id>", methods=["PATCH"])
 @wrap_route(RecordModifyBody, None)
@@ -67,8 +75,6 @@ def modify_records_v1(record_id: Optional[int] = None, *, body_data: RecordModif
                 return storage_socket.records.reset(record_id=record_id, session=session)
             if body_data.status == RecordStatusEnum.cancelled:
                 return storage_socket.records.cancel(record_id=record_id, session=session)
-            if body_data.status == RecordStatusEnum.deleted:
-                return storage_socket.records.delete(record_id=record_id, session=session)
 
             # ignore all other statuses
 

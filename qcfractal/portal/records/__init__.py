@@ -7,6 +7,7 @@ from .models import (
     BaseRecord,
     RecordModifyBody,
     RecordDeleteURLParameters,
+    RecordUndeleteURLParameters,
     RecordQueryBody,
     RecordAddBodyBase,
 )
