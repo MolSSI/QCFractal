@@ -338,6 +338,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
                 )
 
                 sp_orm = SinglepointRecordORM(
+                    is_service=False,
                     specification_id=spec_id,
                     molecule_id=mol_data["id"],
                     status=RecordStatusEnum.waiting,
@@ -391,6 +392,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
             )
 
         record_orm = SinglepointRecordORM()
+        record_orm.is_service = False
         record_orm.specification_id = spec_id
         record_orm.molecule_id = mol_ids[0]
         record_orm.status = RecordStatusEnum.complete

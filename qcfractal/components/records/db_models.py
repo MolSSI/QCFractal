@@ -1,7 +1,6 @@
 import datetime
 
-from sqlalchemy import Column, String, Integer, ForeignKey, Enum, DateTime, JSON, Index, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Column, String, Integer, ForeignKey, Enum, DateTime, JSON, Index, Boolean
 from sqlalchemy.orm import relationship
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
@@ -35,8 +34,11 @@ class BaseRecordORM(BaseORM):
 
     __tablename__ = "base_record"
 
-    # for SQL
-    record_type = Column(String(100), nullable=False)  # for inheritance
+    # for SQLAlchemy inheritence
+    record_type = Column(String(100), nullable=False)
+
+    # Some records can be either a service or a procedure
+    is_service = Column(Boolean, nullable=False)
 
     # Base identification
     id = Column(Integer, primary_key=True)

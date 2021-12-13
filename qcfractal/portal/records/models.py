@@ -126,6 +126,7 @@ class BaseRecord(abc.ABC, BaseModel):
             validate_assignment = True
 
         id: int
+        is_service: bool
 
         extras: Optional[Dict[str, Any]] = None
 
