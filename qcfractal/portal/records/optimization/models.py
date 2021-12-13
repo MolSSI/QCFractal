@@ -37,6 +37,12 @@ class OptimizationInputSpecification(BaseModel):
     keywords: Dict[str, Any] = Field({})
     protocols: OptimizationProtocols = Field(OptimizationProtocols())
 
+    @property
+    def required_programs(self) -> Dict[str, Optional[str]]:
+        r = {self.program: None}
+        r.update(self.singlepoint_specification.required_programs)
+        return r
+
 
 class OptimizationSpecification(OptimizationInputSpecification):
     """

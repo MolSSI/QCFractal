@@ -294,7 +294,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
             tag = tag.lower()
 
         # All will have the same required programs
-        required_programs = {opt_spec.program: None, opt_spec.singlepoint_specification.program: None}
+        required_programs = opt_spec.required_programs
 
         with self.root_socket.optional_session(session, False) as session:
 
@@ -410,10 +410,10 @@ class OptimizationRecordSocket(BaseRecordSocket):
         priority: PriorityEnum = PriorityEnum.normal,
     ) -> None:
 
-        opt_spec = record_orm.specification
+        opt_spec = OptimizationSpecification(**record_orm.specification.dict())
         sp_spec = opt_spec.singlepoint_specification
         init_molecule = Molecule(**record_orm.initial_molecule.dict())
-        required_programs = {opt_spec.program: None, opt_spec.singlepoint_specification.program: None}
+        required_programs = opt_spec.required_programs
 
         model = {"method": sp_spec.method}
         if sp_spec.basis:
@@ -433,7 +433,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         task_orm = TaskQueueORM(
             tag=tag,
             priority=priority,
-            required_programs=required_programs,
+            required_programs=required_programs.keys(),
             spec={
                 "function": "qcengine.compute_procedure",
                 "args": [qcschema_input.dict(), record_orm.specification.program],

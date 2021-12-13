@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional, Union, Any, List
+from typing import Optional, Union, Any, List, Dict
 
 from typing_extensions import Literal
 
@@ -53,6 +53,10 @@ class SinglepointInputSpecification(BaseModel):
         # Convert empty string to None
         # Lowercasing is handled by constr
         return None if v == "" else v
+
+    @property
+    def required_programs(self) -> Dict[str, Optional[str]]:
+        return {self.program: None}
 
 
 class SinglepointSpecification(SinglepointInputSpecification):

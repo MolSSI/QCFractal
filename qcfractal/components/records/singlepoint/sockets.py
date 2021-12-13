@@ -280,7 +280,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
             tag = tag.lower()
 
         # All will have the same required programs
-        required_programs = {sp_spec.program: None}
+        required_programs = sp_spec.required_programs
 
         with self.root_socket.optional_session(session, False) as session:
 
@@ -329,7 +329,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
                 task_orm = TaskQueueORM(
                     tag=tag,
                     priority=priority,
-                    required_programs=required_programs,
+                    required_programs=required_programs.keys(),
                     spec={
                         "function": "qcengine.compute",
                         "args": [qcschema_input.dict(), real_spec["program"]],
@@ -411,8 +411,8 @@ class SinglepointRecordSocket(BaseRecordSocket):
         self, record_orm: SinglepointRecordORM, tag: Optional[str] = None, priority: PriorityEnum = PriorityEnum.normal
     ) -> None:
 
-        spec = record_orm.specification
-        required_programs = {spec.program: None}
+        spec = SinglepointSpecification(**record_orm.specification.dict())
+        required_programs = spec.required_programs
 
         model = {"method": spec.method}
         if spec.basis:
@@ -429,7 +429,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         task_orm = TaskQueueORM(
             tag=tag,
             priority=priority,
-            required_programs=required_programs,
+            required_programs=required_programs.keys(),
             spec={
                 "function": "qcengine.compute",
                 "args": [qcschema_input.dict(), spec.program],
