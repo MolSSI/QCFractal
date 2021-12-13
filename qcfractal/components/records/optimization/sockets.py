@@ -357,6 +357,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
                 )
 
                 opt_orm = OptimizationRecordORM(
+                    is_service=False,
                     specification_id=spec_id,
                     initial_molecule_id=mol_data["id"],
                     status=RecordStatusEnum.waiting,
