@@ -22,14 +22,12 @@ class TaskQueueORM(BaseORM):
 
     spec = Column(MsgpackExt, nullable=False)
 
-    # others
-    tag = Column(String, default=None)
-
     # For some reason, this can't be array of varchar. If it is, the comparisons
     # when claiming tasks don't work
     required_programs = Column(ARRAY(TEXT), nullable=False)
 
-    priority = Column(Integer, default=PriorityEnum.normal, nullable=False)
+    tag = Column(String)
+    priority = Column(Integer, nullable=False)
 
     created_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
 

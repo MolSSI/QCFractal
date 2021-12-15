@@ -1,44 +1,34 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from qcelemental.models import OptimizationInput, OptimizationResult
 from qcelemental.models.procedures import QCInputSpecification
-
 from sqlalchemy import select
-from sqlalchemy.orm import contains_eager
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import contains_eager
 
+from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM, SinglepointSpecificationORM
 from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.tasks.db_models import TaskQueueORM
-from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
 from qcfractal.db_socket.helpers import get_general, insert_general, get_general_multi
 from qcfractal.portal.metadata_models import InsertMetadata, QueryMetadata
 from qcfractal.portal.molecules import Molecule
 from qcfractal.portal.records import PriorityEnum, RecordStatusEnum
-from qcfractal.portal.records.singlepoint import (
-    SinglepointDriver,
-    WavefunctionProperties,
-    SinglepointSpecification,
-    SinglepointInputSpecification,
-)
 from qcfractal.portal.records.optimization import (
     OptimizationInputSpecification,
     OptimizationSpecification,
-    OptimizationProtocols,
     OptimizationQueryBody,
 )
-
-
+from qcfractal.portal.records.singlepoint import (
+    SinglepointDriver,
+)
 from .db_models import OptimizationSpecificationORM, OptimizationRecordORM, OptimizationTrajectoryORM
-from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM, SinglepointSpecificationORM
-from qcfractal.portal.keywords import KeywordSet
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from datetime import datetime
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, Iterable
 
     OptimizationSpecificationDict = Dict[str, Any]
@@ -56,7 +46,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         return session.execute(stmt).scalars().all()
 
     def get_specification(
-        self, id: int, missing_ok: bool = False, *, session: Optional[Session] = None
+        self, spec_id: int, missing_ok: bool = False, *, session: Optional[Session] = None
     ) -> Optional[OptimizationSpecificationDict]:
         """
         Obtain a specification with the specified ID
@@ -68,7 +58,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         ----------
         session
             An existing SQLAlchemy session to get data from
-        id
+        spec_id
             An id for a single point specification
         missing_ok
            If set to True, then missing keywords will be tolerated, and the returned list of
@@ -85,7 +75,13 @@ class OptimizationRecordSocket(BaseRecordSocket):
 
         with self.root_socket.optional_session(session, True) as session:
             return get_general(
-                session, OptimizationSpecificationORM, OptimizationSpecificationORM.id, [id], None, None, missing_ok
+                session,
+                OptimizationSpecificationORM,
+                OptimizationSpecificationORM.id,
+                [spec_id],
+                None,
+                None,
+                missing_ok,
             )[0]
 
     def add_specification(
@@ -255,6 +251,42 @@ class OptimizationRecordSocket(BaseRecordSocket):
             session=session,
         )
 
+    def _create_task(
+        self,
+        specification: OptimizationSpecification,
+        initial_molecule: Dict[str, Any],
+        tag: Optional[str],
+        priority: PriorityEnum,
+    ) -> TaskQueueORM:
+
+        model = {"method": specification.singlepoint_specification.method}
+        if specification.singlepoint_specification.basis:
+            model["basis"] = specification.singlepoint_specification.basis
+
+        # Add the singlepoint program to the optimization keywords
+        opt_keywords = specification.keywords.copy()
+        opt_keywords["program"] = specification.singlepoint_specification.program
+
+        qcschema_input = OptimizationInput(
+            input_specification=QCInputSpecification(
+                model=model, keywords=specification.singlepoint_specification.keywords.values
+            ),
+            initial_molecule=initial_molecule,
+            keywords=opt_keywords,
+            protocols=specification.protocols,
+        )
+
+        return TaskQueueORM(
+            tag=tag,
+            priority=priority,
+            required_programs=specification.required_programs.keys(),
+            spec={
+                "function": "qcengine.compute_procedure",
+                "args": [qcschema_input.dict(), specification.program],
+                "kwargs": {},
+            },
+        )
+
     def add(
         self,
         opt_spec: OptimizationInputSpecification,
@@ -293,9 +325,6 @@ class OptimizationRecordSocket(BaseRecordSocket):
         if tag is not None:
             tag = tag.lower()
 
-        # All will have the same required programs
-        required_programs = opt_spec.required_programs
-
         with self.root_socket.optional_session(session, False) as session:
 
             # First, add the specification
@@ -324,37 +353,12 @@ class OptimizationRecordSocket(BaseRecordSocket):
             # Load the spec as is from the db
             # May be different due to normalization, or because keywords were passed by
             # ID where we need the full keywords
-            real_spec = self.get_specification(spec_id, session=session)
-
-            model = {"method": real_spec["singlepoint_specification"]["method"]}
-            if real_spec["singlepoint_specification"]["basis"]:
-                model["basis"] = real_spec["singlepoint_specification"]["basis"]
-
-            # Add the singlepoint program to the optimization keywords
-            opt_keywords = real_spec["keywords"].copy()
-            opt_keywords["program"] = real_spec["singlepoint_specification"]["program"]
+            real_spec_dict = self.get_specification(spec_id, session=session)
+            real_spec = OptimizationSpecification(**real_spec_dict)
 
             for mol_data in all_molecules:
 
-                qcschema_input = OptimizationInput(
-                    input_specification=QCInputSpecification(
-                        model=model, keywords=real_spec["singlepoint_specification"]["keywords"]["values"]
-                    ),
-                    initial_molecule=mol_data,
-                    keywords=opt_keywords,
-                    protocols=real_spec["protocols"],
-                )
-
-                task_orm = TaskQueueORM(
-                    tag=tag,
-                    priority=priority,
-                    required_programs=required_programs,
-                    spec={
-                        "function": "qcengine.compute_procedure",
-                        "args": [qcschema_input.dict(), real_spec["program"]],
-                        "kwargs": {},
-                    },
-                )
+                task_orm = self._create_task(real_spec, mol_data, tag, priority)
 
                 opt_orm = OptimizationRecordORM(
                     is_service=False,
@@ -411,34 +415,6 @@ class OptimizationRecordSocket(BaseRecordSocket):
     ) -> None:
 
         opt_spec = OptimizationSpecification(**record_orm.specification.dict())
-        sp_spec = opt_spec.singlepoint_specification
-        init_molecule = Molecule(**record_orm.initial_molecule.dict())
-        required_programs = opt_spec.required_programs
+        init_mol = record_orm.initial_molecule.dict()
 
-        model = {"method": sp_spec.method}
-        if sp_spec.basis:
-            model["basis"] = sp_spec.basis
-
-        # Add the singlepoint program to the optimization keywords
-        opt_keywords = opt_spec.keywords.copy()
-        opt_keywords["program"] = sp_spec.program
-
-        qcschema_input = OptimizationInput(
-            input_specification=QCInputSpecification(model=model, keywords=sp_spec.keywords.values),
-            initial_molecule=init_molecule,
-            keywords=opt_keywords,
-            protocols=opt_spec.protocols,
-        )
-
-        task_orm = TaskQueueORM(
-            tag=tag,
-            priority=priority,
-            required_programs=required_programs.keys(),
-            spec={
-                "function": "qcengine.compute_procedure",
-                "args": [qcschema_input.dict(), record_orm.specification.program],
-                "kwargs": {},
-            },
-        )
-
-        record_orm.task = task_orm
+        record_orm.task = self._create_task(opt_spec, init_mol, tag, priority)

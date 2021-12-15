@@ -5,13 +5,14 @@ from typing import TYPE_CHECKING, Optional
 
 from qcelemental.models import AtomicInput, AtomicResult
 from sqlalchemy import select
-from sqlalchemy.orm import contains_eager
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import contains_eager
 
 from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
 from qcfractal.db_socket.helpers import get_general, insert_general
+from qcfractal.portal.keywords import KeywordSet
 from qcfractal.portal.metadata_models import InsertMetadata, QueryMetadata
 from qcfractal.portal.molecules import Molecule
 from qcfractal.portal.records import PriorityEnum, RecordStatusEnum
@@ -22,13 +23,10 @@ from qcfractal.portal.records.singlepoint import (
     SinglepointQueryBody,
 )
 from .db_models import SinglepointSpecificationORM, SinglepointRecordORM
-from qcfractal.portal.keywords import KeywordSet
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from datetime import datetime
-    from qcfractal.portal.records.singlepoint import SinglepointDriver
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, Iterable
 
     SinglepointSpecificationDict = Dict[str, Any]
@@ -65,7 +63,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         return []
 
     def get_specification(
-        self, id: int, missing_ok: bool = False, *, session: Optional[Session] = None
+        self, spec_id: int, missing_ok: bool = False, *, session: Optional[Session] = None
     ) -> Optional[SinglepointSpecificationDict]:
         """
         Obtain a specification with the specified ID
@@ -77,7 +75,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         ----------
         session
             An existing SQLAlchemy session to get data from
-        id
+        spec_id
             An id for a single point specification
         missing_ok
            If set to True, then missing keywords will be tolerated, and the returned list of
@@ -94,7 +92,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
         with self.root_socket.optional_session(session, True) as session:
             return get_general(
-                session, SinglepointSpecificationORM, SinglepointSpecificationORM.id, [id], None, None, missing_ok
+                session, SinglepointSpecificationORM, SinglepointSpecificationORM.id, [spec_id], None, None, missing_ok
             )[0]
 
     def add_specification(
@@ -241,6 +239,37 @@ class SinglepointRecordSocket(BaseRecordSocket):
             session=session,
         )
 
+    def _create_task(
+        self,
+        specification: SinglepointSpecification,
+        molecule: Dict[str, Any],
+        tag: Optional[str],
+        priority: PriorityEnum,
+    ) -> TaskQueueORM:
+
+        model = {"method": specification.method}
+        if specification.basis:
+            model["basis"] = specification.basis
+
+        qcschema_input = AtomicInput(
+            driver=specification.driver,
+            model=model,
+            molecule=molecule,
+            keywords=specification.keywords.values,
+            protocols=specification.protocols,
+        )
+
+        return TaskQueueORM(
+            tag=tag,
+            priority=priority,
+            required_programs=specification.required_programs.keys(),
+            spec={
+                "function": "qcengine.compute",
+                "args": [qcschema_input.dict(), specification.program],
+                "kwargs": {},
+            },
+        )
+
     def add(
         self,
         sp_spec: SinglepointSpecification,
@@ -279,9 +308,6 @@ class SinglepointRecordSocket(BaseRecordSocket):
         if tag is not None:
             tag = tag.lower()
 
-        # All will have the same required programs
-        required_programs = sp_spec.required_programs
-
         with self.root_socket.optional_session(session, False) as session:
 
             # First, add the specification
@@ -310,32 +336,12 @@ class SinglepointRecordSocket(BaseRecordSocket):
             # Load the spec as is from the db
             # May be different due to normalization, or because keywords were passed by
             # ID where we need the full keywords
-            real_spec = self.get_specification(spec_id, session=session)
-
-            model = {"method": real_spec["method"]}
-            if real_spec["basis"]:
-                model["basis"] = real_spec["basis"]
+            real_spec_dict = self.get_specification(spec_id, session=session)
+            real_spec = SinglepointSpecification(**real_spec_dict)
 
             for mol_data in all_molecules:
 
-                qcschema_input = AtomicInput(
-                    driver=real_spec["driver"],
-                    model=model,
-                    molecule=mol_data,
-                    keywords=real_spec["keywords"]["values"],
-                    protocols=real_spec["protocols"],
-                )
-
-                task_orm = TaskQueueORM(
-                    tag=tag,
-                    priority=priority,
-                    required_programs=required_programs.keys(),
-                    spec={
-                        "function": "qcengine.compute",
-                        "args": [qcschema_input.dict(), real_spec["program"]],
-                        "kwargs": {},
-                    },
-                )
+                task_orm = self._create_task(real_spec, mol_data, tag, priority)
 
                 sp_orm = SinglepointRecordORM(
                     is_service=False,
@@ -412,29 +418,6 @@ class SinglepointRecordSocket(BaseRecordSocket):
     ) -> None:
 
         spec = SinglepointSpecification(**record_orm.specification.dict())
-        required_programs = spec.required_programs
+        mol = record_orm.molecule.dict()
 
-        model = {"method": spec.method}
-        if spec.basis:
-            model["basis"] = spec.basis
-
-        qcschema_input = AtomicInput(
-            driver=spec.driver,
-            model=model,
-            molecule=record_orm.molecule.dict(),
-            keywords=spec.keywords.values,
-            protocols=spec.protocols,
-        )
-
-        task_orm = TaskQueueORM(
-            tag=tag,
-            priority=priority,
-            required_programs=required_programs.keys(),
-            spec={
-                "function": "qcengine.compute",
-                "args": [qcschema_input.dict(), spec.program],
-                "kwargs": {},
-            },
-        )
-
-        record_orm.task = task_orm
+        record_orm.task = self._create_task(spec, mol, tag, priority)
