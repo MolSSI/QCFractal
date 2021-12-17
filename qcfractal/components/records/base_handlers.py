@@ -20,7 +20,7 @@ from qcfractal.db_socket.socket import SQLAlchemySocket
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket import BaseORM
-    from qcfractal.components.services.db_models import ServiceQueueTasks, ServiceQueueORM
+    from qcfractal.components.services.db_models import ServiceQueueTasksORM, ServiceQueueORM
     from qcfractal.components.tasks.db_models import TaskQueueORM
     from qcfractal.portal.metadata_models import InsertMetadata, ObjectId, PriorityEnum
     from typing import Sequence, Tuple, List, Optional, TypeVar
@@ -186,7 +186,7 @@ class BaseServiceHandler(abc.ABC):
             if not meta.success:
                 raise RuntimeError("Problem submitting task: {}.".format(meta.error_string))
 
-            service_task = ServiceQueueTasks(procedure_id=added_ids[0], service_id=service_orm.id, extras=key)  # type: ignore
+            service_task = ServiceQueueTasksORM(procedure_id=added_ids[0], service_id=service_orm.id, extras=key)  # type: ignore
             service_orm.tasks_obj.append(service_task)
             all_added_ids.append(added_ids[0])
 

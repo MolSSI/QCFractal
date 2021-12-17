@@ -1038,7 +1038,7 @@ def populate_db(storage_socket: SQLAlchemySocket):
     assert len(tasks) == 3
 
     # we don't send back the one we want to be 'running' still
-    storage_socket.tasks.update_completed(
+    storage_socket.tasks.update_finished(
         mname1.fullname,
         {
             tasks[0]["id"]: result_data_2,
@@ -1051,7 +1051,7 @@ def populate_db(storage_socket: SQLAlchemySocket):
         storage_socket.records.reset(id_4)
         tasks = storage_socket.tasks.claim_tasks(mname2.fullname)
         assert len(tasks) == 1
-        storage_socket.tasks.update_completed(
+        storage_socket.tasks.update_finished(
             mname2.fullname,
             {
                 tasks[0]["id"]: result_data_4,

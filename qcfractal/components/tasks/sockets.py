@@ -43,9 +43,9 @@ class TaskSocket:
         self._user_task_limit = root_socket.qcf_config.response_limits.task_queue
         self._manager_task_limit = root_socket.qcf_config.response_limits.manager_task
 
-    def update_completed(self, manager_name: str, results: Dict[int, AllResultTypes]) -> TaskReturnMetadata:
+    def update_finished(self, manager_name: str, results: Dict[int, AllResultTypes]) -> TaskReturnMetadata:
         """
-        Insert data from completed calculations into the database
+        Insert data from finished calculations into the database
 
         Parameters
         ----------
@@ -131,7 +131,7 @@ class TaskSocket:
 
                     # Failed task returning FailedOperation
                     elif result.success is False and isinstance(result, FailedOperation):
-                        self.root_socket.records.update_failure(record_orm, result, manager_name)
+                        self.root_socket.records.update_failed_task(record_orm, result, manager_name)
                         notify_status = RecordStatusEnum.error
                         tasks_failures.append(task_id)
 
@@ -141,7 +141,7 @@ class TaskSocket:
                         error = {"error_type": "internal_fractal_error", "error_message": msg}
                         failed_op = FailedOperation(error=error, success=False)
 
-                        self.root_socket.records.update_failure(record_orm, failed_op, manager_name)
+                        self.root_socket.records.update_failed_task(record_orm, failed_op, manager_name)
                         notify_status = RecordStatusEnum.error
 
                         self._logger.error(msg)
@@ -149,7 +149,7 @@ class TaskSocket:
 
                     # Manager returned a full, successful result
                     else:
-                        self.root_socket.records.update_completed(session, record_orm, result, manager_name)
+                        self.root_socket.records.update_completed_task(session, record_orm, result, manager_name)
 
                         notify_status = RecordStatusEnum.complete
                         tasks_success.append(task_id)
@@ -163,7 +163,7 @@ class TaskSocket:
                     error = {"error_type": "internal_fractal_error", "error_message": msg}
                     failed_op = FailedOperation(error=error, success=False)
 
-                    self.root_socket.records.update_failure(record_orm, failed_op, manager_name)
+                    self.root_socket.records.update_failed_task(record_orm, failed_op, manager_name)
                     notify_status = RecordStatusEnum.error
 
                     self._logger.error(msg)

@@ -42,7 +42,7 @@ def existing_history_id(storage_socket):
     meta, id = storage_socket.records.singlepoint.add(input_spec, [molecule], "tag1", PriorityEnum.normal)
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 
-    rmeta = storage_socket.tasks.update_completed(mname1.fullname, {tasks[0]["id"]: result_data})
+    rmeta = storage_socket.tasks.update_finished(mname1.fullname, {tasks[0]["id"]: result_data})
     assert rmeta.accepted_ids == [tasks[0]["id"]]
 
     # Now there should be a compute history id that we can return

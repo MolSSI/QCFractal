@@ -330,14 +330,14 @@ class SinglepointRecordSocket(BaseRecordSocket):
                     [],
                 )
 
-            all_orm = []
-            all_molecules = self.root_socket.molecules.get(mol_ids, session=session)
-
             # Load the spec as is from the db
             # May be different due to normalization, or because keywords were passed by
             # ID where we need the full keywords
             real_spec_dict = self.get_specification(spec_id, session=session)
             real_spec = SinglepointSpecification(**real_spec_dict)
+
+            all_orm = []
+            all_molecules = self.root_socket.molecules.get(mol_ids, session=session)
 
             for mol_data in all_molecules:
 
@@ -361,7 +361,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
             )
             return meta, [x[0] for x in ids]
 
-    def update_completed(
+    def update_completed_task(
         self, session: Session, record_orm: SinglepointRecordORM, result: AtomicResult, manager_name: str
     ) -> None:
         # Update the fields themselves
@@ -370,7 +370,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         record_orm.wavefunction = wavefunction_helper(result.wavefunction)
         record_orm.extras = result.extras
 
-    def insert_completed(
+    def insert_complete_record(
         self,
         session: Session,
         result: AtomicResult,

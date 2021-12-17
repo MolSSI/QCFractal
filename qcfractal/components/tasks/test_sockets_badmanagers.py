@@ -62,7 +62,7 @@ def test_task_socket_return_manager_noexist(storage_socket: SQLAlchemySocket):
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 
     with pytest.raises(ComputeManagerError, match="does not exist") as err:
-        storage_socket.tasks.update_completed(
+        storage_socket.tasks.update_finished(
             "missing_manager",
             {tasks[0]["id"]: result_data},
         )
@@ -97,7 +97,7 @@ def test_task_socket_return_manager_inactive(storage_socket: SQLAlchemySocket):
     storage_socket.managers.deactivate([mname1.fullname])
 
     with pytest.raises(ComputeManagerError, match="is not active") as err:
-        storage_socket.tasks.update_completed(
+        storage_socket.tasks.update_finished(
             mname1.fullname,
             {tasks[0]["id"]: result_data},
         )
@@ -135,7 +135,7 @@ def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket):
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 
     # Manager 2 tries to return it
-    rmeta = storage_socket.tasks.update_completed(
+    rmeta = storage_socket.tasks.update_finished(
         mname2.fullname,
         {tasks[0]["id"]: result_data},
     )
@@ -177,7 +177,7 @@ def test_task_socket_return_manager_badid(storage_socket: SQLAlchemySocket, capl
 
     # Should be logged
     with caplog_handler_at_level(caplog, logging.WARNING):
-        rmeta = storage_socket.tasks.update_completed(
+        rmeta = storage_socket.tasks.update_finished(
             mname1.fullname,
             {123: result_data},
         )
@@ -216,7 +216,7 @@ def test_task_socket_return_manager_badstatus_1(storage_socket: SQLAlchemySocket
     storage_socket.records.reset(id, status={RecordStatusEnum.running})
 
     with caplog_handler_at_level(caplog, logging.WARNING):
-        rmeta = storage_socket.tasks.update_completed(
+        rmeta = storage_socket.tasks.update_finished(
             mname1.fullname,
             {tasks[0]["id"]: result_data},
         )
@@ -259,7 +259,7 @@ def test_task_socket_return_manager_badstatus_2(storage_socket: SQLAlchemySocket
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 
-    storage_socket.tasks.update_completed(
+    storage_socket.tasks.update_finished(
         mname1.fullname,
         {tasks[0]["id"]: result_data},
     )
@@ -267,7 +267,7 @@ def test_task_socket_return_manager_badstatus_2(storage_socket: SQLAlchemySocket
     time_1 = datetime.utcnow()
 
     with caplog_handler_at_level(caplog, logging.WARNING):
-        rmeta = storage_socket.tasks.update_completed(
+        rmeta = storage_socket.tasks.update_finished(
             mname1.fullname,
             {tasks[0]["id"]: result_data},
         )
@@ -316,7 +316,7 @@ def test_task_socket_return_manager_badstatus_3(storage_socket: SQLAlchemySocket
     time_1 = datetime.utcnow()
 
     with caplog_handler_at_level(caplog, logging.WARNING):
-        rmeta = storage_socket.tasks.update_completed(
+        rmeta = storage_socket.tasks.update_finished(
             mname1.fullname,
             {tasks[0]["id"]: result_data},
         )

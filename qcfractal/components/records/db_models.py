@@ -5,7 +5,9 @@ from sqlalchemy.orm import relationship
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.db_socket import BaseORM, MsgpackExt
+from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.portal.records import RecordStatusEnum
+from qcfractal.portal.outputstore import OutputTypeEnum, OutputStore, CompressionEnum
 
 
 class RecordComputeHistoryORM(BaseORM):
@@ -19,7 +21,17 @@ class RecordComputeHistoryORM(BaseORM):
     modified_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
     provenance = Column(JSON)
 
-    outputs = relationship("OutputStoreORM", lazy="select")
+    outputs = relationship(OutputStoreORM, lazy="select")
+
+    def get_output(self, output_type: OutputTypeEnum, create: bool = True):
+        for o in self.outputs:
+            if o.output_type == output_type:
+                return o
+
+        new_output = OutputStore.compress(output_type, "", CompressionEnum.lzma, 1)
+        new_output_orm = OutputStoreORM.from_model(new_output)
+        self.outputs.append(new_output_orm)
+        return new_output_orm
 
     __table_args__ = (
         Index("ix_record_compute_history_record_id", "record_id"),

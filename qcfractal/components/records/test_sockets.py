@@ -498,7 +498,7 @@ def test_record_socket_modify(storage_socket: SQLAlchemySocket):
 
     # Delete tag
     meta = storage_socket.records.modify(all_id, delete_tag=True)
-    assert meta.n_updated == 2
+    assert meta.n_updated == 3
 
     rec = storage_socket.records.get(all_id, include=["*", "task"])
 
@@ -509,7 +509,7 @@ def test_record_socket_modify(storage_socket: SQLAlchemySocket):
 
     assert rec[0]["task"]["tag"] is None
     assert rec[1]["task"] is None
-    assert rec[2]["task"]["tag"] == "tag3"
+    assert rec[2]["task"]["tag"] is None  # running can be changed
     assert rec[2]["task"]["priority"] == PriorityEnum.normal
     assert rec[3]["task"]["tag"] is None
     assert rec[4]["task"] is None

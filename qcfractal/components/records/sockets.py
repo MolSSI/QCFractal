@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import abc
 import logging
 from datetime import datetime
 from typing import TYPE_CHECKING
@@ -10,6 +9,7 @@ from sqlalchemy.orm import joinedload, selectinload, with_polymorphic
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
+from qcfractal.components.services.db_models import ServiceQueueORM, ServiceQueueTasksORM
 from qcfractal.db_socket.helpers import (
     get_query_proj_options,
     get_count_2,
@@ -77,40 +77,50 @@ def create_compute_history_entry(
     return history_orm
 
 
-class BaseRecordSocket(abc.ABC):
+class BaseRecordSocket:
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._limit = root_socket.qcf_config.response_limits.record
 
-    @abc.abstractmethod
-    def update_completed(
+    def update_completed_task(
         self, session: Session, record_orm: BaseRecordORM, result: AllResultTypes, manager_name: str
     ) -> None:
-        pass
+        raise NotImplementedError(f"updated_completed not implemented for {type(self)}! This is a developer error")
 
-    @abc.abstractmethod
     def recreate_task(
         self, record_orm: BaseRecordORM, tag: Optional[str] = None, priority: PriorityEnum = PriorityEnum.normal
     ) -> None:
-        pass
+        """
+        Recreate the entry in the task queue
+        """
+        raise NotImplementedError(f"recreate_task not implemented for {type(self)}! This is a developer error")
 
-    @abc.abstractmethod
-    def insert_completed(
+    def recreate_service(
+        self, record_orm: BaseRecordORM, tag: Optional[str] = None, priority: PriorityEnum = PriorityEnum.normal
+    ) -> None:
+        """
+        Recreate the entry in the service queue
+        """
+        raise NotImplementedError(f"recreate_service not implemented for {type(self)}! This is a developer error")
+
+    def insert_complete_record(
         self,
         session: Session,
         result: AllResultTypes,
     ) -> BaseRecordORM:
-        pass
+        raise NotImplementedError(f"insert_completed not implemented for {type(self)}! This is a developer error")
 
-    @abc.abstractmethod
     def get_children_ids(
         self,
         session: Session,
         record_id: Iterable[int],
     ) -> List[int]:
-        # NOTE - it is expected that handlers get ids
-        # for computations that are not of the correct type
-        pass
+        # NOTE - it is expected that handlers are tolerant of this being called
+        # for computations whose type they are not responsible for
+        raise NotImplementedError(f"get_children_ids not implemented for {type(self)}! This is a developer error")
+
+    def iterate_service(self, session: Session, service_orm: ServiceQueueORM) -> bool:
+        raise NotImplementedError(f"iterate_service not implemented for {type(self)}! This is a developer error")
 
 
 class RecordSocket:
@@ -123,25 +133,42 @@ class RecordSocket:
         # All the subsockets
         from .singlepoint.sockets import SinglepointRecordSocket
         from .optimization.sockets import OptimizationRecordSocket
+        from .torsiondrive.sockets import TorsiondriveRecordSocket
 
         self.singlepoint = SinglepointRecordSocket(root_socket)
         self.optimization = OptimizationRecordSocket(root_socket)
+        self.torsiondrive = TorsiondriveRecordSocket(root_socket)
 
         self._handler_map: Dict[str, BaseRecordSocket] = {
             "singlepoint": self.singlepoint,
             "optimization": self.optimization,
+            "torsiondrive": self.torsiondrive,
         }
+
         self._handler_map_by_schema: Dict[str, BaseRecordSocket] = {
             "qcschema_output": self.singlepoint,
             "qcschema_optimization_output": self.optimization,
         }
 
+    def get_subtask_ids(self, session: Session, record_id: Iterable[int]) -> List[int]:
+        # List may contain duplicates. So be tolerant of that!
+
+        stmt = select(ServiceQueueTasksORM.record_id)
+        stmt = stmt.join(ServiceQueueORM, ServiceQueueORM.id == ServiceQueueTasksORM.service_id)
+        stmt = stmt.where(ServiceQueueORM.record_id.in_(record_id))
+        return session.execute(stmt).scalars().all()
+
     def get_children_ids(self, session: Session, record_id: Iterable[int]) -> List[int]:
+        # List may contain duplicates. So be tolerant of that!
         all_ids = []
 
         for h in self._handler_map.values():
             ch = h.get_children_ids(session, record_id)
             all_ids.extend(ch)
+
+        # add in subtasks of services
+        subtask_ids = self.get_subtask_ids(session, record_id)
+        all_ids.extend(subtask_ids)
 
         return all_ids
 
@@ -323,15 +350,20 @@ class RecordSocket:
             )
             return sorted(hist[0], key=lambda x: x["modified_on"])
 
-    def update_completed(self, session: Session, record_orm: BaseRecordORM, result: AllResultTypes, manager_name: str):
+    def update_completed_task(
+        self, session: Session, record_orm: BaseRecordORM, result: AllResultTypes, manager_name: str
+    ):
 
         if isinstance(result, FailedOperation) or not result.success:
             raise RuntimeError("Developer error - this function only handles successful results")
 
+        if record_orm.is_service:
+            raise RuntimeError("Cannot update completed task with a service")
+
         handler = self._handler_map[record_orm.record_type]
 
         # Update record-specific fields
-        handler.update_completed(session, record_orm, result, manager_name)
+        handler.update_completed_task(session, record_orm, result, manager_name)
 
         # Now do everything common to all records
         # Get the outputs & status, storing in the history orm
@@ -346,7 +378,26 @@ class RecordSocket:
         # Delete the task from the task queue since it is completed
         session.delete(record_orm.task)
 
-    def insert_completed(self, results: AllResultTypes) -> List[int]:
+    def iterate_service(self, session: Session, service_orm: ServiceQueueORM) -> bool:
+        if not service_orm.record.is_service:
+            raise RuntimeError("Cannot iterate a record that is not a service")
+
+        record_type = service_orm.record.record_type
+        return self._handler_map[record_type].iterate_service(session, service_orm)
+
+    def update_failed_service(self, record_orm: BaseRecordORM, error_info: Dict[str, Any]):
+        record_orm.status = RecordStatusEnum.error
+
+        error_obj = OutputStore.compress(OutputTypeEnum.error, error_info, CompressionEnum.lzma, 1)
+        error_orm = OutputStoreORM.from_model(error_obj)
+        record_orm.compute_history[-1].status = RecordStatusEnum.error
+        record_orm.compute_history[-1].outputs.append(error_orm)
+        record_orm.compute_history[-1].modified_on = datetime.utcnow()
+
+        record_orm.status = RecordStatusEnum.error
+        record_orm.modified_on = datetime.utcnow()
+
+    def insert_complete_record(self, results: AllResultTypes) -> List[int]:
 
         ids = []
 
@@ -356,7 +407,7 @@ class RecordSocket:
                     raise UserReportableError("Cannot insert a completed, failed operation")
 
                 handler = self._handler_map_by_schema[result.schema_name]
-                record_orm = handler.insert_completed(session, result)
+                record_orm = handler.insert_complete_record(session, result)
 
                 # Now do everything common to all records
                 # Get the outputs & status, storing in the history orm
@@ -371,7 +422,7 @@ class RecordSocket:
 
         return ids
 
-    def update_failure(self, record_orm: BaseRecordORM, failed_result: FailedOperation, manager_name: str):
+    def update_failed_task(self, record_orm: BaseRecordORM, failed_result: FailedOperation, manager_name: str):
         if not isinstance(failed_result, FailedOperation):
             raise RuntimeError("Developer error - this function only handles FailedOperation results")
 
@@ -503,16 +554,18 @@ class RecordSocket:
 
             record_orms = session.execute(stmt).scalars().all()
 
-            for r in record_orms:
-                r.status = RecordStatusEnum.waiting
-                r.modified_on = datetime.utcnow()
-                r.manager_name = None
+            for r_orm in record_orms:
+                r_orm.status = RecordStatusEnum.waiting
+                r_orm.modified_on = datetime.utcnow()
+                r_orm.manager_name = None
 
-                # Regenerate the task if it does not exist
+                # Regenerate the task or service if it does not exist
                 # (cancelled status)
-                if r.task is None:
-                    handler = self._handler_map[r.record_type]
-                    handler.recreate_task(r)
+                handler = self._handler_map[r_orm.record_type]
+                if r_orm.is_service is False and r_orm.task is None:
+                    handler.recreate_task(r_orm)
+                if r_orm.service is True and r_orm.service is None:
+                    handler.recreate_service(r_orm)
 
             # put in order of the input parameter
             updated_ids = [r.id for r in record_orms]
@@ -569,6 +622,12 @@ class RecordSocket:
 
                 if r.task is not None:
                     session.delete(r.task)
+                if r.service is not None:
+                    # Also cancel all (cancellable) subtasks
+                    subtask_ids = self.get_subtask_ids(session, [r.id])
+                    self.cancel(subtask_ids, session=session)
+
+                    session.delete(r.service)
 
             # put in order of the input parameter
             updated_ids = [r.id for r in record_orms]
@@ -615,12 +674,14 @@ class RecordSocket:
             return DeleteMetadata()
 
         with self.root_socket.optional_session(session) as session:
-            all_id = list(record_id)  # convert to a list and/or copy
+            all_id = set(record_id)
             children_ids = []
 
             if delete_children:
                 children_ids = self.get_children_ids(session, record_id)
-                all_id.extend(children_ids)
+                all_id.update(children_ids)
+
+            all_id = set(all_id)
 
             if soft_delete:
                 # Can't do inner join because task may not exist
@@ -643,6 +704,8 @@ class RecordSocket:
 
                     if r.task is not None:
                         session.delete(r.task)
+                    if r.service is not None:
+                        session.delete(r.service)
 
                     d_info = RecordDeletionInfoORM(record_id=r.id, old_status=old_status, deleted_on=datetime.utcnow())
 
@@ -698,9 +761,9 @@ class RecordSocket:
             return UndeleteMetadata()
 
         with self.root_socket.optional_session(session) as session:
-            all_id = list(record_id)  # convert to a list and/or copy
+            all_id = set(record_id)
             children_ids = self.get_children_ids(session, record_id)
-            all_id.extend(children_ids)
+            all_id.update(children_ids)
 
             stmt = select(BaseRecordORM, RecordDeletionInfoORM).join(RecordDeletionInfoORM)
             stmt = stmt.where(BaseRecordORM.id.in_(all_id))
@@ -714,8 +777,13 @@ class RecordSocket:
 
                 # Regenerate the task if the record was previously waiting or errored
                 if d_orm.old_status in {RecordStatusEnum.waiting, RecordStatusEnum.error}:
+                    # Regenerate the task or service if it does not exist
+                    # (cancelled status)
                     handler = self._handler_map[r_orm.record_type]
-                    handler.recreate_task(r_orm)
+                    if r_orm.is_service is False and r_orm.task is None:
+                        handler.recreate_task(r_orm)
+                    if r_orm.service is True and r_orm.service is None:
+                        handler.recreate_service(r_orm)
 
             # put in order of the input parameter
             # We only count the top level deletions, so we are looking at
@@ -778,26 +846,39 @@ class RecordSocket:
         if new_tag is None and new_priority is None and not delete_tag:
             return UpdateMetadata()
 
+        all_id = set(record_id)
+
         with self.root_socket.optional_session(session) as session:
+            # Get subtasks for all the records that are services
+            subtask_id = self.get_subtask_ids(session, record_id)
+            all_id.update(subtask_id)
+
             # Do a manual join, not a joined load - we don't want to actually load the base record, just
             # query by status
             stmt = select(TaskQueueORM)
             stmt = stmt.join(TaskQueueORM.record)
-            stmt = stmt.where(BaseRecordORM.status != RecordStatusEnum.running)
-            stmt = stmt.where(TaskQueueORM.record_id.in_(record_id))
+            stmt = stmt.where(TaskQueueORM.record_id.in_(all_id))
             stmt = stmt.with_for_update()
             task_orms = session.execute(stmt).scalars().all()
 
-            for t in task_orms:
+            stmt = select(ServiceQueueORM)
+            stmt = stmt.join(ServiceQueueORM.record)
+            stmt = stmt.where(ServiceQueueORM.record_id.in_(all_id))
+            stmt = stmt.with_for_update()
+            svc_orms = session.execute(stmt).scalars().all()
+
+            all_orm = task_orms + svc_orms
+            for o in all_orm:
                 if new_tag:
-                    t.tag = new_tag
+                    o.tag = new_tag
                 if new_priority:
-                    t.priority = new_priority
+                    o.priority = new_priority
 
                 if delete_tag:
-                    t.tag = None
+                    o.tag = None
 
             # put in order of the input parameter
+            # only pay attention to the records requested (ie, not subtasks)
             updated_ids = [t.record_id for t in task_orms]
             error_ids = set(record_id) - set(updated_ids)
             updated_idx = [idx for idx, rid in enumerate(record_id) if rid in updated_ids]

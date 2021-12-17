@@ -314,13 +314,13 @@ def test_optimization_socket_update(storage_socket: SQLAlchemySocket):
 
     with storage_socket.session_scope() as session:
         rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
-        storage_socket.records.update_completed(session, rec_orm, result_data_1, None)
+        storage_socket.records.update_completed_task(session, rec_orm, result_data_1, None)
 
         rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id2[0]).one()
-        storage_socket.records.update_completed(session, rec_orm, result_data_2, None)
+        storage_socket.records.update_completed_task(session, rec_orm, result_data_2, None)
 
         rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id3[0]).one()
-        storage_socket.records.update_completed(session, rec_orm, result_data_3, None)
+        storage_socket.records.update_completed_task(session, rec_orm, result_data_3, None)
 
     time_1 = datetime.utcnow()
 
@@ -544,7 +544,7 @@ def test_optimization_socket_delete_1(storage_socket: SQLAlchemySocket, opt_file
 
     with storage_socket.session_scope() as session:
         rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
-        storage_socket.records.update_completed(session, rec_orm, result_data_1, None)
+        storage_socket.records.update_completed_task(session, rec_orm, result_data_1, None)
 
     rec = storage_socket.records.optimization.get(id1, include=["trajectory"])
     child_ids = [x["singlepoint_record_id"] for x in rec[0]["trajectory"]]
@@ -577,7 +577,7 @@ def test_optimization_socket_delete_2(storage_socket: SQLAlchemySocket, opt_file
 
     with storage_socket.session_scope() as session:
         rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
-        storage_socket.records.update_completed(session, rec_orm, result_data_1, None)
+        storage_socket.records.update_completed_task(session, rec_orm, result_data_1, None)
 
     rec = storage_socket.records.optimization.get(id1, include=["trajectory"])
     child_ids = [x["singlepoint_record_id"] for x in rec[0]["trajectory"]]
@@ -610,7 +610,7 @@ def test_optimization_socket_undelete_1(storage_socket: SQLAlchemySocket, opt_fi
 
     with storage_socket.session_scope() as session:
         rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
-        storage_socket.records.update_completed(session, rec_orm, result_data_1, None)
+        storage_socket.records.update_completed_task(session, rec_orm, result_data_1, None)
 
     rec = storage_socket.records.optimization.get(id1, include=["trajectory"])
     child_ids = [x["singlepoint_record_id"] for x in rec[0]["trajectory"]]

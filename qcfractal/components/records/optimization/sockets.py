@@ -306,7 +306,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
 
         Parameters
         ----------
-        optspec
+        opt_spec
             Specification for the calculations
         initial_molecules
             Molecules to compute using the specification
@@ -347,14 +347,14 @@ class OptimizationRecordSocket(BaseRecordSocket):
                     [],
                 )
 
-            all_orm = []
-            all_molecules = self.root_socket.molecules.get(mol_ids, session=session)
-
             # Load the spec as is from the db
             # May be different due to normalization, or because keywords were passed by
             # ID where we need the full keywords
             real_spec_dict = self.get_specification(spec_id, session=session)
             real_spec = OptimizationSpecification(**real_spec_dict)
+
+            all_orm = []
+            all_molecules = self.root_socket.molecules.get(mol_ids, session=session)
 
             for mol_data in all_molecules:
 
@@ -378,7 +378,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
             )
             return meta, [x[0] for x in ids]
 
-    def update_completed(
+    def update_completed_task(
         self, session: Session, record_orm: OptimizationRecordORM, result: OptimizationResult, manager_name: str
     ) -> None:
 
@@ -390,7 +390,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         # Insert the trajectory
         record_orm.trajectory = []
         for position, traj_result in enumerate(result.trajectory):
-            traj_orm = self.root_socket.records.singlepoint.insert_completed(session, traj_result)
+            traj_orm = self.root_socket.records.singlepoint.insert_complete_record(session, traj_result)
             assoc_orm = OptimizationTrajectoryORM(singlepoint_record=traj_orm)
             record_orm.trajectory.append(assoc_orm)
 
@@ -399,7 +399,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         record_orm.energies = result.energies
         record_orm.extras = result.extras
 
-    def insert_completed(
+    def insert_complete_record(
         self,
         session: Session,
         result: OptimizationResult,

@@ -397,7 +397,7 @@ def test_optimization_client_delete_1(snowflake_client: PortalClient, storage_so
 
     with storage_socket.session_scope() as session:
         rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
-        storage_socket.records.update_completed(session, rec_orm, result_data_1, None)
+        storage_socket.records.update_completed_task(session, rec_orm, result_data_1, None)
 
     rec = storage_socket.records.optimization.get(id1, include=["trajectory"])
     child_ids = [x["singlepoint_record_id"] for x in rec[0]["trajectory"]]
