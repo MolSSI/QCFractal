@@ -31,7 +31,10 @@ def _check_td():
 
 from qcfractal.components.records.base_handlers import BaseServiceHandler
 from qcfractal.components.services.db_models import ServiceQueueORM
-from qcfractal.components.records.torsiondrive.db_models import OptimizationHistory, TorsionDriveProcedureORM
+from qcfractal.components.records.torsiondrive.db_models import (
+    TorsiondriveOptimizationHistoryORM,
+    TorsiondriveRecordORM,
+)
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.db_socket.helpers import insert_general, get_query_proj_options
 from qcfractal.interface.models import (
@@ -83,10 +86,10 @@ class TorsionDriveHandler(BaseServiceHandler):
         BaseServiceHandler.__init__(self, root_socket)
 
     def add_orm(
-        self, td_orms: Sequence[TorsionDriveProcedureORM], *, session: Optional[Session] = None
+        self, td_orms: Sequence[TorsiondriveRecordORM], *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, List[ObjectId]]:
         """
-        Adds TorsionDriveProcedureORM to the database, taking into account duplicates
+        Adds TorsiondriveRecordORM to the database, taking into account duplicates
 
         The session is flushed at the end of this function.
 
@@ -121,7 +124,7 @@ class TorsionDriveHandler(BaseServiceHandler):
 
         with self.root_socket.optional_session(session) as session:
             meta, orm = insert_general(
-                session, td_orms, (TorsionDriveProcedureORM.hash_index,), (TorsionDriveProcedureORM.id,)
+                session, td_orms, (TorsiondriveRecordORM.hash_index,), (TorsiondriveRecordORM.id,)
             )
         return meta, [x[0] for x in orm]
 
@@ -172,12 +175,12 @@ class TorsionDriveHandler(BaseServiceHandler):
         int_id = [int(x) for x in id]
         unique_ids = list(set(int_id))
 
-        load_cols, load_rels = get_query_proj_columns(TorsionDriveProcedureORM, include, exclude)
+        load_cols, load_rels = get_query_proj_columns(TorsiondriveRecordORM, include, exclude)
 
         with self.root_socket.optional_session(session, True) as session:
             query = (
-                session.query(TorsionDriveProcedureORM)
-                .filter(TorsionDriveProcedureORM.id.in_(unique_ids))
+                session.query(TorsiondriveRecordORM)
+                .filter(TorsiondriveRecordORM.id.in_(unique_ids))
                 .options(load_only(*load_cols))
             )
 
@@ -213,7 +216,7 @@ class TorsionDriveHandler(BaseServiceHandler):
         if len(initial_molecule_orm) != len(mol_ids):
             raise RuntimeError("Cannot find all molecules for torsion drive?")
 
-        td_orm = TorsionDriveProcedureORM()
+        td_orm = TorsiondriveRecordORM()
         td_orm.keywords = service_input.keywords.dict()
         td_orm.optimization_spec = service_input.optimization_spec.dict()
         td_orm.qc_spec = service_input.qc_spec.dict()
@@ -237,7 +240,7 @@ class TorsionDriveHandler(BaseServiceHandler):
     def create_tasks(
         self,
         session: Session,
-        td_orms: Sequence[TorsionDriveProcedureORM],
+        td_orms: Sequence[TorsiondriveRecordORM],
         tag: Optional[str],
         priority: PriorityEnum,
     ) -> Tuple[InsertMetadata, List[ObjectId]]:
@@ -438,7 +441,9 @@ class TorsionDriveHandler(BaseServiceHandler):
             td_api_key = task_info["td_api_key"]
             opt_key = json.dumps(td_api.grid_id_from_string(td_api_key))
 
-            opt_history = OptimizationHistory(torsion_id=int(td_orm.procedure_obj.id), opt_id=id, key=opt_key)
+            opt_history = TorsiondriveOptimizationHistoryORM(
+                torsion_id=int(td_orm.procedure_obj.id), opt_id=id, key=opt_key
+            )
             td_orm.procedure_obj.optimization_history_obj.append(opt_history)
 
         # Add positions to the association table

@@ -12,7 +12,7 @@ Handles special relationships
 from qcexport_extra_collection import _add_collection
 
 from qcfractal.components.collections.db_models import CollectionORM
-from qcfractal.components.records.torsiondrive.db_models import TorsionDriveProcedureORM
+from qcfractal.components.records.torsiondrive.db_models import TorsiondriveRecordORM
 from qcfractal.components.records.gridoptimization.db_models import GridOptimizationProcedureORM
 from qcfractal.components.records.optimization.db_models import OptimizationRecordORM
 from qcfractal.components.managers.db_models import ComputeManagerORM
@@ -115,5 +115,5 @@ extra_children_map = {CollectionORM: _add_collection,
                       ComputeManagerORM: _add_queuemanager,
                       OptimizationRecordORM: _add_optimization_procedure,
                       GridOptimizationProcedureORM: _add_gridoptimization_procedure,
-                      TorsionDriveProcedureORM: _add_torsiondrive_procedure,
+                      TorsiondriveRecordORM: _add_torsiondrive_procedure,
                       }
