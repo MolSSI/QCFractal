@@ -1,5 +1,6 @@
 from typing import Optional
 
+from flask import g
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper, delete_helper
 from qcfractal.app.routes import check_access, wrap_route
@@ -84,6 +85,14 @@ def modify_records_v1(record_id: Optional[int] = None, *, body_data: RecordModif
                 new_tag=body_data.tag,
                 new_priority=body_data.priority,
                 delete_tag=body_data.delete_tag,
+                session=session,
+            )
+
+        if body_data.comment:
+            return storage_socket.records.add_comment(
+                record_id=record_id,
+                username=g.user if "user" in g else None,
+                comment=body_data.comment,
                 session=session,
             )
 

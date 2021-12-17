@@ -10,7 +10,7 @@ import pytest
 
 from qcfractal.portal.client import PortalRequestError
 from qcfractal.portal.records import PriorityEnum, RecordStatusEnum
-from qcfractal.testing import populate_db
+from qcfractal.testing import TestingSnowflake, _test_users, populate_db
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -125,6 +125,90 @@ def test_record_client_get_empty(snowflake_client: PortalClient, storage_socket:
 
     r = snowflake_client.get_records([])
     assert r == []
+
+
+def test_record_client_add_comment(secure_snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
+    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    all_id = populate_db(storage_socket)
+
+    # comments not retrieved by default
+    rec = client.get_records(all_id)
+    for r in rec:
+        assert r.raw_data.comments is None
+
+    rec = client.get_records(all_id, include_comments=True)
+    for r in rec:
+        assert r.raw_data.comments == []
+
+    time_0 = datetime.utcnow()
+    meta = client.add_comment([all_id[1], all_id[3]], comment="This is a test comment")
+    time_1 = datetime.utcnow()
+    assert meta.success
+    assert meta.n_updated == 2
+    assert meta.updated_idx == [0, 1]
+
+    meta = client.add_comment([all_id[2], all_id[3]], comment="This is another test comment")
+    time_2 = datetime.utcnow()
+    assert meta.success
+    assert meta.n_updated == 2
+    assert meta.updated_idx == [0, 1]
+
+    rec = client.get_records(all_id, include_comments=True)
+    assert rec[0].raw_data.comments == []
+    assert rec[4].raw_data.comments == []
+    assert rec[5].raw_data.comments == []
+    assert len(rec[1].raw_data.comments) == 1
+    assert len(rec[2].raw_data.comments) == 1
+    assert len(rec[3].raw_data.comments) == 2
+
+    assert time_0 < rec[1].raw_data.comments[0].timestamp < time_1
+    assert time_1 < rec[2].raw_data.comments[0].timestamp < time_2
+    assert time_0 < rec[3].raw_data.comments[0].timestamp < time_1
+    assert time_1 < rec[3].raw_data.comments[1].timestamp < time_2
+    assert rec[1].raw_data.comments[0].username == "admin_user"
+    assert rec[3].raw_data.comments[0].username == "admin_user"
+    assert rec[2].raw_data.comments[0].username == "admin_user"
+    assert rec[3].raw_data.comments[1].username == "admin_user"
+
+    assert rec[1].raw_data.comments[0].comment == "This is a test comment"
+    assert rec[3].raw_data.comments[0].comment == "This is a test comment"
+    assert rec[2].raw_data.comments[0].comment == "This is another test comment"
+    assert rec[3].raw_data.comments[1].comment == "This is another test comment"
+
+
+def test_record_client_add_comment_nouser(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+    all_id = populate_db(storage_socket)
+
+    time_0 = datetime.utcnow()
+    meta = snowflake_client.add_comment([all_id[1], all_id[3]], comment="This is a test comment")
+    time_1 = datetime.utcnow()
+    assert meta.success
+    assert meta.n_updated == 2
+    assert meta.updated_idx == [0, 1]
+
+    rec = snowflake_client.get_records(all_id, include_comments=True)
+    assert len(rec[1].raw_data.comments) == 1
+    assert len(rec[3].raw_data.comments) == 1
+
+    assert time_0 < rec[1].raw_data.comments[0].timestamp < time_1
+    assert time_0 < rec[3].raw_data.comments[0].timestamp < time_1
+    assert rec[1].raw_data.comments[0].username is None
+    assert rec[3].raw_data.comments[0].username is None
+
+    assert rec[1].raw_data.comments[0].comment == "This is a test comment"
+    assert rec[3].raw_data.comments[0].comment == "This is a test comment"
+
+
+def test_record_client_add_comment_badid(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+    all_id = populate_db(storage_socket)
+
+    meta = snowflake_client.add_comment([all_id[1], 9999, all_id[3]], comment="test")
+    assert not meta.success
+    assert meta.n_updated == 2
+    assert meta.n_errors == 1
+    assert meta.updated_idx == [0, 2]
+    assert meta.error_idx == [1]
+    assert "does not exist" in meta.errors[0][1]
 
 
 def test_record_client_reset_id(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):

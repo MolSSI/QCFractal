@@ -1059,6 +1059,7 @@ class PortalClient:
         *,
         include_task: bool = False,
         include_outputs: bool = False,
+        include_comments: bool = False,
     ) -> Union[List[Optional[AllRecordTypes]], Optional[AllRecordTypes]]:
         """Get result records by id."""
 
@@ -1074,6 +1075,8 @@ class PortalClient:
             include |= {"*", "task"}
         if include_outputs:
             include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_comments:
+            include |= {"*", "comments"}
 
         if include:
             url_params["include"] = include
@@ -1110,6 +1113,7 @@ class PortalClient:
         *,
         include_task: bool = False,
         include_outputs: bool = False,
+        include_comments: bool = False,
     ) -> Tuple[QueryMetadata, List[AllRecordTypes]]:
 
         query_data = {
@@ -1132,6 +1136,8 @@ class PortalClient:
             include |= {"*", "task"}
         if include_outputs:
             include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_comments:
+            include |= {"*", "comments"}
 
         if include:
             query_data["include"] = include
@@ -1183,6 +1189,30 @@ class PortalClient:
             "tag": new_tag,
             "priority": new_priority,
             "delete_tag": delete_tag,
+        }
+        return self._auto_request("patch", "/v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
+
+    def add_comment(self, record_id: Union[int, Sequence[int]], comment: str) -> UpdateMetadata:
+        """
+        Adds a comment to records
+
+        Parameters
+        ----------
+        record_id
+            The record or records to add the comments to
+
+        comment
+            The comment string to add. You username will be added automatically
+
+        Returns
+        -------
+        :
+            Metadata about which records were updated
+        """
+
+        body_data = {
+            "record_id": make_list(record_id),
+            "comment": comment,
         }
         return self._auto_request("patch", "/v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
@@ -1310,6 +1340,7 @@ class PortalClient:
         *,
         include_task: bool = False,
         include_outputs: bool = False,
+        include_comments: bool = False,
         include_molecule: bool = False,
         include_wavefunction: bool = False,
     ) -> Union[Optional[SinglepointRecord], List[Optional[SinglepointRecord]]]:
@@ -1318,12 +1349,14 @@ class PortalClient:
         include = set()
 
         # We must add '*' so that all the default fields are included
-        if include_molecule:
-            include |= {"*", "molecule"}
         if include_task:
             include |= {"*", "task"}
         if include_outputs:
             include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_comments:
+            include |= {"*", "comments"}
+        if include_molecule:
+            include |= {"*", "molecule"}
         if include_wavefunction:
             include |= {"*", "wavefunction"}
 
@@ -1368,6 +1401,7 @@ class PortalClient:
         *,
         include_task: bool = False,
         include_outputs: bool = False,
+        include_comments: bool = False,
         include_molecule: bool = False,
         include_wavefunction: bool = False,
     ) -> Tuple[QueryMetadata, List[SinglepointRecord]]:
@@ -1399,6 +1433,8 @@ class PortalClient:
             include |= {"*", "task"}
         if include_outputs:
             include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_comments:
+            include |= {"*", "comments"}
         if include_molecule:
             include |= {"*", "molecule"}
         if include_wavefunction:
@@ -1466,6 +1502,7 @@ class PortalClient:
         *,
         include_task: bool = False,
         include_outputs: bool = False,
+        include_comments: bool = False,
         include_initial_molecule: bool = False,
         include_final_molecule: bool = False,
         include_trajectory: bool = False,
@@ -1479,6 +1516,8 @@ class PortalClient:
             include |= {"*", "task"}
         if include_outputs:
             include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_comments:
+            include |= {"*", "comments"}
         if include_initial_molecule:
             include |= {"*", "initial_molecule"}
         if include_final_molecule:
@@ -1528,6 +1567,7 @@ class PortalClient:
         *,
         include_task: bool = False,
         include_outputs: bool = False,
+        include_comments: bool = False,
         include_initial_molecule: bool = False,
         include_final_molecule: bool = False,
         include_trajectory: bool = False,
@@ -1561,6 +1601,8 @@ class PortalClient:
             include |= {"*", "task"}
         if include_outputs:
             include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_comments:
+            include |= {"*", "comments"}
         if include_initial_molecule:
             include |= {"*", "initial_molecule"}
         if include_final_molecule:

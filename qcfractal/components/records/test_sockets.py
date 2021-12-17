@@ -140,6 +140,70 @@ def test_record_socket_get_empty(storage_socket: SQLAlchemySocket):
     assert r == []
 
 
+def test_record_socket_add_comment(storage_socket: SQLAlchemySocket):
+    all_id = populate_db(storage_socket)
+
+    # comments not retrieved by default
+    rec = storage_socket.records.get(all_id)
+    for r in rec:
+        assert "comments" not in r
+
+    rec = storage_socket.records.get(all_id, include=["*", "comments"])
+    for r in rec:
+        assert r["comments"] == []
+
+    time_0 = datetime.utcnow()
+    meta = storage_socket.records.add_comment(
+        [all_id[1], all_id[3]], username="test_user", comment="This is a test comment"
+    )
+    time_1 = datetime.utcnow()
+    assert meta.success
+    assert meta.n_updated == 2
+    assert meta.updated_idx == [0, 1]
+
+    meta = storage_socket.records.add_comment(
+        [all_id[2], all_id[3]], username=None, comment="This is a test comment without a user"
+    )
+    time_2 = datetime.utcnow()
+    assert meta.success
+    assert meta.n_updated == 2
+    assert meta.updated_idx == [0, 1]
+
+    rec = storage_socket.records.get(all_id, include=["*", "comments"])
+    assert rec[0]["comments"] == []
+    assert rec[4]["comments"] == []
+    assert rec[5]["comments"] == []
+    assert len(rec[1]["comments"]) == 1
+    assert len(rec[2]["comments"]) == 1
+    assert len(rec[3]["comments"]) == 2
+
+    assert time_0 < rec[1]["comments"][0]["timestamp"] < time_1
+    assert time_1 < rec[2]["comments"][0]["timestamp"] < time_2
+    assert time_0 < rec[3]["comments"][0]["timestamp"] < time_1
+    assert time_1 < rec[3]["comments"][1]["timestamp"] < time_2
+    assert rec[1]["comments"][0]["username"] == "test_user"
+    assert rec[3]["comments"][0]["username"] == "test_user"
+    assert rec[2]["comments"][0]["username"] is None
+    assert rec[3]["comments"][1]["username"] is None
+
+    assert rec[1]["comments"][0]["comment"] == "This is a test comment"
+    assert rec[3]["comments"][0]["comment"] == "This is a test comment"
+    assert rec[2]["comments"][0]["comment"] == "This is a test comment without a user"
+    assert rec[3]["comments"][1]["comment"] == "This is a test comment without a user"
+
+
+def test_record_socket_add_comment_badid(storage_socket: SQLAlchemySocket):
+    all_id = populate_db(storage_socket)
+
+    meta = storage_socket.records.add_comment([all_id[1], 9999, all_id[3]], username=None, comment="test")
+    assert not meta.success
+    assert meta.n_updated == 2
+    assert meta.n_errors == 1
+    assert meta.updated_idx == [0, 2]
+    assert meta.error_idx == [1]
+    assert "does not exist" in meta.errors[0][1]
+
+
 def test_record_socket_reset_id(storage_socket: SQLAlchemySocket):
     all_id = populate_db(storage_socket)
 
