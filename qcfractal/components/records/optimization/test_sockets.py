@@ -547,7 +547,7 @@ def test_optimization_socket_delete_1(storage_socket: SQLAlchemySocket, opt_file
         storage_socket.records.update_completed_task(session, rec_orm, result_data_1, None)
 
     rec = storage_socket.records.optimization.get(id1, include=["trajectory"])
-    child_ids = [x["singlepoint_record_id"] for x in rec[0]["trajectory"]]
+    child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
 
     meta = storage_socket.records.delete(id1, soft_delete=True, delete_children=True)
     assert meta.success
@@ -580,7 +580,7 @@ def test_optimization_socket_delete_2(storage_socket: SQLAlchemySocket, opt_file
         storage_socket.records.update_completed_task(session, rec_orm, result_data_1, None)
 
     rec = storage_socket.records.optimization.get(id1, include=["trajectory"])
-    child_ids = [x["singlepoint_record_id"] for x in rec[0]["trajectory"]]
+    child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
 
     meta = storage_socket.records.delete(id1, soft_delete=True, delete_children=False)
     assert meta.success
@@ -613,7 +613,7 @@ def test_optimization_socket_undelete_1(storage_socket: SQLAlchemySocket, opt_fi
         storage_socket.records.update_completed_task(session, rec_orm, result_data_1, None)
 
     rec = storage_socket.records.optimization.get(id1, include=["trajectory"])
-    child_ids = [x["singlepoint_record_id"] for x in rec[0]["trajectory"]]
+    child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
 
     meta = storage_socket.records.delete(id1, soft_delete=True, delete_children=True)
     assert meta.success

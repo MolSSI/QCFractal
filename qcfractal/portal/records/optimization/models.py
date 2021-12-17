@@ -57,8 +57,8 @@ class OptimizationSpecification(OptimizationInputSpecification):
 
 
 class OptimizationTrajectory(BaseModel):
-    singlepoint_record_id: int
-    optimization_record_id: int
+    singlepoint_id: int
+    optimization_id: int
     singlepoint_record: Optional[SinglepointRecord._DataModel]
 
 
