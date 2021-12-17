@@ -390,7 +390,7 @@ def test_record_client_modify(snowflake_client: PortalClient, storage_socket: SQ
 
     # Delete tag
     meta = snowflake_client.modify_records(all_id, delete_tag=True)
-    assert meta.n_updated == 2
+    assert meta.n_updated == 3
 
     rec = snowflake_client.get_records(all_id, include_task=True)
 
@@ -401,7 +401,7 @@ def test_record_client_modify(snowflake_client: PortalClient, storage_socket: SQ
 
     assert rec[0].raw_data.task.tag is None
     assert rec[1].raw_data.task is None
-    assert rec[2].raw_data.task.tag == "tag3"
+    assert rec[2].raw_data.task.tag is None  # Running can be changed
     assert rec[2].raw_data.task.priority == PriorityEnum.normal
     assert rec[3].raw_data.task.tag is None
     assert rec[4].raw_data.task is None

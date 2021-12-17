@@ -282,13 +282,13 @@ def test_singlepoint_socket_update(storage_socket: SQLAlchemySocket):
 
     with storage_socket.session_scope() as session:
         rec_orm = session.query(SinglepointRecordORM).where(SinglepointRecordORM.id == id1[0]).one()
-        storage_socket.records.update_completed(session, rec_orm, result_data_1, None)
+        storage_socket.records.update_completed_task(session, rec_orm, result_data_1, None)
 
         rec_orm = session.query(SinglepointRecordORM).where(SinglepointRecordORM.id == id2[0]).one()
-        storage_socket.records.update_completed(session, rec_orm, result_data_2, None)
+        storage_socket.records.update_completed_task(session, rec_orm, result_data_2, None)
 
         rec_orm = session.query(SinglepointRecordORM).where(SinglepointRecordORM.id == id3[0]).one()
-        storage_socket.records.update_completed(session, rec_orm, result_data_3, None)
+        storage_socket.records.update_completed_task(session, rec_orm, result_data_3, None)
 
     time_1 = datetime.utcnow()
 
@@ -349,11 +349,11 @@ def test_singlepoint_socket_insert(storage_socket: SQLAlchemySocket):
     # Typical workflow
     with storage_socket.session_scope() as session:
         rec_orm = session.query(SinglepointRecordORM).where(SinglepointRecordORM.id == id2[0]).one()
-        storage_socket.records.update_completed(session, rec_orm, result_data_2, None)
+        storage_socket.records.update_completed_task(session, rec_orm, result_data_2, None)
 
     # Actually insert the whole thing. This should end up being a duplicate
     with storage_socket.session_scope() as session:
-        dup_id = storage_socket.records.insert_completed([result_data_2])
+        dup_id = storage_socket.records.insert_complete_record([result_data_2])
 
     recs = storage_socket.records.singlepoint.get(
         id2 + dup_id, include=["*", "wavefunction", "compute_history.*", "compute_history.outputs"]
@@ -497,7 +497,7 @@ def test_singlepoint_socket_delete_1(storage_socket: SQLAlchemySocket):
 
     with storage_socket.session_scope() as session:
         rec_orm = session.query(SinglepointRecordORM).where(SinglepointRecordORM.id == id1[0]).one()
-        storage_socket.records.update_completed(session, rec_orm, result_data_1, None)
+        storage_socket.records.update_completed_task(session, rec_orm, result_data_1, None)
 
     # deleting with children is ok (even though we don't have children)
     meta = storage_socket.records.delete(id1, soft_delete=True, delete_children=True)

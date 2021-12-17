@@ -55,7 +55,7 @@ def test_task_socket_fullworkflow_success(storage_socket: SQLAlchemySocket):
         assert rec["modified_on"] > time_1
         assert rec["created_on"] < time_1
 
-    rmeta = storage_socket.tasks.update_completed(
+    rmeta = storage_socket.tasks.update_finished(
         mname1.fullname,
         {tasks[0]["id"]: result_map[tasks[0]["record_id"]], tasks[1]["id"]: result_map[tasks[1]["record_id"]]},
     )
@@ -131,7 +131,7 @@ def test_task_socket_fullworkflow_error(storage_socket: SQLAlchemySocket):
         assert rec["modified_on"] > time_1
         assert rec["created_on"] < time_1
 
-    rmeta = storage_socket.tasks.update_completed(
+    rmeta = storage_socket.tasks.update_finished(
         mname1.fullname,
         {tasks[0]["id"]: result_map[tasks[0]["record_id"]], tasks[1]["id"]: result_map[tasks[1]["record_id"]]},
     )
@@ -190,23 +190,23 @@ def test_task_socket_fullworkflow_error_retry(storage_socket: SQLAlchemySocket):
     # Sends back an error. Do it a few times
     time_0 = datetime.utcnow()
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
-    rmeta = storage_socket.tasks.update_completed(mname1.fullname, {tasks[0]["id"]: fop})
+    rmeta = storage_socket.tasks.update_finished(mname1.fullname, {tasks[0]["id"]: fop})
     storage_socket.records.reset(id1)
 
     time_1 = datetime.utcnow()
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
-    rmeta = storage_socket.tasks.update_completed(mname1.fullname, {tasks[0]["id"]: fop})
+    rmeta = storage_socket.tasks.update_finished(mname1.fullname, {tasks[0]["id"]: fop})
     storage_socket.records.reset(id1)
 
     time_2 = datetime.utcnow()
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
-    rmeta = storage_socket.tasks.update_completed(mname1.fullname, {tasks[0]["id"]: fop})
+    rmeta = storage_socket.tasks.update_finished(mname1.fullname, {tasks[0]["id"]: fop})
     storage_socket.records.reset(id1)
 
     # Now succeed
     time_3 = datetime.utcnow()
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
-    rmeta = storage_socket.tasks.update_completed(mname1.fullname, {tasks[0]["id"]: result_data1})
+    rmeta = storage_socket.tasks.update_finished(mname1.fullname, {tasks[0]["id"]: result_data1})
     time_4 = datetime.utcnow()
 
     records = storage_socket.records.get(id1, include=["*", "task", "compute_history.*", "compute_history.outputs"])
@@ -263,7 +263,7 @@ def test_task_socket_compressed_outputs_success(storage_socket: SQLAlchemySocket
     result_data1.extras["_qcfractal_compressed_outputs"] = [compressed_output.dict()]
     original_stdout = result_data1.__dict__.pop("stdout")
 
-    rmeta = storage_socket.tasks.update_completed(mname1.fullname, {tasks[0]["id"]: result_data1})
+    rmeta = storage_socket.tasks.update_finished(mname1.fullname, {tasks[0]["id"]: result_data1})
 
     assert rmeta.n_accepted == 1
     assert rmeta.n_rejected == 0

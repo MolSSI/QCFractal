@@ -35,7 +35,7 @@ class OutputStoreORM(BaseORM):
 
         # Old way: store a plain string or dict in "value"
         # New way: store (possibly) compressed output in "data"
-        val = d.pop("value")
+        val = d.pop("value", None)
 
         # If stored the old way, convert to the new way
         if d["data"] is None:
@@ -47,3 +47,14 @@ class OutputStoreORM(BaseORM):
             d.pop("compression_level")
 
         return d
+
+    def append(self, to_append: str):
+        out_obj = OutputStore(**self.dict())
+        new_str = out_obj.get_string() + to_append
+
+        new_obj = OutputStore.compress(self.output_type, new_str, self.compression, self.compression_level)
+
+        self.value = None
+        self.data = new_obj.data
+        self.compression = new_obj.compression
+        self.compression_level = new_obj.compression_level
