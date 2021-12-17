@@ -1,119 +1,106 @@
-from sqlalchemy import Column, Integer, ForeignKey, String, JSON, select, func
-from sqlalchemy.ext.hybrid import hybrid_property
+from __future__ import annotations
+
+from typing import Dict, Optional
+
+from sqlalchemy import Column, Integer, ForeignKey, String, JSON, UniqueConstraint, Index, CheckConstraint
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.orderinglist import ordering_list
-from sqlalchemy.orm import column_property, relationship
+from sqlalchemy.orm import relationship
 
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseRecordORM
+from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM
 from qcfractal.db_socket import BaseORM
-from typing import Optional, Iterable, Any, Dict
 
 
-class OptimizationHistory(BaseORM):
+class TorsiondriveOptimizationHistoryORM(BaseORM):
     """Association table for many to many"""
 
-    __tablename__ = "optimization_history"
+    __tablename__ = "torsiondrive_optimizations"
 
-    torsion_id = Column(Integer, ForeignKey("torsiondrive_procedure.id", ondelete="cascade"), primary_key=True)
-    opt_id = Column(Integer, ForeignKey("optimization_record.id", ondelete="cascade"), primary_key=True)
+    torsiondrive_id = Column(Integer, ForeignKey("torsiondrive_record.id", ondelete="cascade"), primary_key=True)
+    optimization_id = Column(Integer, ForeignKey("optimization_record.id"), primary_key=True)
     key = Column(String, nullable=False, primary_key=True)
     position = Column(Integer, primary_key=True)
-    # Index('torsion_id', 'key', unique=True)
-
-    # optimization_obj = relationship(OptimizationRecordORM, lazy="joined")
 
 
-class TorsionInitMol(BaseORM):
+class TorsiondriveInitialMoleculeORM(BaseORM):
     """
-    Association table for many to many relation
+    Association table torsiondrive -> initial molecules
     """
 
-    __tablename__ = "torsion_init_mol_association"
+    __tablename__ = "torsiondrive_initial_molecules"
 
-    torsion_id = Column(
-        "torsion_id", Integer, ForeignKey("torsiondrive_procedure.id", ondelete="cascade"), primary_key=True
+    torsiondrive_id = Column(Integer, ForeignKey("torsiondrive_record.id", ondelete="cascade"), primary_key=True)
+    molecule_id = Column("molecule_id", Integer, ForeignKey(MoleculeORM.id), primary_key=True)
+
+
+class TorsiondriveSpecificationORM(BaseORM):
+    __tablename__ = "torsiondrive_specification"
+
+    id = Column(Integer, primary_key=True)
+
+    program = Column(String(100), nullable=False)
+
+    optimization_specification_id = Column(Integer, ForeignKey(OptimizationSpecificationORM.id), nullable=False)
+    optimization_specification = relationship(OptimizationSpecificationORM, lazy="selectin", uselist=False)
+
+    keywords = Column(JSONB, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "program",
+            "optimization_specification_id",
+            "keywords",
+            name="ux_torsiondrive_specification_keys",
+        ),
+        Index("ix_torsiondrive_specification_program", "program"),
+        Index("ix_torsiondrive_specification_optimization_specification_id", "optimization_specification_id"),
+        Index("ix_torsiondrive_specification_keywords", "keywords"),
+        # Enforce lowercase on some fields
+        # This does not actually change the text to lowercase, but will fail to insert anything not lowercase
+        # WARNING - these are not autodetected by alembic
+        CheckConstraint("program = LOWER(program)", name="ck_torsiondrive_specification_program_lower"),
     )
-    molecule_id = Column("molecule_id", Integer, ForeignKey("molecule.id", ondelete="cascade"), primary_key=True)
+
+    @property
+    def required_programs(self) -> Dict[str, Optional[str]]:
+        r = {self.program: None}
+        r.update(self.optimization_specification.required_programs)
+        return r
 
 
-class TorsionDriveProcedureORM(BaseRecordORM):
+class TorsiondriveRecordORM(BaseRecordORM):
     """
-    A torsion drive  procedure
+    A torsion drive procedure
     """
 
-    __tablename__ = "torsiondrive_procedure"
+    __tablename__ = "torsiondrive_record"
 
     id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"), primary_key=True)
 
-    def __init__(self, **kwargs):
-        kwargs.setdefault("version", 1)
-        self.procedure = "torsiondrive"
-        super().__init__(**kwargs)
+    specification_id = Column(Integer, ForeignKey(TorsiondriveSpecificationORM.id), nullable=False)
+    specification = relationship(TorsiondriveSpecificationORM, lazy="selectin")
 
-    keywords = Column(JSON)
-    qc_spec = Column(JSON)
-
-    # ids of the many to many relation
-    initial_molecule = column_property(
-        select([func.array_agg(TorsionInitMol.molecule_id)]).where(TorsionInitMol.torsion_id == id).scalar_subquery()
+    initial_molecules = relationship(
+        MoleculeORM, secondary=TorsiondriveInitialMoleculeORM.__table__, uselist=True, lazy="select"
     )
-    # actual objects relation M2M, never loaded here
-    initial_molecule_obj = relationship(MoleculeORM, secondary=TorsionInitMol.__table__, uselist=True, lazy="select")
-
-    optimization_spec = Column(JSON)
 
     # Output data
     final_energy_dict = Column(JSON)
     minimum_positions = Column(JSON)
 
-    optimization_history_obj = relationship(
-        OptimizationHistory,
-        cascade="all, delete-orphan",  # backref="torsiondrive_procedure",
-        order_by=OptimizationHistory.position,
+    optimization_history = relationship(
+        TorsiondriveOptimizationHistoryORM,
+        order_by=TorsiondriveOptimizationHistoryORM.position,
         collection_class=ordering_list("position"),
         lazy="select",
     )
-
-    @hybrid_property
-    def optimization_history(self):
-        """calculated property when accessed, not saved in the DB
-        A view of the many to many relation in the form of a dict"""
-
-        return self._optimization_history(self.optimization_history_obj)
-
-    @staticmethod
-    def _optimization_history(optimization_history_obj):
-
-        if not optimization_history_obj:
-            return {}
-
-        if not isinstance(optimization_history_obj, list):
-            optimization_history_obj = [optimization_history_obj]
-
-        ret = {}
-        try:
-            for opt_history in optimization_history_obj:
-                if opt_history.key in ret:
-                    ret[opt_history.key].append(str(opt_history.opt_id))
-                else:
-                    ret[opt_history.key] = [str(opt_history.opt_id)]
-
-        except Exception as err:
-            # raises exception of first access!!
-            pass
-            # print(err)
-
-        return ret
-
-    __table_args__ = ()
 
     __mapper_args__ = {
         "polymorphic_identity": "torsiondrive",
     }
 
-    def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        d = BaseRecordORM.dict(self, exclude)
-
-        # Always include optimization history
-        d["optimization_history"] = self.optimization_history
-        return d
+    @property
+    def required_programs(self) -> Dict[str, Optional[str]]:
+        return self.specification.required_programs

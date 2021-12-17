@@ -25,7 +25,7 @@ from qcfractal.components.outputstore.db_models import KVStoreORM
 from qcfractal.components.molecule.db_models import MoleculeORM
 
 from qcfractal.components.datasets.singlepoint.db_models import DatasetEntryORM, DatasetORM
-from qcfractal.components.records.torsiondrive.db_models import TorsionInitMol, TorsionDriveProcedureORM
+from qcfractal.components.records.torsiondrive.db_models import TorsionInitMol, TorsiondriveRecordORM
 from qcfractal.components.records.gridoptimization.db_models import GridOptimizationAssociation, \
     GridOptimizationProcedureORM
 
@@ -48,7 +48,7 @@ _all_orm = [
     ServiceQueueORM,
     ComputeManagerORM,
     TaskQueueORM,
-    TorsionDriveProcedureORM,
+    TorsiondriveRecordORM,
     TorsionInitMol,
     OptimizationTrajectoryORM,
     VersionsORM,
