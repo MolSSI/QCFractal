@@ -10,6 +10,16 @@ from qcfractal.portal.records import RecordStatusEnum
 from qcfractal.portal.outputstore import OutputTypeEnum, OutputStore, CompressionEnum
 
 
+class RecordCommentsORM(BaseORM):
+    __tablename__ = "record_comments"
+
+    id = Column(Integer, primary_key=True)
+    record_id = Column(Integer, ForeignKey("base_record.id", ondelete="CASCADE"), nullable=False)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    username = Column(String)  # not a foreign key - leaves username if user is deleted
+    comment = Column(String, nullable=False)
+
+
 class RecordComputeHistoryORM(BaseORM):
     __tablename__ = "record_compute_history"
 
@@ -73,6 +83,8 @@ class BaseRecordORM(BaseORM):
         order_by=RecordComputeHistoryORM.modified_on.asc(),
         lazy="selectin",
     )
+
+    comments = relationship(RecordCommentsORM, order_by=RecordCommentsORM.timestamp.asc())
 
     # Related task. The foreign key is in the task_queue table
     task = relationship("TaskQueueORM", back_populates="record", uselist=False)

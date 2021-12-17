@@ -22,7 +22,7 @@ from qcfractal.exceptions import UserReportableError
 from qcfractal.portal.metadata_models import DeleteMetadata, UndeleteMetadata, QueryMetadata, UpdateMetadata
 from qcfractal.portal.outputstore import OutputStore, OutputTypeEnum, CompressionEnum
 from qcfractal.portal.records import FailedOperation, PriorityEnum, RecordStatusEnum
-from .db_models import RecordComputeHistoryORM, BaseRecordORM, RecordDeletionInfoORM
+from .db_models import RecordComputeHistoryORM, BaseRecordORM, RecordDeletionInfoORM, RecordCommentsORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -421,6 +421,32 @@ class RecordSocket:
                 ids.append(record_orm.id)
 
         return ids
+
+    def add_comment(
+        self, record_id: Sequence[int], username: Optional[str], comment: str, *, session: Optional[Session] = None
+    ) -> UpdateMetadata:
+
+        with self.root_socket.optional_session(session) as session:
+            # find only existing records
+            stmt = select(BaseRecordORM.id).where(BaseRecordORM.id.in_(record_id))
+            stmt = stmt.with_for_update()
+            existing_ids = session.execute(stmt).scalars().all()
+
+            for rid in existing_ids:
+                comment_orm = RecordCommentsORM(
+                    record_id=rid,
+                    username=username,
+                    comment=comment,
+                )
+                session.add(comment_orm)
+
+            updated_idx = [idx for idx, rid in enumerate(record_id) if rid in existing_ids]
+            missing_idx = [idx for idx, rid in enumerate(record_id) if rid not in existing_ids]
+
+            return UpdateMetadata(
+                updated_idx=updated_idx,
+                errors=[(idx, "Record does not exist") for idx in missing_idx],
+            )
 
     def update_failed_task(self, record_orm: BaseRecordORM, failed_result: FailedOperation, manager_name: str):
         if not isinstance(failed_result, FailedOperation):

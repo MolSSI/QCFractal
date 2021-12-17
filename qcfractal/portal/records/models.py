@@ -104,6 +104,17 @@ class ComputeHistory(BaseModel):
             return None
 
 
+class RecordComment(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
+    id: int
+    record_id: int
+    username: Optional[str]
+    timestamp: datetime
+    comment: str
+
+
 class TaskRecord(BaseModel):
     class Config:
         extra = Extra.forbid
@@ -139,6 +150,8 @@ class BaseRecord(abc.ABC, BaseModel):
         compute_history: List[ComputeHistory]
 
         task: Optional[TaskRecord] = None
+
+        comments: Optional[List[RecordComment]] = None
 
     class Config:
         extra = Extra.forbid
@@ -219,9 +232,10 @@ class RecordAddBodyBase(RestModelBase):
 class RecordModifyBody(RestModelBase):
     record_id: List[int]
     status: Optional[RecordStatusEnum] = None
-    priority: Optional[PriorityEnum]
+    priority: Optional[PriorityEnum] = None
     tag: Optional[str] = None
     delete_tag: bool = False
+    comment: Optional[str] = None
 
 
 class RecordDeleteURLParameters(RestModelBase):
