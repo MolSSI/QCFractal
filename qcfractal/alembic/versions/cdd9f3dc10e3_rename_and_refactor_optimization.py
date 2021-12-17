@@ -56,21 +56,21 @@ def upgrade():
     # Optimization <-> Singlepoint association (for Trajectory)
     op.drop_constraint("opt_result_association_result_id_fkey", "opt_result_association", type_="foreignkey")
     op.drop_constraint("opt_result_association_opt_id_fkey", "opt_result_association", type_="foreignkey")
-    op.alter_column("opt_result_association", "result_id", new_column_name="singlepoint_record_id")
-    op.alter_column("opt_result_association", "opt_id", new_column_name="optimization_record_id")
+    op.alter_column("opt_result_association", "result_id", new_column_name="singlepoint_id")
+    op.alter_column("opt_result_association", "opt_id", new_column_name="optimization_id")
     op.create_foreign_key(
-        "optimization_trajectory_optimization_record_id_fkey",
+        "optimization_trajectory_optimization_id_fkey",
         "opt_result_association",
         "optimization_procedure",
-        ["optimization_record_id"],
+        ["optimization_id"],
         ["id"],
         ondelete="cascade",
     )
     op.create_foreign_key(
-        "optimization_trajectory_singlepoint_record_id_fkey",
+        "optimization_trajectory_singlepoint_id_fkey",
         "opt_result_association",
         "singlepoint_record",
-        ["singlepoint_record_id"],
+        ["singlepoint_id"],
         ["id"],
     )
 
@@ -235,9 +235,7 @@ def upgrade():
     # Drop and recreate the pkey, since column names changed
     op.drop_constraint("opt_result_association_pkey", "optimization_trajectory", type_="primary")
     op.execute(
-        sa.text(
-            "ALTER TABLE optimization_trajectory ADD PRIMARY KEY (optimization_record_id, singlepoint_record_id, position)"
-        )
+        sa.text("ALTER TABLE optimization_trajectory ADD PRIMARY KEY (optimization_id, singlepoint_id, position)")
     )
 
     op.rename_table("optimization_procedure", "optimization_record")

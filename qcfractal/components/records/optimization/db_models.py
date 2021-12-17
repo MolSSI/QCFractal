@@ -20,8 +20,8 @@ class OptimizationTrajectoryORM(BaseORM):
 
     __tablename__ = "optimization_trajectory"
 
-    optimization_record_id = Column(Integer, ForeignKey("optimization_record.id", ondelete="cascade"), primary_key=True)
-    singlepoint_record_id = Column(Integer, ForeignKey(SinglepointRecordORM.id), primary_key=True)
+    optimization_id = Column(Integer, ForeignKey("optimization_record.id", ondelete="cascade"), primary_key=True)
+    singlepoint_id = Column(Integer, ForeignKey(SinglepointRecordORM.id), primary_key=True)
     position = Column(Integer, primary_key=True)
 
     singlepoint_record = relationship(SinglepointRecordORM)

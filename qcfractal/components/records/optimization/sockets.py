@@ -41,8 +41,8 @@ class OptimizationRecordSocket(BaseRecordSocket):
         self._logger = logging.getLogger(__name__)
 
     def get_children_ids(self, session: Session, record_id: Iterable[int]) -> List[int]:
-        stmt = select(OptimizationTrajectoryORM.singlepoint_record_id)
-        stmt = stmt.where(OptimizationTrajectoryORM.optimization_record_id.in_(record_id))
+        stmt = select(OptimizationTrajectoryORM.singlepoint_id)
+        stmt = stmt.where(OptimizationTrajectoryORM.optimization_id.in_(record_id))
         return session.execute(stmt).scalars().all()
 
     def get_specification(
@@ -188,7 +188,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
             traj = get_general_multi(
                 session,
                 OptimizationTrajectoryORM,
-                OptimizationTrajectoryORM.optimization_record_id,
+                OptimizationTrajectoryORM.optimization_id,
                 [record_id],
                 include,
                 exclude,
