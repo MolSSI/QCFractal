@@ -42,15 +42,14 @@ def upgrade():
 
     # Add columns for record history and output type to the output store
     # nullable for now, will change later in this migration
-    op.add_column("output_store", sa.Column("record_history_id", sa.Integer(), nullable=True))
-    op.create_foreign_key(
-        None, "output_store", "record_compute_history", ["record_history_id"], ["id"], ondelete="CASCADE"
-    )
-    op.create_index("ix_output_store_record_history_id", "output_store", ["record_history_id"])
+    op.add_column("output_store", sa.Column("history_id", sa.Integer(), nullable=True))
+    op.create_foreign_key(None, "output_store", "record_compute_history", ["history_id"], ["id"], ondelete="CASCADE")
+    op.create_index("ix_output_store_history_id", "output_store", ["history_id"])
 
-    output_enum = postgresql.ENUM("other", "stdout", "stderr", "error", name="outputtypeenum")
+    output_enum = postgresql.ENUM("stdout", "stderr", "error", name="outputtypeenum")
     output_enum.create(op.get_bind())
     op.add_column("output_store", sa.Column("output_type", output_enum, nullable=True))
+    op.create_unique_constraint("ux_output_store_id_type", "output_store", ["history_id", "output_type"])
 
     #####################################
     # Populate the compute history table
@@ -101,7 +100,7 @@ def upgrade():
     # Now update the output store with foreign keys to history records
     op.execute(
         sa.text(
-            """UPDATE output_store SET output_type='stdout', record_history_id = record_compute_history.id
+            """UPDATE output_store SET output_type='stdout', history_id = record_compute_history.id
                FROM base_record
                INNER JOIN record_compute_history ON record_compute_history.record_id = base_record.id
                WHERE base_record.stdout = output_store.id;
@@ -110,7 +109,7 @@ def upgrade():
     )
     op.execute(
         sa.text(
-            """UPDATE output_store SET output_type='stderr', record_history_id = record_compute_history.id
+            """UPDATE output_store SET output_type='stderr', history_id = record_compute_history.id
                FROM base_record
                INNER JOIN record_compute_history ON record_compute_history.record_id = base_record.id
                WHERE base_record.stderr = output_store.id;
@@ -119,7 +118,7 @@ def upgrade():
     )
     op.execute(
         sa.text(
-            """UPDATE output_store SET output_type='error', record_history_id = record_compute_history.id
+            """UPDATE output_store SET output_type='error', history_id = record_compute_history.id
                FROM base_record
                INNER JOIN record_compute_history ON record_compute_history.record_id = base_record.id
                WHERE base_record.error = output_store.id;
@@ -132,7 +131,7 @@ def upgrade():
     # data in output_store in case I screwed up the commands above, and there is data linked to from
     # base_record that hasn't been migrated
     # (since deleting an output_store row that is in-use will cause an exception).
-    op.execute(sa.text("DELETE FROM output_store WHERE record_history_id IS NULL"))
+    op.execute(sa.text("DELETE FROM output_store WHERE history_id IS NULL"))
 
     # Now we can safely delete the columns/indices/constraints in base_record
     op.drop_constraint("base_result_stdout_fkey", "base_record", type_="foreignkey")
@@ -152,7 +151,7 @@ def upgrade():
     op.drop_column("task_queue", "manager")
 
     # Now make stuff not nullable
-    op.alter_column("output_store", "record_history_id", nullable=False)
+    op.alter_column("output_store", "history_id", nullable=False)
     op.alter_column("output_store", "output_type", nullable=False)
 
     # ### end Alembic commands ###

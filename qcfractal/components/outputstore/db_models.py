@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, Enum, JSON, LargeBinary, ForeignKey, Index
+from sqlalchemy import Column, Integer, Enum, JSON, LargeBinary, ForeignKey, Index, UniqueConstraint
 
 from qcfractal.db_socket import BaseORM
 from qcfractal.portal.outputstore import CompressionEnum, OutputTypeEnum, OutputStore
@@ -15,7 +15,7 @@ class OutputStoreORM(BaseORM):
     __tablename__ = "output_store"
 
     id = Column(Integer, primary_key=True)
-    record_history_id = Column(Integer, ForeignKey("record_compute_history.id", ondelete="CASCADE"), nullable=False)
+    history_id = Column(Integer, ForeignKey("record_compute_history.id", ondelete="CASCADE"), nullable=False)
 
     output_type = Column(Enum(OutputTypeEnum), nullable=False)
     compression = Column(Enum(CompressionEnum), nullable=True)
@@ -23,7 +23,10 @@ class OutputStoreORM(BaseORM):
     value = Column(JSON, nullable=True)
     data = Column(LargeBinary, nullable=True)
 
-    __table_args__ = (Index("ix_output_store_record_history_id", "record_history_id"),)
+    __table_args__ = (
+        Index("ix_output_store_history_id", "history_id"),
+        UniqueConstraint("history_id", "output_type", name="ux_output_store_id_type"),
+    )
 
     @classmethod
     def from_model(cls, output_model: OutputStore):
