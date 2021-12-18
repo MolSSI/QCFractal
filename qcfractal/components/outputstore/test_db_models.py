@@ -9,9 +9,9 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
-from qcfractal.portal.managers import ManagerName
+from qcfractal.components.records.db_models import RecordComputeHistoryORM
 from qcfractal.portal.outputstore import OutputTypeEnum, CompressionEnum, OutputStore
-from qcfractal.portal.records import PriorityEnum
+from qcfractal.portal.records import RecordStatusEnum
 from qcfractal.testing import load_procedure_data
 
 if TYPE_CHECKING:
@@ -27,27 +27,21 @@ def existing_history_id(storage_socket):
     with an existing calculation
     """
 
-    # Need a manager to claim the tasks
-    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
-    storage_socket.managers.activate(
-        name_data=mname1,
-        manager_version="v2.0",
-        qcengine_version="v1.0",
-        username="bill",
-        programs={"psi4": None, "qchem": "v3.0"},
-        tags=["tag1"],
+    input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
+    meta, id = storage_socket.records.singlepoint.add(input_spec, [molecule])
+
+    hist = RecordComputeHistoryORM(
+        record_id=id[0],
+        status=RecordStatusEnum.error,
+        manager_name=None,
     )
 
-    input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
-    meta, id = storage_socket.records.singlepoint.add(input_spec, [molecule], "tag1", PriorityEnum.normal)
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
+    with storage_socket.session_scope() as session:
+        session.add(hist)
+        session.commit()
+        hist_id = hist.id
 
-    rmeta = storage_socket.tasks.update_finished(mname1.fullname, {tasks[0]["id"]: result_data})
-    assert rmeta.accepted_ids == [tasks[0]["id"]]
-
-    # Now there should be a compute history id that we can return
-    rec = storage_socket.records.get(id)
-    yield rec[0]["compute_history"][0]["id"]
+    yield hist_id
 
 
 @pytest.mark.parametrize("compression", CompressionEnum)
@@ -65,7 +59,7 @@ def test_outputs_models_roundtrip_str(
 
     # Add both as the OutputStore and as the plain str
     out_orm = OutputStoreORM.from_model(output)
-    out_orm.record_history_id = existing_history_id
+    out_orm.history_id = existing_history_id
 
     with storage_socket.session_scope() as session:
         session.add(out_orm)
@@ -102,7 +96,7 @@ def test_outputs_models_roundtrip_dict(
 
     # Add both as the OutputStore and as the plain str
     out_orm = OutputStoreORM.from_model(output)
-    out_orm.record_history_id = existing_history_id
+    out_orm.history_id = existing_history_id
 
     with storage_socket.session_scope() as session:
         session.add(out_orm)
