@@ -61,7 +61,7 @@ def test_record_client_query(snowflake_client: PortalClient, storage_socket: SQL
     assert meta.n_found == 3
 
     meta, data = snowflake_client.query_records(created_after=all_records_sorted[3].raw_data.created_on)
-    assert meta.n_found == 2
+    assert meta.n_found == 3
 
     # modified before/after
     all_records_sorted = sorted(all_records, key=lambda x: x.raw_data.modified_on)
@@ -69,17 +69,17 @@ def test_record_client_query(snowflake_client: PortalClient, storage_socket: SQL
     assert meta.n_found == 3
 
     meta, data = snowflake_client.query_records(modified_after=all_records_sorted[3].raw_data.modified_on)
-    assert meta.n_found == 2
+    assert meta.n_found == 3
 
     # Record type
     meta, data = snowflake_client.query_records(record_type=["singlepoint"])
     assert meta.n_found == 6
 
     meta, data = snowflake_client.query_records(record_type=["optimization"])
-    assert meta.n_found == 0
+    assert meta.n_found == 1
 
     meta, data = snowflake_client.query_records(record_type=["singlepoint", "optimization"])
-    assert meta.n_found == 6
+    assert meta.n_found == 7
 
     # Status
     meta, data = snowflake_client.query_records(status=[RecordStatusEnum.error])
@@ -95,6 +95,9 @@ def test_record_client_query(snowflake_client: PortalClient, storage_socket: SQL
 
     # Some combinations
     meta, data = snowflake_client.query_records(record_type=["singlepoint"], status=[RecordStatusEnum.waiting])
+    assert meta.n_found == 0
+
+    meta, data = snowflake_client.query_records(record_type=["optimization"], status=[RecordStatusEnum.waiting])
     assert meta.n_found == 1
 
     meta, data = snowflake_client.query_records(
@@ -211,14 +214,14 @@ def test_record_client_add_comment_badid(snowflake_client: PortalClient, storage
     assert "does not exist" in meta.errors[0][1]
 
 
-def test_record_client_reset_id(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_reset(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
     all_id = populate_db(storage_socket)
 
-    # waiting, deleted, completed cannot be reset
+    # only running, waiting cannot be reset
     time_0 = datetime.utcnow()
     meta = snowflake_client.reset_records(all_id)
     time_1 = datetime.utcnow()
-    assert meta.n_updated == 3
+    assert meta.n_updated == 2
 
     rec = snowflake_client.get_records(all_id, include_task=True)
 
@@ -230,38 +233,36 @@ def test_record_client_reset_id(snowflake_client: PortalClient, storage_socket: 
     assert rec[1].raw_data.status == RecordStatusEnum.complete
     assert rec[2].raw_data.status == RecordStatusEnum.waiting
     assert rec[3].raw_data.status == RecordStatusEnum.waiting
-    assert rec[4].raw_data.status == RecordStatusEnum.waiting
+    assert rec[4].raw_data.status == RecordStatusEnum.cancelled
     assert rec[5].raw_data.status == RecordStatusEnum.deleted
+    assert rec[6].raw_data.status == RecordStatusEnum.invalid
 
     assert rec[0].raw_data.task is not None
+    assert rec[1].raw_data.task is None
     assert rec[2].raw_data.task is not None
     assert rec[3].raw_data.task is not None
-    assert rec[4].raw_data.task is not None
+    assert rec[4].raw_data.task is None
     assert rec[5].raw_data.task is None
+    assert rec[6].raw_data.task is None
 
     assert rec[0].raw_data.manager_name is None
+    assert rec[1].raw_data.manager_name is not None
     assert rec[2].raw_data.manager_name is None
     assert rec[3].raw_data.manager_name is None
     assert rec[4].raw_data.manager_name is None
-
-    # None because it was deleted while waiting
     assert rec[5].raw_data.manager_name is None
+    assert rec[6].raw_data.manager_name is not None
 
     assert rec[0].raw_data.modified_on < time_0
     assert rec[1].raw_data.modified_on < time_0
     assert time_0 < rec[2].raw_data.modified_on < time_1
     assert time_0 < rec[3].raw_data.modified_on < time_1
-    assert time_0 < rec[4].raw_data.modified_on < time_1
+    assert rec[4].raw_data.modified_on < time_0
     assert rec[5].raw_data.modified_on < time_0
-
-    # Regenerated tasks have a new created_on
-    assert rec[0].raw_data.task.created_on < time_0
-    assert rec[2].raw_data.task.created_on < time_0
-    assert rec[3].raw_data.task.created_on < time_0
-    assert time_0 < rec[4].raw_data.task.created_on < time_1
+    assert rec[6].raw_data.modified_on < time_0
 
 
-def test_record_client_reset_id_none(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_reset_none(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
     populate_db(storage_socket)
     meta = snowflake_client.reset_records([])
     assert meta.n_updated == 0
@@ -289,18 +290,23 @@ def test_record_client_cancel(snowflake_client: PortalClient, storage_socket: SQ
     assert rec[3].raw_data.status == RecordStatusEnum.cancelled
     assert rec[4].raw_data.status == RecordStatusEnum.cancelled
     assert rec[5].raw_data.status == RecordStatusEnum.deleted
+    assert rec[6].raw_data.status == RecordStatusEnum.invalid
 
     assert rec[0].raw_data.task is None
+    assert rec[1].raw_data.task is None
     assert rec[2].raw_data.task is None
     assert rec[3].raw_data.task is None
     assert rec[4].raw_data.task is None
     assert rec[5].raw_data.task is None
+    assert rec[6].raw_data.task is None
 
     assert rec[0].raw_data.manager_name is None
+    assert rec[1].raw_data.manager_name is not None
     assert rec[2].raw_data.manager_name is None
-    assert rec[3].raw_data.manager_name is None
+    assert rec[3].raw_data.manager_name is not None
     assert rec[4].raw_data.manager_name is None
     assert rec[5].raw_data.manager_name is None
+    assert rec[6].raw_data.manager_name is not None
 
     assert time_0 < rec[0].raw_data.modified_on < time_1
     assert rec[1].raw_data.modified_on < time_0
@@ -308,6 +314,7 @@ def test_record_client_cancel(snowflake_client: PortalClient, storage_socket: SQ
     assert time_0 < rec[3].raw_data.modified_on < time_1
     assert rec[4].raw_data.modified_on < time_0
     assert rec[5].raw_data.modified_on < time_0
+    assert rec[6].raw_data.modified_on < time_0
 
 
 def test_record_client_cancel_none(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
@@ -318,6 +325,15 @@ def test_record_client_cancel_none(snowflake_client: PortalClient, storage_socke
     assert meta.n_updated == 0
 
 
+def test_record_client_cancel_missing(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+    all_id = populate_db(storage_socket)
+
+    # completed, cancelled, deleted cannot be cancelled
+    meta = snowflake_client.cancel_records([all_id[0], 9999])
+    assert meta.success is False
+    assert meta.n_updated == 1
+
+
 def test_record_client_softdelete(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
     all_id = populate_db(storage_socket)
 
@@ -325,8 +341,8 @@ def test_record_client_softdelete(snowflake_client: PortalClient, storage_socket
     time_0 = datetime.utcnow()
     meta = snowflake_client.delete_records(all_id, soft_delete=True)
     time_1 = datetime.utcnow()
-    assert meta.n_deleted == 5
-    assert meta.deleted_idx == [0, 1, 2, 3, 4]
+    assert meta.n_deleted == 6
+    assert meta.deleted_idx == [0, 1, 2, 3, 4, 6]
 
     rec = snowflake_client.get_records(all_id, include_task=True)
 
@@ -343,6 +359,7 @@ def test_record_client_softdelete(snowflake_client: PortalClient, storage_socket
     assert time_0 < rec[3].raw_data.modified_on < time_1
     assert time_0 < rec[4].raw_data.modified_on < time_1
     assert rec[5].raw_data.modified_on < time_0
+    assert time_0 < rec[6].raw_data.modified_on < time_1
 
     # completed and errored records should keep their manager
     assert rec[0].raw_data.manager_name is None
@@ -351,24 +368,36 @@ def test_record_client_softdelete(snowflake_client: PortalClient, storage_socket
     assert rec[3].raw_data.manager_name is not None
     assert rec[4].raw_data.manager_name is None
     assert rec[5].raw_data.manager_name is None
+    assert rec[6].raw_data.manager_name is not None
 
 
-def test_record_socket_undelete(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+def test_record_client_softdelete_missing(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+    all_id = populate_db(storage_socket)
+
+    # only deleted can't be deleted
+    meta = snowflake_client.delete_records(all_id + [99999], soft_delete=True)
+    assert meta.success is False
+    assert meta.deleted_idx == [0, 1, 2, 3, 4, 6]
+    assert meta.n_deleted == 6
+    assert meta.error_idx == [5, 7]
+
+
+def test_record_client_undelete(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
     all_id = populate_db(storage_socket)
 
     # only deleted can't be deleted
     time_0 = datetime.utcnow()
     meta = snowflake_client.delete_records(all_id, soft_delete=True)
-    assert meta.n_deleted == 5
-    assert meta.deleted_idx == [0, 1, 2, 3, 4]
+    assert meta.n_deleted == 6
+    assert meta.deleted_idx == [0, 1, 2, 3, 4, 6]
 
     time_1 = datetime.utcnow()
     meta = snowflake_client.undelete_records(all_id)
     time_2 = datetime.utcnow()
 
     assert meta.success
-    assert meta.n_undeleted == 6
-    assert meta.undeleted_idx == [0, 1, 2, 3, 4, 5]
+    assert meta.n_undeleted == 7
+    assert meta.undeleted_idx == [0, 1, 2, 3, 4, 5, 6]
 
     rec = storage_socket.records.get(all_id, include=["*", "task"])
 
@@ -376,22 +405,21 @@ def test_record_socket_undelete(snowflake_client: PortalClient, storage_socket: 
         assert r["created_on"] < time_0
         assert time_1 < r["modified_on"] < time_2
 
-    # 1 = waiting   2 = complete   3 = running
-    # 4 = error     5 = cancelled  6 = deleted
     assert rec[0]["manager_name"] is None
     assert rec[1]["manager_name"] is not None
     assert rec[2]["manager_name"] is None
     assert rec[3]["manager_name"] is not None
     assert rec[4]["manager_name"] is None
     assert rec[5]["manager_name"] is None
+    assert rec[6]["manager_name"] is not None
 
-    # rec[5] was deleted in populate_db. Will now be waiting
     assert rec[0]["status"] == RecordStatusEnum.waiting
     assert rec[1]["status"] == RecordStatusEnum.complete
     assert rec[2]["status"] == RecordStatusEnum.waiting
     assert rec[3]["status"] == RecordStatusEnum.error
     assert rec[4]["status"] == RecordStatusEnum.cancelled
     assert rec[5]["status"] == RecordStatusEnum.waiting
+    assert rec[6]["status"] == RecordStatusEnum.invalid
 
     assert rec[0]["task"] is not None
     assert rec[1]["task"] is None
@@ -399,6 +427,7 @@ def test_record_socket_undelete(snowflake_client: PortalClient, storage_socket: 
     assert rec[3]["task"] is not None
     assert rec[4]["task"] is None
     assert rec[5]["task"] is not None
+    assert rec[6]["task"] is None
 
 
 def test_record_client_delete_1(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
@@ -406,8 +435,8 @@ def test_record_client_delete_1(snowflake_client: PortalClient, storage_socket: 
 
     meta = snowflake_client.delete_records(all_id, soft_delete=False)
     assert meta.success
-    assert meta.deleted_idx == [0, 1, 2, 3, 4, 5]
-    assert meta.n_deleted == 6
+    assert meta.deleted_idx == [0, 1, 2, 3, 4, 5, 6]
+    assert meta.n_deleted == 7
 
     rec = snowflake_client.get_records(all_id, missing_ok=True)
     assert all(x is None for x in rec)
@@ -443,7 +472,7 @@ def test_record_client_modify(snowflake_client: PortalClient, storage_socket: SQ
     assert meta.error_idx == [1]
 
     # one of these records in cancelled
-    meta = snowflake_client.modify_records([all_id[3], all_id[4]], new_priority=PriorityEnum.high)
+    meta = snowflake_client.modify_records([all_id[3], all_id[4]], new_priority=PriorityEnum.low)
     assert meta.n_updated == 1
 
     rec = snowflake_client.get_records(all_id, include_task=True)
@@ -453,24 +482,25 @@ def test_record_client_modify(snowflake_client: PortalClient, storage_socket: SQ
         assert r.raw_data.created_on < time_0
         assert r.raw_data.modified_on < time_0
 
-    # Waiting
+    # 0 - waiting
     assert rec[0].raw_data.task.tag == "new_tag"
     assert rec[0].raw_data.task.priority == PriorityEnum.normal
 
-    # completed
+    # 1 - completed
     assert rec[1].raw_data.task is None
 
-    # running - not changed
-    assert rec[2].raw_data.task.tag == "tag3"
-    assert rec[2].raw_data.task.priority == PriorityEnum.normal
+    # 2 - running - not changed
+    assert rec[2].raw_data.task.tag == "tag2"
+    assert rec[2].raw_data.task.priority == PriorityEnum.high
 
-    # error
-    assert rec[3].raw_data.task.tag == "tag4"
-    assert rec[3].raw_data.task.priority == PriorityEnum.high
+    # 3 - error
+    assert rec[3].raw_data.task.tag == "tag3"
+    assert rec[3].raw_data.task.priority == PriorityEnum.low
 
-    # cancelled/deleted
+    # 4/5/6 - cancelled/deleted/invalid
     assert rec[4].raw_data.task is None
     assert rec[5].raw_data.task is None
+    assert rec[6].raw_data.task is None
 
     # Delete tag
     meta = snowflake_client.modify_records(all_id, delete_tag=True)
@@ -485,8 +515,9 @@ def test_record_client_modify(snowflake_client: PortalClient, storage_socket: SQ
 
     assert rec[0].raw_data.task.tag is None
     assert rec[1].raw_data.task is None
-    assert rec[2].raw_data.task.tag is None  # Running can be changed
-    assert rec[2].raw_data.task.priority == PriorityEnum.normal
+    assert rec[2].raw_data.task.tag is None
+    assert rec[2].raw_data.task.priority == PriorityEnum.high
     assert rec[3].raw_data.task.tag is None
     assert rec[4].raw_data.task is None
     assert rec[5].raw_data.task is None
+    assert rec[6].raw_data.task is None

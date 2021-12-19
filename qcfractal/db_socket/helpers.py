@@ -601,7 +601,7 @@ def delete_general(
             q = [x == y for x, y in zip(search_cols, search_value)]
             n_deleted = session.query(orm_type).filter(and_(*q)).delete()
             if n_deleted == 0:
-                missing_idx.append(idx)
+                errors.append((idx, "Entry is missing"))
             else:
                 deleted_idx.append(idx)
         except Exception as e:
@@ -611,7 +611,7 @@ def delete_general(
 
     session.flush()
 
-    return DeleteMetadata(deleted_idx=deleted_idx, missing_idx=missing_idx, errors=errors)  # type: ignore
+    return DeleteMetadata(deleted_idx=deleted_idx, errors=errors)
 
 
 def _insert_general_batch(

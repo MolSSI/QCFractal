@@ -145,10 +145,10 @@ def test_keywords_socket_delete_nonexist(storage_socket: SQLAlchemySocket):
     assert meta.n_inserted == 1
 
     meta = storage_socket.keywords.delete([456, ids[0], ids[0], 123, 789])
-    assert meta.success
+    assert meta.success is False
     assert meta.n_deleted == 1
-    assert meta.n_missing == 4
-    assert meta.missing_idx == [0, 2, 3, 4]
+    assert meta.n_errors == 4
+    assert meta.error_idx == [0, 2, 3, 4]
     assert meta.deleted_idx == [1]
 
 

@@ -1181,7 +1181,7 @@ class PortalClient:
         self,
         record_id: Union[int, Sequence[int]],
         new_tag: Optional[str] = None,
-        new_priority: Optional[RecordStatusEnum] = None,
+        new_priority: Optional[PriorityEnum] = None,
         delete_tag: bool = False,
     ) -> UpdateMetadata:
         body_data = {
