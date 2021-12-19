@@ -60,6 +60,7 @@ class RecordStatusEnum(str, Enum):
     running = "running"
     error = "error"
     cancelled = "cancelled"
+    invalid = "invalid"
     deleted = "deleted"
 
     @classmethod

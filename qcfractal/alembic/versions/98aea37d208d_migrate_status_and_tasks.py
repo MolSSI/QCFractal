@@ -23,7 +23,9 @@ def upgrade():
 
     # Migrate base_result status to new enum, taking into account task_queue and service_queue statuses
     old_enum = sa.Enum("incomplete", "complete", "running", "error", name="recordstatusenum")
-    new_enum = sa.Enum("complete", "waiting", "running", "error", "cancelled", "deleted", name="recordstatusenum")
+    new_enum = sa.Enum(
+        "complete", "waiting", "running", "error", "invalid", "cancelled", "deleted", name="recordstatusenum"
+    )
 
     # For the temporary, we only need to add "waiting" and "cancelled", then migrate incomplete records with
     # task status of 'waiting' to 'waiting' (and running -> running)
