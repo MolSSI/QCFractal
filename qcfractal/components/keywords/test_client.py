@@ -89,10 +89,10 @@ def test_keywords_client_delete_nonexist(snowflake_client: PortalClient):
     assert meta.n_inserted == 1
 
     meta = snowflake_client._delete_keywords([456, ids[0], ids[0], 123, 789])
-    assert meta.success
+    assert meta.success is False
     assert meta.n_deleted == 1
-    assert meta.n_missing == 4
-    assert meta.missing_idx == [0, 2, 3, 4]
+    assert meta.n_errors == 4
+    assert meta.error_idx == [0, 2, 3, 4]
     assert meta.deleted_idx == [1]
 
 

@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.outputstore.db_models import OutputStoreORM
+from qcfractal.portal.records import PriorityEnum
 from qcfractal.db_socket import BaseORM, MsgpackExt
 from qcfractal.portal.outputstore import OutputTypeEnum, OutputStore, CompressionEnum
 from qcfractal.portal.records import RecordStatusEnum
@@ -93,6 +94,14 @@ class BaseRecordORM(BaseORM):
     # Related service. The foreign key is in the service_queue table
     service = relationship("ServiceQueueORM", back_populates="record", uselist=False)
 
+    # Backed-up info (used for undelete, etc)
+    info_backup = relationship(
+        "RecordInfoBackupORM",
+        uselist=True,
+        order_by="RecordInfoBackupORM.modified_on.asc()",
+        cascade="all, delete-orphan",
+    )
+
     __table_args__ = (
         Index("ix_base_record_status", "status"),
         Index("ix_base_record_record_type", "record_type"),
@@ -106,9 +115,12 @@ class BaseRecordORM(BaseORM):
         raise RuntimeError("Developer error - cannot create task for base record")
 
 
-class RecordDeletionInfoORM(BaseORM):
-    __tablename__ = "record_deletion_info"
+class RecordInfoBackupORM(BaseORM):
+    __tablename__ = "record_info_backup"
 
-    record_id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="CASCADE"), primary_key=True)
+    id = Column(Integer, primary_key=True)
+    record_id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="CASCADE"), nullable=False)
     old_status = Column(Enum(RecordStatusEnum), nullable=False)
-    deleted_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    old_tag = Column(String, nullable=True)
+    old_priority = Column(Integer, nullable=True)
+    modified_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)

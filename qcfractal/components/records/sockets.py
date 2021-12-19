@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select
+from sqlalchemy import select, not_
 from sqlalchemy.orm import joinedload, selectinload, with_polymorphic
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
@@ -22,7 +22,7 @@ from qcfractal.exceptions import UserReportableError
 from qcfractal.portal.metadata_models import DeleteMetadata, UndeleteMetadata, QueryMetadata, UpdateMetadata
 from qcfractal.portal.outputstore import OutputStore, OutputTypeEnum, CompressionEnum
 from qcfractal.portal.records import FailedOperation, PriorityEnum, RecordStatusEnum
-from .db_models import RecordComputeHistoryORM, BaseRecordORM, RecordDeletionInfoORM, RecordCommentsORM
+from .db_models import RecordComputeHistoryORM, BaseRecordORM, RecordInfoBackupORM, RecordCommentsORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -82,19 +82,6 @@ class BaseRecordSocket:
         self.root_socket = root_socket
         self._limit = root_socket.qcf_config.response_limits.record
 
-    def update_completed_task(
-        self, session: Session, record_orm: BaseRecordORM, result: AllResultTypes, manager_name: str
-    ) -> None:
-        raise NotImplementedError(f"updated_completed not implemented for {type(self)}! This is a developer error")
-
-    def generate_task_specification(self, record_orm: BaseRecordORM) -> Dict[str, Any]:
-        """
-        Generate the specification for a task
-        """
-        raise NotImplementedError(
-            f"generate_task_specification not implemented for {type(self)}! This is a developer error"
-        )
-
     @staticmethod
     def create_task(
         record_orm: BaseRecordORM, tag: Optional[str] = None, priority: PriorityEnum = PriorityEnum.normal
@@ -112,7 +99,20 @@ class BaseRecordSocket:
         """
         Recreate the entry in the task queue
         """
-        raise NotImplementedError(f"recreate_service not implemented for {type(self)}! This is a developer error")
+        raise NotImplementedError(f"recreate_service not implemented! This is a developer error")
+
+    def generate_task_specification(self, record_orm: BaseRecordORM) -> Dict[str, Any]:
+        """
+        Generate the specification for a task
+        """
+        raise NotImplementedError(
+            f"generate_task_specification not implemented for {type(self)}! This is a developer error"
+        )
+
+    def update_completed_task(
+        self, session: Session, record_orm: BaseRecordORM, result: AllResultTypes, manager_name: str
+    ) -> None:
+        raise NotImplementedError(f"updated_completed not implemented for {type(self)}! This is a developer error")
 
     def insert_complete_record(
         self,
@@ -163,7 +163,6 @@ class RecordSocket:
 
     def get_subtask_ids(self, session: Session, record_id: Iterable[int]) -> List[int]:
         # List may contain duplicates. So be tolerant of that!
-
         stmt = select(ServiceQueueTasksORM.record_id)
         stmt = stmt.join(ServiceQueueORM, ServiceQueueORM.id == ServiceQueueTasksORM.service_id)
         stmt = stmt.where(ServiceQueueORM.record_id.in_(record_id))
@@ -176,10 +175,6 @@ class RecordSocket:
         for h in self._handler_map.values():
             ch = h.get_children_ids(session, record_id)
             all_ids.extend(ch)
-
-        # add in subtasks of services
-        subtask_ids = self.get_subtask_ids(session, record_id)
-        all_ids.extend(subtask_ids)
 
         return all_ids
 
@@ -549,15 +544,17 @@ class RecordSocket:
 
             return [r.id for r in record_orms]
 
-    def reset(
+    def _revert_common(
         self,
-        record_id: Optional[Sequence[int]] = None,
-        status: Optional[Iterable[RecordStatusEnum]] = None,
+        record_id: Optional[Sequence[int]],
+        status: Iterable[RecordStatusEnum],
         *,
         session: Optional[Session] = None,
     ) -> UpdateMetadata:
         """
-        Reset the status of records to waiting
+        Reverts the status of records
+
+        This functionality applies to undelete, uncancel, etc
 
         This will also re-create tasks as necessary
 
@@ -565,9 +562,6 @@ class RecordSocket:
         ----------
         record_id
             Reset the status of these record ids
-        status
-            Reset only records with these status. Default is all status except 'complete' and 'waiting'.
-            Records with complete or waiting status will always be excluded.
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed before returning from this function.
@@ -581,40 +575,60 @@ class RecordSocket:
         if not record_id:
             return UpdateMetadata()
 
-        resettable_status = {
-            RecordStatusEnum.running,
-            RecordStatusEnum.error,
-            RecordStatusEnum.cancelled,
-        }
-
-        if status is None:
-            status = resettable_status
-        else:
-            status = set(status) & resettable_status
+        all_id = set(record_id)
 
         with self.root_socket.optional_session(session) as session:
+            # We always apply these operations to children
+            children_ids = []
+            children_ids = self.get_children_ids(session, record_id)
+            all_id.update(children_ids)
+
+            # Select records with a resettable status
+            # All are resettable except complete and running
             # Can't do inner join because task may not exist
-            stmt = select(BaseRecordORM).options(selectinload(BaseRecordORM.task))
-            stmt = stmt.filter(BaseRecordORM.status.in_(status))
-            stmt = stmt.filter(BaseRecordORM.id.in_(record_id))
-            stmt = stmt.with_for_update()
+            stmt = select(BaseRecordORM).options(joinedload(BaseRecordORM.task))
+            stmt = stmt.options(selectinload(BaseRecordORM.info_backup))
+            stmt = stmt.where(BaseRecordORM.status.in_(status))
+            stmt = stmt.where(BaseRecordORM.id.in_(all_id))
+            stmt = stmt.with_for_update(of=[BaseRecordORM, BaseRecordORM])
+            record_data = session.execute(stmt).scalars().all()
 
-            record_orms = session.execute(stmt).scalars().all()
+            for r_orm in record_data:
 
-            for r_orm in record_orms:
-                r_orm.status = RecordStatusEnum.waiting
+                # If we have the old backup info, then use that
+                if (
+                    r_orm.status in [RecordStatusEnum.deleted, RecordStatusEnum.cancelled, RecordStatusEnum.invalid]
+                    and r_orm.info_backup
+                ):
+                    last_info = r_orm.info_backup.pop()  # Remove the last entry
+                    r_orm.status = last_info.old_status
+                    r_orm.modified_on = datetime.utcnow()
+
+                    if r_orm.status in [RecordStatusEnum.waiting, RecordStatusEnum.error]:
+                        if r_orm.task:
+                            self._logger.warning(f"Record {r_orm.id} has a task and also an entry in the backup table!")
+                            session.delete(r_orm.task)
+
+                        BaseRecordSocket.create_task(r_orm, last_info.old_tag, last_info.old_priority)
+
+                elif r_orm.status in [RecordStatusEnum.running, RecordStatusEnum.error] and not r_orm.info_backup:
+                    if r_orm.task is None:
+                        raise RuntimeError(f"resetting a record with status {r_orm.status} with no task")
+
+                    # Move the record back to "waiting" for a manager to pick it up
+                    r_orm.status = RecordStatusEnum.waiting
+                    r_orm.manager_name = None
+
+                else:
+                    if r_orm.info_backup:
+                        raise RuntimeError(f"resetting record with status {r_orm.status} with backup info present")
+                    else:
+                        raise RuntimeError(f"resetting record with status {r_orm.status} without backup info present")
+
                 r_orm.modified_on = datetime.utcnow()
-                r_orm.manager_name = None
-
-                # Regenerate the task or service if it does not exist
-                # (cancelled status)
-                if r_orm.is_service is False and r_orm.task is None:
-                    BaseRecordSocket.create_task(r_orm)
-                if r_orm.service is True and r_orm.service is None:
-                    BaseRecordSocket.create_service(r_orm)
 
             # put in order of the input parameter
-            updated_ids = [r.id for r in record_orms]
+            updated_ids = [r.id for r in record_data]
             error_ids = set(record_id) - set(updated_ids)
             updated_idx = [idx for idx, rid in enumerate(record_id) if rid in updated_ids]
             error_idx = [idx for idx, rid in enumerate(record_id) if rid in error_ids]
@@ -622,22 +636,29 @@ class RecordSocket:
 
             return UpdateMetadata(updated_idx=updated_idx, errors=errors)
 
-    def cancel(
+    def _cancel_common(
         self,
         record_id: Sequence[int],
+        new_status: RecordStatusEnum,
+        apply_to_children: bool,
         *,
         session: Optional[Session] = None,
     ) -> UpdateMetadata:
         """
-        Marks a record as cancelled
+        Internal function for cancelling, deleting, or invalidation
 
-        A cancelled record will not be picked up by any manager. This can be undone
-        with reset_status
+        Cancelling, deleting, and invalidation basically the same, with the only difference
+        being that they apply to different statuses.
+        The connotation of these operations is of course different, but internally they behave the same.
 
         Parameters
         ----------
         record_id
             Reset the status of these record ids
+        new_status
+            What the new status of the record should be
+        apply_to_children
+            Apply the cancel or deletion operation to children as well
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed before returning from this function.
@@ -645,44 +666,83 @@ class RecordSocket:
         Returns
         -------
         :
-            Metadata about what was updated/cancelled
+            Metadata about what was updated
         """
-
-        cancellable_status = {RecordStatusEnum.waiting, RecordStatusEnum.running, RecordStatusEnum.error}
 
         if len(record_id) == 0:
             return UpdateMetadata()
 
+        if new_status == RecordStatusEnum.deleted:
+            # can delete everything but deleted
+            cancellable_status = set(RecordStatusEnum) - {RecordStatusEnum.deleted}
+        elif new_status == RecordStatusEnum.cancelled:
+            cancellable_status = {RecordStatusEnum.waiting, RecordStatusEnum.running, RecordStatusEnum.error}
+        elif new_status == RecordStatusEnum.invalid:
+            cancellable_status = {RecordStatusEnum.complete}
+        else:
+            raise RuntimeError(f"QCFractal developer error - cannot cancel to status {new_status}")
+
+        all_ids = set(record_id)
+
         with self.root_socket.optional_session(session) as session:
-            # we can innerjoin here because all cancellable status have an associated task
-            stmt = select(BaseRecordORM).options(joinedload(BaseRecordORM.task, innerjoin=True))
+            if apply_to_children:
+                children_ids = self.get_children_ids(session, record_id)
+                all_ids.update(children_ids)
+
+            stmt = select(BaseRecordORM).options(joinedload(BaseRecordORM.task))
             stmt = stmt.where(BaseRecordORM.status.in_(cancellable_status))
-            stmt = stmt.where(BaseRecordORM.id.in_(record_id))
-            stmt = stmt.with_for_update()
+            stmt = stmt.where(BaseRecordORM.id.in_(all_ids))
+            stmt = stmt.with_for_update(of=[BaseRecordORM])
             record_orms = session.execute(stmt).scalars().all()
 
             for r in record_orms:
-                r.status = RecordStatusEnum.cancelled
-                r.modified_on = datetime.utcnow()
-                r.manager_name = None
+                # If running, delete the manager. Resetting later will move it to waiting
+                if r.status == RecordStatusEnum.running:
+                    r.status = RecordStatusEnum.waiting
+                    r.manager_name = None
 
+                old_tag = None
+                old_priority = None
                 if r.task is not None:
+                    old_tag = r.task.tag
+                    old_priority = r.task.priority
                     session.delete(r.task)
                 if r.service is not None:
-                    # Also cancel all (cancellable) subtasks
-                    subtask_ids = self.get_subtask_ids(session, [r.id])
-                    self.cancel(subtask_ids, session=session)
-
+                    old_tag = r.service.tag
+                    old_priority = r.service.priority
                     session.delete(r.service)
+
+                # Store the old info in the backup table
+                backup_info = RecordInfoBackupORM(
+                    record_id=r.id,
+                    old_status=r.status,
+                    old_tag=old_tag,
+                    old_priority=old_priority,
+                    modified_on=datetime.utcnow(),
+                )
+                session.add(backup_info)
+
+                r.modified_on = datetime.utcnow()
+                r.status = new_status
 
             # put in order of the input parameter
             updated_ids = [r.id for r in record_orms]
             error_ids = set(record_id) - set(updated_ids)
             updated_idx = [idx for idx, rid in enumerate(record_id) if rid in updated_ids]
             error_idx = [idx for idx, rid in enumerate(record_id) if rid in error_ids]
-            errors = [(idx, "Record is missing or cannot be cancelled") for idx in error_idx]
+            errors = [(idx, "Record is missing or cannot be cancelled/deleted/invalidated") for idx in error_idx]
+            n_children_updated = len(updated_ids) - len(updated_idx)
 
-            return UpdateMetadata(updated_idx=updated_idx, errors=errors)
+            return UpdateMetadata(updated_idx=updated_idx, errors=errors, n_children_updated=n_children_updated)
+
+    def reset(self, record_id: Sequence[int], *, session: Optional[Session] = None):
+        """
+        Resets a running or errored record to be waiting again
+        """
+
+        return self._revert_common(
+            record_id, status=[RecordStatusEnum.running, RecordStatusEnum.error], session=session
+        )
 
     def delete(
         self,
@@ -719,6 +779,17 @@ class RecordSocket:
         if len(record_id) == 0:
             return DeleteMetadata()
 
+        if soft_delete:
+            meta = self._cancel_common(record_id, RecordStatusEnum.deleted, delete_children, session=session)
+
+            # convert the update metadata to a deleted metadata
+            return DeleteMetadata(
+                error_description=meta.error_description,
+                errors=meta.errors,
+                deleted_idx=meta.updated_idx,
+                n_children_deleted=meta.n_children_updated,
+            )
+
         with self.root_socket.optional_session(session) as session:
             all_id = set(record_id)
             children_ids = []
@@ -727,57 +798,71 @@ class RecordSocket:
                 children_ids = self.get_children_ids(session, record_id)
                 all_id.update(children_ids)
 
-            all_id = set(all_id)
+            del_id_1 = [(x,) for x in record_id]
+            del_id_2 = [(x,) for x in children_ids]
+            meta = delete_general(session, BaseRecordORM, (BaseRecordORM.id,), del_id_1)
+            ch_meta = delete_general(session, BaseRecordORM, (BaseRecordORM.id,), del_id_2)
 
-            if soft_delete:
-                # Can't do inner join because task may not exist
-                stmt = select(BaseRecordORM).options(selectinload(BaseRecordORM.task))
-                stmt = stmt.where(BaseRecordORM.status != RecordStatusEnum.deleted)
-                stmt = stmt.where(BaseRecordORM.id.in_(all_id))
-                stmt = stmt.with_for_update()
-                record_orms = session.execute(stmt).scalars().all()
+            meta_dict = meta.dict()
+            meta_dict["n_children_deleted"] = ch_meta.n_deleted
+            return DeleteMetadata(**meta_dict)
 
-                for r in record_orms:
-                    # if running, remove the assigned manager and make the old status waiting
-                    if r.status == RecordStatusEnum.running:
-                        r.manager_name = None
-                        old_status = RecordStatusEnum.waiting
-                    else:
-                        old_status = r.status
+    def cancel(
+        self,
+        record_id: Sequence[int],
+        cancel_children: bool = True,
+        *,
+        session: Optional[Session] = None,
+    ) -> UpdateMetadata:
+        """
+        Marks a record as cancelled
 
-                    r.status = RecordStatusEnum.deleted
-                    r.modified_on = datetime.utcnow()
+        Parameters
+        ----------
+        record_id
+            Reset the status of these record ids
+        cancel_children
+            Cancel all children as well
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
 
-                    if r.task is not None:
-                        session.delete(r.task)
-                    if r.service is not None:
-                        session.delete(r.service)
+        Returns
+        -------
+        :
+            Metadata about what was deleted
+        """
 
-                    d_info = RecordDeletionInfoORM(record_id=r.id, old_status=old_status, deleted_on=datetime.utcnow())
+        return self._cancel_common(
+            record_id, RecordStatusEnum.cancelled, apply_to_children=cancel_children, session=session
+        )
 
-                    session.add(d_info)
+    def invalidate(
+        self,
+        record_id: Sequence[int],
+        *,
+        session: Optional[Session] = None,
+    ) -> UpdateMetadata:
+        """
+        Marks a record as invalid
 
-                # put in order of the input parameter
-                # We only count the top level deletions, so we are looking at
-                # record_id and not all_id
-                deleted_ids = [r.id for r in record_orms]
-                missing_ids = set(record_id) - set(deleted_ids)
-                deleted_idx = [idx for idx, rid in enumerate(record_id) if rid in deleted_ids]
-                missing_idx = [idx for idx, rid in enumerate(record_id) if rid in missing_ids]
-                n_children_deleted = len(deleted_ids) - len(deleted_idx)
+        This only applies to completed records
 
-                return DeleteMetadata(
-                    deleted_idx=deleted_idx, missing_idx=list(missing_idx), n_children_deleted=n_children_deleted
-                )
-            else:
-                del_id_1 = [(x,) for x in record_id]
-                del_id_2 = [(x,) for x in children_ids]
-                meta = delete_general(session, BaseRecordORM, (BaseRecordORM.id,), del_id_1)
-                ch_meta = delete_general(session, BaseRecordORM, (BaseRecordORM.id,), del_id_2)
+        Parameters
+        ----------
+        record_id
+            Reset the status of these record ids
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
 
-                meta_dict = meta.dict()
-                meta_dict["n_children_deleted"] = ch_meta.n_deleted
-                return DeleteMetadata(**meta_dict)
+        Returns
+        -------
+        :
+            Metadata about what was deleted
+        """
+
+        return self._cancel_common(record_id, RecordStatusEnum.invalid, apply_to_children=False, session=session)
 
     def undelete(
         self,
@@ -807,41 +892,48 @@ class RecordSocket:
             return UndeleteMetadata()
 
         with self.root_socket.optional_session(session) as session:
-            all_id = set(record_id)
-            children_ids = self.get_children_ids(session, record_id)
-            all_id.update(children_ids)
-
-            stmt = select(BaseRecordORM, RecordDeletionInfoORM).join(RecordDeletionInfoORM)
-            stmt = stmt.where(BaseRecordORM.id.in_(all_id))
-            stmt = stmt.where(BaseRecordORM.status == RecordStatusEnum.deleted)
-            stmt = stmt.with_for_update()
-            record_orms = session.execute(stmt).all()
-
-            for r_orm, d_orm in record_orms:
-                r_orm.status = d_orm.old_status
-                r_orm.modified_on = datetime.utcnow()
-
-                # Regenerate the task if the record was previously waiting or errored
-                if d_orm.old_status in {RecordStatusEnum.waiting, RecordStatusEnum.error}:
-                    # Regenerate the task or service if it does not exist
-                    # (cancelled status)
-                    if r_orm.is_service is False and r_orm.task is None:
-                        BaseRecordSocket.create_task(r_orm)
-                    if r_orm.service is True and r_orm.service is None:
-                        BaseRecordSocket.create_service(r_orm)
-
-            # put in order of the input parameter
-            # We only count the top level deletions, so we are looking at
-            # record_id and not all_id
-            undeleted_ids = [r[0].id for r in record_orms]
-            missing_ids = set(record_id) - set(undeleted_ids)
-            undeleted_idx = [idx for idx, rid in enumerate(record_id) if rid in undeleted_ids]
-            missing_idx = [idx for idx, rid in enumerate(record_id) if rid in missing_ids]
-            n_children_undeleted = len(undeleted_ids) - len(undeleted_idx)
+            meta = self._revert_common(record_id, status=[RecordStatusEnum.deleted], session=session)
 
             return UndeleteMetadata(
-                undeleted_idx=undeleted_idx, missing_idx=missing_idx, n_children_undeleted=n_children_undeleted
+                undeleted_idx=meta.updated_idx,
+                error_description=meta.error_description,
+                errors=meta.errors,
+                n_children_undeleted=meta.n_children_updated,
             )
+
+    def uncancel(
+        self,
+        record_id: Sequence[int],
+        *,
+        session: Optional[Session] = None,
+    ) -> UpdateMetadata:
+        """
+        Uncancels records that were previously cancelled
+
+        This will always uncancel children whenever possible
+        """
+        if len(record_id) == 0:
+            return UpdateMetadata()
+
+        with self.root_socket.optional_session(session) as session:
+            return self._revert_common(record_id, status=[RecordStatusEnum.cancelled], session=session)
+
+    def uninvalidate(
+        self,
+        record_id: Sequence[int],
+        *,
+        session: Optional[Session] = None,
+    ) -> UpdateMetadata:
+        """
+        Uninvalidates records that were previously uninvalidated
+
+        This will always uninvalidate children whenever possible
+        """
+        if len(record_id) == 0:
+            return UpdateMetadata()
+
+        with self.root_socket.optional_session(session) as session:
+            return self._revert_common(record_id, status=[RecordStatusEnum.invalid], session=session)
 
     def modify(
         self,
@@ -914,9 +1006,9 @@ class RecordSocket:
 
             all_orm = task_orms + svc_orms
             for o in all_orm:
-                if new_tag:
+                if new_tag is not None:
                     o.tag = new_tag
-                if new_priority:
+                if new_priority is not None:
                     o.priority = new_priority
 
                 if delete_tag:

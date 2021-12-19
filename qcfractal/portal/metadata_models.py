@@ -100,16 +100,11 @@ class DeleteMetadata:
     error_description: Optional[str] = None
     errors: List[Tuple[int, str]] = dataclasses.field(default_factory=list)
     deleted_idx: List[int] = dataclasses.field(default_factory=list)
-    missing_idx: List[int] = dataclasses.field(default_factory=list)
     n_children_deleted: int = 0
 
     @property
     def n_deleted(self):
         return len(self.deleted_idx)
-
-    @property
-    def n_missing(self):
-        return len(self.missing_idx)
 
     @property
     def n_errors(self):
@@ -131,31 +126,22 @@ class DeleteMetadata:
         s += "\n".join(f"    Index {x}: {y}" for x, y in self.errors)
         return s
 
-    @validator("errors", "deleted_idx", "missing_idx", pre=True)
+    @validator("errors", "deleted_idx", pre=True)
     def sort_fields(cls, v):
         return sorted(v)
 
     @root_validator(pre=False, skip_on_failure=True)
     def check_all_indices(cls, values):
         # Test that all indices are accounted for and that the same index doesn't show up in
-        # deleted_idx, missing_idx, or errors
+        # deleted_idx, or errors
         del_idx = set(values["deleted_idx"])
-        missing_idx = set(values["missing_idx"])
         error_idx = set(x[0] for x in values["errors"])
-
-        if not del_idx.isdisjoint(missing_idx):
-            intersection = del_idx.intersection(missing_idx)
-            raise ValueError(f"deleted_idx and missing_idx are not disjoint: intersection={intersection}")
 
         if not del_idx.isdisjoint(error_idx):
             intersection = del_idx.intersection(error_idx)
             raise ValueError(f"deleted_idx and error_idx are not disjoint: intersection={intersection}")
 
-        if not missing_idx.isdisjoint(error_idx):
-            intersection = missing_idx.intersection(error_idx)
-            raise ValueError(f"missing_idx and error_idx are not disjoint: intersection={intersection}")
-
-        all_idx = del_idx | missing_idx | error_idx
+        all_idx = del_idx | error_idx
 
         # Skip the rest if we don't have any data
         if len(all_idx) == 0:
@@ -187,16 +173,11 @@ class UndeleteMetadata:
     error_description: Optional[str] = None
     errors: List[Tuple[int, str]] = dataclasses.field(default_factory=list)
     undeleted_idx: List[int] = dataclasses.field(default_factory=list)
-    missing_idx: List[int] = dataclasses.field(default_factory=list)
     n_children_undeleted: int = 0
 
     @property
     def n_undeleted(self):
         return len(self.undeleted_idx)
-
-    @property
-    def n_missing(self):
-        return len(self.missing_idx)
 
     @property
     def n_errors(self):
@@ -218,31 +199,22 @@ class UndeleteMetadata:
         s += "\n".join(f"    Index {x}: {y}" for x, y in self.errors)
         return s
 
-    @validator("errors", "undeleted_idx", "missing_idx", pre=True)
+    @validator("errors", "undeleted_idx", pre=True)
     def sort_fields(cls, v):
         return sorted(v)
 
     @root_validator(pre=False, skip_on_failure=True)
     def check_all_indices(cls, values):
         # Test that all indices are accounted for and that the same index doesn't show up in
-        # undeleted_idx, missing_idx, or errors
+        # undeleted_idx, or errors
         undel_idx = set(values["undeleted_idx"])
-        missing_idx = set(values["missing_idx"])
         error_idx = set(x[0] for x in values["errors"])
-
-        if not undel_idx.isdisjoint(missing_idx):
-            intersection = undel_idx.intersection(missing_idx)
-            raise ValueError(f"undeleted_idx and missing_idx are not disjoint: intersection={intersection}")
 
         if not undel_idx.isdisjoint(error_idx):
             intersection = undel_idx.intersection(error_idx)
             raise ValueError(f"undeleted_idx and error_idx are not disjoint: intersection={intersection}")
 
-        if not missing_idx.isdisjoint(error_idx):
-            intersection = missing_idx.intersection(error_idx)
-            raise ValueError(f"missing_idx and error_idx are not disjoint: intersection={intersection}")
-
-        all_idx = undel_idx | missing_idx | error_idx
+        all_idx = undel_idx | error_idx
 
         # Skip the rest if we don't have any data
         if len(all_idx) == 0:
@@ -314,6 +286,7 @@ class UpdateMetadata:
     error_description: Optional[str] = None
     errors: List[Tuple[int, str]] = dataclasses.field(default_factory=list)
     updated_idx: List[int] = dataclasses.field(default_factory=list)  # inserted into the db
+    n_children_updated: int = 0
 
     @property
     def n_updated(self):
