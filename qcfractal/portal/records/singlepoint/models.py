@@ -54,10 +54,6 @@ class SinglepointInputSpecification(BaseModel):
         # Lowercasing is handled by constr
         return None if v == "" else v
 
-    @property
-    def required_programs(self) -> Dict[str, Optional[str]]:
-        return {self.program: None}
-
 
 class SinglepointSpecification(SinglepointInputSpecification):
     """

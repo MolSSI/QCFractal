@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import Dict, Optional
 
 from sqlalchemy import Column, Integer, ForeignKey, String, JSON, Index, CheckConstraint, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
@@ -11,9 +11,6 @@ from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.components.records.singlepoint.db_models import SinglepointSpecificationORM, SinglepointRecordORM
 from qcfractal.db_socket import BaseORM
-
-if TYPE_CHECKING:
-    pass
 
 
 class OptimizationTrajectoryORM(BaseORM):
@@ -59,6 +56,12 @@ class OptimizationSpecificationORM(BaseORM):
         CheckConstraint("program = LOWER(program)", name="ck_optimization_specification_program_lower"),
     )
 
+    @property
+    def required_programs(self) -> Dict[str, Optional[str]]:
+        r = {self.program: None}
+        r.update(self.singlepoint_specification.required_programs)
+        return r
+
 
 class OptimizationRecordORM(BaseRecordORM):
     """
@@ -95,3 +98,7 @@ class OptimizationRecordORM(BaseRecordORM):
         Index("ix_optimization_record_initial_molecule_id", "initial_molecule_id"),
         Index("ix_optimization_record_final_molecule_id", "final_molecule_id"),
     )
+
+    @property
+    def required_programs(self) -> Dict[str, Optional[str]]:
+        return self.specification.required_programs
