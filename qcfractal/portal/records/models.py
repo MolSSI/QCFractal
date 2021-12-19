@@ -123,7 +123,7 @@ class TaskRecord(BaseModel):
     id: int
     record_id: int
 
-    spec: Dict[str, Any]
+    spec: Optional[Dict[str, Any]]
     tag: Optional[str] = None
     required_programs: List[str]
     priority: PriorityEnum

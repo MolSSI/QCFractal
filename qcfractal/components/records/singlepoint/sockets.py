@@ -239,13 +239,10 @@ class SinglepointRecordSocket(BaseRecordSocket):
             session=session,
         )
 
-    def _create_task(
-        self,
-        specification: SinglepointSpecification,
-        molecule: Dict[str, Any],
-        tag: Optional[str],
-        priority: PriorityEnum,
-    ) -> TaskQueueORM:
+    def generate_task_specification(self, record_orm: SinglepointRecordORM) -> Dict[str, Any]:
+
+        specification = record_orm.specification
+        molecule = record_orm.molecule.dict()
 
         model = {"method": specification.method}
         if specification.basis:
@@ -259,16 +256,11 @@ class SinglepointRecordSocket(BaseRecordSocket):
             protocols=specification.protocols,
         )
 
-        return TaskQueueORM(
-            tag=tag,
-            priority=priority,
-            required_programs=specification.required_programs.keys(),
-            spec={
-                "function": "qcengine.compute",
-                "args": [qcschema_input.dict(), specification.program],
-                "kwargs": {},
-            },
-        )
+        return {
+            "function": "qcengine.compute",
+            "args": [qcschema_input.dict(), specification.program],
+            "kwargs": {},
+        }
 
     def add(
         self,
@@ -330,27 +322,22 @@ class SinglepointRecordSocket(BaseRecordSocket):
                     [],
                 )
 
-            # Load the spec as is from the db
-            # May be different due to normalization, or because keywords were passed by
-            # ID where we need the full keywords
-            real_spec_dict = self.get_specification(spec_id, session=session)
-            real_spec = SinglepointSpecification(**real_spec_dict)
+            # Get the spec orm. The full orm will be needed for create_task
+            stmt = select(SinglepointSpecificationORM).where(SinglepointSpecificationORM.id == spec_id)
+            spec_orm = session.execute(stmt).scalar_one()
 
             all_orm = []
-            all_molecules = self.root_socket.molecules.get(mol_ids, session=session)
 
-            for mol_data in all_molecules:
-
-                task_orm = self._create_task(real_spec, mol_data, tag, priority)
-
+            for mid in mol_ids:
                 sp_orm = SinglepointRecordORM(
                     is_service=False,
+                    specification=spec_orm,
                     specification_id=spec_id,
-                    molecule_id=mol_data["id"],
+                    molecule_id=mid,
                     status=RecordStatusEnum.waiting,
-                    task=task_orm,
                 )
 
+                self.create_task(sp_orm, tag, priority)
                 all_orm.append(sp_orm)
 
             meta, ids = insert_general(
@@ -412,12 +399,3 @@ class SinglepointRecordSocket(BaseRecordSocket):
         session.add(record_orm)
         session.flush()
         return record_orm
-
-    def recreate_task(
-        self, record_orm: SinglepointRecordORM, tag: Optional[str] = None, priority: PriorityEnum = PriorityEnum.normal
-    ) -> None:
-
-        spec = SinglepointSpecification(**record_orm.specification.dict())
-        mol = record_orm.molecule.dict()
-
-        record_orm.task = self._create_task(spec, mol, tag, priority)

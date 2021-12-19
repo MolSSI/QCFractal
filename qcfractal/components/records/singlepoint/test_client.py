@@ -57,10 +57,7 @@ def test_singlepoint_client_add_get(snowflake_client: PortalClient, spec: Single
         assert r.raw_data.specification.basis == (spec.basis.lower() if spec.basis is not None else None)
         assert r.raw_data.specification.keywords.hash_index == spec.keywords.hash_index
         assert r.raw_data.specification.protocols == spec.protocols.dict(exclude_defaults=True)
-        assert r.raw_data.task.spec["args"][0]["model"] == {"method": spec.method, "basis": spec.basis}
-        assert r.raw_data.task.spec["args"][0]["protocols"] == spec.protocols.dict(exclude_defaults=True)
-        assert r.raw_data.task.spec["args"][0]["keywords"] == spec.keywords.values
-        assert r.raw_data.task.spec["args"][1] == spec.program
+        assert r.raw_data.task.spec is None
         assert r.raw_data.task.tag == "tag1"
         assert r.raw_data.task.priority == PriorityEnum.high
         assert time_0 < r.raw_data.created_on < time_1
@@ -68,13 +65,8 @@ def test_singlepoint_client_add_get(snowflake_client: PortalClient, spec: Single
         assert time_0 < r.raw_data.task.created_on < time_1
 
     assert recs[0].raw_data.molecule == water
-    assert Molecule(**recs[0].raw_data.task.spec["args"][0]["molecule"]) == water
-
     assert recs[1].raw_data.molecule == hooh
-    assert Molecule(**recs[1].raw_data.task.spec["args"][0]["molecule"]) == hooh
-
     assert recs[2].raw_data.molecule == ne4
-    assert Molecule(**recs[2].raw_data.task.spec["args"][0]["molecule"]) == ne4
 
 
 def test_singlepoint_client_add_existing_molecule(snowflake_client: PortalClient):

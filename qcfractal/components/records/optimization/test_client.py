@@ -77,25 +77,7 @@ def test_optimization_client_add_get(snowflake_client: PortalClient, spec: Optim
         assert sp_spec.keywords.hash_index == spec.singlepoint_specification.keywords.hash_index
         assert sp_spec.protocols == spec.singlepoint_specification.protocols
 
-        # Now the task stuff
-        task_spec = r.task.spec["args"][0]
-        assert r.task.spec["args"][1] == spec.program
-
-        kw_with_prog = spec.keywords.copy()
-        kw_with_prog["program"] = spec.singlepoint_specification.program
-
-        assert task_spec["keywords"] == kw_with_prog
-        assert task_spec["protocols"] == spec.protocols.dict(exclude_defaults=True)
-
-        # Forced to gradient int he qcschema input
-        assert task_spec["input_specification"]["driver"] == SinglepointDriver.gradient
-        assert task_spec["input_specification"]["model"] == {
-            "method": spec.singlepoint_specification.method,
-            "basis": spec.singlepoint_specification.basis,
-        }
-
-        assert task_spec["input_specification"]["keywords"] == spec.singlepoint_specification.keywords.values
-
+        assert r.task.spec is None
         assert r.raw_data.task.tag == "tag1"
         assert r.raw_data.task.priority == PriorityEnum.low
 
@@ -108,15 +90,12 @@ def test_optimization_client_add_get(snowflake_client: PortalClient, spec: Optim
     mol3 = snowflake_client.get_molecules([recs[2].raw_data.initial_molecule_id])[0]
     assert mol1.identifiers.molecule_hash == water.get_hash()
     assert recs[0].raw_data.initial_molecule.identifiers.molecule_hash == water.get_hash()
-    assert Molecule(**recs[0].raw_data.task.spec["args"][0]["initial_molecule"]) == water
 
     assert mol2.identifiers.molecule_hash == hooh.get_hash()
     assert recs[1].raw_data.initial_molecule.identifiers.molecule_hash == hooh.get_hash()
-    assert Molecule(**recs[1].raw_data.task.spec["args"][0]["initial_molecule"]) == hooh
 
     assert mol3.identifiers.molecule_hash == ne4.get_hash()
     assert recs[2].raw_data.initial_molecule.identifiers.molecule_hash == ne4.get_hash()
-    assert Molecule(**recs[2].raw_data.task.spec["args"][0]["initial_molecule"]) == ne4
 
 
 def test_optimization_client_add_existing_molecule(snowflake_client: PortalClient):

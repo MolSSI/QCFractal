@@ -1,13 +1,14 @@
 import datetime
+from typing import Dict, Optional
 
 from sqlalchemy import Column, String, Integer, ForeignKey, Enum, DateTime, JSON, Index, Boolean
 from sqlalchemy.orm import relationship
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
-from qcfractal.db_socket import BaseORM, MsgpackExt
 from qcfractal.components.outputstore.db_models import OutputStoreORM
-from qcfractal.portal.records import RecordStatusEnum
+from qcfractal.db_socket import BaseORM, MsgpackExt
 from qcfractal.portal.outputstore import OutputTypeEnum, OutputStore, CompressionEnum
+from qcfractal.portal.records import RecordStatusEnum
 
 
 class RecordCommentsORM(BaseORM):
@@ -99,6 +100,10 @@ class BaseRecordORM(BaseORM):
     )
 
     __mapper_args__ = {"polymorphic_on": "record_type"}
+
+    @property
+    def required_programs(self) -> Dict[str, Optional[str]]:
+        raise RuntimeError("Developer error - cannot create task for base record")
 
 
 class RecordDeletionInfoORM(BaseORM):

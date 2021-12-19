@@ -87,19 +87,30 @@ class BaseRecordSocket:
     ) -> None:
         raise NotImplementedError(f"updated_completed not implemented for {type(self)}! This is a developer error")
 
-    def recreate_task(
-        self, record_orm: BaseRecordORM, tag: Optional[str] = None, priority: PriorityEnum = PriorityEnum.normal
+    def generate_task_specification(self, record_orm: BaseRecordORM) -> Dict[str, Any]:
+        """
+        Generate the specification for a task
+        """
+        raise NotImplementedError(
+            f"generate_task_specification not implemented for {type(self)}! This is a developer error"
+        )
+
+    @staticmethod
+    def create_task(
+        record_orm: BaseRecordORM, tag: Optional[str] = None, priority: PriorityEnum = PriorityEnum.normal
     ) -> None:
         """
         Recreate the entry in the task queue
         """
-        raise NotImplementedError(f"recreate_task not implemented for {type(self)}! This is a developer error")
 
-    def recreate_service(
-        self, record_orm: BaseRecordORM, tag: Optional[str] = None, priority: PriorityEnum = PriorityEnum.normal
+        record_orm.task = TaskQueueORM(tag=tag, priority=priority, required_programs=record_orm.required_programs)
+
+    @staticmethod
+    def create_service(
+        record_orm: BaseRecordORM, tag: Optional[str] = None, priority: PriorityEnum = PriorityEnum.normal
     ) -> None:
         """
-        Recreate the entry in the service queue
+        Recreate the entry in the task queue
         """
         raise NotImplementedError(f"recreate_service not implemented for {type(self)}! This is a developer error")
 
@@ -350,6 +361,16 @@ class RecordSocket:
             )
             return sorted(hist[0], key=lambda x: x["modified_on"])
 
+    def generate_task_specification(self, task_orm: Sequence[TaskQueueORM]):
+        """
+        Generates the actual qcschema specification and related fields for a computation
+        """
+
+        for t in task_orm:
+            if t.spec is None:
+                record_type = t.record.record_type
+                t.spec = self._handler_map[record_type].generate_task_specification(t.record)
+
     def update_completed_task(
         self, session: Session, record_orm: BaseRecordORM, result: AllResultTypes, manager_name: str
     ):
@@ -587,11 +608,10 @@ class RecordSocket:
 
                 # Regenerate the task or service if it does not exist
                 # (cancelled status)
-                handler = self._handler_map[r_orm.record_type]
                 if r_orm.is_service is False and r_orm.task is None:
-                    handler.recreate_task(r_orm)
+                    BaseRecordSocket.create_task(r_orm)
                 if r_orm.service is True and r_orm.service is None:
-                    handler.recreate_service(r_orm)
+                    BaseRecordSocket.create_service(r_orm)
 
             # put in order of the input parameter
             updated_ids = [r.id for r in record_orms]
@@ -805,11 +825,10 @@ class RecordSocket:
                 if d_orm.old_status in {RecordStatusEnum.waiting, RecordStatusEnum.error}:
                     # Regenerate the task or service if it does not exist
                     # (cancelled status)
-                    handler = self._handler_map[r_orm.record_type]
                     if r_orm.is_service is False and r_orm.task is None:
-                        handler.recreate_task(r_orm)
+                        BaseRecordSocket.create_task(r_orm)
                     if r_orm.service is True and r_orm.service is None:
-                        handler.recreate_service(r_orm)
+                        BaseRecordSocket.create_service(r_orm)
 
             # put in order of the input parameter
             # We only count the top level deletions, so we are looking at

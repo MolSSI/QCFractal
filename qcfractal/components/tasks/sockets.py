@@ -276,6 +276,9 @@ class TaskSocket:
                     task_orm.record.manager_name = manager_name
                     task_orm.record.modified_on = datetime.utcnow()
 
+                # Generate the specification that is passed to QCEngine
+                self.root_socket.records.generate_task_specification(new_items)
+
                 session.flush()
 
                 # Store in dict form for returning,

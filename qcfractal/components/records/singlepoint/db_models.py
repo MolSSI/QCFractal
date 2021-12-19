@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Dict, Optional
+
 from sqlalchemy import Column, Integer, ForeignKey, String, Enum, UniqueConstraint, CheckConstraint, Index
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
@@ -45,6 +49,10 @@ class SinglepointSpecificationORM(BaseORM):
         CheckConstraint("basis = LOWER(basis)", name="ck_singlepoint_specification_basis_lower"),
     )
 
+    @property
+    def required_programs(self) -> Dict[str, Optional[str]]:
+        return {self.program: None}
+
 
 class SinglepointRecordORM(BaseRecordORM):
     """
@@ -75,3 +83,7 @@ class SinglepointRecordORM(BaseRecordORM):
     __mapper_args__ = {
         "polymorphic_identity": "singlepoint",
     }
+
+    @property
+    def required_programs(self) -> Dict[str, Optional[str]]:
+        return self.specification.required_programs

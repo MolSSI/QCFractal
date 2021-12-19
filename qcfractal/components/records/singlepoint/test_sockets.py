@@ -13,6 +13,7 @@ from qcelemental.models.results import AtomicResultProperties
 from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM
 from qcfractal.components.wavefunctions.test_db_models import assert_wfn_equal
 from qcfractal.portal.keywords import KeywordSet
+from qcfractal.portal.managers import ManagerName
 from qcfractal.portal.molecules import Molecule
 from qcfractal.portal.outputstore import OutputStore
 from qcfractal.portal.records import RecordStatusEnum, PriorityEnum
@@ -85,12 +86,11 @@ def test_singlepoint_socket_add_get(storage_socket: SQLAlchemySocket, spec: Sing
         assert r["specification"]["basis"] == (spec.basis.lower() if spec.basis is not None else "")
         assert r["specification"]["keywords"]["hash_index"] == spec.keywords.hash_index
         assert r["specification"]["protocols"] == spec.protocols.dict(exclude_defaults=True)
-        assert r["task"]["spec"]["args"][0]["model"] == {"method": spec.method, "basis": spec.basis}
-        assert r["task"]["spec"]["args"][0]["protocols"] == spec.protocols.dict(exclude_defaults=True)
-        assert r["task"]["spec"]["args"][0]["keywords"] == spec.keywords.values
-        assert r["task"]["spec"]["args"][1] == spec.program
+        assert r["task"]["spec"] is None
         assert r["task"]["tag"] == "tag1"
         assert r["task"]["priority"] == PriorityEnum.low
+        assert spec.program in r["task"]["required_programs"]
+
         assert time_0 < r["created_on"] < time_1
         assert time_0 < r["modified_on"] < time_1
         assert time_0 < r["task"]["created_on"] < time_1
@@ -100,15 +100,56 @@ def test_singlepoint_socket_add_get(storage_socket: SQLAlchemySocket, spec: Sing
     mol3 = storage_socket.molecules.get([recs[2]["molecule_id"]])[0]
     assert mol1["identifiers"]["molecule_hash"] == water.get_hash()
     assert recs[0]["molecule"]["identifiers"]["molecule_hash"] == water.get_hash()
-    assert Molecule(**recs[0]["task"]["spec"]["args"][0]["molecule"]) == water
 
     assert mol2["identifiers"]["molecule_hash"] == hooh.get_hash()
     assert recs[1]["molecule"]["identifiers"]["molecule_hash"] == hooh.get_hash()
-    assert Molecule(**recs[1]["task"]["spec"]["args"][0]["molecule"]) == hooh
 
     assert mol3["identifiers"]["molecule_hash"] == ne4.get_hash()
-    assert Molecule(**recs[2]["task"]["spec"]["args"][0]["molecule"]) == ne4
     assert recs[2]["molecule"]["identifiers"]["molecule_hash"] == ne4.get_hash()
+
+
+@pytest.mark.parametrize("spec", _test_specs)
+def test_singlepoint_socket_task_spec(storage_socket: SQLAlchemySocket, spec: SinglepointInputSpecification):
+    water = load_molecule_data("water_dimer_minima")
+    hooh = load_molecule_data("hooh")
+    ne4 = load_molecule_data("neon_tetramer")
+    all_mols = [water, hooh, ne4]
+
+    time_0 = datetime.utcnow()
+    meta, id = storage_socket.records.singlepoint.add(spec, all_mols, tag="tag1", priority=PriorityEnum.low)
+    time_1 = datetime.utcnow()
+    assert meta.success
+
+    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
+    storage_socket.managers.activate(
+        name_data=mname1,
+        manager_version="v2.0",
+        qcengine_version="v1.0",
+        username="bill",
+        programs={"prog1": None, "prog2": "v3.0", "prog3": None, "prog4": None},
+        tags=["*"],
+    )
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
+
+    assert len(tasks) == 3
+    for t in tasks:
+        assert t["spec"]["args"][0]["model"] == {"method": spec.method, "basis": spec.basis}
+        assert t["spec"]["args"][0]["protocols"] == spec.protocols.dict(exclude_defaults=True)
+        assert t["spec"]["args"][0]["keywords"] == spec.keywords.values
+        assert t["spec"]["args"][1] == spec.program
+        assert t["tag"] == "tag1"
+        assert t["priority"] == PriorityEnum.low
+        assert time_0 < t["created_on"] < time_1
+
+    rec_id_mol_map = {
+        id[0]: all_mols[0],
+        id[1]: all_mols[1],
+        id[2]: all_mols[2],
+    }
+
+    assert Molecule(**tasks[0]["spec"]["args"][0]["molecule"]) == rec_id_mol_map[tasks[0]["record_id"]]
+    assert Molecule(**tasks[1]["spec"]["args"][0]["molecule"]) == rec_id_mol_map[tasks[1]["record_id"]]
+    assert Molecule(**tasks[2]["spec"]["args"][0]["molecule"]) == rec_id_mol_map[tasks[2]["record_id"]]
 
 
 def test_singlepoint_socket_add_existing_molecule(storage_socket: SQLAlchemySocket):
@@ -457,38 +498,6 @@ def test_singlepoint_socket_query(storage_socket: SQLAlchemySocket):
     meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(limit=1))
     assert meta.n_found == 3
     assert meta.n_returned == 1
-
-
-def test_singlepoint_socket_recreate_task(storage_socket: SQLAlchemySocket):
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_peroxide_energy_wfn")
-    meta1, id1 = storage_socket.records.singlepoint.add(input_spec_1, [molecule_1])
-
-    recs = storage_socket.records.singlepoint.get(id1, include=["task"])
-    orig_task = recs[0]["task"]
-    assert orig_task is not None
-
-    # cancel, the verify the task is gone
-    m = storage_socket.records.cancel(id1)
-    assert m.n_updated == 1
-
-    recs = storage_socket.records.singlepoint.get(id1, include=["task"])
-    assert recs[0]["task"] is None
-
-    # reset, and see that the task was recreated (and is the same)
-    m = storage_socket.records.reset(id1)
-    assert m.n_updated == 1
-
-    recs = storage_socket.records.singlepoint.get(id1, include=["task"])
-    new_task = recs[0]["task"]
-    assert new_task is not None
-
-    assert orig_task["required_programs"] == new_task["required_programs"]
-    assert orig_task["spec"]["args"][1] == new_task["spec"]["args"][1]
-    assert orig_task["spec"]["args"][0]["molecule"]["identifiers"]["molecule_hash"] == molecule_1.get_hash()
-    assert orig_task["spec"]["args"][0]["driver"] == new_task["spec"]["args"][0]["driver"]
-    assert orig_task["spec"]["args"][0]["model"] == new_task["spec"]["args"][0]["model"]
-    assert orig_task["spec"]["args"][0]["keywords"] == new_task["spec"]["args"][0]["keywords"]
-    assert orig_task["spec"]["args"][0]["protocols"] == new_task["spec"]["args"][0]["protocols"]
 
 
 def test_singlepoint_socket_delete_1(storage_socket: SQLAlchemySocket):

@@ -20,7 +20,7 @@ class TaskQueueORM(BaseORM):
 
     id = Column(Integer, primary_key=True)
 
-    spec = Column(MsgpackExt, nullable=False)
+    spec = Column(MsgpackExt, nullable=True)
 
     # For some reason, this can't be array of varchar. If it is, the comparisons
     # when claiming tasks don't work
