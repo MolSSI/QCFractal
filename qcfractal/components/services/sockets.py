@@ -27,7 +27,7 @@ from qcfractal.interface.models import (
 )
 from qcfractal.portal.metadata_models import InsertMetadata, QueryMetadata
 from qcfractal.portal.records.models import RecordStatusEnum
-from .db_models import ServiceQueueORM, ServiceQueueTasksORM
+from .db_models import ServiceQueueORM, ServiceDependenciesORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -49,9 +49,9 @@ class ServiceSocket:
         self._logger.info("Iterating on services")
         # A CTE that contains just service id and all the statuses as an array
         status_cte = (
-            select(ServiceQueueTasksORM.service_id, array_agg(BaseRecordORM.status).label("task_statuses"))
-            .join(BaseRecordORM, BaseRecordORM.id == ServiceQueueTasksORM.record_id)
-            .group_by(ServiceQueueTasksORM.service_id)
+            select(ServiceDependenciesORM.service_id, array_agg(BaseRecordORM.status).label("task_statuses"))
+            .join(BaseRecordORM, BaseRecordORM.id == ServiceDependenciesORM.record_id)
+            .group_by(ServiceDependenciesORM.service_id)
             .cte()
         )
 

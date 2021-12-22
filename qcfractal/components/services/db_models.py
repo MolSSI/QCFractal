@@ -8,18 +8,18 @@ from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.db_socket import BaseORM, PlainMsgpackExt
 
 
-class ServiceQueueTasksORM(BaseORM):
-    __tablename__ = "service_queue_tasks"
+class ServiceDependenciesORM(BaseORM):
+    __tablename__ = "service_dependencies"
 
     id = Column(Integer, primary_key=True)
 
-    service_id = Column(Integer, ForeignKey("service_queue.id", ondelete="cascade"))
-    record_id = Column(Integer, ForeignKey(BaseRecordORM.id))
-    extras = Column(JSONB)
+    service_id = Column(Integer, ForeignKey("service_queue.id", ondelete="cascade"), nullable=False)
+    record_id = Column(Integer, ForeignKey(BaseRecordORM.id), nullable=False)
+    extras = Column(JSONB, nullable=False)
 
-    # We make extras part of the unique constraint because rarely the same task will be
+    # We make extras part of the unique constraint because rarely the same dependency will be
     # submitted but with different extras (position, etc)
-    __table_args__ = (UniqueConstraint("service_id", "record_id", "extras", name="ux_service_queue_tasks"),)
+    __table_args__ = (UniqueConstraint("service_id", "record_id", "extras", name="ux_service_dependencies"),)
 
     record = relationship("BaseRecordORM")
 
@@ -39,7 +39,7 @@ class ServiceQueueORM(BaseORM):
 
     service_state = Column(PlainMsgpackExt)
 
-    tasks = relationship(ServiceQueueTasksORM, lazy="selectin", cascade="all, delete-orphan")
+    dependencies = relationship(ServiceDependenciesORM, lazy="selectin", cascade="all, delete-orphan")
 
     __table_args__ = (
         UniqueConstraint("record_id", name="ux_service_queue_record_id"),

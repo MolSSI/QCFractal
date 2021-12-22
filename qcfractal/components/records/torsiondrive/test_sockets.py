@@ -636,7 +636,7 @@ def test_torsiondrive_socket_run(storage_socket: SQLAlchemySocket, test_data_nam
 
     while r > 0:
         rec = storage_socket.records.torsiondrive.get(
-            id_1, include=["*", "service.*", "service.tasks.*", "service.tasks.record"]
+            id_1, include=["*", "service.*", "service.dependencies.*", "service.dependencies.record"]
         )
         assert rec[0]["status"] == RecordStatusEnum.running
 

@@ -62,12 +62,12 @@ def test_service_socket_fail(storage_socket: SQLAlchemySocket):
 
     while r > 0:
         rec = storage_socket.records.torsiondrive.get(
-            id_1, include=["*", "service.*", "service.tasks.*", "service.tasks.record"]
+            id_1, include=["*", "service.*", "service.dependencies.*", "service.dependencies.record"]
         )
 
         assert rec[0]["status"] in {RecordStatusEnum.running, RecordStatusEnum.error}
 
-        waiting_tasks = [x["record"] for x in rec[0]["service"]["tasks"]]
+        waiting_tasks = [x["record"] for x in rec[0]["service"]["dependencies"]]
         assert len(waiting_tasks) > 0
 
         manager_tasks = storage_socket.tasks.claim_tasks(mname1.fullname, limit=4)

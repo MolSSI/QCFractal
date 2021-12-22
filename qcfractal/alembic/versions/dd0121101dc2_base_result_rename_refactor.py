@@ -64,14 +64,12 @@ def upgrade():
 
     # And the service queue tasks table
     # There, we have to recreate the primary key
-    op.drop_constraint("service_queue_tasks_pkey", "service_queue_tasks", type_="primary")
     op.alter_column("service_queue_tasks", "procedure_id", new_column_name="record_id")
     op.execute(
         sa.text(
             "ALTER TABLE service_queue_tasks RENAME CONSTRAINT service_queue_tasks_procedure_id_fkey TO service_queue_tasks_record_id_fkey"
         )
     )
-    op.execute(sa.text("ALTER TABLE service_queue_tasks ADD PRIMARY KEY (service_id, record_id)"))
 
     ##################################################
     # Rename the foreign key constraint to manager name

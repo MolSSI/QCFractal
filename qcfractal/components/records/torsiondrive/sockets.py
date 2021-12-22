@@ -17,7 +17,7 @@ from qcfractal.portal.outputstore import OutputTypeEnum, OutputStore
 
 from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM, SinglepointSpecificationORM
 from qcfractal.components.records.sockets import BaseRecordSocket
-from qcfractal.components.services.db_models import ServiceQueueORM, ServiceQueueTasksORM
+from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependenciesORM
 from qcfractal.db_socket.helpers import get_general, get_general_multi
 from qcfractal.portal.metadata_models import InsertMetadata, QueryMetadata
 from qcfractal.portal.molecules import Molecule
@@ -520,7 +520,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         # Sort by position
         # Fully sorting by the key is not important since that ends up being a key in the dict
         # All that matters is that position 1 for a particular key comes before position 2, etc
-        complete_tasks = sorted(service_orm.tasks, key=lambda x: x.extras["position"])
+        complete_tasks = sorted(service_orm.dependencies, key=lambda x: x.extras["position"])
 
         # Populate task results needed by the torsiondrive package
         task_results = {}
@@ -592,7 +592,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
     ):
 
         # delete all existing entries in the dependency list
-        service_orm.tasks = []
+        service_orm.dependencies = []
 
         for td_api_key, geometries in task_dict.items():
             for position, geometry in enumerate(geometries):
@@ -628,7 +628,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 if not meta.success:
                     raise RuntimeError("Error adding optimization - likely a developer error: " + meta.error_string)
 
-                svc_task = ServiceQueueTasksORM(
+                svc_task = ServiceDependenciesORM(
                     record_id=opt_ids[0],
                     extras={"td_api_key": td_api_key, "position": position},
                 )
@@ -640,5 +640,5 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                     key=opt_key,
                 )
 
-                service_orm.tasks.append(svc_task)
+                service_orm.dependencies.append(svc_task)
                 service_orm.record.optimization_history.append(opt_history)
