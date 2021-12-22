@@ -2,6 +2,7 @@
 Contains testing infrastructure for QCFractal.
 """
 
+import lzma
 import copy
 import gc
 import json
@@ -211,11 +212,24 @@ def load_procedure_data(name: str):
     """
 
     data_path = os.path.join(_my_path, "tests", "procedure_data")
-    file_path = os.path.join(data_path, name + ".json")
-    with open(file_path, "r") as f:
-        data = json.load(f)
+    file_path = os.path.join(data_path, name + ".json.xz")
+    is_xz = True
 
-    record_type = data["input"].pop("record_type")
+    if not os.path.exists(file_path):
+        file_path = os.path.join(data_path, name + ".json")
+        is_xz = False
+
+    if not os.path.exists(file_path):
+        raise RuntimeError(f"Procedure data file {file_path} not found!")
+
+    if is_xz:
+        with lzma.open(file_path, "rt") as f:
+            data = json.load(f)
+    else:
+        with open(file_path, "r") as f:
+            data = json.load(f)
+
+    record_type = data["record_type"]
     if record_type == "singlepoint":
         input_type = SinglepointInputSpecification
         result_type = AtomicResult
@@ -230,7 +244,7 @@ def load_procedure_data(name: str):
 
     molecule = Molecule(**data["molecule"])
 
-    return input_type(**data["input"]), molecule, result_type(**data["result"])
+    return input_type(**data["specification"]), molecule, result_type(**data["result"])
 
 
 def load_molecule_data(name: str) -> Molecule:
