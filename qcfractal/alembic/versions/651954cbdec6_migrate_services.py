@@ -40,12 +40,13 @@ def upgrade():
     # Create the auxiliary table for tasks associated with services
     op.create_table(
         "service_queue_tasks",
+        sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("service_id", sa.Integer(), nullable=False),
         sa.Column("procedure_id", sa.Integer(), nullable=False),
         sa.Column("extras", sa.JSON(), nullable=True),
         sa.ForeignKeyConstraint(["procedure_id"], ["base_result.id"], ondelete="cascade"),
         sa.ForeignKeyConstraint(["service_id"], ["service_queue.id"], ondelete="cascade"),
-        sa.PrimaryKeyConstraint("service_id", "procedure_id"),
+        sa.PrimaryKeyConstraint("id"),
     )
 
     # Handle the service state
