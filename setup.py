@@ -39,6 +39,7 @@ if __name__ == "__main__":
             "psycopg2",
             "qcelemental>=0.23",
             "qcengine>=0.20",
+            "torsiondrive",
             # QCPortal dependencies
             "requests",
             "tqdm",
