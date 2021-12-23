@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import contextlib
 import io
 import json
@@ -75,7 +76,6 @@ class TorsionDriveServiceState(BaseModel):
     # This makes for faster loads and makes them somewhat tamper-proof
     molecule_template: str
     dihedral_template: str
-    optimization_template: str
 
 
 class TorsiondriveRecordSocket(BaseRecordSocket):
@@ -329,15 +329,6 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         dihedral_template_str = json.dumps(dihedral_template)
         molecule_template_str = json.dumps(molecule_template)
 
-        opt_template = specification.optimization_specification.dict()
-
-        # TODO - is there a better place to do this? as_input function on models? Some pydantic export magic?
-        opt_template.pop("id")
-        opt_template.pop("singlepoint_specification_id")
-        opt_template["singlepoint_specification"].pop("id")
-        opt_template["singlepoint_specification"].pop("keywords_id")
-        opt_template_str = json.dumps(opt_template)
-
         if stdout:
             stdout_orm = td_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
             stdout_orm.append(stdout)
@@ -346,7 +337,6 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             torsiondrive_state=td_state,
             dihedral_template=dihedral_template_str,
             molecule_template=molecule_template_str,
-            optimization_template=opt_template_str,
         )
 
     def add(
@@ -551,10 +541,9 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
         stdout_append = "\n" + td_stdout.getvalue()
 
-        # If no tasks are left, we are all done
-        if len(next_tasks) == 0:
-            td_orm.status = RecordStatusEnum.complete
-        else:
+        # If there are any tasks left, submit them
+
+        if len(next_tasks) > 0:
             self.submit_optimization_subtasks(session, service_state, service_orm, next_tasks)
 
         # Update the torsiondrive procedure itself
@@ -598,7 +587,16 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             for position, geometry in enumerate(geometries):
 
                 # Create an optimization input based on the new geometry and the optimization template
-                new_opt_spec = json.loads(service_state.optimization_template)
+                opt_spec = service_orm.record.specification.optimization_specification.dict()
+
+                # Make a deep copy to prevent modifying the original ORM
+                opt_spec = copy.deepcopy(opt_spec)
+
+                # TODO - is there a better place to do this? as_input function on models? Some pydantic export magic?
+                opt_spec.pop("id")
+                opt_spec.pop("singlepoint_specification_id")
+                opt_spec["singlepoint_specification"].pop("id")
+                opt_spec["singlepoint_specification"].pop("keywords_id")
 
                 # Construct constraints
                 constraints = json.loads(service_state.dihedral_template)
@@ -608,9 +606,9 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                     constraints[con_num]["value"] = k
 
                 # update the constraints
-                new_opt_spec["keywords"].setdefault("constraints", {})
-                new_opt_spec["keywords"]["constraints"].setdefault("set", [])
-                new_opt_spec["keywords"]["constraints"]["set"].extend(constraints)
+                opt_spec["keywords"].setdefault("constraints", {})
+                opt_spec["keywords"]["constraints"].setdefault("set", [])
+                opt_spec["keywords"]["constraints"]["set"].extend(constraints)
 
                 # Build new molecule
                 mol = json.loads(service_state.molecule_template)
@@ -618,7 +616,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
                 # Submit the new optimization
                 meta, opt_ids = self.root_socket.records.optimization.add(
-                    OptimizationInputSpecification(**new_opt_spec),
+                    OptimizationInputSpecification(**opt_spec),
                     [Molecule(**mol)],
                     service_orm.tag,
                     service_orm.priority,
