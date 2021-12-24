@@ -5,8 +5,7 @@ import lzma
 from enum import Enum
 from typing import Union, Dict, Optional
 
-from pydantic import Field, validator
-from qcelemental.models import ProtoModel
+from pydantic import Field, validator, BaseModel, Extra
 
 
 class CompressionEnum(str, Enum):
@@ -30,10 +29,14 @@ class OutputTypeEnum(str, Enum):
     error = "error"
 
 
-class OutputStore(ProtoModel):
+class OutputStore(BaseModel):
     """
     Storage of outputs and error messages, with optional compression
     """
+
+    class Config:
+        allow_mutation = False
+        extra = Extra.forbid
 
     id: Optional[int] = Field(
         None, description="ID of the object on the database. This is assigned automatically by the database."
@@ -171,3 +174,11 @@ class OutputStore(ProtoModel):
         """
         s = self.get_string()
         return json.loads(s)
+
+    @property
+    def as_string(self):
+        return self.get_string()
+
+    @property
+    def as_json(self):
+        return self.get_json()

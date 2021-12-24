@@ -191,9 +191,9 @@ class RecordBase(ProtoModel, abc.ABC):
             kv = self.client.query_output([oid])[oid]
 
             if field_name == "error":
-                self.cache[field_name] = kv.get_json()
+                self.cache[field_name] = kv.as_json
             else:
-                self.cache[field_name] = kv.get_string()
+                self.cache[field_name] = kv.as_string
 
         return self.cache[field_name]
 

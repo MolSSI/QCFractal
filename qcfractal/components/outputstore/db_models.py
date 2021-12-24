@@ -53,7 +53,7 @@ class OutputStoreORM(BaseORM):
 
     def append(self, to_append: str):
         out_obj = OutputStore(**self.dict())
-        new_str = out_obj.get_string() + to_append
+        new_str = out_obj.as_string + to_append
 
         new_obj = OutputStore.compress(self.output_type, new_str, self.compression, self.compression_level)
 
