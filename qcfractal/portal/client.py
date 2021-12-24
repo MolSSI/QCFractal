@@ -1270,8 +1270,8 @@ class PortalClient:
         basis: Optional[str],
         keywords: Optional[Union[KeywordSet, Dict[str, Any], int]] = None,
         protocols: Optional[Union[SinglepointProtocols, Dict[str, Any]]] = None,
-        priority: PriorityEnum = PriorityEnum.normal,
         tag: Optional[str] = None,
+        priority: PriorityEnum = PriorityEnum.normal,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds a "single" compute to the server.
@@ -1462,8 +1462,8 @@ class PortalClient:
         singlepoint_specification: OptimizationSinglepointInputSpecification,
         keywords: Optional[Union[KeywordSet, Dict[str, Any], int]] = None,
         protocols: Optional[OptimizationProtocols] = None,
-        priority: PriorityEnum = PriorityEnum.normal,
         tag: Optional[str] = None,
+        priority: PriorityEnum = PriorityEnum.normal,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds optimization calculations to the server

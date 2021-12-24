@@ -54,8 +54,8 @@ def test_singlepoint_client_add_get(snowflake_client: PortalClient, spec: Single
         spec.basis,
         spec.keywords,
         spec.protocols,
-        PriorityEnum.high,
         "tag1",
+        PriorityEnum.high,
     )
     time_1 = datetime.utcnow()
 
@@ -102,8 +102,8 @@ def test_singlepoint_client_add_existing_molecule(snowflake_client: PortalClient
         spec.basis,
         spec.keywords,
         spec.protocols,
-        PriorityEnum.high,
         "tag1",
+        PriorityEnum.high,
     )
 
     assert meta.success
@@ -124,8 +124,8 @@ def test_singlepoint_client_add_same_1(snowflake_client: PortalClient):
         "6-31G*",
         KeywordSet(values={"k": "value"}),
         SinglepointProtocols(wavefunction="all"),
-        PriorityEnum.high,
         "tag1",
+        PriorityEnum.high,
     )
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
@@ -138,8 +138,8 @@ def test_singlepoint_client_add_same_1(snowflake_client: PortalClient):
         "6-31G*",
         KeywordSet(values={"k": "value"}),
         SinglepointProtocols(wavefunction="all"),
-        PriorityEnum.high,
         "tag1",
+        PriorityEnum.high,
     )
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
@@ -159,8 +159,8 @@ def test_singlepoint_client_add_same_2(snowflake_client: PortalClient):
         "6-31G*",
         KeywordSet(values={"k": "value"}),
         SinglepointProtocols(wavefunction="all"),
-        PriorityEnum.high,
         "tag1",
+        PriorityEnum.high,
     )
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
@@ -173,8 +173,8 @@ def test_singlepoint_client_add_same_2(snowflake_client: PortalClient):
         "6-31g*",
         KeywordSet(values={"k": "value"}),
         SinglepointProtocols(wavefunction="all"),
-        PriorityEnum.high,
         "tag1",
+        PriorityEnum.high,
     )
 
     assert meta.n_inserted == 0
@@ -195,8 +195,8 @@ def test_singlepoint_client_add_same_3(snowflake_client: PortalClient):
         "6-31G*",
         KeywordSet(values={}),
         SinglepointProtocols(wavefunction="none"),
-        PriorityEnum.high,
         "tag1",
+        PriorityEnum.high,
     )
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
@@ -209,8 +209,8 @@ def test_singlepoint_client_add_same_3(snowflake_client: PortalClient):
         "6-31G*",
         None,
         SinglepointProtocols(wavefunction="none"),
-        PriorityEnum.high,
         "tag1",
+        PriorityEnum.high,
     )
 
     assert meta.n_inserted == 0
@@ -231,8 +231,8 @@ def test_singlepoint_client_add_same_4(snowflake_client: PortalClient):
         None,
         KeywordSet(values={}),
         SinglepointProtocols(wavefunction="none"),
-        PriorityEnum.high,
         "tag1",
+        PriorityEnum.high,
     )
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
@@ -245,8 +245,8 @@ def test_singlepoint_client_add_same_4(snowflake_client: PortalClient):
         "",
         KeywordSet(values={}),
         SinglepointProtocols(wavefunction="none"),
-        PriorityEnum.high,
         "tag1",
+        PriorityEnum.high,
     )
 
     assert meta.n_inserted == 0
