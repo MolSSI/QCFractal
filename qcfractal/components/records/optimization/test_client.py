@@ -29,9 +29,26 @@ from qcfractal.testing import load_molecule_data, load_procedure_data
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcfractal.portal import PortalClient
+    from typing import Optional
 
 
 from .test_sockets import _test_specs
+
+
+@pytest.mark.parametrize("tag", [None, "tag99"])
+@pytest.mark.parametrize("priority", list(PriorityEnum))
+def test_optimization_client_tag_priority(snowflake_client: PortalClient, tag: Optional[str], priority: PriorityEnum):
+    water = load_molecule_data("water_dimer_minima")
+    meta1, id1 = snowflake_client.add_optimizations(
+        [water],
+        "prog",
+        OptimizationSinglepointInputSpecification(program="prog", method="hf", basis="sto-3g"),
+        priority=priority,
+        tag=tag,
+    )
+    rec = snowflake_client.get_records(id1, include_task=True)
+    assert rec[0].raw_data.task.tag == tag
+    assert rec[0].raw_data.task.priority == priority
 
 
 @pytest.mark.parametrize("spec", _test_specs)
