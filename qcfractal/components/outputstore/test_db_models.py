@@ -73,7 +73,7 @@ def test_outputs_models_roundtrip_str(
 
     assert out_model.id == out_id
     assert out_model.compression == compression
-    assert out_model.get_string() == input_str
+    assert out_model.as_string == input_str
 
     # if compression_level is None (and compression is requested),
     # then a sensible default is used
@@ -110,7 +110,7 @@ def test_outputs_models_roundtrip_dict(
 
     assert out_model.id == out_id
     assert out_model.compression == compression
-    assert out_model.get_json() == input_dict
+    assert out_model.as_json == input_dict
     assert out_model.output_type == output_type
 
     # if compression_level is None (and compression is requested),

@@ -98,9 +98,9 @@ class ComputeHistory(BaseModel):
         for o in self.outputs:
             if o.output_type == output_type:
                 if o.output_type == OutputTypeEnum.error:
-                    return o.get_json()
+                    return o.as_json
                 else:
-                    return o.get_string()
+                    return o.as_string
 
             return None
 

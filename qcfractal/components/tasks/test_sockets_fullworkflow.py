@@ -271,4 +271,4 @@ def test_task_socket_compressed_outputs_success(storage_socket: SQLAlchemySocket
 
     records = storage_socket.records.get(id1, include=["*", "task", "compute_history.*", "compute_history.outputs"])
     out = OutputStore(**records[0]["compute_history"][0]["outputs"][0])
-    assert out.get_string() == original_stdout
+    assert out.as_string == original_stdout

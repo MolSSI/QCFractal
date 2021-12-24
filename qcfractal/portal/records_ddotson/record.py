@@ -318,9 +318,9 @@ class Record(abc.ABC):
         result = self._client._get_outputs(oid)
 
         if field_name == "error":
-            return result.get_json()
+            return result.as_json
         else:
-            return result.get_string()
+            return result.as_string
 
     @property
     def stdout(self):

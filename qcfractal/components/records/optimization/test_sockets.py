@@ -437,7 +437,7 @@ def test_optimization_socket_run(storage_socket: SQLAlchemySocket):
         for o in outs:
             out_obj = OutputStore(**o)
             ro = getattr(result, o["output_type"])
-            assert out_obj.get_string() == ro
+            assert out_obj.as_string == ro
 
         # Test the trajectory
         assert len(record["trajectory"]) == len(result.trajectory)
@@ -502,7 +502,7 @@ def test_optimization_socket_run(storage_socket: SQLAlchemySocket):
 #    assert len(recs[1]["compute_history"][0]["outputs"]) == 1
 #    outs1 = OutputStore(**recs[0]["compute_history"][0]["outputs"][0])
 #    outs2 = OutputStore(**recs[1]["compute_history"][0]["outputs"][0])
-#    assert outs1.get_string() == outs2.get_string()
+#    assert outs1.as_string == outs2.as_string
 
 
 def test_optimization_socket_query(storage_socket: SQLAlchemySocket):
