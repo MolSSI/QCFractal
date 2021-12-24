@@ -23,6 +23,19 @@ from .test_sockets import _test_specs
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcfractal.portal import PortalClient
+    from typing import Optional
+
+
+@pytest.mark.parametrize("tag", [None, "tag99"])
+@pytest.mark.parametrize("priority", list(PriorityEnum))
+def test_singlepoint_client_tag_priority(snowflake_client: PortalClient, tag: Optional[str], priority: PriorityEnum):
+    water = load_molecule_data("water_dimer_minima")
+    meta1, id1 = snowflake_client.add_singlepoints(
+        [water], "prog", SinglepointDriver.energy, "hf", "sto-3g", None, None, priority=priority, tag=tag
+    )
+    rec = snowflake_client.get_records(id1, include_task=True)
+    assert rec[0].raw_data.task.tag == tag
+    assert rec[0].raw_data.task.priority == priority
 
 
 @pytest.mark.parametrize("spec", _test_specs)
