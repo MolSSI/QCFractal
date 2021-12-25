@@ -215,7 +215,7 @@ class RecordSocket:
             stmt = stmt.options(*proj_options)
             n_found = get_count_2(session, stmt)
             stmt = stmt.limit(limit).offset(query_data.skip)
-            results = session.execute(stmt).scalars().all()
+            results = session.execute(stmt).scalars().unique().all()
             result_dicts = [x.dict() for x in results]
 
         meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore

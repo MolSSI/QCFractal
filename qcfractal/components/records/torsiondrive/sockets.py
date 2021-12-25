@@ -17,8 +17,10 @@ from sqlalchemy.orm import contains_eager
 from qcfractal.portal.outputstore import OutputTypeEnum, OutputStore
 
 from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM, SinglepointSpecificationORM
+from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM
 from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependenciesORM
+from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.db_socket.helpers import get_general, get_general_multi
 from qcfractal.portal.metadata_models import InsertMetadata, QueryMetadata
 from qcfractal.portal.molecules import Molecule
@@ -27,6 +29,7 @@ from qcfractal.portal.records.optimization import OptimizationQueryBody, Optimiz
 from qcfractal.portal.records.torsiondrive import (
     TorsiondriveSpecification,
     TorsiondriveInputSpecification,
+    TorsiondriveQueryBody,
 )
 from .db_models import (
     TorsiondriveSpecificationORM,
@@ -224,7 +227,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             hist = get_general_multi(
                 session,
                 TorsiondriveOptimizationHistoryORM,
-                TorsiondriveOptimizationHistoryORM.optimization_id,
+                TorsiondriveOptimizationHistoryORM.torsiondrive_id,
                 [record_id],
                 include,
                 exclude,
@@ -234,7 +237,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
     def query(
         self,
-        query_data: OptimizationQueryBody,
+        query_data: TorsiondriveQueryBody,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[TorsiondriveRecordDict]]:
@@ -242,10 +245,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         and_query = []
         need_spspec_join = False
         need_optspec_join = False
+        need_initmol_join = False
 
-        if query_data.program is not None:
-            and_query.append(OptimizationSpecificationORM.program.in_(query_data.program))
-            need_optspec_join = True
         if query_data.singlepoint_program is not None:
             and_query.append(SinglepointSpecificationORM.program.in_(query_data.singlepoint_program))
             need_spspec_join = True
@@ -258,31 +259,50 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         if query_data.singlepoint_keywords_id is not None:
             and_query.append(SinglepointSpecificationORM.keywords_id.in_(query_data.singlepoint_keywords_id))
             need_spspec_join = True
+        if query_data.optimization_program is not None:
+            and_query.append(OptimizationInputSpecification.program.in_(query_data.optimization_program))
         if query_data.initial_molecule_id is not None:
-            and_query.append(OptimizationRecordORM.initial_molecule_id.in_(query_data.initial_molecule_id))
-        if query_data.final_molecule_id is not None:
-            and_query.append(OptimizationRecordORM.final_molecule_id.in_(query_data.final_molecule_id))
+            and_query.append(TorsiondriveInitialMoleculeORM.molecule_id.in_(query_data.initial_molecule_id))
+            need_initmol_join = True
 
-        stmt = select(OptimizationRecordORM)
+        stmt = select(TorsiondriveRecordORM)
 
-        # If we need the singlepoint spec, we also need the optimization spec
+        # We don't search for anything td-specification specific, so no need for
+        # need_tdspec_join (for now...)
+
         if need_optspec_join or need_spspec_join:
-            stmt = stmt.join(OptimizationRecordORM.specification).options(
-                contains_eager(OptimizationRecordORM.specification)
+            stmt = stmt.join(TorsiondriveRecordORM.specification).options(
+                contains_eager(TorsiondriveRecordORM.specification)
+            )
+
+            stmt = stmt.join(TorsiondriveSpecificationORM.optimization_specification).options(
+                contains_eager(
+                    TorsiondriveRecordORM.specification, TorsiondriveSpecificationORM.optimization_specification
+                )
             )
 
         if need_spspec_join:
             stmt = stmt.join(OptimizationSpecificationORM.singlepoint_specification).options(
                 contains_eager(
-                    OptimizationRecordORM.specification, OptimizationSpecificationORM.singlepoint_specification
+                    TorsiondriveRecordORM.specification,
+                    TorsiondriveSpecificationORM.optimization_specification,
+                    OptimizationSpecificationORM.singlepoint_specification,
                 )
+            )
+
+        if need_initmol_join:
+            # Don't use the relationship - the initial_molecules relationship goes through a secondary table
+            # just use the secondary table directly
+            stmt = stmt.join(
+                TorsiondriveInitialMoleculeORM,
+                TorsiondriveInitialMoleculeORM.torsiondrive_id == TorsiondriveRecordORM.id,
             )
 
         stmt = stmt.where(*and_query)
 
         return self.root_socket.records.query_base(
             stmt=stmt,
-            orm_type=OptimizationRecordORM,
+            orm_type=TorsiondriveRecordORM,
             query_data=query_data,
             session=session,
         )
@@ -306,6 +326,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         molecule_template.pop("identifiers", None)
 
         # The torsiondrive package uses print, so capture that using contextlib
+        # Also capture any warnings generated by that package
+        logging.captureWarnings(True)
         td_stdout = io.StringIO()
         with contextlib.redirect_stdout(td_stdout):
             td_state = td_api.create_initial_state(
@@ -318,6 +340,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 energy_upper_limit=keywords.energy_upper_limit,
             )
 
+        logging.captureWarnings(False)
         stdout = td_stdout.getvalue()
 
         # Build dihedral template. Just for convenience later
@@ -534,12 +557,15 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             task_results[td_api_key].append((initial_mol_geom, final_mol_geom, opt_record.energies[-1]))
 
         # The torsiondrive package uses print, so capture that using contextlib
+        # Also capture any warnings generated by that package
         td_stdout = io.StringIO()
+        logging.captureWarnings(True)
         with contextlib.redirect_stdout(td_stdout):
             td_api.update_state(service_state.torsiondrive_state, task_results)
             next_tasks = td_api.next_jobs_from_state(service_state.torsiondrive_state, verbose=True)
 
         stdout_append = "\n" + td_stdout.getvalue()
+        logging.captureWarnings(False)
 
         # If there are any tasks left, submit them
 

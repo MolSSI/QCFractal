@@ -1,9 +1,9 @@
 from typing import List, Optional, Tuple, Union
 
-from pydantic import BaseModel, Field, Extra, root_validator, constr
+from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
 
 from qcfractal.portal.model_utils import recursive_normalizer
-from qcfractal.portal.records import RecordAddBodyBase
+from qcfractal.portal.records import RecordAddBodyBase, RecordQueryBody
 from qcfractal.portal.records.optimization.models import OptimizationInputSpecification, OptimizationSpecification
 from ...molecules import Molecule
 
@@ -67,6 +67,24 @@ class TorsiondriveAddBody(RecordAddBodyBase):
         description="The Molecule(s) to begin the TorsionDrive with. This can either be an existing Molecule in "
         "the database (through its :class:`ObjectId`) or a fully specified :class:`Molecule` model.",
     )
+
+
+class TorsiondriveQueryBody(RecordQueryBody):
+    singlepoint_program: Optional[List[constr(to_lower=True)]] = None
+    singlepoint_method: Optional[List[constr(to_lower=True)]] = None
+    singlepoint_basis: Optional[List[Optional[constr(to_lower=True)]]] = None
+    singlepoint_keywords_id: Optional[List[int]] = None
+    optimization_program: Optional[List[int]]
+    initial_molecule_id: Optional[List[int]] = None
+
+    @validator("singlepoint_basis")
+    def _convert_basis(cls, v):
+        # Convert empty string to None
+        # Lowercasing is handled by constr
+        if v is not None:
+            return ["" if x is None else x for x in v]
+        else:
+            return None
 
 
 # class TorsiondriveRecord(RecordBase):
