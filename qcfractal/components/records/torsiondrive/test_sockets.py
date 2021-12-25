@@ -27,7 +27,11 @@ from qcfractal.portal.records.singlepoint import (
     SinglepointDriver,
     SinglepointProtocols,
 )
-from qcfractal.portal.records.torsiondrive import TorsiondriveInputSpecification, TorsiondriveKeywords
+from qcfractal.portal.records.torsiondrive import (
+    TorsiondriveInputSpecification,
+    TorsiondriveKeywords,
+    TorsiondriveQueryBody,
+)
 from qcfractal.testing import load_molecule_data, load_procedure_data
 
 if TYPE_CHECKING:
@@ -418,10 +422,34 @@ def test_torsiondrive_socket_add_same_3(storage_socket: SQLAlchemySocket):
 #    assert outs1.as_string == outs2.as_string
 
 
-# def test_torsiondrive_socket_query(storage_socket: SQLAlchemySocket):
-#    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_fluoroethane_opt_notraj")
-#    input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_benzene_opt")
-#    input_spec_3, molecule_3, result_data_3 = load_procedure_data("psi4_methane_opt_sometraj")
+def test_torsiondrive_socket_query(storage_socket: SQLAlchemySocket):
+    input_spec_1, molecules_1, result_data_1 = load_procedure_data("td_H2O2_psi4_b3lyp")
+
+    meta_1, id_1 = storage_socket.records.torsiondrive.add(input_spec_1, [molecules_1], as_service=True)
+    assert meta_1.success
+
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(singlepoint_program=["psi4"]))
+    assert meta.n_found == 1
+
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(singlepoint_program=["nothing"]))
+    assert meta.n_found == 0
+
+    _, init_mol_id = storage_socket.molecules.add(molecules_1)
+    meta, td = storage_socket.records.torsiondrive.query(
+        TorsiondriveQueryBody(initial_molecule_id=[init_mol_id[0]], include=["initial_molecules"])
+    )
+    assert meta.n_found == 1
+    print(td)
+
+    # _, init_mol_id = storage_socket.molecules.add(molecules_1)
+    # meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(
+    #    initial_molecule_id=[init_mol_id[0]+9999]
+    # ))
+    # assert meta.n_found == 0
+    # assert meta.n_returned == 0
+    # assert len(td) == 0
+
+
 #
 #    meta1, id1 = storage_socket.records.optimization.add(input_spec_1, [molecule_1])
 #    meta2, id2 = storage_socket.records.optimization.add(input_spec_2, [molecule_2])
@@ -607,11 +635,27 @@ def test_torsiondrive_socket_add_same_3(storage_socket: SQLAlchemySocket):
 #
 
 
-@pytest.mark.parametrize("test_data_name", ["td_H2O2_psi4", "td_C8H6_psi4", "td_C9H11NO2_psi4"])
+@pytest.mark.parametrize(
+    "test_data_name",
+    [
+        "td_C8H6_psi4",
+        "td_C9H11NO2_psi4",
+        "td_H2O2_psi4_b3lyp-d3bj",
+        "td_H2O2_psi4_b3lyp",
+        "td_H2O2_psi4_blyp",
+        "td_H2O2_psi4_bp86",
+        "td_H2O2_psi4_hf",
+        "td_H2O2_psi4_pbe0-d3bj",
+        "td_H2O2_psi4_pbe0",
+        "td_H2O2_psi4_pbe",
+    ],
+)
 def test_torsiondrive_socket_run(storage_socket: SQLAlchemySocket, test_data_name: str):
     input_spec_1, molecules_1, result_data_1 = load_procedure_data(test_data_name)
 
-    meta_1, id_1 = storage_socket.records.torsiondrive.add(input_spec_1, [molecules_1], as_service=True)
+    meta_1, id_1 = storage_socket.records.torsiondrive.add(
+        input_spec_1, [molecules_1], tag="test_tag", priority=PriorityEnum.low, as_service=True
+    )
     assert meta_1.success
     rec = storage_socket.records.torsiondrive.get(id_1)
     assert rec[0]["status"] == RecordStatusEnum.waiting
@@ -646,6 +690,8 @@ def test_torsiondrive_socket_run(storage_socket: SQLAlchemySocket, test_data_nam
         # The C8H6 test has this "feature"
         opt_ids = set(x["record_id"] for x in manager_tasks)
         opt_recs = storage_socket.records.optimization.get(opt_ids, include=["*", "initial_molecule", "task"])
+        assert all(x["task"]["priority"] == PriorityEnum.low for x in opt_recs)
+        assert all(x["task"]["tag"] == "test_tag" for x in opt_recs)
 
         manager_ret = {}
         for opt in opt_recs:
@@ -671,6 +717,10 @@ def test_torsiondrive_socket_run(storage_socket: SQLAlchemySocket, test_data_nam
     )
 
     assert rec[0]["status"] == RecordStatusEnum.complete
+    assert len(rec[0]["compute_history"]) == 1
+    assert len(rec[0]["compute_history"][-1]["outputs"]) == 1
     assert rec[0]["compute_history"][-1]["status"] == RecordStatusEnum.complete
     assert time_0 < rec[0]["compute_history"][-1]["modified_on"] < time_1
     assert rec[0]["service"] is None
+    out = OutputStore(**rec[0]["compute_history"][-1]["outputs"][0])
+    assert "Job Finished" in out.as_string

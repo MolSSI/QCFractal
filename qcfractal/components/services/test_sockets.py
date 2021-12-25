@@ -14,7 +14,7 @@ from qcfractal.components.records.optimization.db_models import OptimizationReco
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.portal.keywords import KeywordSet
 from qcfractal.portal.molecules import Molecule
-from qcfractal.portal.outputstore import OutputStore
+from qcfractal.portal.outputstore import OutputStore, OutputTypeEnum
 from qcfractal.portal.managers import ManagerName
 from qcfractal.portal.records import RecordStatusEnum, PriorityEnum
 from qcfractal.portal.records.optimization import (
@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
 
 
-def test_service_socket_fail(storage_socket: SQLAlchemySocket):
+def test_service_socket_error(storage_socket: SQLAlchemySocket):
     input_spec_1, molecules_1, result_data_1 = load_procedure_data("td_C7H8N2OS_psi4_fail")
 
     meta_1, id_1 = storage_socket.records.torsiondrive.add(input_spec_1, [molecules_1], as_service=True)
@@ -98,7 +98,15 @@ def test_service_socket_fail(storage_socket: SQLAlchemySocket):
     )
 
     assert rec[0]["status"] == RecordStatusEnum.error
-    assert rec[0]["service"] is not None
+    assert len(rec[0]["compute_history"]) == 1
+    assert len(rec[0]["compute_history"][-1]["outputs"]) == 2  # stdout and error
     assert rec[0]["compute_history"][-1]["status"] == RecordStatusEnum.error
     assert time_0 < rec[0]["compute_history"][-1]["modified_on"] < time_1
     assert rec[0]["service"] is not None
+
+    outs = rec[0]["compute_history"][-1]["outputs"]
+    out0 = OutputStore(**outs[0])
+    out1 = OutputStore(**outs[1])
+
+    out_err = out0 if out0.output_type == OutputTypeEnum.error else out1
+    assert "did not complete successfully" in out_err.as_json["error_message"]

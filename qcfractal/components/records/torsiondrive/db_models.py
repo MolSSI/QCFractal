@@ -82,9 +82,7 @@ class TorsiondriveRecordORM(BaseRecordORM):
     specification_id = Column(Integer, ForeignKey(TorsiondriveSpecificationORM.id), nullable=False)
     specification = relationship(TorsiondriveSpecificationORM, lazy="selectin")
 
-    initial_molecules = relationship(
-        MoleculeORM, secondary=TorsiondriveInitialMoleculeORM.__table__, uselist=True, lazy="select"
-    )
+    initial_molecules = relationship(MoleculeORM, secondary=TorsiondriveInitialMoleculeORM.__table__, uselist=True)
 
     # Output data
     final_energy_dict = Column(JSON)
