@@ -46,6 +46,7 @@ class ServiceSocket:
 
     def iterate_services(self, *, session: Optional[Session] = None) -> int:
 
+        self._logger.info("Iterating on services")
         # A CTE that contains just service id and all the statuses as an array
         status_cte = (
             select(ServiceQueueTasksORM.service_id, array_agg(BaseRecordORM.status).label("task_statuses"))
@@ -97,11 +98,17 @@ class ServiceSocket:
 
                 self.root_socket.notify_completed_watch(service_orm.record_id, RecordStatusEnum.error)
 
-            # Completed, successful services
+            # Completed, successful service dependencies. Service is ready for the next iteration
             for service_orm in completed_services:
                 try:
+                    self._logger.info(
+                        f"Record {service_orm.record_id} (service {service_orm.id}) has all tasks completed. Iterating..."
+                    )
                     completed = self.root_socket.records.iterate_service(session, service_orm)
+                    service_orm.record.modified_on = datetime.utcnow()
                 except Exception as err:
+                    session.rollback()
+
                     error = {
                         "error_type": "service_iteration_error",
                         "error_message": "Error iterating service: " + str(err),
@@ -109,12 +116,16 @@ class ServiceSocket:
                     self.root_socket.records.update_failed_service(service_orm.record, error)
                     session.commit()
                     self.root_socket.notify_completed_watch(service_orm.record_id, RecordStatusEnum.error)
-
                     continue
 
                 # If the service has successfully completed, delete the entry from the Service Queue
                 if completed:
+                    service_orm.record.compute_history[-1].status = RecordStatusEnum.complete
+                    service_orm.record.compute_history[-1].modified_on = datetime.utcnow()
+                    service_orm.record.status = RecordStatusEnum.complete
+                    service_orm.record.modified_on = datetime.utcnow()
                     session.delete(service_orm)
+
                     session.commit()
                     self.root_socket.notify_completed_watch(service_orm.record_id, RecordStatusEnum.complete)
 
@@ -167,10 +178,16 @@ class ServiceSocket:
                     hist.outputs.append(OutputStoreORM.from_model(stdout))
 
                     service_orm.record.compute_history.append(hist)
+                    service_orm.record.modified_on = now
+
+                    session.commit()
 
                     try:
                         self.root_socket.records.iterate_service(session, service_orm)
                     except Exception as err:
+                        session.rollback()
+
+                        raise
                         error = {
                             "error_type": "service_iteration_error",
                             "error_message": "Error in first iteration of service: " + str(err),

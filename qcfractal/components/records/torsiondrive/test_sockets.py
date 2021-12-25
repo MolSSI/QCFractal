@@ -1,5 +1,5 @@
 """
-Tests the singlepoint record socket
+Tests the torsiondrive record socket
 """
 
 from __future__ import annotations
@@ -7,6 +7,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+import json
 import pytest
 
 from qcfractal.components.records.optimization.db_models import OptimizationRecordORM
@@ -14,6 +15,7 @@ from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.portal.keywords import KeywordSet
 from qcfractal.portal.molecules import Molecule
 from qcfractal.portal.outputstore import OutputStore
+from qcfractal.portal.managers import ManagerName
 from qcfractal.portal.records import RecordStatusEnum, PriorityEnum
 from qcfractal.portal.records.optimization import (
     OptimizationInputSpecification,
@@ -35,7 +37,7 @@ _test_specs = [
     TorsiondriveInputSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
-            dihedrals=[(8, 11, 15, 13)],
+            dihedrals=[(1, 2, 3, 4)],
             grid_spacing=[15],
             dihedral_ranges=None,
             energy_decrease_thresh=None,
@@ -58,77 +60,68 @@ _test_specs = [
 
 
 @pytest.mark.parametrize("spec", _test_specs)
-def test_torsiondrive_socket_add_get(storage_socket: SQLAlchemySocket, spec: OptimizationInputSpecification):
+def test_torsiondrive_socket_add_get(storage_socket: SQLAlchemySocket, spec: TorsiondriveInputSpecification):
     hooh = load_molecule_data("peroxide2")
+    c8h6_1 = load_molecule_data("td_C8H6_1")
+    c8h6_2 = load_molecule_data("td_C8H6_2")
 
     time_0 = datetime.utcnow()
     meta, id = storage_socket.records.torsiondrive.add(
-        spec, [[hooh]], as_service=True, tag="tag1", priority=PriorityEnum.low
+        spec, [[hooh], [c8h6_1, c8h6_2]], as_service=True, tag="tag1", priority=PriorityEnum.low
     )
     time_1 = datetime.utcnow()
     assert meta.success
 
-    recs = storage_socket.records.torsiondrive.get(id, include=["*", "initial_molecules"])
-    return
+    recs = storage_socket.records.torsiondrive.get(id, include=["*", "initial_molecules", "service"])
 
-    assert len(recs) == 3
+    assert len(recs) == 2
     for r in recs:
-        assert r["record_type"] == "optimization"
+        assert r["record_type"] == "torsiondrive"
+        assert r["status"] == RecordStatusEnum.waiting
         assert r["specification"]["program"] == spec.program.lower()
-        assert r["specification"]["keywords"] == spec.keywords
-        assert r["specification"]["protocols"] == spec.protocols.dict(exclude_defaults=True)
+        assert TorsiondriveKeywords(**r["specification"]["keywords"]) == spec.keywords
 
-        # Test single point spec
-        sp_spec = r["specification"]["singlepoint_specification"]
-        assert sp_spec["driver"] == spec.singlepoint_specification.driver
+        # Test the optimization spec
+        opt_spec = r["specification"]["optimization_specification"]
+        assert opt_spec["program"] == spec.optimization_specification.program
+        assert opt_spec["keywords"] == spec.optimization_specification.keywords
+        assert opt_spec["protocols"] == spec.optimization_specification.protocols.dict(exclude_defaults=True)
+
+        # And some of the singlepoint spec
+        sp_spec = opt_spec["singlepoint_specification"]
+        assert sp_spec["driver"] == spec.optimization_specification.singlepoint_specification.driver
         assert sp_spec["driver"] == SinglepointDriver.deferred
-        assert sp_spec["method"] == spec.singlepoint_specification.method.lower()
+        assert sp_spec["method"] == spec.optimization_specification.singlepoint_specification.method.lower()
         assert sp_spec["basis"] == (
-            spec.singlepoint_specification.basis.lower() if spec.singlepoint_specification.basis is not None else ""
+            spec.optimization_specification.singlepoint_specification.basis.lower()
+            if spec.optimization_specification.singlepoint_specification.basis is not None
+            else ""
         )
-        assert sp_spec["keywords"]["hash_index"] == spec.singlepoint_specification.keywords.hash_index
-        assert sp_spec["protocols"] == spec.singlepoint_specification.protocols.dict(exclude_defaults=True)
+        assert (
+            sp_spec["keywords"]["hash_index"]
+            == spec.optimization_specification.singlepoint_specification.keywords.hash_index
+        )
+        assert sp_spec["protocols"] == spec.optimization_specification.singlepoint_specification.protocols.dict(
+            exclude_defaults=True
+        )
 
-        # Now the task stuff
-        task_spec = r["task"]["spec"]["args"][0]
-        assert r["task"]["spec"]["args"][1] == spec.program
-
-        kw_with_prog = spec.keywords.copy()
-        kw_with_prog["program"] = spec.singlepoint_specification.program
-
-        assert task_spec["keywords"] == kw_with_prog
-        assert task_spec["protocols"] == spec.protocols.dict(exclude_defaults=True)
-
-        # Forced to gradient int he qcschema input
-        assert task_spec["input_specification"]["driver"] == SinglepointDriver.gradient
-        assert task_spec["input_specification"]["model"] == {
-            "method": spec.singlepoint_specification.method,
-            "basis": spec.singlepoint_specification.basis,
-        }
-
-        assert task_spec["input_specification"]["keywords"] == spec.singlepoint_specification.keywords.values
-
-        assert r["task"]["tag"] == "tag1"
-        assert r["task"]["priority"] == PriorityEnum.low
+        # Service queue entry should exist with the proper tag and priority
+        assert r["service"]["tag"] == "tag1"
+        assert r["service"]["priority"] == PriorityEnum.low
 
         assert time_0 < r["created_on"] < time_1
         assert time_0 < r["modified_on"] < time_1
-        assert time_0 < r["task"]["created_on"] < time_1
+        assert time_0 < r["service"]["created_on"] < time_1
 
-    mol1 = storage_socket.molecules.get([recs[0]["initial_molecule_id"]])[0]
-    mol2 = storage_socket.molecules.get([recs[1]["initial_molecule_id"]])[0]
-    mol3 = storage_socket.molecules.get([recs[2]["initial_molecule_id"]])[0]
-    assert mol1["identifiers"]["molecule_hash"] == water.get_hash()
-    assert recs[0]["initial_molecule"]["identifiers"]["molecule_hash"] == water.get_hash()
-    assert Molecule(**recs[0]["task"]["spec"]["args"][0]["initial_molecule"]) == water
+    assert len(recs[0]["initial_molecules"]) == 1
+    assert len(recs[1]["initial_molecules"]) == 2
 
-    assert mol2["identifiers"]["molecule_hash"] == hooh.get_hash()
-    assert recs[1]["initial_molecule"]["identifiers"]["molecule_hash"] == hooh.get_hash()
-    assert Molecule(**recs[1]["task"]["spec"]["args"][0]["initial_molecule"]) == hooh
+    assert recs[0]["initial_molecules"][0]["identifiers"]["molecule_hash"] == hooh.get_hash()
 
-    assert mol3["identifiers"]["molecule_hash"] == ne4.get_hash()
-    assert Molecule(**recs[2]["task"]["spec"]["args"][0]["initial_molecule"]) == ne4
-    assert recs[2]["initial_molecule"]["identifiers"]["molecule_hash"] == ne4.get_hash()
+    # Not necessarily in the input order
+    hash1 = recs[1]["initial_molecules"][0]["identifiers"]["molecule_hash"]
+    hash2 = recs[1]["initial_molecules"][1]["identifiers"]["molecule_hash"]
+    assert {hash1, hash2} == {c8h6_1.get_hash(), c8h6_2.get_hash()}
 
 
 # def test_torsiondrive_socket_add_existing_molecule(storage_socket: SQLAlchemySocket):
@@ -284,38 +277,6 @@ def test_torsiondrive_socket_add_same_3(storage_socket: SQLAlchemySocket):
     assert meta.n_existing == 1
     assert meta.existing_idx == [0]
     assert id1 == id2
-
-
-def test_torsiondrive_socket_iterate(storage_socket: SQLAlchemySocket):
-    hooh = load_molecule_data("peroxide2")
-    spec = TorsiondriveInputSpecification(
-        program="torsiondrive",
-        keywords=TorsiondriveKeywords(
-            dihedrals=[(0, 1, 2, 3)],
-            grid_spacing=[90],
-            dihedral_ranges=None,
-            energy_decrease_thresh=None,
-            energy_upper_limit=0.05,
-        ),
-        optimization_specification=OptimizationInputSpecification(
-            program="geometric",
-            keywords={},
-            singlepoint_specification=OptimizationSinglepointInputSpecification(
-                program="psi4",
-                method="b3lyp",
-                basis="sto-3g",
-            ),
-        ),
-    )
-
-    time_0 = datetime.utcnow()
-    meta, id = storage_socket.records.torsiondrive.add(
-        spec, [[hooh]], as_service=True, tag="tag1", priority=PriorityEnum.low
-    )
-    time_1 = datetime.utcnow()
-
-    r = storage_socket.services.iterate_services()
-    assert meta.success
 
 
 # def test_torsiondrive_socket_update(storage_socket: SQLAlchemySocket):
@@ -644,3 +605,72 @@ def test_torsiondrive_socket_iterate(storage_socket: SQLAlchemySocket):
 #    child_recs = storage_socket.records.get(child_ids)
 #    assert all(x["status"] == RecordStatusEnum.complete for x in child_recs)
 #
+
+
+@pytest.mark.parametrize("test_data_name", ["td_H2O2_psi4", "td_C8H6_psi4", "td_C9H11NO2_psi4"])
+def test_torsiondrive_socket_run(storage_socket: SQLAlchemySocket, test_data_name: str):
+    input_spec_1, molecules_1, result_data_1 = load_procedure_data(test_data_name)
+
+    meta_1, id_1 = storage_socket.records.torsiondrive.add(input_spec_1, [molecules_1], as_service=True)
+    assert meta_1.success
+    rec = storage_socket.records.torsiondrive.get(id_1)
+    assert rec[0]["status"] == RecordStatusEnum.waiting
+
+    # A manager for completing the tasks
+    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
+    storage_socket.managers.activate(
+        name_data=mname1,
+        manager_version="v2.0",
+        qcengine_version="v1.0",
+        username="bill",
+        programs={
+            "geometric": None,
+            "psi4": None,
+        },
+        tags=["*"],
+    )
+
+    time_0 = datetime.utcnow()
+    r = storage_socket.services.iterate_services()
+    time_1 = datetime.utcnow()
+
+    while r > 0:
+        rec = storage_socket.records.torsiondrive.get(
+            id_1, include=["*", "service.*", "service.tasks.*", "service.tasks.record"]
+        )
+        assert rec[0]["status"] == RecordStatusEnum.running
+
+        manager_tasks = storage_socket.tasks.claim_tasks(mname1.fullname, limit=10)
+
+        # Sometimes a task may be duplicated in the service dependencies.
+        # The C8H6 test has this "feature"
+        opt_ids = set(x["record_id"] for x in manager_tasks)
+        opt_recs = storage_socket.records.optimization.get(opt_ids, include=["*", "initial_molecule", "task"])
+
+        manager_ret = {}
+        for opt in opt_recs:
+            # Find out info about what tasks the service spawned
+            mol_hash = opt["initial_molecule"]["identifiers"]["molecule_hash"]
+            constraints = opt["specification"]["keywords"]["constraints"]
+
+            # This is the key in the dictionary of optimization results
+            optresult_key = mol_hash + "|" + json.dumps(constraints, sort_keys=True)
+            opt_data = result_data_1[optresult_key]
+            manager_ret[opt["task"]["id"]] = opt_data
+
+        rmeta = storage_socket.tasks.update_finished(mname1.fullname, manager_ret)
+        assert rmeta.n_accepted == len(manager_tasks)
+
+        time_0 = datetime.utcnow()
+        # may or may not iterate - depends on if all tasks done
+        r = storage_socket.services.iterate_services()
+        time_1 = datetime.utcnow()
+
+    rec = storage_socket.records.torsiondrive.get(
+        id_1, include=["*", "compute_history.*", "compute_history.outputs", "service"]
+    )
+
+    assert rec[0]["status"] == RecordStatusEnum.complete
+    assert rec[0]["compute_history"][-1]["status"] == RecordStatusEnum.complete
+    assert time_0 < rec[0]["compute_history"][-1]["modified_on"] < time_1
+    assert rec[0]["service"] is None

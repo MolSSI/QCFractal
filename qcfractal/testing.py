@@ -2,11 +2,11 @@
 Contains testing infrastructure for QCFractal.
 """
 
-import lzma
 import copy
 import gc
 import json
 import logging
+import lzma
 import os
 import pkgutil
 import signal
@@ -14,9 +14,11 @@ import subprocess
 import sys
 import time
 from contextlib import contextmanager
+from typing import Dict, List, Union
 
 import numpy as np
 import pandas as pd
+import pydantic
 import pytest
 import requests
 from qcelemental.models import Molecule, FailedOperation, OptimizationResult, AtomicResult
@@ -26,6 +28,7 @@ from qcfractal.portal.managers import ManagerName
 from qcfractal.portal.permissions import UserInfo
 from qcfractal.portal.records.optimization import OptimizationInputSpecification
 from qcfractal.portal.records.singlepoint import SinglepointInputSpecification
+from qcfractal.portal.records.torsiondrive import TorsiondriveInputSpecification
 from .config import FractalConfig, update_nested_dict
 from .db_socket.socket import SQLAlchemySocket
 from .interface import FractalClient
@@ -232,19 +235,26 @@ def load_procedure_data(name: str):
     record_type = data["record_type"]
     if record_type == "singlepoint":
         input_type = SinglepointInputSpecification
-        result_type = AtomicResult
+        result_type = Union[AtomicResult, FailedOperation]
+        molecule_type = Molecule
     elif record_type == "optimization":
         input_type = OptimizationInputSpecification
-        result_type = OptimizationResult
+        result_type = Union[OptimizationResult, FailedOperation]
+        molecule_type = Molecule
+    elif record_type == "torsiondrive":
+        input_type = TorsiondriveInputSpecification
+        result_type = Dict[str, Union[OptimizationResult, FailedOperation]]
+        molecule_type = List[Molecule]
     else:
         raise RuntimeError(f"Unknown procedure '{record_type}' in test!")
 
-    if data["result"]["success"] is not True:
-        result_type = FailedOperation
+    molecule = pydantic.parse_obj_as(molecule_type, data["molecule"])
 
-    molecule = Molecule(**data["molecule"])
-
-    return input_type(**data["specification"]), molecule, result_type(**data["result"])
+    return (
+        pydantic.parse_obj_as(input_type, data["specification"]),
+        molecule,
+        pydantic.parse_obj_as(result_type, data["result"]),
+    )
 
 
 def load_molecule_data(name: str) -> Molecule:

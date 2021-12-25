@@ -310,7 +310,7 @@ def test_singlepoint_socket_add_same_5(storage_socket: SQLAlchemySocket):
     assert id1 == id2
 
 
-def test_singlepoint_socket_update(storage_socket: SQLAlchemySocket):
+def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket):
     input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_benzene_energy_1")
     input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_peroxide_energy_wfn")
     input_spec_3, molecule_3, result_data_3 = load_procedure_data("rdkit_water_energy")
@@ -319,19 +319,35 @@ def test_singlepoint_socket_update(storage_socket: SQLAlchemySocket):
     meta2, id2 = storage_socket.records.singlepoint.add(input_spec_2, [molecule_2])
     meta3, id3 = storage_socket.records.singlepoint.add(input_spec_3, [molecule_3])
 
+    result_map = {id1[0]: result_data_1, id2[0]: result_data_2, id3[0]: result_data_3}
+
+    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
+    storage_socket.managers.activate(
+        name_data=mname1,
+        manager_version="v2.0",
+        qcengine_version="v1.0",
+        username="bill",
+        programs={
+            "rdkit": None,
+            "psi4": None,
+        },
+        tags=["*"],
+    )
+
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, limit=100)
+    assert len(tasks) == 3
+
     time_0 = datetime.utcnow()
-
-    with storage_socket.session_scope() as session:
-        rec_orm = session.query(SinglepointRecordORM).where(SinglepointRecordORM.id == id1[0]).one()
-        storage_socket.records.update_completed_task(session, rec_orm, result_data_1, None)
-
-        rec_orm = session.query(SinglepointRecordORM).where(SinglepointRecordORM.id == id2[0]).one()
-        storage_socket.records.update_completed_task(session, rec_orm, result_data_2, None)
-
-        rec_orm = session.query(SinglepointRecordORM).where(SinglepointRecordORM.id == id3[0]).one()
-        storage_socket.records.update_completed_task(session, rec_orm, result_data_3, None)
-
+    rmeta = storage_socket.tasks.update_finished(
+        mname1.fullname,
+        {
+            tasks[0]["id"]: result_map[tasks[0]["record_id"]],
+            tasks[1]["id"]: result_map[tasks[1]["record_id"]],
+            tasks[2]["id"]: result_map[tasks[2]["record_id"]],
+        },
+    )
     time_1 = datetime.utcnow()
+    assert rmeta.n_accepted == 3
 
     all_results = [result_data_1, result_data_2, result_data_3]
     recs = storage_socket.records.singlepoint.get(
