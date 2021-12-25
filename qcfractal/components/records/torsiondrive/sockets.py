@@ -292,6 +292,10 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         specification = TorsiondriveSpecification(**td_orm.specification.dict())
         initial_molecules: List[Dict[str, Any]] = [x.dict() for x in td_orm.initial_molecules]
 
+        # For this part, sort the initial molecule by hash
+        # This makes everything a bit more deterministic (and helps with testing)
+        initial_molecules.sort(key=lambda x: x["identifiers"]["molecule_hash"])
+
         keywords = specification.keywords
 
         # Create a template from the first initial molecule
@@ -462,8 +466,9 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                         is_service=as_service,
                         specification_id=spec_id,
                         status=RecordStatusEnum.waiting,
-                        service=ServiceQueueORM(service_state={}, tag=tag, priority=priority),
                     )
+
+                    self.create_service(td_orm, tag, priority)
 
                     session.add(td_orm)
                     session.flush()
@@ -527,8 +532,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             opt_record = task.record
 
             # Lookup molecules
-            initial_id = opt_record.initial_molecule
-            final_id = opt_record.final_molecule
+            initial_id = opt_record.initial_molecule_id
+            final_id = opt_record.final_molecule_id
             mol_ids = [initial_id, final_id]
             mol_data = self.root_socket.molecules.get(molecule_id=mol_ids, include=["geometry"], session=session)
 
@@ -586,6 +591,9 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         task_dict: Dict[str, Any],
     ):
 
+        # delete all existing entries in the dependency list
+        service_orm.tasks = []
+
         for td_api_key, geometries in task_dict.items():
             for position, geometry in enumerate(geometries):
 
@@ -620,7 +628,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 if not meta.success:
                     raise RuntimeError("Error adding optimization - likely a developer error: " + meta.error_string)
 
-                svc_tasks = ServiceQueueTasksORM(
+                svc_task = ServiceQueueTasksORM(
                     record_id=opt_ids[0],
                     extras={"td_api_key": td_api_key, "position": position},
                 )
@@ -632,11 +640,5 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                     key=opt_key,
                 )
 
-                service_orm.tasks.append(svc_tasks)
+                service_orm.tasks.append(svc_task)
                 service_orm.record.optimization_history.append(opt_history)
-
-    def create_service(
-        self, record_orm: TorsiondriveRecordORM, tag: Optional[str] = None, priority: PriorityEnum = PriorityEnum.normal
-    ) -> None:
-
-        record_orm.service = ServiceQueueORM(service_state={}, tag=tag, priority=priority)

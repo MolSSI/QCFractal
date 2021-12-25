@@ -97,9 +97,10 @@ class BaseRecordSocket:
         record_orm: BaseRecordORM, tag: Optional[str] = None, priority: PriorityEnum = PriorityEnum.normal
     ) -> None:
         """
-        Recreate the entry in the task queue
+        Recreate the entry in the serivce queue
         """
-        raise NotImplementedError(f"recreate_service not implemented! This is a developer error")
+
+        record_orm.service = ServiceQueueORM(service_state={}, tag=tag, priority=priority)
 
     def generate_task_specification(self, record_orm: BaseRecordORM) -> Dict[str, Any]:
         """

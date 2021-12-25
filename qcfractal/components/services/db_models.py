@@ -2,6 +2,7 @@ import datetime
 
 from sqlalchemy import Column, Integer, ForeignKey, JSON, String, DateTime, Index, UniqueConstraint
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import JSONB
 
 from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.db_socket import BaseORM, PlainMsgpackExt
@@ -10,11 +11,17 @@ from qcfractal.db_socket import BaseORM, PlainMsgpackExt
 class ServiceQueueTasksORM(BaseORM):
     __tablename__ = "service_queue_tasks"
 
-    service_id = Column(Integer, ForeignKey("service_queue.id", ondelete="cascade"), primary_key=True)
-    record_id = Column(Integer, ForeignKey(BaseRecordORM.id), primary_key=True)
+    id = Column(Integer, primary_key=True)
+
+    service_id = Column(Integer, ForeignKey("service_queue.id", ondelete="cascade"))
+    record_id = Column(Integer, ForeignKey(BaseRecordORM.id))
+    extras = Column(JSONB)
+
+    # We make extras part of the unique constraint because rarely the same task will be
+    # submitted but with different extras (position, etc)
+    __table_args__ = (UniqueConstraint("service_id", "record_id", "extras", name="ux_service_queue_tasks"),)
 
     record = relationship("BaseRecordORM")
-    extras = Column(JSON)
 
 
 class ServiceQueueORM(BaseORM):
@@ -32,7 +39,7 @@ class ServiceQueueORM(BaseORM):
 
     service_state = Column(PlainMsgpackExt)
 
-    tasks = relationship(ServiceQueueTasksORM, lazy="selectin")
+    tasks = relationship(ServiceQueueTasksORM, lazy="selectin", cascade="all, delete-orphan")
 
     __table_args__ = (
         UniqueConstraint("record_id", name="ux_service_queue_record_id"),

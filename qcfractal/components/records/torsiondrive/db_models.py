@@ -94,7 +94,6 @@ class TorsiondriveRecordORM(BaseRecordORM):
         TorsiondriveOptimizationHistoryORM,
         order_by=TorsiondriveOptimizationHistoryORM.position,
         collection_class=ordering_list("position"),
-        lazy="select",
     )
 
     __mapper_args__ = {
