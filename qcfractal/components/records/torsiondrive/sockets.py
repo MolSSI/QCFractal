@@ -86,10 +86,13 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         BaseRecordSocket.__init__(self, root_socket)
         self._logger = logging.getLogger(__name__)
 
-    def get_children_ids(self, session: Session, record_id: Iterable[int]) -> List[int]:
-        stmt = select(TorsiondriveOptimizationHistoryORM.optimization_id)
-        stmt = stmt.where(TorsiondriveOptimizationHistoryORM.torsiondrive_id.in_(record_id))
-        return session.execute(stmt).scalars().all()
+    @staticmethod
+    def get_children_select() -> List[Any]:
+        stmt = select(
+            TorsiondriveOptimizationHistoryORM.torsiondrive_id.label("parent_id"),
+            TorsiondriveOptimizationHistoryORM.optimization_id.label("child_id"),
+        )
+        return [stmt]
 
     def get_specification(
         self, id: int, missing_ok: bool = False, *, session: Optional[Session] = None
