@@ -59,7 +59,8 @@ class SinglepointRecordSocket(BaseRecordSocket):
         BaseRecordSocket.__init__(self, root_socket)
         self._logger = logging.getLogger(__name__)
 
-    def get_children_ids(self, session: Session, record_id: Iterable[int]) -> List[int]:
+    @staticmethod
+    def get_children_select() -> List[Any]:
         return []
 
     def get_specification(

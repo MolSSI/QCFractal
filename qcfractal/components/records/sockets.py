@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select, not_
+from sqlalchemy import select, union
 from sqlalchemy.orm import joinedload, selectinload, with_polymorphic
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
@@ -83,6 +83,10 @@ class BaseRecordSocket:
         self._limit = root_socket.qcf_config.response_limits.record
 
     @staticmethod
+    def get_children_select():
+        raise NotImplementedError(f"get_children_select not implemented! This is a developer error")
+
+    @staticmethod
     def create_task(
         record_orm: BaseRecordORM, tag: Optional[str] = None, priority: PriorityEnum = PriorityEnum.normal
     ) -> None:
@@ -122,15 +126,6 @@ class BaseRecordSocket:
     ) -> BaseRecordORM:
         raise NotImplementedError(f"insert_completed not implemented for {type(self)}! This is a developer error")
 
-    def get_children_ids(
-        self,
-        session: Session,
-        record_id: Iterable[int],
-    ) -> List[int]:
-        # NOTE - it is expected that handlers are tolerant of this being called
-        # for computations whose type they are not responsible for
-        raise NotImplementedError(f"get_children_ids not implemented for {type(self)}! This is a developer error")
-
     def iterate_service(self, session: Session, service_orm: ServiceQueueORM) -> bool:
         raise NotImplementedError(f"iterate_service not implemented for {type(self)}! This is a developer error")
 
@@ -162,6 +157,22 @@ class RecordSocket:
             "qcschema_optimization_output": self.optimization,
         }
 
+        ###############################################################################
+        # Build the cte that maps parent and children
+        # This cte represents a single table-like object with two columns
+        # - parent_id and child_id. This contains any parent-child record relationship
+        # (optimization trajectory, torsiondrive optimization, etc).
+        ###############################################################################
+
+        # Get the SQL 'select' statements from the handlers
+        selects = []
+        for h in self._handler_map.values():
+            sel = h.get_children_select()
+            selects.extend(sel)
+
+        # Union them into a CTE
+        self._child_cte = union(*selects).cte()
+
     def get_subtask_ids(self, session: Session, record_id: Iterable[int]) -> List[int]:
         # List may contain duplicates. So be tolerant of that!
         stmt = select(ServiceDependenciesORM.record_id)
@@ -170,14 +181,12 @@ class RecordSocket:
         return session.execute(stmt).scalars().all()
 
     def get_children_ids(self, session: Session, record_id: Iterable[int]) -> List[int]:
-        # List may contain duplicates. So be tolerant of that!
-        all_ids = []
+        stmt = select(self._child_cte.c.child_id).where(self._child_cte.c.parent_id.in_(record_id))
+        return session.execute(stmt).scalars().unique().all()
 
-        for h in self._handler_map.values():
-            ch = h.get_children_ids(session, record_id)
-            all_ids.extend(ch)
-
-        return all_ids
+    def get_parent_ids(self, session: Session, record_id: Iterable[int]) -> List[int]:
+        stmt = select(self._child_cte.c.parent_id).where(self._child_cte.c.child_id.in_(record_id))
+        return session.execute(stmt).scalars().unique().all()
 
     def query_base(
         self,
