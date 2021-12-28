@@ -1,9 +1,10 @@
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, Dict, Any
 
 from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
+from typing_extensions import Literal
 
 from qcfractal.portal.model_utils import recursive_normalizer
-from qcfractal.portal.records import RecordAddBodyBase, RecordQueryBody
+from qcfractal.portal.records import BaseRecord, RecordAddBodyBase, RecordQueryBody
 from qcfractal.portal.records.optimization.models import OptimizationInputSpecification, OptimizationSpecification
 from ...molecules import Molecule
 
@@ -62,11 +63,8 @@ class TorsiondriveSpecification(TorsiondriveInputSpecification):
 
 class TorsiondriveAddBody(RecordAddBodyBase):
     specification: TorsiondriveInputSpecification
-    initial_molecules: List[List[Union[int, Molecule]]] = Field(
-        ...,
-        description="The Molecule(s) to begin the TorsionDrive with. This can either be an existing Molecule in "
-        "the database (through its :class:`ObjectId`) or a fully specified :class:`Molecule` model.",
-    )
+    initial_molecules: List[List[Union[int, Molecule]]]
+    as_service: bool
 
 
 class TorsiondriveQueryBody(RecordQueryBody):
@@ -85,6 +83,20 @@ class TorsiondriveQueryBody(RecordQueryBody):
             return ["" if x is None else x for x in v]
         else:
             return None
+
+
+class TorsiondriveRecord(BaseRecord):
+    class _DataModel(BaseRecord._DataModel):
+        record_type: Literal["torsiondrive"]
+        specification_id: int
+        specification: TorsiondriveSpecification
+        initial_molecules: Optional[Molecule]
+        final_energies: Optional[Dict[str, Any]]
+        minimum_positions: Optional[Dict[str, Any]]
+
+    # This is needed for disambiguation by pydantic
+    record_type: Literal["torsiondrive"]
+    raw_data: _DataModel
 
 
 # class TorsiondriveRecord(RecordBase):

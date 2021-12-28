@@ -85,7 +85,7 @@ class TorsiondriveRecordORM(BaseRecordORM):
     initial_molecules = relationship(MoleculeORM, secondary=TorsiondriveInitialMoleculeORM.__table__, uselist=True)
 
     # Output data
-    final_energy_dict = Column(JSON)
+    final_energies = Column(JSON)
     minimum_positions = Column(JSON)
 
     optimization_history = relationship(

@@ -43,9 +43,14 @@ from qcfractal.portal.records.optimization import (
     OptimizationRecord,
     OptimizationQueryBody,
     OptimizationSinglepointInputSpecification,
+    OptimizationInputSpecification,
     OptimizationAddBody,
 )
 
+from qcfractal.portal.records.torsiondrive import (
+    TorsiondriveKeywords,
+    TorsiondriveAddBody,
+)
 from qcfractal.portal.records import (
     ComputeHistory,
     RecordStatusEnum,
@@ -1058,6 +1063,7 @@ class PortalClient:
         missing_ok: bool = False,
         *,
         include_task: bool = False,
+        include_service: bool = False,
         include_outputs: bool = False,
         include_comments: bool = False,
     ) -> Union[List[Optional[AllRecordTypes]], Optional[AllRecordTypes]]:
@@ -1073,6 +1079,8 @@ class PortalClient:
         # We must add '*' so that all the default fields are included
         if include_task:
             include |= {"*", "task"}
+        if include_service:
+            include |= {"*", "service"}
         if include_outputs:
             include |= {"*", "compute_history.*", "compute_history.outputs"}
         if include_comments:
@@ -1624,6 +1632,41 @@ class PortalClient:
         )
 
         return meta, self.recordmodel_from_datamodel(record_data)
+
+    def add_torsiondrives(
+        self,
+        initial_molecules: List[List[Union[int, Molecule]]],
+        program: str,
+        optimization_specification: OptimizationInputSpecification,
+        keywords: Union[TorsiondriveKeywords, Dict[str, Any]],
+        tag: Optional[str] = None,
+        priority: PriorityEnum = PriorityEnum.normal,
+    ) -> Tuple[InsertMetadata, List[int]]:
+        """
+        Adds torsiondrive calculations to the server
+        """
+
+        body_data = {
+            "initial_molecules": initial_molecules,
+            "specification": {
+                "program": program,
+                "optimization_specification": optimization_specification,
+                "keywords": keywords,
+            },
+            "as_service": True,
+            "tag": tag,
+            "priority": priority,
+        }
+
+        return self._auto_request(
+            "post",
+            "v1/record/torsiondrive",
+            TorsiondriveAddBody,
+            None,
+            Tuple[InsertMetadata, List[int]],
+            body_data,
+            None,
+        )
 
     def get_managers(
         self,

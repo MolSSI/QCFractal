@@ -4,4 +4,5 @@ from .models import (
     TorsiondriveSpecification,
     TorsiondriveAddBody,
     TorsiondriveQueryBody,
+    TorsiondriveRecord,
 )

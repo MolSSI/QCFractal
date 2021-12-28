@@ -130,6 +130,17 @@ class TaskRecord(BaseModel):
     created_on: datetime
 
 
+class ServiceRecord(BaseModel):
+    id: int
+    record_id: int
+
+    tag: Optional[str] = None
+    priority: PriorityEnum
+    created_on: datetime
+
+    service_state: Dict[str, Any]
+
+
 class BaseRecord(abc.ABC, BaseModel):
     class _DataModel(BaseModel):
         class Config:
@@ -151,6 +162,7 @@ class BaseRecord(abc.ABC, BaseModel):
         compute_history: List[ComputeHistory]
 
         task: Optional[TaskRecord] = None
+        service: Optional[ServiceRecord] = None
 
         comments: Optional[List[RecordComment]] = None
 

@@ -297,6 +297,8 @@ def upgrade():
             .values({"service_state": service.service_state})
         )
 
+    # Rename final energies column
+    op.alter_column("torsiondrive_procedure", "final_energy_dict", new_column_name="final_energies")
     # Make columns not nullable now that they are populated
     op.alter_column("torsiondrive_procedure", "specification_id", nullable=True)
 
