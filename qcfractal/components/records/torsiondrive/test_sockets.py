@@ -128,23 +128,27 @@ def test_torsiondrive_socket_add_get(storage_socket: SQLAlchemySocket, spec: Tor
     assert {hash1, hash2} == {c8h6_1.get_hash(), c8h6_2.get_hash()}
 
 
-# def test_torsiondrive_socket_add_existing_molecule(storage_socket: SQLAlchemySocket):
-#    spec = _test_specs[0]
-#
-#    water = load_molecule_data("water_dimer_minima")
-#    hooh = load_molecule_data("hooh")
-#    ne4 = load_molecule_data("neon_tetramer")
-#    all_mols = [water, hooh, ne4]
-#
-#    # Add a molecule separately
-#    _, mol_ids = storage_socket.molecules.add([ne4])
-#
-#    # Now add records
-#    meta, id = storage_socket.records.optimization.add(spec, all_mols)
-#    recs = storage_socket.records.optimization.get(id)
-#
-#    assert len(recs) == 3
-#    assert recs[2]["initial_molecule_id"] == mol_ids[0]
+def test_torsiondrive_socket_add_existing_molecule(storage_socket: SQLAlchemySocket):
+    spec = _test_specs[0]
+
+    mol1 = load_molecule_data("td_C8H6_1")
+    mol2 = load_molecule_data("td_C8H6_2")
+
+    # Add a molecule separately
+    _, mol_ids = storage_socket.molecules.add([mol2])
+
+    # Now add records
+    meta, id = storage_socket.records.torsiondrive.add(spec, [[mol1, mol2], [mol2, mol1]], as_service=True)
+    assert meta.success
+    assert meta.n_inserted == 1
+    assert meta.n_existing == 1
+
+    recs = storage_socket.records.torsiondrive.get(id, include=["initial_molecules"])
+    assert len(recs) == 2
+    rec_mols = {x["id"] for x in recs[0]["initial_molecules"]}
+
+    _, mol_ids_2 = storage_socket.molecules.add([mol1])
+    assert rec_mols == set(mol_ids + mol_ids_2)
 
 
 def test_torsiondrive_socket_add_same_1(storage_socket: SQLAlchemySocket):
@@ -283,6 +287,7 @@ def test_torsiondrive_socket_add_same_3(storage_socket: SQLAlchemySocket):
     assert id1 == id2
 
 
+# TODO - enable when properly handling as_service=False
 # def test_torsiondrive_socket_update(storage_socket: SQLAlchemySocket):
 #    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_fluoroethane_opt_notraj")
 #    input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_benzene_opt")
@@ -365,61 +370,6 @@ def test_torsiondrive_socket_add_same_3(storage_socket: SQLAlchemySocket):
 #                db_traj["singlepoint_record"]["molecule"]["identifiers"]["molecule_hash"]
 #                == res_traj.molecule.get_hash()
 #            )
-
-
-#
-#
-# def test_torsiondrive_socket_insert(storage_socket: SQLAlchemySocket):
-#    input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_peroxide_energy_wfn")
-#
-#    meta2, id2 = storage_socket.records.optimization.add(input_spec_2, [molecule_2])
-#
-#    # Typical workflow
-#    with storage_socket.session_scope() as session:
-#        rec_orm = session.query(SinglepointRecordORM).where(SinglepointRecordORM.id == id2[0]).one()
-#        storage_socket.records.update_completed(session, rec_orm, result_data_2, None)
-#
-#    # Actually insert the whole thing. This should end up being a duplicate
-#    with storage_socket.session_scope() as session:
-#        dup_id = storage_socket.records.insert_completed([result_data_2])
-#
-#    recs = storage_socket.records.optimization.get(
-#        id2 + dup_id, include=["*", "wavefunction", "compute_history.*", "compute_history.outputs"]
-#    )
-#
-#    assert recs[0]["id"] != recs[1]["id"]
-#    assert recs[0]["status"] == RecordStatusEnum.complete == recs[1]["status"] == RecordStatusEnum.complete
-#    assert recs[0]["specification"]["program"] == recs[1]["specification"]["program"]
-#    assert recs[0]["specification"]["driver"] == recs[1]["specification"]["driver"]
-#    assert recs[0]["specification"]["method"] == recs[1]["specification"]["method"]
-#    assert recs[0]["specification"]["basis"] == recs[1]["specification"]["basis"]
-#    assert recs[0]["specification"]["keywords"] == recs[1]["specification"]["keywords"]
-#    assert recs[0]["specification"]["protocols"] == recs[1]["specification"]["protocols"]
-#
-#    assert len(recs[0]["compute_history"]) == 1
-#    assert len(recs[1]["compute_history"]) == 1
-#    assert recs[0]["compute_history"][0]["status"] == RecordStatusEnum.complete
-#    assert recs[1]["compute_history"][0]["status"] == RecordStatusEnum.complete
-#
-#    assert recs[0]["compute_history"][0]["provenance"] == recs[1]["compute_history"][0]["provenance"]
-#
-#    assert recs[0]["return_result"] == recs[1]["return_result"]
-#    arprop1 = AtomicResultProperties(**recs[0]["properties"])
-#    arprop2 = AtomicResultProperties(**recs[1]["properties"])
-#    assert arprop1.nuclear_repulsion_energy == arprop2.nuclear_repulsion_energy
-#    assert arprop1.return_energy == arprop2.return_energy
-#    assert arprop1.scf_iterations == arprop2.scf_iterations
-#    assert arprop1.scf_total_energy == arprop2.scf_total_energy
-#
-#    wfn_model_1 = WavefunctionProperties(**recs[0]["wavefunction"])
-#    wfn_model_2 = WavefunctionProperties(**recs[1]["wavefunction"])
-#    assert_wfn_equal(wfn_model_1, wfn_model_2)
-#
-#    assert len(recs[0]["compute_history"][0]["outputs"]) == 1
-#    assert len(recs[1]["compute_history"][0]["outputs"]) == 1
-#    outs1 = OutputStore(**recs[0]["compute_history"][0]["outputs"][0])
-#    outs2 = OutputStore(**recs[1]["compute_history"][0]["outputs"][0])
-#    assert outs1.as_string == outs2.as_string
 
 
 def test_torsiondrive_socket_query(storage_socket: SQLAlchemySocket):
@@ -509,37 +459,6 @@ def test_torsiondrive_socket_query(storage_socket: SQLAlchemySocket):
 #    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(limit=1))
 #    assert meta.n_found == 3
 #    assert meta.n_returned == 1
-
-
-# def test_torsiondrive_socket_recreate_task(storage_socket: SQLAlchemySocket):
-#    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_fluoroethane_opt_notraj")
-#    meta1, id1 = storage_socket.records.optimization.add(input_spec_1, [molecule_1])
-#
-#    recs = storage_socket.records.optimization.get(id1, include=["task"])
-#    orig_task = recs[0]["task"]
-#    assert orig_task is not None
-#
-#    # cancel, the verify the task is gone
-#    m = storage_socket.records.cancel(id1)
-#    assert m.n_updated == 1
-#
-#    recs = storage_socket.records.optimization.get(id1, include=["task"])
-#    assert recs[0]["task"] is None
-#
-#    # reset, and see that the task was recreated (and is the same)
-#    m = storage_socket.records.reset(id1)
-#    assert m.n_updated == 1
-#
-#    recs = storage_socket.records.optimization.get(id1, include=["task"])
-#    new_task = recs[0]["task"]
-#    assert new_task is not None
-#
-#    assert orig_task["required_programs"] == new_task["required_programs"]
-#    assert orig_task["spec"]["args"][1] == new_task["spec"]["args"][1]
-#    assert orig_task["spec"]["args"][0]["initial_molecule"]["identifiers"]["molecule_hash"] == molecule_1.get_hash()
-#    assert orig_task["spec"]["args"][0]["input_specification"] == new_task["spec"]["args"][0]["input_specification"]
-#    assert orig_task["spec"]["args"][0]["keywords"] == new_task["spec"]["args"][0]["keywords"]
-#    assert orig_task["spec"]["args"][0]["protocols"] == new_task["spec"]["args"][0]["protocols"]
 
 
 # @pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_fluoroethane_opt_notraj"])

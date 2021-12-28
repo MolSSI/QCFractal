@@ -20,6 +20,7 @@ AllResultTypes = Union[FailedOperation, AtomicResult, OptimizationResult]
 # All possible records we can get from the server
 from .singlepoint.models import SinglepointRecord
 from .optimization.models import OptimizationRecord
+from .torsiondrive.models import TorsiondriveRecord
 
-AllRecordTypes = Union[SinglepointRecord, OptimizationRecord]
-AllDataModelTypes = Union[SinglepointRecord._DataModel, OptimizationRecord._DataModel]
+AllRecordTypes = Union[SinglepointRecord, OptimizationRecord, TorsiondriveRecord]
+AllDataModelTypes = Union[SinglepointRecord._DataModel, OptimizationRecord._DataModel, TorsiondriveRecord._DataModel]
