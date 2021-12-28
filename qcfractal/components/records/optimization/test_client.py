@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     from typing import Optional
 
 
-from .test_sockets import _test_specs
+from .test_sockets import _test_specs, compare_optimization_specs
 
 
 @pytest.mark.parametrize("tag", [None, "tag99"])
@@ -79,20 +79,7 @@ def test_optimization_client_add_get(snowflake_client: PortalClient, spec: Optim
     for r in recs:
         assert r.record_type == "optimization"
         assert r.raw_data.record_type == "optimization"
-        assert r.raw_data.specification.program == spec.program.lower()
-        assert r.raw_data.specification.keywords == spec.keywords  # not a KeywordSet
-        assert r.raw_data.specification.protocols == spec.protocols.dict(exclude_defaults=True)
-
-        # Test single point spec
-        sp_spec = r.raw_data.specification.singlepoint_specification
-        assert sp_spec.driver == spec.singlepoint_specification.driver
-        assert sp_spec.driver == SinglepointDriver.deferred
-        assert sp_spec.method == spec.singlepoint_specification.method.lower()
-        assert sp_spec.basis == (
-            spec.singlepoint_specification.basis.lower() if spec.singlepoint_specification.basis is not None else None
-        )
-        assert sp_spec.keywords.hash_index == spec.singlepoint_specification.keywords.hash_index
-        assert sp_spec.protocols == spec.singlepoint_specification.protocols
+        assert compare_optimization_specs(spec, r.raw_data.specification)
 
         assert r.task.spec is None
         assert r.raw_data.task.tag == "tag1"

@@ -90,9 +90,9 @@ class TorsiondriveRecord(BaseRecord):
         record_type: Literal["torsiondrive"]
         specification_id: int
         specification: TorsiondriveSpecification
-        initial_molecules: Optional[Molecule]
-        final_energies: Optional[Dict[str, Any]]
-        minimum_positions: Optional[Dict[str, Any]]
+        initial_molecules: Optional[List[Molecule]] = None
+        final_energies: Optional[Dict[str, Any]] = None
+        minimum_positions: Optional[Dict[str, Any]] = None
 
     # This is needed for disambiguation by pydantic
     record_type: Literal["torsiondrive"]

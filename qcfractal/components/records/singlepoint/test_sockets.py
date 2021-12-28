@@ -18,6 +18,7 @@ from qcfractal.portal.molecules import Molecule
 from qcfractal.portal.outputstore import OutputStore
 from qcfractal.portal.records import RecordStatusEnum, PriorityEnum
 from qcfractal.portal.records.singlepoint import (
+    SinglepointSpecification,
     SinglepointInputSpecification,
     SinglepointDriver,
     SinglepointProtocols,
@@ -28,6 +29,24 @@ from qcfractal.testing import load_molecule_data, load_procedure_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
+    from typing import Dict, Any, Union
+
+
+def compare_singlepoint_specs(
+    input_spec: Union[SinglepointInputSpecification, Dict[str, Any]],
+    full_spec: Union[SinglepointSpecification, Dict[str, Any]],
+) -> bool:
+    if isinstance(input_spec, dict):
+        input_spec = SinglepointInputSpecification(**input_spec)
+    if isinstance(full_spec, SinglepointSpecification):
+        full_spec = full_spec.dict()
+
+    full_spec.pop("id")
+    full_spec.pop("keywords_id")
+    full_spec["keywords"].pop("id")
+    trimmed_spec = SinglepointInputSpecification(**full_spec)
+    return input_spec == trimmed_spec
+
 
 _test_specs = [
     SinglepointInputSpecification(
@@ -80,12 +99,8 @@ def test_singlepoint_socket_add_get(storage_socket: SQLAlchemySocket, spec: Sing
     assert len(recs) == 3
     for r in recs:
         assert r["record_type"] == "singlepoint"
-        assert r["specification"]["program"] == spec.program.lower()
-        assert r["specification"]["driver"] == spec.driver
-        assert r["specification"]["method"] == spec.method.lower()
-        assert r["specification"]["basis"] == (spec.basis.lower() if spec.basis is not None else "")
-        assert r["specification"]["keywords"]["hash_index"] == spec.keywords.hash_index
-        assert r["specification"]["protocols"] == spec.protocols.dict(exclude_defaults=True)
+        assert compare_singlepoint_specs(spec, r["specification"])
+
         assert r["task"]["spec"] is None
         assert r["task"]["tag"] == "tag1"
         assert r["task"]["priority"] == PriorityEnum.low
@@ -417,13 +432,10 @@ def test_singlepoint_socket_insert(storage_socket: SQLAlchemySocket):
     )
 
     assert recs[0]["id"] != recs[1]["id"]
-    assert recs[0]["status"] == RecordStatusEnum.complete == recs[1]["status"] == RecordStatusEnum.complete
-    assert recs[0]["specification"]["program"] == recs[1]["specification"]["program"]
-    assert recs[0]["specification"]["driver"] == recs[1]["specification"]["driver"]
-    assert recs[0]["specification"]["method"] == recs[1]["specification"]["method"]
-    assert recs[0]["specification"]["basis"] == recs[1]["specification"]["basis"]
-    assert recs[0]["specification"]["keywords"] == recs[1]["specification"]["keywords"]
-    assert recs[0]["specification"]["protocols"] == recs[1]["specification"]["protocols"]
+    assert recs[0]["status"] == RecordStatusEnum.complete
+    assert recs[1]["status"] == RecordStatusEnum.complete
+
+    assert recs[0]["specification"] == recs[1]["specification"]
 
     assert len(recs[0]["compute_history"]) == 1
     assert len(recs[1]["compute_history"]) == 1
