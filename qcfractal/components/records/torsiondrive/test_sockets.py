@@ -28,6 +28,7 @@ from qcfractal.portal.records.singlepoint import (
     SinglepointProtocols,
 )
 from qcfractal.portal.records.torsiondrive import (
+    TorsiondriveSpecification,
     TorsiondriveInputSpecification,
     TorsiondriveKeywords,
     TorsiondriveQueryBody,
@@ -36,6 +37,28 @@ from qcfractal.testing import load_molecule_data, load_procedure_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
+    from typing import Dict, Any, Union
+
+
+def compare_torsiondrive_specs(
+    input_spec: Union[TorsiondriveInputSpecification, Dict[str, Any]],
+    full_spec: Union[TorsiondriveSpecification, Dict[str, Any]],
+) -> bool:
+    if isinstance(input_spec, dict):
+        input_spec = TorsiondriveInputSpecification(**input_spec)
+    if isinstance(full_spec, TorsiondriveSpecification):
+        full_spec = full_spec.dict()
+
+    full_spec.pop("id")
+    full_spec.pop("optimization_specification_id")
+    full_spec["optimization_specification"].pop("id")
+    full_spec["optimization_specification"].pop("singlepoint_specification_id")
+    full_spec["optimization_specification"]["singlepoint_specification"].pop("id")
+    full_spec["optimization_specification"]["singlepoint_specification"].pop("keywords_id")
+    full_spec["optimization_specification"]["singlepoint_specification"]["keywords"].pop("id")
+    trimmed_spec = TorsiondriveInputSpecification(**full_spec)
+    return input_spec == trimmed_spec
+
 
 _test_specs = [
     TorsiondriveInputSpecification(
@@ -59,7 +82,29 @@ _test_specs = [
                 protocols=SinglepointProtocols(wavefunction="all"),
             ),
         ),
-    )
+    ),
+    TorsiondriveInputSpecification(
+        program="torsiondrive",
+        keywords=TorsiondriveKeywords(
+            dihedrals=[(7, 2, 9, 4), (5, 11, 3, 10)],
+            grid_spacing=[30, 45],
+            dihedral_ranges=[[-90, 90], [0, 180]],
+            energy_decrease_thresh=1.0,
+            energy_upper_limit=0.05,
+        ),
+        optimization_specification=OptimizationInputSpecification(
+            program="optprog1",
+            keywords={"k": "value"},
+            protocols=OptimizationProtocols(),
+            singlepoint_specification=OptimizationSinglepointInputSpecification(
+                program="prog2",
+                method="b3lyp",
+                basis="6-31g",
+                keywords=KeywordSet(values={"k2": "values2"}),
+                protocols=SinglepointProtocols(wavefunction="all", stdout=False),
+            ),
+        ),
+    ),
 ]
 
 
@@ -82,32 +127,7 @@ def test_torsiondrive_socket_add_get(storage_socket: SQLAlchemySocket, spec: Tor
     for r in recs:
         assert r["record_type"] == "torsiondrive"
         assert r["status"] == RecordStatusEnum.waiting
-        assert r["specification"]["program"] == spec.program.lower()
-        assert TorsiondriveKeywords(**r["specification"]["keywords"]) == spec.keywords
-
-        # Test the optimization spec
-        opt_spec = r["specification"]["optimization_specification"]
-        assert opt_spec["program"] == spec.optimization_specification.program
-        assert opt_spec["keywords"] == spec.optimization_specification.keywords
-        assert opt_spec["protocols"] == spec.optimization_specification.protocols.dict(exclude_defaults=True)
-
-        # And some of the singlepoint spec
-        sp_spec = opt_spec["singlepoint_specification"]
-        assert sp_spec["driver"] == spec.optimization_specification.singlepoint_specification.driver
-        assert sp_spec["driver"] == SinglepointDriver.deferred
-        assert sp_spec["method"] == spec.optimization_specification.singlepoint_specification.method.lower()
-        assert sp_spec["basis"] == (
-            spec.optimization_specification.singlepoint_specification.basis.lower()
-            if spec.optimization_specification.singlepoint_specification.basis is not None
-            else ""
-        )
-        assert (
-            sp_spec["keywords"]["hash_index"]
-            == spec.optimization_specification.singlepoint_specification.keywords.hash_index
-        )
-        assert sp_spec["protocols"] == spec.optimization_specification.singlepoint_specification.protocols.dict(
-            exclude_defaults=True
-        )
+        assert compare_torsiondrive_specs(spec, r["specification"])
 
         # Service queue entry should exist with the proper tag and priority
         assert r["service"]["tag"] == "tag1"
@@ -145,8 +165,9 @@ def test_torsiondrive_socket_add_existing_molecule(storage_socket: SQLAlchemySoc
 
     recs = storage_socket.records.torsiondrive.get(id, include=["initial_molecules"])
     assert len(recs) == 2
-    rec_mols = {x["id"] for x in recs[0]["initial_molecules"]}
+    assert recs[0]["id"] == recs[1]["id"]
 
+    rec_mols = {x["id"] for x in recs[0]["initial_molecules"]}
     _, mol_ids_2 = storage_socket.molecules.add([mol1])
     assert rec_mols == set(mol_ids + mol_ids_2)
 

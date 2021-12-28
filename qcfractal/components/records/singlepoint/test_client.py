@@ -25,6 +25,8 @@ if TYPE_CHECKING:
     from qcfractal.portal import PortalClient
     from typing import Optional
 
+from .test_sockets import compare_singlepoint_specs
+
 
 @pytest.mark.parametrize("tag", [None, "tag99"])
 @pytest.mark.parametrize("priority", list(PriorityEnum))
@@ -64,12 +66,7 @@ def test_singlepoint_client_add_get(snowflake_client: PortalClient, spec: Single
     for r in recs:
         assert r.record_type == "singlepoint"
         assert r.raw_data.record_type == "singlepoint"
-        assert r.raw_data.specification.program == spec.program.lower()
-        assert r.raw_data.specification.driver == spec.driver
-        assert r.raw_data.specification.method == spec.method.lower()
-        assert r.raw_data.specification.basis == (spec.basis.lower() if spec.basis is not None else None)
-        assert r.raw_data.specification.keywords.hash_index == spec.keywords.hash_index
-        assert r.raw_data.specification.protocols == spec.protocols.dict(exclude_defaults=True)
+        assert compare_singlepoint_specs(spec, r.raw_data.specification)
         assert r.raw_data.task.spec is None
         assert r.raw_data.task.tag == "tag1"
         assert r.raw_data.task.priority == PriorityEnum.high

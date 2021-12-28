@@ -17,6 +17,7 @@ from qcfractal.portal.molecules import Molecule
 from qcfractal.portal.outputstore import OutputStore
 from qcfractal.portal.records import RecordStatusEnum, PriorityEnum
 from qcfractal.portal.records.optimization import (
+    OptimizationSpecification,
     OptimizationInputSpecification,
     OptimizationQueryBody,
     OptimizationSinglepointInputSpecification,
@@ -29,6 +30,26 @@ from qcfractal.testing import load_molecule_data, load_procedure_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
+    from typing import Dict, Any, Union
+
+
+def compare_optimization_specs(
+    input_spec: Union[OptimizationInputSpecification, Dict[str, Any]],
+    full_spec: Union[OptimizationSpecification, Dict[str, Any]],
+) -> bool:
+    if isinstance(input_spec, dict):
+        input_spec = OptimizationInputSpecification(**input_spec)
+    if isinstance(full_spec, OptimizationSpecification):
+        full_spec = full_spec.dict()
+
+    full_spec.pop("id")
+    full_spec.pop("singlepoint_specification_id")
+    full_spec["singlepoint_specification"].pop("id")
+    full_spec["singlepoint_specification"].pop("keywords_id")
+    full_spec["singlepoint_specification"]["keywords"].pop("id")
+    trimmed_spec = OptimizationInputSpecification(**full_spec)
+    return input_spec == trimmed_spec
+
 
 _test_specs = [
     OptimizationInputSpecification(
@@ -94,20 +115,7 @@ def test_optimization_socket_add_get(storage_socket: SQLAlchemySocket, spec: Opt
     assert len(recs) == 3
     for r in recs:
         assert r["record_type"] == "optimization"
-        assert r["specification"]["program"] == spec.program.lower()
-        assert r["specification"]["keywords"] == spec.keywords
-        assert r["specification"]["protocols"] == spec.protocols.dict(exclude_defaults=True)
-
-        # Test single point spec
-        sp_spec = r["specification"]["singlepoint_specification"]
-        assert sp_spec["driver"] == spec.singlepoint_specification.driver
-        assert sp_spec["driver"] == SinglepointDriver.deferred
-        assert sp_spec["method"] == spec.singlepoint_specification.method.lower()
-        assert sp_spec["basis"] == (
-            spec.singlepoint_specification.basis.lower() if spec.singlepoint_specification.basis is not None else ""
-        )
-        assert sp_spec["keywords"]["hash_index"] == spec.singlepoint_specification.keywords.hash_index
-        assert sp_spec["protocols"] == spec.singlepoint_specification.protocols.dict(exclude_defaults=True)
+        assert compare_optimization_specs(spec, r["specification"])
 
         assert r["task"]["tag"] == "tag1"
         assert r["task"]["priority"] == PriorityEnum.low

@@ -47,10 +47,7 @@ from qcfractal.portal.records.optimization import (
     OptimizationAddBody,
 )
 
-from qcfractal.portal.records.torsiondrive import (
-    TorsiondriveKeywords,
-    TorsiondriveAddBody,
-)
+from qcfractal.portal.records.torsiondrive import TorsiondriveKeywords, TorsiondriveAddBody, TorsiondriveRecord
 from qcfractal.portal.records import (
     ComputeHistory,
     RecordStatusEnum,
@@ -1514,7 +1511,7 @@ class PortalClient:
         include_initial_molecule: bool = False,
         include_final_molecule: bool = False,
         include_trajectory: bool = False,
-    ) -> Union[Optional[SinglepointRecord], List[Optional[SinglepointRecord]]]:
+    ) -> Union[Optional[OptimizationRecord], List[Optional[OptimizationRecord]]]:
         url_params = {"id": make_list(record_id), "missing_ok": missing_ok}
 
         include = set()
@@ -1579,7 +1576,7 @@ class PortalClient:
         include_initial_molecule: bool = False,
         include_final_molecule: bool = False,
         include_trajectory: bool = False,
-    ) -> Tuple[QueryMetadata, List[SinglepointRecord]]:
+    ) -> Tuple[QueryMetadata, List[OptimizationRecord]]:
         """Queries OptimizationRecords from the server."""
 
         query_data = {
@@ -1667,6 +1664,53 @@ class PortalClient:
             body_data,
             None,
         )
+
+    def get_torsiondrives(
+        self,
+        record_id: Union[int, Sequence[int]],
+        missing_ok: bool = False,
+        *,
+        include_service: bool = False,
+        include_outputs: bool = False,
+        include_comments: bool = False,
+        include_initial_molecules: bool = False,
+        include_optimization_history: bool = False,
+    ) -> Union[Optional[TorsiondriveRecord], List[Optional[TorsiondriveRecord]]]:
+        url_params = {"id": make_list(record_id), "missing_ok": missing_ok}
+
+        include = set()
+
+        # We must add '*' so that all the default fields are included
+        if include_service:
+            include |= {"*", "service"}
+        if include_outputs:
+            include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_comments:
+            include |= {"*", "comments"}
+        if include_initial_molecules:
+            include |= {"*", "initial_molecules"}
+        if include_optimization_history:
+            include |= {"*", "optimization_history"}
+
+        if include:
+            url_params["include"] = include
+
+        record_data = self._auto_request(
+            "get",
+            "v1/record/torsiondrive",
+            None,
+            CommonGetProjURLParameters,
+            List[Optional[TorsiondriveRecord._DataModel]],
+            None,
+            url_params,
+        )
+
+        records = self.recordmodel_from_datamodel(record_data)
+
+        if isinstance(record_id, Sequence):
+            return records
+        else:
+            return records[0]
 
     def get_managers(
         self,
