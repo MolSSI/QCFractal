@@ -1674,7 +1674,7 @@ class PortalClient:
         include_outputs: bool = False,
         include_comments: bool = False,
         include_initial_molecules: bool = False,
-        include_optimization_history: bool = False,
+        include_optimizations: bool = False,
     ) -> Union[Optional[TorsiondriveRecord], List[Optional[TorsiondriveRecord]]]:
         url_params = {"id": make_list(record_id), "missing_ok": missing_ok}
 
@@ -1689,8 +1689,8 @@ class PortalClient:
             include |= {"*", "comments"}
         if include_initial_molecules:
             include |= {"*", "initial_molecules"}
-        if include_optimization_history:
-            include |= {"*", "optimization_history"}
+        if include_optimizations:
+            include |= {"*", "optimizations"}
 
         if include:
             url_params["include"] = include

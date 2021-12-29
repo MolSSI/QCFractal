@@ -50,7 +50,7 @@ class TorsiondriveInputSpecification(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    program: constr(to_lower=True) = Field("torsiondrive", description="The program to use for an optimization")
+    program: constr(to_lower=True) = "torsiondrive"
     optimization_specification: OptimizationInputSpecification
     keywords: TorsiondriveKeywords
 

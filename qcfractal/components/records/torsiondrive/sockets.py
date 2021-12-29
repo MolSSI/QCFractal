@@ -34,7 +34,7 @@ from qcfractal.portal.records.torsiondrive import (
 from .db_models import (
     TorsiondriveSpecificationORM,
     TorsiondriveInitialMoleculeORM,
-    TorsiondriveOptimizationHistoryORM,
+    TorsiondriveOptimizationsORM,
     TorsiondriveRecordORM,
 )
 
@@ -64,7 +64,7 @@ if TYPE_CHECKING:
     TorsiondriveRecordDict = Dict[str, Any]
 
 
-class TorsionDriveServiceState(BaseModel):
+class TorsiondriveServiceState(BaseModel):
     """
     This represents the current state of a torsiondrive service
     """
@@ -89,8 +89,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
     @staticmethod
     def get_children_select() -> List[Any]:
         stmt = select(
-            TorsiondriveOptimizationHistoryORM.torsiondrive_id.label("parent_id"),
-            TorsiondriveOptimizationHistoryORM.optimization_id.label("child_id"),
+            TorsiondriveOptimizationsORM.torsiondrive_id.label("parent_id"),
+            TorsiondriveOptimizationsORM.optimization_id.label("child_id"),
         )
         return [stmt]
 
@@ -131,9 +131,6 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         self, td_spec: TorsiondriveInputSpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, Optional[int]]:
 
-        # TODO - add protocols to models when we have something there
-        # protocols_dict = td_spec.protocols.dict(exclude_defaults=True)
-        protocols_dict = {}
         td_kw_dict = td_spec.keywords.dict(exclude_defaults=True)
 
         with self.root_socket.optional_session(session, False) as session:
@@ -216,7 +213,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             TorsiondriveRecordORM, record_id, include, exclude, missing_ok, session=session
         )
 
-    def get_optimization_history(
+    def get_optimizations(
         self,
         record_id: int,
         include: Optional[Sequence[str]] = None,
@@ -229,8 +226,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         with self.root_socket.optional_session(session, True) as session:
             hist = get_general_multi(
                 session,
-                TorsiondriveOptimizationHistoryORM,
-                TorsiondriveOptimizationHistoryORM.torsiondrive_id,
+                TorsiondriveOptimizationsORM,
+                TorsiondriveOptimizationsORM.torsiondrive_id,
                 [record_id],
                 include,
                 exclude,
@@ -310,7 +307,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             session=session,
         )
 
-    def _create_state(self, td_orm: TorsiondriveRecordORM) -> TorsionDriveServiceState:
+    def _create_state(self, td_orm: TorsiondriveRecordORM) -> TorsiondriveServiceState:
 
         specification = TorsiondriveSpecification(**td_orm.specification.dict())
         initial_molecules: List[Dict[str, Any]] = [x.dict() for x in td_orm.initial_molecules]
@@ -359,7 +356,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             stdout_orm = td_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
             stdout_orm.append(stdout)
 
-        return TorsionDriveServiceState(
+        return TorsiondriveServiceState(
             torsiondrive_state=td_state,
             dihedral_template=dihedral_template_str,
             molecule_template=molecule_template_str,
@@ -368,7 +365,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
     def add(
         self,
         td_spec: TorsiondriveInputSpecification,
-        initial_molecules: Sequence[Union[int, Molecule]],
+        initial_molecules: Sequence[Iterable[Union[int, Molecule]]],
         as_service: bool,
         tag: Optional[str] = None,
         priority: PriorityEnum = PriorityEnum.normal,
@@ -431,11 +428,6 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                     )
 
                 init_mol_ids.append(mol_ids)
-
-            # Load the spec as is from the db
-            # May be different due to normalization, or because keywords were passed by
-            # ID where we need the full keywords
-            real_spec_dict = self.get_specification(spec_id, session=session)
 
             td_ids = []
             inserted_idx = []
@@ -523,15 +515,15 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             td_orm.status = RecordStatusEnum.running
             service_state = self._create_state(td_orm)
 
+            td_orm.compute_history[-1].provenance = {
+                "creator": "torsiondrive",
+                "version": torsiondrive.__version__,
+                "routine": "torsiondrive.td_api",
+            }
+
         else:
             # Load the state from the service_state column
-            service_state = TorsionDriveServiceState(**service_orm.service_state)
-
-        td_orm.compute_history[-1].provenance = {
-            "creator": "torsiondrive",
-            "version": torsiondrive.__version__,
-            "routine": "torsiondrive.td_api",
-        }
+            service_state = TorsiondriveServiceState(**service_orm.service_state)
 
         # Sort by position
         # Fully sorting by the key is not important since that ends up being a key in the dict
@@ -604,7 +596,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
     def submit_optimization_subtasks(
         self,
         session: Session,
-        service_state: TorsionDriveServiceState,
+        service_state: TorsiondriveServiceState,
         service_orm: ServiceQueueORM,
         task_dict: Dict[str, Any],
     ):
@@ -661,11 +653,11 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 )
 
                 opt_key = json.dumps(td_api.grid_id_from_string(td_api_key))
-                opt_history = TorsiondriveOptimizationHistoryORM(
+                opt_history = TorsiondriveOptimizationsORM(
                     torsiondrive_id=service_orm.record_id,
                     optimization_id=opt_ids[0],
                     key=opt_key,
                 )
 
                 service_orm.dependencies.append(svc_task)
-                service_orm.record.optimization_history.append(opt_history)
+                service_orm.record.optimizations.append(opt_history)
