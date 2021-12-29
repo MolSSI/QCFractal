@@ -29,6 +29,7 @@ from qcfractal.portal.permissions import UserInfo
 from qcfractal.portal.records.optimization import OptimizationInputSpecification
 from qcfractal.portal.records.singlepoint import SinglepointInputSpecification
 from qcfractal.portal.records.torsiondrive import TorsiondriveInputSpecification
+from qcfractal.portal.records.gridoptimization import GridoptimizationInputSpecification
 from .config import FractalConfig, update_nested_dict
 from .db_socket.socket import SQLAlchemySocket
 from .interface import FractalClient
@@ -245,6 +246,10 @@ def load_procedure_data(name: str):
         input_type = TorsiondriveInputSpecification
         result_type = Dict[str, Union[OptimizationResult, FailedOperation]]
         molecule_type = List[Molecule]
+    elif record_type == "gridoptimization":
+        input_type = GridoptimizationInputSpecification
+        result_type = Dict[str, Union[OptimizationResult, FailedOperation]]
+        molecule_type = Molecule
     else:
         raise RuntimeError(f"Unknown procedure '{record_type}' in test!")
 
