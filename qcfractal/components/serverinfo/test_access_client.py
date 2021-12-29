@@ -97,6 +97,15 @@ def test_serverinfo_client_access_logged(snowflake_client: PortalClient):
     assert accesses[1]["access_type"] == "v1/molecule/query"
     assert accesses[0]["access_type"] == "v1/molecule"
 
+    assert accesses[0]["response_bytes"] > 0
+    assert accesses[1]["response_bytes"] > 0
+    assert accesses[2]["response_bytes"] > 0
+    assert accesses[3]["response_bytes"] > 0
+    assert accesses[0]["request_bytes"] == 0
+    assert accesses[1]["request_bytes"] > 0
+    assert accesses[2]["request_bytes"] == 0
+    assert accesses[3]["request_bytes"] == 0
+
 
 @pytest.mark.parametrize("encoding", valid_encodings)
 def test_serverinfo_client_access_not_logged(temporary_database, encoding: str):

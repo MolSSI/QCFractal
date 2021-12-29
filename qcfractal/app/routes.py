@@ -36,9 +36,10 @@ def before_request_func():
     # g here refers to flask.g
     g.request_start = time.time()
 
-    g.request_bytes = None
     if request.data:
         g.request_bytes = len(request.data)
+    else:
+        g.request_bytes = 0
 
     # The rest of this function is only for old endpoints
     if request.path.startswith("/v1/"):
@@ -117,7 +118,7 @@ def wrap_route(body_model: Optional[Type], url_params_model: Optional[Type[pydan
 
 
 @main.after_request
-def after_request_func(response: SerializedResponse):
+def after_request_func(response: Response):
 
     # Determine the time the request took
     # g here refers to flask.g
@@ -142,14 +143,12 @@ def after_request_func(response: SerializedResponse):
         log["ip_address"] = real_ip
         log["user_agent"] = request.headers["User-Agent"]
 
-        if g.request_bytes:
-            log["request_bytes"] = g.request_bytes
-
+        log["request_bytes"] = g.request_bytes
         log["request_duration"] = request_duration
         log["user"] = g.user if "user" in g else None
 
-        if isinstance(response.response, (bytes, str)):
-            log["response_bytes"] = len(response.response)
+        # response.response is a list of bytes or str
+        log["response_bytes"] = sum(len(x) for x in response.response)
 
         storage_socket.serverinfo.save_access(log)
 
