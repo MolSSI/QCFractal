@@ -53,7 +53,12 @@ from qcfractal.portal.records.torsiondrive import (
     TorsiondriveRecord,
     TorsiondriveQueryBody,
 )
-
+from qcfractal.portal.records.gridoptimization import (
+    GridoptimizationKeywords,
+    GridoptimizationAddBody,
+    GridoptimizationRecord,
+    GridoptimizationQueryBody,
+)
 from qcfractal.portal.records import (
     ComputeHistory,
     RecordStatusEnum,
@@ -1707,6 +1712,90 @@ class PortalClient:
             None,
             CommonGetProjURLParameters,
             List[Optional[TorsiondriveRecord._DataModel]],
+            None,
+            url_params,
+        )
+
+        records = self.recordmodel_from_datamodel(record_data)
+
+        if isinstance(record_id, Sequence):
+            return records
+        else:
+            return records[0]
+
+    def add_gridoptimizations(
+        self,
+        initial_molecules: Union[int, Molecule, Sequence[Union[int, Molecule]]],
+        program: str,
+        optimization_specification: OptimizationInputSpecification,
+        keywords: Union[GridoptimizationKeywords, Dict[str, Any]],
+        tag: Optional[str] = None,
+        priority: PriorityEnum = PriorityEnum.normal,
+    ) -> Tuple[InsertMetadata, List[int]]:
+        """
+        Adds gridoptimization calculations to the server
+        """
+
+        body_data = {
+            "initial_molecules": initial_molecules,
+            "specification": {
+                "program": program,
+                "optimization_specification": optimization_specification,
+                "keywords": keywords,
+            },
+            "tag": tag,
+            "priority": priority,
+        }
+
+        return self._auto_request(
+            "post",
+            "v1/record/gridoptimization",
+            GridoptimizationAddBody,
+            None,
+            Tuple[InsertMetadata, List[int]],
+            body_data,
+            None,
+        )
+
+    def get_gridoptimizations(
+        self,
+        record_id: Union[int, Sequence[int]],
+        missing_ok: bool = False,
+        *,
+        include_service: bool = False,
+        include_outputs: bool = False,
+        include_comments: bool = False,
+        include_initial_molecule: bool = False,
+        include_starting_molecule: bool = False,
+        include_optimizations: bool = False,
+    ) -> Union[Optional[GridoptimizationRecord], List[Optional[GridoptimizationRecord]]]:
+        url_params = {"id": make_list(record_id), "missing_ok": missing_ok}
+
+        include = set()
+
+        # We must add '*' so that all the default fields are included
+        if include_service:
+            include |= {"*", "service"}
+        if include_outputs:
+            include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_comments:
+            include |= {"*", "comments"}
+        if include_initial_molecule:
+            include |= {"*", "initial_molecule"}
+        if include_starting_molecule:
+            include |= {"*", "starting_molecule"}
+        if include_optimizations:
+            include |= {"*", "optimizations"}
+
+        if include:
+            url_params["include"] = include
+
+        record_data = self._auto_request(
+            "get",
+            "v1/record/gridoptimization",
+            None,
+            CommonGetProjURLParameters,
+            List[Optional[GridoptimizationRecord._DataModel]],
             None,
             url_params,
         )

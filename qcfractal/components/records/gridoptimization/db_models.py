@@ -1,103 +1,96 @@
 from __future__ import annotations
 
-from sqlalchemy import Column, Integer, ForeignKey, String, JSON
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship
+from typing import Dict, Optional
+
+from sqlalchemy import select, UniqueConstraint, Index, CheckConstraint, Column, Integer, ForeignKey, String, JSON
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import relationship, column_property
 
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseRecordORM
+from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM, OptimizationRecordORM
 from qcfractal.db_socket import BaseORM
 
-from typing import Dict, Any, Optional, Iterable
 
-
-class GridOptimizationAssociation(BaseORM):
+class GridoptimizationOptimizationsORM(BaseORM):
     """Association table for many to many"""
 
-    __tablename__ = "grid_optimization_association"
+    __tablename__ = "gridoptimization_optimizations"
 
-    grid_opt_id = Column(Integer, ForeignKey("grid_optimization_procedure.id", ondelete="cascade"), primary_key=True)
+    gridoptimization_id = Column(
+        Integer, ForeignKey("gridoptimization_record.id", ondelete="cascade"), primary_key=True
+    )
+    optimization_id = Column(Integer, ForeignKey("optimization_record.id"))
     key = Column(String, nullable=False, primary_key=True)
 
-    # not primary key
-    opt_id = Column(Integer, ForeignKey("optimization_record.id", ondelete="cascade"))
+    energy = column_property(
+        select(OptimizationRecordORM.energies[-1]).where(OptimizationRecordORM.id == optimization_id).scalar_subquery()
+    )
 
-    # Index('grid_opt_id', 'key', unique=True)
-
-    # optimization_obj = relationship(OptimizationRecordORM, lazy="joined")
+    optimization_record = relationship(OptimizationRecordORM)
 
 
-class GridOptimizationProcedureORM(BaseRecordORM):
+class GridoptimizationSpecificationORM(BaseORM):
+    __tablename__ = "gridoptimization_specification"
 
-    __tablename__ = "grid_optimization_procedure"
+    id = Column(Integer, primary_key=True)
+
+    program = Column(String(100), nullable=False)
+
+    optimization_specification_id = Column(Integer, ForeignKey(OptimizationSpecificationORM.id), nullable=False)
+    optimization_specification = relationship(OptimizationSpecificationORM, lazy="selectin", uselist=False)
+
+    keywords = Column(JSONB, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "program",
+            "optimization_specification_id",
+            "keywords",
+            name="ux_gridoptimization_specification_keys",
+        ),
+        Index("ix_gridoptimization_specification_program", "program"),
+        Index("ix_gridoptimization_specification_optimization_specification_id", "optimization_specification_id"),
+        Index("ix_gridoptimization_specification_keywords", "keywords"),
+        # Enforce lowercase on some fields
+        # This does not actually change the text to lowercase, but will fail to insert anything not lowercase
+        # WARNING - these are not autodetected by alembic
+        CheckConstraint("program = LOWER(program)", name="ck_gridoptimization_specification_program_lower"),
+    )
+
+    @property
+    def required_programs(self) -> Dict[str, Optional[str]]:
+        r = {self.program: None}
+        r.update(self.optimization_specification.required_programs)
+        return r
+
+
+class GridoptimizationRecordORM(BaseRecordORM):
+
+    __tablename__ = "gridoptimization_record"
 
     id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"), primary_key=True)
 
-    def __init__(self, **kwargs):
-        kwargs.setdefault("version", 1)
-        kwargs.setdefault("procedure", "gridoptimization")
-        super().__init__(**kwargs)
+    specification_id = Column(Integer, ForeignKey(GridoptimizationSpecificationORM.id), nullable=False)
+    specification = relationship(GridoptimizationSpecificationORM, lazy="selectin")
 
-    keywords = Column(JSON)
-    qc_spec = Column(JSON)
+    initial_molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), nullable=False)
+    initial_molecule = relationship(MoleculeORM, foreign_keys=initial_molecule_id)
 
-    # Input data
-    initial_molecule = Column(Integer, ForeignKey("molecule.id"), nullable=False)
-    initial_molecule_obj = relationship(MoleculeORM, lazy="select", foreign_keys=initial_molecule)
+    starting_molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), nullable=True)
+    starting_molecule = relationship(MoleculeORM, foreign_keys=starting_molecule_id)
 
-    optimization_spec = Column(JSON)
-
-    # Output data
-    starting_molecule = Column(Integer, ForeignKey("molecule.id"))
-    starting_molecule_obj = relationship(MoleculeORM, lazy="select", foreign_keys=starting_molecule)
-
-    final_energy_dict = Column(JSON)  # Dict[str, float]
     starting_grid = Column(JSON)  # tuple
 
-    grid_optimizations_obj = relationship(
-        GridOptimizationAssociation,
-        lazy="select",
+    optimizations = relationship(
+        GridoptimizationOptimizationsORM,
         cascade="all, delete-orphan",
     )
-
-    @hybrid_property
-    def grid_optimizations(self):
-        """calculated property when accessed, not saved in the DB
-        A view of the many to many relation in the form of a dict"""
-
-        return self._grid_optimizations(self.grid_optimizations_obj)
-
-    @staticmethod
-    def _grid_optimizations(grid_optimizations_obj):
-
-        if not grid_optimizations_obj:
-            return {}
-
-        if not isinstance(grid_optimizations_obj, list):
-            grid_optimizations_obj = [grid_optimizations_obj]
-
-        ret = {}
-        try:
-            for obj in grid_optimizations_obj:
-                ret[obj.key] = str(obj.opt_id)
-
-        except Exception as err:
-            # raises exception of first access!!
-            pass
-            # print(err)
-
-        return ret
-
-    def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-
-        d = BaseRecordORM.dict(self, exclude)
-
-        # Always include grid optimizations field
-        d["grid_optimizations"] = self.grid_optimizations
-        return d
-
-    __table_args__ = ()
 
     __mapper_args__ = {
         "polymorphic_identity": "gridoptimization",
     }
+
+    @property
+    def required_programs(self) -> Dict[str, Optional[str]]:
+        return self.specification.required_programs

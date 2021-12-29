@@ -15,8 +15,8 @@ from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.records.base_handlers import BaseServiceHandler
 from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.records.gridoptimization.db_models import (
-    GridOptimizationAssociation,
-    GridOptimizationProcedureORM,
+    GridoptimizationOptimizationsORM,
+    GridoptimizationRecordORM,
 )
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.db_socket.helpers import insert_general, get_query_proj_options
@@ -170,10 +170,10 @@ class GridOptimizationHandler(BaseServiceHandler):
         BaseServiceHandler.__init__(self, root_socket)
 
     def add_orm(
-        self, gridopt_orms: Sequence[GridOptimizationProcedureORM], *, session: Optional[Session] = None
+        self, gridopt_orms: Sequence[GridoptimizationRecordORM], *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, List[ObjectId]]:
         """
-        Adds GridOptimizationProcedureORM to the database, taking into account duplicates
+        Adds GridoptimizationRecordORM to the database, taking into account duplicates
 
         The session is flushed at the end of this function.
 
@@ -209,7 +209,7 @@ class GridOptimizationHandler(BaseServiceHandler):
 
         with self.root_socket.optional_session(session) as session:
             meta, orm = insert_general(
-                session, gridopt_orms, (GridOptimizationProcedureORM.hash_index,), (GridOptimizationProcedureORM.id,)
+                session, gridopt_orms, (GridoptimizationRecordORM.hash_index,), (GridoptimizationRecordORM.id,)
             )
         return meta, [x[0] for x in orm]
 
@@ -260,12 +260,12 @@ class GridOptimizationHandler(BaseServiceHandler):
         int_id = [int(x) for x in id]
         unique_ids = list(set(int_id))
 
-        load_cols, load_rels = get_query_proj_columns(GridOptimizationProcedureORM, include, exclude)
+        load_cols, load_rels = get_query_proj_columns(GridoptimizationRecordORM, include, exclude)
 
         with self.root_socket.optional_session(session, True) as session:
             query = (
-                session.query(GridOptimizationProcedureORM)
-                .filter(GridOptimizationProcedureORM.id.in_(unique_ids))
+                session.query(GridoptimizationRecordORM)
+                .filter(GridoptimizationRecordORM.id.in_(unique_ids))
                 .options(load_only(*load_cols))
             )
 
@@ -297,7 +297,7 @@ class GridOptimizationHandler(BaseServiceHandler):
 
         initial_molecule_orm = session.query(MoleculeORM).filter(MoleculeORM.id == mol_id).one()
 
-        gridopt_orm = GridOptimizationProcedureORM()
+        gridopt_orm = GridoptimizationRecordORM()
         gridopt_orm.keywords = service_input.keywords.dict()
         gridopt_orm.optimization_spec = service_input.optimization_spec.dict()
         gridopt_orm.qc_spec = service_input.qc_spec.dict()
@@ -425,7 +425,7 @@ class GridOptimizationHandler(BaseServiceHandler):
             added_ids = self.submit_subtasks(session, service_orm, [new_task])
 
             # Add to the association table for the grid opt ORM
-            opt_assoc = GridOptimizationAssociation()
+            opt_assoc = GridoptimizationOptimizationsORM()
             opt_assoc.opt_id = added_ids[0]
             opt_assoc.grid_opt_id = gridopt_orm.id
             opt_assoc.key = serialize_key("preoptimization")
@@ -563,7 +563,7 @@ class GridOptimizationHandler(BaseServiceHandler):
         for id, (task_info, _, _) in zip(added_ids, new_tasks):
             key = task_info["key"]
 
-            opt_assoc = GridOptimizationAssociation()
+            opt_assoc = GridoptimizationOptimizationsORM()
             opt_assoc.opt_id = id
             opt_assoc.grid_opt_id = gridopt_orm.procedure_obj.id
             opt_assoc.key = key
