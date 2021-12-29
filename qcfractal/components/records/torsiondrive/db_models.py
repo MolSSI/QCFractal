@@ -13,7 +13,7 @@ from qcfractal.components.records.optimization.db_models import OptimizationSpec
 from qcfractal.db_socket import BaseORM
 
 
-class TorsiondriveOptimizationHistoryORM(BaseORM):
+class TorsiondriveOptimizationsORM(BaseORM):
     """Association table for many to many"""
 
     __tablename__ = "torsiondrive_optimizations"
@@ -88,10 +88,11 @@ class TorsiondriveRecordORM(BaseRecordORM):
     final_energies = Column(JSON)
     minimum_positions = Column(JSON)
 
-    optimization_history = relationship(
-        TorsiondriveOptimizationHistoryORM,
-        order_by=TorsiondriveOptimizationHistoryORM.position,
+    optimizations = relationship(
+        TorsiondriveOptimizationsORM,
+        order_by=TorsiondriveOptimizationsORM.position,
         collection_class=ordering_list("position"),
+        cascade="all, delete-orphan",
     )
 
     __mapper_args__ = {

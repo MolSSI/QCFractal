@@ -35,11 +35,11 @@ def get_torsiondrive_records_v1(record_id: Optional[int] = None, *, url_params: 
     )
 
 
-@main.route("/v1/record/torsiondrive/<int:record_id>/optimization_history", methods=["GET"])
+@main.route("/v1/record/torsiondrive/<int:record_id>/optimizations", methods=["GET"])
 @wrap_route(None, CommonGetProjURLParameters)
 @check_access
-def get_torsiondrive_optimization_history_v1(record_id: int, *, url_params: CommonGetProjURLParameters):
-    return storage_socket.records.torsiondrive.get_optimization_history(
+def get_torsiondrive_optimizations_v1(record_id: int, *, url_params: CommonGetProjURLParameters):
+    return storage_socket.records.torsiondrive.get_optimizations(
         record_id, url_params.include, url_params.exclude, url_params.missing_ok
     )
 
