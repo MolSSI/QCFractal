@@ -1759,7 +1759,7 @@ class PortalClient:
         after: Optional[datetime] = None,
         limit: Optional[int] = None,
         skip: int = 0,
-    ) -> Tuple[QueryMetadata, Dict[str, Any]]:
+    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
         """Obtains individual entries in the access logs"""
 
         url_params = {
