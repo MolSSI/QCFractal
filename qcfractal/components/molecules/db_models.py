@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 from qcfractal.db_socket.base_orm import BaseORM
 from qcfractal.db_socket.column_types import MsgpackExt
+from qcfractal.portal.molecules import Molecule
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Optional, Iterable
@@ -68,3 +69,6 @@ class MoleculeORM(BaseORM):
 
         # TODO - this is because the pydantic models are goofy
         return {k: v for k, v in d.items() if v is not None}
+
+    def to_model(self):
+        return BaseORM._to_model(self, Molecule)
