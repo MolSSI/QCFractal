@@ -92,12 +92,12 @@ def test_torsiondrive_client_tag_priority_as_service(
 @pytest.mark.parametrize("spec", _test_specs)
 def test_torsiondrive_client_add_get(snowflake_client: PortalClient, spec: TorsiondriveInputSpecification):
     hooh = load_molecule_data("peroxide2")
-    c8h6_1 = load_molecule_data("td_C8H6_1")
-    c8h6_2 = load_molecule_data("td_C8H6_2")
+    td_mol_1 = load_molecule_data("td_C9H11NO2_1")
+    td_mol_2 = load_molecule_data("td_C9H11NO2_2")
 
     time_0 = datetime.utcnow()
     meta, id = snowflake_client.add_torsiondrives(
-        [[hooh], [c8h6_1, c8h6_2]],
+        [[hooh], [td_mol_1, td_mol_2]],
         "torsiondrive",
         keywords=spec.keywords,
         optimization_specification=spec.optimization_specification,
@@ -130,14 +130,14 @@ def test_torsiondrive_client_add_get(snowflake_client: PortalClient, spec: Torsi
     # Not necessarily in the input order
     hash1 = recs[1].raw_data.initial_molecules[0].get_hash()
     hash2 = recs[1].raw_data.initial_molecules[1].get_hash()
-    assert {hash1, hash2} == {c8h6_1.get_hash(), c8h6_2.get_hash()}
+    assert {hash1, hash2} == {td_mol_1.get_hash(), td_mol_2.get_hash()}
 
 
 def test_torsiondrive_client_add_existing_molecule(snowflake_client: PortalClient):
     spec = _test_specs[0]
 
-    mol1 = load_molecule_data("td_C8H6_1")
-    mol2 = load_molecule_data("td_C8H6_2")
+    mol1 = load_molecule_data("td_C9H11NO2_1")
+    mol2 = load_molecule_data("td_C9H11NO2_2")
 
     # Add a molecule separately
     _, mol_ids = snowflake_client.add_molecules([mol2])

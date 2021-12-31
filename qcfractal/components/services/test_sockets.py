@@ -14,6 +14,7 @@ from qcfractal.components.records.optimization.db_models import OptimizationReco
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.portal.keywords import KeywordSet
 from qcfractal.portal.molecules import Molecule
+from qcfractal.portal.records import FailedOperation
 from qcfractal.portal.outputstore import OutputStore, OutputTypeEnum
 from qcfractal.portal.managers import ManagerName
 from qcfractal.portal.records import RecordStatusEnum, PriorityEnum
@@ -35,7 +36,7 @@ if TYPE_CHECKING:
 
 
 def test_service_socket_error(storage_socket: SQLAlchemySocket):
-    input_spec_1, molecules_1, result_data_1 = load_procedure_data("td_C7H8N2OS_psi4_fail")
+    input_spec_1, molecules_1, result_data_1 = load_procedure_data("td_H2O2_psi4_b3lyp")
 
     meta_1, id_1 = storage_socket.records.torsiondrive.add(input_spec_1, [molecules_1], as_service=True)
     assert meta_1.success
@@ -60,6 +61,7 @@ def test_service_socket_error(storage_socket: SQLAlchemySocket):
     r = storage_socket.services.iterate_services()
     time_1 = datetime.utcnow()
 
+    error_counter = 0
     while r > 0:
         rec = storage_socket.records.torsiondrive.get(
             id_1, include=["*", "service.*", "service.dependencies.*", "service.dependencies.record"]
@@ -70,21 +72,29 @@ def test_service_socket_error(storage_socket: SQLAlchemySocket):
         waiting_tasks = [x["record"] for x in rec[0]["service"]["dependencies"]]
         assert len(waiting_tasks) > 0
 
-        manager_tasks = storage_socket.tasks.claim_tasks(mname1.fullname, limit=4)
+        manager_tasks = storage_socket.tasks.claim_tasks(mname1.fullname, limit=2)
 
         opt_ids = set(x["record_id"] for x in manager_tasks)
         opt_recs = storage_socket.records.optimization.get(opt_ids, include=["*", "initial_molecule", "task"])
 
         manager_ret = {}
         for opt in opt_recs:
-            # Find out info about what tasks the service spawned
-            mol_hash = opt["initial_molecule"]["identifiers"]["molecule_hash"]
-            constraints = opt["specification"]["keywords"]["constraints"]
+            if error_counter == 5:
+                # Fake an error
+                manager_ret[opt["task"]["id"]] = FailedOperation(
+                    error={"error_type": "test_error", "error_message": "this is just a test error"}
+                )
+            else:
+                # Find out info about what tasks the service spawned
+                mol_hash = opt["initial_molecule"]["identifiers"]["molecule_hash"]
+                constraints = opt["specification"]["keywords"]["constraints"]
 
-            # This is the key in the dictionary of optimization results
-            optresult_key = mol_hash + "|" + json.dumps(constraints, sort_keys=True)
-            opt_data = result_data_1[optresult_key]
-            manager_ret[opt["task"]["id"]] = opt_data
+                # This is the key in the dictionary of optimization results
+                optresult_key = mol_hash + "|" + json.dumps(constraints, sort_keys=True)
+                opt_data = result_data_1[optresult_key]
+                manager_ret[opt["task"]["id"]] = opt_data
+
+            error_counter += 1
 
         rmeta = storage_socket.tasks.update_finished(mname1.fullname, manager_ret)
         assert rmeta.n_accepted == len(manager_tasks)
