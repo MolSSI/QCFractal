@@ -311,11 +311,6 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
         specification = TorsiondriveSpecification(**td_orm.specification.dict())
         initial_molecules: List[Dict[str, Any]] = [x.dict() for x in td_orm.initial_molecules]
-
-        # For this part, sort the initial molecule by hash
-        # This makes everything a bit more deterministic (and helps with testing)
-        initial_molecules.sort(key=lambda x: x["identifiers"]["molecule_hash"])
-
         keywords = specification.keywords
 
         # Create a template from the first initial molecule
@@ -502,7 +497,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         service_orm: ServiceQueueORM,
     ):
 
-        td_orm = service_orm.record
+        td_orm: TorsiondriveRecordORM = service_orm.record
 
         if td_orm.status not in [RecordStatusEnum.running, RecordStatusEnum.waiting]:
             # This is a programmer error
@@ -563,9 +558,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         logging.captureWarnings(False)
 
         # If there are any tasks left, submit them
-
         if len(next_tasks) > 0:
-            self.submit_optimization_subtasks(session, service_state, service_orm, next_tasks)
+            self.submit_optimizations(session, service_state, service_orm, next_tasks)
 
         # Update the torsiondrive procedure itself
         min_positions = {}
@@ -578,7 +572,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             final_energy[key] = energies[idx]
 
         td_orm.minimum_positions = min_positions
-        td_orm.final_energy_dict = final_energy
+        td_orm.final_energies = final_energy
 
         # append to the existing stdout
         stdout_orm = td_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
@@ -593,31 +587,33 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         # Return True to indicate that this service has successfully completed
         return len(next_tasks) == 0
 
-    def submit_optimization_subtasks(
+    def submit_optimizations(
         self,
         session: Session,
         service_state: TorsiondriveServiceState,
         service_orm: ServiceQueueORM,
-        task_dict: Dict[str, Any],
+        next_tasks: Dict[str, Any],
     ):
+
+        td_orm: TorsiondriveRecordORM = service_orm.record
 
         # delete all existing entries in the dependency list
         service_orm.dependencies = []
 
-        for td_api_key, geometries in task_dict.items():
+        # Create an optimization input based on the new geometry and the optimization template
+        opt_spec = td_orm.specification.optimization_specification.dict()
+
+        # TODO - is there a better place to do this? as_input function on models? Some pydantic export magic?
+        opt_spec.pop("id")
+        opt_spec.pop("singlepoint_specification_id")
+        opt_spec["singlepoint_specification"].pop("id")
+        opt_spec["singlepoint_specification"].pop("keywords_id")
+
+        for td_api_key, geometries in next_tasks.items():
             for position, geometry in enumerate(geometries):
 
-                # Create an optimization input based on the new geometry and the optimization template
-                opt_spec = service_orm.record.specification.optimization_specification.dict()
-
                 # Make a deep copy to prevent modifying the original ORM
-                opt_spec = copy.deepcopy(opt_spec)
-
-                # TODO - is there a better place to do this? as_input function on models? Some pydantic export magic?
-                opt_spec.pop("id")
-                opt_spec.pop("singlepoint_specification_id")
-                opt_spec["singlepoint_specification"].pop("id")
-                opt_spec["singlepoint_specification"].pop("keywords_id")
+                opt_spec2 = copy.deepcopy(opt_spec)
 
                 # Construct constraints
                 constraints = json.loads(service_state.dihedral_template)
@@ -627,9 +623,9 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                     constraints[con_num]["value"] = k
 
                 # update the constraints
-                opt_spec["keywords"].setdefault("constraints", {})
-                opt_spec["keywords"]["constraints"].setdefault("set", [])
-                opt_spec["keywords"]["constraints"]["set"].extend(constraints)
+                opt_spec2["keywords"].setdefault("constraints", {})
+                opt_spec2["keywords"]["constraints"].setdefault("set", [])
+                opt_spec2["keywords"]["constraints"]["set"].extend(constraints)
 
                 # Build new molecule
                 mol = json.loads(service_state.molecule_template)
@@ -637,7 +633,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
                 # Submit the new optimization
                 meta, opt_ids = self.root_socket.records.optimization.add(
-                    OptimizationInputSpecification(**opt_spec),
+                    OptimizationInputSpecification(**opt_spec2),
                     [Molecule(**mol)],
                     service_orm.tag,
                     service_orm.priority,
@@ -647,17 +643,17 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 if not meta.success:
                     raise RuntimeError("Error adding optimization - likely a developer error: " + meta.error_string)
 
-                svc_task = ServiceDependenciesORM(
+                svc_dep = ServiceDependenciesORM(
                     record_id=opt_ids[0],
                     extras={"td_api_key": td_api_key, "position": position},
                 )
 
-                opt_key = json.dumps(td_api.grid_id_from_string(td_api_key))
+                opt_key = json.dumps(grid_id)
                 opt_history = TorsiondriveOptimizationsORM(
                     torsiondrive_id=service_orm.record_id,
                     optimization_id=opt_ids[0],
                     key=opt_key,
                 )
 
-                service_orm.dependencies.append(svc_task)
-                service_orm.record.optimizations.append(opt_history)
+                service_orm.dependencies.append(svc_dep)
+                td_orm.optimizations.append(opt_history)

@@ -47,7 +47,13 @@ from qcfractal.portal.records.optimization import (
     OptimizationAddBody,
 )
 
-from qcfractal.portal.records.torsiondrive import TorsiondriveKeywords, TorsiondriveAddBody, TorsiondriveRecord
+from qcfractal.portal.records.torsiondrive import (
+    TorsiondriveKeywords,
+    TorsiondriveAddBody,
+    TorsiondriveRecord,
+    TorsiondriveQueryBody,
+)
+
 from qcfractal.portal.records import (
     ComputeHistory,
     RecordStatusEnum,

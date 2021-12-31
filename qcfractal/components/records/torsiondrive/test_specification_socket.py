@@ -19,7 +19,7 @@ from qcfractal.portal.records.torsiondrive import (
 from qcfractal.portal.keywords import KeywordSet
 
 
-def test_torsiondriverecord_socket_basic_specification(storage_socket: SQLAlchemySocket):
+def test_torsiondrive_socket_basic_specification(storage_socket: SQLAlchemySocket):
 
     spec1 = TorsiondriveInputSpecification(
         program="torsiondrive",
@@ -133,7 +133,7 @@ common_opt_spec = OptimizationInputSpecification(
 )
 
 
-def test_torsiondriverecord_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
+def test_torsiondrive_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
 
     spec1 = TorsiondriveInputSpecification(
         program="torsiondrive",
@@ -161,7 +161,7 @@ def test_torsiondriverecord_socket_add_specification_same_0(storage_socket: SQLA
     assert id == id2
 
 
-def test_torsiondriverecord_socket_add_specification_same_1(storage_socket: SQLAlchemySocket):
+def test_torsiondrive_socket_add_specification_same_1(storage_socket: SQLAlchemySocket):
 
     spec1 = TorsiondriveInputSpecification(
         program="torsiondrive",
@@ -199,7 +199,7 @@ def test_torsiondriverecord_socket_add_specification_same_1(storage_socket: SQLA
     assert id == id2
 
 
-def test_torsiondriverecord_socket_add_specification_same_2(storage_socket: SQLAlchemySocket):
+def test_torsiondrive_socket_add_specification_same_2(storage_socket: SQLAlchemySocket):
     # some changes to the opt spec
     spec1 = TorsiondriveInputSpecification(
         program="torsiondrive",
@@ -249,7 +249,7 @@ def test_torsiondriverecord_socket_add_specification_same_2(storage_socket: SQLA
     assert id == id2
 
 
-def test_torsiondriverecord_socket_add_specification_diff_1(storage_socket: SQLAlchemySocket):
+def test_torsiondrive_socket_add_specification_diff_1(storage_socket: SQLAlchemySocket):
     #  changing energy upper limit
     spec1 = TorsiondriveInputSpecification(
         program="torsiondrive",
@@ -264,7 +264,7 @@ def test_torsiondriverecord_socket_add_specification_diff_1(storage_socket: SQLA
     )
 
     spec2 = TorsiondriveInputSpecification(
-        program="torSIOndrive",
+        program="torsiondrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 13)],
             grid_spacing=[15],
@@ -286,7 +286,7 @@ def test_torsiondriverecord_socket_add_specification_diff_1(storage_socket: SQLA
     assert id != id2
 
 
-def test_torsiondriverecord_socket_add_specification_diff_2(storage_socket: SQLAlchemySocket):
+def test_torsiondrive_socket_add_specification_diff_2(storage_socket: SQLAlchemySocket):
     #  ordering of dihedrals
     spec1 = TorsiondriveInputSpecification(
         program="torsiondrive",
@@ -301,7 +301,7 @@ def test_torsiondriverecord_socket_add_specification_diff_2(storage_socket: SQLA
     )
 
     spec2 = TorsiondriveInputSpecification(
-        program="torSIOndrive",
+        program="torsionndrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 13, 15)],
             grid_spacing=[15],
@@ -323,7 +323,7 @@ def test_torsiondriverecord_socket_add_specification_diff_2(storage_socket: SQLA
     assert id != id2
 
 
-def test_torsiondriverecord_socket_add_specification_diff_3(storage_socket: SQLAlchemySocket):
+def test_torsiondrive_socket_add_specification_diff_3(storage_socket: SQLAlchemySocket):
     #  grid spacing
     spec1 = TorsiondriveInputSpecification(
         program="torsiondrive",
@@ -338,7 +338,7 @@ def test_torsiondriverecord_socket_add_specification_diff_3(storage_socket: SQLA
     )
 
     spec2 = TorsiondriveInputSpecification(
-        program="torSIOndrive",
+        program="torsionndrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 13)],
             grid_spacing=[5],

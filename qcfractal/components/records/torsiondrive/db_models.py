@@ -9,7 +9,7 @@ from sqlalchemy.orm import relationship
 
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseRecordORM
-from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM
+from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM, OptimizationRecordORM
 from qcfractal.db_socket import BaseORM
 
 
@@ -19,9 +19,11 @@ class TorsiondriveOptimizationsORM(BaseORM):
     __tablename__ = "torsiondrive_optimizations"
 
     torsiondrive_id = Column(Integer, ForeignKey("torsiondrive_record.id", ondelete="cascade"), primary_key=True)
-    optimization_id = Column(Integer, ForeignKey("optimization_record.id"), primary_key=True)
+    optimization_id = Column(Integer, ForeignKey(OptimizationRecordORM.id), primary_key=True)
     key = Column(String, nullable=False, primary_key=True)
     position = Column(Integer, primary_key=True)
+
+    optimization_record = relationship(OptimizationRecordORM)
 
 
 class TorsiondriveInitialMoleculeORM(BaseORM):
