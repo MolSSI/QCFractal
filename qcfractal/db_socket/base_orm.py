@@ -82,7 +82,7 @@ class BaseORM:
 
         return d
 
-    def to_model(self, as_type: Type[_T]) -> _T:
+    def _to_model(self, as_type: Type[_T]) -> _T:
         """
         Converts this ORM to a particular type
 
