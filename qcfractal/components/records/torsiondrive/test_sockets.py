@@ -640,18 +640,4 @@ def test_torsiondrive_socket_run(storage_socket: SQLAlchemySocket, test_data_nam
     out = OutputStore(**rec[0]["compute_history"][-1]["outputs"][0])
     assert "Job Finished" in out.as_string
 
-    assert len(unique_constraints) == len(rec[0]["final_energies"])
-    assert len(unique_constraints) == len(rec[0]["minimum_positions"])
     assert len(rec[0]["optimizations"]) == n_optimizations
-
-    opt_dict = defaultdict(list)
-    for opt in rec[0]["optimizations"]:
-        opt_dict[opt["key"]].append(opt)
-
-    for key, energy in rec[0]["final_energies"].items():
-        min_pos = rec[0]["minimum_positions"][key]
-        assert opt_dict[key][min_pos]["optimization_record"]["energies"][-1] == energy
-
-        # Pull record separately from db to check
-        optr = storage_socket.records.optimization.get([opt_dict[key][min_pos]["optimization_id"]])
-        assert optr[0]["energies"] == opt_dict[key][min_pos]["optimization_record"]["energies"]

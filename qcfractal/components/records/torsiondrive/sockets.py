@@ -560,19 +560,19 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         # If there are any tasks left, submit them
         if len(next_tasks) > 0:
             self.submit_optimizations(session, service_state, service_orm, next_tasks)
+        else:
+            # check that what we have is consistent with what the torsiondrive package reports
+            lowest_energies = td_api.collect_lowest_energies(service_state.torsiondrive_state)
+            lowest_energies = {json.dumps(x): y for x, y in lowest_energies.items()}
 
-        # Update the torsiondrive procedure itself
-        min_positions = {}
-        final_energy = {}
-        for k, v in service_state.torsiondrive_state["grid_status"].items():
-            energies = [x[2] for x in v]
-            idx = energies.index(min(energies))
-            key = json.dumps(td_api.grid_id_from_string(k))
-            min_positions[key] = idx
-            final_energy[key] = energies[idx]
+            our_energies = {x.key: [] for x in td_orm.optimizations}
+            for x in td_orm.optimizations:
+                if x.energy is not None:
+                    our_energies[x.key].append(x.energy)
 
-        td_orm.minimum_positions = min_positions
-        td_orm.final_energies = final_energy
+            min_energies = {x: min(y) if y else None for x, y in our_energies.items()}
+            if lowest_energies != min_energies:
+                raise RuntimeError("Minimum energies reported by the torsiondrive package do not match ours!")
 
         # append to the existing stdout
         stdout_orm = td_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
