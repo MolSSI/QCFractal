@@ -11,11 +11,6 @@ from sqlalchemy.orm import joinedload, contains_eager
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.records.db_models import BaseRecordORM
-from qcfractal.components.records.base_handlers import BaseProcedureHandler
-from qcfractal.components.records.failure import FailedOperationHandler
-
-# from qcfractal.components.records.optimization.handlers import OptimizationHandler
-# from qcfractal.components.records.singlepoint.handlers import SingleResultHandler
 from qcfractal.db_socket.helpers import calculate_limit
 from qcfractal.exceptions import ComputeManagerError
 from qcfractal.interface.models import (
