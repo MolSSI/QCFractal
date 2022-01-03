@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import Dict, Optional
 
-from sqlalchemy import Column, Integer, ForeignKey, String, JSON, UniqueConstraint, Index, CheckConstraint
+from sqlalchemy import select, Column, Integer, ForeignKey, String, JSON, UniqueConstraint, Index, CheckConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.orderinglist import ordering_list
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, column_property
 
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseRecordORM
@@ -22,6 +22,10 @@ class TorsiondriveOptimizationsORM(BaseORM):
     optimization_id = Column(Integer, ForeignKey(OptimizationRecordORM.id), primary_key=True)
     key = Column(String, nullable=False, primary_key=True)
     position = Column(Integer, primary_key=True)
+
+    energy = column_property(
+        select(OptimizationRecordORM.energies[-1]).where(OptimizationRecordORM.id == optimization_id).scalar_subquery()
+    )
 
     optimization_record = relationship(OptimizationRecordORM)
 
@@ -85,10 +89,6 @@ class TorsiondriveRecordORM(BaseRecordORM):
     specification = relationship(TorsiondriveSpecificationORM, lazy="selectin")
 
     initial_molecules = relationship(MoleculeORM, secondary=TorsiondriveInitialMoleculeORM.__table__, uselist=True)
-
-    # Output data
-    final_energies = Column(JSON)
-    minimum_positions = Column(JSON)
 
     optimizations = relationship(
         TorsiondriveOptimizationsORM,
