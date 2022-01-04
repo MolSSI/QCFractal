@@ -11,7 +11,7 @@ from sqlalchemy.orm import contains_eager
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.records.db_models import BaseRecordORM, RecordComputeHistoryORM
 from qcfractal.db_socket.helpers import (
-    get_count_2,
+    get_count,
 )
 from qcfractal.portal.outputstore import OutputStore, OutputTypeEnum, CompressionEnum
 from qcfractal.portal.records.models import RecordStatusEnum
@@ -122,7 +122,7 @@ class ServiceSocket:
                 BaseRecordORM.status == RecordStatusEnum.running, BaseRecordORM.is_service.is_(True)
             )
 
-            running_count = get_count_2(session, stmt)
+            running_count = get_count(session, stmt)
 
             self._logger.info(
                 f"After iteration, now {running_count} running services. Max is {self._max_active_services}"

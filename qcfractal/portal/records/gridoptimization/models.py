@@ -1,13 +1,13 @@
 from enum import Enum
-from typing import Any, Dict, List, Union, Optional
+from typing import List, Union, Optional
 
 from pydantic import BaseModel, Extra, Field, constr, validator
 from typing_extensions import Literal
 
-from qcfractal.portal.model_utils import recursive_normalizer
 from qcfractal.portal.records import BaseRecord, RecordAddBodyBase, RecordQueryBody
 from qcfractal.portal.records.optimization.models import OptimizationInputSpecification, OptimizationSpecification
 from ...molecules import Molecule
+from ...utils import recursive_normalizer
 
 
 class ScanTypeEnum(str, Enum):

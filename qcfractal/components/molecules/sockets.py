@@ -9,7 +9,7 @@ from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.sql import select, and_, or_
 
 from qcfractal.db_socket.helpers import (
-    get_count_2,
+    get_count,
     get_query_proj_options,
     insert_general,
     delete_general,
@@ -285,7 +285,7 @@ class MoleculeSocket:
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(MoleculeORM).where(and_(*and_query))
             stmt = stmt.options(*proj_options)
-            n_found = get_count_2(session, stmt)
+            n_found = get_count(session, stmt)
             stmt = stmt.limit(limit).offset(skip)
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.dict() for x in results]

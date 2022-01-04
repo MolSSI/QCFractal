@@ -12,7 +12,6 @@ from qcelemental.models.results import AtomicResultProtocols
 from ...interface.models import ObjectId, ProtoModel
 from ..records.models import RecordStatusEnum
 from qcfractal.portal.outputstore import OutputStore
-from qcfractal.portal.model_utils import prepare_basis
 
 
 class DriverEnum(str, Enum):

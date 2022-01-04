@@ -13,7 +13,7 @@ import pytest
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.portal.keywords import KeywordSet
 from qcfractal.portal.managers import ManagerName
-from qcfractal.portal.model_utils import recursive_normalizer
+from qcfractal.portal.utils import recursive_normalizer
 from qcfractal.portal.outputstore import OutputStore
 from qcfractal.portal.records import RecordStatusEnum, PriorityEnum
 from qcfractal.portal.records.optimization import (

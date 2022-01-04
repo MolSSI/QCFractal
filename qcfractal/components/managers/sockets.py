@@ -7,9 +7,8 @@ from typing import TYPE_CHECKING
 from sqlalchemy import and_, update, select
 from sqlalchemy.orm import selectinload
 
-from qcfractal.db_socket.helpers import get_query_proj_options, get_count, calculate_limit, get_count_2, get_general
+from qcfractal.db_socket.helpers import get_query_proj_options, calculate_limit, get_count, get_general
 from qcfractal.exceptions import ComputeManagerError
-from qcfractal.portal.records import RecordStatusEnum
 from qcfractal.portal.managers import ManagerStatusEnum, ManagerName
 from qcfractal.portal.metadata_models import QueryMetadata
 from .db_models import ComputeManagerLogORM, ComputeManagerORM
@@ -91,7 +90,7 @@ class ManagerSocket:
 
         with self.root_socket.optional_session(session) as session:
             stmt = select(ComputeManagerORM).where(ComputeManagerORM.name == name_data.fullname)
-            count = get_count_2(session, stmt)
+            count = get_count(session, stmt)
 
             if count > 0:
                 self._logger.warning(f"Cannot activate duplicate manager: {name_data.fullname}")
@@ -324,11 +323,13 @@ class ManagerSocket:
             and_query.append(ComputeManagerORM.modified_on > modified_after)
 
         with self.root_socket.optional_session(session, True) as session:
-            query = session.query(ComputeManagerORM).filter(and_(*and_query))
-            query = query.options(*proj_options)
+            stmt = select(ComputeManagerORM).filter(and_(*and_query))
+            stmt = stmt.options(*proj_options)
 
-            n_found = get_count(query)
-            results = query.limit(limit).offset(skip).all()
+            n_found = get_count(session, stmt)
+            stmt = stmt.limit(limit).offset(skip)
+
+            results = session.execute(stmt).scalars().all()
             result_dicts = [x.dict() for x in results]
 
         meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore

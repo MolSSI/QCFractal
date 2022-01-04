@@ -11,6 +11,6 @@ from .serverinfo import db_models, routes
 from .managers import db_models, routes
 from .records import db_models, routes
 from .records import register_all
-from .tasks import db_models, routes
-from .services import db_models, routes
+from .tasks import db_models
+from .services import db_models
 from .datasets import register_all

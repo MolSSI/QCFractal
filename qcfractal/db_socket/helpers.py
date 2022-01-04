@@ -40,22 +40,7 @@ def calculate_limit(max_limit: int, given_limit: Optional[int]):
     return min(given_limit, max_limit)
 
 
-def get_count(query):
-    """
-    Returns a total count of a query
-
-    This should be used before any limit/skip options are incorporated into the query
-    """
-
-    # TODO - sqlalchemy 1.4 broke the "fast" way. Reverting to the slow way
-    # TODO - should only be used sparingly (maybe for the first page?)
-
-    # count_q = query.statement.with_only_columns([func.count()]).order_by(None)
-    # count = query.session.execute(count_q).scalar()
-    return query.count()
-
-
-def get_count_2(session, stmt):
+def get_count(session, stmt):
     """
     Returns a total count of an sql query statement
 
@@ -632,17 +617,6 @@ def _insert_general_batch(
     # Return early if the size of this batch is zero
     if len(data) == 0:
         return [], [], []
-
-    # Handle the case where we have an autoincremented primary key already set in the orm
-    # If an auto-incremented primary key is set in the input, then that is an exception
-    # since this should have been fixed elsewhere in qcfractal
-    auto_pkey = data[0].get_autoincrement_pkey()
-    for rec in data:
-        # idx is a tuple of equivalent indices
-        # We only need to grab the first element of each tuple, as the rest are considered unique
-        # based on our search criteria
-        if getattr(rec, auto_pkey) is not None:
-            raise RuntimeError(f"Autoincrement pkey is set when it shouldn't be. This is a QCFractal developer error")
 
     # Build up a big query for all existing data
     search_values = [get_values(r, search_cols) for r in data]
