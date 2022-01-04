@@ -68,11 +68,12 @@ class TorsiondriveAddBody(RecordAddBodyBase):
 
 
 class TorsiondriveQueryBody(RecordQueryBody):
+    program: Optional[List[str]] = None
+    optimization_program: Optional[List[str]]
     singlepoint_program: Optional[List[constr(to_lower=True)]] = None
     singlepoint_method: Optional[List[constr(to_lower=True)]] = None
     singlepoint_basis: Optional[List[Optional[constr(to_lower=True)]]] = None
     singlepoint_keywords_id: Optional[List[int]] = None
-    optimization_program: Optional[List[int]]
     initial_molecule_id: Optional[List[int]] = None
 
     @validator("singlepoint_basis")

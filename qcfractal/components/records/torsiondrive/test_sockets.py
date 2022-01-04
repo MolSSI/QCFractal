@@ -5,7 +5,6 @@ Tests the torsiondrive record socket
 from __future__ import annotations
 
 import json
-from collections import defaultdict
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -352,184 +351,62 @@ def test_torsiondrive_socket_add_different_1(storage_socket: SQLAlchemySocket):
 
 def test_torsiondrive_socket_query(storage_socket: SQLAlchemySocket):
     input_spec_1, molecules_1, result_data_1 = load_procedure_data("td_H2O2_psi4_b3lyp")
+    input_spec_2, molecules_2, result_data_2 = load_procedure_data("td_H2O2_psi4_pbe")
+    input_spec_3, molecules_3, result_data_3 = load_procedure_data("td_C9H11NO2_psi4_b3lyp-d3bj")
+    input_spec_4, molecules_4, result_data_4 = load_procedure_data("td_H2O2_psi4_bp86")
 
     meta_1, id_1 = storage_socket.records.torsiondrive.add(input_spec_1, [molecules_1], as_service=True)
-    assert meta_1.success
+    meta_2, id_2 = storage_socket.records.torsiondrive.add(input_spec_2, [molecules_2], as_service=True)
+    meta_3, id_3 = storage_socket.records.torsiondrive.add(input_spec_3, [molecules_3], as_service=True)
+    meta_4, id_4 = storage_socket.records.torsiondrive.add(input_spec_4, [molecules_4], as_service=True)
+    assert meta_1.success and meta_2.success and meta_3.success and meta_4.success
 
     meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(singlepoint_program=["psi4"]))
-    assert meta.n_found == 1
+    assert meta.n_found == 4
 
     meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(singlepoint_program=["nothing"]))
     assert meta.n_found == 0
 
-    _, init_mol_id = storage_socket.molecules.add(molecules_1)
+    _, init_mol_id = storage_socket.molecules.add(molecules_1 + molecules_2 + molecules_3 + molecules_4)
     meta, td = storage_socket.records.torsiondrive.query(
-        TorsiondriveQueryBody(initial_molecule_id=[init_mol_id[0]], include=["initial_molecules"])
+        TorsiondriveQueryBody(initial_molecule_id=[init_mol_id[0], 9999])
     )
+    assert meta.n_found == 3
+
+    # query for optimization program
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(optimization_program=["geometric"]))
+    assert meta.n_found == 4
+
+    # query for optimization program
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(optimization_program=["geometric123"]))
+    assert meta.n_found == 0
+
+    # query for basis
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(singlepoint_basis=["sTO-3g"]))
+    assert meta.n_found == 3
+
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(singlepoint_basis=[None]))
+    assert meta.n_found == 0
+
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(singlepoint_basis=[""]))
+    assert meta.n_found == 0
+
+    # query for method
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(singlepoint_method=["b3lyP"]))
     assert meta.n_found == 1
-    print(td)
 
-    # _, init_mol_id = storage_socket.molecules.add(molecules_1)
-    # meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(
-    #    initial_molecule_id=[init_mol_id[0]+9999]
-    # ))
-    # assert meta.n_found == 0
-    # assert meta.n_returned == 0
-    # assert len(td) == 0
+    kw_id = td[0]["specification"]["optimization_specification"]["singlepoint_specification"]["keywords_id"]
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(singlepoint_keywords_id=[kw_id]))
+    assert meta.n_found == 3
 
+    # Query by default returns everything
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody())
+    assert meta.n_found == 4
 
-#
-#    meta1, id1 = storage_socket.records.optimization.add(input_spec_1, [molecule_1])
-#    meta2, id2 = storage_socket.records.optimization.add(input_spec_2, [molecule_2])
-#    meta3, id3 = storage_socket.records.optimization.add(input_spec_3, [molecule_3])
-#
-#    recs = storage_socket.records.optimization.get(id1 + id2 + id3)
-#
-#    # query for molecule
-#    meta, opt = storage_socket.records.optimization.query(
-#        OptimizationQueryBody(initial_molecule_id=[recs[1]["initial_molecule_id"]])
-#    )
-#    assert meta.n_found == 1
-#    assert opt[0]["id"] == id2[0]
-#
-#    # query for program
-#    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(program=["psi4"]))
-#    assert meta.n_found == 0
-#
-#    # query for program
-#    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(program=["geometric"]))
-#    assert meta.n_found == 3
-#
-#    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(singlepoint_program=["psi4"]))
-#    assert meta.n_found == 3
-#
-#    # query for basis
-#    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(singlepoint_basis=["sTO-3g"]))
-#    assert meta.n_found == 0
-#
-#    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(singlepoint_basis=[None]))
-#    assert meta.n_found == 0
-#
-#    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(singlepoint_basis=[""]))
-#    assert meta.n_found == 0
-#
-#    # query for method
-#    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(singlepoint_method=["b3lyP"]))
-#    assert meta.n_found == 3
-#
-#    # keyword id
-#    meta, opt = storage_socket.records.optimization.query(
-#        OptimizationQueryBody(
-#            singlepoint_keywords_id=[recs[0]["specification"]["singlepoint_specification"]["keywords_id"]]
-#        )
-#    )
-#    assert meta.n_found == 2
-#
-#    # Some empty queries
-#    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(program=["madeupprog"]))
-#    assert meta.n_found == 0
-#
-#    # Query by default returns everything
-#    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody())
-#    assert meta.n_found == 3
-#
-#    # Query by default (with a limit)
-#    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(limit=1))
-#    assert meta.n_found == 3
-#    assert meta.n_returned == 1
-
-
-# @pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_fluoroethane_opt_notraj"])
-# def test_torsiondrive_socket_delete_1(storage_socket: SQLAlchemySocket, opt_file: str):
-#    # Deleting with deleting children
-#    input_spec_1, molecule_1, result_data_1 = load_procedure_data(opt_file)
-#    meta1, id1 = storage_socket.records.optimization.add(input_spec_1, [molecule_1])
-#
-#    with storage_socket.session_scope() as session:
-#        rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
-#        storage_socket.records.update_completed(session, rec_orm, result_data_1, None)
-#
-#    rec = storage_socket.records.optimization.get(id1, include=["trajectory"])
-#    child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
-#
-#    meta = storage_socket.records.delete(id1, soft_delete=True, delete_children=True)
-#    assert meta.success
-#    assert meta.deleted_idx == [0]
-#    assert meta.n_children_deleted == len(child_ids)
-#
-#    child_recs = storage_socket.records.get(child_ids)
-#    assert all(x["status"] == RecordStatusEnum.deleted for x in child_recs)
-#
-#    meta = storage_socket.records.delete(id1, soft_delete=False, delete_children=True)
-#    assert meta.success
-#    assert meta.deleted_idx == [0]
-#    assert meta.n_children_deleted == len(child_ids)
-#
-#    recs = storage_socket.records.get(id1, missing_ok=True)
-#    assert recs == [None]
-#
-#    child_recs = storage_socket.records.get(child_ids, missing_ok=True)
-#    assert all(x is None for x in child_recs)
-#
-#
-# @pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_fluoroethane_opt_notraj"])
-# def test_torsiondrive_socket_delete_2(storage_socket: SQLAlchemySocket, opt_file: str):
-#    # Deleting without deleting children
-#    input_spec_1, molecule_1, result_data_1 = load_procedure_data(opt_file)
-#    meta1, id1 = storage_socket.records.optimization.add(input_spec_1, [molecule_1])
-#
-#    with storage_socket.session_scope() as session:
-#        rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
-#        storage_socket.records.update_completed(session, rec_orm, result_data_1, None)
-#
-#    rec = storage_socket.records.optimization.get(id1, include=["trajectory"])
-#    child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
-#
-#    meta = storage_socket.records.delete(id1, soft_delete=True, delete_children=False)
-#    assert meta.success
-#    assert meta.deleted_idx == [0]
-#    assert meta.n_children_deleted == 0
-#
-#    child_recs = storage_socket.records.get(child_ids)
-#    assert all(x["status"] == RecordStatusEnum.complete for x in child_recs)
-#
-#    meta = storage_socket.records.delete(id1, soft_delete=False, delete_children=False)
-#    assert meta.success
-#    assert meta.deleted_idx == [0]
-#    assert meta.n_children_deleted == 0
-#
-#    recs = storage_socket.records.get(id1, missing_ok=True)
-#    assert recs == [None]
-#
-#    child_recs = storage_socket.records.get(child_ids, missing_ok=True)
-#    assert all(x["status"] == RecordStatusEnum.complete for x in child_recs)
-#
-#
-# @pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_fluoroethane_opt_notraj"])
-# def test_torsiondrive_socket_undelete_1(storage_socket: SQLAlchemySocket, opt_file: str):
-#    # Deleting with deleting children, then undeleting
-#    input_spec_1, molecule_1, result_data_1 = load_procedure_data(opt_file)
-#    meta1, id1 = storage_socket.records.optimization.add(input_spec_1, [molecule_1])
-#
-#    with storage_socket.session_scope() as session:
-#        rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
-#        storage_socket.records.update_completed(session, rec_orm, result_data_1, None)
-#
-#    rec = storage_socket.records.optimization.get(id1, include=["trajectory"])
-#    child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
-#
-#    meta = storage_socket.records.delete(id1, soft_delete=True, delete_children=True)
-#    assert meta.success
-#    assert meta.deleted_idx == [0]
-#    assert meta.n_children_deleted == len(child_ids)
-#
-#    meta = storage_socket.records.undelete(id1)
-#    assert meta.success
-#    assert meta.undeleted_idx == [0]
-#
-#    child_recs = storage_socket.records.get(child_ids)
-#    assert all(x["status"] == RecordStatusEnum.complete for x in child_recs)
-#
+    # Query by default (with a limit)
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(limit=1))
+    assert meta.n_found == 4
+    assert meta.n_returned == 1
 
 
 @pytest.mark.parametrize(
