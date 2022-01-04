@@ -12,7 +12,7 @@ from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependenciesORM
 from qcfractal.db_socket.helpers import (
     get_query_proj_options,
-    get_count_2,
+    get_count,
     calculate_limit,
     get_general,
     get_general_multi,
@@ -225,7 +225,7 @@ class RecordSocket:
         with self.root_socket.optional_session(session, True) as session:
             stmt = stmt.where(*and_query)
             stmt = stmt.options(*proj_options)
-            n_found = get_count_2(session, stmt)
+            n_found = get_count(session, stmt)
             stmt = stmt.limit(limit).offset(query_data.skip)
             results = session.execute(stmt).scalars().unique().all()
             result_dicts = [x.dict() for x in results]

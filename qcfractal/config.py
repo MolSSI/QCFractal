@@ -208,7 +208,7 @@ class FractalConfig(ConfigBase):
 
     base_folder: str = Field(
         ...,
-        description="The base directory to use as the default for some options (logs, views, etc). Default is the location of the config file.",
+        description="The base directory to use as the default for some options (logs, etc). Default is the location of the config file.",
     )
 
     # Info for the REST interface
@@ -258,12 +258,6 @@ class FractalConfig(ConfigBase):
         description="Geoip2 cites file path (.mmdb) for geolocating IP addresses. Defaults to [base_folder]/GeoLite2-City.mmdb. If this file is not available, geo-ip lookup will not be enabled",
     )
 
-    # Settings for views
-    enable_views: bool = Field(True, description="Enable frozen-views")
-    views_directory: Optional[str] = Field(
-        None, description="Location of frozen-view data. If None, defaults to [base_folder]/views"
-    )
-
     # Other settings blocks
     database: DatabaseConfig = Field(..., description="Configuration of the settings for the database")
     flask: FlaskConfig = Field(..., description="Configuration of the REST interface")
@@ -278,16 +272,6 @@ class FractalConfig(ConfigBase):
         values.setdefault("response_limits", dict())
         values.setdefault("flask", dict())
         return values
-
-    @validator("views_directory")
-    def _check_views_directory(cls, v, values):
-        if v is None:
-            ret = os.path.join(values["base_folder"], "views")
-        else:
-            ret = v
-
-        ret = os.path.expanduser(ret)
-        return ret
 
     @validator("geo_file_path")
     def _check_geo_file_path(cls, v, values):
@@ -350,10 +334,6 @@ def convert_old_configuration(old_config):
     cfg_dict["heartbeat_frequency"] = old_config.fractal.heartbeat_frequency
     cfg_dict["log_access"] = old_config.fractal.log_apis
     cfg_dict["geo_file_path"] = old_config.fractal.geo_file_path
-
-    # View options have also been moved to the top level
-    cfg_dict["enable_views"] = old_config.view.enable
-    cfg_dict["views_directory"] = old_config.view.directory
 
     return FractalConfig(**cfg_dict)
 

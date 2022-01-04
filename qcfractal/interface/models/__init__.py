@@ -27,7 +27,7 @@ from .common_models import (
 
 from .gridoptimization import GridOptimizationInput, GridOptimizationRecord
 from .model_builder import build_procedure
-from qcfractal.portal.model_utils import hash_dictionary, json_encoders, prepare_basis
+from ...portal.utils import hash_dictionary
 from .records import OptimizationRecord, SinglepointRecord
 from .rest_models import ComputeResponse, rest_model
 from .task_models import (

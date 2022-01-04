@@ -14,7 +14,7 @@ from pydantic import Field, constr, validator
 
 from ..visualization import scatter_plot
 from .common_models import DriverEnum, ObjectId, ProtoModel, QCSpecification
-from qcfractal.portal.model_utils import hash_dictionary, prepare_basis, recursive_normalizer
+from ...portal.utils import recursive_normalizer, hash_dictionary
 from ...portal.records import RecordStatusEnum
 
 if TYPE_CHECKING:

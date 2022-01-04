@@ -13,7 +13,6 @@ from flask_jwt_extended import JWTManager
 import logging
 
 from qcfractal.db_socket.socket import SQLAlchemySocket
-from qcfractal.db_socket import ViewHandler
 from qcfractal.process_runner import ProcessBase
 
 from typing import TYPE_CHECKING
@@ -31,16 +30,7 @@ class _FlaskSQLAlchemySocket(SQLAlchemySocket):
         SQLAlchemySocket.__init__(self, qcf_config)
 
 
-class _FlaskViewHandler(ViewHandler):
-    def __init__(self):
-        pass
-
-    def init(self, qcf_config):
-        ViewHandler.__init__(self, qcf_config)
-
-
 storage_socket = _FlaskSQLAlchemySocket()
-view_handler = _FlaskViewHandler()
 
 jwt = JWTManager()
 
@@ -66,7 +56,6 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
 
     # Initialize the database socket, API logger, and view handler
     storage_socket.init(qcfractal_config)
-    view_handler.init(qcfractal_config)
 
     app.config["SECRET_KEY"] = qcfractal_config.flask.secret_key
     app.config["JWT_SECRET_KEY"] = qcfractal_config.flask.jwt_secret_key

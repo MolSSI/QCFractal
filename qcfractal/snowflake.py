@@ -138,7 +138,6 @@ class FractalSnowflake:
         qcf_cfg["base_folder"] = self._tmpdir.name
         qcf_cfg["loglevel"] = logging.getLevelName(loglevel)
         qcf_cfg["database"] = db_config.dict()
-        qcf_cfg["enable_views"] = False
         qcf_cfg["flask"] = {"config_name": flask_config, "host": fractal_host, "port": fractal_port}
         qcf_cfg["enable_security"] = False
 

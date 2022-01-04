@@ -7,7 +7,7 @@ from qcelemental.models.procedures import OptimizationProtocols
 
 from ...interface.models import QCSpecification, OptimizationSpecification
 from ...interface.models import ObjectId, DriverEnum
-from qcfractal.portal.model_utils import recursive_normalizer
+from ..utils import recursive_normalizer
 from .record import Record
 from .record_utils import register_record
 

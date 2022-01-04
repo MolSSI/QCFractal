@@ -18,10 +18,15 @@ from flask_jwt_extended import (
 from werkzeug.exceptions import BadRequest, InternalServerError, HTTPException, Forbidden
 
 from qcfractal.app import main, storage_socket
-from qcfractal.app.helpers import _valid_encodings, SerializedResponse
 from qcfractal.exceptions import UserReportableError, AuthenticationFailure, ComputeManagerError
 from qcfractal.app.policyuniverse import Policy
 from qcfractal.portal.serialization import deserialize, serialize
+
+_valid_encodings = {
+    "application/json": "json",
+    "application/json-ext": "json-ext",
+    "application/msgpack-ext": "msgpack-ext",
+}
 
 _read_permissions = {}
 

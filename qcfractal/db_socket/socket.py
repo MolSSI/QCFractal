@@ -17,62 +17,11 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
 import qcfractal
-from qcfractal.interface.models import prepare_basis
 
 if TYPE_CHECKING:
-    from typing import Tuple, Any, List, Optional, Union, Iterable
+    from typing import Tuple, List, Optional
     from sqlalchemy.orm.session import Session
     from ..config import FractalConfig, DatabaseConfig
-
-
-def format_query(ORMClass, **query: Union[None, str, int, Iterable[int], Iterable[str]]) -> List[Any]:
-    """
-    Formats a query into a SQLAlchemy format.
-    """
-
-    _null_keys = {"basis", "keywords"}
-    _lower_func = lambda x: x.lower()
-    _prepare_keys = {"program": _lower_func, "basis": prepare_basis, "method": _lower_func, "procedure": _lower_func}
-
-    ret = []
-    for k, v in query.items():
-        if v is None:
-            continue
-
-        # Handle None keys
-        k = k.lower()
-        if (k in _null_keys) and (v == "null"):
-            v = None
-
-        # TODO: Remove these fixups at some point. This should be handled at a different level
-        if k in _prepare_keys:
-            f = _prepare_keys[k]
-            if isinstance(v, (list, tuple)):
-                v = [f(x) for x in v]
-            else:
-                v = f(v)
-
-        if isinstance(v, (list, tuple)):
-            col = getattr(ORMClass, k)
-            ret.append(getattr(col, "in_")(v))
-        else:
-            ret.append(getattr(ORMClass, k) == v)
-
-    return ret
-
-
-def get_count_fast(query):
-    """
-    returns total count of the query using:
-        Fast: SELECT COUNT(*) FROM TestModel WHERE ...
-
-    Not like q.count():
-        Slow: SELECT COUNT(*) FROM (SELECT ... FROM TestModel WHERE ...) ...
-    """
-    # TODO - sqlalchemy 1.4 broke the "fast" way. Reverting to the slow way
-    # count_q = query.statement.with_only_columns([func.count()]).order_by(None)
-    # count = query.session.execute(count_q).scalar()
-    return query.count()
 
 
 class SQLAlchemySocket:
@@ -354,123 +303,6 @@ class SQLAlchemySocket:
             return autoflushing_scope(existing_session, read_only)
         else:
             return self.session_scope(read_only)
-
-    def get_query_projection(self, className, query, *, limit=None, skip=0, include=None, exclude=None):
-
-        table_name = className.__tablename__
-
-        if include and exclude:
-            raise AttributeError(
-                f"Either include or exclude can be "
-                f"used, not both at the same query. "
-                f"Given include: {include}, exclude: {exclude}"
-            )
-
-        prop, hybrids, relationships = className._get_col_types()
-
-        # build projection from include or exclude
-        _projection = []
-        if include:
-            _projection = set(include)
-        elif exclude:
-            _projection = set(className._all_col_names()) - set(exclude) - set(className.db_related_fields)
-        _projection = list(_projection)
-
-        proj = []
-        join_attrs = {}
-        callbacks = []
-
-        # prepare hybrid attributes for callback and joins
-        for key in _projection:
-            if key in prop:  # normal column
-                proj.append(getattr(className, key))
-
-            # if hybrid property, save callback, and relation if any
-            elif key in hybrids:
-                callbacks.append(key)
-
-                # if it has a relationship
-                if key + "_obj" in relationships.keys():
-
-                    # join_class_name = relationships[key + '_obj']
-                    join_attrs[key] = relationships[key + "_obj"]
-            else:
-                raise AttributeError(f"Atrribute {key} is not found in class {className}.")
-
-        for key in join_attrs:
-            _projection.remove(key)
-
-        with self.session_scope() as session:
-            if _projection or join_attrs:
-
-                if join_attrs and "id" not in _projection:  # if the id is need for joins
-                    proj.append(getattr(className, "id"))
-                    _projection.append("_id")  # not to be returned to user
-
-                # query with projection, without joins
-                data = session.query(*proj).filter(*query)
-
-                n_found = get_count_fast(data)  # before iterating on the data
-                data = data.limit(limit).offset(skip)
-                rdata = [dict(zip(_projection, row)) for row in data]
-
-                # query for joins if any (relationships and hybrids)
-                if join_attrs:
-                    res_ids = [d.get("id", d.get("_id")) for d in rdata]
-                    res_ids.sort()
-                    join_data = {res_id: {} for res_id in res_ids}
-
-                    # relations data
-                    for key, relation_details in join_attrs.items():
-                        ret = (
-                            session.query(
-                                relation_details["remote_side_column"].label("id"), relation_details["join_class"]
-                            )
-                            .filter(relation_details["remote_side_column"].in_(res_ids))
-                            .order_by(relation_details["remote_side_column"])
-                            .all()
-                        )
-                        for res_id in res_ids:
-                            join_data[res_id][key] = []
-                            for res in ret:
-                                if res_id == res[0]:
-                                    join_data[res_id][key].append(res[1])
-
-                        for data in rdata:
-                            parent_id = data.get("id", data.get("_id"))
-                            data[key] = join_data[parent_id][key]
-                            data.pop("_id", None)
-
-                # call hybrid methods
-                for callback in callbacks:
-                    for res in rdata:
-                        res[callback] = getattr(className, "_" + callback)(res[callback])
-
-                id_fields = className._get_fieldnames_with_DB_ids_()
-                for d in rdata:
-                    # Expand extra json into fields
-                    if "extra" in d:
-                        d.update(d["extra"])
-                        del d["extra"]
-
-                    # transform ids from int into str
-                    for key in id_fields:
-                        if key in d.keys() and d[key] is not None:
-                            if isinstance(d[key], Iterable):
-                                d[key] = [str(i) for i in d[key]]
-                            else:
-                                d[key] = str(d[key])
-                # print('--------rdata after: ', rdata)
-            else:
-                data = session.query(className).filter(*query)
-
-                # from sqlalchemy.dialects import postgresql
-                # print(data.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
-                n_found = get_count_fast(data)
-                data = data.limit(limit).offset(skip).all()
-                rdata = [d.to_dict() for d in data]
-
-        return rdata, n_found
 
     def set_completed_watch(self, mp_queue):
         self._completed_queue = mp_queue

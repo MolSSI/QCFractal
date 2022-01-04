@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Tuple, Union, Optional
 from pydantic import Field, constr, validator
 
 from .common_models import Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
-from qcfractal.portal.model_utils import recursive_normalizer
+from ...portal.utils import recursive_normalizer
 from .records import RecordBase
 from ...portal.records import PriorityEnum, RecordStatusEnum
 

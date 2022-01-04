@@ -15,7 +15,7 @@ from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
-from qcfractal.db_socket.helpers import get_query_proj_options, get_count_2, calculate_limit
+from qcfractal.db_socket.helpers import get_query_proj_options, get_count, calculate_limit
 from qcfractal.portal.metadata_models import QueryMetadata
 from .db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM, VersionsORM
 
@@ -96,12 +96,15 @@ class ServerInfoSocket:
                     elemental_version=elemental_version,
                     fractal_version=fractal_version,
                 )
+
                 session.add(current)
                 session.commit()
+                session.refresh(current)
+
             else:
                 current = db_ver.first()
 
-            ver = current.to_dict(exclude=["id"])
+            ver = current.dict(exclude=["id"])
 
         return ver
 
@@ -312,7 +315,7 @@ class ServerInfoSocket:
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(AccessLogORM).where(and_(*and_query)).order_by(AccessLogORM.access_date.desc())
             stmt = stmt.options(*proj_options)
-            n_found = get_count_2(session, stmt)
+            n_found = get_count(session, stmt)
             stmt = stmt.limit(limit).offset(skip)
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.dict() for x in results]
@@ -479,7 +482,7 @@ class ServerInfoSocket:
 
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(InternalErrorLogORM).where(and_(*and_query)).order_by(InternalErrorLogORM.error_date.desc())
-            n_found = get_count_2(session, stmt)
+            n_found = get_count(session, stmt)
             stmt = stmt.limit(limit).offset(skip)
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.dict() for x in results]
@@ -533,7 +536,7 @@ class ServerInfoSocket:
 
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(ServerStatsLogORM).filter(and_(*and_query)).order_by(ServerStatsLogORM.timestamp.desc())
-            n_found = get_count_2(session, stmt)
+            n_found = get_count(session, stmt)
             stmt = stmt.limit(limit).offset(skip)
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.dict() for x in results]

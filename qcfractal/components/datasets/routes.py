@@ -1,11 +1,35 @@
-from flask import jsonify
-from werkzeug.exceptions import NotFound
+from flask import jsonify, request, current_app, Response
+from qcelemental.util import serialize
+from werkzeug.exceptions import NotFound, BadRequest
 
-from qcfractal.app import main, storage_socket, view_handler
-from qcfractal.app.helpers import parse_bodymodel, SerializedResponse
-from qcfractal.app.routes import check_access
+from qcfractal.app import main, storage_socket
+from qcfractal.app.routes import check_access, _valid_encodings
 from qcfractal.interface.models import rest_model
 from qcfractal.components.datasets.storage_utils import add_metadata_template
+
+
+def parse_bodymodel(model):
+    """Parse request body using pydantic models"""
+
+    try:
+        return model(**request.data)
+    except Exception as e:
+        current_app.logger.error("Invalid request body:\n" + str(e))
+        raise BadRequest("Invalid body: " + str(e))
+
+
+class SerializedResponse(Response):
+    """Serialize pydantic response using the given encoding and pass it
+    as a flask response object"""
+
+    def __init__(self, response, **kwargs):
+
+        # TODO: support other content types? We would need to check the Accept header
+        content_type = "application/msgpack-ext"
+        content_type = "application/json"
+        encoding = _valid_encodings[content_type]
+        response = serialize(response, encoding)
+        super(SerializedResponse, self).__init__(response, content_type=content_type, **kwargs)
 
 
 @main.route("/collection", methods=["GET"])

@@ -26,19 +26,18 @@ from qcelemental.models.results import WavefunctionProperties
 
 from qcfractal.portal.managers import ManagerName
 from qcfractal.portal.permissions import UserInfo
+from qcfractal.portal.records.gridoptimization import GridoptimizationInputSpecification
 from qcfractal.portal.records.optimization import OptimizationInputSpecification
 from qcfractal.portal.records.singlepoint import SinglepointInputSpecification
 from qcfractal.portal.records.torsiondrive import TorsiondriveInputSpecification
-from qcfractal.portal.records.gridoptimization import GridoptimizationInputSpecification
 from .config import FractalConfig, update_nested_dict
-from .db_socket import SQLAlchemySocket
 from .db_socket.socket import SQLAlchemySocket
 from .interface import FractalClient
 from .interface.models import TorsionDriveInput
 from .periodics import FractalPeriodics
 from .portal import PortalClient, ManagerClient
-from .portal.model_utils import recursive_normalizer
 from .portal.records import PriorityEnum, RecordStatusEnum
+from .portal.utils import recursive_normalizer
 from .postgres_harness import TemporaryPostgres
 from .qc_queue import build_queue_adapter, QueueManager
 from .snowflake import FractalSnowflake, attempt_client_connect
