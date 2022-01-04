@@ -7,29 +7,10 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-import json
-import pytest
-
-from qcfractal.components.records.optimization.db_models import OptimizationRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.portal.keywords import KeywordSet
-from qcfractal.portal.molecules import Molecule
-from qcfractal.portal.records import FailedOperation
 from qcfractal.portal.outputstore import OutputStore, OutputTypeEnum
-from qcfractal.portal.managers import ManagerName
-from qcfractal.portal.records import RecordStatusEnum, PriorityEnum
-from qcfractal.portal.records.optimization import (
-    OptimizationInputSpecification,
-    OptimizationQueryBody,
-    OptimizationSinglepointInputSpecification,
-    OptimizationProtocols,
-)
-from qcfractal.portal.records.singlepoint import (
-    SinglepointDriver,
-    SinglepointProtocols,
-)
-from qcfractal.portal.records.torsiondrive import TorsiondriveInputSpecification, TorsiondriveKeywords
-from qcfractal.testing import load_molecule_data, load_procedure_data
+from qcfractal.portal.records import FailedOperation, RecordStatusEnum, PriorityEnum
+from qcfractal.testing import load_procedure_data, run_service_constropt
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -38,70 +19,22 @@ if TYPE_CHECKING:
 def test_service_socket_error(storage_socket: SQLAlchemySocket):
     input_spec_1, molecules_1, result_data_1 = load_procedure_data("td_H2O2_psi4_b3lyp")
 
-    meta_1, id_1 = storage_socket.records.torsiondrive.add(input_spec_1, [molecules_1], as_service=True)
-    assert meta_1.success
-    rec = storage_socket.records.torsiondrive.get(id_1)
-    assert rec[0]["status"] == RecordStatusEnum.waiting
-
-    # A manager for completing the tasks
-    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
-    storage_socket.managers.activate(
-        name_data=mname1,
-        manager_version="v2.0",
-        qcengine_version="v1.0",
-        username="bill",
-        programs={
-            "geometric": None,
-            "psi4": None,
-        },
-        tags=["*"],
+    # Inject a failed computation
+    failed_key = list(result_data_1.keys())[1]
+    result_data_1[failed_key] = FailedOperation(
+        error={"error_type": "test_error", "error_message": "this is just a test error"},
     )
 
+    meta_1, id_1 = storage_socket.records.torsiondrive.add(
+        input_spec_1, [molecules_1], tag="test_tag", priority=PriorityEnum.low, as_service=True
+    )
+    assert meta_1.success
+
     time_0 = datetime.utcnow()
-    r = storage_socket.services.iterate_services()
+    finished, n_optimizations = run_service_constropt(id_1[0], result_data_1, storage_socket, 20)
     time_1 = datetime.utcnow()
 
-    error_counter = 0
-    while r > 0:
-        rec = storage_socket.records.torsiondrive.get(
-            id_1, include=["*", "service.*", "service.dependencies.*", "service.dependencies.record"]
-        )
-
-        assert rec[0]["status"] in {RecordStatusEnum.running, RecordStatusEnum.error}
-
-        waiting_tasks = [x["record"] for x in rec[0]["service"]["dependencies"]]
-        assert len(waiting_tasks) > 0
-
-        manager_tasks = storage_socket.tasks.claim_tasks(mname1.fullname, limit=2)
-
-        opt_ids = set(x["record_id"] for x in manager_tasks)
-        opt_recs = storage_socket.records.optimization.get(opt_ids, include=["*", "initial_molecule", "task"])
-
-        manager_ret = {}
-        for opt in opt_recs:
-            if error_counter == 5:
-                # Fake an error
-                manager_ret[opt["task"]["id"]] = FailedOperation(
-                    error={"error_type": "test_error", "error_message": "this is just a test error"}
-                )
-            else:
-                # Find out info about what tasks the service spawned
-                mol_hash = opt["initial_molecule"]["identifiers"]["molecule_hash"]
-                constraints = opt["specification"]["keywords"]["constraints"]
-
-                # This is the key in the dictionary of optimization results
-                optresult_key = mol_hash + "|" + json.dumps(constraints, sort_keys=True)
-                opt_data = result_data_1[optresult_key]
-                manager_ret[opt["task"]["id"]] = opt_data
-
-            error_counter += 1
-
-        rmeta = storage_socket.tasks.update_finished(mname1.fullname, manager_ret)
-        assert rmeta.n_accepted == len(manager_tasks)
-
-        time_0 = datetime.utcnow()
-        r = storage_socket.services.iterate_services()
-        time_1 = datetime.utcnow()
+    assert finished is True
 
     rec = storage_socket.records.torsiondrive.get(
         id_1, include=["*", "compute_history.*", "compute_history.outputs", "service"]

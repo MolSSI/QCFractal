@@ -14,7 +14,7 @@ import subprocess
 import sys
 import time
 from contextlib import contextmanager
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Any, Tuple
 
 import numpy as np
 import pandas as pd
@@ -31,11 +31,13 @@ from qcfractal.portal.records.singlepoint import SinglepointInputSpecification
 from qcfractal.portal.records.torsiondrive import TorsiondriveInputSpecification
 from qcfractal.portal.records.gridoptimization import GridoptimizationInputSpecification
 from .config import FractalConfig, update_nested_dict
+from .db_socket import SQLAlchemySocket
 from .db_socket.socket import SQLAlchemySocket
 from .interface import FractalClient
 from .interface.models import TorsionDriveInput
 from .periodics import FractalPeriodics
 from .portal import PortalClient, ManagerClient
+from .portal.model_utils import recursive_normalizer
 from .portal.records import PriorityEnum, RecordStatusEnum
 from .postgres_harness import TemporaryPostgres
 from .qc_queue import build_queue_adapter, QueueManager
@@ -1100,3 +1102,74 @@ def populate_db(storage_socket: SQLAlchemySocket):
     assert rec[6]["status"] == RecordStatusEnum.invalid
 
     return all_id
+
+
+def run_service_constropt(
+    record_id: int, result_data: Dict[str, Any], storage_socket: SQLAlchemySocket, max_iterations: int = 20
+) -> Tuple[bool, int]:
+    """
+    Runs a service that is based on constrained optimizations
+    """
+
+    # A manager for completing the tasks
+    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
+    storage_socket.managers.activate(
+        name_data=mname1,
+        manager_version="v2.0",
+        qcengine_version="v1.0",
+        username="bill",
+        programs={
+            "geometric": None,
+            "psi4": None,
+        },
+        tags=["*"],
+    )
+    rec = storage_socket.records.get([record_id])
+    assert rec[0]["status"] == RecordStatusEnum.waiting
+
+    r = storage_socket.services.iterate_services()
+
+    n_optimizations = 0
+    n_iterations = 1
+
+    while r > 0 and n_iterations <= max_iterations:
+        rec = storage_socket.records.get(
+            [record_id], include=["*", "service.*", "service.dependencies.*", "service.dependencies.record"]
+        )
+        assert rec[0]["status"] == RecordStatusEnum.running
+
+        manager_tasks = storage_socket.tasks.claim_tasks(mname1.fullname, limit=10)
+
+        # Sometimes a task may be duplicated in the service dependencies.
+        # The C8H6 test has this "feature"
+        opt_ids = set(x["record_id"] for x in manager_tasks)
+        opt_recs = storage_socket.records.optimization.get(opt_ids, include=["*", "initial_molecule", "task"])
+        assert all(x["task"]["priority"] == PriorityEnum.low for x in opt_recs)
+        assert all(x["task"]["tag"] == "test_tag" for x in opt_recs)
+
+        manager_ret = {}
+        for opt in opt_recs:
+            # Find out info about what tasks the service spawned
+            mol_hash = opt["initial_molecule"]["identifiers"]["molecule_hash"]
+            constraints = opt["specification"]["keywords"].get("constraints", None)
+
+            # Lookups may depend on floating point values
+            constraints = recursive_normalizer(constraints)
+
+            # This is the key in the dictionary of optimization results
+            constraints_str = json.dumps(constraints, sort_keys=True)
+
+            optresult_key = mol_hash + "|" + constraints_str
+
+            opt_data = result_data[optresult_key]
+            manager_ret[opt["task"]["id"]] = opt_data
+
+        rmeta = storage_socket.tasks.update_finished(mname1.fullname, manager_ret)
+        assert rmeta.n_accepted == len(manager_tasks)
+        n_optimizations += len(manager_ret)
+
+        # may or may not iterate - depends on if all tasks done
+        r = storage_socket.services.iterate_services()
+        n_iterations += 1
+
+    return r == 0, n_optimizations
