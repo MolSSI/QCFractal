@@ -1845,6 +1845,84 @@ class PortalClient:
         else:
             return records[0]
 
+    def query_gridoptimizations(
+        self,
+        record_id: Optional[Iterable[int]] = None,
+        manager_name: Optional[Iterable[str]] = None,
+        status: Optional[Iterable[RecordStatusEnum]] = None,
+        created_before: Optional[datetime] = None,
+        created_after: Optional[datetime] = None,
+        modified_before: Optional[datetime] = None,
+        modified_after: Optional[datetime] = None,
+        program: Optional[Iterable[str]] = None,
+        optimization_program: Optional[Iterable[str]] = None,
+        singlepoint_program: Optional[Iterable[str]] = None,
+        singlepoint_method: Optional[Iterable[str]] = None,
+        singlepoint_basis: Optional[Iterable[Optional[str]]] = None,
+        singlepoint_keywords_id: Optional[Iterable[int]] = None,
+        initial_molecule_id: Optional[Iterable[int]] = None,
+        limit: Optional[int] = None,
+        skip: int = 0,
+        *,
+        include_task: bool = False,
+        include_service: bool = False,
+        include_outputs: bool = False,
+        include_comments: bool = False,
+        include_initial_molecule: bool = False,
+        include_optimizations: bool = False,
+    ) -> Tuple[QueryMetadata, List[GridoptimizationRecord]]:
+        """Queries torsiondrive records from the server."""
+
+        query_data = {
+            "record_id": make_list(record_id),
+            "manager_name": make_list(manager_name),
+            "status": make_list(status),
+            "program": make_list(program),
+            "optimization_program": make_list(optimization_program),
+            "singlepoint_program": make_list(singlepoint_program),
+            "singlepoint_method": make_list(singlepoint_method),
+            "singlepoint_basis": make_list(singlepoint_basis),
+            "singlepoint_keywords_id": make_list(singlepoint_keywords_id),
+            "initial_molecule_id": make_list(initial_molecule_id),
+            "created_before": created_before,
+            "created_after": created_after,
+            "modified_before": modified_before,
+            "modified_after": modified_after,
+            "limit": limit,
+            "skip": skip,
+        }
+
+        include = set()
+
+        # We must add '*' so that all the default fields are included
+        if include_task:
+            include |= {"*", "task"}
+        if include_service:
+            include |= {"*", "service"}
+        if include_outputs:
+            include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_comments:
+            include |= {"*", "comments"}
+        if include_initial_molecule:
+            include |= {"*", "initial_molecule"}
+        if include_optimizations:
+            include |= {"*", "optimizations"}
+
+        if include:
+            query_data["include"] = include
+
+        meta, record_data = self._auto_request(
+            "post",
+            "v1/record/gridoptimization/query",
+            TorsiondriveQueryBody,
+            None,
+            Tuple[QueryMetadata, List[GridoptimizationRecord._DataModel]],
+            query_data,
+            None,
+        )
+
+        return meta, self.recordmodel_from_datamodel(record_data)
+
     def get_managers(
         self,
         name: Union[str, Sequence[str]],
