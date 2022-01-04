@@ -4,7 +4,6 @@ Tests the gridoptimization record socket
 
 from __future__ import annotations
 
-import json
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -12,8 +11,6 @@ import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.portal.keywords import KeywordSet
-from qcfractal.portal.managers import ManagerName
-from qcfractal.portal.model_utils import recursive_normalizer
 from qcfractal.portal.outputstore import OutputStore
 from qcfractal.portal.records import RecordStatusEnum, PriorityEnum
 from qcfractal.portal.records.gridoptimization import (
@@ -30,7 +27,7 @@ from qcfractal.portal.records.optimization import (
 from qcfractal.portal.records.singlepoint import (
     SinglepointProtocols,
 )
-from qcfractal.testing import load_molecule_data, load_procedure_data
+from qcfractal.testing import load_molecule_data, load_procedure_data, run_service_constropt
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -346,77 +343,19 @@ def test_gridoptimization_socket_run(storage_socket: SQLAlchemySocket, test_data
         input_spec_1, [molecules_1], tag="test_tag", priority=PriorityEnum.low
     )
     assert meta_1.success
-    rec = storage_socket.records.gridoptimization.get(id_1)
-    assert rec[0]["status"] == RecordStatusEnum.waiting
-
-    # A manager for completing the tasks
-    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
-    storage_socket.managers.activate(
-        name_data=mname1,
-        manager_version="v2.0",
-        qcengine_version="v1.0",
-        username="bill",
-        programs={
-            "geometric": None,
-            "psi4": None,
-        },
-        tags=["*"],
-    )
 
     time_0 = datetime.utcnow()
-    r = storage_socket.services.iterate_services()
+    finished, n_optimizations = run_service_constropt(id_1[0], result_data_1, storage_socket, 50)
     time_1 = datetime.utcnow()
 
-    unique_constraints = set()
-    n_optimizations = 0
-
-    while r > 0:
-        rec = storage_socket.records.gridoptimization.get(
-            id_1, include=["*", "service.*", "service.dependencies.*", "service.dependencies.record"]
-        )
-        assert rec[0]["status"] == RecordStatusEnum.running
-
-        manager_tasks = storage_socket.tasks.claim_tasks(mname1.fullname, limit=10)
-
-        # Sometimes a task may be duplicated in the service dependencies.
-        # The C8H6 test has this "feature"
-        opt_ids = set(x["record_id"] for x in manager_tasks)
-        opt_recs = storage_socket.records.optimization.get(opt_ids, include=["*", "initial_molecule", "task"])
-        assert all(x["task"]["priority"] == PriorityEnum.low for x in opt_recs)
-        assert all(x["task"]["tag"] == "test_tag" for x in opt_recs)
-
-        manager_ret = {}
-        for opt in opt_recs:
-            # Find out info about what tasks the service spawned
-            mol_hash = opt["initial_molecule"]["identifiers"]["molecule_hash"]
-            constraints = opt["specification"]["keywords"].get("constraints", None)
-
-            # Lookups may depend on floating point values
-            constraints = recursive_normalizer(constraints)
-
-            # This is the key in the dictionary of optimization results
-            constraints_str = json.dumps(constraints, sort_keys=True)
-            unique_constraints.add(constraints_str)
-
-            optresult_key = mol_hash + "|" + constraints_str
-
-            opt_data = result_data_1[optresult_key]
-            manager_ret[opt["task"]["id"]] = opt_data
-
-        rmeta = storage_socket.tasks.update_finished(mname1.fullname, manager_ret)
-        assert rmeta.n_accepted == len(manager_tasks)
-        n_optimizations += len(manager_ret)
-
-        time_0 = datetime.utcnow()
-        # may or may not iterate - depends on if all tasks done
-        r = storage_socket.services.iterate_services()
-        time_1 = datetime.utcnow()
+    assert finished is True
 
     rec = storage_socket.records.gridoptimization.get(
         id_1, include=["*", "compute_history.*", "compute_history.outputs", "optimizations", "service"]
     )
 
     assert rec[0]["status"] == RecordStatusEnum.complete
+    assert time_0 < rec[0]["modified_on"] < time_1
     assert len(rec[0]["compute_history"]) == 1
     assert len(rec[0]["compute_history"][-1]["outputs"]) == 1
     assert rec[0]["compute_history"][-1]["status"] == RecordStatusEnum.complete
@@ -425,7 +364,6 @@ def test_gridoptimization_socket_run(storage_socket: SQLAlchemySocket, test_data
     out = OutputStore(**rec[0]["compute_history"][-1]["outputs"][0])
     assert "Grid optimization finished successfully!" in out.as_string
 
-    assert len(unique_constraints) == len(rec[0]["optimizations"])
     assert len(rec[0]["optimizations"]) == n_optimizations
 
     for o in rec[0]["optimizations"]:
