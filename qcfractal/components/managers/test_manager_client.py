@@ -74,6 +74,7 @@ def test_manager_mclient_activate_normalize(snowflake: TestingSnowflake):
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
 
     mclient1 = snowflake.manager_client(mname1)
+    client = snowflake.client()
 
     mclient1.activate(
         manager_version="v2.0",
@@ -82,7 +83,7 @@ def test_manager_mclient_activate_normalize(snowflake: TestingSnowflake):
         tags=["tag1", "taG3", "tAg2", "TAG3", "TAG1"],
     )
 
-    manager = mclient1.get_managers([mname1.fullname])
+    manager = client.get_managers([mname1.fullname])
     assert manager[0].tags == ["tag1", "tag3", "tag2"]
     assert manager[0].programs == {"program1": "v3.0", "program2": "v4.0"}
 

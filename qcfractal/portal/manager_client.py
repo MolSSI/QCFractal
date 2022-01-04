@@ -6,10 +6,10 @@ from qcfractal.portal.managers import (
     ManagerUpdateBody,
     ManagerStatusEnum,
 )
-from .client import PortalClient
+from .client_base import PortalClientBase
 
 
-class ManagerClient(PortalClient):
+class ManagerClient(PortalClientBase):
     def __init__(
         self,
         name_data: ManagerName,
@@ -22,6 +22,8 @@ class ManagerClient(PortalClient):
 
         Parameters
         ----------
+        name_data
+            Information about this manager's name
         address
             The IP and port of the FractalServer instance ("192.168.1.1:8888")
         username
@@ -32,13 +34,9 @@ class ManagerClient(PortalClient):
             Verifies the SSL connection with a third party server. This may be False if a
             FractalServer was not provided a SSL certificate and defaults back to self-signed
             SSL keys.
-        manager_name
-            Information about this manager's name
         """
 
-        PortalClient.__init__(
-            self, address=address, username=username, password=password, verify=verify, cache=None, max_memcache_size=0
-        )
+        PortalClientBase.__init__(self, address=address, username=username, password=password, verify=verify)
 
         self.manager_name_data = name_data
 

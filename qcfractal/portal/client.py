@@ -1,66 +1,32 @@
 from __future__ import annotations
-from collections import defaultdict
 
-import pydantic
-from tabulate import tabulate
-
-from datetime import datetime
 import os
-from pkg_resources import parse_version
-from . import __version__
-
-import requests
-
+from datetime import datetime
+from pathlib import Path
 from typing import (
-    TYPE_CHECKING,
     Any,
-    DefaultDict,
     Dict,
     List,
     Optional,
     Tuple,
     Union,
-    TypeVar,
     Sequence,
     Iterable,
-    Type,
 )
-from pathlib import Path
 
-from pydantic import ValidationError
-import pandas as pd
+import pydantic
 
-from ..interface.models.rest_models import rest_model
 from qcfractal.portal.managers import ManagerQueryBody, ComputeManager
-from qcfractal.portal.records.singlepoint import (
-    SinglepointRecord,
-    SinglepointAddBody,
-    SinglepointQueryBody,
-    SinglepointDriver,
-)
-from qcfractal.portal.records.optimization import (
-    OptimizationProtocols,
-    OptimizationRecord,
-    OptimizationQueryBody,
-    OptimizationSinglepointInputSpecification,
-    OptimizationInputSpecification,
-    OptimizationAddBody,
-)
-
-from qcfractal.portal.records.torsiondrive import (
-    TorsiondriveKeywords,
-    TorsiondriveAddBody,
-    TorsiondriveRecord,
-    TorsiondriveQueryBody,
-)
-from qcfractal.portal.records.gridoptimization import (
-    GridoptimizationKeywords,
-    GridoptimizationAddBody,
-    GridoptimizationRecord,
-    GridoptimizationQueryBody,
+from qcfractal.portal.metadata_models import QueryMetadata, UpdateMetadata
+from qcfractal.portal.molecules import Molecule, MoleculeIdentifiers, MoleculeQueryBody, MoleculeModifyBody
+from qcfractal.portal.permissions import (
+    UserInfo,
+    RoleInfo,
+    is_valid_username,
+    is_valid_password,
+    is_valid_rolename,
 )
 from qcfractal.portal.records import (
-    ComputeHistory,
     RecordStatusEnum,
     PriorityEnum,
     RecordQueryBody,
@@ -70,9 +36,32 @@ from qcfractal.portal.records import (
     AllRecordTypes,
     AllDataModelTypes,
 )
-from qcfractal.portal.records.singlepoint import SinglepointProtocols
-
-from .metadata_models import InsertMetadata, DeleteMetadata, UndeleteMetadata
+from qcfractal.portal.records.gridoptimization import (
+    GridoptimizationKeywords,
+    GridoptimizationAddBody,
+    GridoptimizationRecord,
+)
+from qcfractal.portal.records.optimization import (
+    OptimizationProtocols,
+    OptimizationRecord,
+    OptimizationQueryBody,
+    OptimizationSinglepointInputSpecification,
+    OptimizationInputSpecification,
+    OptimizationAddBody,
+)
+from qcfractal.portal.records.singlepoint import (
+    SinglepointRecord,
+    SinglepointAddBody,
+    SinglepointQueryBody,
+    SinglepointDriver,
+    SinglepointProtocols,
+)
+from qcfractal.portal.records.torsiondrive import (
+    TorsiondriveKeywords,
+    TorsiondriveAddBody,
+    TorsiondriveRecord,
+    TorsiondriveQueryBody,
+)
 from qcfractal.portal.serverinfo import (
     AccessLogQueryParameters,
     AccessLogQuerySummaryParameters,
@@ -86,98 +75,15 @@ from .base_models import (
     CommonGetURLParameters,
     CommonDeleteURLParameters,
 )
-from qcfractal.portal.molecules import Molecule, MoleculeIdentifiers, MoleculeQueryBody, MoleculeModifyBody
-from qcfractal.portal.metadata_models import QueryMetadata, UpdateMetadata
-from .collections import Collection, collection_factory, collections_name_map
-from .records_ddotson import record_factory
 from .cache import PortalCache
-from qcfractal.exceptions import AuthenticationFailure
-from .serialization import serialize, deserialize
-
-from ..interface.models import (
-    ObjectId,
-)
+from .client_base import PortalClientBase, PortalRequestError
 from .keywords import KeywordSet
-from qcfractal.portal.permissions import (
-    UserInfo,
-    RoleInfo,
-    is_valid_username,
-    is_valid_password,
-    is_valid_rolename,
-)
-
-if TYPE_CHECKING:  # pragma: no cover
-    from .collections.collection import Collection
-    from ..interface.models.rest_models import (
-        CollectionGETResponse,
-        ComputeResponse,
-        QueryObjectId,
-        QueryListStr,
-        QueryStr,
-        ServiceQueueGETResponse,
-    )
-
-
-_T = TypeVar("_T")
-_U = TypeVar("_U")
-_V = TypeVar("_V")
-
-
-_ssl_error_msg = (
-    "\n\nSSL handshake failed. This is likely caused by a failure to retrieve 3rd party SSL certificates.\n"
-    "If you trust the server you are connecting to, try 'PortalClient(... verify=False)'"
-)
-_connection_error_msg = "\n\nCould not connect to server {}, please check the address and try again."
-
-
-class PortalRequestError(Exception):
-    def __init__(self, msg: str, status_code: int, details: Dict[str, Any]):
-        Exception.__init__(self, msg)
-        self.msg = msg
-        self.status_code = status_code
-        self.details = details
-
-    def __str__(self):
-        return f"Portal request error: {self.msg} (HTTP status {self.status_code})"
-
-
-def make_list(obj: Optional[Union[_T, Sequence[_T]]]) -> Optional[List[_T]]:
-    """
-    Returns a list containing obj if obj is not a list or sequence type object
-    """
-
-    if obj is None:
-        return None
-    # Be careful. strings are sequences
-    if isinstance(obj, str):
-        return [obj]
-    if not isinstance(obj, Sequence):
-        return [obj]
-    return list(obj)
-
-
-def make_str(obj: Optional[Union[_T, Sequence[_T]]]) -> Optional[List[_T]]:
-    """
-    Returns a list containing obj if obj is not a list or sequence type object
-    """
-
-    if obj is None:
-        return None
-    # Be careful. strings are sequences
-    if isinstance(obj, str):
-        return obj
-    if not isinstance(obj, Sequence):
-        return str(obj)
-    if isinstance(obj, list):
-        return [str(i) for i in obj]
-    if isinstance(obj, tuple):
-        return tuple(str(i) for i in obj)
-    else:
-        raise ValueError("`obj` must be `None`, a str, list, tuple, or non-sequence")
+from .metadata_models import InsertMetadata, DeleteMetadata, UndeleteMetadata
+from .utils import make_list, make_str
 
 
 # TODO : built-in query limit chunking, progress bars, fs caching and invalidation
-class PortalClient:
+class PortalClient(PortalClientBase):
     def __init__(
         self,
         address: str = "api.qcarchive.molssi.org:443",
@@ -191,79 +97,26 @@ class PortalClient:
 
         Parameters
         ----------
-        address : str or FractalServer
-            The IP and port of the FractalServer instance ("192.168.1.1:8888") or
-            a FractalServer instance
-        username : None, optional
+        address
+            The IP and port of the FractalServer instance ("192.168.1.1:8888")
+        username
             The username to authenticate with.
-        password : None, optional
+        password
             The password to authenticate with.
-        verify : bool, optional
+        verify
             Verifies the SSL connection with a third party server. This may be False if a
             FractalServer was not provided a SSL certificate and defaults back to self-signed
             SSL keys.
-        cache : str, optional
+        cache
             Path to directory to use for cache.
             If None, only in-memory caching used.
-        max_memcache_size : int
+        max_memcache_size
             Number of items to hold in client's memory cache.
             Increase this value to improve performance for repeated calls,
             at the cost of higher memory usage.
-
         """
 
-        if not address.startswith("http://") and not address.startswith("https://"):
-            address = "https://" + address
-
-        # If we are `http`, ignore all SSL directives
-        if not address.startswith("https"):
-            self._verify = True
-
-        if not address.endswith("/"):
-            address += "/"
-
-        self.address = address
-        self.username = username
-        self._verify = verify
-
-        self._headers: Dict[str, str] = {}
-        self._headers["User-Agent"] = f"qcportal/{__version__}"
-        self._timeout = 60
-        self.encoding = "application/json"
-
-        # Mode toggle for network error testing, not public facing
-        self._mock_network_error = False
-
-        # If no 3rd party verification, quiet urllib
-        if self._verify is False:
-            from urllib3.exceptions import InsecureRequestWarning
-
-            requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
-
-        if (username is not None) or (password is not None):
-            self._get_JWT_token(username, password)
-
-        self._request_counter: DefaultDict[Tuple[str, str], int] = defaultdict(int)
-
-        ### Define all attributes before this line
-
-        # Try to connect and pull the server info
-        self.server_info = self.get_server_information()
-        self.server_name = self.server_info["name"]
-        self.response_limits = self.server_info["response_limits"]
-
-        server_version_min_client = parse_version(self.server_info["client_lower_version_limit"])
-        server_version_max_client = parse_version(self.server_info["client_upper_version_limit"])
-
-        client_version = parse_version(__version__)
-
-        if not server_version_min_client <= client_version <= server_version_max_client:
-            raise RuntimeError(
-                f"This client version {str(client_version)} does not fall within the server's allowed "
-                f"client versions of [{str(server_version_min_client)}, {str(server_version_max_client)}]."
-                f"You may need to upgrade or downgrade"
-            )
-
+        PortalClientBase.__init__(self, address, username, password, verify)
         self._cache = PortalCache(self, cachedir=cache, max_memcache_size=max_memcache_size)
 
     def __repr__(self) -> str:
@@ -294,225 +147,12 @@ class PortalClient:
         # postprocess due to raw spacing above
         return "\n".join([substr.strip() for substr in output.split("\n")])
 
-    @property
-    def encoding(self) -> str:
-        return self._encoding
+    def recordmodel_from_datamodel(self, data: Sequence[Optional[AllDataModelTypes]]) -> List[Optional[AllRecordTypes]]:
+        record_init = [
+            {"client": self, "record_type": d.record_type, "raw_data": d} if d is not None else None for d in data
+        ]
 
-    @property
-    def _old_encoding(self) -> str:
-        return self.encoding.split("/")[1]
-
-    @encoding.setter
-    def encoding(self, encoding: str):
-        self._encoding = encoding
-        self._headers["Content-Type"] = encoding
-        self._headers["Accept"] = encoding
-
-    def _get_JWT_token(self, username: str, password: str) -> None:
-
-        try:
-            ret = requests.post(
-                self.address + "login", json={"username": username, "password": password}, verify=self._verify
-            )
-        except requests.exceptions.SSLError:
-            raise ConnectionRefusedError(_ssl_error_msg) from None
-        except requests.exceptions.ConnectionError:
-            raise ConnectionRefusedError(_connection_error_msg.format(self.address)) from None
-
-        if ret.status_code == 200:
-            self.refresh_token = ret.json()["refresh_token"]
-            self._headers["Authorization"] = f'Bearer {ret.json()["access_token"]}'
-        else:
-            raise AuthenticationFailure(ret.json()["msg"])
-
-    def _refresh_JWT_token(self) -> None:
-
-        ret = requests.post(
-            self.address + "refresh", headers={"Authorization": f"Bearer {self.refresh_token}"}, verify=self._verify
-        )
-
-        if ret.status_code == 200:
-            self._headers["Authorization"] = f'Bearer {ret.json()["access_token"]}'
-        else:  # shouldn't happen unless user is blacklisted
-            raise ConnectionRefusedError("Unable to refresh JWT authorization token! " "This is a server issue!!")
-
-    def _request(
-        self,
-        method: str,
-        service: str,
-        *,
-        data: Optional[str] = None,
-        noraise: bool = False,
-        timeout: Optional[int] = None,
-        retry: Optional[bool] = True,
-    ) -> requests.Response:
-
-        addr = self.address + service
-        kwargs = {"data": data, "timeout": timeout, "headers": self._headers, "verify": self._verify}
-
-        if self._mock_network_error:
-            raise requests.exceptions.RequestException("mock_network_error is on, failing by design!")
-
-        try:
-            if method == "get":
-                r = requests.get(addr, **kwargs)
-            elif method == "post":
-                r = requests.post(addr, **kwargs)
-            elif method == "put":
-                r = requests.put(addr, **kwargs)
-            elif method == "delete":
-                r = requests.delete(addr, **kwargs)
-            else:
-                raise KeyError("Method not understood: '{}'".format(method))
-        except requests.exceptions.SSLError:
-            raise ConnectionRefusedError(_ssl_error_msg) from None
-        except requests.exceptions.ConnectionError:
-            raise ConnectionRefusedError(_connection_error_msg.format(self.address)) from None
-
-        # If JWT token expired, automatically renew it and retry once
-        if retry and (r.status_code == 401) and "Token has expired" in r.json()["msg"]:
-            self._refresh_JWT_token()
-            return self._request(method, service, data=data, noraise=noraise, timeout=timeout, retry=False)
-
-        if (r.status_code != 200) and (not noraise):
-            try:
-                msg = r.json()["msg"]
-            except:
-                msg = r.reason
-
-            raise IOError("Server communication failure. Code: {}, Reason: {}".format(r.status_code, msg))
-
-        return r
-
-    def _automodel_request(
-        self, name: str, rest: str, payload: Dict[str, Any], full_return: bool = False, timeout: int = None
-    ) -> Any:
-        """Automatic model request profiling and creation using rest_models
-
-        Parameters
-        ----------
-        name : str
-            The name of the REST endpoint
-        rest : str
-            The type of the REST endpoint
-        payload : Dict[str, Any]
-            The input dictionary
-        full_return : bool, optional
-            Returns the full server response if True that contains additional metadata.
-        timeout : int, optional
-            Timeout time
-
-        Returns
-        -------
-        Any
-            The REST response object
-        """
-        sname = name.strip("/")
-        self._request_counter[(sname, rest)] += 1
-
-        body_model, response_model = rest_model(sname, rest)
-
-        # Provide a reasonable traceback
-        try:
-            payload = body_model(**payload)
-        except ValidationError as exc:
-            raise TypeError(str(exc))
-
-        r = self._request(rest, name, data=payload.serialize(self._old_encoding), timeout=timeout)
-        encoding = r.headers["Content-Type"].split("/")[1]
-        response = response_model.parse_raw(r.content, encoding=encoding)
-
-        if full_return:
-            return response
-        else:
-            return response.data
-
-    def _request2(
-        self,
-        method: str,
-        endpoint: str,
-        *,
-        body: Optional[Union[bytes, str]] = None,
-        url_params: Optional[Dict[str, Any]] = None,
-        retry: Optional[bool] = True,
-    ) -> requests.Response:
-
-        addr = self.address + endpoint
-        kwargs = {"data": body, "headers": self._headers, "verify": self._verify, "timeout": self._timeout}
-
-        if url_params:
-            kwargs["params"] = url_params
-
-        try:
-            if method == "get":
-                r = requests.get(addr, **kwargs)
-            elif method == "post":
-                r = requests.post(addr, **kwargs)
-            elif method == "put":
-                r = requests.put(addr, **kwargs)
-            elif method == "patch":
-                r = requests.patch(addr, **kwargs)
-            elif method == "delete":
-                r = requests.delete(addr, **kwargs)
-            else:
-                raise KeyError("Method not understood: '{}'".format(method))
-        except requests.exceptions.SSLError:
-            raise ConnectionRefusedError(_ssl_error_msg) from None
-        except requests.exceptions.ConnectionError:
-            raise ConnectionRefusedError(_connection_error_msg.format(self.address)) from None
-
-        # If JWT token expired, automatically renew it and retry once
-        if retry and (r.status_code == 401) and "Token has expired" in r.json()["msg"]:
-            self._refresh_JWT_token()
-            return self._request2(method, endpoint, body=body, retry=False)
-
-        if r.status_code != 200:
-            try:
-                # For many errors returned by our code, the error details are returned as json
-                # with the error message stored under "msg"
-                details = r.json()
-            except:
-                # If this error comes from, ie, the web server or something else, then
-                # we have to use 'reason'
-                details = {"msg": r.reason}
-
-            raise PortalRequestError(f"Request failed: {details['msg']}", r.status_code, details)
-
-        return r
-
-    def _auto_request(
-        self,
-        method: str,
-        endpoint: str,
-        body_model: Optional[Type[_T]],
-        url_params_model: Optional[Type[_U]],
-        response_model: Optional[Type[_V]],
-        body: Optional[Union[_T, Dict[str, Any]]] = None,
-        url_params: Optional[Union[_U, Dict[str, Any]]] = None,
-    ) -> _V:
-
-        if body_model is None and body is not None:
-            raise RuntimeError("Body data not specified, but required")
-
-        if url_params_model is None and url_params is not None:
-            raise RuntimeError("Query parameters not specified, but required")
-
-        serialized_body = None
-        if body_model is not None:
-            parsed_body = pydantic.parse_obj_as(body_model, body)
-            serialized_body = serialize(parsed_body, self.encoding)
-
-        parsed_url_params = None
-        if url_params_model is not None:
-            parsed_url_params = pydantic.parse_obj_as(url_params_model, url_params).dict()
-
-        r = self._request2(method, endpoint, body=serialized_body, url_params=parsed_url_params)
-        d = deserialize(r.content, r.headers["Content-Type"])
-
-        if response_model is None:
-            return None
-        else:
-            return pydantic.parse_obj_as(response_model, d)
+        return pydantic.parse_obj_as(List[Optional[AllRecordTypes]], record_init)
 
     @property
     def cache(self):
@@ -597,42 +237,9 @@ class PortalClient:
         # Request the info, and store here for later use
         return self._auto_request("get", "v1/information", None, None, Dict[str, Any], None, None)
 
-    # def _get_outputs(
-    #    self,
-    #    id: Union[int, Sequence[int]],
-    #    missing_ok: bool = False,
-    # ) -> Union[Optional[OutputStore], List[Optional[OutputStore]]]:
-    #    """Obtains outputs from the server via output ids
-
-    #    Note: This is the id of the output, not of the calculation record.
-
-    #    Parameters
-    #    ----------
-    #    id
-    #        An id or list of ids to query.
-    #    missing_ok
-    #        If True, return ``None`` for ids that were not found on the server.
-    #        If False, raise ``KeyError`` if any ids were not found on the server.
-
-    #    Returns
-    #    -------
-    #    :
-    #        The requested outputs, in the same order as the requested ids.
-    #        If given a list of ids, the return value will be a list.
-    #        Otherwise, it will be a single output.
-    #    """
-
-    #    url_params = {"id": make_list(id), "missing_ok": missing_ok}
-    #    outputs = self._auto_request(
-    #        "get", "v1/output", None, CommonGetURLParameters, List[Optional[OutputStore]], None, url_params
-    #    )
-
-    #    if isinstance(id, Sequence):
-    #        return outputs
-    #    else:
-    #        return outputs[0]
-
-    ### Molecule section
+    ##############################################################
+    # Molecules
+    ##############################################################
 
     def get_molecules(
         self,
@@ -674,7 +281,7 @@ class PortalClient:
         self,
         molecule_hash: Optional[Union[str, Iterable[str]]] = None,
         molecular_formula: Optional[Union[str, Iterable[str]]] = None,
-        identifiers: Optional[Dict[str, Union[str, List[str]]]] = None,
+        identifiers: Optional[Dict[str, Union[str, Iterable[str]]]] = None,
         limit: Optional[int] = None,
         skip: int = 0,
     ) -> List[Molecule]:
@@ -715,7 +322,7 @@ class PortalClient:
         )
         return meta, molecules
 
-    def add_molecules(self, molecules: List[Molecule]) -> Tuple[InsertMetadata, List[int]]:
+    def add_molecules(self, molecules: Sequence[Molecule]) -> Tuple[InsertMetadata, List[int]]:
         """Add molecules to the server.
 
         Parameters
@@ -807,7 +414,9 @@ class PortalClient:
             "delete", "v1/molecule", None, CommonDeleteURLParameters, DeleteMetadata, None, url_params
         )
 
-    ### Keywords section
+    ##############################################################
+    # Keywords
+    ##############################################################
 
     def get_keywords(
         self,
@@ -888,182 +497,9 @@ class PortalClient:
             "delete", "v1/keyword", None, CommonDeleteURLParameters, DeleteMetadata, None, url_params
         )
 
-    ### Collections section
-
-    def list_collections(
-        self,
-        collection_type: Optional[str] = None,
-        full: bool = False,
-        taglines: bool = False,
-        as_list: bool = False,
-        as_df: bool = False,
-        group: Optional[str] = "default",
-        show_hidden: bool = False,
-        tag: Optional[Union[str, List[str]]] = None,
-    ) -> Union[None, List, pd.DataFrame]:
-        """Print or return the available collections currently on the server.
-
-        Parameters
-        ----------
-        collection_type : Optional[str], optional
-            If `None` all collection types will be returned, otherwise only the
-            specified collection type will be returned
-        full : bool, optional
-            Whether to include tags, group in output; default False.
-        taglines : bool, optional
-            Whether to include taglines in output; default False.
-        as_list : bool, optional
-            Return output as a list instead of printing.
-        as_df : bool, optional
-            Return output as a `pandas` DataFrame instead of printing.
-        group : Optional[str], optional
-            Show only collections belonging to a specified group.
-            To explicitly return all collections, set group=None
-        show_hidden : bool, optional
-            Show collections whose visibility flag is set to False. Default: False.
-        tag : Optional[Union[str, List[str]]], optional
-            Show collections whose tags match one of the passed tags.
-            By default, collections are not filtered on tag.
-
-        Returns
-        -------
-        Union[None, List, pandas.DataFrame]
-            Prints output as table to screen; if `as_list=True`,
-            returns list of output content instead.
-        """
-        # preprocess inputs
-        if tag is not None:
-            if isinstance(tag, str):
-                tag = [tag]
-
-        query: Dict[str, str] = {}
-        if collection_type is not None:
-            query = {"collection": collection_type.lower()}
-
-        payload = {"meta": {"include": ["name", "collection", "tagline", "visibility", "group", "tags"]}, "data": query}
-        response: List[Dict[str, Any]] = self._automodel_request("collection", "get", payload, full_return=False)
-
-        collection_data = sorted(response, key=lambda x: (x["collection"], x["name"]))
-
-        # apply filters
-        if not show_hidden:
-            collection_data = [item for item in collection_data if item["visibility"]]
-        if group is not None:
-            collection_data = [item for item in collection_data if item["group"] == group]
-        if tag is not None:
-            collection_data = [item for item in collection_data if set(item["tags"]).intersection(tag)]
-        if collection_type is not None:
-            collection_data = [item for item in collection_data if item["collection"]]
-
-        name_map = collections_name_map()
-        output = []
-        for item in collection_data:
-            if item["collection"] in name_map:
-                trimmed = {}
-                collection_type_i = name_map[item["collection"]]
-
-                if collection_type is not None:
-                    if collection_type_i.lower() != collection_type.lower():
-                        continue
-                else:
-                    trimmed["Collection Type"] = collection_type_i
-
-                trimmed["Collection Name"] = item["name"]
-
-                if full:
-                    trimmed["Tags"] = item["tags"]
-                    trimmed["Group"] = item["group"]
-
-                if taglines:
-                    trimmed["Tagline"] = item["tagline"]
-                output.append(trimmed)
-
-        # give representation
-        if not (as_list or as_df):
-            print(tabulate(output, headers="keys"))
-        elif as_list:
-            return output
-        elif as_df:
-            return pd.DataFrame(output)
-
-    def get_collection(
-        self,
-        collection_type: str,
-        name: str,
-    ) -> "Collection":
-        """Returns a given collection from the server.
-
-        Parameters
-        ----------
-        collection_type : str
-            The collection type.
-        name : str
-            The name of the collection.
-        Returns
-        -------
-        Collection
-            A Collection object if the given collection was found; otherwise returns `None`.
-
-        """
-
-        payload = {"meta": {}, "data": {"collection": collection_type, "name": name}}
-
-        print("{} : '{}' || {}".format(collection_type, name, self.address))
-        response = self._automodel_request("collection", "get", payload, full_return=True)
-
-        # Watching for nothing found
-        if len(response.data):
-            return collection_factory(response.data[0], client=self)
-        else:
-            raise KeyError("Collection '{}:{}' not found.".format(collection_type, name))
-
-    def add_collection(
-        self, collection: Collection, overwrite: bool = False
-    ) -> Union["CollectionGETResponse", List["ObjectId"]]:
-        """Adds a new Collection to the server.
-
-        Parameters
-        ----------
-        collection :
-            The full collection data representation.
-        overwrite : bool, optional
-            Overwrites the collection if it already exists in the database, used for updating collection.
-
-        Returns
-        -------
-        ObjectId
-            The ObjectId of the added collection.
-
-        """
-        if overwrite and collection.id == "local":
-            raise KeyError("Attempting to overwrite collection, but no server ID found (cannot use 'local').")
-
-        payload = {"meta": {"overwrite": overwrite}, "data": collection.to_dict()}
-        return self._automodel_request("collection", "post", payload)
-
-    def delete_collection(self, collection_type: str, name: str) -> None:
-        """Deletes a given collection from the server.
-
-        Parameters
-        ----------
-        collection_type : str
-            The collection type to be deleted
-        name : str
-            The name of the collection to be deleted
-
-        Returns
-        -------
-        None
-        """
-        collection = self.get_collection(collection_type, name)
-        self._automodel_request(f"collection/{collection.data.id}", "delete", payload={"meta": {}})
-
-    def recordmodel_from_datamodel(self, data: Sequence[Optional[AllDataModelTypes]]) -> List[Optional[AllRecordTypes]]:
-        record_init = [
-            {"client": self, "record_type": d.record_type, "raw_data": d} if d is not None else None for d in data
-        ]
-
-        return pydantic.parse_obj_as(List[Optional[AllRecordTypes]], record_init)
+    ##############################################################
+    # General record functions
+    ##############################################################
 
     def get_records(
         self,
@@ -1232,7 +668,9 @@ class PortalClient:
         }
         return self._auto_request("patch", "/v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
-    ### Compute section
+    ##############################################################
+    # Singlepoint calculations
+    ##############################################################
 
     def add_singlepoints(
         self,
@@ -1356,7 +794,6 @@ class PortalClient:
     def query_singlepoints(
         self,
         record_id: Optional[Iterable[int]] = None,
-        record_type: Optional[Iterable[str]] = None,
         manager_name: Optional[Iterable[str]] = None,
         status: Optional[Iterable[RecordStatusEnum]] = None,
         created_before: Optional[datetime] = None,
@@ -1382,7 +819,6 @@ class PortalClient:
 
         query_data = {
             "record_id": make_list(record_id),
-            "record_type": make_list(record_type),
             "manager_name": make_list(manager_name),
             "status": make_list(status),
             "program": make_list(program),
@@ -1427,6 +863,10 @@ class PortalClient:
         )
 
         return meta, self.recordmodel_from_datamodel(record_data)
+
+    ##############################################################
+    # Optimization calculations
+    ##############################################################
 
     def add_optimizations(
         self,
@@ -1521,7 +961,6 @@ class PortalClient:
     def query_optimizations(
         self,
         record_id: Optional[Iterable[int]] = None,
-        record_type: Optional[Iterable[str]] = None,
         manager_name: Optional[Iterable[str]] = None,
         status: Optional[Iterable[RecordStatusEnum]] = None,
         created_before: Optional[datetime] = None,
@@ -1549,7 +988,6 @@ class PortalClient:
 
         query_data = {
             "record_id": make_list(record_id),
-            "record_type": make_list(record_type),
             "manager_name": make_list(manager_name),
             "status": make_list(status),
             "program": make_list(program),
@@ -1597,6 +1035,10 @@ class PortalClient:
         )
 
         return meta, self.recordmodel_from_datamodel(record_data)
+
+    ##############################################################
+    # Torsiondrive calculations
+    ##############################################################
 
     def add_torsiondrives(
         self,
@@ -1761,6 +1203,10 @@ class PortalClient:
 
         return meta, self.recordmodel_from_datamodel(record_data)
 
+    ##############################################################
+    # Grid optimization calculations
+    ##############################################################
+
     def add_gridoptimizations(
         self,
         initial_molecules: Union[int, Molecule, Sequence[Union[int, Molecule]]],
@@ -1923,6 +1369,10 @@ class PortalClient:
 
         return meta, self.recordmodel_from_datamodel(record_data)
 
+    ##############################################################
+    # Managers
+    ##############################################################
+
     def get_managers(
         self,
         name: Union[str, Sequence[str]],
@@ -1962,7 +1412,7 @@ class PortalClient:
         name: Optional[Union[str, Iterable[str]]] = None,
         cluster: Optional[Union[str, Iterable[str]]] = None,
         hostname: Optional[Union[str, Iterable[str]]] = None,
-        status: QueryStr = None,
+        status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         modified_before: Optional[datetime] = None,
         modified_after: Optional[datetime] = None,
         include_log: bool = False,
@@ -2025,6 +1475,10 @@ class PortalClient:
             None,
         )
 
+    ##############################################################
+    # Server statistics and logs
+    ##############################################################
+
     def query_server_stats(
         self,
         before: Optional[datetime] = None,
@@ -2051,8 +1505,8 @@ class PortalClient:
 
     def query_access_log(
         self,
-        access_type: QueryStr = None,
-        access_method: QueryStr = None,
+        access_type: Optional[Union[str, Iterable[str]]] = None,
+        access_method: Optional[Union[str, Iterable[str]]] = None,
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
         limit: Optional[int] = None,
@@ -2085,8 +1539,8 @@ class PortalClient:
 
     def query_error_log(
         self,
-        id: QueryObjectId = None,
-        username: QueryStr = None,
+        id: Optional[Union[int, Iterable[int]]] = None,
+        username: Optional[Union[str, Iterable[str]]] = None,
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
         limit: Optional[int] = None,
@@ -2144,6 +1598,10 @@ class PortalClient:
         return self._auto_request(
             "get", "v1/access/summary", None, AccessLogQuerySummaryParameters, Dict[str, Any], None, url_params
         )
+
+    ##############################################################
+    # User & role management
+    ##############################################################
 
     def list_roles(self) -> List[RoleInfo]:
         """
