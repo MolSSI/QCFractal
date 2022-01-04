@@ -1232,49 +1232,6 @@ class PortalClient:
         }
         return self._auto_request("patch", "/v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
-    def query_torsiondrives(
-        self,
-        id: Optional["QueryObjectId"] = None,
-        procedure_id: Optional["QueryObjectId"] = None,
-        hash_index: Optional["QueryStr"] = None,
-        status: Optional["QueryStr"] = None,
-        limit: Optional[int] = None,
-        skip: int = 0,
-        full_return: bool = False,
-    ) -> Union["ServiceQueueGETResponse", List[Dict[str, Any]]]:
-        """Checks the status of services in the Fractal queue.
-
-        Parameters
-        ----------
-        id : QueryObjectId, optional
-            Queries the Services ``id`` field.
-        procedure_id : QueryObjectId, optional
-            Queries the Services ``procedure_id`` field, or the ObjectId of the procedure associated with the service.
-        status : QueryStr, optional
-            Queries the Services ``status`` field.
-        limit : Optional[int], optional
-            The maximum number of Services to query
-        skip : int, optional
-            The number of Services to skip in the query, used during pagination
-        full_return : bool, optional
-            Returns the full server response if True that contains additional metadata.
-
-        Returns
-        -------
-        List[Dict[str, Any]]
-            A dictionary of each match that contains the current status
-            and, if an error has occurred, the error message.
-        """
-        payload = {
-            "meta": {"limit": limit, "skip": skip},
-            "data": {"id": id, "procedure_id": procedure_id, "status": status},
-        }
-        return self._automodel_request("service_queue", "get", payload, full_return=full_return)
-        pass
-
-    def query_gridoptimizations(self):
-        ...
-
     ### Compute section
 
     def add_singlepoints(
@@ -1681,6 +1638,7 @@ class PortalClient:
         record_id: Union[int, Sequence[int]],
         missing_ok: bool = False,
         *,
+        include_task: bool = False,
         include_service: bool = False,
         include_outputs: bool = False,
         include_comments: bool = False,
@@ -1692,6 +1650,8 @@ class PortalClient:
         include = set()
 
         # We must add '*' so that all the default fields are included
+        if include_task:
+            include |= {"*", "task"}
         if include_service:
             include |= {"*", "service"}
         if include_outputs:
@@ -1722,6 +1682,84 @@ class PortalClient:
             return records
         else:
             return records[0]
+
+    def query_torsiondrives(
+        self,
+        record_id: Optional[Iterable[int]] = None,
+        manager_name: Optional[Iterable[str]] = None,
+        status: Optional[Iterable[RecordStatusEnum]] = None,
+        created_before: Optional[datetime] = None,
+        created_after: Optional[datetime] = None,
+        modified_before: Optional[datetime] = None,
+        modified_after: Optional[datetime] = None,
+        program: Optional[Iterable[str]] = None,
+        optimization_program: Optional[Iterable[str]] = None,
+        singlepoint_program: Optional[Iterable[str]] = None,
+        singlepoint_method: Optional[Iterable[str]] = None,
+        singlepoint_basis: Optional[Iterable[Optional[str]]] = None,
+        singlepoint_keywords_id: Optional[Iterable[int]] = None,
+        initial_molecule_id: Optional[Iterable[int]] = None,
+        limit: Optional[int] = None,
+        skip: int = 0,
+        *,
+        include_task: bool = False,
+        include_service: bool = False,
+        include_outputs: bool = False,
+        include_comments: bool = False,
+        include_initial_molecules: bool = False,
+        include_optimizations: bool = False,
+    ) -> Tuple[QueryMetadata, List[TorsiondriveRecord]]:
+        """Queries torsiondrive records from the server."""
+
+        query_data = {
+            "record_id": make_list(record_id),
+            "manager_name": make_list(manager_name),
+            "status": make_list(status),
+            "program": make_list(program),
+            "optimization_program": make_list(optimization_program),
+            "singlepoint_program": make_list(singlepoint_program),
+            "singlepoint_method": make_list(singlepoint_method),
+            "singlepoint_basis": make_list(singlepoint_basis),
+            "singlepoint_keywords_id": make_list(singlepoint_keywords_id),
+            "initial_molecule_id": make_list(initial_molecule_id),
+            "created_before": created_before,
+            "created_after": created_after,
+            "modified_before": modified_before,
+            "modified_after": modified_after,
+            "limit": limit,
+            "skip": skip,
+        }
+
+        include = set()
+
+        # We must add '*' so that all the default fields are included
+        if include_task:
+            include |= {"*", "task"}
+        if include_service:
+            include |= {"*", "service"}
+        if include_outputs:
+            include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_comments:
+            include |= {"*", "comments"}
+        if include_initial_molecules:
+            include |= {"*", "initial_molecules"}
+        if include_optimizations:
+            include |= {"*", "optimizations"}
+
+        if include:
+            query_data["include"] = include
+
+        meta, record_data = self._auto_request(
+            "post",
+            "v1/record/torsiondrive/query",
+            TorsiondriveQueryBody,
+            None,
+            Tuple[QueryMetadata, List[TorsiondriveRecord._DataModel]],
+            query_data,
+            None,
+        )
+
+        return meta, self.recordmodel_from_datamodel(record_data)
 
     def add_gridoptimizations(
         self,

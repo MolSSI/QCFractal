@@ -260,7 +260,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             and_query.append(SinglepointSpecificationORM.keywords_id.in_(query_data.singlepoint_keywords_id))
             need_spspec_join = True
         if query_data.optimization_program is not None:
-            and_query.append(OptimizationInputSpecification.program.in_(query_data.optimization_program))
+            and_query.append(OptimizationSpecificationORM.program.in_(query_data.optimization_program))
+            need_optspec_join = True
         if query_data.initial_molecule_id is not None:
             and_query.append(TorsiondriveInitialMoleculeORM.molecule_id.in_(query_data.initial_molecule_id))
             need_initmol_join = True
