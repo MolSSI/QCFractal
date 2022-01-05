@@ -39,7 +39,7 @@ from .portal import PortalClient, ManagerClient
 from .portal.records import PriorityEnum, RecordStatusEnum
 from .portal.utils import recursive_normalizer
 from .postgres_harness import TemporaryPostgres
-from .qc_queue import build_queue_adapter, QueueManager
+from .compute_manager import build_queue_adapter, QueueManager
 from .snowflake import FractalSnowflake, attempt_client_connect
 
 # Path to this file (directory only)

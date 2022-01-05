@@ -3,8 +3,14 @@ Helpers for compressing data to send back to the server
 """
 
 from typing import Union, Optional, Dict
-from qcfractal.portal.outputstore import CompressionEnum, OutputStore
+
 from qcelemental.models import AtomicResult, OptimizationResult
+
+# Kind of a hack
+try:
+    from qcfractal.portal.outputstore import CompressionEnum, OutputStore
+except:
+    from qcportal.outputstore import CompressionEnum, OutputStore
 
 
 def _compress_common(

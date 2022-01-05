@@ -6,17 +6,15 @@ import json
 import logging
 import sched
 import socket
+import threading
 import time
 import uuid
-from typing import Any, Callable, Dict, List, Optional, Union, Sequence
-
-from pydantic import BaseModel, validator
+from typing import Any, Dict, List, Optional, Union, Sequence
 
 import qcengine as qcng
+from pydantic import BaseModel, validator
 
-from .. import __version__ as qcfractal_version
-from ..interface.data import get_molecule
-from ..process_runner import InterruptableSleep, SleepInterrupted
+from . import __version__
 from .adapters import build_queue_adapter
 from .compress import compress_results
 
@@ -36,6 +34,43 @@ def make_list(obj):
     if not isinstance(obj, Sequence):
         return [obj]
     return list(obj)
+
+
+class SleepInterrupted(BaseException):
+    """
+    Exception class used to signal that an InterruptableSleep was interrupted
+
+    This (like KeyboardInterrupt) derives from BaseException to prevent
+    it from being handled with "except Exception".
+    """
+
+    pass
+
+
+class InterruptableSleep:
+    """
+    A class for sleeping, but interruptable
+
+    This class uses threading Events to wake up from a sleep before the entire sleep
+    duration has run. If the sleep is interrupted, then an SleepInterrupted exception is raised.
+
+    This class is a functor, so an instance can be passed as the delay function to a python
+    sched.scheduler
+    """
+
+    def __init__(self):
+        self._event = threading.Event()
+
+    def __call__(self, delay: float):
+        interrupted = self._event.wait(delay)
+        if interrupted:
+            raise SleepInterrupted()
+
+    def interrupt(self):
+        self._event.set()
+
+    def clear(self):
+        self._event.clear()
 
 
 class QueueStatistics(BaseModel):
@@ -244,7 +279,7 @@ class QueueManager:
 
         # Print out configuration
         self.logger.info("QueueManager:")
-        self.logger.info("    Version:         {}\n".format(qcfractal_version))
+        self.logger.info("    Version:         {}\n".format(__version__))
 
         if self.verbose:
             self.logger.info("    Name Information:")
@@ -306,7 +341,7 @@ class QueueManager:
             **self.name_data.copy(),
             # Version info
             "qcengine_version": qcng.__version__,
-            "manager_version": qcfractal_version,
+            "manager_version": __version__,
             # User info
             "username": self.client.username,
             # Pull info

@@ -15,14 +15,13 @@ import traceback
 
 import qcfractal
 
-
-from ..config import read_configuration, FractalConfig, FlaskConfig
-from ..postgres_harness import PostgresHarness
-from ..db_socket.socket import SQLAlchemySocket
-from qcfractal.portal.permissions import RoleInfo, UserInfo
-from ..periodics import PeriodicsProcess
-from ..app.gunicorn_app import GunicornProcess
-from ..process_runner import ProcessRunner
+from .config import read_configuration, FractalConfig, FlaskConfig
+from .postgres_harness import PostgresHarness
+from .db_socket.socket import SQLAlchemySocket
+from .portal.permissions import RoleInfo, UserInfo
+from .periodics import PeriodicsProcess
+from .app.gunicorn_app import GunicornProcess
+from .process_runner import ProcessRunner
 
 
 class EndProcess(RuntimeError):

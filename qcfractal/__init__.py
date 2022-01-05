@@ -20,7 +20,6 @@ from . import portal
 
 # Handle top level object imports
 from .postgres_harness import PostgresHarness, TemporaryPostgres
-from .qc_queue import QueueManager
 
 # from .server import FractalServer
 from .snowflake import FractalSnowflake
