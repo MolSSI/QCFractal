@@ -107,9 +107,6 @@ def test_manager_socket_activate_notags_1(storage_socket: SQLAlchemySocket):
             tags=[],
         )
 
-    # The server should be telling this manager to give up and shut down
-    assert error.value.shutdown is True
-
 
 def test_manager_socket_activate_notags_2(storage_socket: SQLAlchemySocket):
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
@@ -123,9 +120,6 @@ def test_manager_socket_activate_notags_2(storage_socket: SQLAlchemySocket):
             programs={"qcprog": None, "qcprog2": "v3.0"},
             tags=[""],
         )
-
-    # The server should be telling this manager to give up and shut down
-    assert error.value.shutdown is True
 
 
 def test_manager_socket_activate_noprogs_1(storage_socket: SQLAlchemySocket):
@@ -141,9 +135,6 @@ def test_manager_socket_activate_noprogs_1(storage_socket: SQLAlchemySocket):
             tags=["tag1"],
         )
 
-    # The server should be telling this manager to give up and shut down
-    assert error.value.shutdown is True
-
 
 def test_manager_socket_activate_noprogs_2(storage_socket: SQLAlchemySocket):
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
@@ -157,9 +148,6 @@ def test_manager_socket_activate_noprogs_2(storage_socket: SQLAlchemySocket):
             programs={"": None},
             tags=["tag1"],
         )
-
-    # The server should be telling this manager to give up and shut down
-    assert error.value.shutdown is True
 
 
 def test_manager_socket_activate_duplicate(storage_socket: SQLAlchemySocket):
@@ -184,9 +172,6 @@ def test_manager_socket_activate_duplicate(storage_socket: SQLAlchemySocket):
             programs={"qcprog": None, "qcprog2": "v3.0"},
             tags=["*"],
         )
-
-    # The server should be telling this manager to give up and shut down
-    assert error.value.shutdown is True
 
 
 def test_manager_socket_deactivate_byname_notasks(storage_socket: SQLAlchemySocket):

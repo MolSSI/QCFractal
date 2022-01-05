@@ -2,9 +2,9 @@
 Initializer for the queue_handler folder
 """
 
-# We are running inside QCPortal repo
+# We are running inside QCFractalCompute repo
 try:
-    # The _version file exists only in the QCPortal package
+    # The _version file exists only in the QCFractalCompute package
     from ._version import get_versions
 
     versions = get_versions()

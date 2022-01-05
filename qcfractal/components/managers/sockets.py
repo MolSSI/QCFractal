@@ -70,9 +70,9 @@ class ManagerSocket:
         programs = {k.lower(): v for k, v in programs.items() if len(k) > 0}
 
         if len(tags) == 0:
-            raise ComputeManagerError("Manager does not have any tags assigned. Use '*' to match all tags", True)
+            raise ComputeManagerError("Manager does not have any tags assigned. Use '*' to match all tags")
         if len(programs) == 0:
-            raise ComputeManagerError("Manager does not have any programs available", True)
+            raise ComputeManagerError("Manager does not have any programs available")
 
         tags = list(dict.fromkeys(tags))  # remove duplicates, maintaining order (in python 3.6+)
 
@@ -94,7 +94,7 @@ class ManagerSocket:
 
             if count > 0:
                 self._logger.warning(f"Cannot activate duplicate manager: {name_data.fullname}")
-                raise ComputeManagerError("A manager with this name already exists", True)
+                raise ComputeManagerError("A manager with this name already exists")
 
             session.add(manager_orm)
             session.flush()
@@ -122,13 +122,9 @@ class ManagerSocket:
             manager: Optional[ComputeManagerORM] = session.execute(stmt).scalar_one_or_none()
 
             if manager is None:
-                raise ComputeManagerError(
-                    f"Cannot update resource stats for manager {name} - does not exist", shutdown=True
-                )
+                raise ComputeManagerError(f"Cannot update resource stats for manager {name} - does not exist")
             if manager.status != ManagerStatusEnum.active:
-                raise ComputeManagerError(
-                    f"Cannot update resource stats for manager {name} - is not active", shutdown=True
-                )
+                raise ComputeManagerError(f"Cannot update resource stats for manager {name} - is not active")
 
             manager.total_worker_walltime = total_worker_walltime
             manager.total_task_walltime = (total_task_walltime,)

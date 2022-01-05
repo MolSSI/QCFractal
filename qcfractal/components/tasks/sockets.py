@@ -24,7 +24,7 @@ from .db_models import TaskQueueORM
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcfractal.interface.models import AllResultTypes
+    from qcfractal.portal.records import AllResultTypes
     from typing import List, Dict, Tuple, Optional, Any
 
     TaskDict = Dict[str, Any]
@@ -67,11 +67,11 @@ class TaskSocket:
 
             if manager is None:
                 self._logger.warning(f"Manager {manager_name} does not exist, but is trying to return tasks. Ignoring.")
-                raise ComputeManagerError(f"Manager {manager_name} does not exist", True)
+                raise ComputeManagerError(f"Manager {manager_name} does not exist")
 
             if manager.status != ManagerStatusEnum.active:
                 self._logger.warning(f"Manager {manager_name} is not active. Ignoring...")
-                raise ComputeManagerError(f"Manager {manager_name} is not active", True)
+                raise ComputeManagerError(f"Manager {manager_name} is not active")
 
             all_notifications: List[Tuple[int, RecordStatusEnum]] = []
 
@@ -221,10 +221,10 @@ class TaskSocket:
 
             if manager is None:
                 self._logger.warning(f"Manager {manager_name} does not exist! Will not give it tasks")
-                raise ComputeManagerError("Manager does not exist!", shutdown=True)
+                raise ComputeManagerError("Manager does not exist!")
             elif manager.status != ManagerStatusEnum.active:
                 self._logger.warning(f"Manager {manager_name} exists but is not active! Will not give it tasks")
-                raise ComputeManagerError("Manager is not active!", shutdown=True)
+                raise ComputeManagerError("Manager is not active!")
 
             manager_programs = array(manager.programs.keys())
             found = []

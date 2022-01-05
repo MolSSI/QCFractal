@@ -17,7 +17,7 @@ except ImportError:
     from .. import __version__, __git_revision__
 
 # Add imports here
-from .client import PortalClient
+from .client import PortalClient, PortalRequestError
 from .manager_client import ManagerClient
 
 # from . import collections

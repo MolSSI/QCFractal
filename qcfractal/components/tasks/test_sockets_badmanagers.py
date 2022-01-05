@@ -20,8 +20,6 @@ def test_task_socket_claim_manager_noexist(storage_socket: SQLAlchemySocket):
     with pytest.raises(ComputeManagerError, match="does not exist") as err:
         storage_socket.tasks.claim_tasks(mname1.fullname)
 
-    assert err.value.shutdown is True
-
 
 def test_task_socket_claim_manager_inactive(storage_socket: SQLAlchemySocket):
     # Manager that is inactive tries to claim tasks
@@ -40,8 +38,6 @@ def test_task_socket_claim_manager_inactive(storage_socket: SQLAlchemySocket):
 
     with pytest.raises(ComputeManagerError, match="is not active") as err:
         storage_socket.tasks.claim_tasks(mname1.fullname)
-
-    assert err.value.shutdown is True
 
 
 def test_task_socket_return_manager_noexist(storage_socket: SQLAlchemySocket):
@@ -66,8 +62,6 @@ def test_task_socket_return_manager_noexist(storage_socket: SQLAlchemySocket):
             "missing_manager",
             {tasks[0]["id"]: result_data},
         )
-
-    assert err.value.shutdown is True
 
     # Task should still be running
     sp_records = storage_socket.records.get(id, include=["*", "task", "compute_history"])
@@ -101,8 +95,6 @@ def test_task_socket_return_manager_inactive(storage_socket: SQLAlchemySocket):
             mname1.fullname,
             {tasks[0]["id"]: result_data},
         )
-
-    assert err.value.shutdown
 
 
 def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket):

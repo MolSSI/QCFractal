@@ -163,8 +163,6 @@ def test_manager_mclient_activate_duplicate(snowflake: TestingSnowflake):
             tags=["tag1"],
         )
 
-    assert err.value.details["shutdown"] is True
-
 
 def test_manager_mclient_deactivate_notasks(snowflake: TestingSnowflake):
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
@@ -233,7 +231,6 @@ def test_manager_mclient_deactivate_deactivated(snowflake: TestingSnowflake):
         mclient1.deactivate(
             total_worker_walltime=1.0, total_task_walltime=2.0, active_tasks=1, active_cores=2, active_memory=7.0
         )
-    assert err.value.details["shutdown"] is True
 
 
 def test_manager_mclient_heartbeat(snowflake: TestingSnowflake):
@@ -306,5 +303,3 @@ def test_manager_mclient_heartbeat_deactivated(snowflake: TestingSnowflake):
         mclient1.heartbeat(
             total_worker_walltime=1.234, total_task_walltime=5.678, active_tasks=3, active_cores=10, active_memory=3.45
         )
-
-    assert err.value.details["shutdown"] is True

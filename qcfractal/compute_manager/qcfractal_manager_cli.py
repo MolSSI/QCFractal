@@ -11,20 +11,20 @@ from enum import Enum
 from math import ceil
 from typing import List, Optional, Union
 
+import qcengine as qcng
 import yaml
 from pydantic import Field, validator
+from qcelemental.models import AutodocBaseSettings, ProtoModel
 
-import qcengine as qcng
-import qcfractal
+from . import __version__, cli_utils
+from .managers import QueueManager
 
-from ..interface.models import AutodocBaseSettings, ProtoModel
-from . import cli_utils
 
 __all__ = ["main"]
 
 QCA_RESOURCE_STRING = "--resources process=1"
 
-logger = logging.getLogger("qcfractal.cli")
+logger = logging.getLogger("qcfractalcompute.cli")
 
 
 class SettingsCommonConfig:
@@ -524,7 +524,7 @@ def parse_args():
         "The Dask and Parsl backends *requires* a config file due to the complexity of its setup. If a config "
         "file is specified, the remaining options serve as CLI overwrites of the config."
     )
-    parser.add_argument("--version", action="version", version=f"{qcfractal.__version__}")
+    parser.add_argument("--version", action="version", version=f"{__version__}")
 
     parser.add_argument("--config-file", type=str, default=None)
 
@@ -652,13 +652,11 @@ def parse_args():
     return data
 
 
-def main(args=None):
+def main():
 
     logging.basicConfig()
 
-    # Grab CLI args if not present
-    if args is None:
-        args = parse_args()
+    args = parse_args()
 
     try:
         if args["debug"]["schema"]:
@@ -709,15 +707,6 @@ def main(args=None):
     if settings.manager.log_file_prefix is not None:
         log_handler = logging.FileHandler(settings.manager.log_file_prefix)
         logging.getLogger().addHandler(log_handler)
-
-    if settings.manager.test:
-        # Test this manager, no client needed
-        client = None
-    else:
-        # Connect to a specified fractal server
-        client = qcfractal.interface.FractalClient(
-            address=settings.server.fractal_uri, **settings.server.dict(skip_defaults=True, exclude={"fractal_uri"})
-        )
 
     # Figure out per-task data
     node_parallel_tasks = settings.common.nodes_per_task > 1  # Whether tasks are node-parallel
@@ -980,8 +969,7 @@ def main(args=None):
         max_queued_tasks = settings.manager.max_queued_tasks
 
     # The queue manager is configured differently for node-parallel and single-node tasks
-    manager = qcfractal.qc_queue.QueueManager(
-        client,
+    manager = QueueManager(
         queue_client,
         max_tasks=max_queued_tasks,
         queue_tag=settings.manager.queue_tag,

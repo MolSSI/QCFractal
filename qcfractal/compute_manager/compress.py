@@ -4,7 +4,7 @@ Helpers for compressing data to send back to the server
 
 import json
 import lzma
-from typing import Union, Dict
+from typing import Union, Dict, Any
 
 from qcelemental.models import AtomicResult, OptimizationResult
 
@@ -86,7 +86,7 @@ def _compress_optimizationresult(
 
 
 def compress_results(
-    results: Dict[str, Union[AtomicResult, OptimizationResult]],
+    results: Dict[str, Any],
 ):
     """
     Compress outputs inside results, storing them in extras

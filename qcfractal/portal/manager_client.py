@@ -1,12 +1,15 @@
 from typing import Optional, List, Dict, Any
 
+from .client_base import PortalClientBase
 from .managers import (
     ManagerName,
     ManagerActivationBody,
     ManagerUpdateBody,
     ManagerStatusEnum,
 )
-from .client_base import PortalClientBase
+from .metadata_models import TaskReturnMetadata
+from .records import AllResultTypes
+from .tasks import TaskClaimBody, TaskReturnBody
 
 
 class ManagerClient(PortalClientBase):
@@ -120,3 +123,30 @@ class ManagerClient(PortalClientBase):
         )
 
         return self._update_on_server(manager_update)
+
+    def claim(self, limit: int) -> List[Dict[str, Any]]:
+
+        claim_data = {"name_data": self.manager_name_data, "limit": limit}
+
+        return self._auto_request(
+            "post",
+            "v1/task/claim",
+            TaskClaimBody,
+            None,
+            List[Dict[str, Any]],
+            claim_data,
+            None,
+        )
+
+    def return_finished(self, results: Dict[int, AllResultTypes]) -> TaskReturnMetadata:
+        return_data = {"name_data": self.manager_name_data, "results": results}
+
+        return self._auto_request(
+            "post",
+            "v1/task/return",
+            TaskReturnBody,
+            None,
+            TaskReturnMetadata,
+            return_data,
+            None,
+        )

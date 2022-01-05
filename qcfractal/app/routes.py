@@ -218,9 +218,8 @@ def handle_auth_error(error):
 
 @main.errorhandler(ComputeManagerError)
 def handle_compute_manager_error(error: ComputeManagerError):
-    # This handles errors with compute managers
-    # This is needed to tell managers that they should shutdown
-    return jsonify(msg=str(error), shutdown=error.shutdown), 400
+    # Handle compute manager errors
+    return jsonify(msg=str(error)), 400
 
 
 def check_access(fn):
