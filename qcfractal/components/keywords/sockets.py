@@ -9,7 +9,7 @@ from qcfractal.db_socket.helpers import (
     delete_general,
     insert_mixed_general,
 )
-from qcfractal.exceptions import LimitExceededError
+from qcfractal.portal.exceptions import LimitExceededError
 from qcfractal.portal.keywords import KeywordSet
 from qcfractal.portal.metadata_models import InsertMetadata, DeleteMetadata
 from .db_models import KeywordsORM

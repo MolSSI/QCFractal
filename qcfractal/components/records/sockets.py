@@ -18,7 +18,7 @@ from qcfractal.db_socket.helpers import (
     get_general_multi,
     delete_general,
 )
-from qcfractal.exceptions import UserReportableError
+from qcfractal.portal.exceptions import UserReportableError
 from qcfractal.portal.metadata_models import DeleteMetadata, UndeleteMetadata, QueryMetadata, UpdateMetadata
 from qcfractal.portal.outputstore import OutputStore, OutputTypeEnum, CompressionEnum
 from qcfractal.portal.records import FailedOperation, PriorityEnum, RecordStatusEnum

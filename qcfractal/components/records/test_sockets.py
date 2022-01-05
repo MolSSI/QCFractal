@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.exceptions import MissingDataError
+from qcfractal.portal.exceptions import MissingDataError
 from qcfractal.portal.records import PriorityEnum, RecordStatusEnum, RecordQueryBody
 from qcfractal.testing import populate_db, mname1
 

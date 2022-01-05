@@ -4,7 +4,12 @@ Tests the client functions related to user management
 
 import pytest
 
-from qcfractal.exceptions import InvalidUsernameError, InvalidPasswordError, InvalidRolenameError, AuthenticationFailure
+from qcfractal.portal.exceptions import (
+    InvalidUsernameError,
+    InvalidPasswordError,
+    InvalidRolenameError,
+    AuthenticationFailure,
+)
 from qcfractal.portal.client import PortalRequestError
 from qcfractal.portal.permissions import UserInfo
 from qcfractal.testing import TestingSnowflake, _test_users

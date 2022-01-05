@@ -4,7 +4,7 @@ from typing import Optional, Union, List
 
 from pydantic import BaseModel, Field, validator, constr, Extra
 
-from qcfractal.exceptions import InvalidPasswordError, InvalidUsernameError, InvalidRolenameError
+from ..exceptions import InvalidPasswordError, InvalidUsernameError, InvalidRolenameError
 
 
 def is_valid_password(password: str) -> None:

@@ -8,7 +8,12 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.exceptions import UserManagementError, AuthenticationFailure, InvalidPasswordError, InvalidUsernameError
+from qcfractal.portal.exceptions import (
+    UserManagementError,
+    AuthenticationFailure,
+    InvalidPasswordError,
+    InvalidUsernameError,
+)
 from qcfractal.portal.permissions.models import UserInfo, is_valid_password
 
 if TYPE_CHECKING:

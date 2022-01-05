@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import select
 
-from qcfractal.exceptions import UserManagementError
+from qcfractal.portal.exceptions import UserManagementError
 from qcfractal.portal.permissions import RoleInfo, is_valid_rolename
 from .db_models import RoleORM
 

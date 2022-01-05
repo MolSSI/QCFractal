@@ -18,7 +18,7 @@ from flask_jwt_extended import (
 from werkzeug.exceptions import BadRequest, InternalServerError, HTTPException, Forbidden
 
 from qcfractal.app import main, storage_socket
-from qcfractal.exceptions import UserReportableError, AuthenticationFailure, ComputeManagerError
+from qcfractal.portal.exceptions import UserReportableError, AuthenticationFailure, ComputeManagerError
 from qcfractal.app.policyuniverse import Policy
 from qcfractal.portal.serialization import deserialize, serialize
 

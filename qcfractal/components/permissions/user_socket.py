@@ -8,7 +8,7 @@ import bcrypt
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import select
 
-from qcfractal.exceptions import AuthenticationFailure, UserManagementError
+from qcfractal.portal.exceptions import AuthenticationFailure, UserManagementError
 from qcfractal.portal.permissions import UserInfo, is_valid_password, is_valid_username
 from .db_models import UserORM
 

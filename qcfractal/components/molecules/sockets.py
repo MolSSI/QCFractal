@@ -17,7 +17,7 @@ from qcfractal.db_socket.helpers import (
     get_general,
     calculate_limit,
 )
-from qcfractal.exceptions import LimitExceededError, MissingDataError
+from qcfractal.portal.exceptions import LimitExceededError, MissingDataError
 from qcfractal.portal.metadata_models import (
     InsertMetadata,
     DeleteMetadata,
