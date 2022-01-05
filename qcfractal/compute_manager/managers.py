@@ -12,6 +12,7 @@ import uuid
 from typing import Any, Dict, List, Optional, Union, Sequence
 
 import qcengine as qcng
+from qcelemental.models import Molecule, FailedOperation
 from pydantic import BaseModel, validator
 
 from . import __version__
@@ -19,6 +20,17 @@ from .adapters import build_queue_adapter
 from .compress import compress_results
 
 __all__ = ["QueueManager"]
+
+try:
+    from ..portal import ManagerClient, PortalRequestError
+    from ..portal.managers import ManagerName, ManagerActivationBody, ManagerUpdateBody
+    from ..portal.metadata_models import TaskReturnMetadata
+    from ..portal.records import AllResultTypes
+except (ValueError, ImportError):  # ValueError: attempted relative import beyond top-level package
+    from qcportal import ManagerClient, PortalRequestError
+    from qcportal.managers import ManagerName, ManagerActivationBody, ManagerUpdateBody
+    from qcportal.metadata_models import TaskReturnMetadata
+    from qcportal.records import AllResultTypes
 
 # TODO - this function is duplicated, but partly because managers call automodel_request directly
 def make_list(obj):
@@ -125,24 +137,11 @@ class QueueManager:
     """
     This object maintains a computational queue and watches for finished tasks for different
     queue backends. Finished tasks are added to the database and removed from the queue.
-
-    Attributes
-    ----------
-    client : FractalClient
-        A FractalClient connected to a server.
-    queue_adapter : QueueAdapter
-        The DBAdapter class for queue abstraction
-    errors : dict
-        A dictionary of current errors
-    logger : logging.logger. Optional, Default: None
-        A logger for the QueueManager
     """
 
     def __init__(
         self,
-        client: "FractalClient",
         queue_client: "BaseAdapter",
-        logger: Optional[logging.Logger] = None,
         max_tasks: int = 200,
         queue_tag: Optional[Union[str, List[str]]] = None,
         manager_name: str = "unlabeled",
@@ -156,17 +155,13 @@ class QueueManager:
         cores_per_rank: Optional[int] = 1,
         scratch_directory: Optional[str] = None,
         retries: Optional[int] = 2,
-        configuration: Optional[Dict[str, Any]] = None,
+        configuration=None,
     ):
         """
         Parameters
         ----------
-        client : FractalClient
-            A FractalClient connected to a server
         queue_client : BaseAdapter
             The DBAdapter class for queue abstraction
-        logger : Optional[logging.Logger], optional
-            A logger for the QueueManager
         max_tasks : int, optional
             The maximum number of tasks to hold at any given time
         queue_tag : str, optional
@@ -209,15 +204,18 @@ class QueueManager:
         """
 
         # Setup logging
-        if logger:
-            self.logger = logger
-        else:
-            self.logger = logging.getLogger("QueueManager")
+        self.logger = logging.getLogger("QCFractalCompute")
 
-        self.name_data = {"cluster": manager_name, "hostname": socket.gethostname(), "uuid": str(uuid.uuid4())}
-        self._name = self.name_data["cluster"] + "-" + self.name_data["hostname"] + "-" + self.name_data["uuid"]
+        self.name_data = ManagerName(cluster=manager_name, hostname=socket.gethostname(), uuid=str(uuid.uuid4()))
 
-        self.client = client
+        self.client = ManagerClient(
+            name_data=self.name_data,
+            address=configuration.server.fractal_uri,
+            username=configuration.server.username,
+            password=configuration.server.password,
+            verify=configuration.server.verify,
+        )
+
         self.cores_per_task = cores_per_task
         self.memory_per_task = memory_per_task
         self.nodes_per_task = nodes_per_task or 1
@@ -283,9 +281,9 @@ class QueueManager:
 
         if self.verbose:
             self.logger.info("    Name Information:")
-            self.logger.info("        Cluster:     {}".format(self.name_data["cluster"]))
-            self.logger.info("        Hostname:    {}".format(self.name_data["hostname"]))
-            self.logger.info("        UUID:        {}\n".format(self.name_data["uuid"]))
+            self.logger.info("        Cluster:     {}".format(self.name_data.cluster))
+            self.logger.info("        Hostname:    {}".format(self.name_data.hostname))
+            self.logger.info("        UUID:        {}\n".format(self.name_data.uuid))
 
         self.logger.info("    Queue Adapter:")
         self.logger.info("        {}\n".format(self.queue_adapter))
@@ -301,13 +299,12 @@ class QueueManager:
             self.logger.info("        Programs:       {}".format(self.available_programs))
             self.logger.info("        Procedures:     {}\n".format(self.available_procedures))
 
-        # DGAS Note: Note super happy about how this if/else turned out. Looking for alternatives.
         if self.connected():
             # Pull server info
-            self.server_info = client.server_information()
+            self.server_info = self.client.get_server_information()
             self.server_name = self.server_info["name"]
             self.server_version = self.server_info["version"]
-            self.server_query_limit = self.server_info["query_limits"]["manager_task"]
+            self.server_query_limit = self.server_info["response_limits"]["manager_task"]
             if self.max_tasks > self.server_query_limit:
                 self.max_tasks = self.server_query_limit
                 self.logger.warning(
@@ -317,12 +314,7 @@ class QueueManager:
                 )
             self.heartbeat_frequency = self.server_info["manager_heartbeat_frequency"]
 
-            # Tell the server we are up and running
-            payload = self._payload_template()
-            payload["data"]["operation"] = "startup"
-            payload["data"]["configuration"] = self.configuration
-
-            self.client._automodel_request("queue_manager", "put", payload)
+            self.client.activate(__version__, qcng.__version__, self.all_program_info, tags=self.queue_tag)
 
             if self.verbose:
                 self.logger.info("    Connected:")
@@ -336,34 +328,13 @@ class QueueManager:
             self.logger.info("    QCFractal server information:")
             self.logger.info("        Not connected, some actions will not be available")
 
-    def _payload_template(self):
-        meta = {
-            **self.name_data.copy(),
-            # Version info
-            "qcengine_version": qcng.__version__,
-            "manager_version": __version__,
-            # User info
-            "username": self.client.username,
-            # Pull info
-            "programs": self.all_program_info,
-            "tag": self.queue_tag,
-            # Statistics
-            "total_worker_walltime": self.statistics.total_worker_walltime,
-            "total_task_walltime": self.statistics.total_task_walltime,
-            "active_tasks": self.statistics.active_task_slots,
-            "active_cores": self.statistics.active_cores,
-            "active_memory": self.statistics.active_memory,
-        }
-
-        return {"meta": meta, "data": {}}
-
     ## Accessors
 
     def name(self) -> str:
         """
         Returns the Managers full name.
         """
-        return self._name
+        return self.name_data.fullname
 
     def connected(self) -> bool:
         """
@@ -378,11 +349,9 @@ class QueueManager:
         if self.connected() is False:
             raise AttributeError("Manager is not connected to a server, this operations is not available.")
 
-    ## Start/stop functionality
-
     def start(self) -> None:
         """
-        Starts up all IOLoops and processes.
+        Starts the manager
 
         This will block until stop() is called
         """
@@ -390,7 +359,7 @@ class QueueManager:
         self.assert_connected()
 
         def scheduler_update():
-            self.update()
+            self.update(True)
             self.scheduler.enter(self.update_frequency, 1, scheduler_update)
 
         def scheduler_heartbeat():
@@ -404,35 +373,31 @@ class QueueManager:
 
         try:
             self.scheduler.run()
+        except KeyboardInterrupt:
+            self.logger.info("Caught SIGINT/Keyboard interrupt")
+
         except SleepInterrupted:
             self.logger.info("Running of services successfully interrupted")
 
-            # Push data back to the server
-            self.shutdown()
         finally:
+            # Push data back to the server & notify server of shutdown
+            self.update(new_tasks=False)
+            self.deactivate()
+
             # Close down the adapter
-            self.close_adapter()
+            self.queue_adapter.close()
 
             self.logger.info("QueueManager stopping gracefully.")
 
     def stop(self) -> None:
         """
-        Shuts down the manager
+        Interrupts a running worker, causing it to shut down
         """
-        self.logger.info("QueueManager stopping/shutting down")
+        self.logger.info("Manager stopping/shutting down")
 
         # Interrupt the scheduler (will finish if in the middle of an update or something, but will
         # cancel running calculations)
         self.int_sleep.interrupt()
-
-    def close_adapter(self) -> bool:
-        """
-        Closes down the underlying adapter.
-        """
-
-        return self.queue_adapter.close()
-
-    ## Queue Manager functions
 
     def heartbeat(self) -> None:
         """
@@ -441,89 +406,72 @@ class QueueManager:
 
         self.assert_connected()
 
-        payload = self._payload_template()
-        payload["data"]["operation"] = "heartbeat"
         try:
-            self.client._automodel_request("queue_manager", "put", payload)
-            self.logger.debug("Heartbeat was successful.")
-        except IOError:
-            self.logger.warning("Heartbeat was not successful.")
+            self.client.heartbeat(
+                total_worker_walltime=self.statistics.total_worker_walltime,
+                total_task_walltime=self.statistics.total_task_walltime,
+                active_tasks=self.statistics.active_task_slots,
+                active_cores=self.statistics.active_cores,
+                active_memory=self.statistics.active_memory,
+            )
+        except ConnectionError as ex:
+            self.logger.warning(f"Heartbeat failed: {str(ex).strip()}")
 
-    def shutdown(self) -> Dict[str, Any]:
+    def deactivate(self):
         """
         Shutdown the manager and returns tasks to queue.
         """
         self.assert_connected()
 
-        self.update(new_tasks=False, allow_shutdown=False)
-
-        payload = self._payload_template()
-        payload["data"]["operation"] = "shutdown"
         try:
-            response = self.client._automodel_request("queue_manager", "put", payload, timeout=5)
-            response["success"] = True
+            # Notify the server of shutdown
+            self.client.deactivate(
+                total_worker_walltime=self.statistics.total_worker_walltime,
+                total_task_walltime=self.statistics.total_task_walltime,
+                active_tasks=self.statistics.active_task_slots,
+                active_cores=self.statistics.active_cores,
+                active_memory=self.statistics.active_memory,
+            )
 
-            shutdown_string = "Shutdown was successful, {} tasks returned to master queue."
+            shutdown_string = "Shutdown was successful, {} tasks returned to the fractal server"
 
-        except IOError as e:
+        except Exception as ex:
             # TODO something as we didnt successfully add the data
-            self.logger.warning(f"Shutdown was not successful. This may delay queued tasks. Error: {e}")
-            response = {"nshutdown": 0, "success": False}
+            self.logger.warning(f"Deactivation failed: {str(ex).strip()}")
             shutdown_string = "Shutdown was not successful, {} tasks not returned."
 
-        nshutdown = response["nshutdown"]
         if self.n_stale_jobs:
-            shutdown_string = shutdown_string.format(
-                f"{min(0, nshutdown-self.n_stale_jobs)} active and {nshutdown} stale"
-            )
+            shutdown_string = shutdown_string.format(f"{self.active} active and {self.n_stale_jobs} stale")
         else:
-            shutdown_string = shutdown_string.format(nshutdown)
+            shutdown_string = shutdown_string.format(self.active)
 
         self.logger.info(shutdown_string)
 
-        response["info"] = shutdown_string
-        return response
+    def _return_finished(self, results: Dict[int, AllResultTypes]) -> TaskReturnMetadata:
+        return_meta = self.client.return_finished(results)
+        self.logger.info(f"Successfully return tasks to the fractal server")
+        if return_meta.accepted_ids:
+            self.logger.info(f"Accepted task ids: " + " ".join(str(x) for x in return_meta.accepted_ids))
+            if return_meta.accepted_ids:
+                self.logger.info(f"Rejected task ids: ")
+            for tid, reason in return_meta.rejected_info:
+                self.logger.warning(f"    Task id {tid}: {reason}")
+            if not return_meta.success:
+                self.logger.warning(f"Error in returning tasks: {str(return_meta.error_string)}")
+        return return_meta
 
-    def _post_update(self, payload_data, allow_shutdown=True):
-        """Internal function to post payload update"""
-        payload = self._payload_template()
-        # Update with data
-        payload["data"] = payload_data
-        try:
-            self.client._automodel_request("queue_manager", "post", payload, full_return=True)
-        except IOError:
-
-            # Trapped behavior elsewhere
-            raise
-
-        except Exception as fatal:
-            # Non IOError, something has gone very wrong
-            self.logger.error(
-                "An error was detected which was not an expected requests-type error. The manager "
-                "will attempt shutdown as best it can. Please report this error to the QCFractal "
-                "developers as this block should not be "
-                "seen outside of debugging modes. Error is as follows\n{}".format(fatal)
-            )
-
-            try:
-                if allow_shutdown:
-                    self.shutdown()
-            finally:
-                raise fatal
-
-    def _update_stale_jobs(self, allow_shutdown=True):
+    def _update_stale_jobs(self) -> None:
         """
         Attempt to post the previous payload failures
         """
         clear_indices = []
         for index, (results, attempts) in enumerate(self._stale_payload_tracking):
             try:
-                self._post_update(results)
-                self.logger.info(f"Successfully pushed jobs from {attempts+1} updates ago")
-                self.logger.info(f"Tasks pushed: " + str(list(results.keys())))
-                clear_indices.append(index)
-            except IOError:
+                return_meta = self._return_finished(results)
+                if return_meta.success:
+                    self.logger.info(f"Successfully pushed jobs from {attempts+1} updates ago")
 
+            except ConnectionError:
                 # Tried and failed
                 attempts += 1
                 # Case: Still within the retry limit
@@ -551,31 +499,26 @@ class QueueManager:
         ):
             self.logger.error("Exceeded number of stale updates allowed! Attempting to shutdown gracefully...")
 
-            # Log all not-quite stale jobs to stale
+            # Log all not-quite stale jobs to stale (for logging?)
             for (results, _) in self._stale_payload_tracking:
                 self.n_stale_jobs += len(results)
-            try:
-                if allow_shutdown:
-                    self.shutdown()
-            finally:
-                raise RuntimeError("Exceeded number of stale updates allowed!")
 
-    def update(self, new_tasks: bool = True, allow_shutdown=True) -> bool:
+            self.stop()
+
+    def update(self, new_tasks) -> None:
         """Examines the queue for completed tasks and adds successful completions to the database
         while unsuccessful are logged for future inspection.
 
         Parameters
         ----------
-        new_tasks: bool, optional, Default: True
+        new_tasks
             Try to get new tasks from the server
-        allow_shutdown: bool, optional, Default: True
-            Allow function to attempt graceful shutdowns in the case of stale job or fatal error limits.
-            Does not prevent errors from being raise, but mostly used to prevent infinite loops when update is
-            called from `shutdown` itself
         """
 
         self.assert_connected()
-        self._update_stale_jobs(allow_shutdown=allow_shutdown)
+
+        # First, try pushing back any stale results
+        self._update_stale_jobs()
 
         results = self.queue_adapter.acquire_complete()
 
@@ -605,22 +548,22 @@ class QueueManager:
         n_fail = 0
         n_result = len(results)
         task_cpu_hours = 0
-        error_payload = []
 
         if n_result:
             # For logging
             failure_messages = {}
 
             try:
-                self._post_update(results, allow_shutdown=allow_shutdown)
-                task_status = {k: "sent" for k in results.keys()}
-            except IOError:
+                return_meta = self.client.return_finished(results)
+                task_status = {k: "sent" for k in results.keys() if k in return_meta.accepted_ids}
+                task_status.update({k: "rejected" for k in results.keys() if k in return_meta.rejected_ids})
+            except ConnectionError:
                 if self.server_error_retries is None or self.server_error_retries > 0:
-                    self.logger.warning("Post complete tasks was not successful. Attempting again on next update.")
+                    self.logger.warning("Returning complete tasks failed. Attempting again on next update.")
                     self._stale_payload_tracking.append([results, 0])
                     task_status = {k: "deferred" for k in results.keys()}
                 else:
-                    self.logger.warning("Post complete tasks was not successful. Data may be lost.")
+                    self.logger.warning("Returning complete tasks failed. Data may be lost.")
                     self.n_stale_jobs += len(results)
                     task_status = {k: "unknown_error" for k in results.keys()}
 
@@ -634,6 +577,8 @@ class QueueManager:
 
                     task_status[key] += " / success"
                 else:
+                    assert isinstance(result, FailedOperation)
+
                     task_status[key] += f" / failed: {result.error.error_type}"
                     failure_messages[key] = result.error
 
@@ -674,10 +619,10 @@ class QueueManager:
         self.statistics.total_task_walltime += task_cpu_hours
         na_format = ""
         float_format = ",.2f"
-        if self.statistics.total_completed_tasks == 0:
-            task_stats_str = "Task statistics unavailable until first tasks return"
-            worker_stats_str = None
-        else:
+
+        task_stats_str = None
+        worker_stats_str = None
+        if self.statistics.total_completed_tasks > 0:
             success_rate = self.statistics.total_successful_tasks / self.statistics.total_completed_tasks * 100
             success_format = float_format
             task_stats_str = (
@@ -712,58 +657,24 @@ class QueueManager:
                         f", Core Usage vs. Max Resources Requested: " f"{efficiency_of_potential:{efficiency_format}}%"
                     )
 
-        self.logger.info(task_stats_str)
+        if task_stats_str is not None:
+            self.logger.info(task_stats_str)
         if worker_stats_str is not None:
             self.logger.info(worker_stats_str)
 
-        if (new_tasks is False) or (open_slots == 0):
-            return True
+        if new_tasks is True and open_slots > 0:
+            try:
+                new_tasks = self.client.claim(open_slots)
+            except ConnectionError as ex:
+                print(type(ex))
+                self.logger.warning(f"Acquisition of new tasks failed: {str(ex).strip()}")
+                return
 
-        # Get new tasks
-        payload = self._payload_template()
-        payload["data"]["limit"] = open_slots
+            self.logger.info("Acquired {} new tasks.".format(len(new_tasks)))
 
-        try:
-            new_tasks = self.client._automodel_request("queue_manager", "get", payload)
-        except IOError:
-            # TODO something as we didnt successfully get data
-            self.logger.warning("Acquisition of new tasks was not successful.")
-            return False
-
-        self.logger.info("Acquired {} new tasks.".format(len(new_tasks)))
-
-        # Add new tasks to queue
-        self.queue_adapter.submit_tasks(new_tasks)
-        self.active += len(new_tasks)
-        return True
-
-    def await_results(self) -> bool:
-        """A synchronous method for testing or small launches
-        that awaits task completion.
-
-        Returns
-        -------
-        bool
-            Return True if the operation completed successfully
-        """
-
-        self.assert_connected()
-
-        self.update()
-        self.queue_adapter.await_results()
-        self.update(new_tasks=False)
-        return True
-
-    def list_current_tasks(self) -> List[Any]:
-        """Provides a list of tasks currently in the queue along
-        with the associated keys.
-
-        Returns
-        -------
-        ret : list of tuples
-            All tasks currently still in the database
-        """
-        return self.queue_adapter.list_tasks()
+            # Add new tasks to queue
+            self.queue_adapter.submit_tasks(new_tasks)
+            self.active += len(new_tasks)
 
     def test(self, n=1) -> bool:
         """
@@ -772,6 +683,26 @@ class QueueManager:
 
         from qcfractal import testing
 
+        test_molecule = Molecule(
+            name="HOOH",
+            geometry=[
+                1.848671612718783,
+                1.4723466699847623,
+                0.6446435664312682,
+                1.3127881568370925,
+                -0.1304193792618355,
+                -0.2118922703584585,
+                -1.3127927010942337,
+                0.1334187339129038,
+                -0.21189641512867613,
+                -1.8386801669381663,
+                -1.482348324549995,
+                0.6446369709610646,
+            ],
+            symbols=["H", "O", "O", "H"],
+            connectivity=[[0, 1, 1], [1, 2, 1], [2, 3, 1]],
+        )
+
         self.logger.info("Testing requested, generating tasks")
         task_base = json.dumps(
             {
@@ -779,7 +710,7 @@ class QueueManager:
                     "function": "qcengine.compute",
                     "args": [
                         {
-                            "molecule": get_molecule("hooh.json").dict(encoding="json"),
+                            "molecule": Molecule.from_file("hooh.json").dict(encoding="json"),
                             "driver": "energy",
                             "model": {},
                             "keywords": {},
