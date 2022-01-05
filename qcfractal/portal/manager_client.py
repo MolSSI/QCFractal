@@ -1,6 +1,6 @@
 from typing import Optional, List, Dict, Any
 
-from qcfractal.portal.managers import (
+from .managers import (
     ManagerName,
     ManagerActivationBody,
     ManagerUpdateBody,

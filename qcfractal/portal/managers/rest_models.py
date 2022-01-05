@@ -1,10 +1,10 @@
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict
 
 from pydantic import Field, validator, constr
 
-from qcfractal.portal.base_models import RestModelBase, QueryProjModelBase
 from .models import ManagerName, ManagerStatusEnum
+from ..base_models import RestModelBase, QueryProjModelBase
 
 
 class ManagerActivationBody(RestModelBase):

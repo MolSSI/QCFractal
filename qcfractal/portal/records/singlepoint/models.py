@@ -1,7 +1,5 @@
 from enum import Enum
-from typing import Optional, Union, Any, List, Dict
-
-from typing_extensions import Literal
+from typing import Optional, Union, Any, List
 
 from pydantic import BaseModel, Field, constr, validator, Extra
 from qcelemental.models import Molecule
@@ -10,9 +8,10 @@ from qcelemental.models.results import (
     AtomicResultProperties as SinglepointProperties,
     WavefunctionProperties,
 )
+from typing_extensions import Literal
 
-from qcfractal.portal.keywords import KeywordSet
-from qcfractal.portal.records import BaseRecord, RecordAddBodyBase, RecordQueryBody
+from .. import BaseRecord, RecordAddBodyBase, RecordQueryBody
+from ...keywords import KeywordSet
 
 
 class SinglepointDriver(str, Enum):
