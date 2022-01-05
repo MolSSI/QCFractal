@@ -4,8 +4,8 @@ from typing import List, Union, Optional
 from pydantic import BaseModel, Extra, Field, constr, validator
 from typing_extensions import Literal
 
-from qcfractal.portal.records import BaseRecord, RecordAddBodyBase, RecordQueryBody
-from qcfractal.portal.records.optimization.models import OptimizationInputSpecification, OptimizationSpecification
+from .. import BaseRecord, RecordAddBodyBase, RecordQueryBody
+from ..optimization.models import OptimizationInputSpecification, OptimizationSpecification
 from ...molecules import Molecule
 from ...utils import recursive_normalizer
 

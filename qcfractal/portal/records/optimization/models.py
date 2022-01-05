@@ -2,22 +2,20 @@ from typing import Optional, Union, Any, List, Dict
 
 import pydantic
 from pydantic import BaseModel, Field, constr, validator, Extra
-
-from qcfractal.portal.base_models import CommonGetProjURLParameters
 from qcelemental.models import Molecule
 from qcelemental.models.procedures import (
     OptimizationProtocols,
 )
-
 from typing_extensions import Literal
 
-from qcfractal.portal.records import BaseRecord, RecordAddBodyBase, RecordQueryBody
-from qcfractal.portal.records.singlepoint import (
+from .. import BaseRecord, RecordAddBodyBase, RecordQueryBody
+from ..singlepoint import (
     SinglepointRecord,
     SinglepointSpecification,
     SinglepointInputSpecification,
     SinglepointDriver,
 )
+from ...base_models import CommonGetProjURLParameters
 
 
 class OptimizationSinglepointInputSpecification(SinglepointInputSpecification):

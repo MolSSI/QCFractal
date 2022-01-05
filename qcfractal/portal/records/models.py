@@ -1,23 +1,20 @@
 from __future__ import annotations
 
-from enum import Enum
-
-from pydantic import BaseModel, Field, Extra, validator
 import abc
 from datetime import datetime
+from enum import Enum
+from typing import Optional, Dict, Any, List, TYPE_CHECKING, Union
 
-from qcfractal.portal.base_models import (
+from pydantic import BaseModel, Extra, validator
+from qcelemental.models.results import Provenance
+
+from ..base_models import (
     RestModelBase,
     QueryProjModelBase,
     CommonGetProjURLParameters,
     validate_list_to_single,
 )
-from qcfractal.portal.outputstore import OutputStore, OutputTypeEnum
-from qcelemental.models.results import Provenance
-from typing import Optional, Dict, Any, List, TYPE_CHECKING, Union
-
-if TYPE_CHECKING:
-    from qcfractal.portal import PortalClient
+from ..outputstore import OutputStore, OutputTypeEnum
 
 
 class PriorityEnum(int, Enum):

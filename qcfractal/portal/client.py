@@ -16,17 +16,17 @@ from typing import (
 
 import pydantic
 
-from qcfractal.portal.managers import ManagerQueryBody, ComputeManager
-from qcfractal.portal.metadata_models import QueryMetadata, UpdateMetadata
-from qcfractal.portal.molecules import Molecule, MoleculeIdentifiers, MoleculeQueryBody, MoleculeModifyBody
-from qcfractal.portal.permissions import (
+from .managers import ManagerQueryBody, ComputeManager
+from .metadata_models import QueryMetadata, UpdateMetadata
+from .molecules import Molecule, MoleculeIdentifiers, MoleculeQueryBody, MoleculeModifyBody
+from .permissions import (
     UserInfo,
     RoleInfo,
     is_valid_username,
     is_valid_password,
     is_valid_rolename,
 )
-from qcfractal.portal.records import (
+from .records import (
     RecordStatusEnum,
     PriorityEnum,
     RecordQueryBody,
@@ -36,12 +36,12 @@ from qcfractal.portal.records import (
     AllRecordTypes,
     AllDataModelTypes,
 )
-from qcfractal.portal.records.gridoptimization import (
+from .records.gridoptimization import (
     GridoptimizationKeywords,
     GridoptimizationAddBody,
     GridoptimizationRecord,
 )
-from qcfractal.portal.records.optimization import (
+from .records.optimization import (
     OptimizationProtocols,
     OptimizationRecord,
     OptimizationQueryBody,
@@ -49,20 +49,20 @@ from qcfractal.portal.records.optimization import (
     OptimizationInputSpecification,
     OptimizationAddBody,
 )
-from qcfractal.portal.records.singlepoint import (
+from .records.singlepoint import (
     SinglepointRecord,
     SinglepointAddBody,
     SinglepointQueryBody,
     SinglepointDriver,
     SinglepointProtocols,
 )
-from qcfractal.portal.records.torsiondrive import (
+from .records.torsiondrive import (
     TorsiondriveKeywords,
     TorsiondriveAddBody,
     TorsiondriveRecord,
     TorsiondriveQueryBody,
 )
-from qcfractal.portal.serverinfo import (
+from .serverinfo import (
     AccessLogQueryParameters,
     AccessLogQuerySummaryParameters,
     ErrorLogQueryParameters,

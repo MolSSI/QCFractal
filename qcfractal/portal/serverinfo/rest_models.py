@@ -4,7 +4,7 @@ from typing import Optional, List
 
 from pydantic import validator
 
-from qcfractal.portal.base_models import (
+from ..base_models import (
     validate_list_to_single,
     QueryProjModelBase,
     QueryModelBase,
