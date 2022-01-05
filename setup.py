@@ -51,8 +51,8 @@ if __name__ == "__main__":
         ],
         entry_points={
             "console_scripts": [
-                "qcfractal-server=qcfractal.cli.qcfractal_server:main",
-                "qcfractal-manager=qcfractal.cli.qcfractal_manager:main",
+                "qcfractal-server=qcfractal.qcfractal_server_cli:main",
+                "qcfractal-manager=qcfractal.compute_manager.qcfractal_manager_cli:main",
             ],
             "pytest11": ["qcfractal_testing=qcfractal.testing"],
         },

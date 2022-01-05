@@ -19,7 +19,7 @@ from .portal import PortalClient
 from .portal.records import RecordStatusEnum
 from .postgres_harness import TemporaryPostgres
 from .process_runner import ProcessBase, ProcessRunner
-from .qc_queue import QueueManager
+from .compute_manager import QueueManager
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Sequence, Optional, Set

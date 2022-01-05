@@ -1,5 +1,5 @@
 """
-DQM Client base folder
+Initializer for the queue_handler folder
 """
 
 # We are running inside QCPortal repo
@@ -16,8 +16,5 @@ try:
 except ImportError:
     from .. import __version__, __git_revision__
 
-# Add imports here
-from .client import PortalClient
-from .manager_client import ManagerClient
-
-# from . import collections
+from .adapters import build_queue_adapter
+from .managers import QueueManager
