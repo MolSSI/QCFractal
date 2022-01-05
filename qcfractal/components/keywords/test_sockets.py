@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.exceptions import MissingDataError
+from qcfractal.portal.exceptions import MissingDataError
 from qcfractal.portal.keywords import KeywordSet
 
 if TYPE_CHECKING:

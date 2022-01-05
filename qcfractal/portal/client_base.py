@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from typing import (
-    TYPE_CHECKING,
     Any,
     DefaultDict,
     Dict,
@@ -17,7 +16,7 @@ import pydantic
 import requests
 from pkg_resources import parse_version
 
-from qcfractal.exceptions import AuthenticationFailure
+from .exceptions import AuthenticationFailure
 from . import __version__
 from .serialization import serialize, deserialize
 

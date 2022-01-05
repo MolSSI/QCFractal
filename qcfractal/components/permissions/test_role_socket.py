@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.components.permissions.role_socket import default_roles
-from qcfractal.exceptions import UserManagementError, InvalidRolenameError
+from qcfractal.portal.exceptions import UserManagementError, InvalidRolenameError
 from qcfractal.portal.permissions import RoleInfo, UserInfo
 
 if TYPE_CHECKING:

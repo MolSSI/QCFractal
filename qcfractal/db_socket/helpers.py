@@ -9,7 +9,7 @@ from sqlalchemy.orm import load_only, selectinload, lazyload
 
 from qcfractal.db_socket import BaseORM
 from qcfractal.portal.metadata_models import InsertMetadata, DeleteMetadata
-from ..exceptions import MissingDataError
+from qcfractal.portal.exceptions import MissingDataError
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.attributes import InstrumentedAttribute

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.exceptions import MissingDataError
+from qcfractal.portal.exceptions import MissingDataError
 from qcfractal.portal.molecules import Molecule, MoleculeIdentifiers
 from qcfractal.testing import load_molecule_data
 

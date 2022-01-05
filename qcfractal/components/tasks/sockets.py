@@ -12,7 +12,7 @@ from sqlalchemy.orm import joinedload, contains_eager
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.db_socket.helpers import calculate_limit
-from qcfractal.exceptions import ComputeManagerError
+from qcfractal.portal.exceptions import ComputeManagerError
 from qcfractal.interface.models import (
     FailedOperation,
 )

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.exceptions import ComputeManagerError, MissingDataError
+from qcfractal.portal.exceptions import ComputeManagerError, MissingDataError
 from qcfractal.portal.managers import ManagerName, ManagerStatusEnum
 
 if TYPE_CHECKING:

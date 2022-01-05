@@ -5,7 +5,7 @@ Tests the tasks socket with respect to misbehaving managers
 import logging
 import pytest
 from datetime import datetime
-from qcfractal.exceptions import ComputeManagerError
+from qcfractal.portal.exceptions import ComputeManagerError
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.portal.managers import ManagerName
 from qcfractal.testing import load_procedure_data, caplog_handler_at_level
