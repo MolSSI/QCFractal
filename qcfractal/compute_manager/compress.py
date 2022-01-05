@@ -2,21 +2,15 @@
 Helpers for compressing data to send back to the server
 """
 
-from typing import Union, Optional, Dict
+import json
+import lzma
+from typing import Union, Dict
 
 from qcelemental.models import AtomicResult, OptimizationResult
-
-# Kind of a hack
-try:
-    from qcfractal.portal.outputstore import CompressionEnum, OutputStore
-except:
-    from qcportal.outputstore import CompressionEnum, OutputStore
 
 
 def _compress_common(
     result: Union[AtomicResult, OptimizationResult],
-    compression: CompressionEnum = CompressionEnum.lzma,
-    compression_level: int = None,
 ):
     """
     Compresses outputs of an AtomicResult or OptimizationResult, storing them in extras
@@ -26,26 +20,56 @@ def _compress_common(
     stderr = result.stderr
     error = result.error
 
-    extras = result.extras
+    compressed_outputs = []
     update = {}
+
     if stdout is not None:
-        extras["_qcfractal_compressed_stdout"] = OutputStore.compress(stdout, compression, compression_level)
+        compressed_outputs.append(
+            dict(
+                output_type="stdout",
+                compression="lzma",
+                compression_level=6,
+                data=lzma.compress(stdout.encode("utf-8"), preset=6),
+            )
+        )
+
         update["stdout"] = None
+
     if stderr is not None:
-        extras["_qcfractal_compressed_stderr"] = OutputStore.compress(stderr, compression, compression_level)
+        compressed_outputs.append(
+            dict(
+                output_type="stderr",
+                compression="lzma",
+                compression_level=6,
+                data=lzma.compress(stderr.encode("utf-8"), preset=6),
+            )
+        )
+
+        compressed_outputs["stderr"] = lzma.compress(stderr.encode("utf-8"), preset=6)
         update["stderr"] = None
+
     if error is not None:
-        extras["_qcfractal_compressed_error"] = OutputStore.compress(error, compression, compression_level)
+        compressed_outputs.append(
+            dict(
+                output_type="error",
+                compression="lzma",
+                compression_level=6,
+                data=lzma.compress(json.dumps(error).encode("utf-8"), preset=6),
+            )
+        )
+
         update["error"] = None
 
+    extras = result.extras
     update["extras"] = extras
+    if compressed_outputs:
+        update["extras"]["_qcfractal_compressed_outputs"] = compressed_outputs
+
     return result.copy(update=update)
 
 
 def _compress_optimizationresult(
     result: OptimizationResult,
-    compression: CompressionEnum = CompressionEnum.lzma,
-    compression_level: Optional[int] = None,
 ):
     """
     Compresses outputs inside an OptimizationResult, storing them in extras
@@ -54,17 +78,15 @@ def _compress_optimizationresult(
     """
 
     # Handle the trajectory
-    trajectory = [_compress_common(x, compression, compression_level) for x in result.trajectory]
+    trajectory = [_compress_common(x) for x in result.trajectory]
     result = result.copy(update={"trajectory": trajectory})
 
     # Now handle the outputs of the optimization itself
-    return _compress_common(result, compression, compression_level)
+    return _compress_common(result)
 
 
 def compress_results(
     results: Dict[str, Union[AtomicResult, OptimizationResult]],
-    compression: CompressionEnum = CompressionEnum.lzma,
-    compression_level: int = None,
 ):
     """
     Compress outputs inside results, storing them in extras
@@ -77,9 +99,9 @@ def compress_results(
     ret = {}
     for k, result in results.items():
         if isinstance(result, AtomicResult):
-            ret[k] = _compress_common(result, compression, compression_level)
+            ret[k] = _compress_common(result)
         elif isinstance(result, OptimizationResult):
-            ret[k] = _compress_optimizationresult(result, compression, compression_level)
+            ret[k] = _compress_optimizationresult(result)
         else:
             ret[k] = result
 
