@@ -19,4 +19,4 @@ except ImportError:
 # Add imports here
 from .client import PortalClient
 from .manager_client import ManagerClient
-from . import collections
+#from . import collections

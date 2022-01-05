@@ -3,7 +3,8 @@ from typing import Any, Optional, Union, Dict
 from pydantic import Field, constr, validator
 import qcelemental as qcel
 
-from ...interface.models import ObjectId, DriverEnum
+ObjectId = int
+from .record import DriverEnum
 from .record import Record, QCSpecification
 from .record_utils import register_record
 
