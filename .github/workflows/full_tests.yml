@@ -1,0 +1,84 @@
+name: Full Suite End-to-end tests
+
+on:
+  push:
+    branches:
+      - master
+      - next
+  pull_request:
+    branches:
+      - master
+      - next
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        
+    steps:
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Clone the QCFractal repository
+        uses: actions/checkout@v2
+        with:
+          path: qcfractal
+          fetch-depth: 0
+
+      - name: Install postgres
+        run: sudo apt update && sudo apt install postgresql postgresql-contrib
+
+      - name: Set git identity
+        shell: bash -l {0}
+        run: |
+            git config --global user.email "you@example.com"
+            git config --global user.name "GHA"
+ 
+      - name: Clone QCPortal repository
+        uses: actions/checkout@v2
+        with:
+          repository: bennybp/QCPortal.git
+          ref: next
+          path: qcportal
+          fetch-depth: 0
+
+      - name: Clone QCFractalCompute repository
+        uses: actions/checkout@v2
+        with:
+          repository: bennybp/QCFractalCompute.git
+          ref: next
+          path: qcfractalcompute
+          fetch-depth: 0
+
+      - name: Split out portal into QCPortal
+        shell: bash -l {0}
+        run: |
+          git -C qcfractal subtree split -q --prefix qcfractal/portal --branch ptl_test_tmp
+          git -C qcportal subtree pull -q --prefix qcportal ../qcfractal ptl_test_tmp
+
+      - name: Split out compute_manager into QCFractalCompute
+        shell: bash -l {0}
+        run: |
+          git -C qcfractal subtree split -q --prefix qcfractal/compute_manager --branch cmp_test_tmp
+          git -C qcfractalcompute subtree pull -q --prefix qcfractalcompute ../qcfractal cmp_test_tmp
+
+      - name: Install local QCPortal
+        shell: bash -l {0}
+        run: |
+          pip install ./qcportal
+
+      - name: Install local QCFractalCompute
+        shell: bash -l {0}
+        run: |
+          pip install ./qcfractalcompute
+
+      - name: Run tests
+        shell: bash -l {0}
+        run: |
+          python3 -c 'import qcportal;print(qcportal.__version__)'
+          python3 -c 'import qcfractalcompute;print(qcfractalcompute.__version__)'
