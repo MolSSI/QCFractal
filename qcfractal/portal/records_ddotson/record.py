@@ -11,7 +11,10 @@ from qcelemental.models.results import AtomicResultProtocols
 
 from ..outputstore import OutputStore
 from ..records.models import RecordStatusEnum
-from ...interface.models import ObjectId, ProtoModel
+
+# from ...interface.models import ObjectId, ProtoModel
+ObjectId = int
+from qcelemental.models import ProtoModel
 
 
 class DriverEnum(str, Enum):
