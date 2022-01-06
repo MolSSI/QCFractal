@@ -608,25 +608,25 @@ class PortalClient(PortalClientBase):
 
     def cancel_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
         body_data = {"record_id": make_list(record_id), "status": RecordStatusEnum.cancelled}
-        return self._auto_request("patch", "/v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
+        return self._auto_request("patch", "v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
     def reset_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
         body_data = {"record_id": make_list(record_id), "status": RecordStatusEnum.waiting}
 
-        return self._auto_request("patch", "/v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
+        return self._auto_request("patch", "v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
     def delete_records(
         self, record_id: Union[int, Sequence[int]], soft_delete=True, delete_children: bool = True
     ) -> DeleteMetadata:
         url_params = {"record_id": make_list(record_id), "soft_delete": soft_delete, "delete_children": delete_children}
         return self._auto_request(
-            "delete", "/v1/record", None, RecordDeleteURLParameters, DeleteMetadata, None, url_params
+            "delete", "v1/record", None, RecordDeleteURLParameters, DeleteMetadata, None, url_params
         )
 
     def undelete_records(self, record_id: Union[int, Sequence[int]]) -> UndeleteMetadata:
         url_params = {"record_id": make_list(record_id)}
         return self._auto_request(
-            "post", "/v1/record/undelete", None, RecordUndeleteURLParameters, UndeleteMetadata, None, url_params
+            "post", "v1/record/undelete", None, RecordUndeleteURLParameters, UndeleteMetadata, None, url_params
         )
 
     def modify_records(
@@ -642,7 +642,7 @@ class PortalClient(PortalClientBase):
             "priority": new_priority,
             "delete_tag": delete_tag,
         }
-        return self._auto_request("patch", "/v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
+        return self._auto_request("patch", "v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
     def add_comment(self, record_id: Union[int, Sequence[int]], comment: str) -> UpdateMetadata:
         """
@@ -666,7 +666,7 @@ class PortalClient(PortalClientBase):
             "record_id": make_list(record_id),
             "comment": comment,
         }
-        return self._auto_request("patch", "/v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
+        return self._auto_request("patch", "v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
     ##############################################################
     # Singlepoint calculations
