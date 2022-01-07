@@ -9,11 +9,11 @@ import socket
 import threading
 import time
 import uuid
-from typing import Any, Dict, List, Optional, Union, Sequence
+from typing import Dict, List, Optional, Union
 
 import qcengine as qcng
-from qcelemental.models import Molecule, FailedOperation
 from pydantic import BaseModel, validator
+from qcelemental.models import Molecule, FailedOperation
 
 from . import __version__
 from .adapters import build_queue_adapter
@@ -21,31 +21,11 @@ from .compress import compress_results
 
 __all__ = ["QueueManager"]
 
-try:
-    from ..portal import ManagerClient, PortalRequestError
-    from ..portal.managers import ManagerName, ManagerActivationBody, ManagerUpdateBody
-    from ..portal.metadata_models import TaskReturnMetadata
-    from ..portal.records import AllResultTypes
-except (ValueError, ImportError):  # ValueError: attempted relative import beyond top-level package
-    from qcportal import ManagerClient, PortalRequestError
-    from qcportal.managers import ManagerName, ManagerActivationBody, ManagerUpdateBody
-    from qcportal.metadata_models import TaskReturnMetadata
-    from qcportal.records import AllResultTypes
-
-# TODO - this function is duplicated, but partly because managers call automodel_request directly
-def make_list(obj):
-    """
-    Returns a list containing obj if obj is not a list or sequence type object
-    """
-
-    if obj is None:
-        return None
-    # Be careful. strings are sequences
-    if isinstance(obj, str):
-        return [obj]
-    if not isinstance(obj, Sequence):
-        return [obj]
-    return list(obj)
+from qcportal import ManagerClient
+from qcportal.utils import make_list
+from qcportal.managers import ManagerName
+from qcportal.metadata_models import TaskReturnMetadata
+from qcportal.records import AllResultTypes
 
 
 class SleepInterrupted(BaseException):
