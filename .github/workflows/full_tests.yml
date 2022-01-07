@@ -64,7 +64,7 @@ jobs:
       - name: Split out compute_manager into QCFractalCompute
         shell: bash -l {0}
         run: |
-          git -C qcfractal subtree split -q --prefix qcfractal/compute_manager --branch cmp_test_tmp
+          git -C qcfractal subtree split -q --prefix qcfractalcompute --branch cmp_test_tmp
           git -C qcfractalcompute subtree pull -q --prefix qcfractalcompute ../qcfractal cmp_test_tmp
 
       - name: Install local QCPortal

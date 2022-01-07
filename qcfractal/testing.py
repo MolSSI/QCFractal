@@ -39,7 +39,7 @@ from qcportal import PortalClient, ManagerClient
 from qcportal.records import PriorityEnum, RecordStatusEnum
 from qcportal.utils import recursive_normalizer
 from .postgres_harness import TemporaryPostgres
-from .compute_manager import build_queue_adapter, QueueManager
+from qcfractalcompute import build_queue_adapter, QueueManager
 from .snowflake import FractalSnowflake, attempt_client_connect
 
 # Path to this file (directory only)

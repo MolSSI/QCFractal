@@ -11,15 +11,15 @@ from concurrent.futures import ProcessPoolExecutor
 from queue import Empty  # Just for exception handling
 from typing import TYPE_CHECKING
 
+from qcfractalcompute import QueueManager
+from qcportal import PortalClient
+from qcportal.records import RecordStatusEnum
 from .app.flask_app import FlaskProcess
 from .config import FractalConfig, DatabaseConfig, update_nested_dict
 from .periodics import PeriodicsProcess
 from .port_util import find_open_port
-from qcportal import PortalClient
-from qcportal.records import RecordStatusEnum
 from .postgres_harness import TemporaryPostgres
 from .process_runner import ProcessBase, ProcessRunner
-from .compute_manager import QueueManager
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Sequence, Optional, Set
