@@ -3,8 +3,8 @@ from typing import List, Optional
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper, delete_helper
 from qcfractal.app.routes import check_access, wrap_route
-from qcfractal.portal.base_models import CommonGetURLParameters, CommonDeleteURLParameters
-from qcfractal.portal.keywords import KeywordSet
+from qcportal.base_models import CommonGetURLParameters, CommonDeleteURLParameters
+from qcportal.keywords import KeywordSet
 
 
 @main.route("/v1/keyword", methods=["GET"])

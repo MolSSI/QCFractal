@@ -12,19 +12,19 @@ from sqlalchemy.orm import joinedload, contains_eager
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.db_socket.helpers import calculate_limit
-from qcfractal.portal.exceptions import ComputeManagerError
+from qcportal.exceptions import ComputeManagerError
 from qcfractal.interface.models import (
     FailedOperation,
 )
-from qcfractal.portal.managers import ManagerStatusEnum
-from qcfractal.portal.metadata_models import TaskReturnMetadata
-from qcfractal.portal.records import RecordStatusEnum
+from qcportal.managers import ManagerStatusEnum
+from qcportal.metadata_models import TaskReturnMetadata
+from qcportal.records import RecordStatusEnum
 from .db_models import TaskQueueORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcfractal.portal.records import AllResultTypes
+    from qcportal.records import AllResultTypes
     from typing import List, Dict, Tuple, Optional, Any
 
     TaskDict = Dict[str, Any]

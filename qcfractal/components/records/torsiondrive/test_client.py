@@ -10,12 +10,12 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.portal.records import PriorityEnum
-from qcfractal.portal.records.optimization import (
+from qcportal.records import PriorityEnum
+from qcportal.records.optimization import (
     OptimizationInputSpecification,
     OptimizationSinglepointInputSpecification,
 )
-from qcfractal.portal.records.torsiondrive import (
+from qcportal.records.torsiondrive import (
     TorsiondriveKeywords,
     TorsiondriveInputSpecification,
 )
@@ -23,7 +23,7 @@ from qcfractal.testing import load_molecule_data, load_procedure_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
-    from qcfractal.portal import PortalClient
+    from qcportal import PortalClient
     from typing import Optional
 
 

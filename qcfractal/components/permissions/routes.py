@@ -5,8 +5,8 @@ from werkzeug.exceptions import BadRequest
 
 from qcfractal.app import main, storage_socket
 from qcfractal.app.routes import check_access, wrap_route
-from qcfractal.portal.exceptions import InconsistentUpdateError, SecurityNotEnabledError
-from qcfractal.portal.permissions import UserInfo, RoleInfo
+from qcportal.exceptions import InconsistentUpdateError, SecurityNotEnabledError
+from qcportal.permissions import UserInfo, RoleInfo
 
 
 ###################################################################

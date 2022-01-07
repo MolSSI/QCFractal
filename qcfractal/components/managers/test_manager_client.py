@@ -10,8 +10,8 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import ValidationError
 
-from qcfractal.portal.client import PortalRequestError
-from qcfractal.portal.managers import ManagerName, ManagerStatusEnum
+from qcportal.client import PortalRequestError
+from qcportal.managers import ManagerName, ManagerStatusEnum
 
 if TYPE_CHECKING:
     from qcfractal.testing import TestingSnowflake

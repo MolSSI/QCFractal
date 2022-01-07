@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Column, Integer, Boolean, String, ForeignKey, UniqueConstraint
 
 from qcfractal.db_socket import BaseORM, MsgpackExt
-from qcfractal.portal.wavefunctions import WavefunctionProperties
+from qcportal.wavefunctions import WavefunctionProperties
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Optional, Iterable

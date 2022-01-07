@@ -3,12 +3,12 @@ Tests the wavefunction store socket
 """
 
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.portal.records.singlepoint import (
+from qcportal.records.singlepoint import (
     SinglepointInputSpecification,
     SinglepointDriver,
     SinglepointProtocols,
 )
-from qcfractal.portal.keywords import KeywordSet
+from qcportal.keywords import KeywordSet
 
 
 def test_singlepoint_socket_basic_specification(storage_socket: SQLAlchemySocket):

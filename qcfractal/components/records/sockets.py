@@ -18,16 +18,16 @@ from qcfractal.db_socket.helpers import (
     get_general_multi,
     delete_general,
 )
-from qcfractal.portal.exceptions import UserReportableError
-from qcfractal.portal.metadata_models import DeleteMetadata, UndeleteMetadata, QueryMetadata, UpdateMetadata
-from qcfractal.portal.outputstore import OutputStore, OutputTypeEnum, CompressionEnum
-from qcfractal.portal.records import FailedOperation, PriorityEnum, RecordStatusEnum
+from qcportal.exceptions import UserReportableError
+from qcportal.metadata_models import DeleteMetadata, UndeleteMetadata, QueryMetadata, UpdateMetadata
+from qcportal.outputstore import OutputStore, OutputTypeEnum, CompressionEnum
+from qcportal.records import FailedOperation, PriorityEnum, RecordStatusEnum
 from .db_models import RecordComputeHistoryORM, BaseRecordORM, RecordInfoBackupORM, RecordCommentsORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcfractal.portal.records import AllResultTypes, RecordQueryBody
+    from qcportal.records import AllResultTypes, RecordQueryBody
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Iterable, Type
 
     ProcedureDict = Dict[str, Any]

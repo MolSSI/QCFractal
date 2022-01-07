@@ -3,7 +3,7 @@ from flask import current_app
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.app import main, storage_socket
 from qcfractal.app.routes import check_access, wrap_route
-from qcfractal.portal.serverinfo import (
+from qcportal.serverinfo import (
     AccessLogQuerySummaryParameters,
     AccessLogQueryParameters,
     ServerStatsQueryParameters,

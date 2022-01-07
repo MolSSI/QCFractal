@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
-    from qcfractal.portal import PortalClient
+    from qcportal import PortalClient
 
 
 def test_serverinfo_client_query_stats(storage_socket: SQLAlchemySocket, snowflake_client: PortalClient):

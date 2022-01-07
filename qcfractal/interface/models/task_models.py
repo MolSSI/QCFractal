@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import Field, constr
 
 from .common_models import ObjectId, ProtoModel, AtomicResultProtocols, OptimizationProtocols
-from ...portal.records import PriorityEnum
+from qcportal.records import PriorityEnum
 
 
 class PythonComputeSpec(ProtoModel):

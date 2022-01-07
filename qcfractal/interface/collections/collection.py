@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 import pandas as pd
 
 from ..models import ProtoModel
-from qcfractal.portal.records import RecordStatusEnum
+from qcportal.records import RecordStatusEnum
 
 if TYPE_CHECKING:  # pragma: no cover
     from .. import FractalClient

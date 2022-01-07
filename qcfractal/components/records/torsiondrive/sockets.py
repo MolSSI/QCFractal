@@ -14,7 +14,7 @@ from qcelemental.models import OptimizationResult
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by
 from sqlalchemy.orm import contains_eager
-from qcfractal.portal.outputstore import OutputTypeEnum, OutputStore
+from qcportal.outputstore import OutputTypeEnum, OutputStore
 
 from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM, SinglepointSpecificationORM
 from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM
@@ -22,11 +22,11 @@ from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependenciesORM
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.db_socket.helpers import get_general, get_general_multi
-from qcfractal.portal.metadata_models import InsertMetadata, QueryMetadata
-from qcfractal.portal.molecules import Molecule
-from qcfractal.portal.records import PriorityEnum, RecordStatusEnum
-from qcfractal.portal.records.optimization import OptimizationQueryBody, OptimizationInputSpecification
-from qcfractal.portal.records.torsiondrive import (
+from qcportal.metadata_models import InsertMetadata, QueryMetadata
+from qcportal.molecules import Molecule
+from qcportal.records import PriorityEnum, RecordStatusEnum
+from qcportal.records.optimization import OptimizationQueryBody, OptimizationInputSpecification
+from qcportal.records.torsiondrive import (
     TorsiondriveSpecification,
     TorsiondriveInputSpecification,
     TorsiondriveQueryBody,

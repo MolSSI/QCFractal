@@ -8,8 +8,8 @@ from sqlalchemy import tuple_, and_, or_, func, select, inspect
 from sqlalchemy.orm import load_only, selectinload, lazyload
 
 from qcfractal.db_socket import BaseORM
-from qcfractal.portal.metadata_models import InsertMetadata, DeleteMetadata
-from qcfractal.portal.exceptions import MissingDataError
+from qcportal.metadata_models import InsertMetadata, DeleteMetadata
+from qcportal.exceptions import MissingDataError
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.attributes import InstrumentedAttribute

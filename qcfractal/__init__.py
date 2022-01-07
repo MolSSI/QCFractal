@@ -15,9 +15,6 @@ __version__ = versions["version"]
 __git_revision__ = versions["full-revisionid"]
 del get_versions, versions
 
-# from . import interface
-from . import portal
-
 # Handle top level object imports
 from .postgres_harness import PostgresHarness, TemporaryPostgres
 

@@ -11,18 +11,18 @@ import pytest
 
 from qcfractal.components.records.optimization.db_models import OptimizationRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.portal.keywords import KeywordSet
-from qcfractal.portal.managers import ManagerName
-from qcfractal.portal.molecules import Molecule
-from qcfractal.portal.outputstore import OutputStore
-from qcfractal.portal.records import RecordStatusEnum, PriorityEnum
-from qcfractal.portal.records.optimization import (
+from qcportal.keywords import KeywordSet
+from qcportal.managers import ManagerName
+from qcportal.molecules import Molecule
+from qcportal.outputstore import OutputStore
+from qcportal.records import RecordStatusEnum, PriorityEnum
+from qcportal.records.optimization import (
     OptimizationSpecification,
     OptimizationInputSpecification,
     OptimizationQueryBody,
     OptimizationSinglepointInputSpecification,
 )
-from qcfractal.portal.records.singlepoint import (
+from qcportal.records.singlepoint import (
     SinglepointDriver,
     SinglepointProtocols,
 )

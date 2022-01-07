@@ -8,13 +8,13 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.portal.exceptions import (
+from qcportal.exceptions import (
     UserManagementError,
     AuthenticationFailure,
     InvalidPasswordError,
     InvalidUsernameError,
 )
-from qcfractal.portal.permissions.models import UserInfo, is_valid_password
+from qcportal.permissions.models import UserInfo, is_valid_password
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

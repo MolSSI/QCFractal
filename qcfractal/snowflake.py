@@ -15,8 +15,8 @@ from .app.flask_app import FlaskProcess
 from .config import FractalConfig, DatabaseConfig, update_nested_dict
 from .periodics import PeriodicsProcess
 from .port_util import find_open_port
-from .portal import PortalClient
-from .portal.records import RecordStatusEnum
+from qcportal import PortalClient
+from qcportal.records import RecordStatusEnum
 from .postgres_harness import TemporaryPostgres
 from .process_runner import ProcessBase, ProcessRunner
 from .compute_manager import QueueManager

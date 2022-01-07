@@ -17,8 +17,8 @@ import requests
 from pydantic import ValidationError
 
 from .collections import collection_factory, collections_name_map
-from qcfractal.portal.records import PriorityEnum, RecordStatusEnum
-from qcfractal.portal.managers import ManagerStatusEnum
+from qcportal.records import PriorityEnum, RecordStatusEnum
+from qcportal.managers import ManagerStatusEnum
 from .models.rest_models import AllRecordTypes, rest_model
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -33,7 +33,7 @@ if TYPE_CHECKING:  # pragma: no cover
         TaskRecord,
         TorsionDriveInput,
     )
-    from ..portal.components.keywords import KeywordSet
+    from qcportal.components.keywords import KeywordSet
     from .models.rest_models import (
         CollectionGETResponse,
         ComputeResponse,

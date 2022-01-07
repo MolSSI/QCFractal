@@ -3,8 +3,8 @@ from typing import Optional
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper
 from qcfractal.app.routes import check_access, wrap_route
-from qcfractal.portal.base_models import CommonGetProjURLParameters
-from qcfractal.portal.records.optimization import OptimizationAddBody, OptimizationQueryBody
+from qcportal.base_models import CommonGetProjURLParameters
+from qcportal.records.optimization import OptimizationAddBody, OptimizationQueryBody
 
 
 @main.route("/v1/record/optimization", methods=["POST"])

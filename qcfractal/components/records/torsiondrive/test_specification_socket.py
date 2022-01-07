@@ -1,22 +1,22 @@
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.portal.records.singlepoint import (
+from qcportal.records.singlepoint import (
     SinglepointInputSpecification,
     SinglepointDriver,
     SinglepointProtocols,
 )
-from qcfractal.portal.records.optimization import (
+from qcportal.records.optimization import (
     OptimizationInputSpecification,
     OptimizationSinglepointInputSpecification,
     OptimizationProtocols,
 )
 
-from qcfractal.portal.records.torsiondrive import (
+from qcportal.records.torsiondrive import (
     TorsiondriveSpecification,
     TorsiondriveInputSpecification,
     TorsiondriveAddBody,
     TorsiondriveKeywords,
 )
-from qcfractal.portal.keywords import KeywordSet
+from qcportal.keywords import KeywordSet
 
 
 def test_torsiondrive_socket_basic_specification(storage_socket: SQLAlchemySocket):

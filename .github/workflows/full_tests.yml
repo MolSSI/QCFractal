@@ -58,7 +58,7 @@ jobs:
       - name: Split out portal into QCPortal
         shell: bash -l {0}
         run: |
-          git -C qcfractal subtree split -q --prefix qcfractal/portal --branch ptl_test_tmp
+          git -C qcfractal subtree split -q --prefix qcportal --branch ptl_test_tmp
           git -C qcportal subtree pull -q --prefix qcportal ../qcfractal ptl_test_tmp
 
       - name: Split out compute_manager into QCFractalCompute

@@ -10,21 +10,21 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.portal.keywords import KeywordSet
-from qcfractal.portal.outputstore import OutputStore
-from qcfractal.portal.records import RecordStatusEnum, PriorityEnum
-from qcfractal.portal.records.gridoptimization import (
+from qcportal.keywords import KeywordSet
+from qcportal.outputstore import OutputStore
+from qcportal.records import RecordStatusEnum, PriorityEnum
+from qcportal.records.gridoptimization import (
     GridoptimizationSpecification,
     GridoptimizationInputSpecification,
     GridoptimizationKeywords,
     GridoptimizationQueryBody,
 )
-from qcfractal.portal.records.optimization import (
+from qcportal.records.optimization import (
     OptimizationInputSpecification,
     OptimizationSinglepointInputSpecification,
     OptimizationProtocols,
 )
-from qcfractal.portal.records.singlepoint import (
+from qcportal.records.singlepoint import (
     SinglepointProtocols,
 )
 from qcfractal.testing import load_molecule_data, load_procedure_data, run_service_constropt

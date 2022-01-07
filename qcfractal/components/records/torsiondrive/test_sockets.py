@@ -11,20 +11,20 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.portal.keywords import KeywordSet
-from qcfractal.portal.managers import ManagerName
-from qcfractal.portal.utils import recursive_normalizer
-from qcfractal.portal.outputstore import OutputStore
-from qcfractal.portal.records import RecordStatusEnum, PriorityEnum
-from qcfractal.portal.records.optimization import (
+from qcportal.keywords import KeywordSet
+from qcportal.managers import ManagerName
+from qcportal.utils import recursive_normalizer
+from qcportal.outputstore import OutputStore
+from qcportal.records import RecordStatusEnum, PriorityEnum
+from qcportal.records.optimization import (
     OptimizationInputSpecification,
     OptimizationSinglepointInputSpecification,
     OptimizationProtocols,
 )
-from qcfractal.portal.records.singlepoint import (
+from qcportal.records.singlepoint import (
     SinglepointProtocols,
 )
-from qcfractal.portal.records.torsiondrive import (
+from qcportal.records.torsiondrive import (
     TorsiondriveSpecification,
     TorsiondriveInputSpecification,
     TorsiondriveKeywords,

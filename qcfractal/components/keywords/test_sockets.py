@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.portal.exceptions import MissingDataError
-from qcfractal.portal.keywords import KeywordSet
+from qcportal.exceptions import MissingDataError
+from qcportal.keywords import KeywordSet
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

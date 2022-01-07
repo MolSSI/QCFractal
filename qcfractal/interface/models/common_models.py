@@ -32,7 +32,7 @@ from qcelemental.models.molecule import Identifiers as MoleculeIdentifiers
 
 from qcelemental.models.procedures import OptimizationProtocols
 from qcelemental.models.results import AtomicResultProtocols
-from qcfractal.portal.utils import recursive_normalizer
+from qcportal.utils import recursive_normalizer
 
 from typing import Any, Dict, Optional, Union
 

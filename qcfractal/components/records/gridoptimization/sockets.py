@@ -18,18 +18,18 @@ from qcfractal.components.records.singlepoint.db_models import SinglepointSpecif
 from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependenciesORM
 from qcfractal.db_socket.helpers import insert_general, get_general, get_general_multi
-from qcfractal.portal.metadata_models import InsertMetadata, QueryMetadata
-from qcfractal.portal.molecules import Molecule
-from qcfractal.portal.outputstore import OutputTypeEnum
-from qcfractal.portal.records import PriorityEnum, RecordStatusEnum
-from qcfractal.portal.records.gridoptimization import (
+from qcportal.metadata_models import InsertMetadata, QueryMetadata
+from qcportal.molecules import Molecule
+from qcportal.outputstore import OutputTypeEnum
+from qcportal.records import PriorityEnum, RecordStatusEnum
+from qcportal.records.gridoptimization import (
     ScanDimension,
     StepTypeEnum,
     GridoptimizationSpecification,
     GridoptimizationInputSpecification,
     GridoptimizationQueryBody,
 )
-from qcfractal.portal.records.optimization import OptimizationInputSpecification
+from qcportal.records.optimization import OptimizationInputSpecification
 from .db_models import GridoptimizationSpecificationORM, GridoptimizationOptimizationsORM, GridoptimizationRecordORM
 
 if TYPE_CHECKING:

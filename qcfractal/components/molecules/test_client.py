@@ -8,12 +8,12 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.portal.client import PortalRequestError
-from qcfractal.portal.molecules import Molecule, MoleculeIdentifiers
+from qcportal.client import PortalRequestError
+from qcportal.molecules import Molecule, MoleculeIdentifiers
 from qcfractal.testing import load_molecule_data
 
 if TYPE_CHECKING:
-    from qcfractal.portal import PortalClient
+    from qcportal import PortalClient
 
 
 def test_molecules_client_basic(snowflake_client: PortalClient):

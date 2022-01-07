@@ -20,7 +20,7 @@ from .task_models import (
     OptimizationProcedureSpecification,
     TaskRecord,
 )
-from ...portal.records import PriorityEnum, RecordStatusEnum
+from qcportal.records import PriorityEnum, RecordStatusEnum
 from .records import SinglepointRecord, OptimizationRecord
 from .gridoptimization import GridOptimizationInput, GridOptimizationRecord
 from .torsiondrive import TorsionDriveInput, TorsionDriveRecord

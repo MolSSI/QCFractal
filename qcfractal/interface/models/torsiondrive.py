@@ -12,9 +12,9 @@ from qcelemental import constants
 
 from ..visualization import scatter_plot
 from .common_models import Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
-from ...portal.utils import recursive_normalizer
+from qcportal.utils import recursive_normalizer
 from .records import RecordBase
-from ...portal.records import PriorityEnum, RecordStatusEnum
+from qcportal.records import PriorityEnum, RecordStatusEnum
 
 
 class TorsionDriveKeywords(ProtoModel):

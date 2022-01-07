@@ -3,8 +3,8 @@ from typing import Optional
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper
 from qcfractal.app.routes import check_access, wrap_route
-from qcfractal.portal.base_models import CommonGetURLParametersName
-from qcfractal.portal.managers import (
+from qcportal.base_models import CommonGetURLParametersName
+from qcportal.managers import (
     ManagerActivationBody,
     ManagerUpdateBody,
     ManagerStatusEnum,

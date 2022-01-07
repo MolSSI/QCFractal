@@ -17,14 +17,14 @@ from qcfractal.db_socket.helpers import (
     get_general,
     calculate_limit,
 )
-from qcfractal.portal.exceptions import LimitExceededError, MissingDataError
-from qcfractal.portal.metadata_models import (
+from qcportal.exceptions import LimitExceededError, MissingDataError
+from qcportal.metadata_models import (
     InsertMetadata,
     DeleteMetadata,
     QueryMetadata,
     UpdateMetadata,
 )
-from qcfractal.portal.molecules import Molecule, MoleculeIdentifiers
+from qcportal.molecules import Molecule, MoleculeIdentifiers
 from .db_models import MoleculeORM
 
 if TYPE_CHECKING:

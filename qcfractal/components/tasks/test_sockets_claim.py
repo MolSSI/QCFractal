@@ -5,8 +5,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from qcfractal.portal.managers import ManagerName
-from qcfractal.portal.records import PriorityEnum
+from qcportal.managers import ManagerName
+from qcportal.records import PriorityEnum
 from qcfractal.testing import load_procedure_data
 
 if TYPE_CHECKING:

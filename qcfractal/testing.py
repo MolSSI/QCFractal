@@ -24,20 +24,20 @@ import requests
 from qcelemental.models import Molecule, FailedOperation, OptimizationResult, AtomicResult
 from qcelemental.models.results import WavefunctionProperties
 
-from qcfractal.portal.managers import ManagerName
-from qcfractal.portal.permissions import UserInfo
-from qcfractal.portal.records.gridoptimization import GridoptimizationInputSpecification
-from qcfractal.portal.records.optimization import OptimizationInputSpecification
-from qcfractal.portal.records.singlepoint import SinglepointInputSpecification
-from qcfractal.portal.records.torsiondrive import TorsiondriveInputSpecification
+from qcportal.managers import ManagerName
+from qcportal.permissions import UserInfo
+from qcportal.records.gridoptimization import GridoptimizationInputSpecification
+from qcportal.records.optimization import OptimizationInputSpecification
+from qcportal.records.singlepoint import SinglepointInputSpecification
+from qcportal.records.torsiondrive import TorsiondriveInputSpecification
 from .config import FractalConfig, update_nested_dict
 from .db_socket.socket import SQLAlchemySocket
 from .interface import FractalClient
 from .interface.models import TorsionDriveInput
 from .periodics import FractalPeriodics
-from .portal import PortalClient, ManagerClient
-from .portal.records import PriorityEnum, RecordStatusEnum
-from .portal.utils import recursive_normalizer
+from qcportal import PortalClient, ManagerClient
+from qcportal.records import PriorityEnum, RecordStatusEnum
+from qcportal.utils import recursive_normalizer
 from .postgres_harness import TemporaryPostgres
 from .compute_manager import build_queue_adapter, QueueManager
 from .snowflake import FractalSnowflake, attempt_client_connect

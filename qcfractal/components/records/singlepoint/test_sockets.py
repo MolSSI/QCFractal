@@ -12,19 +12,19 @@ from qcelemental.models.results import AtomicResultProperties
 
 from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM
 from qcfractal.components.wavefunctions.test_db_models import assert_wfn_equal
-from qcfractal.portal.keywords import KeywordSet
-from qcfractal.portal.managers import ManagerName
-from qcfractal.portal.molecules import Molecule
-from qcfractal.portal.outputstore import OutputStore
-from qcfractal.portal.records import RecordStatusEnum, PriorityEnum
-from qcfractal.portal.records.singlepoint import (
+from qcportal.keywords import KeywordSet
+from qcportal.managers import ManagerName
+from qcportal.molecules import Molecule
+from qcportal.outputstore import OutputStore
+from qcportal.records import RecordStatusEnum, PriorityEnum
+from qcportal.records.singlepoint import (
     SinglepointSpecification,
     SinglepointInputSpecification,
     SinglepointDriver,
     SinglepointProtocols,
     SinglepointQueryBody,
 )
-from qcfractal.portal.wavefunctions.models import WavefunctionProperties
+from qcportal.wavefunctions.models import WavefunctionProperties
 from qcfractal.testing import load_molecule_data, load_procedure_data
 
 if TYPE_CHECKING:

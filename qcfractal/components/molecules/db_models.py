@@ -7,7 +7,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 from qcfractal.db_socket.base_orm import BaseORM
 from qcfractal.db_socket.column_types import MsgpackExt
-from qcfractal.portal.molecules import Molecule
+from qcportal.molecules import Molecule
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Optional, Iterable

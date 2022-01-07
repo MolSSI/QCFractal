@@ -1,6 +1,6 @@
 from typing import List, Optional, Callable, Iterable
 
-from qcfractal.portal.metadata_models import DeleteMetadata
+from qcportal.metadata_models import DeleteMetadata
 
 
 def get_helper(

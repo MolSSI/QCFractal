@@ -8,13 +8,13 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.portal.client import PortalRequestError
-from qcfractal.portal.records import PriorityEnum, RecordStatusEnum
+from qcportal.client import PortalRequestError
+from qcportal.records import PriorityEnum, RecordStatusEnum
 from qcfractal.testing import TestingSnowflake, _test_users, populate_db
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
-    from qcfractal.portal import PortalClient
+    from qcportal import PortalClient
 
 
 def test_record_client_get(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
