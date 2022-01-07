@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING
 
 from qcelemental.models import ComputeError
 
-from qcfractal.portal.managers import ManagerName
-from qcfractal.portal.outputstore import OutputTypeEnum, OutputStore, CompressionEnum
-from qcfractal.portal.records import FailedOperation, PriorityEnum, RecordStatusEnum
+from qcportal.managers import ManagerName
+from qcportal.outputstore import OutputTypeEnum, OutputStore, CompressionEnum
+from qcportal.records import FailedOperation, PriorityEnum, RecordStatusEnum
 from qcfractal.testing import load_procedure_data
 
 if TYPE_CHECKING:

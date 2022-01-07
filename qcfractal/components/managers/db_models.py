@@ -5,7 +5,7 @@ from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
 
 from qcfractal.db_socket import BaseORM
-from qcfractal.portal.managers import ManagerStatusEnum
+from qcportal.managers import ManagerStatusEnum
 
 
 class ComputeManagerLogORM(BaseORM):

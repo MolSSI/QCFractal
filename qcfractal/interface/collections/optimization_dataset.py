@@ -7,7 +7,7 @@ import pandas as pd
 import qcelemental as qcel
 
 from ..models import ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
-from qcfractal.portal.records import RecordStatusEnum
+from qcportal.records import RecordStatusEnum
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
 

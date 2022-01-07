@@ -13,8 +13,8 @@ from qcfractal.components.records.db_models import BaseRecordORM, RecordComputeH
 from qcfractal.db_socket.helpers import (
     get_count,
 )
-from qcfractal.portal.outputstore import OutputStore, OutputTypeEnum, CompressionEnum
-from qcfractal.portal.records.models import RecordStatusEnum
+from qcportal.outputstore import OutputStore, OutputTypeEnum, CompressionEnum
+from qcportal.records.models import RecordStatusEnum
 from .db_models import ServiceQueueORM, ServiceDependenciesORM
 
 if TYPE_CHECKING:

@@ -10,8 +10,8 @@ import pytest
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.records.db_models import RecordComputeHistoryORM
-from qcfractal.portal.outputstore import OutputTypeEnum, CompressionEnum, OutputStore
-from qcfractal.portal.records import RecordStatusEnum
+from qcportal.outputstore import OutputTypeEnum, CompressionEnum, OutputStore
+from qcportal.records import RecordStatusEnum
 from qcfractal.testing import load_procedure_data
 
 if TYPE_CHECKING:

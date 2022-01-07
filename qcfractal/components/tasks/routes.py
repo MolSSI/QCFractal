@@ -1,6 +1,6 @@
 from qcfractal.app import main, storage_socket
 from qcfractal.app.routes import check_access, wrap_route
-from qcfractal.portal.tasks import (
+from qcportal.tasks import (
     TaskClaimBody,
     TaskReturnBody,
 )

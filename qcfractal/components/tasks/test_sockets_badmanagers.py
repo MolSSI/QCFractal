@@ -5,11 +5,11 @@ Tests the tasks socket with respect to misbehaving managers
 import logging
 import pytest
 from datetime import datetime
-from qcfractal.portal.exceptions import ComputeManagerError
+from qcportal.exceptions import ComputeManagerError
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.portal.managers import ManagerName
+from qcportal.managers import ManagerName
 from qcfractal.testing import load_procedure_data, caplog_handler_at_level
-from qcfractal.portal.records import PriorityEnum, RecordStatusEnum
+from qcportal.records import PriorityEnum, RecordStatusEnum
 
 
 def test_task_socket_claim_manager_noexist(storage_socket: SQLAlchemySocket):

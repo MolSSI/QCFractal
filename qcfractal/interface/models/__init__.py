@@ -27,7 +27,7 @@ from .common_models import (
 
 from .gridoptimization import GridOptimizationInput, GridOptimizationRecord
 from .model_builder import build_procedure
-from ...portal.utils import hash_dictionary
+from qcportal.utils import hash_dictionary
 from .records import OptimizationRecord, SinglepointRecord
 from .rest_models import ComputeResponse, rest_model
 from .task_models import (
@@ -38,6 +38,6 @@ from .task_models import (
     AllProcedureSpecifications,
     AllServiceSpecifications,
 )
-from ...portal.records import PriorityEnum, RecordStatusEnum
-from ...portal.managers import ManagerStatusEnum
+from qcportal.records import PriorityEnum, RecordStatusEnum
+from qcportal.managers import ManagerStatusEnum
 from .torsiondrive import TorsionDriveInput, TorsionDriveRecord

@@ -3,8 +3,8 @@ from typing import Optional
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper
 from qcfractal.app.routes import check_access, wrap_route
-from qcfractal.portal.base_models import CommonGetProjURLParameters
-from qcfractal.portal.records.singlepoint import SinglepointAddBody, SinglepointQueryBody
+from qcportal.base_models import CommonGetProjURLParameters
+from qcportal.records.singlepoint import SinglepointAddBody, SinglepointQueryBody
 
 
 @main.route("/v1/record/singlepoint", methods=["POST"])

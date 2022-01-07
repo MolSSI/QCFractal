@@ -8,11 +8,11 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.portal.client import PortalRequestError
-from qcfractal.portal.keywords import KeywordSet
+from qcportal.client import PortalRequestError
+from qcportal.keywords import KeywordSet
 
 if TYPE_CHECKING:
-    from qcfractal.portal import PortalClient
+    from qcportal import PortalClient
 
 
 def test_keywords_client_basic(snowflake_client: PortalClient):

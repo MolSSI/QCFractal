@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index, tex
 from sqlalchemy.dialects.postgresql import ARRAY, TEXT
 from sqlalchemy.orm import relationship
 
-from qcfractal.portal.records import PriorityEnum
+from qcportal.records import PriorityEnum
 from qcfractal.db_socket import BaseORM, MsgpackExt
 from qcfractal.components.records.db_models import BaseRecordORM
 

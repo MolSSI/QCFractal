@@ -16,7 +16,7 @@ from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import get_query_proj_options, get_count, calculate_limit
-from qcfractal.portal.metadata_models import QueryMetadata
+from qcportal.metadata_models import QueryMetadata
 from .db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM, VersionsORM
 
 if TYPE_CHECKING:

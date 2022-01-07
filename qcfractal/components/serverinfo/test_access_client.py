@@ -11,7 +11,7 @@ from .test_access_socket import test_ips
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
-    from qcfractal.portal import PortalClient
+    from qcportal import PortalClient
 
 
 def test_serverinfo_client_query_access(storage_socket: SQLAlchemySocket, snowflake_client: PortalClient):

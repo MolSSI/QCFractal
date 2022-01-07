@@ -8,9 +8,9 @@ from sqlalchemy import and_, update, select
 from sqlalchemy.orm import selectinload
 
 from qcfractal.db_socket.helpers import get_query_proj_options, calculate_limit, get_count, get_general
-from qcfractal.portal.exceptions import ComputeManagerError
-from qcfractal.portal.managers import ManagerStatusEnum, ManagerName
-from qcfractal.portal.metadata_models import QueryMetadata
+from qcportal.exceptions import ComputeManagerError
+from qcportal.managers import ManagerStatusEnum, ManagerName
+from qcportal.metadata_models import QueryMetadata
 from .db_models import ComputeManagerLogORM, ComputeManagerORM
 
 if TYPE_CHECKING:

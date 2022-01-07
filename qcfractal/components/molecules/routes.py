@@ -3,8 +3,8 @@ from typing import List, Optional
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper, delete_helper
 from qcfractal.app.routes import check_access, wrap_route
-from qcfractal.portal.base_models import CommonGetURLParameters, CommonDeleteURLParameters
-from qcfractal.portal.molecules import Molecule, MoleculeQueryBody, MoleculeModifyBody
+from qcportal.base_models import CommonGetURLParameters, CommonDeleteURLParameters
+from qcportal.molecules import Molecule, MoleculeQueryBody, MoleculeModifyBody
 
 
 @main.route("/v1/molecule", methods=["GET"])

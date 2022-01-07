@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.portal.exceptions import ComputeManagerError, MissingDataError
-from qcfractal.portal.managers import ManagerName, ManagerStatusEnum
+from qcportal.exceptions import ComputeManagerError, MissingDataError
+from qcportal.managers import ManagerName, ManagerStatusEnum
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

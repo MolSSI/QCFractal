@@ -14,8 +14,8 @@ from pydantic import Field, constr, validator
 
 from ..visualization import scatter_plot
 from .common_models import DriverEnum, ObjectId, ProtoModel, QCSpecification
-from ...portal.utils import recursive_normalizer, hash_dictionary
-from ...portal.records import RecordStatusEnum
+from qcportal.utils import recursive_normalizer, hash_dictionary
+from qcportal.records import RecordStatusEnum
 
 if TYPE_CHECKING:
     from .common_models import Molecule

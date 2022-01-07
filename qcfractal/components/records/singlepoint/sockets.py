@@ -12,11 +12,11 @@ from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
 from qcfractal.db_socket.helpers import get_general, insert_general
-from qcfractal.portal.keywords import KeywordSet
-from qcfractal.portal.metadata_models import InsertMetadata, QueryMetadata
-from qcfractal.portal.molecules import Molecule
-from qcfractal.portal.records import PriorityEnum, RecordStatusEnum
-from qcfractal.portal.records.singlepoint import (
+from qcportal.keywords import KeywordSet
+from qcportal.metadata_models import InsertMetadata, QueryMetadata
+from qcportal.molecules import Molecule
+from qcportal.records import PriorityEnum, RecordStatusEnum
+from qcportal.records.singlepoint import (
     WavefunctionProperties,
     SinglepointSpecification,
     SinglepointInputSpecification,

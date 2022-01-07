@@ -9,10 +9,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.portal.keywords import KeywordSet
-from qcfractal.portal.molecules import Molecule
-from qcfractal.portal.records import PriorityEnum
-from qcfractal.portal.records.singlepoint import (
+from qcportal.keywords import KeywordSet
+from qcportal.molecules import Molecule
+from qcportal.records import PriorityEnum
+from qcportal.records.singlepoint import (
     SinglepointSpecification,
     SinglepointDriver,
     SinglepointProtocols,
@@ -22,7 +22,7 @@ from .test_sockets import _test_specs
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
-    from qcfractal.portal import PortalClient
+    from qcportal import PortalClient
     from typing import Optional
 
 from .test_sockets import compare_singlepoint_specs

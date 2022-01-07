@@ -12,7 +12,7 @@ from ..models import (
     QCSpecification,
     TorsionDriveInput,
 )
-from qcfractal.portal.records import RecordStatusEnum
+from qcportal.records import RecordStatusEnum
 from ..models.torsiondrive import TorsionDriveKeywords
 from ..visualization import custom_plot
 from .collection import BaseProcedureDataset

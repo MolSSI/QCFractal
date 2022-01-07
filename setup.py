@@ -66,7 +66,7 @@ if __name__ == "__main__":
                 "ipython",
             ],
             "lint": ["black"],
-            "tests": ["pytest", "pytest-cov", "codecov", "mypy"],
+            "tests": ["pytest", "pytest-cov", "codecov", "mypy", "geoip2"],
         },
         tests_require=["pytest", "pytest-cov", "codecov", "mypy"],
         classifiers=[

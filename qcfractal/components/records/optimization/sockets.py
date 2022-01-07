@@ -13,15 +13,15 @@ from qcfractal.components.records.singlepoint.db_models import SinglepointRecord
 from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import get_general, insert_general, get_general_multi
-from qcfractal.portal.metadata_models import InsertMetadata, QueryMetadata
-from qcfractal.portal.molecules import Molecule
-from qcfractal.portal.records import PriorityEnum, RecordStatusEnum
-from qcfractal.portal.records.optimization import (
+from qcportal.metadata_models import InsertMetadata, QueryMetadata
+from qcportal.molecules import Molecule
+from qcportal.records import PriorityEnum, RecordStatusEnum
+from qcportal.records.optimization import (
     OptimizationInputSpecification,
     OptimizationSpecification,
     OptimizationQueryBody,
 )
-from qcfractal.portal.records.singlepoint import (
+from qcportal.records.singlepoint import (
     SinglepointDriver,
 )
 from .db_models import OptimizationSpecificationORM, OptimizationRecordORM, OptimizationTrajectoryORM

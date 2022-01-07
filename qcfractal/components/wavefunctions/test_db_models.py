@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
-from qcfractal.portal.wavefunctions import WavefunctionProperties
+from qcportal.wavefunctions import WavefunctionProperties
 from qcfractal.testing import load_procedure_data, load_wavefunction_data
 
 if TYPE_CHECKING:

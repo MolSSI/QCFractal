@@ -1,8 +1,8 @@
 from datetime import datetime
 
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.portal.managers import ManagerName
-from qcfractal.portal.records import RecordStatusEnum, PriorityEnum
+from qcportal.managers import ManagerName
+from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcfractal.testing import populate_db, load_procedure_data
 
 
