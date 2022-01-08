@@ -41,6 +41,9 @@ from qcportal.utils import recursive_normalizer
 from .postgres_harness import TemporaryPostgres
 from qcfractalcompute import build_queue_adapter, QueueManager
 from .snowflake import FractalSnowflake, attempt_client_connect
+from concurrent.futures import ProcessPoolExecutor
+
+adapter_client = ProcessPoolExecutor(max_workers=2)
 
 # Path to this file (directory only)
 _my_path = os.path.dirname(os.path.abspath(__file__))
@@ -105,7 +108,12 @@ def pytest_addoption(parser):
     See `pytest_collection_modifyitems` for handling and `pytest_configure` for adding known in-line marks.
     """
     parser.addoption("--runslow", action="store_true", default=False, help="run slow tests")
-    parser.addoption("--runexamples", action="store_true", default=False, help="run example tests")
+    parser.addoption(
+        "--runfull",
+        action="store",
+        help="Run full end-to-end tests only, given the adapter type",
+        choices=["snowflake"],
+    )
 
 
 def pytest_collection_modifyitems(config, items):
@@ -114,90 +122,26 @@ def pytest_collection_modifyitems(config, items):
 
     Use decorators:
     @pytest.mark.slow
-    @pyrest.mark.example
     """
     runslow = config.getoption("--runslow")
-    runexamples = config.getoption("--runexamples")
+    runfull = config.getoption("--runfull")
+
     skip_slow = pytest.mark.skip(reason="need --runslow option to run")
-    skip_example = pytest.mark.skip(reason="need --runexamples option to run")
+    skip_full = pytest.mark.skip(reason="need --runfull option to run")
     for item in items:
         if "slow" in item.keywords and not runslow:
             item.add_marker(skip_slow)
-        if "example" in item.keywords and not runexamples:
-            item.add_marker(skip_example)
+        if "fulltest" in item.keywords and not runfull:
+            item.add_marker(skip_full)
 
 
 def pytest_configure(config):
-    config.addinivalue_line("markers", "example: Mark a given test as an example which can be run")
-    config.addinivalue_line(
-        "markers", "slow: Mark a given test as slower than most other tests, needing a special " "flag to run."
-    )
+    config.addinivalue_line("markers", "slow: Mark a given test as slower than most other tests")
+    config.addinivalue_line("markers", "full: Mark a given test as a full end-to-end test")
 
 
 def pytest_unconfigure(config):
     pass
-
-
-def _plugin_import(plug):
-    plug_spec = pkgutil.find_loader(plug)
-    if plug_spec is None:
-        return False
-    else:
-        return True
-
-
-_adapter_testing = ["pool", "dask", "fireworks", "parsl"]
-
-# Figure out what is imported
-_programs = {
-    "fireworks": _plugin_import("fireworks"),
-    "rdkit": _plugin_import("rdkit"),
-    "psi4": _plugin_import("psi4"),
-    "parsl": _plugin_import("parsl"),
-    "dask": _plugin_import("dask"),
-    "dask_jobqueue": _plugin_import("dask_jobqueue"),
-    "geometric": _plugin_import("geometric"),
-    "torsiondrive": _plugin_import("torsiondrive"),
-    "torchani": _plugin_import("torchani"),
-}
-if _programs["dask"]:
-    _programs["dask.distributed"] = _plugin_import("dask.distributed")
-else:
-    _programs["dask.distributed"] = False
-
-_programs["dftd3"] = False
-
-
-def has_module(name):
-    return _programs[name]
-
-
-def check_has_module(program):
-    import_message = "Not detecting module {}. Install package if necessary to enable tests."
-    if has_module(program) is False:
-        pytest.skip(import_message.format(program))
-
-
-def _build_pytest_skip(program):
-    import_message = "Not detecting module {}. Install package if necessary to enable tests."
-    return pytest.mark.skipif(has_module(program) is False, reason=import_message.format(program))
-
-
-# Add a number of module testing options
-using_dask = _build_pytest_skip("dask.distributed")
-using_dask_jobqueue = _build_pytest_skip("dask_jobqueue")
-using_dftd3 = _build_pytest_skip("dftd3")
-using_fireworks = _build_pytest_skip("fireworks")
-using_geometric = _build_pytest_skip("geometric")
-using_parsl = _build_pytest_skip("parsl")
-using_psi4 = _build_pytest_skip("psi4")
-using_rdkit = _build_pytest_skip("rdkit")
-using_torsiondrive = _build_pytest_skip("torsiondrive")
-using_unix = pytest.mark.skipif(
-    os.name.lower() != "posix", reason="Not on Unix operating system, " "assuming Bash is not present"
-)
-
-### Generic helpers
 
 
 def load_procedure_data(name: str):
@@ -596,15 +540,6 @@ class TestingSnowflake(FractalSnowflake):
 
         return SQLAlchemySocket(self._qcf_config)
 
-    def get_periodics(self) -> FractalPeriodics:
-        """
-        Obtain a new FractalPeriodics object
-
-        This function will create a new FractalPeriodics object every time it is called
-        """
-
-        return FractalPeriodics(self._qcf_config)
-
     def get_compute_manager(self, name: str) -> QueueManager:
         """
         Obtain a new QueueManager attached to this instance
@@ -612,9 +547,8 @@ class TestingSnowflake(FractalSnowflake):
         This function will create a new QueueManager object every time it is called
         """
 
-        client = self.client()
-        adapter_client = build_adapter_clients("pool")
-        return QueueManager(client, adapter_client, manager_name=name)
+        adapter_client = ProcessPoolExecutor(max_workers=2)
+        return QueueManager(adapter_client, manager_name=name)
 
     def start_flask(self) -> None:
         """
@@ -783,236 +717,24 @@ def snowflake_client(snowflake):
 
 
 @pytest.fixture(scope="function")
-def old_test_server(temporary_database):
+def fulltest_client(temporary_database, pytestconfig):
     """
-    A QCFractal server with no compute attached, and with security disabled
-    """
+    A portal client used for full end-to-end tests
 
-    # Tighten the service frequency for tests
-    # Also disable connection pooling in the storage socket
-    # (which can leave db connections open, causing problems when we go to delete
-    # the database)
-    extra_config = {}
-    extra_config["service_frequency"] = 5
-    extra_config["heartbeat_frequency"] = 3
-    extra_config["heartbeat_max_missed"] = 2
-    extra_config["database"] = {"pool_size": 0}
-
-    with FractalSnowflake(
-        start=True,
-        compute_workers=0,
-        enable_watching=True,
-        database_config=temporary_database.config,
-        flask_config="testing",
-        extra_config=extra_config,
-    ) as server:
-        yield server
-
-
-####################################
-# Torsiondrive fixtures & functions
-####################################
-def run_services(server: FractalSnowflake, periodics: FractalPeriodics, max_iter: int = 10) -> bool:
-    """
-    Run up to max_iter iterations on a service
+    This may be from a snowflake, or from something else
     """
 
-    logger = logging.getLogger(__name__)
-    # Wait for everything currently running to finish
-    server.await_results()
+    db_config = temporary_database.config
+    client_type = pytestconfig.getoption("--runfull")
 
-    for i in range(1, max_iter + 1):
-        logger.debug(f"Iteration {i}")
-        running_services = periodics._update_services()
-        logger.debug(f"Number of running services: {running_services}")
-        if running_services == 0:
-            return True
-
-        server.await_results()
-
-    return False
-
-
-@pytest.fixture(scope="function")
-def torsiondrive_fixture(fractal_test_server):
-
-    # Cannot use this fixture without these services. Also cannot use `mark` and `fixture` decorators
-    pytest.importorskip("torsiondrive")
-    pytest.importorskip("geometric")
-    pytest.importorskip("rdkit")
-
-    client = fractal_test_server.client()
-    periodics = fractal_test_server.get_periodics()
-    fractal_test_server.start_compute_worker()
-
-    # Add a HOOH
-    hooh = ptl.data.get_molecule("hooh.json")
-    mol_ret = client.add_molecules([hooh])
-
-    # Geometric options
-    torsiondrive_options = {
-        "initial_molecule": [mol_ret[0]],
-        "keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [90]},
-        "optimization_spec": {
-            "program": "geometric",
-            "keywords": {"coordsys": "tric"},
-            "protocols": {"trajectory": "initial_and_final"},
-        },
-        "qc_spec": {"driver": "gradient", "method": "UFF", "basis": "", "keywords": None, "program": "rdkit"},
-    }
-
-    def spin_up_test(**keyword_augments):
-        run_service = keyword_augments.pop("run_service", True)
-
-        instance_options = copy.deepcopy(torsiondrive_options)
-        update_nested_dict(instance_options, keyword_augments)
-
-        inp = TorsionDriveInput(**instance_options)
-        ret = client.add_service([inp], full_return=True)
-
-        if ret.meta.n_inserted:  # In case test already submitted
-            compute_key = ret.data.ids[0]
-            service = client.query_procedures(compute_key)[0]
-            assert service.status == RecordStatusEnum.waiting
-
-        if run_service:
-            finished = run_services(fractal_test_server, periodics)
-            assert finished
-
-        return ret.data
-
-    yield spin_up_test, fractal_test_server, periodics
-
-
-def build_adapter_clients(mtype):
-
-    # Basic boot and loop information
-    if mtype == "pool":
-        from multiprocessing import Pool, set_start_method
-        from .cli.qcfractal_manager import _initialize_signals_process_pool
-
-        adapter_client = Pool(processes=2, initializer=_initialize_signals_process_pool)
-
-    elif mtype == "dask":
-        dd = pytest.importorskip("dask.distributed")
-        adapter_client = dd.Client(n_workers=2, threads_per_worker=1, resources={"process": 1})
-
-        # Not super happy about this line, but shuts up dangling reference errors
-        adapter_client._should_close_loop = False
-
-    elif mtype == "fireworks":
-        fireworks = pytest.importorskip("fireworks")
-
-        fireworks_name = "qcfractal_fireworks_queue"
-        adapter_client = fireworks.LaunchPad(name=fireworks_name, logdir="/tmp/", strm_lvl="CRITICAL")
-
-    elif mtype == "parsl":
-        parsl = pytest.importorskip("parsl")
-
-        # Must only be a single thread as we run thread unsafe applications.
-        adapter_client = parsl.config.Config(executors=[parsl.executors.threads.ThreadPoolExecutor(max_threads=1)])
-
+    if client_type == "snowflake":
+        with TestingSnowflake(db_config, encoding="application/json") as server:
+            server.start_compute_worker()
+            server.start_periodics()
+            server.start_flask()
+            yield server.client()
     else:
-        raise TypeError("fractal_compute_server: internal parametrize error")
-
-    return adapter_client
-
-
-@pytest.fixture(scope="module", params=_adapter_testing)
-def adapter_client_fixture(request):
-    adapter_client = build_adapter_clients(request.param)
-    yield adapter_client
-
-    # Do a final close with existing adapter
-    build_queue_adapter(adapter_client).close()
-
-
-@pytest.fixture(scope="function", params=_adapter_testing)
-def fractal_test_server_adapter(request, test_server):
-    """
-    A Fractal snowflake server with an external compute worker
-    """
-
-    adapter_client = build_adapter_clients(request.param)
-
-    client = test_server.client()
-    manager = QueueManager(client, adapter_client)
-    yield client, test_server, manager
-    manager.close_adapter()
-    manager.stop()
-
-
-def live_fractal_or_skip():
-    """
-    Ensure Fractal live connection can be made
-    First looks for a local staging server, then tries QCArchive.
-    """
-    try:
-        return FractalClient("localhost:7777", verify=False)
-    except (requests.exceptions.ConnectionError, ConnectionRefusedError):
-        return pytest.skip("Failed to connect to localhost, skipping")
-        # print("Failed to connect to localhost, trying MolSSI QCArchive.")
-        # try:
-        #    requests.get("https://api.qcarchive.molssi.org:443", json={}, timeout=5)
-        #    return FractalClient()
-        # except (requests.exceptions.ConnectionError, ConnectionRefusedError):
-        #    return pytest.skip("Could not make a connection to central Fractal server")
-
-
-def df_compare(df1, df2, sort=False):
-    """checks equality even when columns contain numpy arrays, which .equals and == struggle with"""
-    if sort:
-        if isinstance(df1, pd.DataFrame):
-            df1 = df1.reindex(sorted(df1.columns), axis=1)
-        elif isinstance(df1, pd.Series):
-            df1 = df1.sort_index()
-        if isinstance(df2, pd.DataFrame):
-            df2 = df2.reindex(sorted(df2.columns), axis=1)
-        elif isinstance(df2, pd.Series):
-            df2 = df2.sort_index()
-
-    def element_equal(e1, e2):
-        if isinstance(e1, np.ndarray):
-            if not np.array_equal(e1, e2):
-                return False
-        elif isinstance(e1, Molecule):
-            if not e1.get_hash() == e2.get_hash():
-                return False
-        # Because nan != nan
-        elif isinstance(e1, float) and np.isnan(e1):
-            if not np.isnan(e2):
-                return False
-        else:
-            if not e1 == e2:
-                return False
-        return True
-
-    if isinstance(df1, pd.Series):
-        if not isinstance(df2, pd.Series):
-            return False
-        if len(df1) != len(df2):
-            return False
-        for i in range(len(df1)):
-            if not element_equal(df1[i], df2[i]):
-                return False
-        return True
-
-    for column in df1.columns:
-        if column.startswith("_"):
-            df1.drop(column, axis=1, inplace=True)
-    for column in df2.columns:
-        if column.startswith("_"):
-            df2.drop(column, axis=1, inplace=True)
-    if not all(df1.columns == df2.columns):
-        return False
-    if not all(df1.index.values == df2.index.values):
-        return False
-    for i in range(df1.shape[0]):
-        for j in range(df1.shape[1]):
-            if not element_equal(df1.iloc[i, j], df2.iloc[i, j]):
-                return False
-
-    return True
+        raise RuntimeError("Unknown client type for tests! This is a developer error")
 
 
 mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
