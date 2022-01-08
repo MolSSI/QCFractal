@@ -1,4 +1,4 @@
-name: Core Tests
+name: Full Suite End-to-end tests (snowflake)
 
 on:
   push:
@@ -36,6 +36,14 @@ jobs:
       - name: Install postgres
         run: sudo apt update && sudo apt install postgresql postgresql-contrib
 
+      - name: Configure conda
+        uses: conda-incubator/setup-miniconda@v2.1.1
+        with:
+          python-version: ${{ matrix.python-version }}
+          activate-environment: qcarchive
+          environment-file: devtools/conda-envs/fulltest_snowflake.yaml
+          auto-activate-base: false
+
       - name: Install QCFractal package
         shell: bash -l {0}
         run: |
@@ -44,10 +52,4 @@ jobs:
       - name: Run tests
         shell: bash -l {0}
         run: |
-          pytest -vs --cov=qcfractal --cov-report=xml qcfractal
-
-      - name: Code coverage
-        uses: codecov/codecov-action@v1
-        with:
-          file: ./coverage.xml
-          fail_ci_if_error: true
+          pytest -vs --runfull="snowflake" -k _full_ qcfractal
