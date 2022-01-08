@@ -971,6 +971,7 @@ def main():
     # The queue manager is configured differently for node-parallel and single-node tasks
     manager = QueueManager(
         queue_client,
+        fractal_uri=settings.server.fractal_uri,
         max_tasks=max_queued_tasks,
         queue_tag=settings.manager.queue_tag,
         manager_name=settings.manager.manager_name,
@@ -982,7 +983,9 @@ def main():
         retries=settings.common.retries,
         verbose=settings.common.verbose,
         cores_per_rank=settings.common.cores_per_rank,
-        configuration=settings,
+        username=settings.server.username,
+        password=settings.server.password,
+        verify=settings.server.verify
     )
 
     # Set stats correctly since we buffer the max tasks a bit
