@@ -116,7 +116,7 @@ class FractalPeriodics:
         # Set up the next run of this function
         self.scheduler.enter(self.manager_heartbeat_frequency, 2, self._check_manager_heartbeats)
 
-    def _update_services(self) -> int:
+    def _update_services(self) -> None:
         """Runs through all active services and examines their current status
 
         This will check all services to see if they require another iteration, and if so, perform that iteration.
@@ -129,15 +129,14 @@ class FractalPeriodics:
         it is used in testing where this function is run manually
         """
 
-        return 0
-        self.logger.debug(f"Updating services.")
-        n_running = self.storage_socket.services.iterate_services()
-        self.logger.debug(f"Done updating services.")
+        self.logger.debug(f"Updating/iterating services...")
+        time_0 = time.time()
+        self.storage_socket.services.iterate_services()
+        time_1 = time.time()
+        self.logger.info(f"Services iterated. Took {((time_1-time_0)*1000):.1f} ms")
 
         # Set up the next run of this function
         self.scheduler.enter(self.service_frequency, 3, self._update_services)
-
-        return n_running
 
     def start(self) -> None:
         """
