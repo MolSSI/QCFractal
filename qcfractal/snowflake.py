@@ -80,10 +80,12 @@ class SnowflakeComputeProcess(ProcessBase):
         host = self._qcf_config.flask.host
         port = self._qcf_config.flask.port
         uri = f"http://{host}:{port}"
-        client = attempt_client_connect(uri)
+
+        # Wait until the server is up
+        attempt_client_connect(uri)
 
         self._worker_pool = ProcessPoolExecutor(self._compute_workers)
-        self._queue_manager = QueueManager(client, self._worker_pool, manager_name="snowflake_compute")
+        self._queue_manager = QueueManager(self._worker_pool, fractal_uri=uri, manager_name="snowflake_compute")
 
     def run(self) -> None:
         self._queue_manager.start()

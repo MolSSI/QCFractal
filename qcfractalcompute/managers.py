@@ -122,6 +122,7 @@ class QueueManager:
     def __init__(
         self,
         queue_client: "BaseAdapter",
+        fractal_uri: str,
         max_tasks: int = 200,
         queue_tag: Optional[Union[str, List[str]]] = None,
         manager_name: str = "unlabeled",
@@ -135,7 +136,9 @@ class QueueManager:
         cores_per_rank: Optional[int] = 1,
         scratch_directory: Optional[str] = None,
         retries: Optional[int] = 2,
-        configuration=None,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        verify: bool = True
     ):
         """
         Parameters
@@ -179,8 +182,6 @@ class QueueManager:
             Number of retries that QCEngine will attempt for RandomErrors detected when running
             its computations. After this many attempts (or on any other type of error), the
             error will be raised.
-        configuration : Optional[Dict[str, Any]], optional
-            A JSON description of the settings used to create this object for the database.
         """
 
         # Setup logging
@@ -190,10 +191,10 @@ class QueueManager:
 
         self.client = ManagerClient(
             name_data=self.name_data,
-            address=configuration.server.fractal_uri,
-            username=configuration.server.username,
-            password=configuration.server.password,
-            verify=configuration.server.verify,
+            address=fractal_uri,
+            username=username,
+            password=password,
+            verify=verify,
         )
 
         self.cores_per_task = cores_per_task
@@ -202,7 +203,6 @@ class QueueManager:
         self.scratch_directory = scratch_directory
         self.retries = retries
         self.cores_per_rank = cores_per_rank
-        self.configuration = configuration
         self.queue_adapter = build_queue_adapter(
             queue_client,
             logger=self.logger,
@@ -215,7 +215,10 @@ class QueueManager:
             verbose=verbose,
         )
         self.max_tasks = max_tasks
-        self.queue_tag = make_list(queue_tag)
+        if queue_tag is None:
+            self.queue_tag = ['*']
+        else:
+            self.queue_tag = make_list(queue_tag)
         self.verbose = verbose
 
         self.statistics = QueueStatistics(
