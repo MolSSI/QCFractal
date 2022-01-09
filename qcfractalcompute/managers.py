@@ -138,7 +138,7 @@ class QueueManager:
         retries: Optional[int] = 2,
         username: Optional[str] = None,
         password: Optional[str] = None,
-        verify: bool = True
+        verify: bool = True,
     ):
         """
         Parameters
@@ -216,7 +216,7 @@ class QueueManager:
         )
         self.max_tasks = max_tasks
         if queue_tag is None:
-            self.queue_tag = ['*']
+            self.queue_tag = ["*"]
         else:
             self.queue_tag = make_list(queue_tag)
         self.verbose = verbose

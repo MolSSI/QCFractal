@@ -6,8 +6,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.testing import TestingSnowflake, valid_encodings
+from qcfractaltesting import valid_encodings
 from .test_access_socket import test_ips
+from ...testing_helpers import TestingSnowflake
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

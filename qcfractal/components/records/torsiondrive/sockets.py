@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import copy
 import contextlib
+import copy
 import io
 import json
 import logging
@@ -10,22 +10,20 @@ from typing import TYPE_CHECKING
 
 import sqlalchemy.orm.attributes
 from pydantic import BaseModel
-from qcelemental.models import OptimizationResult
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by
 from sqlalchemy.orm import contains_eager
-from qcportal.outputstore import OutputTypeEnum, OutputStore
 
-from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM, SinglepointSpecificationORM
 from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM
+from qcfractal.components.records.singlepoint.db_models import SinglepointSpecificationORM
 from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependenciesORM
-from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.db_socket.helpers import get_general, get_general_multi
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
+from qcportal.outputstore import OutputTypeEnum
 from qcportal.records import PriorityEnum, RecordStatusEnum
-from qcportal.records.optimization import OptimizationQueryBody, OptimizationInputSpecification
+from qcportal.records.optimization import OptimizationInputSpecification
 from qcportal.records.torsiondrive import (
     TorsiondriveSpecification,
     TorsiondriveInputSpecification,

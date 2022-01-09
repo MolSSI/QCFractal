@@ -5,7 +5,7 @@ import ipaddress
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from qcfractal.testing import load_ip_test_data
+from qcfractaltesting import load_ip_test_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

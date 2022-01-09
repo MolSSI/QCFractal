@@ -6,7 +6,6 @@ from sqlalchemy.orm import relationship
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.outputstore.db_models import OutputStoreORM
-from qcportal.records import PriorityEnum
 from qcfractal.db_socket import BaseORM, MsgpackExt
 from qcportal.outputstore import OutputTypeEnum, OutputStore, CompressionEnum
 from qcportal.records import RecordStatusEnum

@@ -1,12 +1,11 @@
 import datetime
 
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index, text, CheckConstraint, UniqueConstraint
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Index, CheckConstraint, UniqueConstraint
 from sqlalchemy.dialects.postgresql import ARRAY, TEXT
 from sqlalchemy.orm import relationship
 
-from qcportal.records import PriorityEnum
-from qcfractal.db_socket import BaseORM, MsgpackExt
 from qcfractal.components.records.db_models import BaseRecordORM
+from qcfractal.db_socket import BaseORM, MsgpackExt
 
 
 class TaskQueueORM(BaseORM):

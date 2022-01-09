@@ -11,14 +11,12 @@ from sqlalchemy.orm import contains_eager
 
 from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM, SinglepointSpecificationORM
 from qcfractal.components.records.sockets import BaseRecordSocket
-from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import get_general, insert_general, get_general_multi
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.records import PriorityEnum, RecordStatusEnum
 from qcportal.records.optimization import (
     OptimizationInputSpecification,
-    OptimizationSpecification,
     OptimizationQueryBody,
 )
 from qcportal.records.singlepoint import (
@@ -29,7 +27,7 @@ from .db_models import OptimizationSpecificationORM, OptimizationRecordORM, Opti
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, Iterable
+    from typing import List, Dict, Tuple, Optional, Sequence, Any, Union
 
     OptimizationSpecificationDict = Dict[str, Any]
     OptimizationRecordDict = Dict[str, Any]

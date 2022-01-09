@@ -8,10 +8,10 @@ from typing import TYPE_CHECKING
 
 from qcelemental.models import ComputeError
 
+from qcfractaltesting import load_procedure_data
 from qcportal.managers import ManagerName
 from qcportal.outputstore import OutputTypeEnum, OutputStore, CompressionEnum
 from qcportal.records import FailedOperation, PriorityEnum, RecordStatusEnum
-from qcfractal.testing import load_procedure_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

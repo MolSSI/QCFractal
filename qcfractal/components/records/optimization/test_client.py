@@ -11,20 +11,12 @@ import pytest
 
 from qcfractal.components.records.optimization.db_models import OptimizationRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
-from qcportal.keywords import KeywordSet
-from qcportal.molecules import Molecule
-from qcportal.outputstore import OutputStore
+from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.optimization import (
     OptimizationInputSpecification,
-    OptimizationQueryBody,
     OptimizationSinglepointInputSpecification,
 )
-from qcportal.records.singlepoint import (
-    SinglepointDriver,
-    SinglepointProtocols,
-)
-from qcfractal.testing import load_molecule_data, load_procedure_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

@@ -8,9 +8,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcfractal.testing_helpers import populate_db, TestingSnowflake
+from qcfractaltesting import test_users
 from qcportal.client import PortalRequestError
 from qcportal.records import PriorityEnum, RecordStatusEnum
-from qcfractal.testing import TestingSnowflake, _test_users, populate_db
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -131,7 +132,7 @@ def test_record_client_get_empty(snowflake_client: PortalClient, storage_socket:
 
 
 def test_record_client_add_comment(secure_snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
     all_id = populate_db(storage_socket)
 
     # comments not retrieved by default

@@ -3,12 +3,14 @@ Tests the tasks socket with respect to misbehaving managers
 """
 
 import logging
-import pytest
 from datetime import datetime
-from qcportal.exceptions import ComputeManagerError
+
+import pytest
+
 from qcfractal.db_socket import SQLAlchemySocket
+from qcfractaltesting import load_procedure_data, caplog_handler_at_level
+from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerName
-from qcfractal.testing import load_procedure_data, caplog_handler_at_level
 from qcportal.records import PriorityEnum, RecordStatusEnum
 
 

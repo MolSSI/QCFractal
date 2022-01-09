@@ -992,7 +992,7 @@ def main():
         cores_per_rank=settings.common.cores_per_rank,
         username=settings.server.username,
         password=settings.server.password,
-        verify=settings.server.verify
+        verify=settings.server.verify,
     )
 
     # Set stats correctly since we buffer the max tasks a bit
