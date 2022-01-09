@@ -14,10 +14,7 @@ def pytest_addoption(parser):
     """
 
     parser.addoption(
-        "--fractal-uri",
-        action="store",
-        help="URI of the fractal instance to run the tests against",
-        required=True
+        "--fractal-uri", action="store", help="URI of the fractal instance to run the tests against", required=True
     )
 
 

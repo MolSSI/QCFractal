@@ -1,0 +1,20 @@
+allow_unauthenticated_read: true
+database:
+  echo_sql: false
+  database_name: next
+  host: localhost
+  logfile: qcfractal_postgres.log
+  own: true
+  port: 9876
+enable_security: false
+flask:
+  jwt_secret_key: a_secret_key
+  port: 7900
+  secret_key: another_secret_key
+heartbeat_frequency: 3
+log_access: false
+logfile: qcfractal_server.log
+loglevel: DEBUG
+max_active_services: 50
+name: QCFractal GHA Test Server
+service_frequency: 3

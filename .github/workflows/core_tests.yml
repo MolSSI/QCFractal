@@ -19,6 +19,9 @@ jobs:
         python-version: ["3.7", "3.8", "3.9", "3.10"]
         
     steps:
+      - name: Install postgres
+        run: sudo apt update && sudo apt install postgresql postgresql-contrib
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
@@ -32,9 +35,6 @@ jobs:
         with:
           repository: maxmind/MaxMind-DB
           path: qcfractaltesting/MaxMind-DB
-
-      - name: Install postgres
-        run: sudo apt update && sudo apt install postgresql postgresql-contrib
 
       - name: Install QCFractal package
         shell: bash -l {0}

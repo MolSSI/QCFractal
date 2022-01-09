@@ -289,15 +289,18 @@ def server_init(args, config):
 
     psql = PostgresHarness(config.database)
 
-    # If we own the database, start it up
+    # If we own the database, initialize and start it
     if config.database.own:
-        psql.start()
+        psql.initialize_postgres()
 
     # Does the database already exist? If so, don't do anything
     if psql.is_alive():
         raise RuntimeError("Database already exists, so you don't need to run init")
 
     psql.create_database()
+
+    if config.database.own:
+        psql.shutdown()
 
 
 def server_info(args, qcf_config):

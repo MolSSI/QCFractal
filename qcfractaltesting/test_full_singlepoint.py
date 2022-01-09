@@ -25,7 +25,7 @@ def test_singlepoint_full_1(fulltest_client: PortalClient):
         "sto-3g",
     )
 
-    for i in range(30):
+    for i in range(60):
         time.sleep(1)
         rec = fulltest_client.get_singlepoints(ids[0])
         if rec.status not in [RecordStatusEnum.running, RecordStatusEnum.waiting]:
@@ -51,7 +51,7 @@ def test_singlepoint_full_2(fulltest_client: PortalClient):
         "",
     )
 
-    for i in range(30):
+    for i in range(60):
         time.sleep(1)
         rec = fulltest_client.get_singlepoints(ids[0])
         if rec.status not in [RecordStatusEnum.running, RecordStatusEnum.waiting]:
