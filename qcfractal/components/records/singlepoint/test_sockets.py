@@ -12,6 +12,7 @@ from qcelemental.models.results import AtomicResultProperties
 
 from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM
 from qcfractal.components.wavefunctions.test_db_models import assert_wfn_equal
+from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.keywords import KeywordSet
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
@@ -25,7 +26,6 @@ from qcportal.records.singlepoint import (
     SinglepointQueryBody,
 )
 from qcportal.wavefunctions.models import WavefunctionProperties
-from qcfractal.testing import load_molecule_data, load_procedure_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

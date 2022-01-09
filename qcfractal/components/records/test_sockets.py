@@ -9,9 +9,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcfractal.testing_helpers import populate_db, mname1
 from qcportal.exceptions import MissingDataError
 from qcportal.records import PriorityEnum, RecordStatusEnum, RecordQueryBody
-from qcfractal.testing import populate_db, mname1
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

@@ -9,15 +9,12 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcportal.keywords import KeywordSet
-from qcportal.molecules import Molecule
+from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.records import PriorityEnum
 from qcportal.records.singlepoint import (
     SinglepointSpecification,
     SinglepointDriver,
-    SinglepointProtocols,
 )
-from qcfractal.testing import load_molecule_data, load_procedure_data
 from .test_sockets import _test_specs
 
 if TYPE_CHECKING:

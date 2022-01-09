@@ -4,16 +4,17 @@ Tests the client functions related to user management
 
 import pytest
 
-from qcportal.exceptions import InvalidRolenameError
+from qcfractaltesting import test_users
 from qcportal.client import PortalRequestError
+from qcportal.exceptions import InvalidRolenameError
 from qcportal.permissions import RoleInfo, PermissionsPolicy
-from qcfractal.testing import TestingSnowflake, _test_users
 from .role_socket import default_roles
 from .test_role_socket import invalid_rolenames
+from ...testing_helpers import TestingSnowflake
 
 
 def test_role_client_list(secure_snowflake: TestingSnowflake):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
     roles = client.list_roles()
 
     assert len(roles) == len(default_roles)
@@ -25,7 +26,7 @@ def test_role_client_list(secure_snowflake: TestingSnowflake):
 
 
 def test_role_client_get(secure_snowflake: TestingSnowflake):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     for r, permissions in default_roles.items():
         u = client.get_role(r)
@@ -35,7 +36,7 @@ def test_role_client_get(secure_snowflake: TestingSnowflake):
 
 
 def test_role_client_add(secure_snowflake: TestingSnowflake):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     rinfo = RoleInfo(
         rolename="test_role",
@@ -49,7 +50,7 @@ def test_role_client_add(secure_snowflake: TestingSnowflake):
 
 
 def test_role_client_add_existing(secure_snowflake: TestingSnowflake):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     rinfo = RoleInfo(
         rolename="read", permissions={"Statement": [{"Effect": "Allow", "Action": "GET", "Resource": ["user", "role"]}]}
@@ -60,7 +61,7 @@ def test_role_client_add_existing(secure_snowflake: TestingSnowflake):
 
 
 def test_role_client_use_nonexist(secure_snowflake: TestingSnowflake):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     rinfo = client.get_role("read")
     rinfo.__dict__["rolename"] = "no_role"  # bypass pydantic validation
@@ -75,7 +76,7 @@ def test_role_client_use_nonexist(secure_snowflake: TestingSnowflake):
 
 @pytest.mark.parametrize("rolename", invalid_rolenames)
 def test_role_client_use_invalid(secure_snowflake: TestingSnowflake, rolename: str):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     rinfo = client.get_role("read")
     rinfo.__dict__["rolename"] = rolename  # bypass pydantic validation
@@ -91,7 +92,7 @@ def test_role_client_use_invalid(secure_snowflake: TestingSnowflake, rolename: s
 
 
 def test_role_client_delete(secure_snowflake: TestingSnowflake):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     rinfo = RoleInfo(
         rolename="test_role",
@@ -110,7 +111,7 @@ def test_role_client_delete(secure_snowflake: TestingSnowflake):
 
 
 def test_role_client_modify(secure_snowflake: TestingSnowflake):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
     rinfo = client.get_role("read")
 
     rinfo.permissions.Statement.append({"Effect": "Allow", "Action": "PUT", "Resource": ["user", "role"]})

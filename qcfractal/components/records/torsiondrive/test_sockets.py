@@ -4,16 +4,15 @@ Tests the torsiondrive record socket
 
 from __future__ import annotations
 
-import json
 from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
+from qcfractal.testing_helpers import run_service_constropt
+from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.keywords import KeywordSet
-from qcportal.managers import ManagerName
-from qcportal.utils import recursive_normalizer
 from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.optimization import (
@@ -30,7 +29,6 @@ from qcportal.records.torsiondrive import (
     TorsiondriveKeywords,
     TorsiondriveQueryBody,
 )
-from qcfractal.testing import load_molecule_data, load_procedure_data, run_service_constropt
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

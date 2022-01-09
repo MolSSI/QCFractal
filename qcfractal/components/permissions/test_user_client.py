@@ -4,29 +4,30 @@ Tests the client functions related to user management
 
 import pytest
 
+from qcfractaltesting import test_users
+from qcportal.client import PortalRequestError
 from qcportal.exceptions import (
     InvalidUsernameError,
     InvalidPasswordError,
     InvalidRolenameError,
     AuthenticationFailure,
 )
-from qcportal.client import PortalRequestError
 from qcportal.permissions import UserInfo
-from qcfractal.testing import TestingSnowflake, _test_users
 from .test_role_socket import invalid_rolenames
 from .test_user_socket import invalid_usernames, invalid_passwords
+from ...testing_helpers import TestingSnowflake
 
 
 def test_user_client_list(secure_snowflake: TestingSnowflake):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
     users = client.list_users()
 
-    assert len(users) == len(_test_users)
+    assert len(users) == len(test_users)
 
     for u in users:
-        assert u.username in _test_users
+        assert u.username in test_users
 
-        tu = _test_users[u.username]["info"]
+        tu = test_users[u.username]["info"]
         assert u.role == tu["role"]
         assert u.fullname == tu["fullname"]
         assert u.organization == tu["organization"]
@@ -34,9 +35,9 @@ def test_user_client_list(secure_snowflake: TestingSnowflake):
 
 
 def test_user_client_get(secure_snowflake: TestingSnowflake):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
-    for username, uinfo in _test_users.items():
+    for username, uinfo in test_users.items():
         u = client.get_user(username)
 
         assert u.username == username
@@ -44,7 +45,7 @@ def test_user_client_get(secure_snowflake: TestingSnowflake):
 
 
 def test_user_client_add(secure_snowflake: TestingSnowflake):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     uinfo = UserInfo(
         username="george",
@@ -61,7 +62,7 @@ def test_user_client_add(secure_snowflake: TestingSnowflake):
 
 
 def test_user_client_add_existing(secure_snowflake: TestingSnowflake):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     uinfo = UserInfo(
         username="read_user",
@@ -77,7 +78,7 @@ def test_user_client_add_existing(secure_snowflake: TestingSnowflake):
 
 
 def test_user_client_add_badrole(secure_snowflake: TestingSnowflake):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     uinfo = UserInfo(
         username="read_user",
@@ -93,7 +94,7 @@ def test_user_client_add_badrole(secure_snowflake: TestingSnowflake):
 
 
 def test_user_client_use_nonexist(secure_snowflake: TestingSnowflake):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     uinfo = client.get_user()
     uinfo.__dict__["username"] = "no_user"  # bypass pydantic validation
@@ -110,7 +111,7 @@ def test_user_client_use_nonexist(secure_snowflake: TestingSnowflake):
 
 @pytest.mark.parametrize("username", invalid_usernames)
 def test_user_client_use_invalid_username(secure_snowflake: TestingSnowflake, username: str):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     uinfo = client.get_user()
     uinfo.__dict__["username"] = username  # bypass pydantic validation
@@ -129,7 +130,7 @@ def test_user_client_use_invalid_username(secure_snowflake: TestingSnowflake, us
 
 @pytest.mark.parametrize("rolename", invalid_rolenames)
 def test_user_client_use_invalid_rolename(secure_snowflake: TestingSnowflake, rolename: str):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     uinfo = client.get_user()
     uinfo.__dict__["role"] = rolename  # bypass pydantic validation
@@ -142,7 +143,7 @@ def test_user_client_use_invalid_rolename(secure_snowflake: TestingSnowflake, ro
 
 @pytest.mark.parametrize("password", invalid_passwords)
 def test_user_client_use_invalid_password(secure_snowflake: TestingSnowflake, password: str):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     uinfo = client.get_user()
     uinfo.__dict__["username"] = "new_user"  # bypass pydantic validation
@@ -154,7 +155,7 @@ def test_user_client_use_invalid_password(secure_snowflake: TestingSnowflake, pa
 
 
 def test_user_client_delete(secure_snowflake: TestingSnowflake):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     client.delete_user("read_user")
 
@@ -163,14 +164,14 @@ def test_user_client_delete(secure_snowflake: TestingSnowflake):
 
 
 def test_user_client_delete_self(secure_snowflake: TestingSnowflake):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     with pytest.raises(RuntimeError, match=r"Cannot delete your own user"):
         client.delete_user("admin_user")
 
 
 def test_user_client_modify(secure_snowflake: TestingSnowflake):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
     uinfo = client.get_user("read_user")
 
     uinfo.fullname = "New Full Name"
@@ -194,7 +195,7 @@ def test_user_client_modify(secure_snowflake: TestingSnowflake):
 
 
 def test_user_client_modify_badrole(secure_snowflake: TestingSnowflake):
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
     uinfo = client.get_user("read_user")
 
     uinfo.fullname = "New Full Name"
@@ -213,7 +214,7 @@ def test_user_client_change_password(secure_snowflake: TestingSnowflake):
     with pytest.raises(AuthenticationFailure):
         secure_snowflake.client("read_user", "a_new_password1234")
 
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     new_pw = client.change_user_password("read_user", "a_new_password1234")
 
@@ -230,7 +231,7 @@ def test_user_client_reset_password(secure_snowflake: TestingSnowflake):
     with pytest.raises(AuthenticationFailure):
         secure_snowflake.client("read_user", "a_new_password1234")
 
-    client = secure_snowflake.client("admin_user", _test_users["admin_user"]["pw"])
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     new_pw = client.change_user_password("read_user")
 
@@ -239,7 +240,7 @@ def test_user_client_reset_password(secure_snowflake: TestingSnowflake):
 
 
 def test_user_client_get_me(secure_snowflake: TestingSnowflake):
-    for username, uinfo in _test_users.items():
+    for username, uinfo in test_users.items():
         client = secure_snowflake.client(username, uinfo["pw"])
         me = client.get_user()
 
@@ -248,7 +249,7 @@ def test_user_client_get_me(secure_snowflake: TestingSnowflake):
 
 
 def test_user_client_modify_me(secure_snowflake: TestingSnowflake):
-    client = secure_snowflake.client("read_user", _test_users["read_user"]["pw"])
+    client = secure_snowflake.client("read_user", test_users["read_user"]["pw"])
     uinfo = client.get_user()
 
     uinfo.fullname = "New Full Name"
@@ -291,7 +292,7 @@ def test_user_client_change_my_password(secure_snowflake: TestingSnowflake):
     with pytest.raises(AuthenticationFailure):
         secure_snowflake.client("read_user", "a_new_password1234")
 
-    client = secure_snowflake.client("read_user", _test_users["read_user"]["pw"])
+    client = secure_snowflake.client("read_user", test_users["read_user"]["pw"])
     new_pw = client.change_user_password(None, "a_new_password1234")
 
     # Change password returns the same password
@@ -307,7 +308,7 @@ def test_user_client_reset_my_password(secure_snowflake: TestingSnowflake):
     with pytest.raises(AuthenticationFailure):
         secure_snowflake.client("read_user", "a_new_password1234")
 
-    client = secure_snowflake.client("read_user", _test_users["read_user"]["pw"])
+    client = secure_snowflake.client("read_user", test_users["read_user"]["pw"])
     new_pw = client.change_user_password()
 
     # Now we can login
@@ -324,7 +325,7 @@ def test_user_client_reset_my_password(secure_snowflake: TestingSnowflake):
 
 
 def test_user_no_update_via_me(secure_snowflake: TestingSnowflake):
-    client = secure_snowflake.client("read_user", _test_users["read_user"]["pw"])
+    client = secure_snowflake.client("read_user", test_users["read_user"]["pw"])
     uinfo = client.get_user()
 
     # Try to be sneaky

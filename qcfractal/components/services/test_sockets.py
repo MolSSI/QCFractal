@@ -8,9 +8,10 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from qcfractal.db_socket import SQLAlchemySocket
+from qcfractal.testing_helpers import run_service_constropt
+from qcfractaltesting import load_procedure_data
 from qcportal.outputstore import OutputStore, OutputTypeEnum
 from qcportal.records import FailedOperation, RecordStatusEnum, PriorityEnum
-from qcfractal.testing import load_procedure_data, run_service_constropt
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

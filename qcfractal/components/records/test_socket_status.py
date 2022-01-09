@@ -1,9 +1,10 @@
 from datetime import datetime
 
 from qcfractal.db_socket import SQLAlchemySocket
+from qcfractal.testing_helpers import populate_db
+from qcfractaltesting import load_procedure_data
 from qcportal.managers import ManagerName
 from qcportal.records import RecordStatusEnum, PriorityEnum
-from qcfractal.testing import populate_db, load_procedure_data
 
 
 def test_record_socket_reset(storage_socket: SQLAlchemySocket):

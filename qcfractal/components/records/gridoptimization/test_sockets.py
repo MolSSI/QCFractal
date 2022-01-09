@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
+from qcfractal.testing_helpers import run_service_constropt
+from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.keywords import KeywordSet
 from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
@@ -27,7 +29,6 @@ from qcportal.records.optimization import (
 from qcportal.records.singlepoint import (
     SinglepointProtocols,
 )
-from qcfractal.testing import load_molecule_data, load_procedure_data, run_service_constropt
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

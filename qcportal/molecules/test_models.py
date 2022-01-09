@@ -9,7 +9,7 @@ import pytest
 import qcelemental as qcel
 
 from .models import Molecule
-from qcfractal.testing import load_molecule_data
+from qcfractaltesting import load_molecule_data
 
 
 def test_molecule_constructors():

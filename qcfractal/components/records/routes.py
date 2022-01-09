@@ -1,6 +1,7 @@
 from typing import Optional
 
 from flask import g
+
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper, delete_helper
 from qcfractal.app.routes import check_access, wrap_route

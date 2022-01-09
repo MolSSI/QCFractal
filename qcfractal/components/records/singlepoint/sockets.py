@@ -9,7 +9,6 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import contains_eager
 
 from qcfractal.components.records.sockets import BaseRecordSocket
-from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
 from qcfractal.db_socket.helpers import get_general, insert_general
 from qcportal.keywords import KeywordSet
@@ -27,7 +26,7 @@ from .db_models import SinglepointSpecificationORM, SinglepointRecordORM
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, Iterable
+    from typing import List, Dict, Tuple, Optional, Sequence, Any, Union
 
     SinglepointSpecificationDict = Dict[str, Any]
     SinglepointRecordDict = Dict[str, Any]

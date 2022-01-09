@@ -5,9 +5,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from qcfractaltesting import load_procedure_data
 from qcportal.managers import ManagerName
 from qcportal.records import PriorityEnum
-from qcfractal.testing import load_procedure_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

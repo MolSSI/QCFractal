@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcfractaltesting import load_molecule_data
 from qcportal.exceptions import MissingDataError
 from qcportal.molecules import Molecule, MoleculeIdentifiers
-from qcfractal.testing import load_molecule_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

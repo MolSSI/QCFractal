@@ -8,8 +8,8 @@ from sqlalchemy import select, union
 from sqlalchemy.orm import joinedload, selectinload, with_polymorphic
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
-from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependenciesORM
+from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import (
     get_query_proj_options,
     get_count,
