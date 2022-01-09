@@ -451,8 +451,14 @@ class PostgresHarness:
 
         self._logger.info("Initializing the Postgresql database")
 
+        psql_conf_file = os.path.join(self.config.data_directory, "postgresql.conf")
+
+        if os.path.exists(psql_conf_file):
+            raise RuntimeError(f"A config already exists at {psql_conf_file}. Database has been initialized already?")
+
         initdb_path = self._get_tool("initdb")
         createdb_path = self._get_tool("createdb")
+
         retcode, stdout, stderr = self._run_subprocess([initdb_path, "-D", self.config.data_directory])
 
         if retcode != 0 or "Success." not in stdout:
@@ -460,7 +466,6 @@ class PostgresHarness:
             raise RuntimeError(err_msg)
 
         # Change some configuration options
-        psql_conf_file = os.path.join(self.config.data_directory, "postgresql.conf")
         psql_conf_path = pathlib.Path(psql_conf_file)
         psql_conf = psql_conf_path.read_text()
 

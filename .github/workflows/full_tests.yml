@@ -16,9 +16,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        python-version: ["3.7", "3.8", "3.9"]
         
     steps:
+      - name: Install postgres
+        run: sudo apt update && sudo apt install postgresql postgresql-contrib
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
@@ -26,30 +29,100 @@ jobs:
 
       - name: Clone the QCFractal repository
         uses: actions/checkout@v2
+        with:
+          path: qcfractal
 
-      - name: Clone MaxMind test db repository
+      - name: Clone QCPortal repository
         uses: actions/checkout@v2
         with:
-          repository: maxmind/MaxMind-DB
-          path: qcfractal/tests/MaxMind-DB
+          repository: bennybp/QCPortal.git
+          ref: next
+          path: qcportal
 
-      - name: Install postgres
-        run: sudo apt update && sudo apt install postgresql postgresql-contrib
+      - name: Clone QCFractalCompute repository
+        uses: actions/checkout@v2
+        with:
+          repository: bennybp/QCFractalCompute.git
+          ref: next
+          path: qcfractalcompute
 
-      - name: Configure conda
+      - name: Split out portal and compute packages
+        shell: bash -l {0}
+        run: |
+          cp -a qcfractal/qcportal/. qcportal/qcportal/
+          cp -a qcfractal/qcfractalcompute/. qcfractalcompute/qcfractalcompute/
+
+      - name: Configure conda for server
         uses: conda-incubator/setup-miniconda@v2.1.1
         with:
           python-version: ${{ matrix.python-version }}
-          activate-environment: qcarchive
-          environment-file: devtools/conda-envs/fulltest_snowflake.yaml
+          activate-environment: qcarchive-server
+          environment-file: qcfractal/qcfractaltesting/conda-envs/fulltest_server.yaml
           auto-activate-base: false
 
-      - name: Install QCFractal package
+      - name: Install & start server
         shell: bash -l {0}
         run: |
-          pip install -e .[geoip,tests]
+          conda info
+          pip install -e qcfractal
+          mkdir server; cd server
+          cp ../qcfractal/qcfractaltesting/config_files/gha_fractal_server.yaml ./
+          qcfractal-server --config=gha_fractal_server.yaml init
+          qcfractal-server --config=gha_fractal_server.yaml start &
 
-      - name: Run tests
+      - name: Configure conda for worker
+        uses: conda-incubator/setup-miniconda@v2.1.1
+        with:
+          python-version: ${{ matrix.python-version }}
+          activate-environment: qcarchive-worker
+          environment-file: qcfractal/qcfractaltesting/conda-envs/fulltest_worker_pool.yaml
+          auto-activate-base: false
+
+      - name: Install & start compute worker
         shell: bash -l {0}
         run: |
-          pytest -vs --runfull="snowflake" -k _full_ qcfractal
+          conda info
+          pip install -e qcportal
+          pip install -e qcfractalcompute
+          mkdir compute; cd compute
+          cp ../qcfractal/qcfractaltesting/config_files/gha_fractal_compute_pool.yaml ./
+          qcfractal-manager --config-file=gha_fractal_compute_pool.yaml &
+
+      - name: Configure conda for portal
+        uses: conda-incubator/setup-miniconda@v2.1.1
+        with:
+          python-version: ${{ matrix.python-version }}
+          activate-environment: qcarchive-portal
+          environment-file: qcfractal/qcfractaltesting/conda-envs/fulltest_portal.yaml
+          auto-activate-base: false
+
+      - name: Install portal
+        shell: bash -l {0}
+        run: |
+          conda info
+          pip install -e qcportal
+
+      - name: Run Tests
+        shell: bash -l {0}
+        run: |
+          conda info
+          cd qcfractal
+          pytest -v --fractal-uri="http://127.0.0.1:7900" qcfractaltesting
+
+      - name: Stop server & worker
+        shell: bash -l {0}
+        run: |
+          killall qcfractal-manager
+          killall qcfractal-server
+
+      - name: 'Save logs/artifacts'
+        uses: actions/upload-artifact@v2
+        with:
+          name: qcfractal_testing_artifacts_${{ matrix.python-version }}
+          path: |
+            server
+            compute
+            qcportal
+            qcfractalcompute
+            !server/postgres/.s.*
+          retention-days: 7
