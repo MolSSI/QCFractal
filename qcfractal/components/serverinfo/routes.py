@@ -10,6 +10,7 @@ from qcportal.serverinfo import (
     ErrorLogQueryParameters,
     DeleteBeforeDateParameters,
 )
+from qcfractal.client_versions import client_version_lower_limit, client_version_upper_limit
 
 
 @main.route("/v1/information", methods=["GET"])
@@ -24,8 +25,8 @@ def get_information():
         "manager_heartbeat_frequency": qcf_cfg.heartbeat_frequency,
         "version": qcfractal_version,
         "response_limits": qcf_cfg.response_limits.dict(),
-        "client_lower_version_limit": qcfractal_version,
-        "client_upper_version_limit": qcfractal_version,
+        "client_version_lower_limit": client_version_lower_limit,
+        "client_version_upper_limit": client_version_upper_limit,
     }
 
     return public_info

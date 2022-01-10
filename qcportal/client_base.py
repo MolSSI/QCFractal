@@ -107,15 +107,15 @@ class PortalClientBase:
         self.server_name = self.server_info["name"]
         self.response_limits = self.server_info["response_limits"]
 
-        server_version_min_client = parse_version(self.server_info["client_lower_version_limit"])
-        server_version_max_client = parse_version(self.server_info["client_upper_version_limit"])
+        client_version_lower_limit = parse_version(self.server_info["client_version_lower_limit"])
+        client_version_upper_limit = parse_version(self.server_info["client_version_upper_limit"])
 
         client_version = parse_version(__version__)
 
-        if not server_version_min_client <= client_version <= server_version_max_client:
+        if not client_version_lower_limit <= client_version <= client_version_upper_limit:
             raise RuntimeError(
                 f"This client version {str(client_version)} does not fall within the server's allowed "
-                f"client versions of [{str(server_version_min_client)}, {str(server_version_max_client)}]."
+                f"client versions of [{str(client_version_lower_limit)}, {str(client_version_upper_limit)}]."
                 f"You may need to upgrade or downgrade"
             )
 
