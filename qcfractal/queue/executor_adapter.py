@@ -30,10 +30,7 @@ class ExecutorAdapter(BaseAdapter):
 
     def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Hashable, Any]:
         func = self.get_function(task_spec["spec"]["function"])
-        kwargs = {'absorb_signals': True}
-        kwargs.update(task_spec['spec']['kwargs'])
-
-        task = self.client.apply_async(func, task_spec["spec"]["args"], kwargs)
+        task = self.client.apply_async(func, task_spec["spec"]["args"], task_spec["spec"]["kwargs"])
         return task_spec["id"], task
 
     def count_active_task_slots(self) -> int:

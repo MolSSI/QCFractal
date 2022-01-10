@@ -28,6 +28,16 @@ QCA_RESOURCE_STRING = "--resources process=1"
 logger = logging.getLogger("qcfractal.cli")
 
 
+def _initialize_signals_process_pool():
+    import signal
+    for signame in {"SIGHUP", "SIGINT", "SIGTERM"}:
+
+        def stop(*args, **kwargs):
+            raise KeyboardInterrupt()
+
+        signal.signal(getattr(signal, signame), stop)
+
+
 class SettingsCommonConfig:
     env_prefix = "QCA_"
     case_insensitive = True
@@ -746,7 +756,9 @@ def main(args=None):
         # Error if the number of nodes per jobs is more than 1
         if settings.common.nodes_per_job > 1:
             raise ValueError("Pool adapters only run on a single local node")
-        queue_client = Pool(processes=settings.common.tasks_per_worker)
+        queue_client = Pool(
+                processes=settings.common.tasks_per_worker,
+                initializer=_initialize_signals_process_pool)
 
     elif settings.common.adapter == "dask":
 
