@@ -532,7 +532,7 @@ class ManagerSettings(ProtoModel):
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="A CLI for a QCFractal QueueManager with a ProcessPoolExecutor, Dask, or Parsl backend. "
+        description="A CLI for a QCFractal QueueManager with a multiprocessing.Pool, Dask, or Parsl backend. "
         "The Dask and Parsl backends *requires* a config file due to the complexity of its setup. If a config "
         "file is specified, the remaining options serve as CLI overwrites of the config."
     )

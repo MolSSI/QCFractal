@@ -30,7 +30,7 @@ class BaseAdapter(abc.ABC):
         ----------
         client : object
             A object wrapper for different distributed workflow types. The following input types are valid
-             - Python Processes: "concurrent.futures.process.ProcessPoolExecutor"
+             - Python Processes: "multiprocessing.Pool"
              - Dask Distributed: "distributed.Client"
              - Fireworks: "fireworks.LaunchPad"
              - Parsl: "parsl.config.Config"

@@ -330,9 +330,11 @@ def server_start(args, config):
         if ncores == -1:
             ncores = None
 
-        from concurrent.futures import ProcessPoolExecutor
+        from multiprocessing import Pool, set_start_method
+        from .qcfractal_manager import _initialize_signals_process_pool
 
-        adapter = ProcessPoolExecutor(max_workers=ncores)
+        set_start_method("spawn")
+        adapter = Pool(processes=ncores, initializer=_initialize_signals_process_pool)
 
     else:
         adapter = None
