@@ -194,7 +194,8 @@ class FractalSnowflake(FractalServer):
             self._storage = None
 
         if self.queue_socket is not None:
-            self.queue_socket.shutdown(wait=False)
+            self.queue_socket.terminate()
+            self.queue_socket.join()
             self.queue_socket = None
 
         # Closed down
