@@ -5,7 +5,7 @@ from pydantic import BaseModel, Extra, Field, constr, validator
 from typing_extensions import Literal
 
 from .. import BaseRecord, RecordAddBodyBase, RecordQueryBody
-from ..optimization.models import OptimizationInputSpecification, OptimizationSpecification
+from ..optimization.models import OptimizationInputSpecification, OptimizationSpecification, OptimizationRecord
 from ...molecules import Molecule
 from ...utils import recursive_normalizer
 
@@ -130,6 +130,18 @@ class GridoptimizationQueryBody(RecordQueryBody):
             return None
 
 
+class GridoptimizationOptimization(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
+    gridoptimization_id: int
+    optimization_id: int
+    key: str
+
+    energy: float
+    optimization_record: OptimizationRecord._DataModel
+
+
 class GridoptimizationRecord(BaseRecord):
     class _DataModel(BaseRecord._DataModel):
         record_type: Literal["gridoptimization"]
@@ -140,7 +152,64 @@ class GridoptimizationRecord(BaseRecord):
         initial_molecule: Optional[Molecule] = None
         starting_molecule_id: Optional[int]
         starting_molecule: Optional[Molecule] = None
+        optimizations: Optional[List[GridoptimizationOptimization]] = None
 
     # This is needed for disambiguation by pydantic
     record_type: Literal["gridoptimization"]
     raw_data: _DataModel
+
+    def _retrieve_initial_molecule(self):
+        self.raw_data.initial_molecule = self.client.get_molecules([self.raw_data.initial_molecule_id])[0]
+
+    def _retrieve_starting_molecule(self):
+        self.raw_data.starting_molecule = self.client.get_molecules([self.raw_data.starting_molecule_id])[0]
+
+    def _retrieve_optimizations(self):
+        self.raw_data.optimizations = self.client._auto_request(
+            "get",
+            f"v1/record/gridoptimization/{self.raw_data.id}/optimizations",
+            None,
+            None,
+            List[GridoptimizationOptimization],
+            None,
+            None,
+        )
+
+    @property
+    def specification_id(self) -> int:
+        return self.raw_data.specification_id
+
+    @property
+    def specification(self) -> GridoptimizationSpecification:
+        return self.raw_data.specification
+
+    @property
+    def starting_grid(self) -> Optional[List[int]]:
+        return self.raw_data.starting_grid
+
+    @property
+    def initial_molecule_id(self) -> int:
+        return self.raw_data.initial_molecule_id
+
+    @property
+    def initial_molecule(self) -> Molecule:
+        if self.raw_data.initial_molecule is None:
+            self._retrieve_initial_molecule()
+        return self.raw_data.initial_molecule
+
+    @property
+    def starting_molecule_id(self) -> Optional[int]:
+        return self.raw_data.starting_molecule_id
+
+    @property
+    def starting_molecule(self) -> Optional[Molecule]:
+        if self.raw_data.initial_molecule is None:
+            self._retrieve_initial_molecule()
+        return self.raw_data.initial_molecule
+
+    @property
+    def optimizations(self) -> List[OptimizationRecord]:
+        if self.raw_data.optimizations is None:
+            self._retrieve_optimizations()
+        opt_dm = [x.optimization_record for x in self.raw_data.optimizations]
+        return self.client.recordmodel_from_datamodel(opt_dm)

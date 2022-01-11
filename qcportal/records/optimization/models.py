@@ -90,8 +90,16 @@ class OptimizationRecord(BaseRecord):
         )
 
     @property
+    def specification_id(self) -> int:
+        return self.raw_data.specification_id
+
+    @property
     def specification(self) -> OptimizationSpecification:
         return self.raw_data.specification
+
+    @property
+    def initial_molecule_id(self) -> int:
+        return self.raw_data.initial_molecule_id
 
     @property
     def initial_molecule(self) -> Molecule:
@@ -100,10 +108,18 @@ class OptimizationRecord(BaseRecord):
         return self.raw_data.initial_molecule
 
     @property
+    def final_molecule_id(self) -> Optional[Molecule]:
+        return self.raw_data.final_molecule
+
+    @property
     def final_molecule(self) -> Molecule:
         if self.raw_data.final_molecule is None:
             self._retrieve_final_molecule()
         return self.raw_data.final_molecule
+
+    @property
+    def energies(self) -> Optional[List[float]]:
+        return self.raw_data.energies
 
     @property
     def trajectory(self) -> Molecule:

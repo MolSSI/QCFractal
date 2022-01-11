@@ -196,6 +196,28 @@ class BaseRecord(abc.ABC, BaseModel):
             None,
         )
 
+    def _retrieve_service(self):
+        self.raw_data.service = self.client._auto_request(
+            "get",
+            f"v1/record/{self.raw_data.id}/service",
+            None,
+            None,
+            Optional[ServiceRecord],
+            None,
+            None,
+        )
+
+    def _retrieve_comments(self):
+        self.raw_data.comments = self.client._auto_request(
+            "get",
+            f"v1/record/{self.raw_data.id}/comments",
+            None,
+            None,
+            Optional[List[RecordComment]],
+            None,
+            None,
+        )
+
     def _get_output(self, output_type: OutputTypeEnum) -> Optional[Union[str, Dict[str, Any]]]:
         if not self.raw_data.compute_history:
             return None
@@ -208,18 +230,54 @@ class BaseRecord(abc.ABC, BaseModel):
         return last_computation.get_output(output_type)
 
     @property
-    def compute_history(self):
-        return self.raw_data.compute_history
+    def id(self) -> int:
+        return self.raw_data.id
+
+    @property
+    def is_service(self) -> bool:
+        return self.raw_data.is_service
+
+    @property
+    def extras(self) -> Optional[Dict[str, Any]]:
+        return self.raw_data.extras
 
     @property
     def status(self):
         return self.raw_data.status
 
     @property
-    def task(self):
-        if self.raw_data.task is None:
+    def manager_name(self) -> Optional[str]:
+        return self.raw_data.manager_name
+
+    @property
+    def created_on(self) -> datetime:
+        return self.raw_data.created_on
+
+    @property
+    def modified_on(self) -> datetime:
+        return self.raw_data.modified_on
+
+    @property
+    def compute_history(self) -> List[ComputeHistory]:
+        return self.raw_data.compute_history
+
+    @property
+    def task(self) -> Optional[TaskRecord]:
+        if not self.raw_data.is_service and self.raw_data.task is None:
             self._retrieve_task()
         return self.raw_data.task
+
+    @property
+    def service(self) -> Optional[ServiceRecord]:
+        if self.raw_data.is_service and self.raw_data.service is None:
+            self._retrieve_service()
+        return self.raw_data.service
+
+    @property
+    def comments(self) -> Optional[List[RecordComment]]:
+        if self.raw_data.comments is None:
+            self._retrieve_comments()
+        return self.raw_data.comments
 
     @property
     def stdout(self) -> Optional[str]:
