@@ -95,14 +95,30 @@ class SinglepointRecord(BaseRecord):
         )
 
     @property
+    def specification_id(self) -> int:
+        return self.raw_data.specification_id
+
+    @property
     def specification(self) -> SinglepointSpecification:
         return self.raw_data.specification
+
+    @property
+    def molecule_id(self) -> int:
+        return self.raw_data.molecule_id
 
     @property
     def molecule(self) -> Molecule:
         if self.raw_data.molecule is None:
             self._retrieve_molecule()
         return self.raw_data.molecule
+
+    @property
+    def return_result(self) -> Any:
+        return self.raw_data.return_result
+
+    @property
+    def properties(self) -> SinglepointProperties:
+        return self.raw_data.properties
 
     @property
     def wavefunction(self) -> WavefunctionProperties:

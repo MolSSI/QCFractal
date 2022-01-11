@@ -40,6 +40,22 @@ def get_record_task_v1(record_id: int):
     return rec[0]["task"]
 
 
+@main.route("/v1/record/<int:record_id>/service", methods=["GET"])
+@wrap_route(None, None)
+@check_access
+def get_record_service_v1(record_id: int):
+    rec = storage_socket.records.get([record_id], include=["service"])
+    return rec[0]["service"]
+
+
+@main.route("/v1/record/<int:record_id>/comments", methods=["GET"])
+@wrap_route(None, None)
+@check_access
+def get_record_comments_v1(record_id: int):
+    rec = storage_socket.records.get([record_id], include=["comments"])
+    return rec[0]["comments"]
+
+
 @main.route("/v1/record", methods=["DELETE"])
 @main.route("/v1/record/<int:record_id>", methods=["DELETE"])
 @wrap_route(None, RecordDeleteURLParameters)

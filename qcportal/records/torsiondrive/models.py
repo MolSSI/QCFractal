@@ -1,10 +1,10 @@
-from typing import List, Optional, Tuple, Union, Dict, Any
+from typing import List, Optional, Tuple, Union
 
 from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
 from typing_extensions import Literal
 
 from .. import BaseRecord, RecordAddBodyBase, RecordQueryBody
-from ..optimization.models import OptimizationInputSpecification, OptimizationSpecification
+from ..optimization.models import OptimizationInputSpecification, OptimizationSpecification, OptimizationRecord
 from ...molecules import Molecule
 from ...utils import recursive_normalizer
 
@@ -61,6 +61,19 @@ class TorsiondriveSpecification(TorsiondriveInputSpecification):
     optimization_specification: OptimizationSpecification
 
 
+class TorsiondriveOptimization(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
+    torsiondrive_id: int
+    optimization_id: int
+    key: str
+    position: int
+
+    energy: float
+    optimization_record: OptimizationRecord._DataModel
+
+
 class TorsiondriveAddBody(RecordAddBodyBase):
     specification: TorsiondriveInputSpecification
     initial_molecules: List[List[Union[int, Molecule]]]
@@ -92,12 +105,54 @@ class TorsiondriveRecord(BaseRecord):
         specification_id: int
         specification: TorsiondriveSpecification
         initial_molecules: Optional[List[Molecule]] = None
-        final_energies: Optional[Dict[str, Any]] = None
-        minimum_positions: Optional[Dict[str, Any]] = None
+        optimizations: Optional[List[TorsiondriveOptimization]] = None
 
     # This is needed for disambiguation by pydantic
     record_type: Literal["torsiondrive"]
     raw_data: _DataModel
+
+    def _retrieve_initial_molecules(self):
+        self.raw_data.initial_molecules = self.client._auto_request(
+            "get",
+            f"v1/record/torsiondrive/{self.raw_data.id}/initial_molecules",
+            None,
+            None,
+            List[Molecule],
+            None,
+            None,
+        )
+
+    def _retrieve_optimizations(self):
+        self.raw_data.optimizations = self.client._auto_request(
+            "get",
+            f"v1/record/torsiondrive/{self.raw_data.id}/optimizations",
+            None,
+            None,
+            List[TorsiondriveOptimization],
+            None,
+            None,
+        )
+
+    @property
+    def specification_id(self) -> int:
+        return self.raw_data.specification_id
+
+    @property
+    def specification(self) -> TorsiondriveSpecification:
+        return self.raw_data.specification
+
+    @property
+    def initial_molecules(self) -> List[Molecule]:
+        if self.raw_data.initial_molecules is None:
+            self._retrieve_initial_molecules()
+        return self.raw_data.initial_molecules
+
+    @property
+    def optimizations(self) -> List[OptimizationRecord]:
+        if self.raw_data.optimizations is None:
+            self._retrieve_optimizations()
+        opt_dm = [x.optimization_record for x in self.raw_data.optimizations]
+        return self.client.recordmodel_from_datamodel(opt_dm)
 
 
 # class TorsiondriveRecord(RecordBase):

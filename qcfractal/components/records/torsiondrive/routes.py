@@ -44,6 +44,14 @@ def get_torsiondrive_optimizations_v1(record_id: int, *, url_params: CommonGetPr
     )
 
 
+@main.route("/v1/record/torsiondrive/<int:record_id>/initial_molecules", methods=["GET"])
+@wrap_route(None, None)
+@check_access
+def get_torsiondrive_initial_molecules_v1(record_id: int):
+    rec = storage_socket.records.torsiondrive.get([record_id], include=["initial_molecules"])
+    return rec[0]["initial_molecules"]
+
+
 @main.route("/v1/record/torsiondrive/query", methods=["POST"])
 @wrap_route(TorsiondriveQueryBody, None)
 @check_access
