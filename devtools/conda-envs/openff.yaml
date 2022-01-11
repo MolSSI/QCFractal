@@ -1,8 +1,8 @@
 name: qcarchive
 channels:
-  - defaults
   - psi4/label/dev
   - conda-forge
+  - defaults
 dependencies:
   - pip
 
