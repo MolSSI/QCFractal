@@ -7,7 +7,7 @@ import datetime
 import logging
 import re
 import time
-from multiprocessing import Pool, set_start_method
+from multiprocessing import Pool
 
 import pytest
 
@@ -39,7 +39,6 @@ def compute_adapter_fixture(test_server):
 
     client = ptl.FractalClient(test_server, username=CLIENT_USERNAME)
 
-    set_start_method("spawn")
     with Pool(processes=2, initializer=_initialize_signals_process_pool) as adapter:
 
         yield client, test_server, adapter
@@ -329,7 +328,6 @@ def test_manager_max_tasks_limiter(compute_adapter_fixture):
 
 def test_queue_manager_testing():
 
-    set_start_method("spawn")
     with Pool(processes=2, initializer=_initialize_signals_process_pool) as adapter:
         manager = queue.QueueManager(None, adapter)
 
