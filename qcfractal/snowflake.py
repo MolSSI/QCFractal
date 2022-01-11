@@ -9,7 +9,7 @@ import tempfile
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
-from multiprocessing import Pool, set_start_method
+from multiprocessing import Pool
 from typing import Optional, Union
 
 from tornado.ioloop import IOLoop
@@ -103,7 +103,6 @@ class FractalSnowflake(FractalServer):
         # Boot workers if needed
         self.queue_socket = None
         if max_workers:
-            set_start_method("spawn")
             self.queue_socket = Pool(processes=max_workers, initializer=_initialize_signals_process_pool)
 
         # Add the loop to a background thread and init the server
