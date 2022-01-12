@@ -19,8 +19,8 @@ from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.singlepoint import (
-    SinglepointSpecification,
-    SinglepointInputSpecification,
+    QCSpecification,
+    QCInputSpecification,
     SinglepointDriver,
     SinglepointProtocols,
     SinglepointQueryBody,
@@ -33,23 +33,23 @@ if TYPE_CHECKING:
 
 
 def compare_singlepoint_specs(
-    input_spec: Union[SinglepointInputSpecification, Dict[str, Any]],
-    full_spec: Union[SinglepointSpecification, Dict[str, Any]],
+    input_spec: Union[QCInputSpecification, Dict[str, Any]],
+    full_spec: Union[QCSpecification, Dict[str, Any]],
 ) -> bool:
     if isinstance(input_spec, dict):
-        input_spec = SinglepointInputSpecification(**input_spec)
-    if isinstance(full_spec, SinglepointSpecification):
+        input_spec = QCInputSpecification(**input_spec)
+    if isinstance(full_spec, QCSpecification):
         full_spec = full_spec.dict()
 
     full_spec.pop("id")
     full_spec.pop("keywords_id")
     full_spec["keywords"].pop("id")
-    trimmed_spec = SinglepointInputSpecification(**full_spec)
+    trimmed_spec = QCInputSpecification(**full_spec)
     return input_spec == trimmed_spec
 
 
 _test_specs = [
-    SinglepointInputSpecification(
+    QCInputSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -57,14 +57,14 @@ _test_specs = [
         keywords=KeywordSet(values={"k": "value"}),
         protocols=SinglepointProtocols(wavefunction="all"),
     ),
-    SinglepointInputSpecification(
+    QCInputSpecification(
         program="Prog2",
         driver=SinglepointDriver.gradient,
         method="Hf",
         basis="def2-TZVP",
         keywords=KeywordSet(values={"k": "v"}),
     ),
-    SinglepointInputSpecification(
+    QCInputSpecification(
         program="Prog3",
         driver=SinglepointDriver.hessian,
         method="pbe0",
@@ -72,7 +72,7 @@ _test_specs = [
         keywords=KeywordSet(values={"o": 1, "v": 2.123}),
         protocols=SinglepointProtocols(stdout=False, wavefunction="orbitals_and_eigenvalues"),
     ),
-    SinglepointInputSpecification(
+    QCInputSpecification(
         program="ProG4",
         driver=SinglepointDriver.hessian,
         method="pbe",
@@ -83,7 +83,7 @@ _test_specs = [
 
 
 @pytest.mark.parametrize("spec", _test_specs)
-def test_singlepoint_socket_add_get(storage_socket: SQLAlchemySocket, spec: SinglepointInputSpecification):
+def test_singlepoint_socket_add_get(storage_socket: SQLAlchemySocket, spec: QCInputSpecification):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
     ne4 = load_molecule_data("neon_tetramer")
@@ -124,7 +124,7 @@ def test_singlepoint_socket_add_get(storage_socket: SQLAlchemySocket, spec: Sing
 
 
 @pytest.mark.parametrize("spec", _test_specs)
-def test_singlepoint_socket_task_spec(storage_socket: SQLAlchemySocket, spec: SinglepointInputSpecification):
+def test_singlepoint_socket_task_spec(storage_socket: SQLAlchemySocket, spec: QCInputSpecification):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
     ne4 = load_molecule_data("neon_tetramer")
@@ -187,7 +187,7 @@ def test_singlepoint_socket_add_existing_molecule(storage_socket: SQLAlchemySock
 
 
 def test_singlepoint_socket_add_same_1(storage_socket: SQLAlchemySocket):
-    spec = SinglepointInputSpecification(
+    spec = QCInputSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -210,7 +210,7 @@ def test_singlepoint_socket_add_same_1(storage_socket: SQLAlchemySocket):
 
 def test_singlepoint_socket_add_same_2(storage_socket: SQLAlchemySocket):
     # Test case sensitivity
-    spec1 = SinglepointInputSpecification(
+    spec1 = QCInputSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -219,7 +219,7 @@ def test_singlepoint_socket_add_same_2(storage_socket: SQLAlchemySocket):
         protocols=SinglepointProtocols(wavefunction="all"),
     )
 
-    spec2 = SinglepointInputSpecification(
+    spec2 = QCInputSpecification(
         program="pRog1",
         driver=SinglepointDriver.energy,
         method="b3lYp",
@@ -242,7 +242,7 @@ def test_singlepoint_socket_add_same_2(storage_socket: SQLAlchemySocket):
 
 def test_singlepoint_socket_add_same_3(storage_socket: SQLAlchemySocket):
     # Test default keywords and protocols
-    spec1 = SinglepointInputSpecification(
+    spec1 = QCInputSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -251,7 +251,7 @@ def test_singlepoint_socket_add_same_3(storage_socket: SQLAlchemySocket):
         protocols=SinglepointProtocols(wavefunction="none"),
     )
 
-    spec2 = SinglepointInputSpecification(
+    spec2 = QCInputSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -272,14 +272,14 @@ def test_singlepoint_socket_add_same_3(storage_socket: SQLAlchemySocket):
 
 def test_singlepoint_socket_add_same_4(storage_socket: SQLAlchemySocket):
     # Test None basis
-    spec1 = SinglepointInputSpecification(
+    spec1 = QCInputSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
         basis=None,
     )
 
-    spec2 = SinglepointInputSpecification(
+    spec2 = QCInputSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -306,11 +306,11 @@ def test_singlepoint_socket_add_same_5(storage_socket: SQLAlchemySocket):
     _, kw_ids = storage_socket.keywords.add([kw])
     _, mol_ids = storage_socket.molecules.add([water])
 
-    spec1 = SinglepointInputSpecification(
+    spec1 = QCInputSpecification(
         program="prog1", driver=SinglepointDriver.energy, method="b3lyp", basis=None, keywords=kw
     )
 
-    spec2 = SinglepointInputSpecification(
+    spec2 = QCInputSpecification(
         program="prog1", driver=SinglepointDriver.energy, method="b3lyp", basis="", keywords=kw_ids[0]
     )
 

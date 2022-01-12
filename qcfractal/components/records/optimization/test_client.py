@@ -56,7 +56,7 @@ def test_optimization_client_add_get(snowflake_client: PortalClient, spec: Optim
         program=spec.program,
         keywords=spec.keywords,
         protocols=spec.protocols,
-        singlepoint_specification=spec.singlepoint_specification,
+        qc_specification=spec.qc_specification,
         tag="tag1",
         priority=PriorityEnum.low,
     )
@@ -111,7 +111,7 @@ def test_optimization_client_add_existing_molecule(snowflake_client: PortalClien
         program=spec.program,
         keywords=spec.keywords,
         protocols=spec.protocols,
-        singlepoint_specification=spec.singlepoint_specification,
+        qc_specification=spec.qc_specification,
         tag="tag1",
         priority=PriorityEnum.low,
     )
@@ -164,7 +164,7 @@ def test_optimization_client_query(snowflake_client: PortalClient, storage_socke
 
     # keyword id
     meta, opt = snowflake_client.query_optimizations(
-        singlepoint_keywords_id=[recs[0].raw_data.specification.singlepoint_specification.keywords_id]
+        singlepoint_keywords_id=[recs[0].raw_data.specification.qc_specification.keywords_id]
     )
     assert meta.n_found == 2
 

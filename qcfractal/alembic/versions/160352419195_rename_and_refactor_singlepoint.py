@@ -24,9 +24,9 @@ def upgrade():
     )
 
     ########################################
-    # Create singlepoint_specification table
+    # Create qc_specification table
     op.create_table(
-        "singlepoint_specification",
+        "qc_specification",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("program", sa.String(length=100), nullable=False),
         sa.Column("driver", driver_enum, nullable=False),
@@ -34,33 +34,31 @@ def upgrade():
         sa.Column("basis", sa.String(length=100), nullable=False),
         sa.Column("keywords_id", sa.Integer(), nullable=False),
         sa.Column("protocols", postgresql.JSONB(), nullable=False),
-        sa.CheckConstraint("basis = LOWER(basis)", name="ck_singlepoint_specification_basis_lower"),
-        sa.CheckConstraint("method = LOWER(method)", name="ck_singlepoint_specification_method_lower"),
-        sa.CheckConstraint("program = LOWER(program)", name="ck_singlepoint_specification_program_lower"),
+        sa.CheckConstraint("basis = LOWER(basis)", name="ck_qc_specification_basis_lower"),
+        sa.CheckConstraint("method = LOWER(method)", name="ck_qc_specification_method_lower"),
+        sa.CheckConstraint("program = LOWER(program)", name="ck_qc_specification_program_lower"),
         sa.ForeignKeyConstraint(
             ["keywords_id"],
             ["keywords.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
-            "program", "driver", "method", "basis", "keywords_id", "protocols", name="ux_singlepoint_specification_keys"
+            "program", "driver", "method", "basis", "keywords_id", "protocols", name="ux_qc_specification_keys"
         ),
     )
-    op.create_index("ix_singlepoint_specification_program", "singlepoint_specification", ["program"], unique=False)
-    op.create_index("ix_singlepoint_specification_driver", "singlepoint_specification", ["driver"], unique=False)
-    op.create_index("ix_singlepoint_specification_method", "singlepoint_specification", ["method"], unique=False)
-    op.create_index("ix_singlepoint_specification_basis", "singlepoint_specification", ["basis"], unique=False)
-    op.create_index(
-        "ix_singlepoint_specification_keywords_id", "singlepoint_specification", ["keywords_id"], unique=False
-    )
-    op.create_index("ix_singlepoint_specification_protocols", "singlepoint_specification", ["protocols"], unique=False)
+    op.create_index("ix_qc_specification_program", "qc_specification", ["program"], unique=False)
+    op.create_index("ix_qc_specification_driver", "qc_specification", ["driver"], unique=False)
+    op.create_index("ix_qc_specification_method", "qc_specification", ["method"], unique=False)
+    op.create_index("ix_qc_specification_basis", "qc_specification", ["basis"], unique=False)
+    op.create_index("ix_qc_specification_keywords_id", "qc_specification", ["keywords_id"], unique=False)
+    op.create_index("ix_qc_specification_protocols", "qc_specification", ["protocols"], unique=False)
 
     ########################################
     # Add columns to the specification table, and rename some columns
     op.add_column("result", sa.Column("specification_id", sa.Integer(), nullable=True))  # Temporarily nullable
     op.create_index("ix_singlepoint_record_specification_id", "result", ["specification_id"], unique=False)
     op.create_foreign_key(
-        "singlepoint_record_specification_id_fkey", "result", "singlepoint_specification", ["specification_id"], ["id"]
+        "singlepoint_record_specification_id_fkey", "result", "qc_specification", ["specification_id"], ["id"]
     )
 
     # op.drop_constraint("result_molecule_fkey", "result", type_="foreignkey")
@@ -171,12 +169,12 @@ def upgrade():
     )
 
     ########################################
-    # Populate the singlepoint_specification table
+    # Populate the qc_specification table
     # Coalesce null basis set, keywords, protocols into something not null
     op.execute(
         sa.text(
             f"""
-               INSERT INTO singlepoint_specification (program, driver, method, basis, keywords_id, protocols)
+               INSERT INTO qc_specification (program, driver, method, basis, keywords_id, protocols)
                SELECT DISTINCT r.program,
                                r.driver::singlepointdriver,
                                r.method,
@@ -193,7 +191,7 @@ def upgrade():
             f"""
               UPDATE result AS r
               SET specification_id = ss.id
-              FROM singlepoint_specification AS ss, base_record as br
+              FROM qc_specification AS ss, base_record as br
               WHERE r.id = br.id
               AND ss.program = r.program
               AND ss.driver = r.driver::singlepointdriver

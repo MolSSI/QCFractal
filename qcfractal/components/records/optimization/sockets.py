@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import contains_eager
 
-from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM, SinglepointSpecificationORM
+from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM, QCSpecificationORM
 from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.db_socket.helpers import get_general, insert_general
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
@@ -94,9 +94,9 @@ class OptimizationRecordSocket(BaseRecordSocket):
         with self.root_socket.optional_session(session, False) as session:
             # Add the singlepoint specification
             # Make double sure the driver is deferred
-            opt_spec.singlepoint_specification.driver = SinglepointDriver.deferred
-            meta, sp_spec_id = self.root_socket.records.singlepoint.add_specification(
-                opt_spec.singlepoint_specification, session=session
+            opt_spec.qc_specification.driver = SinglepointDriver.deferred
+            meta, qc_spec_id = self.root_socket.records.singlepoint.add_specification(
+                opt_spec.qc_specification, session=session
             )
             if not meta.success:
                 return (
@@ -111,7 +111,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
                 .values(
                     program=opt_spec.program,
                     keywords=opt_spec.keywords,
-                    singlepoint_specification_id=sp_spec_id,
+                    qc_specification_id=qc_spec_id,
                     protocols=protocols_dict,
                 )
                 .on_conflict_do_nothing()
@@ -126,7 +126,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
                 stmt = select(OptimizationSpecificationORM.id).filter_by(
                     program=opt_spec.program,
                     keywords=opt_spec.keywords,
-                    singlepoint_specification_id=sp_spec_id,
+                    qc_specification_id=qc_spec_id,
                     protocols=protocols_dict,
                 )
 
@@ -190,16 +190,16 @@ class OptimizationRecordSocket(BaseRecordSocket):
             and_query.append(OptimizationSpecificationORM.program.in_(query_data.program))
             need_optspec_join = True
         if query_data.singlepoint_program is not None:
-            and_query.append(SinglepointSpecificationORM.program.in_(query_data.singlepoint_program))
+            and_query.append(QCSpecificationORM.program.in_(query_data.singlepoint_program))
             need_spspec_join = True
         if query_data.singlepoint_method is not None:
-            and_query.append(SinglepointSpecificationORM.method.in_(query_data.singlepoint_method))
+            and_query.append(QCSpecificationORM.method.in_(query_data.singlepoint_method))
             need_spspec_join = True
         if query_data.singlepoint_basis is not None:
-            and_query.append(SinglepointSpecificationORM.basis.in_(query_data.singlepoint_basis))
+            and_query.append(QCSpecificationORM.basis.in_(query_data.singlepoint_basis))
             need_spspec_join = True
         if query_data.singlepoint_keywords_id is not None:
-            and_query.append(SinglepointSpecificationORM.keywords_id.in_(query_data.singlepoint_keywords_id))
+            and_query.append(QCSpecificationORM.keywords_id.in_(query_data.singlepoint_keywords_id))
             need_spspec_join = True
         if query_data.initial_molecule_id is not None:
             and_query.append(OptimizationRecordORM.initial_molecule_id.in_(query_data.initial_molecule_id))
@@ -215,10 +215,8 @@ class OptimizationRecordSocket(BaseRecordSocket):
             )
 
         if need_spspec_join:
-            stmt = stmt.join(OptimizationSpecificationORM.singlepoint_specification).options(
-                contains_eager(
-                    OptimizationRecordORM.specification, OptimizationSpecificationORM.singlepoint_specification
-                )
+            stmt = stmt.join(OptimizationSpecificationORM.qc_specification).options(
+                contains_eager(OptimizationRecordORM.specification, OptimizationSpecificationORM.qc_specification)
             )
 
         stmt = stmt.where(*and_query)
@@ -235,17 +233,17 @@ class OptimizationRecordSocket(BaseRecordSocket):
         specification = record_orm.specification
         initial_molecule = record_orm.initial_molecule.dict()
 
-        model = {"method": specification.singlepoint_specification.method}
-        if specification.singlepoint_specification.basis:
-            model["basis"] = specification.singlepoint_specification.basis
+        model = {"method": specification.qc_specification.method}
+        if specification.qc_specification.basis:
+            model["basis"] = specification.qc_specification.basis
 
         # Add the singlepoint program to the optimization keywords
         opt_keywords = specification.keywords.copy()
-        opt_keywords["program"] = specification.singlepoint_specification.program
+        opt_keywords["program"] = specification.qc_specification.program
 
         qcschema_input = OptimizationInput(
             input_specification=QCInputSpecification(
-                model=model, keywords=specification.singlepoint_specification.keywords.values
+                model=model, keywords=specification.qc_specification.keywords.values
             ),
             initial_molecule=initial_molecule,
             keywords=opt_keywords,

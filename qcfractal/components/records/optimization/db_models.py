@@ -9,7 +9,7 @@ from sqlalchemy.orm import relationship
 
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseRecordORM
-from qcfractal.components.records.singlepoint.db_models import SinglepointSpecificationORM, SinglepointRecordORM
+from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM, SinglepointRecordORM
 from qcfractal.db_socket import BaseORM
 
 
@@ -32,8 +32,8 @@ class OptimizationSpecificationORM(BaseORM):
 
     program = Column(String(100), nullable=False)
 
-    singlepoint_specification_id = Column(Integer, ForeignKey(SinglepointSpecificationORM.id), nullable=False)
-    singlepoint_specification = relationship(SinglepointSpecificationORM, lazy="selectin", uselist=False)
+    qc_specification_id = Column(Integer, ForeignKey(QCSpecificationORM.id), nullable=False)
+    qc_specification = relationship(QCSpecificationORM, lazy="selectin", uselist=False)
 
     keywords = Column(JSONB, nullable=False)
     protocols = Column(JSONB, nullable=False)
@@ -41,13 +41,13 @@ class OptimizationSpecificationORM(BaseORM):
     __table_args__ = (
         UniqueConstraint(
             "program",
-            "singlepoint_specification_id",
+            "qc_specification_id",
             "keywords",
             "protocols",
             name="ux_optimization_specification_keys",
         ),
         Index("ix_optimization_specification_program", "program"),
-        Index("ix_optimization_specification_singlepoint_specification_id", "singlepoint_specification_id"),
+        Index("ix_optimization_specification_qc_specification_id", "qc_specification_id"),
         Index("ix_optimization_specification_keywords", "keywords"),
         Index("ix_optimization_specification_protocols", "protocols"),
         # Enforce lowercase on some fields
@@ -59,7 +59,7 @@ class OptimizationSpecificationORM(BaseORM):
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:
         r = {self.program: None}
-        r.update(self.singlepoint_specification.required_programs)
+        r.update(self.qc_specification.required_programs)
         return r
 
 

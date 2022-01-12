@@ -170,7 +170,7 @@ def upgrade():
     op.execute(
         sa.text(
             f"""
-               INSERT INTO singlepoint_specification (program, driver, method, basis, keywords_id, protocols)
+               INSERT INTO qc_specification (program, driver, method, basis, keywords_id, protocols)
                SELECT DISTINCT td.qc_spec->>'program',
                                'deferred'::singlepointdriver,
                                td.qc_spec->>'method',
@@ -194,12 +194,12 @@ def upgrade():
     op.execute(
         sa.text(
             f"""
-               INSERT INTO optimization_specification (program, keywords, protocols, singlepoint_specification_id)
+               INSERT INTO optimization_specification (program, keywords, protocols, qc_specification_id)
                SELECT DISTINCT td.optimization_spec->>'program',
                                COALESCE(td.optimization_spec->'keywords', '{{}}'),
                                COALESCE(td.optimization_spec->'protocols', '{{}}'),
                                (
-                               SELECT id from singlepoint_specification sp
+                               SELECT id from qc_specification sp
                                WHERE sp.program = td.qc_spec->>'program'
                                AND sp.driver = 'deferred'::singlepointdriver
                                AND sp.method = td.qc_spec->>'method'
@@ -225,9 +225,9 @@ def upgrade():
                                     WHERE os.program = td.optimization_spec->>'program'
                                     AND os.keywords = COALESCE(td.optimization_spec->'keywords', '{{}}')
                                     AND os.protocols = COALESCE(td.optimization_spec->'protocols', '{{}}')
-                                    AND os.singlepoint_specification_id =
+                                    AND os.qc_specification_id =
                                        (
-                                           SELECT id from singlepoint_specification sp
+                                           SELECT id from qc_specification sp
                                            WHERE sp.program = td.qc_spec->>'program'
                                            AND sp.driver = 'deferred'::singlepointdriver
                                            AND sp.method = td.qc_spec->>'method'
@@ -255,8 +255,8 @@ def upgrade():
                              WHERE os.program = td.optimization_spec->>'program'
                              AND os.keywords = COALESCE(td.optimization_spec->'keywords', '{{}}')
                              AND os.protocols = COALESCE(td.optimization_spec->'protocols', '{{}}')
-                             AND os.singlepoint_specification_id = (
-                                    SELECT id from singlepoint_specification sp
+                             AND os.qc_specification_id = (
+                                    SELECT id from qc_specification sp
                                     WHERE sp.program = td.qc_spec->>'program'
                                     AND sp.driver = 'deferred'::singlepointdriver
                                     AND sp.method = td.qc_spec->>'method'

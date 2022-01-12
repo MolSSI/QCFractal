@@ -14,7 +14,7 @@ from sqlalchemy.orm import contains_eager
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM
-from qcfractal.components.records.singlepoint.db_models import SinglepointSpecificationORM
+from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM
 from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependenciesORM
 from qcfractal.db_socket.helpers import insert_general, get_general
@@ -298,16 +298,16 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         need_optspec_join = False
 
         if query_data.singlepoint_program is not None:
-            and_query.append(SinglepointSpecificationORM.program.in_(query_data.singlepoint_program))
+            and_query.append(QCSpecificationORM.program.in_(query_data.singlepoint_program))
             need_spspec_join = True
         if query_data.singlepoint_method is not None:
-            and_query.append(SinglepointSpecificationORM.method.in_(query_data.singlepoint_method))
+            and_query.append(QCSpecificationORM.method.in_(query_data.singlepoint_method))
             need_spspec_join = True
         if query_data.singlepoint_basis is not None:
-            and_query.append(SinglepointSpecificationORM.basis.in_(query_data.singlepoint_basis))
+            and_query.append(QCSpecificationORM.basis.in_(query_data.singlepoint_basis))
             need_spspec_join = True
         if query_data.singlepoint_keywords_id is not None:
-            and_query.append(SinglepointSpecificationORM.keywords_id.in_(query_data.singlepoint_keywords_id))
+            and_query.append(QCSpecificationORM.keywords_id.in_(query_data.singlepoint_keywords_id))
             need_spspec_join = True
         if query_data.optimization_program is not None:
             and_query.append(OptimizationSpecificationORM.program.in_(query_data.optimization_program))
@@ -332,11 +332,11 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
             )
 
         if need_spspec_join:
-            stmt = stmt.join(OptimizationSpecificationORM.singlepoint_specification).options(
+            stmt = stmt.join(OptimizationSpecificationORM.qc_specification).options(
                 contains_eager(
                     GridoptimizationRecordORM.specification,
                     GridoptimizationSpecificationORM.optimization_specification,
-                    OptimizationSpecificationORM.singlepoint_specification,
+                    OptimizationSpecificationORM.qc_specification,
                 )
             )
 
@@ -609,9 +609,9 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
         # TODO - is there a better place to do this? as_input function on models? Some pydantic export magic?
         opt_spec.pop("id")
-        opt_spec.pop("singlepoint_specification_id")
-        opt_spec["singlepoint_specification"].pop("id")
-        opt_spec["singlepoint_specification"].pop("keywords_id")
+        opt_spec.pop("qc_specification_id")
+        opt_spec["qc_specification"].pop("id")
+        opt_spec["qc_specification"].pop("keywords_id")
 
         # Load the starting molecule (for absolute constraints)
         starting_molecule = None

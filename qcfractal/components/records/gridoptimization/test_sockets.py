@@ -47,10 +47,10 @@ def compare_gridoptimization_specs(
     full_spec.pop("id")
     full_spec.pop("optimization_specification_id")
     full_spec["optimization_specification"].pop("id")
-    full_spec["optimization_specification"].pop("singlepoint_specification_id")
-    full_spec["optimization_specification"]["singlepoint_specification"].pop("id")
-    full_spec["optimization_specification"]["singlepoint_specification"].pop("keywords_id")
-    full_spec["optimization_specification"]["singlepoint_specification"]["keywords"].pop("id")
+    full_spec["optimization_specification"].pop("qc_specification_id")
+    full_spec["optimization_specification"]["qc_specification"].pop("id")
+    full_spec["optimization_specification"]["qc_specification"].pop("keywords_id")
+    full_spec["optimization_specification"]["qc_specification"]["keywords"].pop("id")
     trimmed_spec = GridoptimizationInputSpecification(**full_spec)
     return input_spec == trimmed_spec
 
@@ -69,7 +69,7 @@ _test_specs = [
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            singlepoint_specification=OptimizationSinglepointInputSpecification(
+            qc_specification=OptimizationSinglepointInputSpecification(
                 program="prog2",
                 method="b3lyp",
                 basis="6-31g",
@@ -90,7 +90,7 @@ _test_specs = [
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            singlepoint_specification=OptimizationSinglepointInputSpecification(
+            qc_specification=OptimizationSinglepointInputSpecification(
                 program="prog2",
                 method="b3lyp",
                 basis="6-31g",
@@ -170,7 +170,7 @@ def test_gridoptimization_socket_add_same_1(storage_socket: SQLAlchemySocket):
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            singlepoint_specification=OptimizationSinglepointInputSpecification(
+            qc_specification=OptimizationSinglepointInputSpecification(
                 program="prog2",
                 method="b3lyp",
                 basis="6-31g",
@@ -207,7 +207,7 @@ def test_gridoptimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            singlepoint_specification=OptimizationSinglepointInputSpecification(
+            qc_specification=OptimizationSinglepointInputSpecification(
                 program="prog2",
                 method="b3lyp",
                 basis="6-31g",
@@ -228,7 +228,7 @@ def test_gridoptimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
         optimization_specification=OptimizationInputSpecification(
             program="optPROG1",
             keywords={"k": "value"},
-            singlepoint_specification=OptimizationSinglepointInputSpecification(
+            qc_specification=OptimizationSinglepointInputSpecification(
                 program="prOG2",
                 method="b3LYP",
                 basis="6-31g",
@@ -301,7 +301,7 @@ def test_gridoptimization_socket_query(storage_socket: SQLAlchemySocket):
     meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryBody(singlepoint_method=["b3lyP"]))
     assert meta.n_found == 1
 
-    kw_id = td[0]["specification"]["optimization_specification"]["singlepoint_specification"]["keywords_id"]
+    kw_id = td[0]["specification"]["optimization_specification"]["qc_specification"]["keywords_id"]
     meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryBody(singlepoint_keywords_id=[kw_id]))
     assert meta.n_found == 3
 

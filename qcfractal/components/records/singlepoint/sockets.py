@@ -17,18 +17,18 @@ from qcportal.molecules import Molecule
 from qcportal.records import PriorityEnum, RecordStatusEnum
 from qcportal.records.singlepoint import (
     WavefunctionProperties,
-    SinglepointSpecification,
-    SinglepointInputSpecification,
+    QCSpecification,
+    QCInputSpecification,
     SinglepointQueryBody,
 )
-from .db_models import SinglepointSpecificationORM, SinglepointRecordORM
+from .db_models import QCSpecificationORM, SinglepointRecordORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Union
 
-    SinglepointSpecificationDict = Dict[str, Any]
+    QCSpecificationDict = Dict[str, Any]
     SinglepointRecordDict = Dict[str, Any]
 
 
@@ -64,7 +64,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
     def get_specification(
         self, spec_id: int, missing_ok: bool = False, *, session: Optional[Session] = None
-    ) -> Optional[SinglepointSpecificationDict]:
+    ) -> Optional[QCSpecificationDict]:
         """
         Obtain a specification with the specified ID
 
@@ -91,14 +91,12 @@ class SinglepointRecordSocket(BaseRecordSocket):
         """
 
         with self.root_socket.optional_session(session, True) as session:
-            return get_general(
-                session, SinglepointSpecificationORM, SinglepointSpecificationORM.id, [spec_id], None, None, missing_ok
-            )[0]
+            return get_general(session, QCSpecificationORM, QCSpecificationORM.id, [spec_id], None, None, missing_ok)[0]
 
     def add_specification(
-        self, sp_spec: SinglepointInputSpecification, *, session: Optional[Session] = None
+        self, qc_spec: QCInputSpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, Optional[int]]:
-        protocols_dict = sp_spec.protocols.dict(exclude_defaults=True)
+        protocols_dict = qc_spec.protocols.dict(exclude_defaults=True)
 
         # TODO - if error_correction is manually specified as the default, then it will be an empty dict
         if "error_correction" in protocols_dict:
@@ -109,11 +107,11 @@ class SinglepointRecordSocket(BaseRecordSocket):
             if len(erc) == 0:
                 protocols_dict.pop("error_correction")
 
-        basis = "" if sp_spec.basis is None else sp_spec.basis
+        basis = "" if qc_spec.basis is None else qc_spec.basis
 
         with self.root_socket.optional_session(session, False) as session:
             # Add the keywords
-            meta, kw_ids = self.root_socket.keywords.add_mixed([sp_spec.keywords], session=session)
+            meta, kw_ids = self.root_socket.keywords.add_mixed([qc_spec.keywords], session=session)
             if not meta.success:
                 return (
                     InsertMetadata(
@@ -123,17 +121,17 @@ class SinglepointRecordSocket(BaseRecordSocket):
                 )
 
             stmt = (
-                insert(SinglepointSpecificationORM)
+                insert(QCSpecificationORM)
                 .values(
-                    program=sp_spec.program,
-                    driver=sp_spec.driver,
-                    method=sp_spec.method,
+                    program=qc_spec.program,
+                    driver=qc_spec.driver,
+                    method=qc_spec.method,
                     basis=basis,
                     keywords_id=kw_ids[0],
                     protocols=protocols_dict,
                 )
                 .on_conflict_do_nothing()
-                .returning(SinglepointSpecificationORM.id)
+                .returning(QCSpecificationORM.id)
             )
 
             r = session.execute(stmt).scalar_one_or_none()
@@ -141,10 +139,10 @@ class SinglepointRecordSocket(BaseRecordSocket):
                 return InsertMetadata(inserted_idx=[0]), r
             else:
                 # Specification was already existing
-                stmt = select(SinglepointSpecificationORM.id).filter_by(
-                    program=sp_spec.program,
-                    driver=sp_spec.driver,
-                    method=sp_spec.method,
+                stmt = select(QCSpecificationORM.id).filter_by(
+                    program=qc_spec.program,
+                    driver=qc_spec.driver,
+                    method=qc_spec.method,
                     basis=basis,
                     keywords_id=kw_ids[0],
                     protocols=protocols_dict,
@@ -206,19 +204,19 @@ class SinglepointRecordSocket(BaseRecordSocket):
         need_join = False
 
         if query_data.program is not None:
-            and_query.append(SinglepointSpecificationORM.program.in_(query_data.program))
+            and_query.append(QCSpecificationORM.program.in_(query_data.program))
             need_join = True
         if query_data.driver is not None:
-            and_query.append(SinglepointSpecificationORM.driver.in_(query_data.driver))
+            and_query.append(QCSpecificationORM.driver.in_(query_data.driver))
             need_join = True
         if query_data.method is not None:
-            and_query.append(SinglepointSpecificationORM.method.in_(query_data.method))
+            and_query.append(QCSpecificationORM.method.in_(query_data.method))
             need_join = True
         if query_data.basis is not None:
-            and_query.append(SinglepointSpecificationORM.basis.in_(query_data.basis))
+            and_query.append(QCSpecificationORM.basis.in_(query_data.basis))
             need_join = True
         if query_data.keywords_id is not None:
-            and_query.append(SinglepointSpecificationORM.keywords_id.in_(query_data.keywords_id))
+            and_query.append(QCSpecificationORM.keywords_id.in_(query_data.keywords_id))
             need_join = True
         if query_data.molecule_id is not None:
             and_query.append(SinglepointRecordORM.molecule_id.in_(query_data.molecule_id))
@@ -264,7 +262,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
     def add(
         self,
-        sp_spec: SinglepointSpecification,
+        qc_spec: QCSpecification,
         molecules: Sequence[Union[int, Molecule]],
         tag: Optional[str] = None,
         priority: PriorityEnum = PriorityEnum.normal,
@@ -281,7 +279,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
         Parameters
         ----------
-        sp_spec
+        qc_spec
             Specification for the single point calculations
         molecules
             Molecules to compute using the specification
@@ -303,7 +301,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         with self.root_socket.optional_session(session, False) as session:
 
             # First, add the specification
-            spec_meta, spec_id = self.add_specification(sp_spec, session=session)
+            spec_meta, spec_id = self.add_specification(qc_spec, session=session)
             if not spec_meta.success:
                 return (
                     InsertMetadata(
@@ -323,7 +321,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
                 )
 
             # Get the spec orm. The full orm will be needed for create_task
-            stmt = select(SinglepointSpecificationORM).where(SinglepointSpecificationORM.id == spec_id)
+            stmt = select(QCSpecificationORM).where(QCSpecificationORM.id == spec_id)
             spec_orm = session.execute(stmt).scalar_one()
 
             all_orm = []
@@ -363,7 +361,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         result: AtomicResult,
     ) -> SinglepointRecordORM:
 
-        sp_spec = SinglepointInputSpecification(
+        qc_spec = QCInputSpecification(
             program=result.provenance.creator.lower(),
             driver=result.driver,
             method=result.model.method,
@@ -372,7 +370,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
             protocols=result.protocols,
         )
 
-        spec_meta, spec_id = self.add_specification(sp_spec, session=session)
+        spec_meta, spec_id = self.add_specification(qc_spec, session=session)
         if not spec_meta.success:
             raise RuntimeError(
                 "Aborted single point insertion - could not add specification: " + spec_meta.error_description

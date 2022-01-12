@@ -18,7 +18,7 @@ from qcelemental.models.results import WavefunctionProperties
 
 from qcportal.records.gridoptimization import GridoptimizationInputSpecification
 from qcportal.records.optimization import OptimizationInputSpecification
-from qcportal.records.singlepoint import SinglepointInputSpecification
+from qcportal.records.singlepoint import QCInputSpecification
 from qcportal.records.torsiondrive import TorsiondriveInputSpecification
 
 # Valid client encodings
@@ -114,7 +114,7 @@ def load_procedure_data(name: str):
 
     record_type = data["record_type"]
     if record_type == "singlepoint":
-        input_type = SinglepointInputSpecification
+        input_type = QCInputSpecification
         result_type = Union[AtomicResult, FailedOperation]
         molecule_type = Molecule
     elif record_type == "optimization":
