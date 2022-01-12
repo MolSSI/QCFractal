@@ -15,7 +15,6 @@ from qcfractal.db_socket.helpers import (
     get_count,
     calculate_limit,
     get_general,
-    get_general_multi,
     delete_general,
 )
 from qcportal.exceptions import UserReportableError
@@ -347,27 +346,6 @@ class RecordSocket:
             wp = BaseRecordORM
 
         return self.get_base(wp, record_id, include, exclude, missing_ok, session=session)
-
-    def get_history(
-        self,
-        record_id: int,
-        include: Optional[Sequence[str]] = None,
-        exclude: Optional[Sequence[str]] = None,
-        missing_ok: bool = False,
-        *,
-        session: Optional[Session] = None,
-    ):
-        with self.root_socket.optional_session(session, True) as session:
-            hist = get_general_multi(
-                session,
-                RecordComputeHistoryORM,
-                RecordComputeHistoryORM.record_id,
-                [record_id],
-                include,
-                exclude,
-                missing_ok,
-            )
-            return sorted(hist[0], key=lambda x: x["modified_on"])
 
     def generate_task_specification(self, task_orm: Sequence[TaskQueueORM]):
         """

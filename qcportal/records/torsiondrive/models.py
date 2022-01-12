@@ -1,9 +1,10 @@
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, Dict
 
 from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
 from typing_extensions import Literal
 
 from .. import BaseRecord, RecordAddBodyBase, RecordQueryBody
+from ..models import CommonGetProjURLParameters
 from ..optimization.models import OptimizationInputSpecification, OptimizationSpecification, OptimizationRecord
 from ...molecules import Molecule
 from ...utils import recursive_normalizer
@@ -71,7 +72,7 @@ class TorsiondriveOptimization(BaseModel):
     position: int
 
     energy: float
-    optimization_record: OptimizationRecord._DataModel
+    optimization_record: Optional[OptimizationRecord._DataModel]
 
 
 class TorsiondriveAddBody(RecordAddBodyBase):
@@ -111,6 +112,8 @@ class TorsiondriveRecord(BaseRecord):
     record_type: Literal["torsiondrive"]
     raw_data: _DataModel
 
+    optimization_cache: Optional[Dict[str, OptimizationRecord]] = None
+
     def _retrieve_initial_molecules(self):
         self.raw_data.initial_molecules = self.client._auto_request(
             "get",
@@ -123,14 +126,16 @@ class TorsiondriveRecord(BaseRecord):
         )
 
     def _retrieve_optimizations(self):
+        url_params = {"include": ["*", "optimization_record"]}
+
         self.raw_data.optimizations = self.client._auto_request(
             "get",
             f"v1/record/torsiondrive/{self.raw_data.id}/optimizations",
             None,
-            None,
+            CommonGetProjURLParameters,
             List[TorsiondriveOptimization],
             None,
-            None,
+            url_params,
         )
 
     @property
@@ -148,11 +153,19 @@ class TorsiondriveRecord(BaseRecord):
         return self.raw_data.initial_molecules
 
     @property
-    def optimizations(self) -> List[OptimizationRecord]:
+    def optimizations(self) -> Dict[str, OptimizationRecord]:
+        if self.optimization_cache is not None:
+            return self.optimization_cache
+
+        # convert the raw optimization data to a dictionary of key -> OptimizationRecord
         if self.raw_data.optimizations is None:
             self._retrieve_optimizations()
-        opt_dm = [x.optimization_record for x in self.raw_data.optimizations]
-        return self.client.recordmodel_from_datamodel(opt_dm)
+
+        ret = {}
+        for opt in self.raw_data.optimizations:
+            ret[opt.key] = self.client.recordmodel_from_datamodel([opt.optimization_record])[0]
+        self.optimization_cache = ret
+        return ret
 
 
 # class TorsiondriveRecord(RecordBase):

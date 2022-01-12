@@ -11,7 +11,7 @@ from sqlalchemy.orm import contains_eager
 
 from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM, SinglepointSpecificationORM
 from qcfractal.components.records.sockets import BaseRecordSocket
-from qcfractal.db_socket.helpers import get_general, insert_general, get_general_multi
+from qcfractal.db_socket.helpers import get_general, insert_general
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.records import PriorityEnum, RecordStatusEnum
@@ -174,28 +174,6 @@ class OptimizationRecordSocket(BaseRecordSocket):
         return self.root_socket.records.get_base(
             OptimizationRecordORM, record_id, include, exclude, missing_ok, session=session
         )
-
-    def get_trajectory(
-        self,
-        record_id: int,
-        include: Optional[Sequence[str]] = None,
-        exclude: Optional[Sequence[str]] = None,
-        missing_ok: bool = False,
-        *,
-        session: Optional[Session] = None,
-    ):
-
-        with self.root_socket.optional_session(session, True) as session:
-            traj = get_general_multi(
-                session,
-                OptimizationTrajectoryORM,
-                OptimizationTrajectoryORM.optimization_id,
-                [record_id],
-                include,
-                exclude,
-                missing_ok,
-            )
-            return sorted(traj[0], key=lambda x: x["position"])
 
     def query(
         self,

@@ -1,7 +1,7 @@
 from typing import Optional
 
 from qcfractal.app import main, storage_socket
-from qcfractal.app.helpers import get_helper
+from qcfractal.app.helpers import get_helper, prefix_projection
 from qcfractal.app.routes import check_access, wrap_route
 from qcportal.base_models import CommonGetProjURLParameters
 from qcportal.records.gridoptimization import GridoptimizationAddBody, GridoptimizationQueryBody
@@ -38,9 +38,10 @@ def get_gridoptimization_records_v1(record_id: Optional[int] = None, *, url_para
 @wrap_route(None, CommonGetProjURLParameters)
 @check_access
 def get_gridoptimization_optimizations_v1(record_id: int, *, url_params: CommonGetProjURLParameters):
-    return storage_socket.records.gridoptimization.get_optimizations(
-        record_id, url_params.include, url_params.exclude, url_params.missing_ok
-    )
+    # adjust the includes/excludes to refer to the optimizations
+    ch_includes, ch_excludes = prefix_projection(url_params, "optimizations")
+    rec = storage_socket.records.gridoptimization.get([record_id], include=ch_includes, exclude=ch_excludes)
+    return rec[0]["optimizations"]
 
 
 @main.route("/v1/record/gridoptimization/query", methods=["POST"])

@@ -32,25 +32,27 @@ def test_record_socket_get(storage_socket: SQLAlchemySocket):
 def test_record_socket_get_history(storage_socket: SQLAlchemySocket):
     all_id = populate_db(storage_socket)
 
-    r = storage_socket.records.get_history(all_id[3])
-    assert len(r) == 5
+    r = storage_socket.records.get([all_id[3]], include=["*", "compute_history"])
+    ch = r[0]["compute_history"]
+    assert len(ch) == 5
 
-    assert r[0]["manager_name"] == mname1.fullname
-    assert r[1]["manager_name"] == mname1.fullname
-    assert r[2]["manager_name"] == mname1.fullname
-    assert r[3]["manager_name"] == mname1.fullname
-    assert r[4]["manager_name"] == mname1.fullname
+    assert ch[0]["manager_name"] == mname1.fullname
+    assert ch[1]["manager_name"] == mname1.fullname
+    assert ch[2]["manager_name"] == mname1.fullname
+    assert ch[3]["manager_name"] == mname1.fullname
+    assert ch[4]["manager_name"] == mname1.fullname
 
-    assert r[0]["modified_on"] < r[1]["modified_on"]
-    assert r[1]["modified_on"] < r[2]["modified_on"]
-    assert r[2]["modified_on"] < r[3]["modified_on"]
-    assert r[3]["modified_on"] < r[4]["modified_on"]
+    assert ch[0]["modified_on"] < ch[1]["modified_on"]
+    assert ch[1]["modified_on"] < ch[2]["modified_on"]
+    assert ch[2]["modified_on"] < ch[3]["modified_on"]
+    assert ch[3]["modified_on"] < ch[4]["modified_on"]
 
-    assert all("outputs" not in x for x in r)
+    assert all("outputs" not in x for x in ch)
 
-    r = storage_socket.records.get_history(all_id[3], include=["*", "outputs"])
-    assert len(r) == 5
-    assert all(x["outputs"] is not None for x in r)
+    r = storage_socket.records.get([all_id[3]], include=["compute_history.*", "compute_history.outputs"])
+    ch = r[0]["compute_history"]
+    assert len(ch) == 5
+    assert all(x["outputs"] is not None for x in ch)
 
 
 def test_record_socket_get_missing(storage_socket: SQLAlchemySocket):
