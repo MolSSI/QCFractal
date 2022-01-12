@@ -186,6 +186,9 @@ class BaseRecord(abc.ABC, BaseModel):
         )
 
     def _retrieve_task(self):
+        if self.raw_data.is_service:
+            return
+
         self.raw_data.task = self.client._auto_request(
             "get",
             f"v1/record/{self.raw_data.id}/task",
@@ -197,6 +200,9 @@ class BaseRecord(abc.ABC, BaseModel):
         )
 
     def _retrieve_service(self):
+        if not self.raw_data.is_service:
+            return
+
         self.raw_data.service = self.client._auto_request(
             "get",
             f"v1/record/{self.raw_data.id}/service",
@@ -263,13 +269,13 @@ class BaseRecord(abc.ABC, BaseModel):
 
     @property
     def task(self) -> Optional[TaskRecord]:
-        if not self.raw_data.is_service and self.raw_data.task is None:
+        if self.raw_data.task is None:
             self._retrieve_task()
         return self.raw_data.task
 
     @property
     def service(self) -> Optional[ServiceRecord]:
-        if self.raw_data.is_service and self.raw_data.service is None:
+        if self.raw_data.service is None:
             self._retrieve_service()
         return self.raw_data.service
 

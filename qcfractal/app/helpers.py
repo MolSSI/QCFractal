@@ -1,6 +1,11 @@
-from typing import List, Optional, Callable, Iterable
+from __future__ import annotations
 
-from qcportal.metadata_models import DeleteMetadata
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import List, Optional, Callable, Iterable, Tuple
+    from qcportal.base_models import CommonGetProjURLParameters
+    from qcportal.metadata_models import DeleteMetadata
 
 
 def get_helper(
@@ -56,3 +61,29 @@ def delete_helper(id: Optional[int], id_args: Optional[List[int]], func: Callabl
         return func([id])
     else:
         return func(id_args, **kwargs)
+
+
+def prefix_projection(
+    proj_params: CommonGetProjURLParameters, prefix: str
+) -> Tuple[Optional[List[str]], Optional[List[str]]]:
+    """
+    Prefixes includes and excludes with a string
+    """
+
+    ch_includes = proj_params.include
+    ch_excludes = proj_params.exclude
+
+    base = prefix.strip(".")
+    p = base + "."
+
+    if ch_includes is None:
+        # If nothing is specified, include the defaults of the child
+        ch_includes = [base]
+    else:
+        # Otherwise, prefix all entries with whatever was specified
+        ch_includes = [p + x for x in ch_includes]
+
+    if ch_excludes:
+        ch_excludes = [p + x for x in ch_excludes]
+
+    return ch_includes, ch_excludes

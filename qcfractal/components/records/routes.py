@@ -3,7 +3,7 @@ from typing import Optional
 from flask import g
 
 from qcfractal.app import main, storage_socket
-from qcfractal.app.helpers import get_helper, delete_helper
+from qcfractal.app.helpers import get_helper, delete_helper, prefix_projection
 from qcfractal.app.routes import check_access, wrap_route
 from qcportal.base_models import CommonGetProjURLParameters
 from qcportal.records import (
@@ -29,7 +29,10 @@ def get_records_v1(record_id: Optional[int] = None, *, url_params: CommonGetProj
 @wrap_route(None, CommonGetProjURLParameters)
 @check_access
 def get_record_history_v1(record_id: Optional[int] = None, *, url_params: CommonGetProjURLParameters):
-    return storage_socket.records.get_history(record_id, url_params.include, url_params.exclude, url_params.missing_ok)
+    # adjust the includes/excludes to refer to the compute history
+    ch_includes, ch_excludes = prefix_projection(url_params, "compute_history")
+    rec = storage_socket.records.get([record_id], include=ch_includes, exclude=ch_excludes)
+    return rec[0]["compute_history"]
 
 
 @main.route("/v1/record/<int:record_id>/task", methods=["GET"])

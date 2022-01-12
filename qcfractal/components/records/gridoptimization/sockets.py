@@ -17,7 +17,7 @@ from qcfractal.components.records.optimization.db_models import OptimizationSpec
 from qcfractal.components.records.singlepoint.db_models import SinglepointSpecificationORM
 from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependenciesORM
-from qcfractal.db_socket.helpers import insert_general, get_general, get_general_multi
+from qcfractal.db_socket.helpers import insert_general, get_general
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputTypeEnum
@@ -285,28 +285,6 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         return self.root_socket.records.get_base(
             GridoptimizationRecordORM, record_id, include, exclude, missing_ok, session=session
         )
-
-    def get_optimizations(
-        self,
-        record_id: int,
-        include: Optional[Sequence[str]] = None,
-        exclude: Optional[Sequence[str]] = None,
-        missing_ok: bool = False,
-        *,
-        session: Optional[Session] = None,
-    ):
-
-        with self.root_socket.optional_session(session, True) as session:
-            hist = get_general_multi(
-                session,
-                GridoptimizationOptimizationsORM,
-                GridoptimizationOptimizationsORM.gridoptimization_id,
-                [record_id],
-                include,
-                exclude,
-                missing_ok,
-            )
-            return sorted(hist[0], key=lambda x: x["position"])
 
     def query(
         self,

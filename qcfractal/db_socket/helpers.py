@@ -8,8 +8,8 @@ from sqlalchemy import tuple_, and_, or_, func, select, inspect
 from sqlalchemy.orm import load_only, selectinload, lazyload
 
 from qcfractal.db_socket import BaseORM
-from qcportal.metadata_models import InsertMetadata, DeleteMetadata
 from qcportal.exceptions import MissingDataError
+from qcportal.metadata_models import InsertMetadata, DeleteMetadata
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.attributes import InstrumentedAttribute
@@ -56,6 +56,10 @@ def _get_query_proj_options(
     include: Optional[Tuple[str, ...]] = None,
     exclude: Optional[Tuple[str, ...]] = None,
 ) -> List[InstrumentedAttribute, ...]:
+
+    # Adjust include to be the default "None" if only * is specified
+    if include == {"*"}:
+        include = None
 
     # If include and exclude are both none (common occurrence), then
     # we can skip everything
