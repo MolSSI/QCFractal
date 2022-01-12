@@ -11,14 +11,14 @@ from typing_extensions import Literal
 from .. import BaseRecord, RecordAddBodyBase, RecordQueryBody
 from ..singlepoint import (
     SinglepointRecord,
-    SinglepointSpecification,
-    SinglepointInputSpecification,
+    QCSpecification,
+    QCInputSpecification,
     SinglepointDriver,
 )
 from ...base_models import CommonGetProjURLParameters
 
 
-class OptimizationSinglepointInputSpecification(SinglepointInputSpecification):
+class OptimizationSinglepointInputSpecification(QCInputSpecification):
     driver: SinglepointDriver = SinglepointDriver.deferred
 
     @pydantic.validator("driver", pre=True)
@@ -31,7 +31,7 @@ class OptimizationInputSpecification(BaseModel):
         extra = Extra.forbid
 
     program: constr(to_lower=True) = Field(..., description="The program to use for an optimization")
-    singlepoint_specification: OptimizationSinglepointInputSpecification
+    qc_specification: OptimizationSinglepointInputSpecification
     keywords: Dict[str, Any] = Field({})
     protocols: OptimizationProtocols = Field(OptimizationProtocols())
 
@@ -44,8 +44,8 @@ class OptimizationSpecification(OptimizationInputSpecification):
     """
 
     id: int
-    singlepoint_specification: SinglepointSpecification
-    singlepoint_specification_id: int
+    qc_specification: QCSpecification
+    qc_specification_id: int
 
 
 class OptimizationTrajectory(BaseModel):

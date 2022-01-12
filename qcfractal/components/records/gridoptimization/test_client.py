@@ -41,9 +41,7 @@ def test_gridoptimization_client_tag_priority(
         "gridoptimization",
         optimization_specification=OptimizationInputSpecification(
             program="geometric",
-            singlepoint_specification=OptimizationSinglepointInputSpecification(
-                program="psi4", method="hf", basis="sto-3g"
-            ),
+            qc_specification=OptimizationSinglepointInputSpecification(program="psi4", method="hf", basis="sto-3g"),
         ),
         keywords=GridoptimizationKeywords(
             preoptimization=False,
@@ -173,7 +171,7 @@ def test_gridoptimization_client_query(snowflake_client: PortalClient, storage_s
     meta, td = snowflake_client.query_gridoptimizations(singlepoint_method=["b3lyP"])
     assert meta.n_found == 1
 
-    kw_id = td[0].raw_data.specification.optimization_specification.singlepoint_specification.keywords_id
+    kw_id = td[0].raw_data.specification.optimization_specification.qc_specification.keywords_id
     meta, td = snowflake_client.query_gridoptimizations(singlepoint_keywords_id=[kw_id])
     assert meta.n_found == 3
 

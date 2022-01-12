@@ -175,7 +175,7 @@ def upgrade():
     op.execute(
         sa.text(
             f"""
-               INSERT INTO singlepoint_specification (program, driver, method, basis, keywords_id, protocols)
+               INSERT INTO qc_specification (program, driver, method, basis, keywords_id, protocols)
                SELECT DISTINCT go.qc_spec->>'program',
                                'deferred'::singlepointdriver,
                                go.qc_spec->>'method',
@@ -199,12 +199,12 @@ def upgrade():
     op.execute(
         sa.text(
             f"""
-               INSERT INTO optimization_specification (program, keywords, protocols, singlepoint_specification_id)
+               INSERT INTO optimization_specification (program, keywords, protocols, qc_specification_id)
                SELECT DISTINCT go.optimization_spec->>'program',
                                COALESCE(go.optimization_spec->'keywords', '{{}}'),
                                COALESCE(go.optimization_spec->'protocols', '{{}}'),
                                (
-                               SELECT id from singlepoint_specification sp
+                               SELECT id from qc_specification sp
                                WHERE sp.program = go.qc_spec->>'program'
                                AND sp.driver = 'deferred'::singlepointdriver
                                AND sp.method = go.qc_spec->>'method'
@@ -230,9 +230,9 @@ def upgrade():
                                     WHERE os.program = go.optimization_spec->>'program'
                                     AND os.keywords = COALESCE(go.optimization_spec->'keywords', '{{}}')
                                     AND os.protocols = COALESCE(go.optimization_spec->'protocols', '{{}}')
-                                    AND os.singlepoint_specification_id =
+                                    AND os.qc_specification_id =
                                        (
-                                           SELECT id from singlepoint_specification sp
+                                           SELECT id from qc_specification sp
                                            WHERE sp.program = go.qc_spec->>'program'
                                            AND sp.driver = 'deferred'::singlepointdriver
                                            AND sp.method = go.qc_spec->>'method'
@@ -260,8 +260,8 @@ def upgrade():
                              WHERE os.program = go.optimization_spec->>'program'
                              AND os.keywords = COALESCE(go.optimization_spec->'keywords', '{{}}')
                              AND os.protocols = COALESCE(go.optimization_spec->'protocols', '{{}}')
-                             AND os.singlepoint_specification_id = (
-                                    SELECT id from singlepoint_specification sp
+                             AND os.qc_specification_id = (
+                                    SELECT id from qc_specification sp
                                     WHERE sp.program = go.qc_spec->>'program'
                                     AND sp.driver = 'deferred'::singlepointdriver
                                     AND sp.method = go.qc_spec->>'method'

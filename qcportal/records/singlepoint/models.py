@@ -23,7 +23,7 @@ class SinglepointDriver(str, Enum):
     deferred = "deferred"
 
 
-class SinglepointInputSpecification(BaseModel):
+class QCInputSpecification(BaseModel):
     class Config:
         extra = Extra.forbid
 
@@ -54,9 +54,9 @@ class SinglepointInputSpecification(BaseModel):
         return None if v == "" else v
 
 
-class SinglepointSpecification(SinglepointInputSpecification):
+class QCSpecification(QCInputSpecification):
     """
-    A SinglepointSpecification as stored on the server
+    A QCSpecification as stored on the server
 
     This is the same as the input specification, with a few ids added
     """
@@ -69,7 +69,7 @@ class SinglepointRecord(BaseRecord):
     class _DataModel(BaseRecord._DataModel):
         record_type: Literal["singlepoint"]
         specification_id: int
-        specification: SinglepointSpecification
+        specification: QCSpecification
         molecule_id: int
         molecule: Optional[Molecule]
         return_result: Any
@@ -99,7 +99,7 @@ class SinglepointRecord(BaseRecord):
         return self.raw_data.specification_id
 
     @property
-    def specification(self) -> SinglepointSpecification:
+    def specification(self) -> QCSpecification:
         return self.raw_data.specification
 
     @property
@@ -128,7 +128,7 @@ class SinglepointRecord(BaseRecord):
 
 
 class SinglepointAddBody(RecordAddBodyBase):
-    specification: SinglepointInputSpecification
+    specification: QCInputSpecification
     molecules: List[Union[int, Molecule]]
 
 

@@ -24,18 +24,18 @@ def upgrade():
         "optimization_specification",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("program", sa.String(length=100), nullable=False),
-        sa.Column("singlepoint_specification_id", sa.Integer(), nullable=False),
+        sa.Column("qc_specification_id", sa.Integer(), nullable=False),
         sa.Column("keywords", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("protocols", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.CheckConstraint("program = LOWER(program)", name="ck_optimization_specification_program_lower"),
         sa.ForeignKeyConstraint(
-            ["singlepoint_specification_id"],
-            ["singlepoint_specification.id"],
+            ["qc_specification_id"],
+            ["qc_specification.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint(
             "program",
-            "singlepoint_specification_id",
+            "qc_specification_id",
             "keywords",
             "protocols",
             name="ux_optimization_specification_keys",
@@ -47,9 +47,9 @@ def upgrade():
         "ix_optimization_specification_protocols", "optimization_specification", ["protocols"], unique=False
     )
     op.create_index(
-        "ix_optimization_specification_singlepoint_specification_id",
+        "ix_optimization_specification_qc_specification_id",
         "optimization_specification",
-        ["singlepoint_specification_id"],
+        ["qc_specification_id"],
         unique=False,
     )
 
@@ -155,7 +155,7 @@ def upgrade():
     op.execute(
         sa.text(
             f"""
-               INSERT INTO singlepoint_specification (program, driver, method, basis, keywords_id, protocols)
+               INSERT INTO qc_specification (program, driver, method, basis, keywords_id, protocols)
                SELECT DISTINCT o.qc_spec->>'program',
                                'deferred'::singlepointdriver,
                                o.qc_spec->>'method',
@@ -178,12 +178,12 @@ def upgrade():
     op.execute(
         sa.text(
             f"""
-               INSERT INTO optimization_specification (program, keywords, protocols, singlepoint_specification_id)
+               INSERT INTO optimization_specification (program, keywords, protocols, qc_specification_id)
                SELECT DISTINCT o.program,
                                o.keywords::jsonb,
                                br.protocols::jsonb,
                                (
-                               SELECT id from singlepoint_specification sp
+                               SELECT id from qc_specification sp
                                WHERE sp.program = o.qc_spec->>'program'
                                AND sp.driver = 'deferred'::singlepointdriver
                                AND sp.method = o.qc_spec->>'method'
@@ -207,8 +207,8 @@ def upgrade():
                AND o.program = ss.program
                AND o.keywords::jsonb = ss.keywords
                AND br.protocols::jsonb = ss.protocols
-               AND ss.singlepoint_specification_id = (
-                               SELECT id from singlepoint_specification sp
+               AND ss.qc_specification_id = (
+                               SELECT id from qc_specification sp
                                WHERE sp.program = o.qc_spec->>'program'
                                AND sp.driver = 'deferred'::singlepointdriver
                                AND sp.method = o.qc_spec->>'method'

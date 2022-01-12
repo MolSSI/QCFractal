@@ -43,10 +43,10 @@ def compare_optimization_specs(
         full_spec = full_spec.dict()
 
     full_spec.pop("id")
-    full_spec.pop("singlepoint_specification_id")
-    full_spec["singlepoint_specification"].pop("id")
-    full_spec["singlepoint_specification"].pop("keywords_id")
-    full_spec["singlepoint_specification"]["keywords"].pop("id")
+    full_spec.pop("qc_specification_id")
+    full_spec["qc_specification"].pop("id")
+    full_spec["qc_specification"].pop("keywords_id")
+    full_spec["qc_specification"]["keywords"].pop("id")
     trimmed_spec = OptimizationInputSpecification(**full_spec)
     return input_spec == trimmed_spec
 
@@ -56,7 +56,7 @@ _test_specs = [
         program="optprog1",
         keywords={},
         protocols={"trajectory": "initial_and_final"},
-        singlepoint_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationSinglepointInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
@@ -68,7 +68,7 @@ _test_specs = [
         program="optprog2",
         keywords={"k": "v"},
         protocols={"trajectory": "none"},
-        singlepoint_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationSinglepointInputSpecification(
             program="Prog2",
             method="Hf",
             basis="def2-TZVP",
@@ -78,7 +78,7 @@ _test_specs = [
     OptimizationInputSpecification(
         program="optPRog3",
         keywords={"k2": "v2"},
-        singlepoint_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationSinglepointInputSpecification(
             program="Prog3",
             method="pbe0",
             basis="",
@@ -88,7 +88,7 @@ _test_specs = [
     ),
     OptimizationInputSpecification(
         program="OPTPROG4",
-        singlepoint_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationSinglepointInputSpecification(
             program="ProG4",
             method="pbe",
             basis=None,
@@ -120,7 +120,7 @@ def test_optimization_socket_add_get(storage_socket: SQLAlchemySocket, spec: Opt
         assert r["task"]["tag"] == "tag1"
         assert r["task"]["priority"] == PriorityEnum.low
         assert spec.program in r["task"]["required_programs"]
-        assert spec.singlepoint_specification.program in r["task"]["required_programs"]
+        assert spec.qc_specification.program in r["task"]["required_programs"]
 
         assert time_0 < r["created_on"] < time_1
         assert time_0 < r["modified_on"] < time_1
@@ -177,7 +177,7 @@ def test_optimization_socket_task_spec(storage_socket: SQLAlchemySocket, spec: O
         assert t["spec"]["args"][1] == spec.program
 
         kw_with_prog = spec.keywords.copy()
-        kw_with_prog["program"] = spec.singlepoint_specification.program
+        kw_with_prog["program"] = spec.qc_specification.program
 
         assert task_spec["keywords"] == kw_with_prog
         assert task_spec["protocols"] == spec.protocols.dict(exclude_defaults=True)
@@ -185,11 +185,11 @@ def test_optimization_socket_task_spec(storage_socket: SQLAlchemySocket, spec: O
         # Forced to gradient in the qcschema input
         assert task_spec["input_specification"]["driver"] == SinglepointDriver.gradient
         assert task_spec["input_specification"]["model"] == {
-            "method": spec.singlepoint_specification.method,
-            "basis": spec.singlepoint_specification.basis,
+            "method": spec.qc_specification.method,
+            "basis": spec.qc_specification.basis,
         }
 
-        assert task_spec["input_specification"]["keywords"] == spec.singlepoint_specification.keywords.values
+        assert task_spec["input_specification"]["keywords"] == spec.qc_specification.keywords.values
 
         assert t["tag"] == "tag1"
         assert t["priority"] == PriorityEnum.low
@@ -231,7 +231,7 @@ def test_optimization_socket_add_same_1(storage_socket: SQLAlchemySocket):
         program="optprog1",
         keywords={},
         protocols={"trajectory": "initial_and_final"},
-        singlepoint_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationSinglepointInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
@@ -258,7 +258,7 @@ def test_optimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
         program="optprog1",
         keywords={},
         protocols={"trajectory": "initial_and_final"},
-        singlepoint_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationSinglepointInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
@@ -271,7 +271,7 @@ def test_optimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
         program="opTPROg1",
         keywords={},
         protocols={"trajectory": "initial_and_final"},
-        singlepoint_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationSinglepointInputSpecification(
             program="prOG1",
             method="b3LYp",
             basis="6-31g*",
@@ -298,7 +298,7 @@ def test_optimization_socket_add_same_3(storage_socket: SQLAlchemySocket):
         program="optprog1",
         keywords={},
         protocols={},
-        singlepoint_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationSinglepointInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
@@ -309,7 +309,7 @@ def test_optimization_socket_add_same_3(storage_socket: SQLAlchemySocket):
 
     spec2 = OptimizationInputSpecification(
         program="optprog1",
-        singlepoint_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationSinglepointInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
@@ -340,7 +340,7 @@ def test_optimization_socket_add_same_4(storage_socket: SQLAlchemySocket):
 
     spec1 = OptimizationInputSpecification(
         program="optprog1",
-        singlepoint_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationSinglepointInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
@@ -419,13 +419,10 @@ def test_optimization_socket_run(storage_socket: SQLAlchemySocket):
         assert kw_no_prog == result.keywords
 
         # The singlepoint spec
-        assert record["specification"]["singlepoint_specification"]["program"] == result.keywords["program"]
-        assert record["specification"]["singlepoint_specification"]["method"] == result.input_specification.model.method
-        assert record["specification"]["singlepoint_specification"]["basis"] == result.input_specification.model.basis
-        assert (
-            record["specification"]["singlepoint_specification"]["keywords"]["values"]
-            == result.input_specification.keywords
-        )
+        assert record["specification"]["qc_specification"]["program"] == result.keywords["program"]
+        assert record["specification"]["qc_specification"]["method"] == result.input_specification.model.method
+        assert record["specification"]["qc_specification"]["basis"] == result.input_specification.model.basis
+        assert record["specification"]["qc_specification"]["keywords"]["values"] == result.input_specification.keywords
         assert record["created_on"] < time_0
         assert time_0 < record["modified_on"] < time_1
 
@@ -558,9 +555,7 @@ def test_optimization_socket_query(storage_socket: SQLAlchemySocket):
 
     # keyword id
     meta, opt = storage_socket.records.optimization.query(
-        OptimizationQueryBody(
-            singlepoint_keywords_id=[recs[0]["specification"]["singlepoint_specification"]["keywords_id"]]
-        )
+        OptimizationQueryBody(singlepoint_keywords_id=[recs[0]["specification"]["qc_specification"]["keywords_id"]])
     )
     assert meta.n_found == 2
 

@@ -15,8 +15,8 @@ from qcfractal.db_socket.column_types import MsgpackExt
 from qcportal.records.singlepoint import SinglepointDriver
 
 
-class SinglepointSpecificationORM(BaseORM):
-    __tablename__ = "singlepoint_specification"
+class QCSpecificationORM(BaseORM):
+    __tablename__ = "qc_specification"
 
     id = Column(Integer, primary_key=True)
 
@@ -33,20 +33,20 @@ class SinglepointSpecificationORM(BaseORM):
 
     __table_args__ = (
         UniqueConstraint(
-            "program", "driver", "method", "basis", "keywords_id", "protocols", name="ux_singlepoint_specification_keys"
+            "program", "driver", "method", "basis", "keywords_id", "protocols", name="ux_qc_specification_keys"
         ),
-        Index("ix_singlepoint_specification_program", "program"),
-        Index("ix_singlepoint_specification_driver", "driver"),
-        Index("ix_singlepoint_specification_method", "method"),
-        Index("ix_singlepoint_specification_basis", "basis"),
-        Index("ix_singlepoint_specification_keywords_id", "keywords_id"),
-        Index("ix_singlepoint_specification_protocols", "protocols"),
+        Index("ix_qc_specification_program", "program"),
+        Index("ix_qc_specification_driver", "driver"),
+        Index("ix_qc_specification_method", "method"),
+        Index("ix_qc_specification_basis", "basis"),
+        Index("ix_qc_specification_keywords_id", "keywords_id"),
+        Index("ix_qc_specification_protocols", "protocols"),
         # Enforce lowercase on some fields
         # This does not actually change the text to lowercase, but will fail to insert anything not lowercase
         # WARNING - these are not autodetected by alembic
-        CheckConstraint("program = LOWER(program)", name="ck_singlepoint_specification_program_lower"),
-        CheckConstraint("method = LOWER(method)", name="ck_singlepoint_specification_method_lower"),
-        CheckConstraint("basis = LOWER(basis)", name="ck_singlepoint_specification_basis_lower"),
+        CheckConstraint("program = LOWER(program)", name="ck_qc_specification_program_lower"),
+        CheckConstraint("method = LOWER(method)", name="ck_qc_specification_method_lower"),
+        CheckConstraint("basis = LOWER(basis)", name="ck_qc_specification_basis_lower"),
     )
 
     @property
@@ -64,8 +64,8 @@ class SinglepointRecordORM(BaseRecordORM):
     id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="CASCADE"), primary_key=True)
 
     # uniquely identifying a result
-    specification_id = Column(Integer, ForeignKey(SinglepointSpecificationORM.id), nullable=False)
-    specification = relationship(SinglepointSpecificationORM, lazy="selectin", uselist=False)
+    specification_id = Column(Integer, ForeignKey(QCSpecificationORM.id), nullable=False)
+    specification = relationship(QCSpecificationORM, lazy="selectin", uselist=False)
 
     molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), nullable=False)
     molecule = relationship(MoleculeORM, uselist=False)

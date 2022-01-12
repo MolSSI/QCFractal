@@ -872,7 +872,7 @@ class PortalClient(PortalClientBase):
         self,
         initial_molecules: Union[int, Molecule, List[Union[int, Molecule]]],
         program: str,
-        singlepoint_specification: OptimizationSinglepointInputSpecification,
+        qc_specification: OptimizationSinglepointInputSpecification,
         keywords: Optional[Union[KeywordSet, Dict[str, Any], int]] = None,
         protocols: Optional[OptimizationProtocols] = None,
         tag: Optional[str] = None,
@@ -886,7 +886,7 @@ class PortalClient(PortalClientBase):
             "initial_molecules": make_list(initial_molecules),
             "specification": {
                 "program": program,
-                "singlepoint_specification": singlepoint_specification,
+                "qc_specification": qc_specification,
             },
             "tag": tag,
             "priority": priority,

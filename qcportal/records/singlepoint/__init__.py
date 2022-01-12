@@ -1,6 +1,6 @@
 from .models import (
-    SinglepointSpecification,
-    SinglepointInputSpecification,
+    QCSpecification,
+    QCInputSpecification,
     SinglepointDriver,
     SinglepointProtocols,
     SinglepointProperties,

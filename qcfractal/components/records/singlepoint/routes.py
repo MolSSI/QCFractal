@@ -12,7 +12,7 @@ from qcportal.records.singlepoint import SinglepointAddBody, SinglepointQueryBod
 @check_access
 def add_singlepoint_records_v1(body_data: SinglepointAddBody):
     return storage_socket.records.singlepoint.add(
-        sp_spec=body_data.specification, molecules=body_data.molecules, tag=body_data.tag, priority=body_data.priority
+        qc_spec=body_data.specification, molecules=body_data.molecules, tag=body_data.tag, priority=body_data.priority
     )
 
 

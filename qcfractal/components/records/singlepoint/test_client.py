@@ -12,7 +12,7 @@ import pytest
 from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.records import PriorityEnum
 from qcportal.records.singlepoint import (
-    SinglepointSpecification,
+    QCSpecification,
     SinglepointDriver,
 )
 from .test_sockets import _test_specs
@@ -38,7 +38,7 @@ def test_singlepoint_client_tag_priority(snowflake_client: PortalClient, tag: Op
 
 
 @pytest.mark.parametrize("spec", _test_specs)
-def test_singlepoint_client_add_get(snowflake_client: PortalClient, spec: SinglepointSpecification):
+def test_singlepoint_client_add_get(snowflake_client: PortalClient, spec: QCSpecification):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
     ne4 = load_molecule_data("neon_tetramer")

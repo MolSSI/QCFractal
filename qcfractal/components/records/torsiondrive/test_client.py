@@ -41,9 +41,7 @@ def test_torsiondrive_client_tag_priority_as_service(
         "torsiondrive",
         optimization_specification=OptimizationInputSpecification(
             program="geometric",
-            singlepoint_specification=OptimizationSinglepointInputSpecification(
-                program="psi4", method="hf", basis="sto-3g"
-            ),
+            qc_specification=OptimizationSinglepointInputSpecification(program="psi4", method="hf", basis="sto-3g"),
         ),
         keywords=TorsiondriveKeywords(dihedrals=[(1, 2, 3, 4)], grid_spacing=[15], energy_upper_limit=0.04),
         priority=priority,
@@ -174,7 +172,7 @@ def test_torsiondrive_client_query(snowflake_client: PortalClient, storage_socke
     meta, td = snowflake_client.query_torsiondrives(singlepoint_method=["b3lyP"])
     assert meta.n_found == 1
 
-    kw_id = td[0].raw_data.specification.optimization_specification.singlepoint_specification.keywords_id
+    kw_id = td[0].raw_data.specification.optimization_specification.qc_specification.keywords_id
     meta, td = snowflake_client.query_torsiondrives(singlepoint_keywords_id=[kw_id])
     assert meta.n_found == 3
 
