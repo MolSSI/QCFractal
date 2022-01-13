@@ -15,7 +15,7 @@ import traceback
 
 import qcfractal
 
-from .config import read_configuration, FractalConfig, FlaskConfig
+from .config import read_configuration, FractalConfig, WebAPIConfig
 from .postgres_harness import PostgresHarness
 from .db_socket.socket import SQLAlchemySocket
 from qcportal.permissions import RoleInfo, UserInfo
@@ -144,9 +144,9 @@ def parse_args() -> argparse.Namespace:
 
     # Allow some config settings to be altered via the command line
     fractal_args = start.add_argument_group("Server Settings")
-    fractal_args.add_argument("--port", **FlaskConfig.help_info("port"))
-    fractal_args.add_argument("--host", **FlaskConfig.help_info("host"))
-    fractal_args.add_argument("--num-workers", **FlaskConfig.help_info("num_workers"))
+    fractal_args.add_argument("--port", **WebAPIConfig.help_info("port"))
+    fractal_args.add_argument("--host", **WebAPIConfig.help_info("host"))
+    fractal_args.add_argument("--num-workers", **WebAPIConfig.help_info("num_workers"))
     fractal_args.add_argument("--logfile", **FractalConfig.help_info("loglevel"))
     fractal_args.add_argument("--loglevel", **FractalConfig.help_info("loglevel"))
     fractal_args.add_argument("--enable-security", **FractalConfig.help_info("enable_security"))
@@ -433,8 +433,8 @@ def server_upgrade_config(args, config_path):
     new_qcf_config_dict.pop("base_folder")
 
     # Generate secret keys for the user. They can always change it later
-    new_qcf_config_dict["flask"]["secret_key"] = secrets.token_hex(24)
-    new_qcf_config_dict["flask"]["jwt_secret_key"] = secrets.token_hex(24)
+    new_qcf_config_dict["api"]["secret_key"] = secrets.token_hex(24)
+    new_qcf_config_dict["api"]["jwt_secret_key"] = secrets.token_hex(24)
 
     logger.info(f"Writing new configuration data to  {config_path}")
     with open(config_path, "w") as yf:
@@ -681,16 +681,16 @@ def main():
 
     # Handle some arguments given on the command line
     # They are only valid if starting a server
-    cmd_config = {"flask": {}}
+    cmd_config = {"api": {}}
 
     # command = the subcommand used (init, start, etc)
     if args.command == "start":
         if args.port is not None:
-            cmd_config["flask"]["port"] = args.port
+            cmd_config["api"]["port"] = args.port
         if args.host is not None:
-            cmd_config["flask"]["host"] = args.host
+            cmd_config["api"]["host"] = args.host
         if args.num_workers is not None:
-            cmd_config["flask"]["num_workers"] = args.num_workers
+            cmd_config["api"]["num_workers"] = args.num_workers
         if args.logfile is not None:
             cmd_config["logfile"] = args.logfile
         if args.loglevel is not None:

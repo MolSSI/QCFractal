@@ -7,7 +7,7 @@ database:
   own: true
   port: 9876
 enable_security: false
-flask:
+api:
   jwt_secret_key: a_secret_key
   port: 7900
   secret_key: another_secret_key

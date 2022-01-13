@@ -38,7 +38,7 @@ main = Blueprint("main", __name__)
 
 
 def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
-    config_name = qcfractal_config.flask.config_name
+    config_name = qcfractal_config.api.config_name
 
     app = Flask(__name__)
     app.logger = logging.getLogger("fractal_flask_app")
@@ -57,10 +57,10 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     # Initialize the database socket, API logger, and view handler
     storage_socket.init(qcfractal_config)
 
-    app.config["SECRET_KEY"] = qcfractal_config.flask.secret_key
-    app.config["JWT_SECRET_KEY"] = qcfractal_config.flask.jwt_secret_key
-    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = qcfractal_config.flask.jwt_access_token_expires
-    app.config["JWT_REFRESH_TOKEN_EXPIRES"] = qcfractal_config.flask.jwt_refresh_token_expires
+    app.config["SECRET_KEY"] = qcfractal_config.api.secret_key
+    app.config["JWT_SECRET_KEY"] = qcfractal_config.api.jwt_secret_key
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = qcfractal_config.api.jwt_access_token_expires
+    app.config["JWT_REFRESH_TOKEN_EXPIRES"] = qcfractal_config.api.jwt_refresh_token_expires
 
     # Register all the routes in the other files.
     # Must be done before registering the blueprint
@@ -96,7 +96,7 @@ class FlaskProcess(ProcessBase):
         logging.getLogger("werkzeug").setLevel(logging.getLogger().level)
 
     def run(self):
-        self._flask_app.run(host=self._qcf_config.flask.host, port=self._qcf_config.flask.port)
+        self._flask_app.run(host=self._qcf_config.api.host, port=self._qcf_config.api.port)
 
     def interrupt(self) -> None:
         # We got here via SIGINT or SIGTERM. Convert both to SIGTERM and let flask handle it

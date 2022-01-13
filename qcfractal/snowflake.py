@@ -77,8 +77,8 @@ class SnowflakeComputeProcess(ProcessBase):
         # that is run in the separate process
 
     def setup(self) -> None:
-        host = self._qcf_config.flask.host
-        port = self._qcf_config.flask.port
+        host = self._qcf_config.api.host
+        port = self._qcf_config.api.port
         uri = f"http://{host}:{port}"
 
         # Wait until the server is up
@@ -140,7 +140,7 @@ class FractalSnowflake:
         qcf_cfg["base_folder"] = self._tmpdir.name
         qcf_cfg["loglevel"] = logging.getLevelName(loglevel)
         qcf_cfg["database"] = db_config.dict()
-        qcf_cfg["flask"] = {"config_name": flask_config, "host": fractal_host, "port": fractal_port}
+        qcf_cfg["api"] = {"config_name": flask_config, "host": fractal_host, "port": fractal_port}
         qcf_cfg["enable_security"] = False
 
         # Add in any options passed to this Snowflake
@@ -185,7 +185,7 @@ class FractalSnowflake:
         ####################################################################################
 
         # Stop these in a particular order
-        # First the compute, since it will communicate its demise to the flask server
+        # First the compute, since it will communicate its demise to the api server
         compute_proc.stop()
         flask_proc.stop()
         periodics_proc.stop()
@@ -219,7 +219,7 @@ class FractalSnowflake:
             Address/URI of the rest interface (ie, 'http://127.0.0.1:1234')
         """
 
-        return f"http://{self._qcf_config.flask.host}:{self._qcf_config.flask.port}"
+        return f"http://{self._qcf_config.api.host}:{self._qcf_config.api.port}"
 
     def await_results(self, ids: Optional[Sequence[int]] = None, timeout: Optional[float] = None) -> bool:
         """

@@ -48,11 +48,11 @@ class TestingSnowflake(FractalSnowflake):
         # Have a short token expiration (in case enable_security is True)
         extra_config = {}
 
-        flask_config = {"jwt_access_token_expires": 1}  # expire tokens in 1 second
+        api_config = {"jwt_access_token_expires": 1}  # expire tokens in 1 second
 
         extra_config["enable_security"] = enable_security
         extra_config["allow_unauthenticated_read"] = allow_unauthenticated_read
-        extra_config["flask"] = flask_config
+        extra_config["api"] = api_config
         extra_config["service_frequency"] = 5
         extra_config["loglevel"] = "DEBUG"
         extra_config["hide_internal_errors"] = False
@@ -75,7 +75,7 @@ class TestingSnowflake(FractalSnowflake):
         if create_users:
             self.create_users()
 
-        # Start the flask process if requested
+        # Start the flask api process if requested
         if start_flask:
             self.start_flask()
 
