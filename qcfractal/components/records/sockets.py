@@ -13,7 +13,6 @@ from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import (
     get_query_proj_options,
     get_count,
-    calculate_limit,
     get_general,
     delete_general,
 )
@@ -79,7 +78,6 @@ def create_compute_history_entry(
 class BaseRecordSocket:
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
-        self._limit = root_socket.qcf_config.response_limits.record
 
     @staticmethod
     def get_children_select():
@@ -133,8 +131,6 @@ class RecordSocket:
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._limit = root_socket.qcf_config.response_limits.record
-        self._output_limit = root_socket.qcf_config.response_limits.output_store
 
         # All the subsockets
         from .singlepoint.sockets import SinglepointRecordSocket
@@ -199,8 +195,6 @@ class RecordSocket:
         session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[ProcedureDict]]:
 
-        limit = calculate_limit(self._limit, query_data.limit)
-
         proj_options = get_query_proj_options(orm_type, query_data.include, query_data.exclude)
 
         and_query = []
@@ -225,7 +219,7 @@ class RecordSocket:
             stmt = stmt.where(*and_query)
             stmt = stmt.options(*proj_options)
             n_found = get_count(session, stmt)
-            stmt = stmt.limit(limit).offset(query_data.skip)
+            stmt = stmt.limit(query_data.limit).offset(query_data.skip)
             results = session.execute(stmt).scalars().unique().all()
             result_dicts = [x.dict() for x in results]
 
@@ -270,9 +264,6 @@ class RecordSocket:
             Records as a dictionary in the same order as the given ids.
             If missing_ok is True, then this list will contain None where the molecule was missing.
         """
-        if len(record_id) > self._limit:
-            raise RuntimeError(f"Request for {len(record_id)} records is over the limit of {self._limit}")
-
         with self.root_socket.optional_session(session, True) as session:
             return get_general(session, orm_type, orm_type.id, record_id, include, exclude, missing_ok)
 

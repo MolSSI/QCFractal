@@ -1,15 +1,19 @@
 from typing import Optional
 
+from flask import current_app
+
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper
 from qcfractal.app.routes import check_access, wrap_route
 from qcportal.base_models import CommonGetURLParametersName
+from qcportal.exceptions import LimitExceededError
 from qcportal.managers import (
     ManagerActivationBody,
     ManagerUpdateBody,
     ManagerStatusEnum,
     ManagerQueryBody,
 )
+from qcportal.utils import calculate_limit
 
 
 @main.route("/v1/manager", methods=["POST"])
@@ -57,6 +61,10 @@ def update_manager_v1(name: str, body_data: ManagerUpdateBody):
 @wrap_route(None, CommonGetURLParametersName)
 @check_access
 def get_managers_v1(name: Optional[str] = None, *, url_params: CommonGetURLParametersName):
+    limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_managers
+    if url_params.name is not None and len(url_params.name) > limit:
+        raise LimitExceededError(f"Cannot get {len(url_params.name)} manager records - limit is {limit}")
+
     return get_helper(name, url_params.name, None, None, url_params.missing_ok, storage_socket.managers.get)
 
 
@@ -64,6 +72,9 @@ def get_managers_v1(name: Optional[str] = None, *, url_params: CommonGetURLParam
 @wrap_route(ManagerQueryBody, None)
 @check_access
 def query_managers_v1(body_data: ManagerQueryBody):
+
+    max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_managers
+
     return storage_socket.managers.query(
         manager_id=body_data.id,
         name=body_data.name,
@@ -74,6 +85,6 @@ def query_managers_v1(body_data: ManagerQueryBody):
         modified_after=body_data.modified_after,
         include=body_data.include,
         exclude=body_data.exclude,
-        limit=body_data.limit,
+        limit=calculate_limit(max_limit, body_data.limit),
         skip=body_data.skip,
     )

@@ -105,7 +105,7 @@ class PortalClientBase:
         # Try to connect and pull the server info
         self.server_info = self.get_server_information()
         self.server_name = self.server_info["name"]
-        self.response_limits = self.server_info["response_limits"]
+        self.api_limits = self.server_info["api_limits"]
 
         client_version_lower_limit = parse_version(self.server_info["client_version_lower_limit"])
         client_version_upper_limit = parse_version(self.server_info["client_version_upper_limit"])

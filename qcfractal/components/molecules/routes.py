@@ -1,10 +1,14 @@
 from typing import List, Optional
 
+from flask import current_app
+
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper, delete_helper
 from qcfractal.app.routes import check_access, wrap_route
 from qcportal.base_models import CommonGetURLParameters, CommonDeleteURLParameters
+from qcportal.exceptions import LimitExceededError
 from qcportal.molecules import Molecule, MoleculeQueryBody, MoleculeModifyBody
+from qcportal.utils import calculate_limit
 
 
 @main.route("/v1/molecule", methods=["GET"])
@@ -12,6 +16,10 @@ from qcportal.molecules import Molecule, MoleculeQueryBody, MoleculeModifyBody
 @wrap_route(None, CommonGetURLParameters)
 @check_access
 def get_molecules_v1(molecule_id: Optional[int] = None, *, url_params: CommonGetURLParameters):
+    limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_molecules
+    if url_params.id is not None and len(url_params.id) > limit:
+        raise LimitExceededError(f"Cannot get {len(url_params.id)} molecule records - limit is {limit}")
+
     return get_helper(molecule_id, url_params.id, None, None, url_params.missing_ok, storage_socket.molecules.get)
 
 
@@ -40,6 +48,10 @@ def modify_molecules_v1(molecule_id: Optional[int] = None, *, body_data: Molecul
 @wrap_route(List[Molecule], None)
 @check_access
 def add_molecules_v1(body_data: List[Molecule]):
+    limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.add_molecules
+    if len(body_data) > limit:
+        raise LimitExceededError(f"Cannot add {len(body_data)} molecule records - limit is {limit}")
+
     return storage_socket.molecules.add(body_data)
 
 
@@ -47,6 +59,9 @@ def add_molecules_v1(body_data: List[Molecule]):
 @wrap_route(MoleculeQueryBody, None)
 @check_access
 def query_molecules_v1(body_data: MoleculeQueryBody):
+
+    max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_molecules
+
     return storage_socket.molecules.query(
         molecule_id=body_data.id,
         molecule_hash=body_data.molecule_hash,
@@ -54,6 +69,6 @@ def query_molecules_v1(body_data: MoleculeQueryBody):
         identifiers=body_data.identifiers,
         include=body_data.include,
         exclude=body_data.exclude,
-        limit=body_data.limit,
+        limit=calculate_limit(max_limit, body_data.limit),
         skip=body_data.skip,
     )

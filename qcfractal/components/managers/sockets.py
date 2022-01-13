@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import and_, update, select
 from sqlalchemy.orm import selectinload
 
-from qcfractal.db_socket.helpers import get_query_proj_options, calculate_limit, get_count, get_general
+from qcfractal.db_socket.helpers import get_query_proj_options, get_count, get_general
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerStatusEnum, ManagerName
 from qcportal.metadata_models import QueryMetadata
@@ -26,8 +26,6 @@ class ManagerSocket:
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._manager_limit = root_socket.qcf_config.response_limits.manager
-        self._manager_log_limit = root_socket.qcf_config.response_limits.manager_log
 
     @staticmethod
     def save_snapshot(orm: ComputeManagerORM):
@@ -235,9 +233,6 @@ class ManagerSocket:
             If missing_ok is True, then this list will contain None where the manager was missing.
         """
 
-        if len(name) > self._manager_limit:
-            raise RuntimeError(f"Request for {len(name)} managers is over the limit of {self._manager_limit}")
-
         with self.root_socket.optional_session(session, True) as session:
             return get_general(session, ComputeManagerORM, ComputeManagerORM.name, name, include, exclude, missing_ok)
 
@@ -297,8 +292,6 @@ class ManagerSocket:
         :
             Metadata about the results of the query, and a list of manager data that were found in the database.
         """
-
-        limit = calculate_limit(self._manager_limit, limit)
 
         proj_options = get_query_proj_options(ComputeManagerORM, include, exclude)
 

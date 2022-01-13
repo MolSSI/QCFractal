@@ -15,7 +15,7 @@ from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
-from qcfractal.db_socket.helpers import get_query_proj_options, get_count, calculate_limit
+from qcfractal.db_socket.helpers import get_query_proj_options, get_count
 from qcportal.metadata_models import QueryMetadata
 from .db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM, VersionsORM
 
@@ -34,8 +34,6 @@ class ServerInfoSocket:
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._access_log_limit = root_socket.qcf_config.response_limits.access_logs
-        self._server_log_limit = root_socket.qcf_config.response_limits.server_logs
 
         # Set up access logging
         self._access_log_enabled = root_socket.qcf_config.log_access
@@ -295,8 +293,6 @@ class ServerInfoSocket:
             Metadata about the results of the query, and a list of access log dictionaries
         """
 
-        limit = calculate_limit(self._access_log_limit, limit)
-
         proj_options = get_query_proj_options(AccessLogORM, include, exclude)
 
         and_query = []
@@ -468,8 +464,6 @@ class ServerInfoSocket:
             Metadata about the results of the query, and a list of error dictionaries that were found in the database.
         """
 
-        limit = calculate_limit(self._access_log_limit, limit)
-
         and_query = []
         if error_id:
             and_query.append(InternalErrorLogORM.id.in_(error_id))
@@ -525,8 +519,6 @@ class ServerInfoSocket:
         :
             Metadata about the results of the query, and a list of Molecule that were found in the database.
         """
-
-        limit = calculate_limit(self._server_log_limit, limit)
 
         and_query = []
         if before:

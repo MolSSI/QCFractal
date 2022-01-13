@@ -1,16 +1,24 @@
 from typing import Optional
 
+from flask import current_app
+
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper
 from qcfractal.app.routes import check_access, wrap_route
 from qcportal.base_models import CommonGetProjURLParameters
+from qcportal.exceptions import LimitExceededError
 from qcportal.records.singlepoint import SinglepointAddBody, SinglepointQueryBody
+from qcportal.utils import calculate_limit
 
 
 @main.route("/v1/record/singlepoint", methods=["POST"])
 @wrap_route(SinglepointAddBody, None)
 @check_access
 def add_singlepoint_records_v1(body_data: SinglepointAddBody):
+    limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.add_records
+    if len(body_data.molecules) > limit:
+        raise LimitExceededError(f"Cannot add {len(body_data.molecules)} singlepoint records - limit is {limit}")
+
     return storage_socket.records.singlepoint.add(
         qc_spec=body_data.specification, molecules=body_data.molecules, tag=body_data.tag, priority=body_data.priority
     )
@@ -21,6 +29,10 @@ def add_singlepoint_records_v1(body_data: SinglepointAddBody):
 @wrap_route(None, CommonGetProjURLParameters)
 @check_access
 def get_singlepoint_records_v1(record_id: Optional[int] = None, *, url_params: CommonGetProjURLParameters):
+    limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
+    if url_params.id is not None and len(url_params.id) > limit:
+        raise LimitExceededError(f"Cannot get {len(url_params.id)} singlepoint records - limit is {limit}")
+
     return get_helper(
         record_id,
         url_params.id,
@@ -43,4 +55,7 @@ def get_singlepoint_wavefunction_v1(record_id: int):
 @wrap_route(SinglepointQueryBody, None)
 @check_access
 def query_singlepoint_v1(body_data: SinglepointQueryBody):
+    max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
+    body_data.limit = calculate_limit(max_limit, body_data.limit)
+
     return storage_socket.records.singlepoint.query(body_data)
