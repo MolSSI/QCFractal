@@ -2,25 +2,25 @@
 A command line interface to the qcfractal server.
 """
 
-import os
 import argparse
+import logging
+import os
 import shutil
+import signal
 import sys
 import textwrap
-import logging
-import yaml
 import time
-import signal
 import traceback
 
-import qcfractal
+import yaml
 
-from .config import read_configuration, FractalConfig, WebAPIConfig
-from .postgres_harness import PostgresHarness
-from .db_socket.socket import SQLAlchemySocket
+import qcfractal
 from qcportal.permissions import RoleInfo, UserInfo
-from .periodics import PeriodicsProcess
 from .app.gunicorn_app import GunicornProcess
+from .config import read_configuration, FractalConfig, WebAPIConfig
+from .db_socket.socket import SQLAlchemySocket
+from .periodics import PeriodicsProcess
+from .postgres_harness import PostgresHarness
 from .process_runner import ProcessRunner
 
 
@@ -377,10 +377,15 @@ def server_start(args, config):
 def server_upgrade(args, config):
     logger = logging.getLogger(__name__)
 
+    # We need to skip the version check, since that is what we are fixing!
+    config.database.skip_version_check = True
+
+    _, storage = start_database(args, config, logger)
+
     logger.info(f"Upgrading the postgres database at {config.database.safe_uri}")
 
     try:
-        SQLAlchemySocket.upgrade_database(config.database)
+        storage.upgrade_database(config.database)
     except ValueError as e:
         print(str(e))
         sys.exit(1)
