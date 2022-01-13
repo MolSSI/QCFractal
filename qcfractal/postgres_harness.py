@@ -93,6 +93,9 @@ class PostgresHarness:
         # This is only required if own == True
         self._tool_dir = config.pg_tool_dir if config.own is True else None
 
+        # Did we start the database (and therefore should shut it down?)
+        self._started_db = False
+
         # Own the database, but no tool directory specified
         if config.own and config.pg_tool_dir is None:
             # Find pg_config. However, we should try all the possible pg_config available in the PATH.
@@ -254,17 +257,14 @@ class PostgresHarness:
         """
 
         # if own = True, we are responsible for starting the db instance
-        if self.config.own:
-            if self.is_alive(False):
+        if not self.is_alive(False):
+            if self.config.own:
+                self.start()
+                self._logger.info(f"Started a postgres instance for uri {self.config.safe_uri}")
+            else:
                 raise RuntimeError(
-                    "I am supposed to start the database, since own = True. However it is already running. Is another postgresql or qcfractal-server process running?"
+                    f"A running postgres instance serving uri {self.config.safe_uri} does not appear to be running. It must be running for me to start"
                 )
-            self.start()
-            self._logger.info(f"Started a postgres instance for uri {self.config.safe_uri}")
-        elif not self.is_alive(False):
-            raise RuntimeError(
-                f"A running postgres instance serving uri {self.config.safe_uri} does not appear to be running. It must be running for me to start"
-            )
 
         self._logger.info(f"Database serving uri {self.config.safe_uri} appears to be up and running")
 
@@ -422,13 +422,16 @@ class PostgresHarness:
                 err_msg = f"Database seemed to start, but status check failed:\noutput:\n{stdout}\nstderr:\n{stderr}"
                 raise RuntimeError(err_msg)
 
+        self._started_db = True
+
+        # When this harness object gets deleted, shutdown the database
+        self._finalizer = weakref.finalize(self, self.shutdown)
+
     def shutdown(self) -> None:
         """Shuts down the current postgres instance."""
 
-        # We should only do this if we are in charge of the database itself
-        assert self.config.own
-
-        if self.config.own is False:
+        # We don't manage the database
+        if self.config.own is False or self._started_db is False:
             return
 
         retcode, stdout, stderr = self.pg_ctl(["stop"])
@@ -488,16 +491,11 @@ class PostgresHarness:
 
         # Create the user and database
         self._logger.info(f"Building database user information & creating QCFractal database")
-        try:
-            retcode, stdout, stderr = self._run_subprocess(
-                [createdb_path, "-h", "localhost", "-p", str(self.config.port)]
-            )
-            if retcode != 0:
-                err_msg = f"Error running createdb:\noutput:\n{stdout}\nstderr:\n{stderr}"
-                raise RuntimeError(err_msg)
-        except Exception:
-            self.shutdown()
-            raise
+
+        retcode, stdout, stderr = self._run_subprocess([createdb_path, "-h", "localhost", "-p", str(self.config.port)])
+        if retcode != 0:
+            err_msg = f"Error running createdb:\noutput:\n{stdout}\nstderr:\n{stderr}"
+            raise RuntimeError(err_msg)
 
         self._logger.info("Postgresql instance successfully initialized and started")
 
@@ -605,7 +603,7 @@ class TemporaryPostgres:
 
         logger.info(f"Created temporary postgres database at location {self._data_dir} running on port {port}")
 
-        self._finalizer = weakref.finalize(self, self._stop, self.harness, self._data_tmpdir)
+        self._finalizer = weakref.finalize(self, self._stop, self._data_tmpdir)
 
     def database_uri(self, safe: bool = True) -> str:
         """Provides the full Postgres URI string.
@@ -636,11 +634,10 @@ class TemporaryPostgres:
         self._finalizer()
 
     @classmethod
-    def _stop(cls, harness, tmpdir) -> None:
+    def _stop(cls, tmpdir) -> None:
         ####################################################################################
         # This is written as a class method so that it can be called by a weakref finalizer
         ####################################################################################
 
-        harness.shutdown()
         if tmpdir is not None:
             tmpdir.cleanup()

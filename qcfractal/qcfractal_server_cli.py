@@ -299,9 +299,6 @@ def server_init(args, config):
 
     psql.create_database()
 
-    if config.database.own:
-        psql.shutdown()
-
 
 def server_info(args, qcf_config):
     # Just use raw printing here, rather than going through logging
@@ -373,10 +370,6 @@ def server_start(args, config):
 
     gunicorn_proc.stop()
     periodics_proc.stop()
-
-    # Shutdown the database, but only if we manage it
-    if config.database.own:
-        pg_harness.shutdown()
 
     sys.exit(exitcode)
 
@@ -482,7 +475,7 @@ def server_user(args, config):
 
         user_info = UserInfo(
             username=args.username,
-            role=args.roles,
+            role=args.role,
             fullname=fullname,
             email=email,
             organization=organization,
@@ -548,10 +541,6 @@ def server_user(args, config):
             storage.users.delete(u.username)
             print("Deleted!")
 
-    # Shutdown the database, but only if we manage it
-    if config.database.own:
-        pg_harness.shutdown()
-
 
 def server_role(args, config):
     logger = logging.getLogger(__name__)
@@ -581,10 +570,6 @@ def server_role(args, config):
         print("Resetting default roles to their original default permissions.")
         print("Other roles will not be affected.")
         storage.roles.reset_defaults()
-
-    # Shutdown the database, but only if we manage it
-    if config.database.own:
-        pg_harness.shutdown()
 
 
 def server_backup(args, config):
