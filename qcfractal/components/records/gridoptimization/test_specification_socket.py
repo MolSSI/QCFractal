@@ -6,7 +6,7 @@ from qcportal.records.gridoptimization import (
 )
 from qcportal.records.optimization import (
     OptimizationInputSpecification,
-    OptimizationSinglepointInputSpecification,
+    OptimizationQCInputSpecification,
     OptimizationProtocols,
 )
 from qcportal.records.singlepoint import (
@@ -30,7 +30,7 @@ def test_gridoptimization_socket_basic_specification(storage_socket: SQLAlchemyS
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationSinglepointInputSpecification(
+            qc_specification=OptimizationQCInputSpecification(
                 program="prog2",
                 method="b3lyp",
                 basis="6-31g",
@@ -52,7 +52,7 @@ def test_gridoptimization_socket_basic_specification(storage_socket: SQLAlchemyS
             program="optprog2",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationSinglepointInputSpecification(
+            qc_specification=OptimizationQCInputSpecification(
                 program="prog2",
                 driver=SinglepointDriver.hessian,
                 method="hf",
@@ -75,7 +75,7 @@ def test_gridoptimization_socket_basic_specification(storage_socket: SQLAlchemyS
             program="optprog2",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(trajectory="none"),
-            qc_specification=OptimizationSinglepointInputSpecification(
+            qc_specification=OptimizationQCInputSpecification(
                 program="prog2",
                 driver=SinglepointDriver.hessian,
                 method="hf",
@@ -116,7 +116,7 @@ common_opt_spec = OptimizationInputSpecification(
     program="optprog2",
     keywords={"k": "value"},
     protocols=OptimizationProtocols(trajectory="none"),
-    qc_specification=OptimizationSinglepointInputSpecification(
+    qc_specification=OptimizationQCInputSpecification(
         program="prog2",
         driver=SinglepointDriver.hessian,
         method="hf",

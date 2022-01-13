@@ -6,7 +6,7 @@ from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.keywords import KeywordSet
 from qcportal.records.optimization import (
     OptimizationInputSpecification,
-    OptimizationSinglepointInputSpecification,
+    OptimizationQCInputSpecification,
     OptimizationProtocols,
 )
 from qcportal.records.singlepoint import (
@@ -21,7 +21,7 @@ def test_optimizationrecord_socket_basic_specification(storage_socket: SQLAlchem
         program="optprog1",
         keywords={"k": "value"},
         protocols=OptimizationProtocols(trajectory="final"),
-        qc_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationQCInputSpecification(
             program="prog2",
             method="b3lyp",
             basis="6-31g",
@@ -34,7 +34,7 @@ def test_optimizationrecord_socket_basic_specification(storage_socket: SQLAlchem
         program="optprog2",
         keywords={"k": "value"},
         protocols=OptimizationProtocols(),
-        qc_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationQCInputSpecification(
             program="prog2",
             driver=SinglepointDriver.hessian,
             method="hf",
@@ -48,7 +48,7 @@ def test_optimizationrecord_socket_basic_specification(storage_socket: SQLAlchem
         program="optprog2",
         keywords={"k": "value"},
         protocols=OptimizationProtocols(trajectory="none"),
-        qc_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationQCInputSpecification(
             program="prog2",
             driver=SinglepointDriver.hessian,
             method="hf",
@@ -91,7 +91,7 @@ def test_optimizationrecord_socket_basic_specification(storage_socket: SQLAlchem
     assert OptimizationInputSpecification(**sp3) == spec3
 
 
-common_qc_spec = OptimizationSinglepointInputSpecification(
+common_qc_spec = OptimizationQCInputSpecification(
     program="prog1",
     driver=SinglepointDriver.energy,
     method="b3lyp",

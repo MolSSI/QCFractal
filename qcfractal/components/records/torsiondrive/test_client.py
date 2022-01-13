@@ -14,7 +14,7 @@ from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.records import PriorityEnum
 from qcportal.records.optimization import (
     OptimizationInputSpecification,
-    OptimizationSinglepointInputSpecification,
+    OptimizationQCInputSpecification,
 )
 from qcportal.records.torsiondrive import (
     TorsiondriveKeywords,
@@ -41,7 +41,7 @@ def test_torsiondrive_client_tag_priority_as_service(
         "torsiondrive",
         optimization_specification=OptimizationInputSpecification(
             program="geometric",
-            qc_specification=OptimizationSinglepointInputSpecification(program="psi4", method="hf", basis="sto-3g"),
+            qc_specification=OptimizationQCInputSpecification(program="psi4", method="hf", basis="sto-3g"),
         ),
         keywords=TorsiondriveKeywords(dihedrals=[(1, 2, 3, 4)], grid_spacing=[15], energy_upper_limit=0.04),
         priority=priority,

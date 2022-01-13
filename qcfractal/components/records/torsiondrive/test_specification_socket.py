@@ -2,7 +2,7 @@ from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.keywords import KeywordSet
 from qcportal.records.optimization import (
     OptimizationInputSpecification,
-    OptimizationSinglepointInputSpecification,
+    OptimizationQCInputSpecification,
     OptimizationProtocols,
 )
 from qcportal.records.singlepoint import (
@@ -30,7 +30,7 @@ def test_torsiondrive_socket_basic_specification(storage_socket: SQLAlchemySocke
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationSinglepointInputSpecification(
+            qc_specification=OptimizationQCInputSpecification(
                 program="prog2",
                 method="b3lyp",
                 basis="6-31g",
@@ -53,7 +53,7 @@ def test_torsiondrive_socket_basic_specification(storage_socket: SQLAlchemySocke
             program="optprog2",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationSinglepointInputSpecification(
+            qc_specification=OptimizationQCInputSpecification(
                 program="prog2",
                 driver=SinglepointDriver.hessian,
                 method="hf",
@@ -77,7 +77,7 @@ def test_torsiondrive_socket_basic_specification(storage_socket: SQLAlchemySocke
             program="optprog2",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(trajectory="none"),
-            qc_specification=OptimizationSinglepointInputSpecification(
+            qc_specification=OptimizationQCInputSpecification(
                 program="prog2",
                 driver=SinglepointDriver.hessian,
                 method="hf",
@@ -118,7 +118,7 @@ common_opt_spec = OptimizationInputSpecification(
     program="optprog2",
     keywords={"k": "value"},
     protocols=OptimizationProtocols(trajectory="none"),
-    qc_specification=OptimizationSinglepointInputSpecification(
+    qc_specification=OptimizationQCInputSpecification(
         program="prog2",
         driver=SinglepointDriver.hessian,
         method="hf",
@@ -221,7 +221,7 @@ def test_torsiondrive_socket_add_specification_same_2(storage_socket: SQLAlchemy
             program="optpROg2",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(trajectory="none"),
-            qc_specification=OptimizationSinglepointInputSpecification(
+            qc_specification=OptimizationQCInputSpecification(
                 program="PROG2",
                 driver=SinglepointDriver.gradient,
                 method="hf",
