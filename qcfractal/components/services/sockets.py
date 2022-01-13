@@ -29,7 +29,6 @@ class ServiceSocket:
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._user_service_limit = root_socket.qcf_config.response_limits.service_queue
         self._max_active_services = root_socket.qcf_config.max_active_services
 
     def iterate_services(self, *, session: Optional[Session] = None) -> int:

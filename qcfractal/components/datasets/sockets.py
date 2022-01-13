@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
+
+from qcfractal.components.datasets.db_models import CollectionORM
 from qcfractal.components.datasets.reaction.db_models import ReactionDatasetORM
 from qcfractal.components.datasets.singlepoint.db_models import DatasetORM
-from qcfractal.components.datasets.db_models import CollectionORM
 from qcfractal.components.datasets.storage_utils import add_metadata_template, get_metadata_template
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from qcfractal.db_socket.socket import SQLAlchemySocket
@@ -29,7 +29,6 @@ class DatasetSocket:
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._limit = root_socket.qcf_config.response_limits.collection
 
     def add(self, data: Dict[str, Any], overwrite: bool = False):
         """Add (or update) a collection to the database.
@@ -142,7 +141,6 @@ class DatasetSocket:
             The data is a list of the collections found
         """
 
-        limit = calculate_limit(self._limit, limit)
         meta = get_metadata_template()
         if name:
             name = name.lower()

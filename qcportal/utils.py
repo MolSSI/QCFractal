@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import hashlib
 import json
 from typing import Optional, Union, Sequence, List, TypeVar, Any, Dict
@@ -95,3 +97,16 @@ def hash_dictionary(data: Dict[str, Any]) -> str:
     m = hashlib.sha1()
     m.update(json.dumps(data, sort_keys=True).encode("UTF-8"))
     return m.hexdigest()
+
+
+def calculate_limit(max_limit: int, given_limit: Optional[int]):
+    """Get the allowed limit on results to return for a particular or type of object
+
+    If 'given_limit' is given (ie, by the user), this will return min(limit, max_limit)
+    where max_limit is the set value for the table/type of object
+    """
+
+    if given_limit is None:
+        return max_limit
+
+    return min(given_limit, max_limit)

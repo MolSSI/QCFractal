@@ -11,7 +11,6 @@ from sqlalchemy.orm import joinedload, contains_eager
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.records.db_models import BaseRecordORM
-from qcfractal.db_socket.helpers import calculate_limit
 from qcfractal.interface.models import (
     FailedOperation,
 )
@@ -19,6 +18,7 @@ from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerStatusEnum
 from qcportal.metadata_models import TaskReturnMetadata
 from qcportal.records import RecordStatusEnum
+from qcportal.utils import calculate_limit
 from .db_models import TaskQueueORM
 
 if TYPE_CHECKING:
@@ -35,8 +35,7 @@ class TaskSocket:
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
 
-        self._user_task_limit = root_socket.qcf_config.response_limits.task_queue
-        self._manager_task_limit = root_socket.qcf_config.response_limits.manager_task
+        self._manager_task_limit = root_socket.qcf_config.api_limits.manager_tasks
 
     def update_finished(self, manager_name: str, results: Dict[int, AllResultTypes]) -> TaskReturnMetadata:
         """
@@ -212,6 +211,8 @@ class TaskSocket:
             is used, it will be flushed before returning from this function.
         """
 
+        # Normally, checking limits is done in the route code. However, we really do not want a manager
+        # to claim absolutely everything. So double check here
         limit = calculate_limit(self._manager_task_limit, limit)
 
         with self.root_socket.optional_session(session) as session:

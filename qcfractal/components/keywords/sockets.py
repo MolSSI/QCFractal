@@ -9,7 +9,6 @@ from qcfractal.db_socket.helpers import (
     delete_general,
     insert_mixed_general,
 )
-from qcportal.exceptions import LimitExceededError
 from qcportal.keywords import KeywordSet
 from qcportal.metadata_models import InsertMetadata, DeleteMetadata
 from .db_models import KeywordsORM
@@ -26,7 +25,6 @@ class KeywordsSocket:
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._limit = root_socket.qcf_config.response_limits.keyword
 
     @staticmethod
     def keywords_to_orm(keywords: Union[KeywordDict, KeywordSet]) -> KeywordsORM:
@@ -108,9 +106,6 @@ class KeywordsSocket:
             Keyword information as a dictionary in the same order as the given ids.
             If missing_ok is True, then this list will contain None where the keywords were missing
         """
-        if len(keywords_id) > self._limit:
-            raise LimitExceededError(f"Request for {len(keywords_id)} keywords is over the limit of {self._limit}")
-
         with self.root_socket.optional_session(session, True) as session:
             return get_general(session, KeywordsORM, KeywordsORM.id, keywords_id, None, None, missing_ok)
 

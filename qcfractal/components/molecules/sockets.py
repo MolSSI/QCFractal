@@ -15,9 +15,8 @@ from qcfractal.db_socket.helpers import (
     delete_general,
     insert_mixed_general,
     get_general,
-    calculate_limit,
 )
-from qcportal.exceptions import LimitExceededError, MissingDataError
+from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import (
     InsertMetadata,
     DeleteMetadata,
@@ -39,7 +38,6 @@ class MoleculeSocket:
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
-        self._limit = root_socket.qcf_config.response_limits.molecule
 
     @staticmethod
     def molecule_to_orm(molecule: Molecule) -> MoleculeORM:
@@ -138,9 +136,6 @@ class MoleculeSocket:
             Molecule information as a dictionary in the same order as the given ids.
             If missing_ok is True, then this list will contain None where the molecule was missing.
         """
-
-        if len(molecule_id) > self._limit:
-            raise LimitExceededError(f"Request for {len(molecule_id)} molecules is over the limit of {self._limit}")
 
         with self.root_socket.optional_session(session, True) as session:
             return get_general(session, MoleculeORM, MoleculeORM.id, molecule_id, include, exclude, missing_ok)
@@ -259,8 +254,6 @@ class MoleculeSocket:
             except ValueError:
                 # Probably, the user provided an invalid chemical formula
                 pass
-
-        limit = calculate_limit(self._limit, limit)
 
         proj_options = get_query_proj_options(MoleculeORM, include, exclude)
 

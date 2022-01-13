@@ -1,14 +1,14 @@
 """
 The global qcfractal config file specification.
-
-
 """
 
 from __future__ import annotations
-import urllib.parse
-import os
+
 import logging
+import os
+import urllib.parse
 from typing import Optional, Dict, Any
+
 import yaml
 from pydantic import Field, validator, root_validator, ValidationError
 
@@ -148,27 +148,30 @@ class DatabaseConfig(ConfigBase):
         return f"postgresql://{username}{password}{sep}{host}:{self.port}/{self.database_name}"
 
 
-class ResponseLimitConfig(ConfigBase):
+class APILimitConfig(ConfigBase):
     """
     Limits on the number of records returned per query. This can be specified per object (molecule, etc)
     """
 
-    record: int = Field(2000, description="Limit on the number of calculation records returned")
-    molecule: int = Field(5000, description="Limit on the number of molecules returned")
-    output_store: int = Field(100, description="Limit on the number of program outputs returned")
-    manager: int = Field(5000, description="Limit on the number of manager records to return")
-    manager_log: int = Field(10000, description="Limit on the number of manager log records to return")
-    keyword: int = Field(1000, description="Limit on the number of keywords to return")
-    collection: int = Field(25, description="Limit on the number of collections to return")
-    task_queue: int = Field(1000, description="Limit on the number of tasks to return")
-    service_queue: int = Field(1000, description="Limit on the number of service queuetasks to return")
-    manager_task: int = Field(200, description="Limit on the number of tasks a single manager can pull down")
-    wavefunction: int = Field(25, description="Limit on the number of wavefunctions to return")
-    server_logs: int = Field(25, description="Limit on the number of server log records to return")
-    access_logs: int = Field(10000, description="Limit on the number of access log records to return")
+    get_records: int = Field(1000, description="Number of calculation records that can be retrieved")
+    add_records: int = Field(500, description="Number of calculation records that can be added")
+
+    get_molecules: int = Field(1000, description="Number of molecules that can be retrieved")
+    add_molecules: int = Field(1000, description="Number of molecules that can be added")
+
+    get_keywords: int = Field(100, description="Number of keywords that can be retrieved")
+    add_keywords: int = Field(100, description="Number of keywords that can be added")
+
+    get_managers: int = Field(5000, description="Limit on the number of manager records to return")
+
+    manager_tasks: int = Field(200, description="Limit on the number of tasks a single manager can pull down")
+
+    get_server_stats: int = Field(25, description="Limit on the number of server statistics records to return")
+    get_access_logs: int = Field(10000, description="Limit on the number of access log records to return")
+    get_error_logs: int = Field(100, description="Limit on the number of error log records to return")
 
     class Config(ConfigCommon):
-        env_prefix = "QCF_RESPONSELIMIT_"
+        env_prefix = "QCF_APILIMIT_"
 
 
 class WebAPIConfig(ConfigBase):
@@ -261,7 +264,7 @@ class FractalConfig(ConfigBase):
     # Other settings blocks
     database: DatabaseConfig = Field(..., description="Configuration of the settings for the database")
     api: WebAPIConfig = Field(..., description="Configuration of the REST interface")
-    response_limits: ResponseLimitConfig = Field(..., description="Configuration of the limits to REST responses")
+    api_limits: APILimitConfig = Field(..., description="Configuration of the limits to the api")
 
     @root_validator(pre=True)
     def _root_validator(cls, values):
@@ -269,7 +272,7 @@ class FractalConfig(ConfigBase):
         if "base_folder" not in values["database"]:
             values["database"]["base_folder"] = values.get("base_folder")
 
-        values.setdefault("response_limits", dict())
+        values.setdefault("api_limits", dict())
         values.setdefault("api", dict())
         return values
 
@@ -315,8 +318,8 @@ def convert_old_configuration(old_config):
     # Response limits. The old config only had one. Set all the possible
     # limits to that value
     response_limit = old_config.fractal.query_limit
-    field_list = ResponseLimitConfig.field_names()
-    cfg_dict["response_limits"] = {k: response_limit for k in field_list}
+    field_list = APILimitConfig.field_names()
+    cfg_dict["api_limits"] = {k: response_limit for k in field_list}
 
     # Flask server settings
     cfg_dict["api"] = {}
