@@ -3,7 +3,7 @@ from .models import (
     OptimizationProtocols,
     OptimizationSpecification,
     OptimizationInputSpecification,
-    OptimizationSinglepointInputSpecification,
+    OptimizationQCInputSpecification,
     OptimizationQueryBody,
     OptimizationAddBody,
 )

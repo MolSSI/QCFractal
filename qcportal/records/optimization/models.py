@@ -18,7 +18,7 @@ from ..singlepoint import (
 from ...base_models import CommonGetProjURLParameters
 
 
-class OptimizationSinglepointInputSpecification(QCInputSpecification):
+class OptimizationQCInputSpecification(QCInputSpecification):
     driver: SinglepointDriver = SinglepointDriver.deferred
 
     @pydantic.validator("driver", pre=True)
@@ -31,7 +31,7 @@ class OptimizationInputSpecification(BaseModel):
         extra = Extra.forbid
 
     program: constr(to_lower=True) = Field(..., description="The program to use for an optimization")
-    qc_specification: OptimizationSinglepointInputSpecification
+    qc_specification: OptimizationQCInputSpecification
     keywords: Dict[str, Any] = Field({})
     protocols: OptimizationProtocols = Field(OptimizationProtocols())
 

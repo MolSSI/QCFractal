@@ -18,7 +18,7 @@ from qcportal.records.gridoptimization import (
 )
 from qcportal.records.optimization import (
     OptimizationInputSpecification,
-    OptimizationSinglepointInputSpecification,
+    OptimizationQCInputSpecification,
 )
 
 if TYPE_CHECKING:
@@ -41,7 +41,7 @@ def test_gridoptimization_client_tag_priority(
         "gridoptimization",
         optimization_specification=OptimizationInputSpecification(
             program="geometric",
-            qc_specification=OptimizationSinglepointInputSpecification(program="psi4", method="hf", basis="sto-3g"),
+            qc_specification=OptimizationQCInputSpecification(program="psi4", method="hf", basis="sto-3g"),
         ),
         keywords=GridoptimizationKeywords(
             preoptimization=False,

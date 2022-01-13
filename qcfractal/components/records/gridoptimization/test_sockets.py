@@ -23,7 +23,7 @@ from qcportal.records.gridoptimization import (
 )
 from qcportal.records.optimization import (
     OptimizationInputSpecification,
-    OptimizationSinglepointInputSpecification,
+    OptimizationQCInputSpecification,
     OptimizationProtocols,
 )
 from qcportal.records.singlepoint import (
@@ -69,7 +69,7 @@ _test_specs = [
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationSinglepointInputSpecification(
+            qc_specification=OptimizationQCInputSpecification(
                 program="prog2",
                 method="b3lyp",
                 basis="6-31g",
@@ -90,7 +90,7 @@ _test_specs = [
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationSinglepointInputSpecification(
+            qc_specification=OptimizationQCInputSpecification(
                 program="prog2",
                 method="b3lyp",
                 basis="6-31g",
@@ -170,7 +170,7 @@ def test_gridoptimization_socket_add_same_1(storage_socket: SQLAlchemySocket):
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationSinglepointInputSpecification(
+            qc_specification=OptimizationQCInputSpecification(
                 program="prog2",
                 method="b3lyp",
                 basis="6-31g",
@@ -207,7 +207,7 @@ def test_gridoptimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationSinglepointInputSpecification(
+            qc_specification=OptimizationQCInputSpecification(
                 program="prog2",
                 method="b3lyp",
                 basis="6-31g",
@@ -228,7 +228,7 @@ def test_gridoptimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
         optimization_specification=OptimizationInputSpecification(
             program="optPROG1",
             keywords={"k": "value"},
-            qc_specification=OptimizationSinglepointInputSpecification(
+            qc_specification=OptimizationQCInputSpecification(
                 program="prOG2",
                 method="b3LYP",
                 basis="6-31g",

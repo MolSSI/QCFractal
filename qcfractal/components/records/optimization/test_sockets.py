@@ -21,7 +21,7 @@ from qcportal.records.optimization import (
     OptimizationSpecification,
     OptimizationInputSpecification,
     OptimizationQueryBody,
-    OptimizationSinglepointInputSpecification,
+    OptimizationQCInputSpecification,
 )
 from qcportal.records.singlepoint import (
     SinglepointDriver,
@@ -56,7 +56,7 @@ _test_specs = [
         program="optprog1",
         keywords={},
         protocols={"trajectory": "initial_and_final"},
-        qc_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationQCInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
@@ -68,7 +68,7 @@ _test_specs = [
         program="optprog2",
         keywords={"k": "v"},
         protocols={"trajectory": "none"},
-        qc_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationQCInputSpecification(
             program="Prog2",
             method="Hf",
             basis="def2-TZVP",
@@ -78,7 +78,7 @@ _test_specs = [
     OptimizationInputSpecification(
         program="optPRog3",
         keywords={"k2": "v2"},
-        qc_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationQCInputSpecification(
             program="Prog3",
             method="pbe0",
             basis="",
@@ -88,7 +88,7 @@ _test_specs = [
     ),
     OptimizationInputSpecification(
         program="OPTPROG4",
-        qc_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationQCInputSpecification(
             program="ProG4",
             method="pbe",
             basis=None,
@@ -231,7 +231,7 @@ def test_optimization_socket_add_same_1(storage_socket: SQLAlchemySocket):
         program="optprog1",
         keywords={},
         protocols={"trajectory": "initial_and_final"},
-        qc_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationQCInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
@@ -258,7 +258,7 @@ def test_optimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
         program="optprog1",
         keywords={},
         protocols={"trajectory": "initial_and_final"},
-        qc_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationQCInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
@@ -271,7 +271,7 @@ def test_optimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
         program="opTPROg1",
         keywords={},
         protocols={"trajectory": "initial_and_final"},
-        qc_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationQCInputSpecification(
             program="prOG1",
             method="b3LYp",
             basis="6-31g*",
@@ -298,7 +298,7 @@ def test_optimization_socket_add_same_3(storage_socket: SQLAlchemySocket):
         program="optprog1",
         keywords={},
         protocols={},
-        qc_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationQCInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
@@ -309,7 +309,7 @@ def test_optimization_socket_add_same_3(storage_socket: SQLAlchemySocket):
 
     spec2 = OptimizationInputSpecification(
         program="optprog1",
-        qc_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationQCInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
@@ -340,7 +340,7 @@ def test_optimization_socket_add_same_4(storage_socket: SQLAlchemySocket):
 
     spec1 = OptimizationInputSpecification(
         program="optprog1",
-        qc_specification=OptimizationSinglepointInputSpecification(
+        qc_specification=OptimizationQCInputSpecification(
             program="prog1",
             method="b3lyp",
             basis="6-31G*",

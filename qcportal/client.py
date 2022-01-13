@@ -46,7 +46,7 @@ from .records.optimization import (
     OptimizationProtocols,
     OptimizationRecord,
     OptimizationQueryBody,
-    OptimizationSinglepointInputSpecification,
+    OptimizationQCInputSpecification,
     OptimizationInputSpecification,
     OptimizationAddBody,
 )
@@ -918,7 +918,7 @@ class PortalClient(PortalClientBase):
         self,
         initial_molecules: Union[int, Molecule, List[Union[int, Molecule]]],
         program: str,
-        qc_specification: OptimizationSinglepointInputSpecification,
+        qc_specification: OptimizationQCInputSpecification,
         keywords: Optional[Union[KeywordSet, Dict[str, Any], int]] = None,
         protocols: Optional[OptimizationProtocols] = None,
         tag: Optional[str] = None,

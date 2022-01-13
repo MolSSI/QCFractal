@@ -15,7 +15,7 @@ from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.optimization import (
     OptimizationInputSpecification,
-    OptimizationSinglepointInputSpecification,
+    OptimizationQCInputSpecification,
 )
 
 if TYPE_CHECKING:
@@ -34,7 +34,7 @@ def test_optimization_client_tag_priority(snowflake_client: PortalClient, tag: O
     meta1, id1 = snowflake_client.add_optimizations(
         [water],
         "prog",
-        OptimizationSinglepointInputSpecification(program="prog", method="hf", basis="sto-3g"),
+        OptimizationQCInputSpecification(program="prog", method="hf", basis="sto-3g"),
         priority=priority,
         tag=tag,
     )
