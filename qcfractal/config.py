@@ -171,9 +171,9 @@ class ResponseLimitConfig(ConfigBase):
         env_prefix = "QCF_RESPONSELIMIT_"
 
 
-class FlaskConfig(ConfigBase):
+class WebAPIConfig(ConfigBase):
     """
-    Settings for the Flask REST interface
+    Settings for the Web API (api) interface
     """
 
     config_name: str = Field("production", description="Flask configuration to use (default, debug, production, etc)")
@@ -186,7 +186,7 @@ class FlaskConfig(ConfigBase):
     host: str = Field("127.0.0.1", description="The IP address or hostname to bind to")
     port: int = Field(7777, description="The port on which to run the REST interface.")
 
-    secret_key: str = Field("default_key_PLEASE_CHANGE_ME", description="Secret key for flask. See documentation")
+    secret_key: str = Field("default_key_PLEASE_CHANGE_ME", description="Secret key for flask api. See documentation")
     jwt_secret_key: str = Field(
         "default_key_PLEASE_CHANGE_ME", description="Secret key for web tokens. See documentation"
     )
@@ -260,7 +260,7 @@ class FractalConfig(ConfigBase):
 
     # Other settings blocks
     database: DatabaseConfig = Field(..., description="Configuration of the settings for the database")
-    flask: FlaskConfig = Field(..., description="Configuration of the REST interface")
+    api: WebAPIConfig = Field(..., description="Configuration of the REST interface")
     response_limits: ResponseLimitConfig = Field(..., description="Configuration of the limits to REST responses")
 
     @root_validator(pre=True)
@@ -270,7 +270,7 @@ class FractalConfig(ConfigBase):
             values["database"]["base_folder"] = values.get("base_folder")
 
         values.setdefault("response_limits", dict())
-        values.setdefault("flask", dict())
+        values.setdefault("api", dict())
         return values
 
     @validator("geo_file_path")
@@ -319,8 +319,8 @@ def convert_old_configuration(old_config):
     cfg_dict["response_limits"] = {k: response_limit for k in field_list}
 
     # Flask server settings
-    cfg_dict["flask"] = {}
-    cfg_dict["flask"]["port"] = old_config.fractal.port
+    cfg_dict["api"] = {}
+    cfg_dict["api"]["port"] = old_config.fractal.port
 
     # Now general fractal settings. Before these were in a
     # separate config class, but now they are in the top level

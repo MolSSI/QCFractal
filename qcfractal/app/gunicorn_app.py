@@ -56,13 +56,13 @@ class FractalGunicornApp(gunicorn.app.base.BaseApplication):
     def load_config(self):
         # This must be provided. It is called from the superclass, and we need to
         # populate self.cfg
-        bind = self.qcfractal_config.flask.host
-        port = self.qcfractal_config.flask.port
+        bind = self.qcfractal_config.api.host
+        port = self.qcfractal_config.api.port
 
         config = {
             "bind": f"{bind}:{port}",
-            "workers": self.qcfractal_config.flask.num_workers,
-            "timeout": self.qcfractal_config.flask.worker_timeout,
+            "workers": self.qcfractal_config.api.num_workers,
+            "timeout": self.qcfractal_config.api.worker_timeout,
             "loglevel": self.qcfractal_config.loglevel,
             "logger_class": FractalGunicornLogger,
             "post_fork": post_fork_cleanup,
