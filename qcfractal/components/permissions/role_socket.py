@@ -37,7 +37,7 @@ default_roles = {
         "Statement": [
             {"Effect": "Allow", "Action": "GET", "Resource": "*"},
             {"Effect": "Allow", "Action": "PUT", "Resource": "me"},
-            {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager", "role", "access", "error"]},
+            {"Effect": "Deny", "Action": "*", "Resource": ["user", "role", "manager", "server_error", "access"]},
         ]
     },
     "monitor": {
@@ -51,18 +51,18 @@ default_roles = {
         "Statement": [
             {"Effect": "Allow", "Action": ["GET"], "Resource": "information"},
             {"Effect": "Allow", "Action": ["GET", "PUT"], "Resource": "me"},
-            {"Effect": "Allow", "Action": "*", "Resource": ["queue_manager"]},
+            {"Effect": "Allow", "Action": "*", "Resource": ["task", "manager"]},
         ]
     },
     "submit": {
         "Statement": [
             {"Effect": "Allow", "Action": "GET", "Resource": "*"},
             {"Effect": "Allow", "Action": "PUT", "Resource": "me"},
-            {"Effect": "Deny", "Action": "*", "Resource": ["user", "manager", "role", "access", "error"]},
+            {"Effect": "Deny", "Action": "*", "Resource": ["user", "role", "manager", "server_error", "access"]},
             {
                 "Effect": "Allow",
                 "Action": "*",
-                "Resource": ["task_queue", "service_queue", "molecule", "keyword", "collection"],
+                "Resource": ["record", "molecule", "keyword", "dataset"],
             },
         ]
     },
