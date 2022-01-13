@@ -98,8 +98,6 @@ class PortalClientBase:
         if (username is not None) or (password is not None):
             self._get_JWT_token(username, password)
 
-        self._request_counter: DefaultDict[Tuple[str, str], int] = defaultdict(int)
-
         ### Define all attributes before this line
 
         # Try to connect and pull the server info

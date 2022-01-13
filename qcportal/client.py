@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import warnings
 from datetime import datetime
 from pathlib import Path
 from typing import (
@@ -307,6 +308,10 @@ class PortalClient(PortalClientBase):
             The number of Molecules to skip in the query, used during pagination
         """
 
+        if limit is not None and limit > self.api_limits["get_molecules"]:
+            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
+            limit = min(limit, self.api_limits["get_molecules"])
+
         query_body = {
             "molecule_hash": make_list(molecule_hash),
             "molecular_formula": make_list(molecular_formula),
@@ -334,6 +339,11 @@ class PortalClient(PortalClientBase):
         :
             A list of Molecule ids in the same order as the `molecules` parameter.
         """
+
+        if len(molecules) > self.api_limits["add_molecules"]:
+            raise RuntimeError(
+                f"Cannot add {len(molecules)} molecules - over the limit of {self.api_limits['add_molecules']}"
+            )
 
         mols = self._auto_request(
             "post",
@@ -442,6 +452,12 @@ class PortalClient(PortalClientBase):
         """
 
         url_params = {"id": make_list(keywords_id), "missing_ok": missing_ok}
+
+        if len(url_params["id"]) > self.api_limits["get_keywords"]:
+            raise RuntimeError(
+                f"Cannot get {len(url_params['id'])} keywords - over the limit of {self.api_limits['get_keywords']}"
+            )
+
         keywords = self._auto_request(
             "get", "v1/keyword", None, CommonGetURLParameters, List[Optional[KeywordSet]], None, url_params
         )
@@ -471,6 +487,10 @@ class PortalClient(PortalClientBase):
             same order as specified in the keywords parameter. If full_return is True,
             this function will return a tuple containing metadata and the ids.
         """
+        if len(keywords) > self.api_limits["add_molecules"]:
+            raise RuntimeError(
+                f"Cannot add {len(keywords)} keywords - over the limit of {self.api_limits['add_keywords']}"
+            )
 
         return self._auto_request(
             "post", "v1/keyword", List[KeywordSet], None, Tuple[InsertMetadata, List[int]], make_list(keywords), None
@@ -518,6 +538,11 @@ class PortalClient(PortalClientBase):
 
         url_params = {"id": make_list(record_id), "missing_ok": missing_ok}
 
+        if len(url_params["id"]) > self.api_limits["get_records"]:
+            raise RuntimeError(
+                f"Cannot get {len(url_params['id'])} records - over the limit of {self.api_limits['get_records']}"
+            )
+
         include = set()
 
         # We must add '*' so that all the default fields are included
@@ -564,9 +589,14 @@ class PortalClient(PortalClientBase):
         skip: int = 0,
         *,
         include_task: bool = False,
+        include_service: bool = False,
         include_outputs: bool = False,
         include_comments: bool = False,
     ) -> Tuple[QueryMetadata, List[AllRecordTypes]]:
+
+        if limit is not None and limit > self.api_limits["get_records"]:
+            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
+            limit = min(limit, self.api_limits["get_records"])
 
         query_data = {
             "record_id": make_list(record_id),
@@ -586,6 +616,8 @@ class PortalClient(PortalClientBase):
         # We must add '*' so that all the default fields are included
         if include_task:
             include |= {"*", "task"}
+        if include_service:
+            include |= {"*", "service"}
         if include_outputs:
             include |= {"*", "compute_history.*", "compute_history.outputs"}
         if include_comments:
@@ -740,6 +772,11 @@ class PortalClient(PortalClientBase):
         if protocols is not None:
             body_data["specification"]["protocols"] = protocols
 
+        if len(body_data["molecules"]) > self.api_limits["add_records"]:
+            raise RuntimeError(
+                f"Cannot add {len(body_data['molecules'])} records - over the limit of {self.api_limits['add_records']}"
+            )
+
         return self._auto_request(
             "post", "v1/record/singlepoint", SinglepointAddBody, None, Tuple[InsertMetadata, List[int]], body_data, None
         )
@@ -773,6 +810,11 @@ class PortalClient(PortalClientBase):
 
         if include:
             url_params["include"] = include
+
+        if len(url_params["id"]) > self.api_limits["get_records"]:
+            raise RuntimeError(
+                f"Cannot get {len(url_params['id'])} records - over the limit of {self.api_limits['get_records']}"
+            )
 
         record_data = self._auto_request(
             "get",
@@ -816,6 +858,10 @@ class PortalClient(PortalClientBase):
         include_wavefunction: bool = False,
     ) -> Tuple[QueryMetadata, List[SinglepointRecord]]:
         """Queries SinglepointRecords from the server."""
+
+        if limit is not None and limit > self.api_limits["get_records"]:
+            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
+            limit = min(limit, self.api_limits["get_records"])
 
         query_data = {
             "record_id": make_list(record_id),
@@ -898,6 +944,11 @@ class PortalClient(PortalClientBase):
         if protocols is not None:
             body_data["specification"]["protocols"] = protocols
 
+        if len(body_data["initial_molecules"]) > self.api_limits["add_records"]:
+            raise RuntimeError(
+                f"Cannot get {len(body_data['initial_molecules'])} records - over the limit of {self.api_limits['add_records']}"
+            )
+
         return self._auto_request(
             "post",
             "v1/record/optimization",
@@ -940,6 +991,11 @@ class PortalClient(PortalClientBase):
 
         if include:
             url_params["include"] = include
+
+        if len(url_params["id"]) > self.api_limits["get_records"]:
+            raise RuntimeError(
+                f"Cannot get {len(url_params['id'])} records - over the limit of {self.api_limits['get_records']}"
+            )
 
         record_data = self._auto_request(
             "get",
@@ -985,6 +1041,10 @@ class PortalClient(PortalClientBase):
         include_trajectory: bool = False,
     ) -> Tuple[QueryMetadata, List[OptimizationRecord]]:
         """Queries OptimizationRecords from the server."""
+
+        if limit is not None and limit > self.api_limits["get_records"]:
+            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
+            limit = min(limit, self.api_limits["get_records"])
 
         query_data = {
             "record_id": make_list(record_id),
@@ -1065,6 +1125,11 @@ class PortalClient(PortalClientBase):
             "priority": priority,
         }
 
+        if len(body_data["initial_molecules"]) > self.api_limits["add_records"]:
+            raise RuntimeError(
+                f"Cannot get {len(body_data['initial_molecules'])} records - over the limit of {self.api_limits['add_records']}"
+            )
+
         return self._auto_request(
             "post",
             "v1/record/torsiondrive",
@@ -1107,6 +1172,11 @@ class PortalClient(PortalClientBase):
 
         if include:
             url_params["include"] = include
+
+        if len(url_params["id"]) > self.api_limits["get_records"]:
+            raise RuntimeError(
+                f"Cannot get {len(url_params['id'])} records - over the limit of {self.api_limits['get_records']}"
+            )
 
         record_data = self._auto_request(
             "get",
@@ -1152,6 +1222,10 @@ class PortalClient(PortalClientBase):
         include_optimizations: bool = False,
     ) -> Tuple[QueryMetadata, List[TorsiondriveRecord]]:
         """Queries torsiondrive records from the server."""
+
+        if limit is not None and limit > self.api_limits["get_records"]:
+            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
+            limit = min(limit, self.api_limits["get_records"])
 
         query_data = {
             "record_id": make_list(record_id),
@@ -1231,6 +1305,11 @@ class PortalClient(PortalClientBase):
             "priority": priority,
         }
 
+        if len(body_data["initial_molecules"]) > self.api_limits["add_records"]:
+            raise RuntimeError(
+                f"Cannot get {len(body_data['initial_molecules'])} records - over the limit of {self.api_limits['add_records']}"
+            )
+
         return self._auto_request(
             "post",
             "v1/record/gridoptimization",
@@ -1273,6 +1352,11 @@ class PortalClient(PortalClientBase):
 
         if include:
             url_params["include"] = include
+
+        if len(url_params["id"]) > self.api_limits["get_records"]:
+            raise RuntimeError(
+                f"Cannot get {len(url_params['id'])} records - over the limit of {self.api_limits['get_records']}"
+            )
 
         record_data = self._auto_request(
             "get",
@@ -1318,6 +1402,10 @@ class PortalClient(PortalClientBase):
         include_optimizations: bool = False,
     ) -> Tuple[QueryMetadata, List[GridoptimizationRecord]]:
         """Queries torsiondrive records from the server."""
+
+        if limit is not None and limit > self.api_limits["get_records"]:
+            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
+            limit = min(limit, self.api_limits["get_records"])
 
         query_data = {
             "record_id": make_list(record_id),
@@ -1450,6 +1538,10 @@ class PortalClient(PortalClientBase):
             Metadata about the query results, and a list of dictionaries with information matching the specified query.
         """
 
+        if limit is not None and limit > self.api_limits["get_managers"]:
+            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
+            limit = min(limit, self.api_limits["get_managers"])
+
         query_body = {
             "id": make_list(id),
             "name": make_list(name),
@@ -1488,6 +1580,10 @@ class PortalClient(PortalClientBase):
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
         """Obtains individual entries in the server stats logs"""
 
+        if limit is not None and limit > self.api_limits["get_server_stats"]:
+            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
+            limit = min(limit, self.api_limits["get_server_stats"])
+
         url_params = {"before": before, "after": after, "limit": limit, "skip": skip}
         return self._auto_request(
             "get",
@@ -1513,6 +1609,10 @@ class PortalClient(PortalClientBase):
         skip: int = 0,
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
         """Obtains individual entries in the access logs"""
+
+        if limit is not None and limit > self.api_limits["get_access_logs"]:
+            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
+            limit = min(limit, self.api_limits["get_access_logs"])
 
         url_params = {
             "access_type": make_list(access_type),
@@ -1546,7 +1646,11 @@ class PortalClient(PortalClientBase):
         limit: Optional[int] = None,
         skip: int = 0,
     ) -> Tuple[QueryMetadata, Dict[str, Any]]:
-        """Obtains individual entries in the access logs"""
+        """Obtains individual entries in the error logs"""
+
+        if limit is not None and limit > self.api_limits["get_error_logs"]:
+            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
+            limit = min(limit, self.api_limits["get_error_logs"])
 
         url_params = {
             "id": make_list(id),
