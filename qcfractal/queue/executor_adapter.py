@@ -19,6 +19,15 @@ def _get_result(result):
         return ret
 
 
+def _get_future(future):
+    try:
+        return future.result()
+    except Exception as e:
+        msg = "Caught Executor Error:\n" + traceback.format_exc()
+        ret = FailedOperation(**{"success": False, "error": {"error_type": e.__class__.__name__, "error_message": msg}})
+        return ret
+
+
 class ExecutorAdapter(BaseAdapter):
     """A Queue Adapter for Python Executors"""
 
@@ -61,7 +70,7 @@ class ExecutorAdapter(BaseAdapter):
         return True
 
 
-class DaskAdapter(ExecutorAdapter):
+class DaskAdapter(BaseAdapter):
     """A Queue Adapter for Dask"""
 
     def __repr__(self):
@@ -84,6 +93,19 @@ class DaskAdapter(ExecutorAdapter):
             return self.client.cluster._count_active_workers()
         else:
             return len(self.client.cluster.scheduler.workers)
+
+    def acquire_complete(self) -> Dict[str, Any]:
+        ret = {}
+        del_keys = []
+        for key, future in self.queue.items():
+            if future.done():
+                ret[key] = _get_future(future)
+                del_keys.append(key)
+
+        for key in del_keys:
+            del self.queue[key]
+
+        return ret
 
     def await_results(self) -> bool:
         from dask.distributed import wait
