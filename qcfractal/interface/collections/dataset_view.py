@@ -278,7 +278,10 @@ class HDF5View(DatasetView):
         def _write_dataset(dataset, column, entry_dset):
             assert column.shape[1] == 1
             for i, name in enumerate(entry_dset):
-                name = name.decode("utf-8")
+
+                if isinstance(name, bytes):
+                    name = name.decode("utf-8")
+
                 element = column.loc[name][0]
                 if not h5py.check_dtype(vlen=dataset.dtype):
                     dataset[i] = element
