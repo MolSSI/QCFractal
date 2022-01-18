@@ -1,7 +1,7 @@
 name: qcarchive
 channels:
-  - conda-forge
   - defaults
+  - conda-forge
 dependencies:
   - pip
 
