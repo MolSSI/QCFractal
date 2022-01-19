@@ -359,10 +359,10 @@ def test_torsiondrive_socket_query(storage_socket: SQLAlchemySocket):
     meta_4, id_4 = storage_socket.records.torsiondrive.add(input_spec_4, [molecules_4], as_service=True)
     assert meta_1.success and meta_2.success and meta_3.success and meta_4.success
 
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(singlepoint_program=["psi4"]))
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(qc_program=["psi4"]))
     assert meta.n_found == 4
 
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(singlepoint_program=["nothing"]))
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(qc_program=["nothing"]))
     assert meta.n_found == 0
 
     _, init_mol_id = storage_socket.molecules.add(molecules_1 + molecules_2 + molecules_3 + molecules_4)
@@ -380,21 +380,21 @@ def test_torsiondrive_socket_query(storage_socket: SQLAlchemySocket):
     assert meta.n_found == 0
 
     # query for basis
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(singlepoint_basis=["sTO-3g"]))
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(qc_basis=["sTO-3g"]))
     assert meta.n_found == 3
 
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(singlepoint_basis=[None]))
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(qc_basis=[None]))
     assert meta.n_found == 0
 
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(singlepoint_basis=[""]))
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(qc_basis=[""]))
     assert meta.n_found == 0
 
     # query for method
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(singlepoint_method=["b3lyP"]))
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(qc_method=["b3lyP"]))
     assert meta.n_found == 1
 
     kw_id = td[0]["specification"]["optimization_specification"]["qc_specification"]["keywords_id"]
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(singlepoint_keywords_id=[kw_id]))
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(qc_keywords_id=[kw_id]))
     assert meta.n_found == 3
 
     # Query by default returns everything

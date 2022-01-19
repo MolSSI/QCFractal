@@ -145,26 +145,26 @@ def test_optimization_client_query(snowflake_client: PortalClient, storage_socke
     meta, opt = snowflake_client.query_optimizations(program=["geometric"])
     assert meta.n_found == 3
 
-    meta, opt = snowflake_client.query_optimizations(singlepoint_program=["psi4"])
+    meta, opt = snowflake_client.query_optimizations(qc_program=["psi4"])
     assert meta.n_found == 3
 
     # query for basis
-    meta, opt = snowflake_client.query_optimizations(singlepoint_basis=["sTO-3g"])
+    meta, opt = snowflake_client.query_optimizations(qc_basis=["sTO-3g"])
     assert meta.n_found == 0
 
-    meta, opt = snowflake_client.query_optimizations(singlepoint_basis=[None])
+    meta, opt = snowflake_client.query_optimizations(qc_basis=[None])
     assert meta.n_found == 0
 
-    meta, opt = snowflake_client.query_optimizations(singlepoint_basis=[""])
+    meta, opt = snowflake_client.query_optimizations(qc_basis=[""])
     assert meta.n_found == 0
 
     # query for method
-    meta, opt = snowflake_client.query_optimizations(singlepoint_method=["b3lyP"])
+    meta, opt = snowflake_client.query_optimizations(qc_method=["b3lyP"])
     assert meta.n_found == 3
 
     # keyword id
     meta, opt = snowflake_client.query_optimizations(
-        singlepoint_keywords_id=[recs[0].raw_data.specification.qc_specification.keywords_id]
+        qc_keywords_id=[recs[0].raw_data.specification.qc_specification.keywords_id]
     )
     assert meta.n_found == 2
 

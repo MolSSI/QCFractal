@@ -536,26 +536,26 @@ def test_optimization_socket_query(storage_socket: SQLAlchemySocket):
     meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(program=["geometric"]))
     assert meta.n_found == 3
 
-    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(singlepoint_program=["psi4"]))
+    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(qc_program=["psi4"]))
     assert meta.n_found == 3
 
     # query for basis
-    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(singlepoint_basis=["sTO-3g"]))
+    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(qc_basis=["sTO-3g"]))
     assert meta.n_found == 0
 
-    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(singlepoint_basis=[None]))
+    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(qc_basis=[None]))
     assert meta.n_found == 0
 
-    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(singlepoint_basis=[""]))
+    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(qc_basis=[""]))
     assert meta.n_found == 0
 
     # query for method
-    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(singlepoint_method=["b3lyP"]))
+    meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(qc_method=["b3lyP"]))
     assert meta.n_found == 3
 
     # keyword id
     meta, opt = storage_socket.records.optimization.query(
-        OptimizationQueryBody(singlepoint_keywords_id=[recs[0]["specification"]["qc_specification"]["keywords_id"]])
+        OptimizationQueryBody(qc_keywords_id=[recs[0]["specification"]["qc_specification"]["keywords_id"]])
     )
     assert meta.n_found == 2
 
