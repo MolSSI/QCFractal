@@ -297,17 +297,17 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         need_spspec_join = False
         need_optspec_join = False
 
-        if query_data.singlepoint_program is not None:
-            and_query.append(QCSpecificationORM.program.in_(query_data.singlepoint_program))
+        if query_data.qc_program is not None:
+            and_query.append(QCSpecificationORM.program.in_(query_data.qc_program))
             need_spspec_join = True
-        if query_data.singlepoint_method is not None:
-            and_query.append(QCSpecificationORM.method.in_(query_data.singlepoint_method))
+        if query_data.qc_method is not None:
+            and_query.append(QCSpecificationORM.method.in_(query_data.qc_method))
             need_spspec_join = True
-        if query_data.singlepoint_basis is not None:
-            and_query.append(QCSpecificationORM.basis.in_(query_data.singlepoint_basis))
+        if query_data.qc_basis is not None:
+            and_query.append(QCSpecificationORM.basis.in_(query_data.qc_basis))
             need_spspec_join = True
-        if query_data.singlepoint_keywords_id is not None:
-            and_query.append(QCSpecificationORM.keywords_id.in_(query_data.singlepoint_keywords_id))
+        if query_data.qc_keywords_id is not None:
+            and_query.append(QCSpecificationORM.keywords_id.in_(query_data.qc_keywords_id))
             need_spspec_join = True
         if query_data.optimization_program is not None:
             and_query.append(OptimizationSpecificationORM.program.in_(query_data.optimization_program))

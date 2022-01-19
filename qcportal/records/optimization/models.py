@@ -131,14 +131,14 @@ class OptimizationRecord(BaseRecord):
 
 class OptimizationQueryBody(RecordQueryBody):
     program: Optional[List[str]] = None
-    singlepoint_program: Optional[List[constr(to_lower=True)]] = None
-    singlepoint_method: Optional[List[constr(to_lower=True)]] = None
-    singlepoint_basis: Optional[List[Optional[constr(to_lower=True)]]] = None
-    singlepoint_keywords_id: Optional[List[int]] = None
+    qc_program: Optional[List[constr(to_lower=True)]] = None
+    qc_method: Optional[List[constr(to_lower=True)]] = None
+    qc_basis: Optional[List[Optional[constr(to_lower=True)]]] = None
+    qc_keywords_id: Optional[List[int]] = None
     initial_molecule_id: Optional[List[int]] = None
     final_molecule_id: Optional[List[int]] = None
 
-    @validator("singlepoint_basis")
+    @validator("qc_basis")
     def _convert_basis(cls, v):
         # Convert empty string to None
         # Lowercasing is handled by constr
