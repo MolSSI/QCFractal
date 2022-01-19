@@ -116,6 +116,7 @@ jobs:
           killall qcfractal-server
 
       - name: 'Save logs/artifacts'
+        if: always()
         uses: actions/upload-artifact@v2
         with:
           name: qcfractal_testing_artifacts_${{ matrix.python-version }}
