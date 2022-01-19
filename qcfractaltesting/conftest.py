@@ -25,4 +25,13 @@ def fulltest_client(pytestconfig):
     """
 
     uri = pytestconfig.getoption("--fractal-uri")
-    yield PortalClient(address=uri)
+
+    if uri == "snowflake":
+        from qcfractal import FractalSnowflake
+
+        s = FractalSnowflake()
+        yield s.client()
+        s.stop()
+
+    else:
+        yield PortalClient(address=uri)

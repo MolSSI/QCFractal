@@ -33,7 +33,7 @@ def postgres_server(tmp_path_factory):
 
     db_path = str(tmp_path_factory.mktemp("db"))
     tmp_pg = TemporaryPostgres(data_dir=db_path)
-    pg_harness = tmp_pg.harness
+    pg_harness = tmp_pg._harness
     logger.debug(f"Using database located at {db_path} with uri {pg_harness.database_uri()}")
     assert pg_harness.is_alive(False) and not pg_harness.is_alive(True)
 
@@ -41,7 +41,7 @@ def postgres_server(tmp_path_factory):
     # We connect to the "postgres" database, so as not to be using the database we want to copy
     pg_harness.create_database()
     pg_harness.sql_command(
-        f"CREATE DATABASE template_db TEMPLATE {tmp_pg.config.database_name};", database_name="postgres", returns=False
+        f"CREATE DATABASE template_db TEMPLATE {tmp_pg._config.database_name};", database_name="postgres", returns=False
     )
 
     # Delete the database - we will create it from the template later

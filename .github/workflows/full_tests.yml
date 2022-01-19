@@ -64,7 +64,7 @@ jobs:
         shell: bash -l {0}
         run: |
           conda info
-          pip install -e qcfractal
+          pip install -e ./qcfractal
           mkdir server; cd server
           cp ../qcfractal/qcfractaltesting/config_files/gha_fractal_server.yaml ./
           qcfractal-server --config=gha_fractal_server.yaml init
@@ -82,8 +82,8 @@ jobs:
         shell: bash -l {0}
         run: |
           conda info
-          pip install -e qcportal
-          pip install -e qcfractalcompute
+          pip install -e ./qcportal
+          pip install -e ./qcfractalcompute
           mkdir compute; cd compute
           cp ../qcfractal/qcfractaltesting/config_files/gha_fractal_compute_pool.yaml ./
           qcfractal-manager --config=gha_fractal_compute_pool.yaml &
@@ -100,7 +100,7 @@ jobs:
         shell: bash -l {0}
         run: |
           conda info
-          pip install -e qcportal
+          pip install -e ./qcportal
 
       - name: Run Tests
         shell: bash -l {0}
