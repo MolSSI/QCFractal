@@ -1,10 +1,3 @@
-from typing import Any, Optional, Dict, List
-
-import qcelemental as qcel
-from pydantic import Field, constr, validator
-from qcelemental.models import ProtoModel
-from qcelemental.models.procedures import OptimizationProtocols
-
 # from .record import Record
 # from .record_utils import register_record
 # from ..utils import recursive_normalizer

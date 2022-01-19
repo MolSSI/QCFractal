@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcportal.client import PortalRequestError
+from qcportal import PortalRequestError
 from qcportal.managers import ManagerName, ManagerStatusEnum
 
 if TYPE_CHECKING:

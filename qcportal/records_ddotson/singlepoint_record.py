@@ -1,7 +1,7 @@
 from typing import Any, Optional, Union, Dict
 
-from pydantic import Field, constr, validator
 import qcelemental as qcel
+from pydantic import Field, constr
 
 ObjectId = int
 from .record import DriverEnum

@@ -4,8 +4,8 @@ from werkzeug.exceptions import NotFound, BadRequest
 
 from qcfractal.app import main, storage_socket
 from qcfractal.app.routes import check_access, _valid_encodings
-from qcfractal.interface.models import rest_model
 from qcfractal.components.datasets.storage_utils import add_metadata_template
+from qcfractal.interface.models import rest_model
 
 
 def parse_bodymodel(model):

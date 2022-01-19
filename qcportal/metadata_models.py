@@ -1,7 +1,8 @@
 import dataclasses
-from pydantic.dataclasses import dataclass
-from pydantic import validator, root_validator
 from typing import List, Optional, Tuple, Dict, Any
+
+from pydantic import validator, root_validator
+from pydantic.dataclasses import dataclass
 
 
 @dataclass

@@ -3,10 +3,10 @@ QCPortal Database ODM
 """
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
-from ...interface.models import GridOptimizationInput, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
-from ...interface.models.gridoptimization import GridOptimizationKeywords
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
+from ...interface.models import GridOptimizationInput, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
+from ...interface.models.gridoptimization import GridOptimizationKeywords
 
 if TYPE_CHECKING:  # pragma: no cover
     from ...interface.models.gridoptimization import ScanDimension

@@ -10,7 +10,7 @@ import pytest
 
 from qcfractal.testing_helpers import populate_db, TestingSnowflake
 from qcfractaltesting import test_users
-from qcportal.client import PortalRequestError
+from qcportal import PortalRequestError
 from qcportal.records import PriorityEnum, RecordStatusEnum
 
 if TYPE_CHECKING:

@@ -9,10 +9,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 import pandas as pd
 from tqdm import tqdm
-import pprint
 
 from ...interface.models import ProtoModel, QCSpecification
-from ..records_ddotson import Record
 
 if TYPE_CHECKING:  # pragma: no cover
     from .. import PortalClient

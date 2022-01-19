@@ -19,7 +19,6 @@ from qcelemental.models import AutodocBaseSettings, ProtoModel
 from . import __version__, cli_utils
 from .managers import QueueManager
 
-
 __all__ = ["main"]
 
 QCA_RESOURCE_STRING = "--resources process=1"

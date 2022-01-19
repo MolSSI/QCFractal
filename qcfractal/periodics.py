@@ -6,15 +6,16 @@ dead managers, and updating statistics.
 """
 
 from __future__ import annotations
-import sched
+
 import logging
+import sched
 import time
 import weakref
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
+
 from .db_socket.socket import SQLAlchemySocket
 from .process_runner import ProcessBase, InterruptableSleep, SleepInterrupted
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import multiprocessing

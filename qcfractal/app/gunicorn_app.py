@@ -1,16 +1,19 @@
 from __future__ import annotations
+
 import logging
-import sys
 import logging.handlers
+import sys
+from typing import TYPE_CHECKING
+
 import gunicorn.app.base
 from gunicorn.glogging import Logger as GLogger
+
 from .flask_app import create_qcfractal_flask_app, storage_socket
 from ..process_runner import ProcessBase
 
-from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
-    from ..config import FractalConfig, Optional
+    from ..config import FractalConfig
+
 
 #####################################################
 # See https://docs.gunicorn.org/en/stable/custom.html
