@@ -139,14 +139,34 @@ class ManagerClient(PortalClientBase):
         )
 
     def return_finished(self, results: Dict[int, AllResultTypes]) -> TaskReturnMetadata:
-        return_data = {"name_data": self.manager_name_data, "results": results}
 
-        return self._auto_request(
-            "post",
-            "v1/task/return",
-            TaskReturnBody,
-            None,
-            TaskReturnMetadata,
-            return_data,
-            None,
-        )
+        # Chunk based on the server limit
+        results_flat = list(results.items())
+        n_results = len(results_flat)
+        limit = self.server_info["api_limits"]["manager_tasks_return"]
+
+        task_return_meta = TaskReturnMetadata()
+        for chunk in range(0, n_results, limit):
+            return_data = {
+                "name_data": self.manager_name_data,
+                "results": {k: v for k, v in results_flat[chunk : chunk + limit]},
+            }
+
+            meta = self._auto_request(
+                "post",
+                "v1/task/return",
+                TaskReturnBody,
+                None,
+                TaskReturnMetadata,
+                return_data,
+                None,
+            )
+
+            task_return_meta.error_description = meta.error_description
+            task_return_meta.rejected_info.extend([(x + chunk, y) for x, y in meta.rejected_info])
+            task_return_meta.accepted_ids.extend(meta.accepted_ids)
+
+            if not meta.success:
+                return task_return_meta
+
+        return task_return_meta

@@ -16,7 +16,7 @@ def claim_tasks_v1(body_data: TaskClaimBody):
     """Claims tasks from the task queue"""
 
     # check here, but also in the socket
-    max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.manager_tasks
+    max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.manager_tasks_claim
 
     return storage_socket.tasks.claim_tasks(
         manager_name=body_data.name_data.fullname, limit=calculate_limit(max_limit, body_data.limit)

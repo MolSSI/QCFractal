@@ -162,13 +162,14 @@ class APILimitConfig(ConfigBase):
     get_keywords: int = Field(100, description="Number of keywords that can be retrieved")
     add_keywords: int = Field(100, description="Number of keywords that can be added")
 
-    get_managers: int = Field(5000, description="Limit on the number of manager records to return")
+    get_managers: int = Field(5000, description="Number of manager records to return")
 
-    manager_tasks: int = Field(200, description="Limit on the number of tasks a single manager can pull down")
+    manager_tasks_claim: int = Field(200, description="Number of tasks a single manager can pull down")
+    manager_tasks_return: int = Field(10, description="Number of tasks a single manager can return at once")
 
-    get_server_stats: int = Field(25, description="Limit on the number of server statistics records to return")
-    get_access_logs: int = Field(10000, description="Limit on the number of access log records to return")
-    get_error_logs: int = Field(100, description="Limit on the number of error log records to return")
+    get_server_stats: int = Field(25, description="Number of server statistics records to return")
+    get_access_logs: int = Field(10000, description="Number of access log records to return")
+    get_error_logs: int = Field(100, description="Number of error log records to return")
 
     class Config(ConfigCommon):
         env_prefix = "QCF_APILIMIT_"

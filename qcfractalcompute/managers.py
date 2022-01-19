@@ -3,6 +3,7 @@ Queue backend abstraction manager.
 """
 
 import json
+from collections import defaultdict
 import logging
 import sched
 import socket
@@ -129,7 +130,7 @@ class QueueManager:
         update_frequency: Union[int, float] = 2,
         verbose: bool = False,  # TODO: Remove verbose flag, always respect logging level
         server_error_retries: Optional[int] = 1,
-        stale_update_limit: Optional[int] = 10,
+        deferred_task_limit: Optional[int] = 50,
         cores_per_task: Optional[int] = None,
         memory_per_task: Optional[float] = None,
         nodes_per_task: Optional[int] = None,
@@ -160,10 +161,9 @@ class QueueManager:
             in the event of a server communication error.
             After number of attempts, the failed jobs are dropped from this manager and considered "stale"
             Set to `None` to keep retrying
-        stale_update_limit : Optional[int], optional
-            Number of stale update attempts to keep around
-            If this limit is ever hit, the server initiates as shutdown as best it can
-            since communication with the server has gone wrong too many times.
+        deferred_task_limit : Optional[int], optional
+            Number of deferred tasks to keep around
+            If this limit is ever hit, the server will refuse to pull down new tasks
             Set to `None` for unlimited
         cores_per_task : Optional[int], optional
             How many CPU cores per computation task to allocate for QCEngine
@@ -237,10 +237,10 @@ class QueueManager:
 
         # Server response/stale job handling
         self.server_error_retries = server_error_retries
-        self.stale_update_limit = stale_update_limit
-        self._stale_updates_tracked = 0
-        self._stale_payload_tracking = []
-        self.n_stale_jobs = 0
+        self.deferred_task_limit = deferred_task_limit
+
+        # key = number of retries. value = dict of (task_id, result)
+        self._deferred_tasks: Dict[int, Dict[int, AllResultTypes]] = defaultdict(dict)
 
         # QCEngine data
         self.available_programs = qcng.list_available_programs()
@@ -287,12 +287,13 @@ class QueueManager:
             self.server_info = self.client.get_server_information()
             self.server_name = self.server_info["name"]
             self.server_version = self.server_info["version"]
-            self.server_query_limit = self.server_info["api_limits"]["manager_tasks"]
-            if self.max_tasks > self.server_query_limit:
-                self.max_tasks = self.server_query_limit
+            self.server_claim_limit = self.server_info["api_limits"]["manager_tasks_claim"]
+            self.server_return_limit = self.server_info["api_limits"]["manager_tasks_return"]
+            if self.max_tasks > self.server_claim_limit:
+                self.max_tasks = self.server_claim_limit
                 self.logger.warning(
                     "Max tasks was larger than server query limit of {}, reducing to match query limit.".format(
-                        self.server_query_limit
+                        self.server_claim_limit
                     )
                 )
             self.heartbeat_frequency = self.server_info["manager_heartbeat_frequency"]
@@ -331,6 +332,10 @@ class QueueManager:
         """
         if self.connected() is False:
             raise AttributeError("Manager is not connected to a server, this operations is not available.")
+
+    @property
+    def n_deferred_tasks(self) -> int:
+        return sum(len(x) for x in self._deferred_tasks.values())
 
     def start(self) -> None:
         """
@@ -419,18 +424,20 @@ class QueueManager:
             shutdown_string = "Shutdown was successful, {} tasks returned to the fractal server"
 
         except Exception as ex:
-            # TODO something as we didnt successfully add the data
             self.logger.warning(f"Deactivation failed: {str(ex).strip()}")
             shutdown_string = "Shutdown was not successful, {} tasks not returned."
 
-        if self.n_stale_jobs:
-            shutdown_string = shutdown_string.format(f"{self.active} active and {self.n_stale_jobs} stale")
+        n_deferred = self.n_deferred_tasks
+        if n_deferred:
+            shutdown_string = shutdown_string.format(f"{self.active} active and {n_deferred} stale")
         else:
             shutdown_string = shutdown_string.format(self.active)
 
         self.logger.info(shutdown_string)
 
     def _return_finished(self, results: Dict[int, AllResultTypes]) -> TaskReturnMetadata:
+        print("*" * 100)
+        print(f"REturning {len(results)}")
         return_meta = self.client.return_finished(results)
         self.logger.info(f"Successfully return tasks to the fractal server")
         if return_meta.accepted_ids:
@@ -443,50 +450,38 @@ class QueueManager:
                 self.logger.warning(f"Error in returning tasks: {str(return_meta.error_string)}")
         return return_meta
 
-    def _update_stale_jobs(self) -> None:
+    def _update_deferred_tasks(self) -> None:
         """
         Attempt to post the previous payload failures
         """
-        clear_indices = []
-        for index, (results, attempts) in enumerate(self._stale_payload_tracking):
+        new_deferred_tasks = defaultdict(dict)
+
+        for attempts, results in self._deferred_tasks.items():
             try:
                 return_meta = self._return_finished(results)
                 if return_meta.success:
                     self.logger.info(f"Successfully pushed jobs from {attempts+1} updates ago")
+                else:
+                    self.logger.warning(
+                        f"Did not successfully push jobs from {attempts+1} updates ago. Error: {return_meta.error_string}"
+                    )
 
             except ConnectionError:
                 # Tried and failed
-                attempts += 1
                 # Case: Still within the retry limit
-                if self.server_error_retries is None or self.server_error_retries > attempts:
-                    self._stale_payload_tracking[index][-1] = attempts
-                    self.logger.warning(f"Could not post jobs from {attempts} updates ago, will retry on next update.")
+                if self.server_error_retries is None or self.server_error_retries > (attempts + 1):
+                    new_deferred_tasks[attempts + 1] = results
+                    self.logger.warning(
+                        f"Could not post jobs from {attempts+1} updates ago, will retry on next update."
+                    )
 
                 # Case: Over limit
                 else:
                     self.logger.warning(
-                        f"Could not post jobs from {attempts} ago and over attempt limit, marking " f"jobs as stale."
+                        f"Could not post {len(results)} tasks from {attempts+1} updates ago and over attempt limit. Dropping"
                     )
-                    self.n_stale_jobs += len(results)
-                    clear_indices.append(index)
-                    self._stale_updates_tracked += 1
 
-        # Cleanup clear indices
-        for index in clear_indices[::-1]:
-            self._stale_payload_tracking.pop(index)
-
-        # Check stale limiters
-        if (
-            self.stale_update_limit is not None
-            and (len(self._stale_payload_tracking) + self._stale_updates_tracked) > self.stale_update_limit
-        ):
-            self.logger.error("Exceeded number of stale updates allowed! Attempting to shutdown gracefully...")
-
-            # Log all not-quite stale jobs to stale (for logging?)
-            for (results, _) in self._stale_payload_tracking:
-                self.n_stale_jobs += len(results)
-
-            self.stop()
+        self._deferred_tasks = new_deferred_tasks
 
     def update(self, new_tasks) -> None:
         """Examines the queue for completed tasks and adds successful completions to the database
@@ -501,7 +496,7 @@ class QueueManager:
         self.assert_connected()
 
         # First, try pushing back any stale results
-        self._update_stale_jobs()
+        self._update_deferred_tasks()
 
         results = self.queue_adapter.acquire_complete()
 
@@ -537,13 +532,13 @@ class QueueManager:
             failure_messages = {}
 
             try:
-                return_meta = self.client.return_finished(results)
+                return_meta = self._return_finished(results)
                 task_status = {k: "sent" for k in results.keys() if k in return_meta.accepted_ids}
                 task_status.update({k: "rejected" for k in results.keys() if k in return_meta.rejected_ids})
             except ConnectionError:
                 if self.server_error_retries is None or self.server_error_retries > 0:
                     self.logger.warning("Returning complete tasks failed. Attempting again on next update.")
-                    self._stale_payload_tracking.append([results, 0])
+                    self._deferred_tasks[0].update(results)
                     task_status = {k: "deferred" for k in results.keys()}
                 else:
                     self.logger.warning("Returning complete tasks failed. Data may be lost.")
@@ -594,8 +589,6 @@ class QueueManager:
                     self.logger.info("    Error type: " + str(error_info.error_type))
                     self.logger.info("    Backtrace: \n" + str(error_info.error_message))
 
-        open_slots = max(0, self.max_tasks - self.active)
-
         # Crunch Statistics
         self.statistics.total_failed_tasks += n_fail
         self.statistics.total_successful_tasks += n_success
@@ -644,6 +637,11 @@ class QueueManager:
             self.logger.info(task_stats_str)
         if worker_stats_str is not None:
             self.logger.info(worker_stats_str)
+
+        open_slots = max(0, self.max_tasks - self.active)
+
+        if self.deferred_task_limit is not None:
+            open_slots = min(open_slots, max(0, self.deferred_task_limit - self.n_deferred_tasks))
 
         if new_tasks is True and open_slots > 0:
             try:

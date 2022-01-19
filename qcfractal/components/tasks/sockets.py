@@ -35,7 +35,7 @@ class TaskSocket:
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
 
-        self._manager_task_limit = root_socket.qcf_config.api_limits.manager_tasks
+        self._tasks_claim_limit = root_socket.qcf_config.api_limits.manager_tasks_claim
 
     def update_finished(self, manager_name: str, results: Dict[int, AllResultTypes]) -> TaskReturnMetadata:
         """
@@ -213,7 +213,7 @@ class TaskSocket:
 
         # Normally, checking limits is done in the route code. However, we really do not want a manager
         # to claim absolutely everything. So double check here
-        limit = calculate_limit(self._manager_task_limit, limit)
+        limit = calculate_limit(self._tasks_claim_limit, limit)
 
         with self.root_socket.optional_session(session) as session:
             stmt = select(ComputeManagerORM).where(ComputeManagerORM.name == manager_name)
