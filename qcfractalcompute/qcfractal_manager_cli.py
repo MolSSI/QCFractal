@@ -526,7 +526,7 @@ def parse_args():
     )
     parser.add_argument("--version", action="version", version=f"{__version__}")
 
-    parser.add_argument("--config-file", type=str, default=None)
+    parser.add_argument("--config", type=str, default=None)
 
     # Common settings
     common = parser.add_argument_group("Common Adapter Settings")
@@ -631,8 +631,8 @@ def parse_args():
         "debug": _build_subset(args, {"schema", "skeleton"}),
     }  # yapf: disable
 
-    if args["config_file"] is not None:
-        config_data = cli_utils.read_config_file(args["config_file"])
+    if args["config"] is not None:
+        config_data = cli_utils.read_config_file(args["config"])
         for name, subparser in [("common", common), ("server", server), ("manager", manager)]:
             if name not in config_data:
                 continue
@@ -694,7 +694,7 @@ def main():
             skel.write(data)
             print(
                 f"Skeleton Queue Manager YAML file written to {skel_path}\n"
-                f"Run: `qcfractal-manager --config-file={skel_path}` to start a manager with this configuration."
+                f"Run: `qcfractal-manager --config={skel_path}` to start a manager with this configuration."
             )
             return
 

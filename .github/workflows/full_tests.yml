@@ -86,7 +86,7 @@ jobs:
           pip install -e qcfractalcompute
           mkdir compute; cd compute
           cp ../qcfractal/qcfractaltesting/config_files/gha_fractal_compute_pool.yaml ./
-          qcfractal-manager --config-file=gha_fractal_compute_pool.yaml &
+          qcfractal-manager --config=gha_fractal_compute_pool.yaml &
 
       - name: Configure conda for portal
         uses: conda-incubator/setup-miniconda@v2.1.1
