@@ -174,7 +174,6 @@ class ServiceSocket:
                     except Exception as err:
                         session.rollback()
 
-                        raise
                         error = {
                             "error_type": "service_iteration_error",
                             "error_message": "Error in first iteration of service: " + str(err),
