@@ -436,8 +436,6 @@ class QueueManager:
         self.logger.info(shutdown_string)
 
     def _return_finished(self, results: Dict[int, AllResultTypes]) -> TaskReturnMetadata:
-        print("*" * 100)
-        print(f"REturning {len(results)}")
         return_meta = self.client.return_finished(results)
         self.logger.info(f"Successfully return tasks to the fractal server")
         if return_meta.accepted_ids:
