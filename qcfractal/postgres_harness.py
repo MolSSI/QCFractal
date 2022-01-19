@@ -424,14 +424,14 @@ class PostgresHarness:
 
         self._started_db = True
 
-        # When this harness object gets deleted, shutdown the database
-        self._finalizer = weakref.finalize(self, self.shutdown)
-
     def shutdown(self) -> None:
         """Shuts down the current postgres instance."""
 
         # We don't manage the database
         if self.config.own is False or self._started_db is False:
+            return
+
+        if self.is_alive(False) is False:
             return
 
         retcode, stdout, stderr = self.pg_ctl(["stop"])
@@ -597,13 +597,13 @@ class TemporaryPostgres:
         port = find_open_port()
         db_config = {"port": port, "data_directory": self._data_dir, "base_folder": self._data_dir, "own": True}
 
-        self.config = DatabaseConfig(**db_config)
-        self.harness = PostgresHarness(self.config)
-        self.harness.initialize_postgres()
+        self._config = DatabaseConfig(**db_config)
+        self._harness = PostgresHarness(self._config)
+        self._harness.initialize_postgres()
 
         logger.info(f"Created temporary postgres database at location {self._data_dir} running on port {port}")
 
-        self._finalizer = weakref.finalize(self, self._stop, self._data_tmpdir)
+        self._finalizer = weakref.finalize(self, self._stop, self._data_tmpdir, self._harness)
 
     def database_uri(self, safe: bool = True) -> str:
         """Provides the full Postgres URI string.
@@ -620,9 +620,9 @@ class TemporaryPostgres:
         """
 
         if safe:
-            return self.config.safe_uri
+            return self._config.safe_uri
         else:
-            return self.config.uri
+            return self._config.uri
 
     def stop(self):
         """
@@ -634,10 +634,12 @@ class TemporaryPostgres:
         self._finalizer()
 
     @classmethod
-    def _stop(cls, tmpdir) -> None:
+    def _stop(cls, tmpdir, harness) -> None:
         ####################################################################################
         # This is written as a class method so that it can be called by a weakref finalizer
         ####################################################################################
+
+        harness.shutdown()
 
         if tmpdir is not None:
             tmpdir.cleanup()

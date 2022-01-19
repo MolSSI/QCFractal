@@ -120,10 +120,10 @@ class FractalSnowflake:
 
         if database_config is None:
             # Make this part of the class so it is kept alive
-            self._storage = TemporaryPostgres(data_dir=db_dir)
-            self._storage.harness.create_database()
-            self._storage_uri = self._storage.database_uri(safe=False)
-            db_config = self._storage.config
+            self._tmp_pgdb = TemporaryPostgres(data_dir=db_dir)
+            self._tmp_pgdb._harness.create_database()
+            self._storage_uri = self._tmp_pgdb.database_uri(safe=False)
+            db_config = self._tmp_pgdb._config
         else:
             self._storage_uri = database_config.uri
             db_config = database_config

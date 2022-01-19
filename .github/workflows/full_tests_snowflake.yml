@@ -1,0 +1,67 @@
+name: Full Snowflake End-to-end tests
+
+on:
+  push:
+    branches:
+      - master
+      - next
+  pull_request:
+    branches:
+      - master
+      - next
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.7", "3.8", "3.9"]
+        
+    steps:
+      - name: Install postgres
+        run: sudo apt update && sudo apt install postgresql postgresql-contrib
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Clone the QCFractal repository
+        uses: actions/checkout@v2
+        with:
+          path: qcfractal
+
+      - name: Configure conda for the snowflake
+        uses: conda-incubator/setup-miniconda@v2.1.1
+        with:
+          python-version: ${{ matrix.python-version }}
+          activate-environment: qcarchive-all
+          environment-file: qcfractal/qcfractaltesting/conda-envs/fulltest_snowflake.yaml
+          auto-activate-base: false
+
+      - name: Install & start server
+        shell: bash -l {0}
+        run: |
+          conda info
+          pip install -e ./qcfractal
+
+      - name: Run Tests
+        shell: bash -l {0}
+        run: |
+          conda info
+          cd qcfractal
+          pytest -v --fractal-uri="snowflake" --log-file-level=DEBUG --log-file="../qcfractal_snowflake.log" qcfractaltesting
+
+      - name: 'Save logs/artifacts'
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: qcfractal_testing_artifacts_${{ matrix.python-version }}
+          path: |
+            server
+            compute
+            qcportal
+            qcfractalcompute
+            !server/postgres/.s.*
+          retention-days: 7

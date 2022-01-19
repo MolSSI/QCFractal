@@ -3,6 +3,7 @@ A command line interface to the qcfractal server.
 """
 
 import argparse
+import atexit
 import logging
 import os
 import shutil
@@ -75,6 +76,7 @@ def start_database(args, config, logger):
 
     logger.info("Checking the PostgreSQL connection...")
     pg_harness = PostgresHarness(config.database)
+    atexit.register(pg_harness.shutdown)
 
     # If we are expected to manage the postgres instance ourselves, start it
     # If not, make sure it is started
@@ -287,17 +289,18 @@ def server_init(args, config):
     logger = logging.getLogger(__name__)
     logger.info("*** Initializing QCFractal from configuration ***")
 
-    psql = PostgresHarness(config.database)
+    pg_harness = PostgresHarness(config.database)
+    atexit.register(pg_harness.shutdown)
 
     # If we own the database, initialize and start it
     if config.database.own:
-        psql.initialize_postgres()
+        pg_harness.initialize_postgres()
 
     # Does the database already exist? If so, don't do anything
-    if psql.is_alive():
+    if pg_harness.is_alive():
         raise RuntimeError("Database already exists, so you don't need to run init")
 
-    psql.create_database()
+    pg_harness.create_database()
 
 
 def server_info(args, qcf_config):
