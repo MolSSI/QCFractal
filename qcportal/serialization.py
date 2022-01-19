@@ -1,13 +1,10 @@
-from typing import Union
-
 import base64
-import numpy as np
-import msgpack
-import pydantic
-from pydantic.json import pydantic_encoder
 import json
+from typing import Union, Any
 
-from typing import Any
+import msgpack
+import numpy as np
+from pydantic.json import pydantic_encoder
 
 
 def _msgpack_encode(obj: Any) -> Any:

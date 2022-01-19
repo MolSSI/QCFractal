@@ -2,15 +2,14 @@
 Running external processes, with graceful shutdown
 """
 
-import traceback
-import signal
 import abc
-import multiprocessing
 import logging
-import threading
+import multiprocessing
+import signal
 import sys
+import threading
+import traceback
 import weakref
-
 from typing import Union
 
 

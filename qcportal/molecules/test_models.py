@@ -8,8 +8,8 @@ import numpy as np
 import pytest
 import qcelemental as qcel
 
-from .models import Molecule
 from qcfractaltesting import load_molecule_data
+from .models import Molecule
 
 
 def test_molecule_constructors():

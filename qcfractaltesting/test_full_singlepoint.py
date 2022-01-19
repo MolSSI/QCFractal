@@ -4,11 +4,13 @@ Full end-to-end test of singlepoint
 
 from __future__ import annotations
 
-import pytest
-from typing import TYPE_CHECKING
-from qcelemental.models import Molecule
-from qcportal.records import RecordStatusEnum
 import time
+from typing import TYPE_CHECKING
+
+import pytest
+from qcelemental.models import Molecule
+
+from qcportal.records import RecordStatusEnum
 
 if TYPE_CHECKING:
     from qcportal import PortalClient

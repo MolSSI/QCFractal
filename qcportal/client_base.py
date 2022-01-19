@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from collections import defaultdict
 from typing import (
     Any,
-    DefaultDict,
     Dict,
     Optional,
-    Tuple,
     Union,
     TypeVar,
     Type,
@@ -16,8 +13,8 @@ import pydantic
 import requests
 from pkg_resources import parse_version
 
-from .exceptions import AuthenticationFailure
 from . import __version__
+from .exceptions import AuthenticationFailure
 from .serialization import serialize, deserialize
 
 _T = TypeVar("_T")

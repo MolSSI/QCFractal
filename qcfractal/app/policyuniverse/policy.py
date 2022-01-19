@@ -4,9 +4,9 @@
 
 """
 
-from .statement import Statement
 import logging
 
+from .statement import Statement
 
 logger = logging.getLogger(__name__)
 

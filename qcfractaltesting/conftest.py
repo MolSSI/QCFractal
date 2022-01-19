@@ -3,6 +3,7 @@ Contains testing infrastructure for QCFractal.
 """
 
 import pytest
+
 from qcportal import PortalClient
 
 

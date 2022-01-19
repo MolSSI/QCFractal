@@ -3,13 +3,13 @@ Queue backend abstraction manager.
 """
 
 import json
-from collections import defaultdict
 import logging
 import sched
 import socket
 import threading
 import time
 import uuid
+from collections import defaultdict
 from typing import Dict, List, Optional, Union
 
 import qcengine as qcng

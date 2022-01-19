@@ -15,17 +15,16 @@ from qcelemental import constants
 from qcelemental.models.types import Array
 from tqdm import tqdm
 
-from ...interface.models import Citation, ComputeResponse, ObjectId, ProtoModel, QCSpecification
-from ...interface.statistics import wrap_statistics
-from ...interface.visualization import bar_plot, violin_plot
 from .collection import Collection
 from .collection_utils import register_collection
+from ...interface.models import Citation, ComputeResponse, ObjectId, ProtoModel
+from ...interface.statistics import wrap_statistics
+from ...interface.visualization import bar_plot, violin_plot
 
 if TYPE_CHECKING:  # pragma: no cover
     from .. import PortalClient
     from ...interface.models import Molecule, SinglepointRecord
     from ..keywords import KeywordSet
-    from . import DatasetView
 
 
 class MoleculeEntry(ProtoModel):

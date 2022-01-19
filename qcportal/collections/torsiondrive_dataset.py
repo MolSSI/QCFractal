@@ -5,11 +5,11 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import pandas as pd
 
+from .collection import BaseProcedureDataset
+from .collection_utils import register_collection
 from ...interface.models import ObjectId, OptimizationSpecification, ProtoModel, QCSpecification, TorsionDriveInput
 from ...interface.models.torsiondrive import TorsionDriveKeywords
 from ...interface.visualization import custom_plot
-from .collection import BaseProcedureDataset
-from .collection_utils import register_collection
 
 if TYPE_CHECKING:  # pragma: no cover
     from ...interface.models import Molecule

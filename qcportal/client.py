@@ -17,8 +17,17 @@ from typing import (
 
 import pydantic
 
+from .base_models import (
+    CommonGetURLParametersName,
+    CommonGetProjURLParameters,
+    CommonGetURLParameters,
+    CommonDeleteURLParameters,
+)
+from .cache import PortalCache
+from .client_base import PortalClientBase
+from .keywords import KeywordSet
 from .managers import ManagerQueryBody, ComputeManager
-from .metadata_models import QueryMetadata, UpdateMetadata
+from .metadata_models import QueryMetadata, UpdateMetadata, InsertMetadata, DeleteMetadata, UndeleteMetadata
 from .molecules import Molecule, MoleculeIdentifiers, MoleculeQueryBody, MoleculeModifyBody
 from .permissions import (
     UserInfo,
@@ -70,16 +79,6 @@ from .serverinfo import (
     ServerStatsQueryParameters,
     DeleteBeforeDateParameters,
 )
-from .base_models import (
-    CommonGetURLParametersName,
-    CommonGetProjURLParameters,
-    CommonGetURLParameters,
-    CommonDeleteURLParameters,
-)
-from .cache import PortalCache
-from .client_base import PortalClientBase, PortalRequestError
-from .keywords import KeywordSet
-from .metadata_models import InsertMetadata, DeleteMetadata, UndeleteMetadata
 from .utils import make_list, make_str
 
 

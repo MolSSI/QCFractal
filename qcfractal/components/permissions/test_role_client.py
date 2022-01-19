@@ -5,7 +5,7 @@ Tests the client functions related to user management
 import pytest
 
 from qcfractaltesting import test_users
-from qcportal.client import PortalRequestError
+from qcportal import PortalRequestError
 from qcportal.exceptions import InvalidRolenameError
 from qcportal.permissions import RoleInfo, PermissionsPolicy
 from .role_socket import default_roles

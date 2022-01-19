@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcportal.client import PortalRequestError
+from qcportal import PortalRequestError
 from qcportal.keywords import KeywordSet
 
 if TYPE_CHECKING:

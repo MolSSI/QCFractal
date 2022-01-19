@@ -9,10 +9,10 @@ import numpy as np
 import pandas as pd
 from qcelemental import constants
 
-from ...interface.models import Molecule, ProtoModel
-from ...interface.util import replace_dict_keys
 from .collection_utils import register_collection
 from .dataset import Dataset
+from ...interface.models import Molecule, ProtoModel
+from ...interface.util import replace_dict_keys
 
 if TYPE_CHECKING:  # pragma: no cover
     from .. import FractalClient

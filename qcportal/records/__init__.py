@@ -1,5 +1,8 @@
 from typing import Union
 
+# These are all the possible result objects that might be returned by a manager
+from qcelemental.models import AtomicResult, OptimizationResult, FailedOperation
+
 from .models import (
     PriorityEnum,
     RecordStatusEnum,
@@ -11,9 +14,6 @@ from .models import (
     RecordQueryBody,
     RecordAddBodyBase,
 )
-
-# These are all the possible result objects that might be returned by a manager
-from qcelemental.models import AtomicResult, OptimizationResult, FailedOperation
 
 AllResultTypes = Union[FailedOperation, AtomicResult, OptimizationResult]
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List, TYPE_CHECKING, Union
+from typing import Optional, Dict, Any, List, Union
 
 from pydantic import BaseModel, Extra, validator
 from qcelemental.models.results import Provenance

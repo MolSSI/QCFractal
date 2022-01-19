@@ -1,21 +1,18 @@
 from __future__ import annotations
 
+import importlib
+import logging
+import multiprocessing
 import os
 import sys
-import importlib
+from typing import TYPE_CHECKING
 
 from flask import Flask, Blueprint
-import multiprocessing
-
-from .config import config
-
 from flask_jwt_extended import JWTManager
-import logging
 
 from qcfractal.db_socket.socket import SQLAlchemySocket
 from qcfractal.process_runner import ProcessBase
-
-from typing import TYPE_CHECKING
+from .config import config
 
 if TYPE_CHECKING:
     from ..config import FractalConfig

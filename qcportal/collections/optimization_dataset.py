@@ -6,10 +6,9 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 import pandas as pd
 import qcelemental as qcel
 
-from ...interface.models import ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
-
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
+from ...interface.models import ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
 
 if TYPE_CHECKING:  # pragma: no cover
     from ...interface.models import Molecule
