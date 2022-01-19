@@ -14,7 +14,7 @@ manager:
   log_file_prefix: qcfractal_compute.log
   manager_name: testworker
   max_queued_tasks: 3
-  update_frequency: 15.0
+  update_frequency: 5.0
   queue_tag:
     - '*'
 server:
