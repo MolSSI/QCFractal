@@ -587,48 +587,56 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         opt_spec["qc_specification"].pop("keywords_id")
 
         for td_api_key, geometries in next_tasks.items():
-            for position, geometry in enumerate(geometries):
+            # Make a deep copy to prevent modifying the original ORM
+            opt_spec2 = copy.deepcopy(opt_spec)
 
-                # Make a deep copy to prevent modifying the original ORM
-                opt_spec2 = copy.deepcopy(opt_spec)
+            # Construct constraints
+            constraints = json.loads(service_state.dihedral_template)
 
-                # Construct constraints
-                constraints = json.loads(service_state.dihedral_template)
+            grid_id = td_api.grid_id_from_string(td_api_key)
+            for con_num, k in enumerate(grid_id):
+                constraints[con_num]["value"] = k
 
-                grid_id = td_api.grid_id_from_string(td_api_key)
-                for con_num, k in enumerate(grid_id):
-                    constraints[con_num]["value"] = k
+            # update the constraints
+            opt_spec2["keywords"].setdefault("constraints", {})
+            opt_spec2["keywords"]["constraints"].setdefault("set", [])
+            opt_spec2["keywords"]["constraints"]["set"].extend(constraints)
 
-                # update the constraints
-                opt_spec2["keywords"].setdefault("constraints", {})
-                opt_spec2["keywords"]["constraints"].setdefault("set", [])
-                opt_spec2["keywords"]["constraints"]["set"].extend(constraints)
-
+            # Loop over the new geometries from the torsiondrive package
+            constrained_mols = []
+            for geometry in geometries:
                 # Build new molecule
                 mol = json.loads(service_state.molecule_template)
                 mol["geometry"] = geometry
 
-                # Submit the new optimization
-                meta, opt_ids = self.root_socket.records.optimization.add(
-                    OptimizationInputSpecification(**opt_spec2),
-                    [Molecule(**mol)],
-                    service_orm.tag,
-                    service_orm.priority,
-                    session=session,
-                )
+                constrained_mols.append(Molecule(**mol))
 
-                if not meta.success:
-                    raise RuntimeError("Error adding optimization - likely a developer error: " + meta.error_string)
+            # Submit the new optimizations
+            meta, opt_ids = self.root_socket.records.optimization.add(
+                OptimizationInputSpecification(**opt_spec2),
+                constrained_mols,
+                service_orm.tag,
+                service_orm.priority,
+                session=session,
+            )
 
+            if not meta.success:
+                raise RuntimeError("Error adding optimizations - likely a developer error: " + meta.error_string)
+
+            # ids will be in the same order as the molecules (and the geometries from td)
+            opt_key = json.dumps(grid_id)
+            for position, opt_id in enumerate(opt_ids):
                 svc_dep = ServiceDependenciesORM(
-                    record_id=opt_ids[0],
+                    record_id=opt_id,
                     extras={"td_api_key": td_api_key, "position": position},
                 )
 
-                opt_key = json.dumps(grid_id)
+                # The position field is handled by the collection class in sqlalchemy
+                # corresponds to the absolute position across all optimizations for this torsiondrive,
+                # not the position of the geometry for this td_api_key (as stored in the ServiceDependenciesORM)
                 opt_history = TorsiondriveOptimizationsORM(
                     torsiondrive_id=service_orm.record_id,
-                    optimization_id=opt_ids[0],
+                    optimization_id=opt_id,
                     key=opt_key,
                 )
 
