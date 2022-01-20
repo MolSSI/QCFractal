@@ -44,7 +44,9 @@ jobs:
       - name: Run tests
         shell: bash -l {0}
         run: |
-          pytest -vs --cov=qcfractal --cov=qcportal --cov=qcfractalcompute --cov-report=xml qcfractal qcportal qcfractalcompute
+          pytest -vs --runslow \
+                 --cov=qcfractal --cov=qcportal --cov=qcfractalcompute --cov-report=xml \
+                 qcfractal qcportal qcfractalcompute
 
       - name: Code coverage
         uses: codecov/codecov-action@v1

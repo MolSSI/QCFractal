@@ -282,7 +282,7 @@ class QueueManager:
             self.logger.info("        Programs:       {}".format(self.available_programs))
             self.logger.info("        Procedures:     {}\n".format(self.available_procedures))
 
-        if self.connected():
+        if self.connected:
             # Pull server info
             self.server_info = self.client.get_server_information()
             self.server_name = self.server_info["name"]
@@ -314,12 +314,14 @@ class QueueManager:
 
     ## Accessors
 
+    @property
     def name(self) -> str:
         """
         Returns the Managers full name.
         """
         return self.name_data.fullname
 
+    @property
     def connected(self) -> bool:
         """
         Checks the connection to the server.
@@ -330,7 +332,7 @@ class QueueManager:
         """
         Raises an error for functions that require a server connection.
         """
-        if self.connected() is False:
+        if self.connected is False:
             raise AttributeError("Manager is not connected to a server, this operations is not available.")
 
     @property
@@ -645,7 +647,6 @@ class QueueManager:
             try:
                 new_tasks = self.client.claim(open_slots)
             except ConnectionError as ex:
-                print(type(ex))
                 self.logger.warning(f"Acquisition of new tasks failed: {str(ex).strip()}")
                 return
 

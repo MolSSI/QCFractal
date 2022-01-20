@@ -142,6 +142,7 @@ class FractalSnowflake:
         qcf_cfg["database"] = db_config.dict()
         qcf_cfg["api"] = {"config_name": flask_config, "host": fractal_host, "port": fractal_port}
         qcf_cfg["enable_security"] = False
+        qcf_cfg["hide_internal_errors"] = False
 
         # Add in any options passed to this Snowflake
         if extra_config is None:

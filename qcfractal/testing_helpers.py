@@ -1,11 +1,9 @@
 import json
-from concurrent.futures import ProcessPoolExecutor
 from typing import Dict, Any, Tuple
 
 from qcfractal import FractalSnowflake
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.snowflake import attempt_client_connect
-from qcfractalcompute import QueueManager
 from qcfractaltesting import load_procedure_data, geoip_path, test_users
 from qcportal import PortalClient, ManagerClient
 from qcportal.managers import ManagerName
@@ -55,7 +53,6 @@ class TestingSnowflake(FractalSnowflake):
         extra_config["api"] = api_config
         extra_config["service_frequency"] = 5
         extra_config["loglevel"] = "DEBUG"
-        extra_config["hide_internal_errors"] = False
         extra_config["heartbeat_frequency"] = 3
         extra_config["heartbeat_max_missed"] = 2
         extra_config["database"] = {"pool_size": 0}
@@ -65,7 +62,7 @@ class TestingSnowflake(FractalSnowflake):
         FractalSnowflake.__init__(
             self,
             start=False,
-            compute_workers=1,
+            compute_workers=0,
             enable_watching=True,
             database_config=database_config,
             flask_config="testing",
@@ -95,22 +92,13 @@ class TestingSnowflake(FractalSnowflake):
 
         return SQLAlchemySocket(self._qcf_config)
 
-    def get_compute_manager(self, name: str) -> QueueManager:
-        """
-        Obtain a new QueueManager attached to this instance
-
-        This function will create a new QueueManager object every time it is called
-        """
-
-        adapter_client = ProcessPoolExecutor(max_workers=2)
-        return QueueManager(adapter_client, manager_name=name)
-
     def start_flask(self) -> None:
         """
         Starts the flask subprocess
         """
         if not self._flask_proc.is_alive():
             self._flask_proc.start()
+            self.client()  # wait until it's ready
 
     def stop_flask(self) -> None:
         """
@@ -132,20 +120,6 @@ class TestingSnowflake(FractalSnowflake):
         """
         if self._periodics_proc.is_alive():
             self._periodics_proc.stop()
-
-    def start_compute_worker(self) -> None:
-        """
-        Starts the compute worker subprocess
-        """
-        if not self._compute_proc.is_alive():
-            self._compute_proc.start()
-
-    def stop_compute_worker(self) -> None:
-        """
-        Stops the compute worker subprocess
-        """
-        if self._compute_proc.is_alive():
-            self._compute_proc.stop()
 
     def client(self, username=None, password=None) -> PortalClient:
         """
