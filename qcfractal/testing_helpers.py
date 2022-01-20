@@ -3,7 +3,6 @@ from typing import Dict, Any, Tuple
 
 from qcfractal import FractalSnowflake
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.snowflake import attempt_client_connect
 from qcfractaltesting import load_procedure_data, geoip_path, test_users
 from qcportal import PortalClient, ManagerClient
 from qcportal.managers import ManagerName
@@ -98,7 +97,7 @@ class TestingSnowflake(FractalSnowflake):
         """
         if not self._flask_proc.is_alive():
             self._flask_proc.start()
-            self.client()  # wait until it's ready
+            self.wait_for_flask()
 
     def stop_flask(self) -> None:
         """
@@ -106,6 +105,7 @@ class TestingSnowflake(FractalSnowflake):
         """
         if self._flask_proc.is_alive():
             self._flask_proc.stop()
+            self._flask_started.clear()
 
     def start_periodics(self) -> None:
         """
@@ -137,7 +137,7 @@ class TestingSnowflake(FractalSnowflake):
         :
             A PortalClient that is connected to this snowflake
         """
-        client = attempt_client_connect(
+        client = PortalClient(
             self.get_uri(),
             username=username,
             password=password,
@@ -161,12 +161,6 @@ class TestingSnowflake(FractalSnowflake):
         :
             A PortalClient that is connected to this snowflake
         """
-
-        attempt_client_connect(
-            self.get_uri(),
-            username=username,
-            password=password,
-        )
 
         # Now that we know it's up, create a manager client
         client = ManagerClient(name_data, self.get_uri(), username=username, password=password)
