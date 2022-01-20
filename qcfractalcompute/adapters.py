@@ -5,6 +5,7 @@ Queue backend abstraction manager.
 from .executor_adapter import DaskAdapter, ExecutorAdapter
 from .fireworks_adapter import FireworksAdapter
 from .parsl_adapter import ParslAdapter
+from .mock_testing_adapter import MockTestingAdapter
 
 
 def build_queue_adapter(workflow_client, logger=None, **kwargs) -> "BaseAdapter":
@@ -32,7 +33,10 @@ def build_queue_adapter(workflow_client, logger=None, **kwargs) -> "BaseAdapter"
 
     adapter_type = type(workflow_client).__module__ + "." + type(workflow_client).__name__
 
-    if adapter_type == "parsl.config.Config":
+    if type(workflow_client).__name__ == "MockTestingExecutor":
+        adapter = MockTestingAdapter(workflow_client, logger=logger, **kwargs)
+
+    elif adapter_type == "parsl.config.Config":
         adapter = ParslAdapter(workflow_client, logger=logger, **kwargs)
 
     elif adapter_type == "concurrent.futures.process.ProcessPoolExecutor":
