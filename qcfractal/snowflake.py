@@ -25,45 +25,6 @@ if TYPE_CHECKING:
     from typing import Dict, Any, Sequence, Optional, Set
 
 
-def attempt_client_connect(uri: str, **client_args) -> PortalClient:
-    """
-    Attempt to obtain a PortalClient for a host and port
-
-    This will make several attempts in case the server hasn't been completely booted yet
-
-    If a connection is successful, the PortalClient is returned. Otherwise an exception
-    is raised representing the exception raised from the last attempt at PortalClient construction.
-
-    Parameters
-    ----------
-    uri: str
-        URI to the rest server (ie, http://127.0.0.1:1234)
-    **client_args
-        Additional arguments to pass to the PortalClient constructor
-
-    Returns
-    -------
-    PortalClient
-        A client connected to the given host and port
-    """
-
-    # Try to connect 40 times (~2 seconds). If it fails after that, raise the last exception
-    for i in range(41):
-        try:
-            return PortalClient(uri, **client_args)
-
-        except ConnectionRefusedError:
-            if i == 40:
-                # Out of attempts. Just give the last exception
-                raise
-            else:
-                time.sleep(0.1)
-        except Exception:
-            raise
-
-    raise RuntimeError("PROGRAMMER ERROR - should never get here")
-
-
 class SnowflakeComputeProcess(ProcessBase):
     """
     Runs  a compute manager in a separate process
@@ -80,9 +41,6 @@ class SnowflakeComputeProcess(ProcessBase):
         host = self._qcf_config.api.host
         port = self._qcf_config.api.port
         uri = f"http://{host}:{port}"
-
-        # Wait until the server is up
-        attempt_client_connect(uri)
 
         self._worker_pool = ProcessPoolExecutor(self._compute_workers)
         self._queue_manager = QueueManager(self._worker_pool, fractal_uri=uri, manager_name="snowflake_compute")
@@ -164,11 +122,15 @@ class FractalSnowflake:
         ######################################
         # Now start the various subprocesses #
         ######################################
-        flask = FlaskProcess(self._qcf_config, self._completed_queue)
+        # For notification that flask is now ready to accept connections
+        self._flask_started = multiprocessing.Event()
+        flask = FlaskProcess(self._qcf_config, self._completed_queue, self._flask_started)
+
         periodics = PeriodicsProcess(self._qcf_config, self._completed_queue)
 
         # Don't auto start here. we will handle it later
         self._flask_proc = ProcessRunner("snowflake_flask", flask, False)
+
         self._periodics_proc = ProcessRunner("snowflake_periodics", periodics, False)
 
         compute = SnowflakeComputeProcess(self._qcf_config, self._compute_workers)
@@ -187,28 +149,31 @@ class FractalSnowflake:
 
         # Stop these in a particular order
         # First the compute, since it will communicate its demise to the api server
+        # Flask must be last. It was started first and owns the db
         compute_proc.stop()
-        flask_proc.stop()
         periodics_proc.stop()
+        flask_proc.stop()
+
+    def wait_for_flask(self):
+        running = self._flask_started.wait(10.0)
+
+        if not running:
+            raise RuntimeError("Error starting flask subprocesses. See logging & output for details")
 
     def stop(self):
         self._stop(self._compute_proc, self._flask_proc, self._periodics_proc)
+        self._flask_started.clear()
 
     def start(self):
-        if self._compute_workers > 0 and not self._compute_proc.is_alive():
-            self._compute_proc.start()
         if not self._flask_proc.is_alive():
             self._flask_proc.start()
+
+        self.wait_for_flask()
+
         if not self._periodics_proc.is_alive():
             self._periodics_proc.start()
-
-        # Attempt to get a client. This will block until the server is ready,
-        # or result in an exception after some time
-        try:
-            self.client()
-        except:
-            self.stop()
-            raise RuntimeError("Error starting all the subprocesses. See logging & output for details")
+        if self._compute_workers > 0 and not self._compute_proc.is_alive():
+            self._compute_proc.start()
 
     def get_uri(self) -> str:
         """
@@ -297,7 +262,7 @@ class FractalSnowflake:
         Obtain a PortalClient connected to this server
         """
 
-        return attempt_client_connect(self.get_uri())
+        return PortalClient(self.get_uri())
 
     def __enter__(self):
         return self

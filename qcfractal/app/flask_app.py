@@ -74,9 +74,15 @@ class FlaskProcess(ProcessBase):
     Flask running in a separate process
     """
 
-    def __init__(self, qcf_config: FractalConfig, completed_queue: Optional[multiprocessing.Queue] = None):
+    def __init__(
+        self,
+        qcf_config: FractalConfig,
+        completed_queue: Optional[multiprocessing.Queue] = None,
+        running_event: Optional[multiprocessing.Event] = None,
+    ):
         self._qcf_config = qcf_config
         self._completed_queue = completed_queue
+        self._running_event = running_event
 
     def setup(self):
         self._flask_app = create_qcfractal_flask_app(self._qcf_config)
@@ -93,6 +99,11 @@ class FlaskProcess(ProcessBase):
         logging.getLogger("werkzeug").setLevel(logging.getLogger().level)
 
     def run(self):
+        # see https://stackoverflow.com/a/55573732
+        with self._flask_app.app_context():
+            if self._running_event is not None:
+                self._running_event.set()
+
         self._flask_app.run(host=self._qcf_config.api.host, port=self._qcf_config.api.port)
 
     def interrupt(self) -> None:
