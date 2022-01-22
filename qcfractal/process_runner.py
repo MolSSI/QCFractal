@@ -138,16 +138,17 @@ class ProcessRunner:
         # seeing if there are any issues
         # By default, some OSs and python versions use 'spawn' as the default. So we explicitly
         # set this to fork
-        mp_ctx = multiprocessing.get_context("fork")
+        self._mp_ctx = multiprocessing.get_context("fork")
+        self._subproc = None
 
         self._name = name
-        self._subproc = mp_ctx.Process(name=name, target=self._run_process, args=(name, proc_class))
+        self._proc_class = proc_class
+
+        # A logger for use when finalizing/destructing
+        self._finalize_logger = logging.getLogger(f"ProcessRunner.stop[{name}]")
+
         if start:
             self.start()
-
-        # Add a finalizer
-        self._finalize_logger = logging.getLogger(f"ProcessRunner.stop[{name}]")
-        self._finalizer = weakref.finalize(self, self._stop, self._subproc, self._finalize_logger)
 
     @classmethod
     def _stop(cls, subproc, logger) -> None:
@@ -155,8 +156,7 @@ class ProcessRunner:
         # This is written as a class method so that it can be called by a weakref finalizer
         ####################################################################################
 
-        # Skip everything if already dead
-        if not subproc.is_alive():
+        if subproc is None:
             return
 
         # send SIGTERM 3 times, then kill
@@ -177,13 +177,20 @@ class ProcessRunner:
         logger.debug("Process ended")
 
     def start(self) -> None:
-        if self._subproc.is_alive():
-            raise RuntimeError(f"Process {self._name} is already running")
-        else:
+        if self._subproc is None or not self._subproc.is_alive():
+            self._subproc = self._mp_ctx.Process(
+                name=self._name, target=self._run_process, args=(self._name, self._proc_class)
+            )
             self._subproc.start()
 
+            # Add a finalizer to shutdown when the object is deleted
+            self._finalizer = weakref.finalize(self, self._stop, self._subproc, self._finalize_logger)
+
+        elif self._subproc.is_alive():
+            raise RuntimeError(f"Process {self._name} is already running")
+
     def is_alive(self) -> bool:
-        return self._subproc.is_alive()
+        return self._subproc is not None and self._subproc.is_alive()
 
     def stop(self):
         """
