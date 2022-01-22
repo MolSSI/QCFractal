@@ -280,8 +280,11 @@ def run_service_constropt(
         },
         tags=["*"],
     )
-    rec = storage_socket.records.get([record_id])
+    rec = storage_socket.records.get([record_id], include=["*", "service"])
     assert rec[0]["status"] == RecordStatusEnum.waiting
+
+    tag = rec[0]["service"]["tag"]
+    priority = rec[0]["service"]["priority"]
 
     r = storage_socket.services.iterate_services()
 
@@ -300,8 +303,8 @@ def run_service_constropt(
         # The C8H6 test has this "feature"
         opt_ids = set(x["record_id"] for x in manager_tasks)
         opt_recs = storage_socket.records.optimization.get(opt_ids, include=["*", "initial_molecule", "task"])
-        assert all(x["task"]["priority"] == PriorityEnum.low for x in opt_recs)
-        assert all(x["task"]["tag"] == "test_tag" for x in opt_recs)
+        assert all(x["task"]["priority"] == priority for x in opt_recs)
+        assert all(x["task"]["tag"] == tag for x in opt_recs)
 
         manager_ret = {}
         for opt in opt_recs:
