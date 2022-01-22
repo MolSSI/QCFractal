@@ -54,3 +54,24 @@ def test_service_socket_error(storage_socket: SQLAlchemySocket):
 
     out_err = out0 if out0.output_type == OutputTypeEnum.error else out1
     assert "did not complete successfully" in out_err.as_json["error_message"]
+
+
+def test_service_socket_iterate_order(storage_socket: SQLAlchemySocket):
+    input_spec_1, molecules_1, result_data_1 = load_procedure_data("td_H2O2_psi4_b3lyp")
+    input_spec_2, molecules_2, result_data_2 = load_procedure_data("td_H2O2_psi4_pbe")
+
+    # Bit of a hack here
+    storage_socket.services._max_active_services = 1
+
+    meta_1, id_1 = storage_socket.records.torsiondrive.add(
+        input_spec_1, [molecules_1], as_service=True, priority=PriorityEnum.low
+    )
+    meta_2, id_2 = storage_socket.records.torsiondrive.add(
+        input_spec_2, [molecules_2], as_service=True, priority=PriorityEnum.normal
+    )
+
+    storage_socket.services.iterate_services()
+
+    recs = storage_socket.records.get(id_1 + id_2)
+    assert recs[0]["status"] == RecordStatusEnum.waiting
+    assert recs[1]["status"] == RecordStatusEnum.running
