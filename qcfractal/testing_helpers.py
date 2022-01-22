@@ -47,13 +47,20 @@ class TestingSnowflake(FractalSnowflake):
 
         api_config = {"jwt_access_token_expires": 1}  # expire tokens in 1 second
 
+        # also tighten the server return limit (so we can test chunking)
+        api_limits = {"manager_tasks_claim": 5, "manager_tasks_return": 2}
+
+        extra_config["api"] = api_config
+        extra_config["api_limits"] = api_limits
+
         extra_config["enable_security"] = enable_security
         extra_config["allow_unauthenticated_read"] = allow_unauthenticated_read
-        extra_config["api"] = api_config
         extra_config["service_frequency"] = 5
         extra_config["loglevel"] = "DEBUG"
         extra_config["heartbeat_frequency"] = 3
         extra_config["heartbeat_max_missed"] = 2
+        extra_config["statistics_frequency"] = 3
+
         extra_config["database"] = {"pool_size": 0}
         extra_config["log_access"] = log_access
         extra_config["geo_file_path"] = geoip_path

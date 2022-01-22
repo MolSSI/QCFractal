@@ -2,21 +2,9 @@
 Queue adapter for Dask
 """
 
-import traceback
 from typing import Any, Dict, Hashable, Tuple
 
-from qcelemental.models import FailedOperation
-
 from .base_adapter import BaseAdapter
-
-
-def _get_future(future):
-    try:
-        return future.result()
-    except Exception as e:
-        msg = "Caught Executor Error:\n" + traceback.format_exc()
-        ret = FailedOperation(**{"success": False, "error": {"error_type": e.__class__.__name__, "error_message": msg}})
-        return ret
 
 
 class MockTestingAdapter(BaseAdapter):

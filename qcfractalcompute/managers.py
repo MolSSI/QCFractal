@@ -468,17 +468,19 @@ class QueueManager:
 
             except ConnectionError:
                 # Tried and failed
+                attempts += 1
+
                 # Case: Still within the retry limit
-                if self.server_error_retries is None or self.server_error_retries > (attempts + 1):
-                    new_deferred_tasks[attempts + 1] = results
+                if self.server_error_retries is None or attempts < self.server_error_retries:
+                    new_deferred_tasks[attempts] = results
                     self.logger.warning(
-                        f"Could not post jobs from {attempts+1} updates ago, will retry on next update."
+                        f"Could not post jobs from {attempts-1} updates ago, will retry on next update."
                     )
 
                 # Case: Over limit
                 else:
                     self.logger.warning(
-                        f"Could not post {len(results)} tasks from {attempts+1} updates ago and over attempt limit. Dropping"
+                        f"Could not post {len(results)} tasks from {attempts-1} updates ago and over attempt limit. Dropping"
                     )
 
         self._deferred_tasks = new_deferred_tasks
@@ -542,7 +544,6 @@ class QueueManager:
                     task_status = {k: "deferred" for k in results.keys()}
                 else:
                     self.logger.warning("Returning complete tasks failed. Data may be lost.")
-                    self.n_stale_jobs += len(results)
                     task_status = {k: "unknown_error" for k in results.keys()}
 
             self.active -= n_result
