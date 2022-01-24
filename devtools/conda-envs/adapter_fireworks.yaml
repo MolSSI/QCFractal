@@ -38,8 +38,8 @@ dependencies:
   - requests-mock
 
 #   QCArchive includes
-  - qcengine =0.21
-  - qcelemental =0.24
+  - qcengine >=0.21
+  - qcelemental >=0.24
 
 #   Pip includes
   - pip:
