@@ -99,7 +99,7 @@ class ComputeHistory(BaseModel):
                 else:
                     return o.as_string
 
-            return None
+        return None
 
 
 class RecordComment(BaseModel):
@@ -226,7 +226,7 @@ class BaseRecord(abc.ABC, BaseModel):
 
     def _get_output(self, output_type: OutputTypeEnum) -> Optional[Union[str, Dict[str, Any]]]:
         if not self.raw_data.compute_history:
-            return None
+            self._retrieve_compute_history(include_outputs=True)
 
         last_computation = self.raw_data.compute_history[-1]
         if last_computation.outputs is None:
