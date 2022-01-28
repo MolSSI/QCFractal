@@ -1083,10 +1083,11 @@ class RecordSocket:
 
             # put in order of the input parameter
             # only pay attention to the records requested (ie, not subtasks)
-            updated_ids = [t.record_id for t in task_orms]
+            updated_ids = [t.record_id for t in all_orm]
             error_ids = set(record_id) - set(updated_ids)
             updated_idx = [idx for idx, rid in enumerate(record_id) if rid in updated_ids]
             error_idx = [idx for idx, rid in enumerate(record_id) if rid in error_ids]
             errors = [(idx, "Record is missing or cannot be modified") for idx in error_idx]
+            n_children_updated = len(all_orm) - (len(updated_idx) + len(error_idx))
 
-            return UpdateMetadata(updated_idx=updated_idx, errors=errors)
+            return UpdateMetadata(updated_idx=updated_idx, errors=errors, n_children_updated=n_children_updated)

@@ -47,7 +47,7 @@ def get_record_task_v1(record_id: int):
 @wrap_route(None, None)
 @check_access
 def get_record_service_v1(record_id: int):
-    rec = storage_socket.records.get([record_id], include=["service"])
+    rec = storage_socket.records.get([record_id], include=["service.*", "service.dependencies"])
     return rec[0]["service"]
 
 
