@@ -48,6 +48,8 @@ def get_singlepoint_records_v1(record_id: Optional[int] = None, *, url_params: C
 @check_access
 def get_singlepoint_wavefunction_v1(record_id: int):
     rec = storage_socket.records.singlepoint.get([record_id], include=["wavefunction"])
+
+    assert rec[0] is not None
     return rec[0]["wavefunction"]
 
 

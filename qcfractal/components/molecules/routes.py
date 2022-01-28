@@ -34,7 +34,7 @@ def delete_molecules_v1(molecule_id: Optional[int] = None, *, url_params: Common
 @main.route("/v1/molecule/<molecule_id>", methods=["PATCH"])
 @wrap_route(MoleculeModifyBody, None)
 @check_access
-def modify_molecules_v1(molecule_id: Optional[int] = None, *, body_data: MoleculeModifyBody):
+def modify_molecules_v1(molecule_id: int, *, body_data: MoleculeModifyBody):
     return storage_socket.molecules.modify(
         molecule_id=molecule_id,
         name=body_data.name,

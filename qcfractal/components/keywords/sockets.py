@@ -31,9 +31,9 @@ class KeywordsSocket:
         if isinstance(keywords, KeywordSet):
             kw_dict = keywords.dict(exclude={"id"})
         else:
-            kw_dict = KeywordSet(values=keywords).dict(exclude={"id"})
+            kw_dict = KeywordSet(values=keywords).dict(exclude={"id"})  # type: ignore
 
-        return KeywordsORM(**kw_dict)  # type: ignore
+        return KeywordsORM(**kw_dict)
 
     def add(
         self, keywords: Sequence[KeywordSet], *, session: Optional[Session] = None

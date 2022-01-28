@@ -99,7 +99,7 @@ def hash_dictionary(data: Dict[str, Any]) -> str:
     return m.hexdigest()
 
 
-def calculate_limit(max_limit: int, given_limit: Optional[int]):
+def calculate_limit(max_limit: int, given_limit: Optional[int]) -> int:
     """Get the allowed limit on results to return for a particular or type of object
 
     If 'given_limit' is given (ie, by the user), this will return min(limit, max_limit)

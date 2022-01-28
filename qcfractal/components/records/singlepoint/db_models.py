@@ -27,7 +27,7 @@ class QCSpecificationORM(BaseORM):
     basis = Column(String(100), nullable=False)
 
     keywords_id = Column(Integer, ForeignKey(KeywordsORM.id), nullable=False)
-    keywords = relationship(KeywordsORM, lazy="joined")
+    keywords = relationship(KeywordsORM, lazy="joined", uselist=False)
 
     protocols = Column(JSONB, nullable=False)
 

@@ -5,7 +5,6 @@ import logging.handlers
 import multiprocessing
 import os
 import tempfile
-import time
 import weakref
 from concurrent.futures import ProcessPoolExecutor
 from queue import Empty  # Just for exception handling
@@ -219,11 +218,8 @@ class FractalSnowflake:
 
         if ids is None:
             c = self.client()
-            proc = c.query_tasks(status=[RecordStatusEnum.waiting, RecordStatusEnum.running])
-            ids = [x.base_result for x in proc]
-
-        # TODO - INT ID
-        ids = [int(x) for x in ids]
+            _, proc = c.query_records(status=[RecordStatusEnum.waiting, RecordStatusEnum.running])
+            ids = [x.id for x in proc]
 
         # Remove any we have already marked as completed
         remaining_ids = set(ids) - self._all_completed

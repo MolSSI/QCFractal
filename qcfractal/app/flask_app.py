@@ -78,7 +78,7 @@ class FlaskProcess(ProcessBase):
         self,
         qcf_config: FractalConfig,
         completed_queue: Optional[multiprocessing.Queue] = None,
-        running_event: Optional[multiprocessing.Event] = None,
+        running_event: Optional[multiprocessing.synchronize.Event] = None,
     ):
         self._qcf_config = qcf_config
         self._completed_queue = completed_queue

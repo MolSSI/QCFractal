@@ -288,7 +288,7 @@ class PortalClient(PortalClientBase):
         identifiers: Optional[Dict[str, Union[str, Iterable[str]]]] = None,
         limit: Optional[int] = None,
         skip: int = 0,
-    ) -> List[Molecule]:
+    ) -> Tuple[QueryMetadata, List[Molecule]]:
         """Query molecules by attributes.
 
         All matching molecules, up to the lower of `limit` or the server's
@@ -418,7 +418,7 @@ class PortalClient(PortalClientBase):
 
         Parameters
         ----------
-        id
+        molecule_id
             An id or list of ids to query.
 
         Returns

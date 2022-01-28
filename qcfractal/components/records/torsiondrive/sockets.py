@@ -332,7 +332,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             if not spec_meta.success:
                 return (
                     InsertMetadata(
-                        error_description="Aborted - could not add specification: " + spec_meta.error_description
+                        error_description="Aborted - could not add specification: " + spec_meta.error_string
                     ),
                     [],
                 )
@@ -344,7 +344,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 if not mol_meta.success:
                     return (
                         InsertMetadata(
-                            error_description="Aborted - could not add all molecules: " + mol_meta.error_description
+                            error_description="Aborted - could not add all molecules: " + mol_meta.error_string
                         ),
                         [],
                     )

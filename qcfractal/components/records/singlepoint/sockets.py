@@ -17,7 +17,6 @@ from qcportal.molecules import Molecule
 from qcportal.records import PriorityEnum, RecordStatusEnum
 from qcportal.records.singlepoint import (
     WavefunctionProperties,
-    QCSpecification,
     QCInputSpecification,
     SinglepointQueryBody,
 )
@@ -262,7 +261,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
     def add(
         self,
-        qc_spec: QCSpecification,
+        qc_spec: QCInputSpecification,
         molecules: Sequence[Union[int, Molecule]],
         tag: Optional[str] = None,
         priority: PriorityEnum = PriorityEnum.normal,
@@ -305,7 +304,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
             if not spec_meta.success:
                 return (
                     InsertMetadata(
-                        error_description="Aborted - could not add specification: " + spec_meta.error_description
+                        error_description="Aborted - could not add specification: " + spec_meta.error_string
                     ),
                     [],
                 )
@@ -314,9 +313,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
             mol_meta, mol_ids = self.root_socket.molecules.add_mixed(molecules, session=session)
             if not mol_meta.success:
                 return (
-                    InsertMetadata(
-                        error_description="Aborted - could not add all molecules: " + mol_meta.error_description
-                    ),
+                    InsertMetadata(error_description="Aborted - could not add all molecules: " + mol_meta.error_string),
                     [],
                 )
 
@@ -366,21 +363,19 @@ class SinglepointRecordSocket(BaseRecordSocket):
             driver=result.driver,
             method=result.model.method,
             basis=result.model.basis,
-            keywords=KeywordSet(values=result.keywords),
+            keywords=KeywordSet(values=result.keywords),  # type: ignore
             protocols=result.protocols,
         )
 
         spec_meta, spec_id = self.add_specification(qc_spec, session=session)
         if not spec_meta.success:
             raise RuntimeError(
-                "Aborted single point insertion - could not add specification: " + spec_meta.error_description
+                "Aborted single point insertion - could not add specification: " + spec_meta.error_string
             )
 
         mol_meta, mol_ids = self.root_socket.molecules.add([result.molecule], session=session)
         if not mol_meta.success:
-            raise RuntimeError(
-                "Aborted single point insertion - could not add molecule: " + spec_meta.error_description
-            )
+            raise RuntimeError("Aborted single point insertion - could not add molecule: " + spec_meta.error_string)
 
         record_orm = SinglepointRecordORM()
         record_orm.is_service = False
@@ -391,8 +386,6 @@ class SinglepointRecordSocket(BaseRecordSocket):
         record_orm.properties = result.properties.dict(encoding="json")
         record_orm.wavefunction = wavefunction_helper(result.wavefunction)
         record_orm.extras = result.extras
-
-        record_orm.protocols = {}  # TODO - REMOVE ME
 
         session.add(record_orm)
         session.flush()

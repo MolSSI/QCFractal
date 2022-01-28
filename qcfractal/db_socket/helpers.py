@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from functools import lru_cache
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from sqlalchemy import tuple_, and_, or_, func, select, inspect
 from sqlalchemy.orm import load_only, selectinload, lazyload
@@ -14,7 +14,21 @@ from qcportal.metadata_models import InsertMetadata, DeleteMetadata
 if TYPE_CHECKING:
     from sqlalchemy.orm.attributes import InstrumentedAttribute
     import sqlalchemy.orm.session
-    from typing import Sequence, List, Tuple, Union, Any, TypeVar, Type, Dict, Generator, Optional, Iterable
+    from typing import (
+        Sequence,
+        List,
+        Tuple,
+        Union,
+        Any,
+        TypeVar,
+        Type,
+        Dict,
+        Generator,
+        Optional,
+        Iterable,
+        Optional,
+        Set,
+    )
 
     _ORM_T = TypeVar("_ORM_T", bound=BaseORM)
     _T = TypeVar("_T")
@@ -42,10 +56,10 @@ def _get_query_proj_options(
     orm_type: Type[_ORM_T],
     include: Optional[Tuple[str, ...]] = None,
     exclude: Optional[Tuple[str, ...]] = None,
-) -> List[InstrumentedAttribute, ...]:
+) -> List[Any]:
 
     # Adjust include to be the default "None" if only * is specified
-    if include == {"*"}:
+    if include == ("*",):
         include = None
 
     # If include and exclude are both none (common occurrence), then
@@ -53,20 +67,24 @@ def _get_query_proj_options(
     if include is None and not exclude:
         return []
 
+    include_set: Optional[Set[str]] = None
+    exclude_set: Optional[Set[str]] = None
+
     if include is not None:
-        include = set(include)
+        include_set = set(include)
+
     if exclude is not None:
-        exclude = set(exclude)
+        exclude_set = set(exclude)
 
     # Pull out any subrelationships we need to handle
     # Make a map with the key being the immediate subrelationship
     # of this orm, and the values being all the columns, subsubrelationships,
     # etc, of that subrelationship
-    subrel_map = {}
-    if include is not None:
-        subrel_includes = [x for x in include if "." in x]
+    subrel_map: Dict[str, List[str]] = {}
+    if include_set is not None:
+        subrel_include_sets = [x for x in include_set if "." in x]
 
-        for s in subrel_includes:
+        for s in subrel_include_sets:
             base, col = s.split(".", maxsplit=1)
             subrel_map.setdefault(base, list())
             subrel_map[base].append(col)
@@ -78,60 +96,62 @@ def _get_query_proj_options(
     columns = set(mapper.mapper.column_attrs.keys())
     relationships = set(mapper.mapper.relationships.keys())
 
-    if include is None and exclude:
-        # no include, some exclude
+    if include_set is None and exclude_set:
+        # no include_set, some exclude_set
         # load only the non-excluded columns
         # skip loading excluded relationships
-        load_columns = columns - exclude
-        noload_rels = relationships & exclude
+        load_columns = columns - exclude_set
+        noload_rels = relationships & exclude_set
         options = [load_only(*load_columns)]
         options += [lazyload(getattr(orm_type, x)) for x in noload_rels]
 
-    elif "*" in include and not exclude:
-        # include has '*', no excludes
-        # We just have to possibly include some new relationships
-        load_rels = relationships & include
+    elif include_set and "*" in include_set and not exclude_set:
+        # include_set has '*', no exclude_sets
+        # We just have to possibly include_set some new relationships
+        load_rels = relationships & include_set
         options = [selectinload(getattr(orm_type, x)) for x in load_rels]
 
-    elif "*" in include and exclude:
-        # include has '*', and we have excludes
+    elif include_set and "*" in include_set and exclude_set:
+        # include_set has '*', and we have exclude_sets
         # Load only non-excluded columns
-        # Add any relationship specified in include (and not in exclude)
+        # Add any relationship specified in include_set (and not in exclude_set)
         # Skip loading any relationships that are excluded
-        load_columns = columns - exclude
-        load_rels = (relationships & include) - exclude
-        noload_rels = relationships & exclude
+        load_columns = columns - exclude_set
+        load_rels = (relationships & include_set) - exclude_set
+        noload_rels = relationships & exclude_set
 
         options = [load_only(*load_columns)]
         options += [selectinload(getattr(orm_type, x)) for x in load_rels]
         options += [lazyload(getattr(orm_type, x)) for x in noload_rels]
 
-    elif include and not exclude:
-        # Include, but with no exclude
-        load_columns = columns & include
-        load_rels = relationships & include
-        noload_rels = relationships - include
+    elif include_set and not exclude_set:
+        # Include, but with no exclude_set
+        load_columns = columns & include_set
+        load_rels = relationships & include_set
+        noload_rels = relationships - include_set
 
         options = [load_only(*load_columns)]
         options += [selectinload(getattr(orm_type, x)) for x in load_rels]
         options += [lazyload(getattr(orm_type, x)) for x in noload_rels]
 
-    elif include and exclude:
-        # Both include and exclude specified
-        # Load only columns that are in include and not exclude
-        # Load only relationships that are in include and not exclude
-        # Skip loading any relationships that aren't in include (or are excluded)
+    elif include_set and exclude_set:
+        # Both include_set and exclude_set specified
+        # Load only columns that are in include_set and not exclude_set
+        # Load only relationships that are in include_set and not exclude_set
+        # Skip loading any relationships that aren't in include_set (or are excluded)
 
-        load_columns = (columns & include) - exclude
-        load_rels = (relationships & include) - exclude
-        noload_rels = relationships - include + (relationships & exclude)
+        load_columns = (columns & include_set) - exclude_set
+        load_rels = (relationships & include_set) - exclude_set
+        noload_rels = (relationships - include_set) | (relationships & exclude_set)
 
         options = [load_only(*load_columns)]
         options += [selectinload(getattr(orm_type, x)) for x in load_rels]
         options += [lazyload(getattr(orm_type, x)) for x in noload_rels]
 
     else:
-        raise RuntimeError(f"QCFractal Developer Error: orm_type={orm_type} include={include} exclude={exclude}")
+        raise RuntimeError(
+            f"QCFractal Developer Error: orm_type={orm_type} include_set={include_set} exclude_set={exclude_set}"
+        )
 
     # Now handle subrelationships
     for base, cols in subrel_map.items():
@@ -151,7 +171,7 @@ def get_query_proj_options(
     orm_type: Type[_ORM_T],
     include: Optional[Iterable[str]] = None,
     exclude: Optional[Iterable[str]] = None,
-) -> List[InstrumentedAttribute, ...]:
+) -> List[InstrumentedAttribute]:
     # TODO - needs some explanation...
 
     # Wrap the include/exclude in tuples for memoization
@@ -306,7 +326,7 @@ def insert_general(
         existing_idx.extend([start + x for x in ext])
         all_ret.extend(ret)
 
-    return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx), all_ret  # type: ignore
+    return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx), all_ret
 
 
 def insert_mixed_general(
@@ -373,7 +393,7 @@ def insert_mixed_general(
         errors.extend((start + x, msg) for x, msg in err)
         all_ret.extend(ret)
 
-    return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx, errors=errors), all_ret  # type: ignore
+    return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx, errors=errors), all_ret
 
 
 def get_general(
@@ -516,7 +536,7 @@ def get_general_multi(
     col_name = search_col.key
     result_list = [r.dict() for r in results]
 
-    result_map = {}
+    result_map: Dict[str, Any] = {}
     for r in result_list:
         result_map.setdefault(r[col_name], list())
         result_map[r[col_name]].append(r)

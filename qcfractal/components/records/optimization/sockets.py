@@ -301,7 +301,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
             if not spec_meta.success:
                 return (
                     InsertMetadata(
-                        error_description="Aborted - could not add specification: " + spec_meta.error_description
+                        error_description="Aborted - could not add specification: " + spec_meta.error_string
                     ),
                     [],
                 )
@@ -310,9 +310,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
             mol_meta, mol_ids = self.root_socket.molecules.add_mixed(initial_molecules, session=session)
             if not mol_meta.success:
                 return (
-                    InsertMetadata(
-                        error_description="Aborted - could not add all molecules: " + mol_meta.error_description
-                    ),
+                    InsertMetadata(error_description="Aborted - could not add all molecules: " + mol_meta.error_string),
                     [],
                 )
 

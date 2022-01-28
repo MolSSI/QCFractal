@@ -1,7 +1,7 @@
 import time
 import traceback
 from functools import wraps
-from typing import Optional, Type, Callable
+from typing import Optional, Type, Callable, TypeVar, Dict, List, Any
 from urllib.parse import urlparse
 
 import pydantic
@@ -22,13 +22,15 @@ from qcfractal.app.policyuniverse import Policy
 from qcportal.exceptions import UserReportableError, AuthenticationFailure, ComputeManagerError
 from qcportal.serialization import deserialize, serialize
 
+_T = TypeVar("_T")
+
 _valid_encodings = {
     "application/json": "json",
     "application/json-ext": "json-ext",
     "application/msgpack-ext": "msgpack-ext",
 }
 
-_read_permissions = {}
+_read_permissions: Dict[str, Dict[str, List[Dict[str, str]]]] = {}
 
 
 @main.before_request
@@ -72,7 +74,7 @@ def before_request_func():
         raise BadRequest(f"Could not deserialize body. {e}")
 
 
-def wrap_route(body_model: Optional[Type], url_params_model: Optional[Type[pydantic.BaseModel]] = None) -> Callable:
+def wrap_route(body_model: Optional[_T], url_params_model: Optional[Type[pydantic.BaseModel]] = None) -> Callable:
     def decorate(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
@@ -132,7 +134,7 @@ def after_request_func(response: Response):
     log_access = current_app.config["QCFRACTAL_CONFIG"].log_access
     if log_access:
         # What we are going to log to the DB
-        log = {}
+        log: Dict[str, Any] = {}
         log["access_type"] = request.path[1:]  # remove /
         log["access_method"] = request.method  # GET or POST
 
@@ -145,7 +147,9 @@ def after_request_func(response: Response):
         if real_ip is None:
             real_ip = request.access_route[-1] if len(request.access_route) > 0 else request.remote_addr
 
-        log["ip_address"] = real_ip
+        if real_ip:
+            log["ip_address"] = real_ip
+
         log["user_agent"] = request.headers["User-Agent"]
 
         log["request_bytes"] = g.request_bytes

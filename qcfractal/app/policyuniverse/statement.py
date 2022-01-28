@@ -7,7 +7,7 @@
 from collections import namedtuple
 
 
-PrincipalTuple = namedtuple("Principal", "category value")
+PrincipalTuple = namedtuple("PrincipalTuple", "category value")
 
 
 class Statement(object):

@@ -92,7 +92,7 @@ class PortalClientBase:
 
             requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
-        if (username is not None) or (password is not None):
+        if username is not None and password is not None:
             self._get_JWT_token(username, password)
 
         ### Define all attributes before this line
