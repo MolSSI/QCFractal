@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select, union
+from sqlalchemy import select, union, or_
 from sqlalchemy.orm import joinedload, selectinload, with_polymorphic
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
@@ -179,12 +179,73 @@ class RecordSocket:
         return session.execute(stmt).scalars().all()
 
     def get_children_ids(self, session: Session, record_id: Iterable[int]) -> List[int]:
+        """
+        Recursively obtain the record IDs of all children records
+        """
+
+        all_children_ids = []
+
         stmt = select(self._child_cte.c.child_id).where(self._child_cte.c.parent_id.in_(record_id))
-        return session.execute(stmt).scalars().unique().all()
+        children_ids = session.execute(stmt).scalars().unique().all()
+
+        while len(children_ids) > 0:
+            all_children_ids.extend(children_ids)
+
+            # find children of children, etc
+            stmt = select(self._child_cte.c.child_id).where(self._child_cte.c.parent_id.in_(children_ids))
+            children_ids = session.execute(stmt).scalars().unique().all()
+
+        return all_children_ids
 
     def get_parent_ids(self, session: Session, record_id: Iterable[int]) -> List[int]:
+        """
+        Recursively obtain the record IDs of all parent records
+        """
+
+        all_parent_ids = []
+
         stmt = select(self._child_cte.c.parent_id).where(self._child_cte.c.child_id.in_(record_id))
-        return session.execute(stmt).scalars().unique().all()
+        parent_ids = session.execute(stmt).scalars().unique().all()
+
+        while len(parent_ids) > 0:
+            all_parent_ids.extend(parent_ids)
+
+            # find parents of parents, etc
+            stmt = select(self._child_cte.c.parent_id).where(self._child_cte.c.child_id.in_(parent_ids))
+            parent_ids = session.execute(stmt).scalars().unique().all()
+
+        return all_parent_ids
+
+    def get_relative_ids(self, session: Session, record_id: Iterable[int]) -> List[int]:
+        """
+        Recursively obtain the record IDs of all parent and children records
+        """
+
+        all_relative_ids = set()
+
+        stmt = select(self._child_cte.c.parent_id, self._child_cte.c.child_id).where(
+            or_(self._child_cte.c.child_id.in_(record_id), self._child_cte.c.parent_id.in_(record_id))
+        )
+
+        relative_ids = session.execute(stmt).all()
+
+        while len(relative_ids) > 0:
+            rel_id_flat = set()
+
+            rel_id_flat.update(x[0] for x in relative_ids)
+            rel_id_flat.update(x[1] for x in relative_ids)
+
+            rel_id_flat -= all_relative_ids
+            all_relative_ids |= rel_id_flat
+
+            # find parents of parents, children of children, children of parents, parents of children, etc
+            stmt = select(self._child_cte.c.parent_id, self._child_cte.c.child_id).where(
+                or_(self._child_cte.c.child_id.in_(rel_id_flat), self._child_cte.c.parent_id.in_(rel_id_flat))
+            )
+
+            relative_ids = session.execute(stmt).all()
+
+        return list(all_relative_ids)
 
     def query_base(
         self,
@@ -395,7 +456,7 @@ class RecordSocket:
         record_orm.status = RecordStatusEnum.error
         record_orm.modified_on = datetime.utcnow()
 
-    def insert_complete_record(self, results: AllResultTypes) -> List[int]:
+    def insert_complete_record(self, results: Sequence[AllResultTypes]) -> List[int]:
 
         ids = []
 
@@ -528,17 +589,15 @@ class RecordSocket:
 
     def _revert_common(
         self,
-        record_id: Optional[Sequence[int]],
-        status: Iterable[RecordStatusEnum],
+        record_id: Sequence[int],
+        applicable_status: Iterable[RecordStatusEnum],
         *,
         session: Optional[Session] = None,
     ) -> UpdateMetadata:
         """
-        Reverts the status of records
+        Internal function for resetting, uncancelling, undeleting, or uninvalidation
 
-        This functionality applies to undelete, uncancel, etc
-
-        This will also re-create tasks as necessary
+        This will also re-create tasks & services as necessary
 
         Parameters
         ----------
@@ -560,8 +619,7 @@ class RecordSocket:
         all_id = set(record_id)
 
         with self.root_socket.optional_session(session) as session:
-            # We always apply these operations to children
-            children_ids = []
+            # We always apply these operations to children, but never to parents
             children_ids = self.get_children_ids(session, record_id)
             all_id.update(children_ids)
 
@@ -570,7 +628,7 @@ class RecordSocket:
             # Can't do inner join because task may not exist
             stmt = select(BaseRecordORM).options(joinedload(BaseRecordORM.task))
             stmt = stmt.options(selectinload(BaseRecordORM.info_backup))
-            stmt = stmt.where(BaseRecordORM.status.in_(status))
+            stmt = stmt.where(BaseRecordORM.status.in_(applicable_status))
             stmt = stmt.where(BaseRecordORM.id.in_(all_id))
             stmt = stmt.with_for_update(of=[BaseRecordORM, BaseRecordORM])
             record_data = session.execute(stmt).scalars().all()
@@ -584,7 +642,6 @@ class RecordSocket:
                 ):
                     last_info = r_orm.info_backup.pop()  # Remove the last entry
                     r_orm.status = last_info.old_status
-                    r_orm.modified_on = datetime.utcnow()
 
                     if r_orm.status in [RecordStatusEnum.waiting, RecordStatusEnum.error]:
                         if r_orm.task:
@@ -621,8 +678,9 @@ class RecordSocket:
     def _cancel_common(
         self,
         record_id: Sequence[int],
+        applicable_status: Iterable[RecordStatusEnum],
         new_status: RecordStatusEnum,
-        apply_to_children: bool,
+        propagate_to_children: bool,
         *,
         session: Optional[Session] = None,
     ) -> UpdateMetadata:
@@ -639,8 +697,8 @@ class RecordSocket:
             Reset the status of these record ids
         new_status
             What the new status of the record should be
-        apply_to_children
-            Apply the cancel or deletion operation to children as well
+        propagate_to_children
+            Apply the operation to children as well
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed before returning from this function.
@@ -654,25 +712,20 @@ class RecordSocket:
         if len(record_id) == 0:
             return UpdateMetadata()
 
-        if new_status == RecordStatusEnum.deleted:
-            # can delete everything but deleted
-            cancellable_status = set(RecordStatusEnum) - {RecordStatusEnum.deleted}
-        elif new_status == RecordStatusEnum.cancelled:
-            cancellable_status = {RecordStatusEnum.waiting, RecordStatusEnum.running, RecordStatusEnum.error}
-        elif new_status == RecordStatusEnum.invalid:
-            cancellable_status = {RecordStatusEnum.complete}
-        else:
-            raise RuntimeError(f"QCFractal developer error - cannot cancel to status {new_status}")
-
         all_ids = set(record_id)
 
         with self.root_socket.optional_session(session) as session:
-            if apply_to_children:
-                children_ids = self.get_children_ids(session, record_id)
-                all_ids.update(children_ids)
+            if propagate_to_children:
+                # We always propagate to parents. So recursively find all related records
+                relative_ids = self.get_relative_ids(session, record_id)
+                all_ids.update(relative_ids)
+            else:
+                # Always propagate these changes to parents
+                parent_ids = self.get_parent_ids(session, record_id)
+                all_ids.update(parent_ids)
 
             stmt = select(BaseRecordORM).options(joinedload(BaseRecordORM.task))
-            stmt = stmt.where(BaseRecordORM.status.in_(cancellable_status))
+            stmt = stmt.where(BaseRecordORM.status.in_(applicable_status))
             stmt = stmt.where(BaseRecordORM.id.in_(all_ids))
             stmt = stmt.with_for_update(of=[BaseRecordORM])
             record_orms = session.execute(stmt).scalars().all()
@@ -723,7 +776,7 @@ class RecordSocket:
         """
 
         return self._revert_common(
-            record_id, status=[RecordStatusEnum.running, RecordStatusEnum.error], session=session
+            record_id, applicable_status=[RecordStatusEnum.running, RecordStatusEnum.error], session=session
         )
 
     def delete(
@@ -762,7 +815,14 @@ class RecordSocket:
             return DeleteMetadata()
 
         if soft_delete:
-            meta = self._cancel_common(record_id, RecordStatusEnum.deleted, delete_children, session=session)
+            # anything can be deleted except something already deleted
+            meta = self._cancel_common(
+                record_id,
+                set(RecordStatusEnum) - {RecordStatusEnum.deleted},
+                RecordStatusEnum.deleted,
+                propagate_to_children=delete_children,
+                session=session,
+            )
 
             # convert the update metadata to a deleted metadata
             return DeleteMetadata(
@@ -816,7 +876,11 @@ class RecordSocket:
         """
 
         return self._cancel_common(
-            record_id, RecordStatusEnum.cancelled, apply_to_children=cancel_children, session=session
+            record_id,
+            {RecordStatusEnum.waiting, RecordStatusEnum.running, RecordStatusEnum.error},
+            RecordStatusEnum.cancelled,
+            propagate_to_children=cancel_children,
+            session=session,
         )
 
     def invalidate(
@@ -844,7 +908,13 @@ class RecordSocket:
             Metadata about what was deleted
         """
 
-        return self._cancel_common(record_id, RecordStatusEnum.invalid, apply_to_children=False, session=session)
+        return self._cancel_common(
+            record_id,
+            {RecordStatusEnum.complete},
+            RecordStatusEnum.invalid,
+            propagate_to_children=False,
+            session=session,
+        )
 
     def undelete(
         self,
@@ -874,7 +944,7 @@ class RecordSocket:
             return UndeleteMetadata()
 
         with self.root_socket.optional_session(session) as session:
-            meta = self._revert_common(record_id, status=[RecordStatusEnum.deleted], session=session)
+            meta = self._revert_common(record_id, applicable_status=[RecordStatusEnum.deleted], session=session)
 
             return UndeleteMetadata(
                 undeleted_idx=meta.updated_idx,
@@ -898,7 +968,7 @@ class RecordSocket:
             return UpdateMetadata()
 
         with self.root_socket.optional_session(session) as session:
-            return self._revert_common(record_id, status=[RecordStatusEnum.cancelled], session=session)
+            return self._revert_common(record_id, applicable_status=[RecordStatusEnum.cancelled], session=session)
 
     def uninvalidate(
         self,
@@ -915,7 +985,7 @@ class RecordSocket:
             return UpdateMetadata()
 
         with self.root_socket.optional_session(session) as session:
-            return self._revert_common(record_id, status=[RecordStatusEnum.invalid], session=session)
+            return self._revert_common(record_id, applicable_status=[RecordStatusEnum.invalid], session=session)
 
     def modify(
         self,
