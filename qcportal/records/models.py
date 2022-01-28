@@ -133,6 +133,7 @@ class ServiceDependency(BaseModel):
     record_id: int
     extras: Dict[str, Any]
 
+
 class ServiceRecord(BaseModel):
     id: int
     record_id: int
@@ -304,7 +305,9 @@ class BaseRecord(abc.ABC, BaseModel):
     def error(self) -> Optional[Dict[str, Any]]:
         return self._get_output(OutputTypeEnum.error)
 
+
 ServiceDependency.update_forward_refs()
+
 
 class RecordAddBodyBase(RestModelBase):
     tag: Optional[str]
