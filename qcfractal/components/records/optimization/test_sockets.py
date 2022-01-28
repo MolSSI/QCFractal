@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.components.records.optimization.db_models import OptimizationRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.keywords import KeywordSet
@@ -571,95 +570,3 @@ def test_optimization_socket_query(storage_socket: SQLAlchemySocket):
     meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(limit=1))
     assert meta.n_found == 3
     assert meta.n_returned == 1
-
-
-@pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_fluoroethane_opt_notraj"])
-def test_optimization_socket_delete_1(storage_socket: SQLAlchemySocket, opt_file: str):
-    # Deleting with deleting children
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data(opt_file)
-    meta1, id1 = storage_socket.records.optimization.add(input_spec_1, [molecule_1])
-
-    with storage_socket.session_scope() as session:
-        rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
-        storage_socket.records.update_completed_task(session, rec_orm, result_data_1, None)
-
-    rec = storage_socket.records.optimization.get(id1, include=["trajectory"])
-    child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
-
-    meta = storage_socket.records.delete(id1, soft_delete=True, delete_children=True)
-    assert meta.success
-    assert meta.deleted_idx == [0]
-    assert meta.n_children_deleted == len(child_ids)
-
-    child_recs = storage_socket.records.get(child_ids)
-    assert all(x["status"] == RecordStatusEnum.deleted for x in child_recs)
-
-    meta = storage_socket.records.delete(id1, soft_delete=False, delete_children=True)
-    assert meta.success
-    assert meta.deleted_idx == [0]
-    assert meta.n_children_deleted == len(child_ids)
-
-    recs = storage_socket.records.get(id1, missing_ok=True)
-    assert recs == [None]
-
-    child_recs = storage_socket.records.get(child_ids, missing_ok=True)
-    assert all(x is None for x in child_recs)
-
-
-@pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_fluoroethane_opt_notraj"])
-def test_optimization_socket_delete_2(storage_socket: SQLAlchemySocket, opt_file: str):
-    # Deleting without deleting children
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data(opt_file)
-    meta1, id1 = storage_socket.records.optimization.add(input_spec_1, [molecule_1])
-
-    with storage_socket.session_scope() as session:
-        rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
-        storage_socket.records.update_completed_task(session, rec_orm, result_data_1, None)
-
-    rec = storage_socket.records.optimization.get(id1, include=["trajectory"])
-    child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
-
-    meta = storage_socket.records.delete(id1, soft_delete=True, delete_children=False)
-    assert meta.success
-    assert meta.deleted_idx == [0]
-    assert meta.n_children_deleted == 0
-
-    child_recs = storage_socket.records.get(child_ids)
-    assert all(x["status"] == RecordStatusEnum.complete for x in child_recs)
-
-    meta = storage_socket.records.delete(id1, soft_delete=False, delete_children=False)
-    assert meta.success
-    assert meta.deleted_idx == [0]
-    assert meta.n_children_deleted == 0
-
-    recs = storage_socket.records.get(id1, missing_ok=True)
-    assert recs == [None]
-
-    child_recs = storage_socket.records.get(child_ids, missing_ok=True)
-    assert all(x["status"] == RecordStatusEnum.complete for x in child_recs)
-
-
-@pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_fluoroethane_opt_notraj"])
-def test_optimization_socket_undelete_1(storage_socket: SQLAlchemySocket, opt_file: str):
-    # Deleting with deleting children, then undeleting
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data(opt_file)
-    meta1, id1 = storage_socket.records.optimization.add(input_spec_1, [molecule_1])
-
-    with storage_socket.session_scope() as session:
-        rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
-        storage_socket.records.update_completed_task(session, rec_orm, result_data_1, None)
-
-    rec = storage_socket.records.optimization.get(id1, include=["trajectory"])
-    child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
-
-    meta = storage_socket.records.delete(id1, soft_delete=True, delete_children=True)
-    assert meta.success
-    assert meta.deleted_idx == [0]
-    assert meta.n_children_deleted == len(child_ids)
-
-    meta = storage_socket.records.undelete(id1)
-    assert meta.success
-    assert meta.undeleted_idx == [0]
-
-    child_recs = storage_socket.records.get(child_ids)
-    assert all(x["status"] == RecordStatusEnum.complete for x in child_recs)

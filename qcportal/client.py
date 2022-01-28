@@ -27,7 +27,7 @@ from .cache import PortalCache
 from .client_base import PortalClientBase
 from .keywords import KeywordSet
 from .managers import ManagerQueryBody, ComputeManager
-from .metadata_models import QueryMetadata, UpdateMetadata, InsertMetadata, DeleteMetadata, UndeleteMetadata
+from .metadata_models import QueryMetadata, UpdateMetadata, InsertMetadata, DeleteMetadata
 from .molecules import Molecule, MoleculeIdentifiers, MoleculeQueryBody, MoleculeModifyBody
 from .permissions import (
     UserInfo,
@@ -42,7 +42,7 @@ from .records import (
     RecordQueryBody,
     RecordModifyBody,
     RecordDeleteURLParameters,
-    RecordUndeleteURLParameters,
+    RecordRevertBodyParameters,
     AllRecordTypes,
     AllDataModelTypes,
 )
@@ -243,14 +243,14 @@ class PortalClient(PortalClientBase):
 
     def get_molecules(
         self,
-        id: Union[int, Sequence[int]],
+        molecule_id: Union[int, Sequence[int]],
         missing_ok: bool = False,
     ) -> Union[Optional[Molecule], List[Optional[Molecule]]]:
         """Obtains molecules from the server via molecule ids
 
         Parameters
         ----------
-        id
+        molecule_id
             An id or list of ids to query.
         missing_ok
             If True, return ``None`` for ids that were not found on the server.
@@ -264,12 +264,17 @@ class PortalClient(PortalClientBase):
             Otherwise, it will be a single Molecule.
         """
 
-        url_params = {"id": make_list(id), "missing_ok": missing_ok}
+        molecule_id_lst = make_list(molecule_id)
+        if not molecule_id_lst:
+            return []
+
+
+        url_params = {"id": molecule_id_lst, "missing_ok": missing_ok}
         mols = self._auto_request(
             "get", "v1/molecule", None, CommonGetURLParameters, List[Optional[Molecule]], None, url_params
         )
 
-        if isinstance(id, Sequence):
+        if isinstance(molecule_id, Sequence):
             return mols
         else:
             return mols[0]
@@ -339,6 +344,9 @@ class PortalClient(PortalClientBase):
             A list of Molecule ids in the same order as the `molecules` parameter.
         """
 
+        if not molecules:
+            return InsertMetadata(), []
+
         if len(molecules) > self.api_limits["add_molecules"]:
             raise RuntimeError(
                 f"Cannot add {len(molecules)} molecules - over the limit of {self.api_limits['add_molecules']}"
@@ -357,7 +365,7 @@ class PortalClient(PortalClientBase):
 
     def modify_molecule(
         self,
-        id: int,
+        molecule_id: int,
         name: Optional[str] = None,
         comment: Optional[str] = None,
         identifiers: Optional[Union[Dict[str, Any], MoleculeIdentifiers]] = None,
@@ -373,8 +381,8 @@ class PortalClient(PortalClientBase):
 
         Parameters
         ----------
-        id
-            Molecule ID of the molecule to modify
+        molecule_id
+            ID of the molecule to modify
         name
             New name for the molecule. If None, name is not changed.
         comment
@@ -400,9 +408,9 @@ class PortalClient(PortalClientBase):
             "overwrite_identifiers": overwrite_identifiers,
         }
 
-        return self._auto_request("patch", f"v1/molecule/{id}", MoleculeModifyBody, None, UpdateMetadata, body, None)
+        return self._auto_request("patch", f"v1/molecule/{molecule_id}", MoleculeModifyBody, None, UpdateMetadata, body, None)
 
-    def delete_molecules(self, id: Union[int, Sequence[int]]) -> DeleteMetadata:
+    def delete_molecules(self, molecule_id: Union[int, Sequence[int]]) -> DeleteMetadata:
         """Deletes molecules from the server
 
         This will not delete any keywords that are in use
@@ -418,7 +426,11 @@ class PortalClient(PortalClientBase):
             Metadata about what was deleted
         """
 
-        url_params = {"id": make_list(id)}
+        molecule_id = make_list(molecule_id)
+        if not molecule_id:
+            return DeleteMetadata()
+
+        url_params = {"id": molecule_id}
         return self._auto_request(
             "delete", "v1/molecule", None, CommonDeleteURLParameters, DeleteMetadata, None, url_params
         )
@@ -450,7 +462,11 @@ class PortalClient(PortalClientBase):
             Otherwise, it will be a single KeywordSet.
         """
 
-        url_params = {"id": make_list(keywords_id), "missing_ok": missing_ok}
+        keywords_id_lst = make_list(keywords_id)
+        if not keywords_id_lst:
+            return []
+
+        url_params = {"id": keywords_id_lst, "missing_ok": missing_ok}
 
         if len(url_params["id"]) > self.api_limits["get_keywords"]:
             raise RuntimeError(
@@ -475,9 +491,6 @@ class PortalClient(PortalClientBase):
         ----------
         keywords
             A KeywordSet or list of KeywordSet to add to the server.
-        full_return
-            If True, return additional metadata about the insertion. The return will be a tuple
-            of (metadata, ids)
 
         Returns
         -------
@@ -486,7 +499,10 @@ class PortalClient(PortalClientBase):
             same order as specified in the keywords parameter. If full_return is True,
             this function will return a tuple containing metadata and the ids.
         """
-        if len(keywords) > self.api_limits["add_molecules"]:
+        if len(keywords) == 0:
+            return InsertMetadata(), []
+
+        if len(keywords) > self.api_limits["add_keywords"]:
             raise RuntimeError(
                 f"Cannot add {len(keywords)} keywords - over the limit of {self.api_limits['add_keywords']}"
             )
@@ -511,7 +527,11 @@ class PortalClient(PortalClientBase):
             Metadata about what was deleted
         """
 
-        url_params = {"id": make_list(keywords_id)}
+        keywords_id = make_list(keywords_id)
+        if not keywords_id:
+            return DeleteMetadata()
+
+        url_params = {"id": keywords_id}
         return self._auto_request(
             "delete", "v1/keyword", None, CommonDeleteURLParameters, DeleteMetadata, None, url_params
         )
@@ -532,10 +552,11 @@ class PortalClient(PortalClientBase):
     ) -> Union[List[Optional[AllRecordTypes]], Optional[AllRecordTypes]]:
         """Get result records by id."""
 
-        if isinstance(record_id, Sequence) and not record_id:
+        record_id_lst = make_list(record_id)
+        if not record_id_lst:
             return []
 
-        url_params = {"id": make_list(record_id), "missing_ok": missing_ok}
+        url_params = {"id": record_id_lst, "missing_ok": missing_ok}
 
         if len(url_params["id"]) > self.api_limits["get_records"]:
             raise RuntimeError(
@@ -637,27 +658,72 @@ class PortalClient(PortalClientBase):
 
         return meta, self.recordmodel_from_datamodel(record_data)
 
-    def cancel_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
-        body_data = {"record_id": make_list(record_id), "status": RecordStatusEnum.cancelled}
-        return self._auto_request("patch", "v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
     def reset_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
-        body_data = {"record_id": make_list(record_id), "status": RecordStatusEnum.waiting}
+        record_id = make_list(record_id)
+        if not record_id:
+            return UpdateMetadata()
 
+        body_data = {"record_id": record_id, "status": RecordStatusEnum.waiting}
+        return self._auto_request("patch", "v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
+
+    def cancel_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
+        record_id = make_list(record_id)
+        if not record_id:
+            return UpdateMetadata()
+
+        body_data = {"record_id": record_id, "status": RecordStatusEnum.cancelled}
+        return self._auto_request("patch", "v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
+
+    def invalidate_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
+        record_id = make_list(record_id)
+        if not record_id:
+            return UpdateMetadata()
+
+        body_data = {"record_id": record_id, "status": RecordStatusEnum.invalid}
         return self._auto_request("patch", "v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
     def delete_records(
         self, record_id: Union[int, Sequence[int]], soft_delete=True, delete_children: bool = True
     ) -> DeleteMetadata:
-        url_params = {"record_id": make_list(record_id), "soft_delete": soft_delete, "delete_children": delete_children}
+        record_id = make_list(record_id)
+        if not record_id:
+            return DeleteMetadata()
+
+        url_params = {"record_id": record_id, "soft_delete": soft_delete, "delete_children": delete_children}
         return self._auto_request(
             "delete", "v1/record", None, RecordDeleteURLParameters, DeleteMetadata, None, url_params
         )
 
-    def undelete_records(self, record_id: Union[int, Sequence[int]]) -> UndeleteMetadata:
-        url_params = {"record_id": make_list(record_id)}
+    def uninvalidate_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
+        record_id = make_list(record_id)
+        if not record_id:
+            return UpdateMetadata()
+
+        body = {"record_id": record_id, "revert_status": RecordStatusEnum.invalid}
         return self._auto_request(
-            "post", "v1/record/undelete", None, RecordUndeleteURLParameters, UndeleteMetadata, None, url_params
+            "post", "v1/record/revert", RecordRevertBodyParameters, None, UpdateMetadata, body, None
+        )
+
+    def uncancel_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
+        record_id = make_list(record_id)
+        if not record_id:
+            return UpdateMetadata()
+
+        body = {"record_id": record_id, "revert_status": RecordStatusEnum.cancelled}
+        return self._auto_request(
+            "post", "v1/record/revert", RecordRevertBodyParameters, None, UpdateMetadata, body, None
+        )
+
+
+    def undelete_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
+        record_id = make_list(record_id)
+        if not record_id:
+            return UpdateMetadata()
+
+        body = {"record_id": record_id, "revert_status": RecordStatusEnum.deleted}
+        return self._auto_request(
+            "post", "v1/record/revert", RecordRevertBodyParameters, None, UpdateMetadata, body, None
         )
 
     def modify_records(
@@ -667,8 +733,12 @@ class PortalClient(PortalClientBase):
         new_priority: Optional[PriorityEnum] = None,
         delete_tag: bool = False,
     ) -> UpdateMetadata:
+        record_id = make_list(record_id)
+        if not record_id:
+            return UpdateMetadata()
+
         body_data = {
-            "record_id": make_list(record_id),
+            "record_id": record_id,
             "tag": new_tag,
             "priority": new_priority,
             "delete_tag": delete_tag,
@@ -692,9 +762,12 @@ class PortalClient(PortalClientBase):
         :
             Metadata about which records were updated
         """
+        record_id = make_list(record_id)
+        if not record_id:
+            return UpdateMetadata()
 
         body_data = {
-            "record_id": make_list(record_id),
+            "record_id": record_id,
             "comment": comment,
         }
         return self._auto_request("patch", "v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
@@ -749,8 +822,12 @@ class PortalClient(PortalClientBase):
             same order as specified in the molecules.keywords parameter
         """
 
+        molecules = make_list(molecules)
+        if not molecules:
+            return InsertMetadata(), []
+
         body_data = {
-            "molecules": make_list(molecules),
+            "molecules": molecules,
             "specification": {
                 "program": program,
                 "driver": driver,
@@ -791,7 +868,12 @@ class PortalClient(PortalClientBase):
         include_molecule: bool = False,
         include_wavefunction: bool = False,
     ) -> Union[Optional[SinglepointRecord], List[Optional[SinglepointRecord]]]:
-        url_params = {"id": make_list(record_id), "missing_ok": missing_ok}
+
+        record_id_lst = make_list(record_id)
+        if not record_id_lst:
+            return []
+
+        url_params = {"id": record_id_lst, "missing_ok": missing_ok}
 
         include = set()
 
@@ -927,8 +1009,12 @@ class PortalClient(PortalClientBase):
         Adds optimization calculations to the server
         """
 
+        initial_molecules = make_list(initial_molecules)
+        if not initial_molecules:
+            return InsertMetadata(), []
+
         body_data = {
-            "initial_molecules": make_list(initial_molecules),
+            "initial_molecules": initial_molecules,
             "specification": {
                 "program": program,
                 "qc_specification": qc_specification,
@@ -970,7 +1056,12 @@ class PortalClient(PortalClientBase):
         include_final_molecule: bool = False,
         include_trajectory: bool = False,
     ) -> Union[Optional[OptimizationRecord], List[Optional[OptimizationRecord]]]:
-        url_params = {"id": make_list(record_id), "missing_ok": missing_ok}
+
+        record_id_lst = make_list(record_id)
+        if not record_id_lst:
+            return []
+
+        url_params = {"id": record_id_lst, "missing_ok": missing_ok}
 
         include = set()
 
@@ -1112,6 +1203,9 @@ class PortalClient(PortalClientBase):
         Adds torsiondrive calculations to the server
         """
 
+        if not initial_molecules:
+            return InsertMetadata(), []
+
         body_data = {
             "initial_molecules": initial_molecules,
             "specification": {
@@ -1151,7 +1245,12 @@ class PortalClient(PortalClientBase):
         include_initial_molecules: bool = False,
         include_optimizations: bool = False,
     ) -> Union[Optional[TorsiondriveRecord], List[Optional[TorsiondriveRecord]]]:
-        url_params = {"id": make_list(record_id), "missing_ok": missing_ok}
+
+        record_id_lst = make_list(record_id)
+        if not record_id_lst:
+            return []
+
+        url_params = {"id": record_id_lst, "missing_ok": missing_ok}
 
         include = set()
 
@@ -1293,6 +1392,10 @@ class PortalClient(PortalClientBase):
         Adds gridoptimization calculations to the server
         """
 
+        initial_molecules = make_list(initial_molecules)
+        if not initial_molecules:
+            return InsertMetadata(), []
+
         body_data = {
             "initial_molecules": initial_molecules,
             "specification": {
@@ -1331,7 +1434,12 @@ class PortalClient(PortalClientBase):
         include_starting_molecule: bool = False,
         include_optimizations: bool = False,
     ) -> Union[Optional[GridoptimizationRecord], List[Optional[GridoptimizationRecord]]]:
-        url_params = {"id": make_list(record_id), "missing_ok": missing_ok}
+
+        record_id_lst = make_list(record_id)
+        if not record_id_lst:
+            return []
+
+        url_params = {"id": record_id_lst, "missing_ok": missing_ok}
 
         include = set()
 
@@ -1483,7 +1591,11 @@ class PortalClient(PortalClientBase):
             Otherwise, it will be a single manager.
         """
 
-        url_params = {"name": make_list(name), "missing_ok": missing_ok}
+        name_lst = make_list(name)
+        if not name_lst:
+            return []
+
+        url_params = {"name": name_lst, "missing_ok": missing_ok}
         managers = self._auto_request(
             "get", "v1/manager", None, CommonGetURLParametersName, List[Optional[ComputeManager]], None, url_params
         )

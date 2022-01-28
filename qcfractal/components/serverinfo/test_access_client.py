@@ -85,7 +85,7 @@ def test_serverinfo_client_access_logged(snowflake_client: PortalClient):
     snowflake_client.query_access_log()
     snowflake_client.query_molecules(molecular_formula=["C"])
 
-    snowflake_client.get_molecules([])
+    snowflake_client.get_molecules([123], missing_ok=True)
 
     # This will return 4, because the query to /information was done in constructing the client
     meta, accesses = snowflake_client.query_access_log()
@@ -134,7 +134,7 @@ def test_serverinfo_client_access_delete(snowflake_client: PortalClient):
     time_12 = datetime.utcnow()
     snowflake_client.query_molecules(molecular_formula=["C"])
     time_23 = datetime.utcnow()
-    snowflake_client.get_molecules([])
+    snowflake_client.get_molecules([123], missing_ok=True)
     time_4 = datetime.utcnow()
 
     # This will return 4, because the query to /information was done in constructing the client

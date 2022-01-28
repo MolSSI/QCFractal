@@ -322,7 +322,8 @@ class RecordDeleteURLParameters(RestModelBase):
         return validate_list_to_single(v)
 
 
-class RecordUndeleteURLParameters(RestModelBase):
+class RecordRevertBodyParameters(RestModelBase):
+    revert_status: RecordStatusEnum
     record_id: List[int]
 
 

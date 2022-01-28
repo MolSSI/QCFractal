@@ -17,7 +17,7 @@ from qcfractal.db_socket.helpers import (
     delete_general,
 )
 from qcportal.exceptions import UserReportableError
-from qcportal.metadata_models import DeleteMetadata, UndeleteMetadata, QueryMetadata, UpdateMetadata
+from qcportal.metadata_models import DeleteMetadata, QueryMetadata, UpdateMetadata
 from qcportal.outputstore import OutputStore, OutputTypeEnum, CompressionEnum
 from qcportal.records import FailedOperation, PriorityEnum, RecordStatusEnum
 from .db_models import RecordComputeHistoryORM, BaseRecordORM, RecordInfoBackupORM, RecordCommentsORM
@@ -921,7 +921,7 @@ class RecordSocket:
         record_id: Sequence[int],
         *,
         session: Optional[Session] = None,
-    ) -> UndeleteMetadata:
+    ) -> UpdateMetadata:
         """
         Undeletes records that were soft deleted
 
@@ -941,16 +941,16 @@ class RecordSocket:
             Metadata about what was undeleted
         """
         if len(record_id) == 0:
-            return UndeleteMetadata()
+            return UpdateMetadata()
 
         with self.root_socket.optional_session(session) as session:
             meta = self._revert_common(record_id, applicable_status=[RecordStatusEnum.deleted], session=session)
 
-            return UndeleteMetadata(
-                undeleted_idx=meta.updated_idx,
+            return UpdateMetadata(
+                updated_idx=meta.updated_idx,
                 error_description=meta.error_description,
                 errors=meta.errors,
-                n_children_undeleted=meta.n_children_updated,
+                n_children_updated=meta.n_children_updated,
             )
 
     def uncancel(
