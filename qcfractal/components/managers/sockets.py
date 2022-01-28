@@ -44,7 +44,7 @@ class ManagerSocket:
             active_cores=orm.active_cores,
             active_memory=orm.active_memory,
             timestamp=orm.modified_on,
-        )  # type: ignore
+        )
 
         orm.log.append(log_orm)
 
@@ -84,7 +84,7 @@ class ManagerSocket:
             manager_version=manager_version,
             qcengine_version=qcengine_version,
             programs=programs,
-        )  # type: ignore
+        )
 
         with self.root_socket.optional_session(session) as session:
             stmt = select(ComputeManagerORM).where(ComputeManagerORM.name == name_data.fullname)
@@ -321,5 +321,5 @@ class ManagerSocket:
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.dict() for x in results]
 
-        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
+        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))
         return meta, result_dicts

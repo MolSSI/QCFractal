@@ -58,7 +58,7 @@ class MoleculeSocket:
         mol_dict["fix_com"] = True
         mol_dict["fix_orientation"] = True
 
-        return MoleculeORM(**mol_dict)  # type: ignore
+        return MoleculeORM(**mol_dict)
 
     def add(
         self, molecules: Sequence[Molecule], *, session: Optional[Session] = None
@@ -204,7 +204,7 @@ class MoleculeSocket:
         molecule_id: Optional[Iterable[int]] = None,
         molecule_hash: Optional[Iterable[str]] = None,
         molecular_formula: Optional[Iterable[str]] = None,
-        identifiers: Optional[Dict[str, Iterable[Any]]] = None,
+        identifiers: Optional[Dict[str, List[str]]] = None,
         include: Optional[Iterable[str]] = None,
         exclude: Optional[Iterable[str]] = None,
         limit: Optional[int] = None,
@@ -265,9 +265,9 @@ class MoleculeSocket:
         if molecular_formula is not None:
             # Add it to the identifiers query
             if identifiers is None:
-                identifiers = {"molecular_formula": molecular_formula}
+                identifiers = {"molecular_formula": list(molecular_formula)}
             else:
-                identifiers["molecular_formula"] = molecular_formula
+                identifiers["molecular_formula"] = list(molecular_formula)
         if identifiers is not None:
             for i_name, i_values in identifiers.items():
                 or_query = []
@@ -283,7 +283,7 @@ class MoleculeSocket:
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.dict() for x in results]
 
-        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
+        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))
         return meta, result_dicts
 
     def modify(
@@ -362,4 +362,4 @@ class MoleculeSocket:
                     # sqlalchemy cannot track changes in json
                     flag_modified(mol, "identifiers")
 
-        return UpdateMetadata(updated_idx=[0])  # type: ignore
+        return UpdateMetadata(updated_idx=[0])

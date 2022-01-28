@@ -287,7 +287,7 @@ class RecordSocket:
             results = session.execute(stmt).scalars().unique().all()
             result_dicts = [x.dict() for x in results]
 
-        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
+        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))
         return meta, result_dicts
 
     def get_base(

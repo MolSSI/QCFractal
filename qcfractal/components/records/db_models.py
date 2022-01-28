@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple, Any
 
 from sqlalchemy import Column, String, Integer, ForeignKey, Enum, DateTime, JSON, Index, Boolean
 from sqlalchemy.orm import relationship
@@ -101,7 +101,7 @@ class BaseRecordORM(BaseORM):
         cascade="all, delete-orphan",
     )
 
-    __table_args__ = (
+    __table_args__: Tuple[Any, ...] = (
         Index("ix_base_record_status", "status"),
         Index("ix_base_record_record_type", "record_type"),
         Index("ix_base_record_manager_name", "manager_name"),

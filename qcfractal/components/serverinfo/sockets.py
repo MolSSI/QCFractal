@@ -126,7 +126,7 @@ class ServerInfoSocket:
         ip_data = self._get_geoip2_data(log_data["ip_address"])
 
         with self.root_socket.optional_session(session) as session:
-            log = AccessLogORM(**log_data, **ip_data)  # type: ignore
+            log = AccessLogORM(**log_data, **ip_data)
             session.add(log)
 
     def save_error(self, error_data: ErrorLogDict, *, session: Optional[Session] = None) -> int:
@@ -147,7 +147,7 @@ class ServerInfoSocket:
             The id of the newly-created error
         """
 
-        log = InternalErrorLogORM(**error_data, qcfractal_version=qcfractal.__version__)  # type: ignore
+        log = InternalErrorLogORM(**error_data, qcfractal_version=qcfractal.__version__)
         with self.root_socket.optional_session(session) as session:
             session.add(log)
             session.flush()
@@ -236,7 +236,7 @@ class ServerInfoSocket:
                 "db_table_information": table_info,
             }
 
-            log = ServerStatsLogORM(**data)  # type: ignore
+            log = ServerStatsLogORM(**data)
             session.add(log)
 
     def query_access_log(
@@ -316,7 +316,7 @@ class ServerInfoSocket:
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.dict() for x in results]
 
-        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
+        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))
         return meta, result_dicts
 
     def query_access_summary(
@@ -481,7 +481,7 @@ class ServerInfoSocket:
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.dict() for x in results]
 
-        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
+        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))
         return meta, result_dicts
 
     def query_server_stats(
@@ -533,7 +533,7 @@ class ServerInfoSocket:
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.dict() for x in results]
 
-        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))  # type: ignore
+        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))
         return meta, result_dicts
 
     def delete_access_logs(self, before: datetime, *, session: Optional[Session] = None) -> int:

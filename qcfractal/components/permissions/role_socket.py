@@ -27,7 +27,7 @@ Default roles are:
                write on task_queue, service_queue, molecule, keyword, collection)
 """
 
-default_roles = {
+default_roles: Dict[str, Any] = {
     "admin": {
         "Statement": [
             {"Effect": "Allow", "Action": "*", "Resource": "*"},
@@ -138,7 +138,7 @@ class RoleSocket:
 
         try:
             with self.root_socket.optional_session(session) as session:
-                role = RoleORM(rolename=role_info.rolename, permissions=role_info.permissions.dict())  # type: ignore
+                role = RoleORM(rolename=role_info.rolename, permissions=role_info.permissions.dict())
                 session.add(role)
         except IntegrityError:
             raise UserManagementError(f"Role {role_info.rolename} already exists")
@@ -206,7 +206,7 @@ class RoleSocket:
                 stmt = select(RoleORM).where(RoleORM.rolename == rolename)
                 role_data = session.execute(stmt).scalar_one_or_none()
                 if role_data is None:
-                    role_data = RoleORM(rolename=rolename, permissions=permissions)  # type: ignore
+                    role_data = RoleORM(rolename=rolename, permissions=permissions)
                     session.add(role_data)
                 else:
                     role_data.permissions = permissions

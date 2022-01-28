@@ -45,7 +45,7 @@ class UserSocket:
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
 
-    def _get_internal(self, session: Session, username: str, missing_ok: bool = False) -> Optional[UserORM]:
+    def _get_internal(self, session: Session, username: str) -> UserORM:
         """
         Obtain the ORM for a particular user.
 
@@ -55,8 +55,6 @@ class UserSocket:
         ----------
         session
             SQLAlchemy session to use for querying
-        username
-            Username to search for
 
         Returns
         -------
@@ -68,7 +66,7 @@ class UserSocket:
         stmt = select(UserORM).where(UserORM.username == username)
         user = session.execute(stmt).scalar_one_or_none()
 
-        if missing_ok is False and user is None:
+        if user is None:
             raise UserManagementError(f"User {username} not found.")
 
         return user
@@ -171,7 +169,7 @@ class UserSocket:
                 # Will raise exception if role does not exist or role name is invalid
                 role = self.root_socket.roles._get_internal(session, user_info.role)
 
-                user = UserORM(**user_dict, role_id=role.id, password=hashed_pw)  # type: ignore
+                user = UserORM(**user_dict, role_id=role.id, password=hashed_pw)
                 session.add(user)
         except IntegrityError:
             raise UserManagementError(f"User {user_info.username} already exists")

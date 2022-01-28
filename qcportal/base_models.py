@@ -41,7 +41,7 @@ class CommonGetURLParameters(RestModelBase):
     """
 
     id: Optional[List[int]] = None
-    missing_ok: Optional[bool] = False
+    missing_ok: bool = False
 
     @validator("missing_ok", pre=True)
     def validate_lists(cls, v):
@@ -65,7 +65,7 @@ class CommonGetURLParametersName(RestModelBase):
     """
 
     name: Optional[List[str]] = None
-    missing_ok: Optional[bool] = False
+    missing_ok: bool = False
 
     @validator("missing_ok", pre=True)
     def validate_lists(cls, v):

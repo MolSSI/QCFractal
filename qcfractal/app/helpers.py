@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import List, Optional, Callable, Iterable, Tuple
+    from typing import List, Optional, Callable, Iterable, Tuple, Union
     from qcportal.base_models import CommonGetProjURLParameters
     from qcportal.metadata_models import DeleteMetadata
 
 
 def get_helper(
-    id: Optional[int],
-    id_args: Optional[List[int]],
+    id: Optional[Union[int, str]],
+    id_args: Optional[Union[List[int], List[str]]],
     include: Optional[Iterable[str]],
     exclude: Optional[Iterable[str]],
     missing_ok: bool,

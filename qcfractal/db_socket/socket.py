@@ -19,7 +19,7 @@ from sqlalchemy.pool import NullPool
 import qcfractal
 
 if TYPE_CHECKING:
-    from typing import Tuple, List, Optional
+    from typing import Tuple, List, Optional, Generator, Any
     from sqlalchemy.orm.session import Session
     from ..config import FractalConfig, DatabaseConfig
 
@@ -263,7 +263,9 @@ class SQLAlchemySocket:
         finally:
             session.close()
 
-    def optional_session(self, existing_session: Optional[Session], read_only: bool = False):
+    def optional_session(
+        self, existing_session: Optional[Session], read_only: bool = False
+    ) -> Generator[Session, Any, Any]:
         """
         Use the existing session if available, otherwise use a new session
 
@@ -282,8 +284,6 @@ class SQLAlchemySocket:
         ----------
         existing_session
             An optional, existing sqlalchemy session
-        read_only
-            If True and a new session is created, it will be a read-only session
         """
 
         @contextmanager

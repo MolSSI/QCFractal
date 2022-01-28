@@ -10,7 +10,7 @@ import sys
 import threading
 import traceback
 import weakref
-from typing import Union
+from typing import Union, Any
 
 
 class SleepInterrupted(BaseException):
@@ -139,7 +139,7 @@ class ProcessRunner:
         # By default, some OSs and python versions use 'spawn' as the default. So we explicitly
         # set this to fork
         self._mp_ctx = multiprocessing.get_context("fork")
-        self._subproc = None
+        self._subproc: Any = None
 
         self._name = name
         self._proc_class = proc_class
