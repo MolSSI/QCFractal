@@ -268,7 +268,6 @@ class PortalClient(PortalClientBase):
         if not molecule_id_lst:
             return []
 
-
         url_params = {"id": molecule_id_lst, "missing_ok": missing_ok}
         mols = self._auto_request(
             "get", "v1/molecule", None, CommonGetURLParameters, List[Optional[Molecule]], None, url_params
@@ -408,7 +407,9 @@ class PortalClient(PortalClientBase):
             "overwrite_identifiers": overwrite_identifiers,
         }
 
-        return self._auto_request("patch", f"v1/molecule/{molecule_id}", MoleculeModifyBody, None, UpdateMetadata, body, None)
+        return self._auto_request(
+            "patch", f"v1/molecule/{molecule_id}", MoleculeModifyBody, None, UpdateMetadata, body, None
+        )
 
     def delete_molecules(self, molecule_id: Union[int, Sequence[int]]) -> DeleteMetadata:
         """Deletes molecules from the server
@@ -658,7 +659,6 @@ class PortalClient(PortalClientBase):
 
         return meta, self.recordmodel_from_datamodel(record_data)
 
-
     def reset_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
         record_id = make_list(record_id)
         if not record_id:
@@ -714,7 +714,6 @@ class PortalClient(PortalClientBase):
         return self._auto_request(
             "post", "v1/record/revert", RecordRevertBodyParameters, None, UpdateMetadata, body, None
         )
-
 
     def undelete_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
         record_id = make_list(record_id)

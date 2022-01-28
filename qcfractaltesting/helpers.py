@@ -143,7 +143,9 @@ def load_procedure_data(name: str):
 
 def submit_service(storage_socket, input_spec, molecules, tag, priority):
     if isinstance(input_spec, TorsiondriveInputSpecification):
-        return storage_socket.records.torsiondrive.add(input_spec, [molecules], tag=tag, priority=priority, as_service=True)
+        return storage_socket.records.torsiondrive.add(
+            input_spec, [molecules], tag=tag, priority=priority, as_service=True
+        )
     elif isinstance(input_spec, GridoptimizationInputSpecification):
         return storage_socket.records.gridoptimization.add(input_spec, [molecules], tag=tag, priority=priority)
     else:
