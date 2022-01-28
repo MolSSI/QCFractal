@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import array_agg
-from sqlalchemy.orm import contains_eager
+from sqlalchemy.orm import contains_eager, make_transient
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.records.db_models import BaseRecordORM, RecordComputeHistoryORM
@@ -148,35 +148,58 @@ class ServiceSocket:
 
                 for service_orm in new_services:
 
-                    # Add a compute history entry. The iterate functions expect that at least one
-                    # history entry exists
                     now = datetime.utcnow()
-
-                    hist = RecordComputeHistoryORM()
-                    hist.status = RecordStatusEnum.running
-                    hist.modified_on = now
-
-                    stdout = OutputStore.compress(
-                        OutputTypeEnum.stdout,
-                        f"Starting service: {service_orm.record.record_type} at {now}",
-                        CompressionEnum.lzma,
-                        1,
-                    )
-                    hist.outputs.append(OutputStoreORM.from_model(stdout))
-
-                    service_orm.record.compute_history.append(hist)
                     service_orm.record.modified_on = now
+                    service_orm.record.status = RecordStatusEnum.running
+
+                    # Has this service been started before? ie, the service was restarted or something
+                    fresh_start = len(service_orm.dependencies) == 0 and (
+                        service_orm.service_state == {} or service_orm.service_state is None
+                    )
+
+                    existing_history = service_orm.record.compute_history
+                    if len(existing_history) == 0 or existing_history[-1].status != RecordStatusEnum.running:
+
+                        # Add a compute history entry. The iterate functions expect that at least one
+                        # history entry exists
+                        # But only add if this wasn't a restart of a running service
+
+                        hist = RecordComputeHistoryORM()
+                        hist.status = RecordStatusEnum.running
+                        hist.modified_on = now
+
+                        if len(existing_history) == 0:
+                            stdout = OutputStore.compress(
+                                OutputTypeEnum.stdout,
+                                f"Starting service: {service_orm.record.record_type} at {now}",
+                                CompressionEnum.lzma,
+                                1,
+                            )
+                            hist.outputs.append(OutputStoreORM.from_model(stdout))
+
+                        else:  # this was a restart of a not-running (ie, errored) service
+                            stdout_orm = service_orm.record.compute_history[-1].get_output(OutputTypeEnum.stdout)
+                            make_transient(stdout_orm)
+                            stdout_orm.id = None
+                            stdout_orm.history_id = None
+                            stdout_orm.append(f"\nRestarting service: {service_orm.record.record_type} at {now}")
+                            hist.outputs.append(stdout_orm)
+
+                        service_orm.record.compute_history.append(hist)
 
                     session.commit()
 
                     try:
-                        self.root_socket.records.iterate_service(session, service_orm)
+                        if fresh_start:
+                            self.root_socket.records.initialize_service(session, service_orm)
+                            self.root_socket.records.iterate_service(session, service_orm)
+
                     except Exception as err:
                         session.rollback()
 
                         error = {
-                            "error_type": "service_iteration_error",
-                            "error_message": "Error in first iteration of service: " + str(err),
+                            "error_type": "service_initialization_error",
+                            "error_message": "Error in initialization/iteration of service: " + str(err),
                         }
 
                         self.root_socket.records.update_failed_service(service_orm.record, error)

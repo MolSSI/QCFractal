@@ -346,7 +346,7 @@ def test_gridoptimization_socket_run(storage_socket: SQLAlchemySocket, test_data
     assert meta_1.success
 
     time_0 = datetime.utcnow()
-    finished, n_optimizations = run_service_constropt(id_1[0], result_data_1, storage_socket, 50)
+    finished, n_optimizations = run_service_constropt(id_1[0], result_data_1, storage_socket, 100)
     time_1 = datetime.utcnow()
 
     assert finished is True

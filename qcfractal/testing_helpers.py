@@ -261,7 +261,11 @@ def populate_db(storage_socket: SQLAlchemySocket):
 
 
 def run_service_constropt(
-    record_id: int, result_data: Dict[str, Any], storage_socket: SQLAlchemySocket, max_iterations: int = 20
+    record_id: int,
+    result_data: Dict[str, Any],
+    storage_socket: SQLAlchemySocket,
+    max_iterations: int = 20,
+    activate_manager: bool = True,
 ) -> Tuple[bool, int]:
     """
     Runs a service that is based on constrained optimizations
@@ -269,35 +273,45 @@ def run_service_constropt(
 
     # A manager for completing the tasks
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
-    storage_socket.managers.activate(
-        name_data=mname1,
-        manager_version="v2.0",
-        qcengine_version="v1.0",
-        username="bill",
-        programs={
-            "geometric": None,
-            "psi4": None,
-        },
-        tags=["*"],
-    )
+
+    if activate_manager:
+        storage_socket.managers.activate(
+            name_data=mname1,
+            manager_version="v2.0",
+            qcengine_version="v1.0",
+            username="bill",
+            programs={
+                "geometric": None,
+                "psi4": None,
+            },
+            tags=["*"],
+        )
+
     rec = storage_socket.records.get([record_id], include=["*", "service"])
-    assert rec[0]["status"] == RecordStatusEnum.waiting
+    assert rec[0]["status"] in [RecordStatusEnum.waiting, RecordStatusEnum.running]
 
     tag = rec[0]["service"]["tag"]
     priority = rec[0]["service"]["priority"]
 
-    r = storage_socket.services.iterate_services()
-
     n_optimizations = 0
-    n_iterations = 1
+    n_iterations = 0
+    r = 1
 
-    while r > 0 and n_iterations <= max_iterations:
+    while n_iterations < max_iterations:
+        r = storage_socket.services.iterate_services()
+
+        if r == 0:
+            break
+
+        n_iterations += 1
+
         rec = storage_socket.records.get(
             [record_id], include=["*", "service.*", "service.dependencies.*", "service.dependencies.record"]
         )
         assert rec[0]["status"] == RecordStatusEnum.running
 
-        manager_tasks = storage_socket.tasks.claim_tasks(mname1.fullname, limit=10)
+        # only do 5 tasks at a time. Tests iteration when stuff is not completed
+        manager_tasks = storage_socket.tasks.claim_tasks(mname1.fullname, limit=5)
 
         # Sometimes a task may be duplicated in the service dependencies.
         # The C8H6 test has this "feature"
@@ -326,9 +340,5 @@ def run_service_constropt(
         rmeta = storage_socket.tasks.update_finished(mname1.fullname, manager_ret)
         assert rmeta.n_accepted == len(manager_tasks)
         n_optimizations += len(manager_ret)
-
-        # may or may not iterate - depends on if all tasks done
-        r = storage_socket.services.iterate_services()
-        n_iterations += 1
 
     return r == 0, n_optimizations
