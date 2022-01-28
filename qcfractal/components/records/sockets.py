@@ -123,6 +123,9 @@ class BaseRecordSocket:
     ) -> BaseRecordORM:
         raise NotImplementedError(f"insert_completed not implemented for {type(self)}! This is a developer error")
 
+    def initialize_service(self, session: Session, service_orm: ServiceQueueORM) -> None:
+        raise NotImplementedError(f"initialize_service not implemented for {type(self)}! This is a developer error")
+
     def iterate_service(self, session: Session, service_orm: ServiceQueueORM) -> bool:
         raise NotImplementedError(f"iterate_service not implemented for {type(self)}! This is a developer error")
 
@@ -437,6 +440,13 @@ class RecordSocket:
         # Delete the task from the task queue since it is completed
         session.delete(record_orm.task)
 
+    def initialize_service(self, session: Session, service_orm: ServiceQueueORM) -> None:
+        if not service_orm.record.is_service:
+            raise RuntimeError("Cannot initialize a record that is not a service")
+
+        record_type = service_orm.record.record_type
+        return self._handler_map[record_type].initialize_service(session, service_orm)
+
     def iterate_service(self, session: Session, service_orm: ServiceQueueORM) -> bool:
         if not service_orm.record.is_service:
             raise RuntimeError("Cannot iterate a record that is not a service")
@@ -574,6 +584,7 @@ class RecordSocket:
 
         with self.root_socket.optional_session(session) as session:
             stmt = select(BaseRecordORM).options(joinedload(BaseRecordORM.task, innerjoin=True))
+            stmt = stmt.where(BaseRecordORM.is_service.is_(False))
             stmt = stmt.where(BaseRecordORM.manager_name.in_(manager_name))
             stmt = stmt.where(BaseRecordORM.status == RecordStatusEnum.running)
             stmt = stmt.with_for_update()
@@ -648,13 +659,17 @@ class RecordSocket:
                             self._logger.warning(f"Record {r_orm.id} has a task and also an entry in the backup table!")
                             session.delete(r_orm.task)
 
-                        BaseRecordSocket.create_task(r_orm, last_info.old_tag, last_info.old_priority)
+                        # we leave service queue entries alone
+                        if not r_orm.is_service:
+                            BaseRecordSocket.create_task(r_orm, last_info.old_tag, last_info.old_priority)
 
                 elif r_orm.status in [RecordStatusEnum.running, RecordStatusEnum.error] and not r_orm.info_backup:
-                    if r_orm.task is None:
+                    if not r_orm.is_service and r_orm.task is None:
                         raise RuntimeError(f"resetting a record with status {r_orm.status} with no task")
+                    if r_orm.is_service and r_orm.service is None:
+                        raise RuntimeError(f"resetting a record with status {r_orm.status} with no service")
 
-                    # Move the record back to "waiting" for a manager to pick it up
+                    # Move the record back to "waiting" for a manager/service periodics to pick it up
                     r_orm.status = RecordStatusEnum.waiting
                     r_orm.manager_name = None
 
@@ -742,10 +757,10 @@ class RecordSocket:
                     old_tag = r.task.tag
                     old_priority = r.task.priority
                     session.delete(r.task)
-                if r.service is not None:
-                    old_tag = r.service.tag
-                    old_priority = r.service.priority
-                    session.delete(r.service)
+
+                # If this is a service, we leave the
+                # the entry in the service queue since it contains
+                # the current service state info
 
                 # Store the old info in the backup table
                 backup_info = RecordInfoBackupORM(

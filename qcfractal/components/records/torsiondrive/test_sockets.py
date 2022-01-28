@@ -430,7 +430,7 @@ def test_torsiondrive_socket_run(storage_socket: SQLAlchemySocket, test_data_nam
     assert meta_1.success
 
     time_0 = datetime.utcnow()
-    finished, n_optimizations = run_service_constropt(id_1[0], result_data_1, storage_socket, 100)
+    finished, n_optimizations = run_service_constropt(id_1[0], result_data_1, storage_socket, 200)
     time_1 = datetime.utcnow()
 
     rec = storage_socket.records.torsiondrive.get(

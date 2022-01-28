@@ -349,42 +349,6 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
             session=session,
         )
 
-    def _create_state(self, go_orm: GridoptimizationRecordORM) -> GridoptimizationServiceState:
-
-        specification = GridoptimizationSpecification(**go_orm.specification.dict())
-        keywords = specification.keywords
-
-        # Build constraint template
-        constraint_template = []
-        for scan in keywords.scans:
-            s = {"type": scan.type, "indices": scan.indices}
-            constraint_template.append(s)
-
-        constraint_template_str = json.dumps(constraint_template)
-        dimensions = tuple(len(x.steps) for x in keywords.scans)
-
-        if keywords.preoptimization:
-            iteration = -2
-        else:
-            iteration = 0
-
-        output = (
-            "Created gridoptimization\n"
-            f"dimensions: {dimensions}\n"
-            f"preoptimization: {keywords.preoptimization}\n"
-            f"starting iteration: {iteration}\n"
-        )
-
-        stdout_orm = go_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
-        stdout_orm.append(output)
-
-        return GridoptimizationServiceState(
-            iteration=iteration,
-            complete=[],
-            dimensions=dimensions,
-            constraint_template=constraint_template_str,
-        )
-
     def add(
         self,
         go_spec: GridoptimizationInputSpecification,
@@ -466,6 +430,45 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
             return meta, [x[0] for x in ids]
 
+    def initialize_service(self, session: Session, service_orm: ServiceQueueORM) -> None:
+        go_orm: GridoptimizationRecordORM = service_orm.record
+        specification = GridoptimizationSpecification(**go_orm.specification.dict())
+        keywords = specification.keywords
+
+        # Build constraint template
+        constraint_template = []
+        for scan in keywords.scans:
+            s = {"type": scan.type, "indices": scan.indices}
+            constraint_template.append(s)
+
+        constraint_template_str = json.dumps(constraint_template)
+        dimensions = tuple(len(x.steps) for x in keywords.scans)
+
+        if keywords.preoptimization:
+            iteration = -2
+        else:
+            iteration = 0
+
+        output = (
+            "Created gridoptimization\n"
+            f"dimensions: {dimensions}\n"
+            f"preoptimization: {keywords.preoptimization}\n"
+            f"starting iteration: {iteration}\n"
+        )
+
+        stdout_orm = go_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
+        stdout_orm.append(output)
+
+        service_state = GridoptimizationServiceState(
+            iteration=iteration,
+            complete=[],
+            dimensions=dimensions,
+            constraint_template=constraint_template_str,
+        )
+
+        service_orm.service_state = service_state.dict()
+        sqlalchemy.orm.attributes.flag_modified(service_orm, "service_state")
+
     def iterate_service(
         self,
         session: Session,
@@ -474,26 +477,15 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
         go_orm: GridoptimizationRecordORM = service_orm.record
 
-        if go_orm.status not in [RecordStatusEnum.running, RecordStatusEnum.waiting]:
-            # This is a programmer error
-            raise RuntimeError(
-                f"Gridoptimization {go_orm.id} (service {service_orm.id}) has status {go_orm.status} - cannot iterate!"
-            )
+        # Always update with the current provenance
+        go_orm.compute_history[-1].provenance = {
+            "creator": "qcfractal",
+            "version": qcfractal_version,
+            "routine": "qcfractal.services.gridoptimization",
+        }
 
-        # Is this the first iteration?
-        if go_orm.status == RecordStatusEnum.waiting:
-            go_orm.status = RecordStatusEnum.running
-            service_state = self._create_state(go_orm)
-
-            go_orm.compute_history[-1].provenance = {
-                "creator": "qcfractal",
-                "version": qcfractal_version,
-                "routine": "qcfractal.services.gridoptimization",
-            }
-
-        else:
-            # Load the state from the service_state column
-            service_state = GridoptimizationServiceState(**service_orm.service_state)
+        # Load the state from the service_state column
+        service_state = GridoptimizationServiceState(**service_orm.service_state)
 
         # Maps key to molecule
         next_tasks = {}

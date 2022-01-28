@@ -34,7 +34,7 @@ class RecordComputeHistoryORM(BaseORM):
 
     outputs = relationship(OutputStoreORM, lazy="select")
 
-    def get_output(self, output_type: OutputTypeEnum, create: bool = True):
+    def get_output(self, output_type: OutputTypeEnum) -> OutputStoreORM:
         for o in self.outputs:
             if o.output_type == output_type:
                 return o

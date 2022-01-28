@@ -30,7 +30,7 @@ class ServiceQueueORM(BaseORM):
 
     id = Column(Integer, primary_key=True)
 
-    record_id = Column(Integer, ForeignKey(BaseRecordORM.id))
+    record_id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"))
     record = relationship(BaseRecordORM, back_populates="service", uselist=False)
 
     tag = Column(String)

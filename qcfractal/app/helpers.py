@@ -58,7 +58,7 @@ def delete_helper(id: Optional[int], id_args: Optional[List[int]], func: Callabl
     # If an id was specified in the url (keyword/1234) then use that
     # Otherwise, grab from the query parameters
     if id is not None:
-        return func([id])
+        return func([id], **kwargs)
     else:
         return func(id_args, **kwargs)
 
