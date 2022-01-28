@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractaltesting import load_molecule_data
+from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.exceptions import MissingDataError
 from qcportal.molecules import Molecule, MoleculeIdentifiers
 
@@ -59,6 +59,26 @@ def test_molecules_socket_basic(storage_socket: SQLAlchemySocket):
     # This should return a list containing only None
     mols = storage_socket.molecules.get(ids, missing_ok=True)
     assert mols == [None]
+
+
+def test_molecules_socket_delete_inuse(storage_socket: SQLAlchemySocket):
+    water = load_molecule_data("water_dimer_minima")
+
+    input_spec, molecules, result_data = load_procedure_data("psi4_benzene_opt")
+
+    meta, ids = storage_socket.records.optimization.add(input_spec, [molecules])
+    assert meta.success
+
+    # Delete the molecule
+    meta = storage_socket.molecules.delete(ids)
+    assert meta.success is False
+    assert meta.n_deleted == 0
+    assert meta.error_idx == [0]
+
+    # Make sure it is still there
+    # This should return a list containing only None
+    mols = storage_socket.molecules.get(ids, missing_ok=True)
+    assert mols[0] is not None
 
 
 def test_molecules_socket_get_proj(storage_socket: SQLAlchemySocket):
