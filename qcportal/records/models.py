@@ -127,6 +127,12 @@ class TaskRecord(BaseModel):
     created_on: datetime
 
 
+class ServiceDependency(BaseModel):
+    id: int
+    service_id: int
+    record_id: int
+    extras: Dict[str, Any]
+
 class ServiceRecord(BaseModel):
     id: int
     record_id: int
@@ -136,6 +142,7 @@ class ServiceRecord(BaseModel):
     created_on: datetime
 
     service_state: Dict[str, Any]
+    dependencies: Optional[List[ServiceDependency]] = None
 
 
 class BaseRecord(abc.ABC, BaseModel):
@@ -297,6 +304,7 @@ class BaseRecord(abc.ABC, BaseModel):
     def error(self) -> Optional[Dict[str, Any]]:
         return self._get_output(OutputTypeEnum.error)
 
+ServiceDependency.update_forward_refs()
 
 class RecordAddBodyBase(RestModelBase):
     tag: Optional[str]

@@ -569,7 +569,7 @@ class PortalClient(PortalClientBase):
         if include_task:
             include |= {"*", "task"}
         if include_service:
-            include |= {"*", "service"}
+            include |= {"*", "service.*", "service.dependencies"}
         if include_outputs:
             include |= {"*", "compute_history.*", "compute_history.outputs"}
         if include_comments:

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.testing_helpers import populate_db, TestingSnowflake
-from qcfractaltesting import test_users
+from qcfractaltesting import test_users, load_procedure_data
 from qcportal import PortalRequestError
 from qcportal.records import PriorityEnum, RecordStatusEnum
 
@@ -276,3 +276,33 @@ def test_record_client_modify(snowflake_client: PortalClient, storage_socket: SQ
     assert rec[4].raw_data.task is None
     assert rec[5].raw_data.task is None
     assert rec[6].raw_data.task is None
+
+
+def test_record_client_modify_service(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+    input_spec, molecules, result_data = load_procedure_data("td_H2O2_psi4_hf")
+    meta, svc_id = storage_socket.records.torsiondrive.add(
+        input_spec, [molecules], as_service=True, tag="test_tag", priority=PriorityEnum.high
+    )
+
+    storage_socket.services.iterate_services()
+
+    rec = storage_socket.records.get(svc_id, include=["*", "service", "service.dependencies.record.task"])
+    tasks = [x["record"]["task"] for x in rec[0]["service"]["dependencies"]]
+    assert all(x["tag"] == "test_tag" for x in tasks)
+    assert all(x["priority"] == PriorityEnum.high for x in tasks)
+
+    # Modify service priority and tag
+    meta = snowflake_client.modify_records(svc_id, new_tag="new_tag", new_priority=PriorityEnum.low)
+    assert meta.n_updated == 1
+    assert meta.n_children_updated > 0
+
+    rec = snowflake_client.get_records(svc_id[0], include_service=True)
+    assert rec.service.tag == "new_tag"
+    assert rec.service.priority == PriorityEnum.low
+
+    # Also changed all the dependencies
+    assert len(rec.service.dependencies) > 0
+    for opt in rec.service.dependencies:
+        r = snowflake_client.get_records(opt.record_id, include_task=True)
+        assert r.task.tag == "new_tag"
+        assert r.task.priority == PriorityEnum.low
