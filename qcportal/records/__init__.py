@@ -10,7 +10,7 @@ from .models import (
     BaseRecord,
     RecordModifyBody,
     RecordDeleteURLParameters,
-    RecordUndeleteURLParameters,
+    RecordRevertBodyParameters,
     RecordQueryBody,
     RecordAddBodyBase,
 )

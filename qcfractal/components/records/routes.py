@@ -10,7 +10,7 @@ from qcportal.records import (
     RecordModifyBody,
     RecordQueryBody,
     RecordDeleteURLParameters,
-    RecordUndeleteURLParameters,
+    RecordRevertBodyParameters,
     RecordStatusEnum,
 )
 
@@ -65,15 +65,28 @@ def get_record_comments_v1(record_id: int):
 @check_access
 def delete_records_v1(record_id: Optional[int] = None, *, url_params: RecordDeleteURLParameters):
     return delete_helper(
-        record_id, url_params.record_id, storage_socket.records.delete, soft_delete=url_params.soft_delete
+        record_id,
+        url_params.record_id,
+        storage_socket.records.delete,
+        soft_delete=url_params.soft_delete,
+        delete_children=url_params.delete_children,
     )
 
 
-@main.route("/v1/record/undelete", methods=["POST"])
-@wrap_route(None, RecordUndeleteURLParameters)
+@main.route("/v1/record/revert", methods=["POST"])
+@wrap_route(RecordRevertBodyParameters, None)
 @check_access
-def undelete_records_v1(url_params: RecordUndeleteURLParameters):
-    return storage_socket.records.undelete(url_params.record_id)
+def revert_records_v1(body_data: RecordRevertBodyParameters):
+    if body_data.revert_status == RecordStatusEnum.cancelled:
+        return storage_socket.records.uncancel(body_data.record_id)
+
+    if body_data.revert_status == RecordStatusEnum.invalid:
+        return storage_socket.records.uninvalidate(body_data.record_id)
+
+    if body_data.revert_status == RecordStatusEnum.deleted:
+        return storage_socket.records.undelete(body_data.record_id)
+
+    raise RuntimeError(f"Unknown status to revert: ", body_data.revert_status)
 
 
 @main.route("/v1/record", methods=["PATCH"])
@@ -96,6 +109,8 @@ def modify_records_v1(record_id: Optional[int] = None, *, body_data: RecordModif
                 return storage_socket.records.reset(record_id=record_id, session=session)
             if body_data.status == RecordStatusEnum.cancelled:
                 return storage_socket.records.cancel(record_id=record_id, session=session)
+            if body_data.status == RecordStatusEnum.invalid:
+                return storage_socket.records.invalidate(record_id=record_id, session=session)
 
             # ignore all other statuses
 
