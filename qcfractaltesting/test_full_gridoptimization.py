@@ -16,7 +16,6 @@ if TYPE_CHECKING:
     from qcportal import PortalClient
 
 
-@pytest.mark.fulltest
 def test_gridoptimization_full_1(fulltest_client: PortalClient):
     input_data, molecules, _ = load_procedure_data("go_H2O2_psi4_blyp")
     meta, ids = fulltest_client.add_gridoptimizations(

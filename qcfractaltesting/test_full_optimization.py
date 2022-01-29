@@ -16,7 +16,6 @@ if TYPE_CHECKING:
     from qcportal import PortalClient
 
 
-@pytest.mark.fulltest
 def test_singlepoint_full_1(fulltest_client: PortalClient):
     mol = Molecule(symbols=["H", "H"], geometry=[[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
     meta, ids = fulltest_client.add_optimizations(
@@ -42,7 +41,6 @@ def test_singlepoint_full_1(fulltest_client: PortalClient):
     assert rec.status == RecordStatusEnum.complete
 
 
-@pytest.mark.fulltest
 def test_singlepoint_full_error_1(fulltest_client: PortalClient):
     mol = Molecule(symbols=["H", "H"], geometry=[[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
     meta, ids = fulltest_client.add_optimizations(

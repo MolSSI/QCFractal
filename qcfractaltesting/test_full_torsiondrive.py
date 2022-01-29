@@ -16,7 +16,6 @@ if TYPE_CHECKING:
     from qcportal import PortalClient
 
 
-@pytest.mark.fulltest
 def test_torsiondrive_full_1(fulltest_client: PortalClient):
     input_data, molecules, _ = load_procedure_data("td_H2O2_psi4_pbe")
     meta, ids = fulltest_client.add_torsiondrives(
