@@ -4,7 +4,7 @@ from flask import current_app
 
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper
-from qcfractal.app.routes import check_access, wrap_route
+from qcfractal.app.routes import wrap_route
 from qcportal.base_models import CommonGetURLParametersName
 from qcportal.exceptions import LimitExceededError
 from qcportal.managers import (
@@ -18,7 +18,6 @@ from qcportal.utils import calculate_limit
 
 @main.route("/v1/manager", methods=["POST"])
 @wrap_route(ManagerActivationBody, None)
-@check_access
 def activate_manager_v1(body_data: ManagerActivationBody):
     """Activates/Registers a manager for use with the server"""
 
@@ -34,7 +33,6 @@ def activate_manager_v1(body_data: ManagerActivationBody):
 
 @main.route("/v1/manager/<string:name>", methods=["PATCH"])
 @wrap_route(ManagerUpdateBody, None)
-@check_access
 def update_manager_v1(name: str, body_data: ManagerUpdateBody):
     """Updates a manager's info
 
@@ -59,7 +57,6 @@ def update_manager_v1(name: str, body_data: ManagerUpdateBody):
 @main.route("/v1/manager", methods=["GET"])
 @main.route("/v1/manager/<string:name>", methods=["GET"])
 @wrap_route(None, CommonGetURLParametersName)
-@check_access
 def get_managers_v1(name: Optional[str] = None, *, url_params: CommonGetURLParametersName):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_managers
     if url_params.name is not None and len(url_params.name) > limit:
@@ -70,7 +67,6 @@ def get_managers_v1(name: Optional[str] = None, *, url_params: CommonGetURLParam
 
 @main.route("/v1/manager/query", methods=["POST"])
 @wrap_route(ManagerQueryBody, None)
-@check_access
 def query_managers_v1(body_data: ManagerQueryBody):
 
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_managers

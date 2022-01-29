@@ -3,7 +3,7 @@ from qcelemental.util import serialize
 from werkzeug.exceptions import NotFound, BadRequest
 
 from qcfractal.app import main, storage_socket
-from qcfractal.app.routes import check_access, _valid_encodings
+from qcfractal.app.routes import _valid_encodings
 from qcfractal.components.datasets.storage_utils import add_metadata_template
 from qcfractal.interface.models import rest_model
 
@@ -35,7 +35,6 @@ class SerializedResponse(Response):
 @main.route("/collection", methods=["GET"])
 @main.route("/collection/<int:collection_id>", methods=["GET"])
 @main.route("/collection/<int:collection_id>/<string:view_function>", methods=["GET"])
-@check_access
 def get_collection(collection_id: int = None, view_function: str = None):
     # List collections
 
@@ -91,7 +90,6 @@ def get_collection(collection_id: int = None, view_function: str = None):
 @main.route("/collection", methods=["POST"])
 @main.route("/collection/<int:collection_id>", methods=["POST"])
 @main.route("/collection/<int:collection_id>/<string:view_function>", methods=["POST"])
-@check_access
 def post_collection(collection_id: int = None, view_function: str = None):
 
     view_function_vals = ("value", "entry", "list", "molecule")
@@ -118,7 +116,6 @@ def post_collection(collection_id: int = None, view_function: str = None):
 
 @main.route("/collection", methods=["DELETE"])
 @main.route("/collection/<int:collection_id>", methods=["DELETE"])
-@check_access
 def delete_collection(collection_id: int, view_function: str):
     body_model, response_model = rest_model(f"collection/{collection_id}", "delete")
     ret = storage_socket.datasets.delete(col_id=collection_id)

@@ -4,7 +4,7 @@ from flask import current_app
 
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper, prefix_projection
-from qcfractal.app.routes import check_access, wrap_route
+from qcfractal.app.routes import wrap_route
 from qcportal.base_models import CommonGetProjURLParameters
 from qcportal.exceptions import LimitExceededError
 from qcportal.records.optimization import OptimizationAddBody, OptimizationQueryBody
@@ -13,7 +13,6 @@ from qcportal.utils import calculate_limit
 
 @main.route("/v1/record/optimization", methods=["POST"])
 @wrap_route(OptimizationAddBody, None)
-@check_access
 def add_optimization_records_v1(body_data: OptimizationAddBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.add_records
     if len(body_data.initial_molecules) > limit:
@@ -32,7 +31,6 @@ def add_optimization_records_v1(body_data: OptimizationAddBody):
 @main.route("/v1/record/optimization", methods=["GET"])
 @main.route("/v1/record/optimization/<int:record_id>", methods=["GET"])
 @wrap_route(None, CommonGetProjURLParameters)
-@check_access
 def get_optimization_records_v1(record_id: Optional[int] = None, *, url_params: CommonGetProjURLParameters):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
     if url_params.id is not None and len(url_params.id) > limit:
@@ -50,7 +48,6 @@ def get_optimization_records_v1(record_id: Optional[int] = None, *, url_params: 
 
 @main.route("/v1/record/optimization/<int:record_id>/trajectory", methods=["GET"])
 @wrap_route(None, CommonGetProjURLParameters)
-@check_access
 def get_optimization_trajectory_v1(record_id: int, *, url_params: CommonGetProjURLParameters):
     # adjust the includes/excludes to refer to the trajectory
     ch_includes, ch_excludes = prefix_projection(url_params, "trajectory")
@@ -60,7 +57,6 @@ def get_optimization_trajectory_v1(record_id: int, *, url_params: CommonGetProjU
 
 @main.route("/v1/record/optimization/query", methods=["POST"])
 @wrap_route(OptimizationQueryBody, None)
-@check_access
 def query_optimization_v1(body_data: OptimizationQueryBody):
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
     body_data.limit = calculate_limit(max_limit, body_data.limit)

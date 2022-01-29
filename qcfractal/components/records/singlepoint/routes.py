@@ -4,7 +4,7 @@ from flask import current_app
 
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper
-from qcfractal.app.routes import check_access, wrap_route
+from qcfractal.app.routes import wrap_route
 from qcportal.base_models import CommonGetProjURLParameters
 from qcportal.exceptions import LimitExceededError
 from qcportal.records.singlepoint import SinglepointAddBody, SinglepointQueryBody
@@ -13,7 +13,6 @@ from qcportal.utils import calculate_limit
 
 @main.route("/v1/record/singlepoint", methods=["POST"])
 @wrap_route(SinglepointAddBody, None)
-@check_access
 def add_singlepoint_records_v1(body_data: SinglepointAddBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.add_records
     if len(body_data.molecules) > limit:
@@ -27,7 +26,6 @@ def add_singlepoint_records_v1(body_data: SinglepointAddBody):
 @main.route("/v1/record/singlepoint", methods=["GET"])
 @main.route("/v1/record/singlepoint/<record_id>", methods=["GET"])
 @wrap_route(None, CommonGetProjURLParameters)
-@check_access
 def get_singlepoint_records_v1(record_id: Optional[int] = None, *, url_params: CommonGetProjURLParameters):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
     if url_params.id is not None and len(url_params.id) > limit:
@@ -45,7 +43,6 @@ def get_singlepoint_records_v1(record_id: Optional[int] = None, *, url_params: C
 
 @main.route("/v1/record/singlepoint/<int:record_id>/wavefunction", methods=["GET"])
 @wrap_route(None, None)
-@check_access
 def get_singlepoint_wavefunction_v1(record_id: int):
     rec = storage_socket.records.singlepoint.get([record_id], include=["wavefunction"])
 
@@ -55,7 +52,6 @@ def get_singlepoint_wavefunction_v1(record_id: int):
 
 @main.route("/v1/record/singlepoint/query", methods=["POST"])
 @wrap_route(SinglepointQueryBody, None)
-@check_access
 def query_singlepoint_v1(body_data: SinglepointQueryBody):
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
     body_data.limit = calculate_limit(max_limit, body_data.limit)

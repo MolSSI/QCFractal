@@ -4,7 +4,7 @@ from flask import current_app, g
 from werkzeug.exceptions import BadRequest
 
 from qcfractal.app import main, storage_socket
-from qcfractal.app.routes import check_access, wrap_route
+from qcfractal.app.routes import wrap_route
 from qcportal.exceptions import InconsistentUpdateError, SecurityNotEnabledError
 from qcportal.permissions import UserInfo, RoleInfo
 
@@ -37,7 +37,6 @@ def assert_security_enabled():
 
 @main.route("/v1/role", methods=["GET"])
 @wrap_route(None, None)
-@check_access
 def list_roles_v1():
     assert_security_enabled()
     return storage_socket.roles.list()
@@ -45,7 +44,6 @@ def list_roles_v1():
 
 @main.route("/v1/role", methods=["POST"])
 @wrap_route(RoleInfo, None)
-@check_access
 def add_role_v1(body_data: RoleInfo):
     assert_security_enabled()
     return storage_socket.roles.add(body_data)
@@ -53,7 +51,6 @@ def add_role_v1(body_data: RoleInfo):
 
 @main.route("/v1/role/<string:rolename>", methods=["GET"])
 @wrap_route(None, None)
-@check_access
 def get_role_v1(rolename: str):
     assert_security_enabled()
     return storage_socket.roles.get(rolename)
@@ -61,7 +58,6 @@ def get_role_v1(rolename: str):
 
 @main.route("/v1/role/<string:rolename>", methods=["PUT"])
 @wrap_route(RoleInfo, None)
-@check_access
 def modify_role_v1(rolename: str, *, body_data: RoleInfo):
     assert_security_enabled()
     body_data = body_data
@@ -73,7 +69,6 @@ def modify_role_v1(rolename: str, *, body_data: RoleInfo):
 
 @main.route("/v1/role/<string:rolename>", methods=["DELETE"])
 @wrap_route(None, None)
-@check_access
 def delete_role_v1(rolename: str):
     assert_security_enabled()
     return storage_socket.roles.delete(rolename)
@@ -84,7 +79,6 @@ def delete_role_v1(rolename: str):
 #################################
 @main.route("/v1/user", methods=["GET"])
 @wrap_route(None, None)
-@check_access
 def list_users_v1():
     assert_security_enabled()
     return storage_socket.users.list()
@@ -92,7 +86,6 @@ def list_users_v1():
 
 @main.route("/v1/user", methods=["POST"])
 @wrap_route(Tuple[UserInfo, Optional[str]], None)
-@check_access
 def add_user_v1(body_data: Tuple[UserInfo, Optional[str]]):
 
     user_info, password = body_data
@@ -103,7 +96,6 @@ def add_user_v1(body_data: Tuple[UserInfo, Optional[str]]):
 
 @main.route("/v1/user/<string:username>", methods=["GET"])
 @wrap_route(None, None)
-@check_access
 def get_user_v1(username: str):
     assert_security_enabled()
     return storage_socket.users.get(username)
@@ -111,7 +103,6 @@ def get_user_v1(username: str):
 
 @main.route("/v1/user/<string:username>", methods=["PUT"])
 @wrap_route(UserInfo, None)
-@check_access
 def modify_user_v1(username: str, *, body_data: UserInfo):
     assert_security_enabled()
 
@@ -127,7 +118,6 @@ def modify_user_v1(username: str, *, body_data: UserInfo):
 
 @main.route("/v1/user/<string:username>/password", methods=["PUT"])
 @wrap_route(Optional[str], None)
-@check_access
 def change_password_v1(username: str, *, body_data: Optional[str]):
     assert_security_enabled()
 
@@ -137,7 +127,6 @@ def change_password_v1(username: str, *, body_data: Optional[str]):
 
 @main.route("/v1/user/<string:username>", methods=["DELETE"])
 @wrap_route(None, None)
-@check_access
 def delete_user_v1(username: str):
     assert_security_enabled()
 
@@ -152,7 +141,6 @@ def delete_user_v1(username: str):
 #################################
 @main.route("/v1/me", methods=["GET"])
 @wrap_route(None, None)
-@check_access
 def get_my_user_v1():
     assert_security_enabled()
 
@@ -167,7 +155,6 @@ def get_my_user_v1():
 
 @main.route("/v1/me", methods=["PUT"])
 @wrap_route(UserInfo, None)
-@check_access
 def modify_my_user_v1(body_data: UserInfo):
     assert_security_enabled()
 
@@ -188,7 +175,6 @@ def modify_my_user_v1(body_data: UserInfo):
 
 @main.route("/v1/me/password", methods=["PUT"])
 @wrap_route(Optional[str], None)
-@check_access
 def change_my_password_v1(body_data: Optional[str]):
     assert_security_enabled()
     username = g.get("user", None)
