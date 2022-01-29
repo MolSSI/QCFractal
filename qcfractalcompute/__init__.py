@@ -12,4 +12,4 @@ __git_revision__ = versions["full-revisionid"]
 del get_versions, versions
 
 from .adapters import build_queue_adapter
-from .managers import QueueManager
+from .managers import ComputeManager

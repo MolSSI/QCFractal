@@ -3,13 +3,14 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
+import qcengine as qcng
+
 from qcfractal.config import FractalConfig
 from qcfractal.process_runner import ProcessBase, ProcessRunner
-from qcfractalcompute.managers import QueueManager
-from qcportal.managers import ManagerStatusEnum
+from qcfractalcompute.managers import ComputeManager
 from qcfractaltesting import load_procedure_data
+from qcportal.managers import ManagerStatusEnum
 from qcportal.records import PriorityEnum, RecordStatusEnum
-import qcengine as qcng
 
 # For testing only! We just make all available programs/procedures the same as all of them
 qcng.list_available_programs = qcng.list_all_programs
@@ -44,7 +45,7 @@ class ComputeProcess(ProcessBase):
         uri = f"http://{host}:{port}"
 
         self._worker = MockTestingExecutor(self._result_data)
-        self._queue_manager = QueueManager(
+        self._queue_manager = ComputeManager(
             self._worker,
             fractal_uri=uri,
             manager_name="test_compute",
@@ -91,7 +92,7 @@ def test_manager_keepalive(snowflake: TestingSnowflake, storage_socket: SQLAlche
 def test_manager_tag_none(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
 
     worker = MockTestingExecutor(result_data={})
-    manager = QueueManager(
+    manager = ComputeManager(
         worker,
         fractal_uri=snowflake.get_uri(),
         manager_name="test_compute",
@@ -110,7 +111,7 @@ def test_manager_tag_none(snowflake: TestingSnowflake, storage_socket: SQLAlchem
 def test_manager_tag_single(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
 
     worker = MockTestingExecutor(result_data={})
-    manager = QueueManager(
+    manager = ComputeManager(
         worker,
         fractal_uri=snowflake.get_uri(),
         manager_name="test_compute",
@@ -129,7 +130,7 @@ def test_manager_tag_single(snowflake: TestingSnowflake, storage_socket: SQLAlch
 def test_manager_tag_multi(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
 
     worker = MockTestingExecutor(result_data={})
-    manager = QueueManager(
+    manager = ComputeManager(
         worker,
         fractal_uri=snowflake.get_uri(),
         manager_name="test_compute",
@@ -239,7 +240,7 @@ def test_manager_deferred_return(snowflake: TestingSnowflake, storage_socket: SQ
 
     # Don't use a compute process so we can update, etc, manually
     worker = MockTestingExecutor(result_data)
-    manager = QueueManager(
+    manager = ComputeManager(
         worker,
         fractal_uri=snowflake.get_uri(),
         manager_name="test_compute",
@@ -312,7 +313,7 @@ def test_manager_deferred_drop(snowflake: TestingSnowflake, storage_socket: SQLA
 
     # Don't use a compute process so we can update, etc, manually
     worker = MockTestingExecutor(result_data)
-    manager = QueueManager(
+    manager = ComputeManager(
         worker,
         fractal_uri=snowflake.get_uri(),
         manager_name="test_compute",

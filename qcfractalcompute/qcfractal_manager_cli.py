@@ -17,7 +17,7 @@ from pydantic import Field, validator
 from qcelemental.models import AutodocBaseSettings, ProtoModel
 
 from . import __version__, cli_utils
-from .managers import QueueManager
+from .managers import ComputeManager
 
 __all__ = ["main"]
 
@@ -975,7 +975,7 @@ def main():
         max_queued_tasks = settings.manager.max_queued_tasks
 
     # The queue manager is configured differently for node-parallel and single-node tasks
-    manager = QueueManager(
+    manager = ComputeManager(
         queue_client,
         fractal_uri=settings.server.fractal_uri,
         max_tasks=max_queued_tasks,
