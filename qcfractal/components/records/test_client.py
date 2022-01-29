@@ -281,7 +281,7 @@ def test_record_client_modify(snowflake_client: PortalClient, storage_socket: SQ
 def test_record_client_modify_service(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
     input_spec, molecules, result_data = load_procedure_data("td_H2O2_psi4_hf")
     meta, svc_id = storage_socket.records.torsiondrive.add(
-        input_spec, [molecules], as_service=True, tag="test_tag", priority=PriorityEnum.high
+        [molecules], input_spec, as_service=True, tag="test_tag", priority=PriorityEnum.high
     )
 
     storage_socket.services.iterate_services()

@@ -21,8 +21,8 @@ def add_torsiondrive_records_v1(body_data: TorsiondriveAddBody):
         )
 
     return storage_socket.records.torsiondrive.add(
-        td_spec=body_data.specification,
         initial_molecules=body_data.initial_molecules,
+        td_spec=body_data.specification,
         as_service=body_data.as_service,
         tag=body_data.tag,
         priority=body_data.priority,

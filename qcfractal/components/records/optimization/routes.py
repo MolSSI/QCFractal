@@ -21,8 +21,8 @@ def add_optimization_records_v1(body_data: OptimizationAddBody):
         )
 
     return storage_socket.records.optimization.add(
-        opt_spec=body_data.specification,
         initial_molecules=body_data.initial_molecules,
+        opt_spec=body_data.specification,
         tag=body_data.tag,
         priority=body_data.priority,
     )

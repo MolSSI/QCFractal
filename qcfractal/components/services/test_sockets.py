@@ -27,7 +27,7 @@ def test_service_socket_error(storage_socket: SQLAlchemySocket):
     )
 
     meta_1, id_1 = storage_socket.records.torsiondrive.add(
-        input_spec_1, [molecules_1], tag="test_tag", priority=PriorityEnum.low, as_service=True
+        [molecules_1], input_spec_1, tag="test_tag", priority=PriorityEnum.low, as_service=True
     )
     assert meta_1.success
 
@@ -64,10 +64,10 @@ def test_service_socket_iterate_order(storage_socket: SQLAlchemySocket):
     storage_socket.services._max_active_services = 1
 
     meta_1, id_1 = storage_socket.records.torsiondrive.add(
-        input_spec_1, [molecules_1], as_service=True, priority=PriorityEnum.low
+        [molecules_1], input_spec_1, as_service=True, priority=PriorityEnum.low
     )
     meta_2, id_2 = storage_socket.records.torsiondrive.add(
-        input_spec_2, [molecules_2], as_service=True, priority=PriorityEnum.normal
+        [molecules_2], input_spec_2, as_service=True, priority=PriorityEnum.normal
     )
 
     storage_socket.services.iterate_services()

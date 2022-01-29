@@ -32,8 +32,8 @@ def test_task_socket_fullworkflow_success(storage_socket: SQLAlchemySocket):
     input_spec1, molecule1, result_data1 = load_procedure_data("psi4_benzene_energy_1")
     input_spec2, molecule2, result_data2 = load_procedure_data("psi4_fluoroethane_wfn")
 
-    meta1, id1 = storage_socket.records.singlepoint.add(input_spec1, [molecule1], "tag1", PriorityEnum.normal)
-    meta2, id2 = storage_socket.records.singlepoint.add(input_spec2, [molecule2], "tag1", PriorityEnum.normal)
+    meta1, id1 = storage_socket.records.singlepoint.add([molecule1], input_spec1, "tag1", PriorityEnum.normal)
+    meta2, id2 = storage_socket.records.singlepoint.add([molecule2], input_spec2, "tag1", PriorityEnum.normal)
 
     time_1 = datetime.utcnow()
 
@@ -108,8 +108,8 @@ def test_task_socket_fullworkflow_error(storage_socket: SQLAlchemySocket):
     input_spec1, molecule1, result_data1 = load_procedure_data("psi4_methane_gradient_fail_iter")
     input_spec2, molecule2, result_data2 = load_procedure_data("psi4_peroxide_energy_fail_basis")
 
-    meta1, id1 = storage_socket.records.singlepoint.add(input_spec1, [molecule1], "tag1", PriorityEnum.normal)
-    meta2, id2 = storage_socket.records.singlepoint.add(input_spec2, [molecule2], "tag1", PriorityEnum.normal)
+    meta1, id1 = storage_socket.records.singlepoint.add([molecule1], input_spec1, "tag1", PriorityEnum.normal)
+    meta2, id2 = storage_socket.records.singlepoint.add([molecule2], input_spec2, "tag1", PriorityEnum.normal)
 
     time_1 = datetime.utcnow()
 
@@ -183,7 +183,7 @@ def test_task_socket_fullworkflow_error_retry(storage_socket: SQLAlchemySocket):
     )
     input_spec1, molecule1, result_data1 = load_procedure_data("psi4_benzene_energy_1")
 
-    meta1, id1 = storage_socket.records.singlepoint.add(input_spec1, [molecule1], "tag1", PriorityEnum.normal)
+    meta1, id1 = storage_socket.records.singlepoint.add([molecule1], input_spec1, "tag1", PriorityEnum.normal)
 
     fop = FailedOperation(error=ComputeError(error_type="test_error", error_message="this is a test error"))
 
@@ -253,7 +253,7 @@ def test_task_socket_compressed_outputs_success(storage_socket: SQLAlchemySocket
     )
 
     input_spec1, molecule1, result_data1 = load_procedure_data("psi4_benzene_energy_1")
-    meta1, id1 = storage_socket.records.singlepoint.add(input_spec1, [molecule1], "tag1", PriorityEnum.normal)
+    meta1, id1 = storage_socket.records.singlepoint.add([molecule1], input_spec1, "tag1", PriorityEnum.normal)
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 
     # Compress the outputs

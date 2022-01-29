@@ -261,8 +261,8 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
     def add(
         self,
-        qc_spec: QCInputSpecification,
         molecules: Sequence[Union[int, Molecule]],
+        qc_spec: QCInputSpecification,
         tag: Optional[str] = None,
         priority: PriorityEnum = PriorityEnum.normal,
         *,
@@ -278,10 +278,10 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
         Parameters
         ----------
-        qc_spec
-            Specification for the single point calculations
         molecules
             Molecules to compute using the specification
+        qc_spec
+            Specification for the single point calculations
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed before returning from this function.

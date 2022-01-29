@@ -39,12 +39,12 @@ def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket):
     input_spec_5, molecule_5, result_data_5 = load_procedure_data("psi4_benzene_energy_1")
     input_spec_6, molecule_6, result_data_6 = load_procedure_data("psi4_benzene_energy_2")
 
-    meta, id_1 = storage_socket.records.singlepoint.add(input_spec_1, [molecule_1], "tag1", PriorityEnum.normal)
-    meta, id_2 = storage_socket.records.singlepoint.add(input_spec_2, [molecule_2], "tag2", PriorityEnum.normal)
-    meta, id_3 = storage_socket.records.singlepoint.add(input_spec_3, [molecule_3], "tag1", PriorityEnum.normal)
-    meta, id_4 = storage_socket.records.singlepoint.add(input_spec_4, [molecule_4], "tag2", PriorityEnum.normal)
-    meta, id_5 = storage_socket.records.singlepoint.add(input_spec_5, [molecule_5], "tag1", PriorityEnum.normal)
-    meta, id_6 = storage_socket.records.singlepoint.add(input_spec_6, [molecule_6], "tag1", PriorityEnum.normal)
+    meta, id_1 = storage_socket.records.singlepoint.add([molecule_1], input_spec_1, "tag1", PriorityEnum.normal)
+    meta, id_2 = storage_socket.records.singlepoint.add([molecule_2], input_spec_2, "tag2", PriorityEnum.normal)
+    meta, id_3 = storage_socket.records.singlepoint.add([molecule_3], input_spec_3, "tag1", PriorityEnum.normal)
+    meta, id_4 = storage_socket.records.singlepoint.add([molecule_4], input_spec_4, "tag2", PriorityEnum.normal)
+    meta, id_5 = storage_socket.records.singlepoint.add([molecule_5], input_spec_5, "tag1", PriorityEnum.normal)
+    meta, id_6 = storage_socket.records.singlepoint.add([molecule_6], input_spec_6, "tag1", PriorityEnum.normal)
     all_id = id_1 + id_2 + id_3 + id_4 + id_5 + id_6
 
     tasks_1 = storage_socket.tasks.claim_tasks(mname1.fullname)
@@ -597,7 +597,7 @@ def test_record_client_uninvalidate_missing(snowflake_client: PortalClient, stor
 def test_record_client_delete_children(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, opt_file: str):
     # Deleting with deleting children
     input_spec_1, molecule_1, result_data_1 = load_procedure_data(opt_file)
-    meta1, id1 = storage_socket.records.optimization.add(input_spec_1, [molecule_1])
+    meta1, id1 = storage_socket.records.optimization.add([molecule_1], input_spec_1)
 
     with storage_socket.session_scope() as session:
         rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
@@ -632,7 +632,7 @@ def test_record_client_delete_nochildren(
 ):
     # Deleting without deleting children
     input_spec_1, molecule_1, result_data_1 = load_procedure_data(opt_file)
-    meta1, id1 = storage_socket.records.optimization.add(input_spec_1, [molecule_1])
+    meta1, id1 = storage_socket.records.optimization.add([molecule_1], input_spec_1)
 
     with storage_socket.session_scope() as session:
         rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
@@ -667,7 +667,7 @@ def test_record_client_undelete_children(
 ):
     # Deleting with deleting children, then undeleting
     input_spec_1, molecule_1, result_data_1 = load_procedure_data(opt_file)
-    meta1, id1 = storage_socket.records.optimization.add(input_spec_1, [molecule_1])
+    meta1, id1 = storage_socket.records.optimization.add([molecule_1], input_spec_1)
 
     with storage_socket.session_scope() as session:
         rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()

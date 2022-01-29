@@ -113,9 +113,9 @@ def test_singlepoint_client_query(snowflake_client: PortalClient, storage_socket
     input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_peroxide_energy_wfn")
     input_spec_3, molecule_3, result_data_3 = load_procedure_data("rdkit_water_energy")
 
-    meta1, id1 = storage_socket.records.singlepoint.add(input_spec_1, [molecule_1])
-    meta2, id2 = storage_socket.records.singlepoint.add(input_spec_2, [molecule_2])
-    meta3, id3 = storage_socket.records.singlepoint.add(input_spec_3, [molecule_3])
+    meta1, id1 = storage_socket.records.singlepoint.add([molecule_1], input_spec_1)
+    meta2, id2 = storage_socket.records.singlepoint.add([molecule_2], input_spec_2)
+    meta3, id3 = storage_socket.records.singlepoint.add([molecule_3], input_spec_3)
 
     recs = storage_socket.records.singlepoint.get(id1 + id2 + id3)
 

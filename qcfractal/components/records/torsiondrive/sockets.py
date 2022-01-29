@@ -286,8 +286,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
     def add(
         self,
-        td_spec: TorsiondriveInputSpecification,
         initial_molecules: Sequence[Iterable[Union[int, Molecule]]],
+        td_spec: TorsiondriveInputSpecification,
         as_service: bool,
         tag: Optional[str] = None,
         priority: PriorityEnum = PriorityEnum.normal,
@@ -304,10 +304,10 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
         Parameters
         ----------
-        td_spec
-            Specification for the calculations
         initial_molecules
             Molecules to compute using the specification
+        td_spec
+            Specification for the calculations
         as_service
             Whether this record should be run as a service or as a regular calculation
         session
@@ -610,8 +610,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
             # Submit the new optimizations
             meta, opt_ids = self.root_socket.records.optimization.add(
-                OptimizationInputSpecification(**opt_spec2),
                 constrained_mols,
+                OptimizationInputSpecification(**opt_spec2),
                 service_orm.tag,
                 service_orm.priority,
                 session=session,

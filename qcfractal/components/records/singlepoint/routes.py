@@ -19,7 +19,7 @@ def add_singlepoint_records_v1(body_data: SinglepointAddBody):
         raise LimitExceededError(f"Cannot add {len(body_data.molecules)} singlepoint records - limit is {limit}")
 
     return storage_socket.records.singlepoint.add(
-        qc_spec=body_data.specification, molecules=body_data.molecules, tag=body_data.tag, priority=body_data.priority
+        molecules=body_data.molecules, qc_spec=body_data.specification, tag=body_data.tag, priority=body_data.priority
     )
 
 
