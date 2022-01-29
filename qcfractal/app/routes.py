@@ -5,7 +5,6 @@ from typing import Optional, Type, Callable, TypeVar, Dict, List, Any
 from urllib.parse import urlparse
 
 import pydantic
-import qcelemental
 from flask import g, request, current_app, jsonify, Response
 from flask_jwt_extended import (
     verify_jwt_in_request,
@@ -35,10 +34,6 @@ _read_permissions: Dict[str, Dict[str, List[Dict[str, str]]]] = {}
 
 @main.before_request
 def before_request_func():
-    ###############################################################
-    # Deserialize the various encodings we support (like msgpack) #
-    ###############################################################
-
     # Store timing information in the request/app context
     # g here refers to flask.g
     g.request_start = time.time()
@@ -47,81 +42,6 @@ def before_request_func():
         g.request_bytes = len(request.data)
     else:
         g.request_bytes = 0
-
-    # The rest of this function is only for old endpoints
-    if request.path.startswith("/v1/"):
-        return
-
-    # default to "application/json"
-    content_type = request.headers.get("Content-Type", "application/json")
-    encoding = _valid_encodings.get(content_type, None)
-
-    if encoding is None:
-        raise BadRequest(f"Did not understand Content-Type {content_type}")
-
-    try:
-        # Check to see if we have a json that is encoded as bytes rather than a string
-        if (encoding == "json") and isinstance(request.data, bytes):
-            blob = request.data.decode()
-        else:
-            blob = request.data
-
-        if blob:
-            request.data = qcelemental.util.deserialize(blob, encoding)
-        else:
-            request.data = None
-    except Exception as e:
-        raise BadRequest(f"Could not deserialize body. {e}")
-
-
-def wrap_route(body_model: Optional[_T], url_params_model: Optional[Type[pydantic.BaseModel]] = None) -> Callable:
-    def decorate(fn):
-        @wraps(fn)
-        def wrapper(*args, **kwargs):
-            content_type = request.headers.get("Content-Type")
-
-            # Find an appropriate return type (from the "Accept" header)
-            # Flask helpfully parses this for us
-            # By default, use plain json
-            possible_types = ["text/html", "application/msgpack", "application/json"]
-            accept_type = request.accept_mimetypes.best_match(possible_types, "application/json")
-
-            # If text/html is first, then this is probably a browser. Send json, as most browsers
-            # will accept that
-            if accept_type == "text/html":
-                accept_type = "application/json"
-
-            # 1.) The body is stored in request.data
-            if body_model is not None:
-                if content_type is None:
-                    raise BadRequest("No Content-Type specified")
-
-                if not request.data:
-                    raise BadRequest("Expected body, but it is empty")
-
-                try:
-                    deserialized_data = deserialize(request.data, content_type)
-                    kwargs["body_data"] = pydantic.parse_obj_as(body_model, deserialized_data)
-                except Exception as e:
-                    raise BadRequest("Invalid body: " + str(e))
-
-            # 2.) Query parameters are in request.args
-            if url_params_model is not None:
-                try:
-                    kwargs["url_params"] = url_params_model(**request.args.to_dict(False))
-                except Exception as e:
-                    raise BadRequest("Invalid request arguments: " + str(e))
-
-            # Now call the function, and validate the output
-            ret = fn(*args, **kwargs)
-
-            # Serialize the output
-            serialized = serialize(ret, accept_type)
-            return Response(serialized, content_type=accept_type)
-
-        return wrapper
-
-    return decorate
 
 
 @main.after_request
@@ -162,6 +82,130 @@ def after_request_func(response: Response):
         storage_socket.serverinfo.save_access(log)
 
     return response
+
+
+def check_permissions():
+    """
+    Check for access to the URL given
+    permissions in the JWT token in the request headers
+
+    1- If no security (enable_security is False), always allow
+    2- If enable_security:
+        if read allowed (allow_unauthenticated_read=True), use the default read permissions
+        otherwise, check against the logged-in user permissions
+        from the headers' JWT token
+    """
+
+    # First - check permissions
+    security_enabled = current_app.config["QCFRACTAL_CONFIG"].enable_security
+    allow_unauthenticated_read = current_app.config["QCFRACTAL_CONFIG"].allow_unauthenticated_read
+
+    # if no auth required, always allowed
+    if not security_enabled:
+        return
+
+    # load read permissions from DB if not already loaded
+    global _read_permissions
+    if not _read_permissions:
+        _read_permissions = storage_socket.roles.get("read")["permissions"]
+
+    # if read is allowed without login, use read_permissions
+    # otherwise, check logged-in permissions
+    if allow_unauthenticated_read:
+        # don't raise exception if no JWT is found
+        verify_jwt_in_request(optional=True)
+    else:
+        # read JWT token from request headers
+        verify_jwt_in_request(optional=False)
+
+    try:
+        claims = get_jwt()
+        permissions = claims.get("permissions", {})
+
+        identity = get_jwt_identity()  # may be None
+
+        # Pull the second part of the URL (ie, /v1/molecule -> molecule)
+        # We will consistently ignore the version prefix
+        resource = urlparse(request.url).path.split("/")[2]
+        context = {"Principal": identity, "Action": request.method, "Resource": resource}
+        policy = Policy(permissions)
+        if not policy.evaluate(context):
+            # If that doesn't work, but we allow unauthenticated read, then try that
+            if not allow_unauthenticated_read:
+                raise Forbidden(f"User {identity} is not authorized to access '{resource}'")
+
+            if not Policy(_read_permissions).evaluate(context):
+                raise Forbidden(f"User {identity} is not authorized to access '{resource}'")
+
+        # Store the user in the global app/request context
+        g.user = identity
+
+    except Forbidden:
+        raise
+    except Exception as e:
+        current_app.logger.info("Error in evaluating JWT permissions: \n" + str(e))
+        raise BadRequest("Error in evaluating JWT permissions")
+
+
+def wrap_route(
+    body_model: Optional[_T], url_params_model: Optional[Type[pydantic.BaseModel]] = None, check_access: bool = True
+) -> Callable:
+    def decorate(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+
+            if check_access:
+                check_permissions()
+
+            ##################################################################
+            # If we got here, then the user is allowed access to this endpoint
+            # Continue with parsing their request
+            ##################################################################
+
+            content_type = request.headers.get("Content-Type")
+
+            # Find an appropriate return type (from the "Accept" header)
+            # Flask helpfully parses this for us
+            # By default, use plain json
+            possible_types = ["text/html", "application/msgpack", "application/json"]
+            accept_type = request.accept_mimetypes.best_match(possible_types, "application/json")
+
+            # If text/html is first, then this is probably a browser. Send json, as most browsers
+            # will accept that
+            if accept_type == "text/html":
+                accept_type = "application/json"
+
+            # 1. The body is stored in request.data
+            if body_model is not None:
+                if content_type is None:
+                    raise BadRequest("No Content-Type specified")
+
+                if not request.data:
+                    raise BadRequest("Expected body, but it is empty")
+
+                try:
+                    deserialized_data = deserialize(request.data, content_type)
+                    kwargs["body_data"] = pydantic.parse_obj_as(body_model, deserialized_data)
+                except Exception as e:
+                    raise BadRequest("Invalid body: " + str(e))
+
+            # 2. Query parameters are in request.args
+            if url_params_model is not None:
+                try:
+                    kwargs["url_params"] = url_params_model(**request.args.to_dict(False))
+                except Exception as e:
+                    raise BadRequest("Invalid request arguments: " + str(e))
+
+            # Now call the function, and validate the output
+            ret = fn(*args, **kwargs)
+
+            # Serialize the output
+            serialized = serialize(ret, accept_type)
+            return Response(serialized, content_type=accept_type)
+
+        return wrapper
+
+    return decorate
 
 
 @main.errorhandler(InternalServerError)
@@ -224,80 +268,6 @@ def handle_auth_error(error):
 def handle_compute_manager_error(error: ComputeManagerError):
     # Handle compute manager errors
     return jsonify(msg=str(error)), 400
-
-
-def check_access(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        """
-        Call the route (fn) if allowed to access the url using the given
-        permissions in the JWT token in the request headers
-
-        1- If no security (enable_security is False), always allow
-        2- If enable_security:
-            if read allowed (allow_unauthenticated_read=True), use the default read permissions
-            otherwise, check against the logged-in user permissions
-            from the headers' JWT token
-        """
-
-        security_enabled = current_app.config["QCFRACTAL_CONFIG"].enable_security
-        allow_unauthenticated_read = current_app.config["QCFRACTAL_CONFIG"].allow_unauthenticated_read
-
-        # if no auth required, always allowed
-        if not security_enabled:
-            return fn(*args, **kwargs)
-
-        # load read permissions from DB if not read
-        global _read_permissions
-        if not _read_permissions:
-            _read_permissions = storage_socket.roles.get("read")["permissions"]
-
-        # if read is allowed without login, use read_permissions
-        # otherwise, check logged-in permissions
-        if allow_unauthenticated_read:
-            # don't raise exception if no JWT is found
-            verify_jwt_in_request(optional=True)
-        else:
-            # read JWT token from request headers
-            verify_jwt_in_request(optional=False)
-
-        try:
-            claims = get_jwt()
-            permissions = claims.get("permissions", {})
-
-            identity = get_jwt_identity()  # may be None
-
-            # Pull the second part of the URL (ie, /v1/molecule -> molecule)
-            # We will consistently ignore the version prefix
-            resource = urlparse(request.url).path.split("/")[2]
-            context = {
-                "Principal": identity,
-                "Action": request.method,
-                "Resource": resource
-                # "IpAddress": request.remote_addr,
-                # "AccessTime": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-            }
-            policy = Policy(permissions)
-            if not policy.evaluate(context):
-                # If that doesn't work, but we allow unauthenticated read, then try that
-                if not allow_unauthenticated_read:
-                    raise Forbidden(f"User {identity} is not authorized to access '{resource}'")
-
-                if not Policy(_read_permissions).evaluate(context):
-                    raise Forbidden(f"User {identity} is not authorized to access '{resource}'")
-
-            # Store the user in the global app/request context
-            g.user = identity
-
-        except Forbidden:
-            raise
-        except Exception as e:
-            current_app.logger.info("Error in evaluating JWT permissions: \n" + str(e))
-            raise BadRequest("Error in evaluating JWT permissions")
-
-        return fn(*args, **kwargs)
-
-    return wrapper
 
 
 # @main.route("/register", methods=["POST"])

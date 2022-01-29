@@ -4,7 +4,7 @@ from flask import current_app
 
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper, delete_helper
-from qcfractal.app.routes import check_access, wrap_route
+from qcfractal.app.routes import wrap_route
 from qcportal.base_models import CommonGetURLParameters, CommonDeleteURLParameters
 from qcportal.exceptions import LimitExceededError
 from qcportal.molecules import Molecule, MoleculeQueryBody, MoleculeModifyBody
@@ -14,7 +14,6 @@ from qcportal.utils import calculate_limit
 @main.route("/v1/molecule", methods=["GET"])
 @main.route("/v1/molecule/<molecule_id>", methods=["GET"])
 @wrap_route(None, CommonGetURLParameters)
-@check_access
 def get_molecules_v1(molecule_id: Optional[int] = None, *, url_params: CommonGetURLParameters):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_molecules
     if url_params.id is not None and len(url_params.id) > limit:
@@ -26,14 +25,12 @@ def get_molecules_v1(molecule_id: Optional[int] = None, *, url_params: CommonGet
 @main.route("/v1/molecule", methods=["DELETE"])
 @main.route("/v1/molecule/<molecule_id>", methods=["DELETE"])
 @wrap_route(None, CommonDeleteURLParameters)
-@check_access
 def delete_molecules_v1(molecule_id: Optional[int] = None, *, url_params: CommonDeleteURLParameters):
     return delete_helper(molecule_id, url_params.id, storage_socket.molecules.delete)
 
 
 @main.route("/v1/molecule/<molecule_id>", methods=["PATCH"])
 @wrap_route(MoleculeModifyBody, None)
-@check_access
 def modify_molecules_v1(molecule_id: int, *, body_data: MoleculeModifyBody):
     return storage_socket.molecules.modify(
         molecule_id=molecule_id,
@@ -46,7 +43,6 @@ def modify_molecules_v1(molecule_id: int, *, body_data: MoleculeModifyBody):
 
 @main.route("/v1/molecule", methods=["POST"])
 @wrap_route(List[Molecule], None)
-@check_access
 def add_molecules_v1(body_data: List[Molecule]):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.add_molecules
     if len(body_data) > limit:
@@ -57,7 +53,6 @@ def add_molecules_v1(body_data: List[Molecule]):
 
 @main.route("/v1/molecule/query", methods=["POST"])
 @wrap_route(MoleculeQueryBody, None)
-@check_access
 def query_molecules_v1(body_data: MoleculeQueryBody):
 
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_molecules

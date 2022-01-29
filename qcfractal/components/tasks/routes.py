@@ -1,7 +1,7 @@
 from flask import current_app
 
 from qcfractal.app import main, storage_socket
-from qcfractal.app.routes import check_access, wrap_route
+from qcfractal.app.routes import wrap_route
 from qcportal.tasks import (
     TaskClaimBody,
     TaskReturnBody,
@@ -11,7 +11,6 @@ from qcportal.utils import calculate_limit
 
 @main.route("/v1/task/claim", methods=["POST"])
 @wrap_route(TaskClaimBody, None)
-@check_access
 def claim_tasks_v1(body_data: TaskClaimBody):
     """Claims tasks from the task queue"""
 
@@ -25,7 +24,6 @@ def claim_tasks_v1(body_data: TaskClaimBody):
 
 @main.route("/v1/task/return", methods=["POST"])
 @wrap_route(TaskReturnBody, None)
-@check_access
 def return_tasks_v1(body_data: TaskReturnBody):
     """Return finished tasks"""
 

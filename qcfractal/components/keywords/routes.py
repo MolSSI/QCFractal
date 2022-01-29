@@ -4,7 +4,7 @@ from flask import current_app
 
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper, delete_helper
-from qcfractal.app.routes import check_access, wrap_route
+from qcfractal.app.routes import wrap_route
 from qcportal.base_models import CommonGetURLParameters, CommonDeleteURLParameters
 from qcportal.exceptions import LimitExceededError
 from qcportal.keywords import KeywordSet
@@ -13,7 +13,6 @@ from qcportal.keywords import KeywordSet
 @main.route("/v1/keyword", methods=["GET"])
 @main.route("/v1/keyword/<keywords_id>", methods=["GET"])
 @wrap_route(None, CommonGetURLParameters)
-@check_access
 def get_keywords_v1(keywords_id: Optional[int] = None, *, url_params: CommonGetURLParameters):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_keywords
     if url_params.id is not None and len(url_params.id) > limit:
@@ -24,7 +23,6 @@ def get_keywords_v1(keywords_id: Optional[int] = None, *, url_params: CommonGetU
 
 @main.route("/v1/keyword", methods=["POST"])
 @wrap_route(List[KeywordSet], None)
-@check_access
 def add_keywords_v1(body_data: List[KeywordSet]):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.add_keywords
     if len(body_data) > limit:
@@ -36,6 +34,5 @@ def add_keywords_v1(body_data: List[KeywordSet]):
 @main.route("/v1/keyword", methods=["DELETE"])
 @main.route("/v1/keyword/<keywords_id>", methods=["DELETE"])
 @wrap_route(None, CommonDeleteURLParameters)
-@check_access
 def delete_keywords_v1(keywords_id: Optional[int] = None, *, url_params: CommonDeleteURLParameters):
     return delete_helper(keywords_id, url_params.id, storage_socket.keywords.delete)
