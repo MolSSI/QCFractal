@@ -66,7 +66,7 @@ def test_molecules_socket_delete_inuse(storage_socket: SQLAlchemySocket):
 
     input_spec, molecules, result_data = load_procedure_data("psi4_benzene_opt")
 
-    meta, ids = storage_socket.records.optimization.add(input_spec, [molecules])
+    meta, ids = storage_socket.records.optimization.add([molecules], input_spec)
     assert meta.success
 
     # Delete the molecule

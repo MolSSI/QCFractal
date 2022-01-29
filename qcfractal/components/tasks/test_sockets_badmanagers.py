@@ -56,7 +56,7 @@ def test_task_socket_return_manager_noexist(storage_socket: SQLAlchemySocket):
     )
 
     input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
-    meta, id = storage_socket.records.singlepoint.add(input_spec, [molecule], "tag1", PriorityEnum.normal)
+    meta, id = storage_socket.records.singlepoint.add([molecule], input_spec, "tag1", PriorityEnum.normal)
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 
     with pytest.raises(ComputeManagerError, match="does not exist") as err:
@@ -87,7 +87,7 @@ def test_task_socket_return_manager_inactive(storage_socket: SQLAlchemySocket):
     )
 
     input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
-    meta, id = storage_socket.records.singlepoint.add(input_spec, [molecule], "tag1", PriorityEnum.normal)
+    meta, id = storage_socket.records.singlepoint.add([molecule], input_spec, "tag1", PriorityEnum.normal)
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 
     storage_socket.managers.deactivate([mname1.fullname])
@@ -123,7 +123,7 @@ def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket):
     )
 
     input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
-    meta, id = storage_socket.records.singlepoint.add(input_spec, [molecule], "tag1", PriorityEnum.normal)
+    meta, id = storage_socket.records.singlepoint.add([molecule], input_spec, "tag1", PriorityEnum.normal)
 
     # Manager 1 claims tasks
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
@@ -203,7 +203,7 @@ def test_task_socket_return_manager_badstatus_1(storage_socket: SQLAlchemySocket
     )
 
     input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
-    meta, id = storage_socket.records.singlepoint.add(input_spec, [molecule], "tag1", PriorityEnum.normal)
+    meta, id = storage_socket.records.singlepoint.add([molecule], input_spec, "tag1", PriorityEnum.normal)
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 
@@ -249,7 +249,7 @@ def test_task_socket_return_manager_badstatus_2(storage_socket: SQLAlchemySocket
     )
 
     input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
-    meta, id = storage_socket.records.singlepoint.add(input_spec, [molecule], "tag1", PriorityEnum.normal)
+    meta, id = storage_socket.records.singlepoint.add([molecule], input_spec, "tag1", PriorityEnum.normal)
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 
@@ -301,7 +301,7 @@ def test_task_socket_return_manager_badstatus_3(storage_socket: SQLAlchemySocket
     )
 
     input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
-    meta, id = storage_socket.records.singlepoint.add(input_spec, [molecule], "tag1", PriorityEnum.normal)
+    meta, id = storage_socket.records.singlepoint.add([molecule], input_spec, "tag1", PriorityEnum.normal)
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 

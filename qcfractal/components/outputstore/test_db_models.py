@@ -28,7 +28,7 @@ def existing_history_id(storage_socket):
     """
 
     input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
-    meta, id = storage_socket.records.singlepoint.add(input_spec, [molecule])
+    meta, id = storage_socket.records.singlepoint.add([molecule], input_spec)
 
     hist = RecordComputeHistoryORM(
         record_id=id[0],

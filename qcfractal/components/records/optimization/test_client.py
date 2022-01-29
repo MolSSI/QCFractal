@@ -126,9 +126,9 @@ def test_optimization_client_query(snowflake_client: PortalClient, storage_socke
     input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_benzene_opt")
     input_spec_3, molecule_3, result_data_3 = load_procedure_data("psi4_methane_opt_sometraj")
 
-    meta1, id1 = storage_socket.records.optimization.add(input_spec_1, [molecule_1])
-    meta2, id2 = storage_socket.records.optimization.add(input_spec_2, [molecule_2])
-    meta3, id3 = storage_socket.records.optimization.add(input_spec_3, [molecule_3])
+    meta1, id1 = storage_socket.records.optimization.add([molecule_1], input_spec_1)
+    meta2, id2 = storage_socket.records.optimization.add([molecule_2], input_spec_2)
+    meta3, id3 = storage_socket.records.optimization.add([molecule_3], input_spec_3)
 
     recs = snowflake_client.get_optimizations(id1 + id2 + id3)
 
@@ -186,7 +186,7 @@ def test_optimization_client_query(snowflake_client: PortalClient, storage_socke
 def test_optimization_client_delete_1(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, opt_file: str):
     # Deleting with deleting children
     input_spec_1, molecule_1, result_data_1 = load_procedure_data(opt_file)
-    meta1, id1 = storage_socket.records.optimization.add(input_spec_1, [molecule_1])
+    meta1, id1 = storage_socket.records.optimization.add([molecule_1], input_spec_1)
 
     with storage_socket.session_scope() as session:
         rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()

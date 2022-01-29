@@ -351,8 +351,8 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
     def add(
         self,
-        go_spec: GridoptimizationInputSpecification,
         initial_molecules: Sequence[Union[int, Molecule]],
+        go_spec: GridoptimizationInputSpecification,
         tag: Optional[str] = None,
         priority: PriorityEnum = PriorityEnum.normal,
         *,
@@ -368,10 +368,10 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
         Parameters
         ----------
-        go_spec
-            Specification for the calculations
         initial_molecules
             Molecules to compute using the specification
+        go_spec
+            Specification for the calculations
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed before returning from this function.
@@ -617,8 +617,8 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                     raise RuntimeError("Developer error - starting molecule set when it shouldn't be!")
                 # Submit the new optimization with no constraints
                 meta, opt_ids = self.root_socket.records.optimization.add(
-                    OptimizationInputSpecification(**opt_spec2),
                     [molecule],
+                    OptimizationInputSpecification(**opt_spec2),
                     service_orm.tag,
                     service_orm.priority,
                     session=session,
@@ -648,8 +648,8 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
                 # Submit the new optimization
                 meta, opt_ids = self.root_socket.records.optimization.add(
-                    OptimizationInputSpecification(**opt_spec2),
                     [molecule],
+                    OptimizationInputSpecification(**opt_spec2),
                     service_orm.tag,
                     service_orm.priority,
                     session=session,

@@ -178,13 +178,13 @@ def test_manager_claim_return(snowflake: TestingSnowflake, storage_socket: SQLAl
     input_spec_5, molecule_5, result_data_5 = load_procedure_data("psi4_benzene_energy_2")
     input_spec_6, molecule_6, result_data_6 = load_procedure_data("psi4_water_energy")
 
-    meta, id_0 = storage_socket.records.optimization.add(input_spec_0, [molecule_0], "tag0", PriorityEnum.normal)
-    meta, id_1 = storage_socket.records.singlepoint.add(input_spec_1, [molecule_1], "tag1", PriorityEnum.high)
-    meta, id_2 = storage_socket.records.singlepoint.add(input_spec_2, [molecule_2], "tag2", PriorityEnum.high)
-    meta, id_3 = storage_socket.records.singlepoint.add(input_spec_3, [molecule_3], "tag3", PriorityEnum.high)
-    meta, id_4 = storage_socket.records.singlepoint.add(input_spec_4, [molecule_4], "tag4", PriorityEnum.normal)
-    meta, id_5 = storage_socket.records.singlepoint.add(input_spec_5, [molecule_5], "tag5", PriorityEnum.normal)
-    meta, id_6 = storage_socket.records.singlepoint.add(input_spec_6, [molecule_6], "tag6", PriorityEnum.normal)
+    meta, id_0 = storage_socket.records.optimization.add([molecule_0], input_spec_0, "tag0", PriorityEnum.normal)
+    meta, id_1 = storage_socket.records.singlepoint.add([molecule_1], input_spec_1, "tag1", PriorityEnum.high)
+    meta, id_2 = storage_socket.records.singlepoint.add([molecule_2], input_spec_2, "tag2", PriorityEnum.high)
+    meta, id_3 = storage_socket.records.singlepoint.add([molecule_3], input_spec_3, "tag3", PriorityEnum.high)
+    meta, id_4 = storage_socket.records.singlepoint.add([molecule_4], input_spec_4, "tag4", PriorityEnum.normal)
+    meta, id_5 = storage_socket.records.singlepoint.add([molecule_5], input_spec_5, "tag5", PriorityEnum.normal)
+    meta, id_6 = storage_socket.records.singlepoint.add([molecule_6], input_spec_6, "tag6", PriorityEnum.normal)
     all_id = id_0 + id_1 + id_2 + id_3 + id_4 + id_5 + id_6
 
     result_data = {
@@ -219,13 +219,13 @@ def test_manager_deferred_return(snowflake: TestingSnowflake, storage_socket: SQ
     input_spec_5, molecule_5, result_data_5 = load_procedure_data("psi4_benzene_energy_2")
     input_spec_6, molecule_6, result_data_6 = load_procedure_data("psi4_water_energy")
 
-    meta, id_0 = storage_socket.records.optimization.add(input_spec_0, [molecule_0], "tag0", PriorityEnum.normal)
-    meta, id_1 = storage_socket.records.singlepoint.add(input_spec_1, [molecule_1], "tag1", PriorityEnum.high)
-    meta, id_2 = storage_socket.records.singlepoint.add(input_spec_2, [molecule_2], "tag2", PriorityEnum.high)
-    meta, id_3 = storage_socket.records.singlepoint.add(input_spec_3, [molecule_3], "tag3", PriorityEnum.high)
-    meta, id_4 = storage_socket.records.singlepoint.add(input_spec_4, [molecule_4], "tag4", PriorityEnum.normal)
-    meta, id_5 = storage_socket.records.singlepoint.add(input_spec_5, [molecule_5], "tag5", PriorityEnum.normal)
-    meta, id_6 = storage_socket.records.singlepoint.add(input_spec_6, [molecule_6], "tag6", PriorityEnum.normal)
+    meta, id_0 = storage_socket.records.optimization.add([molecule_0], input_spec_0, "tag0", PriorityEnum.normal)
+    meta, id_1 = storage_socket.records.singlepoint.add([molecule_1], input_spec_1, "tag1", PriorityEnum.high)
+    meta, id_2 = storage_socket.records.singlepoint.add([molecule_2], input_spec_2, "tag2", PriorityEnum.high)
+    meta, id_3 = storage_socket.records.singlepoint.add([molecule_3], input_spec_3, "tag3", PriorityEnum.high)
+    meta, id_4 = storage_socket.records.singlepoint.add([molecule_4], input_spec_4, "tag4", PriorityEnum.normal)
+    meta, id_5 = storage_socket.records.singlepoint.add([molecule_5], input_spec_5, "tag5", PriorityEnum.normal)
+    meta, id_6 = storage_socket.records.singlepoint.add([molecule_6], input_spec_6, "tag6", PriorityEnum.normal)
     all_id = id_0 + id_1 + id_2 + id_3 + id_4 + id_5 + id_6
 
     result_data = {
@@ -292,13 +292,13 @@ def test_manager_deferred_drop(snowflake: TestingSnowflake, storage_socket: SQLA
     input_spec_5, molecule_5, result_data_5 = load_procedure_data("psi4_benzene_energy_2")
     input_spec_6, molecule_6, result_data_6 = load_procedure_data("psi4_water_energy")
 
-    meta, id_0 = storage_socket.records.optimization.add(input_spec_0, [molecule_0], "tag0", PriorityEnum.normal)
-    meta, id_1 = storage_socket.records.singlepoint.add(input_spec_1, [molecule_1], "tag1", PriorityEnum.high)
-    meta, id_2 = storage_socket.records.singlepoint.add(input_spec_2, [molecule_2], "tag2", PriorityEnum.high)
-    meta, id_3 = storage_socket.records.singlepoint.add(input_spec_3, [molecule_3], "tag3", PriorityEnum.high)
-    meta, id_4 = storage_socket.records.singlepoint.add(input_spec_4, [molecule_4], "tag4", PriorityEnum.normal)
-    meta, id_5 = storage_socket.records.singlepoint.add(input_spec_5, [molecule_5], "tag5", PriorityEnum.normal)
-    meta, id_6 = storage_socket.records.singlepoint.add(input_spec_6, [molecule_6], "tag6", PriorityEnum.normal)
+    meta, id_0 = storage_socket.records.optimization.add([molecule_0], input_spec_0, "tag0", PriorityEnum.normal)
+    meta, id_1 = storage_socket.records.singlepoint.add([molecule_1], input_spec_1, "tag1", PriorityEnum.high)
+    meta, id_2 = storage_socket.records.singlepoint.add([molecule_2], input_spec_2, "tag2", PriorityEnum.high)
+    meta, id_3 = storage_socket.records.singlepoint.add([molecule_3], input_spec_3, "tag3", PriorityEnum.high)
+    meta, id_4 = storage_socket.records.singlepoint.add([molecule_4], input_spec_4, "tag4", PriorityEnum.normal)
+    meta, id_5 = storage_socket.records.singlepoint.add([molecule_5], input_spec_5, "tag5", PriorityEnum.normal)
+    meta, id_6 = storage_socket.records.singlepoint.add([molecule_6], input_spec_6, "tag6", PriorityEnum.normal)
     all_id = id_0 + id_1 + id_2 + id_3 + id_4 + id_5 + id_6
 
     result_data = {

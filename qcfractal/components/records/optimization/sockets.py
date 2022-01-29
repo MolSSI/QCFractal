@@ -258,8 +258,8 @@ class OptimizationRecordSocket(BaseRecordSocket):
 
     def add(
         self,
-        opt_spec: OptimizationInputSpecification,
         initial_molecules: Sequence[Union[int, Molecule]],
+        opt_spec: OptimizationInputSpecification,
         tag: Optional[str] = None,
         priority: PriorityEnum = PriorityEnum.normal,
         *,
@@ -275,10 +275,10 @@ class OptimizationRecordSocket(BaseRecordSocket):
 
         Parameters
         ----------
-        opt_spec
-            Specification for the calculations
         initial_molecules
             Molecules to compute using the specification
+        opt_spec
+            Specification for the calculations
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed before returning from this function.

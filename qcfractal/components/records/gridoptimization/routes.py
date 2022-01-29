@@ -21,8 +21,8 @@ def add_gridoptimization_records_v1(body_data: GridoptimizationAddBody):
         )
 
     return storage_socket.records.gridoptimization.add(
-        go_spec=body_data.specification,
         initial_molecules=body_data.initial_molecules,
+        go_spec=body_data.specification,
         tag=body_data.tag,
         priority=body_data.priority,
     )

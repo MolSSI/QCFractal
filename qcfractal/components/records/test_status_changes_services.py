@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 
 # The slow ones are a bit more thorough - ie, some iterations are mixed complete/incomplete
 test_files = [
-    pytest.param("td_C9H11NO2_psi4_b3lyp-d3bj", marks=pytest.mark.slow),
     pytest.param("go_C4H4N2OS_psi4_b3lyp-d3bj", marks=pytest.mark.slow),
     "td_H2O2_psi4_hf",
     "go_H3NS_psi4_pbe0",  # preopt = True
