@@ -10,7 +10,7 @@ from concurrent.futures import ProcessPoolExecutor
 from queue import Empty  # Just for exception handling
 from typing import TYPE_CHECKING
 
-from qcfractalcompute import QueueManager
+from qcfractalcompute import ComputeManager
 from qcportal import PortalClient
 from qcportal.records import RecordStatusEnum
 from .app.flask_app import FlaskProcess
@@ -42,7 +42,7 @@ class SnowflakeComputeProcess(ProcessBase):
         uri = f"http://{host}:{port}"
 
         self._worker_pool = ProcessPoolExecutor(self._compute_workers)
-        self._queue_manager = QueueManager(self._worker_pool, fractal_uri=uri, manager_name="snowflake_compute")
+        self._queue_manager = ComputeManager(self._worker_pool, fractal_uri=uri, manager_name="snowflake_compute")
 
     def run(self) -> None:
         self._queue_manager.start()

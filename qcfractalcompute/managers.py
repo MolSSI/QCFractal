@@ -20,7 +20,7 @@ from . import __version__
 from .adapters import build_queue_adapter
 from .compress import compress_results
 
-__all__ = ["QueueManager"]
+__all__ = ["ComputeManager"]
 
 from qcportal import ManagerClient
 from qcportal.utils import make_list
@@ -114,7 +114,7 @@ class QueueStatistics(BaseModel):
         return v
 
 
-class QueueManager:
+class ComputeManager:
     """
     This object maintains a computational queue and watches for finished tasks for different
     queue backends. Finished tasks are added to the database and removed from the queue.
