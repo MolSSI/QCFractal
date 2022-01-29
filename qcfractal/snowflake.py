@@ -100,6 +100,7 @@ class FractalSnowflake:
         qcf_cfg["api"] = {"config_name": flask_config, "host": fractal_host, "port": fractal_port}
         qcf_cfg["enable_security"] = False
         qcf_cfg["hide_internal_errors"] = False
+        qcf_cfg["service_frequency"] = 10
 
         # Add in any options passed to this Snowflake
         if extra_config is None:
