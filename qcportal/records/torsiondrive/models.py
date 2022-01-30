@@ -71,7 +71,7 @@ class TorsiondriveOptimization(BaseModel):
     key: str
     position: int
 
-    energy: float
+    energy: Optional[float] = None
     optimization_record: Optional[OptimizationRecord._DataModel]
 
 
