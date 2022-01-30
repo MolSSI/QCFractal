@@ -175,16 +175,21 @@ def test_record_client_cancel_running_service(
     assert rec[0]["status"] == RecordStatusEnum.running
 
     while not finished:
-        snowflake_client.cancel_records(svc_id)
+        meta = snowflake_client.cancel_records(svc_id)
+        assert meta.n_updated == 1
 
         rec = storage_socket.records.get(svc_id, include=["*", "service.*", "service.dependencies.record"])
         assert rec[0]["status"] == RecordStatusEnum.cancelled
         assert rec[0]["service"] is not None  # service queue data left in place
         statuses = [x["record"]["status"] for x in rec[0]["service"]["dependencies"]]
         assert all(x in [RecordStatusEnum.complete, RecordStatusEnum.cancelled] for x in statuses)
+        changed_count = statuses.count(RecordStatusEnum.cancelled)
+        assert meta.n_children_updated == changed_count
 
         # will it run after uncancel?
-        snowflake_client.uncancel_records(svc_id)
+        meta = snowflake_client.uncancel_records(svc_id)
+        assert meta.n_updated == 1
+        assert meta.n_children_updated == changed_count
 
         rec = storage_socket.records.get(svc_id)
         assert rec[0]["status"] == RecordStatusEnum.waiting

@@ -687,8 +687,9 @@ class RecordSocket:
             updated_idx = [idx for idx, rid in enumerate(record_id) if rid in updated_ids]
             error_idx = [idx for idx, rid in enumerate(record_id) if rid in error_ids]
             errors = [(idx, "Record is missing or cannot be reset") for idx in error_idx]
+            n_children_updated = len(updated_ids) - len(updated_idx)
 
-            return UpdateMetadata(updated_idx=updated_idx, errors=errors)
+            return UpdateMetadata(updated_idx=updated_idx, errors=errors, n_children_updated=n_children_updated)
 
     def _cancel_common(
         self,
