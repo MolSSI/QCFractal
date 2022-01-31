@@ -28,6 +28,17 @@ QCA_RESOURCE_STRING = "--resources process=1"
 logger = logging.getLogger("qcfractal.cli")
 
 
+def _initialize_signals_process_pool():
+    import signal
+
+    for signame in {"SIGHUP", "SIGINT", "SIGTERM"}:
+
+        def stop(*args, **kwargs):
+            raise KeyboardInterrupt()
+
+        signal.signal(getattr(signal, signame), stop)
+
+
 class SettingsCommonConfig:
     env_prefix = "QCA_"
     case_insensitive = True
@@ -521,7 +532,7 @@ class ManagerSettings(ProtoModel):
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="A CLI for a QCFractal QueueManager with a ProcessPoolExecutor, Dask, or Parsl backend. "
+        description="A CLI for a QCFractal QueueManager with a multiprocessing.Pool, Dask, or Parsl backend. "
         "The Dask and Parsl backends *requires* a config file due to the complexity of its setup. If a config "
         "file is specified, the remaining options serve as CLI overwrites of the config."
     )
@@ -739,18 +750,14 @@ def main(args=None):
         raise ValueError("Cores per task must be larger than one!")
 
     if settings.common.adapter == "pool":
-        from concurrent.futures import ProcessPoolExecutor
-
-        # TODO: Replace with passing via mp_context to ProcessPoolExecutor
-        # when python 3.6 is dead and buried
-        from multiprocessing import set_start_method
+        from multiprocessing import Pool, set_start_method
 
         set_start_method("spawn")
 
         # Error if the number of nodes per jobs is more than 1
         if settings.common.nodes_per_job > 1:
             raise ValueError("Pool adapters only run on a single local node")
-        queue_client = ProcessPoolExecutor(max_workers=settings.common.tasks_per_worker)
+        queue_client = Pool(processes=settings.common.tasks_per_worker, initializer=_initialize_signals_process_pool)
 
     elif settings.common.adapter == "dask":
 

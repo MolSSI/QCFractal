@@ -400,9 +400,10 @@ def build_adapter_clients(mtype, storage_name="test_qcfractal_compute_server"):
 
     # Basic boot and loop information
     if mtype == "pool":
-        from concurrent.futures import ProcessPoolExecutor
+        from multiprocessing import Pool, set_start_method
+        from .cli.qcfractal_manager import _initialize_signals_process_pool
 
-        adapter_client = ProcessPoolExecutor(max_workers=2)
+        adapter_client = Pool(processes=2, initializer=_initialize_signals_process_pool)
 
     elif mtype == "dask":
         dd = pytest.importorskip("dask.distributed")
