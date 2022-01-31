@@ -1643,6 +1643,7 @@ class Dataset(Collection):
         tag: Optional[str] = None,
         priority: Optional[str] = None,
         protocols: Optional[Dict[str, Any]] = None,
+        save: Optional[bool] = True
     ) -> ComputeResponse:
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
@@ -1666,6 +1667,8 @@ class Dataset(Collection):
             protocols: {'wavefunction'}
         subset : Set[str], optional
             Computes only a subset of the dataset.
+        save : bool, optional
+            If `True`, save the whole collection after calling compute
 
         Returns
         -------
@@ -1684,7 +1687,9 @@ class Dataset(Collection):
             molecule_idx = [e.molecule_id for e in self.data.records]
 
         ret = self._compute(compute_keys, molecule_idx, tag, priority, protocols)
-        self.save()
+
+        if save:
+            self.save()
 
         return ret
 
