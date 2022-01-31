@@ -1643,7 +1643,7 @@ class Dataset(Collection):
         tag: Optional[str] = None,
         priority: Optional[str] = None,
         protocols: Optional[Dict[str, Any]] = None,
-        save: Optional[bool] = True
+        save: Optional[bool] = True,
     ) -> ComputeResponse:
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
