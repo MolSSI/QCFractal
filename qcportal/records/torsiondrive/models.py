@@ -163,7 +163,8 @@ class TorsiondriveRecord(BaseRecord):
 
         ret = {}
         for opt in self.raw_data.optimizations:
-            ret[opt.key] = self.client.recordmodel_from_datamodel([opt.optimization_record])[0]
+            ret.setdefault(opt.key, list())
+            ret[opt.key].append(self.client.recordmodel_from_datamodel([opt.optimization_record])[0])
         self.optimization_cache = ret
         return ret
 
