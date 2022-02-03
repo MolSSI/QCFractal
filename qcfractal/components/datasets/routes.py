@@ -1,127 +1,83 @@
-from flask import jsonify, request, current_app, Response
-from qcelemental.util import serialize
-from werkzeug.exceptions import NotFound, BadRequest
-
 from qcfractal.app import main, storage_socket
-from qcfractal.app.routes import _valid_encodings
-from qcfractal.components.datasets.storage_utils import add_metadata_template
-from qcfractal.interface.models import rest_model
+from qcfractal.app.routes import wrap_route
+from qcportal.base_models import ProjURLParameters, CommonGetProjURLParameters
+from qcportal.datasets import DatasetQueryModel, DatasetGetRecordItemsURLParams, DatasetGetEntryURLParams
 
 
-def parse_bodymodel(model):
-    """Parse request body using pydantic models"""
+@main.route("/v1/dataset/<int:dataset_id>", methods=["GET"])
+@wrap_route(None, CommonGetProjURLParameters)
+def get_dataset_v1(dataset_id: int, *, url_params: CommonGetProjURLParameters):
 
-    try:
-        return model(**request.data)
-    except Exception as e:
-        current_app.logger.error("Invalid request body:\n" + str(e))
-        raise BadRequest("Invalid body: " + str(e))
-
-
-class SerializedResponse(Response):
-    """Serialize pydantic response using the given encoding and pass it
-    as a flask response object"""
-
-    def __init__(self, response, **kwargs):
-
-        # TODO: support other content types? We would need to check the Accept header
-        content_type = "application/msgpack-ext"
-        content_type = "application/json"
-        encoding = _valid_encodings[content_type]
-        response = serialize(response, encoding)
-        super(SerializedResponse, self).__init__(response, content_type=content_type, **kwargs)
+    with storage_socket.session_scope(True) as session:
+        ds_type = storage_socket.datasets.lookup_type(dataset_id, session=session)
+        ds_socket = storage_socket.datasets.get_socket(ds_type)
+        return ds_socket.get(dataset_id, url_params.include, url_params.exclude, url_params.missing_ok, session=session)
 
 
-@main.route("/collection", methods=["GET"])
-@main.route("/collection/<int:collection_id>", methods=["GET"])
-@main.route("/collection/<int:collection_id>/<string:view_function>", methods=["GET"])
-def get_collection(collection_id: int = None, view_function: str = None):
-    # List collections
-
-    view_function_vals = ("value", "entry", "list", "molecule")
-    if view_function is not None and view_function not in view_function_vals:
-        raise NotFound(f"URL Not Found. view_function must be in : {view_function_vals}")
-
-    if (collection_id is None) and (view_function is None):
-        body_model, response_model = rest_model("collection", "get")
-        body = parse_bodymodel(body_model)
-
-        cols = storage_socket.datasets.get(**body.data.dict(), include=body.meta.include, exclude=body.meta.exclude)
-        response = response_model(**cols)
-
-    # Get specific collection
-    elif (collection_id is not None) and (view_function is None):
-        body_model, response_model = rest_model("collection", "get")
-
-        body = parse_bodymodel(body_model)
-        cols = storage_socket.datasets.get(
-            **body.data.dict(), col_id=int(collection_id), include=body.meta.include, exclude=body.meta.exclude
-        )
-        response = response_model(**cols)
-
-    # View-backed function on collection
-    elif (collection_id is not None) and (view_function is not None):
-        body_model, response_model = rest_model(f"collection/{collection_id}/{view_function}", "get")
-        body = parse_bodymodel(body_model)
-        if view_handler.enabled is False:
-            meta = {
-                "success": False,
-                "error_description": "Server does not support collection views.",
-                "errors": [],
-                "msgpacked_cols": [],
-            }
-            response = response_model(meta=meta, data=None)
-            return SerializedResponse(response)
-
-        result = view_handler.handle_request(collection_id, view_function, body.data.dict())
-        response = response_model(**result)
-
-    # Unreachable?
-    else:
-        body_model, response_model = rest_model("collection", "get")
-        meta = add_metadata_template()
-        meta["success"] = False
-        meta["error_description"] = "GET request for view with no collection ID not understood."
-        response = response_model(meta=meta, data=None)
-
-    return SerializedResponse(response)
+@main.route("/v1/dataset/query", methods=["POST"])
+@wrap_route(DatasetQueryModel, None)
+def query_dataset_v1(body_data: DatasetQueryModel):
+    with storage_socket.session_scope(True) as session:
+        dataset_id = storage_socket.datasets.lookup_id(body_data.dataset_type, body_data.name, session=session)
+        ds_socket = storage_socket.datasets.lookup_type(dataset_id, session=session)
+        return ds_socket.get(dataset_id, body_data.include, body_data.exclude, session=session)
 
 
-@main.route("/collection", methods=["POST"])
-@main.route("/collection/<int:collection_id>", methods=["POST"])
-@main.route("/collection/<int:collection_id>/<string:view_function>", methods=["POST"])
-def post_collection(collection_id: int = None, view_function: str = None):
-
-    view_function_vals = ("value", "entry", "list", "molecule")
-    if view_function is not None and view_function not in view_function_vals:
-        raise NotFound(f"URL Not Found. view_function must be in : {view_function_vals}")
-
-    body_model, response_model = rest_model("collection", "post")
-    body = parse_bodymodel(body_model)
-
-    # POST requests not supported for anything other than "/collection"
-    if collection_id is not None or view_function is not None:
-        meta = add_metadata_template()
-        meta["success"] = False
-        meta["error_description"] = "POST requests not supported for sub-resources of /collection"
-        response = response_model(meta=meta, data=None)
-
-        return SerializedResponse(response)
-
-    ret = storage_socket.datasets.add(body.data.dict(), overwrite=body.meta.overwrite)
-    response = response_model(**ret)
-
-    return SerializedResponse(response)
+#################################################################
+# COMMON FUNCTIONS
+# These functions are common to all datasets
+# Note that the inputs are all the same, but the returned dicts
+# are different
+#################################################################
 
 
-@main.route("/collection", methods=["DELETE"])
-@main.route("/collection/<int:collection_id>", methods=["DELETE"])
-def delete_collection(collection_id: int, view_function: str):
-    body_model, response_model = rest_model(f"collection/{collection_id}", "delete")
-    ret = storage_socket.datasets.delete(col_id=collection_id)
-    if ret == 0:
-        return jsonify(msg="Collection does not exist."), 404
-    else:
-        response = response_model(meta={"success": True, "errors": [], "error_description": False})
+@main.route("/v1/dataset/<string:dataset_type>/<int:dataset_id>", methods=["GET"])
+@wrap_route(None, ProjURLParameters)
+def get_general_dataset_v1(dataset_type: str, dataset_id: int, *, url_params: ProjURLParameters):
+    ds_socket = storage_socket.datasets.get_socket(dataset_type)
+    return ds_socket.get(
+        dataset_id,
+        url_params.include,
+        url_params.exclude,
+    )
 
-    return SerializedResponse(response)
+
+@main.route("/v1/dataset/<string:dataset_type>/<int:dataset_id>/status", methods=["GET"])
+@wrap_route(None, None)
+def get_general_dataset_status_v1(dataset_type: str, dataset_id: int):
+    ds_socket = storage_socket.datasets.get_socket(dataset_type)
+    return ds_socket.status(dataset_id)
+
+
+@main.route("/v1/dataset/<string:dataset_type>/<int:dataset_id>/specification", methods=["GET"])
+@wrap_route(None, None)
+def get_general_dataset_specifications_v1(dataset_type: str, dataset_id: int):
+    ds_socket = storage_socket.datasets.get_socket(dataset_type)
+    ds_data = ds_socket.get(dataset_id, ["specifications.*", "specifications.specification"], None, False)
+    return ds_data["specifications"]
+
+
+@main.route("/v1/dataset/<string:dataset_type>/<int:dataset_id>/entry", methods=["GET"])
+@wrap_route(None, DatasetGetEntryURLParams)
+def get_general_dataset_entries_v1(dataset_type: str, dataset_id: int, *, url_params: DatasetGetEntryURLParams):
+    ds_socket = storage_socket.datasets.get_socket(dataset_type)
+    return ds_socket.get_entries(
+        dataset_id,
+        entry_names=url_params.name,
+        include=url_params.include,
+        exclude=url_params.exclude,
+        missing_ok=url_params.missing_ok,
+    )
+
+
+@main.route("/v1/dataset/<string:dataset_type>/<int:dataset_id>/record", methods=["GET"])
+@wrap_route(None, DatasetGetRecordItemsURLParams)
+def get_general_dataset_records_v1(dataset_type: str, dataset_id: int, *, url_params: DatasetGetRecordItemsURLParams):
+    ds_socket = storage_socket.datasets.get_socket(dataset_type)
+    return ds_socket.get_records(
+        dataset_id,
+        specification_names=url_params.specification_name,
+        entry_names=url_params.entry_name,
+        include=url_params.include,
+        exclude=url_params.exclude,
+    )

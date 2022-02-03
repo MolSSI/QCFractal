@@ -48,6 +48,11 @@ class CommonGetURLParameters(RestModelBase):
         return validate_list_to_single(v)
 
 
+class ProjURLParameters(RestModelBase):
+    include: Optional[List[str]] = None
+    exclude: Optional[List[str]] = None
+
+
 class CommonGetProjURLParameters(CommonGetURLParameters):
     """
     Common URL parameters for get_ functions, with projection

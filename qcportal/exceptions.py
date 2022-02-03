@@ -43,6 +43,10 @@ class MissingDataError(UserReportableError):
     pass
 
 
+class AlreadyExistsError(UserReportableError):
+    pass
+
+
 class LimitExceededError(UserReportableError):
     pass
 

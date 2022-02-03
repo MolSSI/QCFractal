@@ -27,10 +27,8 @@ class CollectionORM(BaseORM):
     group = Column(String(100), nullable=False)
     visibility = Column(Boolean, nullable=False)
 
-    view_url_hdf5 = Column(String)
-    view_url_plaintext = Column(String)
-    view_metadata = Column(JSON)
-    view_available = Column(Boolean, nullable=False)
+    default_tag = Column(String, nullable=False)
+    default_priority = Column(Integer, nullable=False)
 
     provenance = Column(JSON)
 

@@ -48,6 +48,8 @@ class BaseORM:
                 d[k] = v.dict()
             elif isinstance(v, list):
                 d[k] = [x.dict() if isinstance(x, BaseORM) else x for x in v]
+            elif isinstance(v, dict):
+                d[k] = {x: y.dict() if isinstance(y, BaseORM) else y for x, y in v.items()}
 
         return d
 

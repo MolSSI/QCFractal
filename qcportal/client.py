@@ -25,6 +25,8 @@ from .base_models import (
 )
 from .cache import PortalCache
 from .client_base import PortalClientBase
+from .datasets import AllDatasetTypes, AllDatasetDataModelTypes, DatasetQueryModel
+from .datasets.optimization import OptimizationDatasetAddBody
 from .keywords import KeywordSet
 from .managers import ManagerQueryBody, ComputeManager
 from .metadata_models import QueryMetadata, UpdateMetadata, InsertMetadata, DeleteMetadata
@@ -156,6 +158,10 @@ class PortalClient(PortalClientBase):
 
         return pydantic.parse_obj_as(List[Optional[AllRecordTypes]], record_init)
 
+    def datasetmodel_from_datamodel(self, data: AllDatasetDataModelTypes) -> AllDatasetTypes:
+        dataset_init = {"client": self, "dataset_type": data.collection_type, "raw_data": data}
+        return pydantic.parse_obj_as(AllDatasetTypes, dataset_init)
+
     @property
     def cache(self):
         if self._cache.cachedir is not None:
@@ -238,6 +244,79 @@ class PortalClient(PortalClientBase):
 
         # Request the info, and store here for later use
         return self._auto_request("get", "v1/information", None, None, Dict[str, Any], None, None)
+
+    ##############################################################
+    # Datasets
+    ##############################################################
+    def list_datasets(self, dataset_type: Optional[Union[str, Iterable[str]]]):
+        pass
+
+    def get_dataset(self, dataset_type: str, dataset_name: str):
+
+        payload = {
+            "dataset_type": dataset_type,
+            "dataset_name": dataset_name,
+            "include": ["*", "specifications.*", "specifications.specification"],
+        }
+
+        ds = self._auto_request(
+            "post",
+            f"v1/dataset/query",
+            None,
+            DatasetQueryModel,
+            AllDatasetDataModelTypes,
+            None,
+            payload,
+        )
+
+        return self.datasetmodel_from_datamodel(ds)
+
+    def get_dataset_by_id(self, dataset_id: int):
+
+        payload = {"include": ["*", "specifications.*", "specifications.specification"]}
+
+        ds = self._auto_request(
+            "get",
+            f"v1/dataset/{dataset_id}",
+            None,
+            CommonGetProjURLParameters,
+            AllDatasetDataModelTypes,
+            None,
+            payload,
+        )
+
+        return self.datasetmodel_from_datamodel(ds)
+
+    def add_optimization_dataset(
+        self,
+        name: str,
+        description: Optional[str] = None,
+        tagline: Optional[str] = None,
+        tags: Optional[Dict[str, Any]] = None,
+        group: Optional[str] = None,
+        provenance: Optional[Dict[str, Any]] = None,
+        visibility: bool = True,
+        default_tag: str = "*",
+        default_priority: PriorityEnum = PriorityEnum.normal,
+    ):
+
+        payload = {
+            "name": name,
+            "description": description,
+            "tagline": tagline,
+            "tags": tags,
+            "group": group,
+            "provenance": provenance,
+            "visibility": visibility,
+            "default_tag": default_tag,
+            "default_priority": default_priority,
+        }
+
+        ds_id = self._auto_request(
+            "post", f"v1/dataset/optimization", OptimizationDatasetAddBody, None, int, payload, None
+        )
+
+        return self.get_dataset_by_id(ds_id)
 
     ##############################################################
     # Molecules

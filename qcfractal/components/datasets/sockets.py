@@ -3,26 +3,355 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+from sqlalchemy import select, delete, func, union
+from sqlalchemy.orm import load_only
+
 from qcfractal.components.datasets.db_models import CollectionORM
-from qcfractal.components.datasets.reaction.db_models import ReactionDatasetORM
-from qcfractal.components.datasets.singlepoint.db_models import DatasetORM
-from qcfractal.components.datasets.storage_utils import add_metadata_template, get_metadata_template
+from qcfractal.components.records.db_models import BaseRecordORM
+from qcfractal.db_socket.helpers import (
+    get_general,
+    get_query_proj_options,
+)
+from qcportal.exceptions import AlreadyExistsError, MissingDataError
+from qcportal.records import RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:
+    from sqlalchemy.orm.session import Session
+    from qcportal.metadata_models import InsertMetadata
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from typing import List, Dict, Any, Optional
+    from qcfractal.db_socket.base_orm import BaseORM
+    from typing import Dict, Any, Optional, Sequence, Type, Iterable, Tuple, List
 
 
-def get_collection_class(collection_type):
+class BaseDatasetSocket:
+    def __init__(
+        self,
+        root_socket: SQLAlchemySocket,
+        dataset_orm: Type[CollectionORM],
+        specification_orm: Type[BaseORM],
+        entry_orm: Type[BaseORM],
+        record_orm: Type[BaseORM],
+    ):
+        self.root_socket = root_socket
+        self.dataset_orm = dataset_orm
+        self.specification_orm = specification_orm
+        self.entry_orm = entry_orm
+        self.record_orm = record_orm
+        self.dataset_type = self.dataset_orm.__mapper_args__["polymorphic_identity"]
 
-    collection_map = {"dataset": DatasetORM, "reactiondataset": ReactionDatasetORM}
+    def _add_specification(self, session, specification) -> Tuple[InsertMetadata, Optional[int]]:
+        raise NotImplementedError("_add_specification must be overridden by the derived class")
 
-    collection_class = CollectionORM
+    def _create_entries(self, session, dataset_id, new_entries) -> Sequence[BaseORM]:
+        raise NotImplementedError("_create_entries must be overridden by the derived class")
 
-    if collection_type in collection_map:
-        collection_class = collection_map[collection_type]
+    @staticmethod
+    def get_records_select():
+        raise NotImplementedError(f"get_records_select not implemented! This is a developer error")
 
-    return collection_class
+    def get_default_tag_priority(
+        self, dataset_id: int, *, session: Optional[Session] = None
+    ) -> Tuple[str, PriorityEnum]:
+
+        stmt = select(CollectionORM.default_tag, CollectionORM.default_priority)
+        stmt = stmt.where(CollectionORM.id == dataset_id)
+
+        with self.root_socket.optional_session(session, True) as session:
+            r = session.execute(stmt).one_or_none()
+            if r is None:
+                raise MissingDataError(f"Cannot get default tag & priority - dataset id {dataset_id} does not exist")
+            return tuple(r)
+
+    def get(
+        self,
+        dataset_id: int,
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
+        missing_ok: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ) -> Optional[Dict[str, Any]]:
+
+        with self.root_socket.optional_session(session) as session:
+            return get_general(
+                session, self.dataset_orm, self.dataset_orm.id, (dataset_id,), include, exclude, missing_ok
+            )[0]
+
+    def status(self, dataset_id: int, *, session: Optional[Session] = None) -> Dict[str, Dict[RecordStatusEnum, int]]:
+
+        stmt = select(self.record_orm.specification_name, BaseRecordORM.status, func.count(BaseRecordORM.id))
+        stmt = stmt.join(self.record_orm, BaseRecordORM.id == self.record_orm.record_id)
+        stmt = stmt.where(self.record_orm.dataset_id == dataset_id)
+        stmt = stmt.group_by(self.record_orm.specification_name, BaseRecordORM.status)
+
+        with self.root_socket.optional_session(session, True) as session:
+            stats = session.execute(stmt).all()
+
+        ret: Dict[str, Dict[RecordStatusEnum, int]] = {}
+        for s in stats:
+            ret.setdefault(s[0], dict())
+            ret[s[0]][s[1]] = s[2]
+        return ret
+
+    def add(
+        self,
+        name: str,
+        description: Optional[str] = None,
+        tagline: Optional[str] = None,
+        tags: Optional[Dict[str, Any]] = None,
+        group: Optional[str] = None,
+        provenance: Optional[Dict[str, Any]] = None,
+        visibility: bool = True,
+        default_tag: Optional[str] = None,
+        default_priority: PriorityEnum = PriorityEnum.normal,
+        *,
+        session: Optional[Session] = None,
+    ) -> int:
+
+        # TODO - nullable group?
+        if group is None:
+            group = "default"
+
+        ds_orm = self.dataset_orm(
+            collection_type=self.dataset_type,
+            collection=self.dataset_type,
+            name=name,
+            lname=name.lower(),
+            tagline=tagline,
+            description=description,
+            tags=tags,
+            group=group,
+            provenance=provenance,
+            visibility=visibility,
+            default_tag=default_tag,
+            default_priority=default_priority,
+        )
+
+        with self.root_socket.optional_session(session) as session:
+            stmt = select(self.dataset_orm.id)
+            stmt = stmt.where(self.dataset_orm.lname == name.lower())
+            stmt = stmt.where(self.dataset_orm.collection_type == self.dataset_type)
+            existing = session.execute(stmt).scalar_one_or_none()
+
+            if existing is not None:
+                raise AlreadyExistsError(f"Dataset with type='{self.dataset_type}' and name='{name}' already exists")
+
+            session.add(ds_orm)
+            session.commit()
+            return ds_orm.id
+
+    def add_specifications(
+        self,
+        dataset_id: int,
+        new_specifications: Iterable[Any],  # we don't know the type here
+        *,
+        session: Optional[Session] = None,
+    ):
+
+        with self.root_socket.optional_session(session) as session:
+            stmt = select(self.specification_orm.name)
+            stmt = stmt.where(self.specification_orm.dataset_id == dataset_id)
+
+            existing_specs = session.execute(stmt).scalars().all()
+
+            for ds_spec in new_specifications:
+                if ds_spec.name in existing_specs:
+                    raise AlreadyExistsError(f"Specification '{ds_spec.name}' already exists for this dataset")
+
+                # call the derived class function for adding a specification
+                meta, spec_id = self._add_specification(session, ds_spec.specification)
+
+                if not meta.success:
+                    raise RuntimeError(
+                        f"Unable to add {self.dataset_type} specification: " + meta.error_string,
+                    )
+
+                ds_spec_orm = self.specification_orm(
+                    dataset_id=dataset_id, name=ds_spec.name, comment=ds_spec.comment, specification_id=spec_id
+                )
+
+                session.add(ds_spec_orm)
+
+    def delete_specifications(
+        self,
+        dataset_id: int,
+        specification_names: Iterable[str],
+        delete_records: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ) -> int:
+
+        with self.root_socket.optional_session(session) as session:
+            if delete_records:
+                # Store all record ids for later deletion
+                stmt = select(self.record_orm.record_id)
+                stmt = stmt.where(self.record_orm.dataset_id == dataset_id)
+                stmt = stmt.where(self.record_orm.specification_name.in_(specification_names))
+                record_ids = session.execute(stmt).scalars().all()
+
+            # Deleting the specification will cascade to the dataset->record association table
+            stmt = delete(self.specification_orm)
+            stmt = stmt.where(self.specification_orm.dataset_id == dataset_id)
+            stmt = stmt.where(self.specification_orm.name.in_(specification_names))
+            r = session.execute(stmt)
+            session.flush()
+
+            if delete_records:
+                self.root_socket.records.delete(record_ids, soft_delete=False, delete_children=True, session=session)
+
+            return r.rowcount
+
+    def rename_specifications(
+        self, dataset_id: int, specification_name_map: Dict[str, str], *, session: Optional[Session] = None
+    ):
+        stmt = select(self.specification_orm)
+        stmt = stmt.where(self.specification_orm.dataset_id == dataset_id)
+        stmt = stmt.where(self.specification_orm.name.in_(specification_name_map.keys()))
+        stmt = stmt.options(load_only(self.specification_orm.name))
+
+        # See if any of the new names already exist
+        exist_stmt = select(self.specification_orm.name)
+        exist_stmt = exist_stmt.where(self.specification_orm.dataset_id == dataset_id)
+        exist_stmt = exist_stmt.where(self.specification_orm.name.in_(specification_name_map.values()))
+
+        with self.root_socket.optional_session(session) as session:
+            existing = session.execute(exist_stmt).scalars().all()
+            if existing:
+                raise AlreadyExistsError(
+                    f"Cannot rename specification to {existing[0]} - specification with that name already exists"
+                )
+
+            specs = session.execute(stmt).scalars().all()
+
+            for spec in specs:
+                spec.name = specification_name_map[spec.name]
+
+    def add_entries(self, dataset_id: int, new_entries: Sequence[Any], *, session: Optional[Session] = None):
+
+        with self.root_socket.optional_session(session) as session:
+            # Create orm for all entries (in derived class)
+            entry_orm = self._create_entries(session, dataset_id, new_entries)
+
+            # Get all existing entries first
+            stmt = select(self.entry_orm.name)
+            stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
+            existing_entries = session.execute(stmt).scalars().all()
+
+            for entry in entry_orm:
+                # Only add if the entry does not exist
+                if entry.name not in existing_entries:
+                    session.add(entry)
+
+    def get_entries(
+        self,
+        dataset_id: int,
+        entry_names: Optional[Sequence[str]] = None,
+        include: Optional[Iterable[str]] = None,
+        exclude: Optional[Iterable[str]] = None,
+        missing_ok: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Dict[str, Any]]:
+        stmt = select(self.entry_orm)
+        stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
+
+        if entry_names is not None:
+            stmt = stmt.where(self.entry_orm.name.in_(entry_names))
+
+        if include or exclude:
+            query_opts = get_query_proj_options(self.entry_orm, include, exclude)
+            stmt = stmt.options(*query_opts)
+
+        with self.root_socket.optional_session(session, True) as session:
+            entries = session.execute(stmt).scalars().all()
+
+        if entry_names is not None and missing_ok is False:
+            found_entries = {x.name for x in entries}
+            missing_entries = set(entry_names) - found_entries
+            if missing_entries:
+                s = "\n".join(missing_entries)
+                raise MissingDataError(f"Missing {len(missing_entries)} entries: {s}")
+
+        return [x.dict() for x in entries]
+
+    def delete_entries(
+        self,
+        dataset_id: int,
+        entry_names: Iterable[str],
+        delete_records: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ) -> int:
+
+        with self.root_socket.optional_session(session) as session:
+            if delete_records:
+                # Store all record ids for later deletion
+                stmt = select(self.record_orm.record_id)
+                stmt = stmt.where(self.record_orm.dataset_id == dataset_id)
+                stmt = stmt.where(self.record_orm.entry_name.in_(entry_names))
+                record_ids = session.execute(stmt).scalars().all()
+
+            # Delete the entries will cascade to the dataset->record association table
+            stmt = delete(self.entry_orm)
+            stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
+            stmt = stmt.where(self.entry_orm.name.in_(entry_names))
+            r = session.execute(stmt)
+            session.flush()
+
+            if delete_records:
+                self.root_socket.records.delete(record_ids, soft_delete=False, delete_children=True, session=session)
+
+            return r.rowcount
+
+    def rename_entries(self, dataset_id: int, entry_name_map: Dict[str, str], *, session: Optional[Session] = None):
+        stmt = select(self.entry_orm)
+        stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
+        stmt = stmt.where(self.entry_orm.name.in_(entry_name_map.keys()))
+        stmt = stmt.options(load_only(self.entry_orm.name))
+
+        # See if any of the new names already exist
+        exist_stmt = select(self.entry_orm.name)
+        exist_stmt = exist_stmt.where(self.entry_orm.dataset_id == dataset_id)
+        exist_stmt = exist_stmt.where(self.entry_orm.name.in_(entry_name_map.values()))
+
+        with self.root_socket.optional_session(session) as session:
+            existing = session.execute(exist_stmt).scalars().all()
+            if existing:
+                raise AlreadyExistsError(f"Cannot rename entry to {existing[0]} - entry with that name already exists")
+
+            # Now do the renaming
+            entries = session.execute(stmt).scalars().all()
+
+            for entry in entries:
+                entry.name = entry_name_map[entry.name]
+
+    def get_records(
+        self,
+        dataset_id: int,
+        specification_names: Optional[Sequence[str]] = None,
+        entry_names: Optional[Sequence[str]] = None,
+        include: Optional[Iterable[str]] = None,
+        exclude: Optional[Iterable[str]] = None,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Dict[str, Any]]:
+
+        stmt = select(self.record_orm)
+        stmt = stmt.where(self.record_orm.dataset_id == dataset_id)
+
+        if entry_names is not None:
+            stmt = stmt.where(self.record_orm.entry_name.in_(entry_names))
+        if specification_names is not None:
+            stmt = stmt.where(self.record_orm.specification_name.in_(specification_names))
+
+        if include or exclude:
+            query_opts = get_query_proj_options(self.record_orm, include, exclude)
+            stmt = stmt.options(*query_opts)
+
+        with self.root_socket.optional_session(session, True) as session:
+            records = session.execute(stmt).scalars().all()
+
+        return [x.dict() for x in records]
 
 
 class DatasetSocket:
@@ -30,171 +359,53 @@ class DatasetSocket:
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
 
-    def add(self, data: Dict[str, Any], overwrite: bool = False):
-        """Add (or update) a collection to the database.
+        from .optimization.sockets import OptimizationDatasetSocket
 
-        Parameters
-        ----------
-        data : Dict[str, Any]
-            should inlcude at least(keys):
-            collection : str (immutable)
-            name : str (immutable)
+        self.optimization = OptimizationDatasetSocket(root_socket)
 
-        overwrite : bool
-            Update existing collection
+        self._handler_map: Dict[str, BaseDatasetSocket] = {
+            self.optimization.dataset_type: self.optimization,
+        }
 
-        Returns
-        -------
-        Dict[str, Any]
-        A dict with keys: 'data' and 'meta'
-            (see add_metadata_template())
-            The 'data' part is the id of the inserted document or none
+        # Get the SQL 'select' statements from the handlers
+        selects = []
+        for h in self._handler_map.values():
+            sel = h.get_records_select()
+            selects.extend(sel)
 
-        Notes
-        -----
-        ** Change: The data doesn't have to include the ID, the document
-        is identified by the (collection, name) pairs.
-        ** Change: New fields will be added to the collection, but existing won't
-            be removed.
-        """
+        # Union them into a CTE
+        self._record_cte = union(*selects).cte()
 
-        meta = add_metadata_template()
-        col_id = None
-        # try:
+    def get_socket(self, dataset_type: str) -> BaseDatasetSocket:
+        handler = self._handler_map.get(dataset_type, None)
+        if handler is None:
+            raise MissingDataError(f"Cannot find handler for type {dataset_type}")
+        return handler
 
-        # if ("id" in data) and (data["id"] == "local"):
-        #     data.pop("id", None)
-        if "id" in data:  # remove the ID in any case
-            data.pop("id", None)
-        lname = data.get("name").lower()
-        collection = data.pop("collection").lower()
+    def lookup_type(self, dataset_id: int, *, session: Optional[Session] = None) -> str:
 
-        # Get collection class if special type is implemented
-        collection_class = get_collection_class(collection)
+        stmt = select(CollectionORM.collection_type)
+        stmt = stmt.where(CollectionORM.id == dataset_id)
 
-        update_fields = {}
-        for field in collection_class._all_col_names():
-            if field in data:
-                update_fields[field] = data.pop(field)
+        with self.root_socket.optional_session(session, True) as session:
+            ds_type = session.execute(stmt).scalar_one_or_none()
 
-        update_fields["extra"] = data  # todo: check for sql injection
+            if ds_type is None:
+                raise MissingDataError(f"Could not find {dataset_id}")
 
-        with self.root_socket.session_scope() as session:
+            return ds_type
 
-            try:
-                if overwrite:
-                    col = session.query(collection_class).filter_by(collection=collection, lname=lname).first()
-                    for key, value in update_fields.items():
-                        setattr(col, key, value)
-                else:
-                    col = collection_class(collection=collection, lname=lname, **update_fields)
+    def lookup_id(
+        self, dataset_type: str, dataset_name: str, missing_ok: bool = False, *, session: Optional[Session] = None
+    ) -> Optional[int]:
 
-                session.add(col)
-                session.commit()
-                col.update_relations(**update_fields)
-                session.commit()
+        stmt = select(CollectionORM.id)
+        stmt = stmt.where(CollectionORM.lname == dataset_name.lower())
+        stmt = stmt.where(CollectionORM.collection_type == dataset_type.lower())
 
-                col_id = str(col.id)
-                meta["success"] = True
-                meta["n_inserted"] = 1
+        with self.root_socket.optional_session(session, True) as session:
+            ds_id = session.execute(stmt).scalar_one_or_none()
 
-            except Exception as err:
-                session.rollback()
-                meta["error_description"] = str(err)
-
-        ret = {"data": col_id, "meta": meta}
-        return ret
-
-    def get(
-        self,
-        collection: Optional[str] = None,
-        name: Optional[str] = None,
-        col_id: Optional[int] = None,
-        limit: Optional[int] = None,
-        include: Optional[List[str]] = None,
-        exclude: Optional[List[str]] = None,
-        skip: int = 0,
-    ) -> Dict[str, Any]:
-        """Get collection by collection and/or name
-
-        Parameters
-        ----------
-        collection: Optional[str], optional
-            Type of the collection, e.g. ReactionDataset
-        name: Optional[str], optional
-            Name of the collection, e.g. S22
-        col_id: Optional[int], optional
-            Database id of the collection
-        limit: Optional[int], optional
-            Maximum number of results to return
-        include: Optional[List[str]], optional
-            Columns to return
-        exclude: Optional[List[str]], optional
-            Return all but these columns
-        skip: int, optional
-            Skip the first `skip` results
-
-        Returns
-        -------
-        Dict[str, Any]
-            A dict with keys: 'data' and 'meta'
-            The data is a list of the collections found
-        """
-
-        meta = get_metadata_template()
-        if name:
-            name = name.lower()
-        if collection:
-            collection = collection.lower()
-
-        collection_class = get_collection_class(collection)
-        query = format_query(collection_class, lname=name, collection=collection, id=col_id)
-
-        # try:
-        rdata, meta["n_found"] = self.root_socket.get_query_projection(
-            collection_class, query, include=include, exclude=exclude, limit=limit, skip=skip
-        )
-
-        meta["success"] = True
-        # except Exception as err:
-        #     meta['error_description'] = str(err)
-
-        return {"data": rdata, "meta": meta}
-
-    def delete(
-        self, collection: Optional[str] = None, name: Optional[str] = None, col_id: Optional[int] = None
-    ) -> bool:
-        """
-        Remove a collection from the database from its keys.
-
-        Parameters
-        ----------
-        collection: Optional[str], optional
-            CollectionORM type
-        name : Optional[str], optional
-            CollectionORM name
-        col_id: Optional[int], optional
-            Database id of the collection
-        Returns
-        -------
-        int
-            Number of documents deleted
-        """
-
-        # Assuming here that we don't want to allow deletion of all collections, all datasets, etc.
-        if not (col_id is not None or (collection is not None and name is not None)):
-            raise ValueError(
-                "Either col_id ({col_id}) must be specified, or collection ({collection}) and name ({name}) must be specified."
-            )
-
-        filter_spec = {}
-        if collection is not None:
-            filter_spec["collection"] = collection.lower()
-        if name is not None:
-            filter_spec["lname"] = name.lower()
-        if col_id is not None:
-            filter_spec["id"] = col_id
-
-        with self.root_socket.session_scope() as session:
-            count = session.query(CollectionORM).filter_by(**filter_spec).delete(synchronize_session=False)
-        return count
+            if missing_ok is False and ds_id is None:
+                raise MissingDataError(f"Could not find {dataset_type} dataset with name '{dataset_name}'")
+            return ds_id

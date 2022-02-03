@@ -4,3 +4,4 @@
 
 from .singlepoint import db_models
 from .reaction import db_models
+from .optimization import db_models, routes
