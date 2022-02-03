@@ -349,6 +349,43 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
             session=session,
         )
 
+    def add_internal(
+        self,
+        initial_molecule_ids: Sequence[int],
+        go_spec_id: int,
+        tag: Optional[str] = None,
+        priority: PriorityEnum = PriorityEnum.normal,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[InsertMetadata, List[Optional[int]]]:
+
+        # tags should be lowercase
+        if tag is not None:
+            tag = tag.lower()
+
+        with self.root_socket.optional_session(session, False) as session:
+
+            all_orm = []
+            for mid in initial_molecule_ids:
+                go_orm = GridoptimizationRecordORM(
+                    is_service=True,
+                    specification_id=go_spec_id,
+                    initial_molecule_id=mid,
+                    status=RecordStatusEnum.waiting,
+                )
+
+                self.create_service(go_orm, tag, priority)
+                all_orm.append(go_orm)
+
+            meta, ids = insert_general(
+                session,
+                all_orm,
+                (GridoptimizationRecordORM.specification_id, GridoptimizationRecordORM.initial_molecule_id),
+                (GridoptimizationRecordORM.id,),
+            )
+
+            return meta, [x[0] for x in ids]
+
     def add(
         self,
         initial_molecules: Sequence[Union[int, Molecule]],
@@ -407,26 +444,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                     [],
                 )
 
-            all_orm = []
-            for mid in init_mol_ids:
-                go_orm = GridoptimizationRecordORM(
-                    is_service=True,
-                    specification_id=spec_id,
-                    initial_molecule_id=mid,
-                    status=RecordStatusEnum.waiting,
-                )
-
-                self.create_service(go_orm, tag, priority)
-                all_orm.append(go_orm)
-
-            meta, ids = insert_general(
-                session,
-                all_orm,
-                (GridoptimizationRecordORM.specification_id, GridoptimizationRecordORM.initial_molecule_id),
-                (GridoptimizationRecordORM.id,),
-            )
-
-            return meta, [x[0] for x in ids]
+            return self.add_internal(init_mol_ids, spec_id, tag, priority, session=session)
 
     def initialize_service(self, session: Session, service_orm: ServiceQueueORM) -> None:
         go_orm: GridoptimizationRecordORM = service_orm.record

@@ -259,6 +259,48 @@ class SinglepointRecordSocket(BaseRecordSocket):
             "kwargs": {},
         }
 
+    def add_internal(
+        self,
+        molecule_ids: Sequence[int],
+        qc_spec_id: int,
+        tag: Optional[str] = None,
+        priority: PriorityEnum = PriorityEnum.normal,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[InsertMetadata, List[Optional[int]]]:
+
+        # tags should be lowercase
+        if tag is not None:
+            tag = tag.lower()
+
+        with self.root_socket.optional_session(session, False) as session:
+
+            # Get the spec orm. The full orm will be needed for create_task
+            stmt = select(QCSpecificationORM).where(QCSpecificationORM.id == qc_spec_id)
+            spec_orm = session.execute(stmt).scalar_one()
+
+            all_orm = []
+
+            for mid in molecule_ids:
+                sp_orm = SinglepointRecordORM(
+                    is_service=False,
+                    specification=spec_orm,
+                    specification_id=qc_spec_id,
+                    molecule_id=mid,
+                    status=RecordStatusEnum.waiting,
+                )
+
+                self.create_task(sp_orm, tag, priority)
+                all_orm.append(sp_orm)
+
+            meta, ids = insert_general(
+                session,
+                all_orm,
+                (SinglepointRecordORM.specification_id, SinglepointRecordORM.molecule_id),
+                (SinglepointRecordORM.id,),
+            )
+            return meta, [x[0] for x in ids]
+
     def add(
         self,
         molecules: Sequence[Union[int, Molecule]],
@@ -317,31 +359,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
                     [],
                 )
 
-            # Get the spec orm. The full orm will be needed for create_task
-            stmt = select(QCSpecificationORM).where(QCSpecificationORM.id == spec_id)
-            spec_orm = session.execute(stmt).scalar_one()
-
-            all_orm = []
-
-            for mid in mol_ids:
-                sp_orm = SinglepointRecordORM(
-                    is_service=False,
-                    specification=spec_orm,
-                    specification_id=spec_id,
-                    molecule_id=mid,
-                    status=RecordStatusEnum.waiting,
-                )
-
-                self.create_task(sp_orm, tag, priority)
-                all_orm.append(sp_orm)
-
-            meta, ids = insert_general(
-                session,
-                all_orm,
-                (SinglepointRecordORM.specification_id, SinglepointRecordORM.molecule_id),
-                (SinglepointRecordORM.id,),
-            )
-            return meta, [x[0] for x in ids]
+            return self.add_internal(mol_ids, spec_id, tag, priority, session=session)
 
     def update_completed_task(
         self, session: Session, record_orm: SinglepointRecordORM, result: AtomicResult, manager_name: str

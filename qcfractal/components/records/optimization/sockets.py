@@ -256,6 +256,48 @@ class OptimizationRecordSocket(BaseRecordSocket):
             "kwargs": {},
         }
 
+    def add_internal(
+        self,
+        initial_molecule_ids: Sequence[int],
+        opt_spec_id: int,
+        tag: Optional[str] = None,
+        priority: PriorityEnum = PriorityEnum.normal,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[InsertMetadata, List[Optional[int]]]:
+
+        # tags should be lowercase
+        if tag is not None:
+            tag = tag.lower()
+
+        with self.root_socket.optional_session(session) as session:
+            # Get the spec orm. The full orm will be needed for create_task
+            stmt = select(OptimizationSpecificationORM).where(OptimizationSpecificationORM.id == opt_spec_id)
+            spec_orm = session.execute(stmt).scalar_one()
+
+            all_orm = []
+            all_molecules = self.root_socket.molecules.get(initial_molecule_ids, session=session)
+
+            for mol_data in all_molecules:
+                opt_orm = OptimizationRecordORM(
+                    is_service=False,
+                    specification=spec_orm,
+                    specification_id=opt_spec_id,
+                    initial_molecule_id=mol_data["id"],
+                    status=RecordStatusEnum.waiting,
+                )
+
+                self.create_task(opt_orm, tag, priority)
+                all_orm.append(opt_orm)
+
+            meta, ids = insert_general(
+                session,
+                all_orm,
+                (OptimizationRecordORM.specification_id, OptimizationRecordORM.initial_molecule_id),
+                (OptimizationRecordORM.id,),
+            )
+            return meta, [x[0] for x in ids]
+
     def add(
         self,
         initial_molecules: Sequence[Union[int, Molecule]],
@@ -290,10 +332,6 @@ class OptimizationRecordSocket(BaseRecordSocket):
             order of the input molecules
         """
 
-        # tags should be lowercase
-        if tag is not None:
-            tag = tag.lower()
-
         with self.root_socket.optional_session(session, False) as session:
 
             # First, add the specification
@@ -314,33 +352,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
                     [],
                 )
 
-            # Get the spec orm. The full orm will be needed for create_task
-            stmt = select(OptimizationSpecificationORM).where(OptimizationSpecificationORM.id == spec_id)
-            spec_orm = session.execute(stmt).scalar_one()
-
-            all_orm = []
-            all_molecules = self.root_socket.molecules.get(mol_ids, session=session)
-
-            for mol_data in all_molecules:
-
-                opt_orm = OptimizationRecordORM(
-                    is_service=False,
-                    specification=spec_orm,
-                    specification_id=spec_id,
-                    initial_molecule_id=mol_data["id"],
-                    status=RecordStatusEnum.waiting,
-                )
-
-                self.create_task(opt_orm, tag, priority)
-                all_orm.append(opt_orm)
-
-            meta, ids = insert_general(
-                session,
-                all_orm,
-                (OptimizationRecordORM.specification_id, OptimizationRecordORM.initial_molecule_id),
-                (OptimizationRecordORM.id,),
-            )
-            return meta, [x[0] for x in ids]
+            return self.add_internal(mol_ids, spec_id, tag, priority, session=session)
 
     def update_completed_task(
         self, session: Session, record_orm: OptimizationRecordORM, result: OptimizationResult, manager_name: str

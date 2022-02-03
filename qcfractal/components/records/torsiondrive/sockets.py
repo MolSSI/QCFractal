@@ -284,6 +284,88 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             session=session,
         )
 
+    def add_internal(
+        self,
+        initial_molecule_ids: Sequence[Iterable[int]],
+        td_spec_id: int,
+        as_service: bool,
+        tag: Optional[str] = None,
+        priority: PriorityEnum = PriorityEnum.normal,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[InsertMetadata, List[Optional[int]]]:
+        # tags should be lowercase
+        if tag is not None:
+            tag = tag.lower()
+
+        with self.root_socket.optional_session(session, False) as session:
+            td_ids = []
+            inserted_idx = []
+            existing_idx = []
+
+            # Torsiondrives are a bit more complicated because we have a many-to-many relationship
+            # between torsiondrives and initial molecules. So skip the general insert
+            # function and do this one at a time
+
+            # Create a cte with the initial molecules we can query against
+            # This is like a table, with the specification id and the initial molecule ids
+            # as a postgres array (sorted)
+            # We then use this to determine if there are duplicates
+            init_mol_cte = (
+                select(
+                    TorsiondriveRecordORM.id,
+                    TorsiondriveRecordORM.specification_id,
+                    array_agg(
+                        aggregate_order_by(
+                            TorsiondriveInitialMoleculeORM.molecule_id, TorsiondriveInitialMoleculeORM.molecule_id.asc()
+                        )
+                    ).label("molecule_ids"),
+                )
+                .join(
+                    TorsiondriveInitialMoleculeORM,
+                    TorsiondriveInitialMoleculeORM.torsiondrive_id == TorsiondriveRecordORM.id,
+                )
+                .group_by(TorsiondriveRecordORM.id)
+                .cte()
+            )
+
+            for idx, mol_ids in enumerate(initial_molecule_ids):
+                # sort molecules by increasing ids, and remove duplicates
+                mol_ids = sorted(set(mol_ids))
+
+                # does this exist?
+                stmt = select(init_mol_cte.c.id)
+                stmt = stmt.where(init_mol_cte.c.specification_id == td_spec_id)
+                stmt = stmt.where(init_mol_cte.c.molecule_ids == mol_ids)
+                existing = session.execute(stmt).scalars().first()
+
+                if not existing:
+                    td_orm = TorsiondriveRecordORM(
+                        is_service=as_service,
+                        specification_id=td_spec_id,
+                        status=RecordStatusEnum.waiting,
+                    )
+
+                    self.create_service(td_orm, tag, priority)
+
+                    session.add(td_orm)
+                    session.flush()
+
+                    for mid in mol_ids:
+                        mid_orm = TorsiondriveInitialMoleculeORM(molecule_id=mid, torsiondrive_id=td_orm.id)
+                        session.add(mid_orm)
+
+                    session.flush()
+
+                    td_ids.append(td_orm.id)
+                    inserted_idx.append(idx)
+                else:
+                    td_ids.append(existing)
+                    existing_idx.append(idx)
+
+            meta = InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx)
+            return meta, td_ids
+
     def add(
         self,
         initial_molecules: Sequence[Iterable[Union[int, Molecule]]],
@@ -351,72 +433,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
                 init_mol_ids.append(mol_ids)
 
-            td_ids = []
-            inserted_idx = []
-            existing_idx = []
-
-            # Torsiondrives are a bit more complicated because we have a many-to-many relationship
-            # between torsiondrives and initial molecules. So skip the general insert
-            # function and do this one at a time
-
-            # Create a cte with the initial molecules we can query against
-            # This is like a table, with the specification id and the initial molecule ids
-            # as a postgres array (sorted)
-            # We then use this to determine if there are duplicates
-            init_mol_cte = (
-                select(
-                    TorsiondriveRecordORM.id,
-                    TorsiondriveRecordORM.specification_id,
-                    array_agg(
-                        aggregate_order_by(
-                            TorsiondriveInitialMoleculeORM.molecule_id, TorsiondriveInitialMoleculeORM.molecule_id.asc()
-                        )
-                    ).label("molecule_ids"),
-                )
-                .join(
-                    TorsiondriveInitialMoleculeORM,
-                    TorsiondriveInitialMoleculeORM.torsiondrive_id == TorsiondriveRecordORM.id,
-                )
-                .group_by(TorsiondriveRecordORM.id)
-                .cte()
-            )
-
-            for idx, mol_ids in enumerate(init_mol_ids):
-                # sort molecules by increasing ids, and remove duplicates
-                mol_ids = sorted(set(mol_ids))
-
-                # does this exist?
-                stmt = select(init_mol_cte.c.id)
-                stmt = stmt.where(init_mol_cte.c.specification_id == spec_id)
-                stmt = stmt.where(init_mol_cte.c.molecule_ids == mol_ids)
-                existing = session.execute(stmt).scalars().first()
-
-                if not existing:
-                    td_orm = TorsiondriveRecordORM(
-                        is_service=as_service,
-                        specification_id=spec_id,
-                        status=RecordStatusEnum.waiting,
-                    )
-
-                    self.create_service(td_orm, tag, priority)
-
-                    session.add(td_orm)
-                    session.flush()
-
-                    for mid in mol_ids:
-                        mid_orm = TorsiondriveInitialMoleculeORM(molecule_id=mid, torsiondrive_id=td_orm.id)
-                        session.add(mid_orm)
-
-                    session.flush()
-
-                    td_ids.append(td_orm.id)
-                    inserted_idx.append(idx)
-                else:
-                    td_ids.append(existing)
-                    existing_idx.append(idx)
-
-            meta = InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx)
-            return meta, td_ids
+            return self.add_internal(init_mol_ids, spec_id, as_service, tag, priority, session=session)
 
     def initialize_service(
         self,
