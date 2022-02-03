@@ -171,7 +171,7 @@ def get_query_proj_options(
     orm_type: Type[_ORM_T],
     include: Optional[Iterable[str]] = None,
     exclude: Optional[Iterable[str]] = None,
-) -> List[InstrumentedAttribute]:
+) -> List[Any]:
     # TODO - needs some explanation...
 
     # Wrap the include/exclude in tuples for memoization
