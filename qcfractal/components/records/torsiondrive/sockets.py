@@ -23,7 +23,7 @@ from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputTypeEnum
 from qcportal.records import PriorityEnum, RecordStatusEnum
-from qcportal.records.optimization import OptimizationInputSpecification
+from qcportal.records.optimization import OptimizationInputSpecification, OptimizationSpecification
 from qcportal.records.torsiondrive import (
     TorsiondriveSpecification,
     TorsiondriveInputSpecification,
@@ -594,11 +594,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         # Create an optimization input based on the new geometry and the optimization template
         opt_spec = td_orm.specification.optimization_specification.dict()
 
-        # TODO - is there a better place to do this? as_input function on models? Some pydantic export magic?
-        opt_spec.pop("id")
-        opt_spec.pop("qc_specification_id")
-        opt_spec["qc_specification"].pop("id")
-        opt_spec["qc_specification"].pop("keywords_id")
+        # Convert to an input
+        opt_spec = OptimizationSpecification(**opt_spec).as_input().dict()
 
         for td_api_key, geometries in next_tasks.items():
             # Make a deep copy to prevent modifying the original ORM

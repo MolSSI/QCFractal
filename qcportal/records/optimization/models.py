@@ -47,6 +47,13 @@ class OptimizationSpecification(OptimizationInputSpecification):
     qc_specification: QCSpecification
     qc_specification_id: int
 
+    def as_input(self) -> OptimizationInputSpecification:
+        qc_input_spec = self.qc_specification.as_input()
+        return OptimizationInputSpecification(
+            **self.dict(exclude={"id", "qc_specification_id", "qc_specification"}),
+            qc_specification=OptimizationQCInputSpecification(**qc_input_spec.dict()),
+        )
+
 
 class OptimizationTrajectory(BaseModel):
     singlepoint_id: int

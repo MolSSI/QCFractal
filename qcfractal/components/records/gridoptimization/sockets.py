@@ -29,7 +29,7 @@ from qcportal.records.gridoptimization import (
     GridoptimizationInputSpecification,
     GridoptimizationQueryBody,
 )
-from qcportal.records.optimization import OptimizationInputSpecification
+from qcportal.records.optimization import OptimizationInputSpecification, OptimizationSpecification
 from .db_models import GridoptimizationSpecificationORM, GridoptimizationOptimizationsORM, GridoptimizationRecordORM
 
 if TYPE_CHECKING:
@@ -615,11 +615,8 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         # Create an optimization input based on the new geometry and the optimization template
         opt_spec = go_orm.specification.optimization_specification.dict()
 
-        # TODO - is there a better place to do this? as_input function on models? Some pydantic export magic?
-        opt_spec.pop("id")
-        opt_spec.pop("qc_specification_id")
-        opt_spec["qc_specification"].pop("id")
-        opt_spec["qc_specification"].pop("keywords_id")
+        # Convert to an input
+        opt_spec = OptimizationSpecification(**opt_spec).as_input().dict()
 
         # Load the starting molecule (for absolute constraints)
         starting_molecule = None

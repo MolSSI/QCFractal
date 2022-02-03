@@ -64,6 +64,9 @@ class QCSpecification(QCInputSpecification):
     id: int
     keywords_id: int
 
+    def as_input(self) -> QCInputSpecification:
+        return QCInputSpecification(**self.dict(exclude={"id", "keywords_id"}))
+
 
 class SinglepointRecord(BaseRecord):
     class _DataModel(BaseRecord._DataModel):
