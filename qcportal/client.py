@@ -44,7 +44,7 @@ from .records import (
     RecordDeleteURLParameters,
     RecordRevertBodyParameters,
     AllRecordTypes,
-    AllDataModelTypes,
+    AllRecordDataModelTypes,
 )
 from .records.gridoptimization import (
     GridoptimizationKeywords,
@@ -147,7 +147,9 @@ class PortalClient(PortalClientBase):
         # postprocess due to raw spacing above
         return "\n".join([substr.strip() for substr in output.split("\n")])
 
-    def recordmodel_from_datamodel(self, data: Sequence[Optional[AllDataModelTypes]]) -> List[Optional[AllRecordTypes]]:
+    def recordmodel_from_datamodel(
+        self, data: Sequence[Optional[AllRecordDataModelTypes]]
+    ) -> List[Optional[AllRecordTypes]]:
         record_init = [
             {"client": self, "record_type": d.record_type, "raw_data": d} if d is not None else None for d in data
         ]
@@ -584,7 +586,7 @@ class PortalClient(PortalClientBase):
             "v1/record",
             None,
             CommonGetProjURLParameters,
-            List[Optional[AllDataModelTypes]],
+            List[Optional[AllRecordDataModelTypes]],
             None,
             url_params,
         )
@@ -652,7 +654,7 @@ class PortalClient(PortalClientBase):
             "v1/record/query",
             RecordQueryBody,
             None,
-            Tuple[QueryMetadata, List[AllDataModelTypes]],
+            Tuple[QueryMetadata, List[AllRecordDataModelTypes]],
             query_data,
             None,
         )

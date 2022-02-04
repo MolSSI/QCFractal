@@ -24,7 +24,7 @@ from .torsiondrive.models import TorsiondriveRecord
 from .gridoptimization.models import GridoptimizationRecord
 
 AllRecordTypes = Union[SinglepointRecord, OptimizationRecord, TorsiondriveRecord, GridoptimizationRecord]
-AllDataModelTypes = Union[
+AllRecordDataModelTypes = Union[
     SinglepointRecord._DataModel,
     OptimizationRecord._DataModel,
     TorsiondriveRecord._DataModel,
