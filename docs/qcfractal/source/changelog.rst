@@ -15,6 +15,18 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.15.8 / 2022-02-04
+-------------------
+
+Some minor additions/fixes, mostly to to qcportal and the user interface. No database migrations.
+
+- (:pr:`694`, :pr:`701`) Make QCFractal compatible with new QCElemental and QCEngine versions
+- (:pr:`700`) Replace concurrent.futures with multiprocessing in ExecutorAdapter to help with process termination issues 
+- (:pr:`704`) Eliminate issues when retrieving datasets with duplicate records
+- (:pr:`704`) Make saving optional when calling Dataset.compute
+
+
+
 0.15.7 / 2021-11-05
 -------------------
 

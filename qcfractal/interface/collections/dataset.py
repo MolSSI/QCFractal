@@ -1185,7 +1185,7 @@ class Dataset(Collection):
             raise KeyError("Query matched 0 records.")
 
         if merge:
-            retdf = ret[0][~ret[0].index.duplicated(keep='first')]
+            retdf = ret[0][~ret[0].index.duplicated(keep="first")]
             for df in ret[1:]:
                 retdf += df
             return retdf
