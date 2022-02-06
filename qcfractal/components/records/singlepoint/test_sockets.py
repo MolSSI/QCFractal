@@ -425,7 +425,7 @@ def test_singlepoint_socket_insert(storage_socket: SQLAlchemySocket):
 
     # Actually insert the whole thing. This should end up being a duplicate
     with storage_socket.session_scope() as session:
-        dup_id = storage_socket.records.insert_complete_record([result_data_2])
+        dup_id = storage_socket.records.insert_complete_record(session, [result_data_2])
 
     recs = storage_socket.records.singlepoint.get(
         id2 + dup_id, include=["*", "wavefunction", "compute_history.*", "compute_history.outputs"]

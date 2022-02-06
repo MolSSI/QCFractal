@@ -466,28 +466,31 @@ class RecordSocket:
         record_orm.status = RecordStatusEnum.error
         record_orm.modified_on = datetime.utcnow()
 
-    def insert_complete_record(self, results: Sequence[AllResultTypes]) -> List[int]:
+    def insert_complete_record(self, session: Session, results: Sequence[AllResultTypes]) -> List[int]:
 
         ids = []
 
-        with self.root_socket.session_scope() as session:
-            for result in results:
-                if isinstance(result, FailedOperation) or not result.success:
-                    raise UserReportableError("Cannot insert a completed, failed operation")
+        for result in results:
+            if isinstance(result, FailedOperation) or not result.success:
+                raise UserReportableError("Cannot insert a completed, failed operation")
 
-                handler = self._handler_map_by_schema[result.schema_name]
-                record_orm = handler.insert_complete_record(session, result)
+            # Get the outputs & status, storing in the history orm.
+            # Do this before calling the individual record handlers since it modifies extras
+            # (looking for compressed outputs)
+            history_orm = create_compute_history_entry(result)
 
-                # Now do everything common to all records
-                # Get the outputs & status, storing in the history orm
-                history_orm = create_compute_history_entry(result)
-                record_orm.compute_history.append(history_orm)
+            # Now the record-specific stuff
+            handler = self._handler_map_by_schema[result.schema_name]
+            record_orm = handler.insert_complete_record(session, result)
 
-                record_orm.status = history_orm.status
-                record_orm.modified_on = history_orm.modified_on
+            # Now back to the common modifications
+            record_orm.compute_history.append(history_orm)
 
-                session.flush()
-                ids.append(record_orm.id)
+            record_orm.status = history_orm.status
+            record_orm.modified_on = history_orm.modified_on
+
+            session.flush()
+            ids.append(record_orm.id)
 
         return ids
 
