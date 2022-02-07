@@ -76,8 +76,9 @@ def create_compute_history_entry(
 
 
 class BaseRecordSocket:
-    def __init__(self, root_socket: SQLAlchemySocket):
+    def __init__(self, root_socket: SQLAlchemySocket, record_orm: Type[BaseRecordORM]):
         self.root_socket = root_socket
+        self.record_orm = record_orm
 
     @staticmethod
     def get_children_select():
@@ -102,6 +103,50 @@ class BaseRecordSocket:
         """
 
         record_orm.service = ServiceQueueORM(service_state={}, tag=tag, priority=priority)
+
+    def get(
+        self,
+        record_id: Sequence[int],
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
+        missing_ok: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[Optional[Dict[str, Any]]]:
+        """
+        Obtain a record with specified IDs
+
+        This function should be usable with all sockets. It uses the ORM type
+        specified in the constructor.
+
+        The returned information will be in order of the given ids
+
+        If missing_ok is False, then any ids that are missing in the database will raise an exception. Otherwise,
+        the corresponding entry in the returned list of results will be None.
+
+        Parameters
+        ----------
+        record_id
+            A list or other sequence of record IDs
+        include
+            Which fields of the result to return. Default is to return all fields.
+        exclude
+            Remove these fields from the return. Default is to return all fields.
+        missing_ok
+           If set to True, then missing results will be tolerated, and the returned list of
+           Molecules will contain None for the corresponding IDs that were not found.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created
+
+        Returns
+        -------
+        :
+            Records as a dictionary in the same order as the given ids.
+            If missing_ok is True, then this list will contain None where the molecule was missing.
+        """
+
+        with self.root_socket.optional_session(session, True) as session:
+            return get_general(session, self.record_orm, self.record_orm.id, record_id, include, exclude, missing_ok)
 
     def generate_task_specification(self, record_orm: BaseRecordORM) -> Dict[str, Any]:
         """
@@ -400,7 +445,8 @@ class RecordSocket:
         else:
             wp = BaseRecordORM
 
-        return self.get_base(wp, record_id, include, exclude, missing_ok, session=session)
+        with self.root_socket.optional_session(session, True) as session:
+            return get_general(session, wp, wp.id, record_id, include, exclude, missing_ok)
 
     def generate_task_specification(self, task_orm: Sequence[TaskQueueORM]):
         """
