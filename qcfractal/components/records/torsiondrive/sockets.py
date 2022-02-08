@@ -18,7 +18,6 @@ from qcfractal.components.records.optimization.db_models import OptimizationSpec
 from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM
 from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependenciesORM
-from qcfractal.db_socket.helpers import get_general
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputTypeEnum
@@ -81,7 +80,7 @@ class TorsiondriveServiceState(BaseModel):
 
 class TorsiondriveRecordSocket(BaseRecordSocket):
     def __init__(self, root_socket: SQLAlchemySocket):
-        BaseRecordSocket.__init__(self, root_socket, TorsiondriveRecordORM)
+        BaseRecordSocket.__init__(self, root_socket, TorsiondriveRecordORM, TorsiondriveSpecificationORM)
         self._logger = logging.getLogger(__name__)
 
     @staticmethod
@@ -91,39 +90,6 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             TorsiondriveOptimizationsORM.optimization_id.label("child_id"),
         )
         return [stmt]
-
-    def get_specification(
-        self, id: int, missing_ok: bool = False, *, session: Optional[Session] = None
-    ) -> Optional[TorsiondriveSpecificationDict]:
-        """
-        Obtain a specification with the specified ID
-
-        If missing_ok is False, then any ids that are missing in the database will raise an exception.
-        Otherwise, the returned id will be None
-
-        Parameters
-        ----------
-        session
-            An existing SQLAlchemy session to get data from
-        id
-            An id for a single point specification
-        missing_ok
-           If set to True, then missing keywords will be tolerated, and the returned list of
-           keywords will contain None for the corresponding IDs that were not found.
-        session
-            n existing SQLAlchemy session to use. If None, one will be created
-
-        Returns
-        -------
-        :
-            Specification information as a dictionary in the same order as the given ids.
-            If missing_ok is True, then this list will contain None where the keywords were missing
-        """
-
-        with self.root_socket.optional_session(session, True) as session:
-            return get_general(
-                session, TorsiondriveSpecificationORM, TorsiondriveSpecificationORM.id, [id], None, None, missing_ok
-            )[0]
 
     def add_specification(
         self, td_spec: TorsiondriveInputSpecification, *, session: Optional[Session] = None

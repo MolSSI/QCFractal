@@ -25,6 +25,7 @@ from .db_models import RecordComputeHistoryORM, BaseRecordORM, RecordInfoBackupO
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
+    from qcfractal.db_socket.base_orm import BaseORM
     from qcportal.records import AllResultTypes, RecordQueryBody
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Iterable, Type
 
@@ -76,9 +77,12 @@ def create_compute_history_entry(
 
 
 class BaseRecordSocket:
-    def __init__(self, root_socket: SQLAlchemySocket, record_orm: Type[BaseRecordORM]):
+    def __init__(
+        self, root_socket: SQLAlchemySocket, record_orm: Type[BaseRecordORM], specification_orm: Type[BaseORM]
+    ):
         self.root_socket = root_socket
         self.record_orm = record_orm
+        self.specification_orm = specification_orm
 
     @staticmethod
     def get_children_select():
@@ -147,6 +151,39 @@ class BaseRecordSocket:
 
         with self.root_socket.optional_session(session, True) as session:
             return get_general(session, self.record_orm, self.record_orm.id, record_id, include, exclude, missing_ok)
+
+    def get_specification(
+        self, spec_id: int, missing_ok: bool = False, *, session: Optional[Session] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Obtain a specification with the specified ID
+
+        If missing_ok is False, then any ids that are missing in the database will raise an exception.
+        Otherwise, the returned id will be None
+
+        Parameters
+        ----------
+        session
+            An existing SQLAlchemy session to get data from
+        spec_id
+            An id for a single point specification
+        missing_ok
+           If set to True, then missing keywords will be tolerated, and the returned list of
+           keywords will contain None for the corresponding IDs that were not found.
+        session
+            n existing SQLAlchemy session to use. If None, one will be created
+
+        Returns
+        -------
+        :
+            Keyword information as a dictionary in the same order as the given ids.
+            If missing_ok is True, then this list will contain None where the keywords were missing
+        """
+
+        with self.root_socket.optional_session(session, True) as session:
+            return get_general(
+                session, self.specification_orm, self.specification_orm.id, [spec_id], None, None, missing_ok
+            )[0]
 
     def generate_task_specification(self, record_orm: BaseRecordORM) -> Dict[str, Any]:
         """

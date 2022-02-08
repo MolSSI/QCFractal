@@ -10,7 +10,7 @@ from sqlalchemy.orm import contains_eager
 
 from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
-from qcfractal.db_socket.helpers import get_general, insert_general
+from qcfractal.db_socket.helpers import insert_general
 from qcportal.keywords import KeywordSet
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
@@ -54,43 +54,12 @@ def wavefunction_helper(wavefunction: Optional[WavefunctionProperties]) -> Optio
 
 class SinglepointRecordSocket(BaseRecordSocket):
     def __init__(self, root_socket: SQLAlchemySocket):
-        BaseRecordSocket.__init__(self, root_socket, SinglepointRecordORM)
+        BaseRecordSocket.__init__(self, root_socket, SinglepointRecordORM, QCSpecificationORM)
         self._logger = logging.getLogger(__name__)
 
     @staticmethod
     def get_children_select() -> List[Any]:
         return []
-
-    def get_specification(
-        self, spec_id: int, missing_ok: bool = False, *, session: Optional[Session] = None
-    ) -> Optional[QCSpecificationDict]:
-        """
-        Obtain a specification with the specified ID
-
-        If missing_ok is False, then any ids that are missing in the database will raise an exception.
-        Otherwise, the returned id will be None
-
-        Parameters
-        ----------
-        session
-            An existing SQLAlchemy session to get data from
-        spec_id
-            An id for a single point specification
-        missing_ok
-           If set to True, then missing keywords will be tolerated, and the returned list of
-           keywords will contain None for the corresponding IDs that were not found.
-        session
-            n existing SQLAlchemy session to use. If None, one will be created
-
-        Returns
-        -------
-        :
-            Keyword information as a dictionary in the same order as the given ids.
-            If missing_ok is True, then this list will contain None where the keywords were missing
-        """
-
-        with self.root_socket.optional_session(session, True) as session:
-            return get_general(session, QCSpecificationORM, QCSpecificationORM.id, [spec_id], None, None, missing_ok)[0]
 
     def add_specification(
         self, qc_spec: QCInputSpecification, *, session: Optional[Session] = None
