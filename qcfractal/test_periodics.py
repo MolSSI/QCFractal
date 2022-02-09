@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from qcfractaltesting.helpers import load_procedure_data
 from qcportal.managers import ManagerName, ManagerStatusEnum
-from qcportal.records import RecordStatusEnum
+from qcportal.records import RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:
     from qcfractal.testing_helpers import TestingSnowflake, SQLAlchemySocket
@@ -65,7 +65,9 @@ def test_periodics_service_iteration(snowflake: TestingSnowflake, storage_socket
 
     service_freq = snowflake._qcf_config.service_frequency
 
-    meta_1, id_1 = storage_socket.records.torsiondrive.add([molecules_1], input_spec_1, as_service=True)
+    meta_1, id_1 = storage_socket.records.torsiondrive.add(
+        [molecules_1], input_spec_1, tag="*", priority=PriorityEnum.normal, as_service=True
+    )
 
     rec = storage_socket.records.get(id_1)
     assert rec[0]["status"] == RecordStatusEnum.waiting
@@ -75,7 +77,9 @@ def test_periodics_service_iteration(snowflake: TestingSnowflake, storage_socket
     time.sleep(1.0)
 
     # added after startup
-    meta_2, id_2 = storage_socket.records.torsiondrive.add([molecules_2], input_spec_2, as_service=True)
+    meta_2, id_2 = storage_socket.records.torsiondrive.add(
+        [molecules_2], input_spec_2, tag="*", priority=PriorityEnum.normal, as_service=True
+    )
 
     # The first services iterated at startup
     rec = storage_socket.records.get(id_1 + id_2)

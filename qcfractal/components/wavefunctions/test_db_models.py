@@ -9,6 +9,7 @@ import pytest
 
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
 from qcfractaltesting import load_procedure_data, load_wavefunction_data
+from qcportal.records import PriorityEnum
 from qcportal.wavefunctions import WavefunctionProperties
 
 if TYPE_CHECKING:
@@ -25,7 +26,7 @@ def existing_record_id(storage_socket):
     """
 
     input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
-    meta, id = storage_socket.records.singlepoint.add([molecule], input_spec)
+    meta, id = storage_socket.records.singlepoint.add([molecule], input_spec, tag="*", priority=PriorityEnum.normal)
 
     yield id[0]
 

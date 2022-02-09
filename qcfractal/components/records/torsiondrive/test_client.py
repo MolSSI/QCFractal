@@ -30,11 +30,9 @@ if TYPE_CHECKING:
 from .test_sockets import _test_specs, compare_torsiondrive_specs
 
 
-@pytest.mark.parametrize("tag", [None, "tag99"])
+@pytest.mark.parametrize("tag", ["*", "tag99"])
 @pytest.mark.parametrize("priority", list(PriorityEnum))
-def test_torsiondrive_client_tag_priority_as_service(
-    snowflake_client: PortalClient, tag: Optional[str], priority: PriorityEnum
-):
+def test_torsiondrive_client_tag_priority_as_service(snowflake_client: PortalClient, tag: str, priority: PriorityEnum):
     peroxide2 = load_molecule_data("peroxide2")
     meta1, id1 = snowflake_client.add_torsiondrives(
         [[peroxide2]],
@@ -134,10 +132,18 @@ def test_torsiondrive_client_query(snowflake_client: PortalClient, storage_socke
     input_spec_3, molecules_3, result_data_3 = load_procedure_data("td_C9H11NO2_psi4_b3lyp-d3bj")
     input_spec_4, molecules_4, result_data_4 = load_procedure_data("td_H2O2_psi4_bp86")
 
-    meta_1, id_1 = storage_socket.records.torsiondrive.add([molecules_1], input_spec_1, as_service=True)
-    meta_2, id_2 = storage_socket.records.torsiondrive.add([molecules_2], input_spec_2, as_service=True)
-    meta_3, id_3 = storage_socket.records.torsiondrive.add([molecules_3], input_spec_3, as_service=True)
-    meta_4, id_4 = storage_socket.records.torsiondrive.add([molecules_4], input_spec_4, as_service=True)
+    meta_1, id_1 = storage_socket.records.torsiondrive.add(
+        [molecules_1], input_spec_1, tag="*", priority=PriorityEnum.normal, as_service=True
+    )
+    meta_2, id_2 = storage_socket.records.torsiondrive.add(
+        [molecules_2], input_spec_2, tag="*", priority=PriorityEnum.normal, as_service=True
+    )
+    meta_3, id_3 = storage_socket.records.torsiondrive.add(
+        [molecules_3], input_spec_3, tag="*", priority=PriorityEnum.normal, as_service=True
+    )
+    meta_4, id_4 = storage_socket.records.torsiondrive.add(
+        [molecules_4], input_spec_4, tag="*", priority=PriorityEnum.normal, as_service=True
+    )
     assert meta_1.success and meta_2.success and meta_3.success and meta_4.success
 
     meta, td = snowflake_client.query_torsiondrives(qc_program=["psi4"])

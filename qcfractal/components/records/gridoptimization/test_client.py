@@ -30,11 +30,9 @@ if TYPE_CHECKING:
 from .test_sockets import _test_specs, compare_gridoptimization_specs
 
 
-@pytest.mark.parametrize("tag", [None, "tag99"])
+@pytest.mark.parametrize("tag", ["*", "tag99"])
 @pytest.mark.parametrize("priority", list(PriorityEnum))
-def test_gridoptimization_client_tag_priority(
-    snowflake_client: PortalClient, tag: Optional[str], priority: PriorityEnum
-):
+def test_gridoptimization_client_tag_priority(snowflake_client: PortalClient, tag: str, priority: PriorityEnum):
     peroxide2 = load_molecule_data("peroxide2")
     meta1, id1 = snowflake_client.add_gridoptimizations(
         [peroxide2],
@@ -133,10 +131,18 @@ def test_gridoptimization_client_query(snowflake_client: PortalClient, storage_s
     input_spec_3, molecule_3, result_data_3 = load_procedure_data("go_C4H4N2OS_psi4_b3lyp-d3bj")
     input_spec_4, molecule_4, result_data_4 = load_procedure_data("go_H3NS_psi4_pbe")
 
-    meta_1, id_1 = storage_socket.records.gridoptimization.add([molecule_1], input_spec_1)
-    meta_2, id_2 = storage_socket.records.gridoptimization.add([molecule_2], input_spec_2)
-    meta_3, id_3 = storage_socket.records.gridoptimization.add([molecule_3], input_spec_3)
-    meta_4, id_4 = storage_socket.records.gridoptimization.add([molecule_4], input_spec_4)
+    meta_1, id_1 = storage_socket.records.gridoptimization.add(
+        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
+    )
+    meta_2, id_2 = storage_socket.records.gridoptimization.add(
+        [molecule_2], input_spec_2, tag="*", priority=PriorityEnum.normal
+    )
+    meta_3, id_3 = storage_socket.records.gridoptimization.add(
+        [molecule_3], input_spec_3, tag="*", priority=PriorityEnum.normal
+    )
+    meta_4, id_4 = storage_socket.records.gridoptimization.add(
+        [molecule_4], input_spec_4, tag="*", priority=PriorityEnum.normal
+    )
     assert meta_1.success and meta_2.success and meta_3.success and meta_4.success
 
     meta, td = snowflake_client.query_gridoptimizations(qc_program=["psi4"])

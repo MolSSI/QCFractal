@@ -12,7 +12,7 @@ from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.records.db_models import RecordComputeHistoryORM
 from qcfractaltesting import load_procedure_data
 from qcportal.outputstore import OutputTypeEnum, CompressionEnum, OutputStore
-from qcportal.records import RecordStatusEnum
+from qcportal.records import RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -28,7 +28,7 @@ def existing_history_id(storage_socket):
     """
 
     input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
-    meta, id = storage_socket.records.singlepoint.add([molecule], input_spec)
+    meta, id = storage_socket.records.singlepoint.add([molecule], input_spec, tag="*", priority=PriorityEnum.normal)
 
     hist = RecordComputeHistoryORM(
         record_id=id[0],

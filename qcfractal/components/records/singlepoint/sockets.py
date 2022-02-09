@@ -190,15 +190,13 @@ class SinglepointRecordSocket(BaseRecordSocket):
         self,
         molecule_ids: Sequence[int],
         qc_spec_id: int,
-        tag: Optional[str] = None,
-        priority: PriorityEnum = PriorityEnum.normal,
+        tag: str,
+        priority: PriorityEnum,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
 
-        # tags should be lowercase
-        if tag is not None:
-            tag = tag.lower()
+        tag = tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
 
@@ -232,8 +230,8 @@ class SinglepointRecordSocket(BaseRecordSocket):
         self,
         molecules: Sequence[Union[int, Molecule]],
         qc_spec: QCInputSpecification,
-        tag: Optional[str] = None,
-        priority: PriorityEnum = PriorityEnum.normal,
+        tag: str,
+        priority: PriorityEnum,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -261,10 +259,6 @@ class SinglepointRecordSocket(BaseRecordSocket):
             Metadata about the insertion, and a list of record ids. The ids will be in the
             order of the input molecules
         """
-
-        # tags should be lowercase
-        if tag is not None:
-            tag = tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
 

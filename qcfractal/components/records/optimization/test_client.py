@@ -27,9 +27,9 @@ if TYPE_CHECKING:
 from .test_sockets import _test_specs, compare_optimization_specs
 
 
-@pytest.mark.parametrize("tag", [None, "tag99"])
+@pytest.mark.parametrize("tag", ["*", "tag99"])
 @pytest.mark.parametrize("priority", list(PriorityEnum))
-def test_optimization_client_tag_priority(snowflake_client: PortalClient, tag: Optional[str], priority: PriorityEnum):
+def test_optimization_client_tag_priority(snowflake_client: PortalClient, tag: str, priority: PriorityEnum):
     water = load_molecule_data("water_dimer_minima")
     meta1, id1 = snowflake_client.add_optimizations(
         [water],
@@ -126,9 +126,15 @@ def test_optimization_client_query(snowflake_client: PortalClient, storage_socke
     input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_benzene_opt")
     input_spec_3, molecule_3, result_data_3 = load_procedure_data("psi4_methane_opt_sometraj")
 
-    meta1, id1 = storage_socket.records.optimization.add([molecule_1], input_spec_1)
-    meta2, id2 = storage_socket.records.optimization.add([molecule_2], input_spec_2)
-    meta3, id3 = storage_socket.records.optimization.add([molecule_3], input_spec_3)
+    meta1, id1 = storage_socket.records.optimization.add(
+        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
+    )
+    meta2, id2 = storage_socket.records.optimization.add(
+        [molecule_2], input_spec_2, tag="*", priority=PriorityEnum.normal
+    )
+    meta3, id3 = storage_socket.records.optimization.add(
+        [molecule_3], input_spec_3, tag="*", priority=PriorityEnum.normal
+    )
 
     recs = snowflake_client.get_optimizations(id1 + id2 + id3)
 
@@ -186,7 +192,9 @@ def test_optimization_client_query(snowflake_client: PortalClient, storage_socke
 def test_optimization_client_delete_1(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, opt_file: str):
     # Deleting with deleting children
     input_spec_1, molecule_1, result_data_1 = load_procedure_data(opt_file)
-    meta1, id1 = storage_socket.records.optimization.add([molecule_1], input_spec_1)
+    meta1, id1 = storage_socket.records.optimization.add(
+        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
+    )
 
     with storage_socket.session_scope() as session:
         rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()

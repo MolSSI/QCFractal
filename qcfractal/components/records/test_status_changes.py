@@ -597,7 +597,9 @@ def test_record_client_uninvalidate_missing(snowflake_client: PortalClient, stor
 def test_record_client_delete_children(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, opt_file: str):
     # Deleting with deleting children
     input_spec_1, molecule_1, result_data_1 = load_procedure_data(opt_file)
-    meta1, id1 = storage_socket.records.optimization.add([molecule_1], input_spec_1)
+    meta1, id1 = storage_socket.records.optimization.add(
+        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
+    )
 
     with storage_socket.session_scope() as session:
         rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
@@ -632,7 +634,9 @@ def test_record_client_delete_nochildren(
 ):
     # Deleting without deleting children
     input_spec_1, molecule_1, result_data_1 = load_procedure_data(opt_file)
-    meta1, id1 = storage_socket.records.optimization.add([molecule_1], input_spec_1)
+    meta1, id1 = storage_socket.records.optimization.add(
+        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
+    )
 
     with storage_socket.session_scope() as session:
         rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
@@ -667,7 +671,9 @@ def test_record_client_undelete_children(
 ):
     # Deleting with deleting children, then undeleting
     input_spec_1, molecule_1, result_data_1 = load_procedure_data(opt_file)
-    meta1, id1 = storage_socket.records.optimization.add([molecule_1], input_spec_1)
+    meta1, id1 = storage_socket.records.optimization.add(
+        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
+    )
 
     with storage_socket.session_scope() as session:
         rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()

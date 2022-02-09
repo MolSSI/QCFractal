@@ -89,9 +89,7 @@ class BaseRecordSocket:
         raise NotImplementedError(f"get_children_select not implemented! This is a developer error")
 
     @staticmethod
-    def create_task(
-        record_orm: BaseRecordORM, tag: Optional[str] = None, priority: PriorityEnum = PriorityEnum.normal
-    ) -> None:
+    def create_task(record_orm: BaseRecordORM, tag: str, priority: PriorityEnum) -> None:
         """
         Recreate the entry in the task queue
         """
@@ -99,9 +97,7 @@ class BaseRecordSocket:
         record_orm.task = TaskQueueORM(tag=tag, priority=priority, required_programs=record_orm.required_programs)
 
     @staticmethod
-    def create_service(
-        record_orm: BaseRecordORM, tag: Optional[str] = None, priority: PriorityEnum = PriorityEnum.normal
-    ) -> None:
+    def create_service(record_orm: BaseRecordORM, tag: str, priority: PriorityEnum) -> None:
         """
         Recreate the entry in the serivce queue
         """
@@ -1094,7 +1090,6 @@ class RecordSocket:
         record_id: Sequence[int],
         new_tag: Optional[str] = None,
         new_priority: Optional[RecordStatusEnum] = None,
-        delete_tag: bool = False,
         *,
         session: Optional[Session] = None,
     ) -> UpdateMetadata:
@@ -1106,9 +1101,6 @@ class RecordSocket:
 
         An empty string for new_tag will be treated the same as if you had passed it None
 
-        Note that to set a tag to be None, you must use delete_tag. Just setting
-        new_tag to None will keep the existing tag
-
         Parameters
         ----------
         record_id
@@ -1117,8 +1109,6 @@ class RecordSocket:
             New tag for the task. If None, keep the existing tag
         new_priority
             New priority for the task. If None, then keep the existing priority
-        delete_tag
-            Set the tag to be None
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed before returning from this function.
@@ -1129,12 +1119,8 @@ class RecordSocket:
             Metadata about what was updated
         """
 
-        # empty string?
-        if not new_tag:
-            new_tag = None
-
         # Do we have anything to do?
-        if new_tag is None and new_priority is None and not delete_tag:
+        if new_tag is None and new_priority is None:
             return UpdateMetadata()
 
         all_id = set(record_id)
@@ -1164,9 +1150,6 @@ class RecordSocket:
                     o.tag = new_tag
                 if new_priority is not None:
                     o.priority = new_priority
-
-                if delete_tag:
-                    o.tag = None
 
             # put in order of the input parameter
             # only pay attention to the records requested (ie, not subtasks)

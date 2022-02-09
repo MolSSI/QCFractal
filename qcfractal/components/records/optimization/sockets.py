@@ -179,15 +179,13 @@ class OptimizationRecordSocket(BaseRecordSocket):
         self,
         initial_molecule_ids: Sequence[int],
         opt_spec_id: int,
-        tag: Optional[str] = None,
-        priority: PriorityEnum = PriorityEnum.normal,
+        tag: str,
+        priority: PriorityEnum,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
 
-        # tags should be lowercase
-        if tag is not None:
-            tag = tag.lower()
+        tag = tag.lower()
 
         with self.root_socket.optional_session(session) as session:
             # Get the spec orm. The full orm will be needed for create_task
@@ -221,8 +219,8 @@ class OptimizationRecordSocket(BaseRecordSocket):
         self,
         initial_molecules: Sequence[Union[int, Molecule]],
         opt_spec: OptimizationInputSpecification,
-        tag: Optional[str] = None,
-        priority: PriorityEnum = PriorityEnum.normal,
+        tag: str,
+        priority: PriorityEnum,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:

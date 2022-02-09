@@ -121,9 +121,9 @@ class TaskRecord(BaseModel):
     record_id: int
 
     spec: Optional[Dict[str, Any]]
-    tag: Optional[str] = None
-    required_programs: List[str]
+    tag: str
     priority: PriorityEnum
+    required_programs: List[str]
     created_on: datetime
 
 
@@ -138,7 +138,7 @@ class ServiceRecord(BaseModel):
     id: int
     record_id: int
 
-    tag: Optional[str] = None
+    tag: str
     priority: PriorityEnum
     created_on: datetime
 
@@ -310,8 +310,8 @@ ServiceDependency.update_forward_refs()
 
 
 class RecordAddBodyBase(RestModelBase):
-    tag: Optional[str]
-    priority: PriorityEnum = PriorityEnum.normal
+    tag: str
+    priority: PriorityEnum
 
 
 class RecordModifyBody(RestModelBase):
@@ -319,7 +319,6 @@ class RecordModifyBody(RestModelBase):
     status: Optional[RecordStatusEnum] = None
     priority: Optional[PriorityEnum] = None
     tag: Optional[str] = None
-    delete_tag: bool = False
     comment: Optional[str] = None
 
 

@@ -257,10 +257,6 @@ def test_record_client_modify(snowflake_client: PortalClient, storage_socket: SQ
     assert rec[5].raw_data.task is None
     assert rec[6].raw_data.task is None
 
-    # Delete tag
-    meta = snowflake_client.modify_records(all_id, delete_tag=True)
-    assert meta.n_updated == 3
-
     rec = snowflake_client.get_records(all_id, include_task=True)
 
     # created_on and modified_on hasn't changed
@@ -268,11 +264,8 @@ def test_record_client_modify(snowflake_client: PortalClient, storage_socket: SQ
         assert r.raw_data.created_on < time_0
         assert r.raw_data.modified_on < time_0
 
-    assert rec[0].raw_data.task.tag is None
     assert rec[1].raw_data.task is None
-    assert rec[2].raw_data.task.tag is None
     assert rec[2].raw_data.task.priority == PriorityEnum.high
-    assert rec[3].raw_data.task.tag is None
     assert rec[4].raw_data.task is None
     assert rec[5].raw_data.task is None
     assert rec[6].raw_data.task is None

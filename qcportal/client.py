@@ -732,17 +732,17 @@ class PortalClient(PortalClientBase):
         record_id: Union[int, Sequence[int]],
         new_tag: Optional[str] = None,
         new_priority: Optional[PriorityEnum] = None,
-        delete_tag: bool = False,
     ) -> UpdateMetadata:
         record_id = make_list(record_id)
         if not record_id:
+            return UpdateMetadata()
+        if new_tag is None and new_priority is None:
             return UpdateMetadata()
 
         body_data = {
             "record_id": record_id,
             "tag": new_tag,
             "priority": new_priority,
-            "delete_tag": delete_tag,
         }
         return self._auto_request("patch", "v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
@@ -786,7 +786,7 @@ class PortalClient(PortalClientBase):
         basis: Optional[str],
         keywords: Optional[Union[KeywordSet, Dict[str, Any], int]] = None,
         protocols: Optional[Union[SinglepointProtocols, Dict[str, Any]]] = None,
-        tag: Optional[str] = None,
+        tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
@@ -1003,7 +1003,7 @@ class PortalClient(PortalClientBase):
         qc_specification: OptimizationQCInputSpecification,
         keywords: Optional[Union[KeywordSet, Dict[str, Any], int]] = None,
         protocols: Optional[OptimizationProtocols] = None,
-        tag: Optional[str] = None,
+        tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
@@ -1197,7 +1197,7 @@ class PortalClient(PortalClientBase):
         program: str,
         optimization_specification: OptimizationInputSpecification,
         keywords: Union[TorsiondriveKeywords, Dict[str, Any]],
-        tag: Optional[str] = None,
+        tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
@@ -1386,7 +1386,7 @@ class PortalClient(PortalClientBase):
         program: str,
         optimization_specification: OptimizationInputSpecification,
         keywords: Union[GridoptimizationKeywords, Dict[str, Any]],
-        tag: Optional[str] = None,
+        tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
     ) -> Tuple[InsertMetadata, List[int]]:
         """

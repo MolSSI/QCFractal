@@ -153,7 +153,9 @@ def test_torsiondrive_socket_add_existing_molecule(storage_socket: SQLAlchemySoc
     _, mol_ids = storage_socket.molecules.add([mol2])
 
     # Now add records
-    meta, id = storage_socket.records.torsiondrive.add([[mol1, mol2], [mol2, mol1]], spec, as_service=True)
+    meta, id = storage_socket.records.torsiondrive.add(
+        [[mol1, mol2], [mol2, mol1]], spec, tag="*", priority=PriorityEnum.normal, as_service=True
+    )
     assert meta.success
     assert meta.n_inserted == 1
     assert meta.n_existing == 1
@@ -192,11 +194,15 @@ def test_torsiondrive_socket_add_same_1(storage_socket: SQLAlchemySocket):
     )
 
     hooh = load_molecule_data("peroxide2")
-    meta, id1 = storage_socket.records.torsiondrive.add([[hooh]], spec, as_service=True)
+    meta, id1 = storage_socket.records.torsiondrive.add(
+        [[hooh]], spec, tag="*", priority=PriorityEnum.normal, as_service=True
+    )
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
-    meta, id2 = storage_socket.records.torsiondrive.add([[hooh]], spec, as_service=True)
+    meta, id2 = storage_socket.records.torsiondrive.add(
+        [[hooh]], spec, tag="*", priority=PriorityEnum.normal, as_service=True
+    )
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
     assert meta.existing_idx == [0]
@@ -231,12 +237,18 @@ def test_torsiondrive_socket_add_same_2(storage_socket: SQLAlchemySocket):
     mol1 = load_molecule_data("td_C9H11NO2_0")
     mol2 = load_molecule_data("td_C9H11NO2_1")
     mol3 = load_molecule_data("td_C9H11NO2_2")
-    meta, id1 = storage_socket.records.torsiondrive.add([[mol1, mol2, mol3]], spec, as_service=True)
+    meta, id1 = storage_socket.records.torsiondrive.add(
+        [[mol1, mol2, mol3]], spec, tag="*", priority=PriorityEnum.normal, as_service=True
+    )
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
     meta, id2 = storage_socket.records.torsiondrive.add(
-        [[mol2, mol3, mol1, mol2], [mol3, mol2, mol1, mol1]], spec, as_service=True
+        [[mol2, mol3, mol1, mol2], [mol3, mol2, mol1, mol1]],
+        spec,
+        tag="*",
+        priority=PriorityEnum.normal,
+        as_service=True,
     )
     assert meta.n_inserted == 0
     assert meta.n_existing == 2
@@ -294,11 +306,15 @@ def test_torsiondrive_socket_add_same_3(storage_socket: SQLAlchemySocket):
     mol1 = load_molecule_data("td_C9H11NO2_0")
     mol2 = load_molecule_data("td_C9H11NO2_1")
     mol3 = load_molecule_data("td_C9H11NO2_2")
-    meta, id1 = storage_socket.records.torsiondrive.add([[mol1, mol2, mol3]], spec1, as_service=True)
+    meta, id1 = storage_socket.records.torsiondrive.add(
+        [[mol1, mol2, mol3]], spec1, tag="*", priority=PriorityEnum.normal, as_service=True
+    )
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
-    meta, id2 = storage_socket.records.torsiondrive.add([[mol1, mol2, mol3]], spec2, as_service=True)
+    meta, id2 = storage_socket.records.torsiondrive.add(
+        [[mol1, mol2, mol3]], spec2, tag="*", priority=PriorityEnum.normal, as_service=True
+    )
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
     assert meta.existing_idx == [0]
@@ -333,12 +349,14 @@ def test_torsiondrive_socket_add_different_1(storage_socket: SQLAlchemySocket):
     mol1 = load_molecule_data("td_C9H11NO2_0")
     mol2 = load_molecule_data("td_C9H11NO2_1")
     mol3 = load_molecule_data("td_C9H11NO2_2")
-    meta, id1 = storage_socket.records.torsiondrive.add([[mol1, mol2, mol3]], spec, as_service=True)
+    meta, id1 = storage_socket.records.torsiondrive.add(
+        [[mol1, mol2, mol3]], spec, tag="*", priority=PriorityEnum.normal, as_service=True
+    )
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
     meta, id2 = storage_socket.records.torsiondrive.add(
-        [[mol1], [mol3, mol2], [mol2, mol3, mol1]], spec, as_service=True
+        [[mol1], [mol3, mol2], [mol2, mol3, mol1]], spec, tag="*", priority=PriorityEnum.normal, as_service=True
     )
     assert meta.n_inserted == 2
     assert meta.n_existing == 1
@@ -353,10 +371,18 @@ def test_torsiondrive_socket_query(storage_socket: SQLAlchemySocket):
     input_spec_3, molecules_3, result_data_3 = load_procedure_data("td_C9H11NO2_psi4_b3lyp-d3bj")
     input_spec_4, molecules_4, result_data_4 = load_procedure_data("td_H2O2_psi4_bp86")
 
-    meta_1, id_1 = storage_socket.records.torsiondrive.add([molecules_1], input_spec_1, as_service=True)
-    meta_2, id_2 = storage_socket.records.torsiondrive.add([molecules_2], input_spec_2, as_service=True)
-    meta_3, id_3 = storage_socket.records.torsiondrive.add([molecules_3], input_spec_3, as_service=True)
-    meta_4, id_4 = storage_socket.records.torsiondrive.add([molecules_4], input_spec_4, as_service=True)
+    meta_1, id_1 = storage_socket.records.torsiondrive.add(
+        [molecules_1], input_spec_1, tag="*", priority=PriorityEnum.normal, as_service=True
+    )
+    meta_2, id_2 = storage_socket.records.torsiondrive.add(
+        [molecules_2], input_spec_2, tag="*", priority=PriorityEnum.normal, as_service=True
+    )
+    meta_3, id_3 = storage_socket.records.torsiondrive.add(
+        [molecules_3], input_spec_3, tag="*", priority=PriorityEnum.normal, as_service=True
+    )
+    meta_4, id_4 = storage_socket.records.torsiondrive.add(
+        [molecules_4], input_spec_4, tag="*", priority=PriorityEnum.normal, as_service=True
+    )
     assert meta_1.success and meta_2.success and meta_3.success and meta_4.success
 
     meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(qc_program=["psi4"]))

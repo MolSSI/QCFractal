@@ -11,6 +11,7 @@ import pytest
 from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.exceptions import MissingDataError
 from qcportal.molecules import Molecule, MoleculeIdentifiers
+from qcportal.records import PriorityEnum
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -66,7 +67,7 @@ def test_molecules_socket_delete_inuse(storage_socket: SQLAlchemySocket):
 
     input_spec, molecules, result_data = load_procedure_data("psi4_benzene_opt")
 
-    meta, ids = storage_socket.records.optimization.add([molecules], input_spec)
+    meta, ids = storage_socket.records.optimization.add([molecules], input_spec, tag="*", priority=PriorityEnum.normal)
     assert meta.success
 
     # Delete the molecule

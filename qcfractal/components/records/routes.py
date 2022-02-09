@@ -106,12 +106,11 @@ def modify_records_v1(record_id: Optional[int] = None, *, body_data: RecordModif
 
             # ignore all other statuses
 
-        if body_data.delete_tag or body_data.tag is not None or body_data.priority is not None:
+        if body_data.tag is not None or body_data.priority is not None:
             return storage_socket.records.modify(
                 record_id,
                 new_tag=body_data.tag,
                 new_priority=body_data.priority,
-                delete_tag=body_data.delete_tag,
                 session=session,
             )
 

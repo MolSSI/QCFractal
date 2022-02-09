@@ -25,7 +25,7 @@ class TaskQueueORM(BaseORM):
     # when claiming tasks don't work
     required_programs = Column(ARRAY(TEXT), nullable=False)
 
-    tag = Column(String)
+    tag = Column(String, nullable=False)
     priority = Column(Integer, nullable=False)
 
     created_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)

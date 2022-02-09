@@ -33,7 +33,7 @@ class ServiceQueueORM(BaseORM):
     record_id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"))
     record = relationship(BaseRecordORM, back_populates="service", uselist=False)
 
-    tag = Column(String)
+    tag = Column(String, nullable=False)
     priority = Column(Integer, nullable=False)
     created_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
 
