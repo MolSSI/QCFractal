@@ -46,7 +46,7 @@ class ManagerClient(PortalClientBase):
     def _update_on_server(self, manager_update: ManagerUpdateBody) -> None:
         return self._auto_request(
             "patch",
-            f"v1/manager/{self.manager_name_data.fullname}",
+            f"v1/managers/{self.manager_name_data.fullname}",
             ManagerUpdateBody,
             None,
             None,
@@ -77,7 +77,7 @@ class ManagerClient(PortalClientBase):
 
         return self._auto_request(
             "post",
-            "v1/manager",
+            "v1/managers",
             ManagerActivationBody,
             None,
             None,

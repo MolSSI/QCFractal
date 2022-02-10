@@ -46,6 +46,19 @@ class CommonBulkGetBody(RestModelBase):
     missing_ok: bool = False
 
 
+class CommonBulkGetNamesBody(RestModelBase):
+    """
+    Common URL parameters for get_ functions
+
+    These functions typically take a list for ids, and a bool for missing_ok
+    """
+
+    name: List[str]
+    include: Optional[List[str]] = None
+    exclude: Optional[List[str]] = None
+    missing_ok: bool = False
+
+
 class ProjURLParameters(RestModelBase):
     include: Optional[List[str]] = None
     exclude: Optional[List[str]] = None
@@ -58,21 +71,6 @@ class CommonGetProjURLParameters(CommonBulkGetBody):
 
     include: Optional[List[str]] = None
     exclude: Optional[List[str]] = None
-
-
-class CommonGetURLParametersName(RestModelBase):
-    """
-    Common URL parameters for get_ functions
-
-    This version is for get_ with string arguments (as opposed to int ids)
-    """
-
-    name: Optional[List[str]] = None
-    missing_ok: bool = False
-
-    @validator("missing_ok", pre=True)
-    def validate_lists(cls, v):
-        return validate_list_to_single(v)
 
 
 class QueryModelBase(RestModelBase):

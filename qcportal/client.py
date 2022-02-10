@@ -18,7 +18,7 @@ from typing import (
 import pydantic
 
 from .base_models import (
-    CommonGetURLParametersName,
+    CommonBulkGetNamesBody,
     CommonGetProjURLParameters,
     CommonBulkGetBody,
 )
@@ -1677,9 +1677,9 @@ class PortalClient(PortalClientBase):
         if not name_lst:
             return []
 
-        url_params = {"name": name_lst, "missing_ok": missing_ok}
+        body_data = CommonBulkGetNamesBody(name=name_lst, missing_ok=missing_ok)
         managers = self._auto_request(
-            "get", "v1/manager", None, CommonGetURLParametersName, List[Optional[ComputeManager]], None, url_params
+            "post", "v1/managers/bulkGet", CommonBulkGetNamesBody, None, List[Optional[ComputeManager]], body_data, None
         )
 
         if isinstance(name, Sequence):
@@ -1752,7 +1752,7 @@ class PortalClient(PortalClientBase):
 
         return self._auto_request(
             "post",
-            "v1/manager/query",
+            "v1/managers/query",
             ManagerQueryBody,
             None,
             Tuple[QueryMetadata, List[ComputeManager]],

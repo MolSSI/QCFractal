@@ -5,7 +5,7 @@ from flask import current_app
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper
 from qcfractal.app.routes import wrap_route
-from qcportal.base_models import CommonGetURLParametersName
+from qcportal.base_models import CommonBulkGetNamesBody
 from qcportal.exceptions import LimitExceededError
 from qcportal.managers import (
     ManagerActivationBody,
@@ -16,7 +16,7 @@ from qcportal.managers import (
 from qcportal.utils import calculate_limit
 
 
-@main.route("/v1/manager", methods=["POST"])
+@main.route("/v1/managers", methods=["POST"])
 @wrap_route(ManagerActivationBody, None)
 def activate_manager_v1(body_data: ManagerActivationBody):
     """Activates/Registers a manager for use with the server"""
@@ -31,7 +31,7 @@ def activate_manager_v1(body_data: ManagerActivationBody):
     )
 
 
-@main.route("/v1/manager/<string:name>", methods=["PATCH"])
+@main.route("/v1/managers/<string:name>", methods=["PATCH"])
 @wrap_route(ManagerUpdateBody, None)
 def update_manager_v1(name: str, body_data: ManagerUpdateBody):
     """Updates a manager's info
@@ -54,18 +54,23 @@ def update_manager_v1(name: str, body_data: ManagerUpdateBody):
         storage_socket.managers.deactivate([name])
 
 
-@main.route("/v1/manager", methods=["GET"])
-@main.route("/v1/manager/<string:name>", methods=["GET"])
-@wrap_route(None, CommonGetURLParametersName)
-def get_managers_v1(name: Optional[str] = None, *, url_params: CommonGetURLParametersName):
+@main.route("/v1/managers/<string:name>", methods=["GET"])
+@wrap_route(None, None)
+def get_managers_v1(name: str):
+    return storage_socket.managers.get([name])[0]
+
+
+@main.route("/v1/managers/bulkGet", methods=["POST"])
+@wrap_route(CommonBulkGetNamesBody, None)
+def bulk_get_managers_v1(body_data: CommonBulkGetNamesBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_managers
-    if url_params.name is not None and len(url_params.name) > limit:
-        raise LimitExceededError(f"Cannot get {len(url_params.name)} manager records - limit is {limit}")
+    if body_data.name is not None and len(body_data.name) > limit:
+        raise LimitExceededError(f"Cannot get {len(body_data.name)} manager records - limit is {limit}")
 
-    return get_helper(name, url_params.name, None, None, url_params.missing_ok, storage_socket.managers.get)
+    return storage_socket.managers.get(body_data.name, body_data.include, body_data.include, body_data.missing_ok)
 
 
-@main.route("/v1/manager/query", methods=["POST"])
+@main.route("/v1/managers/query", methods=["POST"])
 @wrap_route(ManagerQueryBody, None)
 def query_managers_v1(body_data: ManagerQueryBody):
 
