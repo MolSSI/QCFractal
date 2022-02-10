@@ -20,8 +20,8 @@ import pydantic
 from .base_models import (
     CommonGetURLParametersName,
     CommonGetProjURLParameters,
-    CommonGetURLParameters,
-    CommonDeleteURLParameters,
+    CommonBulkGetBody,
+    CommonBulkDeleteBody,
 )
 from .cache import PortalCache
 from .client_base import PortalClientBase
@@ -351,7 +351,7 @@ class PortalClient(PortalClientBase):
 
         url_params = {"id": molecule_id_lst, "missing_ok": missing_ok}
         mols = self._auto_request(
-            "get", "v1/molecule", None, CommonGetURLParameters, List[Optional[Molecule]], None, url_params
+            "get", "v1/molecule", None, CommonBulkGetBody, List[Optional[Molecule]], None, url_params
         )
 
         if isinstance(molecule_id, Sequence):
@@ -513,9 +513,7 @@ class PortalClient(PortalClientBase):
             return DeleteMetadata()
 
         url_params = {"id": molecule_id}
-        return self._auto_request(
-            "delete", "v1/molecule", None, CommonDeleteURLParameters, DeleteMetadata, None, url_params
-        )
+        return self._auto_request("delete", "v1/molecule", None, CommonBulkDeleteBody, DeleteMetadata, None, url_params)
 
     ##############################################################
     # Keywords
@@ -548,15 +546,15 @@ class PortalClient(PortalClientBase):
         if not keywords_id_lst:
             return []
 
-        url_params = {"id": keywords_id_lst, "missing_ok": missing_ok}
+        body_data = CommonBulkGetBody(id=keywords_id_lst, missing_ok=missing_ok)
 
-        if len(url_params["id"]) > self.api_limits["get_keywords"]:
+        if len(body_data.id) > self.api_limits["get_keywords"]:
             raise RuntimeError(
-                f"Cannot get {len(url_params['id'])} keywords - over the limit of {self.api_limits['get_keywords']}"
+                f"Cannot get {len(body_data.id)} keywords - over the limit of {self.api_limits['get_keywords']}"
             )
 
         keywords = self._auto_request(
-            "get", "v1/keyword", None, CommonGetURLParameters, List[Optional[KeywordSet]], None, url_params
+            "post", "v1/keywords/bulkGet", CommonBulkGetBody, None, List[Optional[KeywordSet]], body_data, None
         )
 
         if isinstance(keywords_id, Sequence):
@@ -581,6 +579,9 @@ class PortalClient(PortalClientBase):
             same order as specified in the keywords parameter. If full_return is True,
             this function will return a tuple containing metadata and the ids.
         """
+
+        keywords = make_list(keywords)
+
         if len(keywords) == 0:
             return InsertMetadata(), []
 
@@ -590,10 +591,10 @@ class PortalClient(PortalClientBase):
             )
 
         return self._auto_request(
-            "post", "v1/keyword", List[KeywordSet], None, Tuple[InsertMetadata, List[int]], make_list(keywords), None
+            "post", "v1/keywords/bulkCreate", List[KeywordSet], None, Tuple[InsertMetadata, List[int]], keywords, None
         )
 
-    def _delete_keywords(self, keywords_id: Union[int, Sequence[int]]) -> DeleteMetadata:
+    def delete_keywords(self, keywords_id: Union[int, Sequence[int]]) -> DeleteMetadata:
         """Deletes keywords from the server
 
         This will not delete any keywords that are in use
@@ -613,10 +614,7 @@ class PortalClient(PortalClientBase):
         if not keywords_id:
             return DeleteMetadata()
 
-        url_params = {"id": keywords_id}
-        return self._auto_request(
-            "delete", "v1/keyword", None, CommonDeleteURLParameters, DeleteMetadata, None, url_params
-        )
+        return self._auto_request("post", "v1/keywords/bulkDelete", List[int], None, DeleteMetadata, keywords_id, None)
 
     ##############################################################
     # General record functions

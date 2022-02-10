@@ -23,29 +23,27 @@ class RestModelBase(BaseModel):
         extra = Extra.forbid
 
 
-class CommonDeleteURLParameters(RestModelBase):
+class CommonBulkDeleteBody(RestModelBase):
     """
     Common URL parameters for delete functionality
 
     These functions typically only take a list of ids
     """
 
-    id: Optional[List[int]] = None
+    id: List[int]
 
 
-class CommonGetURLParameters(RestModelBase):
+class CommonBulkGetBody(RestModelBase):
     """
     Common URL parameters for get_ functions
 
     These functions typically take a list for ids, and a bool for missing_ok
     """
 
-    id: Optional[List[int]] = None
+    id: List[int]
+    include: Optional[List[str]] = None
+    exclude: Optional[List[str]] = None
     missing_ok: bool = False
-
-    @validator("missing_ok", pre=True)
-    def validate_lists(cls, v):
-        return validate_list_to_single(v)
 
 
 class ProjURLParameters(RestModelBase):
@@ -53,7 +51,7 @@ class ProjURLParameters(RestModelBase):
     exclude: Optional[List[str]] = None
 
 
-class CommonGetProjURLParameters(CommonGetURLParameters):
+class CommonGetProjURLParameters(CommonBulkGetBody):
     """
     Common URL parameters for get_ functions, with projection
     """

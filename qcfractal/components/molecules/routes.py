@@ -5,7 +5,7 @@ from flask import current_app
 from qcfractal.app import main, storage_socket
 from qcfractal.app.helpers import get_helper, delete_helper
 from qcfractal.app.routes import wrap_route
-from qcportal.base_models import CommonGetURLParameters, CommonDeleteURLParameters
+from qcportal.base_models import CommonBulkGetBody, CommonBulkDeleteBody
 from qcportal.exceptions import LimitExceededError
 from qcportal.molecules import Molecule, MoleculeQueryBody, MoleculeModifyBody
 from qcportal.utils import calculate_limit
@@ -13,8 +13,8 @@ from qcportal.utils import calculate_limit
 
 @main.route("/v1/molecule", methods=["GET"])
 @main.route("/v1/molecule/<molecule_id>", methods=["GET"])
-@wrap_route(None, CommonGetURLParameters)
-def get_molecules_v1(molecule_id: Optional[int] = None, *, url_params: CommonGetURLParameters):
+@wrap_route(None, CommonBulkGetBody)
+def get_molecules_v1(molecule_id: Optional[int] = None, *, url_params: CommonBulkGetBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_molecules
     if url_params.id is not None and len(url_params.id) > limit:
         raise LimitExceededError(f"Cannot get {len(url_params.id)} molecule records - limit is {limit}")
@@ -24,8 +24,8 @@ def get_molecules_v1(molecule_id: Optional[int] = None, *, url_params: CommonGet
 
 @main.route("/v1/molecule", methods=["DELETE"])
 @main.route("/v1/molecule/<molecule_id>", methods=["DELETE"])
-@wrap_route(None, CommonDeleteURLParameters)
-def delete_molecules_v1(molecule_id: Optional[int] = None, *, url_params: CommonDeleteURLParameters):
+@wrap_route(None, CommonBulkDeleteBody)
+def delete_molecules_v1(molecule_id: Optional[int] = None, *, url_params: CommonBulkDeleteBody):
     return delete_helper(molecule_id, url_params.id, storage_socket.molecules.delete)
 
 

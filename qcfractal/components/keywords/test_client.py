@@ -36,7 +36,7 @@ def test_keywords_client_basic(snowflake_client: PortalClient):
     assert ret.id == added_ids[0]
 
     # Delete two
-    meta = snowflake_client._delete_keywords(added_ids[:2])
+    meta = snowflake_client.delete_keywords(added_ids[:2])
     assert meta.success
     assert meta.n_deleted == 2
     assert meta.deleted_idx == [0, 1]
@@ -88,7 +88,7 @@ def test_keywords_client_delete_nonexist(snowflake_client: PortalClient):
     meta, ids = snowflake_client.add_keywords([kw1])
     assert meta.n_inserted == 1
 
-    meta = snowflake_client._delete_keywords([456, ids[0], ids[0], 123, 789])
+    meta = snowflake_client.delete_keywords([456, ids[0], ids[0], 123, 789])
     assert meta.success is False
     assert meta.n_deleted == 1
     assert meta.n_errors == 4
@@ -102,7 +102,7 @@ def test_keywords_client_get_nonexist(snowflake_client: PortalClient):
     meta, ids = snowflake_client.add_keywords([kw1, kw6])
     assert meta.n_inserted == 2
 
-    meta = snowflake_client._delete_keywords([ids[0]])
+    meta = snowflake_client.delete_keywords([ids[0]])
     assert meta.success
     assert meta.n_deleted == 1
 
