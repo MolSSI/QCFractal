@@ -21,7 +21,6 @@ from .base_models import (
     CommonGetURLParametersName,
     CommonGetProjURLParameters,
     CommonBulkGetBody,
-    CommonBulkDeleteBody,
 )
 from .cache import PortalCache
 from .client_base import PortalClientBase
@@ -349,9 +348,9 @@ class PortalClient(PortalClientBase):
         if not molecule_id_lst:
             return []
 
-        url_params = {"id": molecule_id_lst, "missing_ok": missing_ok}
+        body_data = CommonBulkGetBody(id=molecule_id_lst, missing_ok=missing_ok)
         mols = self._auto_request(
-            "get", "v1/molecule", None, CommonBulkGetBody, List[Optional[Molecule]], None, url_params
+            "post", "v1/molecules/bulkGet", CommonBulkGetBody, None, List[Optional[Molecule]], body_data, None
         )
 
         if isinstance(molecule_id, Sequence):
@@ -407,7 +406,13 @@ class PortalClient(PortalClientBase):
             query_body["identifiers"] = {k: make_list(v) for k, v in identifiers.items()}
 
         meta, molecules = self._auto_request(
-            "post", "v1/molecule/query", MoleculeQueryBody, None, Tuple[QueryMetadata, List[Molecule]], query_body, None
+            "post",
+            "v1/molecules/query",
+            MoleculeQueryBody,
+            None,
+            Tuple[QueryMetadata, List[Molecule]],
+            query_body,
+            None,
         )
         return meta, molecules
 
@@ -434,7 +439,7 @@ class PortalClient(PortalClientBase):
 
         mols = self._auto_request(
             "post",
-            "v1/molecule",
+            "v1/molecules/bulkCreate",
             List[Molecule],
             None,
             Tuple[InsertMetadata, List[int]],
@@ -489,7 +494,7 @@ class PortalClient(PortalClientBase):
         }
 
         return self._auto_request(
-            "patch", f"v1/molecule/{molecule_id}", MoleculeModifyBody, None, UpdateMetadata, body, None
+            "patch", f"v1/molecules/{molecule_id}", MoleculeModifyBody, None, UpdateMetadata, body, None
         )
 
     def delete_molecules(self, molecule_id: Union[int, Sequence[int]]) -> DeleteMetadata:
@@ -512,8 +517,7 @@ class PortalClient(PortalClientBase):
         if not molecule_id:
             return DeleteMetadata()
 
-        url_params = {"id": molecule_id}
-        return self._auto_request("delete", "v1/molecule", None, CommonBulkDeleteBody, DeleteMetadata, None, url_params)
+        return self._auto_request("post", "v1/molecules/bulkDelete", List[int], None, DeleteMetadata, molecule_id, None)
 
     ##############################################################
     # Keywords
