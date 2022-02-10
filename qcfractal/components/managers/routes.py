@@ -1,9 +1,6 @@
-from typing import Optional
-
 from flask import current_app
 
 from qcfractal.app import main, storage_socket
-from qcfractal.app.helpers import get_helper
 from qcfractal.app.routes import wrap_route
 from qcportal.base_models import CommonBulkGetNamesBody
 from qcportal.exceptions import LimitExceededError

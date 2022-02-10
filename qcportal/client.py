@@ -74,11 +74,11 @@ from .records.torsiondrive import (
     TorsiondriveQueryBody,
 )
 from .serverinfo import (
-    AccessLogQueryParameters,
-    AccessLogQuerySummaryParameters,
-    ErrorLogQueryParameters,
+    AccessLogQueryBody,
+    AccessLogSummaryParameters,
+    ErrorLogQueryBody,
     ServerStatsQueryParameters,
-    DeleteBeforeDateParameters,
+    DeleteBeforeDateBody,
 )
 from .utils import make_list, make_str
 
@@ -1777,7 +1777,7 @@ class PortalClient(PortalClientBase):
             warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
             limit = min(limit, self.api_limits["get_server_stats"])
 
-        url_params = {"before": before, "after": after, "limit": limit, "skip": skip}
+        url_params = ServerStatsQueryParameters(before=before, after=after, limit=limit, skip=skip)
         return self._auto_request(
             "get",
             "v1/server_stats",
@@ -1789,8 +1789,10 @@ class PortalClient(PortalClientBase):
         )
 
     def delete_server_stats(self, before: datetime):
-        url_params = {"before": before}
-        return self._auto_request("delete", "v1/server_stats", None, DeleteBeforeDateParameters, int, None, url_params)
+        body_data = DeleteBeforeDateBody(before=before)
+        return self._auto_request(
+            "post", "v1/server_stats/bulkDelete", DeleteBeforeDateBody, None, int, body_data, None
+        )
 
     def query_access_log(
         self,
@@ -1807,28 +1809,28 @@ class PortalClient(PortalClientBase):
             warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
             limit = min(limit, self.api_limits["get_access_logs"])
 
-        url_params = {
-            "access_type": make_list(access_type),
-            "access_method": make_list(access_method),
-            "before": before,
-            "after": after,
-            "limit": limit,
-            "skip": skip,
-        }
+        body_data = AccessLogQueryBody(
+            access_type=make_list(access_type),
+            access_method=make_list(access_method),
+            before=before,
+            after=after,
+            limit=limit,
+            skip=skip,
+        )
 
         return self._auto_request(
-            "get",
-            "v1/access",
+            "post",
+            "v1/access_logs/query",
+            AccessLogQueryBody,
             None,
-            AccessLogQueryParameters,
             Tuple[QueryMetadata, List[Dict[str, Any]]],
+            body_data,
             None,
-            url_params,
         )
 
     def delete_access_log(self, before: datetime):
-        url_params = {"before": before}
-        return self._auto_request("delete", "v1/access", None, DeleteBeforeDateParameters, int, None, url_params)
+        body_data = DeleteBeforeDateBody(before=before)
+        return self._auto_request("post", "v1/access_logs/bulkDelete", DeleteBeforeDateBody, None, int, body_data, None)
 
     def query_error_log(
         self,
@@ -1845,28 +1847,30 @@ class PortalClient(PortalClientBase):
             warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
             limit = min(limit, self.api_limits["get_error_logs"])
 
-        url_params = {
-            "id": make_list(id),
-            "username": make_list(username),
-            "before": before,
-            "after": after,
-            "limit": limit,
-            "skip": skip,
-        }
+        body_data = ErrorLogQueryBody(
+            id=make_list(id),
+            username=make_list(username),
+            before=before,
+            after=after,
+            limit=limit,
+            skip=skip,
+        )
 
         return self._auto_request(
-            "get",
-            "v1/server_error",
+            "post",
+            "v1/server_errors/query",
+            ErrorLogQueryBody,
             None,
-            ErrorLogQueryParameters,
             Tuple[QueryMetadata, List[Dict[str, Any]]],
+            body_data,
             None,
-            url_params,
         )
 
     def delete_error_log(self, before: datetime):
-        url_params = {"before": before}
-        return self._auto_request("delete", "v1/server_error", None, DeleteBeforeDateParameters, int, None, url_params)
+        body_data = DeleteBeforeDateBody(before=before)
+        return self._auto_request(
+            "post", "v1/server_errors/bulkDelete", DeleteBeforeDateBody, None, int, body_data, None
+        )
 
     def query_access_summary(
         self,
@@ -1893,7 +1897,7 @@ class PortalClient(PortalClientBase):
         }
 
         return self._auto_request(
-            "get", "v1/access/summary", None, AccessLogQuerySummaryParameters, Dict[str, Any], None, url_params
+            "get", "v1/access_logs/summary", None, AccessLogSummaryParameters, Dict[str, Any], None, url_params
         )
 
     ##############################################################

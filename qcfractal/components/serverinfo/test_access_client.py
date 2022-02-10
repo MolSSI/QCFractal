@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 def test_serverinfo_client_query_access(storage_socket: SQLAlchemySocket, snowflake_client: PortalClient):
     # Add some to test ips and other data
     access1 = {
-        "access_type": "v1/molecule",
+        "access_type": "v1/molecules",
         "access_method": "GET",
         "ip_address": test_ips[0][0],
         "user_agent": "Fake user agent",
@@ -29,7 +29,7 @@ def test_serverinfo_client_query_access(storage_socket: SQLAlchemySocket, snowfl
     }
 
     access2 = {
-        "access_type": "v1/wavefunction",
+        "access_type": "v1/records/optimization",
         "access_method": "POST",
         "ip_address": test_ips[1][0],
         "user_agent": "Fake user agent",
@@ -56,8 +56,8 @@ def test_serverinfo_client_query_access(storage_socket: SQLAlchemySocket, snowfl
     assert accesses[1]["access_date"] > accesses[2]["access_date"]
 
     # These are ordered descending (newest accesses first). Reverse the order for testing
-    assert accesses[0]["access_type"] == "v1/wavefunction"
-    assert accesses[1]["access_type"] == "v1/molecule"
+    assert accesses[0]["access_type"] == "v1/records/optimization"
+    assert accesses[1]["access_type"] == "v1/molecules"
     assert accesses[2]["access_type"] == "v1/information"  # from constructing the client
 
     assert accesses[0]["access_method"] == "POST"
@@ -68,17 +68,17 @@ def test_serverinfo_client_query_access(storage_socket: SQLAlchemySocket, snowfl
     assert accesses[1]["ip_address"] == test_ips[0][0]
     assert ipaddress.ip_address(accesses[2]["ip_address"]).is_loopback
 
-    meta, accesses = snowflake_client.query_access_log("v1/wavefunction", "GET")
+    meta, accesses = snowflake_client.query_access_log("v1/records/optimization", "GET")
     assert meta.n_found == 0
 
-    meta, accesses = snowflake_client.query_access_log("v1/wavefunction")
+    meta, accesses = snowflake_client.query_access_log("v1/records/optimization")
     assert meta.n_found == 1
 
     meta, accesses = snowflake_client.query_access_log(access_method=["POST", "GET"], before=time_12)
     assert meta.n_found == 2
 
     meta, accesses = snowflake_client.query_access_log(access_method=["POST"], after=time_12)
-    assert meta.n_found == 1
+    assert meta.n_found == 5  # includes previous queries
 
 
 def test_serverinfo_client_access_logged(snowflake_client: PortalClient):
@@ -94,17 +94,17 @@ def test_serverinfo_client_access_logged(snowflake_client: PortalClient):
     assert meta.n_found == 4
 
     assert accesses[3]["access_type"] == "v1/information"
-    assert accesses[2]["access_type"] == "v1/access"
-    assert accesses[1]["access_type"] == "v1/molecule/query"
-    assert accesses[0]["access_type"] == "v1/molecule"
+    assert accesses[2]["access_type"] == "v1/access_logs/query"
+    assert accesses[1]["access_type"] == "v1/molecules/query"
+    assert accesses[0]["access_type"] == "v1/molecules/bulkGet"
 
     assert accesses[0]["response_bytes"] > 0
     assert accesses[1]["response_bytes"] > 0
     assert accesses[2]["response_bytes"] > 0
     assert accesses[3]["response_bytes"] > 0
-    assert accesses[0]["request_bytes"] == 0
+    assert accesses[0]["request_bytes"] > 0
     assert accesses[1]["request_bytes"] > 0
-    assert accesses[2]["request_bytes"] == 0
+    assert accesses[2]["request_bytes"] > 0
     assert accesses[3]["request_bytes"] == 0
 
 

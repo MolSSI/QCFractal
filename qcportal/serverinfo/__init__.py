@@ -1,7 +1,7 @@
 from .rest_models import (
-    AccessLogQueryParameters,
-    AccessLogQuerySummaryParameters,
-    ErrorLogQueryParameters,
+    AccessLogQueryBody,
+    AccessLogSummaryParameters,
+    ErrorLogQueryBody,
     ServerStatsQueryParameters,
-    DeleteBeforeDateParameters,
+    DeleteBeforeDateBody,
 )

@@ -20,35 +20,23 @@ class GroupByEnum(str, Enum):
     subdivision = "subdivision"
 
 
-class DeleteBeforeDateParameters(RestModelBase):
+class DeleteBeforeDateBody(RestModelBase):
     before: Optional[datetime] = None
 
-    @validator("before", pre=True)
-    def validate_lists(cls, v):
-        return validate_list_to_single(v)
 
-
-class AccessLogQueryParameters(QueryProjModelBase):
+class AccessLogQueryBody(QueryProjModelBase):
     access_type: Optional[List[str]] = None
     access_method: Optional[List[str]] = None
     username: Optional[List[str]] = None
     before: Optional[datetime] = None
     after: Optional[datetime] = None
 
-    @validator("before", "after", pre=True)
-    def validate_lists(cls, v):
-        return validate_list_to_single(v)
 
-
-class ErrorLogQueryParameters(QueryModelBase):
+class ErrorLogQueryBody(QueryModelBase):
     id: Optional[List[int]] = None
     username: Optional[List[str]] = None
     before: Optional[datetime] = None
     after: Optional[datetime] = None
-
-    @validator("before", "after", pre=True)
-    def validate_lists(cls, v):
-        return validate_list_to_single(v)
 
 
 class ServerStatsQueryParameters(QueryModelBase):
@@ -60,7 +48,7 @@ class ServerStatsQueryParameters(QueryModelBase):
         return validate_list_to_single(v)
 
 
-class AccessLogQuerySummaryParameters(RestModelBase):
+class AccessLogSummaryParameters(RestModelBase):
     group_by: GroupByEnum = GroupByEnum.day
     before: Optional[datetime] = None
     after: Optional[datetime] = None
