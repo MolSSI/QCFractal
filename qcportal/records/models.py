@@ -5,14 +5,13 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional, Dict, Any, List, Union
 
-from pydantic import BaseModel, Extra, validator
+from pydantic import BaseModel, Extra
 from qcelemental.models.results import Provenance
 
 from ..base_models import (
     RestModelBase,
     QueryProjModelBase,
-    CommonGetProjURLParameters,
-    validate_list_to_single,
+    ProjURLParameters,
 )
 from ..outputstore import OutputStore, OutputTypeEnum
 
@@ -187,7 +186,7 @@ class BaseRecord(abc.ABC, BaseModel):
             "get",
             f"v1/record/{self.raw_data.id}/compute_history",
             None,
-            CommonGetProjURLParameters,
+            ProjURLParameters,
             List[ComputeHistory],
             None,
             url_params,
@@ -322,17 +321,13 @@ class RecordModifyBody(RestModelBase):
     comment: Optional[str] = None
 
 
-class RecordDeleteURLParameters(RestModelBase):
+class RecordDeleteBody(RestModelBase):
     record_id: List[int]
     soft_delete: bool
     delete_children: bool
 
-    @validator("soft_delete", "delete_children", pre=True)
-    def validate_lists(cls, v):
-        return validate_list_to_single(v)
 
-
-class RecordRevertBodyParameters(RestModelBase):
+class RecordRevertBody(RestModelBase):
     revert_status: RecordStatusEnum
     record_id: List[int]
 

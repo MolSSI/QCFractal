@@ -19,8 +19,8 @@ import pydantic
 
 from .base_models import (
     CommonBulkGetNamesBody,
-    CommonGetProjURLParameters,
     CommonBulkGetBody,
+    ProjURLParameters,
 )
 from .cache import PortalCache
 from .client_base import PortalClientBase
@@ -42,8 +42,8 @@ from .records import (
     PriorityEnum,
     RecordQueryBody,
     RecordModifyBody,
-    RecordDeleteURLParameters,
-    RecordRevertBodyParameters,
+    RecordDeleteBody,
+    RecordRevertBody,
     AllRecordTypes,
     AllRecordDataModelTypes,
 )
@@ -278,7 +278,7 @@ class PortalClient(PortalClientBase):
             "get",
             f"v1/dataset/{dataset_id}",
             None,
-            CommonGetProjURLParameters,
+            ProjURLParameters,
             AllDatasetDataModelTypes,
             None,
             payload,
@@ -640,11 +640,11 @@ class PortalClient(PortalClientBase):
         if not record_id_lst:
             return []
 
-        url_params = {"id": record_id_lst, "missing_ok": missing_ok}
+        body_data = {"id": record_id_lst, "missing_ok": missing_ok}
 
-        if len(url_params["id"]) > self.api_limits["get_records"]:
+        if len(body_data["id"]) > self.api_limits["get_records"]:
             raise RuntimeError(
-                f"Cannot get {len(url_params['id'])} records - over the limit of {self.api_limits['get_records']}"
+                f"Cannot get {len(body_data['id'])} records - over the limit of {self.api_limits['get_records']}"
             )
 
         include = set()
@@ -660,16 +660,16 @@ class PortalClient(PortalClientBase):
             include |= {"*", "comments"}
 
         if include:
-            url_params["include"] = include
+            body_data["include"] = include
 
         record_data = self._auto_request(
-            "get",
-            "v1/record",
+            "post",
+            "v1/records/bulkGet",
+            CommonBulkGetBody,
             None,
-            CommonGetProjURLParameters,
             List[Optional[AllRecordDataModelTypes]],
+            body_data,
             None,
-            url_params,
         )
 
         records = self.recordmodel_from_datamodel(record_data)
@@ -732,7 +732,7 @@ class PortalClient(PortalClientBase):
 
         meta, record_data = self._auto_request(
             "post",
-            "v1/record/query",
+            "v1/records/query",
             RecordQueryBody,
             None,
             Tuple[QueryMetadata, List[AllRecordDataModelTypes]],
@@ -748,7 +748,7 @@ class PortalClient(PortalClientBase):
             return UpdateMetadata()
 
         body_data = {"record_id": record_id, "status": RecordStatusEnum.waiting}
-        return self._auto_request("patch", "v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
+        return self._auto_request("patch", "v1/records", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
     def cancel_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
         record_id = make_list(record_id)
@@ -756,7 +756,7 @@ class PortalClient(PortalClientBase):
             return UpdateMetadata()
 
         body_data = {"record_id": record_id, "status": RecordStatusEnum.cancelled}
-        return self._auto_request("patch", "v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
+        return self._auto_request("patch", "v1/records", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
     def invalidate_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
         record_id = make_list(record_id)
@@ -764,7 +764,7 @@ class PortalClient(PortalClientBase):
             return UpdateMetadata()
 
         body_data = {"record_id": record_id, "status": RecordStatusEnum.invalid}
-        return self._auto_request("patch", "v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
+        return self._auto_request("patch", "v1/records", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
     def delete_records(
         self, record_id: Union[int, Sequence[int]], soft_delete=True, delete_children: bool = True
@@ -773,9 +773,9 @@ class PortalClient(PortalClientBase):
         if not record_id:
             return DeleteMetadata()
 
-        url_params = {"record_id": record_id, "soft_delete": soft_delete, "delete_children": delete_children}
+        body_data = {"record_id": record_id, "soft_delete": soft_delete, "delete_children": delete_children}
         return self._auto_request(
-            "delete", "v1/record", None, RecordDeleteURLParameters, DeleteMetadata, None, url_params
+            "post", "v1/records/bulkDelete", RecordDeleteBody, None, DeleteMetadata, body_data, None
         )
 
     def uninvalidate_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
@@ -784,9 +784,7 @@ class PortalClient(PortalClientBase):
             return UpdateMetadata()
 
         body = {"record_id": record_id, "revert_status": RecordStatusEnum.invalid}
-        return self._auto_request(
-            "post", "v1/record/revert", RecordRevertBodyParameters, None, UpdateMetadata, body, None
-        )
+        return self._auto_request("post", "v1/records/revert", RecordRevertBody, None, UpdateMetadata, body, None)
 
     def uncancel_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
         record_id = make_list(record_id)
@@ -794,9 +792,7 @@ class PortalClient(PortalClientBase):
             return UpdateMetadata()
 
         body = {"record_id": record_id, "revert_status": RecordStatusEnum.cancelled}
-        return self._auto_request(
-            "post", "v1/record/revert", RecordRevertBodyParameters, None, UpdateMetadata, body, None
-        )
+        return self._auto_request("post", "v1/records/revert", RecordRevertBody, None, UpdateMetadata, body, None)
 
     def undelete_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
         record_id = make_list(record_id)
@@ -804,9 +800,7 @@ class PortalClient(PortalClientBase):
             return UpdateMetadata()
 
         body = {"record_id": record_id, "revert_status": RecordStatusEnum.deleted}
-        return self._auto_request(
-            "post", "v1/record/revert", RecordRevertBodyParameters, None, UpdateMetadata, body, None
-        )
+        return self._auto_request("post", "v1/records/revert", RecordRevertBody, None, UpdateMetadata, body, None)
 
     def modify_records(
         self,
@@ -825,7 +819,7 @@ class PortalClient(PortalClientBase):
             "tag": new_tag,
             "priority": new_priority,
         }
-        return self._auto_request("patch", "v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
+        return self._auto_request("patch", "v1/records", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
     def add_comment(self, record_id: Union[int, Sequence[int]], comment: str) -> UpdateMetadata:
         """
@@ -837,7 +831,7 @@ class PortalClient(PortalClientBase):
             The record or records to add the comments to
 
         comment
-            The comment string to add. You username will be added automatically
+            The comment string to add. Your username will be added automatically
 
         Returns
         -------
@@ -852,7 +846,7 @@ class PortalClient(PortalClientBase):
             "record_id": record_id,
             "comment": comment,
         }
-        return self._auto_request("patch", "v1/record", RecordModifyBody, None, UpdateMetadata, body_data, None)
+        return self._auto_request("patch", "v1/records", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
     ##############################################################
     # Singlepoint calculations
@@ -936,7 +930,13 @@ class PortalClient(PortalClientBase):
             )
 
         return self._auto_request(
-            "post", "v1/record/singlepoint", SinglepointAddBody, None, Tuple[InsertMetadata, List[int]], body_data, None
+            "post",
+            "v1/records/singlepoint/bulkCreate",
+            SinglepointAddBody,
+            None,
+            Tuple[InsertMetadata, List[int]],
+            body_data,
+            None,
         )
 
     def get_singlepoints(
@@ -955,7 +955,7 @@ class PortalClient(PortalClientBase):
         if not record_id_lst:
             return []
 
-        url_params = {"id": record_id_lst, "missing_ok": missing_ok}
+        body_data = {"id": record_id_lst, "missing_ok": missing_ok}
 
         include = set()
 
@@ -972,21 +972,21 @@ class PortalClient(PortalClientBase):
             include |= {"*", "wavefunction"}
 
         if include:
-            url_params["include"] = include
+            body_data["include"] = include
 
-        if len(url_params["id"]) > self.api_limits["get_records"]:
+        if len(body_data["id"]) > self.api_limits["get_records"]:
             raise RuntimeError(
-                f"Cannot get {len(url_params['id'])} records - over the limit of {self.api_limits['get_records']}"
+                f"Cannot get {len(body_data['id'])} records - over the limit of {self.api_limits['get_records']}"
             )
 
         record_data = self._auto_request(
-            "get",
-            "v1/record/singlepoint",
+            "post",
+            "v1/records/singlepoint/bulkGet",
+            CommonBulkGetBody,
             None,
-            CommonGetProjURLParameters,
             List[Optional[SinglepointRecord._DataModel]],
+            body_data,
             None,
-            url_params,
         )
 
         records = self.recordmodel_from_datamodel(record_data)
@@ -1063,7 +1063,7 @@ class PortalClient(PortalClientBase):
 
         meta, record_data = self._auto_request(
             "post",
-            "v1/record/singlepoint/query",
+            "v1/records/singlepoint/query",
             SinglepointQueryBody,
             None,
             Tuple[QueryMetadata, List[SinglepointRecord._DataModel]],
@@ -1118,7 +1118,7 @@ class PortalClient(PortalClientBase):
 
         return self._auto_request(
             "post",
-            "v1/record/optimization",
+            "v1/records/optimization/bulkCreate",
             OptimizationAddBody,
             None,
             Tuple[InsertMetadata, List[int]],
@@ -1143,7 +1143,7 @@ class PortalClient(PortalClientBase):
         if not record_id_lst:
             return []
 
-        url_params = {"id": record_id_lst, "missing_ok": missing_ok}
+        body_data = {"id": record_id_lst, "missing_ok": missing_ok}
 
         include = set()
 
@@ -1162,21 +1162,21 @@ class PortalClient(PortalClientBase):
             include |= {"*", "trajectory"}
 
         if include:
-            url_params["include"] = include
+            body_data["include"] = include
 
-        if len(url_params["id"]) > self.api_limits["get_records"]:
+        if len(body_data["id"]) > self.api_limits["get_records"]:
             raise RuntimeError(
-                f"Cannot get {len(url_params['id'])} records - over the limit of {self.api_limits['get_records']}"
+                f"Cannot get {len(body_data['id'])} records - over the limit of {self.api_limits['get_records']}"
             )
 
         record_data = self._auto_request(
-            "get",
-            "v1/record/optimization",
+            "post",
+            "v1/records/optimization/bulkGet",
+            CommonBulkGetBody,
             None,
-            CommonGetProjURLParameters,
             List[Optional[OptimizationRecord._DataModel]],
+            body_data,
             None,
-            url_params,
         )
 
         records = self.recordmodel_from_datamodel(record_data)
@@ -1258,7 +1258,7 @@ class PortalClient(PortalClientBase):
 
         meta, record_data = self._auto_request(
             "post",
-            "v1/record/optimization/query",
+            "v1/records/optimization/query",
             OptimizationQueryBody,
             None,
             Tuple[QueryMetadata, List[OptimizationRecord._DataModel]],
@@ -1307,7 +1307,7 @@ class PortalClient(PortalClientBase):
 
         return self._auto_request(
             "post",
-            "v1/record/torsiondrive",
+            "v1/records/torsiondrive/bulkCreate",
             TorsiondriveAddBody,
             None,
             Tuple[InsertMetadata, List[int]],
@@ -1332,7 +1332,7 @@ class PortalClient(PortalClientBase):
         if not record_id_lst:
             return []
 
-        url_params = {"id": record_id_lst, "missing_ok": missing_ok}
+        body_data = {"id": record_id_lst, "missing_ok": missing_ok}
 
         include = set()
 
@@ -1351,21 +1351,21 @@ class PortalClient(PortalClientBase):
             include |= {"*", "optimizations"}
 
         if include:
-            url_params["include"] = include
+            body_data["include"] = include
 
-        if len(url_params["id"]) > self.api_limits["get_records"]:
+        if len(body_data["id"]) > self.api_limits["get_records"]:
             raise RuntimeError(
-                f"Cannot get {len(url_params['id'])} records - over the limit of {self.api_limits['get_records']}"
+                f"Cannot get {len(body_data['id'])} records - over the limit of {self.api_limits['get_records']}"
             )
 
         record_data = self._auto_request(
-            "get",
-            "v1/record/torsiondrive",
+            "post",
+            "v1/records/torsiondrive/bulkGet",
+            CommonBulkGetBody,
             None,
-            CommonGetProjURLParameters,
             List[Optional[TorsiondriveRecord._DataModel]],
+            body_data,
             None,
-            url_params,
         )
 
         records = self.recordmodel_from_datamodel(record_data)
@@ -1447,7 +1447,7 @@ class PortalClient(PortalClientBase):
 
         meta, record_data = self._auto_request(
             "post",
-            "v1/record/torsiondrive/query",
+            "v1/records/torsiondrive/query",
             TorsiondriveQueryBody,
             None,
             Tuple[QueryMetadata, List[TorsiondriveRecord._DataModel]],
@@ -1496,7 +1496,7 @@ class PortalClient(PortalClientBase):
 
         return self._auto_request(
             "post",
-            "v1/record/gridoptimization",
+            "v1/records/gridoptimization/bulkCreate",
             GridoptimizationAddBody,
             None,
             Tuple[InsertMetadata, List[int]],
@@ -1521,7 +1521,7 @@ class PortalClient(PortalClientBase):
         if not record_id_lst:
             return []
 
-        url_params = {"id": record_id_lst, "missing_ok": missing_ok}
+        body_data = {"id": record_id_lst, "missing_ok": missing_ok}
 
         include = set()
 
@@ -1540,21 +1540,21 @@ class PortalClient(PortalClientBase):
             include |= {"*", "optimizations"}
 
         if include:
-            url_params["include"] = include
+            body_data["include"] = include
 
-        if len(url_params["id"]) > self.api_limits["get_records"]:
+        if len(body_data["id"]) > self.api_limits["get_records"]:
             raise RuntimeError(
-                f"Cannot get {len(url_params['id'])} records - over the limit of {self.api_limits['get_records']}"
+                f"Cannot get {len(body_data['id'])} records - over the limit of {self.api_limits['get_records']}"
             )
 
         record_data = self._auto_request(
-            "get",
-            "v1/record/gridoptimization",
+            "post",
+            "v1/records/gridoptimization/bulkGet",
+            CommonBulkGetBody,
             None,
-            CommonGetProjURLParameters,
             List[Optional[GridoptimizationRecord._DataModel]],
+            body_data,
             None,
-            url_params,
         )
 
         records = self.recordmodel_from_datamodel(record_data)
@@ -1636,7 +1636,7 @@ class PortalClient(PortalClientBase):
 
         meta, record_data = self._auto_request(
             "post",
-            "v1/record/gridoptimization/query",
+            "v1/records/gridoptimization/query",
             TorsiondriveQueryBody,
             None,
             Tuple[QueryMetadata, List[GridoptimizationRecord._DataModel]],

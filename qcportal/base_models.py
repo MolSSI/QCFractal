@@ -88,12 +88,11 @@ class QueryModelBase(RestModelBase):
         return validate_list_to_single(v)
 
 
-class QueryProjModelBase(QueryModelBase):
+class QueryProjModelBase(QueryModelBase, ProjURLParameters):
     """
     Common parameters for query_* functions, with include/exclude (projection)
 
     These can be either URL parameters or part of a POST body
     """
 
-    include: Optional[List[str]] = None
-    exclude: Optional[List[str]] = None
+    pass

@@ -15,7 +15,7 @@ from ..singlepoint import (
     QCInputSpecification,
     SinglepointDriver,
 )
-from ...base_models import CommonGetProjURLParameters
+from ...base_models import ProjURLParameters
 
 
 class OptimizationQCInputSpecification(QCInputSpecification):
@@ -90,7 +90,7 @@ class OptimizationRecord(BaseRecord):
             "get",
             f"v1/record/optimization/{self.raw_data.id}/trajectory",
             None,
-            CommonGetProjURLParameters,
+            ProjURLParameters,
             List[OptimizationTrajectory],
             None,
             url_params,

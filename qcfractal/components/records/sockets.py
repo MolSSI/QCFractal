@@ -16,7 +16,7 @@ from qcfractal.db_socket.helpers import (
     get_general,
     delete_general,
 )
-from qcportal.exceptions import UserReportableError
+from qcportal.exceptions import UserReportableError, MissingDataError
 from qcportal.metadata_models import DeleteMetadata, QueryMetadata, UpdateMetadata
 from qcportal.outputstore import OutputStore, OutputTypeEnum, CompressionEnum
 from qcportal.records import FailedOperation, PriorityEnum, RecordStatusEnum
@@ -251,6 +251,12 @@ class RecordSocket:
 
         # Union them into a CTE
         self._child_cte = union(*selects).cte()
+
+    def get_socket(self, record_type: str) -> BaseRecordSocket:
+        handler = self._handler_map.get(record_type, None)
+        if handler is None:
+            raise MissingDataError(f"Cannot find handler for type {record_type}")
+        return handler
 
     def get_subtask_ids(self, session: Session, record_id: Iterable[int]) -> List[int]:
         # List may contain duplicates. So be tolerant of that!

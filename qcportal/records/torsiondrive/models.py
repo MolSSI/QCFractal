@@ -4,8 +4,8 @@ from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
 from typing_extensions import Literal
 
 from .. import BaseRecord, RecordAddBodyBase, RecordQueryBody
-from ..models import CommonGetProjURLParameters
 from ..optimization.models import OptimizationInputSpecification, OptimizationSpecification, OptimizationRecord
+from ...base_models import ProjURLParameters
 from ...molecules import Molecule
 from ...utils import recursive_normalizer
 
@@ -132,7 +132,7 @@ class TorsiondriveRecord(BaseRecord):
             "get",
             f"v1/record/torsiondrive/{self.raw_data.id}/optimizations",
             None,
-            CommonGetProjURLParameters,
+            ProjURLParameters,
             List[TorsiondriveOptimization],
             None,
             url_params,

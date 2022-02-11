@@ -9,8 +9,8 @@ from .models import (
     ComputeHistory,
     BaseRecord,
     RecordModifyBody,
-    RecordDeleteURLParameters,
-    RecordRevertBodyParameters,
+    RecordDeleteBody,
+    RecordRevertBody,
     RecordQueryBody,
     RecordAddBodyBase,
 )
