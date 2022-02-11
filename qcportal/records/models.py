@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import abc
 from datetime import datetime
 from enum import Enum
 from typing import Optional, Dict, Any, List, Union
@@ -145,7 +144,7 @@ class ServiceRecord(BaseModel):
     dependencies: Optional[List[ServiceDependency]] = None
 
 
-class BaseRecord(abc.ABC, BaseModel):
+class BaseRecord(BaseModel):
     class _DataModel(BaseModel):
         class Config:
             extra = Extra.forbid
@@ -173,6 +172,7 @@ class BaseRecord(abc.ABC, BaseModel):
     class Config:
         extra = Extra.forbid
 
+    record_type: str
     client: Any
     raw_data: _DataModel  # Meant to be overridden by derived classes
 
