@@ -149,8 +149,13 @@ class GridoptimizationServiceState(BaseModel):
 
 
 class GridoptimizationRecordSocket(BaseRecordSocket):
+
+    # Used by the base class
+    record_orm = GridoptimizationRecordORM
+    specification_orm = GridoptimizationSpecificationORM
+
     def __init__(self, root_socket: SQLAlchemySocket):
-        BaseRecordSocket.__init__(self, root_socket, GridoptimizationRecordORM, GridoptimizationSpecificationORM)
+        BaseRecordSocket.__init__(self, root_socket)
         self._logger = logging.getLogger(__name__)
 
     @staticmethod

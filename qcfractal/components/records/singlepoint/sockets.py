@@ -53,8 +53,13 @@ def wavefunction_helper(wavefunction: Optional[WavefunctionProperties]) -> Optio
 
 
 class SinglepointRecordSocket(BaseRecordSocket):
+
+    # Used by the base class
+    record_orm = SinglepointRecordORM
+    specification_orm = QCSpecificationORM
+
     def __init__(self, root_socket: SQLAlchemySocket):
-        BaseRecordSocket.__init__(self, root_socket, SinglepointRecordORM, QCSpecificationORM)
+        BaseRecordSocket.__init__(self, root_socket)
         self._logger = logging.getLogger(__name__)
 
     @staticmethod

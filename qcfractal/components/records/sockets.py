@@ -77,12 +77,17 @@ def create_compute_history_entry(
 
 
 class BaseRecordSocket:
-    def __init__(
-        self, root_socket: SQLAlchemySocket, record_orm: Type[BaseRecordORM], specification_orm: Type[BaseORM]
-    ):
+
+    # Must be overridden by derived classes
+    record_orm: Optional[Type[BaseRecordORM]] = None
+    specification_orm: Optional[Type[BaseORM]] = None
+
+    def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
-        self.record_orm = record_orm
-        self.specification_orm = specification_orm
+
+        # Make sure these were set by the derived classes
+        assert self.record_orm is not None
+        assert self.specification_orm is not None
 
     @staticmethod
     def get_children_select():
