@@ -49,7 +49,7 @@ class DatasetQueryModel(RestModelBase):
     exclude: Optional[List[str]] = None
 
 
-class DatasetGetEntryURLParams(RestModelBase):
+class DatasetGetEntryBody(RestModelBase):
     name: Optional[List[str]] = None
     include: Optional[List[str]] = None
     exclude: Optional[List[str]] = None
@@ -60,7 +60,7 @@ class DatasetGetEntryURLParams(RestModelBase):
         return validate_list_to_single(v)
 
 
-class DatasetGetRecordItemsURLParams(RestModelBase):
+class DatasetGetRecordItemsBody(RestModelBase):
     specification_name: Optional[List[str]] = None
     entry_name: Optional[List[str]] = None
     include: Optional[List[str]] = None

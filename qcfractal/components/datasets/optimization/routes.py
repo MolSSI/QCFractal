@@ -34,7 +34,7 @@ def add_optimization_dataset_specifications_v1(
     return storage_socket.datasets.optimization.add_specifications(dataset_id, body_data)
 
 
-@main.route("/v1/dataset/optimization/<int:dataset_id>/entry", methods=["POST"])
+@main.route("/v1/dataset/optimization/<int:dataset_id>/entry/bulkCreate", methods=["POST"])
 @wrap_route(List[OptimizationDatasetNewEntry], None)
 def add_optimization_dataset_entries_v1(dataset_id: int, *, body_data: List[OptimizationDatasetNewEntry]):
     return storage_socket.datasets.optimization.add_entries(

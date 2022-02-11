@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typing import List, Optional, Callable, Iterable, Tuple, Union
-    from qcportal.base_models import CommonGetProjURLParameters, ProjURLParameters
+    from qcportal.base_models import ProjURLParameters
     from qcportal.metadata_models import DeleteMetadata
 
 
@@ -63,9 +63,7 @@ def delete_helper(id: Optional[int], id_args: Optional[List[int]], func: Callabl
         return func(id_args, **kwargs)
 
 
-def prefix_projection(
-    proj_params: Union[ProjURLParameters, CommonGetProjURLParameters], prefix: str
-) -> Tuple[Optional[List[str]], Optional[List[str]]]:
+def prefix_projection(proj_params: ProjURLParameters, prefix: str) -> Tuple[Optional[List[str]], Optional[List[str]]]:
     """
     Prefixes includes and excludes with a string
     """

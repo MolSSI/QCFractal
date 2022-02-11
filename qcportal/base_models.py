@@ -64,15 +64,6 @@ class ProjURLParameters(RestModelBase):
     exclude: Optional[List[str]] = None
 
 
-class CommonGetProjURLParameters(CommonBulkGetBody):
-    """
-    Common URL parameters for get_ functions, with projection
-    """
-
-    include: Optional[List[str]] = None
-    exclude: Optional[List[str]] = None
-
-
 class QueryModelBase(RestModelBase):
     """
     Common parameters for query_* functions, with out include/exclude

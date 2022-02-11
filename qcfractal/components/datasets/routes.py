@@ -1,17 +1,17 @@
 from qcfractal.app import main, storage_socket
 from qcfractal.app.routes import wrap_route
-from qcportal.base_models import ProjURLParameters, CommonGetProjURLParameters
-from qcportal.datasets import DatasetQueryModel, DatasetGetRecordItemsURLParams, DatasetGetEntryURLParams
+from qcportal.base_models import ProjURLParameters
+from qcportal.datasets import DatasetQueryModel, DatasetGetRecordItemsBody, DatasetGetEntryBody
 
 
 @main.route("/v1/dataset/<int:dataset_id>", methods=["GET"])
-@wrap_route(None, CommonGetProjURLParameters)
-def get_dataset_v1(dataset_id: int, *, url_params: CommonGetProjURLParameters):
+@wrap_route(None, ProjURLParameters)
+def get_dataset_v1(dataset_id: int, *, url_params: ProjURLParameters):
 
     with storage_socket.session_scope(True) as session:
         ds_type = storage_socket.datasets.lookup_type(dataset_id, session=session)
         ds_socket = storage_socket.datasets.get_socket(ds_type)
-        return ds_socket.get(dataset_id, url_params.include, url_params.exclude, url_params.missing_ok, session=session)
+        return ds_socket.get(dataset_id, url_params.include, url_params.exclude, session=session)
 
 
 @main.route("/v1/dataset/query", methods=["POST"])
@@ -57,27 +57,27 @@ def get_general_dataset_specifications_v1(dataset_type: str, dataset_id: int):
     return ds_data["specifications"]
 
 
-@main.route("/v1/dataset/<string:dataset_type>/<int:dataset_id>/entry", methods=["GET"])
-@wrap_route(None, DatasetGetEntryURLParams)
-def get_general_dataset_entries_v1(dataset_type: str, dataset_id: int, *, url_params: DatasetGetEntryURLParams):
+@main.route("/v1/dataset/<string:dataset_type>/<int:dataset_id>/entry/bulkGet", methods=["GET"])
+@wrap_route(DatasetGetEntryBody, None)
+def get_general_dataset_entries_v1(dataset_type: str, dataset_id: int, *, body_data: DatasetGetEntryBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.get_entries(
         dataset_id,
-        entry_names=url_params.name,
-        include=url_params.include,
-        exclude=url_params.exclude,
-        missing_ok=url_params.missing_ok,
+        entry_names=body_data.name,
+        include=body_data.include,
+        exclude=body_data.exclude,
+        missing_ok=body_data.missing_ok,
     )
 
 
-@main.route("/v1/dataset/<string:dataset_type>/<int:dataset_id>/record", methods=["GET"])
-@wrap_route(None, DatasetGetRecordItemsURLParams)
-def get_general_dataset_records_v1(dataset_type: str, dataset_id: int, *, url_params: DatasetGetRecordItemsURLParams):
+@main.route("/v1/dataset/<string:dataset_type>/<int:dataset_id>/record/bulkGet", methods=["GET"])
+@wrap_route(DatasetGetRecordItemsBody, None)
+def get_general_dataset_records_v1(dataset_type: str, dataset_id: int, *, body_data: DatasetGetRecordItemsBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.get_records(
         dataset_id,
-        specification_names=url_params.specification_name,
-        entry_names=url_params.entry_name,
-        include=url_params.include,
-        exclude=url_params.exclude,
+        specification_names=body_data.specification_name,
+        entry_names=body_data.entry_name,
+        include=body_data.include,
+        exclude=body_data.exclude,
     )

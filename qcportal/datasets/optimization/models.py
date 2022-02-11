@@ -7,7 +7,7 @@ from typing_extensions import Literal
 from qcportal.base_models import RestModelBase
 from qcportal.molecules import Molecule
 from qcportal.records.optimization import OptimizationRecord, OptimizationInputSpecification, OptimizationSpecification
-from .. import BaseDataset, DatasetGetEntryURLParams, DatasetGetRecordItemsURLParams
+from .. import BaseDataset, DatasetGetEntryBody, DatasetGetRecordItemsBody
 from ...records import PriorityEnum
 
 
@@ -69,7 +69,7 @@ class OptimizationDataset(BaseDataset):
             "get",
             f"v1/dataset/optimization/{self.id}/entry",
             None,
-            DatasetGetEntryURLParams,
+            DatasetGetEntryBody,
             List[OptimizationDatasetEntry],
             None,
             url_params,
@@ -101,7 +101,7 @@ class OptimizationDataset(BaseDataset):
             "get",
             f"v1/dataset/optimization/{self.id}/record",
             None,
-            DatasetGetRecordItemsURLParams,
+            DatasetGetRecordItemsBody,
             List[OptimizationDatasetRecordItem],
             None,
             url_params,
