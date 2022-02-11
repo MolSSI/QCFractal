@@ -247,8 +247,16 @@ class PortalClient(PortalClientBase):
     ##############################################################
     # Datasets
     ##############################################################
-    def list_datasets(self, dataset_type: Optional[Union[str, Iterable[str]]]):
-        pass
+    def list_datasets(self):
+        return self._auto_request(
+            "get",
+            f"v1/datasets",
+            None,
+            None,
+            List[Dict[str, Any]],
+            None,
+            None,
+        )
 
     def get_dataset(self, dataset_type: str, dataset_name: str):
 
@@ -260,7 +268,7 @@ class PortalClient(PortalClientBase):
 
         ds = self._auto_request(
             "post",
-            f"v1/dataset/query",
+            f"v1/datasets/query",
             None,
             DatasetQueryModel,
             AllDatasetDataModelTypes,
@@ -276,12 +284,26 @@ class PortalClient(PortalClientBase):
 
         ds = self._auto_request(
             "get",
-            f"v1/dataset/{dataset_id}",
+            f"v1/datasets/{dataset_id}",
             None,
             ProjURLParameters,
             AllDatasetDataModelTypes,
             None,
             payload,
+        )
+
+        return self.datasetmodel_from_datamodel(ds)
+
+    def get_dataset_status_by_id(self, dataset_id: int):
+
+        ds = self._auto_request(
+            "get",
+            f"v1/datasets/{dataset_id}/status",
+            None,
+            ProjURLParameters,
+            Dict[str, Dict[RecordStatusEnum, int]],
+            None,
+            None,
         )
 
         return self.datasetmodel_from_datamodel(ds)
@@ -312,7 +334,7 @@ class PortalClient(PortalClientBase):
         }
 
         ds_id = self._auto_request(
-            "post", f"v1/dataset/optimization", OptimizationDatasetAddBody, None, int, payload, None
+            "post", f"v1/datasets/optimization", OptimizationDatasetAddBody, None, int, payload, None
         )
 
         return self.get_dataset_by_id(ds_id)

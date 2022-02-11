@@ -18,7 +18,7 @@ from qcportal.records import RecordModifyBody, RecordStatusEnum, PriorityEnum
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcportal.metadata_models import InsertMetadata
-    from qcportal.datasets.models import DatasetRecordModifyBody
+    from qcportal.datasets.models import DatasetRecordModifyBody, DatasetRecordRevertBody
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.db_socket.base_orm import BaseORM
     from typing import Dict, Any, Optional, Sequence, Iterable, Tuple, List
@@ -67,6 +67,17 @@ class BaseDatasetSocket:
         session: Optional[Session] = None,
     ):
         raise NotImplementedError("submit must be overridden by the derived class")
+
+    def get_tag_priority(
+        self, dataset_id: int, tag: Optional[str], priority: Optional[str], *, session: Optional[Session] = None
+    ):
+        if tag is None or priority is None:
+            default_tag, default_priority = self.get_default_tag_priority(dataset_id, session=session)
+            if tag is None:
+                tag = default_tag
+            if priority is None:
+                priority = default_priority
+        return tag, priority
 
     def get_default_tag_priority(
         self, dataset_id: int, *, session: Optional[Session] = None
@@ -198,7 +209,7 @@ class BaseDatasetSocket:
                     )
 
                 ds_spec_orm = self.specification_orm(
-                    dataset_id=dataset_id, name=ds_spec.name, comment=ds_spec.comment, specification_id=spec_id
+                    dataset_id=dataset_id, name=ds_spec.name, description=ds_spec.description, specification_id=spec_id
                 )
 
                 session.add(ds_spec_orm)
@@ -402,15 +413,28 @@ class BaseDatasetSocket:
         dataset_id: int,
         entry_names: Sequence[str],
         specification_names: Sequence[str],
+        delete_records: bool,
         *,
         session: Optional[Session] = None,
     ):
 
-        stmt = delete(self.record_item_orm)
-        stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
-        stmt = stmt.where(self.record_item_orm.entry_name.in_(entry_names))
-        stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
-        session.execute(stmt)
+        with self.root_socket.optional_session(session) as session:
+            if delete_records:
+                # Store all record ids for later deletion
+                stmt = select(self.record_item_orm.record_id)
+                stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
+                stmt = stmt.where(self.record_item_orm.entry_name.in_(entry_names))
+                stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
+                record_ids = session.execute(stmt).scalars().all()
+
+            stmt = delete(self.record_item_orm)
+            stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
+            stmt = stmt.where(self.record_item_orm.entry_name.in_(entry_names))
+            stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
+            session.execute(stmt)
+
+            if delete_records:
+                self.root_socket.records.delete(record_ids, soft_delete=False, delete_children=True, session=session)
 
     #######################
     # Record modification
@@ -421,6 +445,7 @@ class BaseDatasetSocket:
         dataset_id: int,
         entry_names: Optional[Iterable[str]] = None,
         specification_names: Optional[Iterable[str]] = None,
+        status: Optional[Iterable[RecordStatusEnum]] = None,
         for_update: bool = False,
     ) -> List[int]:
         stmt = select(self.record_item_orm.record_id)
@@ -430,6 +455,9 @@ class BaseDatasetSocket:
             stmt = stmt.where(self.record_item_orm.entry_name.in_(entry_names))
         if specification_names is not None:
             stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
+        if status is not None:
+            stmt = stmt.join(BaseRecordORM, BaseRecordORM.id == self.record_item_orm.record_id)
+            stmt = stmt.where(BaseRecordORM.status.in_(status))
 
         # Locks the record items, not the actual record
         if for_update:
@@ -448,14 +476,19 @@ class BaseDatasetSocket:
     ):
 
         with self.root_socket.optional_session(session) as session:
-            record_id = self._lookup_record_ids(
-                session, dataset_id, modify_data.entry_name, modify_data.specification_name, for_update=True
+
+            record_ids = self._lookup_record_ids(
+                session,
+                dataset_id,
+                modify_data.entry_names,
+                modify_data.specification_names,
+                for_update=True,
             )
 
             # TODO - kinda hacky to pull in a rest model?
             # Break these out into function arguments?
             rec_modify_data = RecordModifyBody(
-                record_ids=record_id,
+                record_ids=record_ids,
                 status=modify_data.status,
                 priority=modify_data.priority,
                 tag=modify_data.tag,
@@ -463,6 +496,21 @@ class BaseDatasetSocket:
             )
 
             self.root_socket.records.modify_generic(rec_modify_data, username, session=session)
+
+    def revert_records(
+        self,
+        dataset_id: int,
+        revert_data: DatasetRecordRevertBody,
+        *,
+        session: Optional[Session] = None,
+    ):
+
+        with self.root_socket.optional_session(session) as session:
+            record_ids = self._lookup_record_ids(
+                session, dataset_id, revert_data.entry_names, revert_data.specification_names, for_update=True
+            )
+
+            self.root_socket.records.revert_generic(record_ids, revert_data.revert_status)
 
 
 class DatasetSocket:
@@ -520,3 +568,10 @@ class DatasetSocket:
             if missing_ok is False and ds_id is None:
                 raise MissingDataError(f"Could not find {dataset_type} dataset with name '{dataset_name}'")
             return ds_id
+
+    def list(self, *, session: Optional[Session] = None):
+        with self.root_socket.optional_session(session, True) as session:
+            stmt = select(CollectionORM.id, CollectionORM.collection_type, CollectionORM.name)
+            r = session.execute(stmt).all()
+
+            return [{"id": x[0], "dataset_type": x[1], "dataset_name": x[2]} for x in r]

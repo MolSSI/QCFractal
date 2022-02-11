@@ -4,7 +4,6 @@ from .models import (
     OptimizationDatasetInputSpecification,
     OptimizationDatasetSpecification,
     OptimizationDatasetEntry,
-    OptimizationDatasetSubmitBody,
     OptimizationDatasetAddBody,
     OptimizationDatasetDeleteEntryBody,
     OptimizationDatasetDeleteSpecificationBody,

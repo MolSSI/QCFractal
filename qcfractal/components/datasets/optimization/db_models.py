@@ -10,62 +10,69 @@ from qcfractal.db_socket import BaseORM
 
 
 class OptimizationDatasetEntryORM(BaseORM):
-    __tablename__ = "optimization_dataset_entries"
+    __tablename__ = "optimization_dataset_entry"
 
     dataset_id = Column(Integer, ForeignKey("optimization_dataset.id", ondelete="cascade"), primary_key=True)
+
     name = Column(String, primary_key=True)
+    comment = Column(String)
+
     initial_molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), nullable=False)
     additional_keywords = Column(JSONB, nullable=True)
     attributes = Column(JSONB, nullable=True)
 
+    initial_molecule = relationship(MoleculeORM)
+
     __table_args__ = (
-        Index("ix_optimization_dataset_entries_dataset_id", "dataset_id"),
-        Index("ix_optimization_dataset_entries_name", "name"),
-        Index("ix_optimization_dataset_entries_initial_molecule_id", "initial_molecule_id"),
+        Index("ix_optimization_dataset_entry_dataset_id", "dataset_id"),
+        Index("ix_optimization_dataset_entry_name", "name"),
+        Index("ix_optimization_dataset_entry_initial_molecule_id", "initial_molecule_id"),
     )
 
 
 class OptimizationDatasetSpecificationORM(BaseORM):
-    __tablename__ = "optimization_dataset_specifications"
+    __tablename__ = "optimization_dataset_specification"
 
     dataset_id = Column(Integer, ForeignKey("optimization_dataset.id", ondelete="cascade"), primary_key=True)
     name = Column(String, primary_key=True)
-    comment = Column(String, nullable=True)
+    description = Column(String, nullable=True)
     specification_id = Column(Integer, ForeignKey(OptimizationSpecificationORM.id), nullable=False)
 
     specification = relationship(OptimizationSpecificationORM, uselist=False)
 
     __table_args__ = (
-        Index("ix_optimization_dataset_specifications_dataset_id", "dataset_id"),
-        Index("ix_optimization_dataset_specifications_name", "name"),
-        Index("ix_optimization_dataset_specifications_specification_id", "specification_id"),
+        Index("ix_optimization_dataset_specification_dataset_id", "dataset_id"),
+        Index("ix_optimization_dataset_specification_name", "name"),
+        Index("ix_optimization_dataset_specification_specification_id", "specification_id"),
     )
 
 
 class OptimizationDatasetRecordItemORM(BaseORM):
-    __tablename__ = "optimization_dataset_records"
+    __tablename__ = "optimization_dataset_record"
 
     dataset_id = Column(Integer, ForeignKey("optimization_dataset.id", ondelete="cascade"), primary_key=True)
     entry_name = Column(String, primary_key=True)
     specification_name = Column(String, primary_key=True)
     record_id = Column(Integer, ForeignKey(OptimizationRecordORM.id), nullable=False)
 
+    record = relationship(OptimizationRecordORM)
+
     __table_args__ = (
         ForeignKeyConstraint(
             ["dataset_id", "entry_name"],
-            ["optimization_dataset_entries.dataset_id", "optimization_dataset_entries.name"],
+            ["optimization_dataset_entry.dataset_id", "optimization_dataset_entry.name"],
             ondelete="cascade",
             onupdate="cascade",
         ),
         ForeignKeyConstraint(
             ["dataset_id", "specification_name"],
-            ["optimization_dataset_specifications.dataset_id", "optimization_dataset_specifications.name"],
+            ["optimization_dataset_specification.dataset_id", "optimization_dataset_specification.name"],
             ondelete="cascade",
             onupdate="cascade",
         ),
-        Index("ix_optimization_dataset_records_record_id", "record_id"),
+        Index("ix_optimization_dataset_record_record_id", "record_id"),
         UniqueConstraint(
-            "dataset_id", "entry_name", "specification_name", name="ux_optimization_dataset_records_unique"
+            "dataset_id", "entry_name", "specification_name", name="ux_optimization_dataset_record_unique"
         ),
     )
 

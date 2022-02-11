@@ -5,9 +5,15 @@ Revises: 88e6b7d536d0
 Create Date: 2021-11-12 13:43:15.488344
 
 """
-from alembic import op
+import os
+import sys
+
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
+
+sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
+from migration_helpers.v0_50_helpers import get_empty_keywords_id
 
 # revision identifiers, used by Alembic.
 revision = "160352419195"
@@ -91,10 +97,7 @@ def upgrade():
         )
     )
 
-    res = op.get_bind().execute(
-        sa.text("SELECT id FROM keywords WHERE hash_index = 'bf21a9e8fbc5a3846fb05b4fa0859e0917b2202f'")
-    )
-    empty_kw = res.scalar()
+    empty_kw_id = get_empty_keywords_id(op.get_bind())
 
     ########################################
     # Update protocols to remove defaults and null
@@ -179,7 +182,7 @@ def upgrade():
                                r.driver::singlepointdriver,
                                r.method,
                                COALESCE(r.basis, ''),
-                               COALESCE(r.keywords, {empty_kw}),
+                               COALESCE(r.keywords, {empty_kw_id}),
                                COALESCE(br.protocols, '{{}}'::jsonb)
                FROM result r INNER JOIN base_record br on r.id = br.id;
                """
@@ -197,7 +200,7 @@ def upgrade():
               AND ss.driver = r.driver::singlepointdriver
               AND ss.method = r.method
               AND ss.basis = COALESCE(r.basis, '')
-              AND ss.keywords_id = COALESCE(r.keywords, {empty_kw})
+              AND ss.keywords_id = COALESCE(r.keywords, {empty_kw_id})
               AND ss.protocols = COALESCE(br.protocols, '{{}}'::jsonb);
             """
         )

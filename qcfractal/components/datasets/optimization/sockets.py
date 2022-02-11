@@ -26,14 +26,17 @@ if TYPE_CHECKING:
 
 
 class OptimizationDatasetSocket(BaseDatasetSocket):
+
+    # Used by the base class
+    dataset_orm = OptimizationDatasetORM
+    specification_orm = OptimizationDatasetSpecificationORM
+    entry_orm = OptimizationDatasetEntryORM
+    record_item_orm = OptimizationDatasetRecordItemORM
+
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseDatasetSocket.__init__(
             self,
             root_socket,
-            OptimizationDatasetORM,
-            OptimizationDatasetSpecificationORM,
-            OptimizationDatasetEntryORM,
-            OptimizationDatasetRecordItemORM,
         )
 
         self._logger = logging.getLogger(__name__)
@@ -60,23 +63,24 @@ class OptimizationDatasetSocket(BaseDatasetSocket):
 
         all_entries = []
         for entry, molecule_id in zip(new_entries, mol_ids):
-            entry_orm = OptimizationDatasetEntryORM(
+            new_ent = OptimizationDatasetEntryORM(
                 dataset_id=dataset_id,
                 name=entry.name,
+                comment=entry.comment,
                 initial_molecule_id=molecule_id,
                 additional_keywords=entry.additional_keywords,
                 attributes=entry.attributes,
             )
 
-            all_entries.append(entry_orm)
+            all_entries.append(new_ent)
 
         return all_entries
 
     def submit(
         self,
         dataset_id: int,
-        specification_names: Optional[Iterable[str]],
         entry_names: Optional[Iterable[str]],
+        specification_names: Optional[Iterable[str]],
         tag: Optional[str],
         priority: Optional[PriorityEnum],
         *,
@@ -84,12 +88,7 @@ class OptimizationDatasetSocket(BaseDatasetSocket):
     ):
 
         with self.root_socket.optional_session(session) as session:
-            if tag is None or priority is None:
-                default_tag, default_priority = self.get_default_tag_priority(dataset_id, session=session)
-                if tag is None:
-                    tag = default_tag
-                if priority is None:
-                    priority = default_priority
+            tag, priority = self.get_tag_priority(dataset_id, tag, priority, session=session)
 
             # Get specification details
             stmt = select(OptimizationDatasetSpecificationORM)
@@ -137,11 +136,12 @@ class OptimizationDatasetSocket(BaseDatasetSocket):
                     session=session,
                 )
 
-                for entry, oid in zip(normal_entries, opt_ids):
-                    rec = OptimizationDatasetRecordItemORM(
-                        dataset_id=dataset_id, entry_name=entry.name, specification_name=ds_spec.name, record_id=oid
-                    )
-                    session.add(rec)
+                for idx, (entry, oid) in enumerate(zip(normal_entries, opt_ids)):
+                    if idx in meta.inserted_idx:
+                        rec = OptimizationDatasetRecordItemORM(
+                            dataset_id=dataset_id, entry_name=entry.name, specification_name=ds_spec.name, record_id=oid
+                        )
+                        session.add(rec)
 
             # Now the ones with additional keywords
             for ds_spec in ds_specs:
@@ -160,10 +160,11 @@ class OptimizationDatasetSocket(BaseDatasetSocket):
                         session=session,
                     )
 
-                    rec = OptimizationDatasetRecordItemORM(
-                        dataset_id=dataset_id,
-                        entry_name=entry.name,
-                        specification_name=ds_spec.name,
-                        record_id=opt_ids[0],
-                    )
-                    session.add(rec)
+                    if meta.n_inserted == 1:
+                        rec = OptimizationDatasetRecordItemORM(
+                            dataset_id=dataset_id,
+                            entry_name=entry.name,
+                            specification_name=ds_spec.name,
+                            record_id=opt_ids[0],
+                        )
+                        session.add(rec)

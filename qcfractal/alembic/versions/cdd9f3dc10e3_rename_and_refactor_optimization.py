@@ -5,9 +5,15 @@ Revises: 160352419195
 Create Date: 2021-12-08 14:53:27.286030
 
 """
-from alembic import op
+import os
+import sys
+
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
+
+sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
+from migration_helpers.v0_50_helpers import get_empty_keywords_id
 
 # revision identifiers, used by Alembic.
 revision = "cdd9f3dc10e3"
@@ -122,19 +128,9 @@ def upgrade():
 
     # Migrate data to the specification tables
     # First, qcspec -> singlepoint specification
-    # First, a hack. The MolSSI database has some old data with a non-existent hash still there. Replace
-    # that with the appropriate keyword
-    op.execute(
-        sa.text(
-            r"""UPDATE optimization_procedure SET qc_spec = qc_spec::jsonb || '{"keywords": "2"}'::jsonb WHERE qc_spec::jsonb->>'keywords' = '5c954fa6b6a2de5f188ea234'"""
-        )
-    )
 
     # Now we can go with qc_spec
-    res = op.get_bind().execute(
-        sa.text("SELECT id FROM keywords WHERE hash_index = 'bf21a9e8fbc5a3846fb05b4fa0859e0917b2202f'")
-    )
-    empty_kw = res.scalar()
+    empty_kw_id = get_empty_keywords_id(op.get_bind())
 
     # remove empty strings an json null
     op.execute(
@@ -160,7 +156,7 @@ def upgrade():
                                'deferred'::singlepointdriver,
                                o.qc_spec->>'method',
                                COALESCE(o.qc_spec->>'basis', ''),
-                               COALESCE((o.qc_spec->>'keywords')::int, {empty_kw}),
+                               COALESCE((o.qc_spec->>'keywords')::int, {empty_kw_id}),
                                '{{}}'::jsonb
                FROM optimization_procedure o
                ON CONFLICT DO NOTHING
@@ -188,7 +184,7 @@ def upgrade():
                                AND sp.driver = 'deferred'::singlepointdriver
                                AND sp.method = o.qc_spec->>'method'
                                AND sp.basis = COALESCE(o.qc_spec->>'basis', '')
-                               AND sp.keywords_id = COALESCE((o.qc_spec->>'keywords')::int, {empty_kw}) 
+                               AND sp.keywords_id = COALESCE((o.qc_spec->>'keywords')::int, {empty_kw_id}) 
                                AND sp.protocols = '{{}}'::jsonb
                                )
                FROM optimization_procedure o INNER JOIN base_record br on br.id = o.id
@@ -213,7 +209,7 @@ def upgrade():
                                AND sp.driver = 'deferred'::singlepointdriver
                                AND sp.method = o.qc_spec->>'method'
                                AND sp.basis = COALESCE(o.qc_spec->>'basis', '')
-                               AND sp.keywords_id = COALESCE((o.qc_spec->>'keywords')::int, {empty_kw}) 
+                               AND sp.keywords_id = COALESCE((o.qc_spec->>'keywords')::int, {empty_kw_id}) 
                                AND sp.protocols = '{{}}'::jsonb
                                )
                """
