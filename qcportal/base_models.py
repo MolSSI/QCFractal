@@ -23,16 +23,6 @@ class RestModelBase(BaseModel):
         extra = Extra.forbid
 
 
-class CommonBulkDeleteBody(RestModelBase):
-    """
-    Common URL parameters for delete functionality
-
-    These functions typically only take a list of ids
-    """
-
-    id: List[int]
-
-
 class CommonBulkGetBody(RestModelBase):
     """
     Common URL parameters for get_ functions
