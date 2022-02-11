@@ -10,7 +10,7 @@ from qcportal.utils import calculate_limit
 
 
 @main.route("/v1/records/optimization/bulkCreate", methods=["POST"])
-@wrap_route(OptimizationAddBody, None)
+@wrap_route(OptimizationAddBody, None, "WRITE")
 def add_optimization_records_v1(body_data: OptimizationAddBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.add_records
     if len(body_data.initial_molecules) > limit:
@@ -27,7 +27,7 @@ def add_optimization_records_v1(body_data: OptimizationAddBody):
 
 
 @main.route("/v1/records/optimization/<int:record_id>/trajectory", methods=["GET"])
-@wrap_route(None, ProjURLParameters)
+@wrap_route(None, ProjURLParameters, "READ")
 def get_optimization_trajectory_v1(record_id: int, *, url_params: ProjURLParameters):
     # adjust the includes/excludes to refer to the trajectory
     ch_includes, ch_excludes = prefix_projection(url_params, "trajectory")
@@ -36,7 +36,7 @@ def get_optimization_trajectory_v1(record_id: int, *, url_params: ProjURLParamet
 
 
 @main.route("/v1/records/optimization/query", methods=["POST"])
-@wrap_route(OptimizationQueryBody, None)
+@wrap_route(OptimizationQueryBody, None, "READ")
 def query_optimization_v1(body_data: OptimizationQueryBody):
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
     body_data.limit = calculate_limit(max_limit, body_data.limit)

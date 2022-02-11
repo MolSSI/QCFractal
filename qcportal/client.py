@@ -1909,7 +1909,7 @@ class PortalClient(PortalClientBase):
         List all user roles on the server
         """
 
-        return self._auto_request("get", "v1/role", None, None, List[RoleInfo], None, None)
+        return self._auto_request("get", "v1/roles", None, None, List[RoleInfo], None, None)
 
     def get_role(self, rolename: str) -> RoleInfo:
         """
@@ -1917,7 +1917,7 @@ class PortalClient(PortalClientBase):
         """
 
         is_valid_rolename(rolename)
-        return self._auto_request("get", f"v1/role/{rolename}", None, None, RoleInfo, None, None)
+        return self._auto_request("get", f"v1/roles/{rolename}", None, None, RoleInfo, None, None)
 
     def add_role(self, role_info: RoleInfo) -> None:
         """
@@ -1927,7 +1927,7 @@ class PortalClient(PortalClientBase):
         """
 
         is_valid_rolename(role_info.rolename)
-        return self._auto_request("post", "v1/role", RoleInfo, None, None, role_info, None)
+        return self._auto_request("post", "v1/roles", RoleInfo, None, None, role_info, None)
 
     def modify_role(self, role_info: RoleInfo) -> RoleInfo:
         """
@@ -1942,7 +1942,7 @@ class PortalClient(PortalClientBase):
         """
 
         is_valid_rolename(role_info.rolename)
-        return self._auto_request("put", f"v1/role/{role_info.rolename}", RoleInfo, None, RoleInfo, role_info, None)
+        return self._auto_request("put", f"v1/roles/{role_info.rolename}", RoleInfo, None, RoleInfo, role_info, None)
 
     def delete_role(self, rolename: str) -> None:
         """
@@ -1959,14 +1959,14 @@ class PortalClient(PortalClientBase):
 
         """
         is_valid_rolename(rolename)
-        return self._auto_request("delete", f"v1/role/{rolename}", None, None, None, None, None)
+        return self._auto_request("delete", f"v1/roles/{rolename}", None, None, None, None, None)
 
     def list_users(self) -> List[UserInfo]:
         """
         List all user roles on the server
         """
 
-        return self._auto_request("get", "v1/user", None, None, List[UserInfo], None, None)
+        return self._auto_request("get", "v1/users", None, None, List[UserInfo], None, None)
 
     def get_user(self, username: Optional[str] = None, as_admin: bool = False) -> UserInfo:
         """
@@ -2010,7 +2010,7 @@ class PortalClient(PortalClientBase):
                     f"Inconsistent username - client is {self.username} but logged in as {uinfo.username}"
                 )
         else:
-            uinfo = self._auto_request("get", f"v1/user/{username}", None, None, UserInfo, None, None)
+            uinfo = self._auto_request("get", f"v1/users/{username}", None, None, UserInfo, None, None)
 
         return uinfo
 
@@ -2043,7 +2043,7 @@ class PortalClient(PortalClientBase):
             raise RuntimeError("Cannot add user when user_info contains an id")
 
         return self._auto_request(
-            "post", "v1/user", Tuple[UserInfo, Optional[str]], None, str, (user_info, password), None
+            "post", "v1/users", Tuple[UserInfo, Optional[str]], None, str, (user_info, password), None
         )
 
     def modify_user(self, user_info: UserInfo, as_admin: bool = False) -> UserInfo:
@@ -2075,7 +2075,7 @@ class PortalClient(PortalClientBase):
         is_valid_rolename(user_info.role)
 
         if as_admin or (user_info.username != self.username):
-            url = f"v1/user/{user_info.username}"
+            url = f"v1/users/{user_info.username}"
         else:
             url = "v1/me"
 
@@ -2113,7 +2113,7 @@ class PortalClient(PortalClientBase):
         if username == self.username:
             url = "v1/me/password"
         else:
-            url = f"v1/user/{username}/password"
+            url = f"v1/users/{username}/password"
 
         return self._auto_request("put", url, Optional[str], None, str, new_password, None)
 
@@ -2123,4 +2123,4 @@ class PortalClient(PortalClientBase):
         if username == self.username:
             raise RuntimeError("Cannot delete your own user!")
 
-        return self._auto_request("delete", f"v1/user/{username}", None, None, None, None, None)
+        return self._auto_request("delete", f"v1/users/{username}", None, None, None, None, None)

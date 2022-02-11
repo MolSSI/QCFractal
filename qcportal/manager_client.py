@@ -130,7 +130,7 @@ class ManagerClient(PortalClientBase):
 
         return self._auto_request(
             "post",
-            "v1/task/claim",
+            "v1/tasks/claim",
             TaskClaimBody,
             None,
             List[Dict[str, Any]],
@@ -154,7 +154,7 @@ class ManagerClient(PortalClientBase):
 
             meta = self._auto_request(
                 "post",
-                "v1/task/return",
+                "v1/tasks/return",
                 TaskReturnBody,
                 None,
                 TaskReturnMetadata,

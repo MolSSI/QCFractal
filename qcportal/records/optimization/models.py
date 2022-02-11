@@ -88,7 +88,7 @@ class OptimizationRecord(BaseRecord):
 
         self.raw_data.trajectory = self.client._auto_request(
             "get",
-            f"v1/record/optimization/{self.raw_data.id}/trajectory",
+            f"v1/records/optimization/{self.raw_data.id}/trajectory",
             None,
             ProjURLParameters,
             List[OptimizationTrajectory],

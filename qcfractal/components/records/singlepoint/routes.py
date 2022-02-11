@@ -8,7 +8,7 @@ from qcportal.utils import calculate_limit
 
 
 @main.route("/v1/records/singlepoint/bulkCreate", methods=["POST"])
-@wrap_route(SinglepointAddBody, None)
+@wrap_route(SinglepointAddBody, None, "WRITE")
 def add_singlepoint_records_v1(body_data: SinglepointAddBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.add_records
     if len(body_data.molecules) > limit:
@@ -20,7 +20,7 @@ def add_singlepoint_records_v1(body_data: SinglepointAddBody):
 
 
 @main.route("/v1/records/singlepoint/<int:record_id>/wavefunction", methods=["GET"])
-@wrap_route(None, None)
+@wrap_route(None, None, "READ")
 def get_singlepoint_wavefunction_v1(record_id: int):
     rec = storage_socket.records.singlepoint.get([record_id], include=["wavefunction"])
 
@@ -29,7 +29,7 @@ def get_singlepoint_wavefunction_v1(record_id: int):
 
 
 @main.route("/v1/records/singlepoint/query", methods=["POST"])
-@wrap_route(SinglepointQueryBody, None)
+@wrap_route(SinglepointQueryBody, None, "READ")
 def query_singlepoint_v1(body_data: SinglepointQueryBody):
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
     body_data.limit = calculate_limit(max_limit, body_data.limit)

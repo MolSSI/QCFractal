@@ -117,7 +117,7 @@ class TorsiondriveRecord(BaseRecord):
     def _retrieve_initial_molecules(self):
         self.raw_data.initial_molecules = self.client._auto_request(
             "get",
-            f"v1/record/torsiondrive/{self.raw_data.id}/initial_molecules",
+            f"v1/records/torsiondrive/{self.raw_data.id}/initial_molecules",
             None,
             None,
             List[Molecule],
@@ -130,7 +130,7 @@ class TorsiondriveRecord(BaseRecord):
 
         self.raw_data.optimizations = self.client._auto_request(
             "get",
-            f"v1/record/torsiondrive/{self.raw_data.id}/optimizations",
+            f"v1/records/torsiondrive/{self.raw_data.id}/optimizations",
             None,
             ProjURLParameters,
             List[TorsiondriveOptimization],

@@ -184,7 +184,7 @@ class BaseRecord(BaseModel):
 
         self.raw_data.compute_history = self.client._auto_request(
             "get",
-            f"v1/record/{self.raw_data.id}/compute_history",
+            f"v1/records/{self.raw_data.id}/compute_history",
             None,
             ProjURLParameters,
             List[ComputeHistory],
@@ -198,7 +198,7 @@ class BaseRecord(BaseModel):
 
         self.raw_data.task = self.client._auto_request(
             "get",
-            f"v1/record/{self.raw_data.id}/task",
+            f"v1/records/{self.raw_data.id}/task",
             None,
             None,
             Optional[TaskRecord],
@@ -212,7 +212,7 @@ class BaseRecord(BaseModel):
 
         self.raw_data.service = self.client._auto_request(
             "get",
-            f"v1/record/{self.raw_data.id}/service",
+            f"v1/records/{self.raw_data.id}/service",
             None,
             None,
             Optional[ServiceRecord],
@@ -223,7 +223,7 @@ class BaseRecord(BaseModel):
     def _retrieve_comments(self):
         self.raw_data.comments = self.client._auto_request(
             "get",
-            f"v1/record/{self.raw_data.id}/comments",
+            f"v1/records/{self.raw_data.id}/comments",
             None,
             None,
             Optional[List[RecordComment]],

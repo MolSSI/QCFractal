@@ -89,7 +89,7 @@ class SinglepointRecord(BaseRecord):
     def _retrieve_wavefunction(self):
         self.raw_data.wavefunction = self.client._auto_request(
             "get",
-            f"v1/record/singlepoint/{self.raw_data.id}/wavefunction",
+            f"v1/records/singlepoint/{self.raw_data.id}/wavefunction",
             None,
             None,
             Optional[WavefunctionProperties],

@@ -85,7 +85,7 @@ def test_serverinfo_socket_save_query_access(storage_socket: SQLAlchemySocket):
     }
 
     access4 = {
-        "access_type": "v1/user",
+        "access_type": "v1/users",
         "access_method": "PUT",
         "ip_address": test_ips[3][0],
         "user_agent": "Fake user agent",

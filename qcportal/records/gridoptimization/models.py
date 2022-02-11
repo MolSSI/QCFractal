@@ -167,7 +167,7 @@ class GridoptimizationRecord(BaseRecord):
     def _retrieve_optimizations(self):
         self.raw_data.optimizations = self.client._auto_request(
             "get",
-            f"v1/record/gridoptimization/{self.raw_data.id}/optimizations",
+            f"v1/records/gridoptimization/{self.raw_data.id}/optimizations",
             None,
             None,
             List[GridoptimizationOptimization],

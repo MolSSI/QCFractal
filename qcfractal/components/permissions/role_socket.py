@@ -35,34 +35,42 @@ default_roles: Dict[str, Any] = {
     },
     "read": {
         "Statement": [
-            {"Effect": "Allow", "Action": "GET", "Resource": "*"},
-            {"Effect": "Allow", "Action": "PUT", "Resource": "me"},
-            {"Effect": "Deny", "Action": "*", "Resource": ["user", "role", "manager", "server_error", "access"]},
+            {"Effect": "Allow", "Action": "READ", "Resource": "*"},
+            {"Effect": "Allow", "Action": "WRITE", "Resource": "me"},
+            {
+                "Effect": "Deny",
+                "Action": "*",
+                "Resource": ["users", "roles", "managers", "server_errors", "access_logs", "tasks"],
+            },
         ]
     },
     "monitor": {
         "Statement": [
-            {"Effect": "Allow", "Action": "GET", "Resource": "*"},
-            {"Effect": "Allow", "Action": "PUT", "Resource": "me"},
-            {"Effect": "Deny", "Action": "*", "Resource": ["user", "role"]},
+            {"Effect": "Allow", "Action": "READ", "Resource": "*"},
+            {"Effect": "Allow", "Action": "WRITE", "Resource": "me"},
+            {"Effect": "Deny", "Action": "*", "Resource": ["users", "roles"]},
         ]
     },
     "compute": {
         "Statement": [
-            {"Effect": "Allow", "Action": ["GET"], "Resource": "information"},
-            {"Effect": "Allow", "Action": ["GET", "PUT"], "Resource": "me"},
-            {"Effect": "Allow", "Action": "*", "Resource": ["task", "manager"]},
+            {"Effect": "Allow", "Action": ["READ"], "Resource": "information"},
+            {"Effect": "Allow", "Action": ["READ", "WRITE"], "Resource": "me"},
+            {"Effect": "Allow", "Action": "*", "Resource": ["tasks", "managers"]},
         ]
     },
     "submit": {
         "Statement": [
-            {"Effect": "Allow", "Action": "GET", "Resource": "*"},
-            {"Effect": "Allow", "Action": "PUT", "Resource": "me"},
-            {"Effect": "Deny", "Action": "*", "Resource": ["user", "role", "manager", "server_error", "access"]},
+            {"Effect": "Allow", "Action": "READ", "Resource": "*"},
+            {"Effect": "Allow", "Action": "WRITE", "Resource": "me"},
+            {
+                "Effect": "Deny",
+                "Action": "*",
+                "Resource": ["users", "roles", "managers", "server_errors", "access_logs", "tasks"],
+            },
             {
                 "Effect": "Allow",
                 "Action": "*",
-                "Resource": ["record", "molecule", "keyword", "dataset"],
+                "Resource": ["records", "molecules", "keywords", "datasets"],
             },
         ]
     },

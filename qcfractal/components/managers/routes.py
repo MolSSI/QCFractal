@@ -14,7 +14,7 @@ from qcportal.utils import calculate_limit
 
 
 @main.route("/v1/managers", methods=["POST"])
-@wrap_route(ManagerActivationBody, None)
+@wrap_route(ManagerActivationBody, None, "WRITE")
 def activate_manager_v1(body_data: ManagerActivationBody):
     """Activates/Registers a manager for use with the server"""
 
@@ -29,7 +29,7 @@ def activate_manager_v1(body_data: ManagerActivationBody):
 
 
 @main.route("/v1/managers/<string:name>", methods=["PATCH"])
-@wrap_route(ManagerUpdateBody, None)
+@wrap_route(ManagerUpdateBody, None, "WRITE")
 def update_manager_v1(name: str, body_data: ManagerUpdateBody):
     """Updates a manager's info
 
@@ -52,13 +52,13 @@ def update_manager_v1(name: str, body_data: ManagerUpdateBody):
 
 
 @main.route("/v1/managers/<string:name>", methods=["GET"])
-@wrap_route(None, None)
+@wrap_route(None, None, "READ")
 def get_managers_v1(name: str):
     return storage_socket.managers.get([name])[0]
 
 
 @main.route("/v1/managers/bulkGet", methods=["POST"])
-@wrap_route(CommonBulkGetNamesBody, None)
+@wrap_route(CommonBulkGetNamesBody, None, "READ")
 def bulk_get_managers_v1(body_data: CommonBulkGetNamesBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_managers
     if body_data.name is not None and len(body_data.name) > limit:
@@ -68,7 +68,7 @@ def bulk_get_managers_v1(body_data: CommonBulkGetNamesBody):
 
 
 @main.route("/v1/managers/query", methods=["POST"])
-@wrap_route(ManagerQueryBody, None)
+@wrap_route(ManagerQueryBody, None, "READ")
 def query_managers_v1(body_data: ManagerQueryBody):
 
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_managers

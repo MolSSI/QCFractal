@@ -1,7 +1,7 @@
 import time
 import traceback
 from functools import wraps
-from typing import Optional, Type, Callable, TypeVar, Dict, List, Any
+from typing import Optional, Type, Callable, TypeVar, Dict, List, Any, Iterable
 from urllib.parse import urlparse
 
 import pydantic
@@ -84,7 +84,7 @@ def after_request_func(response: Response):
     return response
 
 
-def check_permissions():
+def check_permissions(requested_action: str):
     """
     Check for access to the URL given
     permissions in the JWT token in the request headers
@@ -127,7 +127,7 @@ def check_permissions():
         # Pull the second part of the URL (ie, /v1/molecule -> molecule)
         # We will consistently ignore the version prefix
         resource = urlparse(request.url).path.split("/")[2]
-        context = {"Principal": identity, "Action": request.method, "Resource": resource}
+        context = {"Principal": identity, "Action": requested_action, "Resource": resource}
         policy = Policy(permissions)
         if not policy.evaluate(context):
             # If that doesn't work, but we allow unauthenticated read, then try that
@@ -148,14 +148,17 @@ def check_permissions():
 
 
 def wrap_route(
-    body_model: Optional[_T], url_params_model: Optional[Type[pydantic.BaseModel]] = None, check_access: bool = True
+    body_model: Optional[_T],
+    url_params_model: Optional[Type[pydantic.BaseModel]] = None,
+    requested_action="READ",
+    check_access: bool = True,
 ) -> Callable:
     def decorate(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
 
             if check_access:
-                check_permissions()
+                check_permissions(requested_action)
 
             ##################################################################
             # If we got here, then the user is allowed access to this endpoint
