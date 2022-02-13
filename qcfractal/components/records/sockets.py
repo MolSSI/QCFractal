@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.db_socket.base_orm import BaseORM
-    from qcportal.records import AllResultTypes, RecordQueryBody
+    from qcportal.records import AllResultTypes, RecordQueryBody, RecordModifyBody
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Iterable, Type
 
     ProcedureDict = Dict[str, Any]
@@ -1172,3 +1172,55 @@ class RecordSocket:
             n_children_updated = len(all_orm) - (len(updated_idx) + len(error_idx))
 
             return UpdateMetadata(updated_idx=updated_idx, errors=errors, n_children_updated=n_children_updated)
+
+    def modify_generic(
+        self, modify_data: RecordModifyBody, username: Optional[str], *, session: Optional[Session] = None
+    ):
+        """
+        Modify multiple things about a record at once
+
+        This function allows for changing the status, tag, priority, and comment in a single function call
+        """
+
+        if len(modify_data.record_id) == 0:
+            return UpdateMetadata()
+
+        # do all in a single session
+        with self.root_socket.optional_session(session) as session:
+            if modify_data.status is not None:
+                if modify_data.status == RecordStatusEnum.waiting:
+                    return self.root_socket.records.reset(record_id=modify_data.record_id, session=session)
+                if modify_data.status == RecordStatusEnum.cancelled:
+                    return self.root_socket.records.cancel(record_id=modify_data.record_id, session=session)
+                if modify_data.status == RecordStatusEnum.invalid:
+                    return self.root_socket.records.invalidate(record_id=modify_data.record_id, session=session)
+
+                # ignore all other statuses
+
+            if modify_data.tag is not None or modify_data.priority is not None:
+                return self.root_socket.records.modify(
+                    modify_data.record_id,
+                    new_tag=modify_data.tag,
+                    new_priority=modify_data.priority,
+                    session=session,
+                )
+
+            if modify_data.comment:
+                return self.root_socket.records.add_comment(
+                    record_id=modify_data.record_id,
+                    username=username,
+                    comment=modify_data.comment,
+                    session=session,
+                )
+
+    def revert_generic(self, record_id: Sequence[int], revert_status: RecordStatusEnum):
+        if revert_status == RecordStatusEnum.cancelled:
+            return self.uncancel(record_id)
+
+        if revert_status == RecordStatusEnum.invalid:
+            return self.uninvalidate(record_id)
+
+        if revert_status == RecordStatusEnum.deleted:
+            return self.undelete(record_id)
+
+        raise RuntimeError(f"Unknown status to revert: ", revert_status)

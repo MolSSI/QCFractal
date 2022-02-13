@@ -10,7 +10,6 @@ from qcportal.records import (
     RecordQueryBody,
     RecordDeleteBody,
     RecordRevertBody,
-    RecordStatusEnum,
 )
 
 
@@ -79,52 +78,14 @@ def bulk_delete_records_v1(body_data: RecordDeleteBody):
 @main.route("/v1/records/revert", methods=["POST"])
 @wrap_route(RecordRevertBody, None, "WRITE")
 def revert_records_v1(body_data: RecordRevertBody):
-    if body_data.revert_status == RecordStatusEnum.cancelled:
-        return storage_socket.records.uncancel(body_data.record_id)
-
-    if body_data.revert_status == RecordStatusEnum.invalid:
-        return storage_socket.records.uninvalidate(body_data.record_id)
-
-    if body_data.revert_status == RecordStatusEnum.deleted:
-        return storage_socket.records.undelete(body_data.record_id)
-
-    raise RuntimeError(f"Unknown status to revert: ", body_data.revert_status)
+    return storage_socket.records.revert_generic(body_data.record_id, body_data.revert_status)
 
 
 @main.route("/v1/records", methods=["PATCH"])
 @wrap_route(RecordModifyBody, None, "WRITE")
 def modify_records_v1(body_data: RecordModifyBody):
-
-    if len(body_data.record_id) == 0:
-        return {}
-
-    # do all in a single session
-    with storage_socket.session_scope() as session:
-        if body_data.status is not None:
-            if body_data.status == RecordStatusEnum.waiting:
-                return storage_socket.records.reset(record_id=body_data.record_id, session=session)
-            if body_data.status == RecordStatusEnum.cancelled:
-                return storage_socket.records.cancel(record_id=body_data.record_id, session=session)
-            if body_data.status == RecordStatusEnum.invalid:
-                return storage_socket.records.invalidate(record_id=body_data.record_id, session=session)
-
-            # ignore all other statuses
-
-        if body_data.tag is not None or body_data.priority is not None:
-            return storage_socket.records.modify(
-                body_data.record_id,
-                new_tag=body_data.tag,
-                new_priority=body_data.priority,
-                session=session,
-            )
-
-        if body_data.comment:
-            return storage_socket.records.add_comment(
-                record_id=body_data.record_id,
-                username=g.user if "user" in g else None,
-                comment=body_data.comment,
-                session=session,
-            )
+    username = (g.user if "user" in g else None,)
+    return storage_socket.records.modify_generic(body_data, username)
 
 
 @main.route("/v1/records/query", methods=["POST"])
