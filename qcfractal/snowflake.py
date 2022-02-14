@@ -5,10 +5,13 @@ import logging.handlers
 import multiprocessing
 import os
 import tempfile
+import time
 import weakref
 from concurrent.futures import ProcessPoolExecutor
 from queue import Empty  # Just for exception handling
 from typing import TYPE_CHECKING
+
+import requests
 
 from qcfractalcompute import ComputeManager
 from qcportal import PortalClient
@@ -156,9 +159,25 @@ class FractalSnowflake:
 
     def wait_for_flask(self):
         running = self._flask_started.wait(10.0)
+        assert running
 
-        if not running:
-            raise RuntimeError("Error starting flask subprocesses. See logging & output for details")
+        # Seems there still may be a small time after the event is triggered and before
+        # it can handle requests
+        host = self._qcf_config.api.host
+        port = self._qcf_config.api.port
+        uri = f"http://{host}:{port}/ping"
+
+        max_iter = 50
+        iter = 0
+        while True:
+            try:
+                requests.get(uri)
+                break
+            except requests.exceptions.ConnectionError:
+                time.sleep(0.05)
+                iter += 1
+                if iter >= max_iter:
+                    raise
 
     def stop(self):
         self._stop(self._compute_proc, self._flask_proc, self._periodics_proc)

@@ -52,7 +52,7 @@ def after_request_func(response: Response):
     request_duration = time.time() - g.request_start
 
     log_access = current_app.config["QCFRACTAL_CONFIG"].log_access
-    if log_access:
+    if log_access and request.path != "/ping":
         # What we are going to log to the DB
         log: Dict[str, Any] = {}
         log["access_type"] = request.path[1:]  # remove /
@@ -308,6 +308,11 @@ def handle_compute_manager_error(error: ComputeManagerError):
 #        return jsonify(msg="New user created!"), 201
 #    else:
 #        return jsonify(msg="New user created! Password is '{pw}'"), 201
+
+
+@main.route("/ping", methods=["GET"])
+def ping():
+    return jsonify(success=True)
 
 
 @main.route("/login", methods=["POST"])
