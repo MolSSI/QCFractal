@@ -20,11 +20,11 @@ def get_molecules_v1(molecule_id: int, *, url_params: ProjURLParameters):
 @wrap_route(CommonBulkGetBody, None, "READ")
 def bulk_get_molecules_v1(body_data: CommonBulkGetBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_molecules
-    if len(body_data.id) > limit:
-        raise LimitExceededError(f"Cannot get {len(body_data.id)} molecule records - limit is {limit}")
+    if len(body_data.ids) > limit:
+        raise LimitExceededError(f"Cannot get {len(body_data.ids)} molecule records - limit is {limit}")
 
     return storage_socket.molecules.get(
-        body_data.id, body_data.include, body_data.exclude, missing_ok=body_data.missing_ok
+        body_data.ids, body_data.include, body_data.exclude, missing_ok=body_data.missing_ok
     )
 
 

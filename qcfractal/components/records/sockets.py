@@ -111,7 +111,7 @@ class BaseRecordSocket:
 
     def get(
         self,
-        record_id: Sequence[int],
+        record_ids: Sequence[int],
         include: Optional[Sequence[str]] = None,
         exclude: Optional[Sequence[str]] = None,
         missing_ok: bool = False,
@@ -131,7 +131,7 @@ class BaseRecordSocket:
 
         Parameters
         ----------
-        record_id
+        record_ids
             A list or other sequence of record IDs
         include
             Which fields of the result to return. Default is to return all fields.
@@ -151,7 +151,7 @@ class BaseRecordSocket:
         """
 
         with self.root_socket.optional_session(session, True) as session:
-            return get_general(session, self.record_orm, self.record_orm.id, record_id, include, exclude, missing_ok)
+            return get_general(session, self.record_orm, self.record_orm.id, record_ids, include, exclude, missing_ok)
 
     def get_specification(
         self, spec_id: int, missing_ok: bool = False, *, session: Optional[Session] = None
@@ -263,21 +263,21 @@ class RecordSocket:
             raise MissingDataError(f"Cannot find handler for type {record_type}")
         return handler
 
-    def get_subtask_ids(self, session: Session, record_id: Iterable[int]) -> List[int]:
+    def get_subtask_ids(self, session: Session, record_ids: Iterable[int]) -> List[int]:
         # List may contain duplicates. So be tolerant of that!
         stmt = select(ServiceDependenciesORM.record_id)
         stmt = stmt.join(ServiceQueueORM, ServiceQueueORM.id == ServiceDependenciesORM.service_id)
-        stmt = stmt.where(ServiceQueueORM.record_id.in_(record_id))
+        stmt = stmt.where(ServiceQueueORM.record_id.in_(record_ids))
         return session.execute(stmt).scalars().all()
 
-    def get_children_ids(self, session: Session, record_id: Iterable[int]) -> List[int]:
+    def get_children_ids(self, session: Session, record_ids: Iterable[int]) -> List[int]:
         """
         Recursively obtain the record IDs of all children records
         """
 
         all_children_ids = []
 
-        stmt = select(self._child_cte.c.child_id).where(self._child_cte.c.parent_id.in_(record_id))
+        stmt = select(self._child_cte.c.child_id).where(self._child_cte.c.parent_id.in_(record_ids))
         children_ids = session.execute(stmt).scalars().unique().all()
 
         while len(children_ids) > 0:
@@ -289,14 +289,14 @@ class RecordSocket:
 
         return all_children_ids
 
-    def get_parent_ids(self, session: Session, record_id: Iterable[int]) -> List[int]:
+    def get_parent_ids(self, session: Session, record_ids: Iterable[int]) -> List[int]:
         """
         Recursively obtain the record IDs of all parent records
         """
 
         all_parent_ids = []
 
-        stmt = select(self._child_cte.c.parent_id).where(self._child_cte.c.child_id.in_(record_id))
+        stmt = select(self._child_cte.c.parent_id).where(self._child_cte.c.child_id.in_(record_ids))
         parent_ids = session.execute(stmt).scalars().unique().all()
 
         while len(parent_ids) > 0:
@@ -308,7 +308,7 @@ class RecordSocket:
 
         return all_parent_ids
 
-    def get_relative_ids(self, session: Session, record_id: Iterable[int]) -> List[int]:
+    def get_relative_ids(self, session: Session, record_ids: Iterable[int]) -> List[int]:
         """
         Recursively obtain the record IDs of all parent and children records
         """
@@ -316,7 +316,7 @@ class RecordSocket:
         all_relative_ids = set()
 
         stmt = select(self._child_cte.c.parent_id, self._child_cte.c.child_id).where(
-            or_(self._child_cte.c.child_id.in_(record_id), self._child_cte.c.parent_id.in_(record_id))
+            or_(self._child_cte.c.child_id.in_(record_ids), self._child_cte.c.parent_id.in_(record_ids))
         )
 
         relative_ids = session.execute(stmt).all()
@@ -379,47 +379,6 @@ class RecordSocket:
         meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))
         return meta, result_dicts
 
-    def get_base(
-        self,
-        orm_type: Type[BaseRecordORM],
-        record_id: Sequence[int],
-        include: Optional[Sequence[str]] = None,
-        exclude: Optional[Sequence[str]] = None,
-        missing_ok: bool = False,
-        *,
-        session: Optional[Session] = None,
-    ) -> List[Optional[ProcedureDict]]:
-        """
-        Obtain records of a specified type with specified IDs
-
-        If missing_ok is False, then any ids that are missing in the database will raise an exception. Otherwise,
-        the corresponding entry in the returned list of results will be None.
-
-        Parameters
-        ----------
-        orm_type
-            The type of record to get (as an ORM class)
-        record_id
-            A list or other sequence of record IDs
-        include
-            Which fields of the result to return. Default is to return all fields.
-        exclude
-            Remove these fields from the return. Default is to return all fields.
-        missing_ok
-           If set to True, then missing results will be tolerated, and the returned list of
-           Molecules will contain None for the corresponding IDs that were not found.
-        session
-            An existing SQLAlchemy session to use. If None, one will be created
-
-        Returns
-        -------
-        :
-            Records as a dictionary in the same order as the given ids.
-            If missing_ok is True, then this list will contain None where the molecule was missing.
-        """
-        with self.root_socket.optional_session(session, True) as session:
-            return get_general(session, orm_type, orm_type.id, record_id, include, exclude, missing_ok)
-
     def query(
         self,
         query_data: RecordQueryBody,
@@ -446,7 +405,7 @@ class RecordSocket:
 
     def get(
         self,
-        record_id: Sequence[int],
+        record_ids: Sequence[int],
         include: Optional[Sequence[str]] = None,
         exclude: Optional[Sequence[str]] = None,
         missing_ok: bool = False,
@@ -463,7 +422,7 @@ class RecordSocket:
 
         Parameters
         ----------
-        record_id
+        record_ids
             A list or other sequence of record IDs
         include
             Which fields of the result to return. Default is to return all fields.
@@ -490,7 +449,7 @@ class RecordSocket:
             wp = BaseRecordORM
 
         with self.root_socket.optional_session(session, True) as session:
-            return get_general(session, wp, wp.id, record_id, include, exclude, missing_ok)
+            return get_general(session, wp, wp.id, record_ids, include, exclude, missing_ok)
 
     def generate_task_specification(self, task_orm: Sequence[TaskQueueORM]):
         """
@@ -585,12 +544,12 @@ class RecordSocket:
         return ids
 
     def add_comment(
-        self, record_id: Sequence[int], username: Optional[str], comment: str, *, session: Optional[Session] = None
+        self, record_ids: Sequence[int], username: Optional[str], comment: str, *, session: Optional[Session] = None
     ) -> UpdateMetadata:
 
         with self.root_socket.optional_session(session) as session:
             # find only existing records
-            stmt = select(BaseRecordORM.id).where(BaseRecordORM.id.in_(record_id))
+            stmt = select(BaseRecordORM.id).where(BaseRecordORM.id.in_(record_ids))
             stmt = stmt.with_for_update()
             existing_ids = session.execute(stmt).scalars().all()
 
@@ -602,8 +561,8 @@ class RecordSocket:
                 )
                 session.add(comment_orm)
 
-            updated_idx = [idx for idx, rid in enumerate(record_id) if rid in existing_ids]
-            missing_idx = [idx for idx, rid in enumerate(record_id) if rid not in existing_ids]
+            updated_idx = [idx for idx, rid in enumerate(record_ids) if rid in existing_ids]
+            missing_idx = [idx for idx, rid in enumerate(record_ids) if rid not in existing_ids]
 
             return UpdateMetadata(
                 updated_idx=updated_idx,
@@ -693,7 +652,7 @@ class RecordSocket:
 
     def _revert_common(
         self,
-        record_id: Sequence[int],
+        record_ids: Sequence[int],
         applicable_status: Iterable[RecordStatusEnum],
         *,
         session: Optional[Session] = None,
@@ -705,7 +664,7 @@ class RecordSocket:
 
         Parameters
         ----------
-        record_id
+        record_ids
             Reset the status of these record ids
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
@@ -717,14 +676,14 @@ class RecordSocket:
             Metadata about what was updated
         """
 
-        if not record_id:
+        if not record_ids:
             return UpdateMetadata()
 
-        all_id = set(record_id)
+        all_id = set(record_ids)
 
         with self.root_socket.optional_session(session) as session:
             # We always apply these operations to children, but never to parents
-            children_ids = self.get_children_ids(session, record_id)
+            children_ids = self.get_children_ids(session, record_ids)
             all_id.update(children_ids)
 
             # Select records with a resettable status
@@ -776,9 +735,9 @@ class RecordSocket:
 
             # put in order of the input parameter
             updated_ids = [r.id for r in record_data]
-            error_ids = set(record_id) - set(updated_ids)
-            updated_idx = [idx for idx, rid in enumerate(record_id) if rid in updated_ids]
-            error_idx = [idx for idx, rid in enumerate(record_id) if rid in error_ids]
+            error_ids = set(record_ids) - set(updated_ids)
+            updated_idx = [idx for idx, rid in enumerate(record_ids) if rid in updated_ids]
+            error_idx = [idx for idx, rid in enumerate(record_ids) if rid in error_ids]
             errors = [(idx, "Record is missing or cannot be reset") for idx in error_idx]
             n_children_updated = len(updated_ids) - len(updated_idx)
 
@@ -786,7 +745,7 @@ class RecordSocket:
 
     def _cancel_common(
         self,
-        record_id: Sequence[int],
+        record_ids: Sequence[int],
         applicable_status: Iterable[RecordStatusEnum],
         new_status: RecordStatusEnum,
         propagate_to_children: bool,
@@ -802,7 +761,7 @@ class RecordSocket:
 
         Parameters
         ----------
-        record_id
+        record_ids
             Reset the status of these record ids
         new_status
             What the new status of the record should be
@@ -818,19 +777,19 @@ class RecordSocket:
             Metadata about what was updated
         """
 
-        if len(record_id) == 0:
+        if len(record_ids) == 0:
             return UpdateMetadata()
 
-        all_ids = set(record_id)
+        all_ids = set(record_ids)
 
         with self.root_socket.optional_session(session) as session:
             if propagate_to_children:
                 # We always propagate to parents. So recursively find all related records
-                relative_ids = self.get_relative_ids(session, record_id)
+                relative_ids = self.get_relative_ids(session, record_ids)
                 all_ids.update(relative_ids)
             else:
                 # Always propagate these changes to parents
-                parent_ids = self.get_parent_ids(session, record_id)
+                parent_ids = self.get_parent_ids(session, record_ids)
                 all_ids.update(parent_ids)
 
             stmt = select(BaseRecordORM).options(joinedload(BaseRecordORM.task))
@@ -871,26 +830,26 @@ class RecordSocket:
 
             # put in order of the input parameter
             updated_ids = [r.id for r in record_orms]
-            error_ids = set(record_id) - set(updated_ids)
-            updated_idx = [idx for idx, rid in enumerate(record_id) if rid in updated_ids]
-            error_idx = [idx for idx, rid in enumerate(record_id) if rid in error_ids]
+            error_ids = set(record_ids) - set(updated_ids)
+            updated_idx = [idx for idx, rid in enumerate(record_ids) if rid in updated_ids]
+            error_idx = [idx for idx, rid in enumerate(record_ids) if rid in error_ids]
             errors = [(idx, "Record is missing or cannot be cancelled/deleted/invalidated") for idx in error_idx]
             n_children_updated = len(updated_ids) - len(updated_idx)
 
             return UpdateMetadata(updated_idx=updated_idx, errors=errors, n_children_updated=n_children_updated)
 
-    def reset(self, record_id: Sequence[int], *, session: Optional[Session] = None):
+    def reset(self, record_ids: Sequence[int], *, session: Optional[Session] = None):
         """
         Resets a running or errored record to be waiting again
         """
 
         return self._revert_common(
-            record_id, applicable_status=[RecordStatusEnum.running, RecordStatusEnum.error], session=session
+            record_ids, applicable_status=[RecordStatusEnum.running, RecordStatusEnum.error], session=session
         )
 
     def delete(
         self,
-        record_id: Sequence[int],
+        record_ids: Sequence[int],
         soft_delete: bool = True,
         delete_children: bool = True,
         *,
@@ -906,7 +865,7 @@ class RecordSocket:
 
         Parameters
         ----------
-        record_id
+        record_ids
             Reset the status of these record ids
         soft_delete
             Don't actually delete the record, just mark it for later deletion
@@ -920,13 +879,13 @@ class RecordSocket:
             Metadata about what was deleted
         """
 
-        if len(record_id) == 0:
+        if len(record_ids) == 0:
             return DeleteMetadata()
 
         if soft_delete:
             # anything can be deleted except something already deleted
             meta = self._cancel_common(
-                record_id,
+                record_ids,
                 set(RecordStatusEnum) - {RecordStatusEnum.deleted},
                 RecordStatusEnum.deleted,
                 propagate_to_children=delete_children,
@@ -942,14 +901,14 @@ class RecordSocket:
             )
 
         with self.root_socket.optional_session(session) as session:
-            all_id = set(record_id)
+            all_id = set(record_ids)
             children_ids = []
 
             if delete_children:
-                children_ids = self.get_children_ids(session, record_id)
+                children_ids = self.get_children_ids(session, record_ids)
                 all_id.update(children_ids)
 
-            del_id_1 = [(x,) for x in record_id]
+            del_id_1 = [(x,) for x in record_ids]
             del_id_2 = [(x,) for x in children_ids]
             meta = delete_general(session, BaseRecordORM, (BaseRecordORM.id,), del_id_1)
             ch_meta = delete_general(session, BaseRecordORM, (BaseRecordORM.id,), del_id_2)
@@ -960,7 +919,7 @@ class RecordSocket:
 
     def cancel(
         self,
-        record_id: Sequence[int],
+        record_ids: Sequence[int],
         cancel_children: bool = True,
         *,
         session: Optional[Session] = None,
@@ -970,7 +929,7 @@ class RecordSocket:
 
         Parameters
         ----------
-        record_id
+        record_ids
             Reset the status of these record ids
         cancel_children
             Cancel all children as well
@@ -985,7 +944,7 @@ class RecordSocket:
         """
 
         return self._cancel_common(
-            record_id,
+            record_ids,
             {RecordStatusEnum.waiting, RecordStatusEnum.running, RecordStatusEnum.error},
             RecordStatusEnum.cancelled,
             propagate_to_children=cancel_children,
@@ -994,7 +953,7 @@ class RecordSocket:
 
     def invalidate(
         self,
-        record_id: Sequence[int],
+        record_ids: Sequence[int],
         *,
         session: Optional[Session] = None,
     ) -> UpdateMetadata:
@@ -1005,7 +964,7 @@ class RecordSocket:
 
         Parameters
         ----------
-        record_id
+        record_ids
             Reset the status of these record ids
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
@@ -1018,7 +977,7 @@ class RecordSocket:
         """
 
         return self._cancel_common(
-            record_id,
+            record_ids,
             {RecordStatusEnum.complete},
             RecordStatusEnum.invalid,
             propagate_to_children=False,
@@ -1027,7 +986,7 @@ class RecordSocket:
 
     def undelete(
         self,
-        record_id: Sequence[int],
+        record_ids: Sequence[int],
         *,
         session: Optional[Session] = None,
     ) -> UpdateMetadata:
@@ -1038,7 +997,7 @@ class RecordSocket:
 
         Parameters
         ----------
-        record_id
+        record_ids
             ID of the record to undelete
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
@@ -1049,11 +1008,11 @@ class RecordSocket:
         :
             Metadata about what was undeleted
         """
-        if len(record_id) == 0:
+        if len(record_ids) == 0:
             return UpdateMetadata()
 
         with self.root_socket.optional_session(session) as session:
-            meta = self._revert_common(record_id, applicable_status=[RecordStatusEnum.deleted], session=session)
+            meta = self._revert_common(record_ids, applicable_status=[RecordStatusEnum.deleted], session=session)
 
             return UpdateMetadata(
                 updated_idx=meta.updated_idx,
@@ -1064,7 +1023,7 @@ class RecordSocket:
 
     def uncancel(
         self,
-        record_id: Sequence[int],
+        record_ids: Sequence[int],
         *,
         session: Optional[Session] = None,
     ) -> UpdateMetadata:
@@ -1073,15 +1032,15 @@ class RecordSocket:
 
         This will always uncancel children whenever possible
         """
-        if len(record_id) == 0:
+        if len(record_ids) == 0:
             return UpdateMetadata()
 
         with self.root_socket.optional_session(session) as session:
-            return self._revert_common(record_id, applicable_status=[RecordStatusEnum.cancelled], session=session)
+            return self._revert_common(record_ids, applicable_status=[RecordStatusEnum.cancelled], session=session)
 
     def uninvalidate(
         self,
-        record_id: Sequence[int],
+        record_ids: Sequence[int],
         *,
         session: Optional[Session] = None,
     ) -> UpdateMetadata:
@@ -1090,15 +1049,15 @@ class RecordSocket:
 
         This will always uninvalidate children whenever possible
         """
-        if len(record_id) == 0:
+        if len(record_ids) == 0:
             return UpdateMetadata()
 
         with self.root_socket.optional_session(session) as session:
-            return self._revert_common(record_id, applicable_status=[RecordStatusEnum.invalid], session=session)
+            return self._revert_common(record_ids, applicable_status=[RecordStatusEnum.invalid], session=session)
 
     def modify(
         self,
-        record_id: Sequence[int],
+        record_ids: Sequence[int],
         new_tag: Optional[str] = None,
         new_priority: Optional[RecordStatusEnum] = None,
         *,
@@ -1114,7 +1073,7 @@ class RecordSocket:
 
         Parameters
         ----------
-        record_id
+        record_ids
             Modify the tasks corresponding to these record ids
         new_tag
             New tag for the task. If None, keep the existing tag
@@ -1134,11 +1093,11 @@ class RecordSocket:
         if new_tag is None and new_priority is None:
             return UpdateMetadata()
 
-        all_id = set(record_id)
+        all_id = set(record_ids)
 
         with self.root_socket.optional_session(session) as session:
             # Get subtasks for all the records that are services
-            subtask_id = self.get_subtask_ids(session, record_id)
+            subtask_id = self.get_subtask_ids(session, record_ids)
             all_id.update(subtask_id)
 
             # Do a manual join, not a joined load - we don't want to actually load the base record, just
@@ -1165,9 +1124,9 @@ class RecordSocket:
             # put in order of the input parameter
             # only pay attention to the records requested (ie, not subtasks)
             updated_ids = [t.record_id for t in all_orm]
-            error_ids = set(record_id) - set(updated_ids)
-            updated_idx = [idx for idx, rid in enumerate(record_id) if rid in updated_ids]
-            error_idx = [idx for idx, rid in enumerate(record_id) if rid in error_ids]
+            error_ids = set(record_ids) - set(updated_ids)
+            updated_idx = [idx for idx, rid in enumerate(record_ids) if rid in updated_ids]
+            error_idx = [idx for idx, rid in enumerate(record_ids) if rid in error_ids]
             errors = [(idx, "Record is missing or cannot be modified") for idx in error_idx]
             n_children_updated = len(all_orm) - (len(updated_idx) + len(error_idx))
 
@@ -1182,24 +1141,24 @@ class RecordSocket:
         This function allows for changing the status, tag, priority, and comment in a single function call
         """
 
-        if len(modify_data.record_id) == 0:
+        if len(modify_data.record_ids) == 0:
             return UpdateMetadata()
 
         # do all in a single session
         with self.root_socket.optional_session(session) as session:
             if modify_data.status is not None:
                 if modify_data.status == RecordStatusEnum.waiting:
-                    return self.root_socket.records.reset(record_id=modify_data.record_id, session=session)
+                    return self.root_socket.records.reset(record_ids=modify_data.record_ids, session=session)
                 if modify_data.status == RecordStatusEnum.cancelled:
-                    return self.root_socket.records.cancel(record_id=modify_data.record_id, session=session)
+                    return self.root_socket.records.cancel(record_ids=modify_data.record_ids, session=session)
                 if modify_data.status == RecordStatusEnum.invalid:
-                    return self.root_socket.records.invalidate(record_id=modify_data.record_id, session=session)
+                    return self.root_socket.records.invalidate(record_ids=modify_data.record_ids, session=session)
 
                 # ignore all other statuses
 
             if modify_data.tag is not None or modify_data.priority is not None:
                 return self.root_socket.records.modify(
-                    modify_data.record_id,
+                    modify_data.record_ids,
                     new_tag=modify_data.tag,
                     new_priority=modify_data.priority,
                     session=session,
@@ -1207,7 +1166,7 @@ class RecordSocket:
 
             if modify_data.comment:
                 return self.root_socket.records.add_comment(
-                    record_id=modify_data.record_id,
+                    record_ids=modify_data.record_ids,
                     username=username,
                     comment=modify_data.comment,
                     session=session,

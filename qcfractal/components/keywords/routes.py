@@ -19,10 +19,10 @@ def get_keywords_v1(keywords_id: int):
 @wrap_route(CommonBulkGetBody, None, "READ")
 def bulk_get_keywords_v1(body_data: CommonBulkGetBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_keywords
-    if len(body_data.id) > limit:
-        raise LimitExceededError(f"Cannot get {len(body_data.id)} keywords - limit is {limit}")
+    if len(body_data.ids) > limit:
+        raise LimitExceededError(f"Cannot get {len(body_data.ids)} keywords - limit is {limit}")
 
-    return storage_socket.keywords.get(body_data.id, body_data.missing_ok)
+    return storage_socket.keywords.get(body_data.ids, body_data.missing_ok)
 
 
 @main.route("/v1/keywords/bulkCreate", methods=["POST"])

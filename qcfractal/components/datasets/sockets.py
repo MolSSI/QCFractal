@@ -13,30 +13,37 @@ from qcfractal.db_socket.helpers import (
     get_query_proj_options,
 )
 from qcportal.exceptions import AlreadyExistsError, MissingDataError
-from qcportal.records import RecordStatusEnum, PriorityEnum
+from qcportal.records import RecordModifyBody, RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcportal.metadata_models import InsertMetadata
+    from qcportal.datasets.models import DatasetRecordModifyBody
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.db_socket.base_orm import BaseORM
-    from typing import Dict, Any, Optional, Sequence, Type, Iterable, Tuple, List
+    from typing import Dict, Any, Optional, Sequence, Iterable, Tuple, List
 
 
 class BaseDatasetSocket:
+
+    # Must be overridden by the derived classes
+    dataset_orm = None
+    specification_orm = None
+    entry_orm = None
+    record_item_orm = None
+
     def __init__(
         self,
         root_socket: SQLAlchemySocket,
-        dataset_orm: Type[CollectionORM],
-        specification_orm: Type[BaseORM],
-        entry_orm: Type[BaseORM],
-        record_orm: Type[BaseORM],
     ):
         self.root_socket = root_socket
-        self.dataset_orm = dataset_orm
-        self.specification_orm = specification_orm
-        self.entry_orm = entry_orm
-        self.record_orm = record_orm
+
+        # Make sure these were set by the derived classes
+        assert self.dataset_orm is not None
+        assert self.specification_orm is not None
+        assert self.entry_orm is not None
+        assert self.record_item_orm is not None
+
         self.dataset_type = self.dataset_orm.__mapper_args__["polymorphic_identity"]
 
     def _add_specification(self, session, specification) -> Tuple[InsertMetadata, Optional[int]]:
@@ -48,6 +55,18 @@ class BaseDatasetSocket:
     @staticmethod
     def get_records_select():
         raise NotImplementedError(f"get_records_select not implemented! This is a developer error")
+
+    def submit(
+        self,
+        dataset_id: int,
+        entry_names: Optional[Iterable[str]],
+        specification_names: Optional[Iterable[str]],
+        tag: Optional[str],
+        priority: Optional[PriorityEnum],
+        *,
+        session: Optional[Session] = None,
+    ):
+        raise NotImplementedError("submit must be overridden by the derived class")
 
     def get_default_tag_priority(
         self, dataset_id: int, *, session: Optional[Session] = None
@@ -79,10 +98,10 @@ class BaseDatasetSocket:
 
     def status(self, dataset_id: int, *, session: Optional[Session] = None) -> Dict[str, Dict[RecordStatusEnum, int]]:
 
-        stmt = select(self.record_orm.specification_name, BaseRecordORM.status, func.count(BaseRecordORM.id))
-        stmt = stmt.join(self.record_orm, BaseRecordORM.id == self.record_orm.record_id)
-        stmt = stmt.where(self.record_orm.dataset_id == dataset_id)
-        stmt = stmt.group_by(self.record_orm.specification_name, BaseRecordORM.status)
+        stmt = select(self.record_item_orm.specification_name, BaseRecordORM.status, func.count(BaseRecordORM.id))
+        stmt = stmt.join(self.record_item_orm, BaseRecordORM.id == self.record_item_orm.record_id)
+        stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
+        stmt = stmt.group_by(self.record_item_orm.specification_name, BaseRecordORM.status)
 
         with self.root_socket.optional_session(session, True) as session:
             stats = session.execute(stmt).all()
@@ -92,6 +111,18 @@ class BaseDatasetSocket:
             ret.setdefault(s[0], dict())
             ret[s[0]][s[1]] = s[2]
         return ret
+
+    def detailed_status(
+        self, dataset_id: int, *, session: Optional[Session] = None
+    ) -> List[Tuple[str, str, RecordStatusEnum]]:
+
+        stmt = select(self.record_item_orm.entry_name, self.record_item_orm.specification_name, BaseRecordORM.status)
+        stmt = stmt.join(self.record_item_orm, BaseRecordORM.id == self.record_item_orm.record_id)
+        stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
+
+        with self.root_socket.optional_session(session, True) as session:
+            stats = session.execute(stmt).all()
+            return [tuple(x) for x in stats]
 
     def add(
         self,
@@ -184,9 +215,9 @@ class BaseDatasetSocket:
         with self.root_socket.optional_session(session) as session:
             if delete_records:
                 # Store all record ids for later deletion
-                stmt = select(self.record_orm.record_id)
-                stmt = stmt.where(self.record_orm.dataset_id == dataset_id)
-                stmt = stmt.where(self.record_orm.specification_name.in_(specification_names))
+                stmt = select(self.record_item_orm.record_id)
+                stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
+                stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
                 record_ids = session.execute(stmt).scalars().all()
 
             # Deleting the specification will cascade to the dataset->record association table
@@ -242,6 +273,19 @@ class BaseDatasetSocket:
                 if entry.name not in existing_entries:
                     session.add(entry)
 
+    def get_entry_names(
+        self,
+        dataset_id: int,
+        *,
+        session: Optional[Session] = None,
+    ) -> List[str]:
+        stmt = select(self.entry_orm.name)
+        stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
+
+        with self.root_socket.optional_session(session, True) as session:
+            ret = session.execute(stmt).scalars().all()
+            return list(ret)
+
     def get_entries(
         self,
         dataset_id: int,
@@ -286,9 +330,9 @@ class BaseDatasetSocket:
         with self.root_socket.optional_session(session) as session:
             if delete_records:
                 # Store all record ids for later deletion
-                stmt = select(self.record_orm.record_id)
-                stmt = stmt.where(self.record_orm.dataset_id == dataset_id)
-                stmt = stmt.where(self.record_orm.entry_name.in_(entry_names))
+                stmt = select(self.record_item_orm.record_id)
+                stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
+                stmt = stmt.where(self.record_item_orm.entry_name.in_(entry_names))
                 record_ids = session.execute(stmt).scalars().all()
 
             # Delete the entries will cascade to the dataset->record association table
@@ -325,33 +369,100 @@ class BaseDatasetSocket:
             for entry in entries:
                 entry.name = entry_name_map[entry.name]
 
-    def get_records(
+    def get_record_items(
         self,
         dataset_id: int,
-        specification_names: Optional[Sequence[str]] = None,
         entry_names: Optional[Sequence[str]] = None,
+        specification_names: Optional[Sequence[str]] = None,
         include: Optional[Iterable[str]] = None,
         exclude: Optional[Iterable[str]] = None,
         *,
         session: Optional[Session] = None,
     ) -> List[Dict[str, Any]]:
 
-        stmt = select(self.record_orm)
-        stmt = stmt.where(self.record_orm.dataset_id == dataset_id)
+        stmt = select(self.record_item_orm)
+        stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
 
         if entry_names is not None:
-            stmt = stmt.where(self.record_orm.entry_name.in_(entry_names))
+            stmt = stmt.where(self.record_item_orm.entry_name.in_(entry_names))
         if specification_names is not None:
-            stmt = stmt.where(self.record_orm.specification_name.in_(specification_names))
+            stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
 
         if include or exclude:
-            query_opts = get_query_proj_options(self.record_orm, include, exclude)
+            query_opts = get_query_proj_options(self.record_item_orm, include, exclude)
             stmt = stmt.options(*query_opts)
 
         with self.root_socket.optional_session(session, True) as session:
             records = session.execute(stmt).scalars().all()
 
         return [x.dict() for x in records]
+
+    def delete_record_items(
+        self,
+        dataset_id: int,
+        entry_names: Sequence[str],
+        specification_names: Sequence[str],
+        *,
+        session: Optional[Session] = None,
+    ):
+
+        stmt = delete(self.record_item_orm)
+        stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
+        stmt = stmt.where(self.record_item_orm.entry_name.in_(entry_names))
+        stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
+        session.execute(stmt)
+
+    #######################
+    # Record modification
+    #######################
+    def _lookup_record_ids(
+        self,
+        session: Session,
+        dataset_id: int,
+        entry_names: Optional[Iterable[str]] = None,
+        specification_names: Optional[Iterable[str]] = None,
+        for_update: bool = False,
+    ) -> List[int]:
+        stmt = select(self.record_item_orm.record_id)
+        stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
+
+        if entry_names is not None:
+            stmt = stmt.where(self.record_item_orm.entry_name.in_(entry_names))
+        if specification_names is not None:
+            stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
+
+        # Locks the record items, not the actual record
+        if for_update:
+            stmt = stmt.with_for_update()
+
+        r = session.execute(stmt).scalars().all()
+        return r
+
+    def modify_records(
+        self,
+        dataset_id: int,
+        modify_data: DatasetRecordModifyBody,
+        username: Optional[str],
+        *,
+        session: Optional[Session] = None,
+    ):
+
+        with self.root_socket.optional_session(session) as session:
+            record_id = self._lookup_record_ids(
+                session, dataset_id, modify_data.entry_name, modify_data.specification_name, for_update=True
+            )
+
+            # TODO - kinda hacky to pull in a rest model?
+            # Break these out into function arguments?
+            rec_modify_data = RecordModifyBody(
+                record_ids=record_id,
+                status=modify_data.status,
+                priority=modify_data.priority,
+                tag=modify_data.tag,
+                comment=modify_data.comment,
+            )
+
+            self.root_socket.records.modify_generic(rec_modify_data, username, session=session)
 
 
 class DatasetSocket:

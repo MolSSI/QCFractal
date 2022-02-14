@@ -194,15 +194,15 @@ class PortalClient(PortalClientBase):
         # molecule getting does *not* support "include"
         if include is None:
             payload = {
-                "data": {"id": ids},
+                "data": {"ids": ids},
             }
         else:
-            if "id" not in include:
-                include.append("id")
+            if "ids" not in include:
+                include.append("ids")
 
             payload = {
-                "meta": {"include": include},
-                "data": {"id": ids},
+                "meta": {"includes": include},
+                "data": {"ids": ids},
             }
 
         results, to_cache = func(payload)
@@ -323,14 +323,14 @@ class PortalClient(PortalClientBase):
 
     def get_molecules(
         self,
-        molecule_id: Union[int, Sequence[int]],
+        molecule_ids: Union[int, Sequence[int]],
         missing_ok: bool = False,
     ) -> Union[Optional[Molecule], List[Optional[Molecule]]]:
         """Obtains molecules from the server via molecule ids
 
         Parameters
         ----------
-        molecule_id
+        molecule_ids
             An id or list of ids to query.
         missing_ok
             If True, return ``None`` for ids that were not found on the server.
@@ -344,16 +344,16 @@ class PortalClient(PortalClientBase):
             Otherwise, it will be a single Molecule.
         """
 
-        molecule_id_lst = make_list(molecule_id)
-        if not molecule_id_lst:
+        molecule_ids_lst = make_list(molecule_ids)
+        if not molecule_ids_lst:
             return []
 
-        body_data = CommonBulkGetBody(id=molecule_id_lst, missing_ok=missing_ok)
+        body_data = CommonBulkGetBody(ids=molecule_ids_lst, missing_ok=missing_ok)
         mols = self._auto_request(
             "post", "v1/molecules/bulkGet", CommonBulkGetBody, None, List[Optional[Molecule]], body_data, None
         )
 
-        if isinstance(molecule_id, Sequence):
+        if isinstance(molecule_ids, Sequence):
             return mols
         else:
             return mols[0]
@@ -497,14 +497,14 @@ class PortalClient(PortalClientBase):
             "patch", f"v1/molecules/{molecule_id}", MoleculeModifyBody, None, UpdateMetadata, body, None
         )
 
-    def delete_molecules(self, molecule_id: Union[int, Sequence[int]]) -> DeleteMetadata:
+    def delete_molecules(self, molecule_ids: Union[int, Sequence[int]]) -> DeleteMetadata:
         """Deletes molecules from the server
 
         This will not delete any keywords that are in use
 
         Parameters
         ----------
-        molecule_id
+        molecule_ids
             An id or list of ids to query.
 
         Returns
@@ -513,11 +513,13 @@ class PortalClient(PortalClientBase):
             Metadata about what was deleted
         """
 
-        molecule_id = make_list(molecule_id)
-        if not molecule_id:
+        molecule_ids = make_list(molecule_ids)
+        if not molecule_ids:
             return DeleteMetadata()
 
-        return self._auto_request("post", "v1/molecules/bulkDelete", List[int], None, DeleteMetadata, molecule_id, None)
+        return self._auto_request(
+            "post", "v1/molecules/bulkDelete", List[int], None, DeleteMetadata, molecule_ids, None
+        )
 
     ##############################################################
     # Keywords
@@ -525,14 +527,14 @@ class PortalClient(PortalClientBase):
 
     def get_keywords(
         self,
-        keywords_id: Union[int, Sequence[int]],
+        keywords_ids: Union[int, Sequence[int]],
         missing_ok: bool = False,
     ) -> Union[Optional[KeywordSet], List[Optional[KeywordSet]]]:
         """Obtains keywords from the server via keyword ids
 
         Parameters
         ----------
-        keywords_id
+        keywords_ids
             An id or list of ids to query.
         missing_ok
             If True, return ``None`` for ids that were not found on the server.
@@ -546,22 +548,22 @@ class PortalClient(PortalClientBase):
             Otherwise, it will be a single KeywordSet.
         """
 
-        keywords_id_lst = make_list(keywords_id)
-        if not keywords_id_lst:
+        keywords_ids_lst = make_list(keywords_ids)
+        if not keywords_ids_lst:
             return []
 
-        body_data = CommonBulkGetBody(id=keywords_id_lst, missing_ok=missing_ok)
+        body_data = CommonBulkGetBody(ids=keywords_ids_lst, missing_ok=missing_ok)
 
-        if len(body_data.id) > self.api_limits["get_keywords"]:
+        if len(body_data.ids) > self.api_limits["get_keywords"]:
             raise RuntimeError(
-                f"Cannot get {len(body_data.id)} keywords - over the limit of {self.api_limits['get_keywords']}"
+                f"Cannot get {len(body_data.ids)} keywords - over the limit of {self.api_limits['get_keywords']}"
             )
 
         keywords = self._auto_request(
             "post", "v1/keywords/bulkGet", CommonBulkGetBody, None, List[Optional[KeywordSet]], body_data, None
         )
 
-        if isinstance(keywords_id, Sequence):
+        if isinstance(keywords_ids, Sequence):
             return keywords
         else:
             return keywords[0]
@@ -598,14 +600,14 @@ class PortalClient(PortalClientBase):
             "post", "v1/keywords/bulkCreate", List[KeywordSet], None, Tuple[InsertMetadata, List[int]], keywords, None
         )
 
-    def delete_keywords(self, keywords_id: Union[int, Sequence[int]]) -> DeleteMetadata:
+    def delete_keywords(self, keywords_ids: Union[int, Sequence[int]]) -> DeleteMetadata:
         """Deletes keywords from the server
 
         This will not delete any keywords that are in use
 
         Parameters
         ----------
-        keywords_id
+        keywords_ids
             An id or list of ids to query.
 
         Returns
@@ -614,11 +616,11 @@ class PortalClient(PortalClientBase):
             Metadata about what was deleted
         """
 
-        keywords_id = make_list(keywords_id)
-        if not keywords_id:
+        keywords_ids = make_list(keywords_ids)
+        if not keywords_ids:
             return DeleteMetadata()
 
-        return self._auto_request("post", "v1/keywords/bulkDelete", List[int], None, DeleteMetadata, keywords_id, None)
+        return self._auto_request("post", "v1/keywords/bulkDelete", List[int], None, DeleteMetadata, keywords_ids, None)
 
     ##############################################################
     # General record functions
@@ -626,7 +628,7 @@ class PortalClient(PortalClientBase):
 
     def get_records(
         self,
-        record_id: Union[int, Sequence[int]],
+        record_ids: Union[int, Sequence[int]],
         missing_ok: bool = False,
         *,
         include_task: bool = False,
@@ -636,15 +638,15 @@ class PortalClient(PortalClientBase):
     ) -> Union[List[Optional[AllRecordTypes]], Optional[AllRecordTypes]]:
         """Get result records by id."""
 
-        record_id_lst = make_list(record_id)
-        if not record_id_lst:
+        record_ids_lst = make_list(record_ids)
+        if not record_ids_lst:
             return []
 
-        body_data = {"id": record_id_lst, "missing_ok": missing_ok}
+        body_data = {"ids": record_ids_lst, "missing_ok": missing_ok}
 
-        if len(body_data["id"]) > self.api_limits["get_records"]:
+        if len(body_data["ids"]) > self.api_limits["get_records"]:
             raise RuntimeError(
-                f"Cannot get {len(body_data['id'])} records - over the limit of {self.api_limits['get_records']}"
+                f"Cannot get {len(body_data['ids'])} records - over the limit of {self.api_limits['get_records']}"
             )
 
         include = set()
@@ -674,7 +676,7 @@ class PortalClient(PortalClientBase):
 
         records = self.recordmodel_from_datamodel(record_data)
 
-        if isinstance(record_id, Sequence):
+        if isinstance(record_ids, Sequence):
             return records
         else:
             return records[0]
@@ -742,92 +744,88 @@ class PortalClient(PortalClientBase):
 
         return meta, self.recordmodel_from_datamodel(record_data)
 
-    def reset_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
-        record_id = make_list(record_id)
-        if not record_id:
+    def reset_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
+        record_ids = make_list(record_ids)
+        if not record_ids:
             return UpdateMetadata()
 
-        body_data = {"record_id": record_id, "status": RecordStatusEnum.waiting}
+        body_data = RecordModifyBody(record_ids=record_ids, status=RecordStatusEnum.waiting)
         return self._auto_request("patch", "v1/records", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
-    def cancel_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
-        record_id = make_list(record_id)
-        if not record_id:
+    def cancel_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
+        record_ids = make_list(record_ids)
+        if not record_ids:
             return UpdateMetadata()
 
-        body_data = {"record_id": record_id, "status": RecordStatusEnum.cancelled}
+        body_data = RecordModifyBody(record_ids=record_ids, status=RecordStatusEnum.cancelled)
         return self._auto_request("patch", "v1/records", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
-    def invalidate_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
-        record_id = make_list(record_id)
-        if not record_id:
+    def invalidate_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
+        record_ids = make_list(record_ids)
+        if not record_ids:
             return UpdateMetadata()
 
-        body_data = {"record_id": record_id, "status": RecordStatusEnum.invalid}
+        body_data = RecordModifyBody(record_ids=record_ids, status=RecordStatusEnum.invalid)
         return self._auto_request("patch", "v1/records", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
     def delete_records(
-        self, record_id: Union[int, Sequence[int]], soft_delete=True, delete_children: bool = True
+        self, record_ids: Union[int, Sequence[int]], soft_delete=True, delete_children: bool = True
     ) -> DeleteMetadata:
-        record_id = make_list(record_id)
-        if not record_id:
+        record_ids = make_list(record_ids)
+        if not record_ids:
             return DeleteMetadata()
 
-        body_data = {"record_id": record_id, "soft_delete": soft_delete, "delete_children": delete_children}
+        body_data = RecordDeleteBody(record_ids=record_ids, soft_delete=soft_delete, delete_children=delete_children)
         return self._auto_request(
             "post", "v1/records/bulkDelete", RecordDeleteBody, None, DeleteMetadata, body_data, None
         )
 
-    def uninvalidate_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
-        record_id = make_list(record_id)
-        if not record_id:
+    def uninvalidate_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
+        record_ids = make_list(record_ids)
+        if not record_ids:
             return UpdateMetadata()
 
-        body = {"record_id": record_id, "revert_status": RecordStatusEnum.invalid}
-        return self._auto_request("post", "v1/records/revert", RecordRevertBody, None, UpdateMetadata, body, None)
+        body_data = RecordRevertBody(record_ids=record_ids, revert_status=RecordStatusEnum.invalid)
+        return self._auto_request("post", "v1/records/revert", RecordRevertBody, None, UpdateMetadata, body_data, None)
 
-    def uncancel_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
-        record_id = make_list(record_id)
-        if not record_id:
+    def uncancel_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
+        record_ids = make_list(record_ids)
+        if not record_ids:
             return UpdateMetadata()
 
-        body = {"record_id": record_id, "revert_status": RecordStatusEnum.cancelled}
-        return self._auto_request("post", "v1/records/revert", RecordRevertBody, None, UpdateMetadata, body, None)
+        body_data = RecordRevertBody(record_ids=record_ids, revert_status=RecordStatusEnum.cancelled)
+        return self._auto_request("post", "v1/records/revert", RecordRevertBody, None, UpdateMetadata, body_data, None)
 
-    def undelete_records(self, record_id: Union[int, Sequence[int]]) -> UpdateMetadata:
-        record_id = make_list(record_id)
-        if not record_id:
+    def undelete_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
+        record_ids = make_list(record_ids)
+        if not record_ids:
             return UpdateMetadata()
 
-        body = {"record_id": record_id, "revert_status": RecordStatusEnum.deleted}
-        return self._auto_request("post", "v1/records/revert", RecordRevertBody, None, UpdateMetadata, body, None)
+        body_data = RecordRevertBody(record_ids=record_ids, revert_status=RecordStatusEnum.deleted)
+        return self._auto_request("post", "v1/records/revert", RecordRevertBody, None, UpdateMetadata, body_data, None)
 
     def modify_records(
         self,
-        record_id: Union[int, Sequence[int]],
+        record_ids: Union[int, Sequence[int]],
         new_tag: Optional[str] = None,
         new_priority: Optional[PriorityEnum] = None,
     ) -> UpdateMetadata:
-        record_id = make_list(record_id)
-        if not record_id:
+        record_ids = make_list(record_ids)
+        if not record_ids:
             return UpdateMetadata()
         if new_tag is None and new_priority is None:
             return UpdateMetadata()
 
-        body_data = {
-            "record_id": record_id,
-            "tag": new_tag,
-            "priority": new_priority,
-        }
+        body_data = RecordModifyBody(record_ids=record_ids, tag=new_tag, priority=new_priority)
         return self._auto_request("patch", "v1/records", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
-    def add_comment(self, record_id: Union[int, Sequence[int]], comment: str) -> UpdateMetadata:
+    def add_comment(self, record_ids: Union[int, Sequence[int]], comment: str) -> UpdateMetadata:
         """
         Adds a comment to records
 
         Parameters
         ----------
-        record_id
+        record_ids
             The record or records to add the comments to
 
         comment
@@ -838,14 +836,11 @@ class PortalClient(PortalClientBase):
         :
             Metadata about which records were updated
         """
-        record_id = make_list(record_id)
-        if not record_id:
+        record_ids = make_list(record_ids)
+        if not record_ids:
             return UpdateMetadata()
 
-        body_data = {
-            "record_id": record_id,
-            "comment": comment,
-        }
+        body_data = RecordModifyBody(record_ids=record_ids, comment=comment)
         return self._auto_request("patch", "v1/records", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
     ##############################################################
@@ -941,7 +936,7 @@ class PortalClient(PortalClientBase):
 
     def get_singlepoints(
         self,
-        record_id: Union[int, Sequence[int]],
+        record_ids: Union[int, Sequence[int]],
         missing_ok: bool = False,
         *,
         include_task: bool = False,
@@ -951,11 +946,11 @@ class PortalClient(PortalClientBase):
         include_wavefunction: bool = False,
     ) -> Union[Optional[SinglepointRecord], List[Optional[SinglepointRecord]]]:
 
-        record_id_lst = make_list(record_id)
-        if not record_id_lst:
+        record_ids_lst = make_list(record_ids)
+        if not record_ids_lst:
             return []
 
-        body_data = {"id": record_id_lst, "missing_ok": missing_ok}
+        body_data = {"ids": record_ids_lst, "missing_ok": missing_ok}
 
         include = set()
 
@@ -974,9 +969,9 @@ class PortalClient(PortalClientBase):
         if include:
             body_data["include"] = include
 
-        if len(body_data["id"]) > self.api_limits["get_records"]:
+        if len(body_data["ids"]) > self.api_limits["get_records"]:
             raise RuntimeError(
-                f"Cannot get {len(body_data['id'])} records - over the limit of {self.api_limits['get_records']}"
+                f"Cannot get {len(body_data['ids'])} records - over the limit of {self.api_limits['get_records']}"
             )
 
         record_data = self._auto_request(
@@ -991,7 +986,7 @@ class PortalClient(PortalClientBase):
 
         records = self.recordmodel_from_datamodel(record_data)
 
-        if isinstance(record_id, Sequence):
+        if isinstance(record_ids, Sequence):
             return records
         else:
             return records[0]
@@ -1128,7 +1123,7 @@ class PortalClient(PortalClientBase):
 
     def get_optimizations(
         self,
-        record_id: Union[int, Sequence[int]],
+        record_ids: Union[int, Sequence[int]],
         missing_ok: bool = False,
         *,
         include_task: bool = False,
@@ -1139,11 +1134,11 @@ class PortalClient(PortalClientBase):
         include_trajectory: bool = False,
     ) -> Union[Optional[OptimizationRecord], List[Optional[OptimizationRecord]]]:
 
-        record_id_lst = make_list(record_id)
-        if not record_id_lst:
+        record_ids_lst = make_list(record_ids)
+        if not record_ids_lst:
             return []
 
-        body_data = {"id": record_id_lst, "missing_ok": missing_ok}
+        body_data = {"ids": record_ids_lst, "missing_ok": missing_ok}
 
         include = set()
 
@@ -1164,9 +1159,9 @@ class PortalClient(PortalClientBase):
         if include:
             body_data["include"] = include
 
-        if len(body_data["id"]) > self.api_limits["get_records"]:
+        if len(body_data["ids"]) > self.api_limits["get_records"]:
             raise RuntimeError(
-                f"Cannot get {len(body_data['id'])} records - over the limit of {self.api_limits['get_records']}"
+                f"Cannot get {len(body_data['ids'])} records - over the limit of {self.api_limits['get_records']}"
             )
 
         record_data = self._auto_request(
@@ -1181,7 +1176,7 @@ class PortalClient(PortalClientBase):
 
         records = self.recordmodel_from_datamodel(record_data)
 
-        if isinstance(record_id, Sequence):
+        if isinstance(record_ids, Sequence):
             return records
         else:
             return records[0]
@@ -1317,7 +1312,7 @@ class PortalClient(PortalClientBase):
 
     def get_torsiondrives(
         self,
-        record_id: Union[int, Sequence[int]],
+        record_ids: Union[int, Sequence[int]],
         missing_ok: bool = False,
         *,
         include_task: bool = False,
@@ -1328,11 +1323,11 @@ class PortalClient(PortalClientBase):
         include_optimizations: bool = False,
     ) -> Union[Optional[TorsiondriveRecord], List[Optional[TorsiondriveRecord]]]:
 
-        record_id_lst = make_list(record_id)
-        if not record_id_lst:
+        record_ids_lst = make_list(record_ids)
+        if not record_ids_lst:
             return []
 
-        body_data = {"id": record_id_lst, "missing_ok": missing_ok}
+        body_data = {"ids": record_ids_lst, "missing_ok": missing_ok}
 
         include = set()
 
@@ -1353,9 +1348,9 @@ class PortalClient(PortalClientBase):
         if include:
             body_data["include"] = include
 
-        if len(body_data["id"]) > self.api_limits["get_records"]:
+        if len(body_data["ids"]) > self.api_limits["get_records"]:
             raise RuntimeError(
-                f"Cannot get {len(body_data['id'])} records - over the limit of {self.api_limits['get_records']}"
+                f"Cannot get {len(body_data['ids'])} records - over the limit of {self.api_limits['get_records']}"
             )
 
         record_data = self._auto_request(
@@ -1370,7 +1365,7 @@ class PortalClient(PortalClientBase):
 
         records = self.recordmodel_from_datamodel(record_data)
 
-        if isinstance(record_id, Sequence):
+        if isinstance(record_ids, Sequence):
             return records
         else:
             return records[0]
@@ -1506,7 +1501,7 @@ class PortalClient(PortalClientBase):
 
     def get_gridoptimizations(
         self,
-        record_id: Union[int, Sequence[int]],
+        record_ids: Union[int, Sequence[int]],
         missing_ok: bool = False,
         *,
         include_service: bool = False,
@@ -1517,11 +1512,11 @@ class PortalClient(PortalClientBase):
         include_optimizations: bool = False,
     ) -> Union[Optional[GridoptimizationRecord], List[Optional[GridoptimizationRecord]]]:
 
-        record_id_lst = make_list(record_id)
-        if not record_id_lst:
+        record_ids_lst = make_list(record_ids)
+        if not record_ids_lst:
             return []
 
-        body_data = {"id": record_id_lst, "missing_ok": missing_ok}
+        body_data = {"ids": record_ids_lst, "missing_ok": missing_ok}
 
         include = set()
 
@@ -1542,9 +1537,9 @@ class PortalClient(PortalClientBase):
         if include:
             body_data["include"] = include
 
-        if len(body_data["id"]) > self.api_limits["get_records"]:
+        if len(body_data["ids"]) > self.api_limits["get_records"]:
             raise RuntimeError(
-                f"Cannot get {len(body_data['id'])} records - over the limit of {self.api_limits['get_records']}"
+                f"Cannot get {len(body_data['ids'])} records - over the limit of {self.api_limits['get_records']}"
             )
 
         record_data = self._auto_request(
@@ -1559,7 +1554,7 @@ class PortalClient(PortalClientBase):
 
         records = self.recordmodel_from_datamodel(record_data)
 
-        if isinstance(record_id, Sequence):
+        if isinstance(record_ids, Sequence):
             return records
         else:
             return records[0]
@@ -1652,7 +1647,7 @@ class PortalClient(PortalClientBase):
 
     def get_managers(
         self,
-        name: Union[str, Sequence[str]],
+        names: Union[str, Sequence[str]],
         missing_ok: bool = False,
     ) -> Union[Optional[ComputeManager], List[Optional[ComputeManager]]]:
         """Obtains manager information from the server via name
@@ -1673,16 +1668,16 @@ class PortalClient(PortalClientBase):
             Otherwise, it will be a single manager.
         """
 
-        name_lst = make_list(name)
-        if not name_lst:
+        names_lst = make_list(names)
+        if not names_lst:
             return []
 
-        body_data = CommonBulkGetNamesBody(name=name_lst, missing_ok=missing_ok)
+        body_data = CommonBulkGetNamesBody(names=names_lst, missing_ok=missing_ok)
         managers = self._auto_request(
             "post", "v1/managers/bulkGet", CommonBulkGetNamesBody, None, List[Optional[ComputeManager]], body_data, None
         )
 
-        if isinstance(name, Sequence):
+        if isinstance(names, Sequence):
             return managers
         else:
             return managers[0]

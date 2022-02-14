@@ -314,7 +314,7 @@ class RecordAddBodyBase(RestModelBase):
 
 
 class RecordModifyBody(RestModelBase):
-    record_id: List[int]
+    record_ids: List[int]
     status: Optional[RecordStatusEnum] = None
     priority: Optional[PriorityEnum] = None
     tag: Optional[str] = None
@@ -322,14 +322,14 @@ class RecordModifyBody(RestModelBase):
 
 
 class RecordDeleteBody(RestModelBase):
-    record_id: List[int]
+    record_ids: List[int]
     soft_delete: bool
     delete_children: bool
 
 
 class RecordRevertBody(RestModelBase):
     revert_status: RecordStatusEnum
-    record_id: List[int]
+    record_ids: List[int]
 
 
 class RecordQueryBody(QueryProjModelBase):

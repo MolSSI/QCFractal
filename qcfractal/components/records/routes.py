@@ -23,10 +23,10 @@ def get_records_v1(record_id: int, *, url_params: ProjURLParameters):
 @wrap_route(CommonBulkGetBody, None, "READ")
 def bulk_get_records_v1(body_data: CommonBulkGetBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
-    if len(body_data.id) > limit:
-        raise LimitExceededError(f"Cannot get {len(body_data.id)} records - limit is {limit}")
+    if len(body_data.ids) > limit:
+        raise LimitExceededError(f"Cannot get {len(body_data.ids)} records - limit is {limit}")
 
-    return storage_socket.records.get(body_data.id, body_data.include, body_data.exclude, body_data.missing_ok)
+    return storage_socket.records.get(body_data.ids, body_data.include, body_data.exclude, body_data.missing_ok)
 
 
 @main.route("/v1/records/<int:record_id>/compute_history", methods=["GET"])
@@ -71,14 +71,14 @@ def delete_records_v1(record_id: int):
 @wrap_route(RecordDeleteBody, None, "DELETE")
 def bulk_delete_records_v1(body_data: RecordDeleteBody):
     return storage_socket.records.delete(
-        body_data.record_id, soft_delete=body_data.soft_delete, delete_children=body_data.delete_children
+        body_data.record_ids, soft_delete=body_data.soft_delete, delete_children=body_data.delete_children
     )
 
 
 @main.route("/v1/records/revert", methods=["POST"])
 @wrap_route(RecordRevertBody, None, "WRITE")
 def revert_records_v1(body_data: RecordRevertBody):
-    return storage_socket.records.revert_generic(body_data.record_id, body_data.revert_status)
+    return storage_socket.records.revert_generic(body_data.record_ids, body_data.revert_status)
 
 
 @main.route("/v1/records", methods=["PATCH"])
@@ -111,8 +111,8 @@ def get_general_records_v1(record_type: str, record_id: int, *, url_params: Proj
 @wrap_route(CommonBulkGetBody, None, "READ")
 def bulk_get_general_records_v1(record_type: str, *, body_data: CommonBulkGetBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
-    if len(body_data.id) > limit:
-        raise LimitExceededError(f"Cannot get {len(body_data.id)} records - limit is {limit}")
+    if len(body_data.ids) > limit:
+        raise LimitExceededError(f"Cannot get {len(body_data.ids)} records - limit is {limit}")
 
     record_socket = storage_socket.records.get_socket(record_type)
-    return record_socket.get(body_data.id, body_data.include, body_data.exclude, body_data.missing_ok)
+    return record_socket.get(body_data.ids, body_data.include, body_data.exclude, body_data.missing_ok)

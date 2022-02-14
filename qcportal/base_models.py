@@ -30,7 +30,7 @@ class CommonBulkGetBody(RestModelBase):
     These functions typically take a list for ids, and a bool for missing_ok
     """
 
-    id: List[int]
+    ids: List[int]
     include: Optional[List[str]] = None
     exclude: Optional[List[str]] = None
     missing_ok: bool = False
@@ -43,7 +43,7 @@ class CommonBulkGetNamesBody(RestModelBase):
     These functions typically take a list for ids, and a bool for missing_ok
     """
 
-    name: List[str]
+    names: List[str]
     include: Optional[List[str]] = None
     exclude: Optional[List[str]] = None
     missing_ok: bool = False
