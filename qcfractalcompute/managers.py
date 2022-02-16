@@ -584,11 +584,10 @@ class ComputeManager:
             for task_id, status_msg in task_status.items():
                 self.logger.info(f"    Task {task_id} : {status_msg}")
             if n_fail:
-                self.logger.info("The following tasks failed with the errors:")
+                self.logger.debug("The following tasks failed with the errors:")
                 for task_id, error_info in failure_messages.items():
-                    self.logger.info(f"Error message for task id {task_id}")
-                    self.logger.info("    Error type: " + str(error_info.error_type))
-                    self.logger.info("    Backtrace: \n" + str(error_info.error_message))
+                    self.logger.debug(f"Error for task id {task_id}: {error_info.error_type}")
+                    self.logger.debug("    Backtrace: \n" + str(error_info.error_message))
 
         # Crunch Statistics
         self.statistics.total_failed_tasks += n_fail
