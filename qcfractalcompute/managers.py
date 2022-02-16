@@ -442,12 +442,12 @@ class ComputeManager:
         self.logger.info(f"Successfully return tasks to the fractal server")
         if return_meta.accepted_ids:
             self.logger.info(f"Accepted task ids: " + " ".join(str(x) for x in return_meta.accepted_ids))
-            if return_meta.accepted_ids:
-                self.logger.info(f"Rejected task ids: ")
+        if return_meta.rejected_ids:
+            self.logger.info(f"Rejected task ids: ")
             for tid, reason in return_meta.rejected_info:
                 self.logger.warning(f"    Task id {tid}: {reason}")
-            if not return_meta.success:
-                self.logger.warning(f"Error in returning tasks: {str(return_meta.error_string)}")
+        if not return_meta.success:
+            self.logger.warning(f"Error in returning tasks: {str(return_meta.error_string)}")
         return return_meta
 
     def _update_deferred_tasks(self) -> None:
@@ -579,7 +579,7 @@ class ComputeManager:
             n_fail = n_result - n_success
 
             # Now print out all the info
-            self.logger.info(f"Processed {len(results)} tasks: {n_success} succeeded / {n_fail} failed).")
+            self.logger.info(f"Processed {len(results)} tasks: {n_success} success / {n_fail} failed")
             self.logger.info(f"Task ids, submission status, calculation status below")
             for task_id, status_msg in task_status.items():
                 self.logger.info(f"    Task {task_id} : {status_msg}")

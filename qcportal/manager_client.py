@@ -163,7 +163,7 @@ class ManagerClient(PortalClientBase):
             )
 
             task_return_meta.error_description = meta.error_description
-            task_return_meta.rejected_info.extend([(x + chunk, y) for x, y in meta.rejected_info])
+            task_return_meta.rejected_info.extend(meta.rejected_info)
             task_return_meta.accepted_ids.extend(meta.accepted_ids)
 
             if not meta.success:
