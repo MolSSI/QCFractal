@@ -13,7 +13,6 @@ import weakref
 from typing import TYPE_CHECKING
 
 import psycopg2
-import psycopg2.errors
 
 from .config import DatabaseConfig
 from .db_socket.socket import SQLAlchemySocket
