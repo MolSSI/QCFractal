@@ -308,8 +308,9 @@ class PortalClient(PortalClientBase):
 
         return self.datasetmodel_from_datamodel(ds)
 
-    def add_optimization_dataset(
+    def add_dataset(
         self,
+        dataset_type: str,
         name: str,
         description: Optional[str] = None,
         tagline: Optional[str] = None,
@@ -334,7 +335,7 @@ class PortalClient(PortalClientBase):
         }
 
         ds_id = self._auto_request(
-            "post", f"v1/datasets/optimization", OptimizationDatasetAddBody, None, int, payload, None
+            "post", f"v1/datasets/{dataset_type}", OptimizationDatasetAddBody, None, int, payload, None
         )
 
         return self.get_dataset_by_id(ds_id)

@@ -2,6 +2,6 @@
 # (ie, this file is imported, which causes all the routes
 # to be registered with the blueprint)
 
-from .singlepoint import db_models
+from .singlepoint import db_models, routes
 from .reaction import db_models
 from .optimization import db_models, routes

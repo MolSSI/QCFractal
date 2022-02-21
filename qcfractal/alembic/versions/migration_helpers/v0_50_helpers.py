@@ -15,7 +15,7 @@ def add_qc_spec(conn, program, driver, method, basis, keywords_id, protocols):
     if basis is None:
         basis = ""
     if keywords_id is None:
-        keywords_id = get_empty_keywords_id()
+        keywords_id = get_empty_keywords_id(conn)
 
     # Remove protocol defaults
     if protocols.get("wavefunction", None) in [None, "none"]:

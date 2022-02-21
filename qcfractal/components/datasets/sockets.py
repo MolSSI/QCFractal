@@ -518,11 +518,14 @@ class DatasetSocket:
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
 
+        from .singlepoint.sockets import SinglepointDatasetSocket
         from .optimization.sockets import OptimizationDatasetSocket
 
+        self.singlepoint = SinglepointDatasetSocket(root_socket)
         self.optimization = OptimizationDatasetSocket(root_socket)
 
         self._handler_map: Dict[str, BaseDatasetSocket] = {
+            self.singlepoint.dataset_type: self.singlepoint,
             self.optimization.dataset_type: self.optimization,
         }
 

@@ -3,7 +3,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
 from qcfractal.components.datasets.db_models import CollectionORM, DatasetMixin, ContributedValuesORM
-from qcfractal.components.datasets.singlepoint.db_models import DatasetORM
+from qcfractal.components.datasets.singlepoint.db_models import SinglepointDatasetORM
 from qcfractal.db_socket import BaseORM
 
 
@@ -44,7 +44,7 @@ class ReactionDatasetORM(CollectionORM, DatasetMixin):
 
     @staticmethod
     def _contributed_values(contributed_values_obj):
-        return DatasetORM._contributed_values(contributed_values_obj)
+        return SinglepointDatasetORM._contributed_values(contributed_values_obj)
 
     @contributed_values.setter
     def contributed_values(self, dict_values):

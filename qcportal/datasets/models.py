@@ -24,7 +24,7 @@ class BaseDataset(BaseModel):
         collection_type: str
         lname: str
         description: Optional[str]
-        tags: Optional[Dict[str, Any]]
+        tags: Optional[List[str]]
         tagline: Optional[str]
         group: Optional[str]
         visibility: bool

@@ -1,115 +1,109 @@
-from sqlalchemy import Column, Integer, ForeignKey, String, JSON
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import relationship
+from sqlalchemy import select, JSON, Column, Integer, ForeignKey, String, ForeignKeyConstraint, UniqueConstraint, Index
+from sqlalchemy.dialects.postgresql import array_agg, JSONB
+from sqlalchemy.orm import column_property, relationship
+from sqlalchemy.orm.collections import attribute_mapped_collection
 
-from qcfractal.components.datasets.db_models import CollectionORM, DatasetMixin, ContributedValuesORM
+from qcfractal.components.datasets.db_models import CollectionORM, ContributedValuesORM
+from qcfractal.components.molecules.db_models import MoleculeORM
+from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM, SinglepointRecordORM
 from qcfractal.db_socket import BaseORM
 
 
-class DatasetEntryORM(BaseORM):
+class SinglepointDatasetEntryORM(BaseORM):
     """Association table for many to many"""
 
-    __tablename__ = "dataset_entry"
+    __tablename__ = "singlepoint_dataset_entry"
 
-    dataset_id = Column(Integer, ForeignKey("dataset.id", ondelete="cascade"), primary_key=True)
-    # TODO: check the cascase_delete with molecule
-    molecule_id = Column(Integer, ForeignKey("molecule.id"), nullable=False)
+    dataset_id = Column(Integer, ForeignKey("singlepoint_dataset.id", ondelete="cascade"), primary_key=True)
 
     name = Column(String, nullable=False, primary_key=True)
     comment = Column(String)
+
+    molecule_id = Column(Integer, ForeignKey("molecule.id"), nullable=False)
+    additional_keywords = Column(JSONB, nullable=True)
+    attributes = Column(JSONB, nullable=True)
+
     local_results = Column(JSON)
 
+    molecule = relationship(MoleculeORM)
 
-class DatasetORM(CollectionORM, DatasetMixin):
+    __table_args__ = (
+        Index("ix_singlepoint_dataset_entry_dataset_id", "dataset_id"),
+        Index("ix_singlepoint_dataset_entry_name", "name"),
+        Index("ix_singlepoint_dataset_entry_molecule_id", "molecule_id"),
+    )
+
+
+class SinglepointDatasetSpecificationORM(BaseORM):
+    __tablename__ = "singlepoint_dataset_specification"
+
+    dataset_id = Column(Integer, ForeignKey("singlepoint_dataset.id", ondelete="cascade"), primary_key=True)
+    name = Column(String, primary_key=True)
+    description = Column(String, nullable=True)
+    specification_id = Column(Integer, ForeignKey(QCSpecificationORM.id), nullable=False)
+
+    specification = relationship(QCSpecificationORM, uselist=False)
+
+    __table_args__ = (
+        Index("ix_singlepoint_dataset_specification_dataset_id", "dataset_id"),
+        Index("ix_singlepoint_dataset_specification_name", "name"),
+        Index("ix_singlepoint_dataset_specification_specification_id", "specification_id"),
+    )
+
+
+class SinglepointDatasetRecordItemORM(BaseORM):
+    __tablename__ = "singlepoint_dataset_record"
+
+    dataset_id = Column(Integer, ForeignKey("singlepoint_dataset.id", ondelete="cascade"), primary_key=True)
+    entry_name = Column(String, primary_key=True)
+    specification_name = Column(String, primary_key=True)
+    record_id = Column(Integer, ForeignKey(SinglepointRecordORM.id), nullable=False)
+
+    record = relationship(SinglepointRecordORM)
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["dataset_id", "entry_name"],
+            ["singlepoint_dataset_entry.dataset_id", "singlepoint_dataset_entry.name"],
+            ondelete="cascade",
+            onupdate="cascade",
+        ),
+        ForeignKeyConstraint(
+            ["dataset_id", "specification_name"],
+            ["singlepoint_dataset_specification.dataset_id", "singlepoint_dataset_specification.name"],
+            ondelete="cascade",
+            onupdate="cascade",
+        ),
+        Index("ix_singlepoint_dataset_record_record_id", "record_id"),
+        UniqueConstraint("dataset_id", "entry_name", "specification_name", name="ux_singlepoint_dataset_record_unique"),
+    )
+
+
+class SinglepointDatasetORM(CollectionORM):
     """
     The Dataset class for homogeneous computations on many molecules.
     """
 
-    __tablename__ = "dataset"
+    __tablename__ = "singlepoint_dataset"
 
-    id = Column(Integer, ForeignKey("collection.id", ondelete="CASCADE"), primary_key=True)
+    id = Column(Integer, ForeignKey(CollectionORM.id, ondelete="cascade"), primary_key=True)
 
-    contributed_values_obj = relationship(ContributedValuesORM, lazy="selectin", cascade="all, delete-orphan")
+    contributed_values = relationship(ContributedValuesORM, lazy="selectin", cascade="all, delete-orphan")
 
-    records_obj = relationship(
-        DatasetEntryORM, lazy="selectin", cascade="all, delete-orphan", backref="dataset"  # lazy='noload',
+    specifications = relationship(
+        SinglepointDatasetSpecificationORM, collection_class=attribute_mapped_collection("name")
     )
 
-    @hybrid_property
-    def contributed_values(self):
-        return self._contributed_values(self.contributed_values_obj)
+    entries = relationship(SinglepointDatasetEntryORM, collection_class=attribute_mapped_collection("name"))
 
-    @staticmethod
-    def _contributed_values(contributed_values_obj):
-        if not contributed_values_obj:
-            return {}
+    record_items = relationship(SinglepointDatasetRecordItemORM)
 
-        if not isinstance(contributed_values_obj, list):
-            contributed_values_obj = [contributed_values_obj]
-        ret = {}
-        try:
-            for obj in contributed_values_obj:
-                ret[obj.name.lower()] = obj.to_dict(exclude=["collection_id"])
-        except Exception as err:
-            pass
-
-        return ret
-
-    @contributed_values.setter
-    def contributed_values(self, dict_values):
-        return dict_values
-
-    @hybrid_property
-    def records(self):
-        """calculated property when accessed, not saved in the DB
-        A view of the many to many relation"""
-
-        return self._records(self.records_obj)
-
-    @staticmethod
-    def _records(records_obj):
-
-        if not records_obj:
-            return []
-
-        if not isinstance(records_obj, list):
-            records_obj = [records_obj]
-
-        ret = []
-        try:
-            for rec in records_obj:
-                ret.append(rec.to_dict(exclude=["dataset_id"]))
-        except Exception as err:
-            # raises exception of first access!!
-            pass
-
-        return ret
-
-    @records.setter
-    def records(self, dict_values):
-        return dict_values
-
-    def update_relations(self, records=None, contributed_values=None, **kwarg):
-
-        self.records_obj = []
-        records = [] if not records else records
-        for rec_dict in records:
-            rec = DatasetEntryORM(dataset_id=int(self.id), **rec_dict)
-            self.records_obj.append(rec)
-
-        self.contributed_values_obj = []
-        contributed_values = {} if not contributed_values else contributed_values
-        for key, rec_dict in contributed_values.items():
-            rec = ContributedValuesORM(collection_id=int(self.id), **rec_dict)
-            self.contributed_values_obj.append(rec)
-
-    __table_args__ = (
-        # Index('ix_results_molecule', 'molecule'),  # b-tree index
-        # UniqueConstraint("program", "driver", "method", "basis", "keywords", "molecule", name='uix_results_keys'),
+    entry_names = column_property(
+        select(array_agg(SinglepointDatasetEntryORM.name))
+        .where(SinglepointDatasetEntryORM.dataset_id == id)
+        .scalar_subquery()
     )
 
     __mapper_args__ = {
-        "polymorphic_identity": "dataset",
-        # to have separate select when querying CollectionORM
-        "polymorphic_load": "selectin",
+        "polymorphic_identity": "singlepoint",
     }
