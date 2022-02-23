@@ -19,18 +19,18 @@ class BaseDataset(BaseModel):
             validate_assignment = True
 
         id: int
-        name: str
         collection: str
         collection_type: str
+        name: str
         lname: str
         description: Optional[str]
-        tags: Optional[List[str]]
         tagline: Optional[str]
+        tags: Optional[List[str]]
         group: Optional[str]
         visibility: bool
         provenance: Optional[Dict[str, Any]]
 
-        default_tag: Optional[str]
+        default_tag: str
         default_priority: PriorityEnum
 
         extra: Optional[Dict[str, Any]] = None
@@ -177,6 +177,29 @@ class BaseDataset(BaseModel):
 
             if to_skip >= len(record_ids):
                 break
+
+    def _update_metadata(self):
+        new_body = DatasetModifyMetadataBody(
+            name=self.raw_data.name,
+            description=self.raw_data.description,
+            tagline=self.raw_data.tagline,
+            tags=self.raw_data.tags,
+            group=self.raw_data.group,
+            visibility=self.raw_data.visibility,
+            provenance=self.raw_data.provenance,
+            default_tag=self.raw_data.default_tag,
+            default_priority=self.raw_data.default_priority,
+        )
+
+        self.client._auto_request(
+            "patch",
+            f"v1/datasets/{self.dataset_type}/{self.id}",
+            DatasetModifyMetadataBody,
+            None,
+            None,
+            new_body,
+            None,
+        )
 
     def fetch_records(
         self,
@@ -555,8 +578,14 @@ class BaseDataset(BaseModel):
         return ret
 
     def compile_values(self, value_call: Callable, value_name: str) -> pd.DataFrame:
+        def _inner_call(record):
+            if record is None or record.status != RecordStatusEnum.complete:
+                return None
+            return value_call(record)
 
-        data_generator = ((entry_name, spec_name, value_call(record)) for entry_name, spec_name, record in self.records)
+        data_generator = (
+            (entry_name, spec_name, _inner_call(record)) for entry_name, spec_name, record in self.records
+        )
         df = pd.DataFrame(data_generator, columns=("entry", "specification", value_name))
 
         return df.pivot(index="entry", columns="specification", values=value_name)
@@ -565,7 +594,6 @@ class BaseDataset(BaseModel):
     # Various properties and getters/setters
     #########################################
 
-    @property
     def status(self) -> Dict[str, Any]:
         return self.client._auto_request(
             "get",
@@ -577,7 +605,6 @@ class BaseDataset(BaseModel):
             None,
         )
 
-    @property
     def detailed_status(self) -> List[Tuple[str, str, RecordStatusEnum]]:
         return self.client._auto_request(
             "get",
@@ -597,9 +624,28 @@ class BaseDataset(BaseModel):
     def name(self) -> str:
         return self.raw_data.name
 
+    def set_name(self, new_name: str):
+        old_name = self.raw_data.name
+        self.raw_data.name = new_name
+        self.raw_data.lname = new_name.lower()
+        try:
+            self._update_metadata()
+        except:
+            self.raw_data.name = old_name
+            raise
+
     @property
     def description(self) -> str:
         return self.raw_data.description
+
+    def set_description(self, new_description: Optional[str]):
+        old_description = self.raw_data.description
+        self.raw_data.description = new_description
+        try:
+            self._update_metadata()
+        except:
+            self.raw_data.old_description = old_description
+            raise
 
     @property
     def group(self):
@@ -652,9 +698,22 @@ class BaseDataset(BaseModel):
         self.fetch_entry_names()
         self.fetch_specifications()
         for entry_name in self.entry_names:
-            self.fetch_records(entry_names=entry_name)
+            self.fetch_records(entry_names=entry_name, fetch_updated=self.auto_fetch_updated)
             for spec_name in self.specifications.keys():
                 yield entry_name, spec_name, self._get_record_nofetch(entry_name, spec_name)
+
+
+class DatasetModifyMetadataBody(RestModelBase):
+    name: str
+    description: Optional[str]
+    tags: Optional[List[str]]
+    tagline: Optional[str]
+    group: Optional[str]
+    visibility: bool
+    provenance: Optional[Dict[str, Any]]
+
+    default_tag: str
+    default_priority: PriorityEnum
 
 
 class DatasetQueryModel(RestModelBase):

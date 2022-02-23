@@ -14,6 +14,7 @@ from qcportal.datasets import (
     DatasetRecordModifyBody,
     DatasetDeleteRecordItemsBody,
     DatasetRecordRevertBody,
+    DatasetModifyMetadataBody,
 )
 
 
@@ -75,6 +76,16 @@ def get_dataset_status_v1(dataset_type: str, dataset_id: int):
 def get_dataset_detailed_status_v1(dataset_type: str, dataset_id: int):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.detailed_status(dataset_id)
+
+
+#########################
+# Modifying metadata
+#########################
+@main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>", methods=["PATCH"])
+@wrap_route(DatasetModifyMetadataBody, None, "WRITE")
+def modify_dataset_metadata_v1(dataset_type: str, dataset_id: int, *, body_data: DatasetModifyMetadataBody):
+    ds_socket = storage_socket.datasets.get_socket(dataset_type)
+    return ds_socket.update_metadata(dataset_id, new_metadata=body_data)
 
 
 #########################

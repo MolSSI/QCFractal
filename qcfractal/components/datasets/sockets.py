@@ -4,7 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select, delete, func, union
-from sqlalchemy.orm import load_only
+from sqlalchemy.orm import load_only, lazyload
 
 from qcfractal.components.datasets.db_models import CollectionORM
 from qcfractal.components.records.db_models import BaseRecordORM
@@ -18,7 +18,7 @@ from qcportal.records import RecordModifyBody, RecordStatusEnum, PriorityEnum
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcportal.metadata_models import InsertMetadata
-    from qcportal.datasets.models import DatasetRecordModifyBody, DatasetRecordRevertBody
+    from qcportal.datasets.models import DatasetRecordModifyBody, DatasetRecordRevertBody, DatasetModifyMetadataBody
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.db_socket.base_orm import BaseORM
     from typing import Dict, Any, Optional, Sequence, Iterable, Tuple, List
@@ -181,6 +181,28 @@ class BaseDatasetSocket:
             session.add(ds_orm)
             session.commit()
             return ds_orm.id
+
+    def update_metadata(
+        self, dataset_id: int, new_metadata: DatasetModifyMetadataBody, *, session: Optional[Session] = None
+    ):
+        with self.root_socket.optional_session(session) as session:
+            stmt = select(self.dataset_orm).options(lazyload("*")).with_for_update()
+            ds = session.execute(stmt).scalar_one_or_none()
+
+            if ds is None:
+                raise MissingDataError(f"Could not find dataset with type={self.dataset_type} and {dataset_id}")
+
+            ds.name = new_metadata.name
+            ds.lname = new_metadata.name.lower()
+            ds.description = new_metadata.description
+            ds.tagline = new_metadata.tagline
+            ds.tags = new_metadata.tags
+            ds.group = new_metadata.group
+            ds.visibility = new_metadata.visibility
+            ds.provenance = new_metadata.provenance
+
+            ds.default_tag = new_metadata.default_tag
+            ds.default_priority = new_metadata.default_priority
 
     def add_specifications(
         self,
@@ -553,7 +575,7 @@ class DatasetSocket:
             ds_type = session.execute(stmt).scalar_one_or_none()
 
             if ds_type is None:
-                raise MissingDataError(f"Could not find {dataset_id}")
+                raise MissingDataError(f"Could not find dataset with id {dataset_id}")
 
             return ds_type
 

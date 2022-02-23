@@ -10,6 +10,7 @@ from .models import (
     DatasetDeleteRecordItemsBody,
     DatasetRecordModifyBody,
     DatasetRecordRevertBody,
+    DatasetModifyMetadataBody,
 )
 
 # All possible datasets we can get from the server
