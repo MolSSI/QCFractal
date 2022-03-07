@@ -52,9 +52,17 @@ class BaseDatasetSocket:
     def _create_entries(self, session, dataset_id, new_entries) -> Sequence[BaseORM]:
         raise NotImplementedError("_create_entries must be overridden by the derived class")
 
-    @staticmethod
-    def get_records_select():
-        raise NotImplementedError(f"get_records_select not implemented! This is a developer error")
+    def get_records_select(self):
+        # Use the common stuff here, but this function can be overridden
+
+        stmt = select(
+            self.record_item_orm.dataset_id.label("dataset_id"),
+            self.record_item_orm.entry_name.label("entry_name"),
+            self.record_item_orm.specification_name.label("specification_name"),
+            self.record_item_orm.record_id.label("record_id"),
+        )
+
+        return [stmt]
 
     def _submit(
         self,

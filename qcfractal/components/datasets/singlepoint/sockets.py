@@ -4,8 +4,6 @@ import copy
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select
-
 from qcfractal.components.datasets.sockets import BaseDatasetSocket
 from qcportal.datasets.singlepoint import SinglepointDatasetNewEntry
 from qcportal.records import PriorityEnum
@@ -39,16 +37,6 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
         )
 
         self._logger = logging.getLogger(__name__)
-
-    @staticmethod
-    def get_records_select():
-        stmt = select(
-            SinglepointDatasetRecordItemORM.dataset_id.label("dataset_id"),
-            SinglepointDatasetRecordItemORM.entry_name.label("entry_name"),
-            SinglepointDatasetRecordItemORM.specification_name.label("specification_name"),
-            SinglepointDatasetRecordItemORM.record_id.label("record_id"),
-        )
-        return [stmt]
 
     def _add_specification(
         self, session: Session, specification: QCInputSpecification

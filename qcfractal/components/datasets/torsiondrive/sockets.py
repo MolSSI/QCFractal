@@ -44,16 +44,6 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
 
         self._logger = logging.getLogger(__name__)
 
-    @staticmethod
-    def get_records_select():
-        stmt = select(
-            TorsiondriveDatasetRecordItemORM.dataset_id.label("dataset_id"),
-            TorsiondriveDatasetRecordItemORM.entry_name.label("entry_name"),
-            TorsiondriveDatasetRecordItemORM.specification_name.label("specification_name"),
-            TorsiondriveDatasetRecordItemORM.record_id.label("record_id"),
-        )
-        return [stmt]
-
     def _add_specification(
         self, session: Session, specification: OptimizationInputSpecification
     ) -> Tuple[InsertMetadata, Optional[int]]:

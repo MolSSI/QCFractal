@@ -4,8 +4,6 @@ import copy
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select
-
 from qcfractal.components.datasets.sockets import BaseDatasetSocket
 from qcportal.datasets.optimization import OptimizationDatasetNewEntry
 from qcportal.records import PriorityEnum
@@ -39,16 +37,6 @@ class OptimizationDatasetSocket(BaseDatasetSocket):
         )
 
         self._logger = logging.getLogger(__name__)
-
-    @staticmethod
-    def get_records_select():
-        stmt = select(
-            OptimizationDatasetRecordItemORM.dataset_id.label("dataset_id"),
-            OptimizationDatasetRecordItemORM.entry_name.label("entry_name"),
-            OptimizationDatasetRecordItemORM.specification_name.label("specification_name"),
-            OptimizationDatasetRecordItemORM.record_id.label("record_id"),
-        )
-        return [stmt]
 
     def _add_specification(
         self, session: Session, specification: OptimizationInputSpecification

@@ -4,11 +4,7 @@ import copy
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select
-from sqlalchemy.orm import load_only
-
 from qcfractal.components.datasets.sockets import BaseDatasetSocket
-from qcfractal.components.molecules.db_models import MoleculeORM
 from qcportal.datasets.gridoptimization import GridoptimizationDatasetNewEntry
 from qcportal.records import PriorityEnum
 from qcportal.records.gridoptimization import GridoptimizationInputSpecification
@@ -42,16 +38,6 @@ class GridoptimizationDatasetSocket(BaseDatasetSocket):
         )
 
         self._logger = logging.getLogger(__name__)
-
-    @staticmethod
-    def get_records_select():
-        stmt = select(
-            GridoptimizationDatasetRecordItemORM.dataset_id.label("dataset_id"),
-            GridoptimizationDatasetRecordItemORM.entry_name.label("entry_name"),
-            GridoptimizationDatasetRecordItemORM.specification_name.label("specification_name"),
-            GridoptimizationDatasetRecordItemORM.record_id.label("record_id"),
-        )
-        return [stmt]
 
     def _add_specification(
         self, session: Session, specification: OptimizationInputSpecification
