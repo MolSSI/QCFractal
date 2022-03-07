@@ -56,17 +56,17 @@ class BaseDatasetSocket:
     def get_records_select():
         raise NotImplementedError(f"get_records_select not implemented! This is a developer error")
 
-    def submit(
+    def _submit(
         self,
+        session: Session,
         dataset_id: int,
-        entry_names: Optional[Iterable[str]],
-        specification_names: Optional[Iterable[str]],
-        tag: Optional[str],
-        priority: Optional[PriorityEnum],
-        *,
-        session: Optional[Session] = None,
+        entry_orm: Iterable[Any],
+        specification_orm: Iterable[Any],
+        existing_records: Iterable[Tuple[str, str]],
+        tag: str,
+        priority: PriorityEnum,
     ):
-        raise NotImplementedError("submit must be overridden by the derived class")
+        raise NotImplementedError("_submit must be overridden by the derived class")
 
     def get_tag_priority(
         self, dataset_id: int, tag: Optional[str], priority: Optional[str], *, session: Optional[Session] = None
@@ -457,6 +457,72 @@ class BaseDatasetSocket:
 
             if delete_records:
                 self.root_socket.records.delete(record_ids, soft_delete=False, delete_children=True, session=session)
+
+    def submit(
+        self,
+        dataset_id: int,
+        entry_names: Optional[Iterable[str]],
+        specification_names: Optional[Iterable[str]],
+        tag: Optional[str],
+        priority: Optional[PriorityEnum],
+        *,
+        session: Optional[Session] = None,
+    ):
+
+        with self.root_socket.optional_session(session) as session:
+            tag, priority = self.get_tag_priority(dataset_id, tag, priority, session=session)
+
+            ################################
+            # Get specification details
+            ################################
+            stmt = select(self.specification_orm)
+
+            # We want the actual optimization specification as well
+            stmt = stmt.join(self.specification_orm.specification)
+            stmt = stmt.where(self.specification_orm.dataset_id == dataset_id)
+            if specification_names is not None:
+                stmt = stmt.where(self.specification_orm.name.in_(specification_names))
+
+            ds_specs = session.execute(stmt).scalars().all()
+
+            # Check to make sure we found all the specifications
+            if specification_names is not None:
+                found_specs = {x.name for x in ds_specs}
+                missing_specs = set(specification_names) - found_specs
+                if missing_specs:
+                    raise MissingDataError(f"Could not find all specifications. Missing: {missing_specs}")
+
+            ################################
+            # Get entry details
+            ################################
+            stmt = select(self.entry_orm)
+            stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
+
+            if entry_names is not None:
+                stmt = stmt.where(self.entry_orm.name.in_(entry_names))
+
+            entries = session.execute(stmt).scalars().all()
+
+            # Check to make sure we found all the entries
+            if entry_names is not None:
+                found_entries = {x.name for x in entries}
+                missing_entries = set(entry_names) - found_entries
+                if missing_entries:
+                    raise MissingDataError(f"Could not find all entries. Missing: {missing_entries}")
+
+            # Find which records/record_items already exist
+            stmt = select(self.record_item_orm)
+            stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
+
+            if entry_names is not None:
+                stmt = stmt.where(self.record_item_orm.entry_name.in_(entry_names))
+            if specification_names is not None:
+                stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
+
+            existing_record_orm = session.execute(stmt).scalars().all()
+            existing_records = [(x.entry_name, x.specification_name) for x in existing_record_orm]
+
+            return self._submit(session, dataset_id, entries, ds_specs, existing_records, tag, priority)
 
     #######################
     # Record modification

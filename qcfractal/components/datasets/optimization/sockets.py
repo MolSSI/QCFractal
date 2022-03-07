@@ -8,7 +8,6 @@ from sqlalchemy import select
 
 from qcfractal.components.datasets.sockets import BaseDatasetSocket
 from qcportal.datasets.optimization import OptimizationDatasetNewEntry
-from qcportal.exceptions import MissingDataError
 from qcportal.records import PriorityEnum
 from qcportal.records.optimization import OptimizationSpecification, OptimizationInputSpecification
 from .db_models import (
@@ -76,95 +75,67 @@ class OptimizationDatasetSocket(BaseDatasetSocket):
 
         return all_entries
 
-    def submit(
+    def _submit(
         self,
+        session: Session,
         dataset_id: int,
-        entry_names: Optional[Iterable[str]],
-        specification_names: Optional[Iterable[str]],
-        tag: Optional[str],
-        priority: Optional[PriorityEnum],
-        *,
-        session: Optional[Session] = None,
+        entry_orm: Iterable[OptimizationDatasetEntryORM],
+        spec_orm: Iterable[OptimizationDatasetSpecificationORM],
+        existing_records: Iterable[Tuple[str, str]],
+        tag: str,
+        priority: PriorityEnum,
     ):
 
-        with self.root_socket.optional_session(session) as session:
-            tag, priority = self.get_tag_priority(dataset_id, tag, priority, session=session)
+        # Weed out any with additional keywords
+        special_entries = [x for x in entry_orm if x.additional_keywords]
+        normal_entries = [x for x in entry_orm if not x.additional_keywords]
 
-            # Get specification details
-            stmt = select(OptimizationDatasetSpecificationORM)
-            stmt = stmt.join(OptimizationDatasetSpecificationORM.specification)
-            stmt = stmt.where(OptimizationDatasetSpecificationORM.dataset_id == dataset_id)
+        # Normal entries - just let it rip
+        for spec in spec_orm:
+            molecule_ids = [
+                x.initial_molecule_id for x in normal_entries if (x.name, spec.name) not in existing_records
+            ]
 
-            if specification_names:
-                stmt = stmt.where(OptimizationDatasetSpecificationORM.name.in_(specification_names))
+            meta, opt_ids = self.root_socket.records.optimization.add_internal(
+                initial_molecule_ids=molecule_ids,
+                opt_spec_id=spec.specification_id,
+                tag=tag,
+                priority=priority,
+                session=session,
+            )
 
-            ds_specs = session.execute(stmt).scalars().all()
+            for idx, (entry, oid) in enumerate(zip(normal_entries, opt_ids)):
+                if idx in meta.inserted_idx:
+                    rec = OptimizationDatasetRecordItemORM(
+                        dataset_id=dataset_id, entry_name=entry.name, specification_name=spec.name, record_id=oid
+                    )
+                    session.add(rec)
 
-            if specification_names is not None:
-                found_specs = {x.name for x in ds_specs}
-                missing_specs = set(specification_names) - found_specs
-                if missing_specs:
-                    raise MissingDataError(f"Could not find all specifications. Missing: {missing_specs}")
+        # Now the ones with additional keywords
+        for spec in spec_orm:
+            spec_obj = spec.specification._to_model(OptimizationSpecification)
+            spec_input_dict = spec_obj.as_input().dict()
 
-            # Get entries
-            stmt = select(OptimizationDatasetEntryORM)
-            stmt = stmt.where(OptimizationDatasetEntryORM.dataset_id == dataset_id)
+            for entry in special_entries:
+                if (entry.name, spec.name) in existing_records:
+                    continue
 
-            if entry_names:
-                stmt = stmt.where(OptimizationDatasetEntryORM.name.in_(entry_names))
+                new_spec = copy.deepcopy(spec_input_dict)
+                new_spec["keywords"].update(entry.additional_keywords)
 
-            entries = session.execute(stmt).scalars().all()
-
-            if entry_names is not None:
-                found_entries = {x.name for x in entries}
-                missing_entries = set(entry_names) - found_entries
-                if missing_entries:
-                    raise MissingDataError(f"Could not find all entries. Missing: {missing_specs}")
-
-            # Weed out any with additional keywords
-            special_entries = [x for x in entries if x.additional_keywords]
-            normal_entries = [x for x in entries if not x.additional_keywords]
-
-            # Normal entries - just let it rip
-            molecule_ids = [x.initial_molecule_id for x in normal_entries]
-            for ds_spec in ds_specs:
-                meta, opt_ids = self.root_socket.records.optimization.add_internal(
-                    initial_molecule_ids=molecule_ids,
-                    opt_spec_id=ds_spec.specification_id,
+                meta, opt_ids = self.root_socket.records.optimization.add(
+                    initial_molecules=[entry.initial_molecule_id],
+                    opt_spec=OptimizationInputSpecification(**new_spec),
                     tag=tag,
                     priority=priority,
                     session=session,
                 )
 
-                for idx, (entry, oid) in enumerate(zip(normal_entries, opt_ids)):
-                    if idx in meta.inserted_idx:
-                        rec = OptimizationDatasetRecordItemORM(
-                            dataset_id=dataset_id, entry_name=entry.name, specification_name=ds_spec.name, record_id=oid
-                        )
-                        session.add(rec)
-
-            # Now the ones with additional keywords
-            for ds_spec in ds_specs:
-                spec_obj = ds_spec.specification._to_model(OptimizationSpecification)
-                spec_input_dict = spec_obj.as_input().dict()
-
-                for entry in special_entries:
-                    new_spec = copy.deepcopy(spec_input_dict)
-                    new_spec["keywords"].update(entry.additional_keywords)
-
-                    meta, opt_ids = self.root_socket.records.optimization.add(
-                        initial_molecules=[entry.initial_molecule_id],
-                        opt_spec=OptimizationInputSpecification(**new_spec),
-                        tag=tag,
-                        priority=priority,
-                        session=session,
+                if meta.n_inserted == 1:
+                    rec = OptimizationDatasetRecordItemORM(
+                        dataset_id=dataset_id,
+                        entry_name=entry.name,
+                        specification_name=spec.name,
+                        record_id=opt_ids[0],
                     )
-
-                    if meta.n_inserted == 1:
-                        rec = OptimizationDatasetRecordItemORM(
-                            dataset_id=dataset_id,
-                            entry_name=entry.name,
-                            specification_name=ds_spec.name,
-                            record_id=opt_ids[0],
-                        )
-                        session.add(rec)
+                    session.add(rec)
