@@ -59,7 +59,7 @@ class OptimizationDatasetSocket(BaseDatasetSocket):
     def _create_entries(self, session: Session, dataset_id: int, new_entries: Sequence[OptimizationDatasetNewEntry]):
 
         molecules = [x.initial_molecule for x in new_entries]
-        meta, mol_ids = self.root_socket.molecules.add_mixed(molecules)
+        meta, mol_ids = self.root_socket.molecules.add_mixed(molecules, session=session)
 
         all_entries = []
         for entry, molecule_id in zip(new_entries, mol_ids):
