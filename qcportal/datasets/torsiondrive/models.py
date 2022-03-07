@@ -5,79 +5,87 @@ from typing_extensions import Literal
 
 from qcportal.base_models import RestModelBase
 from qcportal.molecules import Molecule
-from qcportal.records.optimization import OptimizationRecord, OptimizationInputSpecification, OptimizationSpecification
+from qcportal.records.optimization import OptimizationInputSpecification, OptimizationSpecification
+from qcportal.records.torsiondrive import (
+    TorsiondriveInputSpecification,
+    TorsiondriveRecord,
+    TorsiondriveKeywords,
+)
 from qcportal.utils import make_list
 from .. import BaseDataset
 from ...records import PriorityEnum
 
 
-class OptimizationDatasetNewEntry(BaseModel):
+class TorsiondriveDatasetNewEntry(BaseModel):
     name: str
     comment: Optional[str] = None
-    initial_molecule: Union[Molecule, int]
+    initial_molecules: List[Union[Molecule, int]]
+    torsiondrive_keywords: TorsiondriveKeywords
     additional_keywords: Dict[str, Any] = {}
     attributes: Dict[str, Any] = {}
 
 
-class OptimizationDatasetEntry(BaseModel):
+class TorsiondriveDatasetEntry(BaseModel):
     dataset_id: int
     name: str
     comment: Optional[str] = None
-    initial_molecule_id: int
+    initial_molecule_ids: List[int]
+    torsiondrive_keywords: TorsiondriveKeywords
     additional_keywords: Dict[str, Any] = {}
     attributes: Dict[str, Any] = {}
 
 
-class OptimizationDatasetInputSpecification(BaseModel):
+# Torsiondrive dataset specifications are just optimization specifications
+# The torsiondrive keywords are stored in the entries ^^
+class TorsiondriveDatasetInputSpecification(BaseModel):
     name: str
     specification: OptimizationInputSpecification
     description: Optional[str] = None
 
 
-class OptimizationDatasetSpecification(BaseModel):
+class TorsiondriveDatasetSpecification(BaseModel):
     dataset_id: int
     name: str
     specification: OptimizationSpecification
     description: Optional[str] = None
 
 
-class OptimizationDatasetRecordItem(BaseModel):
+class TorsiondriveDatasetRecordItem(BaseModel):
     dataset_id: int
     entry_name: str
     specification_name: str
     record_id: int
 
 
-class OptimizationDataset(BaseDataset):
+class TorsiondriveDataset(BaseDataset):
     class _DataModel(BaseDataset._DataModel):
-        collection_type: Literal["optimization"]
+        collection_type: Literal["torsiondrive"]
 
         # Specifications are always loaded
-        specifications: Dict[str, OptimizationDatasetSpecification]
-        entries: Optional[List[OptimizationDatasetEntry]]
-        record_items: Optional[List[OptimizationDatasetRecordItem]]
+        specifications: Dict[str, TorsiondriveDatasetSpecification]
+        entries: Optional[List[TorsiondriveDatasetEntry]]
+        record_items: Optional[List[TorsiondriveDatasetRecordItem]]
 
     # This is needed for disambiguation by pydantic
-    dataset_type: Literal["optimization"]
+    dataset_type: Literal["torsiondrive"]
     raw_data: _DataModel
 
     # Needed by the base class
-    _entry_type = OptimizationDatasetEntry
-    _specification_type = OptimizationDatasetSpecification
-    _record_item_type = OptimizationDatasetRecordItem
-    _record_type = OptimizationRecord
+    _entry_type = TorsiondriveDatasetEntry
+    _specification_type = TorsiondriveDatasetSpecification
+    _record_item_type = TorsiondriveDatasetRecordItem
+    _record_type = TorsiondriveRecord
 
     def add_specification(
-        self, name: str, specification: OptimizationInputSpecification, description: Optional[str] = None
+        self, name: str, specification: TorsiondriveInputSpecification, description: Optional[str] = None
     ):
-        initial_molecules: Optional[List[Molecule]]
 
-        payload = OptimizationDatasetInputSpecification(name=name, specification=specification, description=description)
+        payload = TorsiondriveDatasetInputSpecification(name=name, specification=specification, description=description)
 
         self.client._auto_request(
             "post",
-            f"v1/datasets/optimization/{self.id}/specifications",
-            List[OptimizationDatasetInputSpecification],
+            f"v1/datasets/torsiondrive/{self.id}/specifications",
+            List[TorsiondriveDatasetInputSpecification],
             None,
             None,
             [payload],
@@ -86,13 +94,13 @@ class OptimizationDataset(BaseDataset):
 
         self._post_add_specification(name)
 
-    def add_entries(self, entries: Union[OptimizationDatasetEntry, Iterable[OptimizationDatasetNewEntry]]):
+    def add_entries(self, entries: Union[TorsiondriveDatasetEntry, Iterable[TorsiondriveDatasetNewEntry]]):
 
         entries = make_list(entries)
         self.client._auto_request(
             "post",
-            f"v1/datasets/optimization/{self.id}/entries/bulkCreate",
-            List[OptimizationDatasetNewEntry],
+            f"v1/datasets/torsiondrive/{self.id}/entries/bulkCreate",
+            List[TorsiondriveDatasetNewEntry],
             None,
             None,
             make_list(entries),
@@ -108,7 +116,7 @@ class OptimizationDataset(BaseDataset):
 #######################
 
 
-class OptimizationDatasetAddBody(RestModelBase):
+class TorsiondriveDatasetAddBody(RestModelBase):
     name: str
     description: Optional[str] = None
     tagline: Optional[str] = None
@@ -120,11 +128,11 @@ class OptimizationDatasetAddBody(RestModelBase):
     default_priority: PriorityEnum = PriorityEnum.normal
 
 
-class OptimizationDatasetDeleteEntryBody(RestModelBase):
+class TorsiondriveDatasetDeleteEntryBody(RestModelBase):
     names: List[str]
     delete_records: bool = False
 
 
-class OptimizationDatasetDeleteSpecificationBody(RestModelBase):
+class TorsiondriveDatasetDeleteSpecificationBody(RestModelBase):
     names: List[str]
     delete_records: bool = False

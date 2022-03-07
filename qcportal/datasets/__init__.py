@@ -16,6 +16,9 @@ from .models import (
 # All possible datasets we can get from the server
 from .singlepoint.models import SinglepointDataset
 from .optimization.models import OptimizationDataset
+from .torsiondrive.models import TorsiondriveDataset
 
-AllDatasetTypes = Union[SinglepointDataset, OptimizationDataset]
-AllDatasetDataModelTypes = Union[SinglepointDataset._DataModel, OptimizationDataset._DataModel]
+AllDatasetTypes = Union[SinglepointDataset, OptimizationDataset, TorsiondriveDataset]
+AllDatasetDataModelTypes = Union[
+    SinglepointDataset._DataModel, OptimizationDataset._DataModel, TorsiondriveDataset._DataModel
+]

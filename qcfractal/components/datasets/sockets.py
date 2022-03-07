@@ -608,13 +608,16 @@ class DatasetSocket:
 
         from .singlepoint.sockets import SinglepointDatasetSocket
         from .optimization.sockets import OptimizationDatasetSocket
+        from .torsiondrive.sockets import TorsiondriveDatasetSocket
 
         self.singlepoint = SinglepointDatasetSocket(root_socket)
         self.optimization = OptimizationDatasetSocket(root_socket)
+        self.torsiondrive = TorsiondriveDatasetSocket(root_socket)
 
         self._handler_map: Dict[str, BaseDatasetSocket] = {
             self.singlepoint.dataset_type: self.singlepoint,
             self.optimization.dataset_type: self.optimization,
+            self.torsiondrive.dataset_type: self.torsiondrive,
         }
 
         # Get the SQL 'select' statements from the handlers
