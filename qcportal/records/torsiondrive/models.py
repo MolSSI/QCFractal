@@ -114,7 +114,7 @@ class TorsiondriveRecord(BaseRecord):
 
     optimization_cache: Optional[Dict[str, OptimizationRecord]] = None
 
-    def _retrieve_initial_molecules(self):
+    def _fetch_initial_molecules(self):
         self.raw_data.initial_molecules = self.client._auto_request(
             "get",
             f"v1/records/torsiondrive/{self.raw_data.id}/initial_molecules",
@@ -125,7 +125,7 @@ class TorsiondriveRecord(BaseRecord):
             None,
         )
 
-    def _retrieve_optimizations(self):
+    def _fetch_optimizations(self):
         url_params = {"include": ["*", "optimization_record"]}
 
         self.raw_data.optimizations = self.client._auto_request(
@@ -149,7 +149,7 @@ class TorsiondriveRecord(BaseRecord):
     @property
     def initial_molecules(self) -> List[Molecule]:
         if self.raw_data.initial_molecules is None:
-            self._retrieve_initial_molecules()
+            self._fetch_initial_molecules()
         return self.raw_data.initial_molecules
 
     @property
@@ -159,7 +159,7 @@ class TorsiondriveRecord(BaseRecord):
 
         # convert the raw optimization data to a dictionary of key -> OptimizationRecord
         if self.raw_data.optimizations is None:
-            self._retrieve_optimizations()
+            self._fetch_optimizations()
 
         ret = {}
         for opt in self.raw_data.optimizations:

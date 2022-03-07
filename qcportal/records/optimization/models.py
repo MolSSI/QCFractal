@@ -77,16 +77,16 @@ class OptimizationRecord(BaseRecord):
     record_type: Literal["optimization"]
     raw_data: _DataModel
 
-    def _retrieve_initial_molecule(self):
+    def _fetch_initial_molecule(self):
         self.raw_data.initial_molecule = self.client.get_molecules([self.raw_data.initial_molecule_id])[0]
 
-    def _retrieve_final_molecule(self):
+    def _fetch_final_molecule(self):
         if self.raw_data.final_molecule_id is not None:
             self.raw_data.final_molecule = self.client.get_molecules([self.raw_data.final_molecule_id])[0]
         else:
             self.raw_data.final_molecule = None
 
-    def _retrieve_trajectory(self):
+    def _fetch_trajectory(self):
         url_params = {"include": ["*", "singlepoint_record"]}
 
         self.raw_data.trajectory = self.client._auto_request(
@@ -114,7 +114,7 @@ class OptimizationRecord(BaseRecord):
     @property
     def initial_molecule(self) -> Molecule:
         if self.raw_data.initial_molecule is None:
-            self._retrieve_initial_molecule()
+            self._fetch_initial_molecule()
         return self.raw_data.initial_molecule
 
     @property
@@ -124,7 +124,7 @@ class OptimizationRecord(BaseRecord):
     @property
     def final_molecule(self) -> Optional[Molecule]:
         if self.raw_data.final_molecule is None:
-            self._retrieve_final_molecule()
+            self._fetch_final_molecule()
         return self.raw_data.final_molecule
 
     @property
@@ -134,7 +134,7 @@ class OptimizationRecord(BaseRecord):
     @property
     def trajectory(self) -> Molecule:
         if self.raw_data.trajectory is None:
-            self._retrieve_trajectory()
+            self._fetch_trajectory()
         traj_dm = [x.singlepoint_record for x in self.raw_data.trajectory]
         return self.client.recordmodel_from_datamodel(traj_dm)
 

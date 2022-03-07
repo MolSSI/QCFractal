@@ -176,7 +176,7 @@ class BaseRecord(BaseModel):
     client: Any
     raw_data: _DataModel  # Meant to be overridden by derived classes
 
-    def _retrieve_compute_history(self, include_outputs: bool = False):
+    def _fetch_compute_history(self, include_outputs: bool = False):
         url_params = {}
 
         if include_outputs:
@@ -192,7 +192,7 @@ class BaseRecord(BaseModel):
             url_params,
         )
 
-    def _retrieve_task(self):
+    def _fetch_task(self):
         if self.raw_data.is_service:
             return
 
@@ -206,7 +206,7 @@ class BaseRecord(BaseModel):
             None,
         )
 
-    def _retrieve_service(self):
+    def _fetch_service(self):
         if not self.raw_data.is_service:
             return
 
@@ -220,7 +220,7 @@ class BaseRecord(BaseModel):
             None,
         )
 
-    def _retrieve_comments(self):
+    def _fetch_comments(self):
         self.raw_data.comments = self.client._auto_request(
             "get",
             f"v1/records/{self.raw_data.id}/comments",
@@ -233,11 +233,11 @@ class BaseRecord(BaseModel):
 
     def _get_output(self, output_type: OutputTypeEnum) -> Optional[Union[str, Dict[str, Any]]]:
         if not self.raw_data.compute_history:
-            self._retrieve_compute_history(include_outputs=True)
+            self._fetch_compute_history(include_outputs=True)
 
         last_computation = self.raw_data.compute_history[-1]
         if last_computation.outputs is None:
-            self._retrieve_compute_history(include_outputs=True)
+            self._fetch_compute_history(include_outputs=True)
             last_computation = self.raw_data.compute_history[-1]
 
         return last_computation.get_output(output_type)
@@ -277,19 +277,19 @@ class BaseRecord(BaseModel):
     @property
     def task(self) -> Optional[TaskRecord]:
         if self.raw_data.task is None:
-            self._retrieve_task()
+            self._fetch_task()
         return self.raw_data.task
 
     @property
     def service(self) -> Optional[ServiceRecord]:
         if self.raw_data.service is None:
-            self._retrieve_service()
+            self._fetch_service()
         return self.raw_data.service
 
     @property
     def comments(self) -> Optional[List[RecordComment]]:
         if self.raw_data.comments is None:
-            self._retrieve_comments()
+            self._fetch_comments()
         return self.raw_data.comments
 
     @property

@@ -83,10 +83,10 @@ class SinglepointRecord(BaseRecord):
     record_type: Literal["singlepoint"]
     raw_data: _DataModel
 
-    def _retrieve_molecule(self):
+    def _fetch_molecule(self):
         self.raw_data.molecule = self.client.get_molecules([self.raw_data.molecule_id])[0]
 
-    def _retrieve_wavefunction(self):
+    def _fetch_wavefunction(self):
         self.raw_data.wavefunction = self.client._auto_request(
             "get",
             f"v1/records/singlepoint/{self.raw_data.id}/wavefunction",
@@ -112,7 +112,7 @@ class SinglepointRecord(BaseRecord):
     @property
     def molecule(self) -> Molecule:
         if self.raw_data.molecule is None:
-            self._retrieve_molecule()
+            self._fetch_molecule()
         return self.raw_data.molecule
 
     @property
@@ -126,7 +126,7 @@ class SinglepointRecord(BaseRecord):
     @property
     def wavefunction(self) -> WavefunctionProperties:
         if self.raw_data.wavefunction is None:
-            self._retrieve_wavefunction()
+            self._fetch_wavefunction()
         return self.raw_data.wavefunction
 
 
