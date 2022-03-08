@@ -89,9 +89,6 @@ def upgrade():
         "compute_manager", "active_memory", existing_type=postgresql.DOUBLE_PRECISION(precision=53), nullable=False
     )
     op.alter_column(
-        "compute_manager", "configuration", existing_type=postgresql.JSON(astext_type=sa.Text()), nullable=False
-    )
-    op.alter_column(
         "compute_manager",
         "status",
         existing_type=postgresql.ENUM("active", "inactive", name="managerstatusenum"),
@@ -169,6 +166,13 @@ def upgrade():
         "rejected",
         nullable=False,
     )
+
+    # Deal with null manager and qcengine version
+    op.execute(sa.text(r"UPDATE compute_manager SET manager_version = 'v0' WHERE manager_version IS NULL"))
+
+    op.execute(sa.text(r"UPDATE compute_manager SET qcengine_version = 'v0' WHERE qcengine_version IS NULL"))
+
+    op.execute(sa.text(r"UPDATE compute_manager SET programs = '{}'::json WHERE programs IS NULL"))
 
     op.alter_column("compute_manager", "qcengine_version", nullable=False)
     op.alter_column("compute_manager", "manager_version", nullable=False)

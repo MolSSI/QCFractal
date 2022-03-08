@@ -265,6 +265,9 @@ def upgrade():
     op.drop_column("result", "wavefunction_data_id")
     op.drop_column("result", "wavefunction")
 
+    # Drop any orphan wavefunction
+    op.execute(sa.text("DELETE FROM wavefunction_store WHERE record_id IS NULL"))
+
     # Now make stuff not nullable
     op.alter_column("result", "specification_id", nullable=False)
     op.alter_column("wavefunction_store", "record_id", nullable=False)

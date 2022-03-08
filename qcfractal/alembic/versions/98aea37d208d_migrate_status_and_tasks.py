@@ -24,7 +24,7 @@ def upgrade():
     # Migrate base_result status to new enum, taking into account task_queue and service_queue statuses
     old_enum = sa.Enum("incomplete", "complete", "running", "error", name="recordstatusenum")
     new_enum = sa.Enum(
-        "complete", "waiting", "running", "error", "invalid", "cancelled", "deleted", name="recordstatusenum"
+        "complete", "waiting", "running", "error", "cancelled", "invalid", "deleted", name="recordstatusenum"
     )
 
     # For the temporary, we only need to add "waiting" and "cancelled", then migrate incomplete records with
@@ -155,6 +155,7 @@ def upgrade():
     op.create_index("ix_service_queue_tag", "service_queue", ["tag"], unique=False)
     op.execute("CREATE INDEX ix_service_queue_waiting_sort ON service_queue (priority desc, created_on)")
     op.drop_column("service_queue", "status")
+    op.execute("DROP TYPE taskstatusenum")
     # ### end Alembic commands ###
 
 
