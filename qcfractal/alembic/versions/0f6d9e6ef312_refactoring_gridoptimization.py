@@ -55,7 +55,7 @@ def upgrade():
     )
 
     # Modify the optimization association table
-    op.alter_column("grid_optimization_association", "opt_id", new_column_name="optimization_id")
+    op.alter_column("grid_optimization_association", "opt_id", new_column_name="optimization_id", nullable=False)
     op.alter_column("grid_optimization_association", "grid_opt_id", new_column_name="gridoptimization_id")
 
     op.drop_constraint("grid_optimization_association_opt_id_fkey", "grid_optimization_association", type_="foreignkey")

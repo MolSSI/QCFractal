@@ -20,7 +20,7 @@ class GridoptimizationOptimizationsORM(BaseORM):
     gridoptimization_id = Column(
         Integer, ForeignKey("gridoptimization_record.id", ondelete="cascade"), primary_key=True
     )
-    optimization_id = Column(Integer, ForeignKey("optimization_record.id"))
+    optimization_id = Column(Integer, ForeignKey("optimization_record.id"), nullable=False)
     key = Column(String, nullable=False, primary_key=True)
 
     energy = column_property(
