@@ -10,7 +10,7 @@ from qcportal.molecules import Molecule, MoleculeQueryBody, MoleculeModifyBody
 from qcportal.utils import calculate_limit
 
 
-@main.route("/v1/molecules/<molecule_id>", methods=["GET"])
+@main.route("/v1/molecules/<int:molecule_id>", methods=["GET"])
 @wrap_route(None, ProjURLParameters, "READ")
 def get_molecules_v1(molecule_id: int, *, url_params: ProjURLParameters):
     return storage_socket.molecules.get([molecule_id], url_params.include, url_params.exclude)[0]
@@ -28,7 +28,7 @@ def bulk_get_molecules_v1(body_data: CommonBulkGetBody):
     )
 
 
-@main.route("/v1/molecules/<molecule_id>", methods=["DELETE"])
+@main.route("/v1/molecules/<int:molecule_id>", methods=["DELETE"])
 @wrap_route(None, None, "DELETE")
 def delete_molecules_v1(molecule_id: int):
     return storage_socket.molecules.delete([molecule_id])
@@ -40,7 +40,7 @@ def bulk_delete_molecules_v1(body_data: List[int]):
     return storage_socket.molecules.delete(body_data)
 
 
-@main.route("/v1/molecules/<molecule_id>", methods=["PATCH"])
+@main.route("/v1/molecules/<int:molecule_id>", methods=["PATCH"])
 @wrap_route(MoleculeModifyBody, None, "WRITE")
 def modify_molecules_v1(molecule_id: int, *, body_data: MoleculeModifyBody):
     return storage_socket.molecules.modify(
