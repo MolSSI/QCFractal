@@ -51,6 +51,7 @@ from .records.gridoptimization import (
     GridoptimizationKeywords,
     GridoptimizationAddBody,
     GridoptimizationRecord,
+    GridoptimizationQueryBody,
 )
 from .records.optimization import (
     OptimizationProtocols,
@@ -1131,7 +1132,7 @@ class PortalClient(PortalClientBase):
 
         if len(body_data["initial_molecules"]) > self.api_limits["add_records"]:
             raise RuntimeError(
-                f"Cannot get {len(body_data['initial_molecules'])} records - over the limit of {self.api_limits['add_records']}"
+                f"Cannot add {len(body_data['initial_molecules'])} records - over the limit of {self.api_limits['add_records']}"
             )
 
         return self._auto_request(
@@ -1320,7 +1321,7 @@ class PortalClient(PortalClientBase):
 
         if len(body_data["initial_molecules"]) > self.api_limits["add_records"]:
             raise RuntimeError(
-                f"Cannot get {len(body_data['initial_molecules'])} records - over the limit of {self.api_limits['add_records']}"
+                f"Cannot add {len(body_data['initial_molecules'])} records - over the limit of {self.api_limits['add_records']}"
             )
 
         return self._auto_request(
@@ -1509,7 +1510,7 @@ class PortalClient(PortalClientBase):
 
         if len(body_data["initial_molecules"]) > self.api_limits["add_records"]:
             raise RuntimeError(
-                f"Cannot get {len(body_data['initial_molecules'])} records - over the limit of {self.api_limits['add_records']}"
+                f"Cannot add {len(body_data['initial_molecules'])} records - over the limit of {self.api_limits['add_records']}"
             )
 
         return self._auto_request(
@@ -1655,7 +1656,7 @@ class PortalClient(PortalClientBase):
         meta, record_data = self._auto_request(
             "post",
             "v1/records/gridoptimization/query",
-            TorsiondriveQueryBody,
+            GridoptimizationQueryBody,
             None,
             Tuple[QueryMetadata, List[GridoptimizationRecord._DataModel]],
             query_data,
