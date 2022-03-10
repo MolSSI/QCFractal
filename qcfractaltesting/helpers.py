@@ -10,7 +10,7 @@ import subprocess
 import sys
 import time
 from contextlib import contextmanager
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Tuple
 
 import pydantic
 from qcelemental.models import Molecule, FailedOperation, OptimizationResult, AtomicResult
@@ -18,8 +18,10 @@ from qcelemental.models.results import WavefunctionProperties
 
 from qcportal.records.gridoptimization import GridoptimizationInputSpecification
 from qcportal.records.optimization import OptimizationInputSpecification
+from qcportal.records.reaction import ReactionQCInputSpecification
 from qcportal.records.singlepoint import QCInputSpecification
 from qcportal.records.torsiondrive import TorsiondriveInputSpecification
+from qcportal.serialization import _json_decode
 
 # Valid client encodings
 valid_encodings = ["application/json", "application/msgpack"]
@@ -107,10 +109,10 @@ def load_procedure_data(name: str):
 
     if is_xz:
         with lzma.open(file_path, "rt") as f:
-            data = json.load(f)
+            data = json.load(f, object_hook=_json_decode)
     else:
         with open(file_path, "r") as f:
-            data = json.load(f)
+            data = json.load(f, object_hook=_json_decode)
 
     record_type = data["record_type"]
     if record_type == "singlepoint":
@@ -129,6 +131,10 @@ def load_procedure_data(name: str):
         input_type = GridoptimizationInputSpecification
         result_type = Dict[str, Union[OptimizationResult, FailedOperation]]
         molecule_type = Molecule
+    elif record_type == "reaction":
+        input_type = ReactionQCInputSpecification
+        result_type = Dict[str, Union[AtomicResult, FailedOperation]]
+        molecule_type = List[Tuple[float, Molecule]]
     else:
         raise RuntimeError(f"Unknown procedure '{record_type}' in test!")
 

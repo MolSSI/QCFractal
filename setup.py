@@ -39,12 +39,12 @@ if __name__ == "__main__":
             "qcelemental>=0.24",
             "qcengine>=0.21",
             "torsiondrive",
+            "tabulate",
             # QCPortal dependencies
             "requests",
             "tqdm",
             "plotly",
             "pandas",
-            "tabulate",
             # Only need for python 3.7, but no harm in always including it
             "typing-extensions",
         ],

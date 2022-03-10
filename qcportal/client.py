@@ -61,6 +61,11 @@ from .records.optimization import (
     OptimizationInputSpecification,
     OptimizationAddBody,
 )
+from .records.reaction import (
+    ReactionAddBody,
+    ReactionRecord,
+    ReactionQueryBody,
+)
 from .records.singlepoint import (
     SinglepointRecord,
     SinglepointAddBody,
@@ -1659,6 +1664,199 @@ class PortalClient(PortalClientBase):
             GridoptimizationQueryBody,
             None,
             Tuple[QueryMetadata, List[GridoptimizationRecord._DataModel]],
+            query_data,
+            None,
+        )
+
+        return meta, self.recordmodel_from_datamodel(record_data)
+
+    ##############################################################
+    # Reactions
+    ##############################################################
+
+    def add_reactions(
+        self,
+        stoichiometries: Sequence[Sequence[Sequence[float, Union[int, Molecule]]]],
+        program: str,
+        method: str,
+        basis: Optional[str],
+        keywords: Optional[Union[KeywordSet, Dict[str, Any], int]] = None,
+        protocols: Optional[Union[SinglepointProtocols, Dict[str, Any]]] = None,
+        tag: str = "*",
+        priority: PriorityEnum = PriorityEnum.normal,
+    ) -> Tuple[InsertMetadata, List[int]]:
+        """
+        Adds reaction calculations to the server
+        """
+
+        if not stoichiometries:
+            return InsertMetadata(), []
+
+        body_data = {
+            "stoichiometries": stoichiometries,
+            "specification": {
+                "program": program,
+                "method": method,
+                "basis": basis,
+            },
+            "tag": tag,
+            "priority": priority,
+        }
+
+        if isinstance(keywords, dict):
+            # Turn this into a keyword set
+            keywords = KeywordSet(values=keywords)
+
+        # If these are None, then let the pydantic models handle the defaults
+        if keywords is not None:
+            body_data["specification"]["keywords"] = keywords
+        if protocols is not None:
+            body_data["specification"]["protocols"] = protocols
+
+        if len(body_data["stoichiometries"]) > self.api_limits["add_records"]:
+            raise RuntimeError(
+                f"Cannot add {len(body_data['stoichiometries'])} records - over the limit of {self.api_limits['add_records']}"
+            )
+
+        return self._auto_request(
+            "post",
+            "v1/records/reaction/bulkCreate",
+            ReactionAddBody,
+            None,
+            Tuple[InsertMetadata, List[int]],
+            body_data,
+            None,
+        )
+
+    def get_reactions(
+        self,
+        record_ids: Union[int, Sequence[int]],
+        missing_ok: bool = False,
+        *,
+        include_service: bool = False,
+        include_outputs: bool = False,
+        include_comments: bool = False,
+        include_stoichiometries: bool = False,
+        include_components: bool = False,
+    ) -> Union[Optional[ReactionRecord], List[Optional[ReactionRecord]]]:
+
+        record_ids_lst = make_list(record_ids)
+        if not record_ids_lst:
+            return []
+
+        body_data = {"ids": record_ids_lst, "missing_ok": missing_ok}
+
+        include = set()
+
+        # We must add '*' so that all the default fields are included
+        if include_service:
+            include |= {"*", "service"}
+        if include_outputs:
+            include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_comments:
+            include |= {"*", "comments"}
+        if include_stoichiometries:
+            include |= {"*", "stoichiometries.*", "stoichiometries.molecule"}
+        if include_components:
+            include |= {"*", "components"}
+
+        if include:
+            body_data["include"] = include
+
+        if len(body_data["ids"]) > self.api_limits["get_records"]:
+            raise RuntimeError(
+                f"Cannot get {len(body_data['ids'])} records - over the limit of {self.api_limits['get_records']}"
+            )
+
+        record_data = self._auto_request(
+            "post",
+            "v1/records/reaction/bulkGet",
+            CommonBulkGetBody,
+            None,
+            List[Optional[ReactionRecord._DataModel]],
+            body_data,
+            None,
+        )
+
+        records = self.recordmodel_from_datamodel(record_data)
+
+        if isinstance(record_ids, Sequence):
+            return records
+        else:
+            return records[0]
+
+    def query_reactions(
+        self,
+        record_id: Optional[Iterable[int]] = None,
+        manager_name: Optional[Iterable[str]] = None,
+        status: Optional[Iterable[RecordStatusEnum]] = None,
+        created_before: Optional[datetime] = None,
+        created_after: Optional[datetime] = None,
+        modified_before: Optional[datetime] = None,
+        modified_after: Optional[datetime] = None,
+        program: Optional[Iterable[str]] = None,
+        method: Optional[Iterable[str]] = None,
+        basis: Optional[Iterable[Optional[str]]] = None,
+        keywords_id: Optional[Iterable[int]] = None,
+        molecule_id: Optional[Iterable[int]] = None,
+        limit: Optional[int] = None,
+        skip: int = 0,
+        *,
+        include_task: bool = False,
+        include_service: bool = False,
+        include_outputs: bool = False,
+        include_comments: bool = False,
+        include_stoichiometries: bool = False,
+        include_components: bool = False,
+    ) -> Tuple[QueryMetadata, List[GridoptimizationRecord]]:
+        """Queries torsiondrive records from the server."""
+
+        if limit is not None and limit > self.api_limits["get_records"]:
+            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
+            limit = min(limit, self.api_limits["get_records"])
+
+        query_data = {
+            "record_id": make_list(record_id),
+            "manager_name": make_list(manager_name),
+            "status": make_list(status),
+            "program": make_list(program),
+            "method": make_list(method),
+            "basis": make_list(basis),
+            "keywords_id": make_list(keywords_id),
+            "molecule_id": make_list(molecule_id),
+            "created_before": created_before,
+            "created_after": created_after,
+            "modified_before": modified_before,
+            "modified_after": modified_after,
+            "limit": limit,
+            "skip": skip,
+        }
+
+        include = set()
+
+        # We must add '*' so that all the default fields are included
+        if include_task:
+            include |= {"*", "task"}
+        if include_service:
+            include |= {"*", "service"}
+        if include_outputs:
+            include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_comments:
+            include |= {"*", "comments"}
+        if include_stoichiometries:
+            include |= {"*", "stoichiometries.*", "stoichiometries.molecule"}
+        if include_components:
+            include |= {"*", "components"}
+
+        if include:
+            query_data["include"] = include
+
+        meta, record_data = self._auto_request(
+            "post",
+            "v1/records/reaction/query",
+            ReactionQueryBody,
+            None,
+            Tuple[QueryMetadata, List[ReactionRecord._DataModel]],
             query_data,
             None,
         )
