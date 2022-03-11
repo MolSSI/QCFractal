@@ -153,6 +153,9 @@ class TaskSocket:
                     # So rollback the transaction to the most recent commit
                     nested_session.rollback()
 
+                    # Need a new nested transaction - previous one is dead
+                    nested_session = session.begin_nested()
+
                     msg = "Internal FractalServer Error:\n" + traceback.format_exc()
                     error = {"error_type": "internal_fractal_error", "error_message": msg}
                     failed_op = FailedOperation(error=error, success=False)
