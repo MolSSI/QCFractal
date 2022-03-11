@@ -7,7 +7,6 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
-import pytest
 from qcelemental.models import Molecule
 
 from qcportal.records import RecordStatusEnum
