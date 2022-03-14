@@ -3,7 +3,7 @@
 # to be registered with the blueprint)
 
 from .singlepoint import db_models, routes
-from .reaction import db_models
+from .reaction import db_models, routes
 from .optimization import db_models, routes
 from .torsiondrive import db_models, routes
 from .gridoptimization import db_models, routes

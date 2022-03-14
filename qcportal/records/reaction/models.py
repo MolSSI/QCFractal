@@ -82,7 +82,7 @@ class ReactionRecord(BaseRecord):
     raw_data: _DataModel
 
     def _fetch_components(self):
-        url_params = {"include": ["*", "singlepoint_record"]}
+        url_params = {"include": ["*", "singlepoint_record", "optimization_record"]}
 
         self.raw_data.components = self.client._auto_request(
             "get",

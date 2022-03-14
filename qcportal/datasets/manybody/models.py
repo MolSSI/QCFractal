@@ -21,7 +21,7 @@ class ManybodyDatasetNewEntry(BaseModel):
 
 class ManybodyDatasetEntry(ManybodyDatasetNewEntry):
     initial_molecule_id: int
-    molecule: Optional[Molecule] = None
+    initial_molecule: Optional[Molecule] = None
 
 
 class ManybodyDatasetSpecification(BaseModel):

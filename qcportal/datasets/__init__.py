@@ -25,9 +25,15 @@ from .optimization.models import OptimizationDataset
 from .torsiondrive.models import TorsiondriveDataset
 from .gridoptimization import GridoptimizationDataset
 from .manybody import ManybodyDataset
+from .reaction import ReactionDataset
 
 AllDatasetTypes = Union[
-    SinglepointDataset, OptimizationDataset, TorsiondriveDataset, GridoptimizationDataset, ManybodyDataset
+    SinglepointDataset,
+    OptimizationDataset,
+    TorsiondriveDataset,
+    GridoptimizationDataset,
+    ManybodyDataset,
+    ReactionDataset,
 ]
 AllDatasetDataModelTypes = Union[
     SinglepointDataset._DataModel,
@@ -35,6 +41,7 @@ AllDatasetDataModelTypes = Union[
     TorsiondriveDataset._DataModel,
     GridoptimizationDataset._DataModel,
     ManybodyDataset._DataModel,
+    ReactionDataset._DataModel,
 ]
 
 

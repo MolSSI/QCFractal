@@ -150,7 +150,7 @@ class ServiceRecord(BaseModel):
     priority: PriorityEnum
     created_on: datetime
 
-    service_state: Dict[str, Any]
+    service_state: Optional[Dict[str, Any]] = None
     dependencies: Optional[List[ServiceDependency]] = None
 
 

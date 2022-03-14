@@ -45,23 +45,6 @@ class CollectionORM(BaseORM):
     __mapper_args__ = {"polymorphic_on": "collection_type", "polymorphic_identity": "collection"}
 
 
-class DatasetMixin:
-    """
-    Mixin class for common Dataset attributes.
-    """
-
-    default_benchmark = Column(String)
-    default_keywords = Column(JSON)
-
-    default_driver = Column(String)
-    default_units = Column(String)
-    alias_keywords = Column(JSON)
-    default_program = Column(String)
-
-    history_keys = Column(JSON)
-    history = Column(JSON)
-
-
 class ContributedValuesORM(BaseORM):
     """One group of a contibuted values per dataset
     Each dataset can have multiple rows in this table"""

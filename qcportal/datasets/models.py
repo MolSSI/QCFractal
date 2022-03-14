@@ -41,7 +41,7 @@ class BaseDataset(BaseModel):
 
         # To be overridden by the derived class with more specific types
         specifications: Dict[str, Any]
-        entries: Optional[List[Any]]
+        entries: Optional[Dict[str, Any]]
         record_items: Optional[List[Any]]
 
     client: Any

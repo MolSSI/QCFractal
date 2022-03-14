@@ -154,7 +154,7 @@ def build_mbe_clusters(mol: Molecule, keywords: ManybodyKeywords) -> List[Tuple[
     allfrag = set(range(max_nbody))
 
     # Loop over the nbody (the number of bodies to include. 1 = monomers, 2 = dimers)
-    for nbody in range(1, max_nbody + 1):
+    for nbody in range(1, max_nbody):
         for frag_idx in itertools.combinations(allfrag, nbody):
             frag_idx = set(frag_idx)
             if keywords.bsse_correction == BSSECorrectionEnum.none:
@@ -166,6 +166,10 @@ def build_mbe_clusters(mol: Molecule, keywords: ManybodyKeywords) -> List[Tuple[
                 ret.append((frag_idx, allfrag, frag_mol))
             else:
                 raise RuntimeError(f"Unknown BSSE correction method: {keywords.bsse_correction}")
+
+    # Include full molecule as well
+    if max_nbody >= len(mol.fragments):
+        ret.append((allfrag, allfrag, mol))
 
     # Always include monomer in monomer basis for CP
     if keywords.bsse_correction == BSSECorrectionEnum.cp:
