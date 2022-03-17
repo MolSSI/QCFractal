@@ -165,7 +165,7 @@ class FractalSnowflake:
         # it can handle requests
         host = self._qcf_config.api.host
         port = self._qcf_config.api.port
-        uri = f"http://{host}:{port}/ping"
+        uri = f"http://{host}:{port}/v1/ping"
 
         max_iter = 50
         iter = 0

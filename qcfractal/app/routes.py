@@ -52,7 +52,7 @@ def after_request_func(response: Response):
     request_duration = time.time() - g.request_start
 
     log_access = current_app.config["QCFRACTAL_CONFIG"].log_access
-    if log_access and request.path != "/ping":
+    if log_access and request.path != "/v1/ping":
         # What we are going to log to the DB
         log: Dict[str, Any] = {}
         log["access_type"] = request.path[1:]  # remove /
@@ -273,7 +273,7 @@ def handle_compute_manager_error(error: ComputeManagerError):
     return jsonify(msg=str(error)), 400
 
 
-# @main.route("/register", methods=["POST"])
+# @main.route("/v1/register", methods=["POST"])
 # def register():
 #    if request.is_json:
 #        username = request.json["username"]
@@ -310,12 +310,12 @@ def handle_compute_manager_error(error: ComputeManagerError):
 #        return jsonify(msg="New user created! Password is '{pw}'"), 201
 
 
-@main.route("/ping", methods=["GET"])
+@main.route("/v1/ping", methods=["GET"])
 def ping():
     return jsonify(success=True)
 
 
-@main.route("/login", methods=["POST"])
+@main.route("/v1/login", methods=["POST"])
 def login():
     try:
         if request.is_json:
@@ -343,7 +343,7 @@ def login():
     return jsonify(msg="Login succeeded!", access_token=access_token, refresh_token=refresh_token), 200
 
 
-@main.route("/refresh", methods=["POST"])
+@main.route("/v1/refresh", methods=["POST"])
 @jwt_required(refresh=True)
 def refresh():
     username = get_jwt_identity()
@@ -356,7 +356,7 @@ def refresh():
     return jsonify(ret), 200
 
 
-@main.route("/fresh-login", methods=["POST"])
+@main.route("/v1/fresh-login", methods=["POST"])
 def fresh_login():
     if request.is_json:
         username = request.json["username"]
