@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.dialects.postgresql import array_agg
 from sqlalchemy.orm import contains_eager, make_transient
 
@@ -61,10 +61,10 @@ class ServiceSocket:
             # Services whose tasks this iteration are all successfully completed
             stmt = (
                 select(ServiceQueueORM)
-                .join(status_cte, status_cte.c.service_id == ServiceQueueORM.id)
+                .join(status_cte, status_cte.c.service_id == ServiceQueueORM.id, isouter=True)
                 .join(ServiceQueueORM.record)
                 .where(BaseRecordORM.status == RecordStatusEnum.running)
-                .where(status_cte.c.task_statuses.contained_by(["complete"]))
+                .where(or_(status_cte.c.task_statuses.contained_by(["complete"]), status_cte.c.task_statuses is None))
             )
             completed_services = session.execute(stmt).scalars().all()
 
