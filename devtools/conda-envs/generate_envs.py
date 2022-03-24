@@ -134,10 +134,10 @@ environs = [
         "dependencies": ["rdkit"],
         "qca_ecosystem": [],
         "pip_dependencies": [
-            "git+git://github.com/MolSSI/QCEngine#egg=qcengine",
-            "git+git://github.com/MolSSI/QCElemental#egg=qcelemental",
-            "git+git://github.com/leeping/geomeTRIC#egg=geometric",
-            "git+git://github.com/lpwgroup/torsiondrive.git#egg=torsiondrive",
+            "git+https://github.com/MolSSI/QCEngine#egg=qcengine",
+            "git+https://github.com/MolSSI/QCElemental#egg=qcelemental",
+            "git+https://github.com/leeping/geomeTRIC#egg=geometric",
+            "git+https://github.com/lpwgroup/torsiondrive.git#egg=torsiondrive",
         ]  # yapf: disable
     }
 ]
