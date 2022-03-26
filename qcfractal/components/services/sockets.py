@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select, or_
 from sqlalchemy.dialects.postgresql import array_agg
-from sqlalchemy.orm import contains_eager, make_transient
+from sqlalchemy.orm import contains_eager, make_transient, aliased
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.records.db_models import BaseRecordORM, RecordComputeHistoryORM
@@ -35,9 +35,20 @@ class ServiceSocket:
 
         self._logger.info("Iterating on services")
         # A CTE that contains just service id and all the statuses as an array
+
+        # We alias BaseRecord so we can join twice to it
+        # once for aggregating the status of the dependencies
+        a_br_svc_deps = aliased(BaseRecordORM)
+
+        # And once for filtering by the status of the record corresponding to the service itself
+        a_br_svc = aliased(BaseRecordORM)
+
         status_cte = (
-            select(ServiceDependenciesORM.service_id, array_agg(BaseRecordORM.status).label("task_statuses"))
-            .join(BaseRecordORM, BaseRecordORM.id == ServiceDependenciesORM.record_id)
+            select(ServiceDependenciesORM.service_id, array_agg(a_br_svc_deps.status).label("task_statuses"))
+            .join(ServiceQueueORM, ServiceQueueORM.id == ServiceDependenciesORM.service_id)
+            .join(a_br_svc_deps, a_br_svc_deps.id == ServiceDependenciesORM.record_id)
+            .join(a_br_svc, a_br_svc.id == ServiceQueueORM.record_id)
+            .where(a_br_svc.status == RecordStatusEnum.running)
             .group_by(ServiceDependenciesORM.service_id)
             .cte()
         )
@@ -51,7 +62,6 @@ class ServiceSocket:
                 select(ServiceQueueORM)
                 .join(status_cte, status_cte.c.service_id == ServiceQueueORM.id)
                 .join(ServiceQueueORM.record)
-                .where(BaseRecordORM.status == RecordStatusEnum.running)
                 .where(status_cte.c.task_statuses.contained_by(["complete", "error"]))
                 .where(status_cte.c.task_statuses.contains(["error"]))
             )
@@ -61,10 +71,9 @@ class ServiceSocket:
             # Services whose tasks this iteration are all successfully completed
             stmt = (
                 select(ServiceQueueORM)
-                .join(status_cte, status_cte.c.service_id == ServiceQueueORM.id, isouter=True)
+                .join(status_cte, status_cte.c.service_id == ServiceQueueORM.id)
                 .join(ServiceQueueORM.record)
-                .where(BaseRecordORM.status == RecordStatusEnum.running)
-                .where(or_(status_cte.c.task_statuses.contained_by(["complete"]), status_cte.c.task_statuses is None))
+                .where(or_(status_cte.c.task_statuses.contained_by(["complete"]), status_cte.c.task_statuses == []))
             )
             completed_services = session.execute(stmt).scalars().all()
 
