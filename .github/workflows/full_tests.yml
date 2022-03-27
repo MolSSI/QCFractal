@@ -28,21 +28,21 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Clone the QCFractal repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: qcfractal
 
       - name: Clone QCPortal repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
-          repository: bennybp/QCPortal.git
+          repository: MolSSI/QCPortal.git
           ref: next
           path: qcportal
 
       - name: Clone QCFractalCompute repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
-          repository: bennybp/QCFractalCompute.git
+          repository: MolSSI/QCFractalCompute.git
           ref: next
           path: qcfractalcompute
 

@@ -28,7 +28,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Clone the QCFractal repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Configure conda for the snowflake
         uses: conda-incubator/setup-miniconda@v2.1.1
