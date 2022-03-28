@@ -320,7 +320,9 @@ def server_start(args, config):
     logger.info(f"QCFractal server base directory: {config.base_folder}")
 
     # Initialize the global logging infrastructure
+    stdout_logging = True
     if config.logfile is not None:
+        stdout_logging = False
         logger.info(f"Logging to {config.logfile} at level {config.loglevel}")
         log_handler = logging.FileHandler(config.logfile)
     else:
@@ -365,7 +367,17 @@ def server_start(args, config):
             if not periodics_proc.is_alive():
                 raise RuntimeError("Periodics process died! Check the logs")
     except EndProcess as e:
-        logger.debug("server_start received EndProcess: " + str(e))
+        if not stdout_logging:
+            # Start logging to the screen again
+            stdout_handler = logging.StreamHandler(sys.stdout)
+
+            # Keep the old formatting (for consistency)
+            stdout_handler.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
+            logging.getLogger().handlers.append(stdout_handler)
+
+        logger.info("QCFractal server received EndProcess: " + str(e))
+        logger.info("...stopping server...")
+
     except Exception as e:
         tb = "".join(traceback.format_exception(None, e, e.__traceback__))
         logger.critical(f"Exception while running QCFractal server:\n{tb}")
