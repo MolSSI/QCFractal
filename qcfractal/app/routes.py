@@ -55,8 +55,12 @@ def after_request_func(response: Response):
     if log_access and request.path != "/v1/ping":
         # What we are going to log to the DB
         log: Dict[str, Any] = {}
-        log["access_type"] = request.path[1:]  # remove /
-        log["access_method"] = request.method  # GET or POST
+        access_type = request.path.split("/")[2]  # The top-level endpoint (molecules, records)
+        access_method = request.method  # GET, POST, etc
+
+        log["access_type"] = access_type
+        log["access_method"] = access_method
+        log["full_uri"] = request.path
 
         # get the real IP address behind a proxy or ngnix
         real_ip = request.headers.get("X-Real-IP", None)
@@ -77,9 +81,13 @@ def after_request_func(response: Response):
         log["user"] = g.user if "user" in g else None
 
         # response.response is a list of bytes or str
-        log["response_bytes"] = sum(len(x) for x in response.response)
+        response_bytes = sum(len(x) for x in response.response)
+        log["response_bytes"] = response_bytes
 
         storage_socket.serverinfo.save_access(log)
+        current_app.logger.debug(
+            f"{access_method} {access_type}: {g.request_bytes} -> {response_bytes} [{request_duration*1000:.1f}ms]"
+        )
 
     return response
 
