@@ -13,3 +13,4 @@ del get_versions, versions
 
 from .adapters import build_queue_adapter
 from .managers import ComputeManager
+from .qcfractal_manager_cli import _initialize_signals_process_pool

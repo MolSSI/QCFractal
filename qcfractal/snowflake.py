@@ -7,13 +7,13 @@ import os
 import tempfile
 import time
 import weakref
-from concurrent.futures import ProcessPoolExecutor
+from multiprocessing.pool import Pool
 from queue import Empty  # Just for exception handling
 from typing import TYPE_CHECKING
 
 import requests
 
-from qcfractalcompute import ComputeManager
+from qcfractalcompute import ComputeManager, _initialize_signals_process_pool
 from qcportal import PortalClient
 from qcportal.records import RecordStatusEnum
 from .app.flask_app import FlaskProcess
@@ -44,7 +44,7 @@ class SnowflakeComputeProcess(ProcessBase):
         port = self._qcf_config.api.port
         uri = f"http://{host}:{port}"
 
-        self._worker_pool = ProcessPoolExecutor(self._compute_workers)
+        self._worker_pool = Pool(processes=self._compute_workers, initializer=_initialize_signals_process_pool)
         self._queue_manager = ComputeManager(self._worker_pool, fractal_uri=uri, manager_name="snowflake_compute")
 
     def run(self) -> None:
@@ -52,7 +52,8 @@ class SnowflakeComputeProcess(ProcessBase):
 
     def interrupt(self) -> None:
         self._queue_manager.stop()
-        self._worker_pool.shutdown()
+        self._worker_pool.terminate()
+        self._worker_pool.join()
 
 
 class FractalSnowflake:
