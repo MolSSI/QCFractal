@@ -55,7 +55,7 @@ def after_request_func(response: Response):
     if log_access and request.path != "/v1/ping":
         # What we are going to log to the DB
         log: Dict[str, Any] = {}
-        access_type = request.path.split("/")[2]  # The top-level endpoint (molecules, records)
+        access_type = "/".join(request.path.split("/")[1:3])  # The top-level endpoint (v1/molecules, v1/records)
         access_method = request.method  # GET, POST, etc
 
         log["access_type"] = access_type
