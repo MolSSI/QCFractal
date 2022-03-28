@@ -5,6 +5,9 @@ on:
     branches:
       - master
       - next
+    paths:
+      - 'qcportal/**'
+      - 'qcfractalcompute/**'
 
 jobs:
   make_subpackages:
@@ -45,7 +48,7 @@ jobs:
       - name: Merge onto QCFractalCompute repo
         shell: bash -e -l {0}
         run: |
-            git -C QCFractal subtree split --prefix qcfractalcompute --branch __compute_split_tmp
+            git -C QCFractal subtree split -q --prefix qcfractalcompute --branch __compute_split_tmp
             git -C QCFractalCompute subtree pull --prefix qcfractalcompute ../QCFractal __compute_split_tmp
 
       - name: Push changes to QCFractalCompute repo
@@ -57,7 +60,7 @@ jobs:
       - name: Merge onto QCPortal repo
         shell: bash -e -l {0}
         run: |
-            git -C QCFractal subtree split --prefix qcportal --branch __portal_split_tmp
+            git -C QCFractal subtree split -q --prefix qcportal --branch __portal_split_tmp
             git -C QCPortal subtree pull --prefix qcportal ../QCFractal __portal_split_tmp
 
       - name: Push changes to QCPortal repo
