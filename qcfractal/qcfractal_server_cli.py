@@ -469,12 +469,13 @@ def server_user(args, config):
         print("{:20}  {:16}  {:7}  {}".format("username", "role", "enabled", "fullname"))
         print("{:20}  {:16}  {:7}  {}".format("--------", "----", "-------", "--------"))
         for u in user_list:
-            enabled = "True" if u.enabled else "False"
-            print(f"{u.username:20}  {u.roles:16}  {enabled:>7}  {u.fullname}")
+            u_obj = UserInfo(**u)
+            enabled = "True" if u_obj.enabled else "False"
+            print(f"{u_obj.username:20}  {u_obj.role:16}  {enabled:>7}  {u_obj.fullname}")
 
     if user_command == "info":
         u = storage.users.get(args.username)
-        print_user_info(u)
+        print_user_info(UserInfo(**u))
 
     if user_command == "add":
         fullname = args.fullname if args.fullname is not None else ""
