@@ -4,13 +4,10 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 
 from __future__ import annotations
 
-import functools
-import alembic
 import importlib
 import logging
 import os
 import shutil
-import subprocess
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
@@ -21,7 +18,7 @@ from sqlalchemy.pool import NullPool
 import qcfractal
 
 if TYPE_CHECKING:
-    from typing import Tuple, List, Optional, Generator, Any
+    from typing import List, Optional, Generator, Any
     from sqlalchemy.orm.session import Session
     from ..config import FractalConfig, DatabaseConfig
 
