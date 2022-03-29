@@ -379,6 +379,14 @@ def server_start(args, config):
         logger.info("...stopping server...")
 
     except Exception as e:
+        if not stdout_logging:
+            # Start logging to the screen again
+            stdout_handler = logging.StreamHandler(sys.stdout)
+
+            # Keep the old formatting (for consistency)
+            stdout_handler.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
+            logging.getLogger().handlers.append(stdout_handler)
+
         tb = "".join(traceback.format_exception(None, e, e.__traceback__))
         logger.critical(f"Exception while running QCFractal server:\n{tb}")
         exitcode = 1
