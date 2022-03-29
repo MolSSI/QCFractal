@@ -29,8 +29,10 @@ compare_type = True
 transaction_per_migration = True
 
 # Overwrite the ini-file sqlalchemy.url path
-uri = context.get_x_argument(as_dictionary=True).get("uri")
-config.set_main_option("sqlalchemy.url", uri)
+# This allows you to pass in the uri on the command line
+uri = context.get_x_argument(as_dictionary=True).get("uri", None)
+if uri is not None:
+    config.set_main_option("sqlalchemy.url", uri)
 
 
 def run_migrations_offline():

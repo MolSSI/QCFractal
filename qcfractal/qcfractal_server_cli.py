@@ -392,15 +392,10 @@ def server_start(args, config):
 def server_upgrade(args, config):
     logger = logging.getLogger(__name__)
 
-    # We need to skip the version check, since that is what we are fixing!
-    config.database.skip_version_check = True
-
-    _, storage = start_database(args, config, logger)
-
     logger.info(f"Upgrading the postgres database at {config.database.safe_uri}")
 
     try:
-        storage.upgrade_database(config.database)
+        SQLAlchemySocket.upgrade_database(config.database)
     except ValueError as e:
         print(str(e))
         sys.exit(1)

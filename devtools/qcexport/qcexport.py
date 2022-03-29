@@ -51,7 +51,6 @@ _all_orm = [
     TorsiondriveRecordORM,
     TorsionInitMol,
     OptimizationTrajectoryORM,
-    VersionsORM,
     WavefunctionStoreORM,
 ]
 

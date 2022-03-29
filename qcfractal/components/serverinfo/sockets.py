@@ -17,7 +17,7 @@ from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import get_query_proj_options, get_count
 from qcportal.metadata_models import QueryMetadata
-from .db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM, VersionsORM
+from .db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -80,31 +80,11 @@ class ServerInfoSocket:
 
         return out
 
-    def check_lib_versions(self):
-        """Check the stored versions of elemental and fractal"""
-
-        with self.root_socket.session_scope() as session:
-            db_ver = session.query(VersionsORM).order_by(VersionsORM.created_on.desc())
-
-            # Table exists but empty
-            if db_ver.count() == 0:
-                elemental_version = qcelemental.__version__
-                fractal_version = qcfractal.__version__
-                current = VersionsORM(
-                    elemental_version=elemental_version,
-                    fractal_version=fractal_version,
-                )
-
-                session.add(current)
-                session.commit()
-                session.refresh(current)
-
-            else:
-                current = db_ver.first()
-
-            ver = current.dict(exclude=["id"])
-
-        return ver
+    def check_db_version(self):
+        """
+        Compares the current version of the DB to the expected version (alembic HEAD)
+        """
+        pass
 
     def save_access(self, log_data: AccessLogDict, *, session: Optional[Session] = None) -> None:
         """

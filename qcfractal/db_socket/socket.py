@@ -4,6 +4,8 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 
 from __future__ import annotations
 
+import functools
+import alembic
 import importlib
 import logging
 import os
@@ -76,6 +78,9 @@ class SQLAlchemySocket:
                     "attempting to check out in pid %s" % (connection_record.info["pid"], pid)
                 )
 
+        # Check ito see if the db is up to date
+        self.check_db_revision()
+
         self.Session = sessionmaker(bind=self.engine, future=True)
 
         # Create/initialize the subsockets
@@ -102,50 +107,12 @@ class SQLAlchemySocket:
         self.roles = RoleSocket(self)
 
         # check version compatibility
-        db_ver = self.serverinfo.check_lib_versions()
         self.logger.info(f"Software versions info in database:")
-        for k, v in db_ver.items():
-            self.logger.info(f"      {k}: {v}")
-
-        if not qcf_config.database.skip_version_check and qcfractal.__version__ != db_ver["fractal_version"]:
-            raise RuntimeError(
-                f"You are running QCFractal version {qcfractal.__version__} "
-                f'with an older DB version ({db_ver["fractal_version"]}). '
-                f'Please run "qcfractal-server upgrade" first before starting the server.'
-            )
-
-    @staticmethod
-    def _run_subprocess(command: List[str]) -> Tuple[int, str, str]:
-        """
-        Runs a command using subprocess, and output stdout into the logger
-
-        Parameters
-        ----------
-        command
-            Command to run as a list of strings (see documentation for subprocess)
-
-        Returns
-        -------
-        :
-            Return code, stdout, and stderr as a Tuple
-        """
-
-        logger = logging.getLogger("SQLAlchemySocket")
-        proc = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        logger.debug("Running subprocess: " + str(command))
-        stdout = proc.stdout.decode()
-        stderr = proc.stderr.decode()
-        if len(stdout) > 0:
-            logger.info(stdout)
-        if len(stderr) > 0:
-            logger.info(stderr)
-
-        return proc.returncode, stdout, stderr
 
     @staticmethod
     def alembic_commands(db_config: DatabaseConfig) -> List[str]:
         """
-        Get the components of an alembic command that can be passed to _run_subprocess
+        Get the components of an alembic command that can be used on the command line
 
         This will find the almembic command and also add the uri and alembic configuration information
         to the command line.
@@ -159,13 +126,22 @@ class SQLAlchemySocket:
         db_uri = db_config.uri
 
         # Find the path to the almebic ini
-
         alembic_ini = os.path.join(qcfractal.qcfractal_topdir, "alembic.ini")
         alembic_path = shutil.which("alembic")
 
         if alembic_path is None:
             raise RuntimeError("Cannot find the 'alembic' command. Is it installed?")
         return [alembic_path, "-c", alembic_ini, "-x", "uri=" + db_uri]
+
+    @staticmethod
+    def get_alembic_config(db_config: DatabaseConfig):
+        from alembic.config import Config
+
+        alembic_ini = os.path.join(qcfractal.qcfractal_topdir, "alembic.ini")
+        alembic_cfg = Config(alembic_ini)
+        alembic_cfg.set_main_option("sqlalchemy.url", db_config.uri)
+
+        return alembic_cfg
 
     @staticmethod
     def init_database(db_config: DatabaseConfig):
@@ -200,49 +176,46 @@ class SQLAlchemySocket:
             session.close()
 
         # update alembic_version table with the current version
-        logger.debug(f"Stamping Database with current version")
-        alembic_commands = SQLAlchemySocket.alembic_commands(db_config)
-        retcode, stdout, stderr = SQLAlchemySocket._run_subprocess(alembic_commands + ["stamp", "head"])
+        logger.debug(f"Stamping Database with current alembic revision")
+        from alembic import command
 
-        if retcode != 0:
-            err_msg = f"Error stamping the database with the current version:\noutput:\n{stdout}\nstderr:\n{stderr}"
-            raise RuntimeError(err_msg)
+        alembic_cfg = SQLAlchemySocket.get_alembic_config(db_config)
+        command.stamp(alembic_cfg, "head")
 
     @staticmethod
-    def upgrade_database(db_config: DatabaseConfig) -> None:
+    def upgrade_database(db_config: DatabaseConfig, revision: str = "head") -> None:
         """
         Upgrade the database schema using the latest alembic revision.
         """
-        logger = logging.getLogger("SQLAlchemySocket")
 
-        alembic_commands = SQLAlchemySocket.alembic_commands(db_config)
-        retcode, _, _ = SQLAlchemySocket._run_subprocess(alembic_commands + ["upgrade", "head"])
+        from alembic import command
 
-        if retcode != 0:
-            raise RuntimeError(f"Failed to Upgrade the database")
+        alembic_cfg = SQLAlchemySocket.get_alembic_config(db_config)
+        command.upgrade(alembic_cfg, revision)
 
-        # Now upgrade the stored version information
-        uri = db_config.uri
-        engine = create_engine(uri, echo=False, poolclass=NullPool)
-        session = sessionmaker(bind=engine)()
-        try:
-            import qcfractal
-            import qcelemental
+    def check_db_revision(self):
+        """
+        Checks to make sure the database is up to date
 
-            elemental_version = qcelemental.__version__
-            fractal_version = qcfractal.__version__
+        Will raise an exception if it is not up-to-date
+        """
 
-            logger.info(f"Updating current version of QCFractal in DB: {uri} \n" f"to version {qcfractal.__version__}")
+        from alembic.migration import MigrationContext
+        from alembic.script import ScriptDirectory
 
-            from ..components.serverinfo.db_models import VersionsORM
+        alembic_cfg = SQLAlchemySocket.get_alembic_config(self.qcf_config.database)
+        script = ScriptDirectory.from_config(alembic_cfg)
+        heads = script.get_heads()
 
-            current_ver = VersionsORM(elemental_version=elemental_version, fractal_version=fractal_version)
-            session.add(current_ver)
-            session.commit()
-        except Exception as e:
-            raise ValueError(f"Failed to Update DB version.\n {str(e)}")
-        finally:
-            session.close()
+        conn = self.engine.connect()
+        context = MigrationContext.configure(connection=conn)
+        current_rev = context.get_current_revision()
+
+        if len(heads) > 1:
+            raise RuntimeError("Multiple alembic revision heads not supported")
+
+        if heads[0] != current_rev:
+            raise RuntimeError("Database needs migration. Please run `qcfractal-server upgrade` (after backing up!)")
 
     def __str__(self) -> str:
         return f"<SQLAlchemySocket: address='{self.uri}`>"

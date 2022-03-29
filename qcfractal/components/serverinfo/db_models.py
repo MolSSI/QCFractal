@@ -78,12 +78,3 @@ class ServerStatsLogORM(BaseORM):
     db_table_information = Column(JSON)
 
     __table_args__ = (Index("ix_server_stats_log_timestamp", "timestamp"),)
-
-
-class VersionsORM(BaseORM):
-    __tablename__ = "versions"
-
-    id = Column(Integer, primary_key=True)
-    created_on = Column(DateTime, default=datetime.datetime.utcnow)
-    elemental_version = Column(String, nullable=False)
-    fractal_version = Column(String, nullable=False)

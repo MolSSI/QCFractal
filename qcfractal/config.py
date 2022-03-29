@@ -93,10 +93,6 @@ class DatabaseConfig(ConfigBase):
     )
 
     echo_sql: bool = Field(False, description="[ADVANCED] output raw SQL queries being run")
-    skip_version_check: bool = Field(
-        False,
-        description="[ADVANCED] Do not check that the version of QCFractal matches that of the version of the database. ONLY RECOMMENDED FOR DEVELOPMENT PURPOSES",
-    )
     pg_tool_dir: Optional[str] = Field(
         None,
         description="Directory containing Postgres tools such as psql and pg_ctl (ie, /usr/bin, or /usr/lib/postgresql/13/bin). If not specified, an attempt to find them will be made. This field is only required if autodetection fails and own == True",
