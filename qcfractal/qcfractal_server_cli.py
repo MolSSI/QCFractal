@@ -411,8 +411,8 @@ def server_upgrade(args, config):
 
 def server_upgrade_config(args, config_path):
     import secrets
-    from ..old_config import OldFractalConfig
-    from ..config import convert_old_configuration
+    from qcfractal.old_config import OldFractalConfig
+    from qcfractal.config import convert_old_configuration
 
     logger = logging.getLogger(__name__)
 
