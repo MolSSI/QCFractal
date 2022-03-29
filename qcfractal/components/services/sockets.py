@@ -89,6 +89,10 @@ class ServiceSocket:
                     "error_message": "Some task(s) did not complete successfully",
                 }
 
+                self._logger.info(
+                    f"Record {service_orm.record_id} (service {service_orm.id}) has task failures. Marking as errored"
+                )
+
                 self.root_socket.records.update_failed_service(session, service_orm.record, error)
                 session.commit()
 
@@ -116,6 +120,9 @@ class ServiceSocket:
 
                 # If the service has successfully completed, delete the entry from the Service Queue
                 if completed:
+                    self._logger.info(
+                        f"Record {service_orm.record_id} (service {service_orm.id}) has successfully completed!"
+                    )
                     service_orm.record.compute_history[-1].status = RecordStatusEnum.complete
                     service_orm.record.compute_history[-1].modified_on = datetime.utcnow()
                     service_orm.record.status = RecordStatusEnum.complete
