@@ -90,8 +90,9 @@ class FlaskProcess(ProcessBase):
         # Get the global storage socket and set up the queue
         storage_socket.set_completed_watch(self._completed_queue)
 
-        # Disable printing "Environment: ... WARNING: This is a development server...
-        os.environ["WERKZEUG_RUN_MAIN"] = "true"
+        from flask import cli
+
+        cli.show_server_banner = lambda *_: None
 
         # Get the werkzeug logger to shut up by setting its level to the root level
         # I don't know what flask does but it seems to override it to INFO if not set
