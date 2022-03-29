@@ -197,9 +197,9 @@ class ProcessRunner:
         Terminate the subprocess
         """
 
-        # Don't call self._finalizer, since the subprocess could be restarted with start()
-        # and calling the finalizer will detach the finalizer
-        self._stop(self._subproc, self._finalize_logger)
+        # Call self._finalizer. Will call _stop and also detach the finalizer
+        if self._subproc is not None:
+            self._finalizer()
 
     def exitcode(self) -> Union[int, None]:
         return self._subproc.exitcode
