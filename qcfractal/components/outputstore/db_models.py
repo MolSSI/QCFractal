@@ -55,6 +55,11 @@ class OutputStoreORM(BaseORM):
         out_obj = OutputStore(**self.dict())
         new_str = out_obj.as_string + to_append
 
+        # Handle old, uncompressed output
+        if self.compression is None:
+            self.compression = CompressionEnum.lzma
+            self.compression_level = 1
+
         new_obj = OutputStore.compress(self.output_type, new_str, self.compression, self.compression_level)
 
         self.value = None

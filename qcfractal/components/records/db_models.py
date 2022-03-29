@@ -32,11 +32,19 @@ class RecordComputeHistoryORM(BaseORM):
     modified_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
     provenance = Column(JSON)
 
-    outputs = relationship(OutputStoreORM, lazy="select")
+    outputs = relationship(OutputStoreORM, lazy="select", cascade="all, delete-orphan")
 
-    def upsert_output(self, new_output: OutputStoreORM):
-        self.outputs = [o for o in self.outputs if o.output_type != new_output.output_type]
-        self.outputs.append(new_output)
+    def upsert_output(self, session, new_output_orm: OutputStore) -> None:
+        out_tmp = []
+        for o in self.outputs:
+            if o.output_type == new_output_orm.output_type:
+                session.delete(o)
+            else:
+                out_tmp.append(o)
+
+        session.flush()
+        out_tmp.append(new_output_orm)
+        self.outputs = out_tmp
 
     def get_output(self, output_type: OutputTypeEnum) -> OutputStoreORM:
         for o in self.outputs:

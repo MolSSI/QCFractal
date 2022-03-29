@@ -506,14 +506,14 @@ class RecordSocket:
         record_type = service_orm.record.record_type
         return self._handler_map[record_type].iterate_service(session, service_orm)
 
-    def update_failed_service(self, record_orm: BaseRecordORM, error_info: Dict[str, Any]):
+    def update_failed_service(self, session, record_orm: BaseRecordORM, error_info: Dict[str, Any]):
         record_orm.status = RecordStatusEnum.error
 
         error_obj = OutputStore.compress(OutputTypeEnum.error, error_info, CompressionEnum.lzma, 1)
         error_orm = OutputStoreORM.from_model(error_obj)
         record_orm.compute_history[-1].status = RecordStatusEnum.error
 
-        record_orm.compute_history[-1].upsert_output(error_orm)
+        record_orm.compute_history[-1].upsert_output(session, error_orm)
         record_orm.compute_history[-1].modified_on = datetime.utcnow()
 
         record_orm.status = RecordStatusEnum.error

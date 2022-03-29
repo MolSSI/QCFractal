@@ -89,7 +89,7 @@ class ServiceSocket:
                     "error_message": "Some task(s) did not complete successfully",
                 }
 
-                self.root_socket.records.update_failed_service(service_orm.record, error)
+                self.root_socket.records.update_failed_service(session, service_orm.record, error)
                 session.commit()
 
                 self.root_socket.notify_completed_watch(service_orm.record_id, RecordStatusEnum.error)
@@ -109,7 +109,7 @@ class ServiceSocket:
                         "error_type": "service_iteration_error",
                         "error_message": "Error iterating service: " + str(err),
                     }
-                    self.root_socket.records.update_failed_service(service_orm.record, error)
+                    self.root_socket.records.update_failed_service(session, service_orm.record, error)
                     session.commit()
                     self.root_socket.notify_completed_watch(service_orm.record_id, RecordStatusEnum.error)
                     continue
@@ -211,7 +211,7 @@ class ServiceSocket:
                             "error_message": "Error in initialization/iteration of service: " + str(err),
                         }
 
-                        self.root_socket.records.update_failed_service(service_orm.record, error)
+                        self.root_socket.records.update_failed_service(session, service_orm.record, error)
                         session.commit()
                         self.root_socket.notify_completed_watch(service_orm.record_id, RecordStatusEnum.error)
 
