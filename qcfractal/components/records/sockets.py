@@ -512,7 +512,8 @@ class RecordSocket:
         error_obj = OutputStore.compress(OutputTypeEnum.error, error_info, CompressionEnum.lzma, 1)
         error_orm = OutputStoreORM.from_model(error_obj)
         record_orm.compute_history[-1].status = RecordStatusEnum.error
-        record_orm.compute_history[-1].outputs.append(error_orm)
+
+        record_orm.compute_history[-1].upsert_output(error_orm)
         record_orm.compute_history[-1].modified_on = datetime.utcnow()
 
         record_orm.status = RecordStatusEnum.error
