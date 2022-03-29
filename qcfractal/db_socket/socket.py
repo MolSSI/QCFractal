@@ -200,6 +200,11 @@ class SQLAlchemySocket:
         from alembic.migration import MigrationContext
         from alembic.script import ScriptDirectory
 
+        # Disable logging for migration context (for now)
+        alembic_log = logging.getLogger("alembic")
+        old_level = alembic_log.getEffectiveLevel()
+        alembic_log.setLevel(logging.WARNING)
+
         alembic_cfg = SQLAlchemySocket.get_alembic_config(self.qcf_config.database)
         script = ScriptDirectory.from_config(alembic_cfg)
         heads = script.get_heads()
@@ -213,6 +218,8 @@ class SQLAlchemySocket:
 
         if heads[0] != current_rev:
             raise RuntimeError("Database needs migration. Please run `qcfractal-server upgrade` (after backing up!)")
+
+        alembic_log.setLevel(old_level)
 
     def __str__(self) -> str:
         return f"<SQLAlchemySocket: address='{self.uri}`>"
