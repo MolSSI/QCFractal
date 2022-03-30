@@ -11,13 +11,10 @@ from sqlalchemy.orm import joinedload, contains_eager
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.records.db_models import BaseRecordORM
-from qcfractal.interface.models import (
-    FailedOperation,
-)
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerStatusEnum
 from qcportal.metadata_models import TaskReturnMetadata
-from qcportal.records import RecordStatusEnum
+from qcportal.records import FailedOperation, RecordStatusEnum
 from qcportal.utils import calculate_limit
 from .db_models import TaskQueueORM
 

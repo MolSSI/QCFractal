@@ -11,8 +11,7 @@ from typing import Optional, Dict, Any
 
 import yaml
 from pydantic import Field, validator, root_validator, ValidationError
-
-from .interface.models import AutodocBaseSettings
+from qcelemental.models import AutodocBaseSettings
 
 
 def update_nested_dict(d, u):
