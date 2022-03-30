@@ -4,9 +4,9 @@ from datetime import datetime
 from typing import Optional, Dict, Any, List, Iterable, Type, Tuple, Union, Callable
 
 import pandas as pd
-from pydantic import BaseModel, Extra, PrivateAttr
+from pydantic import BaseModel, Extra, PrivateAttr, validator
 
-from qcportal.base_models import RestModelBase
+from qcportal.base_models import RestModelBase, validate_list_to_single
 from qcportal.records import BaseRecord, PriorityEnum, RecordStatusEnum
 from qcportal.utils import make_list
 
@@ -741,6 +741,14 @@ class DatasetDeleteRecordItemsBody(RestModelBase):
     delete_records: bool = False
 
 
+class DatasetDeleteParams(RestModelBase):
+    delete_records: bool = False
+
+    @validator("delete_records", pre=True)
+    def validate_lists(cls, v):
+        return validate_list_to_single(v)
+
+
 class DatasetGetRecordItemsBody(RestModelBase):
     entry_names: Optional[List[str]] = None
     specification_names: Optional[List[str]] = None
@@ -769,3 +777,8 @@ class DatasetRecordRevertBody(RestModelBase):
     entry_names: Optional[List[str]] = None
     specification_names: Optional[List[str]] = None
     revert_status: RecordStatusEnum = None
+
+
+class DatasetQueryRecords(RestModelBase):
+    record_id: List[int]
+    dataset_type: Optional[List[str]] = None

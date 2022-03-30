@@ -15,6 +15,8 @@ from qcportal.datasets import (
     DatasetDeleteRecordItemsBody,
     DatasetRecordRevertBody,
     DatasetModifyMetadataBody,
+    DatasetQueryRecords,
+    DatasetDeleteParams,
 )
 
 
@@ -41,6 +43,23 @@ def query_general_dataset_v1(body_data: DatasetQueryModel):
         dataset_id = storage_socket.datasets.lookup_id(body_data.dataset_type, body_data.name, session=session)
         ds_socket = storage_socket.datasets.lookup_type(dataset_id, session=session)
         return ds_socket.get(dataset_id, body_data.include, body_data.exclude, session=session)
+
+
+@main.route("/v1/datasets/queryrecords", methods=["POST"])
+@wrap_route(DatasetQueryRecords, None, "READ")
+def query_dataset_records_v1(body_data: DatasetQueryRecords):
+    return storage_socket.datasets.query_dataset_records(
+        record_id=body_data.record_id, dataset_type=body_data.dataset_type
+    )
+
+
+@main.route("/v1/datasets/<int:dataset_id>", methods=["DELETE"])
+@wrap_route(None, DatasetDeleteParams, "WRITE")
+def delete_dataset_v1(dataset_id: int, *, url_params: DatasetDeleteParams):
+    with storage_socket.session_scope(True) as session:
+        ds_type = storage_socket.datasets.lookup_type(dataset_id, session=session)
+        ds_socket = storage_socket.datasets.get_socket(ds_type)
+        return ds_socket.delete_dataset(dataset_id, url_params.delete_records)
 
 
 #################################################################

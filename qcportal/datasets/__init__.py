@@ -11,6 +11,8 @@ from .models import (
     DatasetRecordModifyBody,
     DatasetRecordRevertBody,
     DatasetModifyMetadataBody,
+    DatasetQueryRecords,
+    DatasetDeleteParams,
 )
 
 # All possible datasets we can get from the server

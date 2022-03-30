@@ -24,7 +24,13 @@ from .base_models import (
 )
 from .cache import PortalCache
 from .client_base import PortalClientBase
-from .datasets import AllDatasetTypes, AllDatasetDataModelTypes, DatasetQueryModel
+from .datasets import (
+    AllDatasetTypes,
+    AllDatasetDataModelTypes,
+    DatasetQueryModel,
+    DatasetQueryRecords,
+    DatasetDeleteParams,
+)
 from .datasets.optimization import OptimizationDatasetAddBody
 from .keywords import KeywordSet
 from .managers import ManagerQueryBody, ComputeManager
@@ -284,6 +290,27 @@ class PortalClient(PortalClientBase):
 
         return self.datasetmodel_from_datamodel(ds)
 
+    def query_dataset_records(
+        self,
+        record_id: Union[int, Iterable[int]],
+        dataset_type: Optional[Iterable[str]] = None,
+    ):
+
+        payload = {
+            "record_id": make_list(record_id),
+            "dataset_type": dataset_type,
+        }
+
+        return self._auto_request(
+            "post",
+            f"v1/datasets/queryrecords",
+            DatasetQueryRecords,
+            None,
+            List[Dict],
+            payload,
+            None,
+        )
+
     def get_dataset_by_id(self, dataset_id: int):
 
         payload = {"include": ["*", "specifications.*", "specifications.specification"]}
@@ -345,6 +372,11 @@ class PortalClient(PortalClientBase):
         )
 
         return self.get_dataset_by_id(ds_id)
+
+    def delete_dataset(self, dataset_id: int, delete_records: bool):
+        params = DatasetDeleteParams(delete_records=delete_records)
+
+        return self._auto_request("delete", f"v1/datasets/{dataset_id}", None, DatasetDeleteParams, Any, None, params)
 
     ##############################################################
     # Molecules

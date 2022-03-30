@@ -466,6 +466,28 @@ class BaseDatasetSocket:
             if delete_records:
                 self.root_socket.records.delete(record_ids, soft_delete=False, delete_children=True, session=session)
 
+    def delete_dataset(
+        self,
+        dataset_id: int,
+        delete_records: bool,
+        *,
+        session: Optional[Session] = None,
+    ):
+
+        with self.root_socket.optional_session(session) as session:
+            if delete_records:
+                # Store all record ids for later deletion
+                stmt = select(self.record_item_orm.record_id)
+                stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
+                record_ids = session.execute(stmt).scalars().all()
+
+            stmt = delete(self.dataset_orm)
+            stmt = stmt.where(self.dataset_orm.id == dataset_id)
+            session.execute(stmt)
+
+            if delete_records:
+                self.root_socket.records.delete(record_ids, soft_delete=False, delete_children=True, session=session)
+
     def submit(
         self,
         dataset_id: int,
@@ -680,3 +702,39 @@ class DatasetSocket:
             r = session.execute(stmt).all()
 
             return [{"id": x[0], "dataset_type": x[1], "dataset_name": x[2]} for x in r]
+
+    def query_dataset_records(
+        self,
+        record_id: Iterable[int],
+        dataset_type: Optional[Iterable[str]] = None,
+        *,
+        session: Optional[Session] = None,
+    ):
+
+        stmt = select(
+            self._record_cte.c.record_id,
+            CollectionORM.id,
+            CollectionORM.collection_type,
+            CollectionORM.name,
+            self._record_cte.c.entry_name,
+            self._record_cte.c.specification_name,
+        )
+        stmt = stmt.join(self._record_cte, CollectionORM.id == self._record_cte.c.dataset_id)
+        stmt = stmt.where(self._record_cte.c.record_id.in_(record_id))
+
+        if dataset_type is not None:
+            stmt = stmt.where(CollectionORM.collection_type == dataset_type)
+
+        with self.root_socket.optional_session(session, True) as session:
+            ret = session.execute(stmt).all()
+            return [
+                {
+                    "record_id": x[0],
+                    "dataset_id": x[1],
+                    "dataset_type": x[2],
+                    "dataset_name": x[3],
+                    "entry_name": x[4],
+                    "specification_name": x[5],
+                }
+                for x in ret
+            ]
