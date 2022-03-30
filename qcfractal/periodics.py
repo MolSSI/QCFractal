@@ -105,7 +105,7 @@ class FractalPeriodics:
         reset to a waiting state. The amount of time to wait for a manager is controlled by the config
         options manager_max_missed_heartbeats and manager_heartbeat_frequency.
         """
-        self.logger.info("Checking manager heartbeats")
+        self.logger.debug("Checking manager heartbeats")
         manager_window = self.manager_max_missed_heartbeats * self.manager_heartbeat_frequency
         dt = datetime.utcnow() - timedelta(seconds=manager_window)
 
