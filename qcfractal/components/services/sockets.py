@@ -101,7 +101,7 @@ class ServiceSocket:
             # Completed, successful service dependencies. Service is ready for the next iteration
             for service_orm in completed_services:
                 try:
-                    self._logger.info(
+                    self._logger.debug(
                         f"Record {service_orm.record_id} (service {service_orm.id}) has all tasks completed. Iterating..."
                     )
                     completed = self.root_socket.records.iterate_service(session, service_orm)
