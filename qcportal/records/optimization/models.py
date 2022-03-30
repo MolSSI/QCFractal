@@ -8,6 +8,7 @@ from qcelemental.models.procedures import (
 )
 from typing_extensions import Literal
 
+from qcportal.records.singlepoint import SinglepointProtocols
 from .. import BaseRecord, RecordAddBodyBase, RecordQueryBody
 from ..singlepoint import (
     SinglepointRecord,
@@ -20,10 +21,15 @@ from ...base_models import ProjURLParameters
 
 class OptimizationQCInputSpecification(QCInputSpecification):
     driver: SinglepointDriver = SinglepointDriver.deferred
+    protocols = SinglepointProtocols()
 
     @pydantic.validator("driver", pre=True)
     def force_driver(cls, v):
         return SinglepointDriver.deferred
+
+    @pydantic.validator("protocols", pre=True)
+    def force_protocols(cls, v):
+        return SinglepointProtocols()
 
 
 class OptimizationInputSpecification(BaseModel):
