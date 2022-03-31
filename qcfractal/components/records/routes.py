@@ -61,6 +61,13 @@ def get_record_comments_v1(record_id: int):
     return rec[0]["comments"]
 
 
+@main.route("/v1/records/<int:record_id>/native_files", methods=["GET"])
+@wrap_route(None, None, "READ")
+def get_record_native_files_v1(record_id: int):
+    rec = storage_socket.records.get([record_id], include=["native_files"])
+    return rec[0]["native_files"]
+
+
 @main.route("/v1/records/<int:record_id>", methods=["DELETE"])
 @wrap_route(None, None, "DELETE")
 def delete_records_v1(record_id: int):

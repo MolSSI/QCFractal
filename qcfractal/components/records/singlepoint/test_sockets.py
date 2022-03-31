@@ -18,6 +18,7 @@ from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
+from qcportal.compression import decompress_string
 from qcportal.records.singlepoint import (
     QCSpecification,
     QCInputSpecification,
@@ -329,6 +330,7 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket):
     input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_benzene_energy_1")
     input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_peroxide_energy_wfn")
     input_spec_3, molecule_3, result_data_3 = load_procedure_data("rdkit_water_energy")
+    input_spec_4, molecule_4, result_data_4 = load_procedure_data("psi4_h2_b3lyp_nativefiles")
 
     meta1, id1 = storage_socket.records.singlepoint.add(
         [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
@@ -339,8 +341,11 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket):
     meta3, id3 = storage_socket.records.singlepoint.add(
         [molecule_3], input_spec_3, tag="*", priority=PriorityEnum.normal
     )
+    meta4, id4 = storage_socket.records.singlepoint.add(
+        [molecule_4], input_spec_4, tag="*", priority=PriorityEnum.normal
+    )
 
-    result_map = {id1[0]: result_data_1, id2[0]: result_data_2, id3[0]: result_data_3}
+    result_map = {id1[0]: result_data_1, id2[0]: result_data_2, id3[0]: result_data_3, id4[0]: result_data_4}
 
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
     storage_socket.managers.activate(
@@ -356,7 +361,7 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket):
     )
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname, limit=100)
-    assert len(tasks) == 3
+    assert len(tasks) == 4
 
     time_0 = datetime.utcnow()
     rmeta = storage_socket.tasks.update_finished(
@@ -365,14 +370,16 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket):
             tasks[0]["id"]: result_map[tasks[0]["record_id"]],
             tasks[1]["id"]: result_map[tasks[1]["record_id"]],
             tasks[2]["id"]: result_map[tasks[2]["record_id"]],
+            tasks[3]["id"]: result_map[tasks[3]["record_id"]],
         },
     )
     time_1 = datetime.utcnow()
-    assert rmeta.n_accepted == 3
+    assert rmeta.n_accepted == 4
 
-    all_results = [result_data_1, result_data_2, result_data_3]
+    all_results = [result_data_1, result_data_2, result_data_3, result_data_4]
     recs = storage_socket.records.singlepoint.get(
-        id1 + id2 + id3, include=["*", "wavefunction", "compute_history.*", "compute_history.outputs"]
+        id1 + id2 + id3 + id4,
+        include=["*", "wavefunction", "compute_history.*", "compute_history.outputs", "native_files"],
     )
 
     for record, result in zip(recs, all_results):
@@ -391,7 +398,7 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket):
         assert time_0 < record["compute_history"][0]["modified_on"] < time_1
         assert record["compute_history"][0]["provenance"] == result.provenance
 
-        assert record["return_result"] == result.return_result
+        # assert record["return_result"] == result.return_result
         arprop = AtomicResultProperties(**record["properties"])
         assert arprop.nuclear_repulsion_energy == result.properties.nuclear_repulsion_energy
         assert arprop.return_energy == result.properties.return_energy
@@ -405,17 +412,32 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket):
             wfn_model = WavefunctionProperties(**record["wavefunction"])
             assert_wfn_equal(wfn_model, result.wavefunction)
 
+        nf = record.get("native_files", None)
+        if not nf:
+            assert not result.native_files
+        else:
+            avail_nf = set(record["native_files"].keys())
+            result_nf = set(result.native_files.keys()) if result.native_files is not None else set()
+            compressed_nf = result.extras.get("_qcfractal_compressed_native_files", {})
+            result_nf |= set(compressed_nf.keys())
+            assert avail_nf == result_nf
+
         outs = record["compute_history"][0]["outputs"]
 
         avail_outputs = set(outs.keys())
         result_outputs = {x for x in ["stdout", "stderr", "error"] if getattr(result, x, None) is not None}
+        compressed_outputs = result.extras.get("_qcfractal_compressed_outputs", [])
+        result_outputs |= set(x["output_type"] for x in compressed_outputs)
         assert avail_outputs == result_outputs
 
         # NOTE - this only works for string outputs (not dicts)
         # but those are used for errors, which aren't covered here
         for o in outs.values():
             out_obj = OutputStore(**o)
-            ro = getattr(result, o["output_type"])
+            ro = getattr(result, o["output_type"], None)
+            if ro is None:
+                co = result.extras["_qcfractal_compressed_outputs"][0]
+                ro = decompress_string(co["data"], co["compression"])
             assert out_obj.as_string == ro
 
 

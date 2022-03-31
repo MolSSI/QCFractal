@@ -502,8 +502,13 @@ class ComputeManager:
 
         results = self.queue_adapter.acquire_complete()
 
-        # Compress the stdout/stderr/error outputs
+        # Compress the stdout/stderr/error outputs, and native files
         results = compress_results(results)
+
+        from qcportal.serialization import serialize
+        if results:
+            with open("/tmp/res.json", 'w') as f:
+                json.dump(serialize(results, "application/json"), f)
 
         # Stats fetching for running tasks, as close to the time we got the jobs as we can
         last_time = self.statistics.last_update_time

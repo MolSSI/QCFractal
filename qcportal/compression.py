@@ -19,6 +19,20 @@ class CompressionEnum(str, Enum):
     lzma = "lzma"
 
 
+def get_compressed_ext(compression_type: str) -> str:
+    if compression_type == CompressionEnum.none:
+        return ""
+    elif compression_type == CompressionEnum.gzip:
+        return ".gz"
+    elif compression_type == CompressionEnum.bzip2:
+        return ".bz2"
+    elif compression_type == CompressionEnum.lzma:
+        return ".xz"
+    else:
+        # Shouldn't ever happen, unless we change CompressionEnum but not the rest of this function
+        raise TypeError(f"Unknown compression type: {compression_type}")
+
+
 def compress(
     input_data: Union[str, bytes, Dict[str, str]],
     compression_type: CompressionEnum = CompressionEnum.none,
@@ -77,13 +91,13 @@ def decompress_bytes(compressed_data: bytes, compression_type: CompressionEnum) 
     """
     Decompresses bytes to a byte array
     """
-    if compression_type is CompressionEnum.none:
+    if compression_type == CompressionEnum.none:
         return compressed_data
-    elif compression_type is CompressionEnum.gzip:
+    elif compression_type == CompressionEnum.gzip:
         return gzip.decompress(compressed_data)
-    elif compression_type is CompressionEnum.bzip2:
+    elif compression_type == CompressionEnum.bzip2:
         return bz2.decompress(compressed_data)
-    elif compression_type is CompressionEnum.lzma:
+    elif compression_type == CompressionEnum.lzma:
         return lzma.decompress(compressed_data)
     else:
         # Shouldn't ever happen, unless we change CompressionEnum but not the rest of this function

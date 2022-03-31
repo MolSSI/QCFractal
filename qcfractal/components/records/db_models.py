@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
+from qcfractal.components.nativefiles.db_models import NativeFileORM
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.db_socket import BaseORM, MsgpackExt
 from qcportal.compression import CompressionEnum
@@ -113,6 +114,11 @@ class BaseRecordORM(BaseORM):
         uselist=True,
         order_by="RecordInfoBackupORM.modified_on.asc()",
         cascade="all, delete-orphan",
+    )
+
+    # Native files returned from the computation
+    native_files = relationship(
+        NativeFileORM, collection_class=attribute_mapped_collection("name"), cascade="all, delete-orphan"
     )
 
     __table_args__: Tuple[Any, ...] = (

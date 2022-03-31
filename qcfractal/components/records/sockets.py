@@ -8,6 +8,7 @@ from sqlalchemy import select, union, or_
 from sqlalchemy.orm import joinedload, selectinload, with_polymorphic
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
+from qcfractal.components.nativefiles.db_models import NativeFileORM
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependenciesORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import (
@@ -50,7 +51,7 @@ def create_compute_history_entry(
     history_orm.modified_on = datetime.utcnow()
 
     # Get the compressed outputs if they exist
-    compressed_output = result.extras.pop("_qcfractal_compressed_outputs", None)
+    compressed_output = result.extras.get("_qcfractal_compressed_outputs", None)
 
     if compressed_output is not None:
         all_outputs = [OutputStore(**x) for x in compressed_output]
@@ -75,6 +76,17 @@ def create_compute_history_entry(
     history_orm.outputs = {x.output_type: OutputStoreORM.from_model(x) for x in all_outputs}
 
     return history_orm
+
+
+def native_files_helper(result: AllResultTypes) -> Dict[str, NativeFileORM]:
+    # Get the compressed outputs if they exist
+    compressed_nf = result.extras.get("_qcfractal_compressed_native_files", None)
+
+    if compressed_nf is not None:
+        return {k: NativeFileORM(**v) for k, v in compressed_nf.items()}
+    else:
+        # Don't bother with checking if they exist uncompressed?
+        return {}
 
 
 class BaseRecordSocket:
@@ -492,6 +504,7 @@ class RecordSocket:
         history_orm = create_compute_history_entry(result)
         history_orm.manager_name = manager_name
         record_orm.compute_history.append(history_orm)
+        record_orm.native_files = native_files_helper(result)
 
         record_orm.status = history_orm.status
         record_orm.manager_name = manager_name
@@ -546,6 +559,7 @@ class RecordSocket:
 
             # Now back to the common modifications
             record_orm.compute_history.append(history_orm)
+            record_orm.native_files = native_files_helper(result)
 
             record_orm.status = history_orm.status
             record_orm.modified_on = history_orm.modified_on

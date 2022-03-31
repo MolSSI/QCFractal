@@ -13,6 +13,7 @@ from ..base_models import (
     ProjURLParameters,
 )
 from ..outputstore import OutputStore, OutputTypeEnum
+from ..nativefiles import NativeFile
 
 
 class PriorityEnum(int, Enum):
@@ -168,6 +169,8 @@ class BaseRecord(BaseModel):
 
         comments: Optional[List[RecordComment]] = None
 
+        native_files: Optional[Dict[str, NativeFile]] = None
+
     class Config:
         extra = Extra.forbid
 
@@ -226,6 +229,17 @@ class BaseRecord(BaseModel):
             None,
             None,
             Optional[List[RecordComment]],
+            None,
+            None,
+        )
+
+    def _fetch_native_files(self):
+        self.raw_data.native_files = self.client._auto_request(
+            "get",
+            f"v1/records/{self.raw_data.id}/native_files",
+            None,
+            None,
+            Optional[Dict[str, NativeFile]],
             None,
             None,
         )
@@ -290,6 +304,12 @@ class BaseRecord(BaseModel):
         if self.raw_data.comments is None:
             self._fetch_comments()
         return self.raw_data.comments
+
+    @property
+    def native_files(self) -> Optional[Dict[str, NativeFile]]:
+        if self.raw_data.native_files is None:
+            self._fetch_native_files()
+        return self.raw_data.native_files
 
     @property
     def stdout(self) -> Optional[str]:
