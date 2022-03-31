@@ -333,21 +333,30 @@ def login():
             username = request.form["username"]
             password = request.form["password"]
     except Exception:
+        current_app.logger.info("Invalid/malformed login request")
         raise AuthenticationFailure("Invalid/malformed login request")
 
     if username is None:
+        current_app.logger.info("No username provided for login")
         raise AuthenticationFailure("No username provided for login")
     if password is None:
+        current_app.logger.info(f"No username provided for login of user {username}")
         raise AuthenticationFailure("No password provided for login")
 
     # Raises exceptions on error
     # Also raises AuthenticationFailure if the user is invalid or the password is incorrect
     # This should be handled properly by the flask errorhandlers
-    permissions = storage_socket.users.verify(username, password)
+    try:
+        permissions = storage_socket.users.verify(username, password)
+    except AuthenticationFailure as e:
+        current_app.logger.info(f"Authentication failed for user {username}: {str(e)}")
+        raise
 
     access_token = create_access_token(identity=username, additional_claims={"permissions": permissions})
     # expires_delta=datetime.timedelta(days=3))
     refresh_token = create_refresh_token(identity=username)
+
+    current_app.logger.info(f"Successful login for user {username}")
     return jsonify(msg="Login succeeded!", access_token=access_token, refresh_token=refresh_token), 200
 
 
