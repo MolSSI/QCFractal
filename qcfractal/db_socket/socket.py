@@ -136,6 +136,9 @@ class SQLAlchemySocket:
 
         alembic_ini = os.path.join(qcfractal.qcfractal_topdir, "alembic.ini")
         alembic_cfg = Config(alembic_ini)
+
+        # Tell alembic to not set up logging. We already did that
+        alembic_cfg.set_main_option("skip_logging", "True")
         alembic_cfg.set_main_option("sqlalchemy.url", db_config.uri)
 
         return alembic_cfg
@@ -200,13 +203,8 @@ class SQLAlchemySocket:
         from alembic.migration import MigrationContext
         from alembic.script import ScriptDirectory
 
-        # Disable logging for migration context (for now)
-        alembic_log = logging.getLogger("alembic")
-        old_level = alembic_log.getEffectiveLevel()
-        alembic_log.setLevel(logging.WARNING)
-
-        alembic_cfg = SQLAlchemySocket.get_alembic_config(self.qcf_config.database)
-        script = ScriptDirectory.from_config(alembic_cfg)
+        script_dir = os.path.join(qcfractal.qcfractal_topdir, "alembic")
+        script = ScriptDirectory(script_dir)
         heads = script.get_heads()
 
         conn = self.engine.connect()
@@ -218,8 +216,6 @@ class SQLAlchemySocket:
 
         if heads[0] != current_rev:
             raise RuntimeError("Database needs migration. Please run `qcfractal-server upgrade` (after backing up!)")
-
-        alembic_log.setLevel(old_level)
 
     def __str__(self) -> str:
         return f"<SQLAlchemySocket: address='{self.uri}`>"
