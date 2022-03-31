@@ -72,7 +72,7 @@ def create_compute_history_entry(
             error = OutputStore.compress(OutputTypeEnum.error, result.error.dict(), CompressionEnum.lzma, 1)
             all_outputs.append(error)
 
-    history_orm.outputs = [OutputStoreORM.from_model(x) for x in all_outputs]
+    history_orm.outputs = {x.output_type: OutputStoreORM.from_model(x) for x in all_outputs}
 
     return history_orm
 
@@ -606,7 +606,7 @@ class RecordSocket:
         history_orm.status = RecordStatusEnum.error
         history_orm.manager_name = manager_name
         history_orm.modified_on = datetime.utcnow()
-        history_orm.outputs = [OutputStoreORM.from_model(x) for x in all_outputs]
+        history_orm.outputs = {x.output_type: OutputStoreORM.from_model(x) for x in all_outputs}
 
         record_orm.status = RecordStatusEnum.error
         record_orm.modified_on = history_orm.modified_on

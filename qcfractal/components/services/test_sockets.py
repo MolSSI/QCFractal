@@ -49,10 +49,7 @@ def test_service_socket_error(storage_socket: SQLAlchemySocket):
     assert rec[0]["service"] is not None
 
     outs = rec[0]["compute_history"][-1]["outputs"]
-    out0 = OutputStore(**outs[0])
-    out1 = OutputStore(**outs[1])
-
-    out_err = out0 if out0.output_type == OutputTypeEnum.error else out1
+    out_err = OutputStore(**outs[OutputTypeEnum.error])
     assert "did not complete successfully" in out_err.as_json["error_message"]
 
 

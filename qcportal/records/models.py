@@ -84,20 +84,19 @@ class ComputeHistory(BaseModel):
     manager_name: Optional[str]
     modified_on: datetime
     provenance: Optional[Provenance]
-    outputs: Optional[List[OutputStore]]
+    outputs: Optional[Dict[str, OutputStore]]
 
     def get_output(self, output_type: OutputTypeEnum) -> Optional[Union[str, Dict[str, Any]]]:
         if not self.outputs:
             return None
 
-        for o in self.outputs:
-            if o.output_type == output_type:
-                if o.output_type == OutputTypeEnum.error:
-                    return o.as_json
-                else:
-                    return o.as_string
-
-        return None
+        o = self.outputs.get(output_type, None)
+        if o is None:
+            return None
+        elif o.output_type == OutputTypeEnum.error:
+            return o.as_json
+        else:
+            return o.as_string
 
 
 class RecordComment(BaseModel):

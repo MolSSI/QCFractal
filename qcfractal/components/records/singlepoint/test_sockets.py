@@ -407,13 +407,13 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket):
 
         outs = record["compute_history"][0]["outputs"]
 
-        avail_outputs = {x["output_type"] for x in outs}
+        avail_outputs = set(outs.keys())
         result_outputs = {x for x in ["stdout", "stderr", "error"] if getattr(result, x, None) is not None}
         assert avail_outputs == result_outputs
 
         # NOTE - this only works for string outputs (not dicts)
         # but those are used for errors, which aren't covered here
-        for o in outs:
+        for o in outs.values():
             out_obj = OutputStore(**o)
             ro = getattr(result, o["output_type"])
             assert out_obj.as_string == ro
@@ -466,8 +466,8 @@ def test_singlepoint_socket_insert(storage_socket: SQLAlchemySocket):
 
     assert len(recs[0]["compute_history"][0]["outputs"]) == 1
     assert len(recs[1]["compute_history"][0]["outputs"]) == 1
-    outs1 = OutputStore(**recs[0]["compute_history"][0]["outputs"][0])
-    outs2 = OutputStore(**recs[1]["compute_history"][0]["outputs"][0])
+    outs1 = OutputStore(**recs[0]["compute_history"][0]["outputs"]["stdout"])
+    outs2 = OutputStore(**recs[1]["compute_history"][0]["outputs"]["stdout"])
     assert outs1.as_string == outs2.as_string
 
 

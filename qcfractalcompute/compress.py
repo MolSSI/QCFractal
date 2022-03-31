@@ -7,6 +7,7 @@ from typing import Union, Dict, Any
 from qcelemental.models import AtomicResult, OptimizationResult
 
 from qcportal.compression import CompressionEnum, compress
+from qcportal.outputstore.models import OutputStore, OutputTypeEnum
 
 
 def _compress_common(
@@ -24,46 +25,21 @@ def _compress_common(
     update = {}
 
     if stdout is not None:
-        stdout_data, compression_type, compression_level = compress(stdout, CompressionEnum.lzma, 6)
-        compressed_outputs.append(
-            dict(
-                output_type="stdout",
-                compression=compression_type,
-                compression_level=compression_level,
-                data=stdout_data
-            )
-        )
-
+        new_stdout = OutputStore.compress(OutputTypeEnum.stdout, stdout, CompressionEnum.lzma, 6)
+        compressed_outputs.append(new_stdout)
         update["stdout"] = None
 
     if stderr is not None:
-        stderr_data, compression_type, compression_level = compress(stderr, CompressionEnum.lzma, 6)
-        compressed_outputs.append(
-            dict(
-                output_type="stderr",
-                compression=compression_type,
-                compression_level=compression_level,
-                data=stderr_data
-            )
-        )
-
+        new_stderr = OutputStore.compress(OutputTypeEnum.stderr, stderr, CompressionEnum.lzma, 6)
+        compressed_outputs.append(new_stderr)
         update["stderr"] = None
 
     if error is not None:
-        error_data, compression_type, compression_level = compress(error.dict(), CompressionEnum.lzma, 6)
-        compressed_outputs.append(
-            dict(
-                output_type="error",
-                compression=compression_type,
-                compression_level=compression_level,
-                data=error_data
-            )
-        )
-
+        new_error = OutputStore.compress(OutputTypeEnum.error, error.dict(), CompressionEnum.lzma, 6)
+        compressed_outputs.append(new_error)
         update["error"] = None
 
-    extras = result.extras
-    update["extras"] = extras
+    update["extras"] = result.extras
     if compressed_outputs:
         update["extras"]["_qcfractal_compressed_outputs"] = compressed_outputs
 

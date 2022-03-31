@@ -192,7 +192,7 @@ class ServiceSocket:
                                 CompressionEnum.lzma,
                                 1,
                             )
-                            hist.outputs.append(OutputStoreORM.from_model(stdout))
+                            hist.outputs[OutputTypeEnum.stdout] = OutputStoreORM.from_model(stdout)
 
                         else:  # this was a restart of a not-running (ie, errored) service
                             stdout_orm = service_orm.record.compute_history[-1].get_output(OutputTypeEnum.stdout)
@@ -200,7 +200,7 @@ class ServiceSocket:
                             stdout_orm.id = None
                             stdout_orm.history_id = None
                             stdout_orm.append(f"\nRestarting service: {service_orm.record.record_type} at {now}")
-                            hist.outputs.append(stdout_orm)
+                            hist.outputs[OutputTypeEnum.stdout] = stdout_orm
 
                         service_orm.record.compute_history.append(hist)
 

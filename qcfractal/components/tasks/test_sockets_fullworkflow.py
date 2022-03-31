@@ -228,10 +228,10 @@ def test_task_socket_fullworkflow_error_retry(storage_socket: SQLAlchemySocket):
     assert hist[2]["status"] == RecordStatusEnum.error
     assert hist[3]["status"] == RecordStatusEnum.complete
 
-    assert hist[3]["outputs"][0]["output_type"] == OutputTypeEnum.stdout
-    assert hist[2]["outputs"][0]["output_type"] == OutputTypeEnum.error
-    assert hist[1]["outputs"][0]["output_type"] == OutputTypeEnum.error
-    assert hist[0]["outputs"][0]["output_type"] == OutputTypeEnum.error
+    assert list(hist[3]["outputs"].keys()) == [OutputTypeEnum.stdout]
+    assert list(hist[2]["outputs"].keys()) == [OutputTypeEnum.error]
+    assert list(hist[1]["outputs"].keys()) == [OutputTypeEnum.error]
+    assert list(hist[0]["outputs"].keys()) == [OutputTypeEnum.error]
 
     # Make sure manager info was updated
     manager = storage_socket.managers.get([mname1.fullname])
@@ -271,5 +271,5 @@ def test_task_socket_compressed_outputs_success(storage_socket: SQLAlchemySocket
     assert rmeta.accepted_ids == id1
 
     records = storage_socket.records.get(id1, include=["*", "task", "compute_history.*", "compute_history.outputs"])
-    out = OutputStore(**records[0]["compute_history"][0]["outputs"][0])
+    out = OutputStore(**records[0]["compute_history"][0]["outputs"][OutputTypeEnum.stdout])
     assert out.as_string == original_stdout

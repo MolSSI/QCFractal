@@ -372,7 +372,7 @@ def test_gridoptimization_socket_run(storage_socket: SQLAlchemySocket, test_data
     assert rec[0]["compute_history"][-1]["status"] == RecordStatusEnum.complete
     assert time_0 < rec[0]["compute_history"][-1]["modified_on"] < time_1
     assert rec[0]["service"] is None
-    out = OutputStore(**rec[0]["compute_history"][-1]["outputs"][0])
+    out = OutputStore(**rec[0]["compute_history"][-1]["outputs"]["stdout"])
     assert "Grid optimization finished successfully!" in out.as_string
 
     assert len(rec[0]["optimizations"]) == n_optimizations

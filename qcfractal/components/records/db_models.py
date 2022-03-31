@@ -3,6 +3,7 @@ from typing import Dict, Optional, Tuple, Any
 
 from sqlalchemy import Column, String, Integer, ForeignKey, Enum, DateTime, JSON, Index, Boolean
 from sqlalchemy.orm import relationship
+from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.outputstore.db_models import OutputStoreORM
@@ -33,28 +34,28 @@ class RecordComputeHistoryORM(BaseORM):
     modified_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
     provenance = Column(JSON)
 
-    outputs = relationship(OutputStoreORM, lazy="select", cascade="all, delete-orphan")
+    outputs = relationship(
+        OutputStoreORM, collection_class=attribute_mapped_collection("output_type"), cascade="all, delete-orphan"
+    )
 
     def upsert_output(self, session, new_output_orm: OutputStore) -> None:
-        out_tmp = []
-        for o in self.outputs:
-            if o.output_type == new_output_orm.output_type:
-                session.delete(o)
-            else:
-                out_tmp.append(o)
+        output_type = new_output_orm.output_type
 
+        if output_type in self.outputs:
+            old_orm = self.outputs.pop(output_type)
+            session.delete(old_orm)
         session.flush()
-        out_tmp.append(new_output_orm)
-        self.outputs = out_tmp
+
+        self.outputs[output_type] = new_output_orm
 
     def get_output(self, output_type: OutputTypeEnum) -> OutputStoreORM:
-        for o in self.outputs:
-            if o.output_type == output_type:
-                return o
+
+        if output_type in self.outputs:
+            return self.outputs[output_type]
 
         new_output = OutputStore.compress(output_type, "", CompressionEnum.lzma, 1)
         new_output_orm = OutputStoreORM.from_model(new_output)
-        self.outputs.append(new_output_orm)
+        self.outputs[output_type] = new_output_orm
         return new_output_orm
 
     __table_args__ = (

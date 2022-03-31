@@ -1,13 +1,10 @@
-import bz2
-import gzip
 import json
-import lzma
 from enum import Enum
 from typing import Union, Dict, Optional, Any
 
 from pydantic import Field, validator, BaseModel, Extra
 
-from qcportal.compression import CompressionEnum, compress, decompress_bytes, decompress_string, decompress_json
+from qcportal.compression import CompressionEnum, compress, decompress_string, decompress_json
 
 
 class OutputTypeEnum(str, Enum):

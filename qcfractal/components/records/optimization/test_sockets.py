@@ -438,13 +438,13 @@ def test_optimization_socket_run(storage_socket: SQLAlchemySocket):
 
         outs = record["compute_history"][0]["outputs"]
 
-        avail_outputs = {x["output_type"] for x in outs}
+        avail_outputs = set(outs.keys())
         result_outputs = {x for x in ["stdout", "stderr", "error"] if getattr(result, x, None) is not None}
         assert avail_outputs == result_outputs
 
         # NOTE - this only works for string outputs (not dicts)
         # but those are used for errors, which aren't covered here
-        for o in outs:
+        for o in outs.values():
             out_obj = OutputStore(**o)
             ro = getattr(result, o["output_type"])
             assert out_obj.as_string == ro
