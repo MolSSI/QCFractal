@@ -16,9 +16,10 @@ from qcfractal.db_socket.helpers import (
     get_general,
     delete_general,
 )
+from qcportal.compression import CompressionEnum
 from qcportal.exceptions import UserReportableError, MissingDataError
 from qcportal.metadata_models import DeleteMetadata, QueryMetadata, UpdateMetadata
-from qcportal.outputstore import OutputStore, OutputTypeEnum, CompressionEnum
+from qcportal.outputstore import OutputStore, OutputTypeEnum
 from qcportal.records import FailedOperation, PriorityEnum, RecordStatusEnum
 from .db_models import RecordComputeHistoryORM, BaseRecordORM, RecordInfoBackupORM, RecordCommentsORM
 

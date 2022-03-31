@@ -7,7 +7,8 @@ from sqlalchemy.orm import relationship
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.db_socket import BaseORM, MsgpackExt
-from qcportal.outputstore import OutputTypeEnum, OutputStore, CompressionEnum
+from qcportal.compression import CompressionEnum
+from qcportal.outputstore import OutputTypeEnum, OutputStore
 from qcportal.records import RecordStatusEnum
 
 

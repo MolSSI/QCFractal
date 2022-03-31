@@ -2,11 +2,11 @@
 Helpers for compressing data to send back to the server
 """
 
-import json
-import lzma
 from typing import Union, Dict, Any
 
 from qcelemental.models import AtomicResult, OptimizationResult
+
+from qcportal.compression import CompressionEnum, compress
 
 
 def _compress_common(
@@ -24,37 +24,39 @@ def _compress_common(
     update = {}
 
     if stdout is not None:
+        stdout_data, compression_type, compression_level = compress(stdout, CompressionEnum.lzma, 6)
         compressed_outputs.append(
             dict(
                 output_type="stdout",
-                compression="lzma",
-                compression_level=6,
-                data=lzma.compress(stdout.encode("utf-8"), preset=6),
+                compression=compression_type,
+                compression_level=compression_level,
+                data=stdout_data
             )
         )
 
         update["stdout"] = None
 
     if stderr is not None:
+        stderr_data, compression_type, compression_level = compress(stderr, CompressionEnum.lzma, 6)
         compressed_outputs.append(
             dict(
                 output_type="stderr",
-                compression="lzma",
-                compression_level=6,
-                data=lzma.compress(stderr.encode("utf-8"), preset=6),
+                compression=compression_type,
+                compression_level=compression_level,
+                data=stderr_data
             )
         )
 
-        compressed_outputs["stderr"] = lzma.compress(stderr.encode("utf-8"), preset=6)
         update["stderr"] = None
 
     if error is not None:
+        error_data, compression_type, compression_level = compress(error.dict(), CompressionEnum.lzma, 6)
         compressed_outputs.append(
             dict(
                 output_type="error",
-                compression="lzma",
-                compression_level=6,
-                data=lzma.compress(json.dumps(error).encode("utf-8"), preset=6),
+                compression=compression_type,
+                compression_level=compression_level,
+                data=error_data
             )
         )
 

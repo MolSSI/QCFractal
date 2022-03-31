@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Column, Integer, Enum, JSON, LargeBinary, ForeignKey, Index, UniqueConstraint
 
 from qcfractal.db_socket import BaseORM
-from qcportal.outputstore import CompressionEnum, OutputTypeEnum, OutputStore
+from qcportal.compression import CompressionEnum
+from qcportal.outputstore import OutputTypeEnum, OutputStore
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Optional, Iterable

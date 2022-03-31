@@ -1,1 +1,1 @@
-from .models import CompressionEnum, OutputStore, OutputTypeEnum
+from .models import OutputStore, OutputTypeEnum

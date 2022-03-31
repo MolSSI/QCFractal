@@ -10,7 +10,8 @@ from qcelemental.models import ComputeError
 
 from qcfractaltesting import load_procedure_data
 from qcportal.managers import ManagerName
-from qcportal.outputstore import OutputTypeEnum, OutputStore, CompressionEnum
+from qcportal.outputstore import OutputTypeEnum, OutputStore
+from qcportal.compression import CompressionEnum
 from qcportal.records import FailedOperation, PriorityEnum, RecordStatusEnum
 
 if TYPE_CHECKING:

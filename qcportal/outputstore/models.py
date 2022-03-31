@@ -3,20 +3,11 @@ import gzip
 import json
 import lzma
 from enum import Enum
-from typing import Union, Dict, Optional
+from typing import Union, Dict, Optional, Any
 
 from pydantic import Field, validator, BaseModel, Extra
 
-
-class CompressionEnum(str, Enum):
-    """
-    How data is compressed (compression method only, ie gzip, bzip2)
-    """
-
-    none = "none"
-    gzip = "gzip"
-    bzip2 = "bzip2"
-    lzma = "lzma"
+from qcportal.compression import CompressionEnum, compress, decompress_bytes, decompress_string, decompress_json
 
 
 class OutputTypeEnum(str, Enum):
@@ -105,80 +96,41 @@ class OutputStore(BaseModel):
         compression_type: CompressionEnum = CompressionEnum.none,
         compression_level: Optional[int] = None,
     ):
-        """Compresses a string given a compression scheme and level
+        """Compresses a string or dictionary given a compression scheme and level
 
         Returns an object of type `cls`
 
         If compression_level is None, but a compression_type is specified, an appropriate default level is chosen
         """
 
-        if isinstance(input_data, dict):
-            input_data = json.dumps(input_data)
-
-        data = input_data.encode()
-
-        # No compression
-        if compression_type is CompressionEnum.none:
-            compression_level = 0
-
-        # gzip compression
-        elif compression_type is CompressionEnum.gzip:
-            if compression_level is None:
-                compression_level = 6
-            data = gzip.compress(data, compresslevel=compression_level)
-
-        # bzip2 compression
-        elif compression_type is CompressionEnum.bzip2:
-            if compression_level is None:
-                compression_level = 6
-            data = bz2.compress(data, compresslevel=compression_level)
-
-        # LZMA compression
-        # By default, use level = 1 for larger files (>15MB or so)
-        elif compression_type is CompressionEnum.lzma:
-            if compression_level is None:
-                if len(data) > 15 * 1048576:
-                    compression_level = 1
-                else:
-                    compression_level = 6
-            data = lzma.compress(data, preset=compression_level)
-        else:
-            # Shouldn't ever happen, unless we change CompressionEnum but not the rest of this function
-            raise TypeError("Unknown compression type??")
+        compressed_data, compression_type, compression_level = compress(input_data, compression_type, compression_level)
 
         return cls(
-            output_type=output_type, data=data, compression=compression_type, compression_level=compression_level
+            output_type=output_type,
+            data=compressed_data,
+            compression=compression_type,
+            compression_level=compression_level,
         )
 
-    def get_string(self):
+    def get_string(self) -> str:
         """
         Returns the string representing the output
         """
-        if self.compression is CompressionEnum.none:
-            return self.data.decode()
-        elif self.compression is CompressionEnum.gzip:
-            return gzip.decompress(self.data).decode()
-        elif self.compression is CompressionEnum.bzip2:
-            return bz2.decompress(self.data).decode()
-        elif self.compression is CompressionEnum.lzma:
-            return lzma.decompress(self.data).decode()
-        else:
-            # Shouldn't ever happen, unless we change CompressionEnum but not the rest of this function
-            raise TypeError("Unknown compression type??")
+        return decompress_string(self.data, self.compression)
 
-    def get_json(self):
+    def get_json(self) -> Dict[Any, Any]:
         """
         Returns a dict if the data stored is a JSON string
 
         (errors are stored as JSON. stdout/stderr are just strings)
         """
-        s = self.get_string()
-        return json.loads(s)
+
+        return decompress_json(self.data, self.compression)
 
     @property
-    def as_string(self):
+    def as_string(self) -> str:
         return self.get_string()
 
     @property
-    def as_json(self):
+    def as_json(self) -> Dict[Any, Any]:
         return self.get_json()
