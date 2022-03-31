@@ -372,6 +372,13 @@ class RecordSocket:
         if query_data.modified_after is not None:
             and_query.append(orm_type.modified_on > query_data.modified_after)
 
+        if query_data.dataset_id is not None:
+            # Join with the CTE from the dataset socket
+            # This contains all records and dataset ids
+            cte = self.root_socket.datasets._record_cte
+            stmt = stmt.join(cte, cte.c.record_id == orm_type.id)
+            stmt = stmt.where(cte.c.dataset_id.in_(query_data.dataset_id))
+
         with self.root_socket.optional_session(session, True) as session:
             stmt = stmt.where(*and_query)
             stmt = stmt.options(*proj_options)

@@ -336,6 +336,7 @@ class RecordQueryBody(QueryProjModelBase):
     record_type: Optional[List[str]] = None
     manager_name: Optional[List[str]] = None
     status: Optional[List[RecordStatusEnum]] = None
+    dataset_id: Optional[List[int]] = None
     created_before: Optional[datetime] = None
     created_after: Optional[datetime] = None
     modified_before: Optional[datetime] = None
