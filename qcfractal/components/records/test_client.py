@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.testing_helpers import populate_db, TestingSnowflake
+from qcfractal.testing_helpers import populate_db, TestingSnowflake, mname1
 from qcfractaltesting import test_users, load_procedure_data
 from qcportal import PortalRequestError
 from qcportal.records import PriorityEnum, RecordStatusEnum
@@ -122,6 +122,50 @@ def test_record_client_query(snowflake_client: PortalClient, storage_socket: SQL
     assert len(data) == len(all_id)
     assert meta.success
     assert meta.n_found == len(all_id)
+
+
+def test_record_client_query_parents_children(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_benzene_opt")
+
+    meta1, id1 = storage_socket.records.optimization.add(
+        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
+    )
+
+    storage_socket.managers.activate(
+        name_data=mname1,
+        manager_version="v2.0",
+        qcengine_version="v1.0",
+        username="bill",
+        programs={
+            "geometric": None,
+            "psi4": None,
+        },
+        tags=["*"],
+    )
+
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, limit=100)
+    assert len(tasks) == 1
+
+    rmeta = storage_socket.tasks.update_finished(
+        mname1.fullname,
+        {tasks[0]["id"]: result_data_1},
+    )
+    assert rmeta.n_accepted == 1
+
+    opt_rec = snowflake_client.get_optimizations(id1, include_trajectory=True)[0]
+    assert opt_rec.status == RecordStatusEnum.complete
+
+    traj_id = [x.singlepoint_id for x in opt_rec.raw_data.trajectory]
+    assert len(traj_id) > 0
+
+    # Query for records containing a record as a parent
+    meta, recs = snowflake_client.query_records(parent_id=opt_rec.id)
+    assert {x.id for x in recs} == set(traj_id)
+
+    # Query for records containing a record as a child
+    meta, recs = snowflake_client.query_records(child_id=traj_id[0])
+    assert meta.n_found == 1
+    assert recs[0].id == opt_rec.id
 
 
 def test_record_client_get_empty(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):

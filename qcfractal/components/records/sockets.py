@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select, union, or_
-from sqlalchemy.orm import joinedload, selectinload, with_polymorphic
+from sqlalchemy.orm import joinedload, selectinload, with_polymorphic, aliased
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.nativefiles.db_models import NativeFileORM
@@ -383,6 +383,20 @@ class RecordSocket:
             and_query.append(orm_type.modified_on < query_data.modified_before)
         if query_data.modified_after is not None:
             and_query.append(orm_type.modified_on > query_data.modified_after)
+
+        if query_data.parent_id is not None:
+            # We alias the cte because we might join on it twice
+            parent_cte = aliased(self._child_cte)
+
+            stmt = stmt.join(parent_cte, parent_cte.c.child_id == orm_type.id)
+            stmt = stmt.where(parent_cte.c.parent_id.in_(query_data.parent_id))
+
+        if query_data.child_id is not None:
+            # We alias the cte because we might join on it twice
+            child_cte = aliased(self._child_cte)
+
+            stmt = stmt.join(child_cte, child_cte.c.parent_id == orm_type.id)
+            stmt = stmt.where(child_cte.c.child_id.in_(query_data.child_id))
 
         if query_data.dataset_id is not None:
             # Join with the CTE from the dataset socket
