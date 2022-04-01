@@ -17,6 +17,7 @@ from qcportal.metadata_models import TaskReturnMetadata
 from qcportal.records import FailedOperation, RecordStatusEnum
 from qcportal.utils import calculate_limit
 from .db_models import TaskQueueORM
+from .reset_logic import should_reset
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -56,7 +57,6 @@ class TaskSocket:
         tasks_rejected: List[Tuple[int, str]] = []
 
         with self.root_socket.session_scope() as session:
-
             stmt = select(ComputeManagerORM).where(ComputeManagerORM.name == manager_name)
             stmt = stmt.with_for_update(skip_locked=False)
             manager: Optional[ComputeManagerORM] = session.execute(stmt).scalar_one_or_none()
@@ -70,6 +70,9 @@ class TaskSocket:
                 raise ComputeManagerError(f"Manager {manager_name} is not active")
 
             all_notifications: List[Tuple[int, RecordStatusEnum]] = []
+
+            # For automatic resetting
+            to_be_reset: List[int] = []
 
             for task_id, result in results.items():
 
@@ -126,6 +129,11 @@ class TaskSocket:
                         notify_status = RecordStatusEnum.error
                         tasks_failures.append(task_id)
 
+                        # Should we automatically reset?
+                        if self.root_socket.qcf_config.auto_reset.enabled:
+                            if should_reset(record_orm, self.root_socket.qcf_config.auto_reset):
+                                to_be_reset.append(record_id)
+
                     elif result.success is not True:
                         # QCEngine should always return either FailedOperation, or some result with success == True
                         msg = f"Unexpected return from manager for task {task_id}/base result {record_id}: Returned success != True, but not a FailedOperation"
@@ -175,6 +183,13 @@ class TaskSocket:
             manager.successes += len(tasks_success)
             manager.failures += len(tasks_failures)
             manager.rejected += len(tasks_rejected)
+
+            session.flush()
+
+            # Automatically reset ones that should be reset
+            if self.root_socket.qcf_config.auto_reset.enabled and to_be_reset:
+                self._logger.info(f"Auto resetting {len(to_be_reset)} records")
+                self.root_socket.records.reset(to_be_reset, session=session)
 
         # Send notifications that tasks were completed
         for record_id, notify_status in all_notifications:

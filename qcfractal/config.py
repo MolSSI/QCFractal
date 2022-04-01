@@ -143,6 +143,20 @@ class DatabaseConfig(ConfigBase):
         return f"postgresql://{username}{password}{sep}{host}:{self.port}/{self.database_name}"
 
 
+class AutoResetConfig(ConfigBase):
+    """
+    Limits on the number of records returned per query. This can be specified per object (molecule, etc)
+    """
+
+    enabled: bool = Field(False, description="Enable/disable automatic restart. True = enabled")
+    unknown_error: int = Field(2, description="Max restarts for unknown errors")
+    compute_lost: int = Field(5, description="Max restarts for computations where the compute resource disappeared")
+    random_error: int = Field(5, description="Max restarts for random errors")
+
+    class Config(ConfigCommon):
+        env_prefix = "QCF_AUTORESET_"
+
+
 class APILimitConfig(ConfigBase):
     """
     Limits on the number of records returned per query. This can be specified per object (molecule, etc)
@@ -261,6 +275,7 @@ class FractalConfig(ConfigBase):
     database: DatabaseConfig = Field(..., description="Configuration of the settings for the database")
     api: WebAPIConfig = Field(..., description="Configuration of the REST interface")
     api_limits: APILimitConfig = Field(..., description="Configuration of the limits to the api")
+    auto_reset: AutoResetConfig = Field(..., description="Configuration for automatic resetting of tasks")
 
     @root_validator(pre=True)
     def _root_validator(cls, values):
@@ -270,6 +285,7 @@ class FractalConfig(ConfigBase):
 
         values.setdefault("api_limits", dict())
         values.setdefault("api", dict())
+        values.setdefault("auto_reset", dict())
         return values
 
     @validator("geo_file_path")

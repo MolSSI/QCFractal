@@ -241,6 +241,57 @@ def test_task_socket_fullworkflow_error_retry(storage_socket: SQLAlchemySocket):
     assert manager[0]["claimed"] == 4
 
 
+def test_task_socket_fullworkflow_error_autoreset(storage_socket: SQLAlchemySocket):
+    # Need a manager to claim the tasks
+
+    # Change the socket config
+    storage_socket.qcf_config.auto_reset.enabled = True
+    storage_socket.qcf_config.auto_reset.unknown_error = 1
+    storage_socket.qcf_config.auto_reset.random_error = 2
+
+    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
+    storage_socket.managers.activate(
+        name_data=mname1,
+        manager_version="v2.0",
+        qcengine_version="v1.0",
+        username="bill",
+        programs={"psi4": None, "qchem": "v3.0"},
+        tags=["tag1"],
+    )
+    input_spec1, molecule1, result_data1 = load_procedure_data("psi4_benzene_energy_1")
+
+    meta1, id1 = storage_socket.records.singlepoint.add([molecule1], input_spec1, "tag1", PriorityEnum.normal)
+
+    fop_u = FailedOperation(error=ComputeError(error_type="unknown_error", error_message="this is a test error"))
+    fop_r = FailedOperation(error=ComputeError(error_type="random_error", error_message="this is a test error"))
+
+    # Sends back an error
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
+    storage_socket.tasks.update_finished(mname1.fullname, {tasks[0]["id"]: fop_r})
+
+    # task should be waiting
+    rec = storage_socket.records.get(id1, include=("*", "compute_history"))[0]
+    assert rec["status"] == RecordStatusEnum.waiting
+    assert len(rec["compute_history"]) == 1
+
+    # Claim again, and return a different error
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
+    storage_socket.tasks.update_finished(mname1.fullname, {tasks[0]["id"]: fop_u})
+
+    # waiting again...
+    rec = storage_socket.records.get(id1, include=("*", "compute_history"))[0]
+    assert rec["status"] == RecordStatusEnum.waiting
+    assert len(rec["compute_history"]) == 2
+
+    # Claim again, and return an unknown error. Should stay in errored state now
+    tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
+    storage_socket.tasks.update_finished(mname1.fullname, {tasks[0]["id"]: fop_u})
+
+    rec = storage_socket.records.get(id1, include=("*", "compute_history"))[0]
+    assert rec["status"] == RecordStatusEnum.error
+    assert len(rec["compute_history"]) == 3
+
+
 def test_task_socket_compressed_outputs_success(storage_socket: SQLAlchemySocket):
     # Need a manager to claim the tasks
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
