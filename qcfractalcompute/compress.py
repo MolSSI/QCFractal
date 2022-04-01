@@ -48,7 +48,7 @@ def _compress_common(
 
 
 def _compress_native_files(
-        result: Union[AtomicResult, OptimizationResult],
+    result: Union[AtomicResult, OptimizationResult],
 ):
     """
     Compresses outputs and native files, storing them in extras
@@ -59,13 +59,9 @@ def _compress_native_files(
 
     compressed_nf = {}
     for name, data in result.native_files.items():
-        nf = NativeFile.compress(name,
-                                 data,
-                                 CompressionEnum.lzma,
-                                 6)
+        nf = NativeFile.compress(name, data, CompressionEnum.lzma, 6)
 
         compressed_nf[name] = nf
-
 
     update = {"native_files": {}}
 
