@@ -169,6 +169,11 @@ def upgrade():
             r"UPDATE grid_optimization_procedure SET qc_spec = (qc_spec - 'keywords') WHERE qc_spec->>'keywords' = 'null'"
         )
     )
+    op.execute(
+        sa.text(
+            r"UPDATE grid_optimization_procedure SET qc_spec = (qc_spec - 'keywords') WHERE qc_spec->>'keywords' IS NULL"
+        )
+    )
 
     # Insert the qcspec
     # Protocols for qc_spec were always ignored. So set them with the default
@@ -196,6 +201,23 @@ def upgrade():
     )
 
     # Now the optimization_spec
+    # Remove empty and null keywords
+    op.execute(
+        sa.text(
+            r"UPDATE grid_optimization_procedure SET optimization_spec = (optimization_spec - 'keywords') WHERE optimization_spec->>'keywords' = ''"
+        )
+    )
+    op.execute(
+        sa.text(
+            r"UPDATE grid_optimization_procedure SET optimization_spec = (optimization_spec - 'keywords') WHERE optimization_spec->>'keywords' = 'null'"
+        )
+    )
+    op.execute(
+        sa.text(
+            r"UPDATE grid_optimization_procedure SET optimization_spec = (optimization_spec - 'keywords') WHERE optimization_spec->>'keywords' IS NULL"
+        )
+    )
+
     op.execute(
         sa.text(
             f"""

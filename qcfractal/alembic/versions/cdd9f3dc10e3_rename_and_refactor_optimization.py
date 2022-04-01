@@ -143,6 +143,11 @@ def upgrade():
             r"UPDATE optimization_procedure SET qc_spec = (qc_spec::jsonb - 'keywords')::json WHERE qc_spec::jsonb->>'keywords' = 'null'"
         )
     )
+    op.execute(
+        sa.text(
+            r"UPDATE optimization_procedure SET qc_spec = (qc_spec::jsonb - 'keywords')::json WHERE qc_spec::jsonb->>'keywords' IS NULL"
+        )
+    )
 
     # Remove program from keywords
     op.execute(sa.text(r"UPDATE optimization_procedure SET keywords = (keywords::jsonb - 'program')::json"))
