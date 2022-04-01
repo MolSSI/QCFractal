@@ -283,4 +283,6 @@ class TaskSocket:
 
             manager.claimed += len(found)
 
+            self._logger.info(f"Manager {manager_name} has claimed {len(found)} new tasks")
+
         return found
