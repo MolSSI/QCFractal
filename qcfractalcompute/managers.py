@@ -282,37 +282,30 @@ class ComputeManager:
             self.logger.info("        Programs:       {}".format(self.available_programs))
             self.logger.info("        Procedures:     {}\n".format(self.available_procedures))
 
-        if self.connected:
-            # Pull server info
-            self.server_info = self.client.get_server_information()
-            self.server_name = self.server_info["name"]
-            self.server_version = self.server_info["version"]
-            self.server_claim_limit = self.server_info["api_limits"]["manager_tasks_claim"]
-            self.server_return_limit = self.server_info["api_limits"]["manager_tasks_return"]
-            if self.max_tasks > self.server_claim_limit:
-                self.max_tasks = self.server_claim_limit
-                self.logger.warning(
-                    "Max tasks was larger than server query limit of {}, reducing to match query limit.".format(
-                        self.server_claim_limit
-                    )
+        # Pull server info
+        self.server_info = self.client.get_server_information()
+        self.server_name = self.server_info["name"]
+        self.server_version = self.server_info["version"]
+        self.server_claim_limit = self.server_info["api_limits"]["manager_tasks_claim"]
+        self.server_return_limit = self.server_info["api_limits"]["manager_tasks_return"]
+        if self.max_tasks > self.server_claim_limit:
+            self.max_tasks = self.server_claim_limit
+            self.logger.warning(
+                "Max tasks was larger than server query limit of {}, reducing to match query limit.".format(
+                    self.server_claim_limit
                 )
-            self.heartbeat_frequency = self.server_info["manager_heartbeat_frequency"]
+            )
+        self.heartbeat_frequency = self.server_info["manager_heartbeat_frequency"]
 
-            self.client.activate(__version__, qcng.__version__, self.all_program_info, tags=self.queue_tag)
+        self.client.activate(__version__, qcng.__version__, self.all_program_info, tags=self.queue_tag)
 
-            if self.verbose:
-                self.logger.info("    Connected:")
-                self.logger.info("        Version:     {}".format(self.server_version))
-                self.logger.info("        Address:     {}".format(self.client.address))
-                self.logger.info("        Name:        {}".format(self.server_name))
-                self.logger.info("        Queue tag:   {}".format(self.queue_tag))
-                self.logger.info("        Username:    {}\n".format(self.client.username))
-
-        else:
-            self.logger.info("    QCFractal server information:")
-            self.logger.info("        Not connected, some actions will not be available")
-
-    ## Accessors
+        if self.verbose:
+            self.logger.info("    Connected:")
+            self.logger.info("        Version:     {}".format(self.server_version))
+            self.logger.info("        Address:     {}".format(self.client.address))
+            self.logger.info("        Name:        {}".format(self.server_name))
+            self.logger.info("        Queue tag:   {}".format(self.queue_tag))
+            self.logger.info("        Username:    {}\n".format(self.client.username))
 
     @property
     def name(self) -> str:
@@ -320,20 +313,6 @@ class ComputeManager:
         Returns the Managers full name.
         """
         return self.name_data.fullname
-
-    @property
-    def connected(self) -> bool:
-        """
-        Checks the connection to the server.
-        """
-        return self.client is not None
-
-    def assert_connected(self) -> None:
-        """
-        Raises an error for functions that require a server connection.
-        """
-        if self.connected is False:
-            raise AttributeError("Manager is not connected to a server, this operations is not available.")
 
     @property
     def n_deferred_tasks(self) -> int:
@@ -345,8 +324,6 @@ class ComputeManager:
 
         This will block until stop() is called
         """
-
-        self.assert_connected()
 
         def scheduler_update():
             self.update(True)
@@ -394,8 +371,6 @@ class ComputeManager:
         Provides a heartbeat to the connected Server.
         """
 
-        self.assert_connected()
-
         try:
             self.client.heartbeat(
                 total_worker_walltime=self.statistics.total_worker_walltime,
@@ -411,7 +386,6 @@ class ComputeManager:
         """
         Shutdown the manager and returns tasks to queue.
         """
-        self.assert_connected()
 
         try:
             # Notify the server of shutdown
@@ -494,8 +468,6 @@ class ComputeManager:
         new_tasks
             Try to get new tasks from the server
         """
-
-        self.assert_connected()
 
         # First, try pushing back any stale results
         self._update_deferred_tasks()
