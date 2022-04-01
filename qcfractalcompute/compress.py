@@ -55,7 +55,7 @@ def _compress_native_files(
     """
 
     if not result.native_files:
-        return
+        return result
 
     compressed_nf = {}
     for name, data in result.native_files.items():
