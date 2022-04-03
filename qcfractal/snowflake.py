@@ -164,6 +164,7 @@ class FractalSnowflake:
 
         # Seems there still may be a small time after the event is triggered and before
         # it can handle requests
+        # Can't use ping that is part of the client - we haven't instantiated one yet
         host = self._qcf_config.api.host
         port = self._qcf_config.api.port
         uri = f"http://{host}:{port}/v1/ping"

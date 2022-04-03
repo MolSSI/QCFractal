@@ -244,6 +244,24 @@ class PortalClientBase:
         else:
             return pydantic.parse_obj_as(response_model, d)
 
+    def ping(self) -> bool:
+        """
+        Pings the server to see if it is up
+
+        Returns
+        -------
+        :
+            True if the server is up an responded to the ping. False otherwise
+        """
+
+        uri = f"{self.address}/v1/ping"
+
+        try:
+            r = requests.get(uri)
+            return r.json()["success"]
+        except requests.exceptions.ConnectionError:
+            return False
+
     def get_server_information(self) -> Dict[str, Any]:
         """Request general information about the server
 
