@@ -13,10 +13,10 @@ from qcfractal.components.records.optimization.db_models import OptimizationSpec
 from qcfractal.db_socket import BaseORM
 
 
-class TorsiondriveOptimizationsORM(BaseORM):
+class TorsiondriveOptimizationORM(BaseORM):
     """Association table for many to many"""
 
-    __tablename__ = "torsiondrive_optimizations"
+    __tablename__ = "torsiondrive_optimization"
 
     torsiondrive_id = Column(Integer, ForeignKey("torsiondrive_record.id", ondelete="cascade"), primary_key=True)
     optimization_id = Column(Integer, ForeignKey(OptimizationRecordORM.id), primary_key=True)
@@ -35,7 +35,7 @@ class TorsiondriveInitialMoleculeORM(BaseORM):
     Association table torsiondrive -> initial molecules
     """
 
-    __tablename__ = "torsiondrive_initial_molecules"
+    __tablename__ = "torsiondrive_initial_molecule"
 
     torsiondrive_id = Column(Integer, ForeignKey("torsiondrive_record.id", ondelete="cascade"), primary_key=True)
     molecule_id = Column("molecule_id", Integer, ForeignKey(MoleculeORM.id), primary_key=True)
@@ -91,8 +91,8 @@ class TorsiondriveRecordORM(BaseRecordORM):
     initial_molecules = relationship(MoleculeORM, secondary=TorsiondriveInitialMoleculeORM.__table__, uselist=True)
 
     optimizations = relationship(
-        TorsiondriveOptimizationsORM,
-        order_by=TorsiondriveOptimizationsORM.position,
+        TorsiondriveOptimizationORM,
+        order_by=TorsiondriveOptimizationORM.position,
         collection_class=ordering_list("position"),
         cascade="all, delete-orphan",
     )

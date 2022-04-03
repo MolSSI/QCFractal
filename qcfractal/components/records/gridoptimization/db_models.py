@@ -12,10 +12,10 @@ from qcfractal.components.records.optimization.db_models import OptimizationSpec
 from qcfractal.db_socket import BaseORM
 
 
-class GridoptimizationOptimizationsORM(BaseORM):
+class GridoptimizationOptimizationORM(BaseORM):
     """Association table for many to many"""
 
-    __tablename__ = "gridoptimization_optimizations"
+    __tablename__ = "gridoptimization_optimization"
 
     gridoptimization_id = Column(
         Integer, ForeignKey("gridoptimization_record.id", ondelete="cascade"), primary_key=True
@@ -83,7 +83,7 @@ class GridoptimizationRecordORM(BaseRecordORM):
     starting_grid = Column(JSON)  # tuple
 
     optimizations = relationship(
-        GridoptimizationOptimizationsORM,
+        GridoptimizationOptimizationORM,
         cascade="all, delete-orphan",
     )
 

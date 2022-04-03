@@ -9,7 +9,7 @@ from sqlalchemy.orm import joinedload, selectinload, with_polymorphic, aliased
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.nativefiles.db_models import NativeFileORM
-from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependenciesORM
+from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import (
     get_query_proj_options,
@@ -22,7 +22,7 @@ from qcportal.exceptions import UserReportableError, MissingDataError
 from qcportal.metadata_models import DeleteMetadata, QueryMetadata, UpdateMetadata
 from qcportal.outputstore import OutputStore, OutputTypeEnum
 from qcportal.records import FailedOperation, PriorityEnum, RecordStatusEnum
-from .db_models import RecordComputeHistoryORM, BaseRecordORM, RecordInfoBackupORM, RecordCommentsORM
+from .db_models import RecordComputeHistoryORM, BaseRecordORM, RecordInfoBackupORM, RecordCommentORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -281,8 +281,8 @@ class RecordSocket:
 
     def get_subtask_ids(self, session: Session, record_ids: Iterable[int]) -> List[int]:
         # List may contain duplicates. So be tolerant of that!
-        stmt = select(ServiceDependenciesORM.record_id)
-        stmt = stmt.join(ServiceQueueORM, ServiceQueueORM.id == ServiceDependenciesORM.service_id)
+        stmt = select(ServiceDependencyORM.record_id)
+        stmt = stmt.join(ServiceQueueORM, ServiceQueueORM.id == ServiceDependencyORM.service_id)
         stmt = stmt.where(ServiceQueueORM.record_id.in_(record_ids))
         return session.execute(stmt).scalars().all()
 
@@ -594,7 +594,7 @@ class RecordSocket:
             existing_ids = session.execute(stmt).scalars().all()
 
             for rid in existing_ids:
-                comment_orm = RecordCommentsORM(
+                comment_orm = RecordCommentORM(
                     record_id=rid,
                     username=username,
                     comment=comment,

@@ -16,7 +16,7 @@ from qcfractal.db_socket.helpers import (
 from qcportal.compression import CompressionEnum
 from qcportal.outputstore import OutputStore, OutputTypeEnum
 from qcportal.records.models import RecordStatusEnum
-from .db_models import ServiceQueueORM, ServiceDependenciesORM
+from .db_models import ServiceQueueORM, ServiceDependencyORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -45,12 +45,12 @@ class ServiceSocket:
         a_br_svc = aliased(BaseRecordORM)
 
         status_cte = (
-            select(ServiceDependenciesORM.service_id, array_agg(a_br_svc_deps.status).label("task_statuses"))
-            .join(ServiceQueueORM, ServiceQueueORM.id == ServiceDependenciesORM.service_id)
-            .join(a_br_svc_deps, a_br_svc_deps.id == ServiceDependenciesORM.record_id)
+            select(ServiceDependencyORM.service_id, array_agg(a_br_svc_deps.status).label("task_statuses"))
+            .join(ServiceQueueORM, ServiceQueueORM.id == ServiceDependencyORM.service_id)
+            .join(a_br_svc_deps, a_br_svc_deps.id == ServiceDependencyORM.record_id)
             .join(a_br_svc, a_br_svc.id == ServiceQueueORM.record_id)
             .where(a_br_svc.status == RecordStatusEnum.running)
-            .group_by(ServiceDependenciesORM.service_id)
+            .group_by(ServiceDependencyORM.service_id)
             .cte()
         )
 

@@ -17,7 +17,7 @@ from sqlalchemy.orm import contains_eager
 from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM
 from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM
 from qcfractal.components.records.sockets import BaseRecordSocket
-from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependenciesORM
+from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputTypeEnum
@@ -31,7 +31,7 @@ from qcportal.records.torsiondrive import (
 from .db_models import (
     TorsiondriveSpecificationORM,
     TorsiondriveInitialMoleculeORM,
-    TorsiondriveOptimizationsORM,
+    TorsiondriveOptimizationORM,
     TorsiondriveRecordORM,
 )
 
@@ -91,8 +91,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
     @staticmethod
     def get_children_select() -> List[Any]:
         stmt = select(
-            TorsiondriveOptimizationsORM.torsiondrive_id.label("parent_id"),
-            TorsiondriveOptimizationsORM.optimization_id.label("child_id"),
+            TorsiondriveOptimizationORM.torsiondrive_id.label("parent_id"),
+            TorsiondriveOptimizationORM.optimization_id.label("child_id"),
         )
         return [stmt]
 
@@ -561,7 +561,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             # ids will be in the same order as the molecules (and the geometries from td)
             opt_key = json.dumps(grid_id)
             for position, opt_id in enumerate(opt_ids):
-                svc_dep = ServiceDependenciesORM(
+                svc_dep = ServiceDependencyORM(
                     record_id=opt_id,
                     extras={"td_api_key": td_api_key, "position": position},
                 )
@@ -569,7 +569,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 # The position field is handled by the collection class in sqlalchemy
                 # corresponds to the absolute position across all optimizations for this torsiondrive,
                 # not the position of the geometry for this td_api_key (as stored in the ServiceDependenciesORM)
-                opt_history = TorsiondriveOptimizationsORM(
+                opt_history = TorsiondriveOptimizationORM(
                     torsiondrive_id=service_orm.record_id,
                     optimization_id=opt_id,
                     key=opt_key,

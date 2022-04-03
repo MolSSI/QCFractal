@@ -12,9 +12,9 @@ from qcfractal.components.records.singlepoint.db_models import SinglepointRecord
 from qcfractal.db_socket import BaseORM
 
 
-class ReactionStoichiometriesORM(BaseORM):
+class ReactionStoichiometryORM(BaseORM):
 
-    __tablename__ = "reaction_stoichiometries"
+    __tablename__ = "reaction_stoichiometry"
 
     reaction_id = Column(Integer, ForeignKey("reaction_record.id", ondelete="cascade"), primary_key=True)
 
@@ -24,8 +24,8 @@ class ReactionStoichiometriesORM(BaseORM):
     molecule = relationship(MoleculeORM)
 
 
-class ReactionComponentsORM(BaseORM):
-    __tablename__ = "reaction_components"
+class ReactionComponentORM(BaseORM):
+    __tablename__ = "reaction_component"
 
     reaction_id = Column(Integer, ForeignKey("reaction_record.id", ondelete="cascade"), primary_key=True)
 
@@ -45,7 +45,7 @@ class ReactionComponentsORM(BaseORM):
     __table_args__ = (
         ForeignKeyConstraint(
             ["reaction_id", "molecule_id"],
-            ["reaction_stoichiometries.reaction_id", "reaction_stoichiometries.molecule_id"],
+            ["reaction_stoichiometry.reaction_id", "reaction_stoichiometry.molecule_id"],
             ondelete="cascade",
         ),
     )
@@ -63,12 +63,12 @@ class ReactionRecordORM(BaseRecordORM):
     total_energy = Column(DOUBLE_PRECISION, nullable=True)
 
     components = relationship(
-        ReactionComponentsORM,
+        ReactionComponentORM,
         cascade="all, delete-orphan",
     )
 
     stoichiometries = relationship(
-        ReactionStoichiometriesORM,
+        ReactionStoichiometryORM,
         cascade="all, delete-orphan",
     )
 

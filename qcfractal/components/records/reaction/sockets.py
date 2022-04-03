@@ -11,7 +11,7 @@ from sqlalchemy.orm import contains_eager
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM, SinglepointRecordORM
 from qcfractal.components.records.sockets import BaseRecordSocket
-from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependenciesORM
+from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputTypeEnum
@@ -20,7 +20,7 @@ from qcportal.records.reaction import (
     ReactionQCInputSpecification,
     ReactionQueryBody,
 )
-from .db_models import ReactionStoichiometriesORM, ReactionComponentsORM, ReactionRecordORM
+from .db_models import ReactionStoichiometryORM, ReactionComponentORM, ReactionRecordORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -43,8 +43,8 @@ class ReactionRecordSocket(BaseRecordSocket):
     @staticmethod
     def get_children_select() -> List[Any]:
         stmt = select(
-            ReactionComponentsORM.reaction_id.label("parent_id"),
-            ReactionComponentsORM.singlepoint_id.label("child_id"),
+            ReactionComponentORM.reaction_id.label("parent_id"),
+            ReactionComponentORM.singlepoint_id.label("child_id"),
         )
         return [stmt]
 
@@ -80,7 +80,7 @@ class ReactionRecordSocket(BaseRecordSocket):
             and_query.append(QCSpecificationORM.keywords_id.in_(query_data.keywords_id))
             need_spec_join = True
         if query_data.molecule_id is not None:
-            and_query.append(ReactionStoichiometriesORM.molecule_id.in_(query_data.molecule_id))
+            and_query.append(ReactionStoichiometryORM.molecule_id.in_(query_data.molecule_id))
             need_stoic_join = True
 
         stmt = select(ReactionRecordORM)
@@ -132,13 +132,13 @@ class ReactionRecordSocket(BaseRecordSocket):
                     ReactionRecordORM.specification_id,
                     array_agg(
                         aggregate_order_by(
-                            ReactionStoichiometriesORM.molecule_id, ReactionStoichiometriesORM.molecule_id.asc()
+                            ReactionStoichiometryORM.molecule_id, ReactionStoichiometryORM.molecule_id.asc()
                         )
                     ).label("molecule_ids"),
                 )
                 .join(
-                    ReactionStoichiometriesORM,
-                    ReactionStoichiometriesORM.reaction_id == ReactionRecordORM.id,
+                    ReactionStoichiometryORM,
+                    ReactionStoichiometryORM.reaction_id == ReactionRecordORM.id,
                 )
                 .group_by(ReactionRecordORM.id)
                 .cte()
@@ -156,7 +156,7 @@ class ReactionRecordSocket(BaseRecordSocket):
 
                 if not existing:
                     stoich_orm = [
-                        ReactionStoichiometriesORM(molecule_id=mid, coefficient=coeff) for coeff, mid in rxn_mols
+                        ReactionStoichiometryORM(molecule_id=mid, coefficient=coeff) for coeff, mid in rxn_mols
                     ]
 
                     rxn_orm = ReactionRecordORM(
@@ -291,8 +291,8 @@ class ReactionRecordSocket(BaseRecordSocket):
 
             for mol_id, sp_id in zip(mols_to_compute, sp_ids):
 
-                svc_dep = ServiceDependenciesORM(record_id=sp_id, extras={})
-                rxn_component = ReactionComponentsORM(molecule_id=mol_id, singlepoint_id=sp_id)
+                svc_dep = ServiceDependencyORM(record_id=sp_id, extras={})
+                rxn_component = ReactionComponentORM(molecule_id=mol_id, singlepoint_id=sp_id)
 
                 service_orm.dependencies.append(svc_dep)
                 rxn_orm.components.append(rxn_component)

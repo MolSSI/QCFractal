@@ -16,7 +16,7 @@ from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM
 from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM
 from qcfractal.components.records.sockets import BaseRecordSocket
-from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependenciesORM
+from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.db_socket.helpers import insert_general
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
@@ -30,7 +30,7 @@ from qcportal.records.gridoptimization import (
     GridoptimizationQueryBody,
 )
 from qcportal.records.optimization import OptimizationInputSpecification, OptimizationSpecification
-from .db_models import GridoptimizationSpecificationORM, GridoptimizationOptimizationsORM, GridoptimizationRecordORM
+from .db_models import GridoptimizationSpecificationORM, GridoptimizationOptimizationORM, GridoptimizationRecordORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -161,8 +161,8 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
     @staticmethod
     def get_children_select() -> List[Any]:
         stmt = select(
-            GridoptimizationOptimizationsORM.gridoptimization_id.label("parent_id"),
-            GridoptimizationOptimizationsORM.optimization_id.label("child_id"),
+            GridoptimizationOptimizationORM.gridoptimization_id.label("parent_id"),
+            GridoptimizationOptimizationORM.optimization_id.label("child_id"),
         )
         return [stmt]
 
@@ -591,13 +591,13 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
             if not meta.success:
                 raise RuntimeError("Error adding optimization - likely a developer error: " + meta.error_string)
 
-            svc_dep = ServiceDependenciesORM(
+            svc_dep = ServiceDependencyORM(
                 record_id=opt_ids[0],
                 extras={"key": key},
             )
 
             # Update the association table
-            opt_assoc = GridoptimizationOptimizationsORM(
+            opt_assoc = GridoptimizationOptimizationORM(
                 optimization_id=opt_ids[0], gridoptimization_id=service_orm.record_id, key=key
             )
 

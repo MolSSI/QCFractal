@@ -10,7 +10,7 @@ from qcportal.managers import ManagerStatusEnum
 
 class ComputeManagerLogORM(BaseORM):
 
-    __tablename__ = "compute_manager_logs"
+    __tablename__ = "compute_manager_log"
 
     id = Column(Integer, primary_key=True)
     manager_id = Column(Integer, ForeignKey("compute_manager.id"), nullable=False)
@@ -28,7 +28,7 @@ class ComputeManagerLogORM(BaseORM):
     active_cores = Column(Integer, nullable=False, default=0)
     active_memory = Column(Float, nullable=False, default=0.0)
 
-    __table_args__ = (Index("ix_compute_manager_logs_timestamp", "timestamp"),)
+    __table_args__ = (Index("ix_compute_manager_log_timestamp", "timestamp"),)
 
 
 class ComputeManagerORM(BaseORM):

@@ -14,8 +14,8 @@ from qcportal.outputstore import OutputTypeEnum, OutputStore
 from qcportal.records import RecordStatusEnum
 
 
-class RecordCommentsORM(BaseORM):
-    __tablename__ = "record_comments"
+class RecordCommentORM(BaseORM):
+    __tablename__ = "record_comment"
 
     id = Column(Integer, primary_key=True)
     record_id = Column(Integer, ForeignKey("base_record.id", ondelete="CASCADE"), nullable=False)
@@ -100,7 +100,7 @@ class BaseRecordORM(BaseORM):
         lazy="selectin",
     )
 
-    comments = relationship(RecordCommentsORM, order_by=RecordCommentsORM.timestamp.asc())
+    comments = relationship(RecordCommentORM, order_by=RecordCommentORM.timestamp.asc())
 
     # Related task. The foreign key is in the task_queue table
     task = relationship("TaskQueueORM", back_populates="record", uselist=False)
