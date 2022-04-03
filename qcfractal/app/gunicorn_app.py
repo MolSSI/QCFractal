@@ -69,6 +69,7 @@ class FractalGunicornApp(gunicorn.app.base.BaseApplication):
             "loglevel": self.qcfractal_config.loglevel,
             "logger_class": FractalGunicornLogger,
             "post_fork": post_fork_cleanup,
+            "keepalive": self.qcfractal_config.api.keepalive,
         }
 
         for key, value in config.items():

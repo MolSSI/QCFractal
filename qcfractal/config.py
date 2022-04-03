@@ -209,6 +209,7 @@ class WebAPIConfig(ConfigBase):
     jwt_refresh_token_expires: int = Field(
         60 * 60 * 24 * 30, description="The time (in seconds) a refresh token is valid for. Default is 30 days"
     )
+    keepalive: int = Field(5, description="Time (in seconds) to wait for requests from a Keep-Alive connection")
 
     class Config(ConfigCommon):
         env_prefix = "QCF_FLASK_"
