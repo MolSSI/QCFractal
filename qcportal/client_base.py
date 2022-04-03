@@ -78,8 +78,13 @@ class PortalClientBase:
         self.username = username
         self._verify = verify
 
-        self._headers: Dict[str, str] = {}
-        self._headers["User-Agent"] = f"qcportal/{__version__}"
+        # A persistent session
+        # This results in significant speedup (~65% faster in my test)
+        # https://docs.python-requests.org/en/master/user/advanced/#session-objects
+        self._req_session = requests.Session()
+
+        self._req_session.headers.update({"User-Agent": f"qcportal/{__version__}"})
+
         self._timeout = 60
         self.encoding = "application/json"
 
@@ -121,13 +126,13 @@ class PortalClientBase:
     @encoding.setter
     def encoding(self, encoding: str):
         self._encoding = encoding
-        self._headers["Content-Type"] = encoding
-        self._headers["Accept"] = encoding
+        enc_headers = {"Content-Type": encoding, "Accept": encoding}
+        self._req_session.headers.update(enc_headers)
 
     def _get_JWT_token(self, username: str, password: str) -> None:
 
         try:
-            ret = requests.post(
+            ret = self._req_session.post(
                 self.address + "v1/login", json={"username": username, "password": password}, verify=self._verify
             )
         except requests.exceptions.SSLError:
@@ -137,18 +142,18 @@ class PortalClientBase:
 
         if ret.status_code == 200:
             self.refresh_token = ret.json()["refresh_token"]
-            self._headers["Authorization"] = f'Bearer {ret.json()["access_token"]}'
+            self._req_session.headers.update({"Authorization": f'Bearer {ret.json()["access_token"]}'})
         else:
             raise AuthenticationFailure(ret.json()["msg"])
 
     def _refresh_JWT_token(self) -> None:
 
-        ret = requests.post(
+        ret = self._req_session.post(
             self.address + "v1/refresh", headers={"Authorization": f"Bearer {self.refresh_token}"}, verify=self._verify
         )
 
         if ret.status_code == 200:
-            self._headers["Authorization"] = f'Bearer {ret.json()["access_token"]}'
+            self._req_session.headers.update({"Authorization": f'Bearer {ret.json()["access_token"]}'})
         else:  # shouldn't happen unless user is blacklisted
             raise ConnectionRefusedError("Unable to refresh JWT authorization token! " "This is a server issue!!")
 
@@ -163,22 +168,22 @@ class PortalClientBase:
     ) -> requests.Response:
 
         addr = self.address + endpoint
-        kwargs = {"data": body, "headers": self._headers, "verify": self._verify, "timeout": self._timeout}
+        kwargs = {"data": body, "verify": self._verify, "timeout": self._timeout}
 
         if url_params:
             kwargs["params"] = url_params
 
         try:
             if method == "get":
-                r = requests.get(addr, **kwargs)
+                r = self._req_session.get(addr, **kwargs)
             elif method == "post":
-                r = requests.post(addr, **kwargs)
+                r = self._req_session.post(addr, **kwargs)
             elif method == "put":
-                r = requests.put(addr, **kwargs)
+                r = self._req_session.put(addr, **kwargs)
             elif method == "patch":
-                r = requests.patch(addr, **kwargs)
+                r = self._req_session.patch(addr, **kwargs)
             elif method == "delete":
-                r = requests.delete(addr, **kwargs)
+                r = self._req_session.delete(addr, **kwargs)
             else:
                 raise KeyError("Method not understood: '{}'".format(method))
         except requests.exceptions.SSLError:
