@@ -1421,7 +1421,7 @@ class PortalClient(PortalClientBase):
         if include_initial_molecules:
             include |= {"*", "initial_molecules"}
         if include_optimizations:
-            include |= {"*", "optimizations"}
+            include |= {"*", "optimizations.*", "optimizations.optimization_record"}
 
         if include:
             body_data["include"] = include
@@ -1519,7 +1519,7 @@ class PortalClient(PortalClientBase):
         if include_initial_molecules:
             include |= {"*", "initial_molecules"}
         if include_optimizations:
-            include |= {"*", "optimizations"}
+            include |= {"*", "optimizations.*", "optimizations.optimization_record"}
 
         if include:
             query_data["include"] = include
@@ -1616,7 +1616,7 @@ class PortalClient(PortalClientBase):
         if include_starting_molecule:
             include |= {"*", "starting_molecule"}
         if include_optimizations:
-            include |= {"*", "optimizations"}
+            include |= {"*", "optimizations.*", "optimizations.optimization_record"}
 
         if include:
             body_data["include"] = include
@@ -1714,7 +1714,7 @@ class PortalClient(PortalClientBase):
         if include_initial_molecule:
             include |= {"*", "initial_molecule"}
         if include_optimizations:
-            include |= {"*", "optimizations"}
+            include |= {"*", "optimizations.*", "optimizations.optimization_record"}
 
         if include:
             query_data["include"] = include
