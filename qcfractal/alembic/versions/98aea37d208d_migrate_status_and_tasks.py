@@ -118,8 +118,10 @@ def upgrade():
     # Now do the required_programs column of the task_queue
     # Form this from the program and procedure columns
     op.add_column("task_queue", sa.Column("required_programs", postgresql.ARRAY(sa.TEXT()), nullable=True))
-    op.execute("UPDATE task_queue SET required_programs = ARRAY[program, procedure] WHERE procedure IS NOT NULL")
-    op.execute("UPDATE task_queue SET required_programs = ARRAY[program] WHERE procedure IS NULL")
+    op.execute(
+        "UPDATE task_queue SET required_programs = ARRAY[LOWER(program), LOWER(procedure)] WHERE procedure IS NOT NULL"
+    )
+    op.execute("UPDATE task_queue SET required_programs = ARRAY[LOWER(program)] WHERE procedure IS NULL")
     op.alter_column("task_queue", "required_programs", existing_type=postgresql.JSONB, nullable=False)
     op.create_check_constraint(
         "ck_task_queue_requirements_lower",

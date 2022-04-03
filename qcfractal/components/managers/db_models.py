@@ -1,6 +1,18 @@
 import datetime
 
-from sqlalchemy import Column, Integer, ForeignKey, DateTime, Float, Index, String, JSON, Enum, UniqueConstraint
+from sqlalchemy import (
+    Column,
+    Integer,
+    ForeignKey,
+    DateTime,
+    Float,
+    Index,
+    String,
+    JSON,
+    Enum,
+    UniqueConstraint,
+    CheckConstraint,
+)
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
 
@@ -73,4 +85,6 @@ class ComputeManagerORM(BaseORM):
         Index("ix_compute_manager_status", "status"),
         Index("ix_compute_manager_modified_on", "modified_on"),
         UniqueConstraint("name", name="ux_compute_manager_name"),
+        CheckConstraint("programs::text = LOWER(programs::text)", name="ck_compute_manager_programs_lower"),
+        CheckConstraint("tags::text = LOWER(tags::text)", name="ck_compute_manager_tags_lower"),
     )

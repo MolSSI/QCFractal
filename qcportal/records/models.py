@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional, Dict, Any, List, Union
 
-from pydantic import BaseModel, Extra
+from pydantic import BaseModel, Extra, constr
 from qcelemental.models.results import Provenance
 
 from ..base_models import (
@@ -328,7 +328,7 @@ ServiceDependency.update_forward_refs()
 
 
 class RecordAddBodyBase(RestModelBase):
-    tag: str
+    tag: constr(to_lower=True)
     priority: PriorityEnum
 
 

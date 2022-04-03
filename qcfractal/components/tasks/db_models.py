@@ -47,4 +47,5 @@ class TaskQueueORM(BaseORM):
         CheckConstraint(
             "required_programs::text = LOWER(required_programs::text)", name="ck_task_queue_requirements_lower"
         ),
+        CheckConstraint("tag = LOWER(tag)", name="ck_task_queue_tag_lower"),
     )

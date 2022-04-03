@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, Index, UniqueConstraint
+from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, Index, UniqueConstraint, CheckConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
@@ -45,4 +45,5 @@ class ServiceQueueORM(BaseORM):
         UniqueConstraint("record_id", name="ux_service_queue_record_id"),
         Index("ix_service_queue_tag", "tag"),
         Index("ix_service_queue_waiting_sort", priority.desc(), created_on),
+        CheckConstraint("tag = LOWER(tag)", name="ck_service_queue_tag_lower"),
     )
