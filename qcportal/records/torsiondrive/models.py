@@ -168,6 +168,23 @@ class TorsiondriveRecord(BaseRecord):
         self.optimization_cache = ret
         return ret
 
+    @property
+    def minimum_optimizations(self):
+        url_params = {}
+
+        r = self.client._auto_request(
+            "get",
+            f"v1/records/torsiondrive/{self.raw_data.id}/minimum_optimizations",
+            None,
+            ProjURLParameters,
+            Dict[str, OptimizationRecord._DataModel],
+            None,
+            url_params,
+        )
+
+        return {k: self.client.recordmodel_from_datamodel([v])[0] for k,v in r.items()}
+
+
 
 # class TorsiondriveRecord(RecordBase):
 #    """

@@ -36,6 +36,15 @@ def get_torsiondrive_optimizations_v1(record_id: int, *, url_params: ProjURLPara
     return rec[0]["optimizations"]
 
 
+@main.route("/v1/records/torsiondrive/<int:record_id>/minimum_optimizations", methods=["GET"])
+@wrap_route(None, ProjURLParameters, "READ")
+def get_torsiondrive_minimum_optimizations_v1(record_id: int, *, url_params: ProjURLParameters):
+    # adjust the includes/excludes to refer to the optimizations
+    return storage_socket.records.torsiondrive.get_minimum_optimizations(
+        record_id, url_params.include, url_params.exclude
+    )
+
+
 @main.route("/v1/records/torsiondrive/<int:record_id>/initial_molecules", methods=["GET"])
 @wrap_route(None, None, "READ")
 def get_torsiondrive_initial_molecules_v1(record_id: int):

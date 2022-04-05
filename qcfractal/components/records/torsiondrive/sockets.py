@@ -10,14 +10,15 @@ from typing import TYPE_CHECKING
 
 import sqlalchemy.orm.attributes
 from pydantic import BaseModel
-from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by
+from sqlalchemy import select, func
+from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
 from sqlalchemy.orm import contains_eager
 
-from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM
+from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM, OptimizationRecordORM
 from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM
 from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
+from qcfractal.db_socket.helpers import get_query_proj_options
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputTypeEnum
@@ -577,3 +578,43 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
                 service_orm.dependencies.append(svc_dep)
                 td_orm.optimizations.append(opt_history)
+
+    def get_minimum_optimizations(
+        self,
+        torsiondrive_id: int,
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
+        *,
+        session: Optional[Session] = None,
+    ) -> Dict[str, Dict[str, Any]]:
+
+        # Kind of complicated, but this is relatively cross platform
+        # (with postgres, could do a DISTINCT ON)
+
+        # CTE with columns torsiondrive_id, key, min_energy
+        energy_cte = (
+            select(
+                TorsiondriveOptimizationORM.torsiondrive_id.label("torsiondrive_id"),
+                TorsiondriveOptimizationORM.key.label("key"),
+                func.min(OptimizationRecordORM.energies[-1].cast(TEXT).cast(DOUBLE_PRECISION)).label("min_energy"),
+            )
+            .join(OptimizationRecordORM)
+            .group_by("torsiondrive_id", "key")
+        ).cte()
+
+        query_opts = get_query_proj_options(OptimizationRecordORM, include, exclude)
+
+        # Select rows with matching minimum energies
+        stmt = (
+            select(TorsiondriveOptimizationORM.key, OptimizationRecordORM)
+            .options(*query_opts)
+            .join(energy_cte, energy_cte.c.torsiondrive_id == TorsiondriveOptimizationORM.torsiondrive_id)
+            .join(TorsiondriveOptimizationORM.optimization_record)
+            .where(TorsiondriveOptimizationORM.torsiondrive_id == torsiondrive_id)
+            .where(TorsiondriveOptimizationORM.key == energy_cte.c.key)
+            .where(OptimizationRecordORM.energies[-1].cast(TEXT).cast(DOUBLE_PRECISION) == energy_cte.c.min_energy)
+        )
+
+        with self.root_socket.optional_session(session, True) as session:
+            r = session.execute(stmt).all()  # List of key: OptimizationRecordORM
+            return {x: y.dict() for x, y in r}
