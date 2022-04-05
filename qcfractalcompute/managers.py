@@ -27,6 +27,7 @@ from qcportal.utils import make_list
 from qcportal.managers import ManagerName
 from qcportal.metadata_models import TaskReturnMetadata
 from qcportal.records import AllResultTypes
+from requests.exceptions import Timeout
 
 
 class SleepInterrupted(BaseException):
@@ -509,7 +510,7 @@ class ComputeManager:
                 return_meta = self._return_finished(results)
                 task_status = {k: "sent" for k in results.keys() if k in return_meta.accepted_ids}
                 task_status.update({k: "rejected" for k in results.keys() if k in return_meta.rejected_ids})
-            except ConnectionError:
+            except (ConnectionError, Timeout):
                 if self.server_error_retries is None or self.server_error_retries > 0:
                     self.logger.warning("Returning complete tasks failed. Attempting again on next update.")
                     self._deferred_tasks[0].update(results)
