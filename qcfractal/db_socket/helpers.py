@@ -8,7 +8,7 @@ from sqlalchemy import tuple_, and_, or_, func, select, inspect
 from sqlalchemy.orm import load_only, selectinload, lazyload
 
 from qcfractal.db_socket import BaseORM
-from qcportal.exceptions import MissingDataError
+from qcportal.exceptions import MissingDataError, UserReportableError
 from qcportal.metadata_models import InsertMetadata, DeleteMetadata
 
 if TYPE_CHECKING:
@@ -162,7 +162,10 @@ def _get_query_proj_options(
             options += [selectinload(getattr(orm_type, base)).options(*subrel_options)]
 
     if len(options) == 0:
-        raise RuntimeError("No columns or relationships specified to be loaded. This is a QCFractal developer error")
+        raise UserReportableError(
+            "No columns or relationships specified to be loaded."
+            "This is likely due to only including columns that don't exist, or otherwise including nothing"
+        )
 
     return options
 
