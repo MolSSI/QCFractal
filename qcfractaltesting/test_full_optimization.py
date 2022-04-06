@@ -24,7 +24,7 @@ def test_singlepoint_full_1(fulltest_client: PortalClient):
             "program": "psi4",
             "method": "b3lyp",
             "basis": "6-31g**",
-            "keywords": {"values": {"maxiter": 100}},
+            "keywords": {"maxiter": 100},
         },
         keywords={"maxiter": 30},
     )
@@ -49,7 +49,7 @@ def test_singlepoint_full_error_1(fulltest_client: PortalClient):
             "program": "psi4",
             "method": "b3lyp",
             "basis": "6-31g**",
-            "keywords": {"values": {"maxiter": 1}},
+            "keywords": {"maxiter": 1},
         },
         keywords={"maxiter": 30},
     )

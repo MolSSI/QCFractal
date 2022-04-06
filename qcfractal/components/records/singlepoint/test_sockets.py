@@ -13,12 +13,11 @@ from qcelemental.models.results import AtomicResultProperties
 from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM
 from qcfractal.components.wavefunctions.test_db_models import assert_wfn_equal
 from qcfractaltesting import load_molecule_data, load_procedure_data
-from qcportal.keywords import KeywordSet
+from qcportal.compression import decompress_string
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
-from qcportal.compression import decompress_string
 from qcportal.records.singlepoint import (
     QCSpecification,
     QCInputSpecification,
@@ -44,7 +43,6 @@ def compare_singlepoint_specs(
 
     full_spec.pop("id")
     full_spec.pop("keywords_id")
-    full_spec["keywords"].pop("id")
     trimmed_spec = QCInputSpecification(**full_spec)
     return input_spec == trimmed_spec
 
@@ -55,7 +53,7 @@ _test_specs = [
         driver=SinglepointDriver.energy,
         method="b3lyp",
         basis="6-31G*",
-        keywords=KeywordSet(values={"k": "value"}),
+        keywords={"k": "value"},
         protocols=SinglepointProtocols(wavefunction="all"),
     ),
     QCInputSpecification(
@@ -63,14 +61,14 @@ _test_specs = [
         driver=SinglepointDriver.gradient,
         method="Hf",
         basis="def2-TZVP",
-        keywords=KeywordSet(values={"k": "v"}),
+        keywords={"k": "v"},
     ),
     QCInputSpecification(
         program="Prog3",
         driver=SinglepointDriver.hessian,
         method="pbe0",
         basis="",
-        keywords=KeywordSet(values={"o": 1, "v": 2.123}),
+        keywords={"o": 1, "v": 2.123},
         protocols=SinglepointProtocols(stdout=False, wavefunction="orbitals_and_eigenvalues"),
     ),
     QCInputSpecification(
@@ -151,7 +149,7 @@ def test_singlepoint_socket_task_spec(storage_socket: SQLAlchemySocket, spec: QC
     for t in tasks:
         assert t["spec"]["args"][0]["model"] == {"method": spec.method, "basis": spec.basis}
         assert t["spec"]["args"][0]["protocols"] == spec.protocols.dict(exclude_defaults=True)
-        assert t["spec"]["args"][0]["keywords"] == spec.keywords.values
+        assert t["spec"]["args"][0]["keywords"] == spec.keywords
         assert t["spec"]["args"][1] == spec.program
         assert t["tag"] == "tag1"
         assert t["priority"] == PriorityEnum.low
@@ -193,7 +191,7 @@ def test_singlepoint_socket_add_same_1(storage_socket: SQLAlchemySocket):
         driver=SinglepointDriver.energy,
         method="b3lyp",
         basis="6-31G*",
-        keywords=KeywordSet(values={"k": "value"}),
+        keywords={"k": "value"},
         protocols=SinglepointProtocols(wavefunction="all"),
     )
 
@@ -216,7 +214,7 @@ def test_singlepoint_socket_add_same_2(storage_socket: SQLAlchemySocket):
         driver=SinglepointDriver.energy,
         method="b3lyp",
         basis="6-31G*",
-        keywords=KeywordSet(values={"k": "value"}),
+        keywords={"k": "value"},
         protocols=SinglepointProtocols(wavefunction="all"),
     )
 
@@ -225,7 +223,7 @@ def test_singlepoint_socket_add_same_2(storage_socket: SQLAlchemySocket):
         driver=SinglepointDriver.energy,
         method="b3lYp",
         basis="6-31g*",
-        keywords=KeywordSet(values={"k": "value"}),
+        keywords={"k": "value"},
         protocols=SinglepointProtocols(wavefunction="all"),
     )
 
@@ -248,7 +246,7 @@ def test_singlepoint_socket_add_same_3(storage_socket: SQLAlchemySocket):
         driver=SinglepointDriver.energy,
         method="b3lyp",
         basis="6-31G*",
-        keywords=KeywordSet(values={}),
+        keywords={},
         protocols=SinglepointProtocols(wavefunction="none"),
     )
 
@@ -300,11 +298,10 @@ def test_singlepoint_socket_add_same_4(storage_socket: SQLAlchemySocket):
 
 
 def test_singlepoint_socket_add_same_5(storage_socket: SQLAlchemySocket):
-    # Test adding keywords and molecule by id
+    # Test adding molecule by id
 
     water = load_molecule_data("water_dimer_minima")
-    kw = KeywordSet(values={"a": "value"})
-    _, kw_ids = storage_socket.keywords.add([kw])
+    kw = {"a": "value"}
     _, mol_ids = storage_socket.molecules.add([water])
 
     spec1 = QCInputSpecification(
@@ -312,7 +309,7 @@ def test_singlepoint_socket_add_same_5(storage_socket: SQLAlchemySocket):
     )
 
     spec2 = QCInputSpecification(
-        program="prog1", driver=SinglepointDriver.energy, method="b3lyp", basis="", keywords=kw_ids[0]
+        program="prog1", driver=SinglepointDriver.energy, method="b3lyp", basis="", keywords=kw
     )
 
     meta, id1 = storage_socket.records.singlepoint.add([water], spec1, tag="*", priority=PriorityEnum.normal)
@@ -388,7 +385,7 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket):
         assert record["specification"]["driver"] == result.driver
         assert record["specification"]["method"] == result.model.method
         assert record["specification"]["basis"] == result.model.basis
-        assert record["specification"]["keywords"]["values"] == result.keywords
+        assert record["specification"]["keywords"] == result.keywords
         assert record["specification"]["protocols"] == result.protocols
         assert record["created_on"] < time_0
         assert time_0 < record["modified_on"] < time_1

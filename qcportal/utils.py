@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import hashlib
-import json
 from typing import Optional, Union, Sequence, List, TypeVar, Any, Dict
 
 import numpy as np
@@ -88,15 +86,9 @@ def recursive_normalizer(value: Any, **kwargs: Dict[str, Any]) -> Any:
                 value = 0
 
     else:
-        raise TypeError("Invalid type in KeywordSet ({type(value)}), only simple Python types are allowed.")
+        raise TypeError("Invalid type in recursive normalizer ({type(value)}), only simple Python types are allowed.")
 
     return value
-
-
-def hash_dictionary(data: Dict[str, Any]) -> str:
-    m = hashlib.sha1()
-    m.update(json.dumps(data, sort_keys=True).encode("UTF-8"))
-    return m.hexdigest()
 
 
 def calculate_limit(max_limit: int, given_limit: Optional[int]) -> int:

@@ -12,7 +12,6 @@ import pytest
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service_constropt
 from qcfractaltesting import load_molecule_data, load_procedure_data
-from qcportal.keywords import KeywordSet
 from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.gridoptimization import (
@@ -50,7 +49,6 @@ def compare_gridoptimization_specs(
     full_spec["optimization_specification"].pop("qc_specification_id")
     full_spec["optimization_specification"]["qc_specification"].pop("id")
     full_spec["optimization_specification"]["qc_specification"].pop("keywords_id")
-    full_spec["optimization_specification"]["qc_specification"]["keywords"].pop("id")
     trimmed_spec = GridoptimizationInputSpecification(**full_spec)
     return input_spec == trimmed_spec
 
@@ -73,7 +71,7 @@ _test_specs = [
                 program="prog2",
                 method="b3lyp",
                 basis="6-31g",
-                keywords=KeywordSet(values={"k2": "values2"}),
+                keywords={"k2": "values2"},
                 protocols=SinglepointProtocols(wavefunction="all"),
             ),
         ),
@@ -94,7 +92,7 @@ _test_specs = [
                 program="prog2",
                 method="b3lyp",
                 basis="6-31g",
-                keywords=KeywordSet(values={"k2": "values2"}),
+                keywords={"k2": "values2"},
                 protocols=SinglepointProtocols(wavefunction="all", stdout=False),
             ),
         ),
@@ -176,7 +174,7 @@ def test_gridoptimization_socket_add_same_1(storage_socket: SQLAlchemySocket):
                 program="prog2",
                 method="b3lyp",
                 basis="6-31g",
-                keywords=KeywordSet(values={"k2": "values2"}),
+                keywords={"k2": "values2"},
                 protocols=SinglepointProtocols(wavefunction="all"),
             ),
         ),
@@ -213,7 +211,7 @@ def test_gridoptimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
                 program="prog2",
                 method="b3lyp",
                 basis="6-31g",
-                keywords=KeywordSet(values={"k2": "values2"}),
+                keywords={"k2": "values2"},
                 protocols=SinglepointProtocols(wavefunction="none"),
             ),
         ),
@@ -234,7 +232,7 @@ def test_gridoptimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
                 program="prOG2",
                 method="b3LYP",
                 basis="6-31g",
-                keywords=KeywordSet(values={"k2": "values2"}),
+                keywords={"k2": "values2"},
                 protocols=SinglepointProtocols(stdout=True),
             ),
         ),

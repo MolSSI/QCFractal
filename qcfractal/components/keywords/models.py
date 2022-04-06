@@ -1,8 +1,12 @@
+from __future__ import annotations
+
+import hashlib
+import json
 from typing import Optional, Dict, Any
 
-from pydantic import Field, BaseModel
+from pydantic import BaseModel, Field
 
-from ..utils import recursive_normalizer, hash_dictionary
+from qcportal.utils import recursive_normalizer
 
 
 class KeywordSet(BaseModel):
@@ -63,3 +67,9 @@ class KeywordSet(BaseModel):
 
     def build_index(self):
         self.__dict__["hash_index"] = hash_dictionary(self.values.copy())
+
+
+def hash_dictionary(data: Dict[str, Any]) -> str:
+    m = hashlib.sha1()
+    m.update(json.dumps(data, sort_keys=True).encode("UTF-8"))
+    return m.hexdigest()

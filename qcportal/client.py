@@ -32,7 +32,6 @@ from .datasets import (
     DatasetDeleteParams,
 )
 from .datasets.optimization import OptimizationDatasetAddBody
-from .keywords import KeywordSet
 from .managers import ManagerQueryBody, ComputeManager
 from .metadata_models import QueryMetadata, UpdateMetadata, InsertMetadata, DeleteMetadata
 from .molecules import Molecule, MoleculeIdentifiers, MoleculeQueryBody, MoleculeModifyBody
@@ -583,107 +582,6 @@ class PortalClient(PortalClientBase):
         )
 
     ##############################################################
-    # Keywords
-    ##############################################################
-
-    def get_keywords(
-        self,
-        keywords_ids: Union[int, Sequence[int]],
-        missing_ok: bool = False,
-    ) -> Union[Optional[KeywordSet], List[Optional[KeywordSet]]]:
-        """Obtains keywords from the server via keyword ids
-
-        Parameters
-        ----------
-        keywords_ids
-            An id or list of ids to query.
-        missing_ok
-            If True, return ``None`` for ids that were not found on the server.
-            If False, raise ``KeyError`` if any ids were not found on the server.
-
-        Returns
-        -------
-        :
-            The requested keywords, in the same order as the requested ids.
-            If given a list of ids, the return value will be a list.
-            Otherwise, it will be a single KeywordSet.
-        """
-
-        keywords_ids_lst = make_list(keywords_ids)
-        if not keywords_ids_lst:
-            return []
-
-        body_data = CommonBulkGetBody(ids=keywords_ids_lst, missing_ok=missing_ok)
-
-        if len(body_data.ids) > self.api_limits["get_keywords"]:
-            raise RuntimeError(
-                f"Cannot get {len(body_data.ids)} keywords - over the limit of {self.api_limits['get_keywords']}"
-            )
-
-        keywords = self._auto_request(
-            "post", "v1/keywords/bulkGet", CommonBulkGetBody, None, List[Optional[KeywordSet]], body_data, None
-        )
-
-        if isinstance(keywords_ids, Sequence):
-            return keywords
-        else:
-            return keywords[0]
-
-    def add_keywords(self, keywords: Sequence[KeywordSet]) -> Union[List[int], Tuple[InsertMetadata, List[int]]]:
-        """Adds keywords to the server
-
-        This function is not expected to be used by end users
-
-        Parameters
-        ----------
-        keywords
-            A KeywordSet or list of KeywordSet to add to the server.
-
-        Returns
-        -------
-        :
-            A list of KeywordSet ids that were added or existing on the server, in the
-            same order as specified in the keywords parameter. If full_return is True,
-            this function will return a tuple containing metadata and the ids.
-        """
-
-        keywords = make_list(keywords)
-
-        if len(keywords) == 0:
-            return InsertMetadata(), []
-
-        if len(keywords) > self.api_limits["add_keywords"]:
-            raise RuntimeError(
-                f"Cannot add {len(keywords)} keywords - over the limit of {self.api_limits['add_keywords']}"
-            )
-
-        return self._auto_request(
-            "post", "v1/keywords/bulkCreate", List[KeywordSet], None, Tuple[InsertMetadata, List[int]], keywords, None
-        )
-
-    def delete_keywords(self, keywords_ids: Union[int, Sequence[int]]) -> DeleteMetadata:
-        """Deletes keywords from the server
-
-        This will not delete any keywords that are in use
-
-        Parameters
-        ----------
-        keywords_ids
-            An id or list of ids to query.
-
-        Returns
-        -------
-        :
-            Metadata about what was deleted
-        """
-
-        keywords_ids = make_list(keywords_ids)
-        if not keywords_ids:
-            return DeleteMetadata()
-
-        return self._auto_request("post", "v1/keywords/bulkDelete", List[int], None, DeleteMetadata, keywords_ids, None)
-
-    ##############################################################
     # General record functions
     ##############################################################
 
@@ -921,7 +819,7 @@ class PortalClient(PortalClientBase):
         driver: str,
         method: str,
         basis: Optional[str],
-        keywords: Optional[Union[KeywordSet, Dict[str, Any], int]] = None,
+        keywords: Optional[Dict[str, Any]] = None,
         protocols: Optional[Union[SinglepointProtocols, Dict[str, Any]]] = None,
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
@@ -942,7 +840,7 @@ class PortalClient(PortalClientBase):
         basis
             The basis to apply to the computation (e.g., "cc-pVDZ", "6-31G")
         keywords
-            The KeywordSet ObjectId to use with the given compute
+            The program-specific keywords for the computation
         priority
             The priority of the job {"HIGH", "MEDIUM", "LOW"}. Default is "MEDIUM".
         protocols
@@ -975,10 +873,6 @@ class PortalClient(PortalClientBase):
             "tag": tag,
             "priority": priority,
         }
-
-        if isinstance(keywords, dict):
-            # Turn this into a keyword set
-            keywords = KeywordSet(values=keywords)
 
         # If these are None, then let the pydantic models handle the defaults
         if keywords is not None:
@@ -1149,7 +1043,7 @@ class PortalClient(PortalClientBase):
         initial_molecules: Union[int, Molecule, List[Union[int, Molecule]]],
         program: str,
         qc_specification: OptimizationQCInputSpecification,
-        keywords: Optional[Union[KeywordSet, Dict[str, Any], int]] = None,
+        keywords: Optional[Dict[str, Any]] = None,
         protocols: Optional[OptimizationProtocols] = None,
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
@@ -1741,7 +1635,7 @@ class PortalClient(PortalClientBase):
         program: str,
         method: str,
         basis: Optional[str],
-        keywords: Optional[Union[KeywordSet, Dict[str, Any], int]] = None,
+        keywords: Optional[Dict[str, Any]] = None,
         protocols: Optional[Union[SinglepointProtocols, Dict[str, Any]]] = None,
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
@@ -1763,10 +1657,6 @@ class PortalClient(PortalClientBase):
             "tag": tag,
             "priority": priority,
         }
-
-        if isinstance(keywords, dict):
-            # Turn this into a keyword set
-            keywords = KeywordSet(values=keywords)
 
         # If these are None, then let the pydantic models handle the defaults
         if keywords is not None:

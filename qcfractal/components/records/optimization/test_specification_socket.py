@@ -3,7 +3,6 @@ Tests the wavefunction store socket
 """
 
 from qcfractal.db_socket import SQLAlchemySocket
-from qcportal.keywords import KeywordSet
 from qcportal.records.optimization import (
     OptimizationInputSpecification,
     OptimizationQCInputSpecification,
@@ -25,7 +24,7 @@ def test_optimizationrecord_socket_basic_specification(storage_socket: SQLAlchem
             program="prog2",
             method="b3lyp",
             basis="6-31g",
-            keywords=KeywordSet(values={"k2": "values2"}),
+            keywords={"k2": "values2"},
             protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
@@ -39,7 +38,7 @@ def test_optimizationrecord_socket_basic_specification(storage_socket: SQLAlchem
             driver=SinglepointDriver.hessian,
             method="hf",
             basis="def2-tzvp",
-            keywords=KeywordSet(values={"k": "value"}),
+            keywords={"k": "value"},
             protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
@@ -53,7 +52,7 @@ def test_optimizationrecord_socket_basic_specification(storage_socket: SQLAlchem
             driver=SinglepointDriver.hessian,
             method="hf",
             basis="def2-tzvp",
-            keywords=KeywordSet(values={"k": "value"}),
+            keywords={"k": "value"},
             protocols=SinglepointProtocols(wavefunction="orbitals_and_eigenvalues"),
         ),
     )
@@ -77,12 +76,10 @@ def test_optimizationrecord_socket_basic_specification(storage_socket: SQLAlchem
 
     for sp in [sp1, sp2, sp3]:
         assert sp["qc_specification_id"] == sp["qc_specification"]["id"]
-        assert sp["qc_specification"]["keywords_id"] == sp["qc_specification"]["keywords"]["id"]
         sp.pop("id")
         sp.pop("qc_specification_id")
         sp["qc_specification"].pop("id")
         sp["qc_specification"].pop("keywords_id")
-        sp["qc_specification"]["keywords"].pop("id")
 
         assert sp["qc_specification"]["driver"] == SinglepointDriver.deferred
 
@@ -96,7 +93,7 @@ common_qc_spec = OptimizationQCInputSpecification(
     driver=SinglepointDriver.energy,
     method="b3lyp",
     basis="6-31G*",
-    keywords=KeywordSet(values={"k": "value"}),
+    keywords={"k": "value"},
     protocols=SinglepointProtocols(),
 )
 

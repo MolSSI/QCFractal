@@ -3,7 +3,6 @@ Tests the wavefunction store socket
 """
 
 from qcfractal.db_socket import SQLAlchemySocket
-from qcportal.keywords import KeywordSet
 from qcportal.records.singlepoint import (
     QCInputSpecification,
     SinglepointDriver,
@@ -18,7 +17,7 @@ def test_singlepoint_socket_basic_specification(storage_socket: SQLAlchemySocket
         driver=SinglepointDriver.energy,
         method="b3lyp",
         basis="6-31G*",
-        keywords=KeywordSet(values={"k": "value"}),
+        keywords={"k": "value"},
         protocols=SinglepointProtocols(wavefunction="all"),
     )
 
@@ -27,7 +26,7 @@ def test_singlepoint_socket_basic_specification(storage_socket: SQLAlchemySocket
         driver=SinglepointDriver.hessian,
         method="hf",
         basis="def2-tzvp",
-        keywords=KeywordSet(values={"k": "value"}),
+        keywords={"k": "value"},
         protocols=SinglepointProtocols(wavefunction="all"),
     )
 
@@ -36,7 +35,7 @@ def test_singlepoint_socket_basic_specification(storage_socket: SQLAlchemySocket
         driver=SinglepointDriver.hessian,
         method="hf",
         basis="def2-tzvp",
-        keywords=KeywordSet(values={"k": "value"}),
+        keywords={"k": "value"},
         protocols=SinglepointProtocols(wavefunction="orbitals_and_eigenvalues"),
     )
 
@@ -59,8 +58,6 @@ def test_singlepoint_socket_basic_specification(storage_socket: SQLAlchemySocket
 
     # Remove some ids that aren't in the input spec
     for sp in [sp1, sp2, sp3]:
-        assert sp["keywords_id"] == sp["keywords"]["id"]
-        sp["keywords"].pop("id")
         sp.pop("keywords_id")
         sp.pop("id")
 
@@ -76,7 +73,7 @@ def test_singlepoint_socket_add_specification_same_0(storage_socket: SQLAlchemyS
         driver=SinglepointDriver.energy,
         method="b3lyp",
         basis="6-31G*",
-        keywords=KeywordSet(values={"k": "value"}),
+        keywords={"k": "value"},
         protocols=SinglepointProtocols(wavefunction="all"),
     )
 
@@ -99,7 +96,7 @@ def test_singlepoint_socket_add_specification_same_0(storage_socket: SQLAlchemyS
         driver=SinglepointDriver.energy,
         method="b3lyp",
         basis="6-31G*",
-        keywords=KeywordSet(values={"k": "value2"}),
+        keywords={"k": "value2"},
         protocols=SinglepointProtocols(wavefunction="all"),
     )
 
@@ -117,7 +114,7 @@ def test_singlepoint_socket_add_specification_same_1(storage_socket: SQLAlchemyS
         driver=SinglepointDriver.energy,
         method="b3lyp",
         basis="6-31G*",
-        keywords=KeywordSet(values={"k": "value"}),
+        keywords={"k": "value"},
         protocols=SinglepointProtocols(wavefunction="all"),
     )
 
@@ -129,7 +126,7 @@ def test_singlepoint_socket_add_specification_same_1(storage_socket: SQLAlchemyS
         driver=SinglepointDriver.energy,
         method="b3LYP",
         basis="6-31g*",
-        keywords=KeywordSet(values={"k": "value"}),
+        keywords={"k": "value"},
         protocols=SinglepointProtocols(wavefunction="all"),
     )
 
@@ -145,7 +142,7 @@ def test_singlepoint_socket_add_specification_same_2(storage_socket: SQLAlchemyS
         driver=SinglepointDriver.energy,
         method="b3lyp",
         basis="6-31G*",
-        keywords=KeywordSet(values={}),
+        keywords={},
         protocols=SinglepointProtocols(wavefunction="orbitals_and_eigenvalues"),
     )
 

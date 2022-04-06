@@ -11,7 +11,6 @@ import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractaltesting import load_molecule_data, load_procedure_data
-from qcportal.keywords import KeywordSet
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputStore
@@ -45,7 +44,6 @@ def compare_optimization_specs(
     full_spec.pop("qc_specification_id")
     full_spec["qc_specification"].pop("id")
     full_spec["qc_specification"].pop("keywords_id")
-    full_spec["qc_specification"]["keywords"].pop("id")
     trimmed_spec = OptimizationInputSpecification(**full_spec)
     return input_spec == trimmed_spec
 
@@ -59,7 +57,7 @@ _test_specs = [
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
-            keywords=KeywordSet(values={"k": "value"}),
+            keywords={"k": "value"},
             protocols=SinglepointProtocols(wavefunction="all"),
         ),
     ),
@@ -71,7 +69,7 @@ _test_specs = [
             program="Prog2",
             method="Hf",
             basis="def2-TZVP",
-            keywords=KeywordSet(values={"k": "v"}),
+            keywords={"k": "v"},
         ),
     ),
     OptimizationInputSpecification(
@@ -81,7 +79,7 @@ _test_specs = [
             program="Prog3",
             method="pbe0",
             basis="",
-            keywords=KeywordSet(values={"o": 1, "v": 2.123}),
+            keywords={"o": 1, "v": 2.123},
             protocols=SinglepointProtocols(stdout=False, wavefunction="orbitals_and_eigenvalues"),
         ),
     ),
@@ -188,7 +186,7 @@ def test_optimization_socket_task_spec(storage_socket: SQLAlchemySocket, spec: O
             "basis": spec.qc_specification.basis,
         }
 
-        assert task_spec["input_specification"]["keywords"] == spec.qc_specification.keywords.values
+        assert task_spec["input_specification"]["keywords"] == spec.qc_specification.keywords
 
         assert t["tag"] == "tag1"
         assert t["priority"] == PriorityEnum.low
@@ -234,7 +232,7 @@ def test_optimization_socket_add_same_1(storage_socket: SQLAlchemySocket):
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
-            keywords=KeywordSet(values={"k": "value"}),
+            keywords={"k": "value"},
             protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
@@ -261,7 +259,7 @@ def test_optimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
-            keywords=KeywordSet(values={"k": "value"}),
+            keywords={"k": "value"},
             protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
@@ -274,7 +272,7 @@ def test_optimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
             program="prOG1",
             method="b3LYp",
             basis="6-31g*",
-            keywords=KeywordSet(values={"k": "value"}),
+            keywords={"k": "value"},
             protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
@@ -301,7 +299,7 @@ def test_optimization_socket_add_same_3(storage_socket: SQLAlchemySocket):
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
-            keywords=KeywordSet(values={"k": "value"}),
+            keywords={"k": "value"},
             protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
@@ -312,7 +310,7 @@ def test_optimization_socket_add_same_3(storage_socket: SQLAlchemySocket):
             program="prog1",
             method="b3lyp",
             basis="6-31G*",
-            keywords=KeywordSet(values={"k": "value"}),
+            keywords={"k": "value"},
             protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
@@ -333,7 +331,7 @@ def test_optimization_socket_add_same_4(storage_socket: SQLAlchemySocket):
     # Test adding molecule by id
 
     water = load_molecule_data("water_dimer_minima")
-    kw = KeywordSet(values={"a": "value"})
+    kw = {"a": "value"}
     _, kw_ids = storage_socket.keywords.add([kw])
     _, mol_ids = storage_socket.molecules.add([water])
 
@@ -427,7 +425,7 @@ def test_optimization_socket_run(storage_socket: SQLAlchemySocket):
         assert record["specification"]["qc_specification"]["program"] == result.keywords["program"]
         assert record["specification"]["qc_specification"]["method"] == result.input_specification.model.method
         assert record["specification"]["qc_specification"]["basis"] == result.input_specification.model.basis
-        assert record["specification"]["qc_specification"]["keywords"]["values"] == result.input_specification.keywords
+        assert record["specification"]["qc_specification"]["keywords"] == result.input_specification.keywords
         assert record["created_on"] < time_0
         assert time_0 < record["modified_on"] < time_1
 

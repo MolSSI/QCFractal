@@ -1,5 +1,4 @@
 from qcfractal.db_socket import SQLAlchemySocket
-from qcportal.keywords import KeywordSet
 from qcportal.records.gridoptimization import (
     GridoptimizationInputSpecification,
     GridoptimizationKeywords,
@@ -34,7 +33,7 @@ def test_gridoptimization_socket_basic_specification(storage_socket: SQLAlchemyS
                 program="prog2",
                 method="b3lyp",
                 basis="6-31g",
-                keywords=KeywordSet(values={"k2": "values2"}),
+                keywords={"k2": "values2"},
                 protocols=SinglepointProtocols(wavefunction="all"),
             ),
         ),
@@ -57,7 +56,7 @@ def test_gridoptimization_socket_basic_specification(storage_socket: SQLAlchemyS
                 driver=SinglepointDriver.hessian,
                 method="hf",
                 basis="def2-tzvp",
-                keywords=KeywordSet(values={"k": "value"}),
+                keywords={"k": "value"},
                 protocols=SinglepointProtocols(wavefunction="all"),
             ),
         ),
@@ -80,7 +79,7 @@ def test_gridoptimization_socket_basic_specification(storage_socket: SQLAlchemyS
                 driver=SinglepointDriver.hessian,
                 method="hf",
                 basis="def2-tzvp",
-                keywords=KeywordSet(values={"k": "value"}),
+                keywords={"k": "value"},
                 protocols=SinglepointProtocols(wavefunction="orbitals_and_eigenvalues"),
             ),
         ),
@@ -121,7 +120,7 @@ common_opt_spec = OptimizationInputSpecification(
         driver=SinglepointDriver.hessian,
         method="hf",
         basis="def2-tzvp",
-        keywords=KeywordSet(values={"k": "value"}),
+        keywords={"k": "value"},
         protocols=SinglepointProtocols(wavefunction="orbitals_and_eigenvalues"),
     ),
 )

@@ -12,7 +12,6 @@ import pytest
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service_singlepoint
 from qcfractaltesting import load_molecule_data, load_procedure_data
-from qcportal.keywords import KeywordSet
 from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.reaction import ReactionQCInputSpecification, ReactionQueryBody
@@ -29,14 +28,14 @@ _test_specs = [
         program="prog1",
         method="b3lyp",
         basis="6-31G*",
-        keywords=KeywordSet(values={"k": "value"}),
+        keywords={"k": "value"},
         protocols=SinglepointProtocols(wavefunction="all"),
     ),
     ReactionQCInputSpecification(
         program="Prog2",
         method="Hf",
         basis="def2-TZVP",
-        keywords=KeywordSet(values={"k": "v"}),
+        keywords={"k": "v"},
     ),
 ]
 
@@ -120,7 +119,7 @@ def test_reaction_socket_add_same_1(storage_socket: SQLAlchemySocket):
         program="prog1",
         method="b3lyp",
         basis="6-31G*",
-        keywords=KeywordSet(values={"k": "value"}),
+        keywords={"k": "value"},
         protocols=SinglepointProtocols(wavefunction="all"),
     )
 

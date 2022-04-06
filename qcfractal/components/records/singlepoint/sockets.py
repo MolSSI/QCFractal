@@ -11,7 +11,6 @@ from sqlalchemy.orm import contains_eager
 from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
 from qcfractal.db_socket.helpers import insert_general
-from qcportal.keywords import KeywordSet
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.records import PriorityEnum, RecordStatusEnum
@@ -84,7 +83,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
         with self.root_socket.optional_session(session, False) as session:
             # Add the keywords
-            meta, kw_ids = self.root_socket.keywords.add_mixed([qc_spec.keywords], session=session)
+            meta, kw_ids = self.root_socket.keywords.add([qc_spec.keywords], session=session)
             if not meta.success:
                 return (
                     InsertMetadata(
@@ -307,7 +306,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
             driver=result.driver,
             method=result.model.method,
             basis=result.model.basis,
-            keywords=KeywordSet(values=result.keywords),  # type: ignore
+            keywords=result.keywords,
             protocols=result.protocols,
         )
 

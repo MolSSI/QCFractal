@@ -21,8 +21,6 @@ from qcportal.records.optimization import (
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
-    from typing import Optional
-
 
 from .test_sockets import _test_specs, compare_optimization_specs
 

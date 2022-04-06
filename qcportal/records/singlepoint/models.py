@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional, Union, Any, List
+from typing import Optional, Union, Any, List, Dict
 
 from pydantic import BaseModel, Field, constr, validator, Extra
 from qcelemental.models import Molecule
@@ -11,7 +11,6 @@ from qcelemental.models.results import (
 from typing_extensions import Literal
 
 from .. import BaseRecord, RecordAddBodyBase, RecordQueryBody
-from ...keywords import KeywordSet
 
 
 class SinglepointDriver(str, Enum):
@@ -41,10 +40,7 @@ class QCInputSpecification(BaseModel):
         description="The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for "
         "methods without basis sets.",
     )
-    keywords: Union[int, KeywordSet] = Field(
-        KeywordSet(values={}),
-        description="Keywords to use. Can be an ID of the keywords on the server or a KeywordSet object",
-    )
+    keywords: Dict[str, Any] = Field({}, description="Program-specific keywords to use for the computation")
     protocols: SinglepointProtocols = Field(SinglepointProtocols(), description=str(SinglepointProtocols.__base_doc__))
 
     @validator("basis", pre=True)

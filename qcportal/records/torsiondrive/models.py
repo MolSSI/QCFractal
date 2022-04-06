@@ -182,8 +182,7 @@ class TorsiondriveRecord(BaseRecord):
             url_params,
         )
 
-        return {k: self.client.recordmodel_from_datamodel([v])[0] for k,v in r.items()}
-
+        return {k: self.client.recordmodel_from_datamodel([v])[0] for k, v in r.items()}
 
 
 # class TorsiondriveRecord(RecordBase):

@@ -1,5 +1,4 @@
 from qcfractal.db_socket import SQLAlchemySocket
-from qcportal.keywords import KeywordSet
 from qcportal.records.optimization import (
     OptimizationInputSpecification,
     OptimizationQCInputSpecification,
@@ -34,7 +33,7 @@ def test_torsiondrive_socket_basic_specification(storage_socket: SQLAlchemySocke
                 program="prog2",
                 method="b3lyp",
                 basis="6-31g",
-                keywords=KeywordSet(values={"k2": "values2"}),
+                keywords={"k2": "values2"},
                 protocols=SinglepointProtocols(wavefunction="all"),
             ),
         ),
@@ -58,7 +57,7 @@ def test_torsiondrive_socket_basic_specification(storage_socket: SQLAlchemySocke
                 driver=SinglepointDriver.hessian,
                 method="hf",
                 basis="def2-tzvp",
-                keywords=KeywordSet(values={"k": "value"}),
+                keywords={"k": "value"},
                 protocols=SinglepointProtocols(wavefunction="all"),
             ),
         ),
@@ -82,7 +81,7 @@ def test_torsiondrive_socket_basic_specification(storage_socket: SQLAlchemySocke
                 driver=SinglepointDriver.hessian,
                 method="hf",
                 basis="def2-tzvp",
-                keywords=KeywordSet(values={"k": "value"}),
+                keywords={"k": "value"},
                 protocols=SinglepointProtocols(wavefunction="orbitals_and_eigenvalues"),
             ),
         ),
@@ -123,7 +122,7 @@ common_opt_spec = OptimizationInputSpecification(
         driver=SinglepointDriver.hessian,
         method="hf",
         basis="def2-tzvp",
-        keywords=KeywordSet(values={"k": "value"}),
+        keywords={"k": "value"},
         protocols=SinglepointProtocols(wavefunction="orbitals_and_eigenvalues"),
     ),
 )
@@ -226,7 +225,7 @@ def test_torsiondrive_socket_add_specification_same_2(storage_socket: SQLAlchemy
                 driver=SinglepointDriver.gradient,
                 method="hf",
                 basis="def2-tZVp",
-                keywords=KeywordSet(values={"k": "value"}),
+                keywords={"k": "value"},
                 protocols=SinglepointProtocols(wavefunction="orbitals_and_eigenvalues"),
             ),
         ),

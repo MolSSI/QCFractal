@@ -24,7 +24,7 @@ from ...interface.visualization import bar_plot, violin_plot
 if TYPE_CHECKING:  # pragma: no cover
     from .. import PortalClient
     from ...interface.models import Molecule, SinglepointRecord
-    from ..keywords import KeywordSet
+    from qcfractal.components.keywords.models import KeywordSet
 
 
 class MoleculeEntry(ProtoModel):

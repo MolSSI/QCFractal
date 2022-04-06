@@ -6,12 +6,10 @@ from typing import TYPE_CHECKING
 from qcfractal.db_socket.helpers import (
     get_general,
     insert_general,
-    delete_general,
-    insert_mixed_general,
 )
-from qcportal.keywords import KeywordSet
-from qcportal.metadata_models import InsertMetadata, DeleteMetadata
+from qcportal.metadata_models import InsertMetadata
 from .db_models import KeywordsORM
+from .models import KeywordSet
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -36,7 +34,7 @@ class KeywordsSocket:
         return KeywordsORM(**kw_dict)
 
     def add(
-        self, keywords: Sequence[KeywordSet], *, session: Optional[Session] = None
+        self, keywords: Sequence[Dict[str, Any]], *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Add keywords to the database
@@ -66,104 +64,18 @@ class KeywordsSocket:
         # valid KeywordSet object should be insertable into the database
         ###############################################################################
 
+        keywords_obj = [KeywordSet(values=x) for x in keywords]
+
         # Make sure the hashes are correct
+        kw_orm = []
+
         for k in keywords:
-            k.build_index()
-        kw_orm = [self.keywords_to_orm(x) for x in keywords]
+            k2 = KeywordSet(values=k, lowercase=True, exact_floats=True)
+            k2.build_index()
+            kw_orm.append(self.keywords_to_orm(k2))
 
         with self.root_socket.optional_session(session) as session:
             meta, added_ids = insert_general(session, kw_orm, (KeywordsORM.hash_index,), (KeywordsORM.id,))
 
         # added_ids is a list of tuple, with each tuple only having one value. Flatten that out
         return meta, [x[0] for x in added_ids]
-
-    def get(
-        self, keywords_id: Sequence[int], missing_ok: bool = False, *, session: Optional[Session] = None
-    ) -> List[Optional[KeywordDict]]:
-        """
-        Obtain keywords with specified IDs
-
-        The returned keyword information will be in the same order as the given ids
-
-        If missing_ok is False, then any ids that are missing in the database will raise an exception.
-        Otherwise, the corresponding entry in the returned list of keywords will be None.
-
-        Parameters
-        ----------
-        session
-            An existing SQLAlchemy session to get data from
-        keywords_id
-            A list or other sequence of keyword IDs
-        missing_ok
-           If set to True, then missing keywords will be tolerated, and the returned list of
-           keywords will contain None for the corresponding IDs that were not found.
-        session
-            An existing SQLAlchemy session to use. If None, one will be created
-
-        Returns
-        -------
-        :
-            Keyword information as a dictionary in the same order as the given ids.
-            If missing_ok is True, then this list will contain None where the keywords were missing
-        """
-        with self.root_socket.optional_session(session, True) as session:
-            return get_general(session, KeywordsORM, KeywordsORM.id, keywords_id, None, None, missing_ok)
-
-    def add_mixed(
-        self, keyword_data: Sequence[Union[int, KeywordSet, KeywordDict]], *, session: Optional[Session] = None
-    ) -> Tuple[InsertMetadata, List[Optional[int]]]:
-        """
-        Add a mixed format keywords specification to the database.
-
-        This function can take KeywordSet objects, keyword ids, or dictionaries. If a keyword id is given
-        in the list, then it is checked to make sure it exists. If it does not exist, then it will be
-        marked as an error in the returned metadata and the corresponding entry in the returned
-        list of IDs will be None.
-
-        If a KeywordSet or dictionary is given, it will be added to the database if it does not already exist
-        in the database (based on the hash) and the existing ID will be returned. Otherwise, the new
-        ID will be returned.
-
-        Parameters
-        ----------
-        keyword_data
-            Keyword data to add. Can be a mix of IDs and Keyword objects
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
-        """
-
-        keyword_orm: List[Union[int, KeywordsORM]] = [
-            x if isinstance(x, int) else self.keywords_to_orm(x) for x in keyword_data
-        ]
-
-        with self.root_socket.optional_session(session) as session:
-            meta, all_ids = insert_mixed_general(
-                session, KeywordsORM, keyword_orm, KeywordsORM.id, (KeywordsORM.hash_index,), (KeywordsORM.id,)
-            )
-
-        # added_ids is a list of tuple, with each tuple only having one value. Flatten that out
-        return meta, [x[0] if x is not None else None for x in all_ids]
-
-    def delete(self, keywords_id: Sequence[int], *, session: Optional[Session] = None) -> DeleteMetadata:
-        """
-        Removes keywords from the database based on id
-
-        Parameters
-        ----------
-        keywords_id
-            IDs of the keywords to remove
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
-
-        Returns
-        -------
-        :
-            Information about what was deleted and any errors that occurred
-        """
-
-        id_lst = [(x,) for x in keywords_id]
-
-        with self.root_socket.optional_session(session) as session:
-            return delete_general(session, KeywordsORM, (KeywordsORM.id,), id_lst)
