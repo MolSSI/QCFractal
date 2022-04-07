@@ -168,9 +168,6 @@ class APILimitConfig(ConfigBase):
     get_molecules: int = Field(1000, description="Number of molecules that can be retrieved")
     add_molecules: int = Field(1000, description="Number of molecules that can be added")
 
-    get_keywords: int = Field(100, description="Number of keywords that can be retrieved")
-    add_keywords: int = Field(100, description="Number of keywords that can be added")
-
     get_managers: int = Field(5000, description="Number of manager records to return")
 
     manager_tasks_claim: int = Field(200, description="Number of tasks a single manager can pull down")
