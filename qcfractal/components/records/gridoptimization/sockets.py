@@ -93,7 +93,10 @@ def serialize_key(key: Union[str, Sequence[int]]) -> str:
         The internal key value.
     """
 
-    return json.dumps(key)
+    if isinstance(key, str):
+        return key
+    else:
+        return json.dumps(key)
 
 
 def deserialize_key(key: str) -> Union[str, Tuple[int, ...]]:
