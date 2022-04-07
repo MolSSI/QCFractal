@@ -17,8 +17,6 @@ if TYPE_CHECKING:
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import Optional, List, Dict, Any
 
-    UserInfoDict = Dict[str, Any]
-
 
 def _generate_password() -> str:
     """
@@ -71,7 +69,7 @@ class UserSocket:
 
         return user
 
-    def list(self, *, session: Optional[Session] = None) -> List[UserInfoDict]:
+    def list(self, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
         """
         Get information about all users
 
@@ -86,7 +84,7 @@ class UserSocket:
             all_users = session.execute(stmt).scalars().all()
             return [x.model_dict() for x in all_users]
 
-    def get(self, username: str, *, session: Optional[Session] = None) -> UserInfoDict:
+    def get(self, username: str, *, session: Optional[Session] = None) -> Dict[str, Any]:
         """
         Obtains information for a user
 
@@ -225,7 +223,7 @@ class UserSocket:
 
             return user.role_obj.permissions
 
-    def modify(self, user_info: UserInfo, as_admin: bool, *, session: Optional[Session] = None) -> UserInfoDict:
+    def modify(self, user_info: UserInfo, as_admin: bool, *, session: Optional[Session] = None) -> Dict[str, Any]:
         """
         Alters a user's information
 

@@ -15,8 +15,6 @@ if TYPE_CHECKING:
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import List, Sequence, Union, Dict, Any, Tuple, Optional
 
-    KeywordDict = Dict[str, Any]
-
 
 class KeywordsSocket:
     def __init__(self, root_socket: SQLAlchemySocket):
@@ -24,7 +22,7 @@ class KeywordsSocket:
         self._logger = logging.getLogger(__name__)
 
     @staticmethod
-    def keywords_to_orm(keywords: Union[KeywordDict, KeywordSet]) -> KeywordsORM:
+    def keywords_to_orm(keywords: Union[Dict[str, Any], KeywordSet]) -> KeywordsORM:
         if isinstance(keywords, KeywordSet):
             kw_dict = keywords.dict(exclude={"id"})
         else:

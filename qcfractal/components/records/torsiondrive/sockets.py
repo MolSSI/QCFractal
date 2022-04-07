@@ -57,9 +57,6 @@ if TYPE_CHECKING:
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, Iterable
 
-    TorsiondriveSpecificationDict = Dict[str, Any]
-    TorsiondriveRecordDict = Dict[str, Any]
-
 
 class TorsiondriveServiceState(BaseModel):
     """
@@ -145,7 +142,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         query_data: TorsiondriveQueryBody,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[TorsiondriveRecordDict]]:
+    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
 
         and_query = []
         need_spspec_join = False

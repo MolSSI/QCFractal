@@ -88,7 +88,7 @@ class TorsiondriveDatasetSpecificationORM(BaseORM):
     description = Column(String, nullable=True)
     specification_id = Column(Integer, ForeignKey(OptimizationSpecificationORM.id), nullable=False)
 
-    specification = relationship(OptimizationSpecificationORM, uselist=False)
+    specification = relationship(OptimizationSpecificationORM)
 
     __table_args__ = (
         Index("ix_torsiondrive_dataset_specification_dataset_id", "dataset_id"),

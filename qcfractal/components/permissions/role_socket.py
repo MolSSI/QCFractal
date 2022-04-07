@@ -15,8 +15,6 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
 
-    RoleInfoDict = Dict[str, Any]
-
 """
 Default roles are:
     * admin   (read/write to everything)
@@ -98,7 +96,7 @@ class RoleSocket:
 
         return orm
 
-    def list(self, *, session: Optional[Session] = None) -> List[RoleInfoDict]:
+    def list(self, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
         """
         Get information about all roles
 
@@ -112,7 +110,7 @@ class RoleSocket:
             roles = session.execute(stmt).scalars().all()
             return [r.model_dict() for r in roles]
 
-    def get(self, rolename: str, *, session: Optional[Session] = None) -> RoleInfoDict:
+    def get(self, rolename: str, *, session: Optional[Session] = None) -> Dict[str, Any]:
         """
         Get information about a particular role
 
@@ -153,7 +151,7 @@ class RoleSocket:
 
         self._logger.info(f"Role {role_info.rolename} added")
 
-    def modify(self, role_info: RoleInfo, *, session: Optional[Session] = None) -> RoleInfoDict:
+    def modify(self, role_info: RoleInfo, *, session: Optional[Session] = None) -> Dict[str, Any]:
         """
         Update role's permissions.
 

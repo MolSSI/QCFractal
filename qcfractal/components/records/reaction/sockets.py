@@ -26,9 +26,6 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
 
-    QCSpecificationDict = Dict[str, Any]
-    ReactionRecordDict = Dict[str, Any]
-
 
 class ReactionRecordSocket(BaseRecordSocket):
 
@@ -58,7 +55,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         query_data: ReactionQueryBody,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[ReactionRecordDict]]:
+    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
 
         and_query = []
         need_spec_join = False

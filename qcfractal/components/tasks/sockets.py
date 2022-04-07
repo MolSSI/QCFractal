@@ -25,8 +25,6 @@ if TYPE_CHECKING:
     from qcportal.records import AllResultTypes
     from typing import List, Dict, Tuple, Optional, Any
 
-    TaskDict = Dict[str, Any]
-
 
 class TaskSocket:
     def __init__(self, root_socket: SQLAlchemySocket):
@@ -209,7 +207,7 @@ class TaskSocket:
         limit: Optional[int] = None,
         *,
         session: Optional[Session] = None,
-    ) -> List[TaskDict]:
+    ) -> List[Dict[str, Any]]:
         """Claim/assign tasks for a manager
 
         Given tags and available programs/procedures on the manager, obtain

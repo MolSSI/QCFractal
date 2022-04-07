@@ -21,9 +21,7 @@ from .db_models import ServiceQueueORM, ServiceDependencyORM
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from typing import Dict, Optional, Any
-
-    ServiceQueueDict = Dict[str, Any]
+    from typing import Optional
 
 
 class ServiceSocket:

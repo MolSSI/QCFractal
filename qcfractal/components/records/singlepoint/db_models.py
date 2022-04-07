@@ -29,7 +29,7 @@ class QCSpecificationORM(BaseORM):
     basis = Column(String(100), nullable=False)
 
     keywords_id = Column(Integer, ForeignKey(KeywordsORM.id), nullable=False)
-    keywords = relationship(KeywordsORM, lazy="joined", uselist=False)
+    keywords = relationship(KeywordsORM, lazy="joined")
 
     protocols = Column(JSONB, nullable=False)
 
@@ -72,10 +72,10 @@ class SinglepointRecordORM(BaseRecordORM):
 
     # uniquely identifying a result
     specification_id = Column(Integer, ForeignKey(QCSpecificationORM.id), nullable=False)
-    specification = relationship(QCSpecificationORM, lazy="selectin", uselist=False)
+    specification = relationship(QCSpecificationORM, lazy="selectin")
 
     molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), nullable=False)
-    molecule = relationship(MoleculeORM, uselist=False)
+    molecule = relationship(MoleculeORM)
 
     return_result = Column(MsgpackExt)
     properties = Column(JSONB)

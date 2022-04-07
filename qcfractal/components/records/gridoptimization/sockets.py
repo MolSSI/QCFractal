@@ -35,9 +35,6 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
 
-    GridoptimizationSpecificationDict = Dict[str, Any]
-    GridoptimizationRecordDict = Dict[str, Any]
-
 
 def expand_ndimensional_grid(
     dimensions: Tuple[int, ...], seeds: Set[Tuple[int, ...]], complete: Set[Tuple[int, ...]]
@@ -214,7 +211,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         query_data: GridoptimizationQueryBody,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[GridoptimizationRecordDict]]:
+    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
 
         and_query = []
         need_spspec_join = False

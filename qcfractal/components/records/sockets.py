@@ -31,7 +31,6 @@ if TYPE_CHECKING:
     from qcportal.records import AllResultTypes, RecordQueryBody, RecordModifyBody
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Iterable, Type
 
-    ProcedureDict = Dict[str, Any]
 
 _default_error = {"error_type": "not_supplied", "error_message": "No error message found on task."}
 
@@ -329,7 +328,7 @@ class RecordSocket:
         query_data: RecordQueryBody,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[ProcedureDict]]:
+    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
 
         proj_options = get_query_proj_options(orm_type, query_data.include, query_data.exclude)
 
@@ -388,7 +387,7 @@ class RecordSocket:
         query_data: RecordQueryBody,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[ProcedureDict]]:
+    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
 
         # If all columns are included, then we can load
         # the data from derived classes as well.
@@ -415,7 +414,7 @@ class RecordSocket:
         missing_ok: bool = False,
         *,
         session: Optional[Session] = None,
-    ) -> List[Optional[ProcedureDict]]:
+    ) -> List[Optional[Dict[str, Any]]]:
         """
         Obtain records of any kind of record with specified IDs
 

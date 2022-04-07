@@ -31,8 +31,6 @@ if TYPE_CHECKING:
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import List, Union, Tuple, Optional, Sequence, Iterable, Dict, Any
 
-    MoleculeDict = Dict[str, Any]
-
 
 class MoleculeSocket:
     def __init__(self, root_socket: SQLAlchemySocket):
@@ -107,7 +105,7 @@ class MoleculeSocket:
         missing_ok: bool = False,
         *,
         session: Optional[Session] = None,
-    ) -> List[Optional[MoleculeDict]]:
+    ) -> List[Optional[Dict[str, Any]]]:
         """
         Obtain molecules from with specified IDs
 
@@ -211,7 +209,7 @@ class MoleculeSocket:
         skip: int = 0,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[MoleculeDict]]:
+    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
         """
         General query of molecules in the database
 

@@ -18,9 +18,6 @@ if TYPE_CHECKING:
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import List, Iterable, Optional, Sequence, Sequence, Dict, Any, Tuple
 
-    ManagerDict = Dict[str, Any]
-    ManagerLogDict = Dict[str, Any]
-
 
 class ManagerSocket:
     def __init__(self, root_socket: SQLAlchemySocket):
@@ -201,7 +198,7 @@ class ManagerSocket:
         missing_ok: bool = False,
         *,
         session: Optional[Session] = None,
-    ) -> List[Optional[ManagerDict]]:
+    ) -> List[Optional[Dict[str, Any]]]:
         """
         Obtain manager information from specified names frm an existing session
 
@@ -251,7 +248,7 @@ class ManagerSocket:
         skip: int = 0,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[ManagerDict]]:
+    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
         """
         General query of managers in the database
 

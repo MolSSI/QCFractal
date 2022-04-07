@@ -23,11 +23,6 @@ if TYPE_CHECKING:
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import Dict, Any, List, Optional, Tuple, Iterable
 
-    AccessLogDict = Dict[str, Any]
-    ErrorLogDict = Dict[str, Any]
-    ServerStatsDict = Dict[str, Any]
-    AccessLogSummaryDict = Dict[str, Any]
-
 
 class ServerInfoSocket:
     def __init__(self, root_socket: SQLAlchemySocket):
@@ -85,7 +80,7 @@ class ServerInfoSocket:
         """
         pass
 
-    def save_access(self, log_data: AccessLogDict, *, session: Optional[Session] = None) -> None:
+    def save_access(self, log_data: Dict[str, Any], *, session: Optional[Session] = None) -> None:
         """
         Saves information about an access to the database
 
@@ -108,7 +103,7 @@ class ServerInfoSocket:
             log = AccessLogORM(**log_data, **ip_data)
             session.add(log)
 
-    def save_error(self, error_data: ErrorLogDict, *, session: Optional[Session] = None) -> int:
+    def save_error(self, error_data: Dict[str, Any], *, session: Optional[Session] = None) -> int:
         """
         Saves information about an internal error to the database
 
@@ -231,7 +226,7 @@ class ServerInfoSocket:
         skip: int = 0,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[AccessLogDict]]:
+    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
         """
         General query of server access logs
 
@@ -305,7 +300,7 @@ class ServerInfoSocket:
         after: Optional[datetime] = None,
         *,
         session: Optional[Session] = None,
-    ) -> AccessLogSummaryDict:
+    ) -> Dict[str, Any]:
         """
         General query of server access logs, returning aggregate data
 
@@ -408,7 +403,7 @@ class ServerInfoSocket:
         skip: int = 0,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[AccessLogDict]]:
+    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
         """
         General query of server internal error logs
 
@@ -471,7 +466,7 @@ class ServerInfoSocket:
         skip: int = 0,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[ServerStatsDict]]:
+    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
         """
         General query of server statistics
 
