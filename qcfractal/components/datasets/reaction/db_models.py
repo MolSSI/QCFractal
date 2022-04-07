@@ -28,7 +28,7 @@ class ReactionDatasetORM(CollectionORM, DatasetMixin):
 
     __tablename__ = "reaction_dataset"
 
-    id = Column(Integer, ForeignKey("collection.id", ondelete="CASCADE"), primary_key=True)
+    id = Column(Integer, ForeignKey("collection.id", ondelete="cascade"), primary_key=True)
 
     ds_type = Column(String)
 

@@ -4,7 +4,6 @@ import logging
 from typing import TYPE_CHECKING
 
 from qcfractal.db_socket.helpers import (
-    get_general,
     insert_general,
 )
 from qcportal.metadata_models import InsertMetadata
@@ -63,8 +62,6 @@ class KeywordsSocket:
         # Exceptions in this function would usually be a programmer error, as any
         # valid KeywordSet object should be insertable into the database
         ###############################################################################
-
-        keywords_obj = [KeywordSet(values=x) for x in keywords]
 
         # Make sure the hashes are correct
         kw_orm = []

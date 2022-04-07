@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from sqlalchemy import select, Column, Integer, ForeignKey, String, ForeignKeyConstraint, UniqueConstraint, Index
 from sqlalchemy.dialects.postgresql import JSONB, array_agg
 from sqlalchemy.orm import relationship, column_property
@@ -5,9 +9,12 @@ from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from qcfractal.components.datasets.db_models import CollectionORM
 from qcfractal.components.molecules.db_models import MoleculeORM
-from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM
 from qcfractal.components.records.gridoptimization.db_models import GridoptimizationRecordORM
+from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM
 from qcfractal.db_socket import BaseORM
+
+if TYPE_CHECKING:
+    from typing import Dict, Any, Optional, Iterable
 
 
 class GridoptimizationDatasetEntryORM(BaseORM):
@@ -31,6 +38,11 @@ class GridoptimizationDatasetEntryORM(BaseORM):
         Index("ix_gridoptimization_dataset_entry_initial_molecule_id", "initial_molecule_id"),
     )
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "dataset_id")
+        return BaseORM.model_dict(self, exclude)
+
 
 class GridoptimizationDatasetSpecificationORM(BaseORM):
     __tablename__ = "gridoptimization_dataset_specification"
@@ -40,13 +52,18 @@ class GridoptimizationDatasetSpecificationORM(BaseORM):
     description = Column(String, nullable=True)
     specification_id = Column(Integer, ForeignKey(OptimizationSpecificationORM.id), nullable=False)
 
-    specification = relationship(OptimizationSpecificationORM, uselist=False)
+    specification = relationship(OptimizationSpecificationORM)
 
     __table_args__ = (
         Index("ix_gridoptimization_dataset_specification_dataset_id", "dataset_id"),
         Index("ix_gridoptimization_dataset_specification_name", "name"),
         Index("ix_gridoptimization_dataset_specification_specification_id", "specification_id"),
     )
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "dataset_id", "specification_id")
+        return BaseORM.model_dict(self, exclude)
 
 
 class GridoptimizationDatasetRecordItemORM(BaseORM):
@@ -77,6 +94,11 @@ class GridoptimizationDatasetRecordItemORM(BaseORM):
             "dataset_id", "entry_name", "specification_name", name="ux_gridoptimization_dataset_record_unique"
         ),
     )
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "dataset_id")
+        return BaseORM.model_dict(self, exclude)
 
 
 class GridoptimizationDatasetORM(CollectionORM):

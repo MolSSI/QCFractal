@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, Integer, ForeignKey, String, JSON, Index, CheckConstraint, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
@@ -11,6 +11,9 @@ from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM, SinglepointRecordORM
 from qcfractal.db_socket import BaseORM
+
+if TYPE_CHECKING:
+    from typing import Dict, Any, Optional, Iterable
 
 
 class OptimizationTrajectoryORM(BaseORM):
@@ -24,6 +27,11 @@ class OptimizationTrajectoryORM(BaseORM):
     singlepoint_record = relationship(SinglepointRecordORM)
     optimization_record = relationship("OptimizationRecordORM")
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "optimization_id")
+        return BaseORM.model_dict(self, exclude)
+
 
 class OptimizationSpecificationORM(BaseORM):
     __tablename__ = "optimization_specification"
@@ -33,7 +41,7 @@ class OptimizationSpecificationORM(BaseORM):
     program = Column(String(100), nullable=False)
 
     qc_specification_id = Column(Integer, ForeignKey(QCSpecificationORM.id), nullable=False)
-    qc_specification = relationship(QCSpecificationORM, lazy="selectin", uselist=False)
+    qc_specification = relationship(QCSpecificationORM, lazy="joined")
 
     keywords = Column(JSONB, nullable=False)
     protocols = Column(JSONB, nullable=False)
@@ -56,6 +64,11 @@ class OptimizationSpecificationORM(BaseORM):
         CheckConstraint("program = LOWER(program)", name="ck_optimization_specification_program_lower"),
     )
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "id", "qc_specification_id")
+        return BaseORM.model_dict(self, exclude)
+
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:
         r = {self.program: None}
@@ -76,16 +89,15 @@ class OptimizationRecordORM(BaseRecordORM):
     specification = relationship(OptimizationSpecificationORM, lazy="selectin")
 
     initial_molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), nullable=False)
-    initial_molecule = relationship(MoleculeORM, lazy="select", foreign_keys=initial_molecule_id)
+    initial_molecule = relationship(MoleculeORM, foreign_keys=initial_molecule_id)
 
     final_molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), nullable=True)
-    final_molecule = relationship(MoleculeORM, lazy="select", foreign_keys=final_molecule_id)
+    final_molecule = relationship(MoleculeORM, foreign_keys=final_molecule_id)
 
     energies = Column(JSON)
 
     trajectory = relationship(
         OptimizationTrajectoryORM,
-        lazy="select",
         order_by=OptimizationTrajectoryORM.position,
         collection_class=ordering_list("position"),
         back_populates="optimization_record",
@@ -98,6 +110,11 @@ class OptimizationRecordORM(BaseRecordORM):
         Index("ix_optimization_record_initial_molecule_id", "initial_molecule_id"),
         Index("ix_optimization_record_final_molecule_id", "final_molecule_id"),
     )
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "specification_id")
+        return BaseORM.model_dict(self, exclude)
 
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:

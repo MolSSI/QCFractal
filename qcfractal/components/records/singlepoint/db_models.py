@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, Integer, ForeignKey, String, Enum, UniqueConstraint, CheckConstraint, Index
 from sqlalchemy.dialects.postgresql import JSONB
@@ -14,13 +14,15 @@ from qcfractal.db_socket.base_orm import BaseORM
 from qcfractal.db_socket.column_types import MsgpackExt
 from qcportal.records.singlepoint import SinglepointDriver
 
+if TYPE_CHECKING:
+    from typing import Dict, Any, Optional, Iterable
+
 
 class QCSpecificationORM(BaseORM):
     __tablename__ = "qc_specification"
 
     id = Column(Integer, primary_key=True)
 
-    # uniquely identifying a result
     program = Column(String(100), nullable=False)
     driver = Column(Enum(SinglepointDriver), nullable=False)
     method = Column(String(100), nullable=False)
@@ -49,6 +51,11 @@ class QCSpecificationORM(BaseORM):
         CheckConstraint("basis = LOWER(basis)", name="ck_qc_specification_basis_lower"),
     )
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "id", "keywords_id")
+        return BaseORM.model_dict(self, exclude)
+
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:
         return {self.program: None}
@@ -61,7 +68,7 @@ class SinglepointRecordORM(BaseRecordORM):
 
     __tablename__ = "singlepoint_record"
 
-    id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="CASCADE"), primary_key=True)
+    id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"), primary_key=True)
 
     # uniquely identifying a result
     specification_id = Column(Integer, ForeignKey(QCSpecificationORM.id), nullable=False)
@@ -73,7 +80,7 @@ class SinglepointRecordORM(BaseRecordORM):
     return_result = Column(MsgpackExt)
     properties = Column(JSONB)
 
-    wavefunction = relationship(WavefunctionStoreORM, lazy="select", uselist=False)
+    wavefunction = relationship(WavefunctionStoreORM, uselist=False)
 
     __table_args__ = (
         Index("ix_singlepoint_record_molecule_id", "molecule_id"),
@@ -83,6 +90,11 @@ class SinglepointRecordORM(BaseRecordORM):
     __mapper_args__ = {
         "polymorphic_identity": "singlepoint",
     }
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "specification_id")
+        return BaseORM.model_dict(self, exclude)
 
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:

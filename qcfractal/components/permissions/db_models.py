@@ -17,7 +17,7 @@ class UserORM(BaseORM):
 
     id = Column(Integer, primary_key=True)
     role_id = Column(Integer, ForeignKey("role.id"), nullable=False)
-    role_obj = relationship("RoleORM", lazy="select")  # or lazy='joined'
+    role_obj = relationship("RoleORM")
 
     username = Column(String, nullable=False)
     password = Column(LargeBinary, nullable=False)
@@ -28,11 +28,11 @@ class UserORM(BaseORM):
 
     __table_args__ = (UniqueConstraint("username", name="ux_user_username"),)
 
-    def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Removes some sensitive or useless fields
-        d = BaseORM.dict(self, exclude)
-        d.pop("role_id", None)
-        d.pop("password", None)
+        exclude = self.append_exclude(exclude, "role_id", "password")
+        d = BaseORM.model_dict(self, exclude)
+
         d["role"] = self.role_obj.rolename
         return d
 

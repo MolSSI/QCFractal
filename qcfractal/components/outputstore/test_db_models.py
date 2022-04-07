@@ -70,9 +70,8 @@ def test_outputs_models_roundtrip_str(
     # Retrieve again
     with storage_socket.session_scope() as session:
         stored_orm = session.query(OutputStoreORM).where(OutputStoreORM.id == out_id).one()
-        out_model = OutputStore(**stored_orm.dict())
+        out_model = stored_orm.to_model(OutputStore)
 
-    assert out_model.id == out_id
     assert out_model.compression == compression
     assert out_model.as_string == input_str
 
@@ -107,9 +106,8 @@ def test_outputs_models_roundtrip_dict(
     # Retrieve again
     with storage_socket.session_scope() as session:
         stored_orm = session.query(OutputStoreORM).where(OutputStoreORM.id == out_id).one()
-        out_model = OutputStore(**stored_orm.dict())
+        out_model = stored_orm.to_model(OutputStore)
 
-    assert out_model.id == out_id
     assert out_model.compression == compression
     assert out_model.as_json == input_dict
     assert out_model.output_type == output_type

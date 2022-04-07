@@ -14,9 +14,9 @@ from qcfractal.db_socket import SQLAlchemySocket
 from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.optimization import (
-    OptimizationInputSpecification,
-    OptimizationQCInputSpecification,
+    OptimizationSpecification,
 )
+from qcportal.records.singlepoint import QCSpecification
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -32,7 +32,7 @@ def test_optimization_client_tag_priority(snowflake_client: PortalClient, tag: s
     meta1, id1 = snowflake_client.add_optimizations(
         [water],
         "prog",
-        OptimizationQCInputSpecification(program="prog", method="hf", basis="sto-3g"),
+        QCSpecification(program="prog", method="hf", basis="sto-3g", driver="deferred"),
         priority=priority,
         tag=tag,
     )
@@ -42,7 +42,7 @@ def test_optimization_client_tag_priority(snowflake_client: PortalClient, tag: s
 
 
 @pytest.mark.parametrize("spec", _test_specs)
-def test_optimization_client_add_get(snowflake_client: PortalClient, spec: OptimizationInputSpecification):
+def test_optimization_client_add_get(snowflake_client: PortalClient, spec: OptimizationSpecification):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
     ne4 = load_molecule_data("neon_tetramer")
@@ -165,12 +165,6 @@ def test_optimization_client_query(snowflake_client: PortalClient, storage_socke
     # query for method
     meta, opt = snowflake_client.query_optimizations(qc_method=["b3lyP"])
     assert meta.n_found == 3
-
-    # keyword id
-    meta, opt = snowflake_client.query_optimizations(
-        qc_keywords_id=[recs[0].raw_data.specification.qc_specification.keywords_id]
-    )
-    assert meta.n_found == 2
 
     # Some empty queries
     meta, opt = snowflake_client.query_optimizations(program=["madeupprog"])

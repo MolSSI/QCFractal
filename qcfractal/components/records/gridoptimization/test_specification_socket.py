@@ -1,14 +1,14 @@
 from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.records.gridoptimization import (
-    GridoptimizationInputSpecification,
+    GridoptimizationSpecification,
     GridoptimizationKeywords,
 )
 from qcportal.records.optimization import (
-    OptimizationInputSpecification,
-    OptimizationQCInputSpecification,
+    OptimizationSpecification,
     OptimizationProtocols,
 )
 from qcportal.records.singlepoint import (
+    QCSpecification,
     SinglepointDriver,
     SinglepointProtocols,
 )
@@ -16,7 +16,7 @@ from qcportal.records.singlepoint import (
 
 def test_gridoptimization_socket_basic_specification(storage_socket: SQLAlchemySocket):
 
-    spec1 = GridoptimizationInputSpecification(
+    spec1 = GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(
             preoptimization=False,
@@ -25,12 +25,13 @@ def test_gridoptimization_socket_basic_specification(storage_socket: SQLAlchemyS
                 {"type": "dihedral", "indices": [0, 1, 2, 3], "steps": [-90, 0], "step_type": "absolute"},
             ],
         ),
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationQCInputSpecification(
+            qc_specification=QCSpecification(
                 program="prog2",
+                driver="deferred",
                 method="b3lyp",
                 basis="6-31g",
                 keywords={"k2": "values2"},
@@ -39,7 +40,7 @@ def test_gridoptimization_socket_basic_specification(storage_socket: SQLAlchemyS
         ),
     )
 
-    spec2 = GridoptimizationInputSpecification(
+    spec2 = GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(
             preoptimization=False,
@@ -47,11 +48,11 @@ def test_gridoptimization_socket_basic_specification(storage_socket: SQLAlchemyS
                 {"type": "dihedral", "indices": [0, 1, 2, 3], "steps": [-90, 0, 90], "step_type": "absolute"},
             ],
         ),
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="optprog2",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationQCInputSpecification(
+            qc_specification=QCSpecification(
                 program="prog2",
                 driver=SinglepointDriver.hessian,
                 method="hf",
@@ -62,7 +63,7 @@ def test_gridoptimization_socket_basic_specification(storage_socket: SQLAlchemyS
         ),
     )
 
-    spec3 = GridoptimizationInputSpecification(
+    spec3 = GridoptimizationSpecification(
         # Not putting in program
         keywords=GridoptimizationKeywords(
             preoptimization=False,
@@ -70,11 +71,11 @@ def test_gridoptimization_socket_basic_specification(storage_socket: SQLAlchemyS
                 {"type": "distance", "indices": [0, 3], "steps": [2.0, 3.0, 4.0], "step_type": "relative"},
             ],
         ),
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="optprog2",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(trajectory="none"),
-            qc_specification=OptimizationQCInputSpecification(
+            qc_specification=QCSpecification(
                 program="prog2",
                 driver=SinglepointDriver.hessian,
                 method="hf",
@@ -98,24 +99,12 @@ def test_gridoptimization_socket_basic_specification(storage_socket: SQLAlchemyS
     assert meta2.existing_idx == []
     assert meta3.existing_idx == []
 
-    sp1 = storage_socket.records.gridoptimization.get_specification(id1)
-    sp2 = storage_socket.records.gridoptimization.get_specification(id2)
-    sp3 = storage_socket.records.gridoptimization.get_specification(id3)
 
-    for sp in [sp1, sp2, sp3]:
-        assert sp["program"] == "gridoptimization"
-        assert sp["optimization_specification_id"] == sp["optimization_specification"]["id"]
-
-    assert GridoptimizationKeywords(**sp1["keywords"]) == spec1.keywords
-    assert GridoptimizationKeywords(**sp2["keywords"]) == spec2.keywords
-    assert GridoptimizationKeywords(**sp3["keywords"]) == spec3.keywords
-
-
-common_opt_spec = OptimizationInputSpecification(
+common_opt_spec = OptimizationSpecification(
     program="optprog2",
     keywords={"k": "value"},
     protocols=OptimizationProtocols(trajectory="none"),
-    qc_specification=OptimizationQCInputSpecification(
+    qc_specification=QCSpecification(
         program="prog2",
         driver=SinglepointDriver.hessian,
         method="hf",
@@ -128,7 +117,7 @@ common_opt_spec = OptimizationInputSpecification(
 
 def test_gridoptimization_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
 
-    spec1 = GridoptimizationInputSpecification(
+    spec1 = GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(
             preoptimization=False,
@@ -155,7 +144,7 @@ def test_gridoptimization_socket_add_specification_same_0(storage_socket: SQLAlc
 
 def test_gridoptimization_socket_add_specification_same_1(storage_socket: SQLAlchemySocket):
     # capitalization should be ignored
-    spec1 = GridoptimizationInputSpecification(
+    spec1 = GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(
             preoptimization=False,
@@ -166,7 +155,7 @@ def test_gridoptimization_socket_add_specification_same_1(storage_socket: SQLAlc
         optimization_specification=common_opt_spec,
     )
 
-    spec2 = GridoptimizationInputSpecification(
+    spec2 = GridoptimizationSpecification(
         program="gridopTIMIZatiON",
         keywords=GridoptimizationKeywords(
             preoptimization=False,
@@ -192,7 +181,7 @@ def test_gridoptimization_socket_add_specification_same_1(storage_socket: SQLAlc
 
 def test_gridoptimization_socket_add_specification_diff_1(storage_socket: SQLAlchemySocket):
     # different indices
-    spec1 = GridoptimizationInputSpecification(
+    spec1 = GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(
             preoptimization=False,
@@ -203,7 +192,7 @@ def test_gridoptimization_socket_add_specification_diff_1(storage_socket: SQLAlc
         optimization_specification=common_opt_spec,
     )
 
-    spec2 = GridoptimizationInputSpecification(
+    spec2 = GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(
             preoptimization=False,
@@ -229,7 +218,7 @@ def test_gridoptimization_socket_add_specification_diff_1(storage_socket: SQLAlc
 
 def test_gridoptimization_socket_add_specification_diff_2(storage_socket: SQLAlchemySocket):
     # different steps
-    spec1 = GridoptimizationInputSpecification(
+    spec1 = GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(
             preoptimization=False,
@@ -240,7 +229,7 @@ def test_gridoptimization_socket_add_specification_diff_2(storage_socket: SQLAlc
         optimization_specification=common_opt_spec,
     )
 
-    spec2 = GridoptimizationInputSpecification(
+    spec2 = GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(
             preoptimization=False,
@@ -266,7 +255,7 @@ def test_gridoptimization_socket_add_specification_diff_2(storage_socket: SQLAlc
 
 def test_gridoptimization_socket_add_specification_diff_3(storage_socket: SQLAlchemySocket):
     # absolute vs relative
-    spec1 = GridoptimizationInputSpecification(
+    spec1 = GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(
             preoptimization=False,
@@ -277,7 +266,7 @@ def test_gridoptimization_socket_add_specification_diff_3(storage_socket: SQLAlc
         optimization_specification=common_opt_spec,
     )
 
-    spec2 = GridoptimizationInputSpecification(
+    spec2 = GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(
             preoptimization=False,
@@ -303,7 +292,7 @@ def test_gridoptimization_socket_add_specification_diff_3(storage_socket: SQLAlc
 
 def test_gridoptimization_socket_add_specification_diff_4(storage_socket: SQLAlchemySocket):
     # absolute vs relative
-    spec1 = GridoptimizationInputSpecification(
+    spec1 = GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(
             preoptimization=False,
@@ -314,7 +303,7 @@ def test_gridoptimization_socket_add_specification_diff_4(storage_socket: SQLAlc
         optimization_specification=common_opt_spec,
     )
 
-    spec2 = GridoptimizationInputSpecification(
+    spec2 = GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(
             preoptimization=True,

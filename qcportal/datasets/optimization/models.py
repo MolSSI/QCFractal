@@ -5,7 +5,7 @@ from typing_extensions import Literal
 
 from qcportal.base_models import RestModelBase
 from qcportal.molecules import Molecule
-from qcportal.records.optimization import OptimizationRecord, OptimizationInputSpecification, OptimizationSpecification
+from qcportal.records.optimization import OptimizationRecord, OptimizationSpecification
 from qcportal.utils import make_list
 from .. import BaseDataset
 from ...records import PriorityEnum
@@ -19,30 +19,18 @@ class OptimizationDatasetNewEntry(BaseModel):
     attributes: Dict[str, Any] = {}
 
 
-class OptimizationDatasetEntry(BaseModel):
-    dataset_id: int
-    name: str
-    comment: Optional[str] = None
+class OptimizationDatasetEntry(OptimizationDatasetNewEntry):
     initial_molecule_id: int
-    additional_keywords: Dict[str, Any] = {}
-    attributes: Dict[str, Any] = {}
-
-
-class OptimizationDatasetInputSpecification(BaseModel):
-    name: str
-    specification: OptimizationInputSpecification
-    description: Optional[str] = None
+    molecule: Optional[Molecule] = None
 
 
 class OptimizationDatasetSpecification(BaseModel):
-    dataset_id: int
     name: str
     specification: OptimizationSpecification
     description: Optional[str] = None
 
 
 class OptimizationDatasetRecordItem(BaseModel):
-    dataset_id: int
     entry_name: str
     specification_name: str
     record_id: int
@@ -67,17 +55,15 @@ class OptimizationDataset(BaseDataset):
     _record_item_type = OptimizationDatasetRecordItem
     _record_type = OptimizationRecord
 
-    def add_specification(
-        self, name: str, specification: OptimizationInputSpecification, description: Optional[str] = None
-    ):
+    def add_specification(self, name: str, specification: OptimizationSpecification, description: Optional[str] = None):
         initial_molecules: Optional[List[Molecule]]
 
-        payload = OptimizationDatasetInputSpecification(name=name, specification=specification, description=description)
+        payload = OptimizationDatasetSpecification(name=name, specification=specification, description=description)
 
         self.client._auto_request(
             "post",
             f"v1/datasets/optimization/{self.id}/specifications",
-            List[OptimizationDatasetInputSpecification],
+            List[OptimizationDatasetSpecification],
             None,
             None,
             [payload],
@@ -86,7 +72,7 @@ class OptimizationDataset(BaseDataset):
 
         self._post_add_specification(name)
 
-    def add_entries(self, entries: Union[OptimizationDatasetEntry, Iterable[OptimizationDatasetNewEntry]]):
+    def add_entries(self, entries: Union[OptimizationDatasetNewEntry, Iterable[OptimizationDatasetNewEntry]]):
 
         entries = make_list(entries)
         self.client._auto_request(
@@ -95,7 +81,7 @@ class OptimizationDataset(BaseDataset):
             List[OptimizationDatasetNewEntry],
             None,
             None,
-            make_list(entries),
+            entries,
             None,
         )
 
@@ -118,13 +104,3 @@ class OptimizationDatasetAddBody(RestModelBase):
     visibility: bool = True
     default_tag: Optional[str] = None
     default_priority: PriorityEnum = PriorityEnum.normal
-
-
-class OptimizationDatasetDeleteEntryBody(RestModelBase):
-    names: List[str]
-    delete_records: bool = False
-
-
-class OptimizationDatasetDeleteSpecificationBody(RestModelBase):
-    names: List[str]
-    delete_records: bool = False

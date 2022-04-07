@@ -2,13 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from qcfractal.db_socket import SQLAlchemySocket
-from qcfractaltesting import load_molecule_data
-from qcportal.datasets.optimization import OptimizationDatasetNewEntry, OptimizationDatasetInputSpecification
-from qcportal.records.optimization import OptimizationInputSpecification, OptimizationQCInputSpecification
-
 if TYPE_CHECKING:
-    from qcfractal.db_socket import SQLAlchemySocket
+    pass
 
 
 # def test_optimization_dataset_general(storage_socket: SQLAlchemySocket, snowflake_client):
@@ -19,18 +14,18 @@ if TYPE_CHECKING:
 #        group="test_group",
 #    )
 #
-#    spec1 = OptimizationInputSpecification(
+#    spec1 = OptimizationSpecification(
 #        program="geometric",
 #        keywords={},
-#        qc_specification=OptimizationQCInputSpecification(
+#        qc_specification=QCSpecification(
 #            program="psi4", method="b3lyp", basis="sto-3g", keywords={"values": {}}
 #        ),
 #    )
 #
-#    spec2 = OptimizationInputSpecification(
+#    spec2 = OptimizationSpecification(
 #        program="geometric",
 #        keywords={},
-#        qc_specification=OptimizationQCInputSpecification(
+#        qc_specification=QCSpecification(
 #            program="psi4", method="hf", basis="sto-3g", keywords={"values": {"maxiter": 99}}
 #        ),
 #    )
@@ -38,8 +33,8 @@ if TYPE_CHECKING:
 #    storage_socket.datasets.optimization.add_specifications(
 #        ds_id,
 #        [
-#            OptimizationDatasetInputSpecification(name="test_spec_1", specification=spec1, comment="a_comment"),
-#            OptimizationDatasetInputSpecification(name="test_spec_2", specification=spec2, comment="a_comment_2"),
+#            OptimizationDatasetSpecification(name="test_spec_1", specification=spec1, comment="a_comment"),
+#            OptimizationDatasetSpecification(name="test_spec_2", specification=spec2, comment="a_comment_2"),
 #        ],
 #    )
 #

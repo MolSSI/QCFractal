@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import TYPE_CHECKING
 
 from sqlalchemy import select, UniqueConstraint, Index, CheckConstraint, Column, Integer, ForeignKey, String, JSON
 from sqlalchemy.dialects.postgresql import JSONB
@@ -10,6 +10,9 @@ from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM, OptimizationRecordORM
 from qcfractal.db_socket import BaseORM
+
+if TYPE_CHECKING:
+    from typing import Dict, Any, Optional, Iterable
 
 
 class GridoptimizationOptimizationORM(BaseORM):
@@ -29,6 +32,11 @@ class GridoptimizationOptimizationORM(BaseORM):
 
     optimization_record = relationship(OptimizationRecordORM)
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "gridoptimization_id")
+        return BaseORM.model_dict(self, exclude)
+
 
 class GridoptimizationSpecificationORM(BaseORM):
     __tablename__ = "gridoptimization_specification"
@@ -38,7 +46,7 @@ class GridoptimizationSpecificationORM(BaseORM):
     program = Column(String(100), nullable=False)
 
     optimization_specification_id = Column(Integer, ForeignKey(OptimizationSpecificationORM.id), nullable=False)
-    optimization_specification = relationship(OptimizationSpecificationORM, lazy="selectin", uselist=False)
+    optimization_specification = relationship(OptimizationSpecificationORM, lazy="joined")
 
     keywords = Column(JSONB, nullable=False)
 
@@ -57,6 +65,11 @@ class GridoptimizationSpecificationORM(BaseORM):
         # WARNING - these are not autodetected by alembic
         CheckConstraint("program = LOWER(program)", name="ck_gridoptimization_specification_program_lower"),
     )
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "id", "optimization_specification_id")
+        return BaseORM.model_dict(self, exclude)
 
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:
@@ -90,6 +103,11 @@ class GridoptimizationRecordORM(BaseRecordORM):
     __mapper_args__ = {
         "polymorphic_identity": "gridoptimization",
     }
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "specification_id")
+        return BaseORM.model_dict(self, exclude)
 
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:

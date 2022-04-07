@@ -4,15 +4,11 @@ import copy
 import logging
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select
-from sqlalchemy.orm import load_only
-
 from qcfractal.components.datasets.sockets import BaseDatasetSocket
-from qcfractal.components.molecules.db_models import MoleculeORM
 from qcportal.datasets.torsiondrive import TorsiondriveDatasetNewEntry
 from qcportal.records import PriorityEnum
-from qcportal.records.optimization import OptimizationInputSpecification, OptimizationSpecification
-from qcportal.records.torsiondrive import TorsiondriveInputSpecification
+from qcportal.records.optimization import OptimizationSpecification
+from qcportal.records.torsiondrive import TorsiondriveSpecification
 from .db_models import (
     TorsiondriveDatasetORM,
     TorsiondriveDatasetSpecificationORM,
@@ -45,7 +41,7 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
         self._logger = logging.getLogger(__name__)
 
     def _add_specification(
-        self, session: Session, specification: OptimizationInputSpecification
+        self, session: Session, specification: OptimizationSpecification
     ) -> Tuple[InsertMetadata, Optional[int]]:
         return self.root_socket.records.optimization.add_specification(specification, session=session)
 
@@ -83,8 +79,8 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
     ):
         for spec in spec_orm:
             # The spec for a torsiondrive dataset is an optimization specification
-            opt_spec_obj = spec.specification._to_model(OptimizationSpecification)
-            opt_spec_input_dict = opt_spec_obj.as_input().dict()
+            opt_spec_obj = spec.specification.to_model(OptimizationSpecification)
+            opt_spec_input_dict = opt_spec_obj.dict()
 
             for entry in entry_orm:
                 if (entry.name, spec.name) in existing_records:
@@ -93,7 +89,7 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
                 new_opt_spec = copy.deepcopy(opt_spec_input_dict)
                 new_opt_spec["keywords"].update(entry.additional_keywords)
 
-                td_spec = TorsiondriveInputSpecification(
+                td_spec = TorsiondriveSpecification(
                     optimization_specification=new_opt_spec, keywords=entry.torsiondrive_keywords
                 )
 

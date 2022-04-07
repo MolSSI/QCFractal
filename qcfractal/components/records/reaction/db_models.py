@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import TYPE_CHECKING
 
 from sqlalchemy import select, Column, Integer, ForeignKey, ForeignKeyConstraint
 from sqlalchemy.dialects.postgresql import DOUBLE_PRECISION
@@ -10,6 +10,9 @@ from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM, QCSpecificationORM
 from qcfractal.db_socket import BaseORM
+
+if TYPE_CHECKING:
+    from typing import Dict, Any, Optional, Iterable
 
 
 class ReactionStoichiometryORM(BaseORM):
@@ -22,6 +25,11 @@ class ReactionStoichiometryORM(BaseORM):
     coefficient = Column(DOUBLE_PRECISION, nullable=False)
 
     molecule = relationship(MoleculeORM)
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "reaction_id")
+        return BaseORM.model_dict(self, exclude)
 
 
 class ReactionComponentORM(BaseORM):
@@ -50,6 +58,11 @@ class ReactionComponentORM(BaseORM):
         ),
     )
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "reaction_id")
+        return BaseORM.model_dict(self, exclude)
+
 
 class ReactionRecordORM(BaseRecordORM):
 
@@ -75,6 +88,11 @@ class ReactionRecordORM(BaseRecordORM):
     __mapper_args__ = {
         "polymorphic_identity": "reaction",
     }
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "specification_id")
+        return BaseORM.model_dict(self, exclude)
 
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:

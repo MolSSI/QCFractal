@@ -16,16 +16,15 @@ from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.gridoptimization import (
     GridoptimizationSpecification,
-    GridoptimizationInputSpecification,
     GridoptimizationKeywords,
     GridoptimizationQueryBody,
 )
 from qcportal.records.optimization import (
-    OptimizationInputSpecification,
-    OptimizationQCInputSpecification,
+    OptimizationSpecification,
     OptimizationProtocols,
 )
 from qcportal.records.singlepoint import (
+    QCSpecification,
     SinglepointProtocols,
 )
 
@@ -35,26 +34,19 @@ if TYPE_CHECKING:
 
 
 def compare_gridoptimization_specs(
-    input_spec: Union[GridoptimizationInputSpecification, Dict[str, Any]],
-    full_spec: Union[GridoptimizationSpecification, Dict[str, Any]],
+    input_spec: Union[GridoptimizationSpecification, Dict[str, Any]],
+    output_spec: Union[GridoptimizationSpecification, Dict[str, Any]],
 ) -> bool:
     if isinstance(input_spec, dict):
-        input_spec = GridoptimizationInputSpecification(**input_spec)
-    if isinstance(full_spec, GridoptimizationSpecification):
-        full_spec = full_spec.dict()
+        input_spec = GridoptimizationSpecification(**input_spec)
+    if isinstance(output_spec, dict):
+        output_spec = GridoptimizationSpecification(**output_spec)
 
-    full_spec.pop("id")
-    full_spec.pop("optimization_specification_id")
-    full_spec["optimization_specification"].pop("id")
-    full_spec["optimization_specification"].pop("qc_specification_id")
-    full_spec["optimization_specification"]["qc_specification"].pop("id")
-    full_spec["optimization_specification"]["qc_specification"].pop("keywords_id")
-    trimmed_spec = GridoptimizationInputSpecification(**full_spec)
-    return input_spec == trimmed_spec
+    return input_spec == output_spec
 
 
 _test_specs = [
-    GridoptimizationInputSpecification(
+    GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(
             preoptimization=False,
@@ -63,12 +55,13 @@ _test_specs = [
                 {"type": "dihedral", "indices": [0, 1, 2, 3], "steps": [-90, 0], "step_type": "absolute"},
             ],
         ),
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationQCInputSpecification(
+            qc_specification=QCSpecification(
                 program="prog2",
+                driver="deferred",
                 method="b3lyp",
                 basis="6-31g",
                 keywords={"k2": "values2"},
@@ -76,7 +69,7 @@ _test_specs = [
             ),
         ),
     ),
-    GridoptimizationInputSpecification(
+    GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(
             preoptimization=True,
@@ -84,12 +77,13 @@ _test_specs = [
                 {"type": "dihedral", "indices": [3, 2, 1, 0], "steps": [-90, -45, 0, 45, 90], "step_type": "absolute"},
             ],
         ),
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationQCInputSpecification(
+            qc_specification=QCSpecification(
                 program="prog2",
+                driver="deferred",
                 method="b3lyp",
                 basis="6-31g",
                 keywords={"k2": "values2"},
@@ -101,7 +95,7 @@ _test_specs = [
 
 
 @pytest.mark.parametrize("spec", _test_specs)
-def test_gridoptimization_socket_add_get(storage_socket: SQLAlchemySocket, spec: GridoptimizationInputSpecification):
+def test_gridoptimization_socket_add_get(storage_socket: SQLAlchemySocket, spec: GridoptimizationSpecification):
     hooh = load_molecule_data("peroxide2")
     h3ns = load_molecule_data("go_H3NS")
 
@@ -158,7 +152,7 @@ def test_gridoptimization_socket_add_existing_molecule(storage_socket: SQLAlchem
 
 
 def test_gridoptimization_socket_add_same_1(storage_socket: SQLAlchemySocket):
-    spec = GridoptimizationInputSpecification(
+    spec = GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(
             scans=[
@@ -166,12 +160,13 @@ def test_gridoptimization_socket_add_same_1(storage_socket: SQLAlchemySocket):
                 {"type": "dihedral", "indices": [0, 1, 2, 3], "steps": [-90, 0], "step_type": "absolute"},
             ],
         ),
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationQCInputSpecification(
+            qc_specification=QCSpecification(
                 program="prog2",
+                driver="deferred",
                 method="b3lyp",
                 basis="6-31g",
                 keywords={"k2": "values2"},
@@ -194,7 +189,7 @@ def test_gridoptimization_socket_add_same_1(storage_socket: SQLAlchemySocket):
 
 def test_gridoptimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
     # some modifications to the input specification
-    spec1 = GridoptimizationInputSpecification(
+    spec1 = GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(
             preoptimization=True,
@@ -203,12 +198,13 @@ def test_gridoptimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
                 {"type": "dihedral", "indices": [0, 1, 2, 3], "steps": [-90, 0], "step_type": "absolute"},
             ],
         ),
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationQCInputSpecification(
+            qc_specification=QCSpecification(
                 program="prog2",
+                driver="deferred",
                 method="b3lyp",
                 basis="6-31g",
                 keywords={"k2": "values2"},
@@ -217,7 +213,7 @@ def test_gridoptimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
         ),
     )
 
-    spec2 = GridoptimizationInputSpecification(
+    spec2 = GridoptimizationSpecification(
         program="gridoptimization",
         keywords=GridoptimizationKeywords(
             scans=[
@@ -225,11 +221,12 @@ def test_gridoptimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
                 {"type": "dihedral", "indices": [0, 1, 2, 3], "steps": [-90, 0], "step_type": "absolute"},
             ],
         ),
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="optPROG1",
             keywords={"k": "value"},
-            qc_specification=OptimizationQCInputSpecification(
+            qc_specification=QCSpecification(
                 program="prOG2",
+                driver="deferred",
                 method="b3LYP",
                 basis="6-31g",
                 keywords={"k2": "values2"},
@@ -308,10 +305,6 @@ def test_gridoptimization_socket_query(storage_socket: SQLAlchemySocket):
     # query for method
     meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryBody(qc_method=["b3lyP"]))
     assert meta.n_found == 1
-
-    kw_id = td[0]["specification"]["optimization_specification"]["qc_specification"]["keywords_id"]
-    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryBody(qc_keywords_id=[kw_id]))
-    assert meta.n_found == 3
 
     # Query by default returns everything
     meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryBody())

@@ -7,7 +7,6 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 from qcfractal.db_socket.base_orm import BaseORM
 from qcfractal.db_socket.column_types import MsgpackExt
-from qcportal.molecules import Molecule
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Optional, Iterable
@@ -60,15 +59,12 @@ class MoleculeORM(BaseORM):
         Index("ix_molecule_identifiers", "identifiers", postgresql_using="gin"),
     )
 
-    def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-
-        d = BaseORM.dict(self, exclude)
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
 
         # molecule_hash is only used for indexing. It is otherwise stored in identifiers
-        d.pop("molecule_hash", None)
+        exclude = self.append_exclude(exclude, "molecule_hash")
+
+        d = BaseORM.model_dict(self, exclude)
 
         # TODO - this is because the pydantic models are goofy
         return {k: v for k, v in d.items() if v is not None}
-
-    def to_model(self):
-        return BaseORM._to_model(self, Molecule)

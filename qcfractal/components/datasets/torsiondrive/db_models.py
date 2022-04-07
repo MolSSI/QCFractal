@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from sqlalchemy import select, Column, Integer, ForeignKey, String, ForeignKeyConstraint, UniqueConstraint, Index
 from sqlalchemy.dialects.postgresql import JSONB, array_agg
 from sqlalchemy.orm import relationship, column_property
@@ -8,6 +12,9 @@ from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM
 from qcfractal.components.records.torsiondrive.db_models import TorsiondriveRecordORM
 from qcfractal.db_socket import BaseORM
+
+if TYPE_CHECKING:
+    from typing import Dict, Any, Optional, Iterable
 
 
 class TorsiondriveDatasetMoleculeORM(BaseORM):
@@ -34,6 +41,11 @@ class TorsiondriveDatasetMoleculeORM(BaseORM):
             onupdate="cascade",
         ),
     )
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "dataset_id")
+        return BaseORM.model_dict(self, exclude)
 
 
 class TorsiondriveDatasetEntryORM(BaseORM):
@@ -62,6 +74,11 @@ class TorsiondriveDatasetEntryORM(BaseORM):
         Index("ix_torsiondrive_dataset_entry_name", "name"),
     )
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "dataset_id")
+        return BaseORM.model_dict(self, exclude)
+
 
 class TorsiondriveDatasetSpecificationORM(BaseORM):
     __tablename__ = "torsiondrive_dataset_specification"
@@ -78,6 +95,11 @@ class TorsiondriveDatasetSpecificationORM(BaseORM):
         Index("ix_torsiondrive_dataset_specification_name", "name"),
         Index("ix_torsiondrive_dataset_specification_specification_id", "specification_id"),
     )
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "dataset_id", "specification_id")
+        return BaseORM.model_dict(self, exclude)
 
 
 class TorsiondriveDatasetRecordItemORM(BaseORM):
@@ -108,6 +130,11 @@ class TorsiondriveDatasetRecordItemORM(BaseORM):
             "dataset_id", "entry_name", "specification_name", name="ux_torsiondrive_dataset_record_unique"
         ),
     )
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "dataset_id")
+        return BaseORM.model_dict(self, exclude)
 
 
 class TorsiondriveDatasetORM(CollectionORM):

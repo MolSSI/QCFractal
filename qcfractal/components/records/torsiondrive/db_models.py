@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import TYPE_CHECKING
 
 from sqlalchemy import select, Column, Integer, ForeignKey, String, UniqueConstraint, Index, CheckConstraint
 from sqlalchemy.dialects.postgresql import JSONB
@@ -11,6 +11,9 @@ from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM, OptimizationRecordORM
 from qcfractal.db_socket import BaseORM
+
+if TYPE_CHECKING:
+    from typing import Dict, Any, Optional, Iterable
 
 
 class TorsiondriveOptimizationORM(BaseORM):
@@ -29,6 +32,11 @@ class TorsiondriveOptimizationORM(BaseORM):
 
     optimization_record = relationship(OptimizationRecordORM)
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "torsiondrive_id")
+        return BaseORM.model_dict(self, exclude)
+
 
 class TorsiondriveInitialMoleculeORM(BaseORM):
     """
@@ -40,6 +48,11 @@ class TorsiondriveInitialMoleculeORM(BaseORM):
     torsiondrive_id = Column(Integer, ForeignKey("torsiondrive_record.id", ondelete="cascade"), primary_key=True)
     molecule_id = Column("molecule_id", Integer, ForeignKey(MoleculeORM.id), primary_key=True)
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "torsiondrive_id")
+        return BaseORM.model_dict(self, exclude)
+
 
 class TorsiondriveSpecificationORM(BaseORM):
     __tablename__ = "torsiondrive_specification"
@@ -49,7 +62,7 @@ class TorsiondriveSpecificationORM(BaseORM):
     program = Column(String(100), nullable=False)
 
     optimization_specification_id = Column(Integer, ForeignKey(OptimizationSpecificationORM.id), nullable=False)
-    optimization_specification = relationship(OptimizationSpecificationORM, lazy="selectin", uselist=False)
+    optimization_specification = relationship(OptimizationSpecificationORM, lazy="joined")
 
     keywords = Column(JSONB, nullable=False)
 
@@ -68,6 +81,11 @@ class TorsiondriveSpecificationORM(BaseORM):
         # WARNING - these are not autodetected by alembic
         CheckConstraint("program = LOWER(program)", name="ck_torsiondrive_specification_program_lower"),
     )
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "id", "optimization_specification_id")
+        return BaseORM.model_dict(self, exclude)
 
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:
@@ -88,7 +106,7 @@ class TorsiondriveRecordORM(BaseRecordORM):
     specification_id = Column(Integer, ForeignKey(TorsiondriveSpecificationORM.id), nullable=False)
     specification = relationship(TorsiondriveSpecificationORM, lazy="selectin")
 
-    initial_molecules = relationship(MoleculeORM, secondary=TorsiondriveInitialMoleculeORM.__table__, uselist=True)
+    initial_molecules = relationship(MoleculeORM, secondary=TorsiondriveInitialMoleculeORM.__table__)
 
     optimizations = relationship(
         TorsiondriveOptimizationORM,
@@ -100,6 +118,11 @@ class TorsiondriveRecordORM(BaseRecordORM):
     __mapper_args__ = {
         "polymorphic_identity": "torsiondrive",
     }
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "specification_id")
+        return BaseORM.model_dict(self, exclude)
 
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:

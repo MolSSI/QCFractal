@@ -23,5 +23,5 @@ class KeywordsORM(BaseORM):
 
     __table_args__ = (UniqueConstraint("hash_index", name="ux_keywords_hash_index"),)
 
-    def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         return self.values

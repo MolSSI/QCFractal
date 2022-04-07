@@ -84,7 +84,7 @@ class UserSocket:
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(UserORM).order_by(UserORM.id.asc())
             all_users = session.execute(stmt).scalars().all()
-            return [x.dict() for x in all_users]
+            return [x.model_dict() for x in all_users]
 
     def get(self, username: str, *, session: Optional[Session] = None) -> UserInfoDict:
         """
@@ -102,7 +102,7 @@ class UserSocket:
 
         with self.root_socket.optional_session(session, True) as session:
             user = self._get_internal(session, username)
-            return user.dict()
+            return user.model_dict()
 
     def get_permissions(self, username: str, *, session: Optional[Session] = None) -> Dict[str, Any]:
         """

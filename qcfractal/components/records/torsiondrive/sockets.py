@@ -23,10 +23,9 @@ from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputTypeEnum
 from qcportal.records import PriorityEnum, RecordStatusEnum
-from qcportal.records.optimization import OptimizationInputSpecification, OptimizationSpecification
+from qcportal.records.optimization import OptimizationSpecification
 from qcportal.records.torsiondrive import (
     TorsiondriveSpecification,
-    TorsiondriveInputSpecification,
     TorsiondriveQueryBody,
 )
 from .db_models import (
@@ -98,7 +97,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         return [stmt]
 
     def add_specification(
-        self, td_spec: TorsiondriveInputSpecification, *, session: Optional[Session] = None
+        self, td_spec: TorsiondriveSpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, Optional[int]]:
 
         td_kw_dict = td_spec.keywords.dict(exclude_defaults=True)
@@ -161,9 +160,6 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             need_spspec_join = True
         if query_data.qc_basis is not None:
             and_query.append(QCSpecificationORM.basis.in_(query_data.qc_basis))
-            need_spspec_join = True
-        if query_data.qc_keywords_id is not None:
-            and_query.append(QCSpecificationORM.keywords_id.in_(query_data.qc_keywords_id))
             need_spspec_join = True
         if query_data.optimization_program is not None:
             and_query.append(OptimizationSpecificationORM.program.in_(query_data.optimization_program))
@@ -298,7 +294,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
     def add(
         self,
         initial_molecules: Sequence[Iterable[Union[int, Molecule]]],
-        td_spec: TorsiondriveInputSpecification,
+        td_spec: TorsiondriveSpecification,
         as_service: bool,
         tag: str,
         priority: PriorityEnum,
@@ -367,8 +363,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
     ):
 
         td_orm: TorsiondriveRecordORM = service_orm.record
-        specification = TorsiondriveSpecification(**td_orm.specification.dict())
-        initial_molecules: List[Dict[str, Any]] = [x.dict() for x in td_orm.initial_molecules]
+        specification = TorsiondriveSpecification(**td_orm.specification.model_dict())
+        initial_molecules: List[Dict[str, Any]] = [x.model_dict() for x in td_orm.initial_molecules]
         keywords = specification.keywords
 
         # Create a template from the first initial molecule
@@ -517,10 +513,10 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         service_orm.dependencies = []
 
         # Create an optimization input based on the new geometry and the optimization template
-        opt_spec = td_orm.specification.optimization_specification.dict()
+        opt_spec = td_orm.specification.optimization_specification.model_dict()
 
         # Convert to an input
-        opt_spec = OptimizationSpecification(**opt_spec).as_input().dict()
+        opt_spec = OptimizationSpecification(**opt_spec).dict()
 
         for td_api_key, geometries in next_tasks.items():
             # Make a deep copy to prevent modifying the original ORM
@@ -550,7 +546,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             # Submit the new optimizations
             meta, opt_ids = self.root_socket.records.optimization.add(
                 constrained_mols,
-                OptimizationInputSpecification(**opt_spec2),
+                OptimizationSpecification(**opt_spec2),
                 service_orm.tag,
                 service_orm.priority,
                 session=session,
@@ -617,4 +613,4 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
         with self.root_socket.optional_session(session, True) as session:
             r = session.execute(stmt).all()  # List of key: OptimizationRecordORM
-            return {x: y.dict() for x, y in r}
+            return {x: y.model_dict() for x, y in r}

@@ -6,7 +6,6 @@ from typing_extensions import Literal
 from .. import BaseRecord, RecordAddBodyBase
 from ..singlepoint.models import (
     QCSpecification,
-    QCInputSpecification,
     SinglepointQueryBody,
     SinglepointRecord,
     SinglepointDriver,
@@ -15,7 +14,7 @@ from ...base_models import ProjURLParameters
 from ...molecules import Molecule
 
 
-class ReactionQCInputSpecification(QCInputSpecification):
+class ReactionQCSpecification(QCSpecification):
     driver: SinglepointDriver = SinglepointDriver.energy
 
     @validator("driver", pre=True)
@@ -24,7 +23,7 @@ class ReactionQCInputSpecification(QCInputSpecification):
 
 
 class ReactionAddBody(RecordAddBodyBase):
-    specification: ReactionQCInputSpecification
+    specification: ReactionQCSpecification
     stoichiometries: List[List[Tuple[float, Union[int, Molecule]]]]
 
 
@@ -36,7 +35,6 @@ class ReactionStoichiometry(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    reaction_id: int
     molecule_id: int
     coefficient: float
 
@@ -47,7 +45,6 @@ class ReactionComponent(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    reaction_id: int
     molecule_id: int
     singlepoint_id: int
 
@@ -58,7 +55,6 @@ class ReactionComponent(BaseModel):
 class ReactionRecord(BaseRecord):
     class _DataModel(BaseRecord._DataModel):
         record_type: Literal["reaction"]
-        specification_id: int
         specification: QCSpecification
 
         total_energy: Optional[float]

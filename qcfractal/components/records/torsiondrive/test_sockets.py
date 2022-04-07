@@ -15,16 +15,15 @@ from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.optimization import (
-    OptimizationInputSpecification,
-    OptimizationQCInputSpecification,
+    OptimizationSpecification,
     OptimizationProtocols,
 )
 from qcportal.records.singlepoint import (
+    QCSpecification,
     SinglepointProtocols,
 )
 from qcportal.records.torsiondrive import (
     TorsiondriveSpecification,
-    TorsiondriveInputSpecification,
     TorsiondriveKeywords,
     TorsiondriveQueryBody,
 )
@@ -35,29 +34,19 @@ if TYPE_CHECKING:
 
 
 def compare_torsiondrive_specs(
-    input_spec: Union[TorsiondriveInputSpecification, Dict[str, Any]],
-    full_spec: Union[TorsiondriveSpecification, Dict[str, Any]],
+    input_spec: Union[TorsiondriveSpecification, Dict[str, Any]],
+    output_spec: Union[TorsiondriveSpecification, Dict[str, Any]],
 ) -> bool:
     if isinstance(input_spec, dict):
-        input_spec = TorsiondriveInputSpecification(**input_spec)
-    if isinstance(full_spec, TorsiondriveSpecification):
-        full_spec = full_spec.dict()
+        input_spec = TorsiondriveSpecification(**input_spec)
+    if isinstance(output_spec, dict):
+        output_spec = TorsiondriveSpecification(**output_spec)
 
-    full_spec.pop("id")
-    full_spec.pop("optimization_specification_id")
-    full_spec["optimization_specification"].pop("id")
-    full_spec["optimization_specification"].pop("qc_specification_id")
-    full_spec["optimization_specification"]["qc_specification"].pop("id")
-    full_spec["optimization_specification"]["qc_specification"].pop("keywords_id")
-    trimmed_spec = TorsiondriveInputSpecification(**full_spec)
-    if input_spec != trimmed_spec:
-        print(input_spec)
-        print(trimmed_spec)
-    return input_spec == trimmed_spec
+    return input_spec == output_spec
 
 
 _test_specs = [
-    TorsiondriveInputSpecification(
+    TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(1, 2, 3, 4)],
@@ -66,12 +55,13 @@ _test_specs = [
             energy_decrease_thresh=None,
             energy_upper_limit=0.05,
         ),
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationQCInputSpecification(
+            qc_specification=QCSpecification(
                 program="prog2",
+                driver="deferred",
                 method="b3lyp",
                 basis="6-31g",
                 keywords={"k2": "values2"},
@@ -79,7 +69,7 @@ _test_specs = [
             ),
         ),
     ),
-    TorsiondriveInputSpecification(
+    TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(7, 2, 9, 4), (5, 11, 3, 10)],
@@ -88,12 +78,13 @@ _test_specs = [
             energy_decrease_thresh=1.0,
             energy_upper_limit=0.05,
         ),
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationQCInputSpecification(
+            qc_specification=QCSpecification(
                 program="prog2",
+                driver="deferred",
                 method="b3lyp",
                 basis="6-31g",
                 keywords={"k2": "values2"},
@@ -105,7 +96,7 @@ _test_specs = [
 
 
 @pytest.mark.parametrize("spec", _test_specs)
-def test_torsiondrive_socket_add_get(storage_socket: SQLAlchemySocket, spec: TorsiondriveInputSpecification):
+def test_torsiondrive_socket_add_get(storage_socket: SQLAlchemySocket, spec: TorsiondriveSpecification):
     hooh = load_molecule_data("peroxide2")
     td_mol_1 = load_molecule_data("td_C9H11NO2_1")
     td_mol_2 = load_molecule_data("td_C9H11NO2_2")
@@ -171,7 +162,7 @@ def test_torsiondrive_socket_add_existing_molecule(storage_socket: SQLAlchemySoc
 
 
 def test_torsiondrive_socket_add_same_1(storage_socket: SQLAlchemySocket):
-    spec = TorsiondriveInputSpecification(
+    spec = TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 13)],
@@ -180,12 +171,13 @@ def test_torsiondrive_socket_add_same_1(storage_socket: SQLAlchemySocket):
             energy_decrease_thresh=None,
             energy_upper_limit=0.05,
         ),
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationQCInputSpecification(
+            qc_specification=QCSpecification(
                 program="prog2",
+                driver="deferred",
                 method="b3lyp",
                 basis="6-31g",
                 keywords={"k2": "values2"},
@@ -212,7 +204,7 @@ def test_torsiondrive_socket_add_same_1(storage_socket: SQLAlchemySocket):
 
 def test_torsiondrive_socket_add_same_2(storage_socket: SQLAlchemySocket):
     # multiple molecule ordering, and duplicate molecules
-    spec = TorsiondriveInputSpecification(
+    spec = TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 13)],
@@ -221,12 +213,13 @@ def test_torsiondrive_socket_add_same_2(storage_socket: SQLAlchemySocket):
             energy_decrease_thresh=None,
             energy_upper_limit=0.05,
         ),
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationQCInputSpecification(
+            qc_specification=QCSpecification(
                 program="prog2",
+                driver="deferred",
                 method="b3lyp",
                 basis="6-31g",
                 keywords={"k2": "values2"},
@@ -259,7 +252,7 @@ def test_torsiondrive_socket_add_same_2(storage_socket: SQLAlchemySocket):
 
 def test_torsiondrive_socket_add_same_3(storage_socket: SQLAlchemySocket):
     # some modifications to the input specification
-    spec1 = TorsiondriveInputSpecification(
+    spec1 = TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 13)],
@@ -268,12 +261,13 @@ def test_torsiondrive_socket_add_same_3(storage_socket: SQLAlchemySocket):
             energy_decrease_thresh=None,
             energy_upper_limit=0.05,
         ),
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationQCInputSpecification(
+            qc_specification=QCSpecification(
                 program="prog2",
+                driver="deferred",
                 method="b3lyp",
                 basis="6-31g",
                 keywords={"k2": "values2"},
@@ -282,7 +276,7 @@ def test_torsiondrive_socket_add_same_3(storage_socket: SQLAlchemySocket):
         ),
     )
 
-    spec2 = TorsiondriveInputSpecification(
+    spec2 = TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 13)],
@@ -291,11 +285,12 @@ def test_torsiondrive_socket_add_same_3(storage_socket: SQLAlchemySocket):
             energy_decrease_thresh=None,
             energy_upper_limit=0.05,
         ),
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="optPROG1",
             keywords={"k": "value"},
-            qc_specification=OptimizationQCInputSpecification(
+            qc_specification=QCSpecification(
                 program="prOG2",
+                driver="deferred",
                 method="b3LYP",
                 basis="6-31g",
                 keywords={"k2": "values2"},
@@ -324,7 +319,7 @@ def test_torsiondrive_socket_add_same_3(storage_socket: SQLAlchemySocket):
 
 def test_torsiondrive_socket_add_different_1(storage_socket: SQLAlchemySocket):
     # Molecules are a subset of another
-    spec = TorsiondriveInputSpecification(
+    spec = TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 13)],
@@ -333,12 +328,13 @@ def test_torsiondrive_socket_add_different_1(storage_socket: SQLAlchemySocket):
             energy_decrease_thresh=None,
             energy_upper_limit=0.05,
         ),
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationQCInputSpecification(
+            qc_specification=QCSpecification(
                 program="prog2",
+                driver="deferred",
                 method="b3lyp",
                 basis="6-31g",
                 keywords={"k2": "values2"},
@@ -419,10 +415,6 @@ def test_torsiondrive_socket_query(storage_socket: SQLAlchemySocket):
     # query for method
     meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(qc_method=["b3lyP"]))
     assert meta.n_found == 1
-
-    kw_id = td[0]["specification"]["optimization_specification"]["qc_specification"]["keywords_id"]
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(qc_keywords_id=[kw_id]))
-    assert meta.n_found == 3
 
     # Query by default returns everything
     meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody())

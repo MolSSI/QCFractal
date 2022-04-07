@@ -3,8 +3,11 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from qcelemental.models import OptimizationInput, OptimizationResult
-from qcelemental.models.procedures import QCInputSpecification
+from qcelemental.models import (
+    OptimizationInput as QCEl_OptimizationInput,
+    OptimizationResult as QCEl_OptimizationResult,
+)
+from qcelemental.models.procedures import QCInputSpecification as QCEl_QCInputSpecification
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import contains_eager
@@ -16,7 +19,7 @@ from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.records import PriorityEnum, RecordStatusEnum
 from qcportal.records.optimization import (
-    OptimizationInputSpecification,
+    OptimizationSpecification,
     OptimizationQueryBody,
 )
 from qcportal.records.singlepoint import (
@@ -28,9 +31,6 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Union
-
-    OptimizationSpecificationDict = Dict[str, Any]
-    OptimizationRecordDict = Dict[str, Any]
 
 
 class OptimizationRecordSocket(BaseRecordSocket):
@@ -52,7 +52,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         return [stmt]
 
     def add_specification(
-        self, opt_spec: OptimizationInputSpecification, *, session: Optional[Session] = None
+        self, opt_spec: OptimizationSpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, Optional[int]]:
 
         protocols_dict = opt_spec.protocols.dict(exclude_defaults=True)
@@ -104,7 +104,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         query_data: OptimizationQueryBody,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[OptimizationRecordDict]]:
+    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
 
         and_query = []
         need_spspec_join = False
@@ -121,9 +121,6 @@ class OptimizationRecordSocket(BaseRecordSocket):
             need_spspec_join = True
         if query_data.qc_basis is not None:
             and_query.append(QCSpecificationORM.basis.in_(query_data.qc_basis))
-            need_spspec_join = True
-        if query_data.qc_keywords_id is not None:
-            and_query.append(QCSpecificationORM.keywords_id.in_(query_data.qc_keywords_id))
             need_spspec_join = True
         if query_data.initial_molecule_id is not None:
             and_query.append(OptimizationRecordORM.initial_molecule_id.in_(query_data.initial_molecule_id))
@@ -155,7 +152,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
     def generate_task_specification(self, record_orm: OptimizationRecordORM) -> Dict[str, Any]:
 
         specification = record_orm.specification
-        initial_molecule = record_orm.initial_molecule.dict()
+        initial_molecule = record_orm.initial_molecule.model_dict()
 
         model = {"method": specification.qc_specification.method}
         if specification.qc_specification.basis:
@@ -165,8 +162,8 @@ class OptimizationRecordSocket(BaseRecordSocket):
         opt_keywords = specification.keywords.copy()
         opt_keywords["program"] = specification.qc_specification.program
 
-        qcschema_input = OptimizationInput(
-            input_specification=QCInputSpecification(
+        qcschema_input = QCEl_OptimizationInput(
+            input_specification=QCEl_QCInputSpecification(
                 model=model, keywords=specification.qc_specification.keywords.values
             ),
             initial_molecule=initial_molecule,
@@ -223,7 +220,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
     def add(
         self,
         initial_molecules: Sequence[Union[int, Molecule]],
-        opt_spec: OptimizationInputSpecification,
+        opt_spec: OptimizationSpecification,
         tag: str,
         priority: PriorityEnum,
         *,
@@ -277,7 +274,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
             return self.add_internal(mol_ids, spec_id, tag, priority, session=session)
 
     def update_completed_task(
-        self, session: Session, record_orm: OptimizationRecordORM, result: OptimizationResult, manager_name: str
+        self, session: Session, record_orm: OptimizationRecordORM, result: QCEl_OptimizationResult, manager_name: str
     ) -> None:
 
         # Add the final molecule
@@ -300,7 +297,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
     def insert_complete_record(
         self,
         session: Session,
-        result: OptimizationResult,
+        result: QCEl_OptimizationResult,
     ) -> SinglepointRecordORM:
 
         raise RuntimeError("Not yet implemented")

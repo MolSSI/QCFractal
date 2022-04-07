@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Optional
 
-from qcelemental.models import AtomicInput, AtomicResult
+from qcelemental.models import AtomicInput as QCEl_AtomicInput, AtomicResult as QCEl_AtomicResult
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import contains_eager
@@ -15,8 +15,8 @@ from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.records import PriorityEnum, RecordStatusEnum
 from qcportal.records.singlepoint import (
+    QCSpecification,
     WavefunctionProperties,
-    QCInputSpecification,
     SinglepointQueryBody,
 )
 from .db_models import QCSpecificationORM, SinglepointRecordORM
@@ -25,9 +25,6 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Union
-
-    QCSpecificationDict = Dict[str, Any]
-    SinglepointRecordDict = Dict[str, Any]
 
 
 def wavefunction_helper(wavefunction: Optional[WavefunctionProperties]) -> Optional[WavefunctionStoreORM]:
@@ -66,7 +63,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         return []
 
     def add_specification(
-        self, qc_spec: QCInputSpecification, *, session: Optional[Session] = None
+        self, qc_spec: QCSpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, Optional[int]]:
         protocols_dict = qc_spec.protocols.dict(exclude_defaults=True)
 
@@ -128,7 +125,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
         query_data: SinglepointQueryBody,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[SinglepointRecordDict]]:
+    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
 
         and_query = []
         need_join = False
@@ -144,9 +141,6 @@ class SinglepointRecordSocket(BaseRecordSocket):
             need_join = True
         if query_data.basis is not None:
             and_query.append(QCSpecificationORM.basis.in_(query_data.basis))
-            need_join = True
-        if query_data.keywords_id is not None:
-            and_query.append(QCSpecificationORM.keywords_id.in_(query_data.keywords_id))
             need_join = True
         if query_data.molecule_id is not None:
             and_query.append(SinglepointRecordORM.molecule_id.in_(query_data.molecule_id))
@@ -170,13 +164,13 @@ class SinglepointRecordSocket(BaseRecordSocket):
     def generate_task_specification(self, record_orm: SinglepointRecordORM) -> Dict[str, Any]:
 
         specification = record_orm.specification
-        molecule = record_orm.molecule.dict()
+        molecule = record_orm.molecule.model_dict()
 
         model = {"method": specification.method}
         if specification.basis:
             model["basis"] = specification.basis
 
-        qcschema_input = AtomicInput(
+        qcschema_input = QCEl_AtomicInput(
             driver=specification.driver,
             model=model,
             molecule=molecule,
@@ -233,7 +227,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
     def add(
         self,
         molecules: Sequence[Union[int, Molecule]],
-        qc_spec: QCInputSpecification,
+        qc_spec: QCSpecification,
         tag: str,
         priority: PriorityEnum,
         *,
@@ -287,7 +281,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
             return self.add_internal(mol_ids, spec_id, tag, priority, session=session)
 
     def update_completed_task(
-        self, session: Session, record_orm: SinglepointRecordORM, result: AtomicResult, manager_name: str
+        self, session: Session, record_orm: SinglepointRecordORM, result: QCEl_AtomicResult, manager_name: str
     ) -> None:
         # Update the fields themselves
         record_orm.return_result = result.return_result
@@ -298,10 +292,10 @@ class SinglepointRecordSocket(BaseRecordSocket):
     def insert_complete_record(
         self,
         session: Session,
-        result: AtomicResult,
+        result: QCEl_AtomicResult,
     ) -> SinglepointRecordORM:
 
-        qc_spec = QCInputSpecification(
+        qc_spec = QCSpecification(
             program=result.provenance.creator.lower(),
             driver=result.driver,
             method=result.model.method,

@@ -5,7 +5,7 @@ from pydantic import BaseModel, Extra, Field, constr, validator
 from typing_extensions import Literal
 
 from .. import BaseRecord, RecordAddBodyBase, RecordQueryBody
-from ..optimization.models import OptimizationInputSpecification, OptimizationSpecification, OptimizationRecord
+from ..optimization.models import OptimizationSpecification, OptimizationRecord
 from ...base_models import ProjURLParameters
 from ...molecules import Molecule
 from ...utils import recursive_normalizer
@@ -92,23 +92,17 @@ class GridoptimizationKeywords(BaseModel):
     )
 
 
-class GridoptimizationInputSpecification(BaseModel):
+class GridoptimizationSpecification(BaseModel):
     class Config:
         extra = Extra.forbid
 
     program: constr(to_lower=True) = "gridoptimization"
-    optimization_specification: OptimizationInputSpecification
+    optimization_specification: OptimizationSpecification
     keywords: GridoptimizationKeywords
 
 
-class GridoptimizationSpecification(GridoptimizationInputSpecification):
-    id: int
-    optimization_specification_id: int
-    optimization_specification: OptimizationSpecification
-
-
 class GridoptimizationAddBody(RecordAddBodyBase):
-    specification: GridoptimizationInputSpecification
+    specification: GridoptimizationSpecification
     initial_molecules: List[Union[int, Molecule]]
 
 
@@ -118,7 +112,6 @@ class GridoptimizationQueryBody(RecordQueryBody):
     qc_program: Optional[List[constr(to_lower=True)]] = None
     qc_method: Optional[List[constr(to_lower=True)]] = None
     qc_basis: Optional[List[Optional[constr(to_lower=True)]]] = None
-    qc_keywords_id: Optional[List[int]] = None
     initial_molecule_id: Optional[List[int]] = None
 
     @validator("qc_basis")
@@ -135,7 +128,6 @@ class GridoptimizationOptimization(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    gridoptimization_id: int
     optimization_id: int
     key: str
 
@@ -146,7 +138,6 @@ class GridoptimizationOptimization(BaseModel):
 class GridoptimizationRecord(BaseRecord):
     class _DataModel(BaseRecord._DataModel):
         record_type: Literal["gridoptimization"]
-        specification_id: int
         specification: GridoptimizationSpecification
         starting_grid: Optional[List[int]]
         initial_molecule_id: int

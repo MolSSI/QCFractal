@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 from sqlalchemy import select, union, or_
 from sqlalchemy.orm import joinedload, selectinload, with_polymorphic, aliased
 
-from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.nativefiles.db_models import NativeFileORM
+from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import (
@@ -165,39 +165,6 @@ class BaseRecordSocket:
 
         with self.root_socket.optional_session(session, True) as session:
             return get_general(session, self.record_orm, self.record_orm.id, record_ids, include, exclude, missing_ok)
-
-    def get_specification(
-        self, spec_id: int, missing_ok: bool = False, *, session: Optional[Session] = None
-    ) -> Optional[Dict[str, Any]]:
-        """
-        Obtain a specification with the specified ID
-
-        If missing_ok is False, then any ids that are missing in the database will raise an exception.
-        Otherwise, the returned id will be None
-
-        Parameters
-        ----------
-        session
-            An existing SQLAlchemy session to get data from
-        spec_id
-            An id for a single point specification
-        missing_ok
-           If set to True, then missing keywords will be tolerated, and the returned list of
-           keywords will contain None for the corresponding IDs that were not found.
-        session
-            n existing SQLAlchemy session to use. If None, one will be created
-
-        Returns
-        -------
-        :
-            Keyword information as a dictionary in the same order as the given ids.
-            If missing_ok is True, then this list will contain None where the keywords were missing
-        """
-
-        with self.root_socket.optional_session(session, True) as session:
-            return get_general(
-                session, self.specification_orm, self.specification_orm.id, [spec_id], None, None, missing_ok
-            )[0]
 
     def generate_task_specification(self, record_orm: BaseRecordORM) -> Dict[str, Any]:
         """
@@ -411,7 +378,7 @@ class RecordSocket:
             n_found = get_count(session, stmt)
             stmt = stmt.limit(query_data.limit).offset(query_data.skip)
             results = session.execute(stmt).scalars().unique().all()
-            result_dicts = [x.dict() for x in results]
+            result_dicts = [x.model_dict() for x in results]
 
         meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))
         return meta, result_dicts

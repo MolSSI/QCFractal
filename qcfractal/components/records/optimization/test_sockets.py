@@ -17,11 +17,10 @@ from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.optimization import (
     OptimizationSpecification,
-    OptimizationInputSpecification,
     OptimizationQueryBody,
-    OptimizationQCInputSpecification,
 )
 from qcportal.records.singlepoint import (
+    QCSpecification,
     SinglepointDriver,
     SinglepointProtocols,
 )
@@ -32,61 +31,60 @@ if TYPE_CHECKING:
 
 
 def compare_optimization_specs(
-    input_spec: Union[OptimizationInputSpecification, Dict[str, Any]],
-    full_spec: Union[OptimizationSpecification, Dict[str, Any]],
+    input_spec: Union[OptimizationSpecification, Dict[str, Any]],
+    output_spec: Union[OptimizationSpecification, Dict[str, Any]],
 ) -> bool:
     if isinstance(input_spec, dict):
-        input_spec = OptimizationInputSpecification(**input_spec)
-    if isinstance(full_spec, OptimizationSpecification):
-        full_spec = full_spec.dict()
+        input_spec = OptimizationSpecification(**input_spec)
+    if isinstance(output_spec, dict):
+        output_spec = OptimizationSpecification(**output_spec)
 
-    full_spec.pop("id")
-    full_spec.pop("qc_specification_id")
-    full_spec["qc_specification"].pop("id")
-    full_spec["qc_specification"].pop("keywords_id")
-    trimmed_spec = OptimizationInputSpecification(**full_spec)
-    return input_spec == trimmed_spec
+    return input_spec == output_spec
 
 
 _test_specs = [
-    OptimizationInputSpecification(
+    OptimizationSpecification(
         program="optprog1",
         keywords={},
         protocols={"trajectory": "initial_and_final"},
-        qc_specification=OptimizationQCInputSpecification(
+        qc_specification=QCSpecification(
             program="prog1",
+            driver="deferred",
             method="b3lyp",
             basis="6-31G*",
             keywords={"k": "value"},
             protocols=SinglepointProtocols(wavefunction="all"),
         ),
     ),
-    OptimizationInputSpecification(
+    OptimizationSpecification(
         program="optprog2",
         keywords={"k": "v"},
         protocols={"trajectory": "none"},
-        qc_specification=OptimizationQCInputSpecification(
+        qc_specification=QCSpecification(
             program="Prog2",
+            driver="deferred",
             method="Hf",
             basis="def2-TZVP",
             keywords={"k": "v"},
         ),
     ),
-    OptimizationInputSpecification(
+    OptimizationSpecification(
         program="optPRog3",
         keywords={"k2": "v2"},
-        qc_specification=OptimizationQCInputSpecification(
+        qc_specification=QCSpecification(
             program="Prog3",
+            driver="deferred",
             method="pbe0",
             basis="",
             keywords={"o": 1, "v": 2.123},
             protocols=SinglepointProtocols(stdout=False, wavefunction="orbitals_and_eigenvalues"),
         ),
     ),
-    OptimizationInputSpecification(
+    OptimizationSpecification(
         program="OPTPROG4",
-        qc_specification=OptimizationQCInputSpecification(
+        qc_specification=QCSpecification(
             program="ProG4",
+            driver="deferred",
             method="pbe",
             basis=None,
             protocols=SinglepointProtocols(stdout=False, wavefunction="return_results"),
@@ -96,7 +94,7 @@ _test_specs = [
 
 
 @pytest.mark.parametrize("spec", _test_specs)
-def test_optimization_socket_add_get(storage_socket: SQLAlchemySocket, spec: OptimizationInputSpecification):
+def test_optimization_socket_add_get(storage_socket: SQLAlchemySocket, spec: OptimizationSpecification):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
     ne4 = load_molecule_data("neon_tetramer")
@@ -137,7 +135,7 @@ def test_optimization_socket_add_get(storage_socket: SQLAlchemySocket, spec: Opt
 
 
 @pytest.mark.parametrize("spec", _test_specs)
-def test_optimization_socket_task_spec(storage_socket: SQLAlchemySocket, spec: OptimizationInputSpecification):
+def test_optimization_socket_task_spec(storage_socket: SQLAlchemySocket, spec: OptimizationSpecification):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
     ne4 = load_molecule_data("neon_tetramer")
@@ -224,12 +222,13 @@ def test_optimization_socket_add_existing_molecule(storage_socket: SQLAlchemySoc
 
 
 def test_optimization_socket_add_same_1(storage_socket: SQLAlchemySocket):
-    spec = OptimizationInputSpecification(
+    spec = OptimizationSpecification(
         program="optprog1",
         keywords={},
         protocols={"trajectory": "initial_and_final"},
-        qc_specification=OptimizationQCInputSpecification(
+        qc_specification=QCSpecification(
             program="prog1",
+            driver="deferred",
             method="b3lyp",
             basis="6-31G*",
             keywords={"k": "value"},
@@ -251,12 +250,13 @@ def test_optimization_socket_add_same_1(storage_socket: SQLAlchemySocket):
 
 def test_optimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
     # Test case sensitivity
-    spec1 = OptimizationInputSpecification(
+    spec1 = OptimizationSpecification(
         program="optprog1",
         keywords={},
         protocols={"trajectory": "initial_and_final"},
-        qc_specification=OptimizationQCInputSpecification(
+        qc_specification=QCSpecification(
             program="prog1",
+            driver="deferred",
             method="b3lyp",
             basis="6-31G*",
             keywords={"k": "value"},
@@ -264,12 +264,13 @@ def test_optimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
         ),
     )
 
-    spec2 = OptimizationInputSpecification(
+    spec2 = OptimizationSpecification(
         program="opTPROg1",
         keywords={},
         protocols={"trajectory": "initial_and_final"},
-        qc_specification=OptimizationQCInputSpecification(
+        qc_specification=QCSpecification(
             program="prOG1",
+            driver="deferred",
             method="b3LYp",
             basis="6-31g*",
             keywords={"k": "value"},
@@ -291,12 +292,13 @@ def test_optimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
 
 def test_optimization_socket_add_same_3(storage_socket: SQLAlchemySocket):
     # Test default keywords and protocols
-    spec1 = OptimizationInputSpecification(
+    spec1 = OptimizationSpecification(
         program="optprog1",
         keywords={},
         protocols={},
-        qc_specification=OptimizationQCInputSpecification(
+        qc_specification=QCSpecification(
             program="prog1",
+            driver="deferred",
             method="b3lyp",
             basis="6-31G*",
             keywords={"k": "value"},
@@ -304,10 +306,11 @@ def test_optimization_socket_add_same_3(storage_socket: SQLAlchemySocket):
         ),
     )
 
-    spec2 = OptimizationInputSpecification(
+    spec2 = OptimizationSpecification(
         program="optprog1",
-        qc_specification=OptimizationQCInputSpecification(
+        qc_specification=QCSpecification(
             program="prog1",
+            driver="deferred",
             method="b3lyp",
             basis="6-31G*",
             keywords={"k": "value"},
@@ -335,10 +338,11 @@ def test_optimization_socket_add_same_4(storage_socket: SQLAlchemySocket):
     _, kw_ids = storage_socket.keywords.add([kw])
     _, mol_ids = storage_socket.molecules.add([water])
 
-    spec1 = OptimizationInputSpecification(
+    spec1 = OptimizationSpecification(
         program="optprog1",
-        qc_specification=OptimizationQCInputSpecification(
+        qc_specification=QCSpecification(
             program="prog1",
+            driver="deferred",
             method="b3lyp",
             basis="6-31G*",
         ),
@@ -561,12 +565,6 @@ def test_optimization_socket_query(storage_socket: SQLAlchemySocket):
     # query for method
     meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(qc_method=["b3lyP"]))
     assert meta.n_found == 3
-
-    # keyword id
-    meta, opt = storage_socket.records.optimization.query(
-        OptimizationQueryBody(qc_keywords_id=[recs[0]["specification"]["qc_specification"]["keywords_id"]])
-    )
-    assert meta.n_found == 2
 
     # Some empty queries
     meta, opt = storage_socket.records.optimization.query(OptimizationQueryBody(program=["madeupprog"]))

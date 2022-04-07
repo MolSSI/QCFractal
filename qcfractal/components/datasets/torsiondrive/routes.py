@@ -4,7 +4,7 @@ from qcfractal.app import main, storage_socket
 from qcfractal.app.routes import wrap_route
 from qcportal.datasets.torsiondrive import (
     TorsiondriveDatasetAddBody,
-    TorsiondriveDatasetInputSpecification,
+    TorsiondriveDatasetSpecification,
     TorsiondriveDatasetNewEntry,
 )
 
@@ -26,10 +26,8 @@ def add_torsiondrive_dataset_v1(body_data: TorsiondriveDatasetAddBody):
 
 
 @main.route("/v1/datasets/torsiondrive/<int:dataset_id>/specifications", methods=["POST"])
-@wrap_route(List[TorsiondriveDatasetInputSpecification], None, "WRITE")
-def add_torsiondrive_dataset_specifications_v1(
-    dataset_id: int, *, body_data: List[TorsiondriveDatasetInputSpecification]
-):
+@wrap_route(List[TorsiondriveDatasetSpecification], None, "WRITE")
+def add_torsiondrive_dataset_specifications_v1(dataset_id: int, *, body_data: List[TorsiondriveDatasetSpecification]):
     return storage_socket.datasets.torsiondrive.add_specifications(dataset_id, body_data)
 
 

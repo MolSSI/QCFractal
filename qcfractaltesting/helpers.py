@@ -16,11 +16,11 @@ import pydantic
 from qcelemental.models import Molecule, FailedOperation, OptimizationResult, AtomicResult
 from qcelemental.models.results import WavefunctionProperties
 
-from qcportal.records.gridoptimization import GridoptimizationInputSpecification
-from qcportal.records.optimization import OptimizationInputSpecification
-from qcportal.records.reaction import ReactionQCInputSpecification
-from qcportal.records.singlepoint import QCInputSpecification
-from qcportal.records.torsiondrive import TorsiondriveInputSpecification
+from qcportal.records.gridoptimization import GridoptimizationSpecification
+from qcportal.records.optimization import OptimizationSpecification
+from qcportal.records.reaction import ReactionQCSpecification
+from qcportal.records.singlepoint import QCSpecification
+from qcportal.records.torsiondrive import TorsiondriveSpecification
 from qcportal.serialization import _json_decode
 
 # Valid client encodings
@@ -116,23 +116,23 @@ def load_procedure_data(name: str):
 
     record_type = data["record_type"]
     if record_type == "singlepoint":
-        input_type = QCInputSpecification
+        input_type = QCSpecification
         result_type = Union[AtomicResult, FailedOperation]
         molecule_type = Molecule
     elif record_type == "optimization":
-        input_type = OptimizationInputSpecification
+        input_type = OptimizationSpecification
         result_type = Union[OptimizationResult, FailedOperation]
         molecule_type = Molecule
     elif record_type == "torsiondrive":
-        input_type = TorsiondriveInputSpecification
+        input_type = TorsiondriveSpecification
         result_type = Dict[str, Union[OptimizationResult, FailedOperation]]
         molecule_type = List[Molecule]
     elif record_type == "gridoptimization":
-        input_type = GridoptimizationInputSpecification
+        input_type = GridoptimizationSpecification
         result_type = Dict[str, Union[OptimizationResult, FailedOperation]]
         molecule_type = Molecule
     elif record_type == "reaction":
-        input_type = ReactionQCInputSpecification
+        input_type = ReactionQCSpecification
         result_type = Dict[str, Union[AtomicResult, FailedOperation]]
         molecule_type = List[Tuple[float, Molecule]]
     else:
@@ -148,11 +148,11 @@ def load_procedure_data(name: str):
 
 
 def submit_service(storage_socket, input_spec, molecules, tag, priority):
-    if isinstance(input_spec, TorsiondriveInputSpecification):
+    if isinstance(input_spec, TorsiondriveSpecification):
         return storage_socket.records.torsiondrive.add(
             [molecules], input_spec, tag=tag, priority=priority, as_service=True
         )
-    elif isinstance(input_spec, GridoptimizationInputSpecification):
+    elif isinstance(input_spec, GridoptimizationSpecification):
         return storage_socket.records.gridoptimization.add([molecules], input_spec, tag=tag, priority=priority)
     else:
         raise RuntimeError(f"Unknown input spec: {type(input_spec)}")

@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
 from typing_extensions import Literal
 
 from .. import BaseRecord, RecordAddBodyBase, RecordQueryBody
-from ..optimization.models import OptimizationInputSpecification, OptimizationSpecification, OptimizationRecord
+from ..optimization.models import OptimizationSpecification, OptimizationRecord
 from ...base_models import ProjURLParameters
 from ...molecules import Molecule
 from ...utils import recursive_normalizer
@@ -47,26 +47,19 @@ class TorsiondriveKeywords(BaseModel):
         return recursive_normalizer(values)
 
 
-class TorsiondriveInputSpecification(BaseModel):
+class TorsiondriveSpecification(BaseModel):
     class Config:
         extra = Extra.forbid
 
     program: constr(to_lower=True) = "torsiondrive"
-    optimization_specification: OptimizationInputSpecification
-    keywords: TorsiondriveKeywords
-
-
-class TorsiondriveSpecification(TorsiondriveInputSpecification):
-    id: int
-    optimization_specification_id: int
     optimization_specification: OptimizationSpecification
+    keywords: TorsiondriveKeywords
 
 
 class TorsiondriveOptimization(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    torsiondrive_id: int
     optimization_id: int
     key: str
     position: int
@@ -76,7 +69,7 @@ class TorsiondriveOptimization(BaseModel):
 
 
 class TorsiondriveAddBody(RecordAddBodyBase):
-    specification: TorsiondriveInputSpecification
+    specification: TorsiondriveSpecification
     initial_molecules: List[List[Union[int, Molecule]]]
     as_service: bool
 
@@ -87,7 +80,6 @@ class TorsiondriveQueryBody(RecordQueryBody):
     qc_program: Optional[List[constr(to_lower=True)]] = None
     qc_method: Optional[List[constr(to_lower=True)]] = None
     qc_basis: Optional[List[Optional[constr(to_lower=True)]]] = None
-    qc_keywords_id: Optional[List[int]] = None
     initial_molecule_id: Optional[List[int]] = None
 
     @validator("qc_basis")
@@ -103,7 +95,6 @@ class TorsiondriveQueryBody(RecordQueryBody):
 class TorsiondriveRecord(BaseRecord):
     class _DataModel(BaseRecord._DataModel):
         record_type: Literal["torsiondrive"]
-        specification_id: int
         specification: TorsiondriveSpecification
         initial_molecules: Optional[List[Molecule]] = None
         optimizations: Optional[List[TorsiondriveOptimization]] = None

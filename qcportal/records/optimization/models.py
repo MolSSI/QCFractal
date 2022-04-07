@@ -13,64 +13,44 @@ from .. import BaseRecord, RecordAddBodyBase, RecordQueryBody
 from ..singlepoint import (
     SinglepointRecord,
     QCSpecification,
-    QCInputSpecification,
     SinglepointDriver,
 )
 from ...base_models import ProjURLParameters
 
 
-class OptimizationQCInputSpecification(QCInputSpecification):
-    driver: SinglepointDriver = SinglepointDriver.deferred
-    protocols = SinglepointProtocols()
-
-    @pydantic.validator("driver", pre=True)
-    def force_driver(cls, v):
-        return SinglepointDriver.deferred
-
-    @pydantic.validator("protocols", pre=True)
-    def force_protocols(cls, v):
-        return SinglepointProtocols()
-
-
-class OptimizationInputSpecification(BaseModel):
-    class Config:
-        extra = Extra.forbid
-
-    program: constr(to_lower=True) = Field(..., description="The program to use for an optimization")
-    qc_specification: OptimizationQCInputSpecification
-    keywords: Dict[str, Any] = Field({})
-    protocols: OptimizationProtocols = Field(OptimizationProtocols())
-
-
-class OptimizationSpecification(OptimizationInputSpecification):
+class OptimizationSpecification(BaseModel):
     """
     An OptimizationSpecification as stored on the server
 
     This is the same as the input specification, with a few ids added
     """
 
-    id: int
-    qc_specification: QCSpecification
-    qc_specification_id: int
+    class Config:
+        extra = Extra.forbid
 
-    def as_input(self) -> OptimizationInputSpecification:
-        qc_input_spec = self.qc_specification.as_input()
-        return OptimizationInputSpecification(
-            **self.dict(exclude={"id", "qc_specification_id", "qc_specification"}),
-            qc_specification=OptimizationQCInputSpecification(**qc_input_spec.dict()),
-        )
+    program: constr(to_lower=True) = Field(..., description="The program to use for an optimization")
+    qc_specification: QCSpecification
+    keywords: Dict[str, Any] = Field({})
+    protocols: OptimizationProtocols = Field(OptimizationProtocols())
+
+    @pydantic.validator("qc_specification", pre=True)
+    def force_qcspec(cls, v):
+        if isinstance(v, QCSpecification):
+            v = v.dict()
+
+        v["driver"] = SinglepointDriver.deferred
+        v["protocols"] = SinglepointProtocols()
+        return v
 
 
 class OptimizationTrajectory(BaseModel):
     singlepoint_id: int
-    optimization_id: int
     singlepoint_record: Optional[SinglepointRecord._DataModel]
 
 
 class OptimizationRecord(BaseRecord):
     class _DataModel(BaseRecord._DataModel):
         record_type: Literal["optimization"]
-        specification_id: int
         specification: OptimizationSpecification
         initial_molecule_id: int
         initial_molecule: Optional[Molecule]
@@ -150,7 +130,6 @@ class OptimizationQueryBody(RecordQueryBody):
     qc_program: Optional[List[constr(to_lower=True)]] = None
     qc_method: Optional[List[constr(to_lower=True)]] = None
     qc_basis: Optional[List[Optional[constr(to_lower=True)]]] = None
-    qc_keywords_id: Optional[List[int]] = None
     initial_molecule_id: Optional[List[int]] = None
     final_molecule_id: Optional[List[int]] = None
 
@@ -165,5 +144,5 @@ class OptimizationQueryBody(RecordQueryBody):
 
 
 class OptimizationAddBody(RecordAddBodyBase):
-    specification: OptimizationInputSpecification
+    specification: OptimizationSpecification
     initial_molecules: List[Union[int, Molecule]]

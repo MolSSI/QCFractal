@@ -110,7 +110,7 @@ class RoleSocket:
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(RoleORM).order_by(RoleORM.id.asc())
             roles = session.execute(stmt).scalars().all()
-            return [r.dict() for r in roles]
+            return [r.model_dict() for r in roles]
 
     def get(self, rolename: str, *, session: Optional[Session] = None) -> RoleInfoDict:
         """
@@ -125,7 +125,7 @@ class RoleSocket:
         """
         with self.root_socket.optional_session(session, True) as session:
             role = self._get_internal(session, rolename)
-            return role.dict()
+            return role.model_dict()
 
     def add(self, role_info: RoleInfo, *, session: Optional[Session] = None) -> None:
         """

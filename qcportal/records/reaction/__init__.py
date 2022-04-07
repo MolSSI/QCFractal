@@ -1,5 +1,5 @@
 from .models import (
-    ReactionQCInputSpecification,
+    ReactionQCSpecification,
     ReactionStoichiometry,
     ReactionComponent,
     ReactionAddBody,

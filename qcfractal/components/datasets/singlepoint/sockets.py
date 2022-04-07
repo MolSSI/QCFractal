@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from qcfractal.components.datasets.sockets import BaseDatasetSocket
 from qcportal.datasets.singlepoint import SinglepointDatasetNewEntry
 from qcportal.records import PriorityEnum
-from qcportal.records.singlepoint import QCSpecification, QCInputSpecification
+from qcportal.records.singlepoint import QCSpecification
 from .db_models import (
     SinglepointDatasetORM,
     SinglepointDatasetSpecificationORM,
@@ -39,7 +39,7 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
         self._logger = logging.getLogger(__name__)
 
     def _add_specification(
-        self, session: Session, specification: QCInputSpecification
+        self, session: Session, specification: QCSpecification
     ) -> Tuple[InsertMetadata, Optional[int]]:
         return self.root_socket.records.singlepoint.add_specification(specification, session=session)
 
@@ -99,8 +99,8 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
 
         # Now the ones with additional keywords
         for spec in spec_orm:
-            spec_obj = spec.specification._to_model(QCSpecification)
-            spec_input_dict = spec_obj.as_input().dict()
+            spec_obj = spec.specification.to_model(QCSpecification)
+            spec_input_dict = spec_obj.dict()
 
             for entry in special_entries:
                 if (entry.name, spec.name) in existing_records:
@@ -111,7 +111,7 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
 
                 meta, sp_ids = self.root_socket.records.singlepoint.add(
                     molecule=[entry.molecule_id],
-                    qc_spec=QCInputSpecification(**new_spec),
+                    qc_spec=QCSpecification(**new_spec),
                     tag=tag,
                     priority=priority,
                     session=session,

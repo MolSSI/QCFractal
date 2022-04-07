@@ -294,7 +294,7 @@ class TaskSocket:
 
                 # Store in dict form for returning,
                 # but no need to store the info from the base record
-                found.extend(task_orm.dict(exclude=["record"]) for task_orm in new_items)
+                found.extend(task_orm.model_dict(exclude=["record"]) for task_orm in new_items)
 
             manager.claimed += len(found)
 

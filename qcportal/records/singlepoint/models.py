@@ -22,7 +22,7 @@ class SinglepointDriver(str, Enum):
     deferred = "deferred"
 
 
-class QCInputSpecification(BaseModel):
+class QCSpecification(BaseModel):
     class Config:
         extra = Extra.forbid
 
@@ -50,24 +50,9 @@ class QCInputSpecification(BaseModel):
         return None if v == "" else v
 
 
-class QCSpecification(QCInputSpecification):
-    """
-    A QCSpecification as stored on the server
-
-    This is the same as the input specification, with a few ids added
-    """
-
-    id: int
-    keywords_id: int
-
-    def as_input(self) -> QCInputSpecification:
-        return QCInputSpecification(**self.dict(exclude={"id", "keywords_id"}))
-
-
 class SinglepointRecord(BaseRecord):
     class _DataModel(BaseRecord._DataModel):
         record_type: Literal["singlepoint"]
-        specification_id: int
         specification: QCSpecification
         molecule_id: int
         molecule: Optional[Molecule]
@@ -127,7 +112,7 @@ class SinglepointRecord(BaseRecord):
 
 
 class SinglepointAddBody(RecordAddBodyBase):
-    specification: QCInputSpecification
+    specification: QCSpecification
     molecules: List[Union[int, Molecule]]
 
 
@@ -136,7 +121,6 @@ class SinglepointQueryBody(RecordQueryBody):
     driver: Optional[List[SinglepointDriver]] = None
     method: Optional[List[constr(to_lower=True)]] = None
     basis: Optional[List[Optional[constr(to_lower=True)]]] = None
-    keywords_id: Optional[List[int]] = None
     molecule_id: Optional[List[int]] = None
 
     @validator("basis")

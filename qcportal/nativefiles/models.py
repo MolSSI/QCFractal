@@ -15,11 +15,6 @@ class NativeFile(BaseModel):
         allow_mutation = False
         extra = Extra.forbid
 
-    id: Optional[int] = Field(
-        None, description="ID of the object on the database. This is assigned automatically by the database."
-    )
-    record_id: Optional[int] = Field(None, description="The id of the record this file is attached to")
-
     name: str = Field(..., description="Name of the file")
     compression: CompressionEnum = Field(..., description="Compression method (such as gzip)")
     compression_level: int = Field(..., description="Level of compression (typically 0-9)")

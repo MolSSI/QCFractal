@@ -36,7 +36,7 @@ def should_reset(record_orm: BaseRecordORM, config: AutoResetConfig) -> bool:
 
     # Kinda wrote myself into a corner with all this compression stuff...
     error_orm = [x.outputs.get("error", None) for x in history]
-    error_obj = [x._to_model(OutputStore) for x in error_orm]
+    error_obj = [x.to_model(OutputStore) for x in error_orm]
     error_dict = [x.as_json for x in error_obj]
 
     error_types = [x["error_type"] for x in error_dict]

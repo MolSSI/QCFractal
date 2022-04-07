@@ -57,8 +57,6 @@ class ComputeManagerORM(BaseORM):
     tags = Column(ARRAY(String), nullable=False)
 
     # Latest count
-    # This is denormalized on purpose
-    # TODO: should investigate the performance hit of normalizing
     claimed = Column(Integer, nullable=False, default=0)
     successes = Column(Integer, nullable=False, default=0)
     failures = Column(Integer, nullable=False, default=0)

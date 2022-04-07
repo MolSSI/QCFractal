@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from sqlalchemy import select, JSON, Column, Integer, ForeignKey, String, ForeignKeyConstraint, UniqueConstraint, Index
 from sqlalchemy.dialects.postgresql import array_agg, JSONB
 from sqlalchemy.orm import column_property, relationship
@@ -7,6 +11,9 @@ from qcfractal.components.datasets.db_models import CollectionORM, ContributedVa
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM, SinglepointRecordORM
 from qcfractal.db_socket import BaseORM
+
+if TYPE_CHECKING:
+    from typing import Dict, Any, Optional, Iterable
 
 
 class SinglepointDatasetEntryORM(BaseORM):
@@ -33,6 +40,11 @@ class SinglepointDatasetEntryORM(BaseORM):
         Index("ix_singlepoint_dataset_entry_molecule_id", "molecule_id"),
     )
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "dataset_id")
+        return BaseORM.model_dict(self, exclude)
+
 
 class SinglepointDatasetSpecificationORM(BaseORM):
     __tablename__ = "singlepoint_dataset_specification"
@@ -42,13 +54,18 @@ class SinglepointDatasetSpecificationORM(BaseORM):
     description = Column(String, nullable=True)
     specification_id = Column(Integer, ForeignKey(QCSpecificationORM.id), nullable=False)
 
-    specification = relationship(QCSpecificationORM, uselist=False)
+    specification = relationship(QCSpecificationORM)
 
     __table_args__ = (
         Index("ix_singlepoint_dataset_specification_dataset_id", "dataset_id"),
         Index("ix_singlepoint_dataset_specification_name", "name"),
         Index("ix_singlepoint_dataset_specification_specification_id", "specification_id"),
     )
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "dataset_id", "specification_id")
+        return BaseORM.model_dict(self, exclude)
 
 
 class SinglepointDatasetRecordItemORM(BaseORM):
@@ -77,6 +94,11 @@ class SinglepointDatasetRecordItemORM(BaseORM):
         Index("ix_singlepoint_dataset_record_record_id", "record_id"),
         UniqueConstraint("dataset_id", "entry_name", "specification_name", name="ux_singlepoint_dataset_record_unique"),
     )
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "dataset_id")
+        return BaseORM.model_dict(self, exclude)
 
 
 class SinglepointDatasetORM(CollectionORM):

@@ -357,7 +357,7 @@ class BaseDatasetSocket:
                 s = "\n".join(missing_entries)
                 raise MissingDataError(f"Missing {len(missing_entries)} entries: {s}")
 
-        return [x.dict() for x in entries]
+        return [x.model_dict() for x in entries]
 
     def delete_entries(
         self,
@@ -436,7 +436,7 @@ class BaseDatasetSocket:
         with self.root_socket.optional_session(session, True) as session:
             records = session.execute(stmt).scalars().all()
 
-        return [x.dict() for x in records]
+        return [x.model_dict() for x in records]
 
     def delete_record_items(
         self,

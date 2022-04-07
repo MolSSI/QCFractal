@@ -20,7 +20,6 @@ from .test_sockets import _test_specs
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
-    from typing import Optional
 
 from .test_sockets import compare_singlepoint_specs
 
@@ -149,10 +148,6 @@ def test_singlepoint_client_query(snowflake_client: PortalClient, storage_socket
     # query for method
     meta, sp = snowflake_client.query_singlepoints(method=["b3lyP"])
     assert meta.n_found == 2
-
-    # keyword id
-    meta, sp = snowflake_client.query_singlepoints(keywords_id=[recs[0]["specification"]["keywords_id"]])
-    assert meta.n_found == 3  # All have empty keywords
 
     # driver
     meta, sp = snowflake_client.query_singlepoints(driver=[SinglepointDriver.energy])

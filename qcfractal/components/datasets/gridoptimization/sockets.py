@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 from qcfractal.components.datasets.sockets import BaseDatasetSocket
 from qcportal.datasets.gridoptimization import GridoptimizationDatasetNewEntry
 from qcportal.records import PriorityEnum
-from qcportal.records.gridoptimization import GridoptimizationInputSpecification
-from qcportal.records.optimization import OptimizationInputSpecification, OptimizationSpecification
+from qcportal.records.gridoptimization import GridoptimizationSpecification
+from qcportal.records.optimization import OptimizationSpecification
 from .db_models import (
     GridoptimizationDatasetORM,
     GridoptimizationDatasetSpecificationORM,
@@ -40,7 +40,7 @@ class GridoptimizationDatasetSocket(BaseDatasetSocket):
         self._logger = logging.getLogger(__name__)
 
     def _add_specification(
-        self, session: Session, specification: OptimizationInputSpecification
+        self, session: Session, specification: OptimizationSpecification
     ) -> Tuple[InsertMetadata, Optional[int]]:
         return self.root_socket.records.optimization.add_specification(specification, session=session)
 
@@ -78,8 +78,8 @@ class GridoptimizationDatasetSocket(BaseDatasetSocket):
     ):
         for spec in spec_orm:
             # The spec for a gridoptimization dataset is an optimization specification
-            opt_spec_obj = spec.specification._to_model(OptimizationSpecification)
-            opt_spec_input_dict = opt_spec_obj.as_input().dict()
+            opt_spec_obj = spec.specification.to_model(OptimizationSpecification)
+            opt_spec_input_dict = opt_spec_obj.dict()
 
             for entry in entry_orm:
                 if (entry.name, spec.name) in existing_records:
@@ -88,7 +88,7 @@ class GridoptimizationDatasetSocket(BaseDatasetSocket):
                 new_opt_spec = copy.deepcopy(opt_spec_input_dict)
                 new_opt_spec["keywords"].update(entry.additional_keywords)
 
-                go_spec = GridoptimizationInputSpecification(
+                go_spec = GridoptimizationSpecification(
                     optimization_specification=new_opt_spec, keywords=entry.gridoptimization_keywords
                 )
 

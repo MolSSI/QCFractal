@@ -1,22 +1,22 @@
 from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.records.optimization import (
-    OptimizationInputSpecification,
-    OptimizationQCInputSpecification,
+    OptimizationSpecification,
     OptimizationProtocols,
 )
 from qcportal.records.singlepoint import (
+    QCSpecification,
     SinglepointDriver,
     SinglepointProtocols,
 )
 from qcportal.records.torsiondrive import (
-    TorsiondriveInputSpecification,
+    TorsiondriveSpecification,
     TorsiondriveKeywords,
 )
 
 
 def test_torsiondrive_socket_basic_specification(storage_socket: SQLAlchemySocket):
 
-    spec1 = TorsiondriveInputSpecification(
+    spec1 = TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 13)],
@@ -25,12 +25,13 @@ def test_torsiondrive_socket_basic_specification(storage_socket: SQLAlchemySocke
             energy_decrease_thresh=None,
             energy_upper_limit=0.05,
         ),
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="optprog1",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationQCInputSpecification(
+            qc_specification=QCSpecification(
                 program="prog2",
+                driver="deferred",
                 method="b3lyp",
                 basis="6-31g",
                 keywords={"k2": "values2"},
@@ -39,7 +40,7 @@ def test_torsiondrive_socket_basic_specification(storage_socket: SQLAlchemySocke
         ),
     )
 
-    spec2 = TorsiondriveInputSpecification(
+    spec2 = TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 14)],
@@ -48,11 +49,11 @@ def test_torsiondrive_socket_basic_specification(storage_socket: SQLAlchemySocke
             energy_decrease_thresh=None,
             energy_upper_limit=0.05,
         ),
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="optprog2",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(),
-            qc_specification=OptimizationQCInputSpecification(
+            qc_specification=QCSpecification(
                 program="prog2",
                 driver=SinglepointDriver.hessian,
                 method="hf",
@@ -63,7 +64,7 @@ def test_torsiondrive_socket_basic_specification(storage_socket: SQLAlchemySocke
         ),
     )
 
-    spec3 = TorsiondriveInputSpecification(
+    spec3 = TorsiondriveSpecification(
         # Not putting in program
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 13)],
@@ -72,11 +73,11 @@ def test_torsiondrive_socket_basic_specification(storage_socket: SQLAlchemySocke
             energy_decrease_thresh=None,
             energy_upper_limit=0.05,
         ),
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="optprog2",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(trajectory="none"),
-            qc_specification=OptimizationQCInputSpecification(
+            qc_specification=QCSpecification(
                 program="prog2",
                 driver=SinglepointDriver.hessian,
                 method="hf",
@@ -100,24 +101,12 @@ def test_torsiondrive_socket_basic_specification(storage_socket: SQLAlchemySocke
     assert meta2.existing_idx == []
     assert meta3.existing_idx == []
 
-    sp1 = storage_socket.records.torsiondrive.get_specification(id1)
-    sp2 = storage_socket.records.torsiondrive.get_specification(id2)
-    sp3 = storage_socket.records.torsiondrive.get_specification(id3)
 
-    for sp in [sp1, sp2, sp3]:
-        assert sp["program"] == "torsiondrive"
-        assert sp["optimization_specification_id"] == sp["optimization_specification"]["id"]
-
-    assert TorsiondriveKeywords(**sp1["keywords"]) == spec1.keywords
-    assert TorsiondriveKeywords(**sp2["keywords"]) == spec2.keywords
-    assert TorsiondriveKeywords(**sp3["keywords"]) == spec3.keywords
-
-
-common_opt_spec = OptimizationInputSpecification(
+common_opt_spec = OptimizationSpecification(
     program="optprog2",
     keywords={"k": "value"},
     protocols=OptimizationProtocols(trajectory="none"),
-    qc_specification=OptimizationQCInputSpecification(
+    qc_specification=QCSpecification(
         program="prog2",
         driver=SinglepointDriver.hessian,
         method="hf",
@@ -130,7 +119,7 @@ common_opt_spec = OptimizationInputSpecification(
 
 def test_torsiondrive_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
 
-    spec1 = TorsiondriveInputSpecification(
+    spec1 = TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 13)],
@@ -158,7 +147,7 @@ def test_torsiondrive_socket_add_specification_same_0(storage_socket: SQLAlchemy
 
 def test_torsiondrive_socket_add_specification_same_1(storage_socket: SQLAlchemySocket):
 
-    spec1 = TorsiondriveInputSpecification(
+    spec1 = TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 13)],
@@ -171,7 +160,7 @@ def test_torsiondrive_socket_add_specification_same_1(storage_socket: SQLAlchemy
     )
 
     # model handling defaults
-    spec2 = TorsiondriveInputSpecification(
+    spec2 = TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 13)],
@@ -196,7 +185,7 @@ def test_torsiondrive_socket_add_specification_same_1(storage_socket: SQLAlchemy
 
 def test_torsiondrive_socket_add_specification_same_2(storage_socket: SQLAlchemySocket):
     # some changes to the opt spec
-    spec1 = TorsiondriveInputSpecification(
+    spec1 = TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 13)],
@@ -209,18 +198,18 @@ def test_torsiondrive_socket_add_specification_same_2(storage_socket: SQLAlchemy
     )
 
     # model handling defaults
-    spec2 = TorsiondriveInputSpecification(
+    spec2 = TorsiondriveSpecification(
         program="torSIOndrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 13)],
             grid_spacing=[15],
             energy_upper_limit=0.05,
         ),
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="optpROg2",
             keywords={"k": "value"},
             protocols=OptimizationProtocols(trajectory="none"),
-            qc_specification=OptimizationQCInputSpecification(
+            qc_specification=QCSpecification(
                 program="PROG2",
                 driver=SinglepointDriver.gradient,
                 method="hf",
@@ -246,7 +235,7 @@ def test_torsiondrive_socket_add_specification_same_2(storage_socket: SQLAlchemy
 
 def test_torsiondrive_socket_add_specification_diff_1(storage_socket: SQLAlchemySocket):
     #  changing energy upper limit
-    spec1 = TorsiondriveInputSpecification(
+    spec1 = TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 13)],
@@ -258,7 +247,7 @@ def test_torsiondrive_socket_add_specification_diff_1(storage_socket: SQLAlchemy
         optimization_specification=common_opt_spec,
     )
 
-    spec2 = TorsiondriveInputSpecification(
+    spec2 = TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 13)],
@@ -283,7 +272,7 @@ def test_torsiondrive_socket_add_specification_diff_1(storage_socket: SQLAlchemy
 
 def test_torsiondrive_socket_add_specification_diff_2(storage_socket: SQLAlchemySocket):
     #  ordering of dihedrals
-    spec1 = TorsiondriveInputSpecification(
+    spec1 = TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 13)],
@@ -295,7 +284,7 @@ def test_torsiondrive_socket_add_specification_diff_2(storage_socket: SQLAlchemy
         optimization_specification=common_opt_spec,
     )
 
-    spec2 = TorsiondriveInputSpecification(
+    spec2 = TorsiondriveSpecification(
         program="torsionndrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 13, 15)],
@@ -320,7 +309,7 @@ def test_torsiondrive_socket_add_specification_diff_2(storage_socket: SQLAlchemy
 
 def test_torsiondrive_socket_add_specification_diff_3(storage_socket: SQLAlchemySocket):
     #  grid spacing
-    spec1 = TorsiondriveInputSpecification(
+    spec1 = TorsiondriveSpecification(
         program="torsiondrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 13)],
@@ -332,7 +321,7 @@ def test_torsiondrive_socket_add_specification_diff_3(storage_socket: SQLAlchemy
         optimization_specification=common_opt_spec,
     )
 
-    spec2 = TorsiondriveInputSpecification(
+    spec2 = TorsiondriveSpecification(
         program="torsionndrive",
         keywords=TorsiondriveKeywords(
             dihedrals=[(8, 11, 15, 13)],

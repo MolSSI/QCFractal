@@ -4,7 +4,7 @@ Tests the wavefunction store socket
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.records.singlepoint import (
-    QCInputSpecification,
+    QCSpecification,
     SinglepointDriver,
     SinglepointProtocols,
 )
@@ -12,7 +12,7 @@ from qcportal.records.singlepoint import (
 
 def test_singlepoint_socket_basic_specification(storage_socket: SQLAlchemySocket):
 
-    spec1 = QCInputSpecification(
+    spec1 = QCSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -21,7 +21,7 @@ def test_singlepoint_socket_basic_specification(storage_socket: SQLAlchemySocket
         protocols=SinglepointProtocols(wavefunction="all"),
     )
 
-    spec2 = QCInputSpecification(
+    spec2 = QCSpecification(
         program="prog2",
         driver=SinglepointDriver.hessian,
         method="hf",
@@ -30,7 +30,7 @@ def test_singlepoint_socket_basic_specification(storage_socket: SQLAlchemySocket
         protocols=SinglepointProtocols(wavefunction="all"),
     )
 
-    spec3 = QCInputSpecification(
+    spec3 = QCSpecification(
         program="prog2",
         driver=SinglepointDriver.hessian,
         method="hf",
@@ -52,23 +52,10 @@ def test_singlepoint_socket_basic_specification(storage_socket: SQLAlchemySocket
     assert meta2.existing_idx == []
     assert meta3.existing_idx == []
 
-    sp1 = storage_socket.records.singlepoint.get_specification(id1)
-    sp2 = storage_socket.records.singlepoint.get_specification(id2)
-    sp3 = storage_socket.records.singlepoint.get_specification(id3)
-
-    # Remove some ids that aren't in the input spec
-    for sp in [sp1, sp2, sp3]:
-        sp.pop("keywords_id")
-        sp.pop("id")
-
-    assert QCInputSpecification(**sp1) == spec1
-    assert QCInputSpecification(**sp2) == spec2
-    assert QCInputSpecification(**sp3) == spec3
-
 
 def test_singlepoint_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
 
-    spec1 = QCInputSpecification(
+    spec1 = QCSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -91,7 +78,7 @@ def test_singlepoint_socket_add_specification_same_0(storage_socket: SQLAlchemyS
     assert id == id2
 
     # Change keywords
-    spec1 = QCInputSpecification(
+    spec1 = QCSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -109,7 +96,7 @@ def test_singlepoint_socket_add_specification_same_0(storage_socket: SQLAlchemyS
 
 def test_singlepoint_socket_add_specification_same_1(storage_socket: SQLAlchemySocket):
     # Test case sensitivity
-    spec = QCInputSpecification(
+    spec = QCSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -121,7 +108,7 @@ def test_singlepoint_socket_add_specification_same_1(storage_socket: SQLAlchemyS
     meta, id = storage_socket.records.singlepoint.add_specification(spec)
     assert meta.inserted_idx == [0]
 
-    spec = QCInputSpecification(
+    spec = QCSpecification(
         program="Prog1",
         driver=SinglepointDriver.energy,
         method="b3LYP",
@@ -137,7 +124,7 @@ def test_singlepoint_socket_add_specification_same_1(storage_socket: SQLAlchemyS
 
 def test_singlepoint_socket_add_specification_same_2(storage_socket: SQLAlchemySocket):
     # Test keywords defaults
-    spec = QCInputSpecification(
+    spec = QCSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -149,7 +136,7 @@ def test_singlepoint_socket_add_specification_same_2(storage_socket: SQLAlchemyS
     meta, id = storage_socket.records.singlepoint.add_specification(spec)
     assert meta.inserted_idx == [0]
 
-    spec = QCInputSpecification(
+    spec = QCSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -164,7 +151,7 @@ def test_singlepoint_socket_add_specification_same_2(storage_socket: SQLAlchemyS
 
 def test_singlepoint_socket_add_specification_same_3(storage_socket: SQLAlchemySocket):
     # Test protocols defaults
-    spec = QCInputSpecification(
+    spec = QCSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -175,7 +162,7 @@ def test_singlepoint_socket_add_specification_same_3(storage_socket: SQLAlchemyS
     meta, id = storage_socket.records.singlepoint.add_specification(spec)
     assert meta.inserted_idx == [0]
 
-    spec = QCInputSpecification(
+    spec = QCSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -189,7 +176,7 @@ def test_singlepoint_socket_add_specification_same_3(storage_socket: SQLAlchemyS
 
 def test_singlepoint_socket_add_specification_same_4(storage_socket: SQLAlchemySocket):
     # Test protocols defaults (due to exclude_defaults)
-    spec = QCInputSpecification(
+    spec = QCSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -202,7 +189,7 @@ def test_singlepoint_socket_add_specification_same_4(storage_socket: SQLAlchemyS
     meta, id = storage_socket.records.singlepoint.add_specification(spec)
     assert meta.inserted_idx == [0]
 
-    spec = QCInputSpecification(
+    spec = QCSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -216,7 +203,7 @@ def test_singlepoint_socket_add_specification_same_4(storage_socket: SQLAlchemyS
 
 def test_singlepoint_socket_add_specification_same_5(storage_socket: SQLAlchemySocket):
     # Test protocols defaults (due to exclude_defaults)
-    spec = QCInputSpecification(
+    spec = QCSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -229,7 +216,7 @@ def test_singlepoint_socket_add_specification_same_5(storage_socket: SQLAlchemyS
     meta, id = storage_socket.records.singlepoint.add_specification(spec)
     assert meta.inserted_idx == [0]
 
-    spec = QCInputSpecification(
+    spec = QCSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -243,7 +230,7 @@ def test_singlepoint_socket_add_specification_same_5(storage_socket: SQLAlchemyS
 
 def test_singlepoint_socket_add_specification_same_6(storage_socket: SQLAlchemySocket):
     # Test basis none, empty string
-    spec = QCInputSpecification(
+    spec = QCSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -254,7 +241,7 @@ def test_singlepoint_socket_add_specification_same_6(storage_socket: SQLAlchemyS
     meta, id = storage_socket.records.singlepoint.add_specification(spec)
     assert meta.inserted_idx == [0]
 
-    spec = QCInputSpecification(
+    spec = QCSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -269,7 +256,7 @@ def test_singlepoint_socket_add_specification_same_6(storage_socket: SQLAlchemyS
 
 def test_singlepoint_socket_add_specification_diff_1(storage_socket: SQLAlchemySocket):
     # Test different protocols
-    spec = QCInputSpecification(
+    spec = QCSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",
@@ -280,7 +267,7 @@ def test_singlepoint_socket_add_specification_diff_1(storage_socket: SQLAlchemyS
     meta, id = storage_socket.records.singlepoint.add_specification(spec)
     assert meta.inserted_idx == [0]
 
-    spec = QCInputSpecification(
+    spec = QCSpecification(
         program="prog1",
         driver=SinglepointDriver.energy,
         method="b3lyp",

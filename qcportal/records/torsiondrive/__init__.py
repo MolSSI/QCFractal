@@ -1,5 +1,4 @@
 from .models import (
-    TorsiondriveInputSpecification,
     TorsiondriveKeywords,
     TorsiondriveSpecification,
     TorsiondriveAddBody,

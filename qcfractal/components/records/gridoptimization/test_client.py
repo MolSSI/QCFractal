@@ -14,18 +14,16 @@ from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.records import PriorityEnum
 from qcportal.records.gridoptimization import (
     GridoptimizationKeywords,
-    GridoptimizationInputSpecification,
+    GridoptimizationSpecification,
 )
 from qcportal.records.optimization import (
-    OptimizationInputSpecification,
-    OptimizationQCInputSpecification,
+    OptimizationSpecification,
 )
+from qcportal.records.singlepoint import QCSpecification
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
-    from typing import Optional
-
 
 from .test_sockets import _test_specs, compare_gridoptimization_specs
 
@@ -37,9 +35,9 @@ def test_gridoptimization_client_tag_priority(snowflake_client: PortalClient, ta
     meta1, id1 = snowflake_client.add_gridoptimizations(
         [peroxide2],
         "gridoptimization",
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="geometric",
-            qc_specification=OptimizationQCInputSpecification(program="psi4", method="hf", basis="sto-3g"),
+            qc_specification=QCSpecification(program="psi4", driver="deferred", method="hf", basis="sto-3g"),
         ),
         keywords=GridoptimizationKeywords(
             preoptimization=False,
@@ -57,7 +55,7 @@ def test_gridoptimization_client_tag_priority(snowflake_client: PortalClient, ta
 
 
 @pytest.mark.parametrize("spec", _test_specs)
-def test_gridoptimization_client_add_get(snowflake_client: PortalClient, spec: GridoptimizationInputSpecification):
+def test_gridoptimization_client_add_get(snowflake_client: PortalClient, spec: GridoptimizationSpecification):
     hooh = load_molecule_data("peroxide2")
     h3ns = load_molecule_data("go_H3NS")
 
@@ -176,10 +174,6 @@ def test_gridoptimization_client_query(snowflake_client: PortalClient, storage_s
     # query for method
     meta, td = snowflake_client.query_gridoptimizations(qc_method=["b3lyP"])
     assert meta.n_found == 1
-
-    kw_id = td[0].raw_data.specification.optimization_specification.qc_specification.keywords_id
-    meta, td = snowflake_client.query_gridoptimizations(qc_keywords_id=[kw_id])
-    assert meta.n_found == 3
 
     # Query by default returns everything
     meta, td = snowflake_client.query_gridoptimizations()

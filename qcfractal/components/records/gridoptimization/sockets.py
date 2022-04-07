@@ -26,10 +26,9 @@ from qcportal.records.gridoptimization import (
     ScanDimension,
     StepTypeEnum,
     GridoptimizationSpecification,
-    GridoptimizationInputSpecification,
     GridoptimizationQueryBody,
 )
-from qcportal.records.optimization import OptimizationInputSpecification, OptimizationSpecification
+from qcportal.records.optimization import OptimizationSpecification
 from .db_models import GridoptimizationSpecificationORM, GridoptimizationOptimizationORM, GridoptimizationRecordORM
 
 if TYPE_CHECKING:
@@ -167,7 +166,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         return [stmt]
 
     def add_specification(
-        self, go_spec: GridoptimizationInputSpecification, *, session: Optional[Session] = None
+        self, go_spec: GridoptimizationSpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, Optional[int]]:
 
         go_kw_dict = go_spec.keywords.dict(exclude_defaults=True)
@@ -229,9 +228,6 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
             need_spspec_join = True
         if query_data.qc_basis is not None:
             and_query.append(QCSpecificationORM.basis.in_(query_data.qc_basis))
-            need_spspec_join = True
-        if query_data.qc_keywords_id is not None:
-            and_query.append(QCSpecificationORM.keywords_id.in_(query_data.qc_keywords_id))
             need_spspec_join = True
         if query_data.optimization_program is not None:
             and_query.append(OptimizationSpecificationORM.program.in_(query_data.optimization_program))
@@ -311,7 +307,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
     def add(
         self,
         initial_molecules: Sequence[Union[int, Molecule]],
-        go_spec: GridoptimizationInputSpecification,
+        go_spec: GridoptimizationSpecification,
         tag: str,
         priority: PriorityEnum,
         *,
@@ -366,7 +362,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
     def initialize_service(self, session: Session, service_orm: ServiceQueueORM) -> None:
         go_orm: GridoptimizationRecordORM = service_orm.record
-        specification = GridoptimizationSpecification(**go_orm.specification.dict())
+        specification = GridoptimizationSpecification(**go_orm.specification.model_dict())
         keywords = specification.keywords
 
         # Build constraint template
@@ -426,7 +422,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
         # Special preoptimization iterations
         if service_state.iteration == -2:
-            next_tasks["preoptimization"] = go_orm.initial_molecule.to_model()
+            next_tasks["preoptimization"] = go_orm.initial_molecule.to_model(Molecule)
             service_state.iteration = -1
             output = "Starting preoptimization"
 
@@ -437,7 +433,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
             if len(complete_deps) != 1:
                 raise RuntimeError(f"Expected one complete task for preoptimization, but got {len(complete_deps)}")
 
-            starting_molecule = complete_deps[0].record.final_molecule.to_model()
+            starting_molecule = complete_deps[0].record.final_molecule.to_model(Molecule)
 
             # Assign the true starting molecule and grid to the grid optimization record
             go_orm.starting_molecule_id = complete_deps[0].record.final_molecule_id
@@ -456,7 +452,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
             # We set starting_molecule to initial_molecule
             go_orm.starting_molecule_id = go_orm.initial_molecule_id
-            starting_molecule = go_orm.initial_molecule.to_model()
+            starting_molecule = go_orm.initial_molecule.to_model(Molecule)
 
             go_orm.starting_grid = calculate_starting_grid(go_orm.specification.keywords["scans"], starting_molecule)
 
@@ -476,7 +472,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
             for dep in complete_deps:
                 key = dep.extras["key"]
-                molecule_map[key] = dep.record.final_molecule.to_model()
+                molecule_map[key] = dep.record.final_molecule.to_model(Molecule)
 
             # Build out the new set of seeds
             complete_seeds = set(deserialize_key(dep.extras["key"]) for dep in complete_deps)
@@ -531,15 +527,15 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         service_orm.dependencies = []
 
         # Create an optimization input based on the new geometry and the optimization template
-        opt_spec = go_orm.specification.optimization_specification.dict()
+        opt_spec = go_orm.specification.optimization_specification.model_dict()
 
         # Convert to an input
-        opt_spec = OptimizationSpecification(**opt_spec).as_input().dict()
+        opt_spec = OptimizationSpecification(**opt_spec).dict()
 
         # Load the starting molecule (for absolute constraints)
         starting_molecule = None
         if go_orm.starting_molecule is not None:
-            starting_molecule = go_orm.starting_molecule.to_model()
+            starting_molecule = go_orm.starting_molecule.to_model(Molecule)
 
         for key, molecule in task_dict.items():
             # Make a deep copy to prevent modifying the original ORM
@@ -551,7 +547,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                 # Submit the new optimization with no constraints
                 meta, opt_ids = self.root_socket.records.optimization.add(
                     [molecule],
-                    OptimizationInputSpecification(**opt_spec2),
+                    OptimizationSpecification(**opt_spec2),
                     service_orm.tag,
                     service_orm.priority,
                     session=session,
@@ -582,7 +578,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                 # Submit the new optimization
                 meta, opt_ids = self.root_socket.records.optimization.add(
                     [molecule],
-                    OptimizationInputSpecification(**opt_spec2),
+                    OptimizationSpecification(**opt_spec2),
                     service_orm.tag,
                     service_orm.priority,
                     session=session,

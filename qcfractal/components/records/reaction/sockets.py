@@ -17,7 +17,7 @@ from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputTypeEnum
 from qcportal.records import PriorityEnum, RecordStatusEnum
 from qcportal.records.reaction import (
-    ReactionQCInputSpecification,
+    ReactionQCSpecification,
     ReactionQueryBody,
 )
 from .db_models import ReactionStoichiometryORM, ReactionComponentORM, ReactionRecordORM
@@ -49,7 +49,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         return [stmt]
 
     def add_specification(
-        self, qc_spec: ReactionQCInputSpecification, *, session: Optional[Session] = None
+        self, qc_spec: ReactionQCSpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, Optional[int]]:
         return self.root_socket.records.singlepoint.add_specification(qc_spec=qc_spec, session=session)
 
@@ -75,9 +75,6 @@ class ReactionRecordSocket(BaseRecordSocket):
             need_spec_join = True
         if query_data.basis is not None:
             and_query.append(QCSpecificationORM.basis.in_(query_data.basis))
-            need_spec_join = True
-        if query_data.keywords_id is not None:
-            and_query.append(QCSpecificationORM.keywords_id.in_(query_data.keywords_id))
             need_spec_join = True
         if query_data.molecule_id is not None:
             and_query.append(ReactionStoichiometryORM.molecule_id.in_(query_data.molecule_id))
@@ -183,7 +180,7 @@ class ReactionRecordSocket(BaseRecordSocket):
     def add(
         self,
         stoichiometries: Sequence[Iterable[Tuple[float, Union[int, Molecule]]]],
-        qc_spec: ReactionQCInputSpecification,
+        qc_spec: ReactionQCSpecification,
         tag: str,
         priority: PriorityEnum,
         *,

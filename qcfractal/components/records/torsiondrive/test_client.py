@@ -13,19 +13,17 @@ from qcfractal.db_socket import SQLAlchemySocket
 from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.records import PriorityEnum
 from qcportal.records.optimization import (
-    OptimizationInputSpecification,
-    OptimizationQCInputSpecification,
+    OptimizationSpecification,
 )
+from qcportal.records.singlepoint import QCSpecification
 from qcportal.records.torsiondrive import (
     TorsiondriveKeywords,
-    TorsiondriveInputSpecification,
+    TorsiondriveSpecification,
 )
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
-    from typing import Optional
-
 
 from .test_sockets import _test_specs, compare_torsiondrive_specs
 
@@ -37,9 +35,9 @@ def test_torsiondrive_client_tag_priority_as_service(snowflake_client: PortalCli
     meta1, id1 = snowflake_client.add_torsiondrives(
         [[peroxide2]],
         "torsiondrive",
-        optimization_specification=OptimizationInputSpecification(
+        optimization_specification=OptimizationSpecification(
             program="geometric",
-            qc_specification=OptimizationQCInputSpecification(program="psi4", method="hf", basis="sto-3g"),
+            qc_specification=QCSpecification(program="psi4", method="hf", basis="sto-3g", driver="deferred"),
         ),
         keywords=TorsiondriveKeywords(dihedrals=[(1, 2, 3, 4)], grid_spacing=[15], energy_upper_limit=0.04),
         priority=priority,
@@ -51,7 +49,7 @@ def test_torsiondrive_client_tag_priority_as_service(snowflake_client: PortalCli
 
 
 @pytest.mark.parametrize("spec", _test_specs)
-def test_torsiondrive_client_add_get(snowflake_client: PortalClient, spec: TorsiondriveInputSpecification):
+def test_torsiondrive_client_add_get(snowflake_client: PortalClient, spec: TorsiondriveSpecification):
     hooh = load_molecule_data("peroxide2")
     td_mol_1 = load_molecule_data("td_C9H11NO2_1")
     td_mol_2 = load_molecule_data("td_C9H11NO2_2")
@@ -177,10 +175,6 @@ def test_torsiondrive_client_query(snowflake_client: PortalClient, storage_socke
     # query for method
     meta, td = snowflake_client.query_torsiondrives(qc_method=["b3lyP"])
     assert meta.n_found == 1
-
-    kw_id = td[0].raw_data.specification.optimization_specification.qc_specification.keywords_id
-    meta, td = snowflake_client.query_torsiondrives(qc_keywords_id=[kw_id])
-    assert meta.n_found == 3
 
     # Query by default returns everything
     meta, td = snowflake_client.query_torsiondrives()

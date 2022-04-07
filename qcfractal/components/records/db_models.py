@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict, Optional, Tuple, Any
+from typing import Dict, Optional
 
 from sqlalchemy import Column, String, Integer, ForeignKey, Enum, DateTime, JSON, Index, Boolean
 from sqlalchemy.orm import relationship
@@ -18,17 +18,32 @@ class RecordCommentORM(BaseORM):
     __tablename__ = "record_comment"
 
     id = Column(Integer, primary_key=True)
-    record_id = Column(Integer, ForeignKey("base_record.id", ondelete="CASCADE"), nullable=False)
+    record_id = Column(Integer, ForeignKey("base_record.id", ondelete="cascade"), nullable=False)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
     username = Column(String)  # not a foreign key - leaves username if user is deleted
     comment = Column(String, nullable=False)
+
+    __table_args__ = (Index("ix_record_comment_record_id", "record_id"),)
+
+
+class RecordInfoBackupORM(BaseORM):
+    __tablename__ = "record_info_backup"
+
+    id = Column(Integer, primary_key=True)
+    record_id = Column(Integer, ForeignKey("base_record.id", ondelete="cascade"), nullable=False)
+    old_status = Column(Enum(RecordStatusEnum), nullable=False)
+    old_tag = Column(String, nullable=True)
+    old_priority = Column(Integer, nullable=True)
+    modified_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+
+    __table_args__ = (Index("ix_record_info_backup_record_id", "record_id"),)
 
 
 class RecordComputeHistoryORM(BaseORM):
     __tablename__ = "record_compute_history"
 
     id = Column(Integer, primary_key=True)
-    record_id = Column(Integer, ForeignKey("base_record.id", ondelete="CASCADE"), nullable=False)
+    record_id = Column(Integer, ForeignKey("base_record.id", ondelete="cascade"), nullable=False)
 
     status = Column(Enum(RecordStatusEnum), nullable=False)
     manager_name = Column(String, ForeignKey(ComputeManagerORM.name), nullable=True)
@@ -37,6 +52,11 @@ class RecordComputeHistoryORM(BaseORM):
 
     outputs = relationship(
         OutputStoreORM, collection_class=attribute_mapped_collection("output_type"), cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        Index("ix_record_compute_history_record_id", "record_id"),
+        Index("ix_record_compute_history_manager_name", "manager_name"),
     )
 
     def upsert_output(self, session, new_output_orm: OutputStore) -> None:
@@ -58,11 +78,6 @@ class RecordComputeHistoryORM(BaseORM):
         new_output_orm = OutputStoreORM.from_model(new_output)
         self.outputs[output_type] = new_output_orm
         return new_output_orm
-
-    __table_args__ = (
-        Index("ix_record_compute_history_record_id", "record_id"),
-        Index("ix_record_compute_history_manager_name", "manager_name"),
-    )
 
 
 class BaseRecordORM(BaseORM):
@@ -94,10 +109,7 @@ class BaseRecordORM(BaseORM):
 
     # Full compute history
     compute_history = relationship(
-        RecordComputeHistoryORM,
-        foreign_keys=[RecordComputeHistoryORM.record_id],
-        order_by=RecordComputeHistoryORM.modified_on.asc(),
-        lazy="selectin",
+        RecordComputeHistoryORM, lazy="selectin", order_by=RecordComputeHistoryORM.modified_on.asc()
     )
 
     comments = relationship(RecordCommentORM, order_by=RecordCommentORM.timestamp.asc())
@@ -110,9 +122,8 @@ class BaseRecordORM(BaseORM):
 
     # Backed-up info (used for undelete, etc)
     info_backup = relationship(
-        "RecordInfoBackupORM",
-        uselist=True,
-        order_by="RecordInfoBackupORM.modified_on.asc()",
+        RecordInfoBackupORM,
+        order_by=RecordInfoBackupORM.modified_on.asc(),
         cascade="all, delete-orphan",
     )
 
@@ -121,7 +132,7 @@ class BaseRecordORM(BaseORM):
         NativeFileORM, collection_class=attribute_mapped_collection("name"), cascade="all, delete-orphan"
     )
 
-    __table_args__: Tuple[Any, ...] = (
+    __table_args__ = (
         Index("ix_base_record_status", "status"),
         Index("ix_base_record_record_type", "record_type"),
         Index("ix_base_record_manager_name", "manager_name"),
@@ -132,14 +143,3 @@ class BaseRecordORM(BaseORM):
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:
         raise RuntimeError("Developer error - cannot create task for base record")
-
-
-class RecordInfoBackupORM(BaseORM):
-    __tablename__ = "record_info_backup"
-
-    id = Column(Integer, primary_key=True)
-    record_id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="CASCADE"), nullable=False)
-    old_status = Column(Enum(RecordStatusEnum), nullable=False)
-    old_tag = Column(String, nullable=True)
-    old_priority = Column(Integer, nullable=True)
-    modified_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)

@@ -13,6 +13,8 @@ from .models import (
     DatasetModifyMetadataBody,
     DatasetQueryRecords,
     DatasetDeleteParams,
+    DatasetDeleteEntryBody,
+    DatasetDeleteSpecificationBody,
 )
 
 # All possible datasets we can get from the server

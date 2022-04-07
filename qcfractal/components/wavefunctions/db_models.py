@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 from sqlalchemy import Column, Integer, Boolean, String, ForeignKey, UniqueConstraint
 
 from qcfractal.db_socket import BaseORM, MsgpackExt
-from qcportal.wavefunctions import WavefunctionProperties
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Optional, Iterable
@@ -16,7 +15,7 @@ class WavefunctionStoreORM(BaseORM):
     __tablename__ = "wavefunction_store"
 
     id = Column(Integer, primary_key=True)
-    record_id = Column(Integer, ForeignKey("singlepoint_record.id", ondelete="CASCADE"), nullable=False)
+    record_id = Column(Integer, ForeignKey("singlepoint_record.id", ondelete="cascade"), nullable=False)
 
     # Sparsity is very cheap
     basis = Column(MsgpackExt, nullable=False)
@@ -54,18 +53,11 @@ class WavefunctionStoreORM(BaseORM):
 
     __table_args__ = (UniqueConstraint("record_id", name="ux_wavefunction_store_record_id"),)
 
-    @classmethod
-    def from_model(cls, wfn_model: WavefunctionProperties):
-        return cls(**wfn_model.dict())
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
 
-    def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-
-        d = BaseORM.dict(self, exclude)
-
-        d.pop("record_id")
-
-        # Remove the id field - not present in the model
-        d.pop("id", None)
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "record_id", "id")
+        d = BaseORM.model_dict(self, exclude)
 
         # TODO - this is because the pydantic models are goofy
         return {k: v for k, v in d.items() if v is not None}

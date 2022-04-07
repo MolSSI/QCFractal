@@ -5,9 +5,8 @@ from typing_extensions import Literal
 
 from qcportal.base_models import RestModelBase
 from qcportal.molecules import Molecule
-from qcportal.records.optimization import OptimizationInputSpecification, OptimizationSpecification
+from qcportal.records.optimization import OptimizationSpecification
 from qcportal.records.torsiondrive import (
-    TorsiondriveInputSpecification,
     TorsiondriveRecord,
     TorsiondriveKeywords,
 )
@@ -25,33 +24,20 @@ class TorsiondriveDatasetNewEntry(BaseModel):
     attributes: Dict[str, Any] = {}
 
 
-class TorsiondriveDatasetEntry(BaseModel):
-    dataset_id: int
-    name: str
-    comment: Optional[str] = None
+class TorsiondriveDatasetEntry(TorsiondriveDatasetNewEntry):
     initial_molecule_ids: List[int]
-    torsiondrive_keywords: TorsiondriveKeywords
-    additional_keywords: Dict[str, Any] = {}
-    attributes: Dict[str, Any] = {}
+    initial_molecules: Optional[List[Molecule]] = None
 
 
 # Torsiondrive dataset specifications are just optimization specifications
 # The torsiondrive keywords are stored in the entries ^^
-class TorsiondriveDatasetInputSpecification(BaseModel):
-    name: str
-    specification: OptimizationInputSpecification
-    description: Optional[str] = None
-
-
 class TorsiondriveDatasetSpecification(BaseModel):
-    dataset_id: int
     name: str
     specification: OptimizationSpecification
     description: Optional[str] = None
 
 
 class TorsiondriveDatasetRecordItem(BaseModel):
-    dataset_id: int
     entry_name: str
     specification_name: str
     record_id: int
@@ -76,16 +62,14 @@ class TorsiondriveDataset(BaseDataset):
     _record_item_type = TorsiondriveDatasetRecordItem
     _record_type = TorsiondriveRecord
 
-    def add_specification(
-        self, name: str, specification: TorsiondriveInputSpecification, description: Optional[str] = None
-    ):
+    def add_specification(self, name: str, specification: OptimizationSpecification, description: Optional[str] = None):
 
-        payload = TorsiondriveDatasetInputSpecification(name=name, specification=specification, description=description)
+        payload = TorsiondriveDatasetSpecification(name=name, specification=specification, description=description)
 
         self.client._auto_request(
             "post",
             f"v1/datasets/torsiondrive/{self.id}/specifications",
-            List[TorsiondriveDatasetInputSpecification],
+            List[TorsiondriveDatasetSpecification],
             None,
             None,
             [payload],
@@ -94,7 +78,7 @@ class TorsiondriveDataset(BaseDataset):
 
         self._post_add_specification(name)
 
-    def add_entries(self, entries: Union[TorsiondriveDatasetEntry, Iterable[TorsiondriveDatasetNewEntry]]):
+    def add_entries(self, entries: Union[TorsiondriveDatasetNewEntry, Iterable[TorsiondriveDatasetNewEntry]]):
 
         entries = make_list(entries)
         self.client._auto_request(
@@ -103,7 +87,7 @@ class TorsiondriveDataset(BaseDataset):
             List[TorsiondriveDatasetNewEntry],
             None,
             None,
-            make_list(entries),
+            entries,
             None,
         )
 
@@ -126,13 +110,3 @@ class TorsiondriveDatasetAddBody(RestModelBase):
     visibility: bool = True
     default_tag: Optional[str] = None
     default_priority: PriorityEnum = PriorityEnum.normal
-
-
-class TorsiondriveDatasetDeleteEntryBody(RestModelBase):
-    names: List[str]
-    delete_records: bool = False
-
-
-class TorsiondriveDatasetDeleteSpecificationBody(RestModelBase):
-    names: List[str]
-    delete_records: bool = False

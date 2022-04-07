@@ -5,7 +5,6 @@ from collections import defaultdict
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-import qcelemental
 from sqlalchemy import and_, func, text, select, delete
 
 import qcfractal
@@ -294,7 +293,7 @@ class ServerInfoSocket:
             n_found = get_count(session, stmt)
             stmt = stmt.limit(limit).offset(skip)
             results = session.execute(stmt).scalars().all()
-            result_dicts = [x.dict() for x in results]
+            result_dicts = [x.model_dict() for x in results]
 
         meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))
         return meta, result_dicts
@@ -459,7 +458,7 @@ class ServerInfoSocket:
             n_found = get_count(session, stmt)
             stmt = stmt.limit(limit).offset(skip)
             results = session.execute(stmt).scalars().all()
-            result_dicts = [x.dict() for x in results]
+            result_dicts = [x.model_dict() for x in results]
 
         meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))
         return meta, result_dicts
@@ -511,7 +510,7 @@ class ServerInfoSocket:
             n_found = get_count(session, stmt)
             stmt = stmt.limit(limit).offset(skip)
             results = session.execute(stmt).scalars().all()
-            result_dicts = [x.dict() for x in results]
+            result_dicts = [x.model_dict() for x in results]
 
         meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))
         return meta, result_dicts

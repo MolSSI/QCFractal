@@ -5,7 +5,7 @@ from typing_extensions import Literal
 
 from qcportal.base_models import RestModelBase
 from qcportal.molecules import Molecule
-from qcportal.records.singlepoint import SinglepointRecord, QCInputSpecification, QCSpecification
+from qcportal.records.singlepoint import SinglepointRecord, QCSpecification
 from qcportal.utils import make_list
 from .. import BaseDataset
 from ...records import PriorityEnum
@@ -19,30 +19,18 @@ class SinglepointDatasetNewEntry(BaseModel):
     attributes: Dict[str, Any] = {}
 
 
-class SinglepointDatasetEntry(BaseModel):
-    dataset_id: int
-    name: str
-    comment: Optional[str] = None
+class SinglepointDatasetEntry(SinglepointDatasetNewEntry):
     molecule_id: int
-    additional_keywords: Optional[Dict[str, Any]] = {}
-    attributes: Optional[Dict[str, Any]] = {}
-
-
-class SinglepointDatasetInputSpecification(BaseModel):
-    name: str
-    specification: QCInputSpecification
-    description: Optional[str] = None
+    molecule: Optional[Molecule] = None
 
 
 class SinglepointDatasetSpecification(BaseModel):
-    dataset_id: int
     name: str
     specification: QCSpecification
     description: Optional[str] = None
 
 
 class SinglepointDatasetRecordItem(BaseModel):
-    dataset_id: int
     entry_name: str
     specification_name: str
     record_id: int
@@ -69,14 +57,14 @@ class SinglepointDataset(BaseDataset):
     _record_item_type = SinglepointDatasetRecordItem
     _record_type = SinglepointRecord
 
-    def add_specification(self, name: str, specification: QCInputSpecification, description: Optional[str] = None):
+    def add_specification(self, name: str, specification: QCSpecification, description: Optional[str] = None):
 
-        payload = SinglepointDatasetInputSpecification(name=name, specification=specification, description=description)
+        payload = SinglepointDatasetSpecification(name=name, specification=specification, description=description)
 
         self.client._auto_request(
             "post",
             f"v1/datasets/singlepoint/{self.id}/specifications",
-            List[SinglepointDatasetInputSpecification],
+            List[SinglepointDatasetSpecification],
             None,
             None,
             [payload],
@@ -85,7 +73,7 @@ class SinglepointDataset(BaseDataset):
 
         self._post_add_specification(name)
 
-    def add_entries(self, entries: Union[SinglepointDatasetEntry, Iterable[SinglepointDatasetNewEntry]]):
+    def add_entries(self, entries: Union[SinglepointDatasetNewEntry, Iterable[SinglepointDatasetNewEntry]]):
 
         entries = make_list(entries)
         self.client._auto_request(
@@ -94,7 +82,7 @@ class SinglepointDataset(BaseDataset):
             List[SinglepointDatasetNewEntry],
             None,
             None,
-            make_list(entries),
+            entries,
             None,
         )
 
@@ -117,13 +105,3 @@ class SinglepointDatasetAddBody(RestModelBase):
     visibility: bool = True
     default_tag: Optional[str] = None
     default_priority: PriorityEnum = PriorityEnum.normal
-
-
-class SinglepointDatasetDeleteEntryBody(RestModelBase):
-    names: List[str]
-    delete_records: bool = False
-
-
-class SinglepointDatasetDeleteSpecificationBody(RestModelBase):
-    names: List[str]
-    delete_records: bool = False

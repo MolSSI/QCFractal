@@ -14,7 +14,7 @@ from qcfractal.testing_helpers import run_service_singlepoint
 from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
-from qcportal.records.reaction import ReactionQCInputSpecification, ReactionQueryBody
+from qcportal.records.reaction import ReactionQCSpecification, ReactionQueryBody
 from qcportal.records.singlepoint import (
     SinglepointProtocols,
 )
@@ -24,14 +24,14 @@ if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
 
 _test_specs = [
-    ReactionQCInputSpecification(
+    ReactionQCSpecification(
         program="prog1",
         method="b3lyp",
         basis="6-31G*",
         keywords={"k": "value"},
         protocols=SinglepointProtocols(wavefunction="all"),
     ),
-    ReactionQCInputSpecification(
+    ReactionQCSpecification(
         program="Prog2",
         method="Hf",
         basis="def2-TZVP",
@@ -41,7 +41,7 @@ _test_specs = [
 
 
 @pytest.mark.parametrize("spec", _test_specs)
-def test_reaction_socket_add_get(storage_socket: SQLAlchemySocket, spec: ReactionQCInputSpecification):
+def test_reaction_socket_add_get(storage_socket: SQLAlchemySocket, spec: ReactionQCSpecification):
     hooh = load_molecule_data("peroxide2")
     ne4 = load_molecule_data("neon_tetramer")
     water = load_molecule_data("water_dimer_minima")
@@ -115,7 +115,7 @@ def test_reaction_socket_add_existing_molecule(storage_socket: SQLAlchemySocket)
 
 
 def test_reaction_socket_add_same_1(storage_socket: SQLAlchemySocket):
-    spec = ReactionQCInputSpecification(
+    spec = ReactionQCSpecification(
         program="prog1",
         method="b3lyp",
         basis="6-31G*",
@@ -187,10 +187,6 @@ def test_reaction_socket_query(storage_socket: SQLAlchemySocket):
     assert meta.n_found == 0
 
     meta, rxn = storage_socket.records.reaction.query(ReactionQueryBody(method=["b3lyP"]))
-    assert meta.n_found == 2
-
-    kw_id = rxn[0]["specification"]["keywords_id"]
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryBody(keywords_id=[kw_id]))
     assert meta.n_found == 2
 
     # Query by default returns everything

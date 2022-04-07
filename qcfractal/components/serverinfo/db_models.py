@@ -10,9 +10,9 @@ class AccessLogORM(BaseORM):
     __tablename__ = "access_log"
 
     id = Column(Integer, primary_key=True)
-    access_date = Column(DateTime, nullable=False, default=datetime.datetime.utcnow, index=True)
+    access_date = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     access_method = Column(String, nullable=False)
-    access_type = Column(String, nullable=False, index=True)
+    access_type = Column(String, nullable=False)
     full_uri = Column(String, nullable=True)
 
     request_duration = Column(Float)
@@ -35,6 +35,11 @@ class AccessLogORM(BaseORM):
     city = Column(String)
     ip_lat = Column(Float)
     ip_long = Column(Float)
+
+    __table_args__ = (
+        Index("ix_access_log_access_date", "access_date"),
+        Index("ix_access_log_access_type", "access_type"),
+    )
 
 
 class InternalErrorLogORM(BaseORM):

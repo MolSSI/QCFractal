@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from qcfractal.components.datasets.sockets import BaseDatasetSocket
 from qcportal.datasets.optimization import OptimizationDatasetNewEntry
 from qcportal.records import PriorityEnum
-from qcportal.records.optimization import OptimizationSpecification, OptimizationInputSpecification
+from qcportal.records.optimization import OptimizationSpecification
 from .db_models import (
     OptimizationDatasetORM,
     OptimizationDatasetSpecificationORM,
@@ -39,7 +39,7 @@ class OptimizationDatasetSocket(BaseDatasetSocket):
         self._logger = logging.getLogger(__name__)
 
     def _add_specification(
-        self, session: Session, specification: OptimizationInputSpecification
+        self, session: Session, specification: OptimizationSpecification
     ) -> Tuple[InsertMetadata, Optional[int]]:
         return self.root_socket.records.optimization.add_specification(specification, session=session)
 
@@ -101,8 +101,8 @@ class OptimizationDatasetSocket(BaseDatasetSocket):
 
         # Now the ones with additional keywords
         for spec in spec_orm:
-            spec_obj = spec.specification._to_model(OptimizationSpecification)
-            spec_input_dict = spec_obj.as_input().dict()
+            spec_obj = spec.specification.to_model(OptimizationSpecification)
+            spec_input_dict = spec_obj.dict()
 
             for entry in special_entries:
                 if (entry.name, spec.name) in existing_records:
@@ -113,7 +113,7 @@ class OptimizationDatasetSocket(BaseDatasetSocket):
 
                 meta, opt_ids = self.root_socket.records.optimization.add(
                     initial_molecules=[entry.initial_molecule_id],
-                    opt_spec=OptimizationInputSpecification(**new_spec),
+                    opt_spec=OptimizationSpecification(**new_spec),
                     tag=tag,
                     priority=priority,
                     session=session,

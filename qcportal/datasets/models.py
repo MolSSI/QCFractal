@@ -782,3 +782,13 @@ class DatasetRecordRevertBody(RestModelBase):
 class DatasetQueryRecords(RestModelBase):
     record_id: List[int]
     dataset_type: Optional[List[str]] = None
+
+
+class DatasetDeleteEntryBody(RestModelBase):
+    names: List[str]
+    delete_records: bool = False
+
+
+class DatasetDeleteSpecificationBody(RestModelBase):
+    names: List[str]
+    delete_records: bool = False

@@ -4,7 +4,7 @@ from qcfractal.app import main, storage_socket
 from qcfractal.app.routes import wrap_route
 from qcportal.datasets.gridoptimization import (
     GridoptimizationDatasetAddBody,
-    GridoptimizationDatasetInputSpecification,
+    GridoptimizationDatasetSpecification,
     GridoptimizationDatasetNewEntry,
 )
 
@@ -26,9 +26,9 @@ def add_gridoptimization_dataset_v1(body_data: GridoptimizationDatasetAddBody):
 
 
 @main.route("/v1/datasets/gridoptimization/<int:dataset_id>/specifications", methods=["POST"])
-@wrap_route(List[GridoptimizationDatasetInputSpecification], None, "WRITE")
+@wrap_route(List[GridoptimizationDatasetSpecification], None, "WRITE")
 def add_gridoptimization_dataset_specifications_v1(
-    dataset_id: int, *, body_data: List[GridoptimizationDatasetInputSpecification]
+    dataset_id: int, *, body_data: List[GridoptimizationDatasetSpecification]
 ):
     return storage_socket.datasets.gridoptimization.add_specifications(dataset_id, body_data)
 

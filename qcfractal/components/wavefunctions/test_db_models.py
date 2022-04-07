@@ -73,6 +73,6 @@ def test_wavefunction_models_roundtrip(storage_socket: SQLAlchemySocket, existin
         stored_orm = (
             session.query(WavefunctionStoreORM).where(WavefunctionStoreORM.record_id == existing_record_id).one()
         )
-        wfn_model = WavefunctionProperties(**stored_orm.dict())
+        wfn_model = WavefunctionProperties(**stored_orm.model_dict())
 
     assert_wfn_equal(wfn_model, wfn)

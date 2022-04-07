@@ -17,11 +17,11 @@ class ServiceDependencyORM(BaseORM):
     record_id = Column(Integer, ForeignKey(BaseRecordORM.id), nullable=False)
     extras = Column(JSONB, nullable=False)
 
+    record = relationship(BaseRecordORM)
+
     # We make extras part of the unique constraint because rarely the same dependency will be
     # submitted but with different extras (position, etc)
     __table_args__ = (UniqueConstraint("service_id", "record_id", "extras", name="ux_service_dependency"),)
-
-    record = relationship("BaseRecordORM")
 
 
 class ServiceQueueORM(BaseORM):
@@ -39,7 +39,7 @@ class ServiceQueueORM(BaseORM):
 
     service_state = Column(PlainMsgpackExt)
 
-    dependencies = relationship(ServiceDependencyORM, lazy="selectin", cascade="all, delete-orphan")
+    dependencies = relationship(ServiceDependencyORM, cascade="all, delete-orphan")
 
     __table_args__ = (
         UniqueConstraint("record_id", name="ux_service_queue_record_id"),

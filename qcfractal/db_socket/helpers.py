@@ -462,7 +462,7 @@ def get_general(
     results = session.execute(stmt).scalars().all()
 
     col_name = search_col.key
-    result_list = [r.dict() for r in results]
+    result_list = [r.model_dict() for r in results]
     result_map = {r[col_name]: r for r in result_list}
 
     # Put into the requested order
@@ -537,7 +537,7 @@ def get_general_multi(
     results = session.execute(stmt).scalars().all()
 
     col_name = search_col.key
-    result_list = [r.dict() for r in results]
+    result_list = [r.model_dict() for r in results]
 
     result_map: Dict[str, Any] = {}
     for r in result_list:

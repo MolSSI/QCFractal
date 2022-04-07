@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from sqlalchemy import select, Column, Integer, ForeignKey, String, ForeignKeyConstraint, UniqueConstraint, Index
 from sqlalchemy.dialects.postgresql import JSONB, array_agg
 from sqlalchemy.orm import relationship, column_property
@@ -7,6 +11,9 @@ from qcfractal.components.datasets.db_models import CollectionORM
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM, OptimizationRecordORM
 from qcfractal.db_socket import BaseORM
+
+if TYPE_CHECKING:
+    from typing import Dict, Any, Optional, Iterable
 
 
 class OptimizationDatasetEntryORM(BaseORM):
@@ -29,6 +36,11 @@ class OptimizationDatasetEntryORM(BaseORM):
         Index("ix_optimization_dataset_entry_initial_molecule_id", "initial_molecule_id"),
     )
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "dataset_id")
+        return BaseORM.model_dict(self, exclude)
+
 
 class OptimizationDatasetSpecificationORM(BaseORM):
     __tablename__ = "optimization_dataset_specification"
@@ -38,13 +50,18 @@ class OptimizationDatasetSpecificationORM(BaseORM):
     description = Column(String, nullable=True)
     specification_id = Column(Integer, ForeignKey(OptimizationSpecificationORM.id), nullable=False)
 
-    specification = relationship(OptimizationSpecificationORM, uselist=False)
+    specification = relationship(OptimizationSpecificationORM)
 
     __table_args__ = (
         Index("ix_optimization_dataset_specification_dataset_id", "dataset_id"),
         Index("ix_optimization_dataset_specification_name", "name"),
         Index("ix_optimization_dataset_specification_specification_id", "specification_id"),
     )
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "dataset_id", "specification_id")
+        return BaseORM.model_dict(self, exclude)
 
 
 class OptimizationDatasetRecordItemORM(BaseORM):
@@ -75,6 +92,11 @@ class OptimizationDatasetRecordItemORM(BaseORM):
             "dataset_id", "entry_name", "specification_name", name="ux_optimization_dataset_record_unique"
         ),
     )
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "dataset_id")
+        return BaseORM.model_dict(self, exclude)
 
 
 class OptimizationDatasetORM(CollectionORM):

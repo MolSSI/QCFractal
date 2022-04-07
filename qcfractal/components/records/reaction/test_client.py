@@ -12,7 +12,7 @@ import pytest
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.records import PriorityEnum
-from qcportal.records.reaction import ReactionQCInputSpecification
+from qcportal.records.reaction import ReactionQCSpecification
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -39,7 +39,7 @@ def test_reaction_client_tag_priority(snowflake_client: PortalClient, tag: str, 
 
 
 @pytest.mark.parametrize("spec", _test_specs)
-def test_reaction_client_add_get(snowflake_client: PortalClient, spec: ReactionQCInputSpecification):
+def test_reaction_client_add_get(snowflake_client: PortalClient, spec: ReactionQCSpecification):
     hooh = load_molecule_data("peroxide2")
     ne4 = load_molecule_data("neon_tetramer")
     water = load_molecule_data("water_dimer_minima")
@@ -172,10 +172,6 @@ def test_reaction_client_query(snowflake_client: PortalClient, storage_socket: S
     assert meta.n_found == 0
 
     meta, rxn = snowflake_client.query_reactions(method=["b3lyP"])
-    assert meta.n_found == 2
-
-    kw_id = rxn[0].raw_data.specification.keywords_id
-    meta, rxn = snowflake_client.query_reactions(keywords_id=[kw_id])
     assert meta.n_found == 2
 
     # Query by default returns everything

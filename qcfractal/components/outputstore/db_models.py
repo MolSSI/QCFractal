@@ -9,14 +9,14 @@ from qcportal.compression import CompressionEnum
 from qcportal.outputstore import OutputTypeEnum, OutputStore
 
 if TYPE_CHECKING:
-    from typing import Dict, Any, Optional, Iterable
+    from typing import Dict, Any, Optional, Iterable, List
 
 
 class OutputStoreORM(BaseORM):
     __tablename__ = "output_store"
 
     id = Column(Integer, primary_key=True)
-    history_id = Column(Integer, ForeignKey("record_compute_history.id", ondelete="CASCADE"), nullable=False)
+    history_id = Column(Integer, ForeignKey("record_compute_history.id", ondelete="cascade"), nullable=False)
 
     output_type = Column(Enum(OutputTypeEnum), nullable=False)
     compression = Column(Enum(CompressionEnum), nullable=True)
@@ -29,13 +29,12 @@ class OutputStoreORM(BaseORM):
         UniqueConstraint("history_id", "output_type", name="ux_output_store_id_type"),
     )
 
-    @classmethod
-    def from_model(cls, output_model: OutputStore):
-        return cls(**output_model.dict())
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
 
-    def dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Fields not in model
+        exclude = self.append_exclude(exclude, "id", "history_id")
 
-        d = BaseORM.dict(self, exclude)
+        d = BaseORM.model_dict(self, exclude)
 
         # Old way: store a plain string or dict in "value"
         # New way: store (possibly) compressed output in "data"
@@ -53,7 +52,7 @@ class OutputStoreORM(BaseORM):
         return d
 
     def append(self, to_append: str):
-        out_obj = OutputStore(**self.dict())
+        out_obj = OutputStore(**self.model_dict())
         new_str = out_obj.as_string + to_append
 
         # Handle old, uncompressed output

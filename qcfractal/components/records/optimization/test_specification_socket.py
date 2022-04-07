@@ -4,11 +4,11 @@ Tests the wavefunction store socket
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.records.optimization import (
-    OptimizationInputSpecification,
-    OptimizationQCInputSpecification,
+    OptimizationSpecification,
     OptimizationProtocols,
 )
 from qcportal.records.singlepoint import (
+    QCSpecification,
     SinglepointDriver,
     SinglepointProtocols,
 )
@@ -16,12 +16,13 @@ from qcportal.records.singlepoint import (
 
 def test_optimizationrecord_socket_basic_specification(storage_socket: SQLAlchemySocket):
 
-    spec1 = OptimizationInputSpecification(
+    spec1 = OptimizationSpecification(
         program="optprog1",
         keywords={"k": "value"},
         protocols=OptimizationProtocols(trajectory="final"),
-        qc_specification=OptimizationQCInputSpecification(
+        qc_specification=QCSpecification(
             program="prog2",
+            driver="deferred",
             method="b3lyp",
             basis="6-31g",
             keywords={"k2": "values2"},
@@ -29,11 +30,11 @@ def test_optimizationrecord_socket_basic_specification(storage_socket: SQLAlchem
         ),
     )
 
-    spec2 = OptimizationInputSpecification(
+    spec2 = OptimizationSpecification(
         program="optprog2",
         keywords={"k": "value"},
         protocols=OptimizationProtocols(),
-        qc_specification=OptimizationQCInputSpecification(
+        qc_specification=QCSpecification(
             program="prog2",
             driver=SinglepointDriver.hessian,
             method="hf",
@@ -43,11 +44,11 @@ def test_optimizationrecord_socket_basic_specification(storage_socket: SQLAlchem
         ),
     )
 
-    spec3 = OptimizationInputSpecification(
+    spec3 = OptimizationSpecification(
         program="optprog2",
         keywords={"k": "value"},
         protocols=OptimizationProtocols(trajectory="none"),
-        qc_specification=OptimizationQCInputSpecification(
+        qc_specification=QCSpecification(
             program="prog2",
             driver=SinglepointDriver.hessian,
             method="hf",
@@ -70,25 +71,8 @@ def test_optimizationrecord_socket_basic_specification(storage_socket: SQLAlchem
     assert meta2.existing_idx == []
     assert meta3.existing_idx == []
 
-    sp1 = storage_socket.records.optimization.get_specification(id1)
-    sp2 = storage_socket.records.optimization.get_specification(id2)
-    sp3 = storage_socket.records.optimization.get_specification(id3)
 
-    for sp in [sp1, sp2, sp3]:
-        assert sp["qc_specification_id"] == sp["qc_specification"]["id"]
-        sp.pop("id")
-        sp.pop("qc_specification_id")
-        sp["qc_specification"].pop("id")
-        sp["qc_specification"].pop("keywords_id")
-
-        assert sp["qc_specification"]["driver"] == SinglepointDriver.deferred
-
-    assert OptimizationInputSpecification(**sp1) == spec1
-    assert OptimizationInputSpecification(**sp2) == spec2
-    assert OptimizationInputSpecification(**sp3) == spec3
-
-
-common_qc_spec = OptimizationQCInputSpecification(
+common_qc_spec = QCSpecification(
     program="prog1",
     driver=SinglepointDriver.energy,
     method="b3lyp",
@@ -100,7 +84,7 @@ common_qc_spec = OptimizationQCInputSpecification(
 
 def test_optimizationrecord_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
 
-    spec1 = OptimizationInputSpecification(
+    spec1 = OptimizationSpecification(
         program="optprog1",
         keywords={"k": "value"},
         protocols=OptimizationProtocols(),
@@ -121,7 +105,7 @@ def test_optimizationrecord_socket_add_specification_same_0(storage_socket: SQLA
     assert id == id2
 
     # Change keywords
-    spec1 = OptimizationInputSpecification(
+    spec1 = OptimizationSpecification(
         program="optprog1",
         keywords={"k": "value2"},
         protocols=OptimizationProtocols(),
@@ -137,7 +121,7 @@ def test_optimizationrecord_socket_add_specification_same_0(storage_socket: SQLA
 
 def test_optimizationrecord_socket_add_specification_same_1(storage_socket: SQLAlchemySocket):
     # Test case sensitivity
-    spec = OptimizationInputSpecification(
+    spec = OptimizationSpecification(
         program="optprog1",
         keywords={"k": "value"},
         protocols=OptimizationProtocols(),
@@ -147,7 +131,7 @@ def test_optimizationrecord_socket_add_specification_same_1(storage_socket: SQLA
     meta, id = storage_socket.records.optimization.add_specification(spec)
     assert meta.inserted_idx == [0]
 
-    spec = OptimizationInputSpecification(
+    spec = OptimizationSpecification(
         program="optPRog1",
         keywords={"k": "value"},
         protocols=OptimizationProtocols(),
@@ -161,14 +145,14 @@ def test_optimizationrecord_socket_add_specification_same_1(storage_socket: SQLA
 
 def test_optimizationrecord_socket_add_specification_same_2(storage_socket: SQLAlchemySocket):
     # Test keywords defaults
-    spec = OptimizationInputSpecification(
+    spec = OptimizationSpecification(
         program="optprog1", keywords={}, protocols=OptimizationProtocols(), qc_specification=common_qc_spec
     )
 
     meta, id = storage_socket.records.optimization.add_specification(spec)
     assert meta.inserted_idx == [0]
 
-    spec = OptimizationInputSpecification(
+    spec = OptimizationSpecification(
         program="optprog1", protocols=OptimizationProtocols(), qc_specification=common_qc_spec
     )
 
@@ -179,12 +163,12 @@ def test_optimizationrecord_socket_add_specification_same_2(storage_socket: SQLA
 
 def test_optimizationrecord_socket_add_specification_same_3(storage_socket: SQLAlchemySocket):
     # Test protocols defaults
-    spec = OptimizationInputSpecification(program="optprog1", keywords={}, qc_specification=common_qc_spec)
+    spec = OptimizationSpecification(program="optprog1", keywords={}, qc_specification=common_qc_spec)
 
     meta, id = storage_socket.records.optimization.add_specification(spec)
     assert meta.inserted_idx == [0]
 
-    spec = OptimizationInputSpecification(
+    spec = OptimizationSpecification(
         program="optprog1", keywords={}, protocols=OptimizationProtocols(), qc_specification=common_qc_spec
     )
 
@@ -195,12 +179,12 @@ def test_optimizationrecord_socket_add_specification_same_3(storage_socket: SQLA
 
 def test_optimizationrecord_socket_add_specification_same_4(storage_socket: SQLAlchemySocket):
     # Test protocols defaults (due to exclude_defaults)
-    spec = OptimizationInputSpecification(program="optprog1", keywords={}, qc_specification=common_qc_spec)
+    spec = OptimizationSpecification(program="optprog1", keywords={}, qc_specification=common_qc_spec)
 
     meta, id = storage_socket.records.optimization.add_specification(spec)
     assert meta.inserted_idx == [0]
 
-    spec = OptimizationInputSpecification(
+    spec = OptimizationSpecification(
         program="optprog1",
         keywords={},
         protocols=OptimizationProtocols(trajectory="all"),
@@ -214,7 +198,7 @@ def test_optimizationrecord_socket_add_specification_same_4(storage_socket: SQLA
 
 def test_optimizationrecord_socket_add_diff_1(storage_socket: SQLAlchemySocket):
     # Test different protocols
-    spec = OptimizationInputSpecification(
+    spec = OptimizationSpecification(
         program="optprog1",
         keywords={"k": "value"},
         protocols=OptimizationProtocols(),
@@ -224,7 +208,7 @@ def test_optimizationrecord_socket_add_diff_1(storage_socket: SQLAlchemySocket):
     meta, id = storage_socket.records.optimization.add_specification(spec)
     assert meta.inserted_idx == [0]
 
-    spec = OptimizationInputSpecification(
+    spec = OptimizationSpecification(
         program="optprog1",
         keywords={"k": "value"},
         protocols=OptimizationProtocols(trajectory="initial_and_final"),

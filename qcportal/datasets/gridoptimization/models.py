@@ -5,12 +5,11 @@ from typing_extensions import Literal
 
 from qcportal.base_models import RestModelBase
 from qcportal.molecules import Molecule
-from qcportal.records.optimization import OptimizationInputSpecification, OptimizationSpecification
 from qcportal.records.gridoptimization import (
-    GridoptimizationInputSpecification,
     GridoptimizationRecord,
     GridoptimizationKeywords,
 )
+from qcportal.records.optimization import OptimizationSpecification
 from qcportal.utils import make_list
 from .. import BaseDataset
 from ...records import PriorityEnum
@@ -25,33 +24,20 @@ class GridoptimizationDatasetNewEntry(BaseModel):
     attributes: Dict[str, Any] = {}
 
 
-class GridoptimizationDatasetEntry(BaseModel):
-    dataset_id: int
-    name: str
-    comment: Optional[str] = None
+class GridoptimizationDatasetEntry(GridoptimizationDatasetNewEntry):
     initial_molecule_id: int
-    gridoptimization_keywords: GridoptimizationKeywords
-    additional_keywords: Dict[str, Any] = {}
-    attributes: Dict[str, Any] = {}
+    initial_molecule: Optional[Molecule] = None
 
 
 # Gridoptimization dataset specifications are just optimization specifications
 # The gridoptimization keywords are stored in the entries ^^
-class GridoptimizationDatasetInputSpecification(BaseModel):
-    name: str
-    specification: OptimizationInputSpecification
-    description: Optional[str] = None
-
-
 class GridoptimizationDatasetSpecification(BaseModel):
-    dataset_id: int
     name: str
     specification: OptimizationSpecification
     description: Optional[str] = None
 
 
 class GridoptimizationDatasetRecordItem(BaseModel):
-    dataset_id: int
     entry_name: str
     specification_name: str
     record_id: int
@@ -76,18 +62,14 @@ class GridoptimizationDataset(BaseDataset):
     _record_item_type = GridoptimizationDatasetRecordItem
     _record_type = GridoptimizationRecord
 
-    def add_specification(
-        self, name: str, specification: GridoptimizationInputSpecification, description: Optional[str] = None
-    ):
+    def add_specification(self, name: str, specification: OptimizationSpecification, description: Optional[str] = None):
 
-        payload = GridoptimizationDatasetInputSpecification(
-            name=name, specification=specification, description=description
-        )
+        payload = GridoptimizationDatasetSpecification(name=name, specification=specification, description=description)
 
         self.client._auto_request(
             "post",
             f"v1/datasets/gridoptimization/{self.id}/specifications",
-            List[GridoptimizationDatasetInputSpecification],
+            List[GridoptimizationDatasetSpecification],
             None,
             None,
             [payload],
@@ -96,7 +78,7 @@ class GridoptimizationDataset(BaseDataset):
 
         self._post_add_specification(name)
 
-    def add_entries(self, entries: Union[GridoptimizationDatasetEntry, Iterable[GridoptimizationDatasetNewEntry]]):
+    def add_entries(self, entries: Union[GridoptimizationDatasetNewEntry, Iterable[GridoptimizationDatasetNewEntry]]):
 
         entries = make_list(entries)
         self.client._auto_request(
@@ -105,7 +87,7 @@ class GridoptimizationDataset(BaseDataset):
             List[GridoptimizationDatasetNewEntry],
             None,
             None,
-            make_list(entries),
+            entries,
             None,
         )
 
@@ -128,13 +110,3 @@ class GridoptimizationDatasetAddBody(RestModelBase):
     visibility: bool = True
     default_tag: Optional[str] = None
     default_priority: PriorityEnum = PriorityEnum.normal
-
-
-class GridoptimizationDatasetDeleteEntryBody(RestModelBase):
-    names: List[str]
-    delete_records: bool = False
-
-
-class GridoptimizationDatasetDeleteSpecificationBody(RestModelBase):
-    names: List[str]
-    delete_records: bool = False
