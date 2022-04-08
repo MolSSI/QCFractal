@@ -27,6 +27,8 @@ class OptimizationTrajectoryORM(BaseORM):
     singlepoint_record = relationship(SinglepointRecordORM)
     optimization_record = relationship("OptimizationRecordORM")
 
+    __table_args__ = (Index("ix_optimization_trajectory_singlepoint_id", "singlepoint_id"),)
+
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Remove fields not present in the model
         exclude = self.append_exclude(exclude, "optimization_id")
