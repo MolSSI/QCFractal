@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import yaml
 from typing import (
     Any,
     Dict,
@@ -118,6 +120,49 @@ class PortalClientBase:
                 f"client versions of [{str(client_version_lower_limit)}, {str(client_version_upper_limit)}]."
                 f"You may need to upgrade or downgrade"
             )
+
+    @classmethod
+    def from_file(cls, config_path: Optional[str] = None):
+        """Creates a new client given information in a file. If no path is passed in, the
+        current working directory and ~.qca/ are searched for "qcportal_config.yaml"
+
+        Parameters
+        ----------
+        config_path
+            Full path to a configuration file, or a directory containing "qcportal_config.yaml".
+        """
+
+        # Search canonical paths
+        if config_path is None:
+            test_paths = [os.getcwd(), os.path.join(os.path.expanduser("~"), ".qca")]
+
+            for path in test_paths:
+                local_path = os.path.join(path, "qcportal_config.yaml")
+                if os.path.exists(local_path):
+                    config_path = local_path
+                    break
+
+            if config_path is None:
+                raise FileNotFoundError(
+                    "Could not find `qcportal_config.yaml` in the following paths:\n    {}".format(
+                        ", ".join(test_paths)
+                    )
+                )
+
+        else:
+            config_path = os.path.join(os.path.expanduser(config_path))
+
+            # Gave folder, not file
+            if os.path.isdir(config_path):
+                config_path = os.path.join(config_path, "qcportal_config.yaml")
+
+        with open(config_path, "r") as handle:
+            data = yaml.load(handle, Loader=yaml.SafeLoader)
+
+        if "address" not in data:
+            raise KeyError("Config file must at least contain an address field.")
+
+        return cls(**data)
 
     @property
     def encoding(self) -> str:
