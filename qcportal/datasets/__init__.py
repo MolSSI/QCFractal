@@ -1,5 +1,7 @@
 from typing import Union
 
+import pydantic
+
 from .models import (
     BaseDataset,
     DatasetQueryModel,
@@ -30,3 +32,8 @@ AllDatasetDataModelTypes = Union[
     TorsiondriveDataset._DataModel,
     GridoptimizationDataset._DataModel,
 ]
+
+
+def dataset_from_datamodel(client, data: AllDatasetDataModelTypes) -> AllDatasetTypes:
+    dataset_init = {"client": client, "dataset_type": data.collection_type, "raw_data": data}
+    return pydantic.parse_obj_as(AllDatasetTypes, dataset_init)

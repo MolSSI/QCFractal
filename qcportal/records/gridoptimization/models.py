@@ -213,7 +213,7 @@ class GridoptimizationRecord(BaseRecord):
 
         ret = {}
         for opt in self.raw_data.optimizations:
-            ret[opt.key] = self.client.recordmodel_from_datamodel([opt.optimization_record])[0]
+            ret[opt.key] = self.client.record_from_datamodels(opt.optimization_record)
 
         self.optimization_cache = ret
         return ret

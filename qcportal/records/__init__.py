@@ -1,4 +1,6 @@
-from typing import Union
+from typing import Union, Sequence, Optional, Any, List
+
+import pydantic
 
 # These are all the possible result objects that might be returned by a manager
 from qcelemental.models import AtomicResult, OptimizationResult, FailedOperation
@@ -34,3 +36,19 @@ AllRecordDataModelTypes = Union[
     GridoptimizationRecord._DataModel,
     ReactionRecord._DataModel,
 ]
+
+
+def record_from_datamodel(client: Any, data: AllRecordDataModelTypes) -> AllRecordTypes:
+    record_init = {"client": client, "record_type": data.record_type, "raw_data": data}
+
+    return pydantic.parse_obj_as(AllRecordTypes, record_init)
+
+
+def records_from_datamodels(
+    client: Any, data: Sequence[Optional[AllRecordDataModelTypes]]
+) -> List[Optional[AllRecordTypes]]:
+    record_init = [
+        {"client": client, "record_type": d.record_type, "raw_data": d} if d is not None else None for d in data
+    ]
+
+    return pydantic.parse_obj_as(List[Optional[AllRecordTypes]], record_init)

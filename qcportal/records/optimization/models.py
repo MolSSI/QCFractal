@@ -122,7 +122,7 @@ class OptimizationRecord(BaseRecord):
         if self.raw_data.trajectory is None:
             self._fetch_trajectory()
         traj_dm = [x.singlepoint_record for x in self.raw_data.trajectory]
-        return self.client.recordmodel_from_datamodel(traj_dm)
+        return self.client.records_from_datamodels(traj_dm)
 
 
 class OptimizationQueryBody(RecordQueryBody):

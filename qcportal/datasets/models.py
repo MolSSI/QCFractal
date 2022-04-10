@@ -66,6 +66,10 @@ class BaseDataset(BaseModel):
         BaseModel.__init__(self, **kwargs)
         self._record_cache = {}
 
+    @property
+    def offline(self) -> bool:
+        return self.client is None
+
     def _append_entry_names(self, entry_names: List[str]):
         if self.raw_data.entry_names is None:
             self.raw_data.entry_names = []

@@ -155,7 +155,7 @@ class TorsiondriveRecord(BaseRecord):
         ret = {}
         for opt in self.raw_data.optimizations:
             ret.setdefault(opt.key, list())
-            ret[opt.key].append(self.client.recordmodel_from_datamodel([opt.optimization_record])[0])
+            ret[opt.key].append(self.client.record_from_datamodel(opt.optimization_record))
         self.optimization_cache = ret
         return ret
 
@@ -173,7 +173,7 @@ class TorsiondriveRecord(BaseRecord):
             url_params,
         )
 
-        return {k: self.client.recordmodel_from_datamodel([v])[0] for k, v in r.items()}
+        return {k: self.client.records_from_datamodels([v])[0] for k, v in r.items()}
 
 
 # class TorsiondriveRecord(RecordBase):

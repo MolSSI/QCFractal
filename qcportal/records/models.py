@@ -256,6 +256,10 @@ class BaseRecord(BaseModel):
         return last_computation.get_output(output_type)
 
     @property
+    def offline(self) -> bool:
+        return self.client is None
+
+    @property
     def id(self) -> int:
         return self.raw_data.id
 
