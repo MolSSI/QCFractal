@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import datetime
-from typing import Dict, Optional
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, String, Integer, ForeignKey, Enum, DateTime, JSON, Index, Boolean
 from sqlalchemy.orm import relationship
@@ -12,6 +14,9 @@ from qcfractal.db_socket import BaseORM, MsgpackExt
 from qcportal.compression import CompressionEnum
 from qcportal.outputstore import OutputTypeEnum, OutputStore
 from qcportal.records import RecordStatusEnum
+
+if TYPE_CHECKING:
+    from typing import Dict, Any, Optional, Iterable
 
 
 class RecordCommentORM(BaseORM):
