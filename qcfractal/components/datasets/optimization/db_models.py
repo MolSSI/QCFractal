@@ -25,8 +25,8 @@ class OptimizationDatasetEntryORM(BaseORM):
     comment = Column(String)
 
     initial_molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), nullable=False)
-    additional_keywords = Column(JSONB, nullable=True)
-    attributes = Column(JSONB, nullable=True)
+    additional_keywords = Column(JSONB, nullable=False)
+    attributes = Column(JSONB, nullable=False)
 
     initial_molecule = relationship(MoleculeORM)
 

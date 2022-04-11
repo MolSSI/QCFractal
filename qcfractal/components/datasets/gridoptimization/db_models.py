@@ -27,8 +27,8 @@ class GridoptimizationDatasetEntryORM(BaseORM):
 
     initial_molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), nullable=False)
     gridoptimization_keywords = Column(JSONB, nullable=False)
-    additional_keywords = Column(JSONB, nullable=True)
-    attributes = Column(JSONB, nullable=True)
+    additional_keywords = Column(JSONB, nullable=False)
+    attributes = Column(JSONB, nullable=False)
 
     initial_molecule = relationship(MoleculeORM)
 

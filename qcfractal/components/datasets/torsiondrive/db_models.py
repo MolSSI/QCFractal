@@ -57,8 +57,8 @@ class TorsiondriveDatasetEntryORM(BaseORM):
     comment = Column(String)
 
     torsiondrive_keywords = Column(JSONB, nullable=False)
-    additional_keywords = Column(JSONB, nullable=True)
-    attributes = Column(JSONB, nullable=True)
+    additional_keywords = Column(JSONB, nullable=False)
+    attributes = Column(JSONB, nullable=False)
 
     initial_molecule_ids = column_property(
         select(array_agg(TorsiondriveDatasetMoleculeORM.molecule_id))

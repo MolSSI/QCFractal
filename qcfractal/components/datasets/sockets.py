@@ -314,7 +314,7 @@ class BaseDatasetSocket:
                 if entry.name not in existing_entries:
                     session.add(entry)
 
-    def get_entry_names(
+    def fetch_entry_names(
         self,
         dataset_id: int,
         *,
@@ -327,7 +327,7 @@ class BaseDatasetSocket:
             ret = session.execute(stmt).scalars().all()
             return list(ret)
 
-    def get_entries(
+    def fetch_entries(
         self,
         dataset_id: int,
         entry_names: Optional[Sequence[str]] = None,
@@ -410,7 +410,7 @@ class BaseDatasetSocket:
             for entry in entries:
                 entry.name = entry_name_map[entry.name]
 
-    def get_record_items(
+    def fetch_record_items(
         self,
         dataset_id: int,
         entry_names: Optional[Sequence[str]] = None,

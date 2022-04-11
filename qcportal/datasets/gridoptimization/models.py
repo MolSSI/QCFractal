@@ -41,6 +41,7 @@ class GridoptimizationDatasetRecordItem(BaseModel):
     entry_name: str
     specification_name: str
     record_id: int
+    record: Optional[GridoptimizationRecord._DataModel]
 
 
 class GridoptimizationDataset(BaseDataset):

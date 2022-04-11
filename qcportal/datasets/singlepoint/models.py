@@ -34,6 +34,7 @@ class SinglepointDatasetRecordItem(BaseModel):
     entry_name: str
     specification_name: str
     record_id: int
+    record: Optional[SinglepointRecord._DataModel]
 
 
 class SinglepointDataset(BaseDataset):

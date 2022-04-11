@@ -41,6 +41,7 @@ class TorsiondriveDatasetRecordItem(BaseModel):
     entry_name: str
     specification_name: str
     record_id: int
+    record: Optional[TorsiondriveRecord._DataModel]
 
 
 class TorsiondriveDataset(BaseDataset):

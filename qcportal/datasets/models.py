@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Optional, Dict, Any, List, Iterable, Type, Tuple, Union, Callable
 
 import pandas as pd
 from pydantic import BaseModel, Extra, PrivateAttr, validator
 
 from qcportal.base_models import RestModelBase, validate_list_to_single
-from qcportal.records import BaseRecord, PriorityEnum, RecordStatusEnum
+from qcportal.records import BaseRecord, PriorityEnum, RecordStatusEnum, record_from_datamodel
 from qcportal.utils import make_list
 
 
@@ -50,7 +49,6 @@ class BaseDataset(BaseModel):
 
     # Some dataset options
     auto_fetch_missing: bool = True  # Automatically fetch missing records from the server
-    auto_fetch_updated: bool = False  # Automatically query the server for updated records
 
     # Actual optimization records, mapped via id
     _record_cache: Optional[Dict[int, BaseRecord]] = PrivateAttr()
@@ -84,12 +82,12 @@ class BaseDataset(BaseModel):
         self.fetch_specifications()
 
     def fetch_entries(self, entry_names: Optional[Union[str, Iterable[str]]] = None):
-        body_data = DatasetGetEntryBody(names=make_list(entry_names))
+        body_data = DatasetFetchEntryBody(names=make_list(entry_names))
 
         self.raw_data.entries = self.client._auto_request(
             "post",
-            f"v1/datasets/{self.dataset_type}/{self.id}/entries/bulkGet",
-            DatasetGetEntryBody,
+            f"v1/datasets/{self.dataset_type}/{self.id}/entries/bulkFetch",
+            DatasetFetchEntryBody,
             None,
             List[self._entry_type],
             body_data,
@@ -131,14 +129,16 @@ class BaseDataset(BaseModel):
         specification_names: Optional[Union[str, Iterable[str]]] = None,
     ):
 
-        body_data = DatasetGetRecordItemsBody(
-            entry_names=make_list(entry_names), specification_names=make_list(specification_names)
+        body_data = DatasetFetchRecordItemsBody(
+            entry_names=make_list(entry_names),
+            specification_names=make_list(specification_names),
+            include=["*", "record"],
         )
 
         record_info = self.client._auto_request(
             "post",
-            f"v1/datasets/{self.dataset_type}/{self.id}/record_items/bulkGet",
-            DatasetGetRecordItemsBody,
+            f"v1/datasets/{self.dataset_type}/{self.id}/record_items/bulkFetch",
+            DatasetFetchRecordItemsBody,
             None,
             List[self._record_item_type],
             body_data,
@@ -157,30 +157,6 @@ class BaseDataset(BaseModel):
                 x for x in self.raw_data.record_items if (x.specification_name, x.entry_name) not in new_info
             ]
             self.raw_data.record_items.extend(record_info)
-
-    def _fetch_records(self, record_ids: Iterable[int], modified_after: Optional[datetime] = None):
-        if not record_ids:
-            return
-
-        to_skip = 0
-        while True:
-            meta, fetched_opts = self.client.query_records(
-                record_id=record_ids, modified_after=modified_after, skip=to_skip
-            )
-
-            assert all(type(x) == self._record_type for x in fetched_opts)
-
-            if not meta.success:
-                raise RuntimeError(meta.error_string)
-
-            if meta.n_returned == 0:
-                break
-
-            self._record_cache.update({x.id: x for x in fetched_opts})
-            to_skip += meta.n_returned
-
-            if to_skip >= len(record_ids):
-                break
 
     def _update_metadata(self):
         new_body = DatasetModifyMetadataBody(
@@ -205,56 +181,26 @@ class BaseDataset(BaseModel):
             None,
         )
 
-    def fetch_records(
-        self,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
-        specification_names: Optional[Union[str, Iterable[str]]] = None,
-        fetch_updated: bool = False,
-    ):
+    def _lookup_record(self, entry_name: str, specification_name: str):
 
-        entry_names = make_list(entry_names)
-        specification_names = make_list(specification_names)
-        self.fetch_record_items(entry_names, specification_names)
-
-        # Filter only those record ids we requested
-        opt_ids = [
-            x.record_id
-            for x in self.raw_data.record_items
-            if (
-                (specification_names is None or x.specification_name in specification_names)
-                and (entry_names is None or x.entry_name in entry_names)
-            )
-        ]
-
-        missing_ids = [x for x in opt_ids if x not in self._record_cache]
-
-        # Missing ids - always fetch
-        self._fetch_records(missing_ids)
-
-        # For existing ids, find only those after the latest modified date
-        if fetch_updated:
-            existing_ids = [x for x in opt_ids if x in self._record_cache]
-            if existing_ids:
-                latest_date = max(v.modified_on for k, v in self._record_cache.items() if k in existing_ids)
-                self._fetch_records(existing_ids, latest_date)
-
-    def _get_record_nofetch(self, entry_name: str, specification_name: str):
-
-        # Find the id of the record we want
-        assert self.raw_data.record_items is not None
+        if self.raw_data.record_items is None:
+            return None
 
         for ri in self.raw_data.record_items:
             if ri.specification_name == specification_name and ri.entry_name == entry_name:
-                return self._record_cache.get(ri.record_id, None)
+                return record_from_datamodel(self.client, ri.record)
 
         return None
 
     def get_record(self, entry_name: str, specification_name: str):
 
         # Fetch the records if needed
-        self.fetch_records(entry_name, specification_name, fetch_updated=self.auto_fetch_updated)
+        r = self._lookup_record(entry_name, specification_name)
 
-        return self._get_record_nofetch(entry_name, specification_name)
+        if r is None:
+            self.fetch_record_items(entry_name, specification_name)
+
+        return self._lookup_record(entry_name, specification_name)
 
     def submit(
         self,
@@ -436,7 +382,7 @@ class BaseDataset(BaseModel):
         )
 
         if refetch_records:
-            self.fetch_records(entry_names, specification_names, fetch_updated=True)
+            self.fetch_record_items(entry_names, specification_names)
 
         return ret
 
@@ -464,7 +410,7 @@ class BaseDataset(BaseModel):
         )
 
         if refetch_records:
-            self.fetch_records(entry_names, specification_names, fetch_updated=True)
+            self.fetch_record_items(entry_names, specification_names)
 
         return ret
 
@@ -492,7 +438,7 @@ class BaseDataset(BaseModel):
         )
 
         if refetch_records:
-            self.fetch_records(entry_names, specification_names, fetch_updated=True)
+            self.fetch_record_items(entry_names, specification_names)
 
         return ret
 
@@ -521,7 +467,7 @@ class BaseDataset(BaseModel):
         )
 
         if refetch_records:
-            self.fetch_records(entry_names, specification_names, fetch_updated=True)
+            self.fetch_record_items(entry_names, specification_names)
 
         return ret
 
@@ -549,7 +495,7 @@ class BaseDataset(BaseModel):
         )
 
         if refetch_records:
-            self.fetch_records(entry_names, specification_names, fetch_updated=True)
+            self.fetch_record_items(entry_names, specification_names)
 
         return ret
 
@@ -577,7 +523,7 @@ class BaseDataset(BaseModel):
         )
 
         if refetch_records:
-            self.fetch_records(entry_names, specification_names, fetch_updated=True)
+            self.fetch_record_items(entry_names, specification_names)
 
         return ret
 
@@ -702,9 +648,9 @@ class BaseDataset(BaseModel):
         self.fetch_entry_names()
         self.fetch_specifications()
         for entry_name in self.entry_names:
-            self.fetch_records(entry_names=entry_name, fetch_updated=self.auto_fetch_updated)
+            self.fetch_record_items(entry_names=entry_name)
             for spec_name in self.specifications.keys():
-                yield entry_name, spec_name, self._get_record_nofetch(entry_name, spec_name)
+                yield entry_name, spec_name, self._lookup_record(entry_name, spec_name)
 
 
 class DatasetModifyMetadataBody(RestModelBase):
@@ -727,7 +673,7 @@ class DatasetQueryModel(RestModelBase):
     exclude: Optional[List[str]] = None
 
 
-class DatasetGetEntryBody(RestModelBase):
+class DatasetFetchEntryBody(RestModelBase):
     names: Optional[List[str]] = None
     include: Optional[List[str]] = None
     exclude: Optional[List[str]] = None
@@ -753,12 +699,11 @@ class DatasetDeleteParams(RestModelBase):
         return validate_list_to_single(v)
 
 
-class DatasetGetRecordItemsBody(RestModelBase):
+class DatasetFetchRecordItemsBody(RestModelBase):
     entry_names: Optional[List[str]] = None
     specification_names: Optional[List[str]] = None
     include: Optional[List[str]] = None
     exclude: Optional[List[str]] = None
-    modified_after: datetime = None
 
 
 class DatasetSubmitBody(RestModelBase):

@@ -27,8 +27,8 @@ class SinglepointDatasetEntryORM(BaseORM):
     comment = Column(String)
 
     molecule_id = Column(Integer, ForeignKey("molecule.id"), nullable=False)
-    additional_keywords = Column(JSONB, nullable=True)
-    attributes = Column(JSONB, nullable=True)
+    additional_keywords = Column(JSONB, nullable=False)
+    attributes = Column(JSONB, nullable=False)
 
     local_results = Column(JSON)
 

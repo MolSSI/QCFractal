@@ -7,8 +7,8 @@ from qcfractal.app.routes import wrap_route
 from qcportal.base_models import ProjURLParameters
 from qcportal.datasets import (
     DatasetQueryModel,
-    DatasetGetRecordItemsBody,
-    DatasetGetEntryBody,
+    DatasetFetchRecordItemsBody,
+    DatasetFetchEntryBody,
     DatasetSubmitBody,
     DatasetDeleteStrBody,
     DatasetRecordModifyBody,
@@ -128,7 +128,7 @@ def submit_dataset_v1(dataset_type: str, dataset_id: int, *, body_data: DatasetS
 ###################
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/specifications", methods=["GET"])
 @wrap_route(None, None, "READ")
-def get_dataset_specifications_v1(dataset_type: str, dataset_id: int):
+def fetch_dataset_specifications_v1(dataset_type: str, dataset_id: int):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     ds_data = ds_socket.get(dataset_id, ["specifications.*", "specifications.specification"], None, False)
     return ds_data["specifications"]
@@ -153,9 +153,9 @@ def rename_dataset_specifications_v1(dataset_type: str, dataset_id: int, *, body
 ###################
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/entry_names", methods=["GET"])
 @wrap_route(None, None, "READ")
-def get_dataset_entry_names_v1(dataset_type: str, dataset_id: int):
+def fetch_dataset_entry_names_v1(dataset_type: str, dataset_id: int):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
-    return ds_socket.get_entry_names(dataset_id)
+    return ds_socket.fetch_entry_names(dataset_id)
 
 
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/entries/bulkDelete", methods=["POST"])
@@ -165,11 +165,11 @@ def delete_dataset_entries_v1(dataset_type: str, dataset_id: int, *, body_data: 
     return ds_socket.delete_entries(dataset_id, body_data.names, body_data.delete_records)
 
 
-@main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/entries/bulkGet", methods=["POST"])
-@wrap_route(DatasetGetEntryBody, None, "READ")
-def get_dataset_entries_v1(dataset_type: str, dataset_id: int, *, body_data: DatasetGetEntryBody):
+@main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/entries/bulkFetch", methods=["POST"])
+@wrap_route(DatasetFetchEntryBody, None, "READ")
+def fetch_dataset_entries_v1(dataset_type: str, dataset_id: int, *, body_data: DatasetFetchEntryBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
-    return ds_socket.get_entries(
+    return ds_socket.fetch_entries(
         dataset_id,
         entry_names=body_data.names,
         include=body_data.include,
@@ -188,11 +188,11 @@ def rename_dataset_entries_v1(dataset_type: str, dataset_id: int, *, body_data: 
 #########################
 # Record items
 #########################
-@main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/record_items/bulkGet", methods=["POST"])
-@wrap_route(DatasetGetRecordItemsBody, None, "READ")
-def get_dataset_record_items_v1(dataset_type: str, dataset_id: int, *, body_data: DatasetGetRecordItemsBody):
+@main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/record_items/bulkFetch", methods=["POST"])
+@wrap_route(DatasetFetchRecordItemsBody, None, "READ")
+def fetch_dataset_record_items_v1(dataset_type: str, dataset_id: int, *, body_data: DatasetFetchRecordItemsBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
-    return ds_socket.get_record_items(
+    return ds_socket.fetch_record_items(
         dataset_id,
         entry_names=body_data.entry_names,
         specification_names=body_data.specification_names,
