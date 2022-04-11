@@ -43,6 +43,11 @@ class RecordInfoBackupORM(BaseORM):
 
     __table_args__ = (Index("ix_record_info_backup_record_id", "record_id"),)
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "id", "record_id")
+        return BaseORM.model_dict(self, exclude)
+
 
 class RecordComputeHistoryORM(BaseORM):
     __tablename__ = "record_compute_history"
@@ -130,6 +135,7 @@ class BaseRecordORM(BaseORM):
         RecordInfoBackupORM,
         order_by=RecordInfoBackupORM.modified_on.asc(),
         cascade="all, delete-orphan",
+        lazy="selectin",
     )
 
     # Native files returned from the computation

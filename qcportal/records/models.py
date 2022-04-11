@@ -100,6 +100,16 @@ class ComputeHistory(BaseModel):
             return o.as_string
 
 
+class RecordInfoBackup(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
+    old_status: RecordStatusEnum
+    old_tag: Optional[str]
+    old_priority: Optional[PriorityEnum]
+    modified_on: datetime
+
+
 class RecordComment(BaseModel):
     class Config:
         extra = Extra.forbid
@@ -170,6 +180,8 @@ class BaseRecord(BaseModel):
         comments: Optional[List[RecordComment]] = None
 
         native_files: Optional[Dict[str, NativeFile]] = None
+
+        info_backup: Optional[List[RecordInfoBackup]]
 
     class Config:
         extra = Extra.forbid
