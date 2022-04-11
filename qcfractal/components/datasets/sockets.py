@@ -4,7 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select, delete, func, union
-from sqlalchemy.orm import load_only, lazyload
+from sqlalchemy.orm import load_only, lazyload, joinedload
 
 from qcfractal.components.datasets.db_models import CollectionORM
 from qcfractal.components.records.db_models import BaseRecordORM
@@ -336,7 +336,7 @@ class BaseDatasetSocket:
         missing_ok: bool = False,
         *,
         session: Optional[Session] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> Dict[str, Any]:
         stmt = select(self.entry_orm)
         stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
 
@@ -357,7 +357,28 @@ class BaseDatasetSocket:
                 s = "\n".join(missing_entries)
                 raise MissingDataError(f"Missing {len(missing_entries)} entries: {s}")
 
-        return [x.model_dict() for x in entries]
+        return {x.name: x.model_dict() for x in entries}
+
+    def fetch_specifications(
+        self,
+        dataset_id: int,
+        include: Optional[Iterable[str]] = None,
+        exclude: Optional[Iterable[str]] = None,
+        *,
+        session: Optional[Session] = None,
+    ) -> Dict[str, Any]:
+        stmt = select(self.specification_orm)
+        stmt = stmt.where(self.specification_orm.dataset_id == dataset_id)
+        stmt = stmt.options(joinedload(self.specification_orm.specification))
+
+        if include or exclude:
+            query_opts = get_query_proj_options(self.entry_orm, include, exclude)
+            stmt = stmt.options(*query_opts)
+
+        with self.root_socket.optional_session(session, True) as session:
+            entries = session.execute(stmt).scalars().all()
+
+        return {x.name: x.model_dict() for x in entries}
 
     def delete_entries(
         self,

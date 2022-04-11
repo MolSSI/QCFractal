@@ -49,9 +49,9 @@ class TorsiondriveDataset(BaseDataset):
         collection_type: Literal["torsiondrive"]
 
         # Specifications are always loaded
-        specifications: Dict[str, TorsiondriveDatasetSpecification]
-        entries: Optional[List[TorsiondriveDatasetEntry]]
-        record_items: Optional[List[TorsiondriveDatasetRecordItem]]
+        specifications: Optional[Dict[str, TorsiondriveDatasetSpecification]] = None
+        entries: Optional[Dict[str, TorsiondriveDatasetEntry]] = None
+        record_items: Optional[List[TorsiondriveDatasetRecordItem]] = None
 
     # This is needed for disambiguation by pydantic
     dataset_type: Literal["torsiondrive"]

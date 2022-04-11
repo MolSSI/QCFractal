@@ -41,10 +41,9 @@ class SinglepointDataset(BaseDataset):
     class _DataModel(BaseDataset._DataModel):
         collection_type: Literal["singlepoint"]
 
-        # Specifications are always loaded
-        specifications: Dict[str, SinglepointDatasetSpecification]
-        entries: Optional[List[SinglepointDatasetEntry]]
-        record_items: Optional[List[SinglepointDatasetRecordItem]]
+        specifications: Optional[Dict[str, SinglepointDatasetSpecification]] = None
+        entries: Optional[Dict[str, SinglepointDatasetEntry]] = None
+        record_items: Optional[List[SinglepointDatasetRecordItem]] = None
 
         contributed_values: Any
 

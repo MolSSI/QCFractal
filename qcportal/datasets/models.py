@@ -84,22 +84,26 @@ class BaseDataset(BaseModel):
     def fetch_entries(self, entry_names: Optional[Union[str, Iterable[str]]] = None):
         body_data = DatasetFetchEntryBody(names=make_list(entry_names))
 
-        self.raw_data.entries = self.client._auto_request(
+        fetched_entries = self.client._auto_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/entries/bulkFetch",
             DatasetFetchEntryBody,
             None,
-            List[self._entry_type],
+            Dict[str, self._entry_type],
             body_data,
             None,
         )
 
+        if self.raw_data.entries is None:
+            self.raw_data.entries = {}
+
+        self.raw_data.entries.update(fetched_entries)
+
         # Fill in entry names as well
-        fetched_names = [x.name for x in self.raw_data.entries]
         if self.raw_data.entry_names is None:
-            self.raw_data.entry_names = fetched_names
+            self.raw_data.entry_names = list(fetched_entries.keys())
         else:
-            self.raw_data.entry_names.extend(x for x in fetched_names if x not in self.raw_data.entry_names)
+            self.raw_data.entry_names.extend(k for k in fetched_entries.keys() if k not in self.raw_data.entry_names)
 
     def fetch_entry_names(self):
         self.raw_data.entry_names = self.client._auto_request(
@@ -623,10 +627,16 @@ class BaseDataset(BaseModel):
 
     @property
     def specifications(self):
+        if self.raw_data.specifications is None:
+            self.fetch_specifications()
+
         return self.raw_data.specifications
 
     @property
     def entry_names(self):
+        if self.raw_data.entry_names is None:
+            self.fetch_entry_names()
+
         return self.raw_data.entry_names
 
     @property

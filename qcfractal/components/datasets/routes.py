@@ -130,8 +130,7 @@ def submit_dataset_v1(dataset_type: str, dataset_id: int, *, body_data: DatasetS
 @wrap_route(None, None, "READ")
 def fetch_dataset_specifications_v1(dataset_type: str, dataset_id: int):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
-    ds_data = ds_socket.get(dataset_id, ["specifications.*", "specifications.specification"], None, False)
-    return ds_data["specifications"]
+    return ds_socket.fetch_specifications(dataset_id)
 
 
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/specifications/bulkDelete", methods=["POST"])

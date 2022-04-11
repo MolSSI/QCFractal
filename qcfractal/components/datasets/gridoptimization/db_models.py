@@ -106,20 +106,6 @@ class GridoptimizationDatasetORM(CollectionORM):
 
     id = Column(Integer, ForeignKey(CollectionORM.id, ondelete="cascade"), primary_key=True)
 
-    specifications = relationship(
-        GridoptimizationDatasetSpecificationORM, collection_class=attribute_mapped_collection("name")
-    )
-
-    entries = relationship(GridoptimizationDatasetEntryORM, collection_class=attribute_mapped_collection("name"))
-
-    record_items = relationship(GridoptimizationDatasetRecordItemORM)
-
-    entry_names = column_property(
-        select(array_agg(GridoptimizationDatasetEntryORM.name))
-        .where(GridoptimizationDatasetEntryORM.dataset_id == id)
-        .scalar_subquery()
-    )
-
     __mapper_args__ = {
         "polymorphic_identity": "gridoptimization",
     }

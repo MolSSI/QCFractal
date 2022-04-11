@@ -104,20 +104,6 @@ class OptimizationDatasetORM(CollectionORM):
 
     id = Column(Integer, ForeignKey(CollectionORM.id, ondelete="cascade"), primary_key=True)
 
-    specifications = relationship(
-        OptimizationDatasetSpecificationORM, collection_class=attribute_mapped_collection("name")
-    )
-
-    entries = relationship(OptimizationDatasetEntryORM, collection_class=attribute_mapped_collection("name"))
-
-    record_items = relationship(OptimizationDatasetRecordItemORM)
-
-    entry_names = column_property(
-        select(array_agg(OptimizationDatasetEntryORM.name))
-        .where(OptimizationDatasetEntryORM.dataset_id == id)
-        .scalar_subquery()
-    )
-
     __mapper_args__ = {
         "polymorphic_identity": "optimization",
     }

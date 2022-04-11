@@ -275,7 +275,6 @@ class PortalClient(PortalClientBase):
         payload = {
             "dataset_type": dataset_type,
             "dataset_name": dataset_name,
-            "include": ["*", "specifications.*", "specifications.specification"],
         }
 
         ds = self._auto_request(
@@ -313,16 +312,14 @@ class PortalClient(PortalClientBase):
 
     def get_dataset_by_id(self, dataset_id: int):
 
-        payload = {"include": ["*", "specifications.*", "specifications.specification"]}
-
         ds = self._auto_request(
             "get",
             f"v1/datasets/{dataset_id}",
             None,
-            ProjURLParameters,
+            None,
             AllDatasetDataModelTypes,
             None,
-            payload,
+            None,
         )
 
         return self.dataset_from_datamodel(ds)

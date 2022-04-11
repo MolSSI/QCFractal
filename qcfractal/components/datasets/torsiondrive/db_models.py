@@ -142,20 +142,6 @@ class TorsiondriveDatasetORM(CollectionORM):
 
     id = Column(Integer, ForeignKey(CollectionORM.id, ondelete="cascade"), primary_key=True)
 
-    specifications = relationship(
-        TorsiondriveDatasetSpecificationORM, collection_class=attribute_mapped_collection("name")
-    )
-
-    entries = relationship(TorsiondriveDatasetEntryORM, collection_class=attribute_mapped_collection("name"))
-
-    record_items = relationship(TorsiondriveDatasetRecordItemORM)
-
-    entry_names = column_property(
-        select(array_agg(TorsiondriveDatasetEntryORM.name))
-        .where(TorsiondriveDatasetEntryORM.dataset_id == id)
-        .scalar_subquery()
-    )
-
     __mapper_args__ = {
         "polymorphic_identity": "torsiondrive",
     }

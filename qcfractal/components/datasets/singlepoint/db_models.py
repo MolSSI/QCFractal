@@ -110,21 +110,7 @@ class SinglepointDatasetORM(CollectionORM):
 
     id = Column(Integer, ForeignKey(CollectionORM.id, ondelete="cascade"), primary_key=True)
 
-    contributed_values = relationship(ContributedValuesORM, lazy="selectin", cascade="all, delete-orphan")
-
-    specifications = relationship(
-        SinglepointDatasetSpecificationORM, collection_class=attribute_mapped_collection("name")
-    )
-
-    entries = relationship(SinglepointDatasetEntryORM, collection_class=attribute_mapped_collection("name"))
-
-    record_items = relationship(SinglepointDatasetRecordItemORM)
-
-    entry_names = column_property(
-        select(array_agg(SinglepointDatasetEntryORM.name))
-        .where(SinglepointDatasetEntryORM.dataset_id == id)
-        .scalar_subquery()
-    )
+    contributed_values = relationship(ContributedValuesORM, lazy="select", cascade="all, delete-orphan")
 
     __mapper_args__ = {
         "polymorphic_identity": "singlepoint",

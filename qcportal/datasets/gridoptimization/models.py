@@ -48,10 +48,9 @@ class GridoptimizationDataset(BaseDataset):
     class _DataModel(BaseDataset._DataModel):
         collection_type: Literal["gridoptimization"]
 
-        # Specifications are always loaded
-        specifications: Dict[str, GridoptimizationDatasetSpecification]
-        entries: Optional[List[GridoptimizationDatasetEntry]]
-        record_items: Optional[List[GridoptimizationDatasetRecordItem]]
+        specifications: Optional[Dict[str, GridoptimizationDatasetSpecification]] = None
+        entries: Optional[Dict[str, GridoptimizationDatasetEntry]] = None
+        record_items: Optional[List[GridoptimizationDatasetRecordItem]] = None
 
     # This is needed for disambiguation by pydantic
     dataset_type: Literal["gridoptimization"]
