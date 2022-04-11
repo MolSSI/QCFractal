@@ -135,7 +135,6 @@ class BaseRecordORM(BaseORM):
         RecordInfoBackupORM,
         order_by=RecordInfoBackupORM.modified_on.asc(),
         cascade="all, delete-orphan",
-        lazy="selectin",
     )
 
     # Native files returned from the computation
