@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select, JSON, Column, Integer, ForeignKey, String, ForeignKeyConstraint, UniqueConstraint, Index
-from sqlalchemy.dialects.postgresql import array_agg, JSONB
-from sqlalchemy.orm import column_property, relationship
-from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy import JSON, Column, Integer, ForeignKey, String, ForeignKeyConstraint, UniqueConstraint, Index
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import relationship
 
 from qcfractal.components.datasets.db_models import CollectionORM, ContributedValuesORM
 from qcfractal.components.molecules.db_models import MoleculeORM

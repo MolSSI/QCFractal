@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 from sqlalchemy import select, Column, Integer, ForeignKey, String, ForeignKeyConstraint, UniqueConstraint, Index
 from sqlalchemy.dialects.postgresql import JSONB, array_agg
 from sqlalchemy.orm import relationship, column_property
-from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from qcfractal.components.datasets.db_models import CollectionORM
 from qcfractal.components.molecules.db_models import MoleculeORM

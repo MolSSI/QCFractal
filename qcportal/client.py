@@ -15,8 +15,6 @@ from typing import (
     Iterable,
 )
 
-import pydantic
-
 from .base_models import (
     CommonBulkGetNamesBody,
     CommonBulkGetBody,
