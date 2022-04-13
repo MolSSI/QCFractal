@@ -39,7 +39,7 @@ class SinglepointDatasetRecordItem(BaseModel):
 
 class SinglepointDataset(BaseDataset):
     class _DataModel(BaseDataset._DataModel):
-        collection_type: Literal["singlepoint"]
+        collection_type: Literal["singlepoint"] = "singlepoint"
 
         specifications: Optional[Dict[str, SinglepointDatasetSpecification]] = None
         entries: Optional[Dict[str, SinglepointDatasetEntry]] = None
@@ -48,7 +48,7 @@ class SinglepointDataset(BaseDataset):
         contributed_values: Any
 
     # This is needed for disambiguation by pydantic
-    dataset_type: Literal["singlepoint"]
+    dataset_type: Literal["singlepoint"] = "singlepoint"
     raw_data: _DataModel
 
     # Needed by the base class

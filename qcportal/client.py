@@ -24,7 +24,6 @@ from .cache import PortalCache
 from .client_base import PortalClientBase
 from .datasets import (
     dataset_from_datamodel,
-    AllDatasetTypes,
     AllDatasetDataModelTypes,
     DatasetQueryModel,
     DatasetQueryRecords,
@@ -42,7 +41,6 @@ from .permissions import (
     is_valid_rolename,
 )
 from .records import (
-    record_from_datamodel,
     records_from_datamodels,
     RecordStatusEnum,
     PriorityEnum,
@@ -160,17 +158,6 @@ class PortalClient(PortalClientBase):
         # postprocess due to raw spacing above
         return "\n".join([substr.strip() for substr in output.split("\n")])
 
-    def record_from_datamodel(self, data: AllRecordDataModelTypes) -> AllRecordTypes:
-        return record_from_datamodel(self, data)
-
-    def records_from_datamodels(
-        self, data: Sequence[Optional[AllRecordDataModelTypes]]
-    ) -> List[Optional[AllRecordTypes]]:
-        return records_from_datamodels(self, data)
-
-    def dataset_from_datamodel(self, data: AllDatasetDataModelTypes) -> AllDatasetTypes:
-        return dataset_from_datamodel(self, data)
-
     @property
     def cache(self):
         if self._cache.cachedir is not None:
@@ -285,7 +272,7 @@ class PortalClient(PortalClientBase):
             payload,
         )
 
-        return self.dataset_from_datamodel(ds)
+        return dataset_from_datamodel(ds, self)
 
     def query_dataset_records(
         self,
@@ -320,7 +307,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        return self.dataset_from_datamodel(ds)
+        return dataset_from_datamodel(ds, self)
 
     def get_dataset_status_by_id(self, dataset_id: int):
 
@@ -334,7 +321,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        return self.dataset_from_datamodel(ds)
+        return dataset_from_datamodel(ds, self)
 
     def add_dataset(
         self,
@@ -629,7 +616,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        records = self.records_from_datamodels(record_data)
+        records = records_from_datamodels(record_data, self)
 
         if isinstance(record_ids, Sequence):
             return records
@@ -703,7 +690,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        return meta, self.records_from_datamodels(record_data)
+        return meta, records_from_datamodels(record_data, self)
 
     def reset_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
         record_ids = make_list(record_ids)
@@ -941,7 +928,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        records = self.records_from_datamodels(record_data)
+        records = records_from_datamodels(record_data, self)
 
         if isinstance(record_ids, Sequence):
             return records
@@ -1026,7 +1013,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        return meta, self.records_from_datamodels(record_data)
+        return meta, records_from_datamodels(record_data, self)
 
     ##############################################################
     # Optimization calculations
@@ -1134,7 +1121,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        records = self.records_from_datamodels(record_data)
+        records = records_from_datamodels(record_data, self)
 
         if isinstance(record_ids, Sequence):
             return records
@@ -1225,7 +1212,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        return meta, self.records_from_datamodels(record_data)
+        return meta, records_from_datamodels(record_data, self)
 
     ##############################################################
     # Torsiondrive calculations
@@ -1327,7 +1314,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        records = self.records_from_datamodels(record_data)
+        records = records_from_datamodels(record_data, self)
 
         if isinstance(record_ids, Sequence):
             return records
@@ -1418,7 +1405,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        return meta, self.records_from_datamodels(record_data)
+        return meta, records_from_datamodels(record_data, self)
 
     ##############################################################
     # Grid optimization calculations
@@ -1520,7 +1507,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        records = self.records_from_datamodels(record_data)
+        records = records_from_datamodels(record_data, self)
 
         if isinstance(record_ids, Sequence):
             return records
@@ -1611,7 +1598,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        return meta, self.records_from_datamodels(record_data)
+        return meta, records_from_datamodels(record_data, self)
 
     ##############################################################
     # Reactions
@@ -1717,7 +1704,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        records = self.records_from_datamodels(record_data)
+        records = records_from_datamodels(record_data, self)
 
         if isinstance(record_ids, Sequence):
             return records
@@ -1804,7 +1791,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        return meta, self.records_from_datamodels(record_data)
+        return meta, records_from_datamodels(record_data, self)
 
     ##############################################################
     # Managers

@@ -46,14 +46,14 @@ class GridoptimizationDatasetRecordItem(BaseModel):
 
 class GridoptimizationDataset(BaseDataset):
     class _DataModel(BaseDataset._DataModel):
-        collection_type: Literal["gridoptimization"]
+        collection_type: Literal["gridoptimization"] = "gridoptimization"
 
         specifications: Optional[Dict[str, GridoptimizationDatasetSpecification]] = None
         entries: Optional[Dict[str, GridoptimizationDatasetEntry]] = None
         record_items: Optional[List[GridoptimizationDatasetRecordItem]] = None
 
     # This is needed for disambiguation by pydantic
-    dataset_type: Literal["gridoptimization"]
+    dataset_type: Literal["gridoptimization"] = "gridoptimization"
     raw_data: _DataModel
 
     # Needed by the base class

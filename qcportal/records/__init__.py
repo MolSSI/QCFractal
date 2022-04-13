@@ -38,14 +38,15 @@ AllRecordDataModelTypes = Union[
 ]
 
 
-def record_from_datamodel(client: Any, data: AllRecordDataModelTypes) -> AllRecordTypes:
+def record_from_datamodel(data: AllRecordDataModelTypes, client: Any) -> AllRecordTypes:
     record_init = {"client": client, "record_type": data.record_type, "raw_data": data}
 
     return pydantic.parse_obj_as(AllRecordTypes, record_init)
 
 
 def records_from_datamodels(
-    client: Any, data: Sequence[Optional[AllRecordDataModelTypes]]
+    data: Sequence[Optional[AllRecordDataModelTypes]],
+    client: Any,
 ) -> List[Optional[AllRecordTypes]]:
     record_init = [
         {"client": client, "record_type": d.record_type, "raw_data": d} if d is not None else None for d in data

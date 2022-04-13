@@ -137,7 +137,7 @@ class GridoptimizationOptimization(BaseModel):
 
 class GridoptimizationRecord(BaseRecord):
     class _DataModel(BaseRecord._DataModel):
-        record_type: Literal["gridoptimization"]
+        record_type: Literal["gridoptimization"] = "gridoptimization"
         specification: GridoptimizationSpecification
         starting_grid: Optional[List[int]]
         initial_molecule_id: int
@@ -147,7 +147,7 @@ class GridoptimizationRecord(BaseRecord):
         optimizations: Optional[List[GridoptimizationOptimization]] = None
 
     # This is needed for disambiguation by pydantic
-    record_type: Literal["gridoptimization"]
+    record_type: Literal["gridoptimization"] = "gridoptimization"
     raw_data: _DataModel
 
     optimization_cache: Optional[Dict[str, OptimizationRecord]] = None
@@ -170,10 +170,6 @@ class GridoptimizationRecord(BaseRecord):
             None,
             url_params,
         )
-
-    @property
-    def specification_id(self) -> int:
-        return self.raw_data.specification_id
 
     @property
     def specification(self) -> GridoptimizationSpecification:
@@ -213,7 +209,7 @@ class GridoptimizationRecord(BaseRecord):
 
         ret = {}
         for opt in self.raw_data.optimizations:
-            ret[opt.key] = self.client.record_from_datamodels(opt.optimization_record)
+            ret[opt.key] = OptimizationRecord.from_datamodel(opt.optimization_record, self.client)
 
         self.optimization_cache = ret
         return ret

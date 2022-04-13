@@ -52,7 +52,7 @@ class QCSpecification(BaseModel):
 
 class SinglepointRecord(BaseRecord):
     class _DataModel(BaseRecord._DataModel):
-        record_type: Literal["singlepoint"]
+        record_type: Literal["singlepoint"] = "singlepoint"
         specification: QCSpecification
         molecule_id: int
         molecule: Optional[Molecule]
@@ -61,7 +61,7 @@ class SinglepointRecord(BaseRecord):
         wavefunction: Optional[WavefunctionProperties] = None
 
     # This is needed for disambiguation by pydantic
-    record_type: Literal["singlepoint"]
+    record_type: Literal["singlepoint"] = "singlepoint"
     raw_data: _DataModel
 
     def _fetch_molecule(self):
@@ -77,10 +77,6 @@ class SinglepointRecord(BaseRecord):
             None,
             None,
         )
-
-    @property
-    def specification_id(self) -> int:
-        return self.raw_data.specification_id
 
     @property
     def specification(self) -> QCSpecification:

@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Any
 
 import pydantic
 
@@ -34,6 +34,6 @@ AllDatasetDataModelTypes = Union[
 ]
 
 
-def dataset_from_datamodel(client, data: AllDatasetDataModelTypes) -> AllDatasetTypes:
+def dataset_from_datamodel(data: AllDatasetDataModelTypes, client: Any) -> AllDatasetTypes:
     dataset_init = {"client": client, "dataset_type": data.collection_type, "raw_data": data}
     return pydantic.parse_obj_as(AllDatasetTypes, dataset_init)

@@ -50,7 +50,7 @@ class OptimizationTrajectory(BaseModel):
 
 class OptimizationRecord(BaseRecord):
     class _DataModel(BaseRecord._DataModel):
-        record_type: Literal["optimization"]
+        record_type: Literal["optimization"] = "optimization"
         specification: OptimizationSpecification
         initial_molecule_id: int
         initial_molecule: Optional[Molecule]
@@ -60,7 +60,7 @@ class OptimizationRecord(BaseRecord):
         trajectory: Optional[List[OptimizationTrajectory]]
 
     # This is needed for disambiguation by pydantic
-    record_type: Literal["optimization"]
+    record_type: Literal["optimization"] = "optimization"
     raw_data: _DataModel
 
     def _fetch_initial_molecule(self):
@@ -118,11 +118,11 @@ class OptimizationRecord(BaseRecord):
         return self.raw_data.energies
 
     @property
-    def trajectory(self) -> Molecule:
+    def trajectory(self) -> List[Optional[SinglepointRecord]]:
         if self.raw_data.trajectory is None:
             self._fetch_trajectory()
         traj_dm = [x.singlepoint_record for x in self.raw_data.trajectory]
-        return self.client.records_from_datamodels(traj_dm)
+        return [SinglepointRecord.from_datamodel(x, self.client) for x in traj_dm]
 
 
 class OptimizationQueryBody(RecordQueryBody):

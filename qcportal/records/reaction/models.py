@@ -54,7 +54,7 @@ class ReactionComponent(BaseModel):
 
 class ReactionRecord(BaseRecord):
     class _DataModel(BaseRecord._DataModel):
-        record_type: Literal["reaction"]
+        record_type: Literal["reaction"] = "reaction"
         specification: QCSpecification
 
         total_energy: Optional[float]
@@ -63,7 +63,7 @@ class ReactionRecord(BaseRecord):
         components: Optional[List[ReactionComponent]] = None
 
     # This is needed for disambiguation by pydantic
-    record_type: Literal["reaction"]
+    record_type: Literal["reaction"] = "reaction"
     raw_data: _DataModel
 
     def _fetch_components(self):
@@ -91,10 +91,6 @@ class ReactionRecord(BaseRecord):
             None,
             url_params,
         )
-
-    @property
-    def specification_id(self) -> int:
-        return self.raw_data.specification_id
 
     @property
     def specification(self) -> QCSpecification:

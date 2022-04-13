@@ -46,7 +46,7 @@ class TorsiondriveDatasetRecordItem(BaseModel):
 
 class TorsiondriveDataset(BaseDataset):
     class _DataModel(BaseDataset._DataModel):
-        collection_type: Literal["torsiondrive"]
+        collection_type: Literal["torsiondrive"] = "torsiondrive"
 
         # Specifications are always loaded
         specifications: Optional[Dict[str, TorsiondriveDatasetSpecification]] = None
@@ -54,7 +54,7 @@ class TorsiondriveDataset(BaseDataset):
         record_items: Optional[List[TorsiondriveDatasetRecordItem]] = None
 
     # This is needed for disambiguation by pydantic
-    dataset_type: Literal["torsiondrive"]
+    dataset_type: Literal["torsiondrive"] = "torsiondrive"
     raw_data: _DataModel
 
     # Needed by the base class

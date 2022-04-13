@@ -162,6 +162,7 @@ class BaseRecord(BaseModel):
             validate_assignment = True
 
         id: int
+        record_type: str
         is_service: bool
 
         extras: Optional[Dict[str, Any]] = None
@@ -189,6 +190,10 @@ class BaseRecord(BaseModel):
     record_type: str
     client: Any
     raw_data: _DataModel  # Meant to be overridden by derived classes
+
+    @classmethod
+    def from_datamodel(cls, raw_data: _DataModel, client: Any = None):
+        return cls(client=client, raw_data=raw_data, record_type=raw_data.record_type)
 
     def _fetch_compute_history(self, include_outputs: bool = False):
         url_params = {}

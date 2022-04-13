@@ -94,13 +94,13 @@ class TorsiondriveQueryBody(RecordQueryBody):
 
 class TorsiondriveRecord(BaseRecord):
     class _DataModel(BaseRecord._DataModel):
-        record_type: Literal["torsiondrive"]
+        record_type: Literal["torsiondrive"] = "torsiondrive"
         specification: TorsiondriveSpecification
         initial_molecules: Optional[List[Molecule]] = None
         optimizations: Optional[List[TorsiondriveOptimization]] = None
 
     # This is needed for disambiguation by pydantic
-    record_type: Literal["torsiondrive"]
+    record_type: Literal["torsiondrive"] = "torsiondrive"
     raw_data: _DataModel
 
     optimization_cache: Optional[Dict[str, OptimizationRecord]] = None
@@ -130,10 +130,6 @@ class TorsiondriveRecord(BaseRecord):
         )
 
     @property
-    def specification_id(self) -> int:
-        return self.raw_data.specification_id
-
-    @property
     def specification(self) -> TorsiondriveSpecification:
         return self.raw_data.specification
 
@@ -155,7 +151,7 @@ class TorsiondriveRecord(BaseRecord):
         ret = {}
         for opt in self.raw_data.optimizations:
             ret.setdefault(opt.key, list())
-            ret[opt.key].append(self.client.record_from_datamodel(opt.optimization_record))
+            ret[opt.key].append(OptimizationRecord.from_datamodel(opt.optimization_record, self.client))
         self.optimization_cache = ret
         return ret
 
@@ -173,7 +169,7 @@ class TorsiondriveRecord(BaseRecord):
             url_params,
         )
 
-        return {k: self.client.records_from_datamodels([v])[0] for k, v in r.items()}
+        return {k: OptimizationRecord.from_datamodel(v, self.client) for k, v in r.items()}
 
 
 # class TorsiondriveRecord(RecordBase):

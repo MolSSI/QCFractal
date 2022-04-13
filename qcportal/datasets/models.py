@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import Optional, Dict, Any, List, Iterable, Type, Tuple, Union, Callable
 
 import pandas as pd
-from pydantic import BaseModel, Extra, PrivateAttr, validator
+from pydantic import BaseModel, Extra, validator
 
 from qcportal.base_models import RestModelBase, validate_list_to_single
-from qcportal.records import BaseRecord, PriorityEnum, RecordStatusEnum, record_from_datamodel
+from qcportal.records import PriorityEnum, RecordStatusEnum, record_from_datamodel
 from qcportal.utils import make_list
 
 
@@ -50,23 +50,16 @@ class BaseDataset(BaseModel):
     # Some dataset options
     auto_fetch_missing: bool = True  # Automatically fetch missing records from the server
 
-    # Actual optimization records, mapped via id
-    _record_cache: Optional[Dict[int, BaseRecord]] = PrivateAttr()
-
     # To be overridden by the derived classes
-    dataset_type: Optional[str] = None
+    dataset_type: str
     _entry_type: Optional[Type] = None
     _specification_type: Optional[Type] = None
     _record_item_type: Optional[Type] = None
     _record_type: Optional[Type] = None
 
-    def __init__(self, **kwargs):
-        BaseModel.__init__(self, **kwargs)
-        self._record_cache = {}
-
-    @property
-    def offline(self) -> bool:
-        return self.client is None
+    @classmethod
+    def from_datamodel(cls, raw_data: _DataModel, client: Any = None):
+        return cls(client=client, raw_data=raw_data, dataset_type=raw_data.collection_type)
 
     def _append_entry_names(self, entry_names: List[str]):
         if self.raw_data.entry_names is None:
@@ -82,6 +75,9 @@ class BaseDataset(BaseModel):
         self.fetch_specifications()
 
     def fetch_entries(self, entry_names: Optional[Union[str, Iterable[str]]] = None):
+        if self.offline:
+            return
+
         body_data = DatasetFetchEntryBody(names=make_list(entry_names))
 
         fetched_entries = self.client._auto_request(
@@ -106,6 +102,9 @@ class BaseDataset(BaseModel):
             self.raw_data.entry_names.extend(k for k in fetched_entries.keys() if k not in self.raw_data.entry_names)
 
     def fetch_entry_names(self):
+        if self.offline:
+            return
+
         self.raw_data.entry_names = self.client._auto_request(
             "get",
             f"v1/datasets/{self.dataset_type}/{self.id}/entry_names",
@@ -117,6 +116,9 @@ class BaseDataset(BaseModel):
         )
 
     def fetch_specifications(self):
+        if self.offline:
+            return
+
         self.raw_data.specifications = self.client._auto_request(
             "get",
             f"v1/datasets/{self.dataset_type}/{self.id}/specifications",
@@ -132,6 +134,8 @@ class BaseDataset(BaseModel):
         entry_names: Optional[Union[str, Iterable[str]]] = None,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
     ):
+        if self.offline:
+            return
 
         body_data = DatasetFetchRecordItemsBody(
             entry_names=make_list(entry_names),
@@ -175,6 +179,8 @@ class BaseDataset(BaseModel):
             default_priority=self.raw_data.default_priority,
         )
 
+        self.assert_online()
+
         self.client._auto_request(
             "patch",
             f"v1/datasets/{self.dataset_type}/{self.id}",
@@ -192,7 +198,7 @@ class BaseDataset(BaseModel):
 
         for ri in self.raw_data.record_items:
             if ri.specification_name == specification_name and ri.entry_name == entry_name:
-                return record_from_datamodel(self.client, ri.record)
+                return record_from_datamodel(ri.record, self.client)
 
         return None
 
@@ -213,6 +219,7 @@ class BaseDataset(BaseModel):
         tag: Optional[str] = None,
         priority: PriorityEnum = None,
     ):
+        self.assert_online()
 
         body_data = DatasetSubmitBody(
             entry_names=make_list(entry_names),
@@ -231,6 +238,8 @@ class BaseDataset(BaseModel):
     # General specification management
     ###################################
     def rename_specification(self, old_name: str, new_name: str):
+        self.assert_online()
+
         name_map = {old_name: new_name}
 
         ret = self.client._auto_request(
@@ -252,6 +261,8 @@ class BaseDataset(BaseModel):
         return ret
 
     def delete_specification(self, name: str, delete_records: bool = False):
+        self.assert_online()
+
         body_data = DatasetDeleteStrBody(names=[name], delete_records=delete_records)
 
         ret = self.client._auto_request(
@@ -285,6 +296,7 @@ class BaseDataset(BaseModel):
             new_name_map,
             None,
         )
+        self.assert_online()
 
         # rename locally cached entries and stuff
         if self.raw_data.entry_names:
@@ -301,6 +313,8 @@ class BaseDataset(BaseModel):
         return ret
 
     def delete_entries(self, names: Union[str, Iterable[str]], delete_records: bool = False):
+        self.assert_online()
+
         names = make_list(names)
         body_data = DatasetDeleteStrBody(names=names, delete_records=delete_records)
 
@@ -335,6 +349,8 @@ class BaseDataset(BaseModel):
         specification_names: Optional[Union[str, Iterable[str]]] = None,
         delete_records: bool = False,
     ):
+        self.assert_online()
+
         body_data = DatasetDeleteRecordItemsBody(
             entry_names=make_list(entry_names),
             specification_names=make_list(specification_names),
@@ -367,6 +383,8 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
+        self.assert_online()
+
         body_data = DatasetRecordModifyBody(
             entry_names=make_list(entry_names),
             specification_names=make_list(specification_names),
@@ -397,6 +415,8 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
+        self.assert_online()
+
         body_data = DatasetRecordModifyBody(
             entry_names=make_list(entry_names),
             specification_names=make_list(specification_names),
@@ -425,6 +445,8 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
+        self.assert_online()
+
         body_data = DatasetRecordModifyBody(
             entry_names=make_list(entry_names),
             specification_names=make_list(specification_names),
@@ -453,6 +475,7 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
+        self.assert_online()
 
         body_data = DatasetRecordRevertBody(
             entry_names=make_list(entry_names),
@@ -482,6 +505,8 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
+        self.assert_online()
+
         body_data = DatasetRecordModifyBody(
             entry_names=make_list(entry_names),
             specification_names=make_list(specification_names),
@@ -510,6 +535,8 @@ class BaseDataset(BaseModel):
         *,
         refetch_records: bool = False,
     ):
+        self.assert_online()
+
         body_data = DatasetRecordRevertBody(
             entry_names=make_list(entry_names),
             specification_names=make_list(specification_names),
@@ -549,6 +576,8 @@ class BaseDataset(BaseModel):
     #########################################
 
     def status(self) -> Dict[str, Any]:
+        self.assert_online()
+
         return self.client._auto_request(
             "get",
             f"v1/datasets/{self.dataset_type}/{self.id}/status",
@@ -560,6 +589,8 @@ class BaseDataset(BaseModel):
         )
 
     def detailed_status(self) -> List[Tuple[str, str, RecordStatusEnum]]:
+        self.assert_online()
+
         return self.client._auto_request(
             "get",
             f"v1/datasets/{self.dataset_type}/{self.id}/detailed_status",
@@ -569,6 +600,14 @@ class BaseDataset(BaseModel):
             None,
             None,
         )
+
+    @property
+    def offline(self) -> bool:
+        return self.client is None
+
+    def assert_online(self):
+        if self.offline:
+            raise RuntimeError("Dataset does not connected to a QCFractal server")
 
     @property
     def id(self) -> int:
@@ -593,6 +632,8 @@ class BaseDataset(BaseModel):
         return self.raw_data.description
 
     def set_description(self, new_description: Optional[str]):
+        self.assert_online()
+
         old_description = self.raw_data.description
         self.raw_data.description = new_description
         try:
@@ -652,8 +693,7 @@ class BaseDataset(BaseModel):
             self.fetch_record_items()
         return self.raw_data.record_items
 
-    @property
-    def records(self):
+    def _iterate_records(self):
         # Get an up-to-date list of entry names and specifications
         self.fetch_entry_names()
         self.fetch_specifications()
@@ -661,6 +701,10 @@ class BaseDataset(BaseModel):
             self.fetch_record_items(entry_names=entry_name)
             for spec_name in self.specifications.keys():
                 yield entry_name, spec_name, self._lookup_record(entry_name, spec_name)
+
+    @property
+    def records(self):
+        return self._iterate_records()
 
 
 class DatasetModifyMetadataBody(RestModelBase):
