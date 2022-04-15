@@ -8,7 +8,6 @@ import pytest
 def pytest_addoption(parser):
     """
     Additional PyTest CLI flags to add
-
     See `pytest_collection_modifyitems` for handling and `pytest_configure` for adding known in-line marks.
     """
 
@@ -18,7 +17,6 @@ def pytest_addoption(parser):
 def pytest_collection_modifyitems(config, items):
     """
     Handle test triggers based on the CLI flags
-
     Use decorators:
     @pytest.mark.slow
     """

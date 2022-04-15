@@ -250,6 +250,7 @@ class RecordSocket:
         from .gridoptimization.sockets import GridoptimizationRecordSocket
         from .reaction.sockets import ReactionRecordSocket
         from .manybody.sockets import ManybodyRecordSocket
+        from .neb.sockets import NEBRecordSocket
 
         self.singlepoint = SinglepointRecordSocket(root_socket)
         self.optimization = OptimizationRecordSocket(root_socket)
@@ -257,6 +258,7 @@ class RecordSocket:
         self.gridoptimization = GridoptimizationRecordSocket(root_socket)
         self.reaction = ReactionRecordSocket(root_socket)
         self.manybody = ManybodyRecordSocket(root_socket)
+        self.neb = NEBRecordSocket(root_socket)
 
         self._handler_map: Dict[str, BaseRecordSocket] = {
             "singlepoint": self.singlepoint,
@@ -265,6 +267,7 @@ class RecordSocket:
             "gridoptimization": self.gridoptimization,
             "reaction": self.reaction,
             "manybody": self.manybody,
+            "neb": self.neb,
         }
 
         self._handler_map_by_schema: Dict[str, BaseRecordSocket] = {
