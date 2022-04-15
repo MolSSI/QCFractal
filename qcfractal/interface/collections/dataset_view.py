@@ -1,6 +1,6 @@
 import abc
-import distutils
 import hashlib
+import packaging
 import pathlib
 import shutil
 import tarfile
@@ -252,12 +252,13 @@ class HDF5View(DatasetView):
 
     def write(self, ds: Dataset):
         # For data checksums
-        dataset_kwargs = {"chunks": True, "fletcher32": True}
+        dataset_kwargs = {"chunks": True, "fletcher32": False}
         ds.get_entries(force=True)
         n_records = len(ds.data.records)
         default_shape = (n_records,)
 
-        if h5py.__version__ >= distutils.version.StrictVersion("2.10.0"):
+        if (packaging.version.parse(h5py.__version__) >= 
+            packaging.version.parse("2.10.0")):
             vlen_double_t = h5py.vlen_dtype(np.dtype("float64"))
             utf8_t = h5py.string_dtype(encoding="utf-8")
             bytes_t = h5py.vlen_dtype(np.dtype("uint8"))
