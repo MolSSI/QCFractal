@@ -74,12 +74,6 @@ class ServerInfoSocket:
 
         return out
 
-    def check_db_version(self):
-        """
-        Compares the current version of the DB to the expected version (alembic HEAD)
-        """
-        pass
-
     def save_access(self, log_data: Dict[str, Any], *, session: Optional[Session] = None) -> None:
         """
         Saves information about an access to the database
