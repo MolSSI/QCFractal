@@ -722,7 +722,7 @@ class DatasetModifyMetadataBody(RestModelBase):
 
 class DatasetQueryModel(RestModelBase):
     dataset_type: Optional[str] = None
-    name: Optional[str] = None
+    dataset_name: Optional[str] = None
     include: Optional[List[str]] = None
     exclude: Optional[List[str]] = None
 

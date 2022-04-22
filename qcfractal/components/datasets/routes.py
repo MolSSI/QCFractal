@@ -40,8 +40,9 @@ def get_general_dataset_v1(dataset_id: int, *, url_params: ProjURLParameters):
 @wrap_route(DatasetQueryModel, None, "READ")
 def query_general_dataset_v1(body_data: DatasetQueryModel):
     with storage_socket.session_scope(True) as session:
-        dataset_id = storage_socket.datasets.lookup_id(body_data.dataset_type, body_data.name, session=session)
-        ds_socket = storage_socket.datasets.lookup_type(dataset_id, session=session)
+        dataset_id = storage_socket.datasets.lookup_id(body_data.dataset_type, body_data.dataset_name, session=session)
+        ds_type = storage_socket.datasets.lookup_type(dataset_id, session=session)
+        ds_socket = storage_socket.datasets.get_socket(ds_type)
         return ds_socket.get(dataset_id, body_data.include, body_data.exclude, session=session)
 
 

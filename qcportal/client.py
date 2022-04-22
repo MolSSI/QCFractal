@@ -257,19 +257,16 @@ class PortalClient(PortalClientBase):
 
     def get_dataset(self, dataset_type: str, dataset_name: str):
 
-        payload = {
-            "dataset_type": dataset_type,
-            "dataset_name": dataset_name,
-        }
+        payload = DatasetQueryModel(dataset_name=dataset_name, dataset_type=dataset_type)
 
         ds = self._auto_request(
             "post",
             f"v1/datasets/query",
-            None,
             DatasetQueryModel,
-            AllDatasetDataModelTypes,
             None,
+            AllDatasetDataModelTypes,
             payload,
+            None,
         )
 
         return dataset_from_datamodel(ds, self)
