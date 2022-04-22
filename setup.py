@@ -53,6 +53,7 @@ if __name__ == "__main__":
                 "qcfractal-server=qcfractal.qcfractal_server_cli:main",
                 "qcfractal-manager=qcfractalcompute.qcfractal_manager_cli:main",
             ],
+            "pytest11": ["qcfractal_fixtures=qcfractal.testing_fixtures"],
         },
         extras_require={
             "geoip": ["geoip2"],
