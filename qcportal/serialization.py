@@ -60,9 +60,12 @@ def _json_decode(obj):
 
 
 def deserialize(data: Union[bytes, str], content_type: str):
-    if content_type == "application/msgpack":
+    if content_type.startswith("application/"):
+        content_type = content_type[12:]
+
+    if content_type == "msgpack":
         return msgpack.loads(data, object_hook=_msgpack_decode, raw=False)
-    elif content_type == "application/json":
+    elif content_type == "json":
 
         # JSON stored as bytes? Decode into a string for json to load
         if isinstance(data, bytes):
@@ -73,9 +76,12 @@ def deserialize(data: Union[bytes, str], content_type: str):
 
 
 def serialize(data, content_type: str):
-    if content_type == "application/msgpack":
+    if content_type.startswith("application/"):
+        content_type = content_type[12:]
+
+    if content_type == "msgpack":
         return msgpack.dumps(data, default=_msgpack_encode, use_bin_type=True)
-    elif content_type == "application/json":
+    elif content_type == "json":
         return json.dumps(data, cls=_JSONEncoder)
     else:
         raise RuntimeError(f"Unknown content type for serialization: {content_type}")
