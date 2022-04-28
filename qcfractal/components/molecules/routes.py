@@ -1,3 +1,7 @@
+"""
+Flask routes for molecules
+"""
+
 from typing import List
 
 from flask import current_app

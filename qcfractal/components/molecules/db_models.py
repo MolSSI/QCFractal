@@ -1,3 +1,7 @@
+"""
+Database model for molecule object
+"""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -13,6 +17,10 @@ if TYPE_CHECKING:
 
 
 class MoleculeORM(BaseORM):
+    """
+    Database model for a molecule object
+    """
+
     __tablename__ = "molecule"
 
     id = Column(Integer, primary_key=True)

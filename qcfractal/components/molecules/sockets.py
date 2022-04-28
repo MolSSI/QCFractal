@@ -1,3 +1,7 @@
+"""
+Storage socket for molecules
+"""
+
 from __future__ import annotations
 
 import logging
@@ -39,6 +43,9 @@ class MoleculeSocket:
 
     @staticmethod
     def molecule_to_orm(molecule: Molecule) -> MoleculeORM:
+        """
+        Convert a pydantic (QCElemental) Molecule to an ORM
+        """
 
         # Validate the molecule if it hasn't been validated already
         if molecule.validated is False:
@@ -67,21 +74,19 @@ class MoleculeSocket:
         This checks if the molecule already exists in the database via its hash. If so, it returns
         the existing id, otherwise it will insert it and return the new id.
 
-        If session is specified, changes are not committed to to the database, but the session is flushed.
-
         Parameters
         ----------
         molecules
             Molecule data to add to the session
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
         :
-            Metadata about the insertion, and a list of Molecule ids. The ids will be in the
-            order of the input molecules.
+            Metadata about the insertion, and a list of Molecule ids.
+            The ids will be in the order of the input molecules.
         """
 
         ###############################################################################
@@ -107,12 +112,7 @@ class MoleculeSocket:
         session: Optional[Session] = None,
     ) -> List[Optional[Dict[str, Any]]]:
         """
-        Obtain molecules from with specified IDs
-
-        The returned molecule information will be in order of the given ids
-
-        If missing_ok is False, then any ids that are missing in the database will raise an exception. Otherwise,
-        the corresponding entry in the returned list of Molecules will be None.
+        Obtain molecules with specified IDs from the database
 
         Parameters
         ----------
@@ -131,7 +131,7 @@ class MoleculeSocket:
         Returns
         -------
         :
-            Molecule information as a dictionary in the same order as the given ids.
+            List of molecule data (as dictionaries) in the same order as the given ids.
             If missing_ok is True, then this list will contain None where the molecule was missing.
         """
 
@@ -142,7 +142,7 @@ class MoleculeSocket:
         self, molecule_data: Sequence[Union[int, Molecule]], *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
         """
-        Add a mixed format molecule specification to the database.
+        Add mixed molecules and ids to the database.
 
         This function can take both Molecule objects and molecule ids. If a molecule id is given
         in the list, then it is checked to make sure it exists. If it does not exist, then it will be
@@ -159,7 +159,13 @@ class MoleculeSocket:
             Molecule data to add. Can be a mix of IDs and Molecule objects
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and a list of Molecule ids.
+            The ids will be in the order of the input molecules.
         """
 
         molecule_orm: List[Union[int, MoleculeORM]] = [
@@ -176,7 +182,7 @@ class MoleculeSocket:
 
     def delete(self, molecule_id: Sequence[int], *, session: Optional[Session] = None) -> DeleteMetadata:
         """
-        Removes molecules from the database based on id
+        Removes molecules with the given ids from the database
 
         Parameters
         ----------
@@ -184,12 +190,12 @@ class MoleculeSocket:
             IDs of the molecules to remove
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
         :
-            Information about what was deleted and any errors that occurred
+            Metadata about what was deleted and any errors that occurred
         """
 
         id_lst = [(x,) for x in molecule_id]
@@ -242,12 +248,13 @@ class MoleculeSocket:
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of Molecule that were found in the database.
+            Metadata about the results of the query, and a list of Molecule (as dictionaries)
+            that were found in the database.
         """
 
         if molecular_formula is not None:
             try:
-                # Make sure the molecular formaulae are in the proper element order
+                # Make sure the molecular formulae are in the proper element order
                 molecular_formula = [order_molecular_formula(form) for form in molecular_formula]
             except ValueError:
                 # Probably, the user provided an invalid chemical formula
@@ -302,8 +309,6 @@ class MoleculeSocket:
 
         If a molecule with that id does not exist, an exception is raised
 
-        If session is specified, changes are not committed to to the database, but the session is flushed.
-
         Parameters
         ----------
         molecule_id
@@ -313,7 +318,7 @@ class MoleculeSocket:
         comment
             New comment for the molecule. If None, comment is not changed
         identifiers
-            A new set of identifiers for the molecule
+            New identifiers for the molecule
         overwrite_identifiers
             If True, the identifiers of the molecule are set to be those given exactly (ie, identifiers
             that exist in the DB but not in the new set will be removed). Otherwise, the new set of
