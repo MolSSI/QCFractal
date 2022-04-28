@@ -10,7 +10,7 @@ from qcportal.utils import calculate_limit
 
 
 @main.route("/v1/records/torsiondrive/bulkCreate", methods=["POST"])
-@wrap_route(TorsiondriveAddBody, None, "WRITE")
+@wrap_route("WRITE")
 def add_torsiondrive_records_v1(body_data: TorsiondriveAddBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.add_records
     if len(body_data.initial_molecules) > limit:
@@ -28,7 +28,7 @@ def add_torsiondrive_records_v1(body_data: TorsiondriveAddBody):
 
 
 @main.route("/v1/records/torsiondrive/<int:record_id>/optimizations", methods=["GET"])
-@wrap_route(None, ProjURLParameters, "READ")
+@wrap_route("READ")
 def get_torsiondrive_optimizations_v1(record_id: int, *, url_params: ProjURLParameters):
     # adjust the includes/excludes to refer to the optimizations
     ch_includes, ch_excludes = prefix_projection(url_params, "optimizations")
@@ -37,7 +37,7 @@ def get_torsiondrive_optimizations_v1(record_id: int, *, url_params: ProjURLPara
 
 
 @main.route("/v1/records/torsiondrive/<int:record_id>/minimum_optimizations", methods=["GET"])
-@wrap_route(None, ProjURLParameters, "READ")
+@wrap_route("READ")
 def get_torsiondrive_minimum_optimizations_v1(record_id: int, *, url_params: ProjURLParameters):
     # adjust the includes/excludes to refer to the optimizations
     return storage_socket.records.torsiondrive.get_minimum_optimizations(
@@ -46,14 +46,14 @@ def get_torsiondrive_minimum_optimizations_v1(record_id: int, *, url_params: Pro
 
 
 @main.route("/v1/records/torsiondrive/<int:record_id>/initial_molecules", methods=["GET"])
-@wrap_route(None, None, "READ")
+@wrap_route("READ")
 def get_torsiondrive_initial_molecules_v1(record_id: int):
     rec = storage_socket.records.torsiondrive.get([record_id], include=["initial_molecules"])
     return rec[0]["initial_molecules"]
 
 
 @main.route("/v1/records/torsiondrive/query", methods=["POST"])
-@wrap_route(TorsiondriveQueryBody, None, "READ")
+@wrap_route("READ")
 def query_torsiondrive_v1(body_data: TorsiondriveQueryBody):
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
     body_data.limit = calculate_limit(max_limit, body_data.limit)

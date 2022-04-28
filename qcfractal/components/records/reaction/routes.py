@@ -10,7 +10,7 @@ from qcportal.utils import calculate_limit
 
 
 @main.route("/v1/records/reaction/bulkCreate", methods=["POST"])
-@wrap_route(ReactionAddBody, None, "WRITE")
+@wrap_route("WRITE")
 def add_reaction_records_v1(body_data: ReactionAddBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.add_records
     if len(body_data.stoichiometries) > limit:
@@ -25,7 +25,7 @@ def add_reaction_records_v1(body_data: ReactionAddBody):
 
 
 @main.route("/v1/records/reaction/<int:record_id>/components", methods=["GET"])
-@wrap_route(None, ProjURLParameters, "READ")
+@wrap_route("READ")
 def get_reaction_components_v1(record_id: int, *, url_params: ProjURLParameters):
     # adjust the includes/excludes to refer to the components
     ch_includes, ch_excludes = prefix_projection(url_params, "components")
@@ -34,7 +34,7 @@ def get_reaction_components_v1(record_id: int, *, url_params: ProjURLParameters)
 
 
 @main.route("/v1/records/reaction/<int:record_id>/stoichiometries", methods=["GET"])
-@wrap_route(None, ProjURLParameters, "READ")
+@wrap_route("READ")
 def get_reaction_molecules_v1(record_id: int, *, url_params: ProjURLParameters):
     # adjust the includes/excludes to refer to the molecules
     ch_includes, ch_excludes = prefix_projection(url_params, "stoichiometries")
@@ -43,7 +43,7 @@ def get_reaction_molecules_v1(record_id: int, *, url_params: ProjURLParameters):
 
 
 @main.route("/v1/records/reaction/query", methods=["POST"])
-@wrap_route(ReactionQueryBody, None, "READ")
+@wrap_route("READ")
 def query_reaction_v1(body_data: ReactionQueryBody):
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
     body_data.limit = calculate_limit(max_limit, body_data.limit)

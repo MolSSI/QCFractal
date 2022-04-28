@@ -10,7 +10,7 @@ from qcportal.datasets.torsiondrive import (
 
 
 @main.route("/v1/datasets/torsiondrive", methods=["POST"])
-@wrap_route(TorsiondriveDatasetAddBody, None, "WRITE")
+@wrap_route("WRITE")
 def add_torsiondrive_dataset_v1(body_data: TorsiondriveDatasetAddBody):
     return storage_socket.datasets.torsiondrive.add(
         name=body_data.name,
@@ -26,13 +26,13 @@ def add_torsiondrive_dataset_v1(body_data: TorsiondriveDatasetAddBody):
 
 
 @main.route("/v1/datasets/torsiondrive/<int:dataset_id>/specifications", methods=["POST"])
-@wrap_route(List[TorsiondriveDatasetSpecification], None, "WRITE")
+@wrap_route("WRITE")
 def add_torsiondrive_dataset_specifications_v1(dataset_id: int, *, body_data: List[TorsiondriveDatasetSpecification]):
     return storage_socket.datasets.torsiondrive.add_specifications(dataset_id, body_data)
 
 
 @main.route("/v1/datasets/torsiondrive/<int:dataset_id>/entries/bulkCreate", methods=["POST"])
-@wrap_route(List[TorsiondriveDatasetNewEntry], None, "WRITE")
+@wrap_route("WRITE")
 def add_torsiondrive_dataset_entries_v1(dataset_id: int, *, body_data: List[TorsiondriveDatasetNewEntry]):
     return storage_socket.datasets.torsiondrive.add_entries(
         dataset_id,

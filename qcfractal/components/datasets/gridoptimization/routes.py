@@ -10,7 +10,7 @@ from qcportal.datasets.gridoptimization import (
 
 
 @main.route("/v1/datasets/gridoptimization", methods=["POST"])
-@wrap_route(GridoptimizationDatasetAddBody, None, "WRITE")
+@wrap_route("WRITE")
 def add_gridoptimization_dataset_v1(body_data: GridoptimizationDatasetAddBody):
     return storage_socket.datasets.gridoptimization.add(
         name=body_data.name,
@@ -26,7 +26,7 @@ def add_gridoptimization_dataset_v1(body_data: GridoptimizationDatasetAddBody):
 
 
 @main.route("/v1/datasets/gridoptimization/<int:dataset_id>/specifications", methods=["POST"])
-@wrap_route(List[GridoptimizationDatasetSpecification], None, "WRITE")
+@wrap_route("WRITE")
 def add_gridoptimization_dataset_specifications_v1(
     dataset_id: int, *, body_data: List[GridoptimizationDatasetSpecification]
 ):
@@ -34,7 +34,7 @@ def add_gridoptimization_dataset_specifications_v1(
 
 
 @main.route("/v1/datasets/gridoptimization/<int:dataset_id>/entries/bulkCreate", methods=["POST"])
-@wrap_route(List[GridoptimizationDatasetNewEntry], None, "WRITE")
+@wrap_route("WRITE")
 def add_gridoptimization_dataset_entries_v1(dataset_id: int, *, body_data: List[GridoptimizationDatasetNewEntry]):
     return storage_socket.datasets.gridoptimization.add_entries(
         dataset_id,

@@ -156,9 +156,7 @@ def check_permissions(requested_action: str):
 
 
 def wrap_route(
-    body_model: Optional[_T],
-    url_params_model: Optional[Type[pydantic.BaseModel]] = None,
-    requested_action="READ",
+    requested_action,
     check_access: bool = True,
 ) -> Callable:
     def decorate(fn):
@@ -185,6 +183,13 @@ def wrap_route(
             # will accept that
             if accept_type == "text/html":
                 accept_type = "application/json"
+
+            # get the type annotations for body_model and url_params_model
+            # from the wrapped function
+            annotations = fn.__annotations__
+
+            body_model = annotations.get("body_data", None)
+            url_params_model = annotations.get("url_params", None)
 
             # 1. The body is stored in request.data
             if body_model is not None:

@@ -11,7 +11,7 @@ from qcportal.utils import calculate_limit
 # WRITE action is not a mistake. Claim does some changes to the DB, so require
 # a bit more than read
 @main.route("/v1/tasks/claim", methods=["POST"])
-@wrap_route(TaskClaimBody, None, "WRITE")
+@wrap_route("WRITE")
 def claim_tasks_v1(body_data: TaskClaimBody):
     """Claims tasks from the task queue"""
 
@@ -24,7 +24,7 @@ def claim_tasks_v1(body_data: TaskClaimBody):
 
 
 @main.route("/v1/tasks/return", methods=["POST"])
-@wrap_route(TaskReturnBody, None, "WRITE")
+@wrap_route("WRITE")
 def return_tasks_v1(body_data: TaskReturnBody):
     """Return finished tasks"""
 
