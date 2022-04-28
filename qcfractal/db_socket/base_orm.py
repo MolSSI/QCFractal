@@ -1,3 +1,7 @@
+"""
+Base declarative class for all ORM
+"""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -13,10 +17,30 @@ if TYPE_CHECKING:
 
 @as_declarative()
 class BaseORM:
-    """Base declarative class of all ORM models"""
+    """Base declarative class of all ORM"""
 
     @staticmethod
     def append_exclude(exclude: Optional[Iterable[str]] = None, *args: str) -> List[str]:
+        """
+        Appends additional exclude entries to a list
+
+        The updated list is returned. If a list or other iterable is not given (ie, `exclude` is `None`)
+        then one created.
+
+        Parameters
+        ----------
+        exclude
+            Existing list (or other iterable) of includes. This input may be modified.
+
+        args
+            Additional exclude entries to add to the list
+
+        Returns
+        -------
+        :
+            The input iterable as a list, with the additional entries added.
+        """
+
         if exclude is None:
             return list(args)
         else:
@@ -27,10 +51,10 @@ class BaseORM:
     @classmethod
     def from_model(cls, model_data: Union[dict, BaseModel]):
         """
-        Converts a pydantic model or data type to this ORM
+        Converts a pydantic model or dictionary to this ORM type
 
         By default, we just construct the ORM from the fields of the model. If they don't match one-to-one,
-        then this should be overridden by the derived class
+        then this function should be overridden by the derived class
         """
 
         if isinstance(model_data, dict):
@@ -43,9 +67,6 @@ class BaseORM:
         Converts the ORM to a dictionary that corresponds to the QCPortal pydantic model or type
 
         All columns are included by default, but some can be removed using the exclude parameter.
-
-        The include_relations parameter specifies any relations to also
-        include in the dictionary. By default, none will be included.
         """
 
         d = self.__dict__.copy()
