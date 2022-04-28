@@ -1,7 +1,7 @@
 import time
 import traceback
 from functools import wraps
-from typing import Optional, Type, Callable, TypeVar, Dict, List, Any, Iterable
+from typing import Callable, Dict, List, Any
 from urllib.parse import urlparse
 
 import pydantic
@@ -20,14 +20,6 @@ from qcfractal.app import main, storage_socket
 from qcfractal.app.policyuniverse import Policy
 from qcportal.exceptions import UserReportableError, AuthenticationFailure, ComputeManagerError
 from qcportal.serialization import deserialize, serialize
-
-_T = TypeVar("_T")
-
-_valid_encodings = {
-    "application/json": "json",
-    "application/json-ext": "json-ext",
-    "application/msgpack-ext": "msgpack-ext",
-}
 
 _read_permissions: Dict[str, Dict[str, List[Dict[str, str]]]] = {}
 
@@ -94,22 +86,22 @@ def after_request_func(response: Response):
 
 def check_permissions(requested_action: str):
     """
-    Check for access to the URL given
-    permissions in the JWT token in the request headers
+    Check for access to the URL given permissions in the JWT token in the request headers
 
-    1- If no security (enable_security is False), always allow
-    2- If enable_security:
-        if read allowed (allow_unauthenticated_read=True), use the default read permissions
-        otherwise, check against the logged-in user permissions
-        from the headers' JWT token
+    1. If no security (enable_security is False), always allow
+    2. If security is enabled, and if read allowed (allow_unauthenticated_read=True), use the default read permissions.
+       Otherwise, check against the logged-in user permissions from the headers' JWT token
     """
 
-    # First - check permissions
-    security_enabled = current_app.config["QCFRACTAL_CONFIG"].enable_security
-    allow_unauthenticated_read = current_app.config["QCFRACTAL_CONFIG"].allow_unauthenticated_read
+    # uppercase by convention
+    requested_action = requested_action.upper()
+
+    # Read in config parameters
+    security_enabled: bool = current_app.config["QCFRACTAL_CONFIG"].enable_security
+    allow_unauthenticated_read: bool = current_app.config["QCFRACTAL_CONFIG"].allow_unauthenticated_read
 
     # if no auth required, always allowed
-    if not security_enabled:
+    if security_enabled is False:
         return
 
     # load read permissions from DB if not already loaded
@@ -117,8 +109,7 @@ def check_permissions(requested_action: str):
     if not _read_permissions:
         _read_permissions = storage_socket.roles.get("read")["permissions"]
 
-    # if read is allowed without login, use read_permissions
-    # otherwise, check logged-in permissions
+    # Check for the JWT in the header
     if allow_unauthenticated_read:
         # don't raise exception if no JWT is found
         verify_jwt_in_request(optional=True)
@@ -159,6 +150,33 @@ def wrap_route(
     requested_action,
     check_access: bool = True,
 ) -> Callable:
+    """
+    Decorator that wraps a Flask route function, providing useful functionality
+
+    This wrapper handles several things:
+
+        1. Checks the JWT for permission to access this route (with the requested action)
+        2. Parses the request body and URL params, and converts them to the appropriate model (see below)
+        3. Serializes the response returned from the wrapped function into the appropriate
+           type (taken from the accepted mimetypes)
+
+    The data packaged with the request may be json, msgpack, or maybe others in the future.
+    This is deserialized and converted to the types needed by the wrapped function. These
+    types are read from the type annotations on the wrapped function.
+
+    There are two function parameters that are inspected - `url_params` for the URL parameters,
+    and `body_data` for data included in the request body. The type annotations for these
+    parameters are read, and then pydantic is used to convert the deserialized request body/params
+    into the appropriate type, after which they are passed to the function.
+
+    Parameters
+    ----------
+    requested_action
+        The overall type of action that this route handles (read, write, etc)
+    check_access
+        If True, check to make sure the user has permission to access this route
+    """
+
     def decorate(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):

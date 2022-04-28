@@ -10,6 +10,11 @@ if TYPE_CHECKING:
 def prefix_projection(proj_params: ProjURLParameters, prefix: str) -> Tuple[Optional[List[str]], Optional[List[str]]]:
     """
     Prefixes includes and excludes with a string
+
+    This is used for mapping a set of includes/excludes to a relationship of an ORM. For example,
+    you may have an endpoint for molecules of a computation (/record/1/molecule) which contains
+    include/exclude in its url parameters. This function is used to map those includes/excludes to
+    the "molecule" relationship of the record.
     """
 
     ch_includes = proj_params.include
