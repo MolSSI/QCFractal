@@ -20,6 +20,10 @@ if TYPE_CHECKING:
 
 
 class RecordCommentORM(BaseORM):
+    """
+    Table for storing comments on calculations
+    """
+
     __tablename__ = "record_comment"
 
     id = Column(Integer, primary_key=True)
@@ -32,6 +36,13 @@ class RecordCommentORM(BaseORM):
 
 
 class RecordInfoBackupORM(BaseORM):
+    """
+    Table for storing backup info about a record
+
+    This stores previous tag, status, priority, etc, for a record. This is used when undoing
+    delete, canceling, etc.
+    """
+
     __tablename__ = "record_info_backup"
 
     id = Column(Integer, primary_key=True)
@@ -50,6 +61,14 @@ class RecordInfoBackupORM(BaseORM):
 
 
 class RecordComputeHistoryORM(BaseORM):
+    """
+    Table for storing the computation history of a record
+
+    The computation history stores the result status, provenance, and manager info that
+    ran a computation. This is useful for storing the history of records that have errored multiple
+    times.
+    """
+
     __tablename__ = "record_compute_history"
 
     id = Column(Integer, primary_key=True)
@@ -70,6 +89,13 @@ class RecordComputeHistoryORM(BaseORM):
     )
 
     def upsert_output(self, session, new_output_orm: OutputStore) -> None:
+        """
+        Insert or replace an output in this history entry
+
+        Given a new output orm, if it doesn't exist, add it. If an
+        output of the same type already exists, then delete that one and
+        insert the new one.
+        """
         output_type = new_output_orm.output_type
 
         if output_type in self.outputs:
@@ -80,6 +106,11 @@ class RecordComputeHistoryORM(BaseORM):
         self.outputs[output_type] = new_output_orm
 
     def get_output(self, output_type: OutputTypeEnum) -> OutputStoreORM:
+        """
+        Get an output of a specific type
+
+        If the output doesn't exist, then it is created.
+        """
 
         if output_type in self.outputs:
             return self.outputs[output_type]
@@ -92,7 +123,7 @@ class RecordComputeHistoryORM(BaseORM):
 
 class BaseRecordORM(BaseORM):
     """
-    Base class for all kinds of records
+    Base class for all the kinds of records
     """
 
     __tablename__ = "base_record"
@@ -152,4 +183,8 @@ class BaseRecordORM(BaseORM):
 
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:
+        """
+        Obtain a dictionary of required programs and versions
+        """
+
         raise RuntimeError("Developer error - cannot create task for base record")

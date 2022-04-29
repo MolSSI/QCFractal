@@ -39,6 +39,10 @@ def _hash_password(password: str) -> bytes:
 
 
 class UserSocket:
+    """
+    Socket for managing users
+    """
+
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
@@ -76,7 +80,8 @@ class UserSocket:
         Parameters
         ----------
         session
-            An existing SQLAlchemy session to use. If None, one will be created
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
         """
 
         with self.root_socket.optional_session(session, True) as session:
@@ -113,7 +118,8 @@ class UserSocket:
         username
             The username of the user
         session
-            An existing SQLAlchemy session to use. If None, one will be created
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
@@ -137,7 +143,7 @@ class UserSocket:
             The user's password. If None, a new password will be generated.
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
@@ -188,7 +194,8 @@ class UserSocket:
         password
             The password associated with the username
         session
-            An existing SQLAlchemy session to use. If None, one will be created
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         --------
@@ -241,7 +248,7 @@ class UserSocket:
             Enable changing sensitive columns (enabled & role)
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
@@ -282,7 +289,7 @@ class UserSocket:
             password will be generated
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
@@ -315,7 +322,7 @@ class UserSocket:
             The username of the user
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
         """
 
         try:

@@ -26,6 +26,7 @@ from .db_models import RecordComputeHistoryORM, BaseRecordORM, RecordInfoBackupO
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
+    from sqlalchemy.sql import Select
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.db_socket.base_orm import BaseORM
     from qcportal.records import AllResultTypes, RecordQueryBody, RecordModifyBody
@@ -77,7 +78,11 @@ def create_compute_history_entry(
     return history_orm
 
 
-def native_files_helper(result: AllResultTypes) -> Dict[str, NativeFileORM]:
+def native_files_to_orm(result: AllResultTypes) -> Dict[str, NativeFileORM]:
+    """
+    Convert the native files stored in a QCElemental result to an ORM
+    """
+
     # Get the compressed outputs if they exist
     compressed_nf = result.extras.get("_qcfractal_compressed_native_files", None)
 
@@ -89,6 +94,9 @@ def native_files_helper(result: AllResultTypes) -> Dict[str, NativeFileORM]:
 
 
 class BaseRecordSocket:
+    """
+    Base class for all record sockets
+    """
 
     # Must be overridden by derived classes
     record_orm: Optional[Type[BaseRecordORM]] = None
@@ -102,13 +110,19 @@ class BaseRecordSocket:
         assert self.specification_orm is not None
 
     @staticmethod
-    def get_children_select():
+    def get_children_select() -> List[Any]:
+        """
+        Return a list of 'select' statements that contain a mapping of parent to child ids
+
+        This is used to construct a CTE. That table consists of two columns - parent_id and child_id,
+        which is used in various queries
+        """
         raise NotImplementedError(f"get_children_select not implemented! This is a developer error")
 
     @staticmethod
     def create_task(record_orm: BaseRecordORM, tag: str, priority: PriorityEnum) -> None:
         """
-        Recreate the entry in the task queue
+        Create an entry in the task queue, and attach it to the given record ORM
         """
 
         record_orm.task = TaskQueueORM(tag=tag, priority=priority, required_programs=record_orm.required_programs)
@@ -116,7 +130,7 @@ class BaseRecordSocket:
     @staticmethod
     def create_service(record_orm: BaseRecordORM, tag: str, priority: PriorityEnum) -> None:
         """
-        Recreate the entry in the serivce queue
+        Create an entry in the service queue, and attach it to the given record ORM
         """
 
         record_orm.service = ServiceQueueORM(service_state={}, tag=tag, priority=priority)
@@ -133,13 +147,8 @@ class BaseRecordSocket:
         """
         Obtain a record with specified IDs
 
-        This function should be usable with all sockets. It uses the ORM type
-        specified in the constructor.
-
-        The returned information will be in order of the given ids
-
-        If missing_ok is False, then any ids that are missing in the database will raise an exception. Otherwise,
-        the corresponding entry in the returned list of results will be None.
+        This function should be usable with all sockets - it uses the ORM type that was given
+        in the constructor.
 
         Parameters
         ----------
@@ -153,7 +162,8 @@ class BaseRecordSocket:
            If set to True, then missing results will be tolerated, and the returned list of
            Molecules will contain None for the corresponding IDs that were not found.
         session
-            An existing SQLAlchemy session to use. If None, one will be created
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
@@ -167,8 +177,9 @@ class BaseRecordSocket:
 
     def generate_task_specification(self, record_orm: BaseRecordORM) -> Dict[str, Any]:
         """
-        Generate the specification for a task
+        Generate the actual QCSchema input and related fields for a task
         """
+
         raise NotImplementedError(
             f"generate_task_specification not implemented for {type(self)}! This is a developer error"
         )
@@ -176,6 +187,9 @@ class BaseRecordSocket:
     def update_completed_task(
         self, session: Session, record_orm: BaseRecordORM, result: AllResultTypes, manager_name: str
     ) -> None:
+        """
+        Update a record ORM based on the result of a successfully-completed computation
+        """
         raise NotImplementedError(f"updated_completed not implemented for {type(self)}! This is a developer error")
 
     def insert_complete_record(
@@ -183,16 +197,42 @@ class BaseRecordSocket:
         session: Session,
         result: AllResultTypes,
     ) -> BaseRecordORM:
+        """
+        Create a new ORM based on the result of a successfully-completed computation
+
+        This will always create new ORM from scratch, and not update any existing records.
+        """
         raise NotImplementedError(f"insert_completed not implemented for {type(self)}! This is a developer error")
 
     def initialize_service(self, session: Session, service_orm: ServiceQueueORM) -> None:
+        """
+        Initialize a new service
+
+        A service is initialized when it moves from a waiting state to a running state. After it is
+        initialized, iterate_service may be called.
+        """
         raise NotImplementedError(f"initialize_service not implemented for {type(self)}! This is a developer error")
 
     def iterate_service(self, session: Session, service_orm: ServiceQueueORM) -> bool:
+        """
+        Iterate a service with successfully-completed dependencies
+
+        The server will check to see if all dependencies are successfully completed. If they are, this function
+        is called.
+
+        Cases where the service has an errored dependency are handled elsewhere.
+        """
         raise NotImplementedError(f"iterate_service not implemented for {type(self)}! This is a developer error")
 
 
 class RecordSocket:
+    """
+    Root socket for all record sockets
+
+    This socket contains lots of functionality that is common for all records, as well as
+    acts as a root socket for all specific record sockets.
+    """
+
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
@@ -236,16 +276,29 @@ class RecordSocket:
             sel = h.get_children_select()
             selects.extend(sel)
 
-        # Union them into a CTE
+        # Union them into a single CTE
         self._child_cte = union(*selects).cte()
 
     def get_socket(self, record_type: str) -> BaseRecordSocket:
+        """
+        Get the socket for a specific kind of record type
+        """
+
         handler = self._handler_map.get(record_type, None)
         if handler is None:
             raise MissingDataError(f"Cannot find handler for type {record_type}")
         return handler
 
-    def get_subtask_ids(self, session: Session, record_ids: Iterable[int]) -> List[int]:
+    def get_dependency_ids(self, session: Session, record_ids: Iterable[int]) -> List[int]:
+        """
+        Get record ids of dependencies of the given records
+
+        This only makes sense for records that are services. These services have
+        records that are dependencies of that service.
+
+        Note that this function takes in and returns record ids, not service queue ids.
+        """
+
         # List may contain duplicates. So be tolerant of that!
         stmt = select(ServiceDependencyORM.record_id)
         stmt = stmt.join(ServiceQueueORM, ServiceQueueORM.id == ServiceDependencyORM.service_id)
@@ -254,7 +307,7 @@ class RecordSocket:
 
     def get_children_ids(self, session: Session, record_ids: Iterable[int]) -> List[int]:
         """
-        Recursively obtain the record IDs of all children records
+        Recursively obtain the IDs of all children records of the given records
         """
 
         all_children_ids = []
@@ -273,7 +326,7 @@ class RecordSocket:
 
     def get_parent_ids(self, session: Session, record_ids: Iterable[int]) -> List[int]:
         """
-        Recursively obtain the record IDs of all parent records
+        Recursively obtain the IDs of all parent records of the given records
         """
 
         all_parent_ids = []
@@ -292,7 +345,7 @@ class RecordSocket:
 
     def get_relative_ids(self, session: Session, record_ids: Iterable[int]) -> List[int]:
         """
-        Recursively obtain the record IDs of all parent and children records
+        Recursively obtain the IDs of all parent and children records of the given records
         """
 
         all_relative_ids = set()
@@ -323,12 +376,38 @@ class RecordSocket:
 
     def query_base(
         self,
-        stmt,
+        stmt: Select,
         orm_type: Type[BaseRecordORM],
         query_data: RecordQueryBody,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+        """
+        Core query functionality of all records
+
+        Each record type will first create an SQLAlchemy Select stmt with all the record-specific
+        fields and options. Then it will pass that stmt to this function, which will add queries/filters for all the
+        common fields (ids, manager_names, created/modified, etc) that are passed in through
+        `query_data`
+
+        Parameters
+        ----------
+        stmt
+            An SQLAlchemy select statement with record-specific filters
+        orm_type
+            The type of ORM we are querying for
+        query_data
+            Common record filters to add to the query
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of records (as dictionaries)
+            that were found in the database.
+        """
 
         proj_options = get_query_proj_options(orm_type, query_data.include, query_data.exclude)
 
@@ -388,6 +467,23 @@ class RecordSocket:
         *,
         session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+        """
+        Query records of any kind based on common fields
+
+        Parameters
+        ----------
+        query_data
+            Fields/filters to query for
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of records (as dictionaries)
+            that were found in the database.
+        """
 
         # If all columns are included, then we can load
         # the data from derived classes as well.
@@ -396,7 +492,6 @@ class RecordSocket:
         else:
             wp = BaseRecordORM
 
-        # The bare minimum when queried from the base record socket
         stmt = select(wp)
 
         return self.query_base(
@@ -418,11 +513,6 @@ class RecordSocket:
         """
         Obtain records of any kind of record with specified IDs
 
-        The returned information will be in order of the given ids
-
-        If missing_ok is False, then any ids that are missing in the database will raise an exception. Otherwise,
-        the corresponding entry in the returned list of results will be None.
-
         Parameters
         ----------
         record_ids
@@ -435,13 +525,14 @@ class RecordSocket:
            If set to True, then missing results will be tolerated, and the returned list of
            Molecules will contain None for the corresponding IDs that were not found.
         session
-            An existing SQLAlchemy session to use. If None, one will be created
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
         :
-            Records as a dictionary in the same order as the given ids.
-            If missing_ok is True, then this list will contain None where the molecule was missing.
+            Records (as dictionaries) in the same order as the given ids.
+            If missing_ok is True, then this list will contain None where the record was missing.
         """
 
         # If all columns are included, then we can load
@@ -456,7 +547,7 @@ class RecordSocket:
 
     def generate_task_specification(self, task_orm: Sequence[TaskQueueORM]):
         """
-        Generates the actual qcschema specification and related fields for a computation
+        Generate the actual QCSchema input and related fields for a task
         """
 
         for t in task_orm:
@@ -467,6 +558,20 @@ class RecordSocket:
     def update_completed_task(
         self, session: Session, record_orm: BaseRecordORM, result: AllResultTypes, manager_name: str
     ):
+        """
+        Update a record ORM based on the results of a successfully-completed computation
+
+        Parameters
+        ----------
+        session
+            An existing SQLAlchemy session
+        record_orm
+            ORM to update and mark as completed
+        result
+            The result of the computation. This should be a successful result
+        manager_name
+            The manager that produced the result
+        """
 
         if isinstance(result, FailedOperation) or not result.success:
             raise RuntimeError("Developer error - this function only handles successful results")
@@ -484,7 +589,7 @@ class RecordSocket:
         history_orm = create_compute_history_entry(result)
         history_orm.manager_name = manager_name
         record_orm.compute_history.append(history_orm)
-        record_orm.native_files = native_files_helper(result)
+        record_orm.native_files = native_files_to_orm(result)
 
         record_orm.status = history_orm.status
         record_orm.manager_name = manager_name
@@ -493,89 +598,19 @@ class RecordSocket:
         # Delete the task from the task queue since it is completed
         session.delete(record_orm.task)
 
-    def initialize_service(self, session: Session, service_orm: ServiceQueueORM) -> None:
-        if not service_orm.record.is_service:
-            raise RuntimeError("Cannot initialize a record that is not a service")
-
-        record_type = service_orm.record.record_type
-        return self._handler_map[record_type].initialize_service(session, service_orm)
-
-    def iterate_service(self, session: Session, service_orm: ServiceQueueORM) -> bool:
-        if not service_orm.record.is_service:
-            raise RuntimeError("Cannot iterate a record that is not a service")
-
-        record_type = service_orm.record.record_type
-        return self._handler_map[record_type].iterate_service(session, service_orm)
-
-    def update_failed_service(self, session, record_orm: BaseRecordORM, error_info: Dict[str, Any]):
-        record_orm.status = RecordStatusEnum.error
-
-        error_obj = OutputStore.compress(OutputTypeEnum.error, error_info, CompressionEnum.lzma, 1)
-        error_orm = OutputStoreORM.from_model(error_obj)
-        record_orm.compute_history[-1].status = RecordStatusEnum.error
-
-        record_orm.compute_history[-1].upsert_output(session, error_orm)
-        record_orm.compute_history[-1].modified_on = datetime.utcnow()
-
-        record_orm.status = RecordStatusEnum.error
-        record_orm.modified_on = datetime.utcnow()
-
-    def insert_complete_record(self, session: Session, results: Sequence[AllResultTypes]) -> List[int]:
-
-        ids = []
-
-        for result in results:
-            if isinstance(result, FailedOperation) or not result.success:
-                raise UserReportableError("Cannot insert a completed, failed operation")
-
-            # Get the outputs & status, storing in the history orm.
-            # Do this before calling the individual record handlers since it modifies extras
-            # (looking for compressed outputs)
-            history_orm = create_compute_history_entry(result)
-
-            # Now the record-specific stuff
-            handler = self._handler_map_by_schema[result.schema_name]
-            record_orm = handler.insert_complete_record(session, result)
-
-            # Now back to the common modifications
-            record_orm.compute_history.append(history_orm)
-            record_orm.native_files = native_files_helper(result)
-
-            record_orm.status = history_orm.status
-            record_orm.modified_on = history_orm.modified_on
-
-            session.flush()
-            ids.append(record_orm.id)
-
-        return ids
-
-    def add_comment(
-        self, record_ids: Sequence[int], username: Optional[str], comment: str, *, session: Optional[Session] = None
-    ) -> UpdateMetadata:
-
-        with self.root_socket.optional_session(session) as session:
-            # find only existing records
-            stmt = select(BaseRecordORM.id).where(BaseRecordORM.id.in_(record_ids))
-            stmt = stmt.with_for_update()
-            existing_ids = session.execute(stmt).scalars().all()
-
-            for rid in existing_ids:
-                comment_orm = RecordCommentORM(
-                    record_id=rid,
-                    username=username,
-                    comment=comment,
-                )
-                session.add(comment_orm)
-
-            updated_idx = [idx for idx, rid in enumerate(record_ids) if rid in existing_ids]
-            missing_idx = [idx for idx, rid in enumerate(record_ids) if rid not in existing_ids]
-
-            return UpdateMetadata(
-                updated_idx=updated_idx,
-                errors=[(idx, "Record does not exist") for idx in missing_idx],
-            )
-
     def update_failed_task(self, record_orm: BaseRecordORM, failed_result: FailedOperation, manager_name: str):
+        """
+        Update a record ORM whose computation has failed, and mark it as errored
+
+        Parameters
+        ----------
+        record_orm
+            ORM to update and mark as errored
+        failed_result
+            The (failed) result of the computation
+        manager_name
+            The manager that produced the result
+        """
         if not isinstance(failed_result, FailedOperation):
             raise RuntimeError("Developer error - this function only handles FailedOperation results")
 
@@ -614,6 +649,134 @@ class RecordSocket:
         record_orm.manager_name = manager_name
         record_orm.compute_history.append(history_orm)
 
+    def initialize_service(self, session: Session, service_orm: ServiceQueueORM) -> None:
+        """
+        Initialize a service
+
+        A service is initialized when it moves from a waiting state to a running state. After it is
+        initialized, iterate_service may be called.
+        """
+
+        if not service_orm.record.is_service:
+            raise RuntimeError("Cannot initialize a record that is not a service")
+
+        record_type = service_orm.record.record_type
+        return self._handler_map[record_type].initialize_service(session, service_orm)
+
+    def iterate_service(self, session: Session, service_orm: ServiceQueueORM) -> bool:
+        """
+        Iterate a service with successfully-completed dependencies
+
+        The server will check to see if all dependencies are successfully completed. If they are, this function
+        is called.
+
+        Cases where the service has an errored dependency are handled in :meth:`RecordSocket.update_failed_service`.
+        """
+
+        if not service_orm.record.is_service:
+            raise RuntimeError("Cannot iterate a record that is not a service")
+
+        record_type = service_orm.record.record_type
+        return self._handler_map[record_type].iterate_service(session, service_orm)
+
+    def update_failed_service(self, session, record_orm: BaseRecordORM, error_info: Dict[str, Any]):
+        """
+        Handle a service with errored dependencies
+        """
+        record_orm.status = RecordStatusEnum.error
+
+        error_obj = OutputStore.compress(OutputTypeEnum.error, error_info, CompressionEnum.lzma, 1)
+        error_orm = OutputStoreORM.from_model(error_obj)
+        record_orm.compute_history[-1].status = RecordStatusEnum.error
+
+        record_orm.compute_history[-1].upsert_output(session, error_orm)
+        record_orm.compute_history[-1].modified_on = datetime.utcnow()
+
+        record_orm.status = RecordStatusEnum.error
+        record_orm.modified_on = datetime.utcnow()
+
+    def insert_complete_record(self, session: Session, results: Sequence[AllResultTypes]) -> List[int]:
+        """
+        Create a new ORM based on the result of a successfully-completed computation
+
+        This will always create new ORM from scratch, and not update any existing records.
+        """
+
+        ids = []
+
+        for result in results:
+            if isinstance(result, FailedOperation) or not result.success:
+                raise UserReportableError("Cannot insert a completed, failed operation")
+
+            # Get the outputs & status, storing in the history orm.
+            # Do this before calling the individual record handlers since it modifies extras
+            # (looking for compressed outputs)
+            history_orm = create_compute_history_entry(result)
+
+            # Now the record-specific stuff
+            handler = self._handler_map_by_schema[result.schema_name]
+            record_orm = handler.insert_complete_record(session, result)
+
+            # Now back to the common modifications
+            record_orm.compute_history.append(history_orm)
+            record_orm.native_files = native_files_to_orm(result)
+
+            record_orm.status = history_orm.status
+            record_orm.modified_on = history_orm.modified_on
+
+            session.flush()
+            ids.append(record_orm.id)
+
+        return ids
+
+    def add_comment(
+        self, record_ids: Sequence[int], username: Optional[str], comment: str, *, session: Optional[Session] = None
+    ) -> UpdateMetadata:
+        """
+        Adds a comment to records
+
+        Comments are free-form strings attached to a record.
+
+        Parameters
+        ----------
+        record_ids
+            Records to add the comment to
+        username
+            The name of the user that is adding the comment
+        comment
+            The comment to be attached to the record
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the modification/update.
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            # find only existing records
+            stmt = select(BaseRecordORM.id).where(BaseRecordORM.id.in_(record_ids))
+            stmt = stmt.with_for_update()
+            existing_ids = session.execute(stmt).scalars().all()
+
+            for rid in existing_ids:
+                comment_orm = RecordCommentORM(
+                    record_id=rid,
+                    username=username,
+                    comment=comment,
+                )
+                session.add(comment_orm)
+
+            updated_idx = [idx for idx, rid in enumerate(record_ids) if rid in existing_ids]
+            missing_idx = [idx for idx, rid in enumerate(record_ids) if rid not in existing_ids]
+
+            return UpdateMetadata(
+                updated_idx=updated_idx,
+                errors=[(idx, "Record does not exist") for idx in missing_idx],
+            )
+
     def reset_assigned(
         self,
         manager_name: Optional[Iterable[str]] = None,
@@ -629,7 +792,7 @@ class RecordSocket:
             Reset the status of records belonging to these managers
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
@@ -674,7 +837,7 @@ class RecordSocket:
             Reset the status of these record ids
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
@@ -763,7 +926,7 @@ class RecordSocket:
 
         Cancelling, deleting, and invalidation basically the same, with the only difference
         being that they apply to different statuses.
-        The connotation of these operations is of course different, but internally they behave the same.
+        The connotation of these operations is different, but internally they behave the same.
 
         Parameters
         ----------
@@ -775,7 +938,7 @@ class RecordSocket:
             Apply the operation to children as well
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
@@ -846,7 +1009,7 @@ class RecordSocket:
 
     def reset(self, record_ids: Sequence[int], *, session: Optional[Session] = None):
         """
-        Resets a running or errored record to be waiting again
+        Resets running or errored records to be waiting again
         """
 
         return self._revert_common(
@@ -862,7 +1025,7 @@ class RecordSocket:
         session: Optional[Session] = None,
     ) -> DeleteMetadata:
         """
-        Marks a record as deleted
+        Delete records of computations in the database
 
         If soft_delete is True, then the record is just marked as deleted and actually deletion may
         happen later. Soft delete can be undone with undelete
@@ -877,12 +1040,12 @@ class RecordSocket:
             Don't actually delete the record, just mark it for later deletion
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
         :
-            Metadata about what was deleted
+            Metadata about what was deleted (or marked as deleted)
         """
 
         if len(record_ids) == 0:
@@ -933,6 +1096,8 @@ class RecordSocket:
         """
         Marks a record as cancelled
 
+        A cancelled record will not be picked up by a manager.
+
         Parameters
         ----------
         record_ids
@@ -941,7 +1106,7 @@ class RecordSocket:
             Cancel all children as well
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
@@ -966,7 +1131,8 @@ class RecordSocket:
         """
         Marks a record as invalid
 
-        This only applies to completed records
+        An invalid record is one that supposedly successfully completed. However, after review,
+        is not correct.
 
         Parameters
         ----------
@@ -974,7 +1140,7 @@ class RecordSocket:
             Reset the status of these record ids
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
@@ -1000,19 +1166,6 @@ class RecordSocket:
         Undeletes records that were soft deleted
 
         This will always undelete children whenever possible
-
-        Parameters
-        ----------
-        record_ids
-            ID of the record to undelete
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
-
-        Returns
-        -------
-        :
-            Metadata about what was undeleted
         """
         if len(record_ids) == 0:
             return UpdateMetadata()
@@ -1095,6 +1248,9 @@ class RecordSocket:
             Metadata about what was updated
         """
 
+        if new_tag == "":
+            new_tag = None
+
         # Do we have anything to do?
         if new_tag is None and new_priority is None:
             return UpdateMetadata()
@@ -1103,7 +1259,7 @@ class RecordSocket:
 
         with self.root_socket.optional_session(session) as session:
             # Get subtasks for all the records that are services
-            subtask_id = self.get_subtask_ids(session, record_ids)
+            subtask_id = self.get_dependency_ids(session, record_ids)
             all_id.update(subtask_id)
 
             # Do a manual join, not a joined load - we don't want to actually load the base record, just
@@ -1179,6 +1335,13 @@ class RecordSocket:
                 )
 
     def revert_generic(self, record_id: Sequence[int], revert_status: RecordStatusEnum):
+        """
+        Reverts the status of a record to the previous status
+
+        This dispatches the request to the proper function based on the status. For example,
+        if `revert_status` is "deleted", then this will call undelete.
+        """
+
         if revert_status == RecordStatusEnum.cancelled:
             return self.uncancel(record_id)
 

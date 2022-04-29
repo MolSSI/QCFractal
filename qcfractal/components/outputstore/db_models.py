@@ -9,10 +9,14 @@ from qcportal.compression import CompressionEnum
 from qcportal.outputstore import OutputTypeEnum, OutputStore
 
 if TYPE_CHECKING:
-    from typing import Dict, Any, Optional, Iterable, List
+    from typing import Dict, Any, Optional, Iterable
 
 
 class OutputStoreORM(BaseORM):
+    """
+    Table for storing raw computation outputs (text) and errors (json)
+    """
+
     __tablename__ = "output_store"
 
     id = Column(Integer, primary_key=True)
@@ -30,7 +34,6 @@ class OutputStoreORM(BaseORM):
     )
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-
         # Fields not in model
         exclude = self.append_exclude(exclude, "id", "history_id")
 
@@ -52,6 +55,10 @@ class OutputStoreORM(BaseORM):
         return d
 
     def append(self, to_append: str):
+        """
+        Appends text to output stored in this orm
+        """
+
         out_obj = OutputStore(**self.model_dict())
         new_str = out_obj.as_string + to_append
 

@@ -25,12 +25,38 @@ if TYPE_CHECKING:
 
 
 class ServiceSocket:
+    """
+    Socket for managing services
+    """
+
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
         self._max_active_services = root_socket.qcf_config.max_active_services
 
     def iterate_services(self, *, session: Optional[Session] = None) -> int:
+        """
+        Check for services that have their dependencies finished, and iterate or mark them as errored
+
+        This function will search for services that have all their dependencies finished. If any of the
+        dependencies is errored, it will mark the service as errored. Otherwise, it will call the
+        record-dependent iterate_service function.
+
+        If that function returns 0, indicating that the service has successfully completed, this function
+        will then handle the cleanup.
+
+        After that, this function will start new services if needed.
+
+        Parameters
+        ----------
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+
+        """
 
         self._logger.info("Iterating on services")
         # A CTE that contains just service id and all the statuses as an array
@@ -95,7 +121,7 @@ class ServiceSocket:
                 self.root_socket.records.update_failed_service(session, service_orm.record, error)
                 session.commit()
 
-                self.root_socket.notify_completed_watch(service_orm.record_id, RecordStatusEnum.error)
+                self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.error)
 
             # Completed, successful service dependencies. Service is ready for the next iteration
             for service_orm in completed_services:
@@ -114,7 +140,7 @@ class ServiceSocket:
                     }
                     self.root_socket.records.update_failed_service(session, service_orm.record, error)
                     session.commit()
-                    self.root_socket.notify_completed_watch(service_orm.record_id, RecordStatusEnum.error)
+                    self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.error)
                     continue
 
                 # If the service has successfully completed, delete the entry from the Service Queue
@@ -129,7 +155,7 @@ class ServiceSocket:
                     session.delete(service_orm)
 
                     session.commit()
-                    self.root_socket.notify_completed_watch(service_orm.record_id, RecordStatusEnum.complete)
+                    self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.complete)
 
             # Should we start more?
             stmt = select(BaseRecordORM).where(
@@ -219,6 +245,6 @@ class ServiceSocket:
 
                         self.root_socket.records.update_failed_service(session, service_orm.record, error)
                         session.commit()
-                        self.root_socket.notify_completed_watch(service_orm.record_id, RecordStatusEnum.error)
+                        self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.error)
 
         return running_count

@@ -12,6 +12,10 @@ if TYPE_CHECKING:
 
 
 class NativeFileORM(BaseORM):
+    """
+    Table for storing raw, program-dependent raw data
+    """
+
     __tablename__ = "native_file"
 
     id = Column(Integer, primary_key=True)
@@ -30,7 +34,6 @@ class NativeFileORM(BaseORM):
     )
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-
         # Remove fields not present in the model
         exclude = self.append_exclude(exclude, "record_id", "id")
         return BaseORM.model_dict(self, exclude)

@@ -7,6 +7,10 @@ from qcfractal.db_socket import BaseORM
 
 
 class AccessLogORM(BaseORM):
+    """
+    Table for storing a log of accesses/requests
+    """
+
     __tablename__ = "access_log"
 
     id = Column(Integer, primary_key=True)
@@ -43,6 +47,13 @@ class AccessLogORM(BaseORM):
 
 
 class InternalErrorLogORM(BaseORM):
+    """
+    Table for storing internal errors
+
+    Internal errors are usually not reported to the user, and are stored here instead
+    for retrieval by an admin
+    """
+
     __tablename__ = "internal_error_log"
 
     id = Column(Integer, primary_key=True)
@@ -59,6 +70,13 @@ class InternalErrorLogORM(BaseORM):
 
 
 class ServerStatsLogORM(BaseORM):
+    """
+    Table for storing server statistics
+
+    Server statistics (storage size, row count, etc) are periodically captured and
+    stored in this table
+    """
+
     __tablename__ = "server_stats_log"
 
     id = Column(Integer, primary_key=True)

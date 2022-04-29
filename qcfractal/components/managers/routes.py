@@ -1,7 +1,6 @@
 from flask import current_app
 
-from qcfractal.app import main, storage_socket
-from qcfractal.app.routes import wrap_route
+from qcfractal.app import main, wrap_route, storage_socket
 from qcportal.base_models import CommonBulkGetNamesBody
 from qcportal.exceptions import LimitExceededError
 from qcportal.managers import (
@@ -16,8 +15,6 @@ from qcportal.utils import calculate_limit
 @main.route("/v1/managers", methods=["POST"])
 @wrap_route("WRITE")
 def activate_manager_v1(body_data: ManagerActivationBody):
-    """Activates/Registers a manager for use with the server"""
-
     return storage_socket.managers.activate(
         name_data=body_data.name_data,
         manager_version=body_data.manager_version,
@@ -31,10 +28,7 @@ def activate_manager_v1(body_data: ManagerActivationBody):
 @main.route("/v1/managers/<string:name>", methods=["PATCH"])
 @wrap_route("WRITE")
 def update_manager_v1(name: str, body_data: ManagerUpdateBody):
-    """Updates a manager's info
-
-    This endpoint is used for heartbeats and deactivation
-    """
+    # This endpoint is used for heartbeats and deactivation
 
     # Will raise an exception if manager is not active
     storage_socket.managers.update_resource_stats(

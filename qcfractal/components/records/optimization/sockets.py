@@ -34,6 +34,9 @@ if TYPE_CHECKING:
 
 
 class OptimizationRecordSocket(BaseRecordSocket):
+    """
+    Socket for handling optimization computations
+    """
 
     # Used by the base class
     record_orm = OptimizationRecordORM
@@ -51,9 +54,85 @@ class OptimizationRecordSocket(BaseRecordSocket):
         )
         return [stmt]
 
+    def generate_task_specification(self, record_orm: OptimizationRecordORM) -> Dict[str, Any]:
+
+        specification = record_orm.specification
+        initial_molecule = record_orm.initial_molecule.model_dict()
+
+        model = {"method": specification.qc_specification.method}
+        if specification.qc_specification.basis:
+            model["basis"] = specification.qc_specification.basis
+
+        # Add the singlepoint program to the optimization keywords
+        opt_keywords = specification.keywords.copy()
+        opt_keywords["program"] = specification.qc_specification.program
+
+        qcschema_input = QCEl_OptimizationInput(
+            input_specification=QCEl_QCInputSpecification(
+                model=model, keywords=specification.qc_specification.keywords.values
+            ),
+            initial_molecule=initial_molecule,
+            keywords=opt_keywords,
+            protocols=specification.protocols,
+        )
+
+        return {
+            "function": "qcengine.compute_procedure",
+            "args": [qcschema_input.dict(), specification.program],
+            "kwargs": {},
+        }
+
+    def update_completed_task(
+        self, session: Session, record_orm: OptimizationRecordORM, result: QCEl_OptimizationResult, manager_name: str
+    ) -> None:
+
+        # Add the final molecule
+        meta, final_mol_id = self.root_socket.molecules.add([result.final_molecule])
+        if not meta.success:
+            raise RuntimeError("Unable to add final molecule: " + meta.error_string)
+
+        # Insert the trajectory
+        traj_ids = self.root_socket.records.insert_complete_record(session, result.trajectory)
+        record_orm.trajectory = []
+        for position, traj_id in enumerate(traj_ids):
+            assoc_orm = OptimizationTrajectoryORM(singlepoint_id=traj_id)
+            record_orm.trajectory.append(assoc_orm)
+
+        # Update the fields themselves
+        record_orm.final_molecule_id = final_mol_id[0]
+        record_orm.energies = result.energies
+        record_orm.extras = result.extras
+
+    def insert_complete_record(
+        self,
+        session: Session,
+        result: QCEl_OptimizationResult,
+    ) -> SinglepointRecordORM:
+
+        raise RuntimeError("Not yet implemented")
+
     def add_specification(
         self, opt_spec: OptimizationSpecification, *, session: Optional[Session] = None
-    ) -> Tuple[InsertMetadata, Optional[int]]:
+    ) -> Tuple[InsertMetadata, int]:
+        """
+        Adds a specification for an optimization calculation to the database, returning its id.
+
+        If an identical specification exists, then no insertion takes place and the id of the existing
+        specification is returned.
+
+        Parameters
+        ----------
+        opt_spec
+            Specification to add to the database
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and the id of the specification.
+        """
 
         protocols_dict = opt_spec.protocols.dict(exclude_defaults=True)
 
@@ -105,6 +184,23 @@ class OptimizationRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+        """
+        Query optimization records
+
+        Parameters
+        ----------
+        query_data
+            Fields/filters to query for
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of records (as dictionaries)
+            that were found in the database.
+        """
 
         and_query = []
         need_spspec_join = False
@@ -149,34 +245,6 @@ class OptimizationRecordSocket(BaseRecordSocket):
             session=session,
         )
 
-    def generate_task_specification(self, record_orm: OptimizationRecordORM) -> Dict[str, Any]:
-
-        specification = record_orm.specification
-        initial_molecule = record_orm.initial_molecule.model_dict()
-
-        model = {"method": specification.qc_specification.method}
-        if specification.qc_specification.basis:
-            model["basis"] = specification.qc_specification.basis
-
-        # Add the singlepoint program to the optimization keywords
-        opt_keywords = specification.keywords.copy()
-        opt_keywords["program"] = specification.qc_specification.program
-
-        qcschema_input = QCEl_OptimizationInput(
-            input_specification=QCEl_QCInputSpecification(
-                model=model, keywords=specification.qc_specification.keywords.values
-            ),
-            initial_molecule=initial_molecule,
-            keywords=opt_keywords,
-            protocols=specification.protocols,
-        )
-
-        return {
-            "function": "qcengine.compute_procedure",
-            "args": [qcschema_input.dict(), specification.program],
-            "kwargs": {},
-        }
-
     def add_internal(
         self,
         initial_molecule_ids: Sequence[int],
@@ -186,6 +254,35 @@ class OptimizationRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
+        """
+        Internal function for adding new optimization computations
+
+        This function expects that the molecules and specification are already added to the
+        database and that the ids are known.
+
+        This checks if the calculations already exist in the database. If so, it returns
+        the existing id, otherwise it will insert it and return the new id.
+
+        Parameters
+        ----------
+        initial_molecule_ids
+            IDs of the molecules to optimize. One record will be added per molecule.
+        opt_spec_id
+            ID of the specification
+        tag
+            The tag for the task. This will assist in routing to appropriate compute managers.
+        priority
+            The priority for the computation
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and a list of record ids. The ids will be in the
+            order of the input molecules
+        """
 
         tag = tag.lower()
 
@@ -232,17 +329,19 @@ class OptimizationRecordSocket(BaseRecordSocket):
         This checks if the calculations already exist in the database. If so, it returns
         the existing id, otherwise it will insert it and return the new id.
 
-        If session is specified, changes are not committed to to the database, but the session is flushed.
-
         Parameters
         ----------
         initial_molecules
             Molecules to compute using the specification
         opt_spec
             Specification for the calculations
+        tag
+            The tag for the task. This will assist in routing to appropriate compute managers.
+        priority
+            The priority for the computation
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
@@ -272,32 +371,3 @@ class OptimizationRecordSocket(BaseRecordSocket):
                 )
 
             return self.add_internal(mol_ids, spec_id, tag, priority, session=session)
-
-    def update_completed_task(
-        self, session: Session, record_orm: OptimizationRecordORM, result: QCEl_OptimizationResult, manager_name: str
-    ) -> None:
-
-        # Add the final molecule
-        meta, final_mol_id = self.root_socket.molecules.add([result.final_molecule])
-        if not meta.success:
-            raise RuntimeError("Unable to add final molecule: " + meta.error_string)
-
-        # Insert the trajectory
-        traj_ids = self.root_socket.records.insert_complete_record(session, result.trajectory)
-        record_orm.trajectory = []
-        for position, traj_id in enumerate(traj_ids):
-            assoc_orm = OptimizationTrajectoryORM(singlepoint_id=traj_id)
-            record_orm.trajectory.append(assoc_orm)
-
-        # Update the fields themselves
-        record_orm.final_molecule_id = final_mol_id[0]
-        record_orm.energies = result.energies
-        record_orm.extras = result.extras
-
-    def insert_complete_record(
-        self,
-        session: Session,
-        result: QCEl_OptimizationResult,
-    ) -> SinglepointRecordORM:
-
-        raise RuntimeError("Not yet implemented")

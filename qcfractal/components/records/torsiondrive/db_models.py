@@ -17,7 +17,9 @@ if TYPE_CHECKING:
 
 
 class TorsiondriveOptimizationORM(BaseORM):
-    """Association table for many to many"""
+    """
+    Table for storing torsiondrive to optimization relationships
+    """
 
     __tablename__ = "torsiondrive_optimization"
 
@@ -40,7 +42,7 @@ class TorsiondriveOptimizationORM(BaseORM):
 
 class TorsiondriveInitialMoleculeORM(BaseORM):
     """
-    Association table torsiondrive -> initial molecules
+    Table for storing torsiondrive to initial molecule relationships
     """
 
     __tablename__ = "torsiondrive_initial_molecule"
@@ -55,6 +57,10 @@ class TorsiondriveInitialMoleculeORM(BaseORM):
 
 
 class TorsiondriveSpecificationORM(BaseORM):
+    """
+    Table for storing torsiondrive specifications
+    """
+
     __tablename__ = "torsiondrive_specification"
 
     id = Column(Integer, primary_key=True)
@@ -96,7 +102,7 @@ class TorsiondriveSpecificationORM(BaseORM):
 
 class TorsiondriveRecordORM(BaseRecordORM):
     """
-    A torsion drive procedure
+    Table for storing torsiondrive calculations
     """
 
     __tablename__ = "torsiondrive_record"

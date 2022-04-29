@@ -27,7 +27,6 @@ def is_port_inuse(ip: str, port: int) -> bool:
     port: int
         The port on the IP address to check
 
-
     Returns
     -------
     bool

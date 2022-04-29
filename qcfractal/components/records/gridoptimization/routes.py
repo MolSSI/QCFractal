@@ -1,8 +1,6 @@
 from flask import current_app
 
-from qcfractal.app import main, storage_socket
-from qcfractal.app.helpers import prefix_projection
-from qcfractal.app.routes import wrap_route
+from qcfractal.app import main, wrap_route, prefix_projection, storage_socket
 from qcportal.base_models import ProjURLParameters
 from qcportal.exceptions import LimitExceededError
 from qcportal.records.gridoptimization import GridoptimizationAddBody, GridoptimizationQueryBody
@@ -28,7 +26,7 @@ def add_gridoptimization_records_v1(body_data: GridoptimizationAddBody):
 
 @main.route("/v1/records/gridoptimization/<int:record_id>/optimizations", methods=["GET"])
 @wrap_route("READ")
-def get_gridoptimization_optimizations_v1(record_id: int, *, url_params: ProjURLParameters):
+def get_gridoptimization_optimizations_v1(record_id: int, url_params: ProjURLParameters):
     # adjust the includes/excludes to refer to the optimizations
     ch_includes, ch_excludes = prefix_projection(url_params, "optimizations")
     rec = storage_socket.records.gridoptimization.get([record_id], include=ch_includes, exclude=ch_excludes)

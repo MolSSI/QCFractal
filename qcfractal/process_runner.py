@@ -177,6 +177,12 @@ class ProcessRunner:
         logger.debug("Process ended")
 
     def start(self) -> None:
+        """
+        Starts the subprocess
+
+        If it is already running, an exception is raised
+        """
+
         if self._subproc is None or not self._subproc.is_alive():
             self._subproc = self._mp_ctx.Process(
                 name=self._name, target=self._run_process, args=(self._name, self._proc_class)
@@ -190,6 +196,10 @@ class ProcessRunner:
             raise RuntimeError(f"Process {self._name} is already running")
 
     def is_alive(self) -> bool:
+        """
+        Return true if the subprocess is running, otherwise false
+        """
+
         return self._subproc is not None and self._subproc.is_alive()
 
     def stop(self):
@@ -202,6 +212,10 @@ class ProcessRunner:
             self._finalizer()
 
     def exitcode(self) -> Union[int, None]:
+        """
+        Returns the exit code of the subprocess
+        """
+
         return self._subproc.exitcode
 
     @staticmethod

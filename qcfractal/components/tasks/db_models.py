@@ -9,10 +9,8 @@ from qcfractal.db_socket import BaseORM, MsgpackExt
 
 
 class TaskQueueORM(BaseORM):
-    """A queue of tasks corresponding to a procedure
-
-    Notes: don't sort query results without having the index sorted
-           will impact the performance
+    """
+    Table for storing information about tasks
     """
 
     __tablename__ = "task_queue"
@@ -30,7 +28,6 @@ class TaskQueueORM(BaseORM):
 
     created_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
 
-    # can reference SinglepointRecordORMs or any ProcedureORM
     record_id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"), nullable=False)
     record = relationship(BaseRecordORM, back_populates="task", uselist=False)
 

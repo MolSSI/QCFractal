@@ -76,15 +76,29 @@ default_roles: Dict[str, Any] = {
 
 
 class RoleSocket:
+    """
+    Socket for managing user roles
+    """
+
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
 
     def _get_internal(self, session: Session, rolename: str) -> RoleORM:
         """
-        Returns a RoleORM for the given rolename, or raises an exception if it does not exist
+        Returns a RoleORM for the given rolename
 
-        The returned ORM is attached to the session
+        If the user is not found, an exception is raised. The ORM is attached to the given session
+
+        Parameters
+        ----------
+        session
+            SQLAlchemy session to use for querying
+
+        Returns
+        -------
+        :
+            ORM of the specified role
         """
 
         is_valid_rolename(rolename)
@@ -103,7 +117,8 @@ class RoleSocket:
         Parameters
         ----------
         session
-            An existing SQLAlchemy session to use. If None, one will be created
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
         """
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(RoleORM).order_by(RoleORM.id.asc())
@@ -119,7 +134,8 @@ class RoleSocket:
         rolename
             Name of the role
         session
-            An existing SQLAlchemy session to use. If None, one will be created
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
         """
         with self.root_socket.optional_session(session, True) as session:
             role = self._get_internal(session, rolename)
@@ -137,7 +153,7 @@ class RoleSocket:
             Data about the new role
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
         """
 
         is_valid_rolename(role_info.rolename)
@@ -161,7 +177,7 @@ class RoleSocket:
             Data about the role (new permissions)
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
         """
 
         # Cannot change admin role
@@ -188,7 +204,7 @@ class RoleSocket:
             The role name to delete
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
         """
 
         try:
@@ -205,6 +221,12 @@ class RoleSocket:
         Reset the permissions of the default roles back to their original values
 
         If a role does not exist, it will be created. Manually-created roles will be left alone.
+
+        Parameters
+        ----------
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
         """
 
         with self.root_socket.optional_session(session) as session:

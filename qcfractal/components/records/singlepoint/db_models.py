@@ -19,6 +19,10 @@ if TYPE_CHECKING:
 
 
 class QCSpecificationORM(BaseORM):
+    """
+    Table for storing the core specifications of a QC calculation
+    """
+
     __tablename__ = "qc_specification"
 
     id = Column(Integer, primary_key=True)
@@ -63,14 +67,13 @@ class QCSpecificationORM(BaseORM):
 
 class SinglepointRecordORM(BaseRecordORM):
     """
-    Hold the result of an atomic single calculation
+    Table for storing singlepoint calculations
     """
 
     __tablename__ = "singlepoint_record"
 
     id = Column(Integer, ForeignKey(BaseRecordORM.id, ondelete="cascade"), primary_key=True)
 
-    # uniquely identifying a result
     specification_id = Column(Integer, ForeignKey(QCSpecificationORM.id), nullable=False)
     specification = relationship(QCSpecificationORM, lazy="selectin")
 

@@ -1,6 +1,3 @@
-"""
-Tests for the user and role subsockets
-"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

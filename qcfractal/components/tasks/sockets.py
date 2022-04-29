@@ -27,13 +27,19 @@ if TYPE_CHECKING:
 
 
 class TaskSocket:
+    """
+    Socket for managing tasks
+    """
+
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
 
         self._tasks_claim_limit = root_socket.qcf_config.api_limits.manager_tasks_claim
 
-    def update_finished(self, manager_name: str, results: Dict[int, AllResultTypes]) -> TaskReturnMetadata:
+    def update_finished(
+        self, manager_name: str, results: Dict[int, AllResultTypes], *, session: Optional[Session] = None
+    ) -> TaskReturnMetadata:
         """
         Insert data from finished calculations into the database
 
@@ -43,6 +49,9 @@ class TaskSocket:
             The name of the manager submitting the results
         results
             Results (in QCSchema format), with the task_id as the key
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
         """
 
         all_task_ids = list(results.keys())
@@ -54,7 +63,7 @@ class TaskSocket:
         tasks_failures: List[int] = []
         tasks_rejected: List[Tuple[int, str]] = []
 
-        with self.root_socket.session_scope() as session:
+        with self.root_socket.optional_session(session) as session:
             stmt = select(ComputeManagerORM).where(ComputeManagerORM.name == manager_name)
             stmt = stmt.with_for_update(skip_locked=False)
             manager: Optional[ComputeManagerORM] = session.execute(stmt).scalar_one_or_none()
@@ -191,7 +200,7 @@ class TaskSocket:
 
         # Send notifications that tasks were completed
         for record_id, notify_status in all_notifications:
-            self.root_socket.notify_completed_watch(record_id, notify_status)
+            self.root_socket.notify_finished_watch(record_id, notify_status)
 
         self._logger.info(
             "Processed {} returned tasks ({} successful, {} failed, {} rejected).".format(
@@ -221,7 +230,7 @@ class TaskSocket:
             Maximum number of tasks that the manager can claim
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
         """
 
         # Normally, checking limits is done in the route code. However, we really do not want a manager

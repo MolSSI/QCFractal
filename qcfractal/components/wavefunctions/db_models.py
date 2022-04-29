@@ -11,6 +11,9 @@ if TYPE_CHECKING:
 
 
 class WavefunctionStoreORM(BaseORM):
+    """
+    Table for storing wavefunction data
+    """
 
     __tablename__ = "wavefunction_store"
 
@@ -54,7 +57,6 @@ class WavefunctionStoreORM(BaseORM):
     __table_args__ = (UniqueConstraint("record_id", name="ux_wavefunction_store_record_id"),)
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-
         # Remove fields not present in the model
         exclude = self.append_exclude(exclude, "record_id", "id")
         d = BaseORM.model_dict(self, exclude)

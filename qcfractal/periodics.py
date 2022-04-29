@@ -31,24 +31,24 @@ class FractalPeriodics:
     in the background.
     """
 
-    def __init__(self, qcf_config: FractalConfig, completed_queue: Optional[multiprocessing.Queue] = None):
+    def __init__(self, qcf_config: FractalConfig, finished_queue: Optional[multiprocessing.Queue] = None):
         """
         Parameters
         ----------
         qcf_config: FractalConfig
             Configuration for the QCFractal server
 
-        completed_queue: multiprocessing.Queue, optional
-            A multiprocessing queue. If passed to this function, information about completed computations
-            will be passed into this queue. See :func:`SQLAlchemySocket.set_completed_watch`
+        finished_queue: multiprocessing.Queue, optional
+            A multiprocessing queue. If passed to this function, information about finished computations
+            will be passed into this queue. See :func:`SQLAlchemySocket.set_finished_watch`
         """
 
         self.storage_socket = SQLAlchemySocket(qcf_config)
         self._int_sleep = InterruptableSleep()
         self.scheduler = sched.scheduler(time.time, self._int_sleep)
 
-        self._completed_queue = completed_queue
-        self.storage_socket.set_completed_watch(self._completed_queue)
+        self._finished_queue = finished_queue
+        self.storage_socket.set_finished_watch(self._finished_queue)
 
         self.logger = logging.getLogger("qcfractal_periodics")
 
@@ -164,7 +164,7 @@ class FractalPeriodics:
         """
         Stop running the periodic tasks
 
-        This will stop the tasks that are running in the background. Currently running tasks will
+        This will stop the tasks that are running in the background. Currently-running tasks will
         be allowed to finish.
         """
 
@@ -178,10 +178,10 @@ class PeriodicsProcess(ProcessBase):
     This is used with :class:`process_runner.ProcessRunner` to run all periodic tasks in a separate process
     """
 
-    def __init__(self, qcf_config: FractalConfig, completed_queue: Optional[multiprocessing.Queue] = None):
+    def __init__(self, qcf_config: FractalConfig, finished_queue: Optional[multiprocessing.Queue] = None):
         ProcessBase.__init__(self)
         self._qcf_config = qcf_config
-        self._completed_queue = completed_queue
+        self._finished_queue = finished_queue
 
         # ---------------------------------------------------------------
         # We should not instantiate the FractalPeriodics class here.
@@ -190,7 +190,7 @@ class PeriodicsProcess(ProcessBase):
         # ---------------------------------------------------------------
 
     def setup(self) -> None:
-        self._periodics = FractalPeriodics(self._qcf_config, self._completed_queue)
+        self._periodics = FractalPeriodics(self._qcf_config, self._finished_queue)
 
     def run(self) -> None:
         self._periodics.start()

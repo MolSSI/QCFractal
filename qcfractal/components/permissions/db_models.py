@@ -12,6 +12,9 @@ if TYPE_CHECKING:
 
 
 class UserORM(BaseORM):
+    """
+    Table for storing user information
+    """
 
     __tablename__ = "user"
 
@@ -38,6 +41,9 @@ class UserORM(BaseORM):
 
 
 class RoleORM(BaseORM):
+    """
+    Table for storing role information
+    """
 
     __tablename__ = "role"
 

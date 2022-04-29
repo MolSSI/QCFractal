@@ -1,7 +1,3 @@
-"""
-Tests the wavefunction store socket
-"""
-
 from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.records.singlepoint import (
     QCSpecification,

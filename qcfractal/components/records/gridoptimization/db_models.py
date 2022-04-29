@@ -16,7 +16,9 @@ if TYPE_CHECKING:
 
 
 class GridoptimizationOptimizationORM(BaseORM):
-    """Association table for many to many"""
+    """
+    Table for storing gridoptimization to optimization relationships
+    """
 
     __tablename__ = "gridoptimization_optimization"
 
@@ -39,6 +41,10 @@ class GridoptimizationOptimizationORM(BaseORM):
 
 
 class GridoptimizationSpecificationORM(BaseORM):
+    """
+    Table for storing gridoptimization specifications
+    """
+
     __tablename__ = "gridoptimization_specification"
 
     id = Column(Integer, primary_key=True)
@@ -79,6 +85,9 @@ class GridoptimizationSpecificationORM(BaseORM):
 
 
 class GridoptimizationRecordORM(BaseRecordORM):
+    """
+    Table for storing gridoptimization calculations
+    """
 
     __tablename__ = "gridoptimization_record"
 

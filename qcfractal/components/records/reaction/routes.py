@@ -1,8 +1,6 @@
 from flask import current_app
 
-from qcfractal.app import main, storage_socket
-from qcfractal.app.helpers import prefix_projection
-from qcfractal.app.routes import wrap_route
+from qcfractal.app import main, wrap_route, prefix_projection, storage_socket
 from qcportal.base_models import ProjURLParameters
 from qcportal.exceptions import LimitExceededError
 from qcportal.records.reaction import ReactionAddBody, ReactionQueryBody
@@ -26,7 +24,7 @@ def add_reaction_records_v1(body_data: ReactionAddBody):
 
 @main.route("/v1/records/reaction/<int:record_id>/components", methods=["GET"])
 @wrap_route("READ")
-def get_reaction_components_v1(record_id: int, *, url_params: ProjURLParameters):
+def get_reaction_components_v1(record_id: int, url_params: ProjURLParameters):
     # adjust the includes/excludes to refer to the components
     ch_includes, ch_excludes = prefix_projection(url_params, "components")
     rec = storage_socket.records.reaction.get([record_id], include=ch_includes, exclude=ch_excludes)
@@ -35,7 +33,7 @@ def get_reaction_components_v1(record_id: int, *, url_params: ProjURLParameters)
 
 @main.route("/v1/records/reaction/<int:record_id>/stoichiometries", methods=["GET"])
 @wrap_route("READ")
-def get_reaction_molecules_v1(record_id: int, *, url_params: ProjURLParameters):
+def get_reaction_molecules_v1(record_id: int, url_params: ProjURLParameters):
     # adjust the includes/excludes to refer to the molecules
     ch_includes, ch_excludes = prefix_projection(url_params, "stoichiometries")
     rec = storage_socket.records.reaction.get([record_id], include=ch_includes, exclude=ch_excludes)

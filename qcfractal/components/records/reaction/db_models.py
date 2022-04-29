@@ -16,6 +16,9 @@ if TYPE_CHECKING:
 
 
 class ReactionStoichiometryORM(BaseORM):
+    """
+    Table for storing the molecules and coefficients of a reaction (stoichiometry)
+    """
 
     __tablename__ = "reaction_stoichiometry"
 
@@ -33,6 +36,10 @@ class ReactionStoichiometryORM(BaseORM):
 
 
 class ReactionComponentORM(BaseORM):
+    """
+    Table for storing reaction specifications
+    """
+
     __tablename__ = "reaction_component"
 
     reaction_id = Column(Integer, ForeignKey("reaction_record.id", ondelete="cascade"), primary_key=True)
@@ -65,6 +72,9 @@ class ReactionComponentORM(BaseORM):
 
 
 class ReactionRecordORM(BaseRecordORM):
+    """
+    Table for storing reaction calculations
+    """
 
     __tablename__ = "reaction_record"
 

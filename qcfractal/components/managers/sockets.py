@@ -20,6 +20,10 @@ if TYPE_CHECKING:
 
 
 class ManagerSocket:
+    """
+    Socket for managing/querying compute managers
+    """
+
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
@@ -27,7 +31,7 @@ class ManagerSocket:
     @staticmethod
     def save_snapshot(orm: ComputeManagerORM):
         """
-        Saves the statistics of a manager to its log
+        Saves the statistics of a manager to its log entries
         """
 
         log_orm = ComputeManagerLogORM(
@@ -106,6 +110,9 @@ class ManagerSocket:
         *,
         session: Optional[Session] = None,
     ):
+        """
+        Updates the resources available/in use by a manager, and saves it to its log entries
+        """
 
         with self.root_socket.optional_session(session) as session:
             stmt = (
@@ -152,7 +159,7 @@ class ManagerSocket:
             A descriptive reason given for deactivation
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
@@ -200,14 +207,9 @@ class ManagerSocket:
         session: Optional[Session] = None,
     ) -> List[Optional[Dict[str, Any]]]:
         """
-        Obtain manager information from specified names frm an existing session
+        Obtain manager information with specified names from the database
 
         Names for managers are unique, since they include a UUID.
-
-        The returned manager ORMs will be in order of the given names
-
-        If missing_ok is False, then any manager names that are missing in the database will raise an exception.
-        Otherwise, the corresponding entry in the returned list of manager info will be None.
 
         Parameters
         ----------
@@ -221,12 +223,13 @@ class ManagerSocket:
            If set to True, then missing managers will be tolerated, and the returned list of
            managers will contain None for the corresponding IDs that were not found.
         session
-            An existing SQLAlchemy session to use. If None, one will be created
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
         :
-            Manager information as a dictionary in the same order as the given ids.
+            List of manager data (as dictionaries) in the same order as the given names.
             If missing_ok is True, then this list will contain None where the manager was missing.
         """
 
@@ -282,12 +285,14 @@ class ManagerSocket:
             Skip this many results from the total list of matches. The limit will apply after skipping,
             allowing for pagination.
         session
-            An existing SQLAlchemy session to use. If None, one will be created
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of manager data that were found in the database.
+            Metadata about the results of the query, and a list of manager info (as dictionaries) that were
+            found in the database.
         """
 
         proj_options = get_query_proj_options(ComputeManagerORM, include, exclude)

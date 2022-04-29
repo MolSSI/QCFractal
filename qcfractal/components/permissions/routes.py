@@ -3,8 +3,7 @@ from typing import Optional, Tuple
 from flask import current_app, g
 from werkzeug.exceptions import BadRequest
 
-from qcfractal.app import main, storage_socket
-from qcfractal.app.routes import wrap_route
+from qcfractal.app import main, wrap_route, storage_socket
 from qcportal.exceptions import InconsistentUpdateError, SecurityNotEnabledError
 from qcportal.permissions import UserInfo, RoleInfo
 
@@ -58,7 +57,7 @@ def get_role_v1(rolename: str):
 
 @main.route("/v1/roles/<string:rolename>", methods=["PUT"])
 @wrap_route("WRITE")
-def modify_role_v1(rolename: str, *, body_data: RoleInfo):
+def modify_role_v1(rolename: str, body_data: RoleInfo):
     assert_security_enabled()
     body_data = body_data
     if rolename != body_data.rolename:
@@ -77,6 +76,8 @@ def delete_role_v1(rolename: str):
 #################################
 # Users
 #################################
+
+
 @main.route("/v1/users", methods=["GET"])
 @wrap_route("READ")
 def list_users_v1():
@@ -103,7 +104,7 @@ def get_user_v1(username: str):
 
 @main.route("/v1/users/<string:username>", methods=["PUT"])
 @wrap_route("WRITE")
-def modify_user_v1(username: str, *, body_data: UserInfo):
+def modify_user_v1(username: str, body_data: UserInfo):
     assert_security_enabled()
 
     current_app.logger.info(f"Modifying user {username}")
@@ -118,7 +119,7 @@ def modify_user_v1(username: str, *, body_data: UserInfo):
 
 @main.route("/v1/users/<string:username>/password", methods=["PUT"])
 @wrap_route("WRITE")
-def change_password_v1(username: str, *, body_data: Optional[str]):
+def change_password_v1(username: str, body_data: Optional[str]):
     assert_security_enabled()
 
     # Returns the password (new or generated)

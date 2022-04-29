@@ -1,7 +1,3 @@
-"""
-Storage socket for molecules
-"""
-
 from __future__ import annotations
 
 import logging
@@ -37,6 +33,10 @@ if TYPE_CHECKING:
 
 
 class MoleculeSocket:
+    """
+    Socket for managing/querying molecules
+    """
+
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
@@ -126,7 +126,8 @@ class MoleculeSocket:
            If set to True, then missing molecules will be tolerated, and the returned list of
            Molecules will contain None for the corresponding IDs that were not found.
         session
-            An existing SQLAlchemy session to use. If None, one will be created
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
@@ -243,12 +244,13 @@ class MoleculeSocket:
             Skip this many results from the total list of matches. The limit will apply after skipping,
             allowing for pagination.
         session
-            An existing SQLAlchemy session to use. If None, one will be created
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of Molecule (as dictionaries)
+            Metadata about the results of the query, and a list of molecules (as dictionaries)
             that were found in the database.
         """
 
@@ -326,7 +328,7 @@ class MoleculeSocket:
             are never removed.
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------

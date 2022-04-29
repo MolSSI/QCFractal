@@ -1,5 +1,5 @@
 """
-SQLAlchemy Database class to handle access to Pstgres through ORM
+Main/Root socket for accessing the database
 """
 
 from __future__ import annotations
@@ -25,17 +25,14 @@ if TYPE_CHECKING:
 
 class SQLAlchemySocket:
     """
-    Main handler for managing/accessing an SQLAlchemy database
+    Main/Root socket accessing/managing an SQLAlchemy database
     """
 
     def __init__(self, qcf_config: FractalConfig):
-        """
-        Constructs a new SQLAlchemy socket
-        """
         self.qcf_config = qcf_config
 
         # By default, disable watching
-        self._completed_queue = None
+        self._finished_queue = None
 
         # Logging data
         self.logger = logging.getLogger("SQLAlchemySocket")
@@ -106,6 +103,9 @@ class SQLAlchemySocket:
         # check version compatibility
         self.logger.info(f"Software versions info in database:")
 
+    def __str__(self) -> str:
+        return f"<SQLAlchemySocket: address='{self.uri}`>"
+
     @staticmethod
     def alembic_commands(db_config: DatabaseConfig) -> List[str]:
         """
@@ -132,6 +132,10 @@ class SQLAlchemySocket:
 
     @staticmethod
     def get_alembic_config(db_config: DatabaseConfig):
+        """
+        Obtain an alembic Config object given a QCFractal database configuration
+        """
+
         from alembic.config import Config
 
         alembic_ini = os.path.join(qcfractal.qcfractal_topdir, "alembic.ini")
@@ -144,7 +148,13 @@ class SQLAlchemySocket:
         return alembic_cfg
 
     @staticmethod
-    def init_database(db_config: DatabaseConfig):
+    def create_database_tables(db_config: DatabaseConfig):
+        """
+        Create all the tables in a database
+
+        The database is expected to exist already
+        """
+
         logger = logging.getLogger("SQLAlchemySocket")
 
         # Register all classes that derive from the BaseORM
@@ -195,7 +205,7 @@ class SQLAlchemySocket:
 
     def check_db_revision(self):
         """
-        Checks to make sure the database is up to date
+        Checks to make sure the database is up-to-date
 
         Will raise an exception if it is not up-to-date
         """
@@ -217,12 +227,14 @@ class SQLAlchemySocket:
         if heads[0] != current_rev:
             raise RuntimeError("Database needs migration. Please run `qcfractal-server upgrade` (after backing up!)")
 
-    def __str__(self) -> str:
-        return f"<SQLAlchemySocket: address='{self.uri}`>"
-
     @contextmanager
     def session_scope(self, read_only: bool = False):
-        """Provide a transactional scope"""
+        """Provide a session as a context manager
+
+        You can use this as a context manager (ie, `with session_scope() as session`).
+        After the `with` block exits, the session is committed (if not `read_only`)
+        and then closed. On exception, the session is rolled back.
+        """
 
         session = self.Session()
         try:
@@ -248,7 +260,7 @@ class SQLAlchemySocket:
 
          .. code-block:: python
 
-            def somefunction(session: Optional[Session]=None):
+            def somefunction(session: Optional[Session] = None):
                 # will use session if not None, or will create a new session
                 with storage_socket.optional_session(session) as s:
                     s.add(stuff)
@@ -277,10 +289,20 @@ class SQLAlchemySocket:
         else:
             return self.session_scope(read_only)
 
-    def set_completed_watch(self, mp_queue):
-        self._completed_queue = mp_queue
+    def set_finished_watch(self, mp_queue):
+        """
+        Set the finished watch queue to the given multiprocessing queue
 
-    def notify_completed_watch(self, base_result_id, status):
-        if self._completed_queue is not None:
+        When a calculation finishes, its record ID and status will be placed in this queue
+        """
+
+        self._finished_queue = mp_queue
+
+    def notify_finished_watch(self, record_id, status):
+        """
+        Place information into the queue used to notify of finished calculations
+        """
+
+        if self._finished_queue is not None:
             # Don't want to block here. Just put it in the queue and move on
-            self._completed_queue.put((int(base_result_id), status), block=False)
+            self._finished_queue.put((int(record_id), status), block=False)

@@ -1,7 +1,3 @@
-"""
-Database model for molecule object
-"""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -18,7 +14,7 @@ if TYPE_CHECKING:
 
 class MoleculeORM(BaseORM):
     """
-    Database model for a molecule object
+    Table for storing molecules
     """
 
     __tablename__ = "molecule"
@@ -68,7 +64,6 @@ class MoleculeORM(BaseORM):
     )
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-
         # molecule_hash is only used for indexing. It is otherwise stored in identifiers
         exclude = self.append_exclude(exclude, "molecule_hash")
 

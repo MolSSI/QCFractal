@@ -17,6 +17,9 @@ if TYPE_CHECKING:
 
 
 class OptimizationTrajectoryORM(BaseORM):
+    """
+    Table for storing optimization to singlepoint relationships (trajectory)
+    """
 
     __tablename__ = "optimization_trajectory"
 
@@ -36,6 +39,10 @@ class OptimizationTrajectoryORM(BaseORM):
 
 
 class OptimizationSpecificationORM(BaseORM):
+    """
+    Table for storing optimization specifications
+    """
+
     __tablename__ = "optimization_specification"
 
     id = Column(Integer, primary_key=True)
@@ -80,7 +87,7 @@ class OptimizationSpecificationORM(BaseORM):
 
 class OptimizationRecordORM(BaseRecordORM):
     """
-    An Optimization  procedure
+    Table for storing optimization calculations
     """
 
     __tablename__ = "optimization_record"

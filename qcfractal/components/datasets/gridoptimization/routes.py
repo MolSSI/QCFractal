@@ -28,14 +28,14 @@ def add_gridoptimization_dataset_v1(body_data: GridoptimizationDatasetAddBody):
 @main.route("/v1/datasets/gridoptimization/<int:dataset_id>/specifications", methods=["POST"])
 @wrap_route("WRITE")
 def add_gridoptimization_dataset_specifications_v1(
-    dataset_id: int, *, body_data: List[GridoptimizationDatasetSpecification]
+    dataset_id: int, body_data: List[GridoptimizationDatasetSpecification]
 ):
     return storage_socket.datasets.gridoptimization.add_specifications(dataset_id, body_data)
 
 
 @main.route("/v1/datasets/gridoptimization/<int:dataset_id>/entries/bulkCreate", methods=["POST"])
 @wrap_route("WRITE")
-def add_gridoptimization_dataset_entries_v1(dataset_id: int, *, body_data: List[GridoptimizationDatasetNewEntry]):
+def add_gridoptimization_dataset_entries_v1(dataset_id: int, body_data: List[GridoptimizationDatasetNewEntry]):
     return storage_socket.datasets.gridoptimization.add_entries(
         dataset_id,
         new_entries=body_data,

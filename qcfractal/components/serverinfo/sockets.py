@@ -25,6 +25,10 @@ if TYPE_CHECKING:
 
 
 class ServerInfoSocket:
+    """
+    Socket for managing/querying server logs and information
+    """
+
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
@@ -57,6 +61,10 @@ class ServerInfoSocket:
                     )
 
     def _get_geoip2_data(self, ip_address: str) -> Dict[str, Any]:
+        """
+        Obtain geolocation data of an ip address
+        """
+
         out: Dict[str, Any] = {}
 
         if not self._geoip2_reader:
@@ -76,7 +84,7 @@ class ServerInfoSocket:
 
     def save_access(self, log_data: Dict[str, Any], *, session: Optional[Session] = None) -> None:
         """
-        Saves information about an access to the database
+        Saves information about a request/access to the database
 
         Parameters
         ----------
@@ -84,11 +92,11 @@ class ServerInfoSocket:
             Dictionary of data to add to the database
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
         """
 
         if self._access_log_enabled is not True:
-            return 0
+            return
 
         # Obtain all the information we can from the GeoIP database
         ip_data = self._get_geoip2_data(log_data["ip_address"])
@@ -107,7 +115,7 @@ class ServerInfoSocket:
             Dictionary of error data to add to the database
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
@@ -129,7 +137,7 @@ class ServerInfoSocket:
         ----------
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
+            is used, it will be flushed (but not committed) before returning from this function.
         """
 
         table_list = [CollectionORM, MoleculeORM, BaseRecordORM, OutputStoreORM, AccessLogORM, InternalErrorLogORM]
@@ -253,7 +261,8 @@ class ServerInfoSocket:
             Skip this many results from the total list of matches. The limit will apply after skipping,
             allowing for pagination.
         session
-            An existing SQLAlchemy session to use. If None, one will be created
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
@@ -310,7 +319,8 @@ class ServerInfoSocket:
         after
             Query for log entries with a timestamp after a specific time
         session
-            An existing SQLAlchemy session to use. If None, one will be created
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
@@ -424,12 +434,14 @@ class ServerInfoSocket:
             Skip this many results from the total list of matches. The limit will apply after skipping,
             allowing for pagination.
         session
-            An existing SQLAlchemy session to use. If None, one will be created
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of error dictionaries that were found in the database.
+            Metadata about the results of the query, and a list of errors (as dictionaries)
+            that were found in the database.
         """
 
         and_query = []
@@ -480,12 +492,14 @@ class ServerInfoSocket:
             Skip this many results from the total list of matches. The limit will apply after skipping,
             allowing for pagination.
         session
-            An existing SQLAlchemy session to use. If None, one will be created
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of Molecule that were found in the database.
+            Metadata about the results of the query, and a list of server statistic entries (as dictionaries)
+            that were found in the database.
         """
 
         and_query = []
@@ -512,6 +526,9 @@ class ServerInfoSocket:
         ----------
         before
             Delete access logs before this time
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
@@ -531,6 +548,9 @@ class ServerInfoSocket:
         ----------
         before
             Delete error entries before this time
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------
@@ -550,6 +570,9 @@ class ServerInfoSocket:
         ----------
         before
             Delete server stats before this time
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
 
         Returns
         -------

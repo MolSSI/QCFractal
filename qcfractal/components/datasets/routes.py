@@ -28,7 +28,7 @@ def list_dataset_v1():
 
 @main.route("/v1/datasets/<int:dataset_id>", methods=["GET"])
 @wrap_route("READ")
-def get_general_dataset_v1(dataset_id: int, *, url_params: ProjURLParameters):
+def get_general_dataset_v1(dataset_id: int, url_params: ProjURLParameters):
 
     with storage_socket.session_scope(True) as session:
         ds_type = storage_socket.datasets.lookup_type(dataset_id, session=session)
@@ -56,7 +56,7 @@ def query_dataset_records_v1(body_data: DatasetQueryRecords):
 
 @main.route("/v1/datasets/<int:dataset_id>", methods=["DELETE"])
 @wrap_route("DELETE")
-def delete_dataset_v1(dataset_id: int, *, url_params: DatasetDeleteParams):
+def delete_dataset_v1(dataset_id: int, url_params: DatasetDeleteParams):
     with storage_socket.session_scope(True) as session:
         ds_type = storage_socket.datasets.lookup_type(dataset_id, session=session)
         ds_socket = storage_socket.datasets.get_socket(ds_type)
@@ -75,7 +75,7 @@ def delete_dataset_v1(dataset_id: int, *, url_params: DatasetDeleteParams):
 #########################
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>", methods=["GET"])
 @wrap_route("READ")
-def get_dataset_v1(dataset_type: str, dataset_id: int, *, url_params: ProjURLParameters):
+def get_dataset_v1(dataset_type: str, dataset_id: int, url_params: ProjURLParameters):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.get(
         dataset_id,
@@ -103,7 +103,7 @@ def get_dataset_detailed_status_v1(dataset_type: str, dataset_id: int):
 #########################
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>", methods=["PATCH"])
 @wrap_route("WRITE")
-def modify_dataset_metadata_v1(dataset_type: str, dataset_id: int, *, body_data: DatasetModifyMetadataBody):
+def modify_dataset_metadata_v1(dataset_type: str, dataset_id: int, body_data: DatasetModifyMetadataBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.update_metadata(dataset_id, new_metadata=body_data)
 
@@ -113,7 +113,7 @@ def modify_dataset_metadata_v1(dataset_type: str, dataset_id: int, *, body_data:
 #########################
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/submit", methods=["POST"])
 @wrap_route("WRITE")
-def submit_dataset_v1(dataset_type: str, dataset_id: int, *, body_data: DatasetSubmitBody):
+def submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubmitBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.submit(
         dataset_id,
@@ -136,14 +136,14 @@ def fetch_dataset_specifications_v1(dataset_type: str, dataset_id: int):
 
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/specifications/bulkDelete", methods=["POST"])
 @wrap_route("DELETE")
-def delete_dataset_specifications_v1(dataset_type: str, dataset_id: int, *, body_data: DatasetDeleteStrBody):
+def delete_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_data: DatasetDeleteStrBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.delete_specifications(dataset_id, body_data.names, body_data.delete_records)
 
 
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/specifications", methods=["PATCH"])
 @wrap_route("WRITE")
-def rename_dataset_specifications_v1(dataset_type: str, dataset_id: int, *, body_data: Dict[str, str]):
+def rename_dataset_specifications_v1(dataset_type: str, dataset_id: int, body_data: Dict[str, str]):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.rename_specifications(dataset_id, body_data)
 
@@ -160,14 +160,14 @@ def fetch_dataset_entry_names_v1(dataset_type: str, dataset_id: int):
 
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/entries/bulkDelete", methods=["POST"])
 @wrap_route("DELETE")
-def delete_dataset_entries_v1(dataset_type: str, dataset_id: int, *, body_data: DatasetDeleteStrBody):
+def delete_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetDeleteStrBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.delete_entries(dataset_id, body_data.names, body_data.delete_records)
 
 
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/entries/bulkFetch", methods=["POST"])
 @wrap_route("READ")
-def fetch_dataset_entries_v1(dataset_type: str, dataset_id: int, *, body_data: DatasetFetchEntryBody):
+def fetch_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchEntryBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.fetch_entries(
         dataset_id,
@@ -180,7 +180,7 @@ def fetch_dataset_entries_v1(dataset_type: str, dataset_id: int, *, body_data: D
 
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/entries", methods=["PATCH"])
 @wrap_route("WRITE")
-def rename_dataset_entries_v1(dataset_type: str, dataset_id: int, *, body_data: Dict[str, str]):
+def rename_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Dict[str, str]):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.rename_entries(dataset_id, body_data)
 
@@ -190,7 +190,7 @@ def rename_dataset_entries_v1(dataset_type: str, dataset_id: int, *, body_data: 
 #########################
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/record_items/bulkFetch", methods=["POST"])
 @wrap_route("READ")
-def fetch_dataset_record_items_v1(dataset_type: str, dataset_id: int, *, body_data: DatasetFetchRecordItemsBody):
+def fetch_dataset_record_items_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchRecordItemsBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.fetch_record_items(
         dataset_id,
@@ -203,7 +203,7 @@ def fetch_dataset_record_items_v1(dataset_type: str, dataset_id: int, *, body_da
 
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/record_items/bulkDelete", methods=["POST"])
 @wrap_route("DELETE")
-def delete_dataset_record_items_v1(dataset_type: str, dataset_id: int, *, body_data: DatasetDeleteRecordItemsBody):
+def delete_dataset_record_items_v1(dataset_type: str, dataset_id: int, body_data: DatasetDeleteRecordItemsBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.delete_record_items(
         dataset_id,
@@ -218,7 +218,7 @@ def delete_dataset_record_items_v1(dataset_type: str, dataset_id: int, *, body_d
 #########################
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/records", methods=["PATCH"])
 @wrap_route("WRITE")
-def modify_dataset_records_v1(dataset_type: str, dataset_id: int, *, body_data: DatasetRecordModifyBody):
+def modify_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRecordModifyBody):
     username = (g.user if "user" in g else None,)
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.modify_records(dataset_id, body_data, username)
@@ -226,6 +226,6 @@ def modify_dataset_records_v1(dataset_type: str, dataset_id: int, *, body_data: 
 
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/records/revert", methods=["POST"])
 @wrap_route("WRITE")
-def revert_dataset_records_v1(dataset_type: str, dataset_id: int, *, body_data: DatasetRecordRevertBody):
+def revert_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRecordRevertBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.revert_records(dataset_id, body_data)

@@ -1,7 +1,3 @@
-"""
-Tests the client functions related to user management
-"""
-
 import pytest
 
 from qcfractaltesting import test_users

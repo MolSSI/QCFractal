@@ -9,6 +9,13 @@ from qcfractal.db_socket import BaseORM, PlainMsgpackExt
 
 
 class ServiceDependencyORM(BaseORM):
+    """
+    Table for storing dependencies of a service
+
+    These are other records that are required to be completed before
+    a service will iterate.
+    """
+
     __tablename__ = "service_dependency"
 
     id = Column(Integer, primary_key=True)
@@ -25,6 +32,9 @@ class ServiceDependencyORM(BaseORM):
 
 
 class ServiceQueueORM(BaseORM):
+    """
+    Table for storing service information
+    """
 
     __tablename__ = "service_queue"
 

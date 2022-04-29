@@ -40,7 +40,7 @@ def expand_ndimensional_grid(
     dimensions: Tuple[int, ...], seeds: Set[Tuple[int, ...]], complete: Set[Tuple[int, ...]]
 ) -> List[Tuple[Tuple[int, ...], Tuple[int, ...]]]:
     """
-    Expands an n-dimensional key/value grid.
+    Expands an n-dimensional key/value grid used by gridoptimizations.
     """
 
     dimensions = tuple(dimensions)
@@ -79,18 +79,20 @@ def expand_ndimensional_grid(
 
 
 def serialize_key(key: Union[str, Sequence[int]]) -> str:
-    """Serializes the key to map to the internal keys.
+    """
+    Serializes the key used to map to optimization calculations
+
+    A string `key` is used for preoptimization
 
     Parameters
     ----------
-    key : Union[int, Tuple[int]]
-        A integer or list of integers denoting the position in the grid
-        to find.
+    key
+        A string or sequence of integers denoting the position in the grid
 
     Returns
     -------
-    str
-        The internal key value.
+    :
+        A string representation of the key
     """
 
     if isinstance(key, str):
@@ -100,7 +102,11 @@ def serialize_key(key: Union[str, Sequence[int]]) -> str:
 
 
 def deserialize_key(key: str) -> Union[str, Tuple[int, ...]]:
-    """Deserializes a map key"""
+    """
+    Deserializes the key used to map to optimization calculations
+
+    This turns the key back into a form usable for creating constraints
+    """
 
     r = json.loads(key)
     if isinstance(r, str):
@@ -110,6 +116,24 @@ def deserialize_key(key: str) -> Union[str, Tuple[int, ...]]:
 
 
 def calculate_starting_grid(scans_dict: Sequence[Dict[str, Any]], molecule: Molecule) -> List[int]:
+    """
+    Compute the starting parameters for a gridoptimization
+
+    This finds the indices of the steps that most closely matches the given molecule,
+    and therefore is a good starting point for the grid optimization
+
+    Parameters
+    ----------
+    scans_dict
+        Information about the scans as a dictionary
+    molecule
+        Molecule to use for the first grid computations
+
+    Returns
+    -------
+    :
+        Indices of the starting optimization constraints
+    """
 
     scans = parse_obj_as(List[ScanDimension], scans_dict)
     starting_grid = []
@@ -131,7 +155,7 @@ def calculate_starting_grid(scans_dict: Sequence[Dict[str, Any]], molecule: Mole
 
 class GridoptimizationServiceState(BaseModel):
     """
-    This represents the current state of a torsiondrive service
+    This represents the current state of a gridoptimization service
     """
 
     class Config(BaseModel.Config):
@@ -148,6 +172,9 @@ class GridoptimizationServiceState(BaseModel):
 
 
 class GridoptimizationRecordSocket(BaseRecordSocket):
+    """
+    Socket for handling gridoptimization computations
+    """
 
     # Used by the base class
     record_orm = GridoptimizationRecordORM
@@ -164,201 +191,6 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
             GridoptimizationOptimizationORM.optimization_id.label("child_id"),
         )
         return [stmt]
-
-    def add_specification(
-        self, go_spec: GridoptimizationSpecification, *, session: Optional[Session] = None
-    ) -> Tuple[InsertMetadata, Optional[int]]:
-
-        go_kw_dict = go_spec.keywords.dict(exclude_defaults=True)
-
-        with self.root_socket.optional_session(session, False) as session:
-            # Add the optimization specification
-            meta, opt_spec_id = self.root_socket.records.optimization.add_specification(
-                go_spec.optimization_specification, session=session
-            )
-            if not meta.success:
-                return (
-                    InsertMetadata(
-                        error_description="Unable to add optimization specification: " + meta.error_string,
-                    ),
-                    None,
-                )
-
-            stmt = (
-                insert(GridoptimizationSpecificationORM)
-                .values(
-                    program=go_spec.program,
-                    keywords=go_kw_dict,
-                    optimization_specification_id=opt_spec_id,
-                )
-                .on_conflict_do_nothing()
-                .returning(GridoptimizationSpecificationORM.id)
-            )
-
-            r = session.execute(stmt).scalar_one_or_none()
-            if r is not None:
-                return InsertMetadata(inserted_idx=[0]), r
-            else:
-                # Specification was already existing
-                stmt = select(GridoptimizationSpecificationORM.id).filter_by(
-                    program=go_spec.program,
-                    keywords=go_kw_dict,
-                    optimization_specification_id=opt_spec_id,
-                )
-
-                r = session.execute(stmt).scalar_one()
-                return InsertMetadata(existing_idx=[0]), r
-
-    def query(
-        self,
-        query_data: GridoptimizationQueryBody,
-        *,
-        session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
-
-        and_query = []
-        need_spspec_join = False
-        need_optspec_join = False
-
-        if query_data.qc_program is not None:
-            and_query.append(QCSpecificationORM.program.in_(query_data.qc_program))
-            need_spspec_join = True
-        if query_data.qc_method is not None:
-            and_query.append(QCSpecificationORM.method.in_(query_data.qc_method))
-            need_spspec_join = True
-        if query_data.qc_basis is not None:
-            and_query.append(QCSpecificationORM.basis.in_(query_data.qc_basis))
-            need_spspec_join = True
-        if query_data.optimization_program is not None:
-            and_query.append(OptimizationSpecificationORM.program.in_(query_data.optimization_program))
-            need_optspec_join = True
-        if query_data.initial_molecule_id is not None:
-            and_query.append(GridoptimizationRecordORM.initial_molecule_id.in_(query_data.initial_molecule_id))
-
-        stmt = select(GridoptimizationRecordORM)
-
-        # We don't search for anything td-specification specific, so no need for
-        # need_tdspec_join (for now...)
-
-        if need_optspec_join or need_spspec_join:
-            stmt = stmt.join(GridoptimizationRecordORM.specification).options(
-                contains_eager(GridoptimizationRecordORM.specification)
-            )
-
-            stmt = stmt.join(GridoptimizationSpecificationORM.optimization_specification).options(
-                contains_eager(
-                    GridoptimizationRecordORM.specification, GridoptimizationSpecificationORM.optimization_specification
-                )
-            )
-
-        if need_spspec_join:
-            stmt = stmt.join(OptimizationSpecificationORM.qc_specification).options(
-                contains_eager(
-                    GridoptimizationRecordORM.specification,
-                    GridoptimizationSpecificationORM.optimization_specification,
-                    OptimizationSpecificationORM.qc_specification,
-                )
-            )
-
-        stmt = stmt.where(*and_query)
-
-        return self.root_socket.records.query_base(
-            stmt=stmt,
-            orm_type=GridoptimizationRecordORM,
-            query_data=query_data,
-            session=session,
-        )
-
-    def add_internal(
-        self,
-        initial_molecule_ids: Sequence[int],
-        go_spec_id: int,
-        tag: str,
-        priority: PriorityEnum,
-        *,
-        session: Optional[Session] = None,
-    ) -> Tuple[InsertMetadata, List[Optional[int]]]:
-
-        tag = tag.lower()
-
-        with self.root_socket.optional_session(session, False) as session:
-
-            all_orm = []
-            for mid in initial_molecule_ids:
-                go_orm = GridoptimizationRecordORM(
-                    is_service=True,
-                    specification_id=go_spec_id,
-                    initial_molecule_id=mid,
-                    status=RecordStatusEnum.waiting,
-                )
-
-                self.create_service(go_orm, tag, priority)
-                all_orm.append(go_orm)
-
-            meta, ids = insert_general(
-                session,
-                all_orm,
-                (GridoptimizationRecordORM.specification_id, GridoptimizationRecordORM.initial_molecule_id),
-                (GridoptimizationRecordORM.id,),
-            )
-
-            return meta, [x[0] for x in ids]
-
-    def add(
-        self,
-        initial_molecules: Sequence[Union[int, Molecule]],
-        go_spec: GridoptimizationSpecification,
-        tag: str,
-        priority: PriorityEnum,
-        *,
-        session: Optional[Session] = None,
-    ) -> Tuple[InsertMetadata, List[Optional[int]]]:
-        """
-        Adds new torsiondrive calculations
-
-        This checks if the calculations already exist in the database. If so, it returns
-        the existing id, otherwise it will insert it and return the new id.
-
-        If session is specified, changes are not committed to to the database, but the session is flushed.
-
-        Parameters
-        ----------
-        initial_molecules
-            Molecules to compute using the specification
-        go_spec
-            Specification for the calculations
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed before returning from this function.
-
-        Returns
-        -------
-        :
-            Metadata about the insertion, and a list of record ids. The ids will be in the
-            order of the input molecules
-        """
-
-        with self.root_socket.optional_session(session, False) as session:
-
-            # First, add the specification
-            spec_meta, spec_id = self.add_specification(go_spec, session=session)
-            if not spec_meta.success:
-                return (
-                    InsertMetadata(
-                        error_description="Aborted - could not add specification: " + spec_meta.error_string
-                    ),
-                    [],
-                )
-
-            # Now the molecules
-            mol_meta, init_mol_ids = self.root_socket.molecules.add_mixed(initial_molecules, session=session)
-            if not mol_meta.success:
-                return (
-                    InsertMetadata(error_description="Aborted - could not add all molecules: " + mol_meta.error_string),
-                    [],
-                )
-
-            return self.add_internal(init_mol_ids, spec_id, tag, priority, session=session)
 
     def initialize_service(self, session: Session, service_orm: ServiceQueueORM) -> None:
         go_orm: GridoptimizationRecordORM = service_orm.record
@@ -403,7 +235,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         self,
         session: Session,
         service_orm: ServiceQueueORM,
-    ):
+    ) -> bool:
 
         go_orm: GridoptimizationRecordORM = service_orm.record
 
@@ -495,7 +327,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
         if len(next_tasks) > 0:
             # Submit the new optimizations
-            self.submit_optimizations(session, service_state, service_orm, next_tasks)
+            self._submit_optimizations(session, service_state, service_orm, next_tasks)
 
             output += f"Submitted {len(service_orm.dependencies)} new optimizations"
         else:
@@ -513,13 +345,16 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         # Return True to indicate that this service has successfully completed
         return len(next_tasks) == 0
 
-    def submit_optimizations(
+    def _submit_optimizations(
         self,
         session: Session,
         service_state: GridoptimizationServiceState,
         service_orm: ServiceQueueORM,
         task_dict: Dict[str, Molecule],
     ):
+        """
+        Submit the next batch of optimizations for a gridoptimization service
+        """
 
         go_orm: GridoptimizationRecordORM = service_orm.record
 
@@ -599,3 +434,264 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
             service_orm.dependencies.append(svc_dep)
             go_orm.optimizations.append(opt_assoc)
+
+    def add_specification(
+        self, go_spec: GridoptimizationSpecification, *, session: Optional[Session] = None
+    ) -> Tuple[InsertMetadata, Optional[int]]:
+        """
+        Adds a specification for a gridoptimization service to the database, returning its id.
+
+        If an identical specification exists, then no insertion takes place and the id of the existing
+        specification is returned.
+
+        Parameters
+        ----------
+        go_spec
+            Specification to add to the database
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and the id of the specification.
+        """
+
+        go_kw_dict = go_spec.keywords.dict(exclude_defaults=True)
+
+        with self.root_socket.optional_session(session, False) as session:
+            # Add the optimization specification
+            meta, opt_spec_id = self.root_socket.records.optimization.add_specification(
+                go_spec.optimization_specification, session=session
+            )
+            if not meta.success:
+                return (
+                    InsertMetadata(
+                        error_description="Unable to add optimization specification: " + meta.error_string,
+                    ),
+                    None,
+                )
+
+            stmt = (
+                insert(GridoptimizationSpecificationORM)
+                .values(
+                    program=go_spec.program,
+                    keywords=go_kw_dict,
+                    optimization_specification_id=opt_spec_id,
+                )
+                .on_conflict_do_nothing()
+                .returning(GridoptimizationSpecificationORM.id)
+            )
+
+            r = session.execute(stmt).scalar_one_or_none()
+            if r is not None:
+                return InsertMetadata(inserted_idx=[0]), r
+            else:
+                # Specification was already existing
+                stmt = select(GridoptimizationSpecificationORM.id).filter_by(
+                    program=go_spec.program,
+                    keywords=go_kw_dict,
+                    optimization_specification_id=opt_spec_id,
+                )
+
+                r = session.execute(stmt).scalar_one()
+                return InsertMetadata(existing_idx=[0]), r
+
+    def query(
+        self,
+        query_data: GridoptimizationQueryBody,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+        """
+        Query gridoptimization records
+
+        Parameters
+        ----------
+        query_data
+            Fields/filters to query for
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of records (as dictionaries)
+            that were found in the database.
+        """
+
+        and_query = []
+        need_spspec_join = False
+        need_optspec_join = False
+
+        if query_data.qc_program is not None:
+            and_query.append(QCSpecificationORM.program.in_(query_data.qc_program))
+            need_spspec_join = True
+        if query_data.qc_method is not None:
+            and_query.append(QCSpecificationORM.method.in_(query_data.qc_method))
+            need_spspec_join = True
+        if query_data.qc_basis is not None:
+            and_query.append(QCSpecificationORM.basis.in_(query_data.qc_basis))
+            need_spspec_join = True
+        if query_data.optimization_program is not None:
+            and_query.append(OptimizationSpecificationORM.program.in_(query_data.optimization_program))
+            need_optspec_join = True
+        if query_data.initial_molecule_id is not None:
+            and_query.append(GridoptimizationRecordORM.initial_molecule_id.in_(query_data.initial_molecule_id))
+
+        stmt = select(GridoptimizationRecordORM)
+
+        if need_optspec_join or need_spspec_join:
+            stmt = stmt.join(GridoptimizationRecordORM.specification).options(
+                contains_eager(GridoptimizationRecordORM.specification)
+            )
+
+            stmt = stmt.join(GridoptimizationSpecificationORM.optimization_specification).options(
+                contains_eager(
+                    GridoptimizationRecordORM.specification, GridoptimizationSpecificationORM.optimization_specification
+                )
+            )
+
+        if need_spspec_join:
+            stmt = stmt.join(OptimizationSpecificationORM.qc_specification).options(
+                contains_eager(
+                    GridoptimizationRecordORM.specification,
+                    GridoptimizationSpecificationORM.optimization_specification,
+                    OptimizationSpecificationORM.qc_specification,
+                )
+            )
+
+        stmt = stmt.where(*and_query)
+
+        return self.root_socket.records.query_base(
+            stmt=stmt,
+            orm_type=GridoptimizationRecordORM,
+            query_data=query_data,
+            session=session,
+        )
+
+    def add_internal(
+        self,
+        initial_molecule_ids: Sequence[int],
+        go_spec_id: int,
+        tag: str,
+        priority: PriorityEnum,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[InsertMetadata, List[Optional[int]]]:
+        """
+        Internal function for adding new gridoptimization computations
+
+        This function expects that the molecules and specification are already added to the
+        database and that the ids are known.
+
+        This checks if the calculations already exist in the database. If so, it returns
+        the existing id, otherwise it will insert it and return the new id.
+
+        Parameters
+        ----------
+        initial_molecule_ids
+            IDs of the initial molecules to start the gridoptimizations. One record will be added per molecule.
+        go_spec_id
+            ID of the specification
+        tag
+            The tag for the task. This will assist in routing to appropriate compute managers.
+        priority
+            The priority for the computation
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and a list of record ids. The ids will be in the
+            order of the input molecules
+        """
+
+        tag = tag.lower()
+
+        with self.root_socket.optional_session(session, False) as session:
+
+            all_orm = []
+            for mid in initial_molecule_ids:
+                go_orm = GridoptimizationRecordORM(
+                    is_service=True,
+                    specification_id=go_spec_id,
+                    initial_molecule_id=mid,
+                    status=RecordStatusEnum.waiting,
+                )
+
+                self.create_service(go_orm, tag, priority)
+                all_orm.append(go_orm)
+
+            meta, ids = insert_general(
+                session,
+                all_orm,
+                (GridoptimizationRecordORM.specification_id, GridoptimizationRecordORM.initial_molecule_id),
+                (GridoptimizationRecordORM.id,),
+            )
+
+            return meta, [x[0] for x in ids]
+
+    def add(
+        self,
+        initial_molecules: Sequence[Union[int, Molecule]],
+        go_spec: GridoptimizationSpecification,
+        tag: str,
+        priority: PriorityEnum,
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[InsertMetadata, List[Optional[int]]]:
+        """
+        Adds new gridoptimization calculations
+
+        This checks if the calculations already exist in the database. If so, it returns
+        the existing id, otherwise it will insert it and return the new id.
+
+        If session is specified, changes are not committed to to the database, but the session is flushed.
+
+        Parameters
+        ----------
+        initial_molecules
+            Molecules to compute using the specification
+        go_spec
+            Specification for the calculations
+        tag
+            The tag for the task. This will assist in routing to appropriate compute managers.
+        priority
+            The priority for the computation
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and a list of record ids. The ids will be in the
+            order of the input molecules
+        """
+
+        with self.root_socket.optional_session(session, False) as session:
+
+            # First, add the specification
+            spec_meta, spec_id = self.add_specification(go_spec, session=session)
+            if not spec_meta.success:
+                return (
+                    InsertMetadata(
+                        error_description="Aborted - could not add specification: " + spec_meta.error_string
+                    ),
+                    [],
+                )
+
+            # Now the molecules
+            mol_meta, init_mol_ids = self.root_socket.molecules.add_mixed(initial_molecules, session=session)
+            if not mol_meta.success:
+                return (
+                    InsertMetadata(error_description="Aborted - could not add all molecules: " + mol_meta.error_string),
+                    [],
+                )
+
+            return self.add_internal(init_mol_ids, spec_id, tag, priority, session=session)

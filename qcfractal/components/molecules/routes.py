@@ -1,13 +1,8 @@
-"""
-Flask routes for molecules
-"""
-
 from typing import List
 
 from flask import current_app
 
-from qcfractal.app import main, storage_socket
-from qcfractal.app.routes import wrap_route
+from qcfractal.app import main, wrap_route, storage_socket
 from qcportal.base_models import CommonBulkGetBody, ProjURLParameters
 from qcportal.exceptions import LimitExceededError
 from qcportal.molecules import Molecule, MoleculeQueryBody, MoleculeModifyBody
@@ -16,7 +11,7 @@ from qcportal.utils import calculate_limit
 
 @main.route("/v1/molecules/<int:molecule_id>", methods=["GET"])
 @wrap_route("READ")
-def get_molecules_v1(molecule_id: int, *, url_params: ProjURLParameters):
+def get_molecules_v1(molecule_id: int, url_params: ProjURLParameters):
     return storage_socket.molecules.get([molecule_id], url_params.include, url_params.exclude)[0]
 
 
@@ -46,7 +41,7 @@ def bulk_delete_molecules_v1(body_data: List[int]):
 
 @main.route("/v1/molecules/<int:molecule_id>", methods=["PATCH"])
 @wrap_route("WRITE")
-def modify_molecules_v1(molecule_id: int, *, body_data: MoleculeModifyBody):
+def modify_molecules_v1(molecule_id: int, body_data: MoleculeModifyBody):
     return storage_socket.molecules.modify(
         molecule_id=molecule_id,
         name=body_data.name,

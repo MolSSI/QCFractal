@@ -66,9 +66,14 @@ class FractalSnowflake:
         flask_config: str = "snowflake",
         extra_config: Optional[Dict[str, Any]] = None,
     ):
-        """A temporary FractalServer that can be used to run complex workflows or try new computations.
+        """A temporary, self-contained server
 
-        ! Warning ! All data is lost when the server is shutdown.
+        A snowflake contains the server and compute manager, and can be used to test
+        QCFractal/QCPortal, or to experiment.
+
+        All data is lost when the server is shutdown.
+
+        This can also be used as a context manager (`with FractalSnowflake(...) as s:`)
         """
 
         self._logger = logging.getLogger("fractal_snowflake")
@@ -115,12 +120,12 @@ class FractalSnowflake:
         self._compute_workers = compute_workers
 
         # Do we want to enable watching/waiting for finished tasks?
-        self._completed_queue = None
+        self._finished_queue = None
         if enable_watching:
             # We use fork inside ProcessRunner, so we must use for here to set up the Queues
             # This must be changed if the ProcessRunner is ever changed to use seomthing else
             mp_ctx = multiprocessing.get_context("fork")
-            self._completed_queue = mp_ctx.Queue()
+            self._finished_queue = mp_ctx.Queue()
             self._all_completed: Set[int] = set()
 
         ######################################
@@ -128,9 +133,9 @@ class FractalSnowflake:
         ######################################
         # For notification that flask is now ready to accept connections
         self._flask_started = multiprocessing.Event()
-        flask = FlaskProcess(self._qcf_config, self._completed_queue, self._flask_started)
+        flask = FlaskProcess(self._qcf_config, self._finished_queue, self._flask_started)
 
-        periodics = PeriodicsProcess(self._qcf_config, self._completed_queue)
+        periodics = PeriodicsProcess(self._qcf_config, self._finished_queue)
 
         # Don't auto start here. we will handle it later
         self._flask_proc = ProcessRunner("snowflake_flask", flask, False)
@@ -159,6 +164,12 @@ class FractalSnowflake:
         flask_proc.stop()
 
     def wait_for_flask(self):
+        """
+        Wait for the flask server to come up and then exit
+
+        If it does not come up after some time, an exception will be raised
+        """
+
         running = self._flask_started.wait(10.0)
         assert running
 
@@ -182,10 +193,18 @@ class FractalSnowflake:
                     raise
 
     def stop(self):
+        """
+        Stops the server
+        """
+
         self._stop(self._compute_proc, self._flask_proc, self._periodics_proc)
         self._flask_started.clear()
 
     def start(self):
+        """
+        Starts the server
+        """
+
         if not self._flask_proc.is_alive():
             self._flask_proc.start()
 
@@ -233,7 +252,7 @@ class FractalSnowflake:
         """
         logger = logging.getLogger(__name__)
 
-        if self._completed_queue is None:
+        if self._finished_queue is None:
             raise RuntimeError(
                 "Cannot wait for results when the completed queue is not enabled. See the 'enable_watching' argument to the constructor"
             )
@@ -253,15 +272,14 @@ class FractalSnowflake:
         logger.debug("Waiting for ids: " + str(remaining_ids))
 
         while len(remaining_ids) > 0:
-            # The queue stores a tuple of (id, type, status)
+            # The queue stores a tuple of (id, status)
             try:
-                base_result_info = self._completed_queue.get(True, timeout)
+                finished_id, status = self._finished_queue.get(True, timeout)
             except Empty:
                 logger.warning(f"No tasks finished in {timeout} seconds")
                 return False
 
-            logger.debug("Task finished: id={}, status={}".format(*base_result_info))
-            finished_id = base_result_info[0]
+            logger.debug(f"Task finished: id={finished_id}, status={status}")
 
             # Add it to the list of all completed results we have seen
             self._all_completed.add(finished_id)

@@ -1,7 +1,3 @@
-"""
-Tests the managers subsocket
-"""
-
 from __future__ import annotations
 
 from datetime import datetime

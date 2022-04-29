@@ -3,7 +3,6 @@ from __future__ import annotations
 import importlib
 import logging
 import multiprocessing
-import os
 import sys
 from typing import TYPE_CHECKING
 
@@ -77,18 +76,18 @@ class FlaskProcess(ProcessBase):
     def __init__(
         self,
         qcf_config: FractalConfig,
-        completed_queue: Optional[multiprocessing.Queue] = None,
+        finished_queue: Optional[multiprocessing.Queue] = None,
         running_event: Optional[multiprocessing.synchronize.Event] = None,
     ):
         self._qcf_config = qcf_config
-        self._completed_queue = completed_queue
+        self._finished_queue = finished_queue
         self._running_event = running_event
 
     def setup(self):
         self._flask_app = create_qcfractal_flask_app(self._qcf_config)
 
         # Get the global storage socket and set up the queue
-        storage_socket.set_completed_watch(self._completed_queue)
+        storage_socket.set_finished_watch(self._finished_queue)
 
         from flask import cli
 

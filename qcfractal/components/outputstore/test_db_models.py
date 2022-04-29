@@ -1,7 +1,3 @@
-"""
-Tests the output_store models
-"""
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

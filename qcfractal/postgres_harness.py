@@ -320,7 +320,7 @@ class PostgresHarness:
         return self._run_subprocess(all_cmds)
 
     def create_database(self):
-        """Creates a new qcarchive database given in the configuration.
+        """Creates a new qcarchive database (and tables) given in the configuration.
 
         The postgres instance must be up and running.
 
@@ -345,7 +345,7 @@ class PostgresHarness:
             self._logger.info(f"Database {self.config.database_name} does not exist. Creating...")
             cursor.execute(f"CREATE DATABASE {self.config.database_name}")
             self._logger.info(f"Database {self.config.database_name} created")
-            SQLAlchemySocket.init_database(self.config)
+            SQLAlchemySocket.create_database_tables(self.config)
         else:
             self._logger.info(f"Database {self.config.database_name} already exists, so I am leaving it alone")
 

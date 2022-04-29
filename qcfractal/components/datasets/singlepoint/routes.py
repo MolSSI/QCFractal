@@ -27,13 +27,13 @@ def add_singlepoint_dataset_v1(body_data: SinglepointDatasetAddBody):
 
 @main.route("/v1/datasets/singlepoint/<int:dataset_id>/specifications", methods=["POST"])
 @wrap_route("WRITE")
-def add_singlepoint_dataset_specifications_v1(dataset_id: int, *, body_data: List[SinglepointDatasetSpecification]):
+def add_singlepoint_dataset_specifications_v1(dataset_id: int, body_data: List[SinglepointDatasetSpecification]):
     return storage_socket.datasets.singlepoint.add_specifications(dataset_id, body_data)
 
 
 @main.route("/v1/datasets/singlepoint/<int:dataset_id>/entries/bulkCreate", methods=["POST"])
 @wrap_route("WRITE")
-def add_singlepoint_dataset_entries_v1(dataset_id: int, *, body_data: List[SinglepointDatasetNewEntry]):
+def add_singlepoint_dataset_entries_v1(dataset_id: int, body_data: List[SinglepointDatasetNewEntry]):
     return storage_socket.datasets.singlepoint.add_entries(
         dataset_id,
         new_entries=body_data,

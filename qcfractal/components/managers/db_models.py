@@ -21,6 +21,12 @@ from qcportal.managers import ManagerStatusEnum
 
 
 class ComputeManagerLogORM(BaseORM):
+    """
+    Table for storing manager logs
+
+    This contains information about a manager at a particular point in time. This table
+    is periodically appended to, with updated information about a manager.
+    """
 
     __tablename__ = "compute_manager_log"
 
@@ -44,7 +50,9 @@ class ComputeManagerLogORM(BaseORM):
 
 
 class ComputeManagerORM(BaseORM):
-    """ """
+    """
+    Table for storing information about active and inactive compute managers
+    """
 
     __tablename__ = "compute_manager"
 
