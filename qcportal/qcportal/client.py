@@ -110,6 +110,9 @@ from .utils import make_list
 
 
 class PortalClient(PortalClientBase):
+    """
+    Main class for interacting with a QCArchive server
+    """
     def __init__(
         self,
         address: str = "https://api.qcarchive.molssi.org",
@@ -120,8 +123,7 @@ class PortalClient(PortalClientBase):
         cache: Optional[Union[str, Path]] = None,
         max_memcache_size: Optional[int] = 1000000,
     ) -> None:
-        """Initializes a PortalClient instance from an address and verification information.
-
+        """
         Parameters
         ----------
         address

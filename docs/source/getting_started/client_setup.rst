@@ -1,0 +1,38 @@
+QCPortal Quickstart
+===============================
+
+Installation through conda
+--------------------------
+
+The QCPortal package can be installed via `conda/anaconda <https://www.anaconda.com>`_
+or `mamba <https://github.com/mamba-org/mamba>`_. The packages exist under the
+`QCArchive organization <https://anaconda.org/QCArchive>`_ on Anaconda.
+
+.. code-block:: bash
+
+    $ conda create -n qcportal qcportal -c qcarchive/label/next
+    $ conda activate qcportal
+
+
+
+.. _qcportal_setup_configfile:
+
+Configuration File
+------------------
+
+The username and password used to connect to the remote QCFractal server
+can be placed in a configuration file.
+
+The configuration file is a YAML file containing sections with a name, and then
+the address and other options. The name is arbitrary and is for the user to
+differentiate between different servers.
+
+.. code-block:: yaml
+
+    my_favorite_server:
+      address: http://127.0.0.1:7777
+      username: your_username
+      password: Secret_Password
+
+
+The path to this file and the section name can passed to the :meth:`PortalClient.from_file <qcportal.client.PortalClient.from_file>` function.

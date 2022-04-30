@@ -1,0 +1,51 @@
+@import "../basic.css";
+
+html[data-theme="light"] {
+    --pst-color-primary: #ed1c24;
+	--pst-color-warning: #ed1c24;
+	--pst-color-primary-highlight: #bc151b;
+	--pst-color-secondary: #1d35e7;
+	--pst-color-secondary-highlight: #3e51e3;
+
+}
+
+html[data-theme="dark"] {
+    --pst-color-primary: #ed1c24;
+	--pst-color-warning: #ed1c24;
+	--pst-color-primary-highlight: #bc151b;
+	--pst-color-background: #1A1A1A;
+	--pst-color-secondary: #1d35e7;
+	--pst-color-secondary-highlight: #3e51e3;
+
+	
+}
+
+html[data-theme="light"] a:hover {
+	color: #1A1A1A;
+}
+
+html[data-theme="dark"] h1, html[data-theme="dark"] h2, html[data-theme="dark"] h3, html[data-theme="dark"] h4, html[data-theme="dark"] h5, html[data-theme="dark"] h6 {
+	color: #ffffff;
+}
+
+
+
+html[data-theme="dark"] a {
+	color: #ffffff;
+}
+
+html[data-theme="dark"] a:hover {
+	color: #ed1c24;
+}
+
+html[data-theme="dark"] .prev-next-area a p.prev-next-title {
+    color: white;
+}
+
+html[data-theme="dark"] .prev-next-area:hover a:hover p.prev-next-title:hover {
+    color: #ed1c24;
+}
+
+html[data-theme="dark"] dt:target {
+    background-color: #000000;
+}

@@ -1,0 +1,8 @@
+sphinx_design
+pydata_sphinx_theme
+sphinx
+-e ../qcportal
+-e ../qcfractalcompute
+-e ../qcfractal
+-e ../qcarchivetesting
+git+https://github.com/jchen0506/molssi_doc_theme.git

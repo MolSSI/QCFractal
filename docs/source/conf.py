@@ -8,6 +8,7 @@
 import qcfractal
 
 # Other packages
+import os
 import datetime
 
 # -- Path setup --------------------------------------------------------------
@@ -41,20 +42,34 @@ release = qcfractal.__version__
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.napoleon',
+#    'nbsphinx',
+    'sphinx_design',
+#    'sphinx.ext.mathjax',
+#    'sphinx.ext.extlinks',
 #    'sphinx.ext.doctest',
 #    'sphinx.ext.todo',
 #    'sphinx.ext.coverage',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.extlinks',
-    'sphinx_automodapi.automodapi',
-    'nbsphinx'
+#    'sphinx.ext.intersphinx',
+#    'sphinx_automodapi.automodapi',
 ]
 
+# Some options
+highlight_language = 'python3'
+add_module_names = False
+autoclass_content = "both"
+autodoc_typehints = 'description'
+autodoc_default_options = {
+    'members': True,
+    'undoc-members': True,
+    'inherited-members': True,
+    'show-inheritance': True,
+    'member-order': 'bysource',
+}
+
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ['_templates', ]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -67,7 +82,26 @@ exclude_patterns = ['.ipynb_checkpoints/*']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'pydata_sphinx_theme'
+
+html_theme_options = {
+	"github_url": "https://github.com/MolSSI/QCFractal",
+
+	"logo": {
+      "image_light": "molssi_main_logo.png",
+      "image_dark": "molssi_main_logo_inverted_white.png",
+    },
+	"show_toc_level": 2,
+	"header_links_before_dropdown": 4,
+	"external_links": [
+      {"name": "MolSSI", "url": "https://molssi.org"}
+  ],
+
+	"secondary_sidebar_items": ["page-toc", "sourcelink"],
+}
+
+html_css_files = ['css/custom.css']
+
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
