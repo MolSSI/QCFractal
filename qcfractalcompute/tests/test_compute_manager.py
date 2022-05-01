@@ -9,7 +9,7 @@ from qcfractal.config import FractalConfig
 from qcfractal.process_runner import ProcessBase, ProcessRunner
 from qcfractalcompute.managers import ComputeManager
 from qcfractaltesting import load_procedure_data
-from qcportal.managers import ManagerStatusEnum
+from qcportal.managers import ManagerStatusEnum, ManagerQueryFilters
 from qcportal.records import PriorityEnum, RecordStatusEnum
 
 # For testing only! We just make all available programs/procedures the same as all of them
@@ -69,7 +69,7 @@ def test_manager_keepalive(snowflake: TestingSnowflake, storage_socket: SQLAlche
 
     time.sleep(2)  # wait for manager to register
 
-    meta, managers = storage_socket.managers.query()
+    meta, managers = storage_socket.managers.query(ManagerQueryFilters())
     assert meta.n_found == 1
     manager_name = managers[0]["name"]
 
@@ -103,7 +103,7 @@ def test_manager_tag_none(snowflake: TestingSnowflake, storage_socket: SQLAlchem
 
     time.sleep(2)  # wait for manager to register
 
-    meta, managers = storage_socket.managers.query()
+    meta, managers = storage_socket.managers.query(ManagerQueryFilters())
     assert meta.n_found == 1
     assert managers[0]["tags"] == ["*"]
 
@@ -122,7 +122,7 @@ def test_manager_tag_single(snowflake: TestingSnowflake, storage_socket: SQLAlch
 
     time.sleep(2)  # wait for manager to register
 
-    meta, managers = storage_socket.managers.query()
+    meta, managers = storage_socket.managers.query(ManagerQueryFilters())
     assert meta.n_found == 1
     assert managers[0]["tags"] == ["test_tag"]
 
@@ -141,7 +141,7 @@ def test_manager_tag_multi(snowflake: TestingSnowflake, storage_socket: SQLAlche
 
     time.sleep(2)  # wait for manager to register
 
-    meta, managers = storage_socket.managers.query()
+    meta, managers = storage_socket.managers.query(ManagerQueryFilters())
     assert meta.n_found == 1
     assert managers[0]["tags"] == ["test_tag_1", "test_tag_2", "*"]
 
@@ -155,7 +155,7 @@ def test_manager_claim_inactive(snowflake: TestingSnowflake, storage_socket: SQL
     time.sleep(2)  # wait for manager to register
     assert compute_proc.is_alive() is True
 
-    meta, managers = storage_socket.managers.query()
+    meta, managers = storage_socket.managers.query(ManagerQueryFilters())
     assert meta.n_found == 1
     manager_name = managers[0]["name"]
 
@@ -203,7 +203,7 @@ def test_manager_claim_return(snowflake: TestingSnowflake, storage_socket: SQLAl
     time.sleep(2)  # wait for manager to register
     assert compute_proc.is_alive() is True
 
-    meta, managers = storage_socket.managers.query()
+    meta, managers = storage_socket.managers.query(ManagerQueryFilters())
     assert meta.n_found == 1
 
     snowflake.await_results(all_id, 10.0)
@@ -249,7 +249,7 @@ def test_manager_deferred_return(snowflake: TestingSnowflake, storage_socket: SQ
     )
 
     time.sleep(2)  # wait for manager to register
-    meta, managers = storage_socket.managers.query()
+    meta, managers = storage_socket.managers.query(ManagerQueryFilters())
     assert meta.n_found == 1
 
     manager.update(new_tasks=True)
@@ -323,7 +323,7 @@ def test_manager_deferred_drop(snowflake: TestingSnowflake, storage_socket: SQLA
     )
 
     time.sleep(2)  # wait for manager to register
-    meta, managers = storage_socket.managers.query()
+    meta, managers = storage_socket.managers.query(ManagerQueryFilters())
     assert meta.n_found == 1
 
     manager.update(new_tasks=True)
