@@ -167,7 +167,7 @@ class BaseDataset(BaseModel):
             self.raw_data.record_items.extend(record_info)
 
     def _update_metadata(self):
-        new_body = DatasetModifyMetadataBody(
+        new_body = DatasetModifyMetadata(
             name=self.raw_data.name,
             description=self.raw_data.description,
             tagline=self.raw_data.tagline,
@@ -184,7 +184,7 @@ class BaseDataset(BaseModel):
         self.client._auto_request(
             "patch",
             f"v1/datasets/{self.dataset_type}/{self.id}",
-            DatasetModifyMetadataBody,
+            DatasetModifyMetadata,
             None,
             None,
             new_body,
@@ -707,7 +707,7 @@ class BaseDataset(BaseModel):
         return self._iterate_records()
 
 
-class DatasetModifyMetadataBody(RestModelBase):
+class DatasetModifyMetadata(RestModelBase):
     name: str
     description: Optional[str]
     tags: Optional[List[str]]

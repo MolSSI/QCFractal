@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from sqlalchemy.sql import Select
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.db_socket.base_orm import BaseORM
-    from qcportal.records import AllResultTypes, RecordQueryFilters, RecordModifyBody
+    from qcportal.records import AllResultTypes, RecordQueryFilters
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Iterable, Type
 
 
@@ -1295,7 +1295,15 @@ class RecordSocket:
             return UpdateMetadata(updated_idx=updated_idx, errors=errors, n_children_updated=n_children_updated)
 
     def modify_generic(
-        self, modify_data: RecordModifyBody, username: Optional[str], *, session: Optional[Session] = None
+        self,
+        record_ids: Sequence[int],
+        username: Optional[str],
+        status: Optional[RecordStatusEnum] = None,
+        priority: Optional[PriorityEnum] = None,
+        tag: Optional[str] = None,
+        comment: Optional[str] = None,
+        *,
+        session: Optional[Session] = None,
     ):
         """
         Modify multiple things about a record at once
@@ -1303,34 +1311,34 @@ class RecordSocket:
         This function allows for changing the status, tag, priority, and comment in a single function call
         """
 
-        if len(modify_data.record_ids) == 0:
+        if len(record_ids) == 0:
             return UpdateMetadata()
 
         # do all in a single session
         with self.root_socket.optional_session(session) as session:
-            if modify_data.status is not None:
-                if modify_data.status == RecordStatusEnum.waiting:
-                    return self.root_socket.records.reset(record_ids=modify_data.record_ids, session=session)
-                if modify_data.status == RecordStatusEnum.cancelled:
-                    return self.root_socket.records.cancel(record_ids=modify_data.record_ids, session=session)
-                if modify_data.status == RecordStatusEnum.invalid:
-                    return self.root_socket.records.invalidate(record_ids=modify_data.record_ids, session=session)
+            if status is not None:
+                if status == RecordStatusEnum.waiting:
+                    return self.root_socket.records.reset(record_ids=record_ids, session=session)
+                if status == RecordStatusEnum.cancelled:
+                    return self.root_socket.records.cancel(record_ids=record_ids, session=session)
+                if status == RecordStatusEnum.invalid:
+                    return self.root_socket.records.invalidate(record_ids=record_ids, session=session)
 
                 # ignore all other statuses
 
-            if modify_data.tag is not None or modify_data.priority is not None:
+            if tag is not None or priority is not None:
                 return self.root_socket.records.modify(
-                    modify_data.record_ids,
-                    new_tag=modify_data.tag,
-                    new_priority=modify_data.priority,
+                    record_ids,
+                    new_tag=tag,
+                    new_priority=priority,
                     session=session,
                 )
 
-            if modify_data.comment:
+            if comment:
                 return self.root_socket.records.add_comment(
-                    record_ids=modify_data.record_ids,
+                    record_ids=record_ids,
                     username=username,
-                    comment=modify_data.comment,
+                    comment=comment,
                     session=session,
                 )
 

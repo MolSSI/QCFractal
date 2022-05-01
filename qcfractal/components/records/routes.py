@@ -90,7 +90,9 @@ def revert_records_v1(body_data: RecordRevertBody):
 @wrap_route("WRITE")
 def modify_records_v1(body_data: RecordModifyBody):
     username = (g.user if "user" in g else None,)
-    return storage_socket.records.modify_generic(body_data, username)
+    return storage_socket.records.modify_generic(
+        body_data.record_ids, username, body_data.status, body_data.priority, body_data.tag, body_data.comment
+    )
 
 
 @main.route("/v1/records/query", methods=["POST"])

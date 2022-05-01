@@ -14,7 +14,7 @@ from qcportal.datasets import (
     DatasetRecordModifyBody,
     DatasetDeleteRecordItemsBody,
     DatasetRecordRevertBody,
-    DatasetModifyMetadataBody,
+    DatasetModifyMetadata,
     DatasetQueryRecords,
     DatasetDeleteParams,
 )
@@ -103,7 +103,7 @@ def get_dataset_detailed_status_v1(dataset_type: str, dataset_id: int):
 #########################
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>", methods=["PATCH"])
 @wrap_route("WRITE")
-def modify_dataset_metadata_v1(dataset_type: str, dataset_id: int, body_data: DatasetModifyMetadataBody):
+def modify_dataset_metadata_v1(dataset_type: str, dataset_id: int, body_data: DatasetModifyMetadata):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.update_metadata(dataset_id, new_metadata=body_data)
 
@@ -221,11 +221,22 @@ def delete_dataset_record_items_v1(dataset_type: str, dataset_id: int, body_data
 def modify_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRecordModifyBody):
     username = (g.user if "user" in g else None,)
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
-    return ds_socket.modify_records(dataset_id, body_data, username)
+    return ds_socket.modify_records(
+        dataset_id,
+        username,
+        body_data.entry_names,
+        body_data.specification_names,
+        body_data.status,
+        body_data.priority,
+        body_data.tag,
+        body_data.comment,
+    )
 
 
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/records/revert", methods=["POST"])
 @wrap_route("WRITE")
 def revert_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRecordRevertBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
-    return ds_socket.revert_records(dataset_id, body_data)
+    return ds_socket.revert_records(
+        dataset_id, body_data.entry_names, body_data.specification_names, body_data.revert_status
+    )

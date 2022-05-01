@@ -13,12 +13,12 @@ from qcfractal.db_socket.helpers import (
     get_query_proj_options,
 )
 from qcportal.exceptions import AlreadyExistsError, MissingDataError
-from qcportal.records import RecordModifyBody, RecordStatusEnum, PriorityEnum
+from qcportal.records import RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcportal.metadata_models import InsertMetadata
-    from qcportal.datasets.models import DatasetRecordModifyBody, DatasetRecordRevertBody, DatasetModifyMetadataBody
+    from qcportal.datasets.models import DatasetModifyMetadata
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.db_socket.base_orm import BaseORM
     from typing import Dict, Any, Optional, Sequence, Iterable, Tuple, List
@@ -191,7 +191,7 @@ class BaseDatasetSocket:
             return ds_orm.id
 
     def update_metadata(
-        self, dataset_id: int, new_metadata: DatasetModifyMetadataBody, *, session: Optional[Session] = None
+        self, dataset_id: int, new_metadata: DatasetModifyMetadata, *, session: Optional[Session] = None
     ):
         with self.root_socket.optional_session(session) as session:
             stmt = select(self.dataset_orm).options(lazyload("*")).with_for_update()
@@ -608,8 +608,13 @@ class BaseDatasetSocket:
     def modify_records(
         self,
         dataset_id: int,
-        modify_data: DatasetRecordModifyBody,
         username: Optional[str],
+        entry_names: Optional[Iterable[str]] = None,
+        specification_names: Optional[List[str]] = None,
+        status: Optional[RecordStatusEnum] = None,
+        priority: Optional[PriorityEnum] = None,
+        tag: Optional[str] = None,
+        comment: Optional[str] = None,
         *,
         session: Optional[Session] = None,
     ):
@@ -619,37 +624,29 @@ class BaseDatasetSocket:
             record_ids = self._lookup_record_ids(
                 session,
                 dataset_id,
-                modify_data.entry_names,
-                modify_data.specification_names,
+                entry_names,
+                specification_names,
                 for_update=True,
             )
 
-            # TODO - kinda hacky to pull in a rest model?
-            # Break these out into function arguments?
-            rec_modify_data = RecordModifyBody(
-                record_ids=record_ids,
-                status=modify_data.status,
-                priority=modify_data.priority,
-                tag=modify_data.tag,
-                comment=modify_data.comment,
+            self.root_socket.records.modify_generic(
+                record_ids, username, status=status, priority=priority, tag=tag, comment=comment, session=session
             )
-
-            self.root_socket.records.modify_generic(rec_modify_data, username, session=session)
 
     def revert_records(
         self,
         dataset_id: int,
-        revert_data: DatasetRecordRevertBody,
+        entry_names: Optional[Iterable[str]] = None,
+        specification_names: Optional[List[str]] = None,
+        revert_status: Optional[RecordStatusEnum] = None,
         *,
         session: Optional[Session] = None,
     ):
 
         with self.root_socket.optional_session(session) as session:
-            record_ids = self._lookup_record_ids(
-                session, dataset_id, revert_data.entry_names, revert_data.specification_names, for_update=True
-            )
+            record_ids = self._lookup_record_ids(session, dataset_id, entry_names, specification_names, for_update=True)
 
-            self.root_socket.records.revert_generic(record_ids, revert_data.revert_status)
+            self.root_socket.records.revert_generic(record_ids, revert_status)
 
 
 class DatasetSocket:

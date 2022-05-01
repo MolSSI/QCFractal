@@ -12,7 +12,7 @@ from .models import (
     DatasetDeleteRecordItemsBody,
     DatasetRecordModifyBody,
     DatasetRecordRevertBody,
-    DatasetModifyMetadataBody,
+    DatasetModifyMetadata,
     DatasetQueryRecords,
     DatasetDeleteParams,
     DatasetDeleteEntryBody,
