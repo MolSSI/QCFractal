@@ -2,9 +2,9 @@ from typing import Dict
 
 from pydantic import Field
 
-from ..base_models import RestModelBase
-from ..managers.models import ManagerName
-from ..records import AllResultTypes
+from qcportal.base_models import RestModelBase
+from qcportal.managers import ManagerName
+from qcportal.records import AllResultTypes
 
 
 class TaskClaimBody(RestModelBase):

@@ -11,7 +11,7 @@ import pytest
 
 from qcfractal.testing_helpers import populate_db, mname1
 from qcportal.exceptions import MissingDataError
-from qcportal.records import PriorityEnum, RecordStatusEnum, RecordQueryBody
+from qcportal.records import PriorityEnum, RecordStatusEnum, RecordQueryFilters
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -74,67 +74,67 @@ def test_record_socket_query(storage_socket: SQLAlchemySocket):
 
     # Try created before/after
     all_records_sorted = sorted(all_records, key=lambda x: x["created_on"])
-    meta, data = storage_socket.records.query(RecordQueryBody(created_before=all_records_sorted[3]["created_on"]))
+    meta, data = storage_socket.records.query(RecordQueryFilters(created_before=all_records_sorted[3]["created_on"]))
     assert meta.n_found == 3
 
-    meta, data = storage_socket.records.query(RecordQueryBody(created_after=all_records_sorted[3]["created_on"]))
+    meta, data = storage_socket.records.query(RecordQueryFilters(created_after=all_records_sorted[3]["created_on"]))
     assert meta.n_found == 3
 
     # modified before/after
     all_records_sorted = sorted(all_records, key=lambda x: x["modified_on"])
-    meta, data = storage_socket.records.query(RecordQueryBody(modified_before=all_records_sorted[3]["modified_on"]))
+    meta, data = storage_socket.records.query(RecordQueryFilters(modified_before=all_records_sorted[3]["modified_on"]))
     assert meta.n_found == 3
 
-    meta, data = storage_socket.records.query(RecordQueryBody(modified_after=all_records_sorted[3]["modified_on"]))
+    meta, data = storage_socket.records.query(RecordQueryFilters(modified_after=all_records_sorted[3]["modified_on"]))
     assert meta.n_found == 3
 
     # Record type
-    meta, data = storage_socket.records.query(RecordQueryBody(record_type=["singlepoint"]))
+    meta, data = storage_socket.records.query(RecordQueryFilters(record_type=["singlepoint"]))
     assert meta.n_found == 6
 
-    meta, data = storage_socket.records.query(RecordQueryBody(record_type=["optimization"]))
+    meta, data = storage_socket.records.query(RecordQueryFilters(record_type=["optimization"]))
     assert meta.n_found == 1
 
-    meta, data = storage_socket.records.query(RecordQueryBody(record_type=["singlepoint", "optimization"]))
+    meta, data = storage_socket.records.query(RecordQueryFilters(record_type=["singlepoint", "optimization"]))
     assert meta.n_found == 7
 
     # Status
-    meta, data = storage_socket.records.query(RecordQueryBody(status=[RecordStatusEnum.error]))
+    meta, data = storage_socket.records.query(RecordQueryFilters(status=[RecordStatusEnum.error]))
     assert meta.n_found == 1
 
     meta, data = storage_socket.records.query(
-        RecordQueryBody(status=[RecordStatusEnum.error, RecordStatusEnum.waiting, RecordStatusEnum.deleted])
+        RecordQueryFilters(status=[RecordStatusEnum.error, RecordStatusEnum.waiting, RecordStatusEnum.deleted])
     )
     assert meta.n_found == 3
 
     # Some combinations
     meta, data = storage_socket.records.query(
-        RecordQueryBody(record_type=["singlepoint"], status=[RecordStatusEnum.waiting])
+        RecordQueryFilters(record_type=["singlepoint"], status=[RecordStatusEnum.waiting])
     )
     assert meta.n_found == 0
 
     meta, data = storage_socket.records.query(
-        RecordQueryBody(record_type=["optimization"], status=[RecordStatusEnum.waiting])
+        RecordQueryFilters(record_type=["optimization"], status=[RecordStatusEnum.waiting])
     )
     assert meta.n_found == 1
 
     meta, data = storage_socket.records.query(
-        RecordQueryBody(created_before=all_records[0]["created_on"], status=[RecordStatusEnum.waiting])
+        RecordQueryFilters(created_before=all_records[0]["created_on"], status=[RecordStatusEnum.waiting])
     )
     assert meta.n_found == 0
 
     meta, data = storage_socket.records.query(
-        RecordQueryBody(status=[RecordStatusEnum.waiting], include=["id", "status"])
+        RecordQueryFilters(status=[RecordStatusEnum.waiting], include=["id", "status"])
     )
     assert meta.n_found == 1
     assert set(data[0]) == {"id", "status", "record_type"}
 
-    meta, data = storage_socket.records.query(RecordQueryBody(status=[RecordStatusEnum.waiting], exclude=["status"]))
+    meta, data = storage_socket.records.query(RecordQueryFilters(status=[RecordStatusEnum.waiting], exclude=["status"]))
     assert meta.n_found == 1
     assert "status" not in data[0].keys()
 
     # Empty query returns everything
-    meta, data = storage_socket.records.query(RecordQueryBody())
+    meta, data = storage_socket.records.query(RecordQueryFilters())
     assert len(data) == len(all_id)
     assert meta.success
     assert meta.n_found == len(all_id)

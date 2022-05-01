@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 
 from qcfractal.db_socket.helpers import get_query_proj_options, get_count, get_general
 from qcportal.exceptions import ComputeManagerError
-from qcportal.managers import ManagerStatusEnum, ManagerName
+from qcportal.managers import ManagerStatusEnum, ManagerName, ManagerQueryFilters
 from qcportal.metadata_models import QueryMetadata
 from .db_models import ComputeManagerLogORM, ComputeManagerORM
 
@@ -238,17 +238,7 @@ class ManagerSocket:
 
     def query(
         self,
-        manager_id: Optional[Iterable[int]] = None,
-        name: Optional[Iterable[str]] = None,
-        cluster: Optional[Iterable[str]] = None,
-        hostname: Optional[Iterable[str]] = None,
-        status: Optional[Iterable[ManagerStatusEnum]] = None,
-        modified_before: Optional[datetime] = None,
-        modified_after: Optional[datetime] = None,
-        include: Optional[Iterable[str]] = None,
-        exclude: Optional[Iterable[str]] = None,
-        limit: Optional[int] = None,
-        skip: int = 0,
+        query_data: ManagerQueryFilters,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
@@ -260,30 +250,8 @@ class ManagerSocket:
 
         Parameters
         ----------
-        manager_id
-            Query for managers its ID
-        name
-            Query for managers based on manager name
-        hostname
-            Query for managers based on hostname
-        cluster
-            Query for managers based on cluster name
-        status
-            Query for managers based on status (active, inactive)
-        modified_before
-            Query for managers that were last modified before a specific time
-        modified_after
-            Query for managers that were last modified before a specific time
-        include
-            Which fields of the manager to return. Default is to return all fields.
-        exclude
-            Remove these fields from the return. Default is to return all fields.
-        limit
-            Limit the number of results. If None, the server limit will be used.
-            This limit will not be respected if greater than the configured limit of the server.
-        skip
-            Skip this many results from the total list of matches. The limit will apply after skipping,
-            allowing for pagination.
+        query_data
+            Fields/filters to query for
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -295,30 +263,30 @@ class ManagerSocket:
             found in the database.
         """
 
-        proj_options = get_query_proj_options(ComputeManagerORM, include, exclude)
+        proj_options = get_query_proj_options(ComputeManagerORM, query_data.include, query_data.exclude)
 
         and_query = []
-        if manager_id is not None:
-            and_query.append(ComputeManagerORM.id.in_(manager_id))
-        if name is not None:
-            and_query.append(ComputeManagerORM.name.in_(name))
-        if hostname is not None:
-            and_query.append(ComputeManagerORM.hostname.in_(hostname))
-        if cluster is not None:
-            and_query.append(ComputeManagerORM.cluster.in_(cluster))
-        if status is not None:
-            and_query.append(ComputeManagerORM.status.in_(status))
-        if modified_before is not None:
-            and_query.append(ComputeManagerORM.modified_on < modified_before)
-        if modified_after is not None:
-            and_query.append(ComputeManagerORM.modified_on > modified_after)
+        if query_data.manager_id is not None:
+            and_query.append(ComputeManagerORM.id.in_(query_data.manager_id))
+        if query_data.name is not None:
+            and_query.append(ComputeManagerORM.name.in_(query_data.name))
+        if query_data.hostname is not None:
+            and_query.append(ComputeManagerORM.hostname.in_(query_data.hostname))
+        if query_data.cluster is not None:
+            and_query.append(ComputeManagerORM.cluster.in_(query_data.cluster))
+        if query_data.status is not None:
+            and_query.append(ComputeManagerORM.status.in_(query_data.status))
+        if query_data.modified_before is not None:
+            and_query.append(ComputeManagerORM.modified_on < query_data.modified_before)
+        if query_data.modified_after is not None:
+            and_query.append(ComputeManagerORM.modified_on > query_data.modified_after)
 
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(ComputeManagerORM).filter(and_(*and_query))
             stmt = stmt.options(*proj_options)
 
             n_found = get_count(session, stmt)
-            stmt = stmt.limit(limit).offset(skip)
+            stmt = stmt.limit(query_data.limit).offset(query_data.skip)
 
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]

@@ -26,7 +26,7 @@ from qcportal.records import PriorityEnum, RecordStatusEnum
 from qcportal.records.optimization import OptimizationSpecification
 from qcportal.records.torsiondrive import (
     TorsiondriveSpecification,
-    TorsiondriveQueryBody,
+    TorsiondriveQueryFilters,
 )
 from .db_models import (
     TorsiondriveSpecificationORM,
@@ -383,7 +383,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
     def query(
         self,
-        query_data: TorsiondriveQueryBody,
+        query_data: TorsiondriveQueryFilters,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:

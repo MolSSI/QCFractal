@@ -4,5 +4,5 @@ from .models import (
     ReactionComponent,
     ReactionAddBody,
     ReactionRecord,
-    ReactionQueryBody,
+    ReactionQueryFilters,
 )

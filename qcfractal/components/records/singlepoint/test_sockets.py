@@ -18,7 +18,7 @@ from qcportal.records.singlepoint import (
     QCSpecification,
     SinglepointDriver,
     SinglepointProtocols,
-    SinglepointQueryBody,
+    SinglepointQueryFilters,
 )
 from qcportal.wavefunctions.models import WavefunctionProperties
 
@@ -496,49 +496,49 @@ def test_singlepoint_socket_query(storage_socket: SQLAlchemySocket):
     recs = storage_socket.records.singlepoint.get(id1 + id2 + id3)
 
     # query for molecule
-    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(molecule_id=[recs[1]["molecule_id"]]))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryFilters(molecule_id=[recs[1]["molecule_id"]]))
     assert meta.n_found == 1
     assert sp[0]["id"] == id2[0]
 
     # query for program
-    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(program=["psi4"]))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryFilters(program=["psi4"]))
     assert meta.n_found == 2
     assert {sp[0]["id"], sp[1]["id"]} == set(id1 + id2)
 
     # query for basis
-    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(basis=["sTO-3g"]))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryFilters(basis=["sTO-3g"]))
     assert meta.n_found == 1
     assert sp[0]["id"] == id2[0]
 
-    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(basis=[None]))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryFilters(basis=[None]))
     assert meta.n_found == 1
     assert sp[0]["id"] == id3[0]
 
-    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(basis=[""]))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryFilters(basis=[""]))
     assert meta.n_found == 1
     assert sp[0]["id"] == id3[0]
 
     # query for method
-    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(method=["b3lyP"]))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryFilters(method=["b3lyP"]))
     assert meta.n_found == 2
 
     # driver
-    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(driver=[SinglepointDriver.energy]))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryFilters(driver=[SinglepointDriver.energy]))
     assert meta.n_found == 3
 
     # Some empty queries
-    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(driver=[SinglepointDriver.properties]))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryFilters(driver=[SinglepointDriver.properties]))
     assert meta.n_found == 0
 
-    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(basis=["madeupbasis"]))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryFilters(basis=["madeupbasis"]))
     assert meta.n_found == 0
 
     # Query by default returns everything
-    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody())
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryFilters())
     assert meta.n_found == 3
 
     # Query by default (with a limit)
-    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryBody(limit=1))
+    meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryFilters(limit=1))
     assert meta.n_found == 3
     assert meta.n_returned == 1
 

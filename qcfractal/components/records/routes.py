@@ -5,7 +5,7 @@ from qcportal.base_models import ProjURLParameters, CommonBulkGetBody
 from qcportal.exceptions import LimitExceededError
 from qcportal.records import (
     RecordModifyBody,
-    RecordQueryBody,
+    RecordQueryFilters,
     RecordDeleteBody,
     RecordRevertBody,
 )
@@ -95,7 +95,7 @@ def modify_records_v1(body_data: RecordModifyBody):
 
 @main.route("/v1/records/query", methods=["POST"])
 @wrap_route("READ")
-def query_records_v1(body_data: RecordQueryBody):
+def query_records_v1(body_data: RecordQueryFilters):
     return storage_socket.records.query(body_data)
 
 

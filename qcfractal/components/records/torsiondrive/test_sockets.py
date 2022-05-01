@@ -21,7 +21,7 @@ from qcportal.records.singlepoint import (
 from qcportal.records.torsiondrive import (
     TorsiondriveSpecification,
     TorsiondriveKeywords,
-    TorsiondriveQueryBody,
+    TorsiondriveQueryFilters,
 )
 
 if TYPE_CHECKING:
@@ -378,46 +378,48 @@ def test_torsiondrive_socket_query(storage_socket: SQLAlchemySocket):
     )
     assert meta_1.success and meta_2.success and meta_3.success and meta_4.success
 
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(qc_program=["psi4"]))
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryFilters(qc_program=["psi4"]))
     assert meta.n_found == 4
 
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(qc_program=["nothing"]))
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryFilters(qc_program=["nothing"]))
     assert meta.n_found == 0
 
     _, init_mol_id = storage_socket.molecules.add(molecules_1 + molecules_2 + molecules_3 + molecules_4)
     meta, td = storage_socket.records.torsiondrive.query(
-        TorsiondriveQueryBody(initial_molecule_id=[init_mol_id[0], 9999])
+        TorsiondriveQueryFilters(initial_molecule_id=[init_mol_id[0], 9999])
     )
     assert meta.n_found == 3
 
     # query for optimization program
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(optimization_program=["geometric"]))
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryFilters(optimization_program=["geometric"]))
     assert meta.n_found == 4
 
     # query for optimization program
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(optimization_program=["geometric123"]))
+    meta, td = storage_socket.records.torsiondrive.query(
+        TorsiondriveQueryFilters(optimization_program=["geometric123"])
+    )
     assert meta.n_found == 0
 
     # query for basis
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(qc_basis=["sTO-3g"]))
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryFilters(qc_basis=["sTO-3g"]))
     assert meta.n_found == 3
 
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(qc_basis=[None]))
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryFilters(qc_basis=[None]))
     assert meta.n_found == 0
 
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(qc_basis=[""]))
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryFilters(qc_basis=[""]))
     assert meta.n_found == 0
 
     # query for method
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(qc_method=["b3lyP"]))
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryFilters(qc_method=["b3lyP"]))
     assert meta.n_found == 1
 
     # Query by default returns everything
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody())
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryFilters())
     assert meta.n_found == 4
 
     # Query by default (with a limit)
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryBody(limit=1))
+    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryFilters(limit=1))
     assert meta.n_found == 4
     assert meta.n_returned == 1
 

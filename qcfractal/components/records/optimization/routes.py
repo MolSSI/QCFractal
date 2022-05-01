@@ -3,7 +3,7 @@ from flask import current_app
 from qcfractal.app import main, wrap_route, prefix_projection, storage_socket
 from qcportal.base_models import ProjURLParameters
 from qcportal.exceptions import LimitExceededError
-from qcportal.records.optimization import OptimizationAddBody, OptimizationQueryBody
+from qcportal.records.optimization import OptimizationAddBody, OptimizationQueryFilters
 from qcportal.utils import calculate_limit
 
 
@@ -35,7 +35,7 @@ def get_optimization_trajectory_v1(record_id: int, url_params: ProjURLParameters
 
 @main.route("/v1/records/optimization/query", methods=["POST"])
 @wrap_route("READ")
-def query_optimization_v1(body_data: OptimizationQueryBody):
+def query_optimization_v1(body_data: OptimizationQueryFilters):
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
     body_data.limit = calculate_limit(max_limit, body_data.limit)
 

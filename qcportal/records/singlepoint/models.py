@@ -10,7 +10,7 @@ from qcelemental.models.results import (
 )
 from typing_extensions import Literal
 
-from .. import BaseRecord, RecordAddBodyBase, RecordQueryBody
+from .. import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 
 
 class SinglepointDriver(str, Enum):
@@ -112,7 +112,7 @@ class SinglepointAddBody(RecordAddBodyBase):
     molecules: List[Union[int, Molecule]]
 
 
-class SinglepointQueryBody(RecordQueryBody):
+class SinglepointQueryFilters(RecordQueryFilters):
     program: Optional[List[constr(to_lower=True)]] = None
     driver: Optional[List[SinglepointDriver]] = None
     method: Optional[List[constr(to_lower=True)]] = None

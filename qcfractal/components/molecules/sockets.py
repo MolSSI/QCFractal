@@ -23,13 +23,13 @@ from qcportal.metadata_models import (
     QueryMetadata,
     UpdateMetadata,
 )
-from qcportal.molecules import Molecule, MoleculeIdentifiers
+from qcportal.molecules import Molecule, MoleculeIdentifiers, MoleculeQueryFilters
 from .db_models import MoleculeORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from typing import List, Union, Tuple, Optional, Sequence, Iterable, Dict, Any
+    from typing import List, Union, Tuple, Optional, Sequence, Dict, Any
 
 
 class MoleculeSocket:
@@ -123,8 +123,8 @@ class MoleculeSocket:
         exclude
             Remove these fields from the return. Default is to return all fields.
         missing_ok
-           If set to True, then missing molecules will be tolerated, and the returned list of
-           Molecules will contain None for the corresponding IDs that were not found.
+            If set to True, then missing molecules will be tolerated, and the returned list of
+            Molecules will contain None for the corresponding IDs that were not found.
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -206,14 +206,7 @@ class MoleculeSocket:
 
     def query(
         self,
-        molecule_id: Optional[Iterable[int]] = None,
-        molecule_hash: Optional[Iterable[str]] = None,
-        molecular_formula: Optional[Iterable[str]] = None,
-        identifiers: Optional[Dict[str, List[str]]] = None,
-        include: Optional[Iterable[str]] = None,
-        exclude: Optional[Iterable[str]] = None,
-        limit: Optional[int] = None,
-        skip: int = 0,
+        query_data: MoleculeQueryFilters,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
@@ -225,24 +218,8 @@ class MoleculeSocket:
 
         Parameters
         ----------
-        molecule_id
-            Query for molecules based on its ID
-        molecule_hash
-            Query for molecules based on its hash
-        molecular_formula
-            Query for molecules based on molecular formula
-        identifiers
-            Query based on identifiers. Dictionary is identifier name -> value
-        include
-            Which fields of the molecule to return. Default is to return all fields.
-        exclude
-            Remove these fields from the return. Default is to return all fields.
-        limit
-            Limit the number of results. If None, the server limit will be used.
-            This limit will not be respected if greater than the configured limit of the server.
-        skip
-            Skip this many results from the total list of matches. The limit will apply after skipping,
-            allowing for pagination.
+        query_data
+            Fields/filters to query for
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -254,21 +231,22 @@ class MoleculeSocket:
             that were found in the database.
         """
 
+        molecular_formula = query_data.molecular_formula
+        identifiers = query_data.identifiers
+
         if molecular_formula is not None:
             try:
                 # Make sure the molecular formulae are in the proper element order
-                molecular_formula = [order_molecular_formula(form) for form in molecular_formula]
+                molecular_formula = [order_molecular_formula(form) for form in query_data.molecular_formula]
             except ValueError:
                 # Probably, the user provided an invalid chemical formula
                 pass
 
-        proj_options = get_query_proj_options(MoleculeORM, include, exclude)
-
         and_query = []
-        if molecule_id is not None:
-            and_query.append(MoleculeORM.id.in_(molecule_id))
-        if molecule_hash is not None:
-            and_query.append(MoleculeORM.molecule_hash.in_(molecule_hash))
+        if query_data.molecule_id is not None:
+            and_query.append(MoleculeORM.id.in_(query_data.molecule_id))
+        if query_data.molecule_hash is not None:
+            and_query.append(MoleculeORM.molecule_hash.in_(query_data.molecule_hash))
         if molecular_formula is not None:
             # Add it to the identifiers query
             if identifiers is None:
@@ -282,11 +260,13 @@ class MoleculeSocket:
                     or_query.append(MoleculeORM.identifiers.contains({i_name: v}))
                 and_query.append(or_(*or_query))
 
+        proj_options = get_query_proj_options(MoleculeORM, query_data.include, query_data.exclude)
+
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(MoleculeORM).where(and_(*and_query))
             stmt = stmt.options(*proj_options)
             n_found = get_count(session, stmt)
-            stmt = stmt.limit(limit).offset(skip)
+            stmt = stmt.limit(query_data.limit).offset(query_data.skip)
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]
 

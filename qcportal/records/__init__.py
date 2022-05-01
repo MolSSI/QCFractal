@@ -13,7 +13,7 @@ from .models import (
     RecordModifyBody,
     RecordDeleteBody,
     RecordRevertBody,
-    RecordQueryBody,
+    RecordQueryFilters,
     RecordAddBodyBase,
 )
 

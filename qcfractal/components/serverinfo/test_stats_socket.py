@@ -3,13 +3,15 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from qcportal.serverinfo import ServerStatsQueryFilters
+
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
 
 
 def test_serverinfo_socket_update_query_stats(storage_socket: SQLAlchemySocket):
 
-    meta, stats = storage_socket.serverinfo.query_server_stats()
+    meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert meta.n_found == 0
     assert meta.n_returned == 0
 
@@ -20,7 +22,7 @@ def test_serverinfo_socket_update_query_stats(storage_socket: SQLAlchemySocket):
 
     time_1 = datetime.utcnow()
 
-    meta, stats = storage_socket.serverinfo.query_server_stats()
+    meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert meta.success
     assert meta.n_found == 1
     assert meta.n_returned == 1
@@ -35,7 +37,7 @@ def test_serverinfo_socket_update_query_stats(storage_socket: SQLAlchemySocket):
     storage_socket.serverinfo.update_server_stats()
 
     # Should get the latest now
-    meta, stats2 = storage_socket.serverinfo.query_server_stats()
+    meta, stats2 = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert meta.success
     assert meta.n_found == 2
     assert meta.n_returned == 2
@@ -48,19 +50,21 @@ def test_serverinfo_socket_update_query_stats(storage_socket: SQLAlchemySocket):
     # one more update
     storage_socket.serverinfo.update_server_stats()
 
-    meta, stats = storage_socket.serverinfo.query_server_stats(before=datetime.utcnow())
+    meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters(before=datetime.utcnow()))
     assert meta.n_found == 3
 
-    meta, stats = storage_socket.serverinfo.query_server_stats(before=datetime.utcnow(), after=time_1)
+    meta, stats = storage_socket.serverinfo.query_server_stats(
+        ServerStatsQueryFilters(before=datetime.utcnow(), after=time_1)
+    )
     assert meta.n_found == 2
 
-    meta, stats = storage_socket.serverinfo.query_server_stats(before=time_1)
+    meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters(before=time_1))
     assert meta.n_found == 1
 
 
 def test_serverinfo_socket_query_stats(storage_socket: SQLAlchemySocket):
 
-    meta, _ = storage_socket.serverinfo.query_server_stats()
+    meta, _ = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert meta.n_found == 0
 
     time_0 = datetime.utcnow()
@@ -70,7 +74,7 @@ def test_serverinfo_socket_query_stats(storage_socket: SQLAlchemySocket):
     time_23 = datetime.utcnow()
     storage_socket.serverinfo.update_server_stats()
 
-    meta, stats = storage_socket.serverinfo.query_server_stats()
+    meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert meta.success
     assert meta.n_found == 3
     assert meta.n_returned == 3
@@ -81,28 +85,28 @@ def test_serverinfo_socket_query_stats(storage_socket: SQLAlchemySocket):
     assert stats[1]["timestamp"] > time_12
 
     # Query by times
-    meta, stats = storage_socket.serverinfo.query_server_stats(before=time_0)
+    meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters(before=time_0))
     assert meta.n_found == 0
 
-    meta, stats = storage_socket.serverinfo.query_server_stats(before=time_12)
+    meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters(before=time_12))
     assert meta.n_found == 1
 
-    meta, stats = storage_socket.serverinfo.query_server_stats(after=time_12)
+    meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters(after=time_12))
     assert meta.n_found == 2
 
-    meta, stats = storage_socket.serverinfo.query_server_stats(after=datetime.utcnow())
+    meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters(after=datetime.utcnow()))
     assert meta.n_found == 0
 
-    meta, stats = storage_socket.serverinfo.query_server_stats(before=datetime.utcnow())
+    meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters(before=datetime.utcnow()))
     assert meta.n_found == 3
 
-    meta, stats = storage_socket.serverinfo.query_server_stats(after=time_12, before=time_23)
+    meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters(after=time_12, before=time_23))
     assert meta.n_found == 1
 
 
 def test_serverinfo_socket_delete_stats(storage_socket: SQLAlchemySocket):
 
-    meta, _ = storage_socket.serverinfo.query_server_stats()
+    meta, _ = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert meta.n_found == 0
 
     time_0 = datetime.utcnow()
@@ -117,7 +121,7 @@ def test_serverinfo_socket_delete_stats(storage_socket: SQLAlchemySocket):
 
     n_deleted = storage_socket.serverinfo.delete_server_stats(before=time_12)
     assert n_deleted == 1
-    meta, stats = storage_socket.serverinfo.query_server_stats()
+    meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert meta.n_found == 2
     assert stats[0]["timestamp"] > time_12
     assert stats[1]["timestamp"] > time_12
@@ -127,5 +131,5 @@ def test_serverinfo_socket_delete_stats(storage_socket: SQLAlchemySocket):
 
     n_deleted = storage_socket.serverinfo.delete_server_stats(before=datetime.utcnow())
     assert n_deleted == 2
-    meta, _ = storage_socket.serverinfo.query_server_stats()
+    meta, _ = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert meta.n_found == 0

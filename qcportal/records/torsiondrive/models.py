@@ -3,7 +3,7 @@ from typing import List, Optional, Tuple, Union, Dict
 from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
 from typing_extensions import Literal
 
-from .. import BaseRecord, RecordAddBodyBase, RecordQueryBody
+from .. import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from ..optimization.models import OptimizationSpecification, OptimizationRecord
 from ...base_models import ProjURLParameters
 from ...molecules import Molecule
@@ -74,7 +74,7 @@ class TorsiondriveAddBody(RecordAddBodyBase):
     as_service: bool
 
 
-class TorsiondriveQueryBody(RecordQueryBody):
+class TorsiondriveQueryFilters(RecordQueryFilters):
     program: Optional[List[str]] = None
     optimization_program: Optional[List[str]]
     qc_program: Optional[List[constr(to_lower=True)]] = None

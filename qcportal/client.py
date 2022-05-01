@@ -30,9 +30,9 @@ from .datasets import (
     DatasetDeleteParams,
 )
 from .datasets.optimization import OptimizationDatasetAddBody
-from .managers import ManagerQueryBody, ComputeManager
+from .managers import ManagerQueryFilters, ComputeManager
 from .metadata_models import QueryMetadata, UpdateMetadata, InsertMetadata, DeleteMetadata
-from .molecules import Molecule, MoleculeIdentifiers, MoleculeQueryBody, MoleculeModifyBody
+from .molecules import Molecule, MoleculeIdentifiers, MoleculeQueryFilters, MoleculeModifyBody
 from .permissions import (
     UserInfo,
     RoleInfo,
@@ -44,7 +44,7 @@ from .records import (
     records_from_datamodels,
     RecordStatusEnum,
     PriorityEnum,
-    RecordQueryBody,
+    RecordQueryFilters,
     RecordModifyBody,
     RecordDeleteBody,
     RecordRevertBody,
@@ -55,25 +55,25 @@ from .records.gridoptimization import (
     GridoptimizationKeywords,
     GridoptimizationAddBody,
     GridoptimizationRecord,
-    GridoptimizationQueryBody,
+    GridoptimizationQueryFilters,
 )
 from .records.optimization import (
     OptimizationProtocols,
     OptimizationRecord,
-    OptimizationQueryBody,
+    OptimizationQueryFilters,
     OptimizationSpecification,
     OptimizationAddBody,
 )
 from .records.reaction import (
     ReactionAddBody,
     ReactionRecord,
-    ReactionQueryBody,
+    ReactionQueryFilters,
 )
 from .records.singlepoint import (
     QCSpecification,
     SinglepointRecord,
     SinglepointAddBody,
-    SinglepointQueryBody,
+    SinglepointQueryFilters,
     SinglepointDriver,
     SinglepointProtocols,
 )
@@ -81,13 +81,13 @@ from .records.torsiondrive import (
     TorsiondriveKeywords,
     TorsiondriveAddBody,
     TorsiondriveRecord,
-    TorsiondriveQueryBody,
+    TorsiondriveQueryFilters,
 )
 from .serverinfo import (
-    AccessLogQueryBody,
-    AccessLogSummaryParameters,
-    ErrorLogQueryBody,
-    ServerStatsQueryParameters,
+    AccessLogQueryFilters,
+    AccessLogSummaryFilters,
+    ErrorLogQueryFilters,
+    ServerStatsQueryFilters,
     DeleteBeforeDateBody,
 )
 from .utils import make_list, make_str
@@ -366,21 +366,21 @@ class PortalClient(PortalClientBase):
         molecule_ids: Union[int, Sequence[int]],
         missing_ok: bool = False,
     ) -> Union[Optional[Molecule], List[Optional[Molecule]]]:
-        """Obtains molecules from the server via molecule ids
+        """Obtains molecules with the specified IDs from the server
 
         Parameters
         ----------
         molecule_ids
-            An id or list of ids to query.
+            A single molecule ID, or a list (or other sequence) of molecule IDs
         missing_ok
-            If True, return ``None`` for ids that were not found on the server.
-            If False, raise ``KeyError`` if any ids were not found on the server.
+           If set to True, then missing molecules will be tolerated, and the returned list of
+           Molecules will contain None for the corresponding IDs that were not found.
 
         Returns
         -------
         :
-            The requested molecules, in the same order as the requested ids.
-            If given a list of ids, the return value will be a list.
+            Molecules, in the same order as the requested ids.
+            If given a sequence of ids, the return value will be a list.
             Otherwise, it will be a single Molecule.
         """
 
@@ -411,24 +411,26 @@ class PortalClient(PortalClientBase):
     ) -> Tuple[QueryMetadata, List[Molecule]]:
         """Query molecules by attributes.
 
-        All matching molecules, up to the lower of `limit` or the server's
-        maximum result count, will be returned.
-
-        The return list will be in an indeterminate order
 
         Parameters
         ----------
         molecule_hash
             Queries molecules by hash
         molecular_formula
-            Queries molecules by molecular formula
+            Queries molecules by molecular formula.
             Molecular formulas are not order-sensitive (e.g. "H2O == OH2 != Oh2").
         identifiers
             Additional identifiers to search for (smiles, etc)
         limit
-            The maximum number of Molecules to query.
+            The maximum number of Molecules to return. Note that the server limit is always obeyed.
         skip
-            The number of Molecules to skip in the query, used during pagination
+            The number of Molecules to skip in the query. This can be used for pagination
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of molecules
+            that were found on the server.
         """
 
         if limit is not None and limit > self.api_limits["get_molecules"]:
@@ -448,7 +450,7 @@ class PortalClient(PortalClientBase):
         meta, molecules = self._auto_request(
             "post",
             "v1/molecules/query",
-            MoleculeQueryBody,
+            MoleculeQueryFilters,
             None,
             Tuple[QueryMetadata, List[Molecule]],
             query_body,
@@ -457,16 +459,21 @@ class PortalClient(PortalClientBase):
         return meta, molecules
 
     def add_molecules(self, molecules: Sequence[Molecule]) -> Tuple[InsertMetadata, List[int]]:
-        """Add molecules to the server.
+        """Add molecules to the server database
+
+        If the same molecule (defined by having the same hash) already exists, then the existing
+        molecule is kept and that particular molecule is not added.
 
         Parameters
+        ----------
         molecules
             A list of Molecules to add to the server.
 
         Returns
         -------
         :
-            A list of Molecule ids in the same order as the `molecules` parameter.
+            Metadata about what was inserted, and a list of IDs of the molecules
+            in the same order as the `molecules` parameter.
         """
 
         if not molecules:
@@ -680,7 +687,7 @@ class PortalClient(PortalClientBase):
         meta, record_data = self._auto_request(
             "post",
             "v1/records/query",
-            RecordQueryBody,
+            RecordQueryFilters,
             None,
             Tuple[QueryMetadata, List[AllRecordDataModelTypes]],
             query_data,
@@ -1003,7 +1010,7 @@ class PortalClient(PortalClientBase):
         meta, record_data = self._auto_request(
             "post",
             "v1/records/singlepoint/query",
-            SinglepointQueryBody,
+            SinglepointQueryFilters,
             None,
             Tuple[QueryMetadata, List[SinglepointRecord._DataModel]],
             query_data,
@@ -1202,7 +1209,7 @@ class PortalClient(PortalClientBase):
         meta, record_data = self._auto_request(
             "post",
             "v1/records/optimization/query",
-            OptimizationQueryBody,
+            OptimizationQueryFilters,
             None,
             Tuple[QueryMetadata, List[OptimizationRecord._DataModel]],
             query_data,
@@ -1395,7 +1402,7 @@ class PortalClient(PortalClientBase):
         meta, record_data = self._auto_request(
             "post",
             "v1/records/torsiondrive/query",
-            TorsiondriveQueryBody,
+            TorsiondriveQueryFilters,
             None,
             Tuple[QueryMetadata, List[TorsiondriveRecord._DataModel]],
             query_data,
@@ -1588,7 +1595,7 @@ class PortalClient(PortalClientBase):
         meta, record_data = self._auto_request(
             "post",
             "v1/records/gridoptimization/query",
-            GridoptimizationQueryBody,
+            GridoptimizationQueryFilters,
             None,
             Tuple[QueryMetadata, List[GridoptimizationRecord._DataModel]],
             query_data,
@@ -1781,7 +1788,7 @@ class PortalClient(PortalClientBase):
         meta, record_data = self._auto_request(
             "post",
             "v1/records/reaction/query",
-            ReactionQueryBody,
+            ReactionQueryFilters,
             None,
             Tuple[QueryMetadata, List[ReactionRecord._DataModel]],
             query_data,
@@ -1833,7 +1840,7 @@ class PortalClient(PortalClientBase):
 
     def query_managers(
         self,
-        id: Optional[Union[int, Iterable[int]]] = None,
+        manager_ids: Optional[Union[int, Iterable[int]]] = None,
         name: Optional[Union[str, Iterable[str]]] = None,
         cluster: Optional[Union[str, Iterable[str]]] = None,
         hostname: Optional[Union[str, Iterable[str]]] = None,
@@ -1848,7 +1855,7 @@ class PortalClient(PortalClientBase):
 
         Parameters
         ----------
-        id
+        manager_ids
             ID assigned to the manager (this is not the UUID. This should be used very rarely).
         name
             Queries the managers name
@@ -1880,7 +1887,7 @@ class PortalClient(PortalClientBase):
             limit = min(limit, self.api_limits["get_managers"])
 
         query_body = {
-            "id": make_list(id),
+            "manager_id": make_list(manager_ids),
             "name": make_list(name),
             "cluster": make_list(cluster),
             "hostname": make_list(hostname),
@@ -1897,7 +1904,7 @@ class PortalClient(PortalClientBase):
         return self._auto_request(
             "post",
             "v1/managers/query",
-            ManagerQueryBody,
+            ManagerQueryFilters,
             None,
             Tuple[QueryMetadata, List[ComputeManager]],
             query_body,
@@ -1921,12 +1928,12 @@ class PortalClient(PortalClientBase):
             warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
             limit = min(limit, self.api_limits["get_server_stats"])
 
-        url_params = ServerStatsQueryParameters(before=before, after=after, limit=limit, skip=skip)
+        url_params = ServerStatsQueryFilters(before=before, after=after, limit=limit, skip=skip)
         return self._auto_request(
             "get",
             "v1/server_stats",
             None,
-            ServerStatsQueryParameters,
+            ServerStatsQueryFilters,
             Tuple[QueryMetadata, List[Dict[str, Any]]],
             None,
             url_params,
@@ -1953,7 +1960,7 @@ class PortalClient(PortalClientBase):
             warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
             limit = min(limit, self.api_limits["get_access_logs"])
 
-        body_data = AccessLogQueryBody(
+        body_data = AccessLogQueryFilters(
             access_type=make_list(access_type),
             access_method=make_list(access_method),
             before=before,
@@ -1965,7 +1972,7 @@ class PortalClient(PortalClientBase):
         return self._auto_request(
             "post",
             "v1/access_logs/query",
-            AccessLogQueryBody,
+            AccessLogQueryFilters,
             None,
             Tuple[QueryMetadata, List[Dict[str, Any]]],
             body_data,
@@ -1978,7 +1985,7 @@ class PortalClient(PortalClientBase):
 
     def query_error_log(
         self,
-        id: Optional[Union[int, Iterable[int]]] = None,
+        error_id: Optional[Union[int, Iterable[int]]] = None,
         username: Optional[Union[str, Iterable[str]]] = None,
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
@@ -1991,8 +1998,8 @@ class PortalClient(PortalClientBase):
             warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
             limit = min(limit, self.api_limits["get_error_logs"])
 
-        body_data = ErrorLogQueryBody(
-            id=make_list(id),
+        body_data = ErrorLogQueryFilters(
+            error_id=make_list(error_id),
             username=make_list(username),
             before=before,
             after=after,
@@ -2003,7 +2010,7 @@ class PortalClient(PortalClientBase):
         return self._auto_request(
             "post",
             "v1/server_errors/query",
-            ErrorLogQueryBody,
+            ErrorLogQueryFilters,
             None,
             Tuple[QueryMetadata, List[Dict[str, Any]]],
             body_data,
@@ -2041,7 +2048,7 @@ class PortalClient(PortalClientBase):
         }
 
         return self._auto_request(
-            "get", "v1/access_logs/summary", None, AccessLogSummaryParameters, Dict[str, Any], None, url_params
+            "get", "v1/access_logs/summary", None, AccessLogSummaryFilters, Dict[str, Any], None, url_params
         )
 
     ##############################################################

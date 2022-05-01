@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from sqlalchemy.sql import Select
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.db_socket.base_orm import BaseORM
-    from qcportal.records import AllResultTypes, RecordQueryBody, RecordModifyBody
+    from qcportal.records import AllResultTypes, RecordQueryFilters, RecordModifyBody
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Iterable, Type
 
 
@@ -378,7 +378,7 @@ class RecordSocket:
         self,
         stmt: Select,
         orm_type: Type[BaseRecordORM],
-        query_data: RecordQueryBody,
+        query_data: RecordQueryFilters,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
@@ -463,7 +463,7 @@ class RecordSocket:
 
     def query(
         self,
-        query_data: RecordQueryBody,
+        query_data: RecordQueryFilters,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:

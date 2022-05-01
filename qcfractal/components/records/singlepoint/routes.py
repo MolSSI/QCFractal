@@ -2,7 +2,7 @@ from flask import current_app
 
 from qcfractal.app import main, wrap_route, storage_socket
 from qcportal.exceptions import LimitExceededError
-from qcportal.records.singlepoint import SinglepointAddBody, SinglepointQueryBody
+from qcportal.records.singlepoint import SinglepointAddBody, SinglepointQueryFilters
 from qcportal.utils import calculate_limit
 
 
@@ -29,7 +29,7 @@ def get_singlepoint_wavefunction_v1(record_id: int):
 
 @main.route("/v1/records/singlepoint/query", methods=["POST"])
 @wrap_route("READ")
-def query_singlepoint_v1(body_data: SinglepointQueryBody):
+def query_singlepoint_v1(body_data: SinglepointQueryFilters):
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
     body_data.limit = calculate_limit(max_limit, body_data.limit)
 

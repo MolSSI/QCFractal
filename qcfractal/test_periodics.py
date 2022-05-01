@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from qcfractaltesting.helpers import load_procedure_data
 from qcportal.managers import ManagerName, ManagerStatusEnum
 from qcportal.records import RecordStatusEnum, PriorityEnum
+from qcportal.serverinfo import ServerStatsQueryFilters
 
 if TYPE_CHECKING:
     from qcfractal.testing_helpers import TestingSnowflake, SQLAlchemySocket
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
 
 def test_periodics_server_stats(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
 
-    meta, stats = storage_socket.serverinfo.query_server_stats()
+    meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert meta.n_found == 0
 
     sleep_time = snowflake._qcf_config.statistics_frequency
@@ -26,7 +27,7 @@ def test_periodics_server_stats(snowflake: TestingSnowflake, storage_socket: SQL
         time.sleep(sleep_time)
         time_1 = datetime.utcnow()
 
-        meta, stats = storage_socket.serverinfo.query_server_stats()
+        meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
         assert meta.n_found == i + 1
         assert time_0 < stats[0]["timestamp"] < time_1
 

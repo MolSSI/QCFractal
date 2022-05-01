@@ -7,7 +7,7 @@ from qcportal.managers import (
     ManagerActivationBody,
     ManagerUpdateBody,
     ManagerStatusEnum,
-    ManagerQueryBody,
+    ManagerQueryFilters,
 )
 from qcportal.utils import calculate_limit
 
@@ -63,20 +63,9 @@ def bulk_get_managers_v1(body_data: CommonBulkGetNamesBody):
 
 @main.route("/v1/managers/query", methods=["POST"])
 @wrap_route("READ")
-def query_managers_v1(body_data: ManagerQueryBody):
+def query_managers_v1(body_data: ManagerQueryFilters):
 
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_managers
+    body_data.limit = calculate_limit(max_limit, body_data.limit)
 
-    return storage_socket.managers.query(
-        manager_id=body_data.id,
-        name=body_data.name,
-        cluster=body_data.cluster,
-        hostname=body_data.hostname,
-        status=body_data.status,
-        modified_before=body_data.modified_before,
-        modified_after=body_data.modified_after,
-        include=body_data.include,
-        exclude=body_data.exclude,
-        limit=calculate_limit(max_limit, body_data.limit),
-        skip=body_data.skip,
-    )
+    return storage_socket.managers.query(body_data)

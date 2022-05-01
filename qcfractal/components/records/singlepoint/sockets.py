@@ -17,7 +17,7 @@ from qcportal.records import PriorityEnum, RecordStatusEnum
 from qcportal.records.singlepoint import (
     QCSpecification,
     WavefunctionProperties,
-    SinglepointQueryBody,
+    SinglepointQueryFilters,
 )
 from .db_models import QCSpecificationORM, SinglepointRecordORM
 
@@ -220,7 +220,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
 
     def query(
         self,
-        query_data: SinglepointQueryBody,
+        query_data: SinglepointQueryFilters,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:

@@ -4,12 +4,7 @@ from typing import Optional, List
 
 from pydantic import validator
 
-from ..base_models import (
-    validate_list_to_single,
-    QueryProjModelBase,
-    QueryModelBase,
-    RestModelBase,
-)
+from qcportal.base_models import RestModelBase, QueryProjModelBase, QueryModelBase, validate_list_to_single
 
 
 class GroupByEnum(str, Enum):
@@ -24,7 +19,7 @@ class DeleteBeforeDateBody(RestModelBase):
     before: Optional[datetime] = None
 
 
-class AccessLogQueryBody(QueryProjModelBase):
+class AccessLogQueryFilters(QueryProjModelBase):
     access_type: Optional[List[str]] = None
     access_method: Optional[List[str]] = None
     username: Optional[List[str]] = None
@@ -32,14 +27,14 @@ class AccessLogQueryBody(QueryProjModelBase):
     after: Optional[datetime] = None
 
 
-class ErrorLogQueryBody(QueryModelBase):
-    id: Optional[List[int]] = None
+class ErrorLogQueryFilters(QueryModelBase):
+    error_id: Optional[List[int]] = None
     username: Optional[List[str]] = None
     before: Optional[datetime] = None
     after: Optional[datetime] = None
 
 
-class ServerStatsQueryParameters(QueryModelBase):
+class ServerStatsQueryFilters(QueryModelBase):
     before: Optional[datetime] = None
     after: Optional[datetime] = None
 
@@ -48,7 +43,7 @@ class ServerStatsQueryParameters(QueryModelBase):
         return validate_list_to_single(v)
 
 
-class AccessLogSummaryParameters(RestModelBase):
+class AccessLogSummaryFilters(RestModelBase):
     group_by: GroupByEnum = GroupByEnum.day
     before: Optional[datetime] = None
     after: Optional[datetime] = None

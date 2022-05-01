@@ -46,22 +46,22 @@ def test_serverinfo_client_query_stats(storage_socket: SQLAlchemySocket, snowfla
     storage_socket.serverinfo.update_server_stats()
 
     # Query by times
-    meta, stats = storage_socket.serverinfo.query_server_stats(before=time_0)
+    meta, stats = snowflake_client.query_server_stats(before=time_0)
     assert meta.n_found == 0
 
-    meta, stats = storage_socket.serverinfo.query_server_stats(before=time_12)
+    meta, stats = snowflake_client.query_server_stats(before=time_12)
     assert meta.n_found == 1
 
-    meta, stats = storage_socket.serverinfo.query_server_stats(after=time_12)
+    meta, stats = snowflake_client.query_server_stats(after=time_12)
     assert meta.n_found == 2
 
-    meta, stats = storage_socket.serverinfo.query_server_stats(after=datetime.utcnow())
+    meta, stats = snowflake_client.query_server_stats(after=datetime.utcnow())
     assert meta.n_found == 0
 
-    meta, stats = storage_socket.serverinfo.query_server_stats(before=datetime.utcnow())
+    meta, stats = snowflake_client.query_server_stats(before=datetime.utcnow())
     assert meta.n_found == 3
 
-    meta, stats = storage_socket.serverinfo.query_server_stats(after=time_12, before=time_23)
+    meta, stats = snowflake_client.query_server_stats(after=time_12, before=time_23)
     assert meta.n_found == 1
 
 

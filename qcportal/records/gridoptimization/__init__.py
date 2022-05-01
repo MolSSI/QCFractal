@@ -6,5 +6,5 @@ from .models import (
     GridoptimizationSpecification,
     GridoptimizationRecord,
     GridoptimizationAddBody,
-    GridoptimizationQueryBody,
+    GridoptimizationQueryFilters,
 )

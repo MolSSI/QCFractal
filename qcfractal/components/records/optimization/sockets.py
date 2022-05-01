@@ -20,7 +20,7 @@ from qcportal.molecules import Molecule
 from qcportal.records import PriorityEnum, RecordStatusEnum
 from qcportal.records.optimization import (
     OptimizationSpecification,
-    OptimizationQueryBody,
+    OptimizationQueryFilters,
 )
 from qcportal.records.singlepoint import (
     SinglepointDriver,
@@ -180,7 +180,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
 
     def query(
         self,
-        query_data: OptimizationQueryBody,
+        query_data: OptimizationQueryFilters,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:

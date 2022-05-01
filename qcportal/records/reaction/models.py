@@ -6,7 +6,7 @@ from typing_extensions import Literal
 from .. import BaseRecord, RecordAddBodyBase
 from ..singlepoint.models import (
     QCSpecification,
-    SinglepointQueryBody,
+    SinglepointQueryFilters,
     SinglepointRecord,
     SinglepointDriver,
 )
@@ -27,7 +27,7 @@ class ReactionAddBody(RecordAddBodyBase):
     stoichiometries: List[List[Tuple[float, Union[int, Molecule]]]]
 
 
-class ReactionQueryBody(SinglepointQueryBody):
+class ReactionQueryFilters(SinglepointQueryFilters):
     pass
 
 

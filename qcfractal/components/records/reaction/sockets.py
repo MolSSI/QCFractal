@@ -18,7 +18,7 @@ from qcportal.outputstore import OutputTypeEnum
 from qcportal.records import PriorityEnum, RecordStatusEnum
 from qcportal.records.reaction import (
     ReactionQCSpecification,
-    ReactionQueryBody,
+    ReactionQueryFilters,
 )
 from .db_models import ReactionStoichiometryORM, ReactionComponentORM, ReactionRecordORM
 
@@ -165,7 +165,7 @@ class ReactionRecordSocket(BaseRecordSocket):
 
     def query(
         self,
-        query_data: ReactionQueryBody,
+        query_data: ReactionQueryFilters,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:

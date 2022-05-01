@@ -6,5 +6,5 @@ from .models import (
     SinglepointRecord,
     WavefunctionProperties,
     SinglepointAddBody,
-    SinglepointQueryBody,
+    SinglepointQueryFilters,
 )

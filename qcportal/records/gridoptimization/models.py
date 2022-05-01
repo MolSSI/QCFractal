@@ -4,7 +4,7 @@ from typing import List, Union, Optional, Dict
 from pydantic import BaseModel, Extra, Field, constr, validator
 from typing_extensions import Literal
 
-from .. import BaseRecord, RecordAddBodyBase, RecordQueryBody
+from .. import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from ..optimization.models import OptimizationSpecification, OptimizationRecord
 from ...base_models import ProjURLParameters
 from ...molecules import Molecule
@@ -106,7 +106,7 @@ class GridoptimizationAddBody(RecordAddBodyBase):
     initial_molecules: List[Union[int, Molecule]]
 
 
-class GridoptimizationQueryBody(RecordQueryBody):
+class GridoptimizationQueryFilters(RecordQueryFilters):
     program: Optional[List[str]] = None
     optimization_program: Optional[List[str]]
     qc_program: Optional[List[constr(to_lower=True)]] = None

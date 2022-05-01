@@ -13,7 +13,7 @@ from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.gridoptimization import (
     GridoptimizationSpecification,
     GridoptimizationKeywords,
-    GridoptimizationQueryBody,
+    GridoptimizationQueryFilters,
 )
 from qcportal.records.optimization import (
     OptimizationSpecification,
@@ -264,50 +264,50 @@ def test_gridoptimization_socket_query(storage_socket: SQLAlchemySocket):
     )
     assert meta_1.success and meta_2.success and meta_3.success and meta_4.success
 
-    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryBody(qc_program=["psi4"]))
+    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryFilters(qc_program=["psi4"]))
     assert meta.n_found == 4
 
-    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryBody(qc_program=["nothing"]))
+    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryFilters(qc_program=["nothing"]))
     assert meta.n_found == 0
 
     _, init_mol_id = storage_socket.molecules.add([molecule_1, molecule_2, molecule_3, molecule_4])
     meta, td = storage_socket.records.gridoptimization.query(
-        GridoptimizationQueryBody(initial_molecule_id=[init_mol_id[0], 9999])
+        GridoptimizationQueryFilters(initial_molecule_id=[init_mol_id[0], 9999])
     )
     assert meta.n_found == 2
 
     # query for optimization program
     meta, td = storage_socket.records.gridoptimization.query(
-        GridoptimizationQueryBody(optimization_program=["geometric"])
+        GridoptimizationQueryFilters(optimization_program=["geometric"])
     )
     assert meta.n_found == 4
 
     # query for optimization program
     meta, td = storage_socket.records.gridoptimization.query(
-        GridoptimizationQueryBody(optimization_program=["geometric123"])
+        GridoptimizationQueryFilters(optimization_program=["geometric123"])
     )
     assert meta.n_found == 0
 
     # query for basis
-    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryBody(qc_basis=["sTO-3g"]))
+    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryFilters(qc_basis=["sTO-3g"]))
     assert meta.n_found == 3
 
-    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryBody(qc_basis=[None]))
+    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryFilters(qc_basis=[None]))
     assert meta.n_found == 0
 
-    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryBody(qc_basis=[""]))
+    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryFilters(qc_basis=[""]))
     assert meta.n_found == 0
 
     # query for method
-    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryBody(qc_method=["b3lyP"]))
+    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryFilters(qc_method=["b3lyP"]))
     assert meta.n_found == 1
 
     # Query by default returns everything
-    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryBody())
+    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryFilters())
     assert meta.n_found == 4
 
     # Query by default (with a limit)
-    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryBody(limit=1))
+    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryFilters(limit=1))
     assert meta.n_found == 4
     assert meta.n_returned == 1
 

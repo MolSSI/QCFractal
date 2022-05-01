@@ -12,8 +12,8 @@ from ..base_models import (
     QueryProjModelBase,
     ProjURLParameters,
 )
-from ..outputstore import OutputStore, OutputTypeEnum
 from ..nativefiles import NativeFile
+from ..outputstore import OutputStore, OutputTypeEnum
 
 
 class PriorityEnum(int, Enum):
@@ -372,7 +372,7 @@ class RecordRevertBody(RestModelBase):
     record_ids: List[int]
 
 
-class RecordQueryBody(QueryProjModelBase):
+class RecordQueryFilters(QueryProjModelBase):
     record_id: Optional[List[int]] = None
     record_type: Optional[List[str]] = None
     manager_name: Optional[List[str]] = None

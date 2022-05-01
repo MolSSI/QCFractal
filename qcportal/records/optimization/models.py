@@ -9,7 +9,7 @@ from qcelemental.models.procedures import (
 from typing_extensions import Literal
 
 from qcportal.records.singlepoint import SinglepointProtocols
-from .. import BaseRecord, RecordAddBodyBase, RecordQueryBody
+from .. import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from ..singlepoint import (
     SinglepointRecord,
     QCSpecification,
@@ -125,7 +125,7 @@ class OptimizationRecord(BaseRecord):
         return [SinglepointRecord.from_datamodel(x, self.client) for x in traj_dm]
 
 
-class OptimizationQueryBody(RecordQueryBody):
+class OptimizationQueryFilters(RecordQueryFilters):
     program: Optional[List[str]] = None
     qc_program: Optional[List[constr(to_lower=True)]] = None
     qc_method: Optional[List[constr(to_lower=True)]] = None

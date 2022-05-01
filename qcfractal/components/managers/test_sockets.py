@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcportal.exceptions import ComputeManagerError, MissingDataError
-from qcportal.managers import ManagerName, ManagerStatusEnum
+from qcportal.managers import ManagerName, ManagerStatusEnum, ManagerQueryFilters
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -530,45 +530,47 @@ def test_manager_socket_query(storage_socket: SQLAlchemySocket):
     storage_socket.managers.deactivate([name2])
 
     # Logs not included by default
-    meta, managers = storage_socket.managers.query(name=[name1, name2, name1, name2])
+    meta, managers = storage_socket.managers.query(ManagerQueryFilters(name=[name1, name2, name1, name2]))
     assert len(managers) == 2
     assert "log" not in managers[0]
     assert "log" not in managers[1]
 
-    meta, managers = storage_socket.managers.query(hostname=["a_host"])
+    meta, managers = storage_socket.managers.query(ManagerQueryFilters(hostname=["a_host"]))
     assert meta.n_found == 1
     assert managers[0]["hostname"] == "a_host"
 
-    meta, managers = storage_socket.managers.query(cluster=["test_cluster_2"])
+    meta, managers = storage_socket.managers.query(ManagerQueryFilters(cluster=["test_cluster_2"]))
     assert meta.n_found == 1
     assert managers[0]["cluster"] == "test_cluster_2"
 
-    meta, managers = storage_socket.managers.query(modified_before=time_0)
+    meta, managers = storage_socket.managers.query(ManagerQueryFilters(modified_before=time_0))
     assert meta.n_found == 0
 
-    meta, managers = storage_socket.managers.query(modified_before=time_1)
+    meta, managers = storage_socket.managers.query(ManagerQueryFilters(modified_before=time_1))
     assert meta.n_found == 1
     assert managers[0]["hostname"] == "a_host"
 
-    meta, managers = storage_socket.managers.query(modified_after=time_1)
+    meta, managers = storage_socket.managers.query(ManagerQueryFilters(modified_after=time_1))
     assert meta.n_found == 1
     assert managers[0]["hostname"] == "a_host_2"
 
-    meta, managers = storage_socket.managers.query(status=[ManagerStatusEnum.active])
+    meta, managers = storage_socket.managers.query(ManagerQueryFilters(status=[ManagerStatusEnum.active]))
     assert meta.n_found == 1
     assert managers[0]["hostname"] == "a_host"
 
-    meta, managers = storage_socket.managers.query(status=[ManagerStatusEnum.active, ManagerStatusEnum.inactive])
+    meta, managers = storage_socket.managers.query(
+        ManagerQueryFilters(status=[ManagerStatusEnum.active, ManagerStatusEnum.inactive])
+    )
     assert meta.n_found == 2
 
     meta, managers = storage_socket.managers.query(
-        status=[ManagerStatusEnum.active, ManagerStatusEnum.inactive], limit=1
+        ManagerQueryFilters(status=[ManagerStatusEnum.active, ManagerStatusEnum.inactive], limit=1)
     )
     assert meta.n_found == 2
     assert meta.n_returned == 1
 
     meta, managers = storage_socket.managers.query(
-        status=[ManagerStatusEnum.active, ManagerStatusEnum.inactive], skip=1
+        ManagerQueryFilters(status=[ManagerStatusEnum.active, ManagerStatusEnum.inactive], skip=1)
     )
     assert meta.n_found == 2
     assert meta.n_returned == 1
@@ -605,15 +607,21 @@ def test_manager_socket_query_proj(storage_socket: SQLAlchemySocket):
     storage_socket.managers.deactivate([name2])
 
     # Logs not included by default
-    meta, managers = storage_socket.managers.query(name=[name1, name2, name1, name2], include=["*", "log"])
+    meta, managers = storage_socket.managers.query(
+        ManagerQueryFilters(name=[name1, name2, name1, name2], include=["*", "log"])
+    )
     assert len(managers) == 2
     assert "log" in managers[0]
     assert "log" in managers[1]
 
-    meta, managers = storage_socket.managers.query(name=[name1, name2, name1, name2], include=["claimed"])
+    meta, managers = storage_socket.managers.query(
+        ManagerQueryFilters(name=[name1, name2, name1, name2], include=["claimed"])
+    )
     assert set(managers[0].keys()) == {"id", "claimed"}
 
-    meta, managers = storage_socket.managers.query(name=[name1, name2, name1, name2], exclude=["claimed", "hostname"])
+    meta, managers = storage_socket.managers.query(
+        ManagerQueryFilters(name=[name1, name2, name1, name2], exclude=["claimed", "hostname"])
+    )
     assert "claimed" not in managers[0]
     assert "hostname" not in managers[0]
     assert "claimed" not in managers[1]

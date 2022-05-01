@@ -26,7 +26,7 @@ from qcportal.records.gridoptimization import (
     ScanDimension,
     StepTypeEnum,
     GridoptimizationSpecification,
-    GridoptimizationQueryBody,
+    GridoptimizationQueryFilters,
 )
 from qcportal.records.optimization import OptimizationSpecification
 from .db_models import GridoptimizationSpecificationORM, GridoptimizationOptimizationORM, GridoptimizationRecordORM
@@ -500,7 +500,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
 
     def query(
         self,
-        query_data: GridoptimizationQueryBody,
+        query_data: GridoptimizationQueryFilters,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:

@@ -10,7 +10,7 @@ from qcfractal.testing_helpers import run_service_singlepoint
 from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
-from qcportal.records.reaction import ReactionQCSpecification, ReactionQueryBody
+from qcportal.records.reaction import ReactionQCSpecification, ReactionQueryFilters
 from qcportal.records.singlepoint import (
     SinglepointProtocols,
 )
@@ -149,48 +149,48 @@ def test_reaction_socket_query(storage_socket: SQLAlchemySocket):
     )
     assert meta_1.success and meta_2.success
 
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryBody(program=["psi4"]))
+    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(program=["psi4"]))
     assert meta.n_found == 2
 
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryBody(program=["nothing"]))
+    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(program=["nothing"]))
     assert meta.n_found == 0
 
     mol_H = load_molecule_data("rxn_H")
     mol_H2 = load_molecule_data("rxn_H2")
     _, init_mol_id = storage_socket.molecules.add([mol_H, mol_H2])
 
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryBody(molecule_id=[init_mol_id[0], 9999]))
+    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(molecule_id=[init_mol_id[0], 9999]))
     assert meta.n_found == 1
 
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryBody(molecule_id=[init_mol_id[1], 9999]))
+    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(molecule_id=[init_mol_id[1], 9999]))
     assert meta.n_found == 2
 
     # query for basis
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryBody(basis=["DEF2-tzvp"]))
+    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(basis=["DEF2-tzvp"]))
     assert meta.n_found == 2
 
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryBody(basis=["sTO-3g"]))
+    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(basis=["sTO-3g"]))
     assert meta.n_found == 0
 
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryBody(basis=[None]))
+    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(basis=[None]))
     assert meta.n_found == 0
 
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryBody(basis=[""]))
+    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(basis=[""]))
     assert meta.n_found == 0
 
     # query for method
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryBody(method=["hf"]))
+    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(method=["hf"]))
     assert meta.n_found == 0
 
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryBody(method=["b3lyP"]))
+    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(method=["b3lyP"]))
     assert meta.n_found == 2
 
     # Query by default returns everything
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryBody())
+    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters())
     assert meta.n_found == 2
 
     # Query by default (with a limit)
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryBody(limit=1))
+    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(limit=1))
     assert meta.n_found == 2
     assert meta.n_returned == 1
 

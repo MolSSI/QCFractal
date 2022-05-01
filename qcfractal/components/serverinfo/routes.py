@@ -4,10 +4,10 @@ from qcfractal import __version__ as qcfractal_version
 from qcfractal.app import main, wrap_route, storage_socket
 from qcfractal.client_versions import client_version_lower_limit, client_version_upper_limit
 from qcportal.serverinfo import (
-    AccessLogSummaryParameters,
-    AccessLogQueryBody,
-    ServerStatsQueryParameters,
-    ErrorLogQueryBody,
+    AccessLogSummaryFilters,
+    AccessLogQueryFilters,
+    ServerStatsQueryFilters,
+    ErrorLogQueryFilters,
     DeleteBeforeDateBody,
 )
 from qcportal.utils import calculate_limit
@@ -33,20 +33,10 @@ def get_information():
 
 @main.route("/v1/access_logs/query", methods=["POST"])
 @wrap_route("READ")
-def query_access_log_v1(body_data: AccessLogQueryBody):
+def query_access_log_v1(body_data: AccessLogQueryFilters):
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_access_logs
-
-    return storage_socket.serverinfo.query_access_log(
-        access_type=body_data.access_type,
-        access_method=body_data.access_method,
-        username=body_data.username,
-        before=body_data.before,
-        after=body_data.after,
-        include=body_data.include,
-        exclude=body_data.exclude,
-        limit=calculate_limit(max_limit, body_data.limit),
-        skip=body_data.skip,
-    )
+    body_data.limit = calculate_limit(max_limit, body_data.limit)
+    return storage_socket.serverinfo.query_access_log(body_data)
 
 
 @main.route("/v1/access_logs/bulkDelete", methods=["POST"])
@@ -57,23 +47,16 @@ def delete_access_log_v1(body_data: DeleteBeforeDateBody):
 
 @main.route("/v1/access_logs/summary", methods=["GET"])
 @wrap_route("READ")
-def query_access_summary_v1(url_params: AccessLogSummaryParameters):
-    return storage_socket.serverinfo.query_access_summary(
-        group_by=url_params.group_by, before=url_params.before, after=url_params.after
-    )
+def query_access_summary_v1(url_params: AccessLogSummaryFilters):
+    return storage_socket.serverinfo.query_access_summary(url_params)
 
 
 @main.route("/v1/server_stats", methods=["GET"])
 @wrap_route("READ")
-def query_server_stats_v1(url_params: ServerStatsQueryParameters):
+def query_server_stats_v1(url_params: ServerStatsQueryFilters):
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_server_stats
-
-    return storage_socket.serverinfo.query_server_stats(
-        before=url_params.before,
-        after=url_params.after,
-        limit=calculate_limit(max_limit, url_params.limit),
-        skip=url_params.skip,
-    )
+    url_params.limit = calculate_limit(max_limit, url_params.limit)
+    return storage_socket.serverinfo.query_server_stats(url_params)
 
 
 @main.route("/v1/server_stats/bulkDelete", methods=["POST"])
@@ -84,17 +67,10 @@ def delete_server_stats_v1(body_data: DeleteBeforeDateBody):
 
 @main.route("/v1/server_errors/query", methods=["POST"])
 @wrap_route("READ")
-def query_error_log_v1(body_data: ErrorLogQueryBody):
+def query_error_log_v1(body_data: ErrorLogQueryFilters):
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_server_stats
-
-    return storage_socket.serverinfo.query_error_log(
-        error_id=body_data.id,
-        username=body_data.username,
-        before=body_data.before,
-        after=body_data.after,
-        limit=calculate_limit(max_limit, body_data.limit),
-        skip=body_data.skip,
-    )
+    body_data.limit = calculate_limit(max_limit, body_data.limit)
+    return storage_socket.serverinfo.query_error_log(body_data)
 
 
 @main.route("/v1/server_errors/bulkDelete", methods=["POST"])

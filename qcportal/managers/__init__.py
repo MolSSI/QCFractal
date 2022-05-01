@@ -1,2 +1,9 @@
-from .models import ManagerStatusEnum, ManagerName, ComputeManagerLogEntry, ComputeManager
-from .rest_models import ManagerActivationBody, ManagerUpdateBody, ManagerQueryBody
+from .models import (
+    ManagerStatusEnum,
+    ManagerName,
+    ComputeManagerLogEntry,
+    ComputeManager,
+    ManagerActivationBody,
+    ManagerUpdateBody,
+    ManagerQueryFilters,
+)

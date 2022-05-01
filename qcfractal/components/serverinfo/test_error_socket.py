@@ -3,6 +3,8 @@ from __future__ import annotations
 import datetime
 from typing import TYPE_CHECKING
 
+from qcportal.serverinfo import ErrorLogQueryFilters
+
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
 
@@ -30,7 +32,7 @@ def test_serverinfo_socket_save_query_error(storage_socket: SQLAlchemySocket):
     time_12 = datetime.datetime.utcnow()
     id_2 = storage_socket.serverinfo.save_error(error_data_2)
 
-    meta, errors = storage_socket.serverinfo.query_error_log()
+    meta, errors = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters())
     assert meta.n_found == 2
     assert meta.n_returned == 2
 
@@ -47,26 +49,30 @@ def test_serverinfo_socket_save_query_error(storage_socket: SQLAlchemySocket):
         assert in_err["request_body"] == db_err["request_body"]
 
     # Query by id
-    meta, err = storage_socket.serverinfo.query_error_log(error_id=[id_2])
+    meta, err = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters(error_id=[id_2]))
     assert meta.n_found == 1
     assert err[0]["error_text"] == error_data_2["error_text"]
 
     # query by time
-    meta, err = storage_socket.serverinfo.query_error_log(before=time_12)
+    meta, err = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters(before=time_12))
     assert meta.n_found == 1
     assert err[0]["error_text"] == error_data_1["error_text"]
 
-    meta, err = storage_socket.serverinfo.query_error_log(after=datetime.datetime.utcnow())
+    meta, err = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters(after=datetime.datetime.utcnow()))
     assert meta.n_found == 0
 
-    meta, err = storage_socket.serverinfo.query_error_log(before=datetime.datetime.utcnow(), after=time_12)
+    meta, err = storage_socket.serverinfo.query_error_log(
+        ErrorLogQueryFilters(before=datetime.datetime.utcnow(), after=time_12)
+    )
     assert meta.n_found == 1
 
-    meta, err = storage_socket.serverinfo.query_error_log(after=datetime.datetime.utcnow(), before=time_12)
+    meta, err = storage_socket.serverinfo.query_error_log(
+        ErrorLogQueryFilters(after=datetime.datetime.utcnow(), before=time_12)
+    )
     assert meta.n_found == 0
 
     # query by user
-    meta, err = storage_socket.serverinfo.query_error_log(username=["read_user"])
+    meta, err = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters(username=["read_user"]))
     assert meta.n_found == 1
 
 
@@ -93,18 +99,18 @@ def test_serverinfo_socket_delete_error(storage_socket: SQLAlchemySocket):
     time_12 = datetime.datetime.utcnow()
     storage_socket.serverinfo.save_error(error_data_2)
 
-    meta, errors = storage_socket.serverinfo.query_error_log()
+    meta, errors = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters())
     assert meta.n_found == 2
     assert meta.n_returned == 2
 
     n_deleted = storage_socket.serverinfo.delete_error_logs(before=time_0)
     assert n_deleted == 0
-    meta, errors = storage_socket.serverinfo.query_error_log()
+    meta, errors = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters())
     assert meta.n_found == 2
 
     n_deleted = storage_socket.serverinfo.delete_error_logs(before=time_12)
     assert n_deleted == 1
-    meta, errors = storage_socket.serverinfo.query_error_log()
+    meta, errors = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters())
     assert errors[0]["error_date"] > time_12
 
     n_deleted = storage_socket.serverinfo.delete_error_logs(before=datetime.datetime.utcnow())

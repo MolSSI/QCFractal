@@ -1,1 +1,1 @@
-from .rest_models import TaskClaimBody, TaskReturnBody
+from .models import TaskClaimBody, TaskReturnBody

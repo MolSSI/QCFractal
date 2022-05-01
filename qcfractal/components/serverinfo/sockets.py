@@ -16,12 +16,18 @@ from qcfractal.components.services.db_models import ServiceQueueORM
 from qcfractal.components.tasks.db_models import TaskQueueORM
 from qcfractal.db_socket.helpers import get_query_proj_options, get_count
 from qcportal.metadata_models import QueryMetadata
+from qcportal.serverinfo import (
+    AccessLogQueryFilters,
+    AccessLogSummaryFilters,
+    ErrorLogQueryFilters,
+    ServerStatsQueryFilters,
+)
 from .db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from typing import Dict, Any, List, Optional, Tuple, Iterable
+    from typing import Dict, Any, List, Optional, Tuple
 
 
 class ServerInfoSocket:
@@ -217,15 +223,7 @@ class ServerInfoSocket:
 
     def query_access_log(
         self,
-        access_type: Optional[Iterable[str]] = None,
-        access_method: Optional[Iterable[str]] = None,
-        username: Optional[Iterable[str]] = None,
-        before: Optional[datetime] = None,
-        after: Optional[datetime] = None,
-        include: Optional[Iterable[str]] = None,
-        exclude: Optional[Iterable[str]] = None,
-        limit: int = None,
-        skip: int = 0,
+        query_data: AccessLogQueryFilters,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
@@ -240,26 +238,8 @@ class ServerInfoSocket:
 
         Parameters
         ----------
-        access_type
-            Type of access to query (typically related to the endpoint)
-        access_method
-            The method of access (GET, POST)
-        username
-            The name of the user that made the request
-        before
-            Query for log entries with a timestamp before a specific time
-        after
-            Query for log entries with a timestamp after a specific time
-        include
-            Which fields of the access log return. Default is to return all fields.
-        exclude
-            Remove these fields from the return. Default is to return all fields.
-        limit
-            Limit the number of results. If None, the server limit will be used.
-            This limit will not be respected if greater than the configured limit of the server.
-        skip
-            Skip this many results from the total list of matches. The limit will apply after skipping,
-            allowing for pagination.
+        query_data
+            Fields/filters to query for
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -270,26 +250,26 @@ class ServerInfoSocket:
             Metadata about the results of the query, and a list of access log dictionaries
         """
 
-        proj_options = get_query_proj_options(AccessLogORM, include, exclude)
+        proj_options = get_query_proj_options(AccessLogORM, query_data.include, query_data.exclude)
 
         and_query = []
-        if access_type:
-            and_query.append(AccessLogORM.access_type.in_(access_type))
-        if access_method:
-            access_method = [x.upper() for x in access_method]
+        if query_data.access_type:
+            and_query.append(AccessLogORM.access_type.in_(query_data.access_type))
+        if query_data.access_method:
+            access_method = [x.upper() for x in query_data.access_method]
             and_query.append(AccessLogORM.access_method.in_(access_method))
-        if username:
-            and_query.append(AccessLogORM.user.in_(username))
-        if before:
-            and_query.append(AccessLogORM.access_date <= before)
-        if after:
-            and_query.append(AccessLogORM.access_date >= after)
+        if query_data.username:
+            and_query.append(AccessLogORM.user.in_(query_data.username))
+        if query_data.before:
+            and_query.append(AccessLogORM.access_date <= query_data.before)
+        if query_data.after:
+            and_query.append(AccessLogORM.access_date >= query_data.after)
 
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(AccessLogORM).where(and_(*and_query)).order_by(AccessLogORM.access_date.desc())
             stmt = stmt.options(*proj_options)
             n_found = get_count(session, stmt)
-            stmt = stmt.limit(limit).offset(skip)
+            stmt = stmt.limit(query_data.limit).offset(query_data.skip)
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]
 
@@ -298,9 +278,7 @@ class ServerInfoSocket:
 
     def query_access_summary(
         self,
-        group_by: str = "day",
-        before: Optional[datetime] = None,
-        after: Optional[datetime] = None,
+        query_data: AccessLogSummaryFilters,
         *,
         session: Optional[Session] = None,
     ) -> Dict[str, Any]:
@@ -312,12 +290,8 @@ class ServerInfoSocket:
 
         Parameters
         ----------
-        group_by
-            How to group the data. Valid options are "hour", "day", "country", "subdivision"
-        before
-            Query for log entries with a timestamp before a specific time
-        after
-            Query for log entries with a timestamp after a specific time
+        query_data
+            Fields/filters to query for
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -328,28 +302,26 @@ class ServerInfoSocket:
             Metadata about the results of the query, and a list of dictionaries containing summary data
         """
 
-        group_by = group_by.lower()
-
         and_query = []
-        if before:
-            and_query.append(AccessLogORM.access_date < before)
-        if after:
-            and_query.append(AccessLogORM.access_date > after)
+        if query_data.before:
+            and_query.append(AccessLogORM.access_date < query_data.before)
+        if query_data.after:
+            and_query.append(AccessLogORM.access_date > query_data.after)
 
         result_dict = defaultdict(list)
         with self.root_socket.optional_session(session, True) as session:
-            if group_by == "user":
+            if query_data.group_by == "user":
                 group_col = AccessLogORM.user.label("group_col")
-            elif group_by == "day":
+            elif query_data.group_by == "day":
                 group_col = func.to_char(AccessLogORM.access_date, "YYYY-MM-DD").label("group_col")
-            elif group_by == "hour":
+            elif query_data.group_by == "hour":
                 group_col = func.to_char(AccessLogORM.access_date, "YYYY-MM-DD HH24").label("group_col")
-            elif group_by == "country":
+            elif query_data.group_by == "country":
                 group_col = AccessLogORM.country_code.label("group_col")
-            elif group_by == "subdivision":
+            elif query_data.group_by == "subdivision":
                 group_col = AccessLogORM.subdivision.label("group_col")
             else:
-                raise RuntimeError(f"Unknown group_by: {group_by}")
+                raise RuntimeError(f"Unknown group_by: {query_data.group_by}")
 
             stmt = select(
                 group_col,
@@ -399,12 +371,7 @@ class ServerInfoSocket:
 
     def query_error_log(
         self,
-        error_id: Optional[Iterable[int]] = None,
-        username: Optional[Iterable[str]] = None,
-        before: Optional[datetime] = None,
-        after: Optional[datetime] = None,
-        limit: int = None,
-        skip: int = 0,
+        query_data: ErrorLogQueryFilters,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
@@ -419,20 +386,8 @@ class ServerInfoSocket:
 
         Parameters
         ----------
-        error_id
-            Query based on the error id
-        username
-            Query for errors from a given user name
-        before
-            Query for log entries with a timestamp before a specific time
-        after
-            Query for log entries with a timestamp after a specific time
-        limit
-            Limit the number of results. If None, the server limit will be used.
-            This limit will not be respected if greater than the configured limit of the server.
-        skip
-            Skip this many results from the total list of matches. The limit will apply after skipping,
-            allowing for pagination.
+        query_data
+            Fields/filters to query for
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -445,19 +400,19 @@ class ServerInfoSocket:
         """
 
         and_query = []
-        if error_id:
-            and_query.append(InternalErrorLogORM.id.in_(error_id))
-        if username:
-            and_query.append(InternalErrorLogORM.user.in_(username))
-        if before:
-            and_query.append(InternalErrorLogORM.error_date < before)
-        if after:
-            and_query.append(InternalErrorLogORM.error_date > after)
+        if query_data.error_id:
+            and_query.append(InternalErrorLogORM.id.in_(query_data.error_id))
+        if query_data.username:
+            and_query.append(InternalErrorLogORM.user.in_(query_data.username))
+        if query_data.before:
+            and_query.append(InternalErrorLogORM.error_date < query_data.before)
+        if query_data.after:
+            and_query.append(InternalErrorLogORM.error_date > query_data.after)
 
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(InternalErrorLogORM).where(and_(*and_query)).order_by(InternalErrorLogORM.error_date.desc())
             n_found = get_count(session, stmt)
-            stmt = stmt.limit(limit).offset(skip)
+            stmt = stmt.limit(query_data.limit).offset(query_data.skip)
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]
 
@@ -466,10 +421,7 @@ class ServerInfoSocket:
 
     def query_server_stats(
         self,
-        before: Optional[datetime] = None,
-        after: Optional[datetime] = None,
-        limit: int = None,
-        skip: int = 0,
+        query_data: ServerStatsQueryFilters,
         *,
         session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
@@ -481,16 +433,8 @@ class ServerInfoSocket:
 
         Parameters
         ----------
-        before
-            Query for log entries with a timestamp before a specific time
-        after
-            Query for log entries with a timestamp after a specific time
-        limit
-            Limit the number of results. If None, the server limit will be used.
-            This limit will not be respected if greater than the configured limit of the server.
-        skip
-            Skip this many results from the total list of matches. The limit will apply after skipping,
-            allowing for pagination.
+        query_data
+            Fields/filters to query for
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -503,15 +447,15 @@ class ServerInfoSocket:
         """
 
         and_query = []
-        if before:
-            and_query.append(ServerStatsLogORM.timestamp < before)
-        if after:
-            and_query.append(ServerStatsLogORM.timestamp > after)
+        if query_data.before:
+            and_query.append(ServerStatsLogORM.timestamp < query_data.before)
+        if query_data.after:
+            and_query.append(ServerStatsLogORM.timestamp > query_data.after)
 
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(ServerStatsLogORM).filter(and_(*and_query)).order_by(ServerStatsLogORM.timestamp.desc())
             n_found = get_count(session, stmt)
-            stmt = stmt.limit(limit).offset(skip)
+            stmt = stmt.limit(query_data.limit).offset(query_data.skip)
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]
 
