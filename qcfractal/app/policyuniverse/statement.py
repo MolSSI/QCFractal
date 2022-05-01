@@ -42,21 +42,8 @@ class Statement(object):
         return set(resources)
 
     def whos_allowed(self):
-        """Returns set containing any entries from principal and condition section.
-
-        Example:
-
-        statement = Statement(dict(
-            Effect='Allow',
-            Principal='user@molssi.org',  # optional
-            Action=['GET', 'POST'],
-            Resource='*',
-           ))
-
-        statement.whos_allowed()
-        > set([
-        >    PrincipalTuple(category='principal', value='arn:aws:iam::*:role/Hello'),
-        >    ConditionTuple(category='account', value='012345678910')])
+        """
+        Returns set containing any entries from principal and condition section.
         """
         who = set()
         for principal in self.principals:
