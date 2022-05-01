@@ -306,9 +306,9 @@ class PortalClient(PortalClientBase):
 
         return dataset_from_datamodel(ds, self)
 
-    def get_dataset_status_by_id(self, dataset_id: int):
+    def get_dataset_status_by_id(self, dataset_id: int) -> Dict[str, Dict[RecordStatusEnum, int]]:
 
-        ds = self._auto_request(
+        return self._auto_request(
             "get",
             f"v1/datasets/{dataset_id}/status",
             None,
@@ -317,8 +317,6 @@ class PortalClient(PortalClientBase):
             None,
             None,
         )
-
-        return dataset_from_datamodel(ds, self)
 
     def add_dataset(
         self,
