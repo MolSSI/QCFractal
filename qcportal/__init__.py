@@ -1,5 +1,5 @@
 """
-DQM Client base folder
+Client class for QCArchive/QCFractal
 """
 
 # We are running inside QCPortal repo

@@ -1,7 +1,3 @@
-"""
-Main init function for qcfractal
-"""
-
 ###################################################
 # The version stuff must be handled first.
 # Other packages that we import later will need it

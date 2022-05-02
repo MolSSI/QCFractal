@@ -1,3 +1,7 @@
+"""
+Additional column types for SQLAlchemy
+"""
+
 import msgpack
 from qcelemental.util import msgpackext_dumps, msgpackext_loads
 from sqlalchemy import TypeDecorator

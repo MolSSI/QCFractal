@@ -1,5 +1,7 @@
 """
-The global qcfractal config file specification.
+Pre-0.5 configuration file specification
+
+This is needed for migrating the old config
 """
 
 import os
