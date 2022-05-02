@@ -50,26 +50,6 @@ def replace_db_in_uri(uri: str, new_dbname: str) -> str:
     return urllib.parse.urlunparse(components)
 
 
-def db_uri_base(uri: str) -> str:
-    """
-    Returns the base part of a uri (scheme, user, password, host, port).
-
-    That is, returns the URI minus the database name at the end
-
-    Parameters
-    ----------
-    uri: str
-        The base URI to use
-
-    Returns
-    -------
-    str
-        The base part of the URI (without the database name)
-    """
-
-    return replace_db_in_uri(uri, "")
-
-
 class PostgresHarness:
     def __init__(self, config: DatabaseConfig):
         """A manager for postgres server instances
