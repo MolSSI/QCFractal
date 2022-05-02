@@ -68,7 +68,7 @@ def delete_server_stats_v1(body_data: DeleteBeforeDateBody):
 @main.route("/v1/server_errors/query", methods=["POST"])
 @wrap_route("READ")
 def query_error_log_v1(body_data: ErrorLogQueryFilters):
-    max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_server_stats
+    max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_error_logs
     body_data.limit = calculate_limit(max_limit, body_data.limit)
     return storage_socket.serverinfo.query_error_log(body_data)
 

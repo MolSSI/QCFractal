@@ -50,6 +50,7 @@ from .records import (
     RecordRevertBody,
     AllRecordTypes,
     AllRecordDataModelTypes,
+    BaseRecord,
 )
 from .records.gridoptimization import (
     GridoptimizationKeywords,
@@ -371,8 +372,8 @@ class PortalClient(PortalClientBase):
         molecule_ids
             A single molecule ID, or a list (or other sequence) of molecule IDs
         missing_ok
-           If set to True, then missing molecules will be tolerated, and the returned list of
-           Molecules will contain None for the corresponding IDs that were not found.
+            If set to True, then missing molecules will be tolerated, and the returned list of
+            Molecules will contain None for the corresponding IDs that were not found.
 
         Returns
         -------
@@ -382,19 +383,21 @@ class PortalClient(PortalClientBase):
             Otherwise, it will be a single Molecule.
         """
 
-        molecule_ids_lst = make_list(molecule_ids)
-        if not molecule_ids_lst:
+        is_single = not isinstance(molecule_ids, Sequence)
+
+        molecule_ids = make_list(molecule_ids)
+        if not molecule_ids:
             return []
 
-        body_data = CommonBulkGetBody(ids=molecule_ids_lst, missing_ok=missing_ok)
+        body_data = CommonBulkGetBody(ids=molecule_ids, missing_ok=missing_ok)
         mols = self._auto_request(
             "post", "v1/molecules/bulkGet", CommonBulkGetBody, None, List[Optional[Molecule]], body_data, None
         )
 
-        if isinstance(molecule_ids, Sequence):
-            return mols
-        else:
+        if is_single:
             return mols[0]
+        else:
+            return mols
 
     # TODO: we would like more fields to be queryable via the REST API for mols
     #       e.g. symbols/elements. Unless these are indexed might not be performant.
@@ -409,6 +412,7 @@ class PortalClient(PortalClientBase):
     ) -> Tuple[QueryMetadata, List[Molecule]]:
         """Query molecules by attributes.
 
+        Do not count on the returned molecules being in any particular order.
 
         Parameters
         ----------
@@ -545,7 +549,7 @@ class PortalClient(PortalClientBase):
     def delete_molecules(self, molecule_ids: Union[int, Sequence[int]]) -> DeleteMetadata:
         """Deletes molecules from the server
 
-        This will not delete any keywords that are in use
+        This will not delete any molecules that are in use
 
         Parameters
         ----------
@@ -579,19 +583,51 @@ class PortalClient(PortalClientBase):
         include_service: bool = False,
         include_outputs: bool = False,
         include_comments: bool = False,
-    ) -> Union[List[Optional[AllRecordTypes]], Optional[AllRecordTypes]]:
-        """Get result records by id."""
+    ) -> Union[List[BaseRecord], Optional[BaseRecord]]:
+        """
+        Obtain records of all types with specified IDs
 
-        record_ids_lst = make_list(record_ids)
-        if not record_ids_lst:
+        This function will return record objects of the given ID no matter
+        what the type is. All records are unique by ID (ie, an optimization will never
+        have the same ID as a singlepoint).
+
+        Records will be returned in the same order as the record ids.
+
+        Parameters
+        ----------
+        record_ids
+            Single ID or sequence/list of records to obtain
+        missing_ok
+            If set to True, then missing records will be tolerated, and the returned
+            records will contain None for the corresponding IDs that were not found.
+        include_task
+            If True, include the task information as part of the record
+        include_service
+            If True, include the service information as part of the record
+        include_outputs
+            If True, include the outputs as part of the record
+        include_comments
+            If True, include the comments as part of the record
+        Returns
+        -------
+        :
+            If a single ID was specified, returns just that record. Otherwise, returns
+            a list of records.  If missing_ok was specified, None will be substituted for a record
+            that was not found.
+        """
+
+        is_single = not isinstance(record_ids, Sequence)
+
+        record_ids = make_list(record_ids)
+        if not record_ids:
             return []
 
-        body_data = {"ids": record_ids_lst, "missing_ok": missing_ok}
-
-        if len(body_data["ids"]) > self.api_limits["get_records"]:
+        if len(record_ids) > self.api_limits["get_records"]:
             raise RuntimeError(
-                f"Cannot get {len(body_data['ids'])} records - over the limit of {self.api_limits['get_records']}"
+                f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
             )
+
+        body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
         include = set()
 
@@ -620,10 +656,10 @@ class PortalClient(PortalClientBase):
 
         records = records_from_datamodels(record_data, self)
 
-        if isinstance(record_ids, Sequence):
-            return records
-        else:
+        if is_single:
             return records[0]
+        else:
+            return records
 
     def query_records(
         self,
@@ -646,6 +682,57 @@ class PortalClient(PortalClientBase):
         include_outputs: bool = False,
         include_comments: bool = False,
     ) -> Tuple[QueryMetadata, List[AllRecordTypes]]:
+        """
+        Query records of all types based on common fields
+
+        This is a general query of all record types, so it can only filter by fields
+        that are common among all records.
+
+        Do not count on the returned records being in any particular order.
+
+        Parameters
+        ----------
+        record_id
+            Query records whose ID is in the given list
+        record_type
+            Query records whose type is in the given list
+        manager_name
+            Query records that were completed (or are currently runnning) on a manager is in the given list
+        status
+            Query records whose status is in the given list
+        dataset_id
+            Query records that are part of a dataset is in the given list
+        parent_id
+            Query records that have a parent is in the given list
+        child_id
+            Query records that have a child is in the given list
+        created_before
+            Query records that were created before the given date/time
+        created_after
+            Query records that were created after the given date/time
+        modified_before
+            Query records that were modified before the given date/time
+        modified_after
+            Query records that were modified after the given date/time
+        limit
+            The maximum number of records to return. Note that the server limit is always obeyed.
+        skip
+            The number of records to skip in the query. This can be used for pagination
+        include_task
+            If True, include the task information as part of the record
+        include_service
+            If True, include the service information as part of the record
+        include_outputs
+            If True, include the outputs as part of the record
+        include_comments
+            If True, include the comments as part of the record
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of records
+            that were found on the server.
+        """
 
         if limit is not None and limit > self.api_limits["get_records"]:
             warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
@@ -695,6 +782,10 @@ class PortalClient(PortalClientBase):
         return meta, records_from_datamodels(record_data, self)
 
     def reset_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
+        """
+        Resets running or errored records to be waiting again
+        """
+
         record_ids = make_list(record_ids)
         if not record_ids:
             return UpdateMetadata()
@@ -703,6 +794,12 @@ class PortalClient(PortalClientBase):
         return self._auto_request("patch", "v1/records", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
     def cancel_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
+        """
+        Marks running, waiting, or errored records as cancelled
+
+        A cancelled record will not be picked up by a manager.
+        """
+
         record_ids = make_list(record_ids)
         if not record_ids:
             return UpdateMetadata()
@@ -711,6 +808,13 @@ class PortalClient(PortalClientBase):
         return self._auto_request("patch", "v1/records", RecordModifyBody, None, UpdateMetadata, body_data, None)
 
     def invalidate_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
+        """
+        Marks a completed record as invalid
+
+        An invalid record is one that supposedly successfully completed. However, after review,
+        is not correct.
+        """
+
         record_ids = make_list(record_ids)
         if not record_ids:
             return UpdateMetadata()
@@ -721,6 +825,22 @@ class PortalClient(PortalClientBase):
     def delete_records(
         self, record_ids: Union[int, Sequence[int]], soft_delete=True, delete_children: bool = True
     ) -> DeleteMetadata:
+        """
+        Delete records from the database
+
+        If soft_delete is True, then the record is just marked as deleted and actually deletion may
+        happen later. Soft delete can be undone with undelete
+
+        Parameters
+        ----------
+        record_ids
+            Reset the status of these record ids
+        soft_delete
+            Don't actually delete the record, just mark it for later deletion
+        delete_children
+            If True, attempt to delete child records as well
+        """
+
         record_ids = make_list(record_ids)
         if not record_ids:
             return DeleteMetadata()
@@ -731,6 +851,10 @@ class PortalClient(PortalClientBase):
         )
 
     def uninvalidate_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
+        """
+        Undo the invalidation of records
+        """
+
         record_ids = make_list(record_ids)
         if not record_ids:
             return UpdateMetadata()
@@ -739,6 +863,10 @@ class PortalClient(PortalClientBase):
         return self._auto_request("post", "v1/records/revert", RecordRevertBody, None, UpdateMetadata, body_data, None)
 
     def uncancel_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
+        """
+        Undo the cancellation of records
+        """
+
         record_ids = make_list(record_ids)
         if not record_ids:
             return UpdateMetadata()
@@ -747,6 +875,10 @@ class PortalClient(PortalClientBase):
         return self._auto_request("post", "v1/records/revert", RecordRevertBody, None, UpdateMetadata, body_data, None)
 
     def undelete_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
+        """
+        Undo the (soft) deletion of records
+        """
+
         record_ids = make_list(record_ids)
         if not record_ids:
             return UpdateMetadata()
@@ -760,6 +892,10 @@ class PortalClient(PortalClientBase):
         new_tag: Optional[str] = None,
         new_priority: Optional[PriorityEnum] = None,
     ) -> UpdateMetadata:
+        """
+        Modify the tag or priority of a record
+        """
+
         record_ids = make_list(record_ids)
         if not record_ids:
             return UpdateMetadata()
@@ -810,7 +946,12 @@ class PortalClient(PortalClientBase):
         priority: PriorityEnum = PriorityEnum.normal,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
-        Adds a "single" compute to the server.
+        Adds new singlepoint computations to the server
+
+        This checks if the calculations already exist in the database. If so, it returns
+        the existing id, otherwise it will insert it and return the new id.
+
+        This will add one record per molecule.
 
         Parameters
         ----------
@@ -826,26 +967,28 @@ class PortalClient(PortalClientBase):
             The basis to apply to the computation (e.g., "cc-pVDZ", "6-31G")
         keywords
             The program-specific keywords for the computation
-        priority
-            The priority of the job {"HIGH", "MEDIUM", "LOW"}. Default is "MEDIUM".
         protocols
-            Protocols for store more or less data per field
+            Protocols for storing more/less data for each computation
         tag
-            The computational tag to add to your compute, managers can optionally only pull
-            based off the string tags. These tags are arbitrary, but several examples are to
-            use "large", "medium", "small" to denote the size of the job or "project1", "project2"
-            to denote different projects.
+            The tag for the task. This will assist in routing to appropriate compute managers.
+        priority
+            The priority of the job (high, normal, low). Default is normal.
 
         Returns
         -------
         :
-            A list of record ids (one per molecule) that were added or existing on the server, in the
-            same order as specified in the molecules.keywords parameter
+            Metadata about the insertion, and a list of record ids. The ids will be in the
+            order of the input molecules
         """
 
         molecules = make_list(molecules)
         if not molecules:
             return InsertMetadata(), []
+
+        if len(molecules) > self.api_limits["add_records"]:
+            raise RuntimeError(
+                f"Cannot add {len(molecules)} records - over the limit of {self.api_limits['add_records']}"
+            )
 
         body_data = {
             "molecules": molecules,
@@ -864,11 +1007,6 @@ class PortalClient(PortalClientBase):
             body_data["specification"]["keywords"] = keywords
         if protocols is not None:
             body_data["specification"]["protocols"] = protocols
-
-        if len(body_data["molecules"]) > self.api_limits["add_records"]:
-            raise RuntimeError(
-                f"Cannot add {len(body_data['molecules'])} records - over the limit of {self.api_limits['add_records']}"
-            )
 
         return self._auto_request(
             "post",
@@ -891,12 +1029,49 @@ class PortalClient(PortalClientBase):
         include_molecule: bool = False,
         include_wavefunction: bool = False,
     ) -> Union[Optional[SinglepointRecord], List[Optional[SinglepointRecord]]]:
+        """
+        Obtain singlepoint records with the specified IDs.
 
-        record_ids_lst = make_list(record_ids)
-        if not record_ids_lst:
+        Records will be returned in the same order as the record ids.
+
+        Parameters
+        ----------
+        record_ids
+            Single ID or sequence/list of records to obtain
+        missing_ok
+            If set to True, then missing records will be tolerated, and the returned
+            records will contain None for the corresponding IDs that were not found.
+        include_task
+            If True, include the task information as part of the record
+        include_outputs
+            If True, include the outputs as part of the record
+        include_comments
+            If True, include the comments as part of the record
+        include_molecule
+            If True, include the full molecule as part of the record
+        include_wavefunction
+            If True, include the full wavefunction as part of the record
+
+        Returns
+        -------
+        :
+            If a single ID was specified, returns just that record. Otherwise, returns
+            a list of records.  If missing_ok was specified, None will be substituted for a record
+            that was not found.
+        """
+
+        is_single = not isinstance(record_ids, Sequence)
+
+        record_ids = make_list(record_ids)
+        if not record_ids:
             return []
 
-        body_data = {"ids": record_ids_lst, "missing_ok": missing_ok}
+        if len(record_ids) > self.api_limits["get_records"]:
+            raise RuntimeError(
+                f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
+            )
+
+        body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
         include = set()
 
@@ -915,11 +1090,6 @@ class PortalClient(PortalClientBase):
         if include:
             body_data["include"] = include
 
-        if len(body_data["ids"]) > self.api_limits["get_records"]:
-            raise RuntimeError(
-                f"Cannot get {len(body_data['ids'])} records - over the limit of {self.api_limits['get_records']}"
-            )
-
         record_data = self._auto_request(
             "post",
             "v1/records/singlepoint/bulkGet",
@@ -932,10 +1102,10 @@ class PortalClient(PortalClientBase):
 
         records = records_from_datamodels(record_data, self)
 
-        if isinstance(record_ids, Sequence):
-            return records
-        else:
+        if is_single:
             return records[0]
+        else:
+            return records
 
     def query_singlepoints(
         self,
@@ -962,7 +1132,62 @@ class PortalClient(PortalClientBase):
         include_molecule: bool = False,
         include_wavefunction: bool = False,
     ) -> Tuple[QueryMetadata, List[SinglepointRecord]]:
-        """Queries SinglepointRecords from the server."""
+        """
+        Queries singlepoint records on the server
+
+        Do not count on the returned records being in any particular order.
+
+        Parameters
+        ----------
+        record_id
+            Query records whose ID is in the given list
+        manager_name
+            Query records that were completed (or are currently runnning) on a manager is in the given list
+        status
+            Query records whose status is in the given list
+        dataset_id
+            Query records that are part of a dataset is in the given list
+        parent_id
+            Query records that have a parent is in the given list
+        created_before
+            Query records that were created before the given date/time
+        created_after
+            Query records that were created after the given date/time
+        modified_before
+            Query records that were modified before the given date/time
+        modified_after
+            Query records that were modified after the given date/time
+        program
+            Query records whose program is in the given list
+        driver
+            Query records whose driver is in the given list
+        method
+            Query records whose method is in the given list
+        basis
+            Query records whose basis is in the given list
+        molecule_id
+            Query records whose molecule (id) is in the given list
+        limit
+            The maximum number of records to return. Note that the server limit is always obeyed.
+        skip
+            The number of records to skip in the query. This can be used for pagination
+        include_task
+            If True, include the task information as part of the record
+        include_outputs
+            If True, include the outputs as part of the record
+        include_comments
+            If True, include the comments as part of the record
+        include_molecule
+            If True, include the full molecule as part of the record
+        include_wavefunction
+            If True, include the full wavefunction as part of the record
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of records
+            that were found on the server.
+        """
 
         if limit is not None and limit > self.api_limits["get_records"]:
             warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
@@ -1032,12 +1257,45 @@ class PortalClient(PortalClientBase):
         priority: PriorityEnum = PriorityEnum.normal,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
-        Adds optimization calculations to the server
+        Adds new geometry optimization calculations to the server
+
+        This checks if the calculations already exist in the database. If so, it returns
+        the existing id, otherwise it will insert it and return the new id.
+
+        This will add one record per initial molecule.
+
+        Parameters
+        ----------
+        initial_molecules
+            Initial molecule/geometry to optimize
+        program
+            Which program to use for the optimization (ie, geometric)
+        qc_specification
+            The method, basis, etc, to optimize the geometry with
+        keywords
+            Program-specific keywords for the optimization program (not the qc program)
+        protocols
+            Protocols for storing more/less data for each computation (for the optimization)
+        tag
+            The tag for the task. This will assist in routing to appropriate compute managers.
+        priority
+            The priority of the job (high, normal, low). Default is normal.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and a list of record ids. The ids will be in the
+            order of the input molecules
         """
 
         initial_molecules = make_list(initial_molecules)
         if not initial_molecules:
             return InsertMetadata(), []
+
+        if len(initial_molecules) > self.api_limits["add_records"]:
+            raise RuntimeError(
+                f"Cannot add {len('initial_molecules')} records - over the limit of {self.api_limits['add_records']}"
+            )
 
         body_data = {
             "initial_molecules": initial_molecules,
@@ -1054,11 +1312,6 @@ class PortalClient(PortalClientBase):
             body_data["specification"]["keywords"] = keywords
         if protocols is not None:
             body_data["specification"]["protocols"] = protocols
-
-        if len(body_data["initial_molecules"]) > self.api_limits["add_records"]:
-            raise RuntimeError(
-                f"Cannot add {len(body_data['initial_molecules'])} records - over the limit of {self.api_limits['add_records']}"
-            )
 
         return self._auto_request(
             "post",
@@ -1082,12 +1335,51 @@ class PortalClient(PortalClientBase):
         include_final_molecule: bool = False,
         include_trajectory: bool = False,
     ) -> Union[Optional[OptimizationRecord], List[Optional[OptimizationRecord]]]:
+        """
+        Obtain optimization records with the specified IDs.
 
-        record_ids_lst = make_list(record_ids)
-        if not record_ids_lst:
+        Records will be returned in the same order as the record ids.
+
+        Parameters
+        ----------
+        record_ids
+            Single ID or sequence/list of records to obtain
+        missing_ok
+            If set to True, then missing records will be tolerated, and the returned
+            records will contain None for the corresponding IDs that were not found.
+        include_task
+            If True, include the task information as part of the record
+        include_outputs
+            If True, include the outputs as part of the record
+        include_comments
+            If True, include the comments as part of the record
+        include_initial_molecule
+            If True, include the full initial molecule as part of the record
+        include_final_molecule
+            If True, include the full final molecule as part of the record
+        include_trajectory
+            If True, include available trajectory computation records as part of the record
+
+        Returns
+        -------
+        :
+            If a single ID was specified, returns just that record. Otherwise, returns
+            a list of records.  If missing_ok was specified, None will be substituted for a record
+            that was not found.
+        """
+
+        is_single = not isinstance(record_ids, Sequence)
+
+        record_ids = make_list(record_ids)
+        if not record_ids:
             return []
 
-        body_data = {"ids": record_ids_lst, "missing_ok": missing_ok}
+        if len(record_ids) > self.api_limits["get_records"]:
+            raise RuntimeError(
+                f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
+            )
+
+        body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
         include = set()
 
@@ -1108,11 +1400,6 @@ class PortalClient(PortalClientBase):
         if include:
             body_data["include"] = include
 
-        if len(body_data["ids"]) > self.api_limits["get_records"]:
-            raise RuntimeError(
-                f"Cannot get {len(body_data['ids'])} records - over the limit of {self.api_limits['get_records']}"
-            )
-
         record_data = self._auto_request(
             "post",
             "v1/records/optimization/bulkGet",
@@ -1125,10 +1412,10 @@ class PortalClient(PortalClientBase):
 
         records = records_from_datamodels(record_data, self)
 
-        if isinstance(record_ids, Sequence):
-            return records
-        else:
+        if is_single:
             return records[0]
+        else:
+            return records
 
     def query_optimizations(
         self,
@@ -1158,7 +1445,68 @@ class PortalClient(PortalClientBase):
         include_final_molecule: bool = False,
         include_trajectory: bool = False,
     ) -> Tuple[QueryMetadata, List[OptimizationRecord]]:
-        """Queries OptimizationRecords from the server."""
+        """
+        Queries optimization records on the server
+
+        Do not count on the returned records being in any particular order.
+
+        Parameters
+        ----------
+        record_id
+            Query records whose ID is in the given list
+        manager_name
+            Query records that were completed (or are currently runnning) on a manager is in the given list
+        status
+            Query records whose status is in the given list
+        dataset_id
+            Query records that are part of a dataset is in the given list
+        parent_id
+            Query records that have a parent is in the given list
+        child_id
+            Query records that have a child (singlepoint calculation) is in the given list
+        created_before
+            Query records that were created before the given date/time
+        created_after
+            Query records that were created after the given date/time
+        modified_before
+            Query records that were modified before the given date/time
+        modified_after
+            Query records that were modified after the given date/time
+        program
+            Query records whose optimization program is in the given list
+        qc_program
+            Query records whose qc program is in the given list
+        qc_method
+            Query records whose method is in the given list
+        qc_basis
+            Query records whose basis is in the given list
+        initial_molecule_id
+            Query records whose initial molecule (id) is in the given list
+        final_molecule_id
+            Query records whose final molecule (id) is in the given list
+        limit
+            The maximum number of records to return. Note that the server limit is always obeyed.
+        skip
+            The number of records to skip in the query. This can be used for pagination
+        include_task
+            If True, include the task information as part of the record
+        include_outputs
+            If True, include the outputs as part of the record
+        include_comments
+            If True, include the comments as part of the record
+        include_initial_molecule
+            If True, include the full initial molecule as part of the record
+        include_final_molecule
+            If True, include the full final molecule as part of the record
+        include_trajectory
+            If True, include available trajectory computation records as part of the record
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of records
+            that were found on the server.
+        """
 
         if limit is not None and limit > self.api_limits["get_records"]:
             warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
@@ -1230,11 +1578,43 @@ class PortalClient(PortalClientBase):
         priority: PriorityEnum = PriorityEnum.normal,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
-        Adds torsiondrive calculations to the server
+        Adds new torsiondrive computations to the server
+
+        This checks if the calculations already exist in the database. If so, it returns
+        the existing id, otherwise it will insert it and return the new id.
+
+        This will add one record per set of molecules
+
+        Parameters
+        ----------
+        initial_molecules
+            Molecules to start the torsiondrives. Each torsiondrive can start with
+            multiple molecules, so this is a nested list
+        program
+            The program to run the torsiondrive computation with ("torsiondrive")
+        optimization_specification
+            Specification of how each optimization of the torsiondrive should be run
+        keywords
+            The torsiondrive keywords for the computation
+        tag
+            The tag for the task. This will assist in routing to appropriate compute managers.
+        priority
+            The priority of the job (high, normal, low). Default is normal.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and a list of record ids. The ids will be in the
+            order of the input molecules
         """
 
         if not initial_molecules:
             return InsertMetadata(), []
+
+        if len(initial_molecules) > self.api_limits["add_records"]:
+            raise RuntimeError(
+                f"Cannot add {len(initial_molecules)} records - over the limit of {self.api_limits['add_records']}"
+            )
 
         body_data = {
             "initial_molecules": initial_molecules,
@@ -1247,11 +1627,6 @@ class PortalClient(PortalClientBase):
             "tag": tag,
             "priority": priority,
         }
-
-        if len(body_data["initial_molecules"]) > self.api_limits["add_records"]:
-            raise RuntimeError(
-                f"Cannot add {len(body_data['initial_molecules'])} records - over the limit of {self.api_limits['add_records']}"
-            )
 
         return self._auto_request(
             "post",
@@ -1275,12 +1650,51 @@ class PortalClient(PortalClientBase):
         include_initial_molecules: bool = False,
         include_optimizations: bool = False,
     ) -> Union[Optional[TorsiondriveRecord], List[Optional[TorsiondriveRecord]]]:
+        """
+        Obtain torsiondrive records with the specified IDs.
 
-        record_ids_lst = make_list(record_ids)
-        if not record_ids_lst:
+        Records will be returned in the same order as the record ids.
+
+        Parameters
+        ----------
+        record_ids
+            Single ID or sequence/list of records to obtain
+        missing_ok
+            If set to True, then missing records will be tolerated, and the returned
+            records will contain None for the corresponding IDs that were not found.
+        include_task
+            If True, include the task information as part of the record
+        include_service
+            If True, include the service information as part of the record
+        include_outputs
+            If True, include the outputs as part of the record
+        include_comments
+            If True, include the comments as part of the record
+        include_initial_molecules
+            If True, include the full initial molecules as part of the record
+        include_optimizations
+            If True, include the full set of optimization records as part of the record
+
+        Returns
+        -------
+        :
+            If a single ID was specified, returns just that record. Otherwise, returns
+            a list of records.  If missing_ok was specified, None will be substituted for a record
+            that was not found.
+        """
+
+        is_single = not isinstance(record_ids, Sequence)
+
+        record_ids = make_list(record_ids)
+        if not record_ids:
             return []
 
-        body_data = {"ids": record_ids_lst, "missing_ok": missing_ok}
+        if len(record_ids) > self.api_limits["get_records"]:
+            raise RuntimeError(
+                f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
+            )
+
+        body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
         include = set()
 
@@ -1301,11 +1715,6 @@ class PortalClient(PortalClientBase):
         if include:
             body_data["include"] = include
 
-        if len(body_data["ids"]) > self.api_limits["get_records"]:
-            raise RuntimeError(
-                f"Cannot get {len(body_data['ids'])} records - over the limit of {self.api_limits['get_records']}"
-            )
-
         record_data = self._auto_request(
             "post",
             "v1/records/torsiondrive/bulkGet",
@@ -1318,10 +1727,10 @@ class PortalClient(PortalClientBase):
 
         records = records_from_datamodels(record_data, self)
 
-        if isinstance(record_ids, Sequence):
-            return records
-        else:
+        if is_single:
             return records[0]
+        else:
+            return records
 
     def query_torsiondrives(
         self,
@@ -1351,7 +1760,68 @@ class PortalClient(PortalClientBase):
         include_initial_molecules: bool = False,
         include_optimizations: bool = False,
     ) -> Tuple[QueryMetadata, List[TorsiondriveRecord]]:
-        """Queries torsiondrive records from the server."""
+        """
+        Queries torsiondrive records on the server
+
+        Do not count on the returned records being in any particular order.
+
+        Parameters
+        ----------
+        record_id
+            Query records whose ID is in the given list
+        manager_name
+            Query records that were completed (or are currently runnning) on a manager is in the given list
+        status
+            Query records whose status is in the given list
+        dataset_id
+            Query records that are part of a dataset is in the given list
+        parent_id
+            Query records that have a parent is in the given list
+        child_id
+            Query records that have a child (optimization calculation) is in the given list
+        created_before
+            Query records that were created before the given date/time
+        created_after
+            Query records that were created after the given date/time
+        modified_before
+            Query records that were modified before the given date/time
+        modified_after
+            Query records that were modified after the given date/time
+        program
+            Query records whose torsiondrive program is in the given list
+        optimization_program
+            Query records whose optimization program is in the given list
+        qc_program
+            Query records whose qc program is in the given list
+        qc_method
+            Query records whose method is in the given list
+        qc_basis
+            Query records whose basis is in the given list
+        initial_molecule_id
+            Query records whose initial molecule (id) is in the given list
+        limit
+            The maximum number of records to return. Note that the server limit is always obeyed.
+        skip
+            The number of records to skip in the query. This can be used for pagination
+        include_task
+            If True, include the task information as part of the record
+        include_service
+            If True, include the service information as part of the record
+        include_outputs
+            If True, include the outputs as part of the record
+        include_comments
+            If True, include the comments as part of the record
+        include_initial_molecules
+            If True, include the full initial molecules as part of the record
+        include_optimizations
+            If True, include the full set of optimization records as part of the record
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of records
+            that were found on the server.
+        """
 
         if limit is not None and limit > self.api_limits["get_records"]:
             warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
@@ -1423,12 +1893,44 @@ class PortalClient(PortalClientBase):
         priority: PriorityEnum = PriorityEnum.normal,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
-        Adds gridoptimization calculations to the server
+        Adds new gridoptimization computations to the server
+
+        This checks if the calculations already exist in the database. If so, it returns
+        the existing id, otherwise it will insert it and return the new id.
+
+        This will add one record per initial molecule
+
+        Parameters
+        ----------
+        initial_molecules
+            Molecules to start the gridoptimizations. Each gridoptimization starts with
+             a single molecule.
+        program
+            The program to run the gridoptimization computation with ("gridoptimization")
+        optimization_specification
+            Specification of how each optimization of the gridoptimization should be run
+        keywords
+            The gridoptimization keywords for the computation
+        tag
+            The tag for the task. This will assist in routing to appropriate compute managers.
+        priority
+            The priority of the job (high, normal, low). Default is normal.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and a list of record ids. The ids will be in the
+            order of the input molecules
         """
 
         initial_molecules = make_list(initial_molecules)
         if not initial_molecules:
             return InsertMetadata(), []
+
+        if len(initial_molecules) > self.api_limits["add_records"]:
+            raise RuntimeError(
+                f"Cannot add {len(initial_molecules)} records - over the limit of {self.api_limits['add_records']}"
+            )
 
         body_data = {
             "initial_molecules": initial_molecules,
@@ -1440,11 +1942,6 @@ class PortalClient(PortalClientBase):
             "tag": tag,
             "priority": priority,
         }
-
-        if len(body_data["initial_molecules"]) > self.api_limits["add_records"]:
-            raise RuntimeError(
-                f"Cannot add {len(body_data['initial_molecules'])} records - over the limit of {self.api_limits['add_records']}"
-            )
 
         return self._auto_request(
             "post",
@@ -1468,12 +1965,51 @@ class PortalClient(PortalClientBase):
         include_starting_molecule: bool = False,
         include_optimizations: bool = False,
     ) -> Union[Optional[GridoptimizationRecord], List[Optional[GridoptimizationRecord]]]:
+        """
+        Obtain gridoptimization records with the specified IDs.
 
-        record_ids_lst = make_list(record_ids)
-        if not record_ids_lst:
+        Records will be returned in the same order as the record ids.
+
+        Parameters
+        ----------
+        record_ids
+            Single ID or sequence/list of records to obtain
+        missing_ok
+            If set to True, then missing records will be tolerated, and the returned
+            records will contain None for the corresponding IDs that were not found.
+        include_service
+            If True, include the service information as part of the record
+        include_outputs
+            If True, include the outputs as part of the record
+        include_comments
+            If True, include the comments as part of the record
+        include_initial_molecule
+            If True, include the full initial molecules as part of the record
+        include_starting_molecule
+            If True, include the full starting molecule as part of the record
+        include_optimizations
+            If True, include the full set of optimization records as part of the record
+
+        Returns
+        -------
+        :
+            If a single ID was specified, returns just that record. Otherwise, returns
+            a list of records.  If missing_ok was specified, None will be substituted for a record
+            that was not found.
+        """
+
+        is_single = not isinstance(record_ids, Sequence)
+
+        record_ids = make_list(record_ids)
+        if not record_ids:
             return []
 
-        body_data = {"ids": record_ids_lst, "missing_ok": missing_ok}
+        if len(record_ids) > self.api_limits["get_records"]:
+            raise RuntimeError(
+                f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
+            )
+
+        body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
         include = set()
 
@@ -1494,11 +2030,6 @@ class PortalClient(PortalClientBase):
         if include:
             body_data["include"] = include
 
-        if len(body_data["ids"]) > self.api_limits["get_records"]:
-            raise RuntimeError(
-                f"Cannot get {len(body_data['ids'])} records - over the limit of {self.api_limits['get_records']}"
-            )
-
         record_data = self._auto_request(
             "post",
             "v1/records/gridoptimization/bulkGet",
@@ -1511,10 +2042,10 @@ class PortalClient(PortalClientBase):
 
         records = records_from_datamodels(record_data, self)
 
-        if isinstance(record_ids, Sequence):
-            return records
-        else:
+        if is_single:
             return records[0]
+        else:
+            return records
 
     def query_gridoptimizations(
         self,
@@ -1542,9 +2073,73 @@ class PortalClient(PortalClientBase):
         include_outputs: bool = False,
         include_comments: bool = False,
         include_initial_molecule: bool = False,
+        include_starting_molecule: bool = False,
         include_optimizations: bool = False,
     ) -> Tuple[QueryMetadata, List[GridoptimizationRecord]]:
-        """Queries torsiondrive records from the server."""
+        """
+        Queries gridoptimization records on the server
+
+        Do not count on the returned records being in any particular order.
+
+        Parameters
+        ----------
+        record_id
+            Query records whose ID is in the given list
+        manager_name
+            Query records that were completed (or are currently runnning) on a manager is in the given list
+        status
+            Query records whose status is in the given list
+        dataset_id
+            Query records that are part of a dataset is in the given list
+        parent_id
+            Query records that have a parent is in the given list
+        child_id
+            Query records that have a child (optimization calculation) is in the given list
+        created_before
+            Query records that were created before the given date/time
+        created_after
+            Query records that were created after the given date/time
+        modified_before
+            Query records that were modified before the given date/time
+        modified_after
+            Query records that were modified after the given date/time
+        program
+            Query records whose gridoptimization program is in the given list
+        optimization_program
+            Query records whose optimization program is in the given list
+        qc_program
+            Query records whose qc program is in the given list
+        qc_method
+            Query records whose method is in the given list
+        qc_basis
+            Query records whose basis is in the given list
+        initial_molecule_id
+            Query records whose initial molecule (id) is in the given list
+        limit
+            The maximum number of records to return. Note that the server limit is always obeyed.
+        skip
+            The number of records to skip in the query. This can be used for pagination
+        include_task
+            If True, include the task information as part of the record
+        include_service
+            If True, include the service information as part of the record
+        include_outputs
+            If True, include the outputs as part of the record
+        include_comments
+            If True, include the comments as part of the record
+        include_initial_molecule
+            If True, include the full initial molecules as part of the record
+        include_starting_molecule
+            If True, include the full starting molecule as part of the record
+        include_optimizations
+            If True, include the full set of optimization records as part of the record
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of records
+            that were found on the server.
+        """
 
         if limit is not None and limit > self.api_limits["get_records"]:
             warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
@@ -1584,6 +2179,8 @@ class PortalClient(PortalClientBase):
             include |= {"*", "comments"}
         if include_initial_molecule:
             include |= {"*", "initial_molecule"}
+        if include_starting_molecule:
+            include |= {"*", "starting_molecule"}
         if include_optimizations:
             include |= {"*", "optimizations.*", "optimizations.optimization_record"}
 
@@ -1618,11 +2215,47 @@ class PortalClient(PortalClientBase):
         priority: PriorityEnum = PriorityEnum.normal,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
-        Adds reaction calculations to the server
+        Adds new reaction computations to the server
+
+        This checks if the calculations already exist in the database. If so, it returns
+        the existing id, otherwise it will insert it and return the new id.
+
+        This will add one record per set of molecules
+
+        Parameters
+        ----------
+        stoichiometries
+            Coefficients and molecules of the reaction. Each torsiondrive can start with
+            multiple molecules, so this is a nested list
+        program
+            The program for running the singlepoint energy calculations
+        method
+            The method for the singlepoint energy calculations
+        basis
+            The basis set for the singlepoint energy calculations
+        keywords
+            The singlepoint/qc keywords for the singlepoint energy calculations
+        protocols
+            Protocols for storing more/less data for each singlepoint computation
+        tag
+            The tag for the task. This will assist in routing to appropriate compute managers.
+        priority
+            The priority of the job (high, normal, low). Default is normal.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and a list of record ids. The ids will be in the
+            order of the input molecules
         """
 
         if not stoichiometries:
             return InsertMetadata(), []
+
+        if len(stoichiometries) > self.api_limits["add_records"]:
+            raise RuntimeError(
+                f"Cannot add {len(stoichiometries)} records - over the limit of {self.api_limits['add_records']}"
+            )
 
         body_data = {
             "stoichiometries": stoichiometries,
@@ -1640,11 +2273,6 @@ class PortalClient(PortalClientBase):
             body_data["specification"]["keywords"] = keywords
         if protocols is not None:
             body_data["specification"]["protocols"] = protocols
-
-        if len(body_data["stoichiometries"]) > self.api_limits["add_records"]:
-            raise RuntimeError(
-                f"Cannot add {len(body_data['stoichiometries'])} records - over the limit of {self.api_limits['add_records']}"
-            )
 
         return self._auto_request(
             "post",
@@ -1667,12 +2295,49 @@ class PortalClient(PortalClientBase):
         include_stoichiometries: bool = False,
         include_components: bool = False,
     ) -> Union[Optional[ReactionRecord], List[Optional[ReactionRecord]]]:
+        """
+        Obtain reaction records with the specified IDs.
 
-        record_ids_lst = make_list(record_ids)
-        if not record_ids_lst:
+        Records will be returned in the same order as the record ids.
+
+        Parameters
+        ----------
+        record_ids
+            Single ID or sequence/list of records to obtain
+        missing_ok
+            If set to True, then missing records will be tolerated, and the returned
+            records will contain None for the corresponding IDs that were not found.
+        include_service
+            If True, include the service information as part of the record
+        include_outputs
+            If True, include the outputs as part of the record
+        include_comments
+            If True, include the comments as part of the record
+        include_stoichiometries
+            If True, include the full stoichiometries (include molecules) as part of the record
+        include_components
+            If True, include the full set of singlepoint records as part of the record
+
+        Returns
+        -------
+        :
+            If a single ID was specified, returns just that record. Otherwise, returns
+            a list of records.  If missing_ok was specified, None will be substituted for a record
+            that was not found.
+        """
+
+        is_single = not isinstance(record_ids, Sequence)
+
+        record_ids = make_list(record_ids)
+        if not record_ids:
             return []
 
-        body_data = {"ids": record_ids_lst, "missing_ok": missing_ok}
+        if len(record_ids) > self.api_limits["get_records"]:
+            raise RuntimeError(
+                f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
+            )
+
+        body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
         include = set()
 
@@ -1691,11 +2356,6 @@ class PortalClient(PortalClientBase):
         if include:
             body_data["include"] = include
 
-        if len(body_data["ids"]) > self.api_limits["get_records"]:
-            raise RuntimeError(
-                f"Cannot get {len(body_data['ids'])} records - over the limit of {self.api_limits['get_records']}"
-            )
-
         record_data = self._auto_request(
             "post",
             "v1/records/reaction/bulkGet",
@@ -1708,10 +2368,10 @@ class PortalClient(PortalClientBase):
 
         records = records_from_datamodels(record_data, self)
 
-        if isinstance(record_ids, Sequence):
-            return records
-        else:
+        if is_single:
             return records[0]
+        else:
+            return records
 
     def query_reactions(
         self,
@@ -1739,7 +2399,64 @@ class PortalClient(PortalClientBase):
         include_stoichiometries: bool = False,
         include_components: bool = False,
     ) -> Tuple[QueryMetadata, List[GridoptimizationRecord]]:
-        """Queries torsiondrive records from the server."""
+        """
+        Queries reaction records on the server
+
+        Do not count on the returned records being in any particular order.
+
+        Parameters
+        ----------
+        record_id
+            Query records whose ID is in the given list
+        manager_name
+            Query records that were completed (or are currently runnning) on a manager is in the given list
+        status
+            Query records whose status is in the given list
+        dataset_id
+            Query records that are part of a dataset is in the given list
+        parent_id
+            Query records that have a parent is in the given list
+        child_id
+            Query records that have a child (optimization calculation) is in the given list
+        created_before
+            Query records that were created before the given date/time
+        created_after
+            Query records that were created after the given date/time
+        modified_before
+            Query records that were modified before the given date/time
+        modified_after
+            Query records that were modified after the given date/time
+        program
+            Query records whose qc program is in the given list
+        method
+            Query records whose method is in the given list
+        basis
+            Query records whose basis is in the given list
+        molecule_id
+            Query reactions that contain a molecule (id) is in the given list
+        limit
+            The maximum number of records to return. Note that the server limit is always obeyed.
+        skip
+            The number of records to skip in the query. This can be used for pagination
+        include_task
+            If True, include the task information as part of the record
+        include_service
+            If True, include the service information as part of the record
+        include_outputs
+            If True, include the outputs as part of the record
+        include_comments
+            If True, include the comments as part of the record
+        include_stoichiometries
+            If True, include the full stoichiometries (include molecules) as part of the record
+        include_components
+            If True, include the full set of singlepoint records as part of the record
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of records
+            that were found on the server.
+        """
 
         if limit is not None and limit > self.api_limits["get_records"]:
             warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
@@ -1804,37 +2521,39 @@ class PortalClient(PortalClientBase):
         names: Union[str, Sequence[str]],
         missing_ok: bool = False,
     ) -> Union[Optional[ComputeManager], List[Optional[ComputeManager]]]:
-        """Obtains manager information from the server via name
+        """Obtain manager information from the server with the specified names
 
         Parameters
         ----------
-        name
+        names
             A manager name or list of names
         missing_ok
-            If True, return ``None`` for managers that were not found on the server.
-            If False, raise ``KeyError`` if any managers were not found on the server.
+            If set to True, then missing managers will be tolerated, and the returned
+            managers will contain None for the corresponding managers that were not found.
 
         Returns
         -------
         :
-            The requested managers, in the same order as the requested ids.
-            If given a list of ids, the return value will be a list.
-            Otherwise, it will be a single manager.
+            If a single name was specified, returns just that manager. Otherwise, returns
+            a list of managers.  If missing_ok was specified, None will be substituted for a manager
+            that was not found.
         """
 
-        names_lst = make_list(names)
-        if not names_lst:
+        is_single = not isinstance(names, Sequence)
+
+        names = make_list(names)
+        if not names:
             return []
 
-        body_data = CommonBulkGetNamesBody(names=names_lst, missing_ok=missing_ok)
+        body_data = CommonBulkGetNamesBody(names=names, missing_ok=missing_ok)
         managers = self._auto_request(
             "post", "v1/managers/bulkGet", CommonBulkGetNamesBody, None, List[Optional[ComputeManager]], body_data, None
         )
 
-        if isinstance(names, Sequence):
-            return managers
-        else:
+        if is_single:
             return managers[0]
+        else:
+            return managers
 
     def query_managers(
         self,
@@ -1848,36 +2567,38 @@ class PortalClient(PortalClientBase):
         include_log: bool = False,
         limit: Optional[int] = None,
         skip: int = 0,
-    ) -> Tuple[QueryMetadata, Dict[str, Any]]:
-        """Obtains information about compute managers attached to this Fractal instance
+    ) -> Tuple[QueryMetadata, List[ComputeManager]]:
+        """
+        Queries manager information on the server
 
         Parameters
         ----------
         manager_ids
             ID assigned to the manager (this is not the UUID. This should be used very rarely).
         name
-            Queries the managers name
+            Queries managers whose name is in the given list
         cluster
-            Queries the managers cluster
+            Queries managers whose assigned cluster is in the given list
         hostname
-            Queries the managers hostname
+            Queries managers whose hostname is in the given list
         status
-            Queries the manager's status field
+            Queries managers whose status is in the given list
         modified_before
             Query for managers last modified before a certain time
         modified_after
             Query for managers last modified after a certain time
         include_log
-            If True, include the log entries for the manager
+            If True, include the log entries for the manager in the returned manager
         limit
-            The maximum number of managers to query
+            The maximum number of managers to return. Note that the server limit is always obeyed.
         skip
-            The number of managers to skip in the query, used during pagination
+            The number of managers to skip in the query. This can be used for pagination
 
         Returns
         -------
         :
-            Metadata about the query results, and a list of dictionaries with information matching the specified query.
+            Metadata about the query results,
+            and a list of ComputeManager matching the specified query.
         """
 
         if limit is not None and limit > self.api_limits["get_managers"]:
@@ -1920,7 +2641,30 @@ class PortalClient(PortalClientBase):
         limit: Optional[int] = None,
         skip: int = 0,
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
-        """Obtains individual entries in the server stats logs"""
+        """
+        Query server statistics
+
+        These statistics are captured at certain times, and are available for querying (as long
+        as they are not deleted)
+
+        Parameters
+        ----------
+        before
+            Return statistics captured before the specified date/time
+        after
+            Return statistics captured after the specified date/time
+        limit
+            The maximum number of statistics entries to return. Note that the server limit is always obeyed.
+        skip
+            The number of statistics entries to skip in the query. This can be used for pagination
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of dictionaries with
+            statistics that were found on the server.
+
+        """
 
         if limit is not None and limit > self.api_limits["get_server_stats"]:
             warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
@@ -1937,7 +2681,21 @@ class PortalClient(PortalClientBase):
             url_params,
         )
 
-    def delete_server_stats(self, before: datetime):
+    def delete_server_stats(self, before: datetime) -> int:
+        """
+        Delete server statistics from the server
+
+        Parameters
+        ----------
+        before
+            Delete statistics captured before the given date/time
+
+        Returns
+        -------
+        :
+            The number of statistics entries deleted from the server
+        """
+
         body_data = DeleteBeforeDateBody(before=before)
         return self._auto_request(
             "post", "v1/server_stats/bulkDelete", DeleteBeforeDateBody, None, int, body_data, None
@@ -1952,7 +2710,32 @@ class PortalClient(PortalClientBase):
         limit: Optional[int] = None,
         skip: int = 0,
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
-        """Obtains individual entries in the access logs"""
+        """
+        Query the server access log
+
+        This log contains information about who accessed the server, and when.
+
+        Parameters
+        ----------
+        access_type
+            Return log entries whose access_type is in the given list
+        access_method
+            Return log entries whose access_method is in the given list
+        before
+            Return log entries captured before the specified date/time
+        after
+            Return log entries captured after the specified date/time
+        limit
+            The maximum number of log entries to return. Note that the server limit is always obeyed.
+        skip
+            The number of log entries to skip in the query. This can be used for pagination
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of dictionaries with
+            access log entries that were found on the server.
+        """
 
         if limit is not None and limit > self.api_limits["get_access_logs"]:
             warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
@@ -1977,7 +2760,21 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-    def delete_access_log(self, before: datetime):
+    def delete_access_log(self, before: datetime) -> int:
+        """
+        Delete access log entries from the server
+
+        Parameters
+        ----------
+        before
+            Delete access log entries captured before the given date/time
+
+        Returns
+        -------
+        :
+            The number of access log entries deleted from the server
+        """
+
         body_data = DeleteBeforeDateBody(before=before)
         return self._auto_request("post", "v1/access_logs/bulkDelete", DeleteBeforeDateBody, None, int, body_data, None)
 
@@ -1990,7 +2787,33 @@ class PortalClient(PortalClientBase):
         limit: Optional[int] = None,
         skip: int = 0,
     ) -> Tuple[QueryMetadata, Dict[str, Any]]:
-        """Obtains individual entries in the error logs"""
+        """
+        Query the server's internal error log
+
+        This log contains internal errors that are not always passed to the user.
+
+        Parameters
+        ----------
+        error_id
+            Return error log entries whose id is in the list
+        username
+            Return error log entries whose username is in the list
+        before
+            Return error log entries captured before the specified date/time
+        after
+            Return error log entries captured after the specified date/time
+        limit
+            The maximum number of log entries to return. Note that the server limit is always obeyed.
+        skip
+            The number of log entries to skip in the query. This can be used for pagination
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of dictionaries with
+            error log entries that were found on the server.
+
+        """
 
         if limit is not None and limit > self.api_limits["get_error_logs"]:
             warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
@@ -2015,7 +2838,20 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-    def delete_error_log(self, before: datetime):
+    def delete_error_log(self, before: datetime) -> int:
+        """
+        Delete error log entries from the server
+
+        Parameters
+        ----------
+        before
+            Delete error log entries captured before the given date/time
+
+        Returns
+        -------
+        :
+            The number of error log entries deleted from the server
+        """
         body_data = DeleteBeforeDateBody(before=before)
         return self._auto_request(
             "post", "v1/server_errors/bulkDelete", DeleteBeforeDateBody, None, int, body_data, None
@@ -2027,7 +2863,10 @@ class PortalClient(PortalClientBase):
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
     ) -> Dict[str, Any]:
-        """Obtains daily summaries of accesses
+        """Obtains summaries of access data
+
+        This aggregate data is created on the server, so you don't need to download all the
+        log entries and do it yourself.
 
         Parameters
         ----------
@@ -2267,6 +3106,10 @@ class PortalClient(PortalClientBase):
         return self._auto_request("put", url, Optional[str], None, str, new_password, None)
 
     def delete_user(self, username: str) -> None:
+        """
+        Delete a user from the server
+        """
+
         is_valid_username(username)
 
         if username == self.username:

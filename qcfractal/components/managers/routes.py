@@ -55,7 +55,7 @@ def get_managers_v1(name: str):
 @wrap_route("READ")
 def bulk_get_managers_v1(body_data: CommonBulkGetNamesBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_managers
-    if body_data.names is not None and len(body_data.names) > limit:
+    if len(body_data.names) > limit:
         raise LimitExceededError(f"Cannot get {len(body_data.names)} manager records - limit is {limit}")
 
     return storage_socket.managers.get(body_data.names, body_data.include, body_data.include, body_data.missing_ok)

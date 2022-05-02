@@ -1,6 +1,7 @@
 from flask import current_app
 
 from qcfractal.app import main, wrap_route, storage_socket
+from qcportal.exceptions import LimitExceededError
 from qcportal.tasks import TaskClaimBody, TaskReturnBody
 from qcportal.utils import calculate_limit
 
@@ -24,5 +25,9 @@ def claim_tasks_v1(body_data: TaskClaimBody):
 @wrap_route("WRITE")
 def return_tasks_v1(body_data: TaskReturnBody):
     """Return finished tasks"""
+
+    max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.manager_tasks_claim
+    if len(body_data.results) > max_limit:
+        raise LimitExceededError(f"Attempted to return too many results - limit is {max_limit}")
 
     return storage_socket.tasks.update_finished(manager_name=body_data.name_data.fullname, results=body_data.results)

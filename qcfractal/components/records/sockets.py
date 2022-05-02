@@ -468,7 +468,7 @@ class RecordSocket:
         session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
         """
-        Query records of any kind based on common fields
+        Query records of all types based on common fields
 
         Parameters
         ----------
@@ -511,7 +511,7 @@ class RecordSocket:
         session: Optional[Session] = None,
     ) -> List[Optional[Dict[str, Any]]]:
         """
-        Obtain records of any kind of record with specified IDs
+        Obtain records of all types with specified IDs
 
         Parameters
         ----------
@@ -1025,7 +1025,7 @@ class RecordSocket:
         session: Optional[Session] = None,
     ) -> DeleteMetadata:
         """
-        Delete records of computations in the database
+        Delete records from the database
 
         If soft_delete is True, then the record is just marked as deleted and actually deletion may
         happen later. Soft delete can be undone with undelete
@@ -1038,6 +1038,8 @@ class RecordSocket:
             Reset the status of these record ids
         soft_delete
             Don't actually delete the record, just mark it for later deletion
+        delete_children
+            If True, attempt to delete child records as well
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -1094,7 +1096,7 @@ class RecordSocket:
         session: Optional[Session] = None,
     ) -> UpdateMetadata:
         """
-        Marks a record as cancelled
+        Marks records as cancelled
 
         A cancelled record will not be picked up by a manager.
 
@@ -1129,7 +1131,7 @@ class RecordSocket:
         session: Optional[Session] = None,
     ) -> UpdateMetadata:
         """
-        Marks a record as invalid
+        Marks records as invalid
 
         An invalid record is one that supposedly successfully completed. However, after review,
         is not correct.

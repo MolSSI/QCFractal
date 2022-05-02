@@ -287,15 +287,6 @@ class ComputeManager:
         self.server_info = self.client.get_server_information()
         self.server_name = self.server_info["name"]
         self.server_version = self.server_info["version"]
-        self.server_claim_limit = self.server_info["api_limits"]["manager_tasks_claim"]
-        self.server_return_limit = self.server_info["api_limits"]["manager_tasks_return"]
-        if self.max_tasks > self.server_claim_limit:
-            self.max_tasks = self.server_claim_limit
-            self.logger.warning(
-                "Max tasks was larger than server query limit of {}, reducing to match query limit.".format(
-                    self.server_claim_limit
-                )
-            )
         self.heartbeat_frequency = self.server_info["manager_heartbeat_frequency"]
 
         self.client.activate(__version__, qcng.__version__, self.all_program_info, tags=self.queue_tag)
