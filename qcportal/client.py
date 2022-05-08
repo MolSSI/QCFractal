@@ -2225,8 +2225,8 @@ class PortalClient(PortalClientBase):
         Parameters
         ----------
         stoichiometries
-            Coefficients and molecules of the reaction. Each torsiondrive can start with
-            multiple molecules, so this is a nested list
+            Coefficients and molecules of the reaction. Each reaction has multiple
+            molecules/coefficients, so this is a nested list
         program
             The program for running the singlepoint energy calculations
         method
