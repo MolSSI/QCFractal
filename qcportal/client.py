@@ -2235,8 +2235,6 @@ class PortalClient(PortalClientBase):
             The basis set for the singlepoint energy calculations
         keywords
             The singlepoint/qc keywords for the singlepoint energy calculations
-        protocols
-            Protocols for storing more/less data for each singlepoint computation
         tag
             The tag for the task. This will assist in routing to appropriate compute managers.
         priority
