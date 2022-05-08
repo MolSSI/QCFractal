@@ -265,6 +265,9 @@ class BaseRecord(BaseModel):
         if not self.raw_data.compute_history:
             self._fetch_compute_history(include_outputs=True)
 
+        if not self.raw_data.compute_history:
+            return None
+
         last_computation = self.raw_data.compute_history[-1]
         if last_computation.outputs is None:
             self._fetch_compute_history(include_outputs=True)
