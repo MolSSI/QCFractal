@@ -25,9 +25,15 @@ from .optimization.models import OptimizationRecord
 from .torsiondrive.models import TorsiondriveRecord
 from .gridoptimization.models import GridoptimizationRecord
 from .reaction.models import ReactionRecord
+from .manybody.models import ManybodyRecord
 
 AllRecordTypes = Union[
-    SinglepointRecord, OptimizationRecord, TorsiondriveRecord, GridoptimizationRecord, ReactionRecord
+    SinglepointRecord,
+    OptimizationRecord,
+    TorsiondriveRecord,
+    GridoptimizationRecord,
+    ReactionRecord,
+    ManybodyRecord,
 ]
 AllRecordDataModelTypes = Union[
     SinglepointRecord._DataModel,
@@ -35,6 +41,7 @@ AllRecordDataModelTypes = Union[
     TorsiondriveRecord._DataModel,
     GridoptimizationRecord._DataModel,
     ReactionRecord._DataModel,
+    ManybodyRecord._DataModel,
 ]
 
 

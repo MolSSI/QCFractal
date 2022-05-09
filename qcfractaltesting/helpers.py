@@ -17,6 +17,7 @@ from qcelemental.models import Molecule, FailedOperation, OptimizationResult, At
 from qcelemental.models.results import WavefunctionProperties
 
 from qcportal.records.gridoptimization import GridoptimizationSpecification
+from qcportal.records.manybody import ManybodySpecification
 from qcportal.records.optimization import OptimizationSpecification
 from qcportal.records.reaction import ReactionQCSpecification
 from qcportal.records.singlepoint import QCSpecification
@@ -135,6 +136,10 @@ def load_procedure_data(name: str):
         input_type = ReactionQCSpecification
         result_type = Dict[str, Union[AtomicResult, FailedOperation]]
         molecule_type = List[Tuple[float, Molecule]]
+    elif record_type == "manybody":
+        input_type = ManybodySpecification
+        result_type = Dict[str, Union[AtomicResult, FailedOperation]]
+        molecule_type = Molecule
     else:
         raise RuntimeError(f"Unknown procedure '{record_type}' in test!")
 

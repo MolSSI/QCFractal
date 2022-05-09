@@ -243,12 +243,14 @@ class RecordSocket:
         from .torsiondrive.sockets import TorsiondriveRecordSocket
         from .gridoptimization.sockets import GridoptimizationRecordSocket
         from .reaction.sockets import ReactionRecordSocket
+        from .manybody.sockets import ManybodyRecordSocket
 
         self.singlepoint = SinglepointRecordSocket(root_socket)
         self.optimization = OptimizationRecordSocket(root_socket)
         self.torsiondrive = TorsiondriveRecordSocket(root_socket)
         self.gridoptimization = GridoptimizationRecordSocket(root_socket)
         self.reaction = ReactionRecordSocket(root_socket)
+        self.manybody = ManybodyRecordSocket(root_socket)
 
         self._handler_map: Dict[str, BaseRecordSocket] = {
             "singlepoint": self.singlepoint,
@@ -256,6 +258,7 @@ class RecordSocket:
             "torsiondrive": self.torsiondrive,
             "gridoptimization": self.gridoptimization,
             "reaction": self.reaction,
+            "manybody": self.manybody,
         }
 
         self._handler_map_by_schema: Dict[str, BaseRecordSocket] = {

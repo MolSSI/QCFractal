@@ -350,6 +350,7 @@ def run_service_singlepoint(
     storage_socket: SQLAlchemySocket,
     max_iterations: int = 20,
     activate_manager: bool = True,
+    use_hash: bool = False,
 ) -> Tuple[bool, int]:
     """
     Runs a service that is based on singlepoint calculations
@@ -407,9 +408,12 @@ def run_service_singlepoint(
         manager_ret = {}
         for sp in sp_recs:
             # Find out info about what tasks the service spawned
-            mol_form = sp["molecule"]["identifiers"]["molecular_formula"]
+            if use_hash:
+                mol_lookup = sp["molecule"]["identifiers"]["molecule_hash"]
+            else:
+                mol_lookup = sp["molecule"]["identifiers"]["molecular_formula"]
 
-            sp_data = result_data[mol_form]
+            sp_data = result_data[mol_lookup]
             manager_ret[sp["task"]["id"]] = sp_data
 
         rmeta = storage_socket.tasks.update_finished(mname1.fullname, manager_ret)

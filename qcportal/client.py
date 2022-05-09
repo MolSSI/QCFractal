@@ -58,6 +58,12 @@ from .records.gridoptimization import (
     GridoptimizationRecord,
     GridoptimizationQueryFilters,
 )
+from .records.manybody import (
+    ManybodyKeywords,
+    ManybodyRecord,
+    ManybodyAddBody,
+    ManybodyQueryFilters,
+)
 from .records.optimization import (
     OptimizationProtocols,
     OptimizationRecord,
@@ -2504,6 +2510,309 @@ class PortalClient(PortalClientBase):
             ReactionQueryFilters,
             None,
             Tuple[QueryMetadata, List[ReactionRecord._DataModel]],
+            query_data,
+            None,
+        )
+
+        return meta, records_from_datamodels(record_data, self)
+
+    ##############################################################
+    # Manybody calculations
+    ##############################################################
+
+    def add_manybodys(
+        self,
+        initial_molecules: Sequence[Union[int, Molecule]],
+        program: str,
+        qc_specification: QCSpecification,
+        keywords: ManybodyKeywords,
+        tag: str = "*",
+        priority: PriorityEnum = PriorityEnum.normal,
+    ) -> Tuple[InsertMetadata, List[int]]:
+        """
+        Adds new manybody expansion computations to the server
+
+        This checks if the calculations already exist in the database. If so, it returns
+        the existing id, otherwise it will insert it and return the new id.
+
+        This will add one record per initial molecule.
+
+        Parameters
+        ----------
+        initial_molecules
+            Initial molecules for the manybody expansion. Must have > 1 fragments.
+        qc_specification
+            Specification for the singlepoint calculations done in the expansion
+        keywords
+            The keywords for the manybody program
+        tag
+            The tag for the task. This will assist in routing to appropriate compute managers.
+        priority
+            The priority of the job (high, normal, low). Default is normal.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and a list of record ids. The ids will be in the
+            order of the input molecules
+        """
+
+        initial_molecules = make_list(initial_molecules)
+        if not initial_molecules:
+            return InsertMetadata(), []
+
+        if len(initial_molecules) > self.api_limits["add_records"]:
+            raise RuntimeError(
+                f"Cannot add {len(initial_molecules)} records - over the limit of {self.api_limits['add_records']}"
+            )
+
+        body_data = {
+            "initial_molecules": initial_molecules,
+            "specification": {
+                "program": program,
+                "qc_specification": qc_specification,
+                "keywords": keywords,
+            },
+            "tag": tag,
+            "priority": priority,
+        }
+
+        return self._auto_request(
+            "post",
+            "v1/records/manybody/bulkCreate",
+            ManybodyAddBody,
+            None,
+            Tuple[InsertMetadata, List[int]],
+            body_data,
+            None,
+        )
+
+    def get_manybodys(
+        self,
+        record_ids: Union[int, Sequence[int]],
+        missing_ok: bool = False,
+        *,
+        include_service: bool = False,
+        include_outputs: bool = False,
+        include_comments: bool = False,
+        include_initial_molecule: bool = False,
+        include_clusters: bool = False,
+    ) -> Union[Optional[ManybodyRecord], List[Optional[ManybodyRecord]]]:
+        """
+        Obtain manybody records with the specified IDs.
+
+        Records will be returned in the same order as the record ids.
+
+        Parameters
+        ----------
+        record_ids
+            Single ID or sequence/list of records to obtain
+        missing_ok
+            If set to True, then missing records will be tolerated, and the returned
+            records will contain None for the corresponding IDs that were not found.
+        include_service
+            If True, include the service information as part of the record
+        include_outputs
+            If True, include the outputs as part of the record
+        include_comments
+            If True, include the comments as part of the record
+        include_initial_molecule
+            If True, include the full initial molecule as part of the record
+        include_clusters
+            If True, include the full cluster calculations (molecules and singlepoint records) as part of the record
+
+        Returns
+        -------
+        :
+            If a single ID was specified, returns just that record. Otherwise, returns
+            a list of records.  If missing_ok was specified, None will be substituted for a record
+            that was not found.
+        """
+
+        is_single = not isinstance(record_ids, Sequence)
+
+        record_ids = make_list(record_ids)
+        if not record_ids:
+            return []
+
+        if len(record_ids) > self.api_limits["get_records"]:
+            raise RuntimeError(
+                f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
+            )
+
+        body_data = {"ids": record_ids, "missing_ok": missing_ok}
+
+        include = set()
+
+        # We must add '*' so that all the default fields are included
+        if include_service:
+            include |= {"*", "service"}
+        if include_outputs:
+            include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_comments:
+            include |= {"*", "comments"}
+        if include_initial_molecule:
+            include |= {"*", "initial_molecule"}
+        if include_clusters:
+            include |= {"*", "clusters.*", "clusters.molecule", "clusters.singlepoint_record"}
+
+        if include:
+            body_data["include"] = include
+
+        record_data = self._auto_request(
+            "post",
+            "v1/records/manybody/bulkGet",
+            CommonBulkGetBody,
+            None,
+            List[Optional[ManybodyRecord._DataModel]],
+            body_data,
+            None,
+        )
+
+        records = records_from_datamodels(record_data, self)
+
+        if is_single:
+            return records[0]
+        else:
+            return records
+
+    def query_manybodys(
+        self,
+        record_id: Optional[Iterable[int]] = None,
+        manager_name: Optional[Iterable[str]] = None,
+        status: Optional[Iterable[RecordStatusEnum]] = None,
+        dataset_id: Optional[Iterable[int]] = None,
+        parent_id: Optional[Iterable[int]] = None,
+        child_id: Optional[Iterable[int]] = None,
+        created_before: Optional[datetime] = None,
+        created_after: Optional[datetime] = None,
+        modified_before: Optional[datetime] = None,
+        modified_after: Optional[datetime] = None,
+        program: Optional[Iterable[str]] = None,
+        qc_program: Optional[Iterable[str]] = None,
+        qc_method: Optional[Iterable[str]] = None,
+        qc_basis: Optional[Iterable[Optional[str]]] = None,
+        initial_molecule_id: Optional[Iterable[int]] = None,
+        limit: Optional[int] = None,
+        skip: int = 0,
+        *,
+        include_task: bool = False,
+        include_service: bool = False,
+        include_outputs: bool = False,
+        include_comments: bool = False,
+        include_initial_molecule: bool = False,
+        include_clusters: bool = False,
+    ) -> Tuple[QueryMetadata, List[GridoptimizationRecord]]:
+        """
+        Queries reaction records on the server
+
+        Do not count on the returned records being in any particular order.
+
+        Parameters
+        ----------
+        record_id
+            Query records whose ID is in the given list
+        manager_name
+            Query records that were completed (or are currently runnning) on a manager is in the given list
+        status
+            Query records whose status is in the given list
+        dataset_id
+            Query records that are part of a dataset is in the given list
+        parent_id
+            Query records that have a parent is in the given list
+        child_id
+            Query records that have a child (optimization calculation) is in the given list
+        created_before
+            Query records that were created before the given date/time
+        created_after
+            Query records that were created after the given date/time
+        modified_before
+            Query records that were modified before the given date/time
+        modified_after
+            Query records that were modified after the given date/time
+        program
+            Query records whose reaction program is in the given list
+        qc_program
+            Query records whose qc program is in the given list
+        qc_method
+            Query records whose qc method is in the given list
+        qc_basis
+            Query records whose qc basis is in the given list
+        initial_molecule_id
+            Query manybody calculations that contain an initial molecule (id) is in the given list
+        limit
+            The maximum number of records to return. Note that the server limit is always obeyed.
+        skip
+            The number of records to skip in the query. This can be used for pagination
+        include_task
+            If True, include the task information as part of the record
+        include_service
+            If True, include the service information as part of the record
+        include_outputs
+            If True, include the outputs as part of the record
+        include_comments
+            If True, include the comments as part of the record
+        include_initial_molecule
+            If True, include the full initial molecule as part of the record
+        include_clusters
+            If True, include the full cluster calculations (molecules and singlepoint records) as part of the record
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of records
+            that were found on the server.
+        """
+
+        if limit is not None and limit > self.api_limits["get_records"]:
+            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
+            limit = min(limit, self.api_limits["get_records"])
+
+        query_data = {
+            "record_id": make_list(record_id),
+            "manager_name": make_list(manager_name),
+            "status": make_list(status),
+            "dataset_id": make_list(dataset_id),
+            "parent_id": make_list(parent_id),
+            "child_id": make_list(child_id),
+            "program": make_list(program),
+            "qc_program": make_list(qc_program),
+            "qc_method": make_list(qc_method),
+            "qc_basis": make_list(qc_basis),
+            "initial_molecule_id": make_list(initial_molecule_id),
+            "created_before": created_before,
+            "created_after": created_after,
+            "modified_before": modified_before,
+            "modified_after": modified_after,
+            "limit": limit,
+            "skip": skip,
+        }
+
+        include = set()
+
+        # We must add '*' so that all the default fields are included
+        if include_task:
+            include |= {"*", "task"}
+        if include_service:
+            include |= {"*", "service"}
+        if include_outputs:
+            include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_comments:
+            include |= {"*", "comments"}
+        if include_initial_molecule:
+            include |= {"*", "initial_molecule"}
+        if include_clusters:
+            include |= {"*", "clusters"}
+
+        if include:
+            query_data["include"] = include
+
+        meta, record_data = self._auto_request(
+            "post",
+            "v1/records/manybody/query",
+            ManybodyQueryFilters,
+            None,
+            Tuple[QueryMetadata, List[ManybodyRecord._DataModel]],
             query_data,
             None,
         )

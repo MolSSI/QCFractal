@@ -138,6 +138,7 @@ class ServiceSocket:
                         "error_type": "service_iteration_error",
                         "error_message": "Error iterating service: " + str(err),
                     }
+                    print(error)
                     self.root_socket.records.update_failed_service(session, service_orm.record, error)
                     session.commit()
                     self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.error)
@@ -242,6 +243,7 @@ class ServiceSocket:
                             "error_type": "service_initialization_error",
                             "error_message": "Error in initialization/iteration of service: " + str(err),
                         }
+                        print(error)
 
                         self.root_socket.records.update_failed_service(session, service_orm.record, error)
                         session.commit()
