@@ -13,6 +13,7 @@ from .torsiondrive.models import TorsiondriveRecord
 from .gridoptimization.models import GridoptimizationRecord
 from .reaction.models import ReactionRecord
 from .manybody.models import ManybodyRecord
+from .neb.models import NEBRecord
 
 AllRecordTypes = Union[
     SinglepointRecord,
@@ -21,6 +22,7 @@ AllRecordTypes = Union[
     GridoptimizationRecord,
     ReactionRecord,
     ManybodyRecord,
+    NEBRecord,
 ]
 AllRecordDataModelTypes = Union[
     SinglepointRecord._DataModel,
@@ -29,6 +31,7 @@ AllRecordDataModelTypes = Union[
     GridoptimizationRecord._DataModel,
     ReactionRecord._DataModel,
     ManybodyRecord._DataModel,
+    NEBRecord._DataModel,
 ]
 
 

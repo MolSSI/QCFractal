@@ -1,0 +1,1878 @@
+{
+    "molecule": [
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -1.4210480022690202,
+                -1.5632453984335217,
+                0.0,
+                0.07459757258374447,
+                0.0821504320373475,
+                0.0,
+                1.3464504296852755,
+                1.4810949663961743,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -1.3728517631368042,
+                -1.6008278964894436,
+                0.0,
+                -0.024253140225179794,
+                0.1705636439747302,
+                0.0,
+                1.3971049035509566,
+                1.4302642525147133,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -1.3705442556046559,
+                -1.6217538065094608,
+                0.0,
+                -0.06532525851030375,
+                0.17644454934230933,
+                0.0,
+                1.4358695141149596,
+                1.4453092571671518,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -1.3533089147545905,
+                -1.6276487754078321,
+                0.0,
+                -0.09813944578486304,
+                0.19443352752176635,
+                0.0,
+                1.4514483603504809,
+                1.4332152478860658,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -1.2833190118696967,
+                -1.6348852862044052,
+                0.0,
+                -0.1775472005676036,
+                0.2903668526046289,
+                0.0,
+                1.4608662124373004,
+                1.3445184335997762,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -1.2107328794577308,
+                -1.635510667254801,
+                0.0,
+                -0.25215328372192297,
+                0.38341052603867865,
+                0.0,
+                1.4628861631796535,
+                1.2521001412161223,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -1.1315540149172463,
+                -1.6193480851863002,
+                0.0,
+                -0.3145662482629339,
+                0.46911636590772293,
+                0.0,
+                1.4461202631801802,
+                1.1502317192785774,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -1.0523751501877892,
+                -1.6031855031177997,
+                0.0,
+                -0.3769792129929174,
+                0.5548222059657398,
+                0.0,
+                1.4293543631807066,
+                1.0483632973410326,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -0.9645959549712466,
+                -1.5723962127547524,
+                0.0,
+                -0.4441231543190547,
+                0.624083193485322,
+                0.0,
+                1.4087191092903013,
+                0.9483130194584029,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -0.8740768216581146,
+                -1.5401418753639295,
+                0.0,
+                -0.5206561794863529,
+                0.68638738614649,
+                0.0,
+                1.3947330011444674,
+                0.8537544892174396,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -0.789394153023289,
+                -1.5161133304114698,
+                0.0,
+                -0.6005095124140738,
+                0.7489681489187371,
+                0.0,
+                1.3899036654373627,
+                0.7671451813037601,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -0.7713816999100214,
+                -1.5618612895094997,
+                0.0,
+                -0.6061312227574266,
+                0.8854454006068078,
+                0.0,
+                1.377512922667448,
+                0.676415888902692,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -0.7058459844909442,
+                -1.552732944031891,
+                0.0,
+                -0.7086086652524708,
+                0.9097328673290962,
+                0.0,
+                1.414454649743415,
+                0.6430000767027948,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -0.6207987816395546,
+                -1.4407146891284957,
+                0.0,
+                -0.7564024148299369,
+                0.8169874556053923,
+                0.0,
+                1.3772011962805188,
+                0.6237272333341307,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -0.5691222817136864,
+                -1.399917745391708,
+                0.0,
+                -0.8580401197269811,
+                0.7401152497320812,
+                0.0,
+                1.4271624014406674,
+                0.6598024958485993,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -0.5356793540225997,
+                -1.3980357421998082,
+                0.0,
+                -0.9890978715936098,
+                0.6719160775900758,
+                0.0,
+                1.5247772256162093,
+                0.7261196646097325,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -0.5022364263315129,
+                -1.3961537390079086,
+                0.0,
+                -1.1201556234602383,
+                0.6037169056370429,
+                0.0,
+                1.6223920496027788,
+                0.7924368333708657,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -0.5162288748864399,
+                -1.3871342487470648,
+                0.0,
+                -1.1829011671380185,
+                0.4815827011241297,
+                0.0,
+                1.6991300420244584,
+                0.9055515476229352,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -0.5150105334939604,
+                -1.3683179380767532,
+                0.0,
+                -1.2488321922864074,
+                0.3710361777767307,
+                0.0,
+                1.7638427257803677,
+                0.9972817603000224,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -0.4162319596570354,
+                -1.3016654476193261,
+                0.0,
+                -1.3450243968092335,
+                0.356637796586055,
+                0.0,
+                1.7612563564662689,
+                0.9450276510332711,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -0.34800413756622717,
+                -1.2783152351660825,
+                0.0,
+                -1.3544050082522874,
+                0.45882263710049637,
+                0.0,
+                1.7024091458185144,
+                0.819492598065586,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -0.276132592616096,
+                -1.2441311294878885,
+                0.0,
+                -1.3642447218543048,
+                0.5456501127614282,
+                0.0,
+                1.6403773144704008,
+                0.6984810167264605,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -0.19350578726786868,
+                -1.1779683723270973,
+                0.0,
+                -1.3754395784693336,
+                0.5871469010727169,
+                0.0,
+                1.5689453657372026,
+                0.5908214712543804,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -0.1108789817306688,
+                -1.1118056153552789,
+                0.0,
+                -1.3866344350843627,
+                0.6286436895729783,
+                0.0,
+                1.497513417004004,
+                0.48316192559332777,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                -0.02228498914357377,
+                -1.0236260187313542,
+                0.0,
+                -1.4555186221751062,
+                0.5730619576049488,
+                0.0,
+                1.4778036113186799,
+                0.4505640611264054,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                0.07141018381255801,
+                -0.9166248447704084,
+                0.0,
+                -1.5737197958297016,
+                0.43449052748823985,
+                0.0,
+                1.5023096120171435,
+                0.4821343172821685,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                0.1651053569576624,
+                -0.8096236709984352,
+                0.0,
+                -1.6919209696732698,
+                0.29591909737153094,
+                0.0,
+                1.5268156125266348,
+                0.5137045736269042,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                0.25880053010276677,
+                -0.7026224970374895,
+                0.0,
+                -1.8101221433278651,
+                0.157347667254822,
+                0.0,
+                1.5513216132250984,
+                0.5452748299716401,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                0.29631751381059157,
+                -0.6159673927450153,
+                0.0,
+                -1.8917924071063295,
+                -0.031239845290749427,
+                0.0,
+                1.5954748931067653,
+                0.6472072380357649,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                0.3040441524786151,
+                -0.5401014652771771,
+                0.0,
+                -1.9540909458959048,
+                -0.24635004194066845,
+                0.0,
+                1.6500467936062624,
+                0.7864515070288729,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                0.31177079095766613,
+                -0.4642355378093386,
+                0.0,
+                -2.0163894848744532,
+                -0.4614602384016149,
+                0.0,
+                1.704618693916787,
+                0.9256957762109536,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                0.3194974296256897,
+                -0.38836961034150025,
+                0.0,
+                -2.0786880238530014,
+                -0.6765704348625613,
+                0.0,
+                1.7591905942273118,
+                1.0649400453930342,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                0.25850977684123183,
+                -0.28208399081524727,
+                0.0,
+                -1.9745413586820741,
+                -0.9392714607869033,
+                0.0,
+                1.7160315818408423,
+                1.2213554516021505,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                0.18498172971765262,
+                -0.17024676128109748,
+                0.0,
+                -1.8400183555494831,
+                -1.2106578382443491,
+                0.0,
+                1.6550366260208031,
+                1.3809045995254468,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                0.1114536824051008,
+                -0.05840953174694767,
+                0.0,
+                -1.705495352605865,
+                -1.4820442155128224,
+                0.0,
+                1.5940416700117914,
+                1.540453747448743,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                0.1085461152077635,
+                -0.09522386312519553,
+                0.0,
+                -1.669308156132829,
+                -1.3690941527200464,
+                0.0,
+                1.5607620411140382,
+                1.4643180158452418,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                0.1168978903956223,
+                -0.15573838499085826,
+                0.0,
+                -1.6487990820903542,
+                -1.1948675928826085,
+                0.0,
+                1.5319011918837044,
+                1.3506059780624395,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                0.1252496653945085,
+                -0.21625290685652096,
+                0.0,
+                -1.6282900082368517,
+                -1.0206410332341431,
+                0.0,
+                1.5030403426533705,
+                1.2368939402796368,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                0.13291802528679386,
+                -0.2733013325596711,
+                0.0,
+                -1.6081240799237442,
+                -0.855969829893202,
+                0.0,
+                1.4752060546369505,
+                1.1292711624528733,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                0.11434015799121591,
+                -0.19723606619774092,
+                0.0,
+                -1.601136491600184,
+                -1.058267294512522,
+                0.0,
+                1.4867963337979406,
+                1.2555033605212902,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                0.09858512521916361,
+                -0.12126951156965665,
+                0.0,
+                -1.597535521715732,
+                -1.2573181862171308,
+                0.0,
+                1.4989503964965685,
+                1.3785876977867875,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                0.11308962719290211,
+                -0.04491848139007841,
+                0.0,
+                -1.620639765148923,
+                -1.4141494342188756,
+                0.0,
+                1.507550137956021,
+                1.4590679154199813,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        },
+        {
+            "schema_name": "qcschema_molecule",
+            "schema_version": 2,
+            "validated": true,
+            "symbols": [
+                "C",
+                "N",
+                "H"
+            ],
+            "geometry": [
+                0.03670992476575274,
+                0.040372655246327584,
+                0.0,
+                -1.4341736986461324,
+                -1.5774648771732804,
+                0.0,
+                1.397463773691407,
+                1.537092221926953,
+                0.0
+            ],
+            "name": "CHN",
+            "molecular_charge": 0.0,
+            "molecular_multiplicity": 1,
+            "fix_com": false,
+            "fix_orientation": false,
+            "provenance": {
+                "creator": "QCElemental",
+                "version": "v0.24.0",
+                "routine": "qcelemental.molparse.from_schema"
+            }
+        }
+    ],
+    "record_type": "neb",
+    "result": {
+        "driver": "gradient",
+        "error": null,
+        "properties": {
+            "return_energy": [
+                -92.8537345808067,
+                -92.85300878046883,
+                -92.85067194975288,
+                -92.84977405636812,
+                -92.84965829959964,
+                -92.84761321649079,
+                -92.84484859387561,
+                -92.84023673919712,
+                -92.83601787194694,
+                -92.83129675038843,
+                -92.82541506647827,
+                -92.80238142011825,
+                -92.79403744690526,
+                -92.81438628290788,
+                -92.80211566757403,
+                -92.77912477246909,
+                -92.75431673489891,
+                -92.69967087131434,
+                -92.62501402192385,
+                -92.63934814567327,
+                -92.7140012097372,
+                -92.754947057264,
+                -92.77473020428671,
+                -92.78888682194307,
+                -92.79270854573744,
+                -92.79813557439871,
+                -92.80660232434744,
+                -92.80548996382092,
+                -92.81488686352199,
+                -92.8291739023415,
+                -92.83106294388182,
+                -92.81653279518937,
+                -92.84162562932875,
+                -92.85461562825608,
+                -92.84951731751909,
+                -92.86841175988178,
+                -92.86290304920084,
+                -92.82262890273263,
+                -92.75711535733494,
+                -92.81902005635291,
+                -92.86327077222526,
+                -92.87003219133858,
+                -92.87329119191874
+            ],
+            "return_gradients": [
+                [
+                    -0.036300570496,
+                    -0.03993648632,
+                    -0.0,
+                    0.02583250998,
+                    0.028423981437,
+                    0.0,
+                    0.010468060516,
+                    0.011512504883,
+                    -0.0
+                ],
+                [
+                    -0.031478156014,
+                    -0.044565756083,
+                    0.0,
+                    0.015394767408,
+                    0.033365848505,
+                    -0.0,
+                    0.016083388606,
+                    0.011199907578,
+                    0.0
+                ],
+                [
+                    -0.025755611345,
+                    -0.039382973775,
+                    0.0,
+                    -0.014017917746,
+                    0.009155361335,
+                    -0.0,
+                    0.039773529091,
+                    0.03022761244,
+                    -0.0
+                ],
+                [
+                    -0.016554466869,
+                    -0.02916367011,
+                    0.0,
+                    -0.029921678999,
+                    -0.00383353235,
+                    -0.0,
+                    0.046476145867,
+                    0.03299720246,
+                    -0.0
+                ],
+                [
+                    -0.012777657137,
+                    -0.032081042981,
+                    0.0,
+                    -0.02391341316,
+                    0.015111052679,
+                    -0.0,
+                    0.036691070297,
+                    0.016969990302,
+                    0.0
+                ],
+                [
+                    -0.011040325988,
+                    -0.038907624223,
+                    0.0,
+                    -0.014759697494,
+                    0.034589515509,
+                    0.0,
+                    0.025800023482,
+                    0.004318108714,
+                    -0.0
+                ],
+                [
+                    -0.00474931916,
+                    -0.036713940571,
+                    -0.0,
+                    -0.00221555233,
+                    0.045422000644,
+                    -0.0,
+                    0.00696487149,
+                    -0.008708060074,
+                    0.0
+                ],
+                [
+                    -0.002529666788,
+                    -0.044313855303,
+                    0.0,
+                    0.009362254051,
+                    0.059727678854,
+                    -0.0,
+                    -0.006832587264,
+                    -0.015413823551,
+                    0.0
+                ],
+                [
+                    0.006594093802,
+                    -0.029364397643,
+                    0.0,
+                    0.003331315838,
+                    0.047166918917,
+                    0.0,
+                    -0.00992540964,
+                    -0.017802521274,
+                    -0.0
+                ],
+                [
+                    0.011921172397,
+                    -0.01687221418,
+                    -0.0,
+                    -0.01282410768,
+                    0.033764185611,
+                    0.0,
+                    0.000902935284,
+                    -0.016891971431,
+                    0.0
+                ],
+                [
+                    0.011183562844,
+                    -0.030567239036,
+                    0.0,
+                    -0.028692786178,
+                    0.046034929402,
+                    -0.0,
+                    0.017509223334,
+                    -0.015467690366,
+                    0.0
+                ],
+                [
+                    0.002996626289,
+                    -0.165345512973,
+                    0.0,
+                    -0.009996714821,
+                    0.183554581154,
+                    -0.0,
+                    0.007000088531,
+                    -0.018209068182,
+                    -0.0
+                ],
+                [
+                    0.010675672808,
+                    -0.172070942419,
+                    -0.0,
+                    -0.05196464188,
+                    0.189416715846,
+                    -0.0,
+                    0.041288969071,
+                    -0.017345773428,
+                    0.0
+                ],
+                [
+                    0.010958624534,
+                    -0.018288358766,
+                    -0.0,
+                    -0.049572454381,
+                    0.032219634801,
+                    -0.0,
+                    0.038613829846,
+                    -0.013931276035,
+                    0.0
+                ],
+                [
+                    -0.013592255358,
+                    0.110947364243,
+                    -0.0,
+                    -0.050954658497,
+                    -0.107380617489,
+                    0.0,
+                    0.064546913855,
+                    -0.003566746754,
+                    -0.0
+                ],
+                [
+                    -0.048957679079,
+                    0.170996900669,
+                    0.0,
+                    -0.03621986015,
+                    -0.182303718062,
+                    -0.0,
+                    0.085177539229,
+                    0.011306817393,
+                    0.0
+                ],
+                [
+                    -0.08891051747,
+                    0.206957299069,
+                    0.0,
+                    -0.001630273078,
+                    -0.231392061221,
+                    -0.0,
+                    0.090540790548,
+                    0.024434762152,
+                    0.0
+                ],
+                [
+                    -0.188088071765,
+                    0.431693923759,
+                    -0.0,
+                    0.095193172899,
+                    -0.46745675904,
+                    0.0,
+                    0.092894898865,
+                    0.03576283528,
+                    -0.0
+                ],
+                [
+                    -0.334966333728,
+                    0.68465532288,
+                    -0.0,
+                    0.246019223872,
+                    -0.729769047867,
+                    -0.0,
+                    0.088947109855,
+                    0.045113724987,
+                    0.0
+                ],
+                [
+                    -0.396934576816,
+                    0.58158437094,
+                    0.0,
+                    0.316480569025,
+                    -0.634832970132,
+                    -0.0,
+                    0.080454007791,
+                    0.053248599192,
+                    0.0
+                ],
+                [
+                    -0.246157450872,
+                    0.305405022207,
+                    0.0,
+                    0.168071972555,
+                    -0.35395643269,
+                    -0.0,
+                    0.078085478317,
+                    0.048551410483,
+                    0.0
+                ],
+                [
+                    -0.149367590516,
+                    0.136031509911,
+                    0.0,
+                    0.079579582066,
+                    -0.179292702532,
+                    -0.0,
+                    0.06978800845,
+                    0.043261192621,
+                    0.0
+                ],
+                [
+                    -0.115479733044,
+                    0.077853500765,
+                    0.0,
+                    0.063767388645,
+                    -0.115894516076,
+                    -0.0,
+                    0.051712344399,
+                    0.038041015311,
+                    -0.0
+                ],
+                [
+                    -0.062846468033,
+                    0.032168251695,
+                    0.0,
+                    0.043880995944,
+                    -0.054907426013,
+                    -0.0,
+                    0.018965472088,
+                    0.022739174319,
+                    0.0
+                ],
+                [
+                    -0.051122436446,
+                    0.037347634196,
+                    -0.0,
+                    0.068754708183,
+                    -0.047663108798,
+                    0.0,
+                    -0.017632271737,
+                    0.010315474602,
+                    0.0
+                ],
+                [
+                    -0.048132612481,
+                    0.034648876116,
+                    -0.0,
+                    0.096280338695,
+                    -0.036513899456,
+                    0.0,
+                    -0.048147726216,
+                    0.00186502334,
+                    0.0
+                ],
+                [
+                    0.035648662619,
+                    0.008986414356,
+                    0.0,
+                    0.05011488218,
+                    0.014245434793,
+                    -0.0,
+                    -0.085763544799,
+                    -0.023231849149,
+                    -0.0
+                ],
+                [
+                    0.192289933638,
+                    0.005997348954,
+                    -0.0,
+                    -0.058596263658,
+                    0.062317075085,
+                    0.0,
+                    -0.133693669981,
+                    -0.068314424039,
+                    -0.0
+                ],
+                [
+                    0.221674815506,
+                    0.000631448459,
+                    -0.0,
+                    -0.103300804685,
+                    0.059963719136,
+                    0.0,
+                    -0.118374010822,
+                    -0.060595167595,
+                    0.0
+                ],
+                [
+                    0.205352239851,
+                    -0.019091346017,
+                    -0.0,
+                    -0.133022716726,
+                    0.04459362903,
+                    0.0,
+                    -0.072329523126,
+                    -0.025502283013,
+                    0.0
+                ],
+                [
+                    0.226770536589,
+                    -0.022773939878,
+                    0.0,
+                    -0.192151831506,
+                    0.021599406104,
+                    -0.0,
+                    -0.034618705082,
+                    0.001174533774,
+                    0.0
+                ],
+                [
+                    0.263909112017,
+                    -0.005429216364,
+                    -0.0,
+                    -0.259749185615,
+                    -0.015893652563,
+                    0.0,
+                    -0.004159926402,
+                    0.021322868927,
+                    -0.0
+                ],
+                [
+                    0.191735146004,
+                    0.010151276111,
+                    -0.0,
+                    -0.203102708871,
+                    -0.044806789351,
+                    0.0,
+                    0.011367562866,
+                    0.03465551324,
+                    0.0
+                ],
+                [
+                    0.128492100783,
+                    0.024151326919,
+                    0.0,
+                    -0.15375471979,
+                    -0.067140004486,
+                    0.0,
+                    0.025262619005,
+                    0.042988677567,
+                    -0.0
+                ],
+                [
+                    0.123054083364,
+                    0.071759594465,
+                    -0.0,
+                    -0.160978163677,
+                    -0.120077274244,
+                    0.0,
+                    0.037924080312,
+                    0.048317679779,
+                    -0.0
+                ],
+                [
+                    0.030487899268,
+                    -0.007993221197,
+                    0.0,
+                    -0.057865361685,
+                    -0.032445538314,
+                    -0.0,
+                    0.027377462416,
+                    0.040438759511,
+                    -0.0
+                ],
+                [
+                    -0.151896853648,
+                    -0.127472406916,
+                    0.0,
+                    0.142431632097,
+                    0.098758387284,
+                    -0.0,
+                    0.009465221551,
+                    0.028714019632,
+                    -0.0
+                ],
+                [
+                    -0.417177523693,
+                    -0.234562009268,
+                    -0.0,
+                    0.430393225294,
+                    0.219901688738,
+                    0.0,
+                    -0.013215701602,
+                    0.01466032053,
+                    -0.0
+                ],
+                [
+                    -0.726805559142,
+                    -0.286242243487,
+                    -0.0,
+                    0.76659632431,
+                    0.287578823369,
+                    0.0,
+                    -0.039790765169,
+                    -0.001336579881,
+                    0.0
+                ],
+                [
+                    -0.436286595306,
+                    -0.259420481155,
+                    0.0,
+                    0.44945243978,
+                    0.246819591801,
+                    -0.0,
+                    -0.013165844474,
+                    0.012600889353,
+                    -0.0
+                ],
+                [
+                    -0.157125707505,
+                    -0.13635597617,
+                    -0.0,
+                    0.14971750349,
+                    0.11300656731,
+                    -0.0,
+                    0.007408204014,
+                    0.023349408859,
+                    0.0
+                ],
+                [
+                    0.069838206386,
+                    0.036440153838,
+                    -0.0,
+                    -0.079136316638,
+                    -0.055352932197,
+                    0.0,
+                    0.009298110252,
+                    0.018912778358,
+                    -0.0
+                ],
+                [
+                    0.03965849437,
+                    0.043620079488,
+                    0.0,
+                    -0.045759766388,
+                    -0.050331286038,
+                    0.0,
+                    0.006101272017,
+                    0.006711206549,
+                    -0.0
+                ]
+            ]
+        }
+    },
+    "specification": {
+        "keywords": {
+            "images": 21,
+            "spring_constant": 1.0,
+            "energy_weighted": true
+        },
+        "qc_specification": {
+            "basis": "sto-3g",
+            "keywords": {},
+            "method": "b3lyp",
+            "program": "psi4"
+        },
+        "program": "geometric"
+    }
+}

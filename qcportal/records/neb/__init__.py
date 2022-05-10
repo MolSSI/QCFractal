@@ -1,5 +1,4 @@
 from .models import (
-    NEBQCSpecification,
     NEBKeywords,
     NEBSpecification,
     NEBSinglepoints,

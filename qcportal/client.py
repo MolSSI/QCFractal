@@ -87,6 +87,14 @@ from .records.torsiondrive import (
     TorsiondriveRecord,
     TorsiondriveQueryFilters,
 )
+
+from . records.neb import (
+    NEBKeywords,
+    NEBAddBody,
+    NEBQueryBody,
+    NEBRecord,
+)
+
 from .serverinfo import (
     AccessLogQueryFilters,
     AccessLogSummaryFilters,
@@ -2318,6 +2326,200 @@ class PortalClient(PortalClientBase):
         filter_data = ManybodyQueryFilters(**filter_dict)
 
         return RecordQueryIterator(self, filter_data, "manybody")
+
+    ##############################################################
+    # NEB
+    ##############################################################
+
+    def add_nebs(
+        self,
+        initial_chain: List[List[Union[int, Molecule]]],
+        program: str,
+        qc_specification: QCSpecification,
+        keywords: Union[NEBKeywords, Dict[str, Any]],
+        tag: str = "*",
+        priority: PriorityEnum = PriorityEnum.normal,
+    ) -> Tuple[InsertMetadata, List[int]]:
+        """
+        Adds neb calculations to the server
+        """
+
+        if not initial_chain:
+            return InsertMetadata(), []
+
+        body_data = {
+            "initial_chain": initial_chain,
+            "specification": {
+                "program": program,
+                "qc_specification": qc_specification,
+                "keywords": keywords,
+            },
+            "as_service": True,
+            "tag": tag,
+            "priority": priority,
+        }
+
+        if len(body_data["initial_chain"]) > self.api_limits["add_records"]:
+            raise RuntimeError(
+                f"Cannot add {len(body_data['initial_chain'])} records - over the limit of {self.api_limits['add_records']}"
+            )
+
+        return self._auto_request(
+            "post",
+            "v1/records/neb/bulkCreate",
+            NEBAddBody,
+            None,
+            Tuple[InsertMetadata, List[int]],
+            body_data,
+            None,
+        )
+
+    def get_nebs(
+        self,
+        record_ids: Union[int, Sequence[int]],
+        missing_ok: bool = False,
+        *,
+        include_task: bool = False,
+        include_service: bool = False,
+        include_outputs: bool = False,
+        include_comments: bool = False,
+        include_initial_chain: bool = False,
+        include_singlepoins: bool = False,
+    ) -> Union[Optional[NEBRecord], List[Optional[NEBRecord]]]:
+
+        record_ids_lst = make_list(record_ids)
+        if not record_ids_lst:
+            return []
+
+        body_data = {"ids": record_ids_lst, "missing_ok": missing_ok}
+
+        include = set()
+
+        # We must add '*' so that all the default fields are included
+        if include_task:
+            include |= {"*", "task"}
+        if include_service:
+            include |= {"*", "service"}
+        if include_outputs:
+            include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_comments:
+            include |= {"*", "comments"}
+        if include_initial_chain:
+            include |= {"*", "initial_chain"}
+        if include_singlepoints:
+            include |= {"*", "singlepoints.*", "singlepoints.singlepoint_record"}
+
+        if include:
+            body_data["include"] = include
+
+        if len(body_data["ids"]) > self.api_limits["get_records"]:
+            raise RuntimeError(
+                f"Cannot get {len(body_data['ids'])} records - over the limit of {self.api_limits['get_records']}"
+            )
+
+        record_data = self._auto_request(
+            "post",
+            "v1/records/neb/bulkGet",
+            CommonBulkGetBody,
+            None,
+            List[Optional[NEBRecord._DataModel]],
+            body_data,
+            None,
+        )
+
+        records = records_from_datamodels(record_data, self)
+
+        if isinstance(record_ids, Sequence):
+            return records
+        else:
+            return records[0]
+
+    def query_nebs(
+        self,
+        record_id: Optional[Iterable[int]] = None,
+        manager_name: Optional[Iterable[str]] = None,
+        status: Optional[Iterable[RecordStatusEnum]] = None,
+        dataset_id: Optional[Iterable[int]] = None,
+        parent_id: Optional[Iterable[int]] = None,
+        child_id: Optional[Iterable[int]] = None,
+        created_before: Optional[datetime] = None,
+        created_after: Optional[datetime] = None,
+        modified_before: Optional[datetime] = None,
+        modified_after: Optional[datetime] = None,
+        program: Optional[Iterable[str]] = None,
+        neb_program: Optional[Iterable[str]] = None,
+        qc_program: Optional[Iterable[str]] = None,
+        qc_method: Optional[Iterable[str]] = None,
+        qc_basis: Optional[Iterable[Optional[str]]] = None,
+        initial_chain_id: Optional[Iterable[int]] = None,
+        limit: Optional[int] = None,
+        skip: int = 0,
+        *,
+        include_task: bool = False,
+        include_service: bool = False,
+        include_outputs: bool = False,
+        include_comments: bool = False,
+        include_initial_chain: bool = False,
+        include_singlepoints: bool = False,
+    ) -> Tuple[QueryMetadata, List[NEBRecord]]:
+        """Queries neb records from the server."""
+
+        if limit is not None and limit > self.api_limits["get_records"]:
+            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
+            limit = min(limit, self.api_limits["get_records"])
+
+        query_data = {
+            "record_id": make_list(record_id),
+            "manager_name": make_list(manager_name),
+            "status": make_list(status),
+            "dataset_id": make_list(dataset_id),
+            "parent_id": make_list(parent_id),
+            "child_id": make_list(child_id),
+            "program": make_list(program),
+            "neb_program": make_list(neb_program),
+            "qc_program": make_list(qc_program),
+            "qc_method": make_list(qc_method),
+            "qc_basis": make_list(qc_basis),
+            "initial_chain_id": make_list(initial_chain_id),
+            "created_before": created_before,
+            "created_after": created_after,
+            "modified_before": modified_before,
+            "modified_after": modified_after,
+            "limit": limit,
+            "skip": skip,
+        }
+
+        include = set()
+
+        # We must add '*' so that all the default fields are included
+        if include_task:
+            include |= {"*", "task"}
+        if include_service:
+            include |= {"*", "service"}
+        if include_outputs:
+            include |= {"*", "compute_history.*", "compute_history.outputs"}
+        if include_comments:
+            include |= {"*", "comments"}
+        if include_initial_chain:
+            include |= {"*", "initial_chain"}
+        if include_singlepoints:
+            include |= {"*", "singlepoints.*", "singlepoints.singlepoint_record"}
+
+        if include:
+            query_data["include"] = include
+
+        meta, record_data = self._auto_request(
+            "post",
+            "v1/records/neb/query",
+            NEBQueryBody,
+            None,
+            Tuple[QueryMetadata, List[NEBRecord._DataModel]],
+            query_data,
+            None,
+        )
+
+        return meta, records_from_datamodels(record_data, self)
+
 
     ##############################################################
     # Managers

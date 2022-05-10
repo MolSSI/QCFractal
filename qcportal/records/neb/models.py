@@ -1,10 +1,11 @@
 from typing import List, Optional, Tuple, Union, Dict
 
+import pydantic
 from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
 from typing_extensions import Literal
 
 from .. import BaseRecord, RecordAddBodyBase, RecordQueryBody
-from ..singlepoint.models import QCInputSpecification, QCSpecification, SinglepointRecord, SinglepointDriver
+from ..singlepoint.models import QCSpecification, SinglepointRecord, SinglepointDriver, SinglepointProtocols
 from ...base_models import ProjURLParameters
 from ...molecules import Molecule
 from ...utils import recursive_normalizer
@@ -16,13 +17,14 @@ class NEBKeywords(BaseModel):
     """
 
     images: int = Field(
-        21,
+        11,
         description="Number of images for the NEB method. Each image represents a specific geometry.",
         gt=5,
     )
  
     spring_constant: float = Field(
-        1.0,
+        10.0,
+        #TODO: Change the unit to ev/Ang^2 and set the default as 0.1 eV/ Ang^2
         description="Sping constant in kcal/mol/Ang^2.",
     )
         
@@ -36,42 +38,36 @@ class NEBKeywords(BaseModel):
     def normalize(cls, values):
         return recursive_normalizer(values)
 
-class NEBQCSpecification(QCInputSpecification):
-
-    #id: int
-    #qc_specification_id: int
-    #qc_specification: QCSpecification
-    driver: SinglepointDriver = SinglepointDriver.gradient
-
-    @validator("driver", pre=True)
-    def force_driver(cls, v):
-        return SinglepointDriver.gradient
 
 class NEBSpecification(BaseModel):
-    program: constr(to_lower=True) = "geometric"
-    qc_specification: NEBQCSpecification
-    keywords: NEBKeywords
-    
-#class NEBSpecification(BaseModel):
-#
-#    qc_specification_id: int
+    class Config:
+        extra = Extra.forbid
 
-#class NEBSpecificationID(NEBSpecification):
-#    id: int
-#    qc_specification_id:int
-#    qc_specification : QCSpecification
-    
+    program: constr(to_lower=True) = "geometric"
+    qc_specification: QCSpecification
+    keywords: NEBKeywords
+
+    @pydantic.validator("qc_specification", pre=True)
+    def force_qcspec(cls, v):
+        if isinstance(v, QCSpecification):
+            v = v.dict()
+ 
+        v["driver"] = SinglepointDriver.gradient
+        v["protocols"] = SinglepointProtocols()
+        return v
+
+
 
 class NEBSinglepoints(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    neb_id: int
+    #neb_id: int
     singlepoint_id: int
     iteration: int
     position: int
 
-    #energy: Optional[float] = None
+    gradients: Optional[List[float]] = None
     singlepoint_record: Optional[SinglepointRecord._DataModel]
 
 
@@ -150,7 +146,7 @@ class NEBRecord(BaseRecord):
         return self.raw_data.specification_id
 
     @property
-    def specification(self) -> NEBQCSpecification:
+    def specification(self) -> QCSpecification:
         return self.raw_data.specification
 
     @property

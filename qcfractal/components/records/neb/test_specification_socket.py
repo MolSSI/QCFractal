@@ -1,14 +1,12 @@
 from qcfractal.db_socket import SQLAlchemySocket
-from qcportal.keywords import KeywordSet
 
 from qcportal.records.singlepoint import (
-    QCInputSpecification,
+    QCSpecification,
     SinglepointDriver,
     SinglepointProtocols,
 )
 from qcportal.records.neb import (
     NEBSpecification,
-    NEBQCSpecification,
     NEBKeywords,
     NEBInitialchain
 )
@@ -23,11 +21,12 @@ def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):
             spring_constant=1.0,
             energy_weighted=False,
         ),
-        qc_specification=NEBQCSpecification(
+        qc_specification=QCSpecification(
             program="psi4",
             method="b3lyp",
             basis="6-31g",
-            keywords=KeywordSet(values={"k1": "values1"}),
+            keywords={"k1": "values1"},
+            driver="gradient",
             protocols=SinglepointProtocols(wavefunction="all"),
             ),
     )
@@ -39,11 +38,12 @@ def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):
             spring_constant=1.0,
             energy_weighted=False,
         ),
-        qc_specification=NEBQCSpecification(
+        qc_specification=QCSpecification(
             program="psi4",
             method="CCSD(T)",
             basis="6-31g**",
-            keywords=KeywordSet(values={"k1": "values1"}),
+            keywords={"k1": "values1"},
+            driver=SinglepointDriver.gradient,
             protocols=SinglepointProtocols(wavefunction="all"),
             ),
     )
@@ -54,11 +54,12 @@ def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):
             spring_constant=1.0,
             energy_weighted=False,
         ),
-        qc_specification=NEBQCSpecification(
+        qc_specification=QCSpecification(
             program="psi4",
             method="CCSD(T)",
             basis="def2-tzvp",
-            keywords=KeywordSet(values={"k1": "values1"}),
+            keywords={"k1": "values1"},
+            driver=SinglepointDriver.gradient,
             protocols=SinglepointProtocols(wavefunction="all"),
             ),
     )
@@ -76,24 +77,13 @@ def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):
     assert meta2.existing_idx == []
     assert meta3.existing_idx == []
 
-    sp1 = storage_socket.records.neb.get_specification(id1)
-    sp2 = storage_socket.records.neb.get_specification(id2)
-    sp3 = storage_socket.records.neb.get_specification(id3)
 
-    for sp in [sp1, sp2, sp3]:
-        assert sp["program"] == "geometric"
-        assert sp["qc_specification_id"] == sp["qc_specification"]["id"]
-
-    assert NEBKeywords(**sp1["keywords"]) == spec1.keywords
-    assert NEBKeywords(**sp2["keywords"]) == spec2.keywords
-    assert NEBKeywords(**sp3["keywords"]) == spec3.keywords
-
-
-common_sp_spec = NEBQCSpecification(
+common_sp_spec = QCSpecification(
             program="psi4",
             method="CCSD(T)",
             basis="def2-tzvp",
-            keywords=KeywordSet(values={"k1": "values1"}),
+            keywords={"k1": "values1"},
+            driver=SinglepointDriver.gradient,
             protocols=SinglepointProtocols(wavefunction="all"),
             )
 
@@ -176,11 +166,12 @@ def test_neb_socket_add_specification_same_2(storage_socket: SQLAlchemySocket):
             spring_constant=1.0,
             energy_weighted=False,
         ),
-        qc_specification=NEBQCSpecification(
+        qc_specification=QCSpecification(
             program="psi4",
             method="CCSD(T)",
             basis="def2-tzvp",
-            keywords=KeywordSet(values={"k1": "values1"}),
+            keywords={"k1": "values1"},
+            driver=SinglepointDriver.gradient,
             protocols=SinglepointProtocols(wavefunction="all"),
             ),
     )
@@ -285,8 +276,8 @@ def test_neb_socket_add_specification_diff_3(storage_socket: SQLAlchemySocket):
             energy_weighted=False,
         ),
         qc_specification=common_sp_spec,
-    )
- 
+    
+    ) 
     meta, id = storage_socket.records.neb.add_specification(spec1)
     assert meta.success
     assert meta.inserted_idx == [0]
