@@ -1,9 +1,9 @@
 """
 Queue backend abstraction manager.
 """
-
 import json
 import logging
+import os
 import sched
 import socket
 import threading
@@ -16,6 +16,7 @@ import qcengine as qcng
 from pydantic import BaseModel, validator
 from qcelemental.models import Molecule, FailedOperation
 
+from qcportal.serialization import serialize, deserialize
 from . import __version__
 from .adapters import build_queue_adapter
 from .compress import compress_results
@@ -197,6 +198,8 @@ class ComputeManager:
             password=password,
             verify=verify,
         )
+
+        self.save_results_path = None
 
         self.cores_per_task = cores_per_task
         self.memory_per_task = memory_per_task
@@ -468,6 +471,19 @@ class ComputeManager:
 
         # Compress the stdout/stderr/error outputs, and native files
         results = compress_results(results)
+
+        # If requested, save the outputs to json
+        if self.save_results_path is not None:
+            if os.path.exists(self.save_results_path):
+                with open(self.save_results_path, "r") as save_file:
+                    data = deserialize(save_file.read(), "json")
+            else:
+                data = {}
+
+            data.update(results)
+
+            with open(self.save_results_path, "w") as save_file:
+                save_file.write(serialize(data, "json"))
 
         # Stats fetching for running tasks, as close to the time we got the jobs as we can
         last_time = self.statistics.last_update_time
