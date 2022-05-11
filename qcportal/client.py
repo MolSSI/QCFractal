@@ -2541,6 +2541,8 @@ class PortalClient(PortalClientBase):
         ----------
         initial_molecules
             Initial molecules for the manybody expansion. Must have > 1 fragments.
+        program
+            The program to run the manybody computation with ("manybody")
         qc_specification
             Specification for the singlepoint calculations done in the expansion
         keywords
