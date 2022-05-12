@@ -1,6 +1,6 @@
 from .models import (
-    ReactionQCSpecification,
-    ReactionStoichiometry,
+    ReactionSpecification,
+    ReactionKeywords,
     ReactionComponent,
     ReactionAddBody,
     ReactionRecord,

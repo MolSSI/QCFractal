@@ -19,7 +19,7 @@ from qcelemental.models.results import WavefunctionProperties
 from qcportal.records.gridoptimization import GridoptimizationSpecification
 from qcportal.records.manybody import ManybodySpecification
 from qcportal.records.optimization import OptimizationSpecification
-from qcportal.records.reaction import ReactionQCSpecification
+from qcportal.records.reaction import ReactionSpecification
 from qcportal.records.singlepoint import QCSpecification
 from qcportal.records.torsiondrive import TorsiondriveSpecification
 from qcportal.serialization import _json_decode
@@ -133,7 +133,7 @@ def load_procedure_data(name: str):
         result_type = Dict[str, Union[OptimizationResult, FailedOperation]]
         molecule_type = Molecule
     elif record_type == "reaction":
-        input_type = ReactionQCSpecification
+        input_type = ReactionSpecification
         result_type = Dict[str, Union[AtomicResult, FailedOperation]]
         molecule_type = List[Tuple[float, Molecule]]
     elif record_type == "manybody":

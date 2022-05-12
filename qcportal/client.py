@@ -74,6 +74,7 @@ from .records.optimization import (
 from .records.reaction import (
     ReactionAddBody,
     ReactionRecord,
+    ReactionKeywords,
     ReactionQueryFilters,
 )
 from .records.singlepoint import (
@@ -2213,15 +2214,19 @@ class PortalClient(PortalClientBase):
         self,
         stoichiometries: Sequence[Sequence[Sequence[float, Union[int, Molecule]]]],
         program: str,
-        method: str,
-        basis: Optional[str],
-        keywords: Optional[Dict[str, Any]] = None,
-        protocols: Optional[Union[SinglepointProtocols, Dict[str, Any]]] = None,
+        singlepoint_specification: Optional[QCSpecification],
+        optimization_specification: Optional[OptimizationSpecification],
+        keywords: ReactionKeywords,
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds new reaction computations to the server
+
+        Reactions can have a singlepoint specification, optimization specification,
+        or both; at least one must be specified. If both are specified, an optimization
+        is done, followed by a singlepoint computation. Otherwise, only the specification
+        that is specified is used.
 
         This checks if the calculations already exist in the database. If so, it returns
         the existing id, otherwise it will insert it and return the new id.
@@ -2234,13 +2239,13 @@ class PortalClient(PortalClientBase):
             Coefficients and molecules of the reaction. Each reaction has multiple
             molecules/coefficients, so this is a nested list
         program
-            The program for running the singlepoint energy calculations
-        method
-            The method for the singlepoint energy calculations
-        basis
-            The basis set for the singlepoint energy calculations
+            The program for running the reaction computation ("reaction")
+        singlepoint_specification
+            The specification for singlepoint energy calculations
+        optimization_specification
+            The specification for optimization calculations
         keywords
-            The singlepoint/qc keywords for the singlepoint energy calculations
+            The keywords for the reaction calculation/service
         tag
             The tag for the task. This will assist in routing to appropriate compute managers.
         priority
@@ -2265,18 +2270,13 @@ class PortalClient(PortalClientBase):
             "stoichiometries": stoichiometries,
             "specification": {
                 "program": program,
-                "method": method,
-                "basis": basis,
+                "singlepoint_specification": singlepoint_specification,
+                "optimization_specification": optimization_specification,
+                "keywords": keywords,
             },
             "tag": tag,
             "priority": priority,
         }
-
-        # If these are None, then let the pydantic models handle the defaults
-        if keywords is not None:
-            body_data["specification"]["keywords"] = keywords
-        if protocols is not None:
-            body_data["specification"]["protocols"] = protocols
 
         return self._auto_request(
             "post",
@@ -2296,7 +2296,6 @@ class PortalClient(PortalClientBase):
         include_service: bool = False,
         include_outputs: bool = False,
         include_comments: bool = False,
-        include_stoichiometries: bool = False,
         include_components: bool = False,
     ) -> Union[Optional[ReactionRecord], List[Optional[ReactionRecord]]]:
         """
@@ -2317,8 +2316,6 @@ class PortalClient(PortalClientBase):
             If True, include the outputs as part of the record
         include_comments
             If True, include the comments as part of the record
-        include_stoichiometries
-            If True, include the full stoichiometries (include molecules) as part of the record
         include_components
             If True, include the full set of singlepoint records as part of the record
 
@@ -2352,10 +2349,8 @@ class PortalClient(PortalClientBase):
             include |= {"*", "compute_history.*", "compute_history.outputs"}
         if include_comments:
             include |= {"*", "comments"}
-        if include_stoichiometries:
-            include |= {"*", "stoichiometries.*", "stoichiometries.molecule"}
         if include_components:
-            include |= {"*", "components"}
+            include |= {"*", "components.*", "components.molecule", "components.singlepoint", "components.optimization"}
 
         if include:
             body_data["include"] = include
@@ -2390,8 +2385,10 @@ class PortalClient(PortalClientBase):
         modified_before: Optional[datetime] = None,
         modified_after: Optional[datetime] = None,
         program: Optional[Iterable[str]] = None,
-        method: Optional[Iterable[str]] = None,
-        basis: Optional[Iterable[Optional[str]]] = None,
+        qc_program: Optional[Iterable[str]] = None,
+        qc_method: Optional[Iterable[str]] = None,
+        qc_basis: Optional[Iterable[Optional[str]]] = None,
+        optimization_program: Optional[Iterable[Optional[str]]] = None,
         molecule_id: Optional[Iterable[int]] = None,
         limit: Optional[int] = None,
         skip: int = 0,
@@ -2400,7 +2397,6 @@ class PortalClient(PortalClientBase):
         include_service: bool = False,
         include_outputs: bool = False,
         include_comments: bool = False,
-        include_stoichiometries: bool = False,
         include_components: bool = False,
     ) -> Tuple[QueryMetadata, List[GridoptimizationRecord]]:
         """
@@ -2431,11 +2427,15 @@ class PortalClient(PortalClientBase):
         modified_after
             Query records that were modified after the given date/time
         program
+            Query records whose reaction program is in the given list
+        qc_program
             Query records whose qc program is in the given list
-        method
+        qc_method
             Query records whose method is in the given list
-        basis
+        qc_basis
             Query records whose basis is in the given list
+        optimization_program
+            Query records whose optimization program is in the given list
         molecule_id
             Query reactions that contain a molecule (id) is in the given list
         limit
@@ -2450,8 +2450,6 @@ class PortalClient(PortalClientBase):
             If True, include the outputs as part of the record
         include_comments
             If True, include the comments as part of the record
-        include_stoichiometries
-            If True, include the full stoichiometries (include molecules) as part of the record
         include_components
             If True, include the full set of singlepoint records as part of the record
 
@@ -2474,8 +2472,10 @@ class PortalClient(PortalClientBase):
             "parent_id": make_list(parent_id),
             "child_id": make_list(child_id),
             "program": make_list(program),
-            "method": make_list(method),
-            "basis": make_list(basis),
+            "qc_program": make_list(qc_program),
+            "qc_method": make_list(qc_method),
+            "qc_basis": make_list(qc_basis),
+            "optimization_program": make_list(optimization_program),
             "molecule_id": make_list(molecule_id),
             "created_before": created_before,
             "created_after": created_after,
@@ -2496,8 +2496,6 @@ class PortalClient(PortalClientBase):
             include |= {"*", "compute_history.*", "compute_history.outputs"}
         if include_comments:
             include |= {"*", "comments"}
-        if include_stoichiometries:
-            include |= {"*", "stoichiometries.*", "stoichiometries.molecule"}
         if include_components:
             include |= {"*", "components"}
 

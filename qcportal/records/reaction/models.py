@@ -1,44 +1,57 @@
 from typing import List, Union, Optional, Tuple
 
-from pydantic import BaseModel, Extra, validator
+from pydantic import BaseModel, Extra, root_validator, constr
 from typing_extensions import Literal
 
-from .. import BaseRecord, RecordAddBodyBase
+from .. import BaseRecord, RecordAddBodyBase, RecordQueryFilters
+from ..optimization.models import OptimizationRecord, OptimizationSpecification
 from ..singlepoint.models import (
     QCSpecification,
-    SinglepointQueryFilters,
     SinglepointRecord,
-    SinglepointDriver,
 )
 from ...base_models import ProjURLParameters
 from ...molecules import Molecule
 
 
-class ReactionQCSpecification(QCSpecification):
-    driver: SinglepointDriver = SinglepointDriver.energy
-
-    @validator("driver", pre=True)
-    def force_driver(cls, v):
-        return SinglepointDriver.energy
-
-
-class ReactionAddBody(RecordAddBodyBase):
-    specification: ReactionQCSpecification
-    stoichiometries: List[List[Tuple[float, Union[int, Molecule]]]]
-
-
-class ReactionQueryFilters(SinglepointQueryFilters):
-    pass
-
-
-class ReactionStoichiometry(BaseModel):
+class ReactionKeywords(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    molecule_id: int
-    coefficient: float
+    max_running: Optional[int] = None
 
-    molecule: Optional[Molecule]
+
+class ReactionSpecification(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
+    program: constr(to_lower=True) = "manybody"
+
+    singlepoint_specification: Optional[QCSpecification]
+    optimization_specification: Optional[OptimizationSpecification]
+
+    keywords: ReactionKeywords
+
+    @root_validator
+    def required_spec(cls, v):
+        qc_spec = v.get("singlepoint_specification", None)
+        opt_spec = v.get("optimization_specification", None)
+        if qc_spec is None and opt_spec is None:
+            raise ValueError("singlepoint_specification or optimization_specification must be specified")
+        return v
+
+
+class ReactionAddBody(RecordAddBodyBase):
+    specification: ReactionSpecification
+    stoichiometries: List[List[Tuple[float, Union[int, Molecule]]]]
+
+
+class ReactionQueryFilters(RecordQueryFilters):
+    program: Optional[List[str]] = None
+    qc_program: Optional[List[constr(to_lower=True)]] = None
+    qc_method: Optional[List[constr(to_lower=True)]] = None
+    qc_basis: Optional[List[Optional[constr(to_lower=True)]]] = None
+    optimization_program: Optional[List[constr(to_lower=True)]] = None
+    molecule_id: Optional[List[int]] = None
 
 
 class ReactionComponent(BaseModel):
@@ -46,20 +59,22 @@ class ReactionComponent(BaseModel):
         extra = Extra.forbid
 
     molecule_id: int
-    singlepoint_id: int
+    coefficient: float
+    singlepoint_id: Optional[int]
+    optimization_id: Optional[int]
 
-    energy: Optional[float] = None
+    molecule: Optional[Molecule]
     singlepoint_record: Optional[SinglepointRecord._DataModel]
+    optimization_record: Optional[OptimizationRecord._DataModel]
 
 
 class ReactionRecord(BaseRecord):
     class _DataModel(BaseRecord._DataModel):
         record_type: Literal["reaction"] = "reaction"
-        specification: QCSpecification
+        specification: ReactionSpecification
 
         total_energy: Optional[float]
 
-        stoichiometries: Optional[List[ReactionStoichiometry]] = None
         components: Optional[List[ReactionComponent]] = None
 
     # This is needed for disambiguation by pydantic
@@ -79,19 +94,6 @@ class ReactionRecord(BaseRecord):
             url_params,
         )
 
-    def _fetch_stoichiometries(self):
-        url_params = {"include": ["*", "molecule"]}
-
-        self.raw_data.stoichiometries = self.client._auto_request(
-            "get",
-            f"v1/records/reaction/{self.raw_data.id}/stoichiometries",
-            None,
-            ProjURLParameters,
-            List[ReactionStoichiometry],
-            None,
-            url_params,
-        )
-
     @property
     def specification(self) -> QCSpecification:
         return self.raw_data.specification
@@ -102,13 +104,6 @@ class ReactionRecord(BaseRecord):
             self._fetch_components()
 
         return self.raw_data.components
-
-    @property
-    def stoichiometries(self) -> List[ReactionStoichiometry]:
-        if self.raw_data.stoichiometries is None:
-            self._fetch_stoichiometries()
-
-        return self.raw_data.stoichiometries
 
     @property
     def total_energy(self) -> Optional[float]:

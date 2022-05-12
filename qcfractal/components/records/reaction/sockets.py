@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 import logging
 from typing import List, Dict, Tuple, Optional, Iterable, Sequence, Any, Union, TYPE_CHECKING
 
 import tabulate
-from sqlalchemy import select
+from sqlalchemy import select, union
 from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
 from sqlalchemy.orm import contains_eager
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM, SinglepointRecordORM
+from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM
 from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
@@ -17,10 +20,10 @@ from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputTypeEnum
 from qcportal.records import PriorityEnum, RecordStatusEnum
 from qcportal.records.reaction import (
-    ReactionQCSpecification,
+    ReactionSpecification,
     ReactionQueryFilters,
 )
-from .db_models import ReactionStoichiometryORM, ReactionComponentORM, ReactionRecordORM
+from .db_models import ReactionComponentORM, ReactionSpecificationORM, ReactionRecordORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -34,7 +37,7 @@ class ReactionRecordSocket(BaseRecordSocket):
 
     # Used by the base class
     record_orm = ReactionRecordORM
-    specification_orm = QCSpecificationORM
+    specification_orm = ReactionSpecificationORM
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)
@@ -42,9 +45,15 @@ class ReactionRecordSocket(BaseRecordSocket):
 
     @staticmethod
     def get_children_select() -> List[Any]:
-        stmt = select(
-            ReactionComponentORM.reaction_id.label("parent_id"),
-            ReactionComponentORM.singlepoint_id.label("child_id"),
+        stmt = union(
+            select(
+                ReactionComponentORM.reaction_id.label("parent_id"),
+                ReactionComponentORM.singlepoint_id.label("child_id"),
+            ),
+            select(
+                ReactionComponentORM.reaction_id.label("parent_id"),
+                ReactionComponentORM.optimization_id.label("child_id"),
+            ),
         )
         return [stmt]
 
@@ -52,9 +61,28 @@ class ReactionRecordSocket(BaseRecordSocket):
         rxn_orm: ReactionRecordORM = service_orm.record
 
         output = "\n\nCreated reaction. Molecules:\n\n"
+
+        output += "-" * 80 + "\nManybody Keywords:\n\n"
+        spec = ReactionSpecification(**rxn_orm.specification.model_dict())
+        table_rows = sorted(spec.keywords.dict().items())
+        output += tabulate.tabulate(table_rows, headers=["keyword", "value"])
+
+        if spec.singlepoint_specification:
+            output += "\n\n" + "-" * 80 + "\nQC Specification:\n\n"
+            table_rows = sorted(spec.singlepoint_specification.dict().items())
+            output += tabulate.tabulate(table_rows, headers=["keyword", "value"])
+            output += "\n\n"
+
+        if spec.optimization_specification:
+            output += "\n\n" + "-" * 80 + "\nOptimization Specification:\n\n"
+            table_rows = sorted(spec.optimization_specification.dict().items())
+            output += tabulate.tabulate(table_rows, headers=["keyword", "value"])
+            output += "\n\n"
+
+        output += "\n\n" + "-" * 80 + "\nReaction Stoichiometry:\n\n"
         table_rows = [
             (f"{m.coefficient:.8f}", m.molecule.identifiers["molecular_formula"], m.molecule_id)
-            for m in rxn_orm.stoichiometries
+            for m in rxn_orm.components
         ]
         output += tabulate.tabulate(table_rows, headers=["coefficient", "molecule", "molecule id"])
         output += "\n\n"
@@ -79,7 +107,10 @@ class ReactionRecordSocket(BaseRecordSocket):
             "routine": "qcfractal.services.reaction",
         }
 
-        required_mols = [x.molecule_id for x in rxn_orm.stoichiometries]
+        # Component by molecule id
+        component_map = {x.molecule_id: x for x in rxn_orm.components}
+
+        required_mols = [x.molecule_id for x in rxn_orm.components]
 
         complete_tasks = service_orm.dependencies
         complete_mols = [x.record.molecule_id for x in complete_tasks]
@@ -89,18 +120,20 @@ class ReactionRecordSocket(BaseRecordSocket):
         service_orm.dependencies = []
 
         if mols_to_compute:
-            qc_spec_id = rxn_orm.specification_id
+            qc_spec_id = rxn_orm.specification.singlepoint_specification_id
             meta, sp_ids = self.root_socket.records.singlepoint.add_internal(
                 mols_to_compute, qc_spec_id, service_orm.tag, service_orm.priority, session=session
             )
 
             for mol_id, sp_id in zip(mols_to_compute, sp_ids):
+                component = component_map[mol_id]
 
                 svc_dep = ServiceDependencyORM(record_id=sp_id, extras={})
-                rxn_component = ReactionComponentORM(molecule_id=mol_id, singlepoint_id=sp_id)
+
+                assert component.singlepoint_id is None
+                component.singlepoint_id = sp_id
 
                 service_orm.dependencies.append(svc_dep)
-                rxn_orm.components.append(rxn_component)
 
             output = "\nSubmitted singlepoint calculations:\n"
             output += tabulate.tabulate(zip(mols_to_compute, sp_ids), headers=["molecule id", "singlepoint id"])
@@ -113,15 +146,20 @@ class ReactionRecordSocket(BaseRecordSocket):
             table = []
             total = 0.0
 
-            coef_map = {x.molecule_id: x.coefficient for x in rxn_orm.stoichiometries}
+            coef_map = {x.molecule_id: x.coefficient for x in rxn_orm.components}
 
             for component in rxn_orm.components:
                 mol_form = component.molecule.identifiers["molecular_formula"]
                 mol_id = component.molecule_id
-                energy = component.energy
+
+                if component.singlepoint_id is not None:
+                    energy = component.singlepoint_record.properties["return_energy"]
+                else:
+                    energy = component.optimization_record.properties["return_energy"]
+
                 coefficient = coef_map[mol_id]
 
-                table_row = [mol_id, mol_form, component.singlepoint_id, component.energy, coefficient]
+                table_row = [mol_id, mol_form, component.singlepoint_id, energy, coefficient]
                 table.append(table_row)
 
                 total += coefficient * energy
@@ -140,7 +178,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         return len(mols_to_compute) == 0
 
     def add_specification(
-        self, qc_spec: ReactionQCSpecification, *, session: Optional[Session] = None
+        self, rxn_spec: ReactionSpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, Optional[int]]:
         """
         Adds a specification for a reaction service to the database, returning its id.
@@ -150,7 +188,7 @@ class ReactionRecordSocket(BaseRecordSocket):
 
         Parameters
         ----------
-        qc_spec
+        rxn_spec
             Specification to add to the database
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
@@ -161,7 +199,71 @@ class ReactionRecordSocket(BaseRecordSocket):
         :
             Metadata about the insertion, and the id of the specification.
         """
-        return self.root_socket.records.singlepoint.add_specification(qc_spec=qc_spec, session=session)
+        with self.root_socket.optional_session(session) as session:
+            qc_spec_id = None
+            opt_spec_id = None
+
+            if rxn_spec.singlepoint_specification is not None:
+                meta, qc_spec_id = self.root_socket.records.singlepoint.add_specification(
+                    qc_spec=rxn_spec.singlepoint_specification, session=session
+                )
+
+                if not meta.success:
+                    return (
+                        InsertMetadata(
+                            error_description="Unable to add singlepoint specification: " + meta.error_string,
+                        ),
+                        None,
+                    )
+
+            if rxn_spec.optimization_specification is not None:
+                meta, opt_spec_id = self.root_socket.records.optimization.add_specification(
+                    opt_spec=rxn_spec.optimization_specification, session=session
+                )
+
+                if not meta.success:
+                    return (
+                        InsertMetadata(
+                            error_description="Unable to add optimization specification: " + meta.error_string,
+                        ),
+                        None,
+                    )
+
+            kw_dict = rxn_spec.keywords.dict(exclude_defaults=True)
+
+            # Query first, due to behavior of NULL in postgres
+            stmt = select(ReactionSpecificationORM.id).filter_by(
+                program=rxn_spec.program,
+                keywords=kw_dict,
+            )
+
+            if qc_spec_id is not None:
+                stmt = stmt.filter(ReactionSpecificationORM.singlepoint_specification_id == qc_spec_id)
+            else:
+                stmt = stmt.filter(ReactionSpecificationORM.singlepoint_specification_id.is_(None))
+
+            if opt_spec_id is not None:
+                stmt = stmt.filter(ReactionSpecificationORM.optimization_specification_id == opt_spec_id)
+            else:
+                stmt = stmt.filter(ReactionSpecificationORM.optimization_specification_id.is_(None))
+
+            r = session.execute(stmt).scalar_one_or_none()
+            if r is not None:
+                return InsertMetadata(existing_idx=[0]), r
+            else:
+                stmt = (
+                    insert(ReactionSpecificationORM)
+                    .values(
+                        program=rxn_spec.program,
+                        singlepoint_specification_id=qc_spec_id,
+                        optimization_specification_id=opt_spec_id,
+                        keywords=kw_dict,
+                    )
+                    .returning(ReactionSpecificationORM.id)
+                )
+
+            r = session.execute(stmt).scalar_one_or_none()
+            return InsertMetadata(inserted_idx=[0]), r
 
     def query(
         self,
@@ -188,34 +290,47 @@ class ReactionRecordSocket(BaseRecordSocket):
         """
 
         and_query = []
+        need_qc_spec_join = False
+        need_opt_spec_join = False
         need_spec_join = False
-        need_stoic_join = False
+        need_component_join = False
 
         if query_data.program is not None:
-            and_query.append(QCSpecificationORM.program.in_(query_data.program))
+            and_query.append(ReactionSpecificationORM.program.in_(query_data.program))
             need_spec_join = True
-        if query_data.driver is not None:
-            and_query.append(QCSpecificationORM.driver.in_(query_data.driver))
-            need_spec_join = True
-        if query_data.method is not None:
-            and_query.append(QCSpecificationORM.method.in_(query_data.method))
-            need_spec_join = True
-        if query_data.basis is not None:
-            and_query.append(QCSpecificationORM.basis.in_(query_data.basis))
-            need_spec_join = True
+        if query_data.qc_program is not None:
+            and_query.append(QCSpecificationORM.program.in_(query_data.qc_program))
+            need_qc_spec_join = True
+        if query_data.qc_method is not None:
+            and_query.append(QCSpecificationORM.method.in_(query_data.qc_method))
+            need_qc_spec_join = True
+        if query_data.qc_basis is not None:
+            and_query.append(QCSpecificationORM.basis.in_(query_data.qc_basis))
+            need_qc_spec_join = True
+        if query_data.optimization_program is not None:
+            and_query.append(OptimizationSpecificationORM.program.in_(query_data.qc_basis))
+            need_opt_spec_join = True
         if query_data.molecule_id is not None:
-            and_query.append(ReactionStoichiometryORM.molecule_id.in_(query_data.molecule_id))
-            need_stoic_join = True
+            and_query.append(ReactionComponentORM.molecule_id.in_(query_data.molecule_id))
+            need_component_join = True
 
         stmt = select(ReactionRecordORM)
 
-        if need_spec_join:
+        if need_spec_join or need_qc_spec_join or need_opt_spec_join:
             stmt = stmt.join(ReactionRecordORM.specification).options(contains_eager(ReactionRecordORM.specification))
 
-        if need_stoic_join:
-            stmt = stmt.join(ReactionRecordORM.stoichiometries).options(
-                contains_eager(ReactionRecordORM.stoichiometries)
+        if need_qc_spec_join:
+            stmt = stmt.join(ReactionSpecificationORM.singlepoint_specification).options(
+                contains_eager(ReactionRecordORM.specification, ReactionSpecificationORM.singlepoint_specification)
             )
+
+        if need_opt_spec_join:
+            stmt = stmt.join(ReactionSpecificationORM.optimization_specification).options(
+                contains_eager(ReactionRecordORM.specification, ReactionSpecificationORM.optimization_specification)
+            )
+
+        if need_component_join:
+            stmt = stmt.join(ReactionRecordORM.components).options(contains_eager(ReactionRecordORM.components))
 
         stmt = stmt.where(*and_query)
 
@@ -229,7 +344,7 @@ class ReactionRecordSocket(BaseRecordSocket):
     def add_internal(
         self,
         stoichiometries: Sequence[Iterable[Tuple[float, int]]],  # coefficient, molecule_id
-        qc_spec_id: int,
+        rxn_spec_id: int,
         tag: str,
         priority: PriorityEnum,
         *,
@@ -248,7 +363,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         ----------
         stoichiometries
             Coefficients and IDs of the molecules that form the reaction
-        qc_spec_id
+        rxn_spec_id
             ID of the specification
         tag
             The tag for the task. This will assist in routing to appropriate compute managers.
@@ -284,14 +399,12 @@ class ReactionRecordSocket(BaseRecordSocket):
                     ReactionRecordORM.id,
                     ReactionRecordORM.specification_id,
                     array_agg(
-                        aggregate_order_by(
-                            ReactionStoichiometryORM.molecule_id, ReactionStoichiometryORM.molecule_id.asc()
-                        )
+                        aggregate_order_by(ReactionComponentORM.molecule_id, ReactionComponentORM.molecule_id.asc())
                     ).label("molecule_ids"),
                 )
                 .join(
-                    ReactionStoichiometryORM,
-                    ReactionStoichiometryORM.reaction_id == ReactionRecordORM.id,
+                    ReactionComponentORM,
+                    ReactionComponentORM.reaction_id == ReactionRecordORM.id,
                 )
                 .group_by(ReactionRecordORM.id)
                 .cte()
@@ -303,19 +416,19 @@ class ReactionRecordSocket(BaseRecordSocket):
 
                 # does this exist?
                 stmt = select(init_mol_cte.c.id)
-                stmt = stmt.where(init_mol_cte.c.specification_id == qc_spec_id)
+                stmt = stmt.where(init_mol_cte.c.specification_id == rxn_spec_id)
                 stmt = stmt.where(init_mol_cte.c.molecule_ids == rxn_mol_ids)
                 existing = session.execute(stmt).scalars().first()
 
                 if not existing:
-                    stoich_orm = [
-                        ReactionStoichiometryORM(molecule_id=mid, coefficient=coeff) for coeff, mid in rxn_mols
+                    component_orm = [
+                        ReactionComponentORM(coefficient=coeff, molecule_id=mid) for coeff, mid in rxn_mols
                     ]
 
                     rxn_orm = ReactionRecordORM(
                         is_service=True,
-                        specification_id=qc_spec_id,
-                        stoichiometries=stoich_orm,
+                        specification_id=rxn_spec_id,
+                        components=component_orm,
                         status=RecordStatusEnum.waiting,
                     )
 
@@ -336,7 +449,7 @@ class ReactionRecordSocket(BaseRecordSocket):
     def add(
         self,
         stoichiometries: Sequence[Iterable[Tuple[float, Union[int, Molecule]]]],
-        qc_spec: ReactionQCSpecification,
+        rxn_spec: ReactionSpecification,
         tag: str,
         priority: PriorityEnum,
         *,
@@ -352,8 +465,8 @@ class ReactionRecordSocket(BaseRecordSocket):
         ----------
         stoichiometries
             Coefficient and molecules (objects or ids) to compute using the specification
-        qc_spec
-            Specification for the calculations
+        rxn_spec
+            Specification for the reaction calculations
         tag
             The tag for the task. This will assist in routing to appropriate compute managers.
         priority
@@ -372,7 +485,8 @@ class ReactionRecordSocket(BaseRecordSocket):
         with self.root_socket.optional_session(session, False) as session:
 
             # First, add the specification
-            spec_meta, spec_id = self.add_specification(qc_spec, session=session)
+            spec_meta, spec_id = self.add_specification(rxn_spec, session=session)
+
             if not spec_meta.success:
                 return (
                     InsertMetadata(
