@@ -38,7 +38,7 @@ _test_specs = [
     ManybodySpecification(
         program="manybody",
         keywords=ManybodyKeywords(max_nbody=None, bsse_correction="none"),
-        qc_specification=QCSpecification(
+        singlepoint_specification=QCSpecification(
             program="prog1",
             driver="energy",
             method="b3lyp",
@@ -50,7 +50,7 @@ _test_specs = [
     ManybodySpecification(
         keywords=ManybodyKeywords(max_nbody=1, bsse_correction="none"),
         program="manybody",
-        qc_specification=QCSpecification(
+        singlepoint_specification=QCSpecification(
             program="Prog2",
             driver="energy",
             method="Hf",
@@ -61,7 +61,7 @@ _test_specs = [
     ManybodySpecification(
         keywords=ManybodyKeywords(max_nbody=1, bsse_correction="none"),
         program="manybody",
-        qc_specification=QCSpecification(
+        singlepoint_specification=QCSpecification(
             program="Prog3",
             driver="properties",
             method="Hf",
@@ -130,7 +130,7 @@ def test_manybody_socket_add_same_1(storage_socket: SQLAlchemySocket):
     spec = ManybodySpecification(
         program="manybody",
         keywords=ManybodyKeywords(max_nbody=None, bsse_correction="none"),
-        qc_specification=QCSpecification(
+        singlepoint_specification=QCSpecification(
             program="prog1",
             driver="energy",
             method="b3lyp",

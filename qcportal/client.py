@@ -2524,7 +2524,7 @@ class PortalClient(PortalClientBase):
         self,
         initial_molecules: Sequence[Union[int, Molecule]],
         program: str,
-        qc_specification: QCSpecification,
+        singlepoint_specification: QCSpecification,
         keywords: ManybodyKeywords,
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
@@ -2543,7 +2543,7 @@ class PortalClient(PortalClientBase):
             Initial molecules for the manybody expansion. Must have > 1 fragments.
         program
             The program to run the manybody computation with ("manybody")
-        qc_specification
+        singlepoint_specification
             Specification for the singlepoint calculations done in the expansion
         keywords
             The keywords for the manybody program
@@ -2572,7 +2572,7 @@ class PortalClient(PortalClientBase):
             "initial_molecules": initial_molecules,
             "specification": {
                 "program": program,
-                "qc_specification": qc_specification,
+                "singlepoint_specification": singlepoint_specification,
                 "keywords": keywords,
             },
             "tag": tag,

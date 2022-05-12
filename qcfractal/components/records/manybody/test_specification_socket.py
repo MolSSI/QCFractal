@@ -11,7 +11,7 @@ def test_manybody_socket_add_specification_same_0(storage_socket: SQLAlchemySock
     spec1 = ManybodySpecification(
         program="manybody",
         keywords=ManybodyKeywords(max_nbody=None, bsse_correction="none"),
-        qc_specification=QCSpecification(
+        singlepoint_specification=QCSpecification(
             program="prog1",
             driver="energy",
             method="b3lyp",
@@ -40,7 +40,7 @@ def test_manybody_socket_add_specification_same_1(storage_socket: SQLAlchemySock
     spec1 = ManybodySpecification(
         program="manybody",
         keywords=ManybodyKeywords(max_nbody=None, bsse_correction="none"),
-        qc_specification=QCSpecification(
+        singlepoint_specification=QCSpecification(
             program="prog1",
             driver="energy",
             method="b3lyp",
@@ -53,7 +53,7 @@ def test_manybody_socket_add_specification_same_1(storage_socket: SQLAlchemySock
     spec2 = ManybodySpecification(
         program="manybody",
         keywords=ManybodyKeywords(max_nbody=None, bsse_correction="none"),
-        qc_specification=QCSpecification(
+        singlepoint_specification=QCSpecification(
             program="prOg1",
             driver="energy",
             method="b3LYP",
@@ -75,7 +75,7 @@ def test_manybody_socket_add_diff_1(storage_socket: SQLAlchemySocket):
     spec1 = ManybodySpecification(
         program="manybody",
         keywords=ManybodyKeywords(max_nbody=4, bsse_correction="none"),
-        qc_specification=QCSpecification(
+        singlepoint_specification=QCSpecification(
             program="prog1",
             driver="energy",
             method="b3lyp",
@@ -88,7 +88,7 @@ def test_manybody_socket_add_diff_1(storage_socket: SQLAlchemySocket):
     spec2 = ManybodySpecification(
         program="manybody",
         keywords=ManybodyKeywords(max_nbody=None, bsse_correction="none"),
-        qc_specification=QCSpecification(
+        singlepoint_specification=QCSpecification(
             program="prOg1",
             driver="energy",
             method="b3LYP",
@@ -110,7 +110,7 @@ def test_manybody_socket_add_diff_2(storage_socket: SQLAlchemySocket):
     spec1 = ManybodySpecification(
         program="manybody",
         keywords=ManybodyKeywords(max_nbody=None, bsse_correction="cp"),
-        qc_specification=QCSpecification(
+        singlepoint_specification=QCSpecification(
             program="prog1",
             driver="energy",
             method="b3lyp",
@@ -123,7 +123,7 @@ def test_manybody_socket_add_diff_2(storage_socket: SQLAlchemySocket):
     spec2 = ManybodySpecification(
         program="manybody",
         keywords=ManybodyKeywords(max_nbody=None, bsse_correction="none"),
-        qc_specification=QCSpecification(
+        singlepoint_specification=QCSpecification(
             program="prOg1",
             driver="energy",
             method="b3LYP",
@@ -145,7 +145,7 @@ def test_manybody_socket_add_diff_3(storage_socket: SQLAlchemySocket):
     spec1 = ManybodySpecification(
         program="manybody",
         keywords=ManybodyKeywords(max_nbody=None, bsse_correction="none"),
-        qc_specification=QCSpecification(
+        singlepoint_specification=QCSpecification(
             program="prog1",
             driver="energy",
             method="b3lyp",
@@ -158,7 +158,7 @@ def test_manybody_socket_add_diff_3(storage_socket: SQLAlchemySocket):
     spec2 = ManybodySpecification(
         program="manybody",
         keywords=ManybodyKeywords(max_nbody=None, bsse_correction="none"),
-        qc_specification=QCSpecification(
+        singlepoint_specification=QCSpecification(
             program="prOg1",
             driver="energy",
             method="bhlyp",

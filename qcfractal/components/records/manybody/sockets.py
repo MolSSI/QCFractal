@@ -207,7 +207,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
         table_rows = sorted(spec.keywords.dict().items())
         output += tabulate.tabulate(table_rows, headers=["keyword", "value"])
         output += "\n\n" + "-" * 80 + "\nQC Specification:\n\n"
-        table_rows = sorted(spec.qc_specification.dict().items())
+        table_rows = sorted(spec.singlepoint_specification.dict().items())
         output += tabulate.tabulate(table_rows, headers=["keyword", "value"])
         output += "\n\n"
 
@@ -294,9 +294,9 @@ class ManybodyRecordSocket(BaseRecordSocket):
         mols_to_compute = [c.molecule_id for c in clusters if c.singlepoint_id is None]
 
         if mols_to_compute:
-            qc_spec_id = mb_orm.specification.qc_specification_id
+            sp_spec_id = mb_orm.specification.singlepoint_specification_id
             meta, sp_ids = self.root_socket.records.singlepoint.add_internal(
-                mols_to_compute, qc_spec_id, service_orm.tag, service_orm.priority, session=session
+                mols_to_compute, sp_spec_id, service_orm.tag, service_orm.priority, session=session
             )
 
             output = f"\nSubmitted {len(sp_ids)} singlepoint calculations "
@@ -394,8 +394,8 @@ class ManybodyRecordSocket(BaseRecordSocket):
         """
 
         with self.root_socket.optional_session(session) as session:
-            meta, qc_spec_id = self.root_socket.records.singlepoint.add_specification(
-                qc_spec=mb_spec.qc_specification, session=session
+            meta, sp_spec_id = self.root_socket.records.singlepoint.add_specification(
+                qc_spec=mb_spec.singlepoint_specification, session=session
             )
 
             if not meta.success:
@@ -406,14 +406,14 @@ class ManybodyRecordSocket(BaseRecordSocket):
                     None,
                 )
 
-            frag_kw_dict = mb_spec.keywords.dict(exclude_defaults=True)
+            kw_dict = mb_spec.keywords.dict(exclude_defaults=True)
 
             stmt = (
                 insert(ManybodySpecificationORM)
                 .values(
                     program=mb_spec.program,
-                    qc_specification_id=qc_spec_id,
-                    keywords=frag_kw_dict,
+                    singlepoint_specification_id=sp_spec_id,
+                    keywords=kw_dict,
                 )
                 .on_conflict_do_nothing()
                 .returning(ManybodySpecificationORM.id)
@@ -426,8 +426,8 @@ class ManybodyRecordSocket(BaseRecordSocket):
                 # Specification was already existing
                 stmt = select(ManybodySpecificationORM.id).filter_by(
                     program=mb_spec.program,
-                    qc_specification_id=qc_spec_id,
-                    keywords=frag_kw_dict,
+                    singlepoint_specification_id=sp_spec_id,
+                    keywords=kw_dict,
                 )
 
                 r = session.execute(stmt).scalar_one()
@@ -482,8 +482,8 @@ class ManybodyRecordSocket(BaseRecordSocket):
             stmt = stmt.join(ManybodyRecordORM.specification).options(contains_eager(ManybodyRecordORM.specification))
 
         if need_qcspec_join:
-            stmt = stmt.join(ManybodySpecificationORM.qc_specification).options(
-                contains_eager(ManybodyRecordORM.specification, ManybodySpecificationORM.qc_specification)
+            stmt = stmt.join(ManybodySpecificationORM.singlepoint_specification).options(
+                contains_eager(ManybodyRecordORM.specification, ManybodySpecificationORM.singlepoint_specification)
             )
 
         stmt = stmt.where(*and_query)

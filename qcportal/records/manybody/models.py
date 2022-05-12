@@ -35,7 +35,7 @@ class ManybodyKeywords(BaseModel):
 
 class ManybodySpecification(BaseModel):
     program: constr(to_lower=True) = "manybody"
-    qc_specification: QCSpecification
+    singlepoint_specification: QCSpecification
     keywords: ManybodyKeywords
 
 

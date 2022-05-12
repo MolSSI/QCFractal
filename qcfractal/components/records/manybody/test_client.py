@@ -23,7 +23,7 @@ from .test_sockets import _test_specs, compare_manybody_specs
 def test_manybody_client_tag_priority(snowflake_client: PortalClient, tag: str, priority: PriorityEnum):
     water = load_molecule_data("water_dimer_minima")
 
-    qc_spec = QCSpecification(
+    sp_spec = QCSpecification(
         program="prog",
         driver="energy",
         method="hf",
@@ -32,7 +32,7 @@ def test_manybody_client_tag_priority(snowflake_client: PortalClient, tag: str, 
 
     kw = ManybodyKeywords(max_nbody=1, bsse_correction="none")
 
-    meta1, id1 = snowflake_client.add_manybodys([water], "manybody", qc_spec, kw, tag=tag, priority=priority)
+    meta1, id1 = snowflake_client.add_manybodys([water], "manybody", sp_spec, kw, tag=tag, priority=priority)
 
     rec = snowflake_client.get_records(id1, include_service=True)
     assert rec[0].raw_data.service.tag == tag
@@ -48,7 +48,7 @@ def test_manybody_client_add_get(snowflake_client: PortalClient, spec: ManybodyS
     meta1, id1 = snowflake_client.add_manybodys(
         [water2, water4],
         spec.program,
-        spec.qc_specification,
+        spec.singlepoint_specification,
         spec.keywords,
         tag="tag1",
         priority=PriorityEnum.low,
@@ -90,7 +90,7 @@ def test_manybody_client_add_existing_molecule(snowflake_client: PortalClient):
     meta1, id1 = snowflake_client.add_manybodys(
         [mol1, mol2, mol1],
         spec.program,
-        spec.qc_specification,
+        spec.singlepoint_specification,
         spec.keywords,
         tag="tag1",
         priority=PriorityEnum.low,

@@ -20,7 +20,7 @@ def test_manybody_full_1(fulltest_client: PortalClient):
     meta, ids = fulltest_client.add_manybodys(
         initial_molecules=[molecule],
         program=input_spec.program,
-        qc_specification=input_spec.qc_specification,
+        singlepoint_specification=input_spec.singlepoint_specification,
         keywords=input_spec.keywords,
     )
 

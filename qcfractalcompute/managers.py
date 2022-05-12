@@ -199,7 +199,7 @@ class ComputeManager:
             verify=verify,
         )
 
-        self.save_results_path = "/tmp/save.json"
+        self.save_results_path = None
 
         self.cores_per_task = cores_per_task
         self.memory_per_task = memory_per_task
