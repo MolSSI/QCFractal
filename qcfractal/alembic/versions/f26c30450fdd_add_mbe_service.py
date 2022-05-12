@@ -22,20 +22,23 @@ def upgrade():
         "manybody_specification",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("program", sa.String(), nullable=False),
-        sa.Column("qc_specification_id", sa.Integer(), nullable=False),
+        sa.Column("singlepoint_specification_id", sa.Integer(), nullable=False),
         sa.Column("keywords", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.CheckConstraint("program = LOWER(program)", name="ck_manybody_specification_program_lower"),
         sa.ForeignKeyConstraint(
-            ["qc_specification_id"],
+            ["singlepoint_specification_id"],
             ["qc_specification.id"],
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("qc_specification_id", "keywords", name="ux_manybody_specification_keys"),
+        sa.UniqueConstraint("singlepoint_specification_id", "keywords", name="ux_manybody_specification_keys"),
     )
     op.create_index("ix_manybody_specification_keywords", "manybody_specification", ["keywords"], unique=False)
     op.create_index("ix_manybody_specification_program", "manybody_specification", ["program"], unique=False)
     op.create_index(
-        "ix_manybody_specification_qc_specification_id", "manybody_specification", ["qc_specification_id"], unique=False
+        "ix_manybody_specification_singlepoint_specification_id",
+        "manybody_specification",
+        ["singlepoint_specification_id"],
+        unique=False,
     )
     op.create_table(
         "manybody_record",
@@ -87,7 +90,7 @@ def downgrade():
     op.drop_index("ix_manybody_cluster_molecule_id", table_name="manybody_cluster")
     op.drop_table("manybody_cluster")
     op.drop_table("manybody_record")
-    op.drop_index("ix_manybody_specification_qc_specification_id", table_name="manybody_specification")
+    op.drop_index("ix_manybody_specification_singlepoint_specification_id", table_name="manybody_specification")
     op.drop_index("ix_manybody_specification_program", table_name="manybody_specification")
     op.drop_index("ix_manybody_specification_keywords", table_name="manybody_specification")
     op.drop_table("manybody_specification")
