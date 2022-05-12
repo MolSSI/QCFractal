@@ -19,10 +19,9 @@ def test_reaction_full_1(fulltest_client: PortalClient):
     meta, ids = fulltest_client.add_reactions(
         stoichiometries=[molecules],
         program=input_data.program,
-        method=input_data.method,
-        basis=input_data.basis,
+        singlepoint_specification=input_data.singlepoint_specification,
+        optimization_specification=input_data.optimization_specification,
         keywords=input_data.keywords,
-        protocols=input_data.protocols,
     )
 
     for i in range(240):
