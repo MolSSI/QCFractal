@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.testing_helpers import run_service_singlepoint
+from qcfractal.testing_helpers import run_service_simple
 from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
@@ -227,7 +227,7 @@ def test_manybody_socket_run(storage_socket: SQLAlchemySocket, test_data_name: s
     assert meta_1.success
 
     time_0 = datetime.utcnow()
-    finished, n_singlepoints = run_service_singlepoint(id_1[0], result_data_1, storage_socket, 100, use_hash=True)
+    finished, n_singlepoints = run_service_simple(id_1[0], result_data_1, storage_socket, 100)
     time_1 = datetime.utcnow()
 
     assert finished is True

@@ -344,13 +344,12 @@ def run_service_constropt(
     return r == 0, n_optimizations
 
 
-def run_service_singlepoint(
+def run_service_simple(
     record_id: int,
     result_data: Dict[str, Any],
     storage_socket: SQLAlchemySocket,
     max_iterations: int = 20,
     activate_manager: bool = True,
-    use_hash: bool = False,
 ) -> Tuple[bool, int]:
     """
     Runs a service that is based on singlepoint calculations
@@ -378,7 +377,7 @@ def run_service_singlepoint(
     tag = rec[0]["service"]["tag"]
     priority = rec[0]["service"]["priority"]
 
-    n_singlepoints = 0
+    n_records = 0
     n_iterations = 0
     r = 1
 
@@ -400,24 +399,32 @@ def run_service_singlepoint(
 
         # Sometimes a task may be duplicated in the service dependencies.
         # The C8H6 test has this "feature"
-        sp_ids = set(x["record_id"] for x in manager_tasks)
-        sp_recs = storage_socket.records.singlepoint.get(sp_ids, include=["*", "molecule", "task"])
-        assert all(x["task"]["priority"] == priority for x in sp_recs)
-        assert all(x["task"]["tag"] == tag for x in sp_recs)
+        ids = set(x["record_id"] for x in manager_tasks)
+        recs = storage_socket.records.get(ids, include=["id", "record_type", "task"])
+        assert all(x["task"]["priority"] == priority for x in recs)
+        assert all(x["task"]["tag"] == tag for x in recs)
 
         manager_ret = {}
-        for sp in sp_recs:
+        for r in recs:
             # Find out info about what tasks the service spawned
-            if use_hash:
-                mol_lookup = sp["molecule"]["identifiers"]["molecule_hash"]
-            else:
-                mol_lookup = sp["molecule"]["identifiers"]["molecular_formula"]
+            sock = storage_socket.records.get_socket(r["record_type"])
 
-            sp_data = result_data[mol_lookup]
-            manager_ret[sp["task"]["id"]] = sp_data
+            # Include any molecules in the record. Unknown ones are ignored
+            real_r = sock.get([r["id"]], include=["*", "molecule", "initial_molecule"])[0]
+
+            # Optimizations have initial molecule
+            if "initial_molecule" in real_r:
+                mol_hash = real_r["initial_molecule"]["identifiers"]["molecule_hash"]
+            else:
+                mol_hash = real_r["molecule"]["identifiers"]["molecule_hash"]
+
+            key = r["record_type"] + "|" + mol_hash
+
+            task_result = result_data[key]
+            manager_ret[r["task"]["id"]] = task_result
 
         rmeta = storage_socket.tasks.update_finished(mname1.fullname, manager_ret)
         assert rmeta.n_accepted == len(manager_tasks)
-        n_singlepoints += len(manager_ret)
+        n_records += len(manager_ret)
 
-    return r == 0, n_singlepoints
+    return r == 0, n_records
