@@ -203,7 +203,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
         output = "\n\nCreated manybody calculation\n"
 
         output += "-" * 80 + "\nManybody Keywords:\n\n"
-        spec = ManybodySpecification(**mb_orm.specification.model_dict())
+        spec: ManybodySpecification = mb_orm.specification.to_model(ManybodySpecification)
         table_rows = sorted(spec.keywords.dict().items())
         output += tabulate.tabulate(table_rows, headers=["keyword", "value"])
         output += "\n\n" + "-" * 80 + "\nQC Specification:\n\n"
