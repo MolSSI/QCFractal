@@ -134,7 +134,7 @@ def load_procedure_data(name: str):
         molecule_type = Molecule
     elif record_type == "reaction":
         input_type = ReactionSpecification
-        result_type = Dict[str, Union[AtomicResult, FailedOperation]]
+        result_type = Dict[str, Union[AtomicResult, OptimizationResult, FailedOperation]]
         molecule_type = List[Tuple[float, Molecule]]
     elif record_type == "manybody":
         input_type = ManybodySpecification

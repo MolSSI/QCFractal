@@ -158,8 +158,8 @@ def test_reaction_socket_add_same_1(storage_socket: SQLAlchemySocket):
 
 
 def test_reaction_socket_query(storage_socket: SQLAlchemySocket):
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data("rxn_H2O_psi4_b3lyp")
-    input_spec_2, molecule_2, result_data_2 = load_procedure_data("rxn_H2_psi4_b3lyp")
+    input_spec_1, molecule_1, result_data_1 = load_procedure_data("rxn_H2O_psi4_b3lyp_sp")
+    input_spec_2, molecule_2, result_data_2 = load_procedure_data("rxn_H2_psi4_b3lyp_sp")
 
     meta_1, id_1 = storage_socket.records.reaction.add(
         [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
@@ -218,8 +218,10 @@ def test_reaction_socket_query(storage_socket: SQLAlchemySocket):
 @pytest.mark.parametrize(
     "test_data_name",
     [
-        "rxn_H2_psi4_b3lyp",
-        "rxn_H2O_psi4_b3lyp",
+        "rxn_H2_psi4_b3lyp_sp",
+        "rxn_H2O_psi4_b3lyp_sp",
+        "rxn_H2O_psi4_mp2_opt",
+        "rxn_H2O_psi4_mp2_optsp",
     ],
 )
 def test_reaction_socket_run(storage_socket: SQLAlchemySocket, test_data_name: str):
@@ -249,7 +251,5 @@ def test_reaction_socket_run(storage_socket: SQLAlchemySocket, test_data_name: s
     assert rec[0]["service"] is None
     out = OutputStore(**rec[0]["compute_history"][-1]["outputs"]["stdout"])
     assert "All reaction components are complete" in out.as_string
-
-    assert len(rec[0]["components"]) == n_singlepoints
 
     assert rec[0]["total_energy"] < 0.0
