@@ -63,7 +63,7 @@ class ReactionRecordSocket(BaseRecordSocket):
         output = "\n\nCreated reaction. Molecules:\n\n"
 
         output += "-" * 80 + "\nManybody Keywords:\n\n"
-        spec = ReactionSpecification(**rxn_orm.specification.model_dict())
+        spec: ReactionSpecification = rxn_orm.specification.to_model(ReactionSpecification)
         table_rows = sorted(spec.keywords.dict().items())
         output += tabulate.tabulate(table_rows, headers=["keyword", "value"])
 
@@ -100,6 +100,10 @@ class ReactionRecordSocket(BaseRecordSocket):
 
         rxn_orm: ReactionRecordORM = service_orm.record
 
+        spec: ReactionSpecification = rxn_orm.specification.to_model(ReactionSpecification)
+        has_singlepoint = bool(spec.singlepoint_specification)
+        has_optimization = bool(spec.optimization_specification)
+
         # Always update with the current provenance
         rxn_orm.compute_history[-1].provenance = {
             "creator": "qcfractal",
@@ -110,22 +114,68 @@ class ReactionRecordSocket(BaseRecordSocket):
         # Component by molecule id
         component_map = {x.molecule_id: x for x in rxn_orm.components}
 
-        required_mols = [x.molecule_id for x in rxn_orm.components]
+        # Molecules we need to do an optimization on
+        required_opt_mols = {x.molecule_id for x in rxn_orm.components if has_optimization}
+
+        # Molecules we need to do a singlepoint calculation on
+        # (this is the molecule of the reaction, so it may actually be the INITIAL molecule
+        # of an optimization)
+        required_sp_mols = {x.molecule_id for x in rxn_orm.components if has_singlepoint}
 
         complete_tasks = service_orm.dependencies
-        complete_mols = [x.record.molecule_id for x in complete_tasks]
 
-        mols_to_compute = list(set(required_mols) - set(complete_mols))
+        # What was already completed and/or submitted
+        sub_opt_mols = {x.molecule_id for x in rxn_orm.components if x.optimization_id is not None}
+        sub_sp_mols = {x.molecule_id for x in rxn_orm.components if x.singlepoint_id is not None}
+
+        # What we need to compute
+        opt_mols_to_compute = required_opt_mols - sub_opt_mols
+        sp_mols_to_compute = required_sp_mols - sub_sp_mols
+
+        # Singlepoint calculations must wait for optimizations
+        sp_mols_to_compute -= opt_mols_to_compute
 
         service_orm.dependencies = []
 
-        if mols_to_compute:
-            qc_spec_id = rxn_orm.specification.singlepoint_specification_id
-            meta, sp_ids = self.root_socket.records.singlepoint.add_internal(
-                mols_to_compute, qc_spec_id, service_orm.tag, service_orm.priority, session=session
+        if opt_mols_to_compute:
+            opt_spec_id = rxn_orm.specification.optimization_specification_id
+
+            meta, opt_ids = self.root_socket.records.optimization.add_internal(
+                opt_mols_to_compute, opt_spec_id, service_orm.tag, service_orm.priority, session=session
             )
 
-            for mol_id, sp_id in zip(mols_to_compute, sp_ids):
+            for mol_id, opt_id in zip(opt_mols_to_compute, opt_ids):
+                component = component_map[mol_id]
+
+                svc_dep = ServiceDependencyORM(record_id=opt_id, extras={})
+
+                assert component.singlepoint_id is None
+                component.optimization_id = opt_id
+
+                service_orm.dependencies.append(svc_dep)
+
+            output = "\n\nSubmitted optimization calculations:\n"
+            output += tabulate.tabulate(zip(opt_mols_to_compute, opt_ids), headers=["molecule id", "optimization id"])
+
+        if sp_mols_to_compute:
+
+            # If an optimization was specified, we need to get the final molecule from that
+            if has_optimization:
+                real_mols_to_compute = {
+                    x.optimization_record.final_molecule_id
+                    for x in rxn_orm.components
+                    if x.molecule_id in sp_mols_to_compute
+                }
+            else:
+                real_mols_to_compute = sp_mols_to_compute
+
+            qc_spec_id = rxn_orm.specification.singlepoint_specification_id
+            meta, sp_ids = self.root_socket.records.singlepoint.add_internal(
+                real_mols_to_compute, qc_spec_id, service_orm.tag, service_orm.priority, session=session
+            )
+
+            # Note the mapping back to the original molecule id (not the optimized one)
+            for mol_id, sp_id in zip(sp_mols_to_compute, sp_ids):
                 component = component_map[mol_id]
 
                 svc_dep = ServiceDependencyORM(record_id=sp_id, extras={})
@@ -135,47 +185,93 @@ class ReactionRecordSocket(BaseRecordSocket):
 
                 service_orm.dependencies.append(svc_dep)
 
-            output = "\nSubmitted singlepoint calculations:\n"
-            output += tabulate.tabulate(zip(mols_to_compute, sp_ids), headers=["molecule id", "singlepoint id"])
+            output = "\n\nSubmitted singlepoint calculations:\n"
+            output += tabulate.tabulate(zip(sp_mols_to_compute, sp_ids), headers=["molecule id", "singlepoint id"])
 
-        else:
+        if not (opt_mols_to_compute or sp_mols_to_compute):
             output = "\n\n" + "*" * 80 + "\n"
             output += "All reaction components are complete!\n\n"
 
             output += "Reaction results:\n"
             table = []
-            total = 0.0
+            total_energy = 0.0
 
             coef_map = {x.molecule_id: x.coefficient for x in rxn_orm.components}
 
             for component in rxn_orm.components:
                 mol_form = component.molecule.identifiers["molecular_formula"]
                 mol_id = component.molecule_id
-
-                if component.singlepoint_id is not None:
-                    energy = component.singlepoint_record.properties["return_energy"]
-                else:
-                    energy = component.optimization_record.properties["return_energy"]
-
                 coefficient = coef_map[mol_id]
 
-                table_row = [mol_id, mol_form, component.singlepoint_id, energy, coefficient]
+                if has_optimization and has_singlepoint:
+                    energy = component.singlepoint_record.properties["return_energy"]
+                    table_row = [
+                        mol_id,
+                        mol_form,
+                        component.optimization_record.final_molecule_id,
+                        component.optimization_id,
+                        component.singlepoint_id,
+                        energy,
+                        coefficient,
+                    ]
+                elif has_singlepoint:
+                    energy = component.singlepoint_record.properties["return_energy"]
+                    table_row = [mol_id, mol_form, component.singlepoint_id, energy, coefficient]
+                else:
+                    # has optimization only
+                    energy = component.optimization_record.energies[-1]
+                    table_row = [
+                        mol_id,
+                        mol_form,
+                        component.optimization_record.final_molecule_id,
+                        component.optimization_id,
+                        energy,
+                        coefficient,
+                    ]
+
                 table.append(table_row)
+                total_energy += coefficient * energy
 
-                total += coefficient * energy
+            if has_optimization and has_singlepoint:
+                output += tabulate.tabulate(
+                    table,
+                    headers=[
+                        "initial molecule id",
+                        "molecule",
+                        "optimized molecule id",
+                        "optimization id",
+                        "singlepoint id",
+                        "energy (hartree)",
+                        "coefficient",
+                    ],
+                )
+            elif has_singlepoint:
+                output += tabulate.tabulate(
+                    table,
+                    headers=["initial molecule id", "molecule", "singlepoint id", "energy (hartree)", "coefficient"],
+                )
+            else:
+                output += tabulate.tabulate(
+                    table,
+                    headers=[
+                        "initial molecule id",
+                        "molecule",
+                        "optimized molecule id",
+                        "optimization id",
+                        "energy (hartree)",
+                        "coefficient",
+                    ],
+                )
 
-            output += tabulate.tabulate(
-                table, headers=["molecule id", "molecule", "singlepoint id", "energy (hartree)", "coefficient"]
-            )
             output += "\n\n"
-            output += f"Weighted total energy: {total:.16f} hartrees"
+            output += f"Total reaction energy: {total_energy:.16f} hartrees"
 
-            rxn_orm.total_energy = total
+            rxn_orm.total_energy = total_energy
 
         stdout_orm = rxn_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
         stdout_orm.append(output)
 
-        return len(mols_to_compute) == 0
+        return not (opt_mols_to_compute or sp_mols_to_compute)
 
     def add_specification(
         self, rxn_spec: ReactionSpecification, *, session: Optional[Session] = None
