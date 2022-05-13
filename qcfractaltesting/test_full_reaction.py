@@ -15,7 +15,28 @@ if TYPE_CHECKING:
 
 
 def test_reaction_full_1(fulltest_client: PortalClient):
-    input_data, molecules, _ = load_procedure_data("rxn_H2O_psi4_b3lyp")
+    input_data, molecules, _ = load_procedure_data("rxn_H2O_psi4_b3lyp_sp")
+    meta, ids = fulltest_client.add_reactions(
+        stoichiometries=[molecules],
+        program=input_data.program,
+        singlepoint_specification=input_data.singlepoint_specification,
+        optimization_specification=input_data.optimization_specification,
+        keywords=input_data.keywords,
+    )
+
+    for i in range(240):
+        time.sleep(1)
+        rec = fulltest_client.get_reactions(ids[0])
+        if rec.status not in [RecordStatusEnum.running, RecordStatusEnum.waiting]:
+            break
+    else:
+        raise RuntimeError("Did not finish calculation in time")
+
+    assert rec.status == RecordStatusEnum.complete
+
+
+def test_reaction_full_2(fulltest_client: PortalClient):
+    input_data, molecules, _ = load_procedure_data("rxn_H2O_psi4_b3lyp_optsp")
     meta, ids = fulltest_client.add_reactions(
         stoichiometries=[molecules],
         program=input_data.program,
