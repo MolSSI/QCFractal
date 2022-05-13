@@ -36,7 +36,7 @@ def test_reaction_full_1(fulltest_client: PortalClient):
 
 
 def test_reaction_full_2(fulltest_client: PortalClient):
-    input_data, molecules, _ = load_procedure_data("rxn_H2O_psi4_b3lyp_optsp")
+    input_data, molecules, _ = load_procedure_data("rxn_H2O_psi4_mp2_optsp")
     meta, ids = fulltest_client.add_reactions(
         stoichiometries=[molecules],
         program=input_data.program,
