@@ -44,6 +44,7 @@ class BaseDatasetSocket:
         assert self.entry_orm is not None
         assert self.record_item_orm is not None
 
+        # Use the identity from the ORM object. This keeps everything consistent
         self.dataset_type = self.dataset_orm.__mapper_args__["polymorphic_identity"]
 
     def _add_specification(self, session, specification) -> Tuple[InsertMetadata, Optional[int]]:
@@ -658,17 +659,20 @@ class DatasetSocket:
         from .optimization.sockets import OptimizationDatasetSocket
         from .torsiondrive.sockets import TorsiondriveDatasetSocket
         from .gridoptimization.sockets import GridoptimizationDatasetSocket
+        from .manybody.sockets import ManybodyDatasetSocket
 
         self.singlepoint = SinglepointDatasetSocket(root_socket)
         self.optimization = OptimizationDatasetSocket(root_socket)
         self.torsiondrive = TorsiondriveDatasetSocket(root_socket)
         self.gridoptimization = GridoptimizationDatasetSocket(root_socket)
+        self.manybody = ManybodyDatasetSocket(root_socket)
 
         self._handler_map: Dict[str, BaseDatasetSocket] = {
             self.singlepoint.dataset_type: self.singlepoint,
             self.optimization.dataset_type: self.optimization,
             self.torsiondrive.dataset_type: self.torsiondrive,
             self.gridoptimization.dataset_type: self.gridoptimization,
+            self.manybody.dataset_type: self.manybody,
         }
 
         # Get the SQL 'select' statements from the handlers

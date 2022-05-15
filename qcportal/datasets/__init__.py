@@ -24,13 +24,17 @@ from .singlepoint.models import SinglepointDataset
 from .optimization.models import OptimizationDataset
 from .torsiondrive.models import TorsiondriveDataset
 from .gridoptimization import GridoptimizationDataset
+from .manybody import ManybodyDataset
 
-AllDatasetTypes = Union[SinglepointDataset, OptimizationDataset, TorsiondriveDataset, GridoptimizationDataset]
+AllDatasetTypes = Union[
+    SinglepointDataset, OptimizationDataset, TorsiondriveDataset, GridoptimizationDataset, ManybodyDataset
+]
 AllDatasetDataModelTypes = Union[
     SinglepointDataset._DataModel,
     OptimizationDataset._DataModel,
     TorsiondriveDataset._DataModel,
     GridoptimizationDataset._DataModel,
+    ManybodyDataset._DataModel,
 ]
 
 
