@@ -80,9 +80,8 @@ class OptimizationDatasetSocket(BaseDatasetSocket):
 
         # Normal entries - just let it rip
         for spec in spec_orm:
-            molecule_ids = [
-                x.initial_molecule_id for x in normal_entries if (x.name, spec.name) not in existing_records
-            ]
+            new_normal_entries = [x for x in normal_entries if (x.name, spec.name) not in existing_records]
+            molecule_ids = [x.initial_molecule_id for x in new_normal_entries]
 
             meta, opt_ids = self.root_socket.records.optimization.add_internal(
                 initial_molecule_ids=molecule_ids,
@@ -92,12 +91,11 @@ class OptimizationDatasetSocket(BaseDatasetSocket):
                 session=session,
             )
 
-            for idx, (entry, oid) in enumerate(zip(normal_entries, opt_ids)):
-                if idx in meta.inserted_idx:
-                    rec = OptimizationDatasetRecordItemORM(
-                        dataset_id=dataset_id, entry_name=entry.name, specification_name=spec.name, record_id=oid
-                    )
-                    session.add(rec)
+            for entry, oid in zip(new_normal_entries, opt_ids):
+                rec = OptimizationDatasetRecordItemORM(
+                    dataset_id=dataset_id, entry_name=entry.name, specification_name=spec.name, record_id=oid
+                )
+                session.add(rec)
 
         # Now the ones with additional keywords
         for spec in spec_orm:
