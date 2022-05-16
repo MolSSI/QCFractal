@@ -24,7 +24,7 @@ class ReactionSpecification(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    program: constr(to_lower=True) = "manybody"
+    program: constr(to_lower=True) = "reaction"
 
     singlepoint_specification: Optional[QCSpecification]
     optimization_specification: Optional[OptimizationSpecification]
@@ -95,7 +95,7 @@ class ReactionRecord(BaseRecord):
         )
 
     @property
-    def specification(self) -> QCSpecification:
+    def specification(self) -> ReactionSpecification:
         return self.raw_data.specification
 
     @property

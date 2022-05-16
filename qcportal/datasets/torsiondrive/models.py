@@ -48,7 +48,6 @@ class TorsiondriveDataset(BaseDataset):
     class _DataModel(BaseDataset._DataModel):
         collection_type: Literal["torsiondrive"] = "torsiondrive"
 
-        # Specifications are always loaded
         specifications: Optional[Dict[str, TorsiondriveDatasetSpecification]] = None
         entries: Optional[Dict[str, TorsiondriveDatasetEntry]] = None
         record_items: Optional[List[TorsiondriveDatasetRecordItem]] = None
