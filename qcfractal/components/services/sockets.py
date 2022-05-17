@@ -34,6 +34,18 @@ class ServiceSocket:
         self._logger = logging.getLogger(__name__)
         self._max_active_services = root_socket.qcf_config.max_active_services
 
+    def mark_service_complete(self, session: Session, service_orm: ServiceQueueORM):
+        # If the service has successfully completed, delete the entry from the Service Queue
+        self._logger.info(f"Record {service_orm.record_id} (service {service_orm.id}) has successfully completed!")
+        service_orm.record.compute_history[-1].status = RecordStatusEnum.complete
+        service_orm.record.compute_history[-1].modified_on = datetime.utcnow()
+        service_orm.record.status = RecordStatusEnum.complete
+        service_orm.record.modified_on = datetime.utcnow()
+        session.delete(service_orm)
+
+        session.commit()
+        self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.complete)
+
     def iterate_services(self, *, session: Optional[Session] = None) -> int:
         """
         Check for services that have their dependencies finished, and iterate or mark them as errored
@@ -144,19 +156,8 @@ class ServiceSocket:
                     self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.error)
                     continue
 
-                # If the service has successfully completed, delete the entry from the Service Queue
                 if completed:
-                    self._logger.info(
-                        f"Record {service_orm.record_id} (service {service_orm.id}) has successfully completed!"
-                    )
-                    service_orm.record.compute_history[-1].status = RecordStatusEnum.complete
-                    service_orm.record.compute_history[-1].modified_on = datetime.utcnow()
-                    service_orm.record.status = RecordStatusEnum.complete
-                    service_orm.record.modified_on = datetime.utcnow()
-                    session.delete(service_orm)
-
-                    session.commit()
-                    self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.complete)
+                    self.mark_service_complete(session, service_orm)
 
             # Should we start more?
             stmt = select(BaseRecordORM).where(
@@ -234,7 +235,11 @@ class ServiceSocket:
                     try:
                         if fresh_start:
                             self.root_socket.records.initialize_service(session, service_orm)
-                            self.root_socket.records.iterate_service(session, service_orm)
+                            completed = self.root_socket.records.iterate_service(session, service_orm)
+
+                            # Completed on first iteration? Possible if everything was already computed
+                            if completed:
+                                self.mark_service_complete(session, service_orm)
 
                     except Exception as err:
                         session.rollback()
