@@ -1,22 +1,22 @@
-from sqlalchemy import Column, Integer, String, JSON, Boolean, Index, ForeignKey
+from __future__ import annotations
+
+from typing import Optional, Iterable, Dict, Any
+
+from sqlalchemy import Column, Integer, String, JSON, Boolean, Index, ForeignKey, UniqueConstraint
 
 from qcfractal.db_socket import BaseORM, MsgpackExt
 
 
-class CollectionORM(BaseORM):
+class BaseDatasetORM(BaseORM):
     """
-    A base collection class of precomuted workflows such as datasets, ..
-
-    This is a dynamic document, so it will accept any number of
-    extra fields (expandable and uncontrolled schema)
+    A base class for all dataset ORM
     """
 
-    __tablename__ = "collection"
+    __tablename__ = "base_dataset"
 
     id = Column(Integer, primary_key=True)
-    collection_type = Column(String, nullable=False)  # for inheritance
+    dataset_type = Column(String, nullable=False)
 
-    collection = Column(String(100), nullable=False)
     lname = Column(String(100), nullable=False)
     name = Column(String(100), nullable=False)
 
@@ -32,26 +32,25 @@ class CollectionORM(BaseORM):
 
     provenance = Column(JSON)
 
-    extra = Column(JSON)  # extra data related to specific collection type
-
-    def update_relations(self, **kwarg):
-        pass
+    extra = Column(JSON)
 
     __table_args__ = (
-        Index("ix_collection_lname", "collection", "lname", unique=True),
-        Index("ix_collection_type", "collection_type"),
+        UniqueConstraint("dataset_type", "lname", name="uix_dataset_type_lname"),
+        Index("ix_dataset_type", "dataset_type"),
     )
 
-    __mapper_args__ = {"polymorphic_on": "collection_type", "polymorphic_identity": "collection"}
+    __mapper_args__ = {"polymorphic_on": "dataset_type"}
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # lname is only for the server
+        exclude = self.append_exclude(exclude, "lname")
+        return BaseORM.model_dict(self, exclude)
 
 
 class ContributedValuesORM(BaseORM):
-    """One group of a contibuted values per dataset
-    Each dataset can have multiple rows in this table"""
-
     __tablename__ = "contributed_values"
 
-    collection_id = Column(Integer, ForeignKey("collection.id", ondelete="cascade"), primary_key=True)
+    dataset_id = Column(Integer, ForeignKey("base_dataset.id", ondelete="cascade"), primary_key=True)
 
     name = Column(String, nullable=False, primary_key=True)
     values = Column(MsgpackExt, nullable=False)
@@ -67,3 +66,7 @@ class ContributedValuesORM(BaseORM):
     doi = Column(String)
 
     comments = Column(String)
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        exclude = self.append_exclude(exclude, "dataset_id")
+        return BaseORM.model_dict(self, exclude)

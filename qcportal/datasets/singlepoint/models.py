@@ -39,7 +39,7 @@ class SinglepointDatasetRecordItem(BaseModel):
 
 class SinglepointDataset(BaseDataset):
     class _DataModel(BaseDataset._DataModel):
-        collection_type: Literal["singlepoint"] = "singlepoint"
+        dataset_type: Literal["singlepoint"] = "singlepoint"
 
         specifications: Optional[Dict[str, SinglepointDatasetSpecification]] = None
         entries: Optional[Dict[str, SinglepointDatasetEntry]] = None

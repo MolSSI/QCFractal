@@ -18,10 +18,8 @@ class BaseDataset(BaseModel):
             validate_assignment = True
 
         id: int
-        collection: str
-        collection_type: str
+        dataset_type: str
         name: str
-        lname: str
         description: Optional[str]
         tagline: Optional[str]
         tags: Optional[List[str]]
@@ -59,7 +57,7 @@ class BaseDataset(BaseModel):
 
     @classmethod
     def from_datamodel(cls, raw_data: _DataModel, client: Any = None):
-        return cls(client=client, raw_data=raw_data, dataset_type=raw_data.collection_type)
+        return cls(client=client, raw_data=raw_data, dataset_type=raw_data.dataset_type)
 
     def _append_entry_names(self, entry_names: List[str]):
         if self.raw_data.entry_names is None:
@@ -620,7 +618,6 @@ class BaseDataset(BaseModel):
     def set_name(self, new_name: str):
         old_name = self.raw_data.name
         self.raw_data.name = new_name
-        self.raw_data.lname = new_name.lower()
         try:
             self._update_metadata()
         except:

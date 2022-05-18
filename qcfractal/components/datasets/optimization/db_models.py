@@ -6,7 +6,7 @@ from sqlalchemy import Column, Integer, ForeignKey, String, ForeignKeyConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
-from qcfractal.components.datasets.db_models import CollectionORM
+from qcfractal.components.datasets.db_models import BaseDatasetORM
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM, OptimizationRecordORM
 from qcfractal.db_socket import BaseORM
@@ -98,10 +98,10 @@ class OptimizationDatasetRecordItemORM(BaseORM):
         return BaseORM.model_dict(self, exclude)
 
 
-class OptimizationDatasetORM(CollectionORM):
+class OptimizationDatasetORM(BaseDatasetORM):
     __tablename__ = "optimization_dataset"
 
-    id = Column(Integer, ForeignKey(CollectionORM.id, ondelete="cascade"), primary_key=True)
+    id = Column(Integer, ForeignKey(BaseDatasetORM.id, ondelete="cascade"), primary_key=True)
 
     __mapper_args__ = {
         "polymorphic_identity": "optimization",

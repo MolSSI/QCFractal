@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import select, delete, func, union
 from sqlalchemy.orm import load_only, lazyload, joinedload
 
-from qcfractal.components.datasets.db_models import CollectionORM
+from qcfractal.components.datasets.db_models import BaseDatasetORM
 from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.db_socket.helpers import (
     get_general,
@@ -92,8 +92,8 @@ class BaseDatasetSocket:
         self, dataset_id: int, *, session: Optional[Session] = None
     ) -> Tuple[str, PriorityEnum]:
 
-        stmt = select(CollectionORM.default_tag, CollectionORM.default_priority)
-        stmt = stmt.where(CollectionORM.id == dataset_id)
+        stmt = select(BaseDatasetORM.default_tag, BaseDatasetORM.default_priority)
+        stmt = stmt.where(BaseDatasetORM.id == dataset_id)
 
         with self.root_socket.optional_session(session, True) as session:
             r = session.execute(stmt).one_or_none()
@@ -164,8 +164,7 @@ class BaseDatasetSocket:
             group = "default"
 
         ds_orm = self.dataset_orm(
-            collection_type=self.dataset_type,
-            collection=self.dataset_type,
+            dataset_type=self.dataset_type,
             name=name,
             lname=name.lower(),
             tagline=tagline,
@@ -181,7 +180,7 @@ class BaseDatasetSocket:
         with self.root_socket.optional_session(session) as session:
             stmt = select(self.dataset_orm.id)
             stmt = stmt.where(self.dataset_orm.lname == name.lower())
-            stmt = stmt.where(self.dataset_orm.collection_type == self.dataset_type)
+            stmt = stmt.where(self.dataset_orm.dataset_type == self.dataset_type)
             existing = session.execute(stmt).scalar_one_or_none()
 
             if existing is not None:
@@ -695,8 +694,8 @@ class DatasetSocket:
 
     def lookup_type(self, dataset_id: int, *, session: Optional[Session] = None) -> str:
 
-        stmt = select(CollectionORM.collection_type)
-        stmt = stmt.where(CollectionORM.id == dataset_id)
+        stmt = select(BaseDatasetORM.dataset_type)
+        stmt = stmt.where(BaseDatasetORM.id == dataset_id)
 
         with self.root_socket.optional_session(session, True) as session:
             ds_type = session.execute(stmt).scalar_one_or_none()
@@ -710,9 +709,9 @@ class DatasetSocket:
         self, dataset_type: str, dataset_name: str, missing_ok: bool = False, *, session: Optional[Session] = None
     ) -> Optional[int]:
 
-        stmt = select(CollectionORM.id)
-        stmt = stmt.where(CollectionORM.lname == dataset_name.lower())
-        stmt = stmt.where(CollectionORM.collection_type == dataset_type.lower())
+        stmt = select(BaseDatasetORM.id)
+        stmt = stmt.where(BaseDatasetORM.lname == dataset_name.lower())
+        stmt = stmt.where(BaseDatasetORM.dataset_type == dataset_type.lower())
 
         with self.root_socket.optional_session(session, True) as session:
             ds_id = session.execute(stmt).scalar_one_or_none()
@@ -723,7 +722,7 @@ class DatasetSocket:
 
     def list(self, *, session: Optional[Session] = None):
         with self.root_socket.optional_session(session, True) as session:
-            stmt = select(CollectionORM.id, CollectionORM.collection_type, CollectionORM.name)
+            stmt = select(BaseDatasetORM.id, BaseDatasetORM.dataset_type, BaseDatasetORM.name)
             r = session.execute(stmt).all()
 
             return [{"id": x[0], "dataset_type": x[1], "dataset_name": x[2]} for x in r]
@@ -738,17 +737,17 @@ class DatasetSocket:
 
         stmt = select(
             self._record_cte.c.record_id,
-            CollectionORM.id,
-            CollectionORM.collection_type,
-            CollectionORM.name,
+            BaseDatasetORM.id,
+            BaseDatasetORM.dataset_type,
+            BaseDatasetORM.name,
             self._record_cte.c.entry_name,
             self._record_cte.c.specification_name,
         )
-        stmt = stmt.join(self._record_cte, CollectionORM.id == self._record_cte.c.dataset_id)
+        stmt = stmt.join(self._record_cte, BaseDatasetORM.id == self._record_cte.c.dataset_id)
         stmt = stmt.where(self._record_cte.c.record_id.in_(record_id))
 
         if dataset_type is not None:
-            stmt = stmt.where(CollectionORM.collection_type == dataset_type)
+            stmt = stmt.where(BaseDatasetORM.dataset_type == dataset_type)
 
         with self.root_socket.optional_session(session, True) as session:
             ret = session.execute(stmt).all()

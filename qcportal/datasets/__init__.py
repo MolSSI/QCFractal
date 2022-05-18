@@ -46,5 +46,5 @@ AllDatasetDataModelTypes = Union[
 
 
 def dataset_from_datamodel(data: AllDatasetDataModelTypes, client: Any) -> AllDatasetTypes:
-    dataset_init = {"client": client, "dataset_type": data.collection_type, "raw_data": data}
+    dataset_init = {"client": client, "dataset_type": data.dataset_type, "raw_data": data}
     return pydantic.parse_obj_as(AllDatasetTypes, dataset_init)

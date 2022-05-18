@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, ForeignKey, String, Index, ForeignKeyCon
 from sqlalchemy.dialects.postgresql import JSONB, DOUBLE_PRECISION
 from sqlalchemy.orm import relationship
 
-from qcfractal.components.datasets.db_models import CollectionORM
+from qcfractal.components.datasets.db_models import BaseDatasetORM
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.reaction.db_models import ReactionRecordORM, ReactionSpecificationORM
 from qcfractal.db_socket import BaseORM
@@ -96,10 +96,10 @@ class ReactionDatasetRecordItemORM(BaseORM):
     )
 
 
-class ReactionDatasetORM(CollectionORM):
+class ReactionDatasetORM(BaseDatasetORM):
     __tablename__ = "reaction_dataset"
 
-    id = Column(Integer, ForeignKey("collection.id", ondelete="cascade"), primary_key=True)
+    id = Column(Integer, ForeignKey(BaseDatasetORM.id, ondelete="cascade"), primary_key=True)
 
     __mapper_args__ = {
         "polymorphic_identity": "reaction",

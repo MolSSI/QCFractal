@@ -6,7 +6,7 @@ from sqlalchemy import select, Column, Integer, ForeignKey, String, ForeignKeyCo
 from sqlalchemy.dialects.postgresql import JSONB, array_agg
 from sqlalchemy.orm import relationship, column_property
 
-from qcfractal.components.datasets.db_models import CollectionORM
+from qcfractal.components.datasets.db_models import BaseDatasetORM
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM
 from qcfractal.components.records.torsiondrive.db_models import TorsiondriveRecordORM
@@ -136,10 +136,10 @@ class TorsiondriveDatasetRecordItemORM(BaseORM):
         return BaseORM.model_dict(self, exclude)
 
 
-class TorsiondriveDatasetORM(CollectionORM):
+class TorsiondriveDatasetORM(BaseDatasetORM):
     __tablename__ = "torsiondrive_dataset"
 
-    id = Column(Integer, ForeignKey(CollectionORM.id, ondelete="cascade"), primary_key=True)
+    id = Column(Integer, ForeignKey(BaseDatasetORM.id, ondelete="cascade"), primary_key=True)
 
     __mapper_args__ = {
         "polymorphic_identity": "torsiondrive",

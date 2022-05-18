@@ -39,7 +39,7 @@ class OptimizationDatasetRecordItem(BaseModel):
 
 class OptimizationDataset(BaseDataset):
     class _DataModel(BaseDataset._DataModel):
-        collection_type: Literal["optimization"] = "optimization"
+        dataset_type: Literal["optimization"] = "optimization"
 
         specifications: Optional[Dict[str, OptimizationDatasetSpecification]] = None
         entries: Optional[Dict[str, OptimizationDatasetEntry]] = None

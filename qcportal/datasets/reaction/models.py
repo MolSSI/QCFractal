@@ -49,7 +49,7 @@ class ReactionDatasetRecordItem(BaseModel):
 
 class ReactionDataset(BaseDataset):
     class _DataModel(BaseDataset._DataModel):
-        collection_type: Literal["reaction"]
+        dataset_type: Literal["reaction"]
 
         specifications: Optional[Dict[str, ReactionDatasetSpecification]] = None
         entries: Optional[Dict[str, ReactionDatasetEntry]] = None

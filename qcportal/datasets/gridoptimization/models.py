@@ -46,7 +46,7 @@ class GridoptimizationDatasetRecordItem(BaseModel):
 
 class GridoptimizationDataset(BaseDataset):
     class _DataModel(BaseDataset._DataModel):
-        collection_type: Literal["gridoptimization"] = "gridoptimization"
+        dataset_type: Literal["gridoptimization"] = "gridoptimization"
 
         specifications: Optional[Dict[str, GridoptimizationDatasetSpecification]] = None
         entries: Optional[Dict[str, GridoptimizationDatasetEntry]] = None

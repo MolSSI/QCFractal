@@ -39,7 +39,7 @@ class ManybodyDatasetRecordItem(BaseModel):
 
 class ManybodyDataset(BaseDataset):
     class _DataModel(BaseDataset._DataModel):
-        collection_type: Literal["manybody"] = "manybody"
+        dataset_type: Literal["manybody"] = "manybody"
 
         specifications: Optional[Dict[str, ManybodyDatasetSpecification]] = None
         entries: Optional[Dict[str, ManybodyDatasetEntry]] = None

@@ -6,7 +6,7 @@ from sqlalchemy import JSON, Column, Integer, ForeignKey, String, ForeignKeyCons
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
-from qcfractal.components.datasets.db_models import CollectionORM, ContributedValuesORM
+from qcfractal.components.datasets.db_models import BaseDatasetORM, ContributedValuesORM
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM, SinglepointRecordORM
 from qcfractal.db_socket import BaseORM
@@ -100,14 +100,14 @@ class SinglepointDatasetRecordItemORM(BaseORM):
         return BaseORM.model_dict(self, exclude)
 
 
-class SinglepointDatasetORM(CollectionORM):
+class SinglepointDatasetORM(BaseDatasetORM):
     """
     The Dataset class for homogeneous computations on many molecules.
     """
 
     __tablename__ = "singlepoint_dataset"
 
-    id = Column(Integer, ForeignKey(CollectionORM.id, ondelete="cascade"), primary_key=True)
+    id = Column(Integer, ForeignKey(BaseDatasetORM.id, ondelete="cascade"), primary_key=True)
 
     contributed_values = relationship(ContributedValuesORM, lazy="select", cascade="all, delete-orphan")
 

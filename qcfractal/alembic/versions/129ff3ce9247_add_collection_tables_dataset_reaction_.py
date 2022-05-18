@@ -9,7 +9,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.orm.session import Session
 
-from qcfractal.components.datasets.db_models import CollectionORM
+from qcfractal.components.datasets.db_models import BaseDatasetORM
 from qcfractal.components.datasets.reaction.db_models import ReactionDatasetORM
 
 # revision identifiers, used by Alembic.
@@ -90,7 +90,7 @@ def migrate_collections():
 
     collection_map = {"dataset": DatasetORM, "reactiondataset": ReactionDatasetORM}
 
-    collections = session.query(CollectionORM)
+    collections = session.query(BaseDatasetORM)
 
     for collection in collections:
         print(f"collection: id:{collection.id}, lname: {collection.lname}")
@@ -101,7 +101,7 @@ def migrate_collections():
             continue
 
         fields = collection.to_dict(exclude=["id"])
-        session.query(CollectionORM).filter_by(id=collection.id).delete(synchronize_session=False)
+        session.query(BaseDatasetORM).filter_by(id=collection.id).delete(synchronize_session=False)
         session.commit()
 
         dataset = collection_class(**fields)

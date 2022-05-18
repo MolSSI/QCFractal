@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import and_, func, text, select, delete
 
 import qcfractal
-from qcfractal.components.datasets.db_models import CollectionORM
+from qcfractal.components.datasets.db_models import BaseDatasetORM
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.records.db_models import BaseRecordORM
@@ -146,7 +146,7 @@ class ServerInfoSocket:
             is used, it will be flushed (but not committed) before returning from this function.
         """
 
-        table_list = [CollectionORM, MoleculeORM, BaseRecordORM, OutputStoreORM, AccessLogORM, InternalErrorLogORM]
+        table_list = [BaseDatasetORM, MoleculeORM, BaseRecordORM, OutputStoreORM, AccessLogORM, InternalErrorLogORM]
         db_name = self.root_socket.qcf_config.database.database_name
 
         table_counts = {}
@@ -204,7 +204,7 @@ class ServerInfoSocket:
 
             # Build out final data
             data = {
-                "collection_count": table_counts[CollectionORM.__tablename__],
+                "collection_count": table_counts[BaseDatasetORM.__tablename__],
                 "molecule_count": table_counts[MoleculeORM.__tablename__],
                 "record_count": table_counts[BaseRecordORM.__tablename__],
                 "outputstore_count": table_counts[OutputStoreORM.__tablename__],

@@ -6,7 +6,7 @@ from sqlalchemy import Column, Integer, ForeignKey, String, ForeignKeyConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
-from qcfractal.components.datasets.db_models import CollectionORM
+from qcfractal.components.datasets.db_models import BaseDatasetORM
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.manybody.db_models import ManybodySpecificationORM, ManybodyRecordORM
 from qcfractal.db_socket import BaseORM
@@ -96,10 +96,10 @@ class ManybodyDatasetRecordItemORM(BaseORM):
         return BaseORM.model_dict(self, exclude)
 
 
-class ManybodyDatasetORM(CollectionORM):
+class ManybodyDatasetORM(BaseDatasetORM):
     __tablename__ = "manybody_dataset"
 
-    id = Column(Integer, ForeignKey(CollectionORM.id, ondelete="cascade"), primary_key=True)
+    id = Column(Integer, ForeignKey(BaseDatasetORM.id, ondelete="cascade"), primary_key=True)
 
     __mapper_args__ = {
         "polymorphic_identity": "manybody",
