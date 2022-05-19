@@ -240,3 +240,12 @@ def revert_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Dat
     return ds_socket.revert_records(
         dataset_id, body_data.entry_names, body_data.specification_names, body_data.revert_status
     )
+
+
+###################
+# Contributed Values
+###################
+@main.route("/v1/datasets/<int:dataset_id>/contributed_values", methods=["GET"])
+@wrap_route("READ")
+def fetch_dataset_contributed_values_v1(dataset_id: int):
+    return storage_socket.datasets.get_contributed_values(dataset_id)

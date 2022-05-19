@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy import select, delete, func, union
 from sqlalchemy.orm import load_only, lazyload, joinedload
 
-from qcfractal.components.datasets.db_models import BaseDatasetORM
+from qcfractal.components.datasets.db_models import BaseDatasetORM, ContributedValuesORM
 from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.db_socket.helpers import (
     get_general,
@@ -762,3 +762,11 @@ class DatasetSocket:
                 }
                 for x in ret
             ]
+
+    def get_contributed_values(self, dataset_id: int, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
+        stmt = select(ContributedValuesORM)
+        stmt = stmt.where(ContributedValuesORM.dataset_id == dataset_id)
+
+        with self.root_socket.optional_session(session, True) as session:
+            cv = session.execute(stmt).scalars().all()
+            return [x.model_dict() for x in cv]

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Optional, Iterable, Dict, Any
 
 from sqlalchemy import Column, Integer, String, JSON, Boolean, Index, ForeignKey, UniqueConstraint
+from sqlalchemy.orm import relationship
 
 from qcfractal.db_socket import BaseORM, MsgpackExt
 
@@ -33,6 +34,8 @@ class BaseDatasetORM(BaseORM):
     provenance = Column(JSON)
 
     extra = Column(JSON)
+
+    contributed_values = relationship("ContributedValuesORM")
 
     __table_args__ = (
         UniqueConstraint("dataset_type", "lname", name="uix_dataset_type_lname"),

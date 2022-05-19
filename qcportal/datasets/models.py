@@ -4,10 +4,49 @@ from typing import Optional, Dict, Any, List, Iterable, Type, Tuple, Union, Call
 
 import pandas as pd
 from pydantic import BaseModel, Extra, validator
+from qcelemental.models.types import Array
 
 from qcportal.base_models import RestModelBase, validate_list_to_single
 from qcportal.records import PriorityEnum, RecordStatusEnum, record_from_datamodel
 from qcportal.utils import make_list
+
+
+class Citation(BaseModel):
+    """A literature citation."""
+
+    class Config:
+        extra = Extra.forbid
+        allow_mutation = False
+
+    acs_citation: Optional[str] = None  # hand-formatted citation in ACS style
+    bibtex: Optional[str] = None  # bibtex blob for later use with bibtex-renderer
+    doi: Optional[str] = None
+    url: Optional[str] = None
+
+    def to_acs(self) -> str:
+        """Returns an ACS-formatted citation"""
+        return self.acs_citation
+
+
+class ContributedValues(BaseModel):
+    class Config:
+        extra = Extra.forbid
+        allow_mutation = False
+
+    name: str
+    values: Any
+    index: Array[str]
+    values_structure: Dict[str, Any] = {}
+
+    theory_level: Union[str, Dict[str, str]]
+    units: str
+    theory_level_details: Optional[Union[str, Dict[str, Optional[str]]]] = None
+
+    citations: Optional[List[Citation]] = None
+    external_url: Optional[str] = None
+    doi: Optional[str] = None
+
+    comments: Optional[str] = None
 
 
 class BaseDataset(BaseModel):
@@ -41,6 +80,9 @@ class BaseDataset(BaseModel):
         specifications: Dict[str, Any]
         entries: Optional[Dict[str, Any]]
         record_items: Optional[List[Any]]
+
+        # Values computed outside QCA
+        contributed_values: Optional[List[ContributedValues]] = None
 
     client: Any
     raw_data: _DataModel  # Meant to be overridden by derived classes
@@ -163,6 +205,20 @@ class BaseDataset(BaseModel):
                 x for x in self.raw_data.record_items if (x.specification_name, x.entry_name) not in new_info
             ]
             self.raw_data.record_items.extend(record_info)
+
+    def fetch_contributed_values(self):
+        if self.offline:
+            return
+
+        self.raw_data.contributed_values = self.client._auto_request(
+            "get",
+            f"v1/datasets/{self.id}/contributed_values",
+            None,
+            None,
+            Optional[List[ContributedValues]],
+            None,
+            None,
+        )
 
     def _update_metadata(self):
         new_body = DatasetModifyMetadata(
@@ -702,6 +758,13 @@ class BaseDataset(BaseModel):
     @property
     def records(self):
         return self._iterate_records()
+
+    @property
+    def contributed_values(self):
+        if self.raw_data.contributed_values is None:
+            self.fetch_contributed_values()
+
+        return self.raw_data.contributed_values
 
 
 class DatasetModifyMetadata(RestModelBase):
