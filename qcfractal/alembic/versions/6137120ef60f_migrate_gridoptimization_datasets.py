@@ -242,19 +242,8 @@ def upgrade():
                     record_id=record_id,
                 )
 
-        # Merge the provenance column with the provenance key in extra
-        conn.execute(
-            sa.text(
-                """UPDATE collection
-                SET provenance = COALESCE(extra->'provenance', '{}')::jsonb || COALESCE(provenance, '{}')::jsonb
-                WHERE id = :col_id"""
-            ),
-            col_id=col["id"],
-        )
-
         # Update the collection extra, with the removed fields
         ext.pop("history", None)
-        ext.pop("provenance", None)
         conn.execute(
             sa.text("UPDATE collection SET extra = (:extra)::json WHERE id = :col_id"),
             col_id=col["id"],

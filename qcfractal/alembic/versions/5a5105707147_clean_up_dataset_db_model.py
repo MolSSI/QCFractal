@@ -27,11 +27,31 @@ def upgrade():
 
     op.execute("ALTER SEQUENCE collection_id_seq RENAME TO base_dataset_id_seq")
     op.execute("ALTER INDEX collection_pkey RENAME TO base_dataset_pkey")
-    op.rename_table("collection", "base_dataset")
 
     op.alter_column("contributed_values", "collection_id", new_column_name="dataset_id")
     op.drop_constraint("contributed_values_collection_id_fkey", "contributed_values", type_="foreignkey")
-    op.create_foreign_key(None, "contributed_values", "base_dataset", ["dataset_id"], ["id"], ondelete="cascade")
+    op.create_foreign_key(None, "contributed_values", "collection", ["dataset_id"], ["id"], ondelete="cascade")
+
+    # Merge the provenance column with the provenance key in extra
+    op.execute(
+        sa.text(
+            """UPDATE collection
+            SET provenance = COALESCE(extra->'provenance', '{}')::jsonb || COALESCE(provenance, '{}')::jsonb"""
+        )
+    )
+
+    # Update the collection extra, with the removed fields
+    op.execute(sa.text("UPDATE collection SET extra = (extra::jsonb - 'provenance')::json"))
+
+    # Remove view columns from base collection
+    op.drop_column("collection", "view_url_hdf5")
+    op.drop_column("collection", "view_url_plaintext")
+    op.drop_column("collection", "view_available")
+    op.drop_column("collection", "view_metadata")
+
+    # Finally rename the table
+    op.rename_table("collection", "base_dataset")
+
     # ### end Alembic commands ###
 
 
