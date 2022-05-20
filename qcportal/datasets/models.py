@@ -115,11 +115,13 @@ class BaseDataset(BaseModel):
         # Ignoring the function argument for now... Just get all specs
         self.fetch_specifications()
 
-    def fetch_entries(self, entry_names: Optional[Union[str, Iterable[str]]] = None):
+    def _fetch_entries(
+        self, entry_names: Optional[Union[str, Iterable[str]]] = None, include: Optional[Iterable[str]] = None
+    ):
         if self.offline:
             return
 
-        body_data = DatasetFetchEntryBody(names=make_list(entry_names))
+        body_data = DatasetFetchEntryBody(names=make_list(entry_names), include=include)
 
         fetched_entries = self.client._auto_request(
             "post",

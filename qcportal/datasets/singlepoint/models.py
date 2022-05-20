@@ -88,3 +88,11 @@ class SinglepointDataset(BaseDataset):
 
         new_names = [x.name for x in entries]
         self._post_add_entries(new_names)
+
+    def fetch_entries(self, entry_names: Optional[Union[str, Iterable[str]]] = None, include_molecule: bool = True):
+
+        include = set()
+        if include_molecule:
+            include |= {"*", "molecule"}
+
+        return self._fetch_entries(entry_names, include)
