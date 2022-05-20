@@ -2,6 +2,8 @@
 A command line interface to the qcfractal server.
 """
 
+from __future__ import annotations
+
 import argparse
 import atexit
 import logging
@@ -12,6 +14,8 @@ import sys
 import textwrap
 import time
 import traceback
+import tabulate
+from typing import Tuple
 
 import yaml
 
@@ -29,13 +33,13 @@ class EndProcess(RuntimeError):
     pass
 
 
-def human_sizeof_byte(num, suffix="B"):
+def pretty_bytes(num):
     # SO: https://stackoverflow.com/questions/1094841/reusable-library-to-get-human-readable-version-of-file-size
     for unit in ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
         if abs(num) < 1024.0:
-            return "%3.1f%s%s" % (num, unit, suffix)
+            return "%4.2f%sB" % (num, unit)
         num /= 1024.0
-    return "%.1f%s%s" % (num, "Yi", suffix)
+    return "%.2f%sB" % (num, "Yi")
 
 
 def dump_config(qcf_config: FractalConfig, indent: int = 0) -> str:
@@ -46,14 +50,14 @@ def dump_config(qcf_config: FractalConfig, indent: int = 0) -> str:
 
     Parameters
     ----------
-    qcf_config: FractalConfig
+    qcf_config
         Configuration to print
-    indent: int
+    indent
         Indent the entire configuration by this many spaces
 
     Returns
     -------
-    str
+    :
         The configuration as a human-readable string
     """
 
@@ -64,7 +68,7 @@ def dump_config(qcf_config: FractalConfig, indent: int = 0) -> str:
     return s
 
 
-def start_database(args, config, logger):
+def start_database(config: FractalConfig) -> Tuple[PostgresHarness, SQLAlchemySocket]:
     """
     Obtain a storage socket to a running postgres server
 
@@ -74,7 +78,9 @@ def start_database(args, config, logger):
     This returns a harness and a storage socket
     """
 
+    logger = logging.getLogger(__name__)
     logger.info("Checking the PostgreSQL connection...")
+
     pg_harness = PostgresHarness(config.database)
     atexit.register(pg_harness.shutdown)
 
@@ -99,13 +105,14 @@ def parse_args() -> argparse.Namespace:
 
     Returns
     -------
-    argparse.Namespace
+    :
         Argparse namespace containing the information about all the options specified on
         the command line
     """
 
     # Common help strings
-    base_folder_help = "The base directory to use as the default for some options (logs, views, etc). Default is the location of the config file."
+    base_folder_help = "The base directory to use as the default for some options (logs, views, etc). Default is the " \
+                       "location of the config file. "
     config_file_help = "Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
     verbose_help = "Output more details about the startup of qcfractal-server commands"
 
@@ -133,7 +140,7 @@ def parse_args() -> argparse.Namespace:
     #####################################
     # init subcommand
     #####################################
-    init = subparsers.add_parser(
+    subparsers.add_parser(
         "init",
         help="Initializes a QCFractal server and database information from a given configuration.",
         parents=[base_parser],
@@ -162,12 +169,12 @@ def parse_args() -> argparse.Namespace:
     #####################################
     # upgrade subcommand
     #####################################
-    upgrade = subparsers.add_parser("upgrade", help="Upgrade QCFractal database.", parents=[base_parser])
+    subparsers.add_parser("upgrade", help="Upgrade QCFractal database.", parents=[base_parser])
 
     #####################################
     # upgrade-config subcommand
     #####################################
-    upgrade_config = subparsers.add_parser(
+    subparsers.add_parser(
         "upgrade-config", help="Upgrade a QCFractal configuration file.", parents=[base_parser]
     )
 
@@ -257,7 +264,8 @@ def parse_args() -> argparse.Namespace:
     role_subparsers.add_parser("list", help="List all role names", parents=[base_parser])
 
     # role info
-    role_subparsers.add_parser("info", help="Get information about a role", parents=[base_parser])
+    role_info = role_subparsers.add_parser("info", help="Get information about a role", parents=[base_parser])
+    role_info.add_argument("rolename", type=str, help="The role of this user on the server")
 
     # role reset
     role_subparsers.add_parser("reset", help="Reset all the original roles to their defaults", parents=[base_parser])
@@ -269,10 +277,9 @@ def parse_args() -> argparse.Namespace:
         "backup", help="Creates a postgres backup file of the current database.", parents=[base_parser]
     )
     backup.add_argument(
-        "--filename",
-        default=None,
+        "filename",
         type=str,
-        help="The filename to dump the backup to, defaults to 'database_name.bak'.",
+        help="The filename to dump the backup to",
     )
 
     #####################################
@@ -285,7 +292,7 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-def server_init(args, config):
+def server_init(config: FractalConfig) -> None:
     logger = logging.getLogger(__name__)
     logger.info("*** Initializing QCFractal from configuration ***")
 
@@ -303,18 +310,18 @@ def server_init(args, config):
     pg_harness.create_database()
 
 
-def server_info(args, qcf_config):
+def server_info(category: str, qcf_config: FractalConfig) -> None:
     # Just use raw printing here, rather than going through logging
-    if args.category == "config":
+    if category == "config":
         print("Displaying QCFractal configuration below")
         print(dump_config(qcf_config))
-    elif args.category == "alembic":
+    elif category == "alembic":
         print(f"Displaying QCFractal Alembic CLI configuration:\n")
         alembic_commands = SQLAlchemySocket.alembic_commands(qcf_config.database)
         print(" ".join(alembic_commands))
 
 
-def server_start(args, config):
+def server_start(config):
     logger = logging.getLogger(__name__)
     logger.info("*** Starting a QCFractal server ***")
     logger.info(f"QCFractal server base directory: {config.base_folder}")
@@ -342,7 +349,7 @@ def server_start(args, config):
     logger = logging.getLogger(__name__)
 
     # Ensure that the database is alive, optionally starting it
-    pg_harness, _ = start_database(args, config, logger)
+    pg_harness, _ = start_database(config)
 
     # Start up the gunicorn and periodics
     gunicorn = GunicornProcess(config)
@@ -397,7 +404,7 @@ def server_start(args, config):
     sys.exit(exitcode)
 
 
-def server_upgrade(args, config):
+def server_upgrade(config):
     logger = logging.getLogger(__name__)
 
     logger.info(f"Upgrading the postgres database at {config.database.safe_uri}")
@@ -409,7 +416,7 @@ def server_upgrade(args, config):
         sys.exit(1)
 
 
-def server_upgrade_config(args, config_path):
+def server_upgrade_config(config_path):
     import secrets
     from qcfractal.old_config import OldFractalConfig
     from qcfractal.config import convert_old_configuration
@@ -462,10 +469,9 @@ def server_upgrade_config(args, config_path):
     logger.info("*" * 80)
 
 
-def server_user(args, config):
-    logger = logging.getLogger(__name__)
+def server_user(args: argparse.Namespace, config: FractalConfig):
     user_command = args.user_command
-    pg_harness, storage = start_database(args, config, logger)
+    pg_harness, storage = start_database(config)
 
     def print_user_info(u: UserInfo):
         enabled = "True" if u.enabled else "False"
@@ -481,12 +487,17 @@ def server_user(args, config):
     if user_command == "list":
         user_list = storage.users.list()
 
-        print("{:20}  {:16}  {:7}  {}".format("username", "role", "enabled", "fullname"))
-        print("{:20}  {:16}  {:7}  {}".format("--------", "----", "-------", "--------"))
+        table_rows = []
+
         for u in user_list:
             u_obj = UserInfo(**u)
-            enabled = "True" if u_obj.enabled else "False"
-            print(f"{u_obj.username:20}  {u_obj.role:16}  {enabled:>7}  {u_obj.fullname}")
+            table_rows.append((u_obj.username, u_obj.role, u_obj.enabled, u_obj.fullname))
+
+        print()
+        table_str = tabulate.tabulate(table_rows,
+                                      headers=['username', 'role', 'enabled', 'fullname'])
+        print(table_str)
+        print()
 
     if user_command == "info":
         u = storage.users.get(args.username)
@@ -519,7 +530,6 @@ def server_user(args, config):
     if user_command == "modify":
         u = storage.users.get(args.username)
 
-        update = {}
         if args.fullname is not None:
             u["fullname"] = args.fullname
         if args.organization is not None:
@@ -566,10 +576,9 @@ def server_user(args, config):
             print("Deleted!")
 
 
-def server_role(args, config):
-    logger = logging.getLogger(__name__)
+def server_role(args: argparse.Namespace, config: FractalConfig):
     role_command = args.role_command
-    pg_harness, storage = start_database(args, config, logger)
+    pg_harness, storage = start_database(config)
 
     def print_role_info(r: RoleInfo):
         print("-" * 80)
@@ -581,14 +590,16 @@ def server_role(args, config):
     if role_command == "list":
         role_list = storage.roles.list()
 
+        print()
         print("rolename")
         print("--------")
         for r in role_list:
-            print(f"{r.rolename}")
+            print(r["rolename"])
+        print()
 
     if role_command == "info":
         r = storage.roles.get(args.rolename)
-        print_role_info(r)
+        print_role_info(RoleInfo(**r))
 
     if role_command == "reset":
         print("Resetting default roles to their original default permissions.")
@@ -596,73 +607,102 @@ def server_role(args, config):
         storage.roles.reset_defaults()
 
 
-def server_backup(args, config):
-    psql = standard_command_startup("backup", config)
+def server_backup(args: argparse.Namespace, config: FractalConfig):
 
-    print("\n>>> Starting backup, this may take several hours for large databases (100+ GB)...")
+    pg_harness, _ = start_database(config)
 
-    db_size = psql.database_size()
-    print(f"Current database size: {db_size['stdout']}")
+    db_size = pg_harness.database_size()
+    pretty_size = pretty_bytes(db_size)
 
-    filename = args["filename"]
-    if filename is None:
-        filename = f"{config.database.database_name}.bak"
-        print(f"No filename provided, defaulting to filename: {filename}")
+    print("\n")
+    print(f"Backing up the database at {config.database.safe_uri}")
+    print(f"Current database size is {pretty_size}")
+    print("\n")
 
-    filename = os.path.realpath(filename)
+    # Bigger than 250GB?
+    if db_size > 250*2**30:
+        print("\n" + "*"*80)
+        print("This is a pretty big database! This will take a while...")
+        print("Consider alternate backup strategies, such as pg_basebackup and WAL archiving")
+        print("*"*80 + "\n")
 
-    filename_temporary = filename + ".in_progress"
-    psql.backup_database(filename=filename_temporary)
+    filepath = os.path.realpath(args.filename)
+    filepath_tmp = filepath + '.in_progress'
 
-    shutil.move(filename_temporary, filename)
+    if os.path.exists(filepath):
+        raise RuntimeError(f"File {filepath} already exists. Will not overwrite!")
+    if os.path.exists(filepath_tmp):
+        raise RuntimeError(f"File {filepath_tmp} already exists. This is a leftover temporary file, and probably "
+                           f"needs to be deleted, but it could also mean you have a backup running already")
+
+    print(f"Backing up to {filepath_tmp}...", end=None)
+
+    def _remove_temporary_file():
+        if os.path.exists(filepath_tmp):
+            print("NOTE: Removing temporary file due to unexpected exit")
+            os.remove(filepath_tmp)
+
+    atexit.register(_remove_temporary_file)
+
+    pg_harness.backup_database(filepath_tmp)
+
+    print("Done!")
+    print(f"Moving to {filepath}")
+
+    # Check again...
+    if os.path.exists(filepath):
+        raise RuntimeError(f"File {filepath} already exists. It didn't before! {filepath_tmp} contains the backup we "
+                           f"just made. You are on your own.")
+
+    shutil.move(filepath_tmp, filepath)
 
     print("Backup complete!")
+    atexit.unregister(_remove_temporary_file)
 
 
-def server_restore(args, config):
-    psql = standard_command_startup("restore", config)
+def server_restore(args: argparse.Namespace, config: FractalConfig):
 
-    print("!WARNING! This will erase old data. Make sure to to run 'qcfractal-server backup' before this option.")
+    if not os.path.isfile(args.filename):
+        raise RuntimeError(f"Backup file {args.filename} does not exist or is not a file!")
 
-    user_required_input = f"REMOVEALLDATA {str(config.database_path)}"
-    print(f"!WARNING! If you are sure you wish to proceed please type '{user_required_input}' below.")
+    logger = logging.getLogger(__name__)
+    logger.info("Checking the PostgreSQL connection...")
 
-    inp = input("  > ")
-    print()
-    if inp != user_required_input:
-        print(f"Input does not match '{user_required_input}', exiting.")
-        sys.exit(1)
+    pg_harness = PostgresHarness(config.database)
+    atexit.register(pg_harness.shutdown)
 
-    if not os.path.isfile(args["filename"]):
-        print(f"Provided filename {args['filename']} does not exist.")
-        sys.exit(1)
+    # If we are expected to manage the postgres instance ourselves, start it
+    # If not, make sure it is started
+    pg_harness.ensure_alive()
 
-    restore_size = os.path.getsize(args["filename"])
-    human_rsize = human_sizeof_byte(restore_size)
+    db_exists = pg_harness.is_alive(True)
 
-    print("\n>>> Starting restore, this may take several hours for large databases (100+ GB)...")
-    print(f"Current restore size: {human_rsize}")
+    if db_exists:
+        print("!WARNING! This will erase old data!")
+        print("Run 'qcfractal-server backup' before this option if you want to keep it,")
+        print("or copy the database to somewhere else")
 
-    db_name = config.database.database_name
-    db_backup_name = db_name + "_backup"
+        user_required_input = f"REMOVEALLDATA {str(config.database.database_name)}"
+        print(f"!WARNING! If you are sure you wish to proceed please type '{user_required_input}' below.")
+        inp = input("> ")
+        print()
 
-    print("Renaming old database for backup...")
-    cmd = psql.command(f"ALTER DATABASE {db_name} RENAME TO {db_backup_name};", check=False)
-    if cmd["retcode"] != 0:
-        print(cmd["stderr"])
-        raise ValueError("Could not rename the old database, stopping.")
+        if inp != user_required_input:
+            print(f"Input does not match. Aborting")
+            return
 
-    print("Restoring database...")
-    try:
-        psql.restore_database(args["filename"])
-        psql.command(f"DROP DATABASE {db_backup_name};", check=False)
-    except ValueError:
-        print("Could not restore the database from file, reverting to the old database.")
-        psql.command(f"DROP DATABASE {db_name};", check=False)
-        psql.command(f"ALTER DATABASE {db_backup_name} RENAME TO {db_name};")
-        sys.exit(1)
+        pg_harness.delete_database()
 
-    print("Restore complete!")
+    restore_size = os.path.getsize(args.filename)
+    pretty_size = pretty_bytes(restore_size)
+
+    print(f"\nSize of the backup file: {pretty_size}")
+    print("Starting restore...", end=None)
+
+    pg_harness.restore_database(args.filename)
+
+    print("done")
+    print("\nRestore complete!")
 
 
 def main():
@@ -672,7 +712,8 @@ def main():
     # Set up a a log handler. This is used before the logfile is set up
     log_handler = logging.StreamHandler(sys.stdout)
 
-    # If the user wants verbose output (particularly about startup of all the commands), then set logging level to be DEBUG
+    # If the user wants verbose output (particularly about startup of all the commands), then set logging level
+    # to be DEBUG
     # Use a stripped down format, since we are just logging to stdout
     if args.verbose:
         logging.basicConfig(level="DEBUG", handlers=[log_handler], format="%(levelname)s: %(name)s: %(message)s")
@@ -722,7 +763,7 @@ def main():
     # Shortcut here for upgrading the configuration
     # This prevent s actually reading the configuration with the newest code
     if args.command == "upgrade-config":
-        server_upgrade_config(args, config_path)
+        server_upgrade_config(config_path)
         exit(0)
 
     # Now read and form the complete configuration
@@ -732,18 +773,18 @@ def main():
     logger.debug("Assembled the following configuration:\n" + cfg_str)
 
     if args.command == "info":
-        server_info(args, qcf_config)
+        server_info(args.category, qcf_config)
     elif args.command == "init":
-        server_init(args, qcf_config)
+        server_init(qcf_config)
     elif args.command == "start":
-        server_start(args, qcf_config)
+        server_start(qcf_config)
     elif args.command == "upgrade":
-        server_upgrade(args, qcf_config)
+        server_upgrade(qcf_config)
     elif args.command == "user":
         server_user(args, qcf_config)
     elif args.command == "role":
         server_role(args, qcf_config)
-    # elif args.command == "backup":
-    #    server_backup(args, qcf_config)
-    # elif args.command == "restore":
-    #    server_restore(args, qcf_config)
+    elif args.command == "backup":
+        server_backup(args, qcf_config)
+    elif args.command == "restore":
+        server_restore(args, qcf_config)

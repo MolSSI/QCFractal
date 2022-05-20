@@ -41,7 +41,7 @@ def replace_db_in_uri(uri: str, new_dbname: str) -> str:
 
     Returns
     -------
-    str
+    :
         A new URI with the database name replaced
     """
 
@@ -60,7 +60,7 @@ class PostgresHarness:
 
         Parameters
         ----------
-        config : DatabaseConfig
+        config
             The configuration options
         """
         self.config = config
@@ -135,11 +135,12 @@ class PostgresHarness:
 
         Parameters
         ----------
-        tool: str
+        tool
             Tool to search for (ie, psql)
 
         Returns
         -------
+        :
             Full path to the tools executable
         """
 
@@ -176,6 +177,7 @@ class PostgresHarness:
 
         return proc.returncode, stdout, stderr
 
+    @property
     def database_uri(self) -> str:
         """Provides the full PostgreSQL URI string."""
         return self.config.uri
@@ -186,12 +188,12 @@ class PostgresHarness:
 
         Parameters
         ----------
-        uri :str
+        uri
             The database to URI to connect to
 
         Returns
         -------
-        psycopg2.extensions.connection
+        :
             A live psycopg2 connection
         """
 
@@ -207,12 +209,12 @@ class PostgresHarness:
 
         Parameters
         ----------
-        check_database : Optional[str], optional
+        check_database
             If true, check to see if the database specified in the config exists.
 
         Returns
         -------
-        bool
+        :
             True if the instance is alive and that the database exists (if check_database is True)
         """
         try:
@@ -242,7 +244,8 @@ class PostgresHarness:
                 self._logger.info(f"Started a postgres instance for uri {self.config.safe_uri}")
             else:
                 raise RuntimeError(
-                    f"A running postgres instance serving uri {self.config.safe_uri} does not appear to be running. It must be running for me to start"
+                    f"A running postgres instance serving uri {self.config.safe_uri} does not appear to be running. "
+                    f"It must be running for me to continue "
                 )
 
         self._logger.info(f"Database serving uri {self.config.safe_uri} appears to be up and running")
@@ -254,12 +257,15 @@ class PostgresHarness:
 
         Parameters
         ----------
-        statement: str
+        statement
             A psql command/query string.
         database_name: Optional[str]:
             Connect to an alternate database name rather than the one specified in the config
-        fail_ok: bool
-            If False, raise an exception if there is an error
+        autocommit
+            If true, enable autocommit on the connection
+        returns
+            If true, fetch the results and return them. Set to False for commands that
+            don't return anything.
         """
 
         uri = self.config.uri
@@ -272,7 +278,7 @@ class PostgresHarness:
         cursor = conn.cursor()
 
         self._logger.debug(f"Executing SQL: {statement}")
-        r = cursor.execute(statement)
+        cursor.execute(statement)
         if returns:
             return cursor.fetchall()
 
@@ -281,12 +287,12 @@ class PostgresHarness:
 
         Parameters
         ----------
-        cmds : List[str]
+        cmds
             A list of PostgreSQL pg_ctl commands to run.
 
         Returns
         -------
-        Tuple[int, str, str]
+        :
             The return code, stdout, and stderr returned by pg_ctl
         """
 
@@ -299,7 +305,7 @@ class PostgresHarness:
         all_cmds.extend(cmds)
         return self._run_subprocess(all_cmds)
 
-    def create_database(self):
+    def create_database(self, create_tables: bool = True):
         """Creates a new qcarchive database (and tables) given in the configuration.
 
         The postgres instance must be up and running.
@@ -307,6 +313,11 @@ class PostgresHarness:
         If the database is existing, no changes to the database are made.
 
         If there is an error, an exception in raised
+
+        Parameters
+        ----------
+        create_tables
+            If true, create the tables (schema) as well
         """
 
         # First we connect to the 'postgres' database
@@ -325,7 +336,9 @@ class PostgresHarness:
             self._logger.info(f"Database {self.config.database_name} does not exist. Creating...")
             cursor.execute(f"CREATE DATABASE {self.config.database_name}")
             self._logger.info(f"Database {self.config.database_name} created")
-            SQLAlchemySocket.create_database_tables(self.config)
+
+            if create_tables:
+                SQLAlchemySocket.create_database_tables(self.config)
         else:
             self._logger.info(f"Database {self.config.database_name} already exists, so I am leaving it alone")
 
@@ -484,12 +497,9 @@ class PostgresHarness:
 
         Parameters
         ----------
-        filepath: str
+        filepath
             File to store the backup to. Must not exist
         """
-
-        # Only do this if we manage the database ourselves
-        assert self.config.own
 
         filepath = os.path.realpath(filepath)
         if os.path.exists(filepath):
@@ -497,6 +507,8 @@ class PostgresHarness:
 
         cmds = [
             self._get_tool("pg_dump"),
+            "-h",
+            self.config.host,
             "-p",
             str(self.config.port),
             "-d",
@@ -515,31 +527,34 @@ class PostgresHarness:
 
     def restore_database(self, filepath) -> None:
 
-        # Only do this if we manage the database ourselves
-        assert self.config.own
+        if not os.path.exists(filepath):
+            raise RuntimeError(f"Backup file {filepath} does not exist or is not a file")
 
-        self.create_database()
+        # Create the database, but not the tables. These are in the backup file, and may represent
+        # a different version
+        self.create_database(create_tables=False)
 
         cmds = [
             self._get_tool("pg_restore"),
+            f"--host={self.config.host}",
             f"--port={self.config.port}",
             f"--dbname={self.config.database_name}",
             filepath,
         ]
 
-        self._logger.debug(f"pg_backup command: {'  '.join(cmds)}")
+        self._logger.debug(f"pg_restore command: {'  '.join(cmds)}")
         retcode, stdout, stderr = self._run_subprocess(cmds)
 
         if retcode != 0:
             err_msg = f"Error restoring the database\noutput:\n{stdout}\nstderr:\n{stderr}"
             raise RuntimeError(err_msg)
 
-    def database_size(self) -> str:
+    def database_size(self) -> int:
         """
-        Returns a pretty formatted string of the database size.
+        Returns the size of the database in bytes
         """
 
-        sql = f"SELECT pg_size_pretty( pg_database_size('{self.config.database_name}') );"
+        sql = f"SELECT pg_database_size('{self.config.database_name}');"
         size = self.sql_command(sql, "postgres")
 
         # sql_command returns a list of tuples

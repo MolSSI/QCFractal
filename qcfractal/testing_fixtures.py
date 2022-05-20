@@ -34,7 +34,7 @@ def postgres_server(tmp_path_factory):
     db_path = str(tmp_path_factory.mktemp("db"))
     tmp_pg = TemporaryPostgres(data_dir=db_path)
     pg_harness = tmp_pg._harness
-    logger.debug(f"Using database located at {db_path} with uri {pg_harness.database_uri()}")
+    logger.debug(f"Using database located at {db_path} with uri {pg_harness.database_uri}")
     assert pg_harness.is_alive(False) and not pg_harness.is_alive(True)
 
     # Create the database, and we will use that as a template
