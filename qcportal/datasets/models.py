@@ -82,7 +82,7 @@ class BaseDataset(BaseModel):
         record_items: Optional[List[Any]]
 
         # Values computed outside QCA
-        contributed_values: Optional[List[ContributedValues]] = None
+        contributed_values: Optional[Dict[str, ContributedValues]] = None
 
     client: Any
     raw_data: _DataModel  # Meant to be overridden by derived classes
@@ -215,7 +215,7 @@ class BaseDataset(BaseModel):
             f"v1/datasets/{self.id}/contributed_values",
             None,
             None,
-            Optional[List[ContributedValues]],
+            Optional[Dict[str, ContributedValues]],
             None,
             None,
         )
@@ -760,7 +760,7 @@ class BaseDataset(BaseModel):
         return self._iterate_records()
 
     @property
-    def contributed_values(self):
+    def contributed_values(self) -> Dict[str, ContributedValues]:
         if self.raw_data.contributed_values is None:
             self.fetch_contributed_values()
 

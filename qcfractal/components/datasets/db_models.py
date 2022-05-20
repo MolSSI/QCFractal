@@ -4,6 +4,7 @@ from typing import Optional, Iterable, Dict, Any
 
 from sqlalchemy import Column, Integer, String, JSON, Boolean, Index, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
+from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from qcfractal.db_socket import BaseORM, MsgpackExt
 
@@ -35,7 +36,9 @@ class BaseDatasetORM(BaseORM):
 
     extra = Column(JSON)
 
-    contributed_values = relationship("ContributedValuesORM")
+    contributed_values = relationship(
+        "ContributedValuesORM", collection_class=attribute_mapped_collection("name"), cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         UniqueConstraint("dataset_type", "lname", name="uix_dataset_type_lname"),
