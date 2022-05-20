@@ -342,18 +342,18 @@ class PortalClient(PortalClientBase):
         metadata: Optional[Dict[str, Any]] = None,
     ) -> BaseDataset:
 
-        payload = {
-            "name": name,
-            "description": description,
-            "tagline": tagline,
-            "tags": tags,
-            "group": group,
-            "provenance": provenance,
-            "visibility": visibility,
-            "default_tag": default_tag,
-            "default_priority": default_priority,
-            "metadata": metadata,
-        }
+        payload = DatasetAddBody(
+            name=name,
+            description=description,
+            tagline=tagline,
+            tags=tags,
+            group=group,
+            provenance=provenance,
+            visibility=visibility,
+            default_tag=default_tag,
+            default_priority=default_priority,
+            metadata=metadata,
+        )
 
         ds_id = self._auto_request("post", f"v1/datasets/{dataset_type}", DatasetAddBody, None, int, payload, None)
 

@@ -74,10 +74,12 @@ def delete_dataset_v1(dataset_id: int, url_params: DatasetDeleteParams):
 ########################
 # Adding a dataset
 ########################
-@main.route("/v1/datasets/singlepoint", methods=["POST"])
+@main.route("/v1/datasets/<string:dataset_type>", methods=["POST"])
 @wrap_route("WRITE")
-def add_singlepoint_dataset_v1(body_data: DatasetAddBody):
-    return storage_socket.datasets.singlepoint.add(
+def add_dataset_v1(dataset_type: str, body_data: DatasetAddBody):
+
+    ds_socket = storage_socket.datasets.get_socket(dataset_type)
+    return ds_socket.add(
         name=body_data.name,
         description=body_data.description,
         tagline=body_data.tagline,
