@@ -111,8 +111,10 @@ def parse_args() -> argparse.Namespace:
     """
 
     # Common help strings
-    base_folder_help = "The base directory to use as the default for some options (logs, views, etc). Default is the " \
-                       "location of the config file. "
+    base_folder_help = (
+        "The base directory to use as the default for some options (logs, views, etc). Default is the "
+        "location of the config file. "
+    )
     config_file_help = "Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
     verbose_help = "Output more details about the startup of qcfractal-server commands"
 
@@ -174,9 +176,7 @@ def parse_args() -> argparse.Namespace:
     #####################################
     # upgrade-config subcommand
     #####################################
-    subparsers.add_parser(
-        "upgrade-config", help="Upgrade a QCFractal configuration file.", parents=[base_parser]
-    )
+    subparsers.add_parser("upgrade-config", help="Upgrade a QCFractal configuration file.", parents=[base_parser])
 
     #####################################
     # info subcommand
@@ -494,8 +494,7 @@ def server_user(args: argparse.Namespace, config: FractalConfig):
             table_rows.append((u_obj.username, u_obj.role, u_obj.enabled, u_obj.fullname))
 
         print()
-        table_str = tabulate.tabulate(table_rows,
-                                      headers=['username', 'role', 'enabled', 'fullname'])
+        table_str = tabulate.tabulate(table_rows, headers=["username", "role", "enabled", "fullname"])
         print(table_str)
         print()
 
@@ -620,20 +619,22 @@ def server_backup(args: argparse.Namespace, config: FractalConfig):
     print("\n")
 
     # Bigger than 250GB?
-    if db_size > 250*2**30:
-        print("\n" + "*"*80)
+    if db_size > 250 * 2 ** 30:
+        print("\n" + "*" * 80)
         print("This is a pretty big database! This will take a while...")
         print("Consider alternate backup strategies, such as pg_basebackup and WAL archiving")
-        print("*"*80 + "\n")
+        print("*" * 80 + "\n")
 
     filepath = os.path.realpath(args.filename)
-    filepath_tmp = filepath + '.in_progress'
+    filepath_tmp = filepath + ".in_progress"
 
     if os.path.exists(filepath):
         raise RuntimeError(f"File {filepath} already exists. Will not overwrite!")
     if os.path.exists(filepath_tmp):
-        raise RuntimeError(f"File {filepath_tmp} already exists. This is a leftover temporary file, and probably "
-                           f"needs to be deleted, but it could also mean you have a backup running already")
+        raise RuntimeError(
+            f"File {filepath_tmp} already exists. This is a leftover temporary file, and probably "
+            f"needs to be deleted, but it could also mean you have a backup running already"
+        )
 
     print(f"Backing up to {filepath_tmp}...", end=None)
 
@@ -651,8 +652,10 @@ def server_backup(args: argparse.Namespace, config: FractalConfig):
 
     # Check again...
     if os.path.exists(filepath):
-        raise RuntimeError(f"File {filepath} already exists. It didn't before! {filepath_tmp} contains the backup we "
-                           f"just made. You are on your own.")
+        raise RuntimeError(
+            f"File {filepath} already exists. It didn't before! {filepath_tmp} contains the backup we "
+            f"just made. You are on your own."
+        )
 
     shutil.move(filepath_tmp, filepath)
 

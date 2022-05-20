@@ -34,6 +34,9 @@ class BaseDatasetORM(BaseORM):
 
     provenance = Column(JSON)
 
+    # metadata is reserved in sqlalchemy
+    meta = Column("metadata", JSON)
+
     extra = Column(JSON)
 
     contributed_values = relationship(
@@ -50,7 +53,14 @@ class BaseDatasetORM(BaseORM):
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # lname is only for the server
         exclude = self.append_exclude(exclude, "lname")
-        return BaseORM.model_dict(self, exclude)
+
+        d = BaseORM.model_dict(self, exclude)
+
+        # meta -> metadata
+        if "meta" in d:
+            d["metadata"] = d.pop("meta")
+
+        return d
 
 
 class ContributedValuesORM(BaseORM):

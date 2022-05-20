@@ -3,5 +3,4 @@ from .models import (
     ManybodyDatasetNewEntry,
     ManybodyDatasetSpecification,
     ManybodyDatasetEntry,
-    ManybodyDatasetAddBody,
 )

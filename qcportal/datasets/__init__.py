@@ -4,6 +4,7 @@ import pydantic
 
 from .models import (
     BaseDataset,
+    DatasetAddBody,
     DatasetQueryModel,
     DatasetFetchEntryBody,
     DatasetFetchRecordItemsBody,

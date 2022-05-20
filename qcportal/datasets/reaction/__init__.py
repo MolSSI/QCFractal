@@ -3,5 +3,4 @@ from .models import (
     ReactionDatasetNewEntry,
     ReactionDatasetSpecification,
     ReactionDatasetEntry,
-    ReactionDatasetAddBody,
 )

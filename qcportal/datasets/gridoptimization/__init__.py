@@ -3,5 +3,4 @@ from .models import (
     GridoptimizationDatasetNewEntry,
     GridoptimizationDatasetSpecification,
     GridoptimizationDatasetEntry,
-    GridoptimizationDatasetAddBody,
 )

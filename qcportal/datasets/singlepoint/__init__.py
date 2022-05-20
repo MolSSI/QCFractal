@@ -3,5 +3,4 @@ from .models import (
     SinglepointDatasetNewEntry,
     SinglepointDatasetSpecification,
     SinglepointDatasetEntry,
-    SinglepointDatasetAddBody,
 )

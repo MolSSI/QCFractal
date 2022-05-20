@@ -93,20 +93,3 @@ class GridoptimizationDataset(BaseDataset):
 
         new_names = [x.name for x in entries]
         self._post_add_entries(new_names)
-
-
-#######################
-# Web API models
-#######################
-
-
-class GridoptimizationDatasetAddBody(RestModelBase):
-    name: str
-    description: Optional[str] = None
-    tagline: Optional[str] = None
-    tags: Optional[Dict[str, Any]] = None
-    group: Optional[str] = None
-    provenance: Optional[Dict[str, Any]]
-    visibility: bool = True
-    default_tag: Optional[str] = None
-    default_priority: PriorityEnum = PriorityEnum.normal

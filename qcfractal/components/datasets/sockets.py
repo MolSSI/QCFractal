@@ -155,6 +155,7 @@ class BaseDatasetSocket:
         visibility: bool = True,
         default_tag: Optional[str] = None,
         default_priority: PriorityEnum = PriorityEnum.normal,
+        metadata: Optional[Dict[str, Any]] = None,
         *,
         session: Optional[Session] = None,
     ) -> int:
@@ -175,6 +176,7 @@ class BaseDatasetSocket:
             visibility=visibility,
             default_tag=default_tag,
             default_priority=default_priority,
+            meta=metadata,
         )
 
         with self.root_socket.optional_session(session) as session:

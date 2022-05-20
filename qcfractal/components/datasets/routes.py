@@ -6,6 +6,7 @@ from qcfractal.app import main, storage_socket
 from qcfractal.app.routes import wrap_route
 from qcportal.base_models import ProjURLParameters
 from qcportal.datasets import (
+    DatasetAddBody,
     DatasetQueryModel,
     DatasetFetchRecordItemsBody,
     DatasetFetchEntryBody,
@@ -69,6 +70,26 @@ def delete_dataset_v1(dataset_id: int, url_params: DatasetDeleteParams):
 # Note that the inputs are all the same, but the returned dicts
 # are different
 #################################################################
+
+########################
+# Adding a dataset
+########################
+@main.route("/v1/datasets/singlepoint", methods=["POST"])
+@wrap_route("WRITE")
+def add_singlepoint_dataset_v1(body_data: DatasetAddBody):
+    return storage_socket.datasets.singlepoint.add(
+        name=body_data.name,
+        description=body_data.description,
+        tagline=body_data.tagline,
+        tags=body_data.tags,
+        group=body_data.group,
+        provenance=body_data.provenance,
+        visibility=body_data.visibility,
+        default_tag=body_data.default_tag,
+        default_priority=body_data.default_priority,
+        metadata=body_data.metadata,
+    )
+
 
 #########################
 # Getting info

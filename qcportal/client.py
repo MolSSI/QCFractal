@@ -24,12 +24,13 @@ from .cache import PortalCache
 from .client_base import PortalClientBase
 from .datasets import (
     dataset_from_datamodel,
+    BaseDataset,
     AllDatasetDataModelTypes,
     DatasetQueryModel,
     DatasetQueryRecords,
     DatasetDeleteParams,
+    DatasetAddBody,
 )
-from .datasets.optimization import OptimizationDatasetAddBody
 from .managers import ManagerQueryFilters, ComputeManager
 from .metadata_models import QueryMetadata, UpdateMetadata, InsertMetadata, DeleteMetadata
 from .molecules import Molecule, MoleculeIdentifiers, MoleculeQueryFilters, MoleculeModifyBody
@@ -338,7 +339,8 @@ class PortalClient(PortalClientBase):
         visibility: bool = True,
         default_tag: str = "*",
         default_priority: PriorityEnum = PriorityEnum.normal,
-    ):
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> BaseDataset:
 
         payload = {
             "name": name,
@@ -350,11 +352,10 @@ class PortalClient(PortalClientBase):
             "visibility": visibility,
             "default_tag": default_tag,
             "default_priority": default_priority,
+            "metadata": metadata,
         }
 
-        ds_id = self._auto_request(
-            "post", f"v1/datasets/{dataset_type}", OptimizationDatasetAddBody, None, int, payload, None
-        )
+        ds_id = self._auto_request("post", f"v1/datasets/{dataset_type}", DatasetAddBody, None, int, payload, None)
 
         return self.get_dataset_by_id(ds_id)
 

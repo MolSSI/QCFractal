@@ -3,5 +3,4 @@ from .models import (
     OptimizationDatasetNewEntry,
     OptimizationDatasetSpecification,
     OptimizationDatasetEntry,
-    OptimizationDatasetAddBody,
 )
