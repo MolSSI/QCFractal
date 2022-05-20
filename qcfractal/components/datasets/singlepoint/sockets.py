@@ -81,7 +81,7 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
         # Normal entries - just let it rip
         for spec in spec_orm:
             new_normal_entries = [x for x in normal_entries if (x.name, spec.name) not in existing_records]
-            molecule_ids = [x.initial_molecule_id for x in new_normal_entries]
+            molecule_ids = [x.molecule_id for x in new_normal_entries]
 
             meta, sp_ids = self.root_socket.records.singlepoint.add_internal(
                 molecule_ids=molecule_ids,
