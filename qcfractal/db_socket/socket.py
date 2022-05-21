@@ -79,7 +79,6 @@ class SQLAlchemySocket:
 
         # Create/initialize the subsockets
         from ..components.molecules.sockets import MoleculeSocket
-        from ..components.keywords.sockets import KeywordsSocket
         from ..components.permissions.user_socket import UserSocket
         from ..components.permissions.role_socket import RoleSocket
         from ..components.serverinfo.sockets import ServerInfoSocket
@@ -90,7 +89,6 @@ class SQLAlchemySocket:
         from ..components.datasets.sockets import DatasetSocket
 
         self.serverinfo = ServerInfoSocket(self)
-        self.keywords = KeywordsSocket(self)
         self.molecules = MoleculeSocket(self)
         self.datasets = DatasetSocket(self)
         self.records = RecordSocket(self)

@@ -331,7 +331,6 @@ def test_optimization_socket_add_same_4(storage_socket: SQLAlchemySocket):
 
     water = load_molecule_data("water_dimer_minima")
     kw = {"a": "value"}
-    _, kw_ids = storage_socket.keywords.add([kw])
     _, mol_ids = storage_socket.molecules.add([water])
 
     spec1 = OptimizationSpecification(

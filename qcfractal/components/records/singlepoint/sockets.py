@@ -82,7 +82,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
             driver=specification.driver,
             model=model,
             molecule=molecule,
-            keywords=specification.keywords.values,
+            keywords=specification.keywords,
             protocols=specification.protocols,
         )
 
@@ -177,16 +177,6 @@ class SinglepointRecordSocket(BaseRecordSocket):
         basis = "" if qc_spec.basis is None else qc_spec.basis
 
         with self.root_socket.optional_session(session, False) as session:
-            # Add the keywords
-            meta, kw_ids = self.root_socket.keywords.add([qc_spec.keywords], session=session)
-            if not meta.success:
-                return (
-                    InsertMetadata(
-                        error_description="Unable to add keywords: " + meta.error_string,
-                    ),
-                    None,
-                )
-
             stmt = (
                 insert(QCSpecificationORM)
                 .values(
@@ -194,7 +184,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
                     driver=qc_spec.driver,
                     method=qc_spec.method,
                     basis=basis,
-                    keywords_id=kw_ids[0],
+                    keywords=qc_spec.keywords,
                     protocols=protocols_dict,
                 )
                 .on_conflict_do_nothing()
@@ -211,7 +201,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
                     driver=qc_spec.driver,
                     method=qc_spec.method,
                     basis=basis,
-                    keywords_id=kw_ids[0],
+                    keywords=qc_spec.keywords,
                     protocols=protocols_dict,
                 )
 

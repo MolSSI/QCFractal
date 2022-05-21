@@ -69,7 +69,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
 
         qcschema_input = QCEl_OptimizationInput(
             input_specification=QCEl_QCInputSpecification(
-                model=model, keywords=specification.qc_specification.keywords.values
+                model=model, keywords=specification.qc_specification.keywords
             ),
             initial_molecule=initial_molecule,
             keywords=opt_keywords,
