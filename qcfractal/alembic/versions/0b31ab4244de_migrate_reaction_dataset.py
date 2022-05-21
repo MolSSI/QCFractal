@@ -414,7 +414,10 @@ def upgrade():
             # keywords should be in alias_keywords, except for dftd3 directly run through the
             # composition planner......
             try:
-                kw = ds["alias_keywords"][spec["program"]][spec["keywords"]]
+                if spec["keywords"] is None:
+                    kw = None
+                else:
+                    kw = ds["alias_keywords"][spec["program"]][spec["keywords"]]
             except KeyError:
                 if spec["program"] == "dftd3":
                     kw = empty_kw
