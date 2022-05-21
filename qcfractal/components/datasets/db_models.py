@@ -35,7 +35,7 @@ class BaseDatasetORM(BaseORM):
     provenance = Column(JSON)
 
     # metadata is reserved in sqlalchemy
-    meta = Column("metadata", JSON)
+    meta = Column("metadata", JSON, nullable=False)
 
     extra = Column(JSON)
 
