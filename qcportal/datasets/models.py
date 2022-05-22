@@ -70,7 +70,7 @@ class BaseDataset(BaseModel):
         default_priority: PriorityEnum
 
         metadata: Optional[Dict[str, Any]] = None
-        extra: Optional[Dict[str, Any]] = None
+        extras: Optional[Dict[str, Any]] = None
 
         ########################################
         # Info about entries, specs, and records

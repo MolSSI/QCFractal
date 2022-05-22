@@ -37,7 +37,7 @@ class BaseDatasetORM(BaseORM):
     # metadata is reserved in sqlalchemy
     meta = Column("metadata", JSON, nullable=False)
 
-    extra = Column(JSON)
+    extras = Column(JSON)
 
     contributed_values = relationship(
         "ContributedValuesORM", collection_class=attribute_mapped_collection("name"), cascade="all, delete-orphan"
