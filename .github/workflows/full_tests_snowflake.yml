@@ -38,16 +38,19 @@ jobs:
           environment-file: qcfractaltesting/conda-envs/fulltest_snowflake.yaml
           auto-activate-base: false
 
-      - name: Install & start server
+      - name: Conda info
         shell: bash -l {0}
         run: |
           conda info
+
+      - name: Install QCFractal
+        shell: bash -l {0}
+        run: |
           pip install -e .
 
       - name: Run Tests
         shell: bash -l {0}
         run: |
-          conda info
           pytest -v --fractal-uri="snowflake" --log-file-level=DEBUG --log-file="qcfractal_snowflake.log" qcfractaltesting
 
       - name: 'Save logs/artifacts'

@@ -46,13 +46,13 @@ jobs:
           ref: next
           path: qcfractalcompute
 
-      - name: Split out portal and compute packages
+      - name: Update QCPortal and QCFractalCompute packages
         shell: bash -l {0}
         run: |
           cp -a qcfractal/qcportal/. qcportal/qcportal/
           cp -a qcfractal/qcfractalcompute/. qcfractalcompute/qcfractalcompute/
 
-      - name: Configure conda for server
+      - name: Configure conda for the QCFractal server
         uses: conda-incubator/setup-miniconda@v2.1.1
         with:
           python-version: ${{ matrix.python-version }}
@@ -60,17 +60,25 @@ jobs:
           environment-file: qcfractal/qcfractaltesting/conda-envs/fulltest_server.yaml
           auto-activate-base: false
 
-      - name: Install & start server
+      - name: Install QCFractal
+        shell: bash -l {0}
+        run: |
+          pip install -e ./qcfractal
+
+      - name: Conda info for the QCFractal server
         shell: bash -l {0}
         run: |
           conda info
-          pip install -e ./qcfractal
+
+      - name: Start the QCFractal server
+        shell: bash -l {0}
+        run: |
           mkdir server; cd server
           cp ../qcfractal/qcfractaltesting/config_files/gha_fractal_server.yaml ./
           qcfractal-server --config=gha_fractal_server.yaml init
           qcfractal-server --config=gha_fractal_server.yaml start &
 
-      - name: Configure conda for worker
+      - name: Configure conda for QCFractalCompute worker
         uses: conda-incubator/setup-miniconda@v2.1.1
         with:
           python-version: ${{ matrix.python-version }}
@@ -78,17 +86,26 @@ jobs:
           environment-file: qcfractal/qcfractaltesting/conda-envs/fulltest_worker_pool.yaml
           auto-activate-base: false
 
-      - name: Install & start compute worker
+      - name: Install QCFractalCompute
+        shell: bash -l {0}
+        run: |
+          pip install -e ./qcportal
+          pip install -e ./qcfractalcompute
+
+      - name: Conda info for the QCFractalCompute worker
         shell: bash -l {0}
         run: |
           conda info
-          pip install -e ./qcportal
-          pip install -e ./qcfractalcompute
+
+
+      - name: Start the QCFractalCompute worker
+        shell: bash -l {0}
+        run: |
           mkdir compute; cd compute
           cp ../qcfractal/qcfractaltesting/config_files/gha_fractal_compute_pool.yaml ./
           qcfractal-manager --config=gha_fractal_compute_pool.yaml &
 
-      - name: Configure conda for portal
+      - name: Configure conda for the QCPortal client
         uses: conda-incubator/setup-miniconda@v2.1.1
         with:
           python-version: ${{ matrix.python-version }}
@@ -96,16 +113,19 @@ jobs:
           environment-file: qcfractal/qcfractaltesting/conda-envs/fulltest_portal.yaml
           auto-activate-base: false
 
-      - name: Install portal
+      - name: Install QCPortal
+        shell: bash -l {0}
+        run: |
+          pip install -e ./qcportal
+
+      - name: Conda info for the QCPortal client
         shell: bash -l {0}
         run: |
           conda info
-          pip install -e ./qcportal
-
+  
       - name: Run Tests
         shell: bash -l {0}
         run: |
-          conda info
           cd qcfractal
           pytest -v --fractal-uri="http://127.0.0.1:7900" qcfractaltesting
 
