@@ -22,6 +22,7 @@ class SinglepointDatasetNewEntry(BaseModel):
 class SinglepointDatasetEntry(SinglepointDatasetNewEntry):
     molecule_id: int
     molecule: Optional[Molecule] = None
+    local_results: Optional[Dict[str, Any]] = None
 
 
 class SinglepointDatasetSpecification(BaseModel):
