@@ -1,5 +1,5 @@
 """
-Full end-to-end test of singlepoint
+Full end-to-end test of optimization
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from qcportal import PortalClient
 
 
-def test_singlepoint_full_1(fulltest_client: PortalClient):
+def test_optimization_full_1(fulltest_client: PortalClient):
     mol = Molecule(symbols=["H", "H"], geometry=[[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
     meta, ids = fulltest_client.add_optimizations(
         initial_molecules=[mol],
@@ -40,7 +40,7 @@ def test_singlepoint_full_1(fulltest_client: PortalClient):
     assert rec.status == RecordStatusEnum.complete
 
 
-def test_singlepoint_full_error_1(fulltest_client: PortalClient):
+def test_optimization_full_error_1(fulltest_client: PortalClient):
     mol = Molecule(symbols=["H", "H"], geometry=[[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
     meta, ids = fulltest_client.add_optimizations(
         initial_molecules=[mol],
