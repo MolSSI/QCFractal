@@ -266,7 +266,7 @@ class BaseDataset(BaseModel):
             entry_names=make_list(entry_names),
             specification_names=make_list(specification_names),
             status=make_list(status),
-            include=make_list(include),
+            include=self._record_type.transform_includes(include),
         )
 
         record_info = self.client._auto_request(
@@ -815,6 +815,7 @@ class BaseDataset(BaseModel):
         entry_names: Optional[Union[str, Iterable[str]]] = None,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
+        include: Optional[Iterable[str]] = None,
     ):
 
         # Get an up-to-date list of entry names and specifications
@@ -832,7 +833,7 @@ class BaseDataset(BaseModel):
 
         for entry_name in entry_names:
             # Fetch all records for a given entry (ie, for all specifications)
-            self.fetch_records(entry_names=entry_name, status=status)
+            self.fetch_records(entry_names=entry_name, status=status, include=include)
 
             for spec_name in specification_names:
                 record = self._lookup_record(entry_name, spec_name)

@@ -5,6 +5,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from qcfractal.components.datasets.sockets import BaseDatasetSocket
+from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM
 from qcportal.datasets.singlepoint import SinglepointDatasetNewEntry
 from qcportal.records import PriorityEnum
 from qcportal.records.singlepoint import QCSpecification
@@ -29,6 +30,7 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
     specification_orm = SinglepointDatasetSpecificationORM
     entry_orm = SinglepointDatasetEntryORM
     record_item_orm = SinglepointDatasetRecordItemORM
+    record_orm = SinglepointRecordORM
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseDatasetSocket.__init__(

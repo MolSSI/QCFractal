@@ -5,6 +5,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from qcfractal.components.datasets.sockets import BaseDatasetSocket
+from qcfractal.components.records.torsiondrive.db_models import TorsiondriveRecordORM
 from qcportal.datasets.torsiondrive import TorsiondriveDatasetNewEntry
 from qcportal.records import PriorityEnum
 from qcportal.records.optimization import OptimizationSpecification
@@ -31,6 +32,7 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
     specification_orm = TorsiondriveDatasetSpecificationORM
     entry_orm = TorsiondriveDatasetEntryORM
     record_item_orm = TorsiondriveDatasetRecordItemORM
+    record_orm = TorsiondriveRecordORM
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseDatasetSocket.__init__(

@@ -31,6 +31,7 @@ class BaseDatasetSocket:
     specification_orm = None
     entry_orm = None
     record_item_orm = None
+    record_orm = None
 
     def __init__(
         self,
@@ -447,19 +448,20 @@ class BaseDatasetSocket:
 
         stmt = select(self.record_item_orm)
         stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
-        stmt = stmt.options(selectinload(self.record_item_orm.record))
 
         if entry_names is not None:
             stmt = stmt.where(self.record_item_orm.entry_name.in_(entry_names))
         if specification_names is not None:
             stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
-        if status is not None:
-            stmt = stmt.join(self.record_item_orm.record).options(contains_eager(self.record_item_orm.record))
-            stmt = stmt.where(BaseRecordORM.status.in_(status))
+        if status:
+            stmt = stmt.join(self.record_item_orm.record)
+            stmt = stmt.where(self.record_orm.status.in_(status))
 
+        query_opts = []
         if include or exclude:
-            query_opts = get_query_proj_options(self.record_item_orm.record, include, exclude)
-            stmt = stmt.options(*query_opts)
+            query_opts = get_query_proj_options(self.record_orm, include, exclude)
+
+        stmt = stmt.options(selectinload(self.record_item_orm.record).options(*query_opts))
 
         with self.root_socket.optional_session(session, True) as session:
             records = session.execute(stmt).scalars().all()

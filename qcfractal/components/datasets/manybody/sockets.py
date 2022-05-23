@@ -5,6 +5,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from qcfractal.components.datasets.sockets import BaseDatasetSocket
+from qcfractal.components.records.manybody.db_models import ManybodyRecordORM
 from qcportal.datasets.manybody import ManybodyDatasetNewEntry
 from qcportal.records import PriorityEnum
 from qcportal.records.manybody import ManybodySpecification
@@ -29,6 +30,7 @@ class ManybodyDatasetSocket(BaseDatasetSocket):
     specification_orm = ManybodyDatasetSpecificationORM
     entry_orm = ManybodyDatasetEntryORM
     record_item_orm = ManybodyDatasetRecordItemORM
+    record_orm = ManybodyRecordORM
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseDatasetSocket.__init__(

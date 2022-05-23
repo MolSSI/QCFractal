@@ -5,6 +5,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from qcfractal.components.datasets.sockets import BaseDatasetSocket
+from qcfractal.components.records.reaction.db_models import ReactionRecordORM
 from qcportal.datasets.reaction import ReactionDatasetNewEntry
 from qcportal.records import PriorityEnum
 from qcportal.records.reaction import ReactionSpecification
@@ -30,6 +31,7 @@ class ReactionDatasetSocket(BaseDatasetSocket):
     specification_orm = ReactionDatasetSpecificationORM
     entry_orm = ReactionDatasetEntryORM
     record_item_orm = ReactionDatasetRecordItemORM
+    record_orm = ReactionRecordORM
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseDatasetSocket.__init__(

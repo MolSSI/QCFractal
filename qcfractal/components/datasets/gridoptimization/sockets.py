@@ -5,6 +5,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from qcfractal.components.datasets.sockets import BaseDatasetSocket
+from qcfractal.components.records.gridoptimization.db_models import GridoptimizationRecordORM
 from qcportal.datasets.gridoptimization import GridoptimizationDatasetNewEntry
 from qcportal.records import PriorityEnum
 from qcportal.records.gridoptimization import GridoptimizationSpecification
@@ -30,6 +31,7 @@ class GridoptimizationDatasetSocket(BaseDatasetSocket):
     specification_orm = GridoptimizationDatasetSpecificationORM
     entry_orm = GridoptimizationDatasetEntryORM
     record_item_orm = GridoptimizationDatasetRecordItemORM
+    record_orm = GridoptimizationRecordORM
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseDatasetSocket.__init__(
