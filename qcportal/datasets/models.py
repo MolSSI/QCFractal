@@ -80,7 +80,7 @@ class BaseDataset(BaseModel):
         # To be overridden by the derived class with more specific types
         specifications: Dict[str, Any]
         entries: Optional[Dict[str, Any]]
-        record_items: Optional[List[Any]]
+        record_map: Optional[Dict[Tuple[str, str], Any]]
 
         # Values computed outside QCA
         contributed_values: Optional[Dict[str, ContributedValues]] = None
@@ -100,128 +100,39 @@ class BaseDataset(BaseModel):
 
     @classmethod
     def from_datamodel(cls, raw_data: _DataModel, client: Any = None):
+        """
+        Create a dataset from a dataset DataModel
+        """
+
         return cls(client=client, raw_data=raw_data, dataset_type=raw_data.dataset_type)
 
-    def _append_entry_names(self, entry_names: List[str]):
+    def _post_add_entries(self, entry_names) -> None:
+        """
+        Perform some actions after entries have been added to the remote server
+
+        Parameters
+        ----------
+        entry_names
+            Names of the new entries that have been added to the remote server
+        """
+
         if self.raw_data.entry_names is None:
             self.raw_data.entry_names = []
 
         self.raw_data.entry_names.extend(x for x in entry_names if x not in self.raw_data.entry_names)
 
-    def _post_add_entries(self, entry_names):
-        self._append_entry_names(entry_names)
+    def _post_add_specification(self, specification_name) -> None:
+        """
+        Perform some actions after specifications have been added to the remote server
 
-    def _post_add_specification(self, specification_name):
+        Parameters
+        ----------
+        specification_name
+            Name of the new specification that has been added to the remote server
+        """
+
         # Ignoring the function argument for now... Just get all specs
         self.fetch_specifications()
-
-    def _fetch_entries(
-        self, entry_names: Optional[Union[str, Iterable[str]]] = None, include: Optional[Iterable[str]] = None
-    ):
-        if self.offline:
-            return
-
-        body_data = DatasetFetchEntryBody(names=make_list(entry_names), include=include)
-
-        fetched_entries = self.client._auto_request(
-            "post",
-            f"v1/datasets/{self.dataset_type}/{self.id}/entries/bulkFetch",
-            DatasetFetchEntryBody,
-            None,
-            Dict[str, self._entry_type],
-            body_data,
-            None,
-        )
-
-        if self.raw_data.entries is None:
-            self.raw_data.entries = {}
-
-        self.raw_data.entries.update(fetched_entries)
-
-        # Fill in entry names as well
-        if self.raw_data.entry_names is None:
-            self.raw_data.entry_names = list(fetched_entries.keys())
-        else:
-            self.raw_data.entry_names.extend(k for k in fetched_entries.keys() if k not in self.raw_data.entry_names)
-
-    def fetch_entry_names(self):
-        if self.offline:
-            return
-
-        self.raw_data.entry_names = self.client._auto_request(
-            "get",
-            f"v1/datasets/{self.dataset_type}/{self.id}/entry_names",
-            None,
-            None,
-            List[str],
-            None,
-            None,
-        )
-
-    def fetch_specifications(self):
-        if self.offline:
-            return
-
-        self.raw_data.specifications = self.client._auto_request(
-            "get",
-            f"v1/datasets/{self.dataset_type}/{self.id}/specifications",
-            None,
-            None,
-            Dict[str, self._specification_type],
-            None,
-            None,
-        )
-
-    def fetch_record_items(
-        self,
-        entry_names: Optional[Union[str, Iterable[str]]] = None,
-        specification_names: Optional[Union[str, Iterable[str]]] = None,
-    ):
-        if self.offline:
-            return
-
-        body_data = DatasetFetchRecordItemsBody(
-            entry_names=make_list(entry_names),
-            specification_names=make_list(specification_names),
-            include=["*", "record"],
-        )
-
-        record_info = self.client._auto_request(
-            "post",
-            f"v1/datasets/{self.dataset_type}/{self.id}/record_items/bulkFetch",
-            DatasetFetchRecordItemsBody,
-            None,
-            List[self._record_item_type],
-            body_data,
-            None,
-        )
-
-        if self.raw_data.record_items is None:
-            self.raw_data.record_items = record_info
-        else:
-            # Merge in newly-downloaded records
-            # what spec names and entries did we just download
-            new_info = [(x.specification_name, x.entry_name) for x in record_info]
-
-            # Remove any items that match what we just downloaded, and then extend the list with the new items
-            self.raw_data.record_items = [
-                x for x in self.raw_data.record_items if (x.specification_name, x.entry_name) not in new_info
-            ]
-            self.raw_data.record_items.extend(record_info)
-
-    def fetch_contributed_values(self):
-        if self.offline:
-            return
-
-        self.raw_data.contributed_values = self.client._auto_request(
-            "get",
-            f"v1/datasets/{self.id}/contributed_values",
-            None,
-            None,
-            Optional[Dict[str, ContributedValues]],
-            None,
-            None,
-        )
 
     def _update_metadata(self):
         new_body = DatasetModifyMetadata(
@@ -249,24 +160,162 @@ class BaseDataset(BaseModel):
             None,
         )
 
+    def fetch_entries(
+        self, entry_names: Optional[Union[str, Iterable[str]]] = None, include: Optional[Iterable[str]] = None
+    ) -> None:
+        """
+        Common function for fetching entries from the remote server
+
+        These are fetched and then stored internally, and not returned.
+
+        Parameters
+        ----------
+        entry_names
+            Names of entries to fetch. If None, fetch all entries
+        include
+            Additional fields/data to include when fetch the entry
+        """
+
+        if self.offline:
+            return
+
+        body_data = DatasetFetchEntryBody(names=make_list(entry_names), include=include)
+
+        fetched_entries = self.client._auto_request(
+            "post",
+            f"v1/datasets/{self.dataset_type}/{self.id}/entries/bulkFetch",
+            DatasetFetchEntryBody,
+            None,
+            Dict[str, self._entry_type],
+            body_data,
+            None,
+        )
+
+        if self.raw_data.entries is None:
+            self.raw_data.entries = {}
+
+        self.raw_data.entries.update(fetched_entries)
+
+        # Fill in entry names as well
+        if self.raw_data.entry_names is None:
+            self.raw_data.entry_names = list(fetched_entries.keys())
+        else:
+            self.raw_data.entry_names.extend(k for k in fetched_entries.keys() if k not in self.raw_data.entry_names)
+
+    def fetch_entry_names(self) -> None:
+        """
+        Fetch all entry names from the remote server
+
+        These are fetched and then stored internally, and not returned.
+        """
+        if self.offline:
+            return
+
+        self.raw_data.entry_names = self.client._auto_request(
+            "get",
+            f"v1/datasets/{self.dataset_type}/{self.id}/entry_names",
+            None,
+            None,
+            List[str],
+            None,
+            None,
+        )
+
+    def fetch_specifications(self) -> None:
+        """
+        Fetch all specifications from the remote server
+
+        These are fetched and then stored internally, and not returned.
+        """
+        if self.offline:
+            return
+
+        self.raw_data.specifications = self.client._auto_request(
+            "get",
+            f"v1/datasets/{self.dataset_type}/{self.id}/specifications",
+            None,
+            None,
+            Dict[str, self._specification_type],
+            None,
+            None,
+        )
+
     def _lookup_record(self, entry_name: str, specification_name: str):
 
-        if self.raw_data.record_items is None:
+        if self.raw_data.record_map is None:
             return None
 
-        for ri in self.raw_data.record_items:
-            if ri.specification_name == specification_name and ri.entry_name == entry_name:
-                return record_from_datamodel(ri.record, self.client)
+        return self.raw_data.record_map.get((entry_name, specification_name), None)
 
-        return None
+    def fetch_records(
+        self,
+        entry_names: Optional[Union[str, Iterable[str]]] = None,
+        specification_names: Optional[Union[str, Iterable[str]]] = None,
+        status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
+        include: Optional[Iterable[str]] = None,
+    ):
+        """
+        Fetch records related to this dataset from the remote server
 
-    def get_record(self, entry_name: str, specification_name: str):
+        These are fetched and then stored internally, and not returned.
+        """
+        if self.offline:
+            return
+
+        body_data = DatasetFetchRecordsBody(
+            entry_names=make_list(entry_names),
+            specification_names=make_list(specification_names),
+            status=make_list(status),
+            include=make_list(include),
+        )
+
+        record_info = self.client._auto_request(
+            "post",
+            f"v1/datasets/{self.dataset_type}/{self.id}/records/bulkFetch",
+            DatasetFetchRecordsBody,
+            None,
+            List[self._record_item_type],
+            body_data,
+            None,
+        )
+
+        # Convert a list of record items info to a dict
+        record_info_dict = {}
+        for rec_item in record_info:
+            record = record_from_datamodel(rec_item.record, self.client)
+            record_info_dict[(rec_item.entry_name, rec_item.specification_name)] = record
+
+        if self.raw_data.record_map is None:
+            self.raw_data.record_map = record_info_dict
+        else:
+            self.raw_data.record_map.update(record_info_dict)
+
+    def fetch_contributed_values(self):
+        if self.offline:
+            return
+
+        self.raw_data.contributed_values = self.client._auto_request(
+            "get",
+            f"v1/datasets/{self.id}/contributed_values",
+            None,
+            None,
+            Optional[Dict[str, ContributedValues]],
+            None,
+            None,
+        )
+
+    def _get_record(self, entry_name: str, specification_name: str):
+        """
+        Obtain a calculation record related to this dataset
+
+        The record will be automatically fetched if needed
+        """
 
         # Fetch the records if needed
         r = self._lookup_record(entry_name, specification_name)
 
         if r is None:
-            self.fetch_record_items(entry_name, specification_name)
+            self.fetch_records(entry_name, specification_name)
 
         return self._lookup_record(entry_name, specification_name)
 
@@ -310,11 +359,12 @@ class BaseDataset(BaseModel):
             None,
         )
 
-        self.raw_data.specifications = {name_map.get(x, x): y for x, y in self.raw_data.specifications.items()}
+        if self.raw_data.specifications:
+            self.raw_data.specifications = {name_map.get(k, k): v for k, v in self.raw_data.specifications.items()}
 
-        if self.raw_data.record_items:
-            for x in self.raw_data.record_items:
-                x.specification_name = name_map.get(x.specification_name, x.specification_name)
+        if self.raw_data.record_map:
+            # Renames the specifications in the record map
+            self.raw_data.record_map = {(e, name_map.get(s, s)): r for (e, s), r in self.raw_data.record_map.items()}
 
         return ret
 
@@ -334,39 +384,39 @@ class BaseDataset(BaseModel):
         )
 
         # Delete locally-cached stuff
-        self.raw_data.specifications.pop(name, None)
+        if self.raw_data.specifications:
+            self.raw_data.specifications.pop(name, None)
 
-        if self.raw_data.record_items:
-            self.raw_data.record_items = [x for x in self.raw_data.record_items if x.specification_name != name]
+        if self.raw_data.record_map:
+            self.raw_data.record_map = {(e, s): r for (e, s), r in self.raw_data.record_map.items() if s != name}
 
         return ret
 
     ###################################
     # General entry management
     ###################################
-    def rename_entries(self, new_name_map: Dict[str, str]):
+    def rename_entries(self, name_map: Dict[str, str]):
         ret = self.client._auto_request(
             "patch",
             f"v1/datasets/{self.dataset_type}/{self.id}/entries",
             Dict[str, str],
             None,
             None,
-            new_name_map,
+            name_map,
             None,
         )
         self.assert_online()
 
         # rename locally cached entries and stuff
         if self.raw_data.entry_names:
-            self.raw_data.entry_names = [new_name_map.get(x, x) for x in self.raw_data.entry_names]
+            self.raw_data.entry_names = [name_map.get(x, x) for x in self.raw_data.entry_names]
 
         if self.raw_data.entries:
-            for x in self.raw_data.entries:
-                x.entry_name = new_name_map.get(x.entry_name, x.entry_name)
+            self.raw_data.entries = {name_map.get(k, k): v for k, v in self.raw_data.entries.items()}
 
-        if self.raw_data.record_items:
-            for x in self.raw_data.record_items:
-                x.entry_name = new_name_map.get(x.entry_name, x.entry_name)
+        if self.raw_data.record_map:
+            # Renames the entries in the record map
+            self.raw_data.record_map = {(name_map.get(e, e), s): r for (e, s), r in self.raw_data.record_map.items()}
 
         return ret
 
@@ -391,9 +441,10 @@ class BaseDataset(BaseModel):
             self.raw_data.entry_names = [x for x in self.raw_data.entry_names if x not in names]
 
         if self.raw_data.entries:
-            self.raw_data.entries = [x for x in self.raw_data.entries if x.entry_name not in names]
-        if self.raw_data.record_items:
-            self.raw_data.record_items = [x for x in self.raw_data.record_items if x.entry_name not in names]
+            self.raw_data.entries = {x: y for x, y in self.raw_data.entries.items() if x not in names}
+
+        if self.raw_data.record_map:
+            self.raw_data.record_map = {(e, s): r for (e, s), r in self.raw_data.record_map.items() if e not in names}
 
         return ret
 
@@ -401,7 +452,7 @@ class BaseDataset(BaseModel):
     # Record items modification
     ###########################
 
-    def delete_record_items(
+    def delete_records(
         self,
         entry_names: Optional[Union[str, Iterable[str]]] = None,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
@@ -409,7 +460,7 @@ class BaseDataset(BaseModel):
     ):
         self.assert_online()
 
-        body_data = DatasetDeleteRecordItemsBody(
+        body_data = DatasetDeleteRecordsBody(
             entry_names=make_list(entry_names),
             specification_names=make_list(specification_names),
             delete_records=delete_records,
@@ -417,8 +468,8 @@ class BaseDataset(BaseModel):
 
         ret = self.client._auto_request(
             "post",
-            f"v1/datasets/{self.dataset_type}/{self.id}/record_items/bulkDelete",
-            DatasetDeleteRecordItemsBody,
+            f"v1/datasets/{self.dataset_type}/{self.id}/records/bulkDelete",
+            DatasetDeleteRecordsBody,
             None,
             None,
             body_data,
@@ -462,7 +513,7 @@ class BaseDataset(BaseModel):
         )
 
         if refetch_records:
-            self.fetch_record_items(entry_names, specification_names)
+            self.fetch_records(entry_names, specification_names)
 
         return ret
 
@@ -492,7 +543,7 @@ class BaseDataset(BaseModel):
         )
 
         if refetch_records:
-            self.fetch_record_items(entry_names, specification_names)
+            self.fetch_records(entry_names, specification_names)
 
         return ret
 
@@ -522,7 +573,7 @@ class BaseDataset(BaseModel):
         )
 
         if refetch_records:
-            self.fetch_record_items(entry_names, specification_names)
+            self.fetch_records(entry_names, specification_names)
 
         return ret
 
@@ -552,7 +603,7 @@ class BaseDataset(BaseModel):
         )
 
         if refetch_records:
-            self.fetch_record_items(entry_names, specification_names)
+            self.fetch_records(entry_names, specification_names)
 
         return ret
 
@@ -582,7 +633,7 @@ class BaseDataset(BaseModel):
         )
 
         if refetch_records:
-            self.fetch_record_items(entry_names, specification_names)
+            self.fetch_records(entry_names, specification_names)
 
         return ret
 
@@ -612,7 +663,7 @@ class BaseDataset(BaseModel):
         )
 
         if refetch_records:
-            self.fetch_record_items(entry_names, specification_names)
+            self.fetch_records(entry_names, specification_names)
 
         return ret
 
@@ -749,30 +800,52 @@ class BaseDataset(BaseModel):
         return self.raw_data.entries
 
     @property
-    def record_items(self):
-        if self.raw_data.record_items is None:
-            self.fetch_record_items()
-        return self.raw_data.record_items
-
-    def _iterate_records(self):
-        # Get an up-to-date list of entry names and specifications
-        self.fetch_entry_names()
-        self.fetch_specifications()
-        for entry_name in self.entry_names:
-            self.fetch_record_items(entry_names=entry_name)
-            for spec_name in self.specifications.keys():
-                yield entry_name, spec_name, self._lookup_record(entry_name, spec_name)
-
-    @property
-    def records(self):
-        return self._iterate_records()
-
-    @property
     def contributed_values(self) -> Dict[str, ContributedValues]:
         if self.raw_data.contributed_values is None:
             self.fetch_contributed_values()
 
         return self.raw_data.contributed_values
+
+    ##############################
+    # Records (getting, iterating)
+    ##############################
+
+    def iterate_records(
+        self,
+        entry_names: Optional[Union[str, Iterable[str]]] = None,
+        specification_names: Optional[Union[str, Iterable[str]]] = None,
+        status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
+    ):
+
+        # Get an up-to-date list of entry names and specifications
+        self.fetch_entry_names()
+        self.fetch_specifications()
+
+        entry_names = make_list(entry_names)
+        specification_names = make_list(specification_names)
+        status = make_list(status)
+
+        if entry_names is None:
+            entry_names = self.entry_names
+        if specification_names is None:
+            specification_names = self.specifications.keys()
+
+        for entry_name in entry_names:
+            # Fetch all records for a given entry (ie, for all specifications)
+            self.fetch_records(entry_names=entry_name, status=status)
+
+            for spec_name in specification_names:
+                record = self._lookup_record(entry_name, spec_name)
+
+                if record is None:
+                    continue
+
+                if status is None or record.status in status:
+                    yield entry_name, spec_name, self._lookup_record(entry_name, spec_name)
+
+    @property
+    def records(self):
+        return self.iterate_records()
 
 
 class DatasetAddBody(RestModelBase):
@@ -812,7 +885,6 @@ class DatasetQueryModel(RestModelBase):
 class DatasetFetchEntryBody(RestModelBase):
     names: Optional[List[str]] = None
     include: Optional[List[str]] = None
-    exclude: Optional[List[str]] = None
     missing_ok: bool = False
 
 
@@ -821,7 +893,7 @@ class DatasetDeleteStrBody(RestModelBase):
     delete_records: bool = False
 
 
-class DatasetDeleteRecordItemsBody(RestModelBase):
+class DatasetDeleteRecordsBody(RestModelBase):
     entry_names: List[str]
     specification_names: List[str]
     delete_records: bool = False
@@ -835,11 +907,11 @@ class DatasetDeleteParams(RestModelBase):
         return validate_list_to_single(v)
 
 
-class DatasetFetchRecordItemsBody(RestModelBase):
+class DatasetFetchRecordsBody(RestModelBase):
     entry_names: Optional[List[str]] = None
     specification_names: Optional[List[str]] = None
+    status: Optional[List[RecordStatusEnum]] = None
     include: Optional[List[str]] = None
-    exclude: Optional[List[str]] = None
 
 
 class DatasetSubmitBody(RestModelBase):

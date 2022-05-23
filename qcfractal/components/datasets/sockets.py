@@ -4,7 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select, delete, func, union
-from sqlalchemy.orm import load_only, lazyload, joinedload
+from sqlalchemy.orm import load_only, lazyload, joinedload, contains_eager, selectinload
 
 from qcfractal.components.datasets.db_models import BaseDatasetORM, ContributedValuesORM
 from qcfractal.components.records.db_models import BaseRecordORM
@@ -433,11 +433,12 @@ class BaseDatasetSocket:
             for entry in entries:
                 entry.name = entry_name_map[entry.name]
 
-    def fetch_record_items(
+    def fetch_records(
         self,
         dataset_id: int,
-        entry_names: Optional[Sequence[str]] = None,
-        specification_names: Optional[Sequence[str]] = None,
+        entry_names: Optional[Iterable[str]] = None,
+        specification_names: Optional[Iterable[str]] = None,
+        status: Optional[Iterable[RecordStatusEnum]] = None,
         include: Optional[Iterable[str]] = None,
         exclude: Optional[Iterable[str]] = None,
         *,
@@ -446,14 +447,18 @@ class BaseDatasetSocket:
 
         stmt = select(self.record_item_orm)
         stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
+        stmt = stmt.options(selectinload(self.record_item_orm.record))
 
         if entry_names is not None:
             stmt = stmt.where(self.record_item_orm.entry_name.in_(entry_names))
         if specification_names is not None:
             stmt = stmt.where(self.record_item_orm.specification_name.in_(specification_names))
+        if status is not None:
+            stmt = stmt.join(self.record_item_orm.record).options(contains_eager(self.record_item_orm.record))
+            stmt = stmt.where(BaseRecordORM.status.in_(status))
 
         if include or exclude:
-            query_opts = get_query_proj_options(self.record_item_orm, include, exclude)
+            query_opts = get_query_proj_options(self.record_item_orm.record, include, exclude)
             stmt = stmt.options(*query_opts)
 
         with self.root_socket.optional_session(session, True) as session:

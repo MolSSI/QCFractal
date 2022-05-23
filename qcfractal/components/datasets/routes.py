@@ -8,12 +8,12 @@ from qcportal.base_models import ProjURLParameters
 from qcportal.datasets import (
     DatasetAddBody,
     DatasetQueryModel,
-    DatasetFetchRecordItemsBody,
+    DatasetFetchRecordsBody,
     DatasetFetchEntryBody,
     DatasetSubmitBody,
     DatasetDeleteStrBody,
     DatasetRecordModifyBody,
-    DatasetDeleteRecordItemsBody,
+    DatasetDeleteRecordsBody,
     DatasetRecordRevertBody,
     DatasetModifyMetadata,
     DatasetQueryRecords,
@@ -196,7 +196,6 @@ def fetch_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Data
         dataset_id,
         entry_names=body_data.names,
         include=body_data.include,
-        exclude=body_data.exclude,
         missing_ok=body_data.missing_ok,
     )
 
@@ -209,26 +208,27 @@ def rename_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Dic
 
 
 #########################
-# Record items
+# Records
 #########################
-@main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/record_items/bulkFetch", methods=["POST"])
+@main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/records/bulkFetch", methods=["POST"])
 @wrap_route("READ")
-def fetch_dataset_record_items_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchRecordItemsBody):
+def fetch_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchRecordsBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
-    return ds_socket.fetch_record_items(
+
+    return ds_socket.fetch_records(
         dataset_id,
         entry_names=body_data.entry_names,
         specification_names=body_data.specification_names,
+        status=body_data.status,
         include=body_data.include,
-        exclude=body_data.exclude,
     )
 
 
-@main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/record_items/bulkDelete", methods=["POST"])
+@main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/records/bulkDelete", methods=["POST"])
 @wrap_route("DELETE")
-def delete_dataset_record_items_v1(dataset_type: str, dataset_id: int, body_data: DatasetDeleteRecordItemsBody):
+def delete_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetDeleteRecordsBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
-    return ds_socket.delete_record_items(
+    return ds_socket.delete_records(
         dataset_id,
         entry_names=body_data.entry_names,
         specification_names=body_data.specification_names,

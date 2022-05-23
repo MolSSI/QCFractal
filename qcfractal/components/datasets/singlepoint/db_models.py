@@ -6,7 +6,7 @@ from sqlalchemy import JSON, Column, Integer, ForeignKey, String, ForeignKeyCons
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
-from qcfractal.components.datasets.db_models import BaseDatasetORM, ContributedValuesORM
+from qcfractal.components.datasets.db_models import BaseDatasetORM
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM, SinglepointRecordORM
 from qcfractal.db_socket import BaseORM
@@ -108,8 +108,6 @@ class SinglepointDatasetORM(BaseDatasetORM):
     __tablename__ = "singlepoint_dataset"
 
     id = Column(Integer, ForeignKey(BaseDatasetORM.id, ondelete="cascade"), primary_key=True)
-
-    contributed_values = relationship(ContributedValuesORM, lazy="select", cascade="all, delete-orphan")
 
     __mapper_args__ = {
         "polymorphic_identity": "singlepoint",

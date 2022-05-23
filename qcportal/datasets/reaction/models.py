@@ -3,12 +3,10 @@ from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
 from pydantic import BaseModel
 from typing_extensions import Literal
 
-from qcportal.base_models import RestModelBase
 from qcportal.molecules import Molecule
 from qcportal.records.reaction import ReactionRecord, ReactionSpecification
 from qcportal.utils import make_list
 from .. import BaseDataset
-from ...records import PriorityEnum
 
 
 class ReactionDatasetNewEntry(BaseModel):
@@ -53,7 +51,7 @@ class ReactionDataset(BaseDataset):
 
         specifications: Optional[Dict[str, ReactionDatasetSpecification]] = None
         entries: Optional[Dict[str, ReactionDatasetEntry]] = None
-        record_items: Optional[List[ReactionDatasetRecordItem]] = None
+        record_map: Optional[Dict[Tuple[str, str], ReactionRecord]] = None
 
         contributed_values: Any
 
@@ -98,11 +96,3 @@ class ReactionDataset(BaseDataset):
 
         new_names = [x.name for x in entries]
         self._post_add_entries(new_names)
-
-    def fetch_entries(self, entry_names: Optional[Union[str, Iterable[str]]] = None, include_molecules: bool = True):
-
-        include = set()
-        if include_molecules:
-            include |= {"*", "stoichiometry.*", "stoichiometry.molecule"}
-
-        return self._fetch_entries(entry_names, include)

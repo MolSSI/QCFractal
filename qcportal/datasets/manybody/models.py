@@ -1,14 +1,12 @@
-from typing import Dict, Any, Union, Optional, List, Iterable
+from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
 
 from pydantic import BaseModel
 from typing_extensions import Literal
 
-from qcportal.base_models import RestModelBase
 from qcportal.molecules import Molecule
 from qcportal.records.manybody import ManybodyRecord, ManybodySpecification
 from qcportal.utils import make_list
 from .. import BaseDataset
-from ...records import PriorityEnum
 
 
 class ManybodyDatasetNewEntry(BaseModel):
@@ -43,7 +41,7 @@ class ManybodyDataset(BaseDataset):
 
         specifications: Optional[Dict[str, ManybodyDatasetSpecification]] = None
         entries: Optional[Dict[str, ManybodyDatasetEntry]] = None
-        record_items: Optional[List[ManybodyDatasetRecordItem]] = None
+        record_map: Optional[Dict[Tuple[str, str], ManybodyRecord]] = None
 
     # This is needed for disambiguation by pydantic
     dataset_type: Literal["manybody"] = "manybody"
@@ -87,13 +85,3 @@ class ManybodyDataset(BaseDataset):
 
         new_names = [x.name for x in entries]
         self._post_add_entries(new_names)
-
-    def fetch_entries(
-        self, entry_names: Optional[Union[str, Iterable[str]]] = None, include_initial_molecule: bool = True
-    ):
-
-        include = set()
-        if include_initial_molecule:
-            include |= {"*", "initial_molecule"}
-
-        return self._fetch_entries(entry_names, include)
