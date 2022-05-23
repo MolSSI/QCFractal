@@ -1,4 +1,4 @@
-from typing import List, Union, Optional, Tuple
+from typing import List, Union, Optional, Tuple, Set, Iterable
 
 from pydantic import BaseModel, Extra, root_validator, constr
 from typing_extensions import Literal
@@ -80,6 +80,19 @@ class ReactionRecord(BaseRecord):
     # This is needed for disambiguation by pydantic
     record_type: Literal["reaction"] = "reaction"
     raw_data: _DataModel
+
+    @staticmethod
+    def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
+
+        if includes is None:
+            return None
+
+        ret = BaseRecord.transform_includes(includes)
+
+        if "components" in includes:
+            ret |= {"*", "components.*", "components.molecule", "components.singlepoint", "components.optimization"}
+
+        return ret
 
     def _fetch_components(self):
         url_params = {"include": ["*", "singlepoint_record", "optimization_record"]}

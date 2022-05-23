@@ -39,7 +39,7 @@ def test_torsiondrive_client_tag_priority_as_service(snowflake_client: PortalCli
         priority=priority,
         tag=tag,
     )
-    rec = snowflake_client.get_records(id1, include_service=True)
+    rec = snowflake_client.get_records(id1, include=["service"])
     assert rec[0].raw_data.service.tag == tag
     assert rec[0].raw_data.service.priority == priority
 
@@ -62,7 +62,7 @@ def test_torsiondrive_client_add_get(snowflake_client: PortalClient, spec: Torsi
     time_1 = datetime.utcnow()
     assert meta.success
 
-    recs = snowflake_client.get_torsiondrives(id, include_service=True, include_initial_molecules=True)
+    recs = snowflake_client.get_torsiondrives(id, include=["service", "initial_molecules"])
     assert len(recs) == 2
 
     for r in recs:
@@ -111,7 +111,7 @@ def test_torsiondrive_client_add_existing_molecule(snowflake_client: PortalClien
     assert meta.n_inserted == 1
     assert meta.n_existing == 1
 
-    recs = snowflake_client.get_torsiondrives(id, include_initial_molecules=True)
+    recs = snowflake_client.get_torsiondrives(id, include=["initial_molecules"])
     assert len(recs) == 2
     assert recs[0].raw_data.id == recs[1].raw_data.id
 

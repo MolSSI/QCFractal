@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List, Union
+from typing import Optional, Dict, Any, List, Union, Iterable, Set
 
 from pydantic import BaseModel, Extra, constr
 from qcelemental.models.results import Provenance
@@ -194,6 +194,28 @@ class BaseRecord(BaseModel):
     @classmethod
     def from_datamodel(cls, raw_data: _DataModel, client: Any = None):
         return cls(client=client, raw_data=raw_data, record_type=raw_data.record_type)
+
+    @staticmethod
+    def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
+        """
+        Transforms user-friendly includes into includes used by the web API
+        """
+
+        if includes is None:
+            return None
+
+        ret: Set[str] = {"*"}
+
+        if "task" in includes:
+            ret.add("task")
+        if "service" in includes:
+            ret |= {"service.*", "service.dependencies"}
+        if "outputs" in includes:
+            ret |= {"compute_history.*", "compute_history.outputs"}
+        if "comments" in includes:
+            ret.add("comments")
+
+        return ret
 
     def _fetch_compute_history(self, include_outputs: bool = False):
         url_params = {}

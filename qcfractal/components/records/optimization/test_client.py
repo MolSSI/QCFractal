@@ -32,7 +32,7 @@ def test_optimization_client_tag_priority(snowflake_client: PortalClient, tag: s
         priority=priority,
         tag=tag,
     )
-    rec = snowflake_client.get_records(id1, include_task=True)
+    rec = snowflake_client.get_records(id1, include=["task"])
     assert rec[0].raw_data.task.tag == tag
     assert rec[0].raw_data.task.priority == priority
 
@@ -58,7 +58,7 @@ def test_optimization_client_add_get(snowflake_client: PortalClient, spec: Optim
     time_1 = datetime.utcnow()
     assert meta.success
 
-    recs = snowflake_client.get_optimizations(id, include_task=True, include_initial_molecule=True)
+    recs = snowflake_client.get_optimizations(id, include=["task", "initial_molecule"])
 
     assert len(recs) == 3
 

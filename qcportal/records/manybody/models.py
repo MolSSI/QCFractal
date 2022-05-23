@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Union, Optional, Dict, Any
+from typing import List, Union, Optional, Dict, Any, Set, Iterable
 
 from pydantic import BaseModel, Extra, validator, constr
 from typing_extensions import Literal
@@ -7,7 +7,6 @@ from typing_extensions import Literal
 from .. import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from ..singlepoint.models import (
     QCSpecification,
-    SinglepointQueryFilters,
     SinglepointRecord,
 )
 from ...base_models import ProjURLParameters
@@ -86,6 +85,21 @@ class ManybodyRecord(BaseRecord):
     # This is needed for disambiguation by pydantic
     record_type: Literal["manybody"] = "manybody"
     raw_data: _DataModel
+
+    @staticmethod
+    def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
+
+        if includes is None:
+            return None
+
+        ret = BaseRecord.transform_includes(includes)
+
+        if "initial_molecule" in includes:
+            ret.add("initial_molecule")
+        if "clusters" in includes:
+            ret.add("clusters")
+
+        return ret
 
     def _fetch_initial_molecule(self):
         self.raw_data.initial_molecule = self.client.get_molecules([self.raw_data.initial_molecule_id])[0]

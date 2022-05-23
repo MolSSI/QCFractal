@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple, Union, Dict
+from typing import List, Optional, Tuple, Union, Dict, Set, Iterable
 
 from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
 from typing_extensions import Literal
@@ -104,6 +104,21 @@ class TorsiondriveRecord(BaseRecord):
     raw_data: _DataModel
 
     optimization_cache: Optional[Dict[str, OptimizationRecord]] = None
+
+    @staticmethod
+    def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
+
+        if includes is None:
+            return None
+
+        ret = BaseRecord.transform_includes(includes)
+
+        if "initial_molecules" in includes:
+            ret.add("initial_molecules")
+        if "optimizations" in includes:
+            ret |= {"optimizations.*", "optimizations.optimization_record"}
+
+        return ret
 
     def _fetch_initial_molecules(self):
         self.raw_data.initial_molecules = self.client._auto_request(

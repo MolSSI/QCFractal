@@ -587,10 +587,7 @@ class PortalClient(PortalClientBase):
         record_ids: Union[int, Sequence[int]],
         missing_ok: bool = False,
         *,
-        include_task: bool = False,
-        include_service: bool = False,
-        include_outputs: bool = False,
-        include_comments: bool = False,
+        include: Optional[Iterable[str]] = None,
     ) -> Union[List[BaseRecord], Optional[BaseRecord]]:
         """
         Obtain records of all types with specified IDs
@@ -608,14 +605,9 @@ class PortalClient(PortalClientBase):
         missing_ok
             If set to True, then missing records will be tolerated, and the returned
             records will contain None for the corresponding IDs that were not found.
-        include_task
-            If True, include the task information as part of the record
-        include_service
-            If True, include the service information as part of the record
-        include_outputs
-            If True, include the outputs as part of the record
-        include_comments
-            If True, include the comments as part of the record
+        include
+            Additional fields to include in the returned record
+
         Returns
         -------
         :
@@ -637,20 +629,8 @@ class PortalClient(PortalClientBase):
 
         body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
-        include = set()
-
-        # We must add '*' so that all the default fields are included
-        if include_task:
-            include |= {"*", "task"}
-        if include_service:
-            include |= {"*", "service.*", "service.dependencies"}
-        if include_outputs:
-            include |= {"*", "compute_history.*", "compute_history.outputs"}
-        if include_comments:
-            include |= {"*", "comments"}
-
         if include:
-            body_data["include"] = include
+            body_data["include"] = BaseRecord.transform_includes(include)
 
         record_data = self._auto_request(
             "post",
@@ -685,10 +665,7 @@ class PortalClient(PortalClientBase):
         limit: int = None,
         skip: int = 0,
         *,
-        include_task: bool = False,
-        include_service: bool = False,
-        include_outputs: bool = False,
-        include_comments: bool = False,
+        include: Optional[Iterable[str]] = None,
     ) -> Tuple[QueryMetadata, List[AllRecordTypes]]:
         """
         Query records of all types based on common fields
@@ -726,14 +703,8 @@ class PortalClient(PortalClientBase):
             The maximum number of records to return. Note that the server limit is always obeyed.
         skip
             The number of records to skip in the query. This can be used for pagination
-        include_task
-            If True, include the task information as part of the record
-        include_service
-            If True, include the service information as part of the record
-        include_outputs
-            If True, include the outputs as part of the record
-        include_comments
-            If True, include the comments as part of the record
+        include
+            Additional fields to include in the returned record
 
         Returns
         -------
@@ -762,20 +733,8 @@ class PortalClient(PortalClientBase):
             "skip": skip,
         }
 
-        include = set()
-
-        # We must add '*' so that all the default fields are included
-        if include_task:
-            include |= {"*", "task"}
-        if include_service:
-            include |= {"*", "service"}
-        if include_outputs:
-            include |= {"*", "compute_history.*", "compute_history.outputs"}
-        if include_comments:
-            include |= {"*", "comments"}
-
         if include:
-            query_data["include"] = include
+            query_data["include"] = BaseRecord.transform_includes(include)
 
         meta, record_data = self._auto_request(
             "post",
@@ -1031,11 +990,7 @@ class PortalClient(PortalClientBase):
         record_ids: Union[int, Sequence[int]],
         missing_ok: bool = False,
         *,
-        include_task: bool = False,
-        include_outputs: bool = False,
-        include_comments: bool = False,
-        include_molecule: bool = False,
-        include_wavefunction: bool = False,
+        include: Optional[Iterable[str]] = None,
     ) -> Union[Optional[SinglepointRecord], List[Optional[SinglepointRecord]]]:
         """
         Obtain singlepoint records with the specified IDs.
@@ -1049,16 +1004,8 @@ class PortalClient(PortalClientBase):
         missing_ok
             If set to True, then missing records will be tolerated, and the returned
             records will contain None for the corresponding IDs that were not found.
-        include_task
-            If True, include the task information as part of the record
-        include_outputs
-            If True, include the outputs as part of the record
-        include_comments
-            If True, include the comments as part of the record
-        include_molecule
-            If True, include the full molecule as part of the record
-        include_wavefunction
-            If True, include the full wavefunction as part of the record
+        include
+            Additional fields to include in the returned record
 
         Returns
         -------
@@ -1081,22 +1028,8 @@ class PortalClient(PortalClientBase):
 
         body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
-        include = set()
-
-        # We must add '*' so that all the default fields are included
-        if include_task:
-            include |= {"*", "task"}
-        if include_outputs:
-            include |= {"*", "compute_history.*", "compute_history.outputs"}
-        if include_comments:
-            include |= {"*", "comments"}
-        if include_molecule:
-            include |= {"*", "molecule"}
-        if include_wavefunction:
-            include |= {"*", "wavefunction"}
-
         if include:
-            body_data["include"] = include
+            body_data["include"] = SinglepointRecord.transform_includes(include)
 
         record_data = self._auto_request(
             "post",
@@ -1134,11 +1067,7 @@ class PortalClient(PortalClientBase):
         limit: Optional[int] = None,
         skip: int = 0,
         *,
-        include_task: bool = False,
-        include_outputs: bool = False,
-        include_comments: bool = False,
-        include_molecule: bool = False,
-        include_wavefunction: bool = False,
+        include: Optional[Iterable[str]] = None,
     ) -> Tuple[QueryMetadata, List[SinglepointRecord]]:
         """
         Queries singlepoint records on the server
@@ -1179,16 +1108,8 @@ class PortalClient(PortalClientBase):
             The maximum number of records to return. Note that the server limit is always obeyed.
         skip
             The number of records to skip in the query. This can be used for pagination
-        include_task
-            If True, include the task information as part of the record
-        include_outputs
-            If True, include the outputs as part of the record
-        include_comments
-            If True, include the comments as part of the record
-        include_molecule
-            If True, include the full molecule as part of the record
-        include_wavefunction
-            If True, include the full wavefunction as part of the record
+        include
+            Additional fields to include in the returned record
 
         Returns
         -------
@@ -1221,22 +1142,8 @@ class PortalClient(PortalClientBase):
             "skip": skip,
         }
 
-        include = set()
-
-        # We must add '*' so that all the default fields are included
-        if include_task:
-            include |= {"*", "task"}
-        if include_outputs:
-            include |= {"*", "compute_history.*", "compute_history.outputs"}
-        if include_comments:
-            include |= {"*", "comments"}
-        if include_molecule:
-            include |= {"*", "molecule"}
-        if include_wavefunction:
-            include |= {"*", "wavefuntion"}
-
         if include:
-            query_data["include"] = include
+            query_data["include"] = SinglepointRecord.transform_includes(include)
 
         meta, record_data = self._auto_request(
             "post",
@@ -1336,12 +1243,7 @@ class PortalClient(PortalClientBase):
         record_ids: Union[int, Sequence[int]],
         missing_ok: bool = False,
         *,
-        include_task: bool = False,
-        include_outputs: bool = False,
-        include_comments: bool = False,
-        include_initial_molecule: bool = False,
-        include_final_molecule: bool = False,
-        include_trajectory: bool = False,
+        include: Optional[Iterable[str]] = None,
     ) -> Union[Optional[OptimizationRecord], List[Optional[OptimizationRecord]]]:
         """
         Obtain optimization records with the specified IDs.
@@ -1355,18 +1257,8 @@ class PortalClient(PortalClientBase):
         missing_ok
             If set to True, then missing records will be tolerated, and the returned
             records will contain None for the corresponding IDs that were not found.
-        include_task
-            If True, include the task information as part of the record
-        include_outputs
-            If True, include the outputs as part of the record
-        include_comments
-            If True, include the comments as part of the record
-        include_initial_molecule
-            If True, include the full initial molecule as part of the record
-        include_final_molecule
-            If True, include the full final molecule as part of the record
-        include_trajectory
-            If True, include available trajectory computation records as part of the record
+        include
+            Additional fields to include in the returned record
 
         Returns
         -------
@@ -1389,24 +1281,8 @@ class PortalClient(PortalClientBase):
 
         body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
-        include = set()
-
-        # We must add '*' so that all the default fields are included
-        if include_task:
-            include |= {"*", "task"}
-        if include_outputs:
-            include |= {"*", "compute_history.*", "compute_history.outputs"}
-        if include_comments:
-            include |= {"*", "comments"}
-        if include_initial_molecule:
-            include |= {"*", "initial_molecule"}
-        if include_final_molecule:
-            include |= {"*", "final_molecule"}
-        if include_trajectory:
-            include |= {"*", "trajectory"}
-
         if include:
-            body_data["include"] = include
+            body_data["include"] = OptimizationRecord.transform_includes(include)
 
         record_data = self._auto_request(
             "post",
@@ -1446,12 +1322,7 @@ class PortalClient(PortalClientBase):
         limit: Optional[int] = None,
         skip: int = 0,
         *,
-        include_task: bool = False,
-        include_outputs: bool = False,
-        include_comments: bool = False,
-        include_initial_molecule: bool = False,
-        include_final_molecule: bool = False,
-        include_trajectory: bool = False,
+        include: Optional[Iterable[str]] = None,
     ) -> Tuple[QueryMetadata, List[OptimizationRecord]]:
         """
         Queries optimization records on the server
@@ -1496,18 +1367,8 @@ class PortalClient(PortalClientBase):
             The maximum number of records to return. Note that the server limit is always obeyed.
         skip
             The number of records to skip in the query. This can be used for pagination
-        include_task
-            If True, include the task information as part of the record
-        include_outputs
-            If True, include the outputs as part of the record
-        include_comments
-            If True, include the comments as part of the record
-        include_initial_molecule
-            If True, include the full initial molecule as part of the record
-        include_final_molecule
-            If True, include the full final molecule as part of the record
-        include_trajectory
-            If True, include available trajectory computation records as part of the record
+        include
+            Additional fields to include in the returned record
 
         Returns
         -------
@@ -1541,24 +1402,8 @@ class PortalClient(PortalClientBase):
             "skip": skip,
         }
 
-        include = set()
-
-        # We must add '*' so that all the default fields are included
-        if include_task:
-            include |= {"*", "task"}
-        if include_outputs:
-            include |= {"*", "compute_history.*", "compute_history.outputs"}
-        if include_comments:
-            include |= {"*", "comments"}
-        if include_initial_molecule:
-            include |= {"*", "initial_molecule"}
-        if include_final_molecule:
-            include |= {"*", "final_molecule"}
-        if include_trajectory:
-            include |= {"*", "trajectory"}
-
         if include:
-            query_data["include"] = include
+            query_data["include"] = OptimizationRecord.transform_includes(include)
 
         meta, record_data = self._auto_request(
             "post",
@@ -1651,12 +1496,7 @@ class PortalClient(PortalClientBase):
         record_ids: Union[int, Sequence[int]],
         missing_ok: bool = False,
         *,
-        include_task: bool = False,
-        include_service: bool = False,
-        include_outputs: bool = False,
-        include_comments: bool = False,
-        include_initial_molecules: bool = False,
-        include_optimizations: bool = False,
+        include: Optional[Iterable[str]] = None,
     ) -> Union[Optional[TorsiondriveRecord], List[Optional[TorsiondriveRecord]]]:
         """
         Obtain torsiondrive records with the specified IDs.
@@ -1670,18 +1510,8 @@ class PortalClient(PortalClientBase):
         missing_ok
             If set to True, then missing records will be tolerated, and the returned
             records will contain None for the corresponding IDs that were not found.
-        include_task
-            If True, include the task information as part of the record
-        include_service
-            If True, include the service information as part of the record
-        include_outputs
-            If True, include the outputs as part of the record
-        include_comments
-            If True, include the comments as part of the record
-        include_initial_molecules
-            If True, include the full initial molecules as part of the record
-        include_optimizations
-            If True, include the full set of optimization records as part of the record
+        include
+            Additional fields to include in the returned record
 
         Returns
         -------
@@ -1704,24 +1534,8 @@ class PortalClient(PortalClientBase):
 
         body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
-        include = set()
-
-        # We must add '*' so that all the default fields are included
-        if include_task:
-            include |= {"*", "task"}
-        if include_service:
-            include |= {"*", "service"}
-        if include_outputs:
-            include |= {"*", "compute_history.*", "compute_history.outputs"}
-        if include_comments:
-            include |= {"*", "comments"}
-        if include_initial_molecules:
-            include |= {"*", "initial_molecules"}
-        if include_optimizations:
-            include |= {"*", "optimizations.*", "optimizations.optimization_record"}
-
         if include:
-            body_data["include"] = include
+            body_data["include"] = TorsiondriveRecord.transform_includes(include)
 
         record_data = self._auto_request(
             "post",
@@ -1761,12 +1575,7 @@ class PortalClient(PortalClientBase):
         limit: Optional[int] = None,
         skip: int = 0,
         *,
-        include_task: bool = False,
-        include_service: bool = False,
-        include_outputs: bool = False,
-        include_comments: bool = False,
-        include_initial_molecules: bool = False,
-        include_optimizations: bool = False,
+        include: Optional[Iterable[str]] = None,
     ) -> Tuple[QueryMetadata, List[TorsiondriveRecord]]:
         """
         Queries torsiondrive records on the server
@@ -1811,18 +1620,8 @@ class PortalClient(PortalClientBase):
             The maximum number of records to return. Note that the server limit is always obeyed.
         skip
             The number of records to skip in the query. This can be used for pagination
-        include_task
-            If True, include the task information as part of the record
-        include_service
-            If True, include the service information as part of the record
-        include_outputs
-            If True, include the outputs as part of the record
-        include_comments
-            If True, include the comments as part of the record
-        include_initial_molecules
-            If True, include the full initial molecules as part of the record
-        include_optimizations
-            If True, include the full set of optimization records as part of the record
+        include
+            Additional fields to include in the returned record
 
         Returns
         -------
@@ -1856,24 +1655,8 @@ class PortalClient(PortalClientBase):
             "skip": skip,
         }
 
-        include = set()
-
-        # We must add '*' so that all the default fields are included
-        if include_task:
-            include |= {"*", "task"}
-        if include_service:
-            include |= {"*", "service"}
-        if include_outputs:
-            include |= {"*", "compute_history.*", "compute_history.outputs"}
-        if include_comments:
-            include |= {"*", "comments"}
-        if include_initial_molecules:
-            include |= {"*", "initial_molecules"}
-        if include_optimizations:
-            include |= {"*", "optimizations.*", "optimizations.optimization_record"}
-
         if include:
-            query_data["include"] = include
+            query_data["include"] = TorsiondriveRecord.transform_includes(include)
 
         meta, record_data = self._auto_request(
             "post",
@@ -1966,12 +1749,7 @@ class PortalClient(PortalClientBase):
         record_ids: Union[int, Sequence[int]],
         missing_ok: bool = False,
         *,
-        include_service: bool = False,
-        include_outputs: bool = False,
-        include_comments: bool = False,
-        include_initial_molecule: bool = False,
-        include_starting_molecule: bool = False,
-        include_optimizations: bool = False,
+        include: Optional[Iterable[str]] = None,
     ) -> Union[Optional[GridoptimizationRecord], List[Optional[GridoptimizationRecord]]]:
         """
         Obtain gridoptimization records with the specified IDs.
@@ -1985,18 +1763,8 @@ class PortalClient(PortalClientBase):
         missing_ok
             If set to True, then missing records will be tolerated, and the returned
             records will contain None for the corresponding IDs that were not found.
-        include_service
-            If True, include the service information as part of the record
-        include_outputs
-            If True, include the outputs as part of the record
-        include_comments
-            If True, include the comments as part of the record
-        include_initial_molecule
-            If True, include the full initial molecules as part of the record
-        include_starting_molecule
-            If True, include the full starting molecule as part of the record
-        include_optimizations
-            If True, include the full set of optimization records as part of the record
+        include
+            Additional fields to include in the returned record
 
         Returns
         -------
@@ -2019,24 +1787,8 @@ class PortalClient(PortalClientBase):
 
         body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
-        include = set()
-
-        # We must add '*' so that all the default fields are included
-        if include_service:
-            include |= {"*", "service"}
-        if include_outputs:
-            include |= {"*", "compute_history.*", "compute_history.outputs"}
-        if include_comments:
-            include |= {"*", "comments"}
-        if include_initial_molecule:
-            include |= {"*", "initial_molecule"}
-        if include_starting_molecule:
-            include |= {"*", "starting_molecule"}
-        if include_optimizations:
-            include |= {"*", "optimizations.*", "optimizations.optimization_record"}
-
         if include:
-            body_data["include"] = include
+            body_data["include"] = GridoptimizationRecord.transform_includes(include)
 
         record_data = self._auto_request(
             "post",
@@ -2076,13 +1828,7 @@ class PortalClient(PortalClientBase):
         limit: Optional[int] = None,
         skip: int = 0,
         *,
-        include_task: bool = False,
-        include_service: bool = False,
-        include_outputs: bool = False,
-        include_comments: bool = False,
-        include_initial_molecule: bool = False,
-        include_starting_molecule: bool = False,
-        include_optimizations: bool = False,
+        include: Optional[Iterable[str]] = None,
     ) -> Tuple[QueryMetadata, List[GridoptimizationRecord]]:
         """
         Queries gridoptimization records on the server
@@ -2127,20 +1873,8 @@ class PortalClient(PortalClientBase):
             The maximum number of records to return. Note that the server limit is always obeyed.
         skip
             The number of records to skip in the query. This can be used for pagination
-        include_task
-            If True, include the task information as part of the record
-        include_service
-            If True, include the service information as part of the record
-        include_outputs
-            If True, include the outputs as part of the record
-        include_comments
-            If True, include the comments as part of the record
-        include_initial_molecule
-            If True, include the full initial molecules as part of the record
-        include_starting_molecule
-            If True, include the full starting molecule as part of the record
-        include_optimizations
-            If True, include the full set of optimization records as part of the record
+        include
+            Additional fields to include in the returned record
 
         Returns
         -------
@@ -2174,26 +1908,8 @@ class PortalClient(PortalClientBase):
             "skip": skip,
         }
 
-        include = set()
-
-        # We must add '*' so that all the default fields are included
-        if include_task:
-            include |= {"*", "task"}
-        if include_service:
-            include |= {"*", "service"}
-        if include_outputs:
-            include |= {"*", "compute_history.*", "compute_history.outputs"}
-        if include_comments:
-            include |= {"*", "comments"}
-        if include_initial_molecule:
-            include |= {"*", "initial_molecule"}
-        if include_starting_molecule:
-            include |= {"*", "starting_molecule"}
-        if include_optimizations:
-            include |= {"*", "optimizations.*", "optimizations.optimization_record"}
-
         if include:
-            query_data["include"] = include
+            query_data["include"] = GridoptimizationRecord.transform_includes(include)
 
         meta, record_data = self._auto_request(
             "post",
@@ -2294,10 +2010,7 @@ class PortalClient(PortalClientBase):
         record_ids: Union[int, Sequence[int]],
         missing_ok: bool = False,
         *,
-        include_service: bool = False,
-        include_outputs: bool = False,
-        include_comments: bool = False,
-        include_components: bool = False,
+        include: Optional[Iterable[str]] = None,
     ) -> Union[Optional[ReactionRecord], List[Optional[ReactionRecord]]]:
         """
         Obtain reaction records with the specified IDs.
@@ -2311,14 +2024,8 @@ class PortalClient(PortalClientBase):
         missing_ok
             If set to True, then missing records will be tolerated, and the returned
             records will contain None for the corresponding IDs that were not found.
-        include_service
-            If True, include the service information as part of the record
-        include_outputs
-            If True, include the outputs as part of the record
-        include_comments
-            If True, include the comments as part of the record
-        include_components
-            If True, include the full set of singlepoint records as part of the record
+        include
+            Additional fields to include in the returned record
 
         Returns
         -------
@@ -2341,20 +2048,8 @@ class PortalClient(PortalClientBase):
 
         body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
-        include = set()
-
-        # We must add '*' so that all the default fields are included
-        if include_service:
-            include |= {"*", "service"}
-        if include_outputs:
-            include |= {"*", "compute_history.*", "compute_history.outputs"}
-        if include_comments:
-            include |= {"*", "comments"}
-        if include_components:
-            include |= {"*", "components.*", "components.molecule", "components.singlepoint", "components.optimization"}
-
         if include:
-            body_data["include"] = include
+            body_data["include"] = ReactionRecord.transform_includes(include)
 
         record_data = self._auto_request(
             "post",
@@ -2394,11 +2089,7 @@ class PortalClient(PortalClientBase):
         limit: Optional[int] = None,
         skip: int = 0,
         *,
-        include_task: bool = False,
-        include_service: bool = False,
-        include_outputs: bool = False,
-        include_comments: bool = False,
-        include_components: bool = False,
+        include: Optional[Iterable[str]] = None,
     ) -> Tuple[QueryMetadata, List[GridoptimizationRecord]]:
         """
         Queries reaction records on the server
@@ -2443,16 +2134,8 @@ class PortalClient(PortalClientBase):
             The maximum number of records to return. Note that the server limit is always obeyed.
         skip
             The number of records to skip in the query. This can be used for pagination
-        include_task
-            If True, include the task information as part of the record
-        include_service
-            If True, include the service information as part of the record
-        include_outputs
-            If True, include the outputs as part of the record
-        include_comments
-            If True, include the comments as part of the record
-        include_components
-            If True, include the full set of singlepoint records as part of the record
+        include
+            Additional fields to include in the returned record
 
         Returns
         -------
@@ -2486,22 +2169,8 @@ class PortalClient(PortalClientBase):
             "skip": skip,
         }
 
-        include = set()
-
-        # We must add '*' so that all the default fields are included
-        if include_task:
-            include |= {"*", "task"}
-        if include_service:
-            include |= {"*", "service"}
-        if include_outputs:
-            include |= {"*", "compute_history.*", "compute_history.outputs"}
-        if include_comments:
-            include |= {"*", "comments"}
-        if include_components:
-            include |= {"*", "components"}
-
         if include:
-            query_data["include"] = include
+            query_data["include"] = ReactionRecord.transform_includes(include)
 
         meta, record_data = self._auto_request(
             "post",
@@ -2593,11 +2262,7 @@ class PortalClient(PortalClientBase):
         record_ids: Union[int, Sequence[int]],
         missing_ok: bool = False,
         *,
-        include_service: bool = False,
-        include_outputs: bool = False,
-        include_comments: bool = False,
-        include_initial_molecule: bool = False,
-        include_clusters: bool = False,
+        include: Optional[Iterable[str]] = None,
     ) -> Union[Optional[ManybodyRecord], List[Optional[ManybodyRecord]]]:
         """
         Obtain manybody records with the specified IDs.
@@ -2611,16 +2276,8 @@ class PortalClient(PortalClientBase):
         missing_ok
             If set to True, then missing records will be tolerated, and the returned
             records will contain None for the corresponding IDs that were not found.
-        include_service
-            If True, include the service information as part of the record
-        include_outputs
-            If True, include the outputs as part of the record
-        include_comments
-            If True, include the comments as part of the record
-        include_initial_molecule
-            If True, include the full initial molecule as part of the record
-        include_clusters
-            If True, include the full cluster calculations (molecules and singlepoint records) as part of the record
+        include
+            Additional fields to include in the returned record
 
         Returns
         -------
@@ -2643,22 +2300,8 @@ class PortalClient(PortalClientBase):
 
         body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
-        include = set()
-
-        # We must add '*' so that all the default fields are included
-        if include_service:
-            include |= {"*", "service"}
-        if include_outputs:
-            include |= {"*", "compute_history.*", "compute_history.outputs"}
-        if include_comments:
-            include |= {"*", "comments"}
-        if include_initial_molecule:
-            include |= {"*", "initial_molecule"}
-        if include_clusters:
-            include |= {"*", "clusters.*", "clusters.molecule", "clusters.singlepoint_record"}
-
         if include:
-            body_data["include"] = include
+            body_data["include"] = ManybodyRecord.transform_includes(include)
 
         record_data = self._auto_request(
             "post",
@@ -2697,12 +2340,7 @@ class PortalClient(PortalClientBase):
         limit: Optional[int] = None,
         skip: int = 0,
         *,
-        include_task: bool = False,
-        include_service: bool = False,
-        include_outputs: bool = False,
-        include_comments: bool = False,
-        include_initial_molecule: bool = False,
-        include_clusters: bool = False,
+        include: Optional[Iterable[str]] = None,
     ) -> Tuple[QueryMetadata, List[GridoptimizationRecord]]:
         """
         Queries reaction records on the server
@@ -2745,18 +2383,8 @@ class PortalClient(PortalClientBase):
             The maximum number of records to return. Note that the server limit is always obeyed.
         skip
             The number of records to skip in the query. This can be used for pagination
-        include_task
-            If True, include the task information as part of the record
-        include_service
-            If True, include the service information as part of the record
-        include_outputs
-            If True, include the outputs as part of the record
-        include_comments
-            If True, include the comments as part of the record
-        include_initial_molecule
-            If True, include the full initial molecule as part of the record
-        include_clusters
-            If True, include the full cluster calculations (molecules and singlepoint records) as part of the record
+        include
+            Additional fields to include in the returned record
 
         Returns
         -------
@@ -2789,24 +2417,8 @@ class PortalClient(PortalClientBase):
             "skip": skip,
         }
 
-        include = set()
-
-        # We must add '*' so that all the default fields are included
-        if include_task:
-            include |= {"*", "task"}
-        if include_service:
-            include |= {"*", "service"}
-        if include_outputs:
-            include |= {"*", "compute_history.*", "compute_history.outputs"}
-        if include_comments:
-            include |= {"*", "comments"}
-        if include_initial_molecule:
-            include |= {"*", "initial_molecule"}
-        if include_clusters:
-            include |= {"*", "clusters"}
-
         if include:
-            query_data["include"] = include
+            query_data["include"] = ManybodyRecord.transform_includes(include)
 
         meta, record_data = self._auto_request(
             "post",

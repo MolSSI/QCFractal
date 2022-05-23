@@ -1,4 +1,4 @@
-from typing import Optional, Union, Any, List, Dict
+from typing import Optional, Union, Any, List, Dict, Set, Iterable
 
 import pydantic
 from pydantic import BaseModel, Field, constr, validator, Extra
@@ -62,6 +62,23 @@ class OptimizationRecord(BaseRecord):
     # This is needed for disambiguation by pydantic
     record_type: Literal["optimization"] = "optimization"
     raw_data: _DataModel
+
+    @staticmethod
+    def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
+
+        if includes is None:
+            return None
+
+        ret = BaseRecord.transform_includes(includes)
+
+        if "initial_molecule" in includes:
+            ret.add("initial_molecule")
+        if "final_molecule" in includes:
+            ret.add("final_molecule")
+        if "trajectory" in includes:
+            ret.add("trajectory")
+
+        return ret
 
     def _fetch_initial_molecule(self):
         self.raw_data.initial_molecule = self.client.get_molecules([self.raw_data.initial_molecule_id])[0]

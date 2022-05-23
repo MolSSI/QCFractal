@@ -45,7 +45,7 @@ def test_gridoptimization_client_tag_priority(snowflake_client: PortalClient, ta
         priority=priority,
         tag=tag,
     )
-    rec = snowflake_client.get_records(id1, include_service=True)
+    rec = snowflake_client.get_records(id1, include=["service"])
     assert rec[0].raw_data.service.tag == tag
     assert rec[0].raw_data.service.priority == priority
 
@@ -67,7 +67,7 @@ def test_gridoptimization_client_add_get(snowflake_client: PortalClient, spec: G
     time_1 = datetime.utcnow()
     assert meta.success
 
-    recs = snowflake_client.get_gridoptimizations(id, include_service=True, include_initial_molecule=True)
+    recs = snowflake_client.get_gridoptimizations(id, include=["service", "initial_molecule"])
     assert len(recs) == 2
 
     for r in recs:
@@ -109,7 +109,7 @@ def test_gridoptimization_client_add_existing_molecule(snowflake_client: PortalC
     assert meta.n_inserted == 2
     assert meta.n_existing == 2
 
-    recs = snowflake_client.get_gridoptimizations(id, include_initial_molecule=True)
+    recs = snowflake_client.get_gridoptimizations(id, include=["initial_molecule"])
     assert len(recs) == 4
     assert recs[0].raw_data.id == recs[3].raw_data.id
     assert recs[1].raw_data.id == recs[2].raw_data.id

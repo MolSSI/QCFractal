@@ -30,7 +30,7 @@ def test_record_client_get(snowflake_client: PortalClient, storage_socket: SQLAl
     assert r[3].raw_data.compute_history[0].outputs is None
     assert [x.raw_data.task is None for x in r]
 
-    r = snowflake_client.get_records(all_id, include_outputs=True, include_task=True)
+    r = snowflake_client.get_records(all_id, include=["outputs", "task"])
     assert r[1].raw_data.compute_history[0].outputs is not None
     assert r[3].raw_data.compute_history[0].outputs is not None
     assert r[0].raw_data.task is not None
@@ -112,7 +112,7 @@ def test_record_client_query(snowflake_client: PortalClient, storage_socket: SQL
     assert data[0].raw_data.task is None
     assert data[0].raw_data.compute_history[0].outputs is None
 
-    meta, data = snowflake_client.query_records(status=RecordStatusEnum.error, include_outputs=True, include_task=True)
+    meta, data = snowflake_client.query_records(status=RecordStatusEnum.error, include=["outputs", "task"])
     assert meta.n_found == 1
     assert data[0].raw_data.task is not None
     assert data[0].raw_data.compute_history[0].outputs is not None
@@ -152,7 +152,7 @@ def test_record_client_query_parents_children(snowflake_client: PortalClient, st
     )
     assert rmeta.n_accepted == 1
 
-    opt_rec = snowflake_client.get_optimizations(id1, include_trajectory=True)[0]
+    opt_rec = snowflake_client.get_optimizations(id1, include=["trajectory"])[0]
     assert opt_rec.status == RecordStatusEnum.complete
 
     traj_id = [x.singlepoint_id for x in opt_rec.raw_data.trajectory]
@@ -184,7 +184,7 @@ def test_record_client_add_comment(secure_snowflake: TestingSnowflake, storage_s
     for r in rec:
         assert r.raw_data.comments is None
 
-    rec = client.get_records(all_id, include_comments=True)
+    rec = client.get_records(all_id, include=["comments"])
     for r in rec:
         assert r.raw_data.comments == []
 
@@ -201,7 +201,7 @@ def test_record_client_add_comment(secure_snowflake: TestingSnowflake, storage_s
     assert meta.n_updated == 2
     assert meta.updated_idx == [0, 1]
 
-    rec = client.get_records(all_id, include_comments=True)
+    rec = client.get_records(all_id, include=["comments"])
     assert rec[0].raw_data.comments == []
     assert rec[4].raw_data.comments == []
     assert rec[5].raw_data.comments == []
@@ -234,7 +234,7 @@ def test_record_client_add_comment_nouser(snowflake_client: PortalClient, storag
     assert meta.n_updated == 2
     assert meta.updated_idx == [0, 1]
 
-    rec = snowflake_client.get_records(all_id, include_comments=True)
+    rec = snowflake_client.get_records(all_id, include=["comments"])
     assert len(rec[1].raw_data.comments) == 1
     assert len(rec[3].raw_data.comments) == 1
 
@@ -274,7 +274,7 @@ def test_record_client_modify(snowflake_client: PortalClient, storage_socket: SQ
     meta = snowflake_client.modify_records([all_id[3], all_id[4]], new_priority=PriorityEnum.low)
     assert meta.n_updated == 1
 
-    rec = snowflake_client.get_records(all_id, include_task=True)
+    rec = snowflake_client.get_records(all_id, include=["task"])
 
     # created_on and modified_on hasn't changed
     for r in rec:
@@ -301,7 +301,7 @@ def test_record_client_modify(snowflake_client: PortalClient, storage_socket: SQ
     assert rec[5].raw_data.task is None
     assert rec[6].raw_data.task is None
 
-    rec = snowflake_client.get_records(all_id, include_task=True)
+    rec = snowflake_client.get_records(all_id, include=["task"])
 
     # created_on and modified_on hasn't changed
     for r in rec:
@@ -333,13 +333,13 @@ def test_record_client_modify_service(snowflake_client: PortalClient, storage_so
     assert meta.n_updated == 1
     assert meta.n_children_updated > 0
 
-    rec = snowflake_client.get_records(svc_id[0], include_service=True)
+    rec = snowflake_client.get_records(svc_id[0], include=["service"])
     assert rec.service.tag == "new_tag"
     assert rec.service.priority == PriorityEnum.low
 
     # Also changed all the dependencies
     assert len(rec.service.dependencies) > 0
     for opt in rec.service.dependencies:
-        r = snowflake_client.get_records(opt.record_id, include_task=True)
+        r = snowflake_client.get_records(opt.record_id, include=["task"])
         assert r.task.tag == "new_tag"
         assert r.task.priority == PriorityEnum.low

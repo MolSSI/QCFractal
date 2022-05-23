@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Union, Optional, Dict
+from typing import List, Union, Optional, Dict, Set, Iterable
 
 from pydantic import BaseModel, Extra, Field, constr, validator
 from typing_extensions import Literal
@@ -151,6 +151,23 @@ class GridoptimizationRecord(BaseRecord):
     raw_data: _DataModel
 
     optimization_cache: Optional[Dict[str, OptimizationRecord]] = None
+
+    @staticmethod
+    def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
+
+        if includes is None:
+            return None
+
+        ret = BaseRecord.transform_includes(includes)
+
+        if "initial_molecule" in includes:
+            ret.add("initial_molecule")
+        if "starting_molecule" in includes:
+            ret.add("starting_molecule")
+        if "optimizations" in includes:
+            ret |= {"optimizations.*", "optimizations.optimization_record"}
+
+        return ret
 
     def _fetch_initial_molecule(self):
         self.raw_data.initial_molecule = self.client.get_molecules([self.raw_data.initial_molecule_id])[0]

@@ -27,7 +27,7 @@ def test_singlepoint_client_tag_priority(snowflake_client: PortalClient, tag: st
     meta1, id1 = snowflake_client.add_singlepoints(
         [water], "prog", SinglepointDriver.energy, "hf", "sto-3g", None, None, priority=priority, tag=tag
     )
-    rec = snowflake_client.get_records(id1, include_task=True)
+    rec = snowflake_client.get_records(id1, include=["task"])
     assert rec[0].raw_data.task.tag == tag
     assert rec[0].raw_data.task.priority == priority
 
@@ -53,7 +53,7 @@ def test_singlepoint_client_add_get(snowflake_client: PortalClient, spec: QCSpec
     )
     time_1 = datetime.utcnow()
 
-    recs = snowflake_client.get_singlepoints(id, include_task=True, include_molecule=True)
+    recs = snowflake_client.get_singlepoints(id, include=["task", "molecule"])
 
     for r in recs:
         assert r.record_type == "singlepoint"
@@ -96,7 +96,7 @@ def test_singlepoint_client_add_existing_molecule(snowflake_client: PortalClient
     )
 
     assert meta.success
-    recs = snowflake_client.get_singlepoints(ids, include_molecule=True)
+    recs = snowflake_client.get_singlepoints(ids, include=["molecule"])
 
     assert len(recs) == 3
     assert recs[2].raw_data.molecule_id == mol_ids[0]

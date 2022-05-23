@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional, Union, Any, List, Dict
+from typing import Optional, Union, Any, List, Dict, Set, Iterable
 
 from pydantic import BaseModel, Field, constr, validator, Extra
 from qcelemental.models import Molecule
@@ -63,6 +63,21 @@ class SinglepointRecord(BaseRecord):
     # This is needed for disambiguation by pydantic
     record_type: Literal["singlepoint"] = "singlepoint"
     raw_data: _DataModel
+
+    @staticmethod
+    def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
+
+        if includes is None:
+            return None
+
+        ret = BaseRecord.transform_includes(includes)
+
+        if "molecule" in includes:
+            ret.add("molecule")
+        if "wavefunction" in includes:
+            ret.add("wavefunction")
+
+        return ret
 
     def _fetch_molecule(self):
         self.raw_data.molecule = self.client.get_molecules([self.raw_data.molecule_id])[0]

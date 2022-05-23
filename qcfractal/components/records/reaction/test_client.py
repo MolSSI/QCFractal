@@ -36,7 +36,7 @@ def test_reaction_client_tag_priority(snowflake_client: PortalClient, tag: str, 
         priority=priority,
     )
 
-    rec = snowflake_client.get_records(id1, include_service=True)
+    rec = snowflake_client.get_records(id1, include=["service"])
     assert rec[0].raw_data.service.tag == tag
     assert rec[0].raw_data.service.priority == priority
 
@@ -60,7 +60,7 @@ def test_reaction_client_add_get(snowflake_client: PortalClient, spec: ReactionS
     time_1 = datetime.utcnow()
     assert meta1.success
 
-    recs = snowflake_client.get_reactions(id1, include_service=True, include_components=True)
+    recs = snowflake_client.get_reactions(id1, include=["service", "components"])
     assert len(recs) == 2
 
     for r in recs:
@@ -117,7 +117,7 @@ def test_reaction_client_add_existing_molecule(snowflake_client: PortalClient):
     assert meta1.n_inserted == 2
     assert meta1.n_existing == 1
 
-    recs = snowflake_client.get_reactions(id1, include_components=True)
+    recs = snowflake_client.get_reactions(id1, include=["components"])
     assert len(recs) == 3
     assert recs[0].raw_data.id == recs[2].raw_data.id
     assert recs[0].raw_data.id != recs[1].raw_data.id
