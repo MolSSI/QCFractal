@@ -1,6 +1,6 @@
 from typing import Dict
 
-from flask import g
+from flask import current_app, g
 
 from qcfractal.app import main, storage_socket
 from qcfractal.app.routes import wrap_route
@@ -19,6 +19,7 @@ from qcportal.datasets import (
     DatasetQueryRecords,
     DatasetDeleteParams,
 )
+from qcportal.exceptions import LimitExceededError
 
 
 @main.route("/v1/datasets", methods=["GET"])
@@ -191,6 +192,11 @@ def delete_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Dat
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/entries/bulkFetch", methods=["POST"])
 @wrap_route("READ")
 def fetch_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchEntryBody):
+    limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_dataset_entries
+
+    if len(body_data.names) > limit:
+        raise LimitExceededError(f"Cannot get {len(body_data.names)} dataset entries - limit is {limit}")
+
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.fetch_entries(
         dataset_id,
@@ -213,6 +219,12 @@ def rename_dataset_entries_v1(dataset_type: str, dataset_id: int, body_data: Dic
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/records/bulkFetch", methods=["POST"])
 @wrap_route("READ")
 def fetch_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetFetchRecordsBody):
+    limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
+
+    n_requested = len(body_data.entry_names) * len(body_data.specification_names)
+    if n_requested > limit:
+        raise LimitExceededError(f"Cannot get {n_requested} dataset records - limit is {limit}")
+
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
 
     return ds_socket.fetch_records(

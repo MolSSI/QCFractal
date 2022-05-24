@@ -165,6 +165,8 @@ class APILimitConfig(ConfigBase):
     get_records: int = Field(1000, description="Number of calculation records that can be retrieved")
     add_records: int = Field(500, description="Number of calculation records that can be added")
 
+    get_dataset_entries: int = Field(4, description="Number of dataset entries that can be retrieved")
+
     get_molecules: int = Field(1000, description="Number of molecules that can be retrieved")
     add_molecules: int = Field(1000, description="Number of molecules that can be added")
 
