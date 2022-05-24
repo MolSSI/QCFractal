@@ -8,8 +8,8 @@ import pytest
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractaltesting import load_molecule_data, load_procedure_data
 from qcportal.records import PriorityEnum
-from qcportal.records.singlepoint import QCSpecification
 from qcportal.records.manybody import ManybodySpecification, ManybodyKeywords
+from qcportal.records.singlepoint import QCSpecification
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

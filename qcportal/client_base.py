@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import yaml
 from typing import (
     Any,
     Dict,
@@ -13,6 +12,7 @@ from typing import (
 
 import pydantic
 import requests
+import yaml
 from pkg_resources import parse_version
 
 from . import __version__

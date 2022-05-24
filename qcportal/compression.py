@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+import bz2
+import gzip
 import json
+import lzma
 from enum import Enum
 from typing import Optional, Union, Dict, Tuple, Any
-import gzip
-import bz2
-import lzma
 
 
 class CompressionEnum(str, Enum):

@@ -14,9 +14,9 @@ import sys
 import textwrap
 import time
 import traceback
-import tabulate
 from typing import Tuple
 
+import tabulate
 import yaml
 
 import qcfractal

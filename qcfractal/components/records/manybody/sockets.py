@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import contains_eager
 
 from qcfractal import __version__ as qcfractal_version
-from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM, SinglepointRecordORM
+from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM
 from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcfractal.db_socket.helpers import insert_general

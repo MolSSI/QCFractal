@@ -4,8 +4,8 @@ Queue backend abstraction manager.
 
 from .executor_adapter import DaskAdapter, ExecutorAdapter
 from .fireworks_adapter import FireworksAdapter
-from .parsl_adapter import ParslAdapter
 from .mock_testing_adapter import MockTestingAdapter
+from .parsl_adapter import ParslAdapter
 
 
 def build_queue_adapter(workflow_client, logger=None, **kwargs) -> "BaseAdapter":

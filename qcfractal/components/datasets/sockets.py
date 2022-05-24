@@ -4,7 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select, delete, func, union
-from sqlalchemy.orm import load_only, lazyload, joinedload, contains_eager, selectinload
+from sqlalchemy.orm import load_only, lazyload, joinedload, selectinload
 
 from qcfractal.components.datasets.db_models import BaseDatasetORM, ContributedValuesORM
 from qcfractal.components.records.db_models import BaseRecordORM

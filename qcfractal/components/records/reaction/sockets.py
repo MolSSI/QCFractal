@@ -1,18 +1,16 @@
 from __future__ import annotations
 
-from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert
 import logging
 from typing import List, Dict, Tuple, Optional, Iterable, Sequence, Any, Union, TYPE_CHECKING
 
 import tabulate
 from sqlalchemy import select, union
-from sqlalchemy.dialects.postgresql import array_agg, aggregate_order_by
+from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by
 from sqlalchemy.orm import contains_eager
 
 from qcfractal import __version__ as qcfractal_version
-from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM, SinglepointRecordORM
 from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM
+from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM, SinglepointRecordORM
 from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
