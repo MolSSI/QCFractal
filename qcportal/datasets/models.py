@@ -391,7 +391,6 @@ class BaseDataset(BaseModel):
         if self.raw_data.entries is None:
             self.raw_data.entries = {}
 
-        print("fetching", entry_names)
         body_data = DatasetFetchEntryBody(names=entry_names, include=api_include)
 
         fetched_entries = self.client._auto_request(
