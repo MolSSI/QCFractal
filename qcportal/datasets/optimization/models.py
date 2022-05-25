@@ -19,7 +19,7 @@ class OptimizationDatasetNewEntry(BaseModel):
 
 class OptimizationDatasetEntry(OptimizationDatasetNewEntry):
     initial_molecule_id: int
-    molecule: Optional[Molecule] = None
+    initial_molecule: Optional[Molecule] = None
 
 
 class OptimizationDatasetSpecification(BaseModel):
