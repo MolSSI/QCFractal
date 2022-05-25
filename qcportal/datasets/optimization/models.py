@@ -39,9 +39,9 @@ class OptimizationDataset(BaseDataset):
     class _DataModel(BaseDataset._DataModel):
         dataset_type: Literal["optimization"] = "optimization"
 
-        specifications: Optional[Dict[str, OptimizationDatasetSpecification]] = None
-        entries: Optional[Dict[str, OptimizationDatasetEntry]] = None
-        record_map: Optional[Dict[Tuple[str, str], OptimizationRecord]] = None
+        specifications: Dict[str, OptimizationDatasetSpecification] = {}
+        entries: Dict[str, OptimizationDatasetEntry] = {}
+        record_map: Dict[Tuple[str, str], OptimizationRecord] = {}
 
     # This is needed for disambiguation by pydantic
     dataset_type: Literal["optimization"] = "optimization"

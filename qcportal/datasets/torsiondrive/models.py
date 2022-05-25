@@ -46,9 +46,9 @@ class TorsiondriveDataset(BaseDataset):
     class _DataModel(BaseDataset._DataModel):
         dataset_type: Literal["torsiondrive"] = "torsiondrive"
 
-        specifications: Optional[Dict[str, TorsiondriveDatasetSpecification]] = None
-        entries: Optional[Dict[str, TorsiondriveDatasetEntry]] = None
-        record_map: Optional[Dict[Tuple[str, str], TorsiondriveRecord]] = None
+        specifications: Dict[str, TorsiondriveDatasetSpecification] = {}
+        entries: Dict[str, TorsiondriveDatasetEntry] = {}
+        record_map: Dict[Tuple[str, str], TorsiondriveRecord] = {}
 
     # This is needed for disambiguation by pydantic
     dataset_type: Literal["torsiondrive"] = "torsiondrive"

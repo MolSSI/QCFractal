@@ -49,9 +49,9 @@ class ReactionDataset(BaseDataset):
     class _DataModel(BaseDataset._DataModel):
         dataset_type: Literal["reaction"]
 
-        specifications: Optional[Dict[str, ReactionDatasetSpecification]] = None
-        entries: Optional[Dict[str, ReactionDatasetEntry]] = None
-        record_map: Optional[Dict[Tuple[str, str], ReactionRecord]] = None
+        specifications: Dict[str, ReactionDatasetSpecification] = {}
+        entries: Dict[str, ReactionDatasetEntry] = {}
+        record_map: Dict[Tuple[str, str], ReactionRecord] = {}
 
         contributed_values: Any
 

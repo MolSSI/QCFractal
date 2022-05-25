@@ -46,9 +46,9 @@ class GridoptimizationDataset(BaseDataset):
     class _DataModel(BaseDataset._DataModel):
         dataset_type: Literal["gridoptimization"] = "gridoptimization"
 
-        specifications: Optional[Dict[str, GridoptimizationDatasetSpecification]] = None
-        entries: Optional[Dict[str, GridoptimizationDatasetEntry]] = None
-        record_map: Optional[Dict[Tuple[str, str], GridoptimizationRecord]] = None
+        specifications: Dict[str, GridoptimizationDatasetSpecification] = {}
+        entries: Dict[str, GridoptimizationDatasetEntry] = {}
+        record_map: Dict[Tuple[str, str], GridoptimizationRecord] = {}
 
     # This is needed for disambiguation by pydantic
     dataset_type: Literal["gridoptimization"] = "gridoptimization"

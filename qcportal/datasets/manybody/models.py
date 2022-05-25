@@ -39,9 +39,9 @@ class ManybodyDataset(BaseDataset):
     class _DataModel(BaseDataset._DataModel):
         dataset_type: Literal["manybody"] = "manybody"
 
-        specifications: Optional[Dict[str, ManybodyDatasetSpecification]] = None
-        entries: Optional[Dict[str, ManybodyDatasetEntry]] = None
-        record_map: Optional[Dict[Tuple[str, str], ManybodyRecord]] = None
+        specifications: Dict[str, ManybodyDatasetSpecification] = {}
+        entries: Dict[str, ManybodyDatasetEntry] = {}
+        record_map: Dict[Tuple[str, str], ManybodyRecord] = {}
 
     # This is needed for disambiguation by pydantic
     dataset_type: Literal["manybody"] = "manybody"

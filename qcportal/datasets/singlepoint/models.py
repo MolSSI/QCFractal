@@ -40,9 +40,9 @@ class SinglepointDataset(BaseDataset):
     class _DataModel(BaseDataset._DataModel):
         dataset_type: Literal["singlepoint"] = "singlepoint"
 
-        specifications: Optional[Dict[str, SinglepointDatasetSpecification]] = None
-        entries: Optional[Dict[str, SinglepointDatasetEntry]] = None
-        record_map: Optional[Dict[Tuple[str, str], SinglepointRecord]] = None
+        specifications: Dict[str, SinglepointDatasetSpecification] = {}
+        entries: Dict[str, SinglepointDatasetEntry] = {}
+        record_map: Dict[Tuple[str, str], SinglepointRecord] = {}
 
         contributed_values: Any
 

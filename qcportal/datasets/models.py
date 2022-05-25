@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Optional, Dict, Any, List, Iterable, Type, Tuple, Union, Callable
 
 import pandas as pd
+import pydantic
 from pydantic import BaseModel, Extra, validator
 from qcelemental.models.types import Array
 
@@ -75,12 +77,12 @@ class BaseDataset(BaseModel):
         ########################################
         # Info about entries, specs, and records
         ########################################
-        entry_names: Optional[List[str]] = None
+        entry_names: List[str] = []
 
         # To be overridden by the derived class with more specific types
-        specifications: Optional[Dict[str, Any]] = None
-        entries: Optional[Dict[str, Any]] = None
-        record_map: Optional[Dict[Tuple[str, str], Any]] = None
+        specifications: Dict[str, Any] = {}
+        entries: Dict[str, Any] = {}
+        record_map: Dict[Tuple[str, str], Any] = {}
 
         # Values computed outside QCA
         contributed_values: Optional[Dict[str, ContributedValues]] = None
@@ -115,9 +117,6 @@ class BaseDataset(BaseModel):
         entry_names
             Names of the new entries that have been added to the remote server
         """
-
-        if self.raw_data.entry_names is None:
-            self.raw_data.entry_names = []
 
         self.raw_data.entry_names.extend(x for x in entry_names if x not in self.raw_data.entry_names)
 
@@ -253,23 +252,23 @@ class BaseDataset(BaseModel):
             raise
 
     @property
-    def group(self):
+    def group(self) -> Optional[str]:
         return self.raw_data.group
 
     @property
-    def tags(self):
+    def tags(self) -> Optional[List[str]]:
         return self.raw_data.tags
 
     @property
-    def tagline(self):
+    def tagline(self) -> Optional[str]:
         return self.raw_data.tagline
 
     @property
-    def provenance(self):
+    def provenance(self) -> Optional[Dict[str, Any]]:
         return self.raw_data.provenance
 
     @property
-    def metadata(self):
+    def metadata(self) -> Optional[Dict[str, Any]]:
         return self.raw_data.metadata
 
     @property
@@ -281,7 +280,7 @@ class BaseDataset(BaseModel):
         return self.raw_data.default_priority
 
     @property
-    def specifications(self):
+    def specifications(self) -> Optional[Dict[str, Any]]:
         if self.raw_data.specifications is None:
             self.fetch_specifications()
 
@@ -309,12 +308,12 @@ class BaseDataset(BaseModel):
             None,
         )
 
-    def rename_specification(self, old_name: str, new_name: str):
+    def rename_specification(self, old_name: str, new_name: str) -> None:
         self.assert_online()
 
         name_map = {old_name: new_name}
 
-        ret = self.client._auto_request(
+        self.client._auto_request(
             "patch",
             f"v1/datasets/{self.dataset_type}/{self.id}/specifications",
             Dict[str, str],
@@ -324,21 +323,17 @@ class BaseDataset(BaseModel):
             None,
         )
 
-        if self.raw_data.specifications:
-            self.raw_data.specifications = {name_map.get(k, k): v for k, v in self.raw_data.specifications.items()}
+        self.raw_data.specifications = {name_map.get(k, k): v for k, v in self.raw_data.specifications.items()}
 
-        if self.raw_data.record_map:
-            # Renames the specifications in the record map
-            self.raw_data.record_map = {(e, name_map.get(s, s)): r for (e, s), r in self.raw_data.record_map.items()}
+        # Renames the specifications in the record map
+        self.raw_data.record_map = {(e, name_map.get(s, s)): r for (e, s), r in self.raw_data.record_map.items()}
 
-        return ret
-
-    def delete_specification(self, name: str, delete_records: bool = False):
+    def delete_specification(self, name: str, delete_records: bool = False) -> None:
         self.assert_online()
 
         body_data = DatasetDeleteStrBody(names=[name], delete_records=delete_records)
 
-        ret = self.client._auto_request(
+        self.client._auto_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/specifications/bulkDelete",
             DatasetDeleteStrBody,
@@ -349,13 +344,8 @@ class BaseDataset(BaseModel):
         )
 
         # Delete locally-cached stuff
-        if self.raw_data.specifications:
-            self.raw_data.specifications.pop(name, None)
-
-        if self.raw_data.record_map:
-            self.raw_data.record_map = {(e, s): r for (e, s), r in self.raw_data.record_map.items() if s != name}
-
-        return ret
+        self.raw_data.specifications.pop(name, None)
+        self.raw_data.record_map = {(e, s): r for (e, s), r in self.raw_data.record_map.items() if s != name}
 
     ###################################
     # Entries
@@ -383,13 +373,26 @@ class BaseDataset(BaseModel):
         self,
         entry_names: Iterable[str],
         api_include: Optional[Iterable[str]],
-    ):
+    ) -> None:
+        """
+        Fetches entry information from the remote server, storing it internally
 
-        if len(entry_names) == 0:
+        This does not do any checking for existing entries, but is used to actually
+        request the data from the server.
+
+        Note: This function does not do any batching w.r.t. server API limits. It is expected that is done
+        before this function is called.
+
+        Parameters
+        ----------
+        entry_names
+            Names of the entries to fetch
+        api_include
+            Additional fields/data to include when fetch the entry (the 'raw' fields used by the web API)
+        """
+
+        if not entry_names:
             return
-
-        if self.raw_data.entries is None:
-            self.raw_data.entries = {}
 
         body_data = DatasetFetchEntryBody(names=entry_names, include=api_include)
 
@@ -412,16 +415,17 @@ class BaseDataset(BaseModel):
         force_refetch: bool = False,
     ) -> None:
         """
-        Common function for fetching entries from the remote server
+        Fetches entry information from the remote server, storing it internally
 
-        These are fetched and then stored internally, and not returned.
+        By default, already-fetched entries will not be fetched again, unless
+        `force_refetch` is True.
 
         Parameters
         ----------
         entry_names
             Names of entries to fetch. If None, fetch all entries
         include
-            Additional fields/data to include when fetch the entry
+            Additional fields/data to include when fetching the entry
         force_refetch
             If true, fetch data from the server even if it already exists locally
         """
@@ -439,15 +443,12 @@ class BaseDataset(BaseModel):
         else:
             entry_names = make_list(entry_names)
 
-        # If we want to force refetching, or if we haven't fetched anything yet
-        if not force_refetch and self.raw_data.entries:
-            entry_names = list(set(entry_names) - set(self.raw_data.entries.keys()))
+        # Strip out existing entries if we aren't forcing refetching
+        if not force_refetch:
+            entry_names = [x for x in entry_names if x not in self.raw_data.entries]
 
         fetch_limit: int = self.client.api_limits["get_dataset_entries"] // 4
         n_entries = len(entry_names)
-
-        if self.raw_data.entries is None:
-            self.raw_data.entries = {}
 
         for start_idx in range(0, n_entries, fetch_limit):
             entries_batch = entry_names[start_idx : start_idx + fetch_limit]
@@ -459,6 +460,20 @@ class BaseDataset(BaseModel):
         include: Optional[Iterable[str]] = None,
         force_refetch: bool = False,
     ):
+        """
+        Iterate over all entries
+
+        This is used as a generator, and automatically fetches entries as needed
+
+        Parameters
+        ----------
+        entry_names
+            Names of entries to iterate over. If None, iterate over all entries
+        include
+            Additional fields/data to include when fetching the entry
+        force_refetch
+            If true, fetch data from the server even if it already exists locally
+        """
 
         #########################################################
         # We duplicate a little bit of fetch_entries here, since
@@ -475,12 +490,6 @@ class BaseDataset(BaseModel):
         else:
             entry_names = make_list(entry_names)
 
-        # If we want to force refetching, or if we haven't fetched anything yet
-        if not force_refetch and self.raw_data.entries:
-            existing_entries = set(self.raw_data.entries.keys())
-        else:
-            existing_entries = set()
-
         fetch_limit: int = self.client.api_limits["get_dataset_entries"] // 4
         n_entries = len(entry_names)
 
@@ -488,16 +497,19 @@ class BaseDataset(BaseModel):
             self.raw_data.entries = {}
 
         for start_idx in range(0, n_entries, fetch_limit):
-            entries_batch = entry_names[start_idx : start_idx + fetch_limit]
+            names_batch = entry_names[start_idx : start_idx + fetch_limit]
 
+            # If forcing refetching, then use the whole batch. Otherwise, strip out
+            # any existing entries
             if force_refetch:
-                entries_batch_tofetch = entries_batch
+                names_tofetch = names_batch
             else:
-                entries_batch_tofetch = [x for x in entries_batch if x not in existing_entries]
+                names_tofetch = [x for x in names_batch if x not in self.raw_data.entries]
 
-            self._internal_fetch_entries(entries_batch_tofetch, include)
+            self._internal_fetch_entries(names_tofetch, include)
 
-            for entry_name in entries_batch:
+            # Loop over the whole batch (not just what we fetched)
+            for entry_name in names_batch:
                 entry = self.raw_data.entries.get(entry_name, None)
 
                 if entry is not None:
@@ -510,8 +522,8 @@ class BaseDataset(BaseModel):
 
         return self.raw_data.entry_names
 
-    def rename_entries(self, name_map: Dict[str, str]):
-        ret = self.client._auto_request(
+    def rename_entries(self, name_map: Dict[str, str]) -> None:
+        self.client._auto_request(
             "patch",
             f"v1/datasets/{self.dataset_type}/{self.id}/entries",
             Dict[str, str],
@@ -523,17 +535,11 @@ class BaseDataset(BaseModel):
         self.assert_online()
 
         # rename locally cached entries and stuff
-        if self.raw_data.entry_names:
-            self.raw_data.entry_names = [name_map.get(x, x) for x in self.raw_data.entry_names]
+        self.raw_data.entry_names = [name_map.get(x, x) for x in self.raw_data.entry_names]
+        self.raw_data.entries = {name_map.get(k, k): v for k, v in self.raw_data.entries.items()}
 
-        if self.raw_data.entries:
-            self.raw_data.entries = {name_map.get(k, k): v for k, v in self.raw_data.entries.items()}
-
-        if self.raw_data.record_map:
-            # Renames the entries in the record map
-            self.raw_data.record_map = {(name_map.get(e, e), s): r for (e, s), r in self.raw_data.record_map.items()}
-
-        return ret
+        # Renames the entries in the record map
+        self.raw_data.record_map = {(name_map.get(e, e), s): r for (e, s), r in self.raw_data.record_map.items()}
 
     def delete_entries(self, names: Union[str, Iterable[str]], delete_records: bool = False):
         self.assert_online()
@@ -552,14 +558,9 @@ class BaseDataset(BaseModel):
         )
 
         # Delete locally-cached stuff
-        if self.raw_data.entry_names:
-            self.raw_data.entry_names = [x for x in self.raw_data.entry_names if x not in names]
-
-        if self.raw_data.entries:
-            self.raw_data.entries = {x: y for x, y in self.raw_data.entries.items() if x not in names}
-
-        if self.raw_data.record_map:
-            self.raw_data.record_map = {(e, s): r for (e, s), r in self.raw_data.record_map.items() if e not in names}
+        self.raw_data.entry_names = [x for x in self.raw_data.entry_names if x not in names]
+        self.raw_data.entries = {x: y for x, y in self.raw_data.entries.items() if x not in names}
+        self.raw_data.record_map = {(e, s): r for (e, s), r in self.raw_data.record_map.items() if e not in names}
 
         return ret
 
@@ -579,9 +580,29 @@ class BaseDataset(BaseModel):
         specification_names: Iterable[str],
         status: Optional[Iterable[RecordStatusEnum]],
         api_include: Optional[Iterable[str]],
-    ):
+    ) -> None:
+        """
+        Fetches record information from the remote server, storing it internally
 
-        if len(entry_names) == 0 or len(specification_names) == 0:
+        This does not do any checking for existing records, but is used to actually
+        request the data from the server.
+
+        Note: This function does not do any batching w.r.t. server API limits. It is expected that is done
+        before this function is called.
+
+        Parameters
+        ----------
+        entry_names
+            Names of the entries whose records to fetch. If None, fetch all entries
+        specification_names
+            Names of the specifications whose records to fetch. If None, fetch all specifications
+        status
+            Fetch only records with these statuses
+        api_include
+            Additional fields/data to include when fetch the entry (the 'raw' fields used by the web API)
+        """
+
+        if not (entry_names and specification_names):
             return
 
         body_data = DatasetFetchRecordsBody(
@@ -598,13 +619,76 @@ class BaseDataset(BaseModel):
             None,
         )
 
-        if self.raw_data.record_map is None:
-            self.raw_data.record_map = {}
-
         # Update the locally-stored records
         for rec_item in record_info:
             record = record_from_datamodel(rec_item.record, self.client)
             self.raw_data.record_map[(rec_item.entry_name, rec_item.specification_name)] = record
+
+    def _internal_update_records(
+        self,
+        entry_names: Iterable[str],
+        specification_names: Iterable[str],
+        status: Optional[Iterable[RecordStatusEnum]],
+        api_include: Optional[Iterable[str]],
+    ):
+        """
+        Update local record information if it has been modified on the server
+
+        Note: This function does not do any batching w.r.t. server API limits. It is expected that is done
+        before this function is called.
+
+        Parameters
+        ----------
+        entry_names
+            Names of the entries whose records to update. If None, fetch all entries
+        specification_names
+            Names of the specifications whose records to update. If None, fetch all specifications
+        status
+            Fetch only records with these statuses (only records with the given status on the server will be fetched)
+        api_include
+            Additional fields/data to include when fetch the entry (the 'raw' fields used by the web API)
+        """
+
+        if not (entry_names and specification_names):
+            return
+
+        # Get modified_on field of all the records
+        body_data = DatasetFetchRecordsBody(
+            entry_names=entry_names,
+            specification_names=specification_names,
+            status=status,
+            include=["modified_on"],
+        )
+
+        modified_info = self.client._auto_request(
+            "post",
+            f"v1/datasets/{self.dataset_type}/{self.id}/records/bulkFetch",
+            DatasetFetchRecordsBody,
+            None,
+            List[Dict[str, Any]],
+            body_data,
+            None,
+        )
+
+        # Which ones need to be updated
+        need_updating = []
+        for minfo in modified_info:
+            entry_name = minfo["entry_name"]
+            spec_name = minfo["specification_name"]
+            existing_record = self.raw_data.record_map.get((entry_name, spec_name), None)
+
+            # Too lazy to look up how pydantic stores datetime, so use pydantic to parse it
+            minfo_mtime = pydantic.parse_obj_as(datetime, minfo["record"]["modified_on"])
+
+            # It's expected that existing_record is not None (ie, that the record had been downloaded already)
+            # But handle this edge case anyway
+            if existing_record is None or existing_record.modified_on < minfo_mtime:
+                need_updating.append((entry_name, spec_name))
+
+        # Go via one spec at a time
+        for spec_name in specification_names:
+            entries_to_update = [x[0] for x in need_updating if x[1] == spec_name]
+            self._internal_fetch_records(entries_to_update, [spec_name], None, api_include)
 
     def fetch_records(
         self,
@@ -612,12 +696,11 @@ class BaseDataset(BaseModel):
         specification_names: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         include: Optional[Iterable[str]] = None,
+        fetch_updated: bool = True,
         force_refetch: bool = False,
     ):
         """
-        Fetch records related to this dataset from the remote server
-
-        These are fetched and then stored internally, and not returned.
+        Fetches record information from the remote server, storing it internally
 
         By default, this function will only fetch records that have not been fetch previously.
         If `force_refetch` is True, then this will always fetch the records.
@@ -629,9 +712,11 @@ class BaseDataset(BaseModel):
         specification_names
             Names of the specifications whose records to fetch. If None, fetch all specifications
         status
-            Only include records with these statuses
+            Fetch only records with these statuses
         include
             Additional fields to include in the returned record
+        fetch_updated
+            Fetch any records that exist locally but have been updated on the server
         force_refetch
             If true, fetch data from the server even if it already exists locally
         """
@@ -642,6 +727,7 @@ class BaseDataset(BaseModel):
         # Reload entry names if we are forcing refetching
         if force_refetch:
             self.fetch_entry_names()
+            self.fetch_specifications()
 
         status = make_list(status)
         api_include = self._record_type.transform_includes(include)
@@ -657,12 +743,6 @@ class BaseDataset(BaseModel):
         else:
             specification_names = make_list(specification_names)
 
-        # If we want to force refetching, or if we haven't fetched anything yet
-        if force_refetch or not self.raw_data.record_map:
-            existing_records = []
-        else:
-            existing_records = list(self.raw_data.record_map.keys())
-
         # Determine the number of entries in each batch
         # Assume there are many more entries than specifications, and that
         # everything has been submitted
@@ -671,13 +751,20 @@ class BaseDataset(BaseModel):
 
         n_entries = len(entry_names)
 
+        # Do all entries for one spec. This simplifies things, especially with handling
+        # existing or update-able records
         for spec_name in specification_names:
             for start_idx in range(0, n_entries, fetch_limit):
                 entries_batch = entry_names[start_idx : start_idx + fetch_limit]
 
-                # Filter if they already exist
+                # Handle existing records that need to be updated
+                if fetch_updated and not force_refetch:
+                    existing_batch = [x for x in entries_batch if (x, spec_name) in self.raw_data.record_map]
+                    self._internal_update_records(existing_batch, [spec_name], status, api_include)
+
+                # Prune records that already exist, and then fetch them
                 if not force_refetch:
-                    entries_batch = [x for x in entries_batch if (x, spec_name) not in existing_records]
+                    entries_batch = [x for x in entries_batch if (x, spec_name) not in self.raw_data.record_map]
 
                 self._internal_fetch_records(entries_batch, [spec_name], status, api_include)
 
@@ -691,7 +778,7 @@ class BaseDataset(BaseModel):
         """
         Obtain a calculation record related to this dataset
 
-        The record will be automatically fetched if needed.
+        The record will be automatically fetched from the remote server if needed.
         """
 
         self.fetch_records(entry_name, specification_name, include=include, force_refetch=force_refetch)
@@ -703,6 +790,7 @@ class BaseDataset(BaseModel):
         specification_names: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         include: Optional[Iterable[str]] = None,
+        fetch_updated: bool = True,
         force_refetch: bool = False,
     ):
 
@@ -730,12 +818,6 @@ class BaseDataset(BaseModel):
         else:
             specification_names = make_list(specification_names)
 
-        # If we want to force refetching, or if we haven't fetched anything yet
-        if force_refetch or not self.raw_data.record_map:
-            existing_records = []
-        else:
-            existing_records = list(self.raw_data.record_map.keys())
-
         # Smaller fetch limit for iteration (than in fetch_records)
         fetch_limit: int = self.client.api_limits["get_records"] // 10
 
@@ -745,13 +827,18 @@ class BaseDataset(BaseModel):
             for start_idx in range(0, n_entries, fetch_limit):
                 entries_batch = entry_names[start_idx : start_idx + fetch_limit]
 
+                # Handle existing records that need to be updated
+                if fetch_updated and not force_refetch:
+                    existing_batch = [x for x in entries_batch if (x, spec_name) in self.raw_data.record_map]
+                    self._internal_update_records(existing_batch, [spec_name], status, api_include)
+
                 if force_refetch:
-                    entries_batch_tofetch = entries_batch
+                    batch_tofetch = entries_batch
                 else:
                     # Filter if they already exist
-                    entries_batch_tofetch = [x for x in entries_batch if (x, spec_name) not in existing_records]
+                    batch_tofetch = [x for x in entries_batch if (x, spec_name) not in self.raw_data.record_map]
 
-                self._internal_fetch_records(entries_batch_tofetch, [spec_name], status, api_include)
+                self._internal_fetch_records(batch_tofetch, [spec_name], status, api_include)
 
                 # Now lookup the just-fetched records and yield them
                 for entry_name in entries_batch:
@@ -973,16 +1060,28 @@ class BaseDataset(BaseModel):
 
         return ret
 
-    def compile_values(self, value_call: Callable, value_name: str) -> pd.DataFrame:
-        def _inner_call(record):
-            if record is None or record.status != RecordStatusEnum.complete:
-                return None
-            return value_call(record)
+    def compile_values(
+        self,
+        value_call: Callable,
+        value_name: str,
+        entry_names: Optional[Union[str, Iterable[str]]] = None,
+        specification_names: Optional[Union[str, Iterable[str]]] = None,
+        include: Optional[Iterable[str]] = None,
+        fetch_updated: bool = True,
+        force_refetch: bool = False,
+    ) -> pd.DataFrame:
+        def _data_generator():
+            for entry_name, spec_name, record in self.iterate_records(
+                    entry_names=entry_names,
+                    specification_names=specification_names,
+                    status=RecordStatusEnum.complete,
+                    include=include,
+                    fetch_updated=fetch_updated,
+                    force_refetch=force_refetch,
+            ):
+                yield entry_name, spec_name, value_call(record)
 
-        data_generator = (
-            (entry_name, spec_name, _inner_call(record)) for entry_name, spec_name, record in self.records
-        )
-        df = pd.DataFrame(data_generator, columns=("entry", "specification", value_name))
+        df = pd.DataFrame(_data_generator(), columns=("entry", "specification", value_name))
 
         return df.pivot(index="entry", columns="specification", values=value_name)
 
