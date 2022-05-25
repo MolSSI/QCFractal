@@ -281,7 +281,7 @@ class BaseDataset(BaseModel):
 
     @property
     def specifications(self) -> Optional[Dict[str, Any]]:
-        if self.raw_data.specifications is None:
+        if not self.raw_data.specifications:
             self.fetch_specifications()
 
         return self.raw_data.specifications
@@ -517,7 +517,7 @@ class BaseDataset(BaseModel):
 
     @property
     def entry_names(self) -> List[str]:
-        if self.raw_data.entry_names is None:
+        if not self.raw_data.entry_names:
             self.fetch_entry_names()
 
         return self.raw_data.entry_names
@@ -568,10 +568,6 @@ class BaseDataset(BaseModel):
     # Records
     ###########################
     def _lookup_record(self, entry_name: str, specification_name: str):
-
-        if self.raw_data.record_map is None:
-            return None
-
         return self.raw_data.record_map.get((entry_name, specification_name), None)
 
     def _internal_fetch_records(
@@ -1072,12 +1068,12 @@ class BaseDataset(BaseModel):
     ) -> pd.DataFrame:
         def _data_generator():
             for entry_name, spec_name, record in self.iterate_records(
-                    entry_names=entry_names,
-                    specification_names=specification_names,
-                    status=RecordStatusEnum.complete,
-                    include=include,
-                    fetch_updated=fetch_updated,
-                    force_refetch=force_refetch,
+                entry_names=entry_names,
+                specification_names=specification_names,
+                status=RecordStatusEnum.complete,
+                include=include,
+                fetch_updated=fetch_updated,
+                force_refetch=force_refetch,
             ):
                 yield entry_name, spec_name, value_call(record)
 
@@ -1105,7 +1101,7 @@ class BaseDataset(BaseModel):
 
     @property
     def contributed_values(self) -> Dict[str, ContributedValues]:
-        if self.raw_data.contributed_values is None:
+        if not self.raw_data.contributed_values:
             self.fetch_contributed_values()
 
         return self.raw_data.contributed_values
