@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
+from typing import Dict, Any, Union, Optional, List, Iterable, Tuple, Set
 
 from pydantic import BaseModel
 from typing_extensions import Literal
@@ -55,6 +55,22 @@ class SinglepointDataset(BaseDataset):
     _specification_type = SinglepointDatasetSpecification
     _record_item_type = SinglepointDatasetRecordItem
     _record_type = SinglepointRecord
+
+    @staticmethod
+    def transform_entry_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
+        """
+        Transforms user-friendly includes into includes used by the web API
+        """
+
+        if includes is None:
+            return None
+
+        ret = BaseDataset.transform_entry_includes(includes)
+
+        if "molecule" in includes:
+            ret.add("molecule")
+
+        return ret
 
     def add_specification(self, name: str, specification: QCSpecification, description: Optional[str] = None):
 

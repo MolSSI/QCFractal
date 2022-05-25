@@ -43,7 +43,7 @@ class TorsiondriveDatasetMoleculeORM(BaseORM):
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id")
+        exclude = self.append_exclude(exclude, "dataset_id", "entry_name")
         return BaseORM.model_dict(self, exclude)
 
 
@@ -66,7 +66,7 @@ class TorsiondriveDatasetEntryORM(BaseORM):
         .scalar_subquery()
     )
 
-    molecules = relationship(TorsiondriveDatasetMoleculeORM)
+    initial_molecules = relationship(TorsiondriveDatasetMoleculeORM)
 
     __table_args__ = (
         Index("ix_torsiondrive_dataset_entry_dataset_id", "dataset_id"),

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, Dict, Any, List, Iterable, Type, Tuple, Union, Callable
+from typing import Optional, Dict, Any, List, Iterable, Type, Tuple, Union, Callable, Set
 
 import pandas as pd
 import pydantic
@@ -107,6 +107,19 @@ class BaseDataset(BaseModel):
         """
 
         return cls(client=client, raw_data=raw_data, dataset_type=raw_data.dataset_type)
+
+    @staticmethod
+    def transform_entry_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
+        """
+        Transforms user-friendly includes into includes used by the web API
+        """
+
+        if includes is None:
+            return None
+
+        ret: Set[str] = {"*"}
+
+        return ret
 
     def _post_add_entries(self, entry_names) -> None:
         """
@@ -433,6 +446,8 @@ class BaseDataset(BaseModel):
         if self.offline:
             return
 
+        api_include = self.transform_entry_includes(include)
+
         # Reload entry names if we are forcing refetching
         if force_refetch:
             self.fetch_entry_names()
@@ -452,7 +467,22 @@ class BaseDataset(BaseModel):
 
         for start_idx in range(0, n_entries, fetch_limit):
             entries_batch = entry_names[start_idx : start_idx + fetch_limit]
-            self._internal_fetch_entries(entries_batch, include)
+            self._internal_fetch_entries(entries_batch, api_include)
+
+    def get_entry(
+        self,
+        entry_name: str,
+        include: Optional[Iterable[str]] = None,
+        force_refetch: bool = False,
+    ) -> Optional[Any]:
+        """
+        Obtain entry information
+
+        The entry will be automatically fetched from the remote server if needed.
+        """
+
+        self.fetch_entries(entry_name, include=include, force_refetch=force_refetch)
+        return self.raw_data.entries.get(entry_name, None)
 
     def iterate_entries(
         self,
@@ -480,6 +510,8 @@ class BaseDataset(BaseModel):
         # we want to yield in the middle
         #########################################################
 
+        api_include = self.transform_entry_includes(include)
+
         # Reload entry names if we are forcing refetching
         if force_refetch:
             self.fetch_entry_names()
@@ -506,7 +538,7 @@ class BaseDataset(BaseModel):
             else:
                 names_tofetch = [x for x in names_batch if x not in self.raw_data.entries]
 
-            self._internal_fetch_entries(names_tofetch, include)
+            self._internal_fetch_entries(names_tofetch, api_include)
 
             # Loop over the whole batch (not just what we fetched)
             for entry_name in names_batch:

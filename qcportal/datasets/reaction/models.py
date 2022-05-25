@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
+from typing import Dict, Any, Union, Optional, List, Iterable, Tuple, Set
 
 from pydantic import BaseModel
 from typing_extensions import Literal
@@ -64,6 +64,22 @@ class ReactionDataset(BaseDataset):
     _specification_type = ReactionDatasetSpecification
     _record_item_type = ReactionDatasetRecordItem
     _record_type = ReactionRecord
+
+    @staticmethod
+    def transform_entry_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
+        """
+        Transforms user-friendly includes into includes used by the web API
+        """
+
+        if includes is None:
+            return None
+
+        ret = BaseDataset.transform_entry_includes(includes)
+
+        if "molecule" in includes:
+            ret |= {"stoichiometry.*", "stoichiometry.molecule"}
+
+        return ret
 
     def add_specification(self, name: str, specification: ReactionSpecification, description: Optional[str] = None):
 

@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
+from typing import Dict, Any, Union, Optional, List, Iterable, Tuple, Set
 
 from pydantic import BaseModel
 from typing_extensions import Literal
@@ -22,9 +22,14 @@ class TorsiondriveDatasetNewEntry(BaseModel):
     attributes: Dict[str, Any] = {}
 
 
+class TorsiondriveDatasetMolecule(BaseModel):
+    molecule_id: str
+    molecule: Optional[Molecule]
+
+
 class TorsiondriveDatasetEntry(TorsiondriveDatasetNewEntry):
     initial_molecule_ids: List[int]
-    initial_molecules: Optional[List[Molecule]] = None
+    initial_molecules: Optional[List[TorsiondriveDatasetMolecule]] = None
 
 
 # Torsiondrive dataset specifications are just optimization specifications
@@ -59,6 +64,22 @@ class TorsiondriveDataset(BaseDataset):
     _specification_type = TorsiondriveDatasetSpecification
     _record_item_type = TorsiondriveDatasetRecordItem
     _record_type = TorsiondriveRecord
+
+    @staticmethod
+    def transform_entry_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
+        """
+        Transforms user-friendly includes into includes used by the web API
+        """
+
+        if includes is None:
+            return None
+
+        ret = BaseDataset.transform_entry_includes(includes)
+
+        if "initial_molecules" in includes:
+            ret |= {"initial_molecules", "initial_molecules.molecule"}
+
+        return ret
 
     def add_specification(self, name: str, specification: OptimizationSpecification, description: Optional[str] = None):
 
