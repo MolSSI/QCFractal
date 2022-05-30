@@ -45,7 +45,7 @@ def get_count(session, stmt):
     """
     Returns a total count of an sql query statement
 
-    This should be used before any limit/skip options are incorporated into the query
+    This should be used before any limit/offset options are incorporated into the query
     """
 
     return session.scalar(select(func.count()).select_from(stmt))

@@ -196,39 +196,50 @@ def test_molecules_client_query(snowflake_client: PortalClient):
     #################################################
 
     # Query by hash
-    meta, mols = snowflake_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()])
-    mols = sorted(mols, key=lambda x: x.get_hash())
+    query_res = snowflake_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()])
+    meta = query_res.current_meta
+    mols = sorted(query_res, key=lambda x: x.get_hash())
     assert meta.success
     assert len(mols) == 2
     assert mols[0] == added_mols[0]
     assert mols[1] == added_mols[1]
 
     # Query by formula
-    meta, mols = snowflake_client.query_molecules(molecular_formula=["H4O2", "H2O2"])
-    mols = sorted(mols, key=lambda x: x.get_hash())
+    query_res = snowflake_client.query_molecules(molecular_formula=["H4O2", "H2O2"])
+    meta = query_res.current_meta
+    mols = sorted(query_res, key=lambda x: x.get_hash())
     assert meta.success
     assert len(mols) == 2
     assert mols[0] == added_mols[0]
     assert mols[1] == added_mols[1]
 
     # Query by identifiers
-    meta, mols = snowflake_client.query_molecules(identifiers={"smiles": ["smiles_str"]})
+    query_res = snowflake_client.query_molecules(identifiers={"smiles": ["smiles_str"]})
+    meta = query_res.current_meta
+    mols = list(query_res)
     assert meta.success
     assert len(mols) == 1
     assert mols[0] == added_mols[0]
 
     # Queries should be intersections
-    meta, mols = snowflake_client.query_molecules(molecular_formula=["H4O2", "H2O2"], molecule_hash=[water.get_hash()])
+    query_res = snowflake_client.query_molecules(molecular_formula=["H4O2", "H2O2"], molecule_hash=[water.get_hash()])
+    meta = query_res.current_meta
+    mols = list(query_res)
     assert meta.success
     assert len(mols) == 1
     assert mols[0] == water
 
     # Empty everything = return all
-    meta, mols = snowflake_client.query_molecules()
+    query_res = snowflake_client.query_molecules()
+    meta = query_res.current_meta
+    mols = list(query_res)
     assert meta.n_found == 2
+    assert len(mols) == 2
 
     # Empty lists will constrain the results to be empty
-    meta, mols = snowflake_client.query_molecules(molecule_hash=[])
+    query_res = snowflake_client.query_molecules(molecule_hash=[])
+    meta = query_res.current_meta
+    mols = list(query_res)
     assert meta.n_found == 0
     assert mols == []
 
@@ -242,16 +253,15 @@ def test_molecules_client_query_limit(snowflake_client: PortalClient):
     meta, ids = snowflake_client.add_molecules(added_mols)
     assert meta.success
 
-    meta, mols = snowflake_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1)
+    query_res = snowflake_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1)
+    meta = query_res.current_meta
+    mols = list(query_res)
     assert meta.success
     assert len(mols) == 1
 
-    meta, mols = snowflake_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1, skip=1)
-    assert meta.success
-    assert len(mols) == 1
-
-    # Asking for more molecules than there are
-    meta, mols = snowflake_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1, skip=2)
+    query_res = snowflake_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=0)
+    meta = query_res.current_meta
+    mols = list(query_res)
     assert meta.success
     assert len(mols) == 0
 

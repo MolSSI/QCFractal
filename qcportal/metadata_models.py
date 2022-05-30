@@ -174,7 +174,6 @@ class QueryMetadata:
     error_description: Optional[str] = None
     errors: List[str] = dataclasses.field(default_factory=list)
     n_found: int = 0  # Total number found
-    n_returned: int = 0  # How many we are actually returning (ie, the query has hit a limit)
 
     @property
     def success(self):

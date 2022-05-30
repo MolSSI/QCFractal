@@ -15,11 +15,7 @@ from typing import (
     Iterable,
 )
 
-from .base_models import (
-    CommonBulkGetNamesBody,
-    CommonBulkGetBody,
-    ProjURLParameters,
-)
+from .base_models import CommonBulkGetNamesBody, CommonBulkGetBody, ProjURLParameters
 from .cache import PortalCache
 from .client_base import PortalClientBase
 from .datasets import (
@@ -33,7 +29,7 @@ from .datasets import (
 )
 from .managers import ManagerQueryFilters, ComputeManager
 from .metadata_models import QueryMetadata, UpdateMetadata, InsertMetadata, DeleteMetadata
-from .molecules import Molecule, MoleculeIdentifiers, MoleculeQueryFilters, MoleculeModifyBody
+from .molecules import Molecule, MoleculeIdentifiers, MoleculeModifyBody, MoleculeQueryIterator, MoleculeQueryFilters
 from .permissions import (
     UserInfo,
     RoleInfo,
@@ -416,8 +412,7 @@ class PortalClient(PortalClientBase):
         molecular_formula: Optional[Union[str, Iterable[str]]] = None,
         identifiers: Optional[Dict[str, Union[str, Iterable[str]]]] = None,
         limit: Optional[int] = None,
-        skip: int = 0,
-    ) -> Tuple[QueryMetadata, List[Molecule]]:
+    ) -> MoleculeQueryIterator:
         """Query molecules by attributes.
 
         Do not count on the returned molecules being in any particular order.
@@ -433,40 +428,25 @@ class PortalClient(PortalClientBase):
             Additional identifiers to search for (smiles, etc)
         limit
             The maximum number of Molecules to return. Note that the server limit is always obeyed.
-        skip
-            The number of Molecules to skip in the query. This can be used for pagination
 
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of molecules
-            that were found on the server.
+            Metadata about the results of the query, and a generator that can be used to iterate over
+            molecules that were found on the server.
         """
 
-        if limit is not None and limit > self.api_limits["get_molecules"]:
-            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
-            limit = min(limit, self.api_limits["get_molecules"])
-
-        query_body = {
+        filter_dict = {
             "molecule_hash": make_list(molecule_hash),
             "molecular_formula": make_list(molecular_formula),
             "limit": limit,
-            "skip": skip,
         }
 
         if identifiers is not None:
-            query_body["identifiers"] = {k: make_list(v) for k, v in identifiers.items()}
+            filter_dict["identifiers"] = {k: make_list(v) for k, v in identifiers.items()}
 
-        meta, molecules = self._auto_request(
-            "post",
-            "v1/molecules/query",
-            MoleculeQueryFilters,
-            None,
-            Tuple[QueryMetadata, List[Molecule]],
-            query_body,
-            None,
-        )
-        return meta, molecules
+        filter_data = MoleculeQueryFilters(**filter_dict)
+        return MoleculeQueryIterator(self, filter_data)
 
     def add_molecules(self, molecules: Sequence[Molecule]) -> Tuple[InsertMetadata, List[int]]:
         """Add molecules to the server database

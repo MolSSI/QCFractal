@@ -209,7 +209,7 @@ class MoleculeSocket:
         query_data: MoleculeQueryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+    ) -> Tuple[Optional[QueryMetadata], List[Dict[str, Any]]]:
         """
         General query of molecules in the database
 
@@ -265,12 +265,23 @@ class MoleculeSocket:
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(MoleculeORM).where(and_(*and_query))
             stmt = stmt.options(*proj_options)
-            n_found = get_count(session, stmt)
-            stmt = stmt.limit(query_data.limit).offset(query_data.skip)
+
+            if query_data.include_metadata:
+                n_found = get_count(session, stmt)
+
+            if query_data.cursor is not None:
+                stmt = stmt.where(MoleculeORM.id < query_data.cursor)
+
+            stmt = stmt.order_by(MoleculeORM.id.desc())
+            stmt = stmt.limit(query_data.limit)
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]
 
-        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))
+        if query_data.include_metadata:
+            meta = QueryMetadata(n_found=n_found)
+        else:
+            meta = None
+
         return meta, result_dicts
 
     def modify(

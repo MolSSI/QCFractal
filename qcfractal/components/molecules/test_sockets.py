@@ -417,18 +417,32 @@ def test_molecules_socket_query_limit(storage_socket: SQLAlchemySocket):
     assert meta.success
     assert len(mols) == 1
 
+    # With a cursor. We go by id desc, so this should only return one
     meta, mols = storage_socket.molecules.query(
-        MoleculeQueryFilters(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1, skip=1)
+        MoleculeQueryFilters(molecule_hash=[water.get_hash(), hooh.get_hash()], cursor=max(ids))
     )
     assert meta.success
     assert len(mols) == 1
 
-    # Asking for more molecules than there are
+    # At the end
     meta, mols = storage_socket.molecules.query(
-        MoleculeQueryFilters(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1, skip=2)
+        MoleculeQueryFilters(molecule_hash=[water.get_hash(), hooh.get_hash()], cursor=min(ids))
     )
     assert meta.success
     assert len(mols) == 0
+
+
+def test_molecules_socket_query_metadata(storage_socket: SQLAlchemySocket):
+    water = load_molecule_data("water_dimer_minima")
+    hooh = load_molecule_data("hooh")
+
+    added_mols = [water, hooh]
+
+    meta, ids = storage_socket.molecules.add(added_mols)
+    assert meta.success
+
+    meta, mols = storage_socket.molecules.query(MoleculeQueryFilters(include_metadata=False))
+    assert meta is None
 
 
 def test_molecules_socket_get_empty(storage_socket: SQLAlchemySocket):
