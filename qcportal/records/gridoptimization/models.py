@@ -4,7 +4,7 @@ from typing import List, Union, Optional, Dict, Set, Iterable
 from pydantic import BaseModel, Extra, Field, constr, validator
 from typing_extensions import Literal
 
-from .. import BaseRecord, RecordAddBodyBase, RecordQueryFilters
+from ..models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from ..optimization.models import OptimizationSpecification, OptimizationRecord
 from ...base_models import ProjURLParameters
 from ...molecules import Molecule

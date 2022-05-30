@@ -10,7 +10,7 @@ from qcportal.records.torsiondrive import (
     TorsiondriveKeywords,
 )
 from qcportal.utils import make_list
-from .. import BaseDataset
+from ..models import BaseDataset
 
 
 class TorsiondriveDatasetNewEntry(BaseModel):

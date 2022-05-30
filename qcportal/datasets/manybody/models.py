@@ -6,7 +6,7 @@ from typing_extensions import Literal
 from qcportal.molecules import Molecule
 from qcportal.records.manybody import ManybodyRecord, ManybodySpecification
 from qcportal.utils import make_list
-from .. import BaseDataset
+from ..models import BaseDataset
 
 
 class ManybodyDatasetNewEntry(BaseModel):

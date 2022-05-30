@@ -10,7 +10,7 @@ from qcelemental.models.results import (
 )
 from typing_extensions import Literal
 
-from .. import BaseRecord, RecordAddBodyBase, RecordQueryFilters
+from ..models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 
 
 class SinglepointDriver(str, Enum):

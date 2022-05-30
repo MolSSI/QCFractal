@@ -3,10 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
+from qcelemental.models import FailedOperation
 
 from qcfractal.testing_helpers import run_service_constropt
 from qcfractaltesting import load_procedure_data, submit_service
-from qcportal.records import FailedOperation, RecordStatusEnum, PriorityEnum
+from qcportal.records import RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

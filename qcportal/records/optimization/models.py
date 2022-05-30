@@ -9,7 +9,7 @@ from qcelemental.models.procedures import (
 from typing_extensions import Literal
 
 from qcportal.records.singlepoint import SinglepointProtocols
-from .. import BaseRecord, RecordAddBodyBase, RecordQueryFilters
+from ..models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from ..singlepoint import (
     SinglepointRecord,
     QCSpecification,

@@ -4,6 +4,7 @@ import logging
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from qcelemental.models import FailedOperation
 from sqlalchemy import select, union, or_
 from sqlalchemy.orm import joinedload, selectinload, with_polymorphic, aliased
 
@@ -21,7 +22,7 @@ from qcportal.compression import CompressionEnum
 from qcportal.exceptions import UserReportableError, MissingDataError
 from qcportal.metadata_models import DeleteMetadata, QueryMetadata, UpdateMetadata
 from qcportal.outputstore import OutputStore, OutputTypeEnum
-from qcportal.records import FailedOperation, PriorityEnum, RecordStatusEnum
+from qcportal.records import PriorityEnum, RecordStatusEnum
 from .db_models import RecordComputeHistoryORM, BaseRecordORM, RecordInfoBackupORM, RecordCommentORM
 
 if TYPE_CHECKING:

@@ -6,7 +6,7 @@ from typing_extensions import Literal
 from qcportal.molecules import Molecule
 from qcportal.records.reaction import ReactionRecord, ReactionSpecification
 from qcportal.utils import make_list
-from .. import BaseDataset
+from ..models import BaseDataset
 
 
 class ReactionDatasetNewEntry(BaseModel):

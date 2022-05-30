@@ -5,6 +5,7 @@ import traceback
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from qcelemental.models import FailedOperation
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import array
 from sqlalchemy.orm import joinedload, contains_eager
@@ -14,7 +15,7 @@ from qcfractal.components.records.db_models import BaseRecordORM
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerStatusEnum
 from qcportal.metadata_models import TaskReturnMetadata
-from qcportal.records import FailedOperation, RecordStatusEnum
+from qcportal.records import RecordStatusEnum
 from qcportal.utils import calculate_limit
 from .db_models import TaskQueueORM
 from .reset_logic import should_reset

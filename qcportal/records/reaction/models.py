@@ -3,7 +3,7 @@ from typing import List, Union, Optional, Tuple, Set, Iterable
 from pydantic import BaseModel, Extra, root_validator, constr
 from typing_extensions import Literal
 
-from .. import BaseRecord, RecordAddBodyBase, RecordQueryFilters
+from ..models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from ..optimization.models import OptimizationRecord, OptimizationSpecification
 from ..singlepoint.models import (
     QCSpecification,

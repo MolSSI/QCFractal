@@ -10,7 +10,7 @@ from qcportal.records.gridoptimization import (
 )
 from qcportal.records.optimization import OptimizationSpecification
 from qcportal.utils import make_list
-from .. import BaseDataset
+from ..models import BaseDataset
 
 
 class GridoptimizationDatasetNewEntry(BaseModel):

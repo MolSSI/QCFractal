@@ -6,13 +6,13 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from qcelemental.models import ComputeError
+from qcelemental.models import ComputeError, FailedOperation
 
 from qcfractaltesting import load_procedure_data
 from qcportal.compression import CompressionEnum
 from qcportal.managers import ManagerName
 from qcportal.outputstore import OutputTypeEnum, OutputStore
-from qcportal.records import FailedOperation, PriorityEnum, RecordStatusEnum
+from qcportal.records import PriorityEnum, RecordStatusEnum
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

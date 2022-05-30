@@ -4,7 +4,7 @@ from typing import List, Union, Optional, Dict, Any, Set, Iterable
 from pydantic import BaseModel, Extra, validator, constr
 from typing_extensions import Literal
 
-from .. import BaseRecord, RecordAddBodyBase, RecordQueryFilters
+from ..models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from ..singlepoint.models import (
     QCSpecification,
     SinglepointRecord,
