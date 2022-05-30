@@ -24,7 +24,7 @@ def test_serverinfo_client_query_stats(storage_socket: SQLAlchemySocket, snowfla
     meta, stats = snowflake_client.query_server_stats()
     assert meta.success
     assert meta.n_found == 1
-    assert meta.n_returned == 1
+    assert len(stats) == 1
 
     assert stats[0]["molecule_count"] == 0
     assert stats[0]["outputstore_count"] == 0
@@ -37,7 +37,7 @@ def test_serverinfo_client_query_stats(storage_socket: SQLAlchemySocket, snowfla
     meta, stats = snowflake_client.query_server_stats()
     assert meta.success
     assert meta.n_found == 2
-    assert meta.n_returned == 2
+    assert len(stats) == 2
 
     # Should return newest first
     assert stats[0]["timestamp"] > stats[1]["timestamp"]
@@ -71,9 +71,9 @@ def test_serverinfo_client_delete_stats(storage_socket: SQLAlchemySocket, snowfl
     time_12 = datetime.utcnow()
     storage_socket.serverinfo.update_server_stats()
 
-    meta, errors = snowflake_client.query_server_stats()
+    meta, stats = snowflake_client.query_server_stats()
     assert meta.success
-    assert meta.n_returned == 2
+    assert len(stats) == 2
     assert meta.n_found == 2
 
     n_deleted = snowflake_client.delete_server_stats(before=time_0)
@@ -82,6 +82,6 @@ def test_serverinfo_client_delete_stats(storage_socket: SQLAlchemySocket, snowfl
     n_deleted = snowflake_client.delete_server_stats(before=time_12)
     assert n_deleted == 1
 
-    meta, errors2 = snowflake_client.query_server_stats()
+    meta, stats2 = snowflake_client.query_server_stats()
     assert meta.n_found == 1
-    assert errors2[0] == errors[0]
+    assert stats2[0] == stats[0]

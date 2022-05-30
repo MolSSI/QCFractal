@@ -13,7 +13,7 @@ def test_serverinfo_socket_update_query_stats(storage_socket: SQLAlchemySocket):
 
     meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert meta.n_found == 0
-    assert meta.n_returned == 0
+    assert len(stats) == 0
 
     time_0 = datetime.utcnow()
 
@@ -25,7 +25,7 @@ def test_serverinfo_socket_update_query_stats(storage_socket: SQLAlchemySocket):
     meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert meta.success
     assert meta.n_found == 1
-    assert meta.n_returned == 1
+    assert len(stats) == 1
 
     assert stats[0]["molecule_count"] == 0
     assert stats[0]["outputstore_count"] == 0
@@ -40,7 +40,7 @@ def test_serverinfo_socket_update_query_stats(storage_socket: SQLAlchemySocket):
     meta, stats2 = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert meta.success
     assert meta.n_found == 2
-    assert meta.n_returned == 2
+    assert len(stats2) == 2
 
     # Should return newest first
     assert stats2[1] == stats[0]
@@ -77,7 +77,7 @@ def test_serverinfo_socket_query_stats(storage_socket: SQLAlchemySocket):
     meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert meta.success
     assert meta.n_found == 3
-    assert meta.n_returned == 3
+    assert len(stats) == 3
 
     # Should return newest first
     assert stats[0]["timestamp"] > time_23

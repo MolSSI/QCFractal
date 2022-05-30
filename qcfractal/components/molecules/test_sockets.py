@@ -322,7 +322,7 @@ def test_molecules_socket_query(storage_socket: SQLAlchemySocket):
     mols = [to_molecule(x) for x in mols]
     mols = sorted(mols, key=lambda x: x.get_hash())
     assert meta.success
-    assert meta.n_returned == 2
+    assert len(mols) == 2
     assert mols[0] == added_mols[0]
     assert mols[1] == added_mols[1]
 
@@ -331,7 +331,7 @@ def test_molecules_socket_query(storage_socket: SQLAlchemySocket):
     mols = [to_molecule(x) for x in mols]
     mols = sorted(mols, key=lambda x: x.get_hash())
     assert meta.success
-    assert meta.n_returned == 2
+    assert len(mols) == 2
     assert mols[0] == added_mols[0]
     assert mols[1] == added_mols[1]
 
@@ -340,7 +340,7 @@ def test_molecules_socket_query(storage_socket: SQLAlchemySocket):
     mols = [to_molecule(x) for x in mols]
     mols = sorted(mols, key=lambda x: x.get_hash())
     assert meta.success
-    assert meta.n_returned == 2
+    assert len(mols) == 2
     assert mols[0] == added_mols[0]
     assert mols[1] == added_mols[1]
 
@@ -348,7 +348,7 @@ def test_molecules_socket_query(storage_socket: SQLAlchemySocket):
     meta, mols = storage_socket.molecules.query(MoleculeQueryFilters(identifiers={"smiles": ["smiles_str"]}))
     mols = [to_molecule(x) for x in mols]
     assert meta.success
-    assert meta.n_returned == 1
+    assert len(mols) == 1
     assert mols[0] == added_mols[0]
 
     # Queries should be intersections
@@ -357,7 +357,7 @@ def test_molecules_socket_query(storage_socket: SQLAlchemySocket):
     )
     mols = [to_molecule(x) for x in mols]
     assert meta.success
-    assert meta.n_returned == 1
+    assert len(mols) == 1
     assert mols[0] == water
 
     # Empty everything = return all
@@ -388,7 +388,7 @@ def test_molecules_socket_query_proj(storage_socket: SQLAlchemySocket):
         MoleculeQueryFilters(molecule_hash=[water.get_hash(), hooh.get_hash()], include=["geometry", "symbols"])
     )
     assert meta.success
-    assert meta.n_returned == 2
+    assert len(mols) == 2
     assert set(mols[0].keys()) == {"id", "symbols", "geometry"}
     assert set(mols[1].keys()) == {"id", "symbols", "geometry"}
 
@@ -397,7 +397,7 @@ def test_molecules_socket_query_proj(storage_socket: SQLAlchemySocket):
         MoleculeQueryFilters(molecular_formula=["H4O2", "H2O2"], exclude=["connectivity"])
     )
     assert meta.success
-    assert meta.n_returned == 2
+    assert len(mols) == 2
     assert set(mols[0].keys()).intersection({"connectivity"}) == set()
     assert set(mols[1].keys()).intersection({"connectivity"}) == set()
 
@@ -415,14 +415,12 @@ def test_molecules_socket_query_limit(storage_socket: SQLAlchemySocket):
         MoleculeQueryFilters(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1)
     )
     assert meta.success
-    assert meta.n_returned == 1
     assert len(mols) == 1
 
     meta, mols = storage_socket.molecules.query(
         MoleculeQueryFilters(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1, skip=1)
     )
     assert meta.success
-    assert meta.n_returned == 1
     assert len(mols) == 1
 
     # Asking for more molecules than there are
@@ -430,7 +428,6 @@ def test_molecules_socket_query_limit(storage_socket: SQLAlchemySocket):
         MoleculeQueryFilters(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1, skip=2)
     )
     assert meta.success
-    assert meta.n_returned == 0
     assert len(mols) == 0
 
 

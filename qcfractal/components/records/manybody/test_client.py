@@ -162,4 +162,4 @@ def test_manybody_client_query(snowflake_client: PortalClient, storage_socket: S
     # Query by default (with a limit)
     meta, mb = snowflake_client.query_manybodys(limit=1)
     assert meta.n_found == 2
-    assert meta.n_returned == 1
+    assert len(mb) == 1

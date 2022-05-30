@@ -31,7 +31,7 @@ def test_serverinfo_client_query_error(storage_socket: SQLAlchemySocket, snowfla
 
     meta, errors = snowflake_client.query_error_log()
     assert meta.success
-    assert meta.n_returned == 2
+    assert len(errors) == 2
     assert meta.n_found == 2
 
     # Order should be latest access first
@@ -39,13 +39,13 @@ def test_serverinfo_client_query_error(storage_socket: SQLAlchemySocket, snowfla
 
     # Query by user
     meta, errors = snowflake_client.query_error_log(username="read_user")
-    assert meta.n_returned == 1
+    assert len(errors) == 1
 
     meta, errors = snowflake_client.query_error_log(username="read_user", before=time_12)
-    assert meta.n_returned == 0
+    assert len(errors) == 0
 
     meta, errors = snowflake_client.query_error_log(username="read_user", after=time_12)
-    assert meta.n_returned == 1
+    assert len(errors) == 1
 
 
 def test_serverinfo_client_delete_error(storage_socket: SQLAlchemySocket, snowflake_client: PortalClient):
@@ -72,7 +72,7 @@ def test_serverinfo_client_delete_error(storage_socket: SQLAlchemySocket, snowfl
 
     meta, errors = snowflake_client.query_error_log()
     assert meta.success
-    assert meta.n_returned == 2
+    assert len(errors) == 2
     assert meta.n_found == 2
 
     n_deleted = snowflake_client.delete_error_log(before=time_0)

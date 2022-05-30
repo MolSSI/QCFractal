@@ -34,7 +34,7 @@ def test_serverinfo_socket_save_query_error(storage_socket: SQLAlchemySocket):
 
     meta, errors = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters())
     assert meta.n_found == 2
-    assert meta.n_returned == 2
+    assert len(errors) == 2
 
     # Returned in chrono order, newest first
     assert errors[0]["id"] == id_2
@@ -101,7 +101,7 @@ def test_serverinfo_socket_delete_error(storage_socket: SQLAlchemySocket):
 
     meta, errors = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters())
     assert meta.n_found == 2
-    assert meta.n_returned == 2
+    assert len(errors) == 2
 
     n_deleted = storage_socket.serverinfo.delete_error_logs(before=time_0)
     assert n_deleted == 0

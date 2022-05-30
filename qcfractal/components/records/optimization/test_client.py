@@ -173,7 +173,7 @@ def test_optimization_client_query(snowflake_client: PortalClient, storage_socke
     # Query by default (with a limit)
     meta, opt = snowflake_client.query_optimizations(limit=1)
     assert meta.n_found == 3
-    assert meta.n_returned == 1
+    assert len(opt) == 1
 
 
 @pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_fluoroethane_opt_notraj"])

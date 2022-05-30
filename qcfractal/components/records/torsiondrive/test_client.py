@@ -179,4 +179,4 @@ def test_torsiondrive_client_query(snowflake_client: PortalClient, storage_socke
     # Query by default (with a limit)
     meta, td = snowflake_client.query_torsiondrives(limit=1)
     assert meta.n_found == 4
-    assert meta.n_returned == 1
+    assert len(td) == 1

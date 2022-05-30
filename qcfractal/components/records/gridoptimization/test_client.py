@@ -178,4 +178,4 @@ def test_gridoptimization_client_query(snowflake_client: PortalClient, storage_s
     # Query by default (with a limit)
     meta, td = snowflake_client.query_gridoptimizations(limit=1)
     assert meta.n_found == 4
-    assert meta.n_returned == 1
+    assert len(td) == 1

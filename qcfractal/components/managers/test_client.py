@@ -180,11 +180,11 @@ def test_manager_client_query(snowflake: TestingSnowflake):
 
     meta, managers = client.query_managers(status=[ManagerStatusEnum.active, ManagerStatusEnum.inactive], limit=1)
     assert meta.n_found == 2
-    assert meta.n_returned == 1
+    assert len(managers) == 1
 
     meta, managers = client.query_managers(status=[ManagerStatusEnum.active, ManagerStatusEnum.inactive], skip=1)
     assert meta.n_found == 2
-    assert meta.n_returned == 1
+    assert len(managers) == 1
 
     # Empty query
     meta, managers = client.query_managers()

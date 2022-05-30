@@ -572,4 +572,4 @@ def test_optimization_socket_query(storage_socket: SQLAlchemySocket):
     # Query by default (with a limit)
     meta, opt = storage_socket.records.optimization.query(OptimizationQueryFilters(limit=1))
     assert meta.n_found == 3
-    assert meta.n_returned == 1
+    assert len(opt) == 1

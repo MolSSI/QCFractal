@@ -208,7 +208,7 @@ def test_manybody_socket_query(storage_socket: SQLAlchemySocket):
     # Query by default (with a limit)
     meta, mb = storage_socket.records.manybody.query(ManybodyQueryFilters(limit=1))
     assert meta.n_found == 2
-    assert meta.n_returned == 1
+    assert len(mb) == 1
 
 
 @pytest.mark.parametrize(

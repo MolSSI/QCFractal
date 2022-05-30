@@ -182,4 +182,4 @@ def test_reaction_client_query(snowflake_client: PortalClient, storage_socket: S
     # Query by default (with a limit)
     meta, rxn = snowflake_client.query_reactions(limit=1)
     assert meta.n_found == 2
-    assert meta.n_returned == 1
+    assert len(rxn) == 1

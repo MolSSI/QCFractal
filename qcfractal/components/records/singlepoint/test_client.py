@@ -164,4 +164,4 @@ def test_singlepoint_client_query(snowflake_client: PortalClient, storage_socket
     # Query by default (with a limit)
     meta, sp = snowflake_client.query_singlepoints(limit=1)
     assert meta.n_found == 3
-    assert meta.n_returned == 1
+    assert len(sp) == 1

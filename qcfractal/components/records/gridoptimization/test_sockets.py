@@ -309,7 +309,7 @@ def test_gridoptimization_socket_query(storage_socket: SQLAlchemySocket):
     # Query by default (with a limit)
     meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryFilters(limit=1))
     assert meta.n_found == 4
-    assert meta.n_returned == 1
+    assert len(td) == 1
 
 
 @pytest.mark.parametrize(

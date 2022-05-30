@@ -291,5 +291,5 @@ class ManagerSocket:
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]
 
-        meta = QueryMetadata(n_found=n_found, n_returned=len(result_dicts))
+        meta = QueryMetadata(n_found=n_found)
         return meta, result_dicts

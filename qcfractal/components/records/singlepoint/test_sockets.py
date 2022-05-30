@@ -540,7 +540,7 @@ def test_singlepoint_socket_query(storage_socket: SQLAlchemySocket):
     # Query by default (with a limit)
     meta, sp = storage_socket.records.singlepoint.query(SinglepointQueryFilters(limit=1))
     assert meta.n_found == 3
-    assert meta.n_returned == 1
+    assert len(sp) == 1
 
 
 def test_singlepoint_socket_delete_1(storage_socket: SQLAlchemySocket):

@@ -567,13 +567,13 @@ def test_manager_socket_query(storage_socket: SQLAlchemySocket):
         ManagerQueryFilters(status=[ManagerStatusEnum.active, ManagerStatusEnum.inactive], limit=1)
     )
     assert meta.n_found == 2
-    assert meta.n_returned == 1
+    assert len(managers) == 1
 
     meta, managers = storage_socket.managers.query(
         ManagerQueryFilters(status=[ManagerStatusEnum.active, ManagerStatusEnum.inactive], skip=1)
     )
     assert meta.n_found == 2
-    assert meta.n_returned == 1
+    assert len(managers) == 1
 
 
 def test_manager_socket_query_proj(storage_socket: SQLAlchemySocket):

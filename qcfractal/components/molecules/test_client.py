@@ -199,9 +199,7 @@ def test_molecules_client_query(snowflake_client: PortalClient):
     meta, mols = snowflake_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()])
     mols = sorted(mols, key=lambda x: x.get_hash())
     assert meta.success
-    assert meta.n_returned == 2
-    assert meta.success
-    assert meta.n_returned == 2
+    assert len(mols) == 2
     assert mols[0] == added_mols[0]
     assert mols[1] == added_mols[1]
 
@@ -209,20 +207,20 @@ def test_molecules_client_query(snowflake_client: PortalClient):
     meta, mols = snowflake_client.query_molecules(molecular_formula=["H4O2", "H2O2"])
     mols = sorted(mols, key=lambda x: x.get_hash())
     assert meta.success
-    assert meta.n_returned == 2
+    assert len(mols) == 2
     assert mols[0] == added_mols[0]
     assert mols[1] == added_mols[1]
 
     # Query by identifiers
     meta, mols = snowflake_client.query_molecules(identifiers={"smiles": ["smiles_str"]})
     assert meta.success
-    assert meta.n_returned == 1
+    assert len(mols) == 1
     assert mols[0] == added_mols[0]
 
     # Queries should be intersections
     meta, mols = snowflake_client.query_molecules(molecular_formula=["H4O2", "H2O2"], molecule_hash=[water.get_hash()])
     assert meta.success
-    assert meta.n_returned == 1
+    assert len(mols) == 1
     assert mols[0] == water
 
     # Empty everything = return all
@@ -246,18 +244,15 @@ def test_molecules_client_query_limit(snowflake_client: PortalClient):
 
     meta, mols = snowflake_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1)
     assert meta.success
-    assert meta.n_returned == 1
     assert len(mols) == 1
 
     meta, mols = snowflake_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1, skip=1)
     assert meta.success
-    assert meta.n_returned == 1
     assert len(mols) == 1
 
     # Asking for more molecules than there are
     meta, mols = snowflake_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1, skip=2)
     assert meta.success
-    assert meta.n_returned == 0
     assert len(mols) == 0
 
 

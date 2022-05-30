@@ -212,7 +212,7 @@ def test_reaction_socket_query(storage_socket: SQLAlchemySocket):
     # Query by default (with a limit)
     meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(limit=1))
     assert meta.n_found == 2
-    assert meta.n_returned == 1
+    assert len(rxn) == 1
 
 
 @pytest.mark.parametrize(

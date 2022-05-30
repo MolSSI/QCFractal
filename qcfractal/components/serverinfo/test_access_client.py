@@ -48,7 +48,7 @@ def test_serverinfo_client_query_access(storage_socket: SQLAlchemySocket, snowfl
 
     # This will return 3, because the query to /information was done in constructing the client
     assert meta.success
-    assert meta.n_returned == 3
+    assert len(accesses) == 3
     assert meta.n_found == 3
 
     # Order should be latest access first
@@ -90,7 +90,7 @@ def test_serverinfo_client_access_logged(snowflake_client: PortalClient):
     # This will return 4, because the query to /information was done in constructing the client
     meta, accesses = snowflake_client.query_access_log()
     assert meta.success
-    assert meta.n_returned == 4
+    assert len(accesses) == 4
     assert meta.n_found == 4
 
     assert accesses[3]["access_type"] == "v1/information"
@@ -129,7 +129,7 @@ def test_serverinfo_client_access_not_logged(temporary_database, encoding: str):
         # This will return 0 because logging is disabled
         meta, accesses = client.query_access_log()
         assert meta.success
-        assert meta.n_returned == 0
+        assert len(accesses) == 0
         assert meta.n_found == 0
         assert len(accesses) == 0
 
@@ -147,7 +147,7 @@ def test_serverinfo_client_access_delete(snowflake_client: PortalClient):
     # This will return 4, because the query to /information was done in constructing the client
     meta, accesses = snowflake_client.query_access_log()
     assert meta.success
-    assert meta.n_returned == 4
+    assert len(accesses) == 4
 
     n_deleted = snowflake_client.delete_access_log(time_0)
     assert n_deleted == 1  # deleted our original /information query

@@ -128,7 +128,7 @@ def test_serverinfo_socket_save_query_access(storage_socket: SQLAlchemySocket):
 
     meta, accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters())
     assert meta.success
-    assert meta.n_returned == 6
+    assert len(accesses) == 6
     assert meta.n_found == 6
 
     # Order should be latest access first
@@ -213,31 +213,31 @@ def test_serverinfo_socket_query_access(storage_socket: SQLAlchemySocket):
 
     meta, accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters(before=time_0))
     assert meta.success
-    assert meta.n_returned == 0
+    assert len(accesses) == 0
     assert meta.n_found == 0
 
     meta, accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters(before=time_12))
     assert meta.success
-    assert meta.n_returned == 1
+    assert len(accesses) == 1
     assert meta.n_found == 1
     assert accesses[0]["access_type"] == "v1/molecule"
 
     meta, accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters(after=time_12))
     assert meta.success
-    assert meta.n_returned == 2
+    assert len(accesses) == 2
     assert meta.n_found == 2
     assert accesses[0]["access_type"] == "v1/me"
     assert accesses[1]["access_type"] == "v1/wavefunction"
 
     meta, accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters(access_type=["v1/me"]))
     assert meta.success
-    assert meta.n_returned == 1
+    assert len(accesses) == 1
     assert meta.n_found == 1
     assert accesses[0]["access_type"] == "v1/me"
 
     meta, accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters(access_method=["POST"]))
     assert meta.success
-    assert meta.n_returned == 1
+    assert len(accesses) == 1
     assert meta.n_found == 1
     assert accesses[0]["access_type"] == "v1/wavefunction"
 
@@ -245,19 +245,19 @@ def test_serverinfo_socket_query_access(storage_socket: SQLAlchemySocket):
         AccessLogQueryFilters(before=time_23, access_method=["PUT"])
     )
     assert meta.success
-    assert meta.n_returned == 0
+    assert len(accesses) == 0
     assert meta.n_found == 0
 
     meta, accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters(limit=2))
     assert meta.success
-    assert meta.n_returned == 2
+    assert len(accesses) == 2
     assert meta.n_found == 3
     assert accesses[0]["access_type"] == "v1/me"
     assert accesses[1]["access_type"] == "v1/wavefunction"
 
     meta, accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters(limit=2, skip=2))
     assert meta.success
-    assert meta.n_returned == 1
+    assert len(accesses) == 1
     assert meta.n_found == 3
     assert accesses[0]["access_type"] == "v1/molecule"
 
@@ -265,16 +265,16 @@ def test_serverinfo_socket_query_access(storage_socket: SQLAlchemySocket):
         AccessLogQueryFilters(before=datetime.utcnow(), limit=1, skip=1)
     )
     assert meta.success
-    assert meta.n_returned == 1
+    assert len(accesses) == 1
     assert meta.n_found == 3
     assert accesses[0]["access_type"] == "v1/wavefunction"
 
     meta, accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters(after=time_12, before=time_23))
-    assert meta.n_returned == 1
+    assert len(accesses) == 1
     assert accesses[0]["access_type"] == "v1/wavefunction"
 
     meta, accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters(after=time_23, before=time_12))
-    assert meta.n_returned == 0
+    assert len(accesses) == 0
 
     meta, accesses = storage_socket.serverinfo.query_access_log(
         AccessLogQueryFilters(username=["read_user"], before=time_23)
@@ -330,7 +330,7 @@ def test_serverinfo_socket_delete_access(storage_socket: SQLAlchemySocket):
     assert n_deleted == 1
 
     meta, accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters())
-    assert meta.n_returned == 2
+    assert len(accesses) == 2
     assert accesses[0]["access_type"] == "v1/me"
     assert accesses[1]["access_type"] == "v1/wavefunction"
 
@@ -338,5 +338,5 @@ def test_serverinfo_socket_delete_access(storage_socket: SQLAlchemySocket):
     assert n_deleted == 2
 
     meta, accesses = storage_socket.serverinfo.query_access_log(AccessLogQueryFilters())
-    assert meta.n_returned == 0
+    assert len(accesses) == 0
     assert meta.n_found == 0
