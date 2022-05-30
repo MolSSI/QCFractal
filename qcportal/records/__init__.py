@@ -17,3 +17,5 @@ from .models import (
     RecordQueryFilters,
     RecordAddBodyBase,
 )
+
+from .query_iter import RecordQueryIterator

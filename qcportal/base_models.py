@@ -65,11 +65,10 @@ class QueryModelBase(RestModelBase):
     """
 
     limit: Optional[int] = None
-    skip: int = 0
     cursor: Optional[int] = None
     include_metadata: bool = True
 
-    @validator("limit", "skip", "cursor", "include_metadata", pre=True)
+    @validator("limit", "cursor", "include_metadata", pre=True)
     def validate_lists(cls, v):
         return validate_list_to_single(v)
 

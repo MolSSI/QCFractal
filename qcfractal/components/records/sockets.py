@@ -457,12 +457,23 @@ class RecordSocket:
         with self.root_socket.optional_session(session, True) as session:
             stmt = stmt.where(*and_query)
             stmt = stmt.options(*proj_options)
-            n_found = get_count(session, stmt)
-            stmt = stmt.limit(query_data.limit).offset(query_data.skip)
+
+            if query_data.include_metadata:
+                n_found = get_count(session, stmt)
+
+            if query_data.cursor is not None:
+                stmt = stmt.where(orm_type.id < query_data.cursor)
+
+            stmt = stmt.order_by(orm_type.id.desc())
+            stmt = stmt.limit(query_data.limit)
             results = session.execute(stmt).scalars().unique().all()
             result_dicts = [x.model_dict() for x in results]
 
-        meta = QueryMetadata(n_found=n_found)
+        if query_data.include_metadata:
+            meta = QueryMetadata(n_found=n_found)
+        else:
+            meta = None
+
         return meta, result_dicts
 
     def query(

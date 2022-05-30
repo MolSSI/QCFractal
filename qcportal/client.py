@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import warnings
 from datetime import datetime
 from pathlib import Path
 from typing import (
@@ -45,9 +44,9 @@ from .records import (
     RecordModifyBody,
     RecordDeleteBody,
     RecordRevertBody,
-    AllRecordTypes,
     AllRecordDataModelTypes,
     BaseRecord,
+    RecordQueryIterator,
 )
 from .records.gridoptimization import (
     GridoptimizationKeywords,
@@ -647,10 +646,9 @@ class PortalClient(PortalClientBase):
         modified_before: Optional[datetime] = None,
         modified_after: Optional[datetime] = None,
         limit: int = None,
-        skip: int = 0,
         *,
         include: Optional[Iterable[str]] = None,
-    ) -> Tuple[QueryMetadata, List[AllRecordTypes]]:
+    ) -> RecordQueryIterator:
         """
         Query records of all types based on common fields
 
@@ -685,23 +683,16 @@ class PortalClient(PortalClientBase):
             Query records that were modified after the given date/time
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
-        skip
-            The number of records to skip in the query. This can be used for pagination
         include
             Additional fields to include in the returned record
 
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of records
-            that were found on the server.
+            An iterator that can be used to retrieve the results of the query
         """
 
-        if limit is not None and limit > self.api_limits["get_records"]:
-            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
-            limit = min(limit, self.api_limits["get_records"])
-
-        query_data = {
+        filter_dict = {
             "record_id": make_list(record_id),
             "record_type": make_list(record_type),
             "manager_name": make_list(manager_name),
@@ -714,23 +705,14 @@ class PortalClient(PortalClientBase):
             "modified_before": modified_before,
             "modified_after": modified_after,
             "limit": limit,
-            "skip": skip,
         }
 
         if include:
-            query_data["include"] = BaseRecord.transform_includes(include)
+            filter_dict["include"] = BaseRecord.transform_includes(include)
 
-        meta, record_data = self._auto_request(
-            "post",
-            "v1/records/query",
-            RecordQueryFilters,
-            None,
-            Tuple[QueryMetadata, List[AllRecordDataModelTypes]],
-            query_data,
-            None,
-        )
+        filter_data = RecordQueryFilters(**filter_dict)
 
-        return meta, records_from_datamodels(record_data, self)
+        return RecordQueryIterator(self, filter_data, None)
 
     def reset_records(self, record_ids: Union[int, Sequence[int]]) -> UpdateMetadata:
         """
@@ -1049,10 +1031,9 @@ class PortalClient(PortalClientBase):
         basis: Optional[Iterable[Optional[str]]] = None,
         molecule_id: Optional[Iterable[int]] = None,
         limit: Optional[int] = None,
-        skip: int = 0,
         *,
         include: Optional[Iterable[str]] = None,
-    ) -> Tuple[QueryMetadata, List[SinglepointRecord]]:
+    ) -> RecordQueryIterator:
         """
         Queries singlepoint records on the server
 
@@ -1090,24 +1071,17 @@ class PortalClient(PortalClientBase):
             Query records whose molecule (id) is in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
-        skip
-            The number of records to skip in the query. This can be used for pagination
         include
             Additional fields to include in the returned record
 
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of records
-            that were found on the server.
+            An iterator that can be used to retrieve the results of the query
         """
 
-        if limit is not None and limit > self.api_limits["get_records"]:
-            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
-            limit = min(limit, self.api_limits["get_records"])
-
         # Note - singlepoints don't have any children
-        query_data = {
+        filter_dict = {
             "record_id": make_list(record_id),
             "manager_name": make_list(manager_name),
             "status": make_list(status),
@@ -1123,23 +1097,14 @@ class PortalClient(PortalClientBase):
             "modified_before": modified_before,
             "modified_after": modified_after,
             "limit": limit,
-            "skip": skip,
         }
 
         if include:
-            query_data["include"] = SinglepointRecord.transform_includes(include)
+            filter_dict["include"] = SinglepointRecord.transform_includes(include)
 
-        meta, record_data = self._auto_request(
-            "post",
-            "v1/records/singlepoint/query",
-            SinglepointQueryFilters,
-            None,
-            Tuple[QueryMetadata, List[SinglepointRecord._DataModel]],
-            query_data,
-            None,
-        )
+        filter_data = SinglepointQueryFilters(**filter_dict)
 
-        return meta, records_from_datamodels(record_data, self)
+        return RecordQueryIterator(self, filter_data, "singlepoint")
 
     ##############################################################
     # Optimization calculations
@@ -1304,10 +1269,9 @@ class PortalClient(PortalClientBase):
         initial_molecule_id: Optional[Iterable[int]] = None,
         final_molecule_id: Optional[Iterable[int]] = None,
         limit: Optional[int] = None,
-        skip: int = 0,
         *,
         include: Optional[Iterable[str]] = None,
-    ) -> Tuple[QueryMetadata, List[OptimizationRecord]]:
+    ) -> RecordQueryIterator:
         """
         Queries optimization records on the server
 
@@ -1349,23 +1313,16 @@ class PortalClient(PortalClientBase):
             Query records whose final molecule (id) is in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
-        skip
-            The number of records to skip in the query. This can be used for pagination
         include
             Additional fields to include in the returned record
 
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of records
-            that were found on the server.
+            An iterator that can be used to retrieve the results of the query
         """
 
-        if limit is not None and limit > self.api_limits["get_records"]:
-            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
-            limit = min(limit, self.api_limits["get_records"])
-
-        query_data = {
+        filter_dict = {
             "record_id": make_list(record_id),
             "manager_name": make_list(manager_name),
             "status": make_list(status),
@@ -1383,23 +1340,14 @@ class PortalClient(PortalClientBase):
             "modified_before": modified_before,
             "modified_after": modified_after,
             "limit": limit,
-            "skip": skip,
         }
 
         if include:
-            query_data["include"] = OptimizationRecord.transform_includes(include)
+            filter_dict["include"] = OptimizationRecord.transform_includes(include)
 
-        meta, record_data = self._auto_request(
-            "post",
-            "v1/records/optimization/query",
-            OptimizationQueryFilters,
-            None,
-            Tuple[QueryMetadata, List[OptimizationRecord._DataModel]],
-            query_data,
-            None,
-        )
+        filter_data = OptimizationQueryFilters(**filter_dict)
 
-        return meta, records_from_datamodels(record_data, self)
+        return RecordQueryIterator(self, filter_data, "optimization")
 
     ##############################################################
     # Torsiondrive calculations
@@ -1557,10 +1505,9 @@ class PortalClient(PortalClientBase):
         qc_basis: Optional[Iterable[Optional[str]]] = None,
         initial_molecule_id: Optional[Iterable[int]] = None,
         limit: Optional[int] = None,
-        skip: int = 0,
         *,
         include: Optional[Iterable[str]] = None,
-    ) -> Tuple[QueryMetadata, List[TorsiondriveRecord]]:
+    ) -> RecordQueryIterator:
         """
         Queries torsiondrive records on the server
 
@@ -1602,23 +1549,16 @@ class PortalClient(PortalClientBase):
             Query records whose initial molecule (id) is in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
-        skip
-            The number of records to skip in the query. This can be used for pagination
         include
             Additional fields to include in the returned record
 
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of records
-            that were found on the server.
+            An iterator that can be used to retrieve the results of the query
         """
 
-        if limit is not None and limit > self.api_limits["get_records"]:
-            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
-            limit = min(limit, self.api_limits["get_records"])
-
-        query_data = {
+        filter_dict = {
             "record_id": make_list(record_id),
             "manager_name": make_list(manager_name),
             "status": make_list(status),
@@ -1636,23 +1576,14 @@ class PortalClient(PortalClientBase):
             "modified_before": modified_before,
             "modified_after": modified_after,
             "limit": limit,
-            "skip": skip,
         }
 
         if include:
-            query_data["include"] = TorsiondriveRecord.transform_includes(include)
+            filter_dict["include"] = TorsiondriveRecord.transform_includes(include)
 
-        meta, record_data = self._auto_request(
-            "post",
-            "v1/records/torsiondrive/query",
-            TorsiondriveQueryFilters,
-            None,
-            Tuple[QueryMetadata, List[TorsiondriveRecord._DataModel]],
-            query_data,
-            None,
-        )
+        filter_data = TorsiondriveQueryFilters(**filter_dict)
 
-        return meta, records_from_datamodels(record_data, self)
+        return RecordQueryIterator(self, filter_data, "torsiondrive")
 
     ##############################################################
     # Grid optimization calculations
@@ -1810,10 +1741,9 @@ class PortalClient(PortalClientBase):
         qc_basis: Optional[Iterable[Optional[str]]] = None,
         initial_molecule_id: Optional[Iterable[int]] = None,
         limit: Optional[int] = None,
-        skip: int = 0,
         *,
         include: Optional[Iterable[str]] = None,
-    ) -> Tuple[QueryMetadata, List[GridoptimizationRecord]]:
+    ) -> RecordQueryIterator:
         """
         Queries gridoptimization records on the server
 
@@ -1855,23 +1785,16 @@ class PortalClient(PortalClientBase):
             Query records whose initial molecule (id) is in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
-        skip
-            The number of records to skip in the query. This can be used for pagination
         include
             Additional fields to include in the returned record
 
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of records
-            that were found on the server.
+            An iterator that can be used to retrieve the results of the query
         """
 
-        if limit is not None and limit > self.api_limits["get_records"]:
-            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
-            limit = min(limit, self.api_limits["get_records"])
-
-        query_data = {
+        filter_dict = {
             "record_id": make_list(record_id),
             "manager_name": make_list(manager_name),
             "status": make_list(status),
@@ -1889,23 +1812,14 @@ class PortalClient(PortalClientBase):
             "modified_before": modified_before,
             "modified_after": modified_after,
             "limit": limit,
-            "skip": skip,
         }
 
         if include:
-            query_data["include"] = GridoptimizationRecord.transform_includes(include)
+            filter_dict["include"] = GridoptimizationRecord.transform_includes(include)
 
-        meta, record_data = self._auto_request(
-            "post",
-            "v1/records/gridoptimization/query",
-            GridoptimizationQueryFilters,
-            None,
-            Tuple[QueryMetadata, List[GridoptimizationRecord._DataModel]],
-            query_data,
-            None,
-        )
+        filter_data = GridoptimizationQueryFilters(**filter_dict)
 
-        return meta, records_from_datamodels(record_data, self)
+        return RecordQueryIterator(self, filter_data, "gridoptimization")
 
     ##############################################################
     # Reactions
@@ -2071,10 +1985,9 @@ class PortalClient(PortalClientBase):
         optimization_program: Optional[Iterable[Optional[str]]] = None,
         molecule_id: Optional[Iterable[int]] = None,
         limit: Optional[int] = None,
-        skip: int = 0,
         *,
         include: Optional[Iterable[str]] = None,
-    ) -> Tuple[QueryMetadata, List[GridoptimizationRecord]]:
+    ) -> RecordQueryIterator:
         """
         Queries reaction records on the server
 
@@ -2116,23 +2029,16 @@ class PortalClient(PortalClientBase):
             Query reactions that contain a molecule (id) is in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
-        skip
-            The number of records to skip in the query. This can be used for pagination
         include
             Additional fields to include in the returned record
 
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of records
-            that were found on the server.
+            An iterator that can be used to retrieve the results of the query
         """
 
-        if limit is not None and limit > self.api_limits["get_records"]:
-            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
-            limit = min(limit, self.api_limits["get_records"])
-
-        query_data = {
+        filter_dict = {
             "record_id": make_list(record_id),
             "manager_name": make_list(manager_name),
             "status": make_list(status),
@@ -2150,11 +2056,10 @@ class PortalClient(PortalClientBase):
             "modified_before": modified_before,
             "modified_after": modified_after,
             "limit": limit,
-            "skip": skip,
         }
 
         if include:
-            query_data["include"] = ReactionRecord.transform_includes(include)
+            filter_dict["include"] = ReactionRecord.transform_includes(include)
 
         meta, record_data = self._auto_request(
             "post",
@@ -2162,11 +2067,13 @@ class PortalClient(PortalClientBase):
             ReactionQueryFilters,
             None,
             Tuple[QueryMetadata, List[ReactionRecord._DataModel]],
-            query_data,
+            filter_dict,
             None,
         )
 
-        return meta, records_from_datamodels(record_data, self)
+        filter_data = ReactionQueryFilters(**filter_dict)
+
+        return RecordQueryIterator(self, filter_data, "reaction")
 
     ##############################################################
     # Manybody calculations
@@ -2322,10 +2229,9 @@ class PortalClient(PortalClientBase):
         qc_basis: Optional[Iterable[Optional[str]]] = None,
         initial_molecule_id: Optional[Iterable[int]] = None,
         limit: Optional[int] = None,
-        skip: int = 0,
         *,
         include: Optional[Iterable[str]] = None,
-    ) -> Tuple[QueryMetadata, List[GridoptimizationRecord]]:
+    ) -> RecordQueryIterator:
         """
         Queries reaction records on the server
 
@@ -2365,23 +2271,16 @@ class PortalClient(PortalClientBase):
             Query manybody calculations that contain an initial molecule (id) is in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
-        skip
-            The number of records to skip in the query. This can be used for pagination
         include
             Additional fields to include in the returned record
 
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of records
-            that were found on the server.
+            An iterator that can be used to retrieve the results of the query
         """
 
-        if limit is not None and limit > self.api_limits["get_records"]:
-            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
-            limit = min(limit, self.api_limits["get_records"])
-
-        query_data = {
+        filter_dict = {
             "record_id": make_list(record_id),
             "manager_name": make_list(manager_name),
             "status": make_list(status),
@@ -2398,23 +2297,14 @@ class PortalClient(PortalClientBase):
             "modified_before": modified_before,
             "modified_after": modified_after,
             "limit": limit,
-            "skip": skip,
         }
 
         if include:
-            query_data["include"] = ManybodyRecord.transform_includes(include)
+            filter_dict["include"] = ManybodyRecord.transform_includes(include)
 
-        meta, record_data = self._auto_request(
-            "post",
-            "v1/records/manybody/query",
-            ManybodyQueryFilters,
-            None,
-            Tuple[QueryMetadata, List[ManybodyRecord._DataModel]],
-            query_data,
-            None,
-        )
+        filter_data = ManybodyQueryFilters(**filter_dict)
 
-        return meta, records_from_datamodels(record_data, self)
+        return RecordQueryIterator(self, filter_data, "manybody")
 
     ##############################################################
     # Managers
@@ -2505,8 +2395,7 @@ class PortalClient(PortalClientBase):
         Returns
         -------
         :
-            Metadata about the query results,
-            and a list of ComputeManager matching the specified query.
+            An iterator that can be used to retrieve the results of the query
         """
 
         filter_dict = {
