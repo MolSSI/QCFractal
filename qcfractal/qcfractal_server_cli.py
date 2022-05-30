@@ -619,7 +619,7 @@ def server_backup(args: argparse.Namespace, config: FractalConfig):
     print("\n")
 
     # Bigger than 250GB?
-    if db_size > 250 * 2 ** 30:
+    if db_size > 250 * 2**30:
         print("\n" + "*" * 80)
         print("This is a pretty big database! This will take a while...")
         print("Consider alternate backup strategies, such as pg_basebackup and WAL archiving")
