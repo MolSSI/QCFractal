@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import tuple_, and_, or_, func, select, inspect
 from sqlalchemy.orm import load_only, selectinload, lazyload
+from sqlalchemy.exc import IntegrityError
 
 from qcfractal.db_socket import BaseORM
 from qcportal.exceptions import MissingDataError, UserReportableError
@@ -603,6 +604,9 @@ def delete_general(
                 errors.append((idx, "Entry is missing"))
             else:
                 deleted_idx.append(idx)
+        except IntegrityError:
+            err_msg = f"Integrity Error - may still be referenced"
+            errors.append((idx, err_msg))
         except Exception as e:
             scols = [x.key for x in search_cols]
             err_msg = f"Attempting to delete resulted in error: orm_type={orm_type.__name__}, search_cols={scols}, idx={idx}, search_value={search_value}, error={str(e)}"
