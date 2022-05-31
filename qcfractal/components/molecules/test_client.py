@@ -9,7 +9,37 @@ from qcportal import PortalRequestError
 from qcportal.molecules import Molecule, MoleculeIdentifiers
 
 if TYPE_CHECKING:
+    from typing import Tuple, List
     from qcportal import PortalClient
+
+
+@pytest.fixture(scope="function")
+def queryable_molecules(snowflake_client: PortalClient):
+
+    elements1 = ["h", "he", "li", "be", "b", "c", "n", "o", "f", "ne"]
+    elements2 = ["na", "mg", "al", "si", "p", "s", "cl", "ar", "k", "ca"]
+
+    all_mols = []
+    for el1 in elements1:
+        mols = []
+        for el2 in elements2:
+            for dist in range(2, 22, 1):
+                m = Molecule(
+                    symbols=[el1, el2],
+                    geometry=[0, 0, 0, 0, 0, dist],
+                    identifiers={
+                        "smiles": f"madeupsmiles_{el1}_{el2}_{dist}",
+                        "inchikey": f"madeupinchi_{el1}_{el2}_{dist}",
+                    },
+                )
+                mols.append(m)
+
+        meta, _ = snowflake_client.add_molecules(mols)
+        all_mols.extend(mols)
+        assert meta.n_inserted == 200
+
+    assert len(all_mols) == 2000
+    yield all_mols, snowflake_client
 
 
 def test_molecules_client_basic(snowflake_client: PortalClient):
@@ -36,23 +66,28 @@ def test_molecules_client_basic(snowflake_client: PortalClient):
     # Is a valid molecule object dictionary
     assert mols[0].validated
 
-    # Try to add again
-    meta, ids2 = snowflake_client.add_molecules([water])
-    assert meta.success
-    assert meta.n_inserted == 0
-    assert meta.n_existing == 1
-    assert meta.existing_idx == [0]
 
-    # Delete the molecule
-    meta = snowflake_client.delete_molecules(ids)
-    assert meta.success
-    assert meta.n_deleted == 1
-    assert meta.deleted_idx == [0]
+def test_molecules_client_get_nonexist(snowflake_client: PortalClient):
+    water = load_molecule_data("water_dimer_minima")
+    meta, ids = snowflake_client.add_molecules([water])
 
-    # Make sure it is gone
-    # This should return a list containing only None
-    mols = snowflake_client.get_molecules(ids, missing_ok=True)
-    assert mols == [None]
+    mols = snowflake_client.get_molecules(123456, missing_ok=True)
+    assert mols is None
+
+    mols = snowflake_client.get_molecules([123, 456, 789, ids[0]], missing_ok=True)
+
+    assert len(mols) == 4
+    assert mols[0] is None
+    assert mols[1] is None
+    assert mols[2] is None
+    assert water == mols[3]
+
+    # Now try with missing_ok = False. This should raise an exception
+    with pytest.raises(PortalRequestError, match=r"Could not find all requested records"):
+        snowflake_client.get_molecules(123, missing_ok=False)
+
+    with pytest.raises(PortalRequestError, match=r"Could not find all requested records"):
+        snowflake_client.get_molecules([123, 456, 789, ids[0]], missing_ok=False)
 
 
 def test_molecules_client_add_with_id(snowflake_client: PortalClient):
@@ -80,11 +115,12 @@ def test_molecules_client_add_with_id(snowflake_client: PortalClient):
     assert mols[0] == water
 
 
-def test_molecules_client_add_duplicates_1(snowflake_client: PortalClient):
+def test_molecules_client_add_duplicates(snowflake_client: PortalClient):
     # Tests various ways of adding duplicate molecules
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
 
+    # Duplicate molecules in same add_molecules call
     meta, ids = snowflake_client.add_molecules([water, hooh, water, hooh, hooh])
     assert meta.success
     assert meta.n_inserted == 2
@@ -96,25 +132,25 @@ def test_molecules_client_add_duplicates_1(snowflake_client: PortalClient):
     assert ids[1] == ids[4]
 
     # Test in a different order
-    meta, ids = snowflake_client.add_molecules([hooh, hooh, water, water, hooh])
+    meta, ids2 = snowflake_client.add_molecules([hooh, hooh, water, water, hooh])
     assert meta.success
     assert meta.n_inserted == 0
     assert meta.n_existing == 5
     assert meta.inserted_idx == []
     assert meta.existing_idx == [0, 1, 2, 3, 4]
-    assert ids[0] == ids[1]
-    assert ids[0] == ids[4]
-    assert ids[2] == ids[3]
+    assert ids2[0] == ids2[1]
+    assert ids2[0] == ids2[4]
+    assert ids2[2] == ids2[3]
+
+    assert ids2[0] == ids[1]
+    assert ids2[2] == ids[0]
 
 
 def test_molecules_client_get_duplicates(snowflake_client: PortalClient):
-    # Tests various ways of getting duplicate molecules
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
 
     meta, ids = snowflake_client.add_molecules([water, hooh])
-    assert meta.success
-    assert meta.n_inserted == 2
 
     id1, id2 = ids
     mols = snowflake_client.get_molecules([id1, id2, id1, id2, id1])
@@ -137,6 +173,28 @@ def test_molecules_client_get_duplicates(snowflake_client: PortalClient):
     assert mols[1].id == mols[3].id
 
 
+def test_molecules_client_get_empty(snowflake_client: PortalClient):
+    water = load_molecule_data("water_dimer_minima")
+    _, ids = snowflake_client.add_molecules([water])
+
+    assert snowflake_client.get_molecules([]) == []
+
+
+def test_molecules_client_delete(snowflake_client: PortalClient):
+
+    water = load_molecule_data("water_dimer_minima")
+    meta, ids = snowflake_client.add_molecules([water])
+
+    meta = snowflake_client.delete_molecules(ids)
+    assert meta.success is True
+    assert meta.n_deleted == 1
+    assert meta.n_errors == 0
+    assert meta.deleted_idx == [0]
+
+    mol = snowflake_client.get_molecules(ids[0], missing_ok=True)
+    assert mol is None
+
+
 def test_molecules_client_delete_nonexist(snowflake_client: PortalClient):
 
     water = load_molecule_data("water_dimer_minima")
@@ -151,129 +209,19 @@ def test_molecules_client_delete_nonexist(snowflake_client: PortalClient):
     assert meta.deleted_idx == [1]
 
 
-def test_molecules_client_get_nonexist(snowflake_client: PortalClient):
-    water = load_molecule_data("water_dimer_minima")
-    hooh = load_molecule_data("hooh")
-
-    meta, ids = snowflake_client.add_molecules([water, hooh])
-    assert meta.success
-
-    id1, id2 = ids
-    meta = snowflake_client.delete_molecules([id1])
-    assert meta.success
-
-    # We now have one molecule in the database and one that has been deleted
-    # Try to get both with missing_ok = True. This should have None in the returned list
-    mols = snowflake_client.get_molecules([id1, id2, id1, id2], missing_ok=True)
-    assert len(mols) == 4
-    assert mols[0] is None
-    assert mols[2] is None
-    assert hooh == mols[1]
-    assert hooh == mols[3]
-
-    # Now try with missing_ok = False. This should raise an exception
-    with pytest.raises(PortalRequestError, match=r"Could not find all requested records"):
-        snowflake_client.get_molecules([id1, id2, id1, id2], missing_ok=False)
-
-
-def test_molecules_client_query(snowflake_client: PortalClient):
-    water = load_molecule_data("water_dimer_minima")
-    hooh = load_molecule_data("hooh")
-
-    water_dict = water.dict()
-    water_dict["identifiers"] = MoleculeIdentifiers(smiles="smiles_str", inchikey="inchikey_str")
-    water = Molecule(**water_dict)
-
-    added_mols = [water, hooh]
-    added_mols = sorted(added_mols, key=lambda x: x.get_hash())
-
-    meta, ids = snowflake_client.add_molecules(added_mols)
-    assert meta.success
-    assert meta.inserted_idx == [0, 1]
-
-    #################################################
-    # Note that queries may not be returned in order
-    #################################################
-
-    # Query by hash
-    query_res = snowflake_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()])
-    meta = query_res.current_meta
-    mols = sorted(query_res, key=lambda x: x.get_hash())
-    assert meta.success
-    assert len(mols) == 2
-    assert mols[0] == added_mols[0]
-    assert mols[1] == added_mols[1]
-
-    # Query by formula
-    query_res = snowflake_client.query_molecules(molecular_formula=["H4O2", "H2O2"])
-    meta = query_res.current_meta
-    mols = sorted(query_res, key=lambda x: x.get_hash())
-    assert meta.success
-    assert len(mols) == 2
-    assert mols[0] == added_mols[0]
-    assert mols[1] == added_mols[1]
-
-    # Query by identifiers
-    query_res = snowflake_client.query_molecules(identifiers={"smiles": ["smiles_str"]})
-    meta = query_res.current_meta
-    mols = list(query_res)
-    assert meta.success
-    assert len(mols) == 1
-    assert mols[0] == added_mols[0]
-
-    # Queries should be intersections
-    query_res = snowflake_client.query_molecules(molecular_formula=["H4O2", "H2O2"], molecule_hash=[water.get_hash()])
-    meta = query_res.current_meta
-    mols = list(query_res)
-    assert meta.success
-    assert len(mols) == 1
-    assert mols[0] == water
-
-    # Empty everything = return all
-    query_res = snowflake_client.query_molecules()
-    meta = query_res.current_meta
-    mols = list(query_res)
-    assert meta.n_found == 2
-    assert len(mols) == 2
-
-    # Empty lists will constrain the results to be empty
-    query_res = snowflake_client.query_molecules(molecule_hash=[])
-    meta = query_res.current_meta
-    mols = list(query_res)
-    assert meta.n_found == 0
-    assert mols == []
-
-
-def test_molecules_client_query_limit(snowflake_client: PortalClient):
-    water = load_molecule_data("water_dimer_minima")
-    hooh = load_molecule_data("hooh")
-
-    added_mols = [water, hooh]
-
-    meta, ids = snowflake_client.add_molecules(added_mols)
-    assert meta.success
-
-    query_res = snowflake_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=1)
-    meta = query_res.current_meta
-    mols = list(query_res)
-    assert meta.success
-    assert len(mols) == 1
-
-    query_res = snowflake_client.query_molecules(molecule_hash=[water.get_hash(), hooh.get_hash()], limit=0)
-    meta = query_res.current_meta
-    mols = list(query_res)
-    assert meta.success
-    assert len(mols) == 0
-
-
-def test_molecules_client_get_empty(snowflake_client: PortalClient):
-    assert snowflake_client.get_molecules([]) == []
+def test_molecules_client_delete_inuse(snowflake_client: PortalClient):
 
     water = load_molecule_data("water_dimer_minima")
-    _, ids = snowflake_client.add_molecules([water])
-    assert len(ids) == 1
 
-    assert snowflake_client.get_molecules([]) == []
+    meta, water_ids = snowflake_client.add_molecules([water])
+    snowflake_client.add_singlepoints(water, "prog1", "energy", "b3lyp", "sto-3g")
+
+    meta = snowflake_client.delete_molecules(water_ids)
+    assert meta.success is False
+    assert meta.n_deleted == 0
+    assert meta.n_errors == 1
+    assert meta.error_idx == [0]
+    assert "may still be referenced" in meta.errors[0][1]
 
 
 def test_molecules_client_modify(snowflake_client: PortalClient):
@@ -343,3 +291,69 @@ def test_molecules_client_update_nonexist(snowflake_client: PortalClient):
             identifiers=MoleculeIdentifiers(smiles="madeupsmiles", inchi="madeupinchi"),
             overwrite_identifiers=False,
         )
+
+
+def test_molecules_client_query(queryable_molecules: Tuple[List[Molecule], PortalClient]):
+    def sort_molecules(m):
+        return sorted(m, key=lambda x: x.get_hash())
+
+    all_mols, client = queryable_molecules
+
+    # Query by hash
+    test_mols = all_mols[:3]
+    test_hashes = [x.get_hash() for x in test_mols]
+    query_res = client.query_molecules(molecule_hash=test_hashes)
+    assert query_res.current_meta.success
+
+    test_mols = sort_molecules(test_mols)
+    res_mols = sort_molecules(query_res)
+    assert test_mols == res_mols
+
+    # Query by formula
+    query_res = client.query_molecules(molecular_formula=["HNa", "CCl", "MgB"])
+    assert query_res.current_meta.success
+    mols = list(query_res)
+    assert len(mols) == 60
+
+    # Query by identifiers
+    query_res = client.query_molecules(identifiers={"smiles": ["madeupsmiles_h_na_4", "madeupsmiles_c_s_2"]})
+    assert query_res.current_meta.success
+    mols = list(query_res)
+    assert len(mols) == 2
+
+    query_res = client.query_molecules(identifiers={"inchikey": ["madeupinchi_c_cl_10", "madeupinchi_ne_ar_17"]})
+    assert query_res.current_meta.success
+    mols = list(query_res)
+    assert len(mols) == 2
+
+    # Queries should be intersections
+    query_res = client.query_molecules(molecular_formula=["HCl", "CS"], identifiers={"smiles": ["madeupsmiles_c_s_4"]})
+    assert query_res.current_meta.success
+    mols = list(query_res)
+    assert len(mols) == 1
+
+
+def test_molecules_client_empty_query_iter(queryable_molecules: Tuple[List[Molecule], PortalClient]):
+    all_mols, client = queryable_molecules
+
+    # Future-proof against changes to test infrastructure
+    assert len(all_mols) > 1000
+    assert client.api_limits["get_molecules"] <= 1000
+
+    query_res = client.query_molecules()
+    assert len(query_res.current_batch) < 1000
+
+    all_mols_2 = list(query_res)
+    assert len(all_mols) == len(all_mols_2)
+    assert {x.get_hash() for x in all_mols} == {x.get_hash() for x in all_mols_2}
+
+
+def test_molecules_client_query_limit(queryable_molecules: Tuple[List[Molecule], PortalClient]):
+    all_mols, client = queryable_molecules
+
+    query_res = client.query_molecules(molecular_formula=["HCl", "CS"], limit=5)
+    assert query_res.current_meta.success
+    assert query_res.current_meta.n_found == 40
+
+    mols = list(query_res)
+    assert len(mols) == 5
