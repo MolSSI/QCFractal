@@ -53,8 +53,7 @@ def postgres_server(tmp_path_factory):
         tmp_pg.stop()
 
 
-@pytest.fixture(scope="function")
-def temporary_database(postgres_server):
+def _temporary_database(postgres_server):
     """
     A temporary database that only lasts for one function
 
@@ -78,6 +77,11 @@ def temporary_database(postgres_server):
         gc.collect()
 
         postgres_server.delete_database()
+
+
+# Two - one for function scope, and one for module scope
+temporary_database = pytest.fixture(_temporary_database, scope="function")
+module_temporary_database = pytest.fixture(_temporary_database, scope="module")
 
 
 @pytest.fixture(scope="function")

@@ -100,9 +100,9 @@ class QueryIteratorBase:
         # Fetch metadata on first iteration
         self.query_filters.include_metadata = True
 
-        self.current_batch = None
-        self.current_meta = None
-        self.fetched = 0
+        self.current_batch: Optional[List[Any]] = None
+        self.current_meta: Optional[QueryMetadata] = None
+        self.fetched: int = 0
 
         self._fetch_batch()
 
