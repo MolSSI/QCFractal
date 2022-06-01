@@ -63,7 +63,7 @@ default_roles: Dict[str, Any] = {
             {
                 "Effect": "Deny",
                 "Action": "*",
-                "Resource": ["users", "roles", "managers", "server_errors", "access_logs", "tasks"],
+                "Resource": ["users", "roles", "managers", "server_stats", "server_errors", "access_logs", "tasks"],
             },
             {
                 "Effect": "Allow",
