@@ -176,7 +176,7 @@ class APILimitConfig(ConfigBase):
     manager_tasks_return: int = Field(10, description="Number of tasks a single manager can return at once")
 
     get_server_stats: int = Field(25, description="Number of server statistics records to return")
-    get_access_logs: int = Field(10000, description="Number of access log records to return")
+    get_access_logs: int = Field(1000, description="Number of access log records to return")
     get_error_logs: int = Field(100, description="Number of error log records to return")
 
     class Config(ConfigCommon):

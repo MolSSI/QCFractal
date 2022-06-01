@@ -51,12 +51,12 @@ def query_access_summary_v1(url_params: AccessLogSummaryFilters):
     return storage_socket.serverinfo.query_access_summary(url_params)
 
 
-@main.route("/v1/server_stats", methods=["GET"])
+@main.route("/v1/server_stats/query", methods=["POST"])
 @wrap_route("READ")
-def query_server_stats_v1(url_params: ServerStatsQueryFilters):
+def query_server_stats_v1(body_data: ServerStatsQueryFilters):
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_server_stats
-    url_params.limit = calculate_limit(max_limit, url_params.limit)
-    return storage_socket.serverinfo.query_server_stats(url_params)
+    body_data.limit = calculate_limit(max_limit, body_data.limit)
+    return storage_socket.serverinfo.query_server_stats(body_data)
 
 
 @main.route("/v1/server_stats/bulkDelete", methods=["POST"])

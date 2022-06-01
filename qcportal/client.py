@@ -91,8 +91,12 @@ from .records.torsiondrive import (
 from .serverinfo import (
     AccessLogQueryFilters,
     AccessLogSummaryFilters,
+    AccessLogSummaryEntry,
+    AccessLogQueryIterator,
     ErrorLogQueryFilters,
+    ErrorLogQueryIterator,
     ServerStatsQueryFilters,
+    ServerStatsQueryIterator,
     DeleteBeforeDateBody,
 )
 from .utils import make_list, make_str
@@ -432,8 +436,7 @@ class PortalClient(PortalClientBase):
         Returns
         -------
         :
-            Metadata about the results of the query, and a generator that can be used to iterate over
-            molecules that were found on the server.
+            An iterator that can be used to retrieve the results of the query
         """
 
         filter_dict = {
@@ -2539,8 +2542,7 @@ class PortalClient(PortalClientBase):
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
         limit: Optional[int] = None,
-        skip: int = 0,
-    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+    ) -> ServerStatsQueryIterator:
         """
         Query server statistics
 
@@ -2555,31 +2557,15 @@ class PortalClient(PortalClientBase):
             Return statistics captured after the specified date/time
         limit
             The maximum number of statistics entries to return. Note that the server limit is always obeyed.
-        skip
-            The number of statistics entries to skip in the query. This can be used for pagination
 
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of dictionaries with
-            statistics that were found on the server.
-
+            An iterator that can be used to retrieve the results of the query
         """
 
-        if limit is not None and limit > self.api_limits["get_server_stats"]:
-            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
-            limit = min(limit, self.api_limits["get_server_stats"])
-
-        url_params = ServerStatsQueryFilters(before=before, after=after, limit=limit, skip=skip)
-        return self._auto_request(
-            "get",
-            "v1/server_stats",
-            None,
-            ServerStatsQueryFilters,
-            Tuple[QueryMetadata, List[Dict[str, Any]]],
-            None,
-            url_params,
-        )
+        filter_data = ServerStatsQueryFilters(before=before, after=after, limit=limit)
+        return ServerStatsQueryIterator(self, filter_data)
 
     def delete_server_stats(self, before: datetime) -> int:
         """
@@ -2608,8 +2594,7 @@ class PortalClient(PortalClientBase):
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
         limit: Optional[int] = None,
-        skip: int = 0,
-    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+    ) -> AccessLogQueryIterator:
         """
         Query the server access log
 
@@ -2627,38 +2612,22 @@ class PortalClient(PortalClientBase):
             Return log entries captured after the specified date/time
         limit
             The maximum number of log entries to return. Note that the server limit is always obeyed.
-        skip
-            The number of log entries to skip in the query. This can be used for pagination
 
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of dictionaries with
-            access log entries that were found on the server.
+            An iterator that can be used to retrieve the results of the query
         """
 
-        if limit is not None and limit > self.api_limits["get_access_logs"]:
-            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
-            limit = min(limit, self.api_limits["get_access_logs"])
-
-        body_data = AccessLogQueryFilters(
+        filter_data = AccessLogQueryFilters(
             access_type=make_list(access_type),
             access_method=make_list(access_method),
             before=before,
             after=after,
             limit=limit,
-            skip=skip,
         )
 
-        return self._auto_request(
-            "post",
-            "v1/access_logs/query",
-            AccessLogQueryFilters,
-            None,
-            Tuple[QueryMetadata, List[Dict[str, Any]]],
-            body_data,
-            None,
-        )
+        return AccessLogQueryIterator(self, filter_data)
 
     def delete_access_log(self, before: datetime) -> int:
         """
@@ -2685,8 +2654,7 @@ class PortalClient(PortalClientBase):
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
         limit: Optional[int] = None,
-        skip: int = 0,
-    ) -> Tuple[QueryMetadata, Dict[str, Any]]:
+    ) -> ErrorLogQueryIterator:
         """
         Query the server's internal error log
 
@@ -2704,39 +2672,22 @@ class PortalClient(PortalClientBase):
             Return error log entries captured after the specified date/time
         limit
             The maximum number of log entries to return. Note that the server limit is always obeyed.
-        skip
-            The number of log entries to skip in the query. This can be used for pagination
 
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of dictionaries with
-            error log entries that were found on the server.
-
+            An iterator that can be used to retrieve the results of the query
         """
 
-        if limit is not None and limit > self.api_limits["get_error_logs"]:
-            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
-            limit = min(limit, self.api_limits["get_error_logs"])
-
-        body_data = ErrorLogQueryFilters(
+        filter_data = ErrorLogQueryFilters(
             error_id=make_list(error_id),
             username=make_list(username),
             before=before,
             after=after,
             limit=limit,
-            skip=skip,
         )
 
-        return self._auto_request(
-            "post",
-            "v1/server_errors/query",
-            ErrorLogQueryFilters,
-            None,
-            Tuple[QueryMetadata, List[Dict[str, Any]]],
-            body_data,
-            None,
-        )
+        return ErrorLogQueryIterator(self, filter_data)
 
     def delete_error_log(self, before: datetime) -> int:
         """
@@ -2762,7 +2713,7 @@ class PortalClient(PortalClientBase):
         group_by: str = "day",
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, List[AccessLogSummaryEntry]]:
         """Obtains summaries of access data
 
         This aggregate data is created on the server, so you don't need to download all the
@@ -2785,7 +2736,13 @@ class PortalClient(PortalClientBase):
         }
 
         return self._auto_request(
-            "get", "v1/access_logs/summary", None, AccessLogSummaryFilters, Dict[str, Any], None, url_params
+            "get",
+            "v1/access_logs/summary",
+            None,
+            AccessLogSummaryFilters,
+            Dict[str, List[AccessLogSummaryEntry]],
+            None,
+            url_params,
         )
 
     ##############################################################

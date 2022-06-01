@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import ipaddress
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -11,74 +10,36 @@ from .test_access_socket import test_ips
 from ...testing_helpers import TestingSnowflake
 
 if TYPE_CHECKING:
-    from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
 
 
-def test_serverinfo_client_query_access(storage_socket: SQLAlchemySocket, snowflake_client: PortalClient):
-    # Add some to test ips and other data
-    access1 = {
-        "access_type": "v1/molecules",
-        "access_method": "GET",
-        "ip_address": test_ips[0][0],
-        "user_agent": "Fake user agent",
-        "request_duration": 0.24,
-        "user": "admin_user",
-        "request_bytes": 543,
-        "response_bytes": 18273,
-    }
+@pytest.fixture(scope="module")
+def queryable_access_client(module_temporary_database):
+    db_config = module_temporary_database.config
 
-    access2 = {
-        "access_type": "v1/records/optimization",
-        "access_method": "POST",
-        "ip_address": test_ips[1][0],
-        "user_agent": "Fake user agent",
-        "request_duration": 0.45,
-        "user": "read_user",
-        "request_bytes": 210,
-        "response_bytes": 12671,
-    }
+    # Don't log accesses
+    with TestingSnowflake(db_config, encoding="application/json", log_access=False) as server:
 
-    time_0 = datetime.utcnow()
-    storage_socket.serverinfo.save_access(access1)
-    time_12 = datetime.utcnow()
-    storage_socket.serverinfo.save_access(access2)
+        # generate a bunch of test data
+        storage_socket = server.get_storage_socket()
+        with storage_socket.session_scope() as session:
+            for i in range(100):
+                for user in ["admin_user", "read_user"]:
+                    for endpoint in ["molecules", "records", "wavefunctions", "managers"]:
+                        for method in ["GET", "POST"]:
+                            access = {
+                                "access_type": f"v1/{endpoint}",
+                                "access_method": method,
+                                "ip_address": test_ips[0][0],
+                                "user_agent": "Fake user agent",
+                                "request_duration": 0.25 * i,
+                                "user": user,
+                                "request_bytes": 2 * i,
+                                "response_bytes": 4 * i,
+                            }
+                            storage_socket.serverinfo.save_access(access, session=session)
 
-    meta, accesses = snowflake_client.query_access_log()
-
-    # This will return 3, because the query to /information was done in constructing the client
-    assert meta.success
-    assert len(accesses) == 3
-    assert meta.n_found == 3
-
-    # Order should be latest access first
-    assert accesses[0]["access_date"] > accesses[1]["access_date"]
-    assert accesses[1]["access_date"] > accesses[2]["access_date"]
-
-    # These are ordered descending (newest accesses first). Reverse the order for testing
-    assert accesses[0]["access_type"] == "v1/records/optimization"
-    assert accesses[1]["access_type"] == "v1/molecules"
-    assert accesses[2]["access_type"] == "v1/information"  # from constructing the client
-
-    assert accesses[0]["access_method"] == "POST"
-    assert accesses[1]["access_method"] == "GET"
-    assert accesses[2]["access_method"] == "GET"
-
-    assert accesses[0]["ip_address"] == test_ips[1][0]
-    assert accesses[1]["ip_address"] == test_ips[0][0]
-    assert ipaddress.ip_address(accesses[2]["ip_address"]).is_loopback
-
-    meta, accesses = snowflake_client.query_access_log("v1/records/optimization", "GET")
-    assert meta.n_found == 0
-
-    meta, accesses = snowflake_client.query_access_log("v1/records/optimization")
-    assert meta.n_found == 1
-
-    meta, accesses = snowflake_client.query_access_log(access_method=["POST", "GET"], before=time_12)
-    assert meta.n_found == 2
-
-    meta, accesses = snowflake_client.query_access_log(access_method=["POST"], after=time_12)
-    assert meta.n_found == 5  # includes previous queries
+        yield server.client()
 
 
 def test_serverinfo_client_access_logged(snowflake_client: PortalClient):
@@ -88,31 +49,31 @@ def test_serverinfo_client_access_logged(snowflake_client: PortalClient):
     snowflake_client.get_molecules([123], missing_ok=True)
 
     # This will return 4, because the query to /information was done in constructing the client
-    meta, accesses = snowflake_client.query_access_log()
-    assert meta.success
-    assert len(accesses) == 4
-    assert meta.n_found == 4
+    query_res = snowflake_client.query_access_log()
+    assert query_res.current_meta.success
+    assert query_res.current_meta.n_found == 4
+    accesses = list(query_res)
 
-    assert accesses[3]["access_type"] == "v1/information"
-    assert accesses[3]["full_uri"] == "/v1/information"
+    assert accesses[3].access_type == "v1/information"
+    assert accesses[3].full_uri == "/v1/information"
 
-    assert accesses[2]["access_type"] == "v1/access_logs"
-    assert accesses[2]["full_uri"] == "/v1/access_logs/query"
+    assert accesses[2].access_type == "v1/access_logs"
+    assert accesses[2].full_uri == "/v1/access_logs/query"
 
-    assert accesses[1]["access_type"] == "v1/molecules"
-    assert accesses[1]["full_uri"] == "/v1/molecules/query"
+    assert accesses[1].access_type == "v1/molecules"
+    assert accesses[1].full_uri == "/v1/molecules/query"
 
-    assert accesses[0]["access_type"] == "v1/molecules"
-    assert accesses[0]["full_uri"] == "/v1/molecules/bulkGet"
+    assert accesses[0].access_type == "v1/molecules"
+    assert accesses[0].full_uri == "/v1/molecules/bulkGet"
 
-    assert accesses[0]["response_bytes"] > 0
-    assert accesses[1]["response_bytes"] > 0
-    assert accesses[2]["response_bytes"] > 0
-    assert accesses[3]["response_bytes"] > 0
-    assert accesses[0]["request_bytes"] > 0
-    assert accesses[1]["request_bytes"] > 0
-    assert accesses[2]["request_bytes"] > 0
-    assert accesses[3]["request_bytes"] == 0
+    assert accesses[0].response_bytes > 0
+    assert accesses[1].response_bytes > 0
+    assert accesses[2].response_bytes > 0
+    assert accesses[3].response_bytes > 0
+    assert accesses[0].request_bytes > 0
+    assert accesses[1].request_bytes > 0
+    assert accesses[2].request_bytes > 0
+    assert accesses[3].request_bytes == 0
 
 
 @pytest.mark.parametrize("encoding", valid_encodings)
@@ -127,11 +88,10 @@ def test_serverinfo_client_access_not_logged(temporary_database, encoding: str):
         client.get_molecules([])
 
         # This will return 0 because logging is disabled
-        meta, accesses = client.query_access_log()
-        assert meta.success
-        assert len(accesses) == 0
-        assert meta.n_found == 0
-        assert len(accesses) == 0
+        query_res = client.query_access_log()
+        assert query_res.current_meta.success
+        assert query_res.current_meta.n_found == 0
+        assert len(list(query_res)) == 0
 
 
 def test_serverinfo_client_access_delete(snowflake_client: PortalClient):
@@ -145,9 +105,8 @@ def test_serverinfo_client_access_delete(snowflake_client: PortalClient):
     time_4 = datetime.utcnow()
 
     # This will return 4, because the query to /information was done in constructing the client
-    meta, accesses = snowflake_client.query_access_log()
-    assert meta.success
-    assert len(accesses) == 4
+    query_res = snowflake_client.query_access_log()
+    assert query_res.current_meta.n_found == 4
 
     n_deleted = snowflake_client.delete_access_log(time_0)
     assert n_deleted == 1  # deleted our original /information query
@@ -164,3 +123,67 @@ def test_serverinfo_client_access_delete(snowflake_client: PortalClient):
     # All of the above generated accesses!
     n_deleted = snowflake_client.delete_access_log(datetime.utcnow())
     assert n_deleted == 5
+
+
+def test_serverinfo_client_query_access(queryable_access_client: PortalClient):
+
+    query_res = queryable_access_client.query_access_log(access_method=["get"])
+    assert query_res.current_meta.n_found == 800
+    all_entries = list(query_res)
+    assert len(all_entries) == 800
+
+    query_res = queryable_access_client.query_access_log(access_method=["POST"])
+    assert query_res.current_meta.n_found == 800
+    all_entries = list(query_res)
+    assert len(all_entries) == 800
+
+    query_res = queryable_access_client.query_access_log(access_type=["v1/molecules"], access_method="get")
+    assert query_res.current_meta.n_found == 200
+    all_entries = list(query_res)
+    assert len(all_entries) == 200
+
+    query_res = queryable_access_client.query_access_log(access_type=["v1/records"])
+    all_entries = list(query_res)
+    assert len(all_entries) == 400
+
+    # get a date. note that results are returned in descending order based on access_date
+    test_time = all_entries[100].access_date
+    query_res = queryable_access_client.query_access_log(access_type=["v1/records"], before=test_time)
+    all_entries = list(query_res)
+    assert len(all_entries) == 300
+    assert all(x.access_date <= test_time for x in all_entries)
+
+    query_res = queryable_access_client.query_access_log(access_type=["v1/records"], after=test_time)
+    all_entries = list(query_res)
+    assert len(all_entries) == 101
+    assert all(x.access_date >= test_time for x in all_entries)
+
+
+def test_serverinfo_client_query_access_empty_iter(queryable_access_client: PortalClient):
+
+    # Future-proof against changes to test infrastructure
+    assert queryable_access_client.api_limits["get_access_logs"] <= 1500
+
+    query_res = queryable_access_client.query_access_log()
+    assert len(query_res.current_batch) < 1000
+
+    all_entries = list(query_res)
+    assert len(all_entries) == 1600
+
+
+def test_serverinfo_client_query_access_limit(queryable_access_client: PortalClient):
+    query_res = queryable_access_client.query_access_log(limit=1200)
+    all_entries = list(query_res)
+    assert len(all_entries) == 1200
+
+
+def test_serverinfo_client_access_summary(queryable_access_client: PortalClient):
+
+    # Just test that it works
+    # TODO - better way of testing. Prepopulated db?
+    now = datetime.now()
+    r = queryable_access_client.query_access_summary()
+    assert list(r.keys())[0] == now.strftime("%Y-%m-%d")
+
+    r = queryable_access_client.query_access_summary(group_by="user")
+    assert set(r.keys()) == {"admin_user", "read_user"}

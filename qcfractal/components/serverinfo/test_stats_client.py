@@ -1,68 +1,32 @@
-from __future__ import annotations
+from __future__ import annotations, annotations
 
 from datetime import datetime
 from typing import TYPE_CHECKING
+
+import pytest
+
+from ...testing_helpers import TestingSnowflake
+from qcportal.molecules import Molecule
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
 
 
-def test_serverinfo_client_query_stats(storage_socket: SQLAlchemySocket, snowflake_client: PortalClient):
+@pytest.fixture(scope="module")
+def queryable_stats_client(module_temporary_database):
+    db_config = module_temporary_database.config
 
-    meta, stats = snowflake_client.query_server_stats()
-    assert meta.success
-    assert meta.n_found == 0
+    # Don't log accesses
+    with TestingSnowflake(db_config, encoding="application/json", log_access=False) as server:
 
-    time_0 = datetime.utcnow()
+        # generate a bunch of test data
+        storage_socket = server.get_storage_socket()
+        with storage_socket.session_scope() as session:
+            for i in range(1000):
+                storage_socket.serverinfo.update_server_stats(session=session)
 
-    # Force saving the stats
-    storage_socket.serverinfo.update_server_stats()
-
-    time_12 = datetime.utcnow()
-
-    meta, stats = snowflake_client.query_server_stats()
-    assert meta.success
-    assert meta.n_found == 1
-    assert len(stats) == 1
-
-    assert stats[0]["molecule_count"] == 0
-    assert stats[0]["outputstore_count"] == 0
-    assert stats[0]["record_count"] == 0
-
-    # Force saving the stats again
-    storage_socket.serverinfo.update_server_stats()
-
-    # Should get the latest now
-    meta, stats = snowflake_client.query_server_stats()
-    assert meta.success
-    assert meta.n_found == 2
-    assert len(stats) == 2
-
-    # Should return newest first
-    assert stats[0]["timestamp"] > stats[1]["timestamp"]
-
-    time_23 = datetime.utcnow()
-    storage_socket.serverinfo.update_server_stats()
-
-    # Query by times
-    meta, stats = snowflake_client.query_server_stats(before=time_0)
-    assert meta.n_found == 0
-
-    meta, stats = snowflake_client.query_server_stats(before=time_12)
-    assert meta.n_found == 1
-
-    meta, stats = snowflake_client.query_server_stats(after=time_12)
-    assert meta.n_found == 2
-
-    meta, stats = snowflake_client.query_server_stats(after=datetime.utcnow())
-    assert meta.n_found == 0
-
-    meta, stats = snowflake_client.query_server_stats(before=datetime.utcnow())
-    assert meta.n_found == 3
-
-    meta, stats = snowflake_client.query_server_stats(after=time_12, before=time_23)
-    assert meta.n_found == 1
+        yield server.client()
 
 
 def test_serverinfo_client_delete_stats(storage_socket: SQLAlchemySocket, snowflake_client: PortalClient):
@@ -71,10 +35,10 @@ def test_serverinfo_client_delete_stats(storage_socket: SQLAlchemySocket, snowfl
     time_12 = datetime.utcnow()
     storage_socket.serverinfo.update_server_stats()
 
-    meta, stats = snowflake_client.query_server_stats()
-    assert meta.success
-    assert len(stats) == 2
-    assert meta.n_found == 2
+    query_res = snowflake_client.query_server_stats()
+    stats = list(query_res)
+    assert query_res.current_meta.success
+    assert query_res.current_meta.n_found == 2
 
     n_deleted = snowflake_client.delete_server_stats(before=time_0)
     assert n_deleted == 0
@@ -82,6 +46,40 @@ def test_serverinfo_client_delete_stats(storage_socket: SQLAlchemySocket, snowfl
     n_deleted = snowflake_client.delete_server_stats(before=time_12)
     assert n_deleted == 1
 
-    meta, stats2 = snowflake_client.query_server_stats()
-    assert meta.n_found == 1
+    query_res = snowflake_client.query_server_stats()
+    assert query_res.current_meta.n_found == 1
+    stats2 = list(query_res)
     assert stats2[0] == stats[0]
+
+
+def test_serverinfo_client_query_stats(queryable_stats_client):
+    query_res = queryable_stats_client.query_server_stats(limit=100)
+    stats = list(query_res)
+
+    test_time = stats[50].timestamp
+    query_res = queryable_stats_client.query_server_stats(before=test_time)
+    stats = list(query_res)
+    assert query_res.current_meta.n_found == 950
+    assert len(stats) == 950
+
+    query_res = queryable_stats_client.query_server_stats(after=test_time)
+    stats = list(query_res)
+    assert query_res.current_meta.n_found == 51
+    assert len(stats) == 51
+
+
+def test_serverinfo_client_query_stats_empty_iter(queryable_stats_client):
+    # Future-proof against changes to test infrastructure
+    assert queryable_stats_client.api_limits["get_server_stats"] <= 1500
+
+    query_res = queryable_stats_client.query_server_stats()
+    assert len(query_res.current_batch) < 1000
+
+    stats = list(query_res)
+    assert len(stats) == 1000
+
+
+def test_serverinfo_client_query_stats_limit(queryable_stats_client):
+    query_res = queryable_stats_client.query_server_stats(limit=800)
+    stats = list(query_res)
+    assert len(stats) == 800

@@ -42,9 +42,10 @@ class ServerInfoSocket:
         # Set up access logging
         self._access_log_enabled = root_socket.qcf_config.log_access
 
+        self._geoip2_reader = None
+
         if self._access_log_enabled:
             geo_file_path = root_socket.qcf_config.geo_file_path
-            self._geoip2_reader = None
 
             if geo_file_path:
                 try:
@@ -100,9 +101,6 @@ class ServerInfoSocket:
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
         """
-
-        if self._access_log_enabled is not True:
-            return
 
         # Obtain all the information we can from the GeoIP database
         ip_data = self._get_geoip2_data(log_data["ip_address"])
@@ -268,12 +266,22 @@ class ServerInfoSocket:
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(AccessLogORM).where(and_(*and_query)).order_by(AccessLogORM.access_date.desc())
             stmt = stmt.options(*proj_options)
-            n_found = get_count(session, stmt)
-            stmt = stmt.limit(query_data.limit).offset(query_data.skip)
+
+            if query_data.include_metadata:
+                n_found = get_count(session, stmt)
+
+            if query_data.cursor is not None:
+                stmt = stmt.where(AccessLogORM.id < query_data.cursor)
+
+            stmt = stmt.limit(query_data.limit)
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]
 
-        meta = QueryMetadata(n_found=n_found)
+        if query_data.include_metadata:
+            meta = QueryMetadata(n_found=n_found)
+        else:
+            meta = None
+
         return meta, result_dicts
 
     def query_access_summary(
@@ -281,7 +289,7 @@ class ServerInfoSocket:
         query_data: AccessLogSummaryFilters,
         *,
         session: Optional[Session] = None,
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, List[Dict[str, Any]]]:
         """
         General query of server access logs, returning aggregate data
 
@@ -299,14 +307,14 @@ class ServerInfoSocket:
         Returns
         -------
         :
-            Metadata about the results of the query, and a list of dictionaries containing summary data
+            A dictionary containing summary data
         """
 
         and_query = []
         if query_data.before:
-            and_query.append(AccessLogORM.access_date < query_data.before)
+            and_query.append(AccessLogORM.access_date <= query_data.before)
         if query_data.after:
-            and_query.append(AccessLogORM.access_date > query_data.after)
+            and_query.append(AccessLogORM.access_date >= query_data.after)
 
         result_dict = defaultdict(list)
         with self.root_socket.optional_session(session, True) as session:
@@ -405,18 +413,28 @@ class ServerInfoSocket:
         if query_data.username:
             and_query.append(InternalErrorLogORM.user.in_(query_data.username))
         if query_data.before:
-            and_query.append(InternalErrorLogORM.error_date < query_data.before)
+            and_query.append(InternalErrorLogORM.error_date <= query_data.before)
         if query_data.after:
-            and_query.append(InternalErrorLogORM.error_date > query_data.after)
+            and_query.append(InternalErrorLogORM.error_date >= query_data.after)
 
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(InternalErrorLogORM).where(and_(*and_query)).order_by(InternalErrorLogORM.error_date.desc())
-            n_found = get_count(session, stmt)
-            stmt = stmt.limit(query_data.limit).offset(query_data.skip)
+
+            if query_data.include_metadata:
+                n_found = get_count(session, stmt)
+
+            if query_data.cursor is not None:
+                stmt = stmt.where(InternalErrorLogORM.id < query_data.cursor)
+
+            stmt = stmt.limit(query_data.limit)
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]
 
-        meta = QueryMetadata(n_found=n_found)
+        if query_data.include_metadata:
+            meta = QueryMetadata(n_found=n_found)
+        else:
+            meta = None
+
         return meta, result_dicts
 
     def query_server_stats(
@@ -448,18 +466,28 @@ class ServerInfoSocket:
 
         and_query = []
         if query_data.before:
-            and_query.append(ServerStatsLogORM.timestamp < query_data.before)
+            and_query.append(ServerStatsLogORM.timestamp <= query_data.before)
         if query_data.after:
-            and_query.append(ServerStatsLogORM.timestamp > query_data.after)
+            and_query.append(ServerStatsLogORM.timestamp >= query_data.after)
 
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(ServerStatsLogORM).filter(and_(*and_query)).order_by(ServerStatsLogORM.timestamp.desc())
-            n_found = get_count(session, stmt)
-            stmt = stmt.limit(query_data.limit).offset(query_data.skip)
+
+            if query_data.include_metadata:
+                n_found = get_count(session, stmt)
+
+            if query_data.cursor is not None:
+                stmt = stmt.where(ServerStatsLogORM.id < query_data.cursor)
+
+            stmt = stmt.limit(query_data.limit)
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]
 
-        meta = QueryMetadata(n_found=n_found)
+        if query_data.include_metadata:
+            meta = QueryMetadata(n_found=n_found)
+        else:
+            meta = None
+
         return meta, result_dicts
 
     def delete_access_logs(self, before: datetime, *, session: Optional[Session] = None) -> int:
