@@ -112,3 +112,42 @@ def test_outputs_models_roundtrip_dict(
     # then a sensible default is used
     if compression_level is not None and compression is not CompressionEnum.none:
         assert out_model.compression_level == compression_level
+
+
+@pytest.mark.parametrize("compression", CompressionEnum)
+@pytest.mark.parametrize("compression_level", [None, 1, 5])
+@pytest.mark.parametrize("output_type", OutputTypeEnum)
+def test_outputs_models_append(
+    storage_socket: SQLAlchemySocket, existing_history_id, compression, compression_level, output_type
+):
+    """
+    Tests appending data to a stored string
+    """
+
+    input_str = "This is some input " * 20
+    output = OutputStore.compress(output_type, input_str, compression, compression_level)
+
+    # Add both as the OutputStore and as the plain str
+    out_orm = OutputStoreORM.from_model(output)
+    out_orm.history_id = existing_history_id
+
+    with storage_socket.session_scope() as session:
+        session.add(out_orm)
+        session.flush()
+        out_id = out_orm.id
+
+    # Retrieve again and append a new string
+    with storage_socket.session_scope() as session:
+        stored_orm = session.query(OutputStoreORM).where(OutputStoreORM.id == out_id).one()
+        stored_orm.append("Appended string")
+
+    # Retrieve again
+    with storage_socket.session_scope() as session:
+        stored_orm = session.query(OutputStoreORM).where(OutputStoreORM.id == out_id).one()
+        out_model = stored_orm.to_model(OutputStore)
+
+    # Didn't change compression
+    assert out_model.compression == compression
+    assert out_model.output_type == output_type
+
+    assert out_model.as_string == input_str + "Appended string"
