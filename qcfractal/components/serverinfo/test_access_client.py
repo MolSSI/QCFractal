@@ -23,7 +23,7 @@ def queryable_access_client(module_temporary_database):
         # generate a bunch of test data
         storage_socket = server.get_storage_socket()
         with storage_socket.session_scope() as session:
-            for i in range(100):
+            for i in range(10):
                 for user in ["admin_user", "read_user"]:
                     for endpoint in ["molecules", "records", "wavefunctions", "managers"]:
                         for method in ["GET", "POST"]:
@@ -128,53 +128,49 @@ def test_serverinfo_client_access_delete(snowflake_client: PortalClient):
 def test_serverinfo_client_query_access(queryable_access_client: PortalClient):
 
     query_res = queryable_access_client.query_access_log(access_method=["get"])
-    assert query_res.current_meta.n_found == 800
+    assert query_res.current_meta.n_found == 80
     all_entries = list(query_res)
-    assert len(all_entries) == 800
+    assert len(all_entries) == 80
 
     query_res = queryable_access_client.query_access_log(access_method=["POST"])
-    assert query_res.current_meta.n_found == 800
+    assert query_res.current_meta.n_found == 80
     all_entries = list(query_res)
-    assert len(all_entries) == 800
+    assert len(all_entries) == 80
 
     query_res = queryable_access_client.query_access_log(access_type=["v1/molecules"], access_method="get")
-    assert query_res.current_meta.n_found == 200
+    assert query_res.current_meta.n_found == 20
     all_entries = list(query_res)
-    assert len(all_entries) == 200
+    assert len(all_entries) == 20
 
     query_res = queryable_access_client.query_access_log(access_type=["v1/records"])
     all_entries = list(query_res)
-    assert len(all_entries) == 400
+    assert len(all_entries) == 40
 
     # get a date. note that results are returned in descending order based on access_date
-    test_time = all_entries[100].access_date
+    test_time = all_entries[10].access_date
     query_res = queryable_access_client.query_access_log(access_type=["v1/records"], before=test_time)
     all_entries = list(query_res)
-    assert len(all_entries) == 300
+    assert len(all_entries) == 30
     assert all(x.access_date <= test_time for x in all_entries)
 
     query_res = queryable_access_client.query_access_log(access_type=["v1/records"], after=test_time)
     all_entries = list(query_res)
-    assert len(all_entries) == 101
+    assert len(all_entries) == 11
     assert all(x.access_date >= test_time for x in all_entries)
 
 
 def test_serverinfo_client_query_access_empty_iter(queryable_access_client: PortalClient):
-
-    # Future-proof against changes to test infrastructure
-    assert queryable_access_client.api_limits["get_access_logs"] <= 1500
-
     query_res = queryable_access_client.query_access_log()
-    assert len(query_res.current_batch) < 1000
+    assert len(query_res.current_batch) < queryable_access_client.api_limits["get_access_logs"]
 
     all_entries = list(query_res)
-    assert len(all_entries) == 1600
+    assert len(all_entries) == 160
 
 
 def test_serverinfo_client_query_access_limit(queryable_access_client: PortalClient):
-    query_res = queryable_access_client.query_access_log(limit=1200)
+    query_res = queryable_access_client.query_access_log(limit=99)
     all_entries = list(query_res)
-    assert len(all_entries) == 1200
+    assert len(all_entries) == 99
 
 
 def test_serverinfo_client_access_summary(queryable_access_client: PortalClient):

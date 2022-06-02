@@ -27,7 +27,7 @@ def queryable_molecules(module_temporary_database):
         for el1 in elements1:
             mols = []
             for el2 in elements2:
-                for dist in range(2, 22, 1):
+                for dist in range(2, 4, 1):
                     m = Molecule(
                         symbols=[el1, el2],
                         geometry=[0, 0, 0, 0, 0, dist],
@@ -40,9 +40,9 @@ def queryable_molecules(module_temporary_database):
 
             meta, _ = client.add_molecules(mols)
             all_mols.extend(mols)
-            assert meta.n_inserted == 200
+            assert meta.n_inserted == 20
 
-        assert len(all_mols) == 2000
+        assert len(all_mols) == 200
         yield all_mols, client
 
 
@@ -317,21 +317,21 @@ def test_molecules_client_query(queryable_molecules: Tuple[List[Molecule], Porta
     query_res = client.query_molecules(molecular_formula=["HNa", "CCl", "MgB"])
     assert query_res.current_meta.success
     mols = list(query_res)
-    assert len(mols) == 60
+    assert len(mols) == 6
 
     # Query by identifiers
-    query_res = client.query_molecules(identifiers={"smiles": ["madeupsmiles_h_na_4", "madeupsmiles_c_s_2"]})
+    query_res = client.query_molecules(identifiers={"smiles": ["madeupsmiles_h_na_3", "madeupsmiles_c_s_2"]})
     assert query_res.current_meta.success
     mols = list(query_res)
     assert len(mols) == 2
 
-    query_res = client.query_molecules(identifiers={"inchikey": ["madeupinchi_c_cl_10", "madeupinchi_ne_ar_17"]})
+    query_res = client.query_molecules(identifiers={"inchikey": ["madeupinchi_c_cl_3", "madeupinchi_ne_ar_2"]})
     assert query_res.current_meta.success
     mols = list(query_res)
     assert len(mols) == 2
 
     # Queries should be intersections
-    query_res = client.query_molecules(molecular_formula=["HCl", "CS"], identifiers={"smiles": ["madeupsmiles_c_s_4"]})
+    query_res = client.query_molecules(molecular_formula=["HCl", "CS"], identifiers={"smiles": ["madeupsmiles_c_s_2"]})
     assert query_res.current_meta.success
     mols = list(query_res)
     assert len(mols) == 1
@@ -341,11 +341,10 @@ def test_molecules_client_query_empty_iter(queryable_molecules: Tuple[List[Molec
     all_mols, client = queryable_molecules
 
     # Future-proof against changes to test infrastructure
-    assert len(all_mols) > 1000
-    assert client.api_limits["get_molecules"] <= 1000
+    assert len(all_mols) > client.api_limits["get_molecules"]
 
     query_res = client.query_molecules()
-    assert len(query_res.current_batch) < 1000
+    assert len(query_res.current_batch) < len(all_mols)
 
     all_mols_2 = list(query_res)
     assert len(all_mols) == len(all_mols_2)
@@ -355,17 +354,17 @@ def test_molecules_client_query_empty_iter(queryable_molecules: Tuple[List[Molec
 def test_molecules_client_query_limit(queryable_molecules: Tuple[List[Molecule], PortalClient]):
     all_mols, client = queryable_molecules
 
-    query_res = client.query_molecules(molecular_formula=["HCl", "CS"], limit=5)
+    query_res = client.query_molecules(molecular_formula=["HCl", "CS"], limit=2)
     assert query_res.current_meta.success
-    assert query_res.current_meta.n_found == 40
+    assert query_res.current_meta.n_found == 4
 
     mols = list(query_res)
-    assert len(mols) == 5
+    assert len(mols) == 2
 
     # Limit that still requires batching
-    query_res = client.query_molecules(limit=1500)
+    query_res = client.query_molecules(limit=len(all_mols) - 1)
     assert query_res.current_meta.success
-    assert query_res.current_meta.n_found == 2000
+    assert query_res.current_meta.n_found == len(all_mols)
 
     mols = list(query_res)
-    assert len(mols) == 1500
+    assert len(mols) == len(all_mols) - 1

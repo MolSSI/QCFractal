@@ -23,7 +23,7 @@ def queryable_stats_client(module_temporary_database):
         # generate a bunch of test data
         storage_socket = server.get_storage_socket()
         with storage_socket.session_scope() as session:
-            for i in range(1000):
+            for i in range(100):
                 storage_socket.serverinfo.update_server_stats(session=session)
 
         yield server.client()
@@ -53,33 +53,30 @@ def test_serverinfo_client_delete_stats(storage_socket: SQLAlchemySocket, snowfl
 
 
 def test_serverinfo_client_query_stats(queryable_stats_client):
-    query_res = queryable_stats_client.query_server_stats(limit=100)
+    query_res = queryable_stats_client.query_server_stats()
     stats = list(query_res)
 
-    test_time = stats[50].timestamp
+    test_time = stats[21].timestamp
     query_res = queryable_stats_client.query_server_stats(before=test_time)
     stats = list(query_res)
-    assert query_res.current_meta.n_found == 950
-    assert len(stats) == 950
+    assert query_res.current_meta.n_found == 79
+    assert len(stats) == 79
 
     query_res = queryable_stats_client.query_server_stats(after=test_time)
     stats = list(query_res)
-    assert query_res.current_meta.n_found == 51
-    assert len(stats) == 51
+    assert query_res.current_meta.n_found == 22
+    assert len(stats) == 22
 
 
 def test_serverinfo_client_query_stats_empty_iter(queryable_stats_client):
-    # Future-proof against changes to test infrastructure
-    assert queryable_stats_client.api_limits["get_server_stats"] <= 1500
-
     query_res = queryable_stats_client.query_server_stats()
-    assert len(query_res.current_batch) < 1000
+    assert len(query_res.current_batch) < queryable_stats_client.api_limits["get_server_stats"]
 
     stats = list(query_res)
-    assert len(stats) == 1000
+    assert len(stats) == 100
 
 
 def test_serverinfo_client_query_stats_limit(queryable_stats_client):
-    query_res = queryable_stats_client.query_server_stats(limit=800)
+    query_res = queryable_stats_client.query_server_stats(limit=77)
     stats = list(query_res)
-    assert len(stats) == 800
+    assert len(stats) == 77

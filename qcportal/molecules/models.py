@@ -1,4 +1,4 @@
-from typing import Optional, List, Tuple, Dict, Any
+from typing import Optional, List, Tuple, Dict
 
 from qcelemental.models import Molecule
 from qcelemental.models.molecule import Identifiers as MoleculeIdentifiers

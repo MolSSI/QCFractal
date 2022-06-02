@@ -20,7 +20,7 @@ def queryable_error_client(module_temporary_database):
         # generate a bunch of test data
         storage_socket = server.get_storage_socket()
         with storage_socket.session_scope() as session:
-            for i in range(200):
+            for i in range(20):
                 for endpoint in ["molecules", "records", "wavefunctions", "managers"]:
                     for user in ["read_user", "admin"]:
                         error = {
@@ -74,23 +74,23 @@ def test_serverinfo_client_query_error(queryable_error_client: PortalClient):
     # Query by user
     query_res = queryable_error_client.query_error_log(username="read_user")
     errors = list(query_res)
-    assert len(errors) == 800
+    assert len(errors) == 80
     assert all(x.user == "read_user" for x in errors)
 
     # Get a time
-    test_time = errors[100].error_date
+    test_time = errors[20].error_date
     query_res = queryable_error_client.query_error_log(username="read_user", before=test_time)
     errors = list(query_res)
-    assert len(errors) == 700
+    assert len(errors) == 60
     assert all(x.error_date <= test_time for x in errors)
 
     query_res = queryable_error_client.query_error_log(username="read_user", after=test_time)
     errors = list(query_res)
-    assert len(errors) == 101
+    assert len(errors) == 21
     assert all(x.error_date >= test_time for x in errors)
 
     # query by id
-    ids = [errors[12].id, errors[22].id]
+    ids = [errors[12].id, errors[15].id]
     query_res = queryable_error_client.query_error_log(error_id=ids)
     errors = list(query_res)
     assert len(errors) == 2
@@ -98,17 +98,14 @@ def test_serverinfo_client_query_error(queryable_error_client: PortalClient):
 
 
 def test_serverinfo_client_query_error_empty_iter(queryable_error_client: PortalClient):
-    # Future-proof against changes to test infrastructure
-    assert queryable_error_client.api_limits["get_error_logs"] <= 1500
-
     query_res = queryable_error_client.query_error_log()
-    assert len(query_res.current_batch) < 1000
+    assert len(query_res.current_batch) < queryable_error_client.api_limits["get_error_logs"]
 
     all_entries = list(query_res)
-    assert len(all_entries) == 1600
+    assert len(all_entries) == 160
 
 
 def test_serverinfo_client_query_error_limit(queryable_error_client: PortalClient):
-    query_res = queryable_error_client.query_error_log(limit=1200)
+    query_res = queryable_error_client.query_error_log(limit=38)
     all_entries = list(query_res)
-    assert len(all_entries) == 1200
+    assert len(all_entries) == 38
