@@ -5,6 +5,7 @@ from .models import (
     AccessLogEntry,
     AccessLogSummaryFilters,
     AccessLogSummaryEntry,
+    AccessLogSummary,
     ErrorLogQueryFilters,
     ErrorLogEntry,
     ErrorLogQueryIterator,

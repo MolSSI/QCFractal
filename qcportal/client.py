@@ -92,6 +92,7 @@ from .serverinfo import (
     AccessLogQueryFilters,
     AccessLogSummaryFilters,
     AccessLogSummaryEntry,
+    AccessLogSummary,
     AccessLogQueryIterator,
     ErrorLogQueryFilters,
     ErrorLogQueryIterator,
@@ -2713,7 +2714,7 @@ class PortalClient(PortalClientBase):
         group_by: str = "day",
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
-    ) -> Dict[str, List[AccessLogSummaryEntry]]:
+    ) -> AccessLogSummary:
         """Obtains summaries of access data
 
         This aggregate data is created on the server, so you don't need to download all the
@@ -2735,7 +2736,7 @@ class PortalClient(PortalClientBase):
             "after": after,
         }
 
-        return self._auto_request(
+        entries = self._auto_request(
             "get",
             "v1/access_logs/summary",
             None,
@@ -2744,6 +2745,8 @@ class PortalClient(PortalClientBase):
             None,
             url_params,
         )
+
+        return AccessLogSummary(entries=entries)
 
     ##############################################################
     # User & role management

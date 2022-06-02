@@ -98,6 +98,15 @@ class AccessLogSummaryEntry(BaseModel):
     response_bytes_info: List[float]
 
 
+class AccessLogSummary(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
+    entries: Dict[str, List[AccessLogSummaryEntry]]
+
+    # TODO - lots of stuff here about analysis, plotting, etc
+
+
 class ErrorLogQueryFilters(QueryModelBase):
     error_id: Optional[List[int]] = None
     username: Optional[List[str]] = None

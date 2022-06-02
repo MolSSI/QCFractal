@@ -181,9 +181,9 @@ def test_serverinfo_client_access_summary(queryable_access_client: PortalClient)
 
     # Just test that it works
     # TODO - better way of testing. Prepopulated db?
-    now = datetime.now()
+    now = datetime.utcnow()
     r = queryable_access_client.query_access_summary()
-    assert list(r.keys())[0] == now.strftime("%Y-%m-%d")
+    assert list(r.entries.keys())[0] == now.strftime("%Y-%m-%d")
 
     r = queryable_access_client.query_access_summary(group_by="user")
-    assert set(r.keys()) == {"admin_user", "read_user"}
+    assert set(r.entries.keys()) == {"admin_user", "read_user"}
