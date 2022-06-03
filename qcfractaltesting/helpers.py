@@ -1,6 +1,7 @@
 """
 Contains testing infrastructure for QCFractal.
 """
+from __future__ import annotations
 
 import json
 import lzma
