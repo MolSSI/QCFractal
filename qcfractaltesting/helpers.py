@@ -10,13 +10,12 @@ import subprocess
 import sys
 import time
 from contextlib import contextmanager
-from typing import Dict, List, Union, Tuple, Optional
+from typing import TYPE_CHECKING, Dict, List, Union, Tuple, Optional
 
 import pydantic
 from qcelemental.models import Molecule, FailedOperation, OptimizationResult, AtomicResult
 from qcelemental.models.results import WavefunctionProperties
 
-from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.records import PriorityEnum
 from qcportal.records.gridoptimization import GridoptimizationSpecification
 from qcportal.records.manybody import ManybodySpecification
@@ -25,6 +24,9 @@ from qcportal.records.reaction import ReactionSpecification
 from qcportal.records.singlepoint import QCSpecification
 from qcportal.records.torsiondrive import TorsiondriveSpecification
 from qcportal.serialization import _json_decode
+
+if TYPE_CHECKING:
+    from qcfractal.db_socket import SQLAlchemySocket
 
 # Valid client encodings
 valid_encodings = ["application/json", "application/msgpack"]
