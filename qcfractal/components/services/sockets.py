@@ -79,7 +79,6 @@ class ServiceSocket:
 
         # And once for filtering by the status of the record corresponding to the service itself
         a_br_svc = aliased(BaseRecordORM)
-
         status_cte = (
             select(ServiceDependencyORM.service_id, array_agg(a_br_svc_deps.status).label("task_statuses"))
             .join(ServiceQueueORM, ServiceQueueORM.id == ServiceDependencyORM.service_id)

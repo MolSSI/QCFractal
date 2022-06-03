@@ -91,7 +91,7 @@ from .records.torsiondrive import (
 from . records.neb import (
     NEBKeywords,
     NEBAddBody,
-    NEBQueryBody,
+    NEBQueryFilters,
     NEBRecord,
 )
 
@@ -2333,9 +2333,9 @@ class PortalClient(PortalClientBase):
 
     def add_nebs(
         self,
-        initial_chain: List[List[Union[int, Molecule]]],
+        initial_chains: List[List[Union[int, Molecule]]],
         program: str,
-        qc_specification: QCSpecification,
+        singlepoint_specification: QCSpecification,
         keywords: Union[NEBKeywords, Dict[str, Any]],
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
@@ -2343,25 +2343,23 @@ class PortalClient(PortalClientBase):
         """
         Adds neb calculations to the server
         """
-
-        if not initial_chain:
+        if not initial_chains:
             return InsertMetadata(), []
 
         body_data = {
-            "initial_chain": initial_chain,
+            "initial_chains": initial_chains,
             "specification": {
                 "program": program,
-                "qc_specification": qc_specification,
+                "singlepoint_specification": singlepoint_specification,
                 "keywords": keywords,
             },
-            "as_service": True,
             "tag": tag,
             "priority": priority,
         }
 
-        if len(body_data["initial_chain"]) > self.api_limits["add_records"]:
+        if len(body_data["initial_chains"]) > self.api_limits["add_records"]:
             raise RuntimeError(
-                f"Cannot add {len(body_data['initial_chain'])} records - over the limit of {self.api_limits['add_records']}"
+                f"Cannot add {len(body_data['initial_chains'])} records - over the limit of {self.api_limits['add_records']}"
             )
 
         return self._auto_request(
@@ -2384,14 +2382,15 @@ class PortalClient(PortalClientBase):
         include_outputs: bool = False,
         include_comments: bool = False,
         include_initial_chain: bool = False,
-        include_singlepoins: bool = False,
+        include_singlepoints: bool = False,
     ) -> Union[Optional[NEBRecord], List[Optional[NEBRecord]]]:
 
-        record_ids_lst = make_list(record_ids)
-        if not record_ids_lst:
+        is_single = not isinstance(record_ids, Sequence)
+        record_ids = make_list(record_ids)
+        if not record_ids:
             return []
 
-        body_data = {"ids": record_ids_lst, "missing_ok": missing_ok}
+        body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
         include = set()
 
@@ -2429,10 +2428,10 @@ class PortalClient(PortalClientBase):
 
         records = records_from_datamodels(record_data, self)
 
-        if isinstance(record_ids, Sequence):
-            return records
-        else:
+        if is_single:
             return records[0]
+        else:
+            return records
 
     def query_nebs(
         self,
@@ -2511,7 +2510,7 @@ class PortalClient(PortalClientBase):
         meta, record_data = self._auto_request(
             "post",
             "v1/records/neb/query",
-            NEBQueryBody,
+            NEBQueryFilters,
             None,
             Tuple[QueryMetadata, List[NEBRecord._DataModel]],
             query_data,

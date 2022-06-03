@@ -1,9 +1,9 @@
 from .models import (
     NEBKeywords,
     NEBSpecification,
-    NEBSinglepoints,
+    NEBSinglepoint,
     NEBInitialchain,
     NEBAddBody,
-    NEBQueryBody,
+    NEBQueryFilters,
     NEBRecord,
 )

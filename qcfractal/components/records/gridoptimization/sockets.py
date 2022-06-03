@@ -222,7 +222,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         stdout_orm.append(output)
 
         service_state = GridoptimizationServiceState(
-            iteration=iteration,
+           iteration=iteration,
             complete=[],
             dimensions=dimensions,
             constraint_template=constraint_template_str,

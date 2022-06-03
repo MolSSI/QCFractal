@@ -1,35 +1,37 @@
 from __future__ import annotations
 
-import contextlib
-import copy
-import io
 import json
 import logging
-from importlib.util import find_spec
+import numpy as np
 from typing import TYPE_CHECKING
 
 
-from geometric.neb import nextchain
-import numpy as np
+import geometric
 import sqlalchemy.orm.attributes
+import tabulate
 from pydantic import BaseModel
-from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by
+from sqlalchemy import select, func
+from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
 from sqlalchemy.orm import contains_eager
 
-from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM
+from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM, SinglepointRecordORM
 from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
+from qcfractal.db_socket.helpers import get_query_proj_options
+from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputTypeEnum
 from qcportal.records import PriorityEnum, RecordStatusEnum
 from qcportal.records.singlepoint import QCSpecification
+from qcportal.records.optimization import OptimizationSpecification
 from qcportal.records.neb import (
+    NEBKeywords,
     NEBSpecification,
-    NEBQueryBody,
+    NEBQueryFilters,
 )
 from .db_models import (
+    NEBOptimiationsORM,
     NEBSpecificationORM,
     NEBSinglepointsORM,
     NEBInitialchainORM,
@@ -57,13 +59,16 @@ class NEBServiceState(BaseModel):
         allow_mutation = True
         validate_assignment = True
 
-    neb_state = {}
 
     # These are stored as JSON (ie, dict encoded into a string)
     # This makes for faster loads and makes them somewhat tamper-proof
-    itretaion: int
+
+    prev = {}
+    optimized: bool
+    iteration: int
     elems: list
     molecule_template: str
+
     
 
 
@@ -71,7 +76,7 @@ class NEBRecordSocket(BaseRecordSocket):
 
     # Used by the base class
     record_orm = NEBRecordORM
-    specification_orm = NEBSpecificationORM
+    specification_orm = QCSpecificationORM
 
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)
@@ -85,8 +90,203 @@ class NEBRecordSocket(BaseRecordSocket):
         )
         return [stmt]
 
+    def initialize_service(
+        self,
+        session: Session,
+        service_orm: ServiceQueueORM,
+    ):
+
+        neb_orm: NEBRecordORM = service_orm.record
+
+        output = "\n\nCreated NEB calculation\n"
+        spec: NEBSpecification = neb_orm.specification.to_model(NEBSpecification)
+        table_rows = sorted(spec.keywords.dict().items())
+        output += tabulate.tabulate(table_rows, headers=["keywords", "value"])
+        output += "\n\n"
+        table_rows = sorted(spec.singlepoint_specification.dict().items())
+        output += tabulate.tabulate(table_rows, headers=["keywords", "value"])
+        output += "\n\n"
+
+        #keywords = NEBKeywords(neb_orm.specification.keywords)
+        initial_chain: List[Dict[str, Any]] = [x.molecule.model_dict() for x in neb_orm.initial_chain]
+
+        #picking_images = np.array([int(round(i)) for i in np.linspace(0,len(initial_chain)-1,images)])
+        #picked_molecules = np.array([Molecule(**mol_dict) for mol_dict in initial_chain])[picking_images]
+
+        output += f"{spec.keywords.dict()['images']} images will be used to guess a transition state structure.\n"
+        output += f"Molecular formula = {Molecule(**initial_chain[0]).get_molecular_formula()}\n"
+        molecule_template = Molecule(**initial_chain[0]).dict(encoding="json")
+
+        molecule_template.pop("geometry", None)
+        molecule_template.pop("identifiers", None)
+        molecule_template.pop("id", None)
+
+        elems = molecule_template["symbols"]
+
+        stdout_orm = neb_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
+        stdout_orm.append(output)
+
+        molecule_template_str = json.dumps(molecule_template)
+
+        service_state = NEBServiceState(
+            iteration = 0,
+            elems = elems,
+            optimized = False,
+            molecule_template=molecule_template_str,
+            old_chain=[],
+        )
+
+        service_orm.service_state = service_state.dict()
+        sqlalchemy.orm.attributes.flag_modified(service_orm, "service_state")
+
+    def iterate_service(
+        self,
+        session: Session,
+        service_orm: ServiceQueueORM,
+    ) -> bool:
+
+        neb_orm: NEBRecordORM = service_orm.record
+        # Always update with the current provenance
+        neb_orm.compute_history[-1].provenance = {
+            "creator": "neb",
+            "version": geometric.__version__,
+            "routine": "qcfractal.services.neb",
+        }
+        # Load the state from the service_state column
+        spec: NEBSpecification = neb_orm.specification.to_model(NEBSpecification)
+        params = spec.keywords.dict()
+        service_state = NEBServiceState(**service_orm.service_state)
+        molecule_template = json.loads(service_state.molecule_template)
+
+        params['iteration'] = service_state.iteration
+
+        output = ''
+        if service_state.iteration==0:
+            initial_chain: List[Dict[str, Any]] = [x.molecule.model_dict() for x in neb_orm.initial_chain]
+            initial_molecules = [Molecule(**M) for M in initial_chain]
+            if not service_state.optimized:
+                output += "\nFirst, optimizing the end points"
+                self.submit_optimizations(session, service_orm, [initial_molecules[0], initial_molecules[-1]])
+                service_state.optimized = True
+                finished = False
+            else:
+                complete_opts = sorted(service_orm.dependencies, key=lambda x: x.extras["position"])
+                initial_molecules[0] = Molecule(**complete_opts[0].record.final_molecule.model_dict())
+                initial_molecules[-1] = Molecule(**complete_opts[-1].record.final_molecule.model_dict())
+                self.submit_singlepoints(session, service_state, service_orm, initial_molecules)
+                service_state.iteration += 1
+                finished = False
+        else:
+            complete_tasks = sorted(service_orm.dependencies, key=lambda x: x.extras["position"])
+            geometries = []
+            energies = []
+            gradients = []
+            for task in complete_tasks:
+                # This is an ORM for singlepoint calculations
+                sp_record = task.record
+                mol_data = self.root_socket.molecules.get(molecule_id=[sp_record.molecule_id], include=["geometry"], session=session)
+                geometries.append(mol_data[0]["geometry"])
+                energies.append(sp_record.properties["return_energy"])
+                gradients.append(sp_record.properties["return_gradient"])
+
+            newcoords, prev = geometric.neb.nextchain(service_state.elems, geometries, gradients, energies, params, service_state.prev)
+            service_state.prev = prev
+            if newcoords is not None:
+                next_chain = [Molecule(**molecule_template, geometry=geometry) for geometry in newcoords]
+                self.submit_singlepoints(session, service_state, service_orm, next_chain)
+                finished = False
+            else:
+                output += "\nNEB calculation is completed with %i iterations" %service_state.iteration
+                finished = True
+            service_state.iteration += 1
+
+        stdout_orm = neb_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
+
+        stdout_orm.append(output)
+        service_orm.service_state = service_state.dict()
+        sqlalchemy.orm.attributes.flag_modified(service_orm, "service_state")
+        return finished
+
+    def submit_optimizations(
+        self,
+        session: Session,
+        service_orm: ServiceQueueORM,
+        molecules: List[Molecule],
+    ):
+
+        neb_orm: NEBRecordORM = service_orm.record
+        # delete all existing entries in the dependency list
+        service_orm.dependencies = []
+
+        qc_spec = neb_orm.specification.singlepoint_specification.model_dict()
+        opt_spec = OptimizationSpecification(
+            program="geometric",
+            qc_specification=QCSpecification(**qc_spec),
+        )
+
+        meta, opt_ids = self.root_socket.records.optimization.add(
+            molecules,
+            opt_spec,
+            service_orm.tag,
+            service_orm.priority,
+            session=session,
+        )
+        for pos, opt_id in enumerate(opt_ids):
+            svc_dep = ServiceDependencyORM(
+                record_id=opt_id,
+                extras={"position": pos})
+            opt_history = NEBOptimiationsORM(
+                neb_id=service_orm.record_id,
+                optimization_id=opt_id,
+                position=pos)
+
+            service_orm.dependencies.append(svc_dep)
+            neb_orm.optimizations.append(opt_history)
+
+    def submit_singlepoints(
+        self,
+        session: Session,
+        service_state: NEBServiceState,
+        service_orm: ServiceQueueORM,
+        chain: List[Molecule],
+    ):
+
+        neb_orm: NEBRecordORM = service_orm.record
+        # delete all existing entries in the dependency list
+        service_orm.dependencies = []
+
+        # Create a singlepoint input based on the multiple geometries
+        qc_spec = neb_orm.specification.singlepoint_specification.model_dict()#.to_model(QCSpecification)
+        #qc_spec = QCSpecification(**qc_spec).dict()
+        meta, sp_ids = self.root_socket.records.singlepoint.add(
+            chain,
+            QCSpecification(**qc_spec),
+            service_orm.tag,
+            service_orm.priority,
+            session=session,
+        )
+
+        if not meta.success:
+                raise RuntimeError("Error adding singlepoints - likely a developer error: " + meta.error_string)
+
+        for pos, sp_id in enumerate(sp_ids):
+
+            svc_dep = ServiceDependencyORM(
+                record_id=sp_id,
+                extras={"position": pos},
+            )
+            sp_history = NEBSinglepointsORM(
+                neb_id=service_orm.record_id,
+                singlepoint_id=sp_id,
+                chain_iteration=service_state.iteration,
+                position= pos,
+            )
+            
+            service_orm.dependencies.append(svc_dep)
+            neb_orm.singlepoints.append(sp_history)
+
     def add_specification(
-        self, neb_spec: NEBSpecification, *, session: Optional[Session] = None
+            self, neb_spec: NEBSpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, Optional[int]]:
 
         neb_kw_dict = neb_spec.keywords.dict(exclude_defaults=True)
@@ -94,7 +294,7 @@ class NEBRecordSocket(BaseRecordSocket):
         with self.root_socket.optional_session(session, False) as session:
             # Add the singlepoint specification
             meta, sp_spec_id = self.root_socket.records.singlepoint.add_specification(
-                neb_spec.qc_specification, session=session
+                neb_spec.singlepoint_specification, session=session
             )
             if not meta.success:
                 return (
@@ -106,13 +306,13 @@ class NEBRecordSocket(BaseRecordSocket):
 
             stmt = (
                 insert(NEBSpecificationORM)
-                .values(
+                    .values(
                     program=neb_spec.program,
                     keywords=neb_kw_dict,
-                    qc_specification_id=sp_spec_id,
+                    singlepoint_specification_id=sp_spec_id,
                 )
-                .on_conflict_do_nothing()
-                .returning(NEBSpecificationORM.id)
+                    .on_conflict_do_nothing()
+                    .returning(NEBSpecificationORM.id)
             )
 
             r = session.execute(stmt).scalar_one_or_none()
@@ -124,25 +324,25 @@ class NEBRecordSocket(BaseRecordSocket):
                 stmt = select(NEBSpecificationORM.id).filter_by(
                     program=neb_spec.program,
                     keywords=neb_kw_dict,
-                    qc_specification_id=sp_spec_id,
+                    singlepoint_specification_id=sp_spec_id,
                 )
 
                 r = session.execute(stmt).scalar_one()
                 return InsertMetadata(existing_idx=[0]), r
 
     def query(
-        self,
-        query_data: NEBQueryBody,
-        *,
-        session: Optional[Session] = None,
+            self,
+            query_data: NEBQueryFilters,
+            *,
+            session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[NEBRecordDict]]:
 
         and_query = []
         need_spspec_join = False
-        #need_nebspec_join = False
+        need_nebspec_join = False
         need_initchain_join = False
 
-        
+
         if query_data.qc_program is not None:
             and_query.append(QCSpecificationORM.program.in_(query_data.qc_program))
             need_spspec_join = True
@@ -152,10 +352,7 @@ class NEBRecordSocket(BaseRecordSocket):
         if query_data.qc_basis is not None:
             and_query.append(QCSpecificationORM.basis.in_(query_data.qc_basis))
             need_spspec_join = True
-        if query_data.qc_keywords_id is not None:
-            and_query.append(QCSpecificationORM.keywords_id.in_(query_data.qc_keywords_id))
-            need_spspec_join = True
-        if query_data.neb_program is not None: # Needs review
+        if query_data.neb_program is not None:
             and_query.append('geometric')
             need_qcspec_join = True
         if query_data.initial_chain_id is not None:
@@ -164,14 +361,12 @@ class NEBRecordSocket(BaseRecordSocket):
 
         stmt = select(NEBRecordORM)
 
-
-
         if need_spspec_join:
-            stmt = stmt.join(QCSpecificationORM.qc_specification).options(
+            stmt = stmt.join(QCSpecificationORM.singlepoint_specification).options(
                 contains_eager(
                     NEBRecordORM.specification,
                     NEBSpecificationORM.singlepoint_specification,
-                    OptimizationSpecificationORM.qc_specification,
+                    QCSpecificationORM.singlepoint_specification,
                 )
             )
 
@@ -189,7 +384,6 @@ class NEBRecordSocket(BaseRecordSocket):
             query_data=query_data,
             session=session,
         )
-
     def add_internal(
         self,
         initial_chain_ids: Sequence[Iterable[int]],
@@ -199,7 +393,6 @@ class NEBRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
-
         tag = tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
@@ -226,7 +419,6 @@ class NEBRecordSocket(BaseRecordSocket):
             )
 
             for idx, mol_ids in enumerate(initial_chain_ids):
-
                 # does this exist?
                 stmt = select(init_mol_cte.c.id)
                 stmt = stmt.where(init_mol_cte.c.specification_id == neb_spec_id)
@@ -258,6 +450,7 @@ class NEBRecordSocket(BaseRecordSocket):
                     existing_idx.append(idx)
 
             meta = InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx)
+
             return meta, neb_ids
 
     def add(
@@ -293,7 +486,7 @@ class NEBRecordSocket(BaseRecordSocket):
             Metadata about the insertion, and a list of record ids. The ids will be in the
             order of the input molecules
         """
-
+        images = neb_spec.keywords.images
         with self.root_socket.optional_session(session, False) as session:
 
             # First, add the specification
@@ -309,7 +502,15 @@ class NEBRecordSocket(BaseRecordSocket):
             # Now the molecules
             init_molecule_ids = []
             for init_chain in initial_chains:
-                mol_meta, molecule_ids = self.root_socket.molecules.add_mixed(init_chain, session=session)
+                if len(init_chain) < images:
+                    return(
+                        InsertMetadata(
+                            error_description="Aborted - number of images for NEB can not exceed the number of input frames:" + mol_meta.error_string
+                        ),
+                        [],
+                    )
+                selected_chain = np.array(init_chain)[np.array([int(round(i)) for i in np.linspace(0, len(init_chain)-1 ,images)])]
+                mol_meta, molecule_ids = self.root_socket.molecules.add_mixed(selected_chain, session=session)
                 if not mol_meta.success:
                     return (
                         InsertMetadata(
@@ -320,147 +521,30 @@ class NEBRecordSocket(BaseRecordSocket):
 
                 init_molecule_ids.append(molecule_ids)
 
+
             return self.add_internal(init_molecule_ids, spec_id, tag, priority, session=session)
 
-    
-    def initialize_service(
+    def get_final_ts(
         self,
-        session: Session,
-        service_orm: ServiceQueueORM,
-    ):
+        neb_id: int,
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
+        *,
+        session: Optional[Session] = None,
+    ) -> Dict[str, Dict[str, Any]]:
 
-        neb_orm: NEBRecordORM = service_orm.record
-        specification = NEBSpecification(**neb_orm.specification.model_dict())
-        keywords = specification.keywords
-        initial_chain: List[Dict[str, Any]] = [x.model_dict() for x in neb_orm.initial_chain]
+        query_sps = get_query_proj_options(SinglepointRecordORM, include, exclude)
 
-        #pick_images=np.array([int(round(i)) for i in np.linspace(0, len(initial_chain)-1, keywords.images)])
+        stmt = (select(NEBSinglepointsORM)
+                .options(*query_sps)
+                .join(SinglepointRecordORM)
+                .where(NEBSinglepointsORM.neb_id == neb_id)
+                .order_by(NEBSinglepointsORM.chain_iteration.desc(), SinglepointRecordORM.properties["return_energy"].cast(TEXT).cast(DOUBLE_PRECISION).desc())
+                .limit(1)
+                )
 
-        molecule_template = Molecule(**initial_chain[0]).dict(encoding="json")
-
-        molecule_template.pop("geometry", None)
-        molecule_template.pop("identifiers", None)
-        molecule_template.pop("id", None)
-
-        neb_stdout = io.StringIO()
-        stdout = neb_stdout.getvalue()
-        elems = molecule_template["symbols"]
-
-        #params = {'neb': True, 'images': keywords.images, 'nebk': keywords.spring_constant, 'nebew': keywords.energy_weighted }
-
-        if stdout:
-            stdout_orm = neb_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
-            stdout_orm.append(stdout)
-
-
-        molecule_template_str = json.dumps(molecule_template)
-
-        service_state = NEBServiceState(
-           # neb_state = params,
-            iteration = 0,
-            elems = elems,
-            molecule_template=molecule_template_str,
-        )
-
-        service_orm.service_state = service_state.dict()
-        sqlalchemy.orm.attributes.flag_modified(service_orm, "service_state")
-
-    def iterate_service(
-        self,
-        session: Session,
-        service_orm: ServiceQueueORM,
-    ) -> None:
-
-        neb_orm: NEBRecordORM = service_orm.record
-
-        # Always update with the current provenance
-        neb_orm.compute_history[-1].provenance = {
-            "creator": "neb",
-            "version": neb.__version__,
-            "routine": "neb.neb_api",
-        }
-
-
-        # Load the state from the service_state column
-        service_state = NEBServiceState(**service_orm.service_state)
-        molecule_template = json.loads(service_state.molecule_template)
-        # Sort by position
-        complete_tasks = sorted(service_orm.dependencies, key=lambda x: x.extras["position"])
-
-        geometries = []
-        energies = []
-        gradients = []
-        
-        for task in complete_tasks:
-            # This is an ORM for singlepoint calculations
-            sp_record = task.record
-            mol_data = self.root_socket.molecules.get(molecule_id=sp.record.molecule_id, include=["geometry"], session=session)
-
-            geometries.append(mol_data[0]["geometry"].tolist())
-            energies.append(sp_record.properties.return_energy)
-            gradients.append(sp_record.properties.return_gradient.tolist())
-
-
-
-        #call geometric.neb.next_chain
-        #return the next chain(list of geometries)
-        #Assemble a new molecule object, I can return None for the converged chain
-        newcoords = nextchain(service_state.elems, geometries, gradients, energies ,service_state.neb_state)
-        if newcoords is not None:
-            next_chain = [Molecule(**molecule_template, geometry=geometry) for geometry in newcoords]
-            service_state.iteration += 1
-            submit_singlepoints(session, service_state, service_orm, next_chain)
-
-        stdout_orm = neb_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
-        stdout_orm.append(stdout_append)
-
-        service_orm.service_state = service_state.dict()
-        sqlalchemy.orm.attributes.flag_modified(service_orm, "service_state")
-
-        # Return True to indicate that this service has successfully completed
-        return len(next_tasks) == 0 # if returned value from geometric == none -> True (converged)
-
-    def submit_singlepoints(
-        self,
-        session: Session,
-        service_state: NEBServiceState,
-        service_orm: ServiceQueueORM,
-        next_chain: List[Molecule],
-    ):
-
-        neb_orm: NEBRecordORM = service_orm.record
-
-        # delete all existing entries in the dependency list
-        service_orm.dependencies = []
-
-        # Create a singlepoint input based on the multiple geometries
-
-        qc_spec = neb_orm.specification.qc_specification.to_model(QCSpecification)
-
-        meta, sp_ids = self.root_socket.records.singlepoint.add(
-            next_chain,
-            qc_spec,
-            service_orm.tag,
-            service_orm.priority,
-            session=session,
-        )
-
-        if not meta.success:
-                raise RuntimeError("Error adding singlepoints - likely a developer error: " + meta.error_string)
-        
-        for position, sp_id in enumerate(sp_ids):
-
-            svc_dep = ServiceDependencyORM(
-                record_id=sp_id,
-                extras={"position": position},
-            )
-            
-            sp_history = NEBSinglepointsORM(
-                neb_id=service_orm.record_id,
-                chain_iteration=service_state.iteration, 
-                singlepoint_id=sp_id,
-                position=position,
-            )
-            
-            service_orm.dependencies.append(svc_dep)
-            neb_orm.singlepoints.append(sp_history)
+        with self.root_socket.optional_session(session, True) as session:
+            r = session.execute(stmt).scalar_one_or_none()
+            if r is None:
+                raise MissingDataError("No TS found")
+            return r.model_dict()

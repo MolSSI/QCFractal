@@ -17,7 +17,6 @@ def add_singlepoint_records_v1(body_data: SinglepointAddBody):
         molecules=body_data.molecules, qc_spec=body_data.specification, tag=body_data.tag, priority=body_data.priority
     )
 
-
 @main.route("/v1/records/singlepoint/<int:record_id>/wavefunction", methods=["GET"])
 @wrap_route("READ")
 def get_singlepoint_wavefunction_v1(record_id: int):
