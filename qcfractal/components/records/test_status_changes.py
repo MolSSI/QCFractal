@@ -2,13 +2,12 @@ from datetime import datetime
 
 import pytest
 
-from qcfractal.components.records.optimization.db_models import OptimizationRecordORM
+from qcfractal.components.records.test_sockets import populate_db
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.testing_helpers import populate_db
-from qcfractaltesting import load_procedure_data
+from qcfractaltesting import submit_record_data
 from qcportal import PortalClient
 from qcportal.managers import ManagerName
-from qcportal.records import RecordStatusEnum, PriorityEnum
+from qcportal.records import RecordStatusEnum
 
 
 def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket):
@@ -32,20 +31,13 @@ def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket):
         tags=["tag2"],
     )
 
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_water_energy")
-    input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_water_gradient")
-    input_spec_3, molecule_3, result_data_3 = load_procedure_data("psi4_water_hessian")
-    input_spec_4, molecule_4, result_data_4 = load_procedure_data("psi4_methane_gradient_fail_iter")
-    input_spec_5, molecule_5, result_data_5 = load_procedure_data("psi4_benzene_energy_1")
-    input_spec_6, molecule_6, result_data_6 = load_procedure_data("psi4_benzene_energy_2")
-
-    meta, id_1 = storage_socket.records.singlepoint.add([molecule_1], input_spec_1, "tag1", PriorityEnum.normal)
-    meta, id_2 = storage_socket.records.singlepoint.add([molecule_2], input_spec_2, "tag2", PriorityEnum.normal)
-    meta, id_3 = storage_socket.records.singlepoint.add([molecule_3], input_spec_3, "tag1", PriorityEnum.normal)
-    meta, id_4 = storage_socket.records.singlepoint.add([molecule_4], input_spec_4, "tag2", PriorityEnum.normal)
-    meta, id_5 = storage_socket.records.singlepoint.add([molecule_5], input_spec_5, "tag1", PriorityEnum.normal)
-    meta, id_6 = storage_socket.records.singlepoint.add([molecule_6], input_spec_6, "tag1", PriorityEnum.normal)
-    all_id = id_1 + id_2 + id_3 + id_4 + id_5 + id_6
+    id_1, result_data_1 = submit_record_data(storage_socket, "psi4_water_energy", "tag1")
+    id_2, result_data_2 = submit_record_data(storage_socket, "psi4_water_gradient", "tag2")
+    id_3, result_data_3 = submit_record_data(storage_socket, "psi4_water_hessian", "tag1")
+    id_4, result_data_4 = submit_record_data(storage_socket, "psi4_methane_gradient_fail_iter", "tag2")
+    id_5, result_data_5 = submit_record_data(storage_socket, "psi4_benzene_energy_1", "tag1")
+    id_6, result_data_6 = submit_record_data(storage_socket, "psi4_benzene_energy_2", "tag1")
+    all_id = [id_1, id_2, id_3, id_4, id_5, id_6]
 
     tasks_1 = storage_socket.tasks.claim_tasks(mname1.fullname)
     tasks_2 = storage_socket.tasks.claim_tasks(mname2.fullname)
@@ -56,7 +48,7 @@ def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket):
     time_0 = datetime.utcnow()
     ids = storage_socket.records.reset_assigned(manager_name=[mname1.fullname])
     time_1 = datetime.utcnow()
-    assert set(ids) == set(id_1 + id_3 + id_5 + id_6)
+    assert set(ids) == {id_1, id_3, id_5, id_6}
 
     rec = storage_socket.records.get(all_id, include=["*", "task"])
     assert rec[0]["status"] == RecordStatusEnum.waiting
@@ -594,21 +586,21 @@ def test_record_client_uninvalidate_missing(snowflake_client: PortalClient, stor
 
 
 @pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_fluoroethane_opt_notraj"])
-def test_record_client_delete_children(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, opt_file: str):
+def test_record_client_delete_children(
+    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, opt_file: str
+):
     # Deleting with deleting children
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data(opt_file)
-    meta1, id1 = storage_socket.records.optimization.add(
-        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
-    )
+    id1, result_data_1 = submit_record_data(storage_socket, opt_file)
 
-    with storage_socket.session_scope() as session:
-        rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
-        storage_socket.records.update_completed_task(session, rec_orm, result_data_1, None)
+    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, 1)
+    assert len(tasks) == 1
+    rmeta = storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: result_data_1})
+    assert rmeta.n_accepted == 1
 
-    rec = storage_socket.records.optimization.get(id1, include=["trajectory"])
+    rec = storage_socket.records.optimization.get([id1], include=["trajectory"])
     child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
 
-    meta = snowflake_client.delete_records(id1, soft_delete=True, delete_children=True)
+    meta = snowflake_client.delete_records([id1], soft_delete=True, delete_children=True)
     assert meta.success
     assert meta.deleted_idx == [0]
     assert meta.n_children_deleted == len(child_ids)
@@ -616,12 +608,12 @@ def test_record_client_delete_children(snowflake_client: PortalClient, storage_s
     child_recs = storage_socket.records.get(child_ids)
     assert all(x["status"] == RecordStatusEnum.deleted for x in child_recs)
 
-    meta = snowflake_client.delete_records(id1, soft_delete=False, delete_children=True)
+    meta = snowflake_client.delete_records([id1], soft_delete=False, delete_children=True)
     assert meta.success
     assert meta.deleted_idx == [0]
     assert meta.n_children_deleted == len(child_ids)
 
-    recs = storage_socket.records.get(id1, missing_ok=True)
+    recs = storage_socket.records.get([id1], missing_ok=True)
     assert recs == [None]
 
     child_recs = storage_socket.records.get(child_ids, missing_ok=True)
@@ -630,22 +622,20 @@ def test_record_client_delete_children(snowflake_client: PortalClient, storage_s
 
 @pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_fluoroethane_opt_notraj"])
 def test_record_client_delete_nochildren(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, opt_file: str
+    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, opt_file: str
 ):
     # Deleting without deleting children
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data(opt_file)
-    meta1, id1 = storage_socket.records.optimization.add(
-        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
-    )
+    id1, result_data_1 = submit_record_data(storage_socket, opt_file)
 
-    with storage_socket.session_scope() as session:
-        rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
-        storage_socket.records.update_completed_task(session, rec_orm, result_data_1, None)
+    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, 1)
+    assert len(tasks) == 1
+    rmeta = storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: result_data_1})
+    assert rmeta.n_accepted == 1
 
-    rec = storage_socket.records.optimization.get(id1, include=["trajectory"])
+    rec = storage_socket.records.optimization.get([id1], include=["trajectory"])
     child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
 
-    meta = snowflake_client.delete_records(id1, soft_delete=True, delete_children=False)
+    meta = snowflake_client.delete_records([id1], soft_delete=True, delete_children=False)
     assert meta.success
     assert meta.deleted_idx == [0]
     assert meta.n_children_deleted == 0
@@ -653,12 +643,12 @@ def test_record_client_delete_nochildren(
     child_recs = storage_socket.records.get(child_ids)
     assert all(x["status"] == RecordStatusEnum.complete for x in child_recs)
 
-    meta = snowflake_client.delete_records(id1, soft_delete=False, delete_children=False)
+    meta = snowflake_client.delete_records([id1], soft_delete=False, delete_children=False)
     assert meta.success
     assert meta.deleted_idx == [0]
     assert meta.n_children_deleted == 0
 
-    recs = storage_socket.records.get(id1, missing_ok=True)
+    recs = storage_socket.records.get([id1], missing_ok=True)
     assert recs == [None]
 
     child_recs = storage_socket.records.get(child_ids, missing_ok=True)
@@ -667,27 +657,25 @@ def test_record_client_delete_nochildren(
 
 @pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_fluoroethane_opt_notraj"])
 def test_record_client_undelete_children(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, opt_file: str
+    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, opt_file: str
 ):
     # Deleting with deleting children, then undeleting
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data(opt_file)
-    meta1, id1 = storage_socket.records.optimization.add(
-        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
-    )
+    id1, result_data_1 = submit_record_data(storage_socket, opt_file)
 
-    with storage_socket.session_scope() as session:
-        rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
-        storage_socket.records.update_completed_task(session, rec_orm, result_data_1, None)
+    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, 1)
+    assert len(tasks) == 1
+    rmeta = storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: result_data_1})
+    assert rmeta.n_accepted == 1
 
-    rec = storage_socket.records.optimization.get(id1, include=["trajectory"])
+    rec = storage_socket.records.optimization.get([id1], include=["trajectory"])
     child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
 
-    meta = snowflake_client.delete_records(id1, soft_delete=True, delete_children=True)
+    meta = snowflake_client.delete_records([id1], soft_delete=True, delete_children=True)
     assert meta.success
     assert meta.deleted_idx == [0]
     assert meta.n_children_deleted == len(child_ids)
 
-    meta = snowflake_client.undelete_records(id1)
+    meta = snowflake_client.undelete_records([id1])
     assert meta.success
     assert meta.updated_idx == [0]
 

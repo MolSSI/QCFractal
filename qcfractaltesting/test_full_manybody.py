@@ -1,21 +1,17 @@
-"""
-Full end-to-end test of singlepoint
-"""
-
 from __future__ import annotations
 
 import time
 from typing import TYPE_CHECKING
 
 from qcportal.records import RecordStatusEnum
-from . import load_procedure_data
+from . import load_record_data
 
 if TYPE_CHECKING:
     from qcportal import PortalClient
 
 
 def test_manybody_full_1(fulltest_client: PortalClient):
-    input_spec, molecule, _ = load_procedure_data("mb_none_he4_psi4_mp2")
+    input_spec, molecule, _ = load_record_data("mb_none_he4_psi4_mp2")
 
     meta, ids = fulltest_client.add_manybodys(
         initial_molecules=[molecule],

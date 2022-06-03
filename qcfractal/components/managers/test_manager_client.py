@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import ValidationError
 
-from qcfractaltesting import load_procedure_data
+from qcfractaltesting import submit_record_data
 from qcportal import PortalRequestError
 from qcportal.managers import ManagerName, ManagerStatusEnum
 from qcportal.records import PriorityEnum
@@ -152,18 +152,8 @@ def test_manager_mclient_activate_duplicate(snowflake: TestingSnowflake):
 
 def test_manager_mclient_deactivate(snowflake: TestingSnowflake):
     client = snowflake.client()
-    input_spec1, molecule1, result_data1 = load_procedure_data("psi4_benzene_energy_1")
-    meta1, id1 = client.add_singlepoints(
-        [molecule1],
-        input_spec1.program,
-        input_spec1.driver,
-        input_spec1.method,
-        input_spec1.basis,
-        input_spec1.keywords,
-        input_spec1.protocols,
-        "tag1",
-        PriorityEnum.normal,
-    )
+
+    id1, _ = submit_record_data(snowflake.get_storage_socket(), "psi4_benzene_energy_1", "tag1")
 
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
 
@@ -208,7 +198,7 @@ def test_manager_mclient_deactivate(snowflake: TestingSnowflake):
     assert manager[1].active_memory == 7.0
     assert manager[1].claimed == 1
 
-    record = client.get_records(id1[0])
+    record = client.get_records(id1)
     assert record.raw_data.status == "waiting"
     assert record.raw_data.manager_name is None
 

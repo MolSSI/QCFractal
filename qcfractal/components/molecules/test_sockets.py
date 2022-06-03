@@ -2,12 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pytest
-
-from qcfractaltesting import load_molecule_data, load_procedure_data
-from qcportal.exceptions import MissingDataError
-from qcportal.molecules import Molecule, MoleculeIdentifiers, MoleculeQueryFilters
-from qcportal.records import PriorityEnum
+from qcfractaltesting import load_molecule_data
+from qcportal.molecules import Molecule, MoleculeQueryFilters
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

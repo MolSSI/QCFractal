@@ -1,7 +1,3 @@
-"""
-Full end-to-end test of optimization
-"""
-
 from __future__ import annotations
 
 import time

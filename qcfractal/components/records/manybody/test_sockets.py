@@ -7,7 +7,7 @@ import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service_simple
-from qcfractaltesting import load_molecule_data, load_procedure_data
+from qcfractaltesting import load_molecule_data, load_record_data
 from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.manybody import ManybodySpecification, ManybodyQueryFilters
@@ -156,8 +156,8 @@ def test_manybody_socket_add_same_1(storage_socket: SQLAlchemySocket):
 
 
 def test_manybody_socket_query(storage_socket: SQLAlchemySocket):
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data("mb_none_he4_psi4_mp2")
-    input_spec_2, molecule_2, result_data_2 = load_procedure_data("mb_cp_he4_psi4_mp2")
+    input_spec_1, molecule_1, result_data_1 = load_record_data("mb_none_he4_psi4_mp2")
+    input_spec_2, molecule_2, result_data_2 = load_record_data("mb_cp_he4_psi4_mp2")
 
     meta_1, id_1 = storage_socket.records.manybody.add(
         [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
@@ -219,7 +219,7 @@ def test_manybody_socket_query(storage_socket: SQLAlchemySocket):
     ],
 )
 def test_manybody_socket_run(storage_socket: SQLAlchemySocket, test_data_name: str):
-    input_spec_1, molecules_1, result_data_1 = load_procedure_data(test_data_name)
+    input_spec_1, molecules_1, result_data_1 = load_record_data(test_data_name)
 
     meta_1, id_1 = storage_socket.records.manybody.add(
         [molecules_1], input_spec_1, tag="test_tag", priority=PriorityEnum.low
@@ -227,7 +227,7 @@ def test_manybody_socket_run(storage_socket: SQLAlchemySocket, test_data_name: s
     assert meta_1.success
 
     time_0 = datetime.utcnow()
-    finished, n_singlepoints = run_service_simple(id_1[0], result_data_1, storage_socket, 100)
+    finished, n_singlepoints = run_service_simple(storage_socket, id_1[0], result_data_1, 100)
     time_1 = datetime.utcnow()
 
     assert finished is True

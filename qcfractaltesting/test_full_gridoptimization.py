@@ -1,21 +1,17 @@
-"""
-Full end-to-end test of singlepoint
-"""
-
 from __future__ import annotations
 
 import time
 from typing import TYPE_CHECKING
 
 from qcportal.records import RecordStatusEnum
-from . import load_procedure_data
+from . import load_record_data
 
 if TYPE_CHECKING:
     from qcportal import PortalClient
 
 
 def test_gridoptimization_full_1(fulltest_client: PortalClient):
-    input_data, molecules, _ = load_procedure_data("go_H2O2_psi4_blyp")
+    input_data, molecules, _ = load_record_data("go_H2O2_psi4_blyp")
     meta, ids = fulltest_client.add_gridoptimizations(
         initial_molecules=[molecules],
         program="gridoptimization",

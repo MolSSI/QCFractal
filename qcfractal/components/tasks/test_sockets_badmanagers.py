@@ -8,10 +8,10 @@ from datetime import datetime
 import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractaltesting import load_procedure_data, caplog_handler_at_level
+from qcfractaltesting import load_record_data, submit_record_data, caplog_handler_at_level
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerName
-from qcportal.records import PriorityEnum, RecordStatusEnum
+from qcportal.records import RecordStatusEnum
 
 
 def test_task_socket_claim_manager_noexist(storage_socket: SQLAlchemySocket):
@@ -38,7 +38,7 @@ def test_task_socket_claim_manager_inactive(storage_socket: SQLAlchemySocket):
 
     storage_socket.managers.deactivate([mname1.fullname])
 
-    with pytest.raises(ComputeManagerError, match="is not active") as err:
+    with pytest.raises(ComputeManagerError, match="is not active"):
         storage_socket.tasks.claim_tasks(mname1.fullname)
 
 
@@ -55,18 +55,18 @@ def test_task_socket_return_manager_noexist(storage_socket: SQLAlchemySocket):
         tags=["tag1"],
     )
 
-    input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
-    meta, id = storage_socket.records.singlepoint.add([molecule], input_spec, "tag1", PriorityEnum.normal)
+    record_id, result_data = submit_record_data(storage_socket, "psi4_benzene_energy_1", "tag1")
+
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 
-    with pytest.raises(ComputeManagerError, match="does not exist") as err:
+    with pytest.raises(ComputeManagerError, match="does not exist"):
         storage_socket.tasks.update_finished(
             "missing_manager",
             {tasks[0]["id"]: result_data},
         )
 
     # Task should still be running
-    sp_records = storage_socket.records.get(id, include=["*", "task", "compute_history"])
+    sp_records = storage_socket.records.get([record_id], include=["*", "task", "compute_history"])
     assert sp_records[0]["status"] == RecordStatusEnum.running
     assert sp_records[0]["manager_name"] == mname1.fullname
     assert sp_records[0]["task"] is not None
@@ -86,13 +86,12 @@ def test_task_socket_return_manager_inactive(storage_socket: SQLAlchemySocket):
         tags=["tag1"],
     )
 
-    input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
-    meta, id = storage_socket.records.singlepoint.add([molecule], input_spec, "tag1", PriorityEnum.normal)
+    record_id, result_data = submit_record_data(storage_socket, "psi4_benzene_energy_1", "tag1")
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 
     storage_socket.managers.deactivate([mname1.fullname])
 
-    with pytest.raises(ComputeManagerError, match="is not active") as err:
+    with pytest.raises(ComputeManagerError, match="is not active"):
         storage_socket.tasks.update_finished(
             mname1.fullname,
             {tasks[0]["id"]: result_data},
@@ -122,8 +121,7 @@ def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket):
         tags=["tag1"],
     )
 
-    input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
-    meta, id = storage_socket.records.singlepoint.add([molecule], input_spec, "tag1", PriorityEnum.normal)
+    record_id, result_data = submit_record_data(storage_socket, "psi4_benzene_energy_1", "tag1")
 
     # Manager 1 claims tasks
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
@@ -141,7 +139,7 @@ def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket):
 
     # But it didn't do anything
     # Task should still be running
-    sp_records = storage_socket.records.get(id, include=["*", "task", "compute_history"])
+    sp_records = storage_socket.records.get([record_id], include=["*", "task", "compute_history"])
     assert sp_records[0]["status"] == RecordStatusEnum.running
     assert sp_records[0]["manager_name"] == mname1.fullname
     assert sp_records[0]["task"] is not None
@@ -167,7 +165,7 @@ def test_task_socket_return_manager_badid(storage_socket: SQLAlchemySocket, capl
         tags=["tag1"],
     )
 
-    input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
+    _, _, result_data = load_record_data("psi4_benzene_energy_1")
 
     # Should be logged
     with caplog_handler_at_level(caplog, logging.WARNING):
@@ -202,12 +200,11 @@ def test_task_socket_return_manager_badstatus_1(storage_socket: SQLAlchemySocket
         tags=["tag1"],
     )
 
-    input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
-    meta, id = storage_socket.records.singlepoint.add([molecule], input_spec, "tag1", PriorityEnum.normal)
+    record_id, result_data = submit_record_data(storage_socket, "psi4_benzene_energy_1", "tag1")
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 
-    storage_socket.records.reset(id)
+    storage_socket.records.reset([record_id])
 
     with caplog_handler_at_level(caplog, logging.WARNING):
         rmeta = storage_socket.tasks.update_finished(
@@ -222,7 +219,7 @@ def test_task_socket_return_manager_badstatus_1(storage_socket: SQLAlchemySocket
     assert rmeta.rejected_info[0][1] == "Task is not in a running state"
 
     # Record should still be waiting
-    sp_records = storage_socket.records.get(id, include=["*", "task", "compute_history"])
+    sp_records = storage_socket.records.get([record_id], include=["*", "task", "compute_history"])
     assert sp_records[0]["status"] == RecordStatusEnum.waiting
     assert sp_records[0]["manager_name"] is None
     assert sp_records[0]["task"] is not None
@@ -248,8 +245,7 @@ def test_task_socket_return_manager_badstatus_2(storage_socket: SQLAlchemySocket
         tags=["tag1"],
     )
 
-    input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
-    meta, id = storage_socket.records.singlepoint.add([molecule], input_spec, "tag1", PriorityEnum.normal)
+    record_id, result_data = submit_record_data(storage_socket, "psi4_benzene_energy_1", "tag1")
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 
@@ -273,7 +269,7 @@ def test_task_socket_return_manager_badstatus_2(storage_socket: SQLAlchemySocket
     assert rmeta.rejected_info[0][1] == "Task does not exist in the task queue"
 
     # Record should be complete
-    sp_records = storage_socket.records.get(id, include=["*", "task", "compute_history"])
+    sp_records = storage_socket.records.get([record_id], include=["*", "task", "compute_history"])
     assert sp_records[0]["status"] == RecordStatusEnum.complete
     assert sp_records[0]["manager_name"] == mname1.fullname
     assert sp_records[0]["task"] is None
@@ -300,12 +296,11 @@ def test_task_socket_return_manager_badstatus_3(storage_socket: SQLAlchemySocket
         tags=["tag1"],
     )
 
-    input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
-    meta, id = storage_socket.records.singlepoint.add([molecule], input_spec, "tag1", PriorityEnum.normal)
+    record_id, result_data = submit_record_data(storage_socket, "psi4_benzene_energy_1", "tag1")
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 
-    storage_socket.records.cancel(id)
+    storage_socket.records.cancel([record_id])
 
     time_1 = datetime.utcnow()
 
@@ -322,7 +317,7 @@ def test_task_socket_return_manager_badstatus_3(storage_socket: SQLAlchemySocket
     assert rmeta.rejected_info[0][1] == "Task does not exist in the task queue"
 
     # Record should be cancelled
-    sp_records = storage_socket.records.get(id, include=["*", "task", "compute_history"])
+    sp_records = storage_socket.records.get([record_id], include=["*", "task", "compute_history"])
     assert sp_records[0]["status"] == RecordStatusEnum.cancelled
     assert sp_records[0]["manager_name"] is None
     assert sp_records[0]["task"] is None

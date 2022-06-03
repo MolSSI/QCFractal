@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
-from qcfractaltesting import load_procedure_data, load_wavefunction_data
-from qcportal.records import PriorityEnum
+from qcfractaltesting import submit_record_data, load_wavefunction_data
 from qcportal.wavefunctions import WavefunctionProperties
 
 if TYPE_CHECKING:
@@ -22,10 +21,9 @@ def existing_record_id(storage_socket):
     with an existing calculation
     """
 
-    input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
-    meta, id = storage_socket.records.singlepoint.add([molecule], input_spec, tag="*", priority=PriorityEnum.normal)
+    record_id, _ = submit_record_data(storage_socket, "psi4_benzene_energy_1")
 
-    yield id[0]
+    yield record_id
 
 
 def assert_wfn_equal(wfn1: WavefunctionProperties, wfn2: WavefunctionProperties):

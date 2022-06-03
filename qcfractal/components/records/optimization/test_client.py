@@ -7,7 +7,7 @@ import pytest
 
 from qcfractal.components.records.optimization.db_models import OptimizationRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractaltesting import load_molecule_data, load_procedure_data
+from qcfractaltesting import load_molecule_data, load_record_data
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.optimization import (
     OptimizationSpecification,
@@ -116,9 +116,9 @@ def test_optimization_client_add_existing_molecule(snowflake_client: PortalClien
 
 
 def test_optimization_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_fluoroethane_opt_notraj")
-    input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_benzene_opt")
-    input_spec_3, molecule_3, result_data_3 = load_procedure_data("psi4_methane_opt_sometraj")
+    input_spec_1, molecule_1, result_data_1 = load_record_data("psi4_fluoroethane_opt_notraj")
+    input_spec_2, molecule_2, result_data_2 = load_record_data("psi4_benzene_opt")
+    input_spec_3, molecule_3, result_data_3 = load_record_data("psi4_methane_opt_sometraj")
 
     meta1, id1 = storage_socket.records.optimization.add(
         [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
@@ -179,7 +179,7 @@ def test_optimization_client_query(snowflake_client: PortalClient, storage_socke
 @pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_fluoroethane_opt_notraj"])
 def test_optimization_client_delete_1(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, opt_file: str):
     # Deleting with deleting children
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data(opt_file)
+    input_spec_1, molecule_1, result_data_1 = load_record_data(opt_file)
     meta1, id1 = storage_socket.records.optimization.add(
         [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
     )

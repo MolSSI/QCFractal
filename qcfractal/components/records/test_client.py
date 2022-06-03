@@ -8,9 +8,11 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.testing_helpers import populate_db, TestingSnowflake, mname1
-from qcfractaltesting import test_users, load_procedure_data
-from qcportal import PortalRequestError
+from qcfractal.testing_helpers import TestingSnowflake, mname1
+from qcfractal.components.records.test_sockets import populate_db
+from qcfractaltesting import test_users, load_record_data, submit_record_data
+from qcportal import PortalRequestError, ManagerClient
+from qcportal.managers import ManagerName
 from qcportal.records import PriorityEnum, RecordStatusEnum
 
 if TYPE_CHECKING:
@@ -49,6 +51,13 @@ def test_record_client_get_missing(snowflake_client: PortalClient, storage_socke
     assert r[1] is None
     assert r[0].raw_data.id == all_id[0]
     assert r[2].raw_data.id == all_id[1]
+
+
+def test_record_client_get_empty(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+    populate_db(storage_socket)
+
+    r = snowflake_client.get_records([])
+    assert r == []
 
 
 def test_record_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
@@ -124,35 +133,22 @@ def test_record_client_query(snowflake_client: PortalClient, storage_socket: SQL
     assert meta.n_found == len(all_id)
 
 
-def test_record_client_query_parents_children(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_benzene_opt")
+def test_record_client_query_parents_children(
+    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
+):
 
-    meta1, id1 = storage_socket.records.optimization.add(
-        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
-    )
+    id1, result_data_1 = submit_record_data(storage_socket, "psi4_benzene_opt")
 
-    storage_socket.managers.activate(
-        name_data=mname1,
-        manager_version="v2.0",
-        qcengine_version="v1.0",
-        username="bill",
-        programs={
-            "geometric": None,
-            "psi4": None,
-        },
-        tags=["*"],
-    )
-
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, limit=100)
+    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, limit=100)
     assert len(tasks) == 1
 
     rmeta = storage_socket.tasks.update_finished(
-        mname1.fullname,
+        activated_manager_name.fullname,
         {tasks[0]["id"]: result_data_1},
     )
     assert rmeta.n_accepted == 1
 
-    opt_rec = snowflake_client.get_optimizations(id1, include=["trajectory"])[0]
+    opt_rec = snowflake_client.get_optimizations(id1, include=["trajectory"])
     assert opt_rec.status == RecordStatusEnum.complete
 
     traj_id = [x.singlepoint_id for x in opt_rec.raw_data.trajectory]
@@ -166,13 +162,6 @@ def test_record_client_query_parents_children(snowflake_client: PortalClient, st
     meta, recs = snowflake_client.query_records(child_id=traj_id[0])
     assert meta.n_found == 1
     assert recs[0].id == opt_rec.id
-
-
-def test_record_client_get_empty(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    populate_db(storage_socket)
-
-    r = snowflake_client.get_records([])
-    assert r == []
 
 
 def test_record_client_add_comment(secure_snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
@@ -316,14 +305,12 @@ def test_record_client_modify(snowflake_client: PortalClient, storage_socket: SQ
 
 
 def test_record_client_modify_service(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    input_spec, molecules, result_data = load_procedure_data("td_H2O2_psi4_hf")
-    meta, svc_id = storage_socket.records.torsiondrive.add(
-        [molecules], input_spec, as_service=True, tag="test_tag", priority=PriorityEnum.high
-    )
+
+    svc_id, _ = submit_record_data(storage_socket, "td_H2O2_psi4_hf", "test_tag", PriorityEnum.high)
 
     storage_socket.services.iterate_services()
 
-    rec = storage_socket.records.get(svc_id, include=["*", "service", "service.dependencies.record.task"])
+    rec = storage_socket.records.get([svc_id], include=["*", "service", "service.dependencies.record.task"])
     tasks = [x["record"]["task"] for x in rec[0]["service"]["dependencies"]]
     assert all(x["tag"] == "test_tag" for x in tasks)
     assert all(x["priority"] == PriorityEnum.high for x in tasks)
@@ -333,7 +320,7 @@ def test_record_client_modify_service(snowflake_client: PortalClient, storage_so
     assert meta.n_updated == 1
     assert meta.n_children_updated > 0
 
-    rec = snowflake_client.get_records(svc_id[0], include=["service"])
+    rec = snowflake_client.get_records(svc_id, include=["service"])
     assert rec.service.tag == "new_tag"
     assert rec.service.priority == PriorityEnum.low
 

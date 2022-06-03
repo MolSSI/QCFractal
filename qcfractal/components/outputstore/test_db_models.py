@@ -6,7 +6,7 @@ import pytest
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.records.db_models import RecordComputeHistoryORM
-from qcfractaltesting import load_procedure_data
+from qcfractaltesting import submit_record_data
 from qcportal.compression import CompressionEnum
 from qcportal.outputstore import OutputTypeEnum, OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
@@ -24,11 +24,10 @@ def existing_history_id(storage_socket):
     with an existing calculation
     """
 
-    input_spec, molecule, result_data = load_procedure_data("psi4_benzene_energy_1")
-    meta, id = storage_socket.records.singlepoint.add([molecule], input_spec, tag="*", priority=PriorityEnum.normal)
+    record_id, _ = submit_record_data(storage_socket, "psi4_benzene_energy_1")
 
     hist = RecordComputeHistoryORM(
-        record_id=id[0],
+        record_id=record_id,
         status=RecordStatusEnum.error,
         manager_name=None,
     )

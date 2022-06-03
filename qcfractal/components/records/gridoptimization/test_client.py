@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractaltesting import load_molecule_data, load_procedure_data
+from qcfractaltesting import load_molecule_data, load_record_data
 from qcportal.records import PriorityEnum
 from qcportal.records.gridoptimization import (
     GridoptimizationKeywords,
@@ -120,10 +120,10 @@ def test_gridoptimization_client_add_existing_molecule(snowflake_client: PortalC
 
 
 def test_gridoptimization_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data("go_H2O2_psi4_b3lyp")
-    input_spec_2, molecule_2, result_data_2 = load_procedure_data("go_H2O2_psi4_pbe")
-    input_spec_3, molecule_3, result_data_3 = load_procedure_data("go_C4H4N2OS_psi4_b3lyp-d3bj")
-    input_spec_4, molecule_4, result_data_4 = load_procedure_data("go_H3NS_psi4_pbe")
+    input_spec_1, molecule_1, result_data_1 = load_record_data("go_H2O2_psi4_b3lyp")
+    input_spec_2, molecule_2, result_data_2 = load_record_data("go_H2O2_psi4_pbe")
+    input_spec_3, molecule_3, result_data_3 = load_record_data("go_C4H4N2OS_psi4_b3lyp-d3bj")
+    input_spec_4, molecule_4, result_data_4 = load_record_data("go_H3NS_psi4_pbe")
 
     meta_1, id_1 = storage_socket.records.gridoptimization.add(
         [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal

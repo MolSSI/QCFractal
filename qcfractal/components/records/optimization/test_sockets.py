@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractaltesting import load_molecule_data, load_procedure_data
+from qcfractaltesting import load_molecule_data, load_record_data
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputStore
@@ -355,9 +355,9 @@ def test_optimization_socket_add_same_4(storage_socket: SQLAlchemySocket):
 
 
 def test_optimization_socket_run(storage_socket: SQLAlchemySocket):
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_fluoroethane_opt_notraj")
-    input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_benzene_opt")
-    input_spec_3, molecule_3, result_data_3 = load_procedure_data("psi4_methane_opt_sometraj")
+    input_spec_1, molecule_1, result_data_1 = load_record_data("psi4_fluoroethane_opt_notraj")
+    input_spec_2, molecule_2, result_data_2 = load_record_data("psi4_benzene_opt")
+    input_spec_3, molecule_3, result_data_3 = load_record_data("psi4_methane_opt_sometraj")
 
     meta1, id1 = storage_socket.records.optimization.add(
         [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
@@ -513,9 +513,9 @@ def test_optimization_socket_run(storage_socket: SQLAlchemySocket):
 
 
 def test_optimization_socket_query(storage_socket: SQLAlchemySocket):
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_fluoroethane_opt_notraj")
-    input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_benzene_opt")
-    input_spec_3, molecule_3, result_data_3 = load_procedure_data("psi4_methane_opt_sometraj")
+    input_spec_1, molecule_1, result_data_1 = load_record_data("psi4_fluoroethane_opt_notraj")
+    input_spec_2, molecule_2, result_data_2 = load_record_data("psi4_benzene_opt")
+    input_spec_3, molecule_3, result_data_3 = load_record_data("psi4_methane_opt_sometraj")
 
     meta1, id1 = storage_socket.records.optimization.add(
         [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal

@@ -10,12 +10,14 @@ import subprocess
 import sys
 import time
 from contextlib import contextmanager
-from typing import Dict, List, Union, Tuple
+from typing import Dict, List, Union, Tuple, Optional
 
 import pydantic
 from qcelemental.models import Molecule, FailedOperation, OptimizationResult, AtomicResult
 from qcelemental.models.results import WavefunctionProperties
 
+from qcfractal.db_socket import SQLAlchemySocket
+from qcportal.records import PriorityEnum
 from qcportal.records.gridoptimization import GridoptimizationSpecification
 from qcportal.records.manybody import ManybodySpecification
 from qcportal.records.optimization import OptimizationSpecification
@@ -81,7 +83,7 @@ test_users = {
 }
 
 
-def load_procedure_data(name: str):
+def load_record_data(name: str):
     """
     Loads pre-computed/dummy procedure data from the test directory
 
@@ -152,15 +154,28 @@ def load_procedure_data(name: str):
     )
 
 
-def submit_service(storage_socket, input_spec, molecules, tag, priority):
-    if isinstance(input_spec, TorsiondriveSpecification):
-        return storage_socket.records.torsiondrive.add(
-            [molecules], input_spec, tag=tag, priority=priority, as_service=True
-        )
+def submit_record_data(
+    storage_socket: SQLAlchemySocket,
+    name: str,
+    tag: Optional[str] = "*",
+    priority: PriorityEnum = PriorityEnum.normal,
+):
+
+    input_spec, molecules, result_data = load_record_data(name)
+
+    if isinstance(input_spec, QCSpecification):
+        meta, ids = storage_socket.records.singlepoint.add([molecules], input_spec, tag, priority)
+    elif isinstance(input_spec, OptimizationSpecification):
+        meta, ids = storage_socket.records.optimization.add([molecules], input_spec, tag, priority)
+    elif isinstance(input_spec, TorsiondriveSpecification):
+        meta, ids = storage_socket.records.torsiondrive.add([molecules], input_spec, True, tag, priority)
     elif isinstance(input_spec, GridoptimizationSpecification):
-        return storage_socket.records.gridoptimization.add([molecules], input_spec, tag=tag, priority=priority)
+        meta, ids = storage_socket.records.gridoptimization.add([molecules], input_spec, tag, priority)
     else:
         raise RuntimeError(f"Unknown input spec: {type(input_spec)}")
+
+    assert meta.success
+    return ids[0], result_data
 
 
 def load_molecule_data(name: str) -> Molecule:

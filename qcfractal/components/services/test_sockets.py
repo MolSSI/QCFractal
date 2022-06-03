@@ -7,7 +7,7 @@ from qcelemental.models import FailedOperation
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service_constropt
-from qcfractaltesting import load_procedure_data
+from qcfractaltesting import load_record_data, submit_record_data
 from qcportal.outputstore import OutputStore, OutputTypeEnum
 from qcportal.records import RecordStatusEnum, PriorityEnum
 
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 def test_service_socket_error(storage_socket: SQLAlchemySocket):
-    input_spec_1, molecules_1, result_data_1 = load_procedure_data("td_H2O2_psi4_b3lyp")
+    id_1, result_data_1 = submit_record_data(storage_socket, "td_H2O2_psi4_b3lyp", "test_tag", PriorityEnum.low)
 
     # Inject a failed computation
     failed_key = list(result_data_1.keys())[1]
@@ -24,19 +24,14 @@ def test_service_socket_error(storage_socket: SQLAlchemySocket):
         error={"error_type": "test_error", "error_message": "this is just a test error"},
     )
 
-    meta_1, id_1 = storage_socket.records.torsiondrive.add(
-        [molecules_1], input_spec_1, tag="test_tag", priority=PriorityEnum.low, as_service=True
-    )
-    assert meta_1.success
-
     time_0 = datetime.utcnow()
-    finished, n_optimizations = run_service_constropt(id_1[0], result_data_1, storage_socket, 20)
+    finished, n_optimizations = run_service_constropt(storage_socket, id_1, result_data_1, 20)
     time_1 = datetime.utcnow()
 
     assert finished is True
 
     rec = storage_socket.records.torsiondrive.get(
-        id_1, include=["*", "compute_history.*", "compute_history.outputs", "service"]
+        [id_1], include=["*", "compute_history.*", "compute_history.outputs", "service"]
     )
 
     assert rec[0]["status"] == RecordStatusEnum.error
@@ -52,21 +47,14 @@ def test_service_socket_error(storage_socket: SQLAlchemySocket):
 
 
 def test_service_socket_iterate_order(storage_socket: SQLAlchemySocket):
-    input_spec_1, molecules_1, result_data_1 = load_procedure_data("td_H2O2_psi4_b3lyp")
-    input_spec_2, molecules_2, result_data_2 = load_procedure_data("td_H2O2_psi4_pbe")
 
-    # Bit of a hack here
     storage_socket.services._max_active_services = 1
 
-    meta_1, id_1 = storage_socket.records.torsiondrive.add(
-        [molecules_1], input_spec_1, as_service=True, tag="*", priority=PriorityEnum.low
-    )
-    meta_2, id_2 = storage_socket.records.torsiondrive.add(
-        [molecules_2], input_spec_2, as_service=True, tag="*", priority=PriorityEnum.normal
-    )
+    id_1, _ = submit_record_data(storage_socket, "td_H2O2_psi4_b3lyp", "*", PriorityEnum.normal)
+    id_2, _ = submit_record_data(storage_socket, "go_H3NS_psi4_pbe", "*", PriorityEnum.high)
 
     storage_socket.services.iterate_services()
 
-    recs = storage_socket.records.get(id_1 + id_2)
+    recs = storage_socket.records.get([id_1, id_2])
     assert recs[0]["status"] == RecordStatusEnum.waiting
     assert recs[1]["status"] == RecordStatusEnum.running

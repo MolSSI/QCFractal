@@ -202,17 +202,3 @@ def activated_manager_name(storage_socket: SQLAlchemySocket) -> ManagerName:
     )
 
     yield mname
-
-
-@pytest.fixture(scope="function")
-def activated_manager_client(snowflake):
-    """
-    A client connected to a testing snowflake
-
-    This is for a simple snowflake (no security, no compute) because a lot
-    of tests will use this. Other tests will need to use a different fixture
-    and manually call client() there
-    """
-
-    mname = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
-    yield snowflake.manager_client(mname)

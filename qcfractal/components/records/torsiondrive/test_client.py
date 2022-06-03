@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractaltesting import load_molecule_data, load_procedure_data
+from qcfractaltesting import load_molecule_data, load_record_data
 from qcportal.records import PriorityEnum
 from qcportal.records.optimization import (
     OptimizationSpecification,
@@ -121,10 +121,10 @@ def test_torsiondrive_client_add_existing_molecule(snowflake_client: PortalClien
 
 
 def test_torsiondrive_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    input_spec_1, molecules_1, result_data_1 = load_procedure_data("td_H2O2_psi4_b3lyp")
-    input_spec_2, molecules_2, result_data_2 = load_procedure_data("td_H2O2_psi4_pbe")
-    input_spec_3, molecules_3, result_data_3 = load_procedure_data("td_C9H11NO2_psi4_b3lyp-d3bj")
-    input_spec_4, molecules_4, result_data_4 = load_procedure_data("td_H2O2_psi4_bp86")
+    input_spec_1, molecules_1, result_data_1 = load_record_data("td_H2O2_psi4_b3lyp")
+    input_spec_2, molecules_2, result_data_2 = load_record_data("td_H2O2_psi4_pbe")
+    input_spec_3, molecules_3, result_data_3 = load_record_data("td_C9H11NO2_psi4_b3lyp-d3bj")
+    input_spec_4, molecules_4, result_data_4 = load_record_data("td_H2O2_psi4_bp86")
 
     meta_1, id_1 = storage_socket.records.torsiondrive.add(
         [molecules_1], input_spec_1, tag="*", priority=PriorityEnum.normal, as_service=True

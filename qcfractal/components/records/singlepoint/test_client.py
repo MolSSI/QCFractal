@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractaltesting import load_molecule_data, load_procedure_data
+from qcfractaltesting import load_molecule_data, load_record_data
 from qcportal.records import PriorityEnum
 from qcportal.records.singlepoint import (
     QCSpecification,
@@ -104,9 +104,9 @@ def test_singlepoint_client_add_existing_molecule(snowflake_client: PortalClient
 
 
 def test_singlepoint_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_benzene_energy_1")
-    input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_peroxide_energy_wfn")
-    input_spec_3, molecule_3, result_data_3 = load_procedure_data("rdkit_water_energy")
+    input_spec_1, molecule_1, result_data_1 = load_record_data("psi4_benzene_energy_1")
+    input_spec_2, molecule_2, result_data_2 = load_record_data("psi4_peroxide_energy_wfn")
+    input_spec_3, molecule_3, result_data_3 = load_record_data("rdkit_water_energy")
 
     meta1, id1 = storage_socket.records.singlepoint.add(
         [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal

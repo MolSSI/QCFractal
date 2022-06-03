@@ -1,21 +1,17 @@
-"""
-Full end-to-end test of singlepoint
-"""
-
 from __future__ import annotations
 
 import time
 from typing import TYPE_CHECKING
 
 from qcportal.records import RecordStatusEnum
-from . import load_procedure_data
+from . import load_record_data
 
 if TYPE_CHECKING:
     from qcportal import PortalClient
 
 
 def test_reaction_full_1(fulltest_client: PortalClient):
-    input_data, molecules, _ = load_procedure_data("rxn_H2O_psi4_b3lyp_sp")
+    input_data, molecules, _ = load_record_data("rxn_H2O_psi4_b3lyp_sp")
     meta, ids = fulltest_client.add_reactions(
         stoichiometries=[molecules],
         program=input_data.program,
@@ -36,7 +32,7 @@ def test_reaction_full_1(fulltest_client: PortalClient):
 
 
 def test_reaction_full_2(fulltest_client: PortalClient):
-    input_data, molecules, _ = load_procedure_data("rxn_H2O_psi4_mp2_optsp")
+    input_data, molecules, _ = load_record_data("rxn_H2O_psi4_mp2_optsp")
     meta, ids = fulltest_client.add_reactions(
         stoichiometries=[molecules],
         program=input_data.program,

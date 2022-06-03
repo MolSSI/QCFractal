@@ -8,7 +8,7 @@ import qcengine as qcng
 from qcfractal.config import FractalConfig
 from qcfractal.process_runner import ProcessBase, ProcessRunner
 from qcfractalcompute.managers import ComputeManager
-from qcfractaltesting import load_procedure_data
+from qcfractaltesting import submit_record_data
 from qcportal.managers import ManagerStatusEnum, ManagerQueryFilters
 from qcportal.records import PriorityEnum, RecordStatusEnum
 
@@ -29,7 +29,7 @@ class MockTestingExecutor:
 
 class ComputeProcess(ProcessBase):
     """
-    Runs  a compute manager in a separate process
+    Runs a compute manager in a separate process
     """
 
     def __init__(self, qcf_config: FractalConfig, result_data: Dict[int, AllResultTypes]):
@@ -168,34 +168,34 @@ def test_manager_claim_inactive(snowflake: TestingSnowflake, storage_socket: SQL
     assert compute_proc.is_alive() is False
 
 
-def test_manager_claim_return(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
+def populate_db(storage_socket: SQLAlchemySocket):
     # explicitly load enough so we have to do chunking on the return
-    input_spec_0, molecule_0, result_data_0 = load_procedure_data("psi4_methane_opt_sometraj")
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_water_gradient")
-    input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_water_hessian")
-    input_spec_3, molecule_3, result_data_3 = load_procedure_data("psi4_methane_gradient_fail_iter")
-    input_spec_4, molecule_4, result_data_4 = load_procedure_data("rdkit_water_energy")
-    input_spec_5, molecule_5, result_data_5 = load_procedure_data("psi4_benzene_energy_2")
-    input_spec_6, molecule_6, result_data_6 = load_procedure_data("psi4_water_energy")
-
-    meta, id_0 = storage_socket.records.optimization.add([molecule_0], input_spec_0, "tag0", PriorityEnum.normal)
-    meta, id_1 = storage_socket.records.singlepoint.add([molecule_1], input_spec_1, "tag1", PriorityEnum.high)
-    meta, id_2 = storage_socket.records.singlepoint.add([molecule_2], input_spec_2, "tag2", PriorityEnum.high)
-    meta, id_3 = storage_socket.records.singlepoint.add([molecule_3], input_spec_3, "tag3", PriorityEnum.high)
-    meta, id_4 = storage_socket.records.singlepoint.add([molecule_4], input_spec_4, "tag4", PriorityEnum.normal)
-    meta, id_5 = storage_socket.records.singlepoint.add([molecule_5], input_spec_5, "tag5", PriorityEnum.normal)
-    meta, id_6 = storage_socket.records.singlepoint.add([molecule_6], input_spec_6, "tag6", PriorityEnum.normal)
-    all_id = id_0 + id_1 + id_2 + id_3 + id_4 + id_5 + id_6
+    id_0, result_data_0 = submit_record_data(storage_socket, "psi4_methane_opt_sometraj", "tag0", PriorityEnum.normal)
+    id_1, result_data_1 = submit_record_data(storage_socket, "psi4_water_gradient", "tag1", PriorityEnum.high)
+    id_2, result_data_2 = submit_record_data(storage_socket, "psi4_water_hessian", "tag2", PriorityEnum.high)
+    id_3, result_data_3 = submit_record_data(
+        storage_socket, "psi4_methane_gradient_fail_iter", "tag3", PriorityEnum.high
+    )
+    id_4, result_data_4 = submit_record_data(storage_socket, "rdkit_water_energy", "tag4", PriorityEnum.normal)
+    id_5, result_data_5 = submit_record_data(storage_socket, "psi4_benzene_energy_2", "tag5", PriorityEnum.normal)
+    id_6, result_data_6 = submit_record_data(storage_socket, "psi4_water_energy", "tag6", PriorityEnum.normal)
+    all_id = [id_0, id_1, id_2, id_3, id_4, id_5, id_6]
 
     result_data = {
-        id_0[0]: result_data_0,
-        id_1[0]: result_data_1,
-        id_2[0]: result_data_2,
-        id_3[0]: result_data_3,
-        id_4[0]: result_data_4,
-        id_5[0]: result_data_5,
-        id_6[0]: result_data_6,
+        id_0: result_data_0,
+        id_1: result_data_1,
+        id_2: result_data_2,
+        id_3: result_data_3,
+        id_4: result_data_4,
+        id_5: result_data_5,
+        id_6: result_data_6,
     }
+
+    return all_id, result_data
+
+
+def test_manager_claim_return(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
+    all_id, result_data = populate_db(storage_socket)
 
     compute = ComputeProcess(snowflake._qcf_config, result_data)
     compute_proc = ProcessRunner("test_compute", compute)
@@ -206,37 +206,12 @@ def test_manager_claim_return(snowflake: TestingSnowflake, storage_socket: SQLAl
     meta, managers = storage_socket.managers.query(ManagerQueryFilters())
     assert meta.n_found == 1
 
-    snowflake.await_results(all_id, 10.0)
+    r = snowflake.await_results(all_id, 10.0)
+    assert r is True
 
 
 def test_manager_deferred_return(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
-    # explicitly load enough so we have to do chunking on the return
-    input_spec_0, molecule_0, result_data_0 = load_procedure_data("psi4_methane_opt_sometraj")
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_water_gradient")
-    input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_water_hessian")
-    input_spec_3, molecule_3, result_data_3 = load_procedure_data("psi4_methane_gradient_fail_iter")
-    input_spec_4, molecule_4, result_data_4 = load_procedure_data("rdkit_water_energy")
-    input_spec_5, molecule_5, result_data_5 = load_procedure_data("psi4_benzene_energy_2")
-    input_spec_6, molecule_6, result_data_6 = load_procedure_data("psi4_water_energy")
-
-    meta, id_0 = storage_socket.records.optimization.add([molecule_0], input_spec_0, "tag0", PriorityEnum.normal)
-    meta, id_1 = storage_socket.records.singlepoint.add([molecule_1], input_spec_1, "tag1", PriorityEnum.high)
-    meta, id_2 = storage_socket.records.singlepoint.add([molecule_2], input_spec_2, "tag2", PriorityEnum.high)
-    meta, id_3 = storage_socket.records.singlepoint.add([molecule_3], input_spec_3, "tag3", PriorityEnum.high)
-    meta, id_4 = storage_socket.records.singlepoint.add([molecule_4], input_spec_4, "tag4", PriorityEnum.normal)
-    meta, id_5 = storage_socket.records.singlepoint.add([molecule_5], input_spec_5, "tag5", PriorityEnum.normal)
-    meta, id_6 = storage_socket.records.singlepoint.add([molecule_6], input_spec_6, "tag6", PriorityEnum.normal)
-    all_id = id_0 + id_1 + id_2 + id_3 + id_4 + id_5 + id_6
-
-    result_data = {
-        id_0[0]: result_data_0,
-        id_1[0]: result_data_1,
-        id_2[0]: result_data_2,
-        id_3[0]: result_data_3,
-        id_4[0]: result_data_4,
-        id_5[0]: result_data_5,
-        id_6[0]: result_data_6,
-    }
+    all_id, result_data = populate_db(storage_socket)
 
     # Don't use a compute process so we can update, etc, manually
     worker = MockTestingExecutor(result_data)
@@ -283,33 +258,7 @@ def test_manager_deferred_return(snowflake: TestingSnowflake, storage_socket: SQ
 
 
 def test_manager_deferred_drop(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
-    # explicitly load enough so we have to do chunking on the return
-    input_spec_0, molecule_0, result_data_0 = load_procedure_data("psi4_methane_opt_sometraj")
-    input_spec_1, molecule_1, result_data_1 = load_procedure_data("psi4_water_gradient")
-    input_spec_2, molecule_2, result_data_2 = load_procedure_data("psi4_water_hessian")
-    input_spec_3, molecule_3, result_data_3 = load_procedure_data("psi4_methane_gradient_fail_iter")
-    input_spec_4, molecule_4, result_data_4 = load_procedure_data("rdkit_water_energy")
-    input_spec_5, molecule_5, result_data_5 = load_procedure_data("psi4_benzene_energy_2")
-    input_spec_6, molecule_6, result_data_6 = load_procedure_data("psi4_water_energy")
-
-    meta, id_0 = storage_socket.records.optimization.add([molecule_0], input_spec_0, "tag0", PriorityEnum.normal)
-    meta, id_1 = storage_socket.records.singlepoint.add([molecule_1], input_spec_1, "tag1", PriorityEnum.high)
-    meta, id_2 = storage_socket.records.singlepoint.add([molecule_2], input_spec_2, "tag2", PriorityEnum.high)
-    meta, id_3 = storage_socket.records.singlepoint.add([molecule_3], input_spec_3, "tag3", PriorityEnum.high)
-    meta, id_4 = storage_socket.records.singlepoint.add([molecule_4], input_spec_4, "tag4", PriorityEnum.normal)
-    meta, id_5 = storage_socket.records.singlepoint.add([molecule_5], input_spec_5, "tag5", PriorityEnum.normal)
-    meta, id_6 = storage_socket.records.singlepoint.add([molecule_6], input_spec_6, "tag6", PriorityEnum.normal)
-    all_id = id_0 + id_1 + id_2 + id_3 + id_4 + id_5 + id_6
-
-    result_data = {
-        id_0[0]: result_data_0,
-        id_1[0]: result_data_1,
-        id_2[0]: result_data_2,
-        id_3[0]: result_data_3,
-        id_4[0]: result_data_4,
-        id_5[0]: result_data_5,
-        id_6[0]: result_data_6,
-    }
+    all_id, result_data = populate_db(storage_socket)
 
     # Don't use a compute process so we can update, etc, manually
     worker = MockTestingExecutor(result_data)

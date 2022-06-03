@@ -4,13 +4,18 @@ import time
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from qcfractaltesting.helpers import load_procedure_data
+import pytest
+
+from qcfractaltesting.helpers import submit_record_data
 from qcportal.managers import ManagerName, ManagerStatusEnum
-from qcportal.records import RecordStatusEnum, PriorityEnum
+from qcportal.records import RecordStatusEnum
 from qcportal.serverinfo import ServerStatsQueryFilters
 
 if TYPE_CHECKING:
     from qcfractal.testing_helpers import TestingSnowflake, SQLAlchemySocket
+
+
+pytestmark = pytest.mark.slow
 
 
 def test_periodics_server_stats(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
@@ -61,16 +66,11 @@ def test_periodics_manager_heartbeats(snowflake: TestingSnowflake, storage_socke
 
 def test_periodics_service_iteration(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
 
-    input_spec_1, molecules_1, result_data_1 = load_procedure_data("td_H2O2_psi4_b3lyp")
-    input_spec_2, molecules_2, result_data_2 = load_procedure_data("td_H2O2_psi4_pbe")
+    id_1, _ = submit_record_data(storage_socket, "td_H2O2_psi4_b3lyp")
 
     service_freq = snowflake._qcf_config.service_frequency
 
-    meta_1, id_1 = storage_socket.records.torsiondrive.add(
-        [molecules_1], input_spec_1, tag="*", priority=PriorityEnum.normal, as_service=True
-    )
-
-    rec = storage_socket.records.get(id_1)
+    rec = storage_socket.records.get([id_1])
     assert rec[0]["status"] == RecordStatusEnum.waiting
 
     snowflake.start_periodics()
@@ -78,17 +78,15 @@ def test_periodics_service_iteration(snowflake: TestingSnowflake, storage_socket
     time.sleep(1.0)
 
     # added after startup
-    meta_2, id_2 = storage_socket.records.torsiondrive.add(
-        [molecules_2], input_spec_2, tag="*", priority=PriorityEnum.normal, as_service=True
-    )
+    id_2, _ = submit_record_data(storage_socket, "go_H2O2_psi4_blyp")
 
     # The first services iterated at startup
-    rec = storage_socket.records.get(id_1 + id_2)
+    rec = storage_socket.records.get([id_1, id_2])
     assert rec[0]["status"] == RecordStatusEnum.running
     assert rec[1]["status"] == RecordStatusEnum.waiting
 
     # wait for the next iteration. Then both should be running
     time.sleep(service_freq + 0.5)
-    rec = storage_socket.records.get(id_1 + id_2)
+    rec = storage_socket.records.get([id_1, id_2])
     assert rec[0]["status"] == RecordStatusEnum.running
     assert rec[1]["status"] == RecordStatusEnum.running
