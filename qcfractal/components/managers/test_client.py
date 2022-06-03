@@ -1,15 +1,40 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 import pytest
 
-from qcportal import PortalRequestError
+from qcfractal.testing_helpers import TestingSnowflake
+from qcportal import PortalRequestError, PortalClient
 from qcportal.managers import ManagerName, ManagerStatusEnum
 
-if TYPE_CHECKING:
-    from qcfractal.testing_helpers import TestingSnowflake
+
+@pytest.fixture(scope="module")
+def queryable_managers_client(module_temporary_database):
+    db_config = module_temporary_database.config
+    with TestingSnowflake(db_config, encoding="application/json") as server:
+
+        for cluster_i in range(4):
+            for host_i in range(10):
+                for uuid_i in range(3):
+                    mname = ManagerName(
+                        cluster=f"test_cluster_{cluster_i}",
+                        hostname=f"test_host_{host_i}",
+                        uuid=f"1234-5678-1234-567{uuid_i}",
+                    )
+
+                    mclient = server.manager_client(mname)
+                    mclient.activate(
+                        manager_version="v2.0",
+                        qcengine_version="v1.0",
+                        programs={"qcprog": None, "qcprog2": "v3.0"},
+                        tags=[f"tag_{cluster_i}", "tag2"],
+                    )
+
+                    if uuid_i == 0:
+                        mclient.deactivate(1.0, 1.0, 1, 1, 1.0)
+
+        yield server.client()
 
 
 def test_manager_client_get(snowflake: TestingSnowflake):
@@ -20,24 +45,23 @@ def test_manager_client_get(snowflake: TestingSnowflake):
     # UUID is different
     mname2 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5679")
 
-    storage_socket = snowflake.get_storage_socket()
     client = snowflake.client()
 
-    storage_socket.managers.activate(
-        name_data=mname1,
+    mclient1 = snowflake.manager_client(mname1, username="bill")
+    mclient2 = snowflake.manager_client(mname2, username="bill")
+
+    time_0 = datetime.utcnow()
+    mclient1.activate(
         manager_version="v2.0",
         qcengine_version="v1.0",
-        username="bill",
         programs={"qcprog": None, "qcprog2": "v3.0"},
         tags=["tag1", "tag2"],
     )
 
     time_1 = datetime.utcnow()
-    storage_socket.managers.activate(
-        name_data=mname2,
+    mclient2.activate(
         manager_version="v2.0",
         qcengine_version="v1.0",
-        username="bill",
         programs={"qcprog": None, "qcprog2": "v3.0"},
         tags=["tag1"],
     )
@@ -59,6 +83,7 @@ def test_manager_client_get(snowflake: TestingSnowflake):
     assert manager[1].modified_on > time_0
     assert manager[1].created_on < time_1
     assert manager[1].modified_on < time_1
+    assert manager[1].log is None
 
     assert manager[0].name == name2
     assert manager[0].tags == ["tag1"]
@@ -67,125 +92,81 @@ def test_manager_client_get(snowflake: TestingSnowflake):
     assert manager[0].modified_on > time_1
     assert manager[0].created_on < time_2
     assert manager[0].modified_on < time_2
+    assert manager[0].log is None
 
     assert manager[2] == manager[1]
     assert manager[3] == manager[0]
 
+    # Including logs
+    manager = client.get_managers(name1, include=["log"])
+    assert manager.log is not None
 
-def test_manager_client_get_nonexist(snowflake: TestingSnowflake):
-    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
 
-    storage_socket = snowflake.get_storage_socket()
+def test_manager_client_get_nonexist(snowflake: TestingSnowflake, activated_manager_name: ManagerName):
     client = snowflake.client()
-
-    storage_socket.managers.activate(
-        name_data=mname1,
-        manager_version="v2.0",
-        qcengine_version="v1.0",
-        username="bill",
-        programs={"qcprog": None, "qcprog2": "v3.0"},
-        tags=["tag1", "tag2"],
-    )
-
-    manager = client.get_managers(["noname"], missing_ok=True)
-    assert manager == [None]
+    manager = client.get_managers(["noname", activated_manager_name.fullname], missing_ok=True)
+    assert manager[0] is None
+    assert manager[1] is not None
 
     with pytest.raises(PortalRequestError):
-        client.get_managers(["noname", mname1.fullname], missing_ok=False)
+        client.get_managers(["noname", activated_manager_name.fullname], missing_ok=False)
 
 
-def test_manager_client_get_empty(snowflake: TestingSnowflake):
-    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
-
-    storage_socket = snowflake.get_storage_socket()
+def test_manager_client_get_empty(snowflake: TestingSnowflake, activated_manager_name: ManagerName):
+    # include activated_manager_name so that there is something in the db
     client = snowflake.client()
-
-    storage_socket.managers.activate(
-        name_data=mname1,
-        manager_version="v2.0",
-        qcengine_version="v1.0",
-        username="bill",
-        programs={"qcprog": None, "qcprog2": "v3.0"},
-        tags=["tag1", "tag2"],
-    )
-
     manager = client.get_managers([], missing_ok=True)
     assert manager == []
 
 
-def test_manager_client_query(snowflake: TestingSnowflake):
-    storage_socket = snowflake.get_storage_socket()
-    client = snowflake.client()
+def test_manager_client_query(queryable_managers_client: PortalClient):
+    query_res = queryable_managers_client.query_managers(status="active")
+    assert query_res.current_meta.n_found == 80
 
-    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
-    mname2 = ManagerName(cluster="test_cluster_2", hostname="a_host_2", uuid="1234-5678-1234-5679")
+    query_res = queryable_managers_client.query_managers(hostname="test_host_1")
+    assert query_res.current_meta.n_found == 12
 
-    time_0 = datetime.utcnow()
-    storage_socket.managers.activate(
-        mname1,
-        manager_version="v2.0",
-        qcengine_version="v1.0",
-        username="bill",
-        programs={"qcprog": None, "qcprog2": "v3.0"},
-        tags=["tag1", "tag2"],
+    query_res = queryable_managers_client.query_managers(hostname="test_host_1", status="inactive")
+    assert query_res.current_meta.n_found == 4
+
+    query_res = queryable_managers_client.query_managers(cluster="test_cluster_2", status="active")
+    assert query_res.current_meta.n_found == 20
+
+    query_res = queryable_managers_client.query_managers(
+        name=["test_cluster_2-test_host_1-1234-5678-1234-5672", "test_cluster_1-test_host_2-1234-5678-1234-5671"]
     )
+    assert query_res.current_meta.n_found == 2
 
-    time_1 = datetime.utcnow()
-    storage_socket.managers.activate(
-        name_data=mname2,
-        manager_version="v2.0",
-        qcengine_version="v1.0",
-        username="bill",
-        programs={"qcprog": None, "qcprog2": "v3.0"},
-        tags=["tag1", "tag2"],
-    )
+    managers = list(query_res)
+    query_res = queryable_managers_client.query_managers(manager_ids=[managers[0].id, managers[1].id])
+    assert query_res.current_meta.n_found == 2
+    assert all(x.log is None for x in query_res)
 
-    time_2 = datetime.utcnow()
-    name1 = mname1.fullname
-    name2 = mname2.fullname
+    query_res = queryable_managers_client.query_managers(manager_ids=[managers[0].id, managers[1].id], include=["log"])
+    assert query_res.current_meta.n_found == 2
+    assert all(x.log is not None for x in query_res)
 
-    storage_socket.managers.deactivate([name2])
 
-    # Logs not included by default
-    meta, managers = client.query_managers(name=[name1, name2, name1, name2])
-    assert len(managers) == 2
-    assert managers[0].log is None
-    assert managers[1].log is None
+def test_manager_client_query_empty_iter(queryable_managers_client: PortalClient):
 
-    meta, managers = client.query_managers(hostname=["a_host"])
-    assert meta.n_found == 1
-    assert managers[0].hostname == "a_host"
+    query_res = queryable_managers_client.query_managers()
+    assert len(query_res.current_batch) < queryable_managers_client.api_limits["get_managers"]
 
-    meta, managers = client.query_managers(cluster=["test_cluster_2"])
-    assert meta.n_found == 1
-    assert managers[0].cluster == "test_cluster_2"
+    managers = list(query_res)
+    assert len(managers) == 120
 
-    meta, managers = client.query_managers(modified_before=time_0)
-    assert meta.n_found == 0
 
-    meta, managers = client.query_managers(modified_before=time_1)
-    assert meta.n_found == 1
-    assert managers[0].hostname == "a_host"
+def test_manager_client_query_limit(queryable_managers_client: PortalClient):
 
-    meta, managers = client.query_managers(modified_after=time_1)
-    assert meta.n_found == 1
-    assert managers[0].hostname == "a_host_2"
+    query_res = queryable_managers_client.query_managers(limit=19)
+    assert query_res.current_meta.n_found == 120
+    assert len(query_res.current_batch) < queryable_managers_client.api_limits["get_managers"]
 
-    meta, managers = client.query_managers(status=[ManagerStatusEnum.active])
-    assert meta.n_found == 1
-    assert managers[0].hostname == "a_host"
+    managers = list(query_res)
+    assert len(managers) == 19
 
-    meta, managers = client.query_managers(status=[ManagerStatusEnum.active, ManagerStatusEnum.inactive])
-    assert meta.n_found == 2
+    query_res = queryable_managers_client.query_managers(hostname="test_host_1", limit=11)
+    assert query_res.current_meta.n_found == 12
 
-    meta, managers = client.query_managers(status=[ManagerStatusEnum.active, ManagerStatusEnum.inactive], limit=1)
-    assert meta.n_found == 2
-    assert len(managers) == 1
-
-    meta, managers = client.query_managers(status=[ManagerStatusEnum.active, ManagerStatusEnum.inactive], skip=1)
-    assert meta.n_found == 2
-    assert len(managers) == 1
-
-    # Empty query
-    meta, managers = client.query_managers()
-    assert len(managers) == 2
+    managers = list(query_res)
+    assert len(managers) == 11

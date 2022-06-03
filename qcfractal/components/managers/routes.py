@@ -58,7 +58,7 @@ def bulk_get_managers_v1(body_data: CommonBulkGetNamesBody):
     if len(body_data.names) > limit:
         raise LimitExceededError(f"Cannot get {len(body_data.names)} manager records - limit is {limit}")
 
-    return storage_socket.managers.get(body_data.names, body_data.include, body_data.include, body_data.missing_ok)
+    return storage_socket.managers.get(body_data.names, body_data.include, body_data.exclude, body_data.missing_ok)
 
 
 @main.route("/v1/managers/query", methods=["POST"])

@@ -6,4 +6,5 @@ from .models import (
     ManagerActivationBody,
     ManagerUpdateBody,
     ManagerQueryFilters,
+    ManagerQueryIterator,
 )

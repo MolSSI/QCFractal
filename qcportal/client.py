@@ -27,7 +27,7 @@ from .datasets import (
     DatasetDeleteParams,
     DatasetAddBody,
 )
-from .managers import ManagerQueryFilters, ComputeManager
+from .managers import ManagerQueryFilters, ManagerQueryIterator, ComputeManager
 from .metadata_models import QueryMetadata, UpdateMetadata, InsertMetadata, DeleteMetadata
 from .molecules import Molecule, MoleculeIdentifiers, MoleculeModifyBody, MoleculeQueryIterator, MoleculeQueryFilters
 from .permissions import (
@@ -2424,6 +2424,8 @@ class PortalClient(PortalClientBase):
         self,
         names: Union[str, Sequence[str]],
         missing_ok: bool = False,
+        *,
+        include: Optional[Iterable[str]] = None,
     ) -> Union[Optional[ComputeManager], List[Optional[ComputeManager]]]:
         """Obtain manager information from the server with the specified names
 
@@ -2434,6 +2436,8 @@ class PortalClient(PortalClientBase):
         missing_ok
             If set to True, then missing managers will be tolerated, and the returned
             managers will contain None for the corresponding managers that were not found.
+        include
+            Additional fields to include in the returned managers
 
         Returns
         -------
@@ -2443,13 +2447,17 @@ class PortalClient(PortalClientBase):
             that was not found.
         """
 
-        is_single = not isinstance(names, Sequence)
+        is_single = isinstance(names, str)
 
         names = make_list(names)
         if not names:
             return []
 
         body_data = CommonBulkGetNamesBody(names=names, missing_ok=missing_ok)
+
+        if include:
+            body_data.include = ComputeManager.transform_includes(include)
+
         managers = self._auto_request(
             "post", "v1/managers/bulkGet", CommonBulkGetNamesBody, None, List[Optional[ComputeManager]], body_data, None
         )
@@ -2468,10 +2476,10 @@ class PortalClient(PortalClientBase):
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
         modified_before: Optional[datetime] = None,
         modified_after: Optional[datetime] = None,
-        include_log: bool = False,
         limit: Optional[int] = None,
-        skip: int = 0,
-    ) -> Tuple[QueryMetadata, List[ComputeManager]]:
+        *,
+        include: Optional[Iterable[str]] = None,
+    ) -> ManagerQueryIterator:
         """
         Queries manager information on the server
 
@@ -2491,12 +2499,8 @@ class PortalClient(PortalClientBase):
             Query for managers last modified before a certain time
         modified_after
             Query for managers last modified after a certain time
-        include_log
-            If True, include the log entries for the manager in the returned manager
         limit
             The maximum number of managers to return. Note that the server limit is always obeyed.
-        skip
-            The number of managers to skip in the query. This can be used for pagination
 
         Returns
         -------
@@ -2505,11 +2509,7 @@ class PortalClient(PortalClientBase):
             and a list of ComputeManager matching the specified query.
         """
 
-        if limit is not None and limit > self.api_limits["get_managers"]:
-            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
-            limit = min(limit, self.api_limits["get_managers"])
-
-        query_body = {
+        filter_dict = {
             "manager_id": make_list(manager_ids),
             "name": make_list(name),
             "cluster": make_list(cluster),
@@ -2518,21 +2518,13 @@ class PortalClient(PortalClientBase):
             "modified_before": modified_before,
             "modified_after": modified_after,
             "limit": limit,
-            "skip": skip,
         }
 
-        if include_log:
-            query_body["include"] = ["*", "log"]
+        if include:
+            filter_dict["include"] = ["*", "log"]
 
-        return self._auto_request(
-            "post",
-            "v1/managers/query",
-            ManagerQueryFilters,
-            None,
-            Tuple[QueryMetadata, List[ComputeManager]],
-            query_body,
-            None,
-        )
+        filter_data = ManagerQueryFilters(**filter_dict)
+        return ManagerQueryIterator(self, filter_data)
 
     ##############################################################
     # Server statistics and logs

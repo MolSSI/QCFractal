@@ -23,6 +23,7 @@ def validate_list_to_single(v):
 class RestModelBase(BaseModel):
     class Config:
         extra = Extra.forbid
+        validate_assignment = True
 
 
 class CommonBulkGetBody(RestModelBase):

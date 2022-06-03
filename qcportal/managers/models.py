@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Iterable, Set, Tuple
 
 from pydantic import BaseModel, Field, constr, validator
 
 from qcportal.base_models import RestModelBase, QueryProjModelBase
+from ..base_models import QueryIteratorBase
+from ..metadata_models import QueryMetadata
 
 
 class ManagerStatusEnum(str, Enum):
@@ -61,6 +63,8 @@ class ComputeManagerLogEntry(BaseModel):
     active_cores: int
     active_memory: float
 
+    timestamp: datetime
+
 
 class ComputeManager(BaseModel):
     id: int = Field(...)
@@ -89,7 +93,19 @@ class ComputeManager(BaseModel):
     manager_version: str
     programs: Dict[str, Any]
 
-    log: Optional[List[ComputeManagerLogEntry]]
+    log: Optional[List[ComputeManagerLogEntry]] = None
+
+    @staticmethod
+    def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
+        if includes is None:
+            return None
+
+        ret: Set[str] = {"*"}
+
+        if "log" in includes:
+            ret.add("log")
+
+        return ret
 
 
 class ManagerActivationBody(RestModelBase):
@@ -135,3 +151,20 @@ class ManagerQueryFilters(QueryProjModelBase):
     status: Optional[List[ManagerStatusEnum]] = None
     modified_before: Optional[datetime] = None
     modified_after: Optional[datetime] = None
+
+
+class ManagerQueryIterator(QueryIteratorBase):
+    def __init__(self, client, query_filters: ManagerQueryFilters):
+        api_limit = client.api_limits["get_managers"] // 4
+        QueryIteratorBase.__init__(self, client, query_filters, api_limit)
+
+    def _request(self) -> Tuple[Optional[QueryMetadata], List[ManagerQueryFilters]]:
+        return self.client._auto_request(
+            "post",
+            "v1/managers/query",
+            ManagerQueryFilters,
+            None,
+            Tuple[Optional[QueryMetadata], List[ComputeManager]],
+            self.query_filters,
+            None,
+        )

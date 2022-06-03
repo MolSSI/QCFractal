@@ -17,6 +17,9 @@ from qcfractaltesting import valid_encodings, geoip_path
 #######################################
 # Database and storage socket fixtures
 #######################################
+from qcportal.managers import ManagerName
+
+
 @pytest.fixture(scope="session")
 def postgres_server(tmp_path_factory):
     """
@@ -180,3 +183,36 @@ def snowflake_client(snowflake):
     """
 
     yield snowflake.client()
+
+
+@pytest.fixture(scope="function")
+def activated_manager_name(storage_socket: SQLAlchemySocket) -> ManagerName:
+    """
+    An activated manager, returning only its manager name
+    """
+    mname = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
+
+    storage_socket.managers.activate(
+        name_data=mname,
+        manager_version="v2.0",
+        qcengine_version="v1.0",
+        username="bill",
+        programs={"psi4": None, "qchem": None, "geometric": None},
+        tags=["*"],
+    )
+
+    yield mname
+
+
+@pytest.fixture(scope="function")
+def activated_manager_client(snowflake):
+    """
+    A client connected to a testing snowflake
+
+    This is for a simple snowflake (no security, no compute) because a lot
+    of tests will use this. Other tests will need to use a different fixture
+    and manually call client() there
+    """
+
+    mname = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
+    yield snowflake.manager_client(mname)

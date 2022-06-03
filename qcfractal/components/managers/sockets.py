@@ -285,11 +285,21 @@ class ManagerSocket:
             stmt = select(ComputeManagerORM).filter(and_(*and_query))
             stmt = stmt.options(*proj_options)
 
-            n_found = get_count(session, stmt)
-            stmt = stmt.limit(query_data.limit).offset(query_data.skip)
+            if query_data.include_metadata:
+                n_found = get_count(session, stmt)
+
+            if query_data.cursor is not None:
+                stmt = stmt.where(ComputeManagerORM.id < query_data.cursor)
+
+            stmt = stmt.order_by(ComputeManagerORM.id.desc())
+            stmt = stmt.limit(query_data.limit)
 
             results = session.execute(stmt).scalars().all()
             result_dicts = [x.model_dict() for x in results]
 
-        meta = QueryMetadata(n_found=n_found)
+        if query_data.include_metadata:
+            meta = QueryMetadata(n_found=n_found)
+        else:
+            meta = None
+
         return meta, result_dicts
