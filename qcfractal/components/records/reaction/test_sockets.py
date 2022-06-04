@@ -15,6 +15,7 @@ from qcportal.records.singlepoint import SinglepointProtocols, QCSpecification
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
+    from qcportal.managers import ManagerName
     from typing import Union, Dict, Any
 
 
@@ -224,7 +225,9 @@ def test_reaction_socket_query(storage_socket: SQLAlchemySocket):
         "rxn_H2O_psi4_mp2_optsp",
     ],
 )
-def test_reaction_socket_run(storage_socket: SQLAlchemySocket, test_data_name: str):
+def test_reaction_socket_run(
+    storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, test_data_name: str
+):
     input_spec_1, molecules_1, result_data_1 = load_record_data(test_data_name)
 
     meta_1, id_1 = storage_socket.records.reaction.add(
@@ -233,7 +236,7 @@ def test_reaction_socket_run(storage_socket: SQLAlchemySocket, test_data_name: s
     assert meta_1.success
 
     time_0 = datetime.utcnow()
-    finished, n_singlepoints = run_service_simple(storage_socket, id_1[0], result_data_1, 100)
+    finished, n_singlepoints = run_service_simple(storage_socket, activated_manager_name, id_1[0], result_data_1, 100)
     time_1 = datetime.utcnow()
 
     assert finished is True

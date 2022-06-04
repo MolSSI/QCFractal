@@ -187,6 +187,7 @@ class TestingSnowflake(FractalSnowflake):
 
 def run_service_constropt(
     storage_socket: SQLAlchemySocket,
+    manager_name: ManagerName,
     record_id: int,
     result_data: Dict[str, Any],
     max_iterations: int = 20,
@@ -194,25 +195,6 @@ def run_service_constropt(
     """
     Runs a service that is based on constrained optimizations
     """
-
-    # A manager for completing the tasks
-    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
-
-    # See if this manager exists and activate if not
-    manager = storage_socket.managers.get([mname1.fullname], missing_ok=True)
-
-    if manager[0] is None:
-        storage_socket.managers.activate(
-            name_data=mname1,
-            manager_version="v2.0",
-            qcengine_version="v1.0",
-            username="bill",
-            programs={
-                "geometric": None,
-                "psi4": None,
-            },
-            tags=["*"],
-        )
 
     rec = storage_socket.records.get([record_id], include=["*", "service"])
     assert rec[0]["status"] in [RecordStatusEnum.waiting, RecordStatusEnum.running]
@@ -238,7 +220,7 @@ def run_service_constropt(
         assert rec[0]["status"] == RecordStatusEnum.running
 
         # only do 5 tasks at a time. Tests iteration when stuff is not completed
-        manager_tasks = storage_socket.tasks.claim_tasks(mname1.fullname, limit=5)
+        manager_tasks = storage_socket.tasks.claim_tasks(manager_name.fullname, limit=5)
 
         # Sometimes a task may be duplicated in the service dependencies.
         # The C8H6 test has this "feature"
@@ -264,7 +246,7 @@ def run_service_constropt(
             opt_data = result_data[optresult_key]
             manager_ret[opt["task"]["id"]] = opt_data
 
-        rmeta = storage_socket.tasks.update_finished(mname1.fullname, manager_ret)
+        rmeta = storage_socket.tasks.update_finished(manager_name.fullname, manager_ret)
         assert rmeta.n_accepted == len(manager_tasks)
         n_optimizations += len(manager_ret)
 
@@ -273,30 +255,14 @@ def run_service_constropt(
 
 def run_service_simple(
     storage_socket: SQLAlchemySocket,
+    manager_name: ManagerName,
     record_id: int,
     result_data: Dict[str, Any],
     max_iterations: int = 20,
-    activate_manager: bool = True,
 ) -> Tuple[bool, int]:
     """
     Runs a service that is based on singlepoint calculations
     """
-
-    # A manager for completing the tasks
-    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
-
-    if activate_manager:
-        storage_socket.managers.activate(
-            name_data=mname1,
-            manager_version="v2.0",
-            qcengine_version="v1.0",
-            username="bill",
-            programs={
-                "geometric": None,
-                "psi4": None,
-            },
-            tags=["*"],
-        )
 
     rec = storage_socket.records.get([record_id], include=["*", "service"])
     assert rec[0]["status"] in [RecordStatusEnum.waiting, RecordStatusEnum.running]
@@ -322,7 +288,7 @@ def run_service_simple(
         assert rec[0]["status"] == RecordStatusEnum.running
 
         # only do 5 tasks at a time. Tests iteration when stuff is not completed
-        manager_tasks = storage_socket.tasks.claim_tasks(mname1.fullname, limit=5)
+        manager_tasks = storage_socket.tasks.claim_tasks(manager_name.fullname, limit=5)
 
         # Sometimes a task may be duplicated in the service dependencies.
         # The C8H6 test has this "feature"
@@ -350,7 +316,7 @@ def run_service_simple(
             task_result = result_data[key]
             manager_ret[r["task"]["id"]] = task_result
 
-        rmeta = storage_socket.tasks.update_finished(mname1.fullname, manager_ret)
+        rmeta = storage_socket.tasks.update_finished(manager_name.fullname, manager_ret)
         assert rmeta.n_accepted == len(manager_tasks)
         n_records += len(manager_ret)
 

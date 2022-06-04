@@ -7,7 +7,8 @@ from qcelemental.models import FailedOperation
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service_constropt
-from qcfractaltesting import load_record_data, submit_record_data
+from qcfractaltesting import submit_record_data
+from qcportal.managers import ManagerName
 from qcportal.outputstore import OutputStore, OutputTypeEnum
 from qcportal.records import RecordStatusEnum, PriorityEnum
 
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
 
 
-def test_service_socket_error(storage_socket: SQLAlchemySocket):
+def test_service_socket_error(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName):
     id_1, result_data_1 = submit_record_data(storage_socket, "td_H2O2_psi4_b3lyp", "test_tag", PriorityEnum.low)
 
     # Inject a failed computation
@@ -25,7 +26,7 @@ def test_service_socket_error(storage_socket: SQLAlchemySocket):
     )
 
     time_0 = datetime.utcnow()
-    finished, n_optimizations = run_service_constropt(storage_socket, id_1, result_data_1, 20)
+    finished, n_optimizations = run_service_constropt(storage_socket, activated_manager_name, id_1, result_data_1, 20)
     time_1 = datetime.utcnow()
 
     assert finished is True

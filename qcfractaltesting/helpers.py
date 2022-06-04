@@ -86,6 +86,43 @@ test_users = {
 }
 
 
+def read_record_data(name: str):
+    """
+    Loads pre-computed/dummy procedure data from the test directory
+
+    Parameters
+    ----------
+    name
+        The name of the file to load (without the json extension)
+
+    Returns
+    -------
+    :
+        A dictionary with all the data in the file
+
+    """
+
+    data_path = os.path.join(_my_path, "procedure_data")
+    file_path = os.path.join(data_path, name + ".json.xz")
+    is_xz = True
+
+    if not os.path.exists(file_path):
+        file_path = os.path.join(data_path, name + ".json")
+        is_xz = False
+
+    if not os.path.exists(file_path):
+        raise RuntimeError(f"Procedure data file {file_path} not found!")
+
+    if is_xz:
+        with lzma.open(file_path, "rt") as f:
+            data = json.load(f, object_hook=_json_decode)
+    else:
+        with open(file_path, "r") as f:
+            data = json.load(f, object_hook=_json_decode)
+
+    return data
+
+
 def load_record_data(name: str):
     """
     Loads pre-computed/dummy procedure data from the test directory

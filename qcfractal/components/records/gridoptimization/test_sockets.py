@@ -26,6 +26,7 @@ from qcportal.records.singlepoint import (
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
+    from qcportal.managers import ManagerName
     from typing import Dict, Any, Union
 
 
@@ -334,7 +335,9 @@ def test_gridoptimization_socket_query(storage_socket: SQLAlchemySocket):
         "go_H3NS_psi4_pbe",
     ],
 )
-def test_gridoptimization_socket_run(storage_socket: SQLAlchemySocket, test_data_name: str):
+def test_gridoptimization_socket_run(
+    storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, test_data_name: str
+):
     input_spec_1, molecules_1, result_data_1 = load_record_data(test_data_name)
 
     meta_1, id_1 = storage_socket.records.gridoptimization.add(
@@ -343,7 +346,9 @@ def test_gridoptimization_socket_run(storage_socket: SQLAlchemySocket, test_data
     assert meta_1.success
 
     time_0 = datetime.utcnow()
-    finished, n_optimizations = run_service_constropt(storage_socket, id_1[0], result_data_1, 100)
+    finished, n_optimizations = run_service_constropt(
+        storage_socket, activated_manager_name, id_1[0], result_data_1, 100
+    )
     time_1 = datetime.utcnow()
 
     assert finished is True

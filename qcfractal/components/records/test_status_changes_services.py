@@ -3,10 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from qcelemental.models import FailedOperation
+from qcelemental.models import FailedOperation, ComputeError
 
 from qcfractal.testing_helpers import run_service_constropt
 from qcfractaltesting import submit_record_data
+from qcportal.managers import ManagerName
 from qcportal.records import RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:
@@ -24,11 +25,14 @@ test_files = [
 
 @pytest.mark.parametrize("procedure_file", test_files)
 def test_record_client_reset_running_service(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, procedure_file: str
+    snowflake_client: PortalClient,
+    storage_socket: SQLAlchemySocket,
+    activated_manager_name: ManagerName,
+    procedure_file: str,
 ):
     svc_id, result_data = submit_record_data(storage_socket, procedure_file)
 
-    finished, n_optimizations = run_service_constropt(storage_socket, svc_id, result_data, 1)
+    finished, n_optimizations = run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 1)
     while not finished:
         snowflake_client.reset_records([svc_id])
 
@@ -41,7 +45,9 @@ def test_record_client_reset_running_service(
 
         # we need two iterations. The first will move the service to running,
         # the second will actually iterate if necessary
-        finished, n_optimizations = run_service_constropt(storage_socket, svc_id, result_data, 2)
+        finished, n_optimizations = run_service_constropt(
+            storage_socket, activated_manager_name, svc_id, result_data, 2
+        )
 
         rec = storage_socket.records.get([svc_id])
         assert rec[0]["status"] in [RecordStatusEnum.running, RecordStatusEnum.complete]
@@ -49,18 +55,21 @@ def test_record_client_reset_running_service(
 
 @pytest.mark.parametrize("procedure_file", test_files)
 def test_record_client_reset_error_service(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, procedure_file: str
+    snowflake_client: PortalClient,
+    storage_socket: SQLAlchemySocket,
+    activated_manager_name: ManagerName,
+    procedure_file: str,
 ):
     svc_id, result_data = submit_record_data(storage_socket, procedure_file)
 
     # create an alternative result dict where everything has errored
     failed_op = FailedOperation(
-        error={"error_type": "test_error", "error_message": "this is just a test error"},
+        error=ComputeError(error_type="test_error", error_message="this is just a test error"),
     )
 
     failed_data = {x: failed_op for x in result_data.keys()}
 
-    run_service_constropt(storage_socket, svc_id, result_data, 1)
+    run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 1)
 
     while True:
         snowflake_client.reset_records([svc_id])
@@ -74,7 +83,7 @@ def test_record_client_reset_error_service(
 
         # Move the service to running. This will also use result_data to populate some of the
         # previously-errored (now waiting) dependencies
-        run_service_constropt(storage_socket, svc_id, result_data, 1)
+        run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 1)
 
         rec = storage_socket.records.get([svc_id])
         assert rec[0]["status"] == RecordStatusEnum.running
@@ -83,7 +92,7 @@ def test_record_client_reset_error_service(
         # needs multiple iterations - first generates tasks and submits results
         # second returns all tasks as errored
         # iteration will only happen when all tasks are completed or errored
-        run_service_constropt(storage_socket, svc_id, failed_data, 200)
+        run_service_constropt(storage_socket, activated_manager_name, svc_id, failed_data, 200)
 
         rec = storage_socket.records.get([svc_id], include=["*", "service.dependencies.record"])
         assert rec[0]["status"] in [RecordStatusEnum.error, RecordStatusEnum.complete]
@@ -98,7 +107,10 @@ def test_record_client_reset_error_service(
 
 @pytest.mark.parametrize("procedure_file", test_files)
 def test_record_client_cancel_waiting_service(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, procedure_file: str
+    snowflake_client: PortalClient,
+    storage_socket: SQLAlchemySocket,
+    activated_manager_name: ManagerName,
+    procedure_file: str,
 ):
     svc_id, result_data = submit_record_data(storage_socket, procedure_file, "test_tag", PriorityEnum.low)
 
@@ -117,7 +129,7 @@ def test_record_client_cancel_waiting_service(
     assert rec[0]["service"]["tag"] == "test_tag"
     assert rec[0]["service"]["priority"] == PriorityEnum.low
 
-    finished, n_optimizations = run_service_constropt(storage_socket, svc_id, result_data, 200)
+    finished, n_optimizations = run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 200)
 
     assert finished
     rec = storage_socket.records.get([svc_id], include=["*", "compute_history.outputs"])
@@ -128,10 +140,13 @@ def test_record_client_cancel_waiting_service(
 
 @pytest.mark.parametrize("procedure_file", test_files)
 def test_record_client_cancel_waiting_service_child(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, procedure_file: str
+    snowflake_client: PortalClient,
+    storage_socket: SQLAlchemySocket,
+    activated_manager_name: ManagerName,
+    procedure_file: str,
 ):
     svc_id, result_data = submit_record_data(storage_socket, procedure_file)
-    run_service_constropt(storage_socket, svc_id, result_data, 1)
+    run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 1)
 
     # Cancel a child
     with storage_socket.session_scope() as session:
@@ -146,7 +161,7 @@ def test_record_client_cancel_waiting_service_child(
     # Uncancel & continue
     snowflake_client.uncancel_records([svc_id])
 
-    finished, n_optimizations = run_service_constropt(storage_socket, svc_id, result_data, 200)
+    finished, n_optimizations = run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 200)
     assert finished
     rec = storage_socket.records.get([svc_id])
     assert rec[0]["status"] == RecordStatusEnum.complete
@@ -154,12 +169,15 @@ def test_record_client_cancel_waiting_service_child(
 
 @pytest.mark.parametrize("procedure_file", test_files)
 def test_record_client_cancel_running_service(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, procedure_file: str
+    snowflake_client: PortalClient,
+    storage_socket: SQLAlchemySocket,
+    activated_manager_name: ManagerName,
+    procedure_file: str,
 ):
     svc_id, result_data = submit_record_data(storage_socket, procedure_file)
 
     # Get it running
-    finished, n_optimizations = run_service_constropt(storage_socket, svc_id, result_data, 1)
+    finished, n_optimizations = run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 1)
 
     rec = storage_socket.records.get([svc_id])
     assert rec[0]["status"] == RecordStatusEnum.running
@@ -190,23 +208,28 @@ def test_record_client_cancel_running_service(
 
         # we need two iterations. The first will move the service to running,
         # the second will actually iterate if necessary
-        finished, n_optimizations = run_service_constropt(storage_socket, svc_id, result_data, 2)
+        finished, n_optimizations = run_service_constropt(
+            storage_socket, activated_manager_name, svc_id, result_data, 2
+        )
 
 
 @pytest.mark.parametrize("procedure_file", test_files)
 def test_record_client_cancel_error_service(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, procedure_file: str
+    snowflake_client: PortalClient,
+    storage_socket: SQLAlchemySocket,
+    activated_manager_name: ManagerName,
+    procedure_file: str,
 ):
     svc_id, result_data = submit_record_data(storage_socket, procedure_file)
 
     # create an alternative result dict where everything has errored
     failed_op = FailedOperation(
-        error={"error_type": "test_error", "error_message": "this is just a test error"},
+        error=ComputeError(error_type="test_error", error_message="this is just a test error"),
     )
 
     failed_data = {x: failed_op for x in result_data.keys()}
 
-    run_service_constropt(storage_socket, svc_id, result_data, 1)
+    run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 1)
 
     while True:
         snowflake_client.cancel_records([svc_id])
@@ -232,7 +255,7 @@ def test_record_client_cancel_error_service(
 
         # Move the service to running. This will also use result_data to populate some of the
         # previously-errored (now waiting) dependencies
-        run_service_constropt(storage_socket, svc_id, result_data, 1)
+        run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 1)
 
         rec = storage_socket.records.get([svc_id])
         assert rec[0]["status"] == RecordStatusEnum.running
@@ -241,7 +264,7 @@ def test_record_client_cancel_error_service(
         # needs multiple iterations - first generates tasks and submits results
         # second returns all tasks as errored
         # iteration will only happen when all tasks are completed or errored
-        run_service_constropt(storage_socket, svc_id, failed_data, 200)
+        run_service_constropt(storage_socket, activated_manager_name, svc_id, failed_data, 200)
 
         rec = storage_socket.records.get([svc_id], include=["*", "service.dependencies.record"])
         assert rec[0]["status"] in [RecordStatusEnum.error, RecordStatusEnum.complete]
@@ -256,12 +279,15 @@ def test_record_client_cancel_error_service(
 
 @pytest.mark.parametrize("procedure_file", test_files)
 def test_record_client_invalidate_completed_service(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, procedure_file: str
+    snowflake_client: PortalClient,
+    storage_socket: SQLAlchemySocket,
+    activated_manager_name: ManagerName,
+    procedure_file: str,
 ):
     svc_id, result_data = submit_record_data(storage_socket, procedure_file)
 
     # Run it straight
-    finished, n_optimizations = run_service_constropt(storage_socket, svc_id, result_data, 200)
+    finished, n_optimizations = run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 200)
 
     assert finished
     rec = storage_socket.records.get([svc_id])
@@ -310,7 +336,11 @@ def get_children_ids(storage_socket: SQLAlchemySocket, svc_ids):
 @pytest.mark.parametrize("procedure_file", test_files)
 @pytest.mark.parametrize("delete_children", [True, False])
 def test_record_client_softdelete_service(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, procedure_file: str, delete_children: bool
+    snowflake_client: PortalClient,
+    storage_socket: SQLAlchemySocket,
+    activated_manager_name: ManagerName,
+    procedure_file: str,
+    delete_children: bool,
 ):
 
     svc_id, result_data = submit_record_data(storage_socket, procedure_file)
@@ -338,7 +368,7 @@ def test_record_client_softdelete_service(
     assert rec[0]["status"] == RecordStatusEnum.waiting
 
     # 2. running
-    run_service_constropt(storage_socket, svc_id, result_data, 1)
+    run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 1)
     rec = storage_socket.records.get([svc_id])
     assert rec[0]["status"] == RecordStatusEnum.running
 
@@ -357,10 +387,10 @@ def test_record_client_softdelete_service(
 
     # 3. error
     failed_op = FailedOperation(
-        error={"error_type": "test_error", "error_message": "this is just a test error"},
+        error=ComputeError(error_type="test_error", error_message="this is just a test error"),
     )
     failed_data = {x: failed_op for x in result_data.keys()}
-    run_service_constropt(storage_socket, svc_id, failed_data, 3)
+    run_service_constropt(storage_socket, activated_manager_name, svc_id, failed_data, 3)
     rec = storage_socket.records.get([svc_id])
     assert rec[0]["status"] == RecordStatusEnum.error
 
@@ -399,7 +429,7 @@ def test_record_client_softdelete_service(
     # reset and finish
     snowflake_client.uncancel_records([svc_id])
     snowflake_client.reset_records([svc_id])  # was error
-    finished, n_optimizations = run_service_constropt(storage_socket, svc_id, result_data, 200)
+    finished, n_optimizations = run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 200)
     assert finished
     rec = storage_socket.records.get([svc_id], include=["*", "service"])
     assert rec[0]["status"] == RecordStatusEnum.complete
@@ -439,12 +469,16 @@ def test_record_client_softdelete_service(
 @pytest.mark.parametrize("procedure_file", test_files)
 @pytest.mark.parametrize("delete_children", [True, False])
 def test_record_client_softdelete_service_child(
-    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, procedure_file: str, delete_children: bool
+    snowflake_client: PortalClient,
+    storage_socket: SQLAlchemySocket,
+    activated_manager_name: ManagerName,
+    procedure_file: str,
+    delete_children: bool,
 ):
 
     svc_id, result_data = submit_record_data(storage_socket, procedure_file)
 
-    run_service_constropt(storage_socket, svc_id, result_data, 3)
+    run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 3)
     rec = storage_socket.records.get([svc_id])
     assert rec[0]["status"] == RecordStatusEnum.running
 
@@ -473,6 +507,7 @@ def test_record_client_softdelete_service_child(
 def test_record_client_harddelete_service(
     snowflake_client: PortalClient,
     storage_socket: SQLAlchemySocket,
+    activated_manager_name: ManagerName,
     procedure_file: str,
     status: RecordStatusEnum,
     delete_children: bool,
@@ -494,7 +529,7 @@ def test_record_client_harddelete_service(
             assert all(x is not None for x in ch)
         return
 
-    run_service_constropt(storage_socket, svc_id, result_data, 1)
+    run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 1)
     rec = storage_socket.records.get([svc_id])
     assert rec[0]["status"] == RecordStatusEnum.running
 
@@ -513,7 +548,7 @@ def test_record_client_harddelete_service(
 
         return
 
-    run_service_constropt(storage_socket, svc_id, result_data, 200)
+    run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 200)
     rec = storage_socket.records.get([svc_id])
     assert rec[0]["status"] == RecordStatusEnum.complete
 
