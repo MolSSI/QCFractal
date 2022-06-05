@@ -152,27 +152,16 @@ def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket):
     assert manager[0]["rejected"] == 1
 
 
-def test_task_socket_return_manager_badid(storage_socket: SQLAlchemySocket, caplog):
+def test_task_socket_return_manager_badid(
+    storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, caplog
+):
     # Manager returns data for a record that doesn't exist
-
-    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
-    storage_socket.managers.activate(
-        name_data=mname1,
-        manager_version="v2.0",
-        qcengine_version="v1.0",
-        username="bill",
-        programs={"psi4": None, "qchem": "v3.0"},
-        tags=["tag1"],
-    )
 
     _, _, result_data = load_record_data("psi4_benzene_energy_1")
 
     # Should be logged
     with caplog_handler_at_level(caplog, logging.WARNING):
-        rmeta = storage_socket.tasks.update_finished(
-            mname1.fullname,
-            {123: result_data},
-        )
+        rmeta = storage_socket.tasks.update_finished(activated_manager_name.fullname, {123: result_data})
         assert "does not exist in the task queue" in caplog.text
 
     assert rmeta.n_accepted == 0
@@ -181,7 +170,7 @@ def test_task_socket_return_manager_badid(storage_socket: SQLAlchemySocket, capl
     assert rmeta.rejected_info[0][1] == "Task does not exist in the task queue"
 
     # Make sure manager info was updated
-    manager = storage_socket.managers.get([mname1.fullname])
+    manager = storage_socket.managers.get([activated_manager_name.fullname])
     assert manager[0]["successes"] == 0
     assert manager[0]["failures"] == 0
     assert manager[0]["rejected"] == 1

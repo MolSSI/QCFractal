@@ -9,7 +9,6 @@ from pydantic import ValidationError
 from qcfractaltesting import submit_record_data
 from qcportal import PortalRequestError
 from qcportal.managers import ManagerName, ManagerStatusEnum
-from qcportal.records import PriorityEnum
 
 if TYPE_CHECKING:
     from qcfractal.testing_helpers import TestingSnowflake

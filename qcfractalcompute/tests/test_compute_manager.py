@@ -173,9 +173,7 @@ def populate_db(storage_socket: SQLAlchemySocket):
     id_0, result_data_0 = submit_record_data(storage_socket, "psi4_methane_opt_sometraj", "tag0", PriorityEnum.normal)
     id_1, result_data_1 = submit_record_data(storage_socket, "psi4_water_gradient", "tag1", PriorityEnum.high)
     id_2, result_data_2 = submit_record_data(storage_socket, "psi4_water_hessian", "tag2", PriorityEnum.high)
-    id_3, result_data_3 = submit_record_data(
-        storage_socket, "psi4_methane_gradient_fail_iter", "tag3", PriorityEnum.high
-    )
+    id_3, result_data_3 = submit_record_data(storage_socket, "psi4_benzene_opt", "tag3", PriorityEnum.high)
     id_4, result_data_4 = submit_record_data(storage_socket, "rdkit_water_energy", "tag4", PriorityEnum.normal)
     id_5, result_data_5 = submit_record_data(storage_socket, "psi4_benzene_energy_2", "tag5", PriorityEnum.normal)
     id_6, result_data_6 = submit_record_data(storage_socket, "psi4_water_energy", "tag6", PriorityEnum.normal)

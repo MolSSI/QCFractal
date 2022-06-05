@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 input_spec_1, molecule_1, result_data_1 = load_record_data("psi4_water_energy")
 input_spec_2, molecule_2, result_data_2 = load_record_data("psi4_water_gradient")
 input_spec_3, molecule_3, result_data_3 = load_record_data("psi4_water_hessian")
-input_spec_4, molecule_4, result_data_4 = load_record_data("psi4_methane_gradient_fail_iter")
+input_spec_4, molecule_4, result_data_4 = load_record_data("psi4_benzene_opt")
 input_spec_5, molecule_5, result_data_5 = load_record_data("psi4_benzene_energy_1")
 input_spec_6, molecule_6, result_data_6 = load_record_data("psi4_benzene_energy_2")
 input_spec_7, molecule_7, result_data_7 = load_record_data("rdkit_benzene_energy")
@@ -31,7 +31,7 @@ def test_task_socket_claim_mixed(storage_socket: SQLAlchemySocket):
         manager_version="v2.0",
         qcengine_version="v1.0",
         username="bill",
-        programs={"psi4": None, "qchem": "v3.0"},
+        programs={"psi4": None, "geometric": "v3.0"},
         tags=["tag1"],
     )
     storage_socket.managers.activate(
@@ -39,7 +39,7 @@ def test_task_socket_claim_mixed(storage_socket: SQLAlchemySocket):
         manager_version="v2.0",
         qcengine_version="v1.0",
         username="bill",
-        programs={"psi4": None, "qchem": "v3.0"},
+        programs={"psi4": None, "geometric": "v3.0"},
         tags=["*"],
     )
     storage_socket.managers.activate(
@@ -47,7 +47,7 @@ def test_task_socket_claim_mixed(storage_socket: SQLAlchemySocket):
         manager_version="v2.0",
         qcengine_version="v1.0",
         username="bill",
-        programs={"psi4": None, "qchem": "v3.0"},
+        programs={"psi4": None, "geometric": "v3.0"},
         tags=["tag3", "tag1"],
     )
     storage_socket.managers.activate(
@@ -55,14 +55,14 @@ def test_task_socket_claim_mixed(storage_socket: SQLAlchemySocket):
         manager_version="v2.0",
         qcengine_version="v1.0",
         username="bill",
-        programs={"psi4": None, "rdkit": "v1.0"},
+        programs={"psi4": None, "geometric": "v3.0", "rdkit": "v1.0"},
         tags=["tag3", "*"],
     )
 
     meta, id_1 = storage_socket.records.singlepoint.add([molecule_1], input_spec_1, "tag1", PriorityEnum.low)
     meta, id_2 = storage_socket.records.singlepoint.add([molecule_2], input_spec_2, "tag2", PriorityEnum.normal)
     meta, id_3 = storage_socket.records.singlepoint.add([molecule_3], input_spec_3, "tag1", PriorityEnum.high)
-    meta, id_4 = storage_socket.records.singlepoint.add([molecule_4], input_spec_4, "tag3", PriorityEnum.normal)
+    meta, id_4 = storage_socket.records.optimization.add([molecule_4], input_spec_4, "tag3", PriorityEnum.normal)
     meta, id_5 = storage_socket.records.singlepoint.add([molecule_5], input_spec_5, "tag1", PriorityEnum.normal)
     meta, id_6 = storage_socket.records.singlepoint.add([molecule_6], input_spec_6, "tag6", PriorityEnum.high)
     meta, id_7 = storage_socket.records.singlepoint.add([molecule_7], input_spec_7, "tag1", PriorityEnum.high)
@@ -123,14 +123,14 @@ def test_task_socket_claim_priority(storage_socket: SQLAlchemySocket):
         manager_version="v2.0",
         qcengine_version="v1.0",
         username="bill",
-        programs={"Psi4": None, "qchem": "v3.0"},
+        programs={"Psi4": None, "geometric": "v3.0"},
         tags=["tag1"],
     )
 
     meta, id_1 = storage_socket.records.singlepoint.add([molecule_1], input_spec_1, "tag1", PriorityEnum.low)
     meta, id_2 = storage_socket.records.singlepoint.add([molecule_2], input_spec_2, "tag1", PriorityEnum.normal)
     meta, id_3 = storage_socket.records.singlepoint.add([molecule_3], input_spec_3, "tag1", PriorityEnum.high)
-    meta, id_4 = storage_socket.records.singlepoint.add([molecule_4], input_spec_4, "tag1", PriorityEnum.normal)
+    meta, id_4 = storage_socket.records.optimization.add([molecule_4], input_spec_4, "tag1", PriorityEnum.normal)
     meta, id_5 = storage_socket.records.singlepoint.add([molecule_5], input_spec_5, "tag1", PriorityEnum.normal)
     meta, id_6 = storage_socket.records.singlepoint.add([molecule_6], input_spec_6, "tag1", PriorityEnum.high)
 
@@ -159,14 +159,14 @@ def test_task_socket_claim_tag(storage_socket: SQLAlchemySocket):
         manager_version="v2.0",
         qcengine_version="v1.0",
         username="bill",
-        programs={"psi4": None, "qchem": "v3.0"},
+        programs={"psi4": None, "geometric": "v3.0"},
         tags=["tag3", "tag1"],
     )
 
     meta, id_1 = storage_socket.records.singlepoint.add([molecule_1], input_spec_1, "TAg1", PriorityEnum.normal)
     meta, id_2 = storage_socket.records.singlepoint.add([molecule_2], input_spec_2, "tag2", PriorityEnum.normal)
     meta, id_3 = storage_socket.records.singlepoint.add([molecule_3], input_spec_3, "*", PriorityEnum.normal)
-    meta, id_4 = storage_socket.records.singlepoint.add([molecule_4], input_spec_4, "tag3", PriorityEnum.normal)
+    meta, id_4 = storage_socket.records.optimization.add([molecule_4], input_spec_4, "tag3", PriorityEnum.normal)
     meta, id_5 = storage_socket.records.singlepoint.add([molecule_5], input_spec_5, "tag1", PriorityEnum.normal)
 
     all_id = id_1 + id_2 + id_3 + id_4 + id_5
@@ -190,14 +190,14 @@ def test_task_socket_claim_tag_wildcard(storage_socket: SQLAlchemySocket):
         manager_version="v2.0",
         qcengine_version="v1.0",
         username="bill",
-        programs={"psi4": None, "qchem": "v3.0"},
+        programs={"psi4": None, "geometric": "v3.0"},
         tags=["TAG3", "*"],
     )
 
     meta, id_1 = storage_socket.records.singlepoint.add([molecule_1], input_spec_1, "tag1", PriorityEnum.normal)
     meta, id_2 = storage_socket.records.singlepoint.add([molecule_2], input_spec_2, "tag2", PriorityEnum.normal)
     meta, id_3 = storage_socket.records.singlepoint.add([molecule_3], input_spec_3, "*", PriorityEnum.normal)
-    meta, id_4 = storage_socket.records.singlepoint.add([molecule_4], input_spec_4, "taG3", PriorityEnum.normal)
+    meta, id_4 = storage_socket.records.optimization.add([molecule_4], input_spec_4, "taG3", PriorityEnum.normal)
     meta, id_5 = storage_socket.records.singlepoint.add([molecule_5], input_spec_5, "tag1", PriorityEnum.normal)
 
     all_id = id_1 + id_2 + id_3 + id_4 + id_5
@@ -223,7 +223,7 @@ def test_task_socket_claim_program(storage_socket: SQLAlchemySocket):
         manager_version="v2.0",
         qcengine_version="v1.0",
         username="bill",
-        programs={"PSi4": None, "qchem": "v3.0"},
+        programs={"psi4": None, "geometric": "v3.0"},
         tags=["*"],
     )
 

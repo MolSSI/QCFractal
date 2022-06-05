@@ -19,7 +19,7 @@ def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket):
         manager_version="v2.0",
         qcengine_version="v1.0",
         username="bill",
-        programs={"psi4": None, "qchem": "v3.0"},
+        programs={"psi4": None, "geometric": "v3.0"},
         tags=["tag1"],
     )
     storage_socket.managers.activate(
@@ -27,14 +27,14 @@ def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket):
         manager_version="v2.0",
         qcengine_version="v1.0",
         username="bill",
-        programs={"psi4": None, "qchem": "v3.0"},
+        programs={"psi4": None, "geometric": "v3.0"},
         tags=["tag2"],
     )
 
     id_1, result_data_1 = submit_record_data(storage_socket, "psi4_water_energy", "tag1")
     id_2, result_data_2 = submit_record_data(storage_socket, "psi4_water_gradient", "tag2")
     id_3, result_data_3 = submit_record_data(storage_socket, "psi4_water_hessian", "tag1")
-    id_4, result_data_4 = submit_record_data(storage_socket, "psi4_methane_gradient_fail_iter", "tag2")
+    id_4, result_data_4 = submit_record_data(storage_socket, "psi4_benzene_opt", "tag2")
     id_5, result_data_5 = submit_record_data(storage_socket, "psi4_benzene_energy_1", "tag1")
     id_6, result_data_6 = submit_record_data(storage_socket, "psi4_benzene_energy_2", "tag1")
     all_id = [id_1, id_2, id_3, id_4, id_5, id_6]

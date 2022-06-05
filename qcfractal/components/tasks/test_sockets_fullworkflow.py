@@ -6,7 +6,6 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-import pytest
 from qcelemental.models import ComputeError, FailedOperation
 
 from qcfractaltesting import load_record_data, submit_record_data
@@ -83,36 +82,18 @@ def test_task_socket_fullworkflow_success(storage_socket: SQLAlchemySocket, acti
 
 
 def test_task_socket_fullworkflow_error(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName):
-    id1, result_data1 = submit_record_data(
-        storage_socket, "psi4_methane_gradient_fail_iter", "tag1", PriorityEnum.normal
-    )
-    id2, result_data2 = submit_record_data(
-        storage_socket, "psi4_peroxide_energy_fail_basis", "tag1", PriorityEnum.normal
-    )
+    id1, _ = submit_record_data(storage_socket, "psi4_benzene_energy_1")
+    id2, _ = submit_record_data(storage_socket, "psi4_fluoroethane_wfn")
 
     time_1 = datetime.utcnow()
 
-    result_map = {id1: result_data1, id2: result_data2}
-
     tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname)
 
-    # Should be claimed in the manager table
-    manager = storage_socket.managers.get([activated_manager_name.fullname])
-    assert manager[0]["claimed"] == 2
-
-    # Status should be updated
-    records = storage_socket.records.get([id1, id2], include=["*", "task"])
-    for rec in records:
-        assert rec["status"] == RecordStatusEnum.running
-        assert rec["manager_name"] == activated_manager_name.fullname
-        assert rec["task"] is not None
-        assert rec["compute_history"] == []
-        assert rec["modified_on"] > time_1
-        assert rec["created_on"] < time_1
+    fop = FailedOperation(error=ComputeError(error_type="test_error", error_message="this is a test error"))
 
     rmeta = storage_socket.tasks.update_finished(
         activated_manager_name.fullname,
-        {tasks[0]["id"]: result_map[tasks[0]["record_id"]], tasks[1]["id"]: result_map[tasks[1]["record_id"]]},
+        {tasks[0]["id"]: fop, tasks[1]["id"]: fop},
     )
 
     assert rmeta.n_accepted == 2
@@ -159,23 +140,23 @@ def test_task_socket_fullworkflow_error_retry(storage_socket: SQLAlchemySocket, 
     # Sends back an error. Do it a few times
     time_0 = datetime.utcnow()
     tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname)
-    rmeta = storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: fop})
+    storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: fop})
     storage_socket.records.reset(id1)
 
     time_1 = datetime.utcnow()
     tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname)
-    rmeta = storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: fop})
+    storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: fop})
     storage_socket.records.reset(id1)
 
     time_2 = datetime.utcnow()
     tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname)
-    rmeta = storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: fop})
+    storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: fop})
     storage_socket.records.reset(id1)
 
     # Now succeed
     time_3 = datetime.utcnow()
     tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname)
-    rmeta = storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: result_data1})
+    storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: result_data1})
     time_4 = datetime.utcnow()
 
     records = storage_socket.records.get(id1, include=["*", "task", "compute_history.*", "compute_history.outputs"])
@@ -257,6 +238,7 @@ def test_task_socket_compressed_outputs_success(storage_socket: SQLAlchemySocket
     tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname)
 
     # Compress the outputs
+    assert result_data1.stdout
     compressed_output = OutputStore.compress(OutputTypeEnum.stdout, result_data1.stdout, CompressionEnum.lzma, 5)
     if result_data1.extras is None:
         result_data1.__dict__["extras"] = {}

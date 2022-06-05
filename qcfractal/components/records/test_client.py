@@ -83,10 +83,10 @@ def test_record_client_query(snowflake_client: PortalClient, storage_socket: SQL
 
     # Record type
     meta, data = snowflake_client.query_records(record_type=["singlepoint"])
-    assert meta.n_found == 6
+    assert meta.n_found == 5
 
     meta, data = snowflake_client.query_records(record_type=["optimization"])
-    assert meta.n_found == 1
+    assert meta.n_found == 2
 
     meta, data = snowflake_client.query_records(record_type=["singlepoint", "optimization"])
     assert meta.n_found == 7
