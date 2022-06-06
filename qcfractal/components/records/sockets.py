@@ -425,13 +425,13 @@ class RecordSocket:
         if query_data.status is not None:
             and_query.append(orm_type.status.in_(query_data.status))
         if query_data.created_before is not None:
-            and_query.append(orm_type.created_on < query_data.created_before)
+            and_query.append(orm_type.created_on <= query_data.created_before)
         if query_data.created_after is not None:
-            and_query.append(orm_type.created_on > query_data.created_after)
+            and_query.append(orm_type.created_on >= query_data.created_after)
         if query_data.modified_before is not None:
-            and_query.append(orm_type.modified_on < query_data.modified_before)
+            and_query.append(orm_type.modified_on <= query_data.modified_before)
         if query_data.modified_after is not None:
-            and_query.append(orm_type.modified_on > query_data.modified_after)
+            and_query.append(orm_type.modified_on >= query_data.modified_after)
 
         if query_data.parent_id is not None:
             # We alias the cte because we might join on it twice

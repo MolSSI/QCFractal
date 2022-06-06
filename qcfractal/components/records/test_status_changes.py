@@ -2,13 +2,13 @@ from datetime import datetime
 
 import pytest
 
-from qcfractal.components.records.test_sockets import populate_db
+from qcfractal.components.records.optimization.testing_helpers import run_test_data as run_opt_test_data
+from qcfractal.components.records.testing_helpers import populate_records_status
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractaltesting import submit_record_data
 from qcportal import PortalClient
 from qcportal.managers import ManagerName
 from qcportal.records import RecordStatusEnum
-from qcfractal.components.records.optimization.testing_helpers import run_test_data as run_opt_test_data
 
 
 def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket):
@@ -75,13 +75,13 @@ def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket):
 
 
 def test_record_socket_reset_assigned_manager_none(storage_socket: SQLAlchemySocket):
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     ids = storage_socket.records.reset_assigned(manager_name=[])
     assert ids == []
 
 
 def test_record_client_reset(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    all_id = populate_db(storage_socket)
+    all_id = populate_records_status(storage_socket)
 
     # Can reset only running, error
     time_0 = datetime.utcnow()
@@ -130,26 +130,26 @@ def test_record_client_reset(snowflake_client: PortalClient, storage_socket: SQL
 
 def test_record_socket_reset_none(storage_socket: SQLAlchemySocket):
     # The client may short-circuit with empty lists, so we should also test the socket separately
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     meta = storage_socket.records.reset([])
     assert meta.n_updated == 0
 
 
 def test_record_client_reset_none(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     meta = snowflake_client.reset_records([])
     assert meta.n_updated == 0
 
 
 def test_record_client_reset_missing(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    all_id = populate_db(storage_socket)
+    all_id = populate_records_status(storage_socket)
     meta = snowflake_client.reset_records([all_id[2], 9999])
     assert meta.success is False
     assert meta.n_updated == 1
 
 
 def test_record_client_cancel(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    all_id = populate_db(storage_socket)
+    all_id = populate_records_status(storage_socket)
 
     # waiting, running, error can be cancelled
     time_0 = datetime.utcnow()
@@ -198,26 +198,26 @@ def test_record_client_cancel(snowflake_client: PortalClient, storage_socket: SQ
 
 def test_record_socket_cancel_none(storage_socket: SQLAlchemySocket):
     # The client may short-circuit with empty lists, so we should also test the socket separately
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     meta = storage_socket.records.cancel([])
     assert meta.n_updated == 0
 
 
 def test_record_client_cancel_none(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     meta = snowflake_client.cancel_records([])
     assert meta.n_updated == 0
 
 
 def test_record_client_cancel_missing(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    all_id = populate_db(storage_socket)
+    all_id = populate_records_status(storage_socket)
     meta = snowflake_client.cancel_records([all_id[0], 9999])
     assert meta.success is False
     assert meta.n_updated == 1
 
 
 def test_record_client_invalidate(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    all_id = populate_db(storage_socket)
+    all_id = populate_records_status(storage_socket)
 
     # only completed can be invalidated
     time_0 = datetime.utcnow()
@@ -266,26 +266,26 @@ def test_record_client_invalidate(snowflake_client: PortalClient, storage_socket
 
 def test_record_socket_invalidate_none(storage_socket: SQLAlchemySocket):
     # The client may short-circuit with empty lists, so we should also test the socket separately
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     meta = storage_socket.records.invalidate([])
     assert meta.n_updated == 0
 
 
 def test_record_client_invalidate_none(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     meta = snowflake_client.invalidate_records([])
     assert meta.n_updated == 0
 
 
 def test_record_client_invalidate_missing(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    all_id = populate_db(storage_socket)
+    all_id = populate_records_status(storage_socket)
     meta = snowflake_client.invalidate_records([all_id[1], 9999])
     assert meta.success is False
     assert meta.n_updated == 1
 
 
 def test_record_client_softdelete(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    all_id = populate_db(storage_socket)
+    all_id = populate_records_status(storage_socket)
 
     # only deleted can't be deleted
     time_0 = datetime.utcnow()
@@ -323,7 +323,7 @@ def test_record_client_softdelete(snowflake_client: PortalClient, storage_socket
 
 
 def test_record_client_softdelete_missing(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    all_id = populate_db(storage_socket)
+    all_id = populate_records_status(storage_socket)
     meta = snowflake_client.delete_records(all_id + [99999], soft_delete=True)
     assert meta.success is False
     assert meta.deleted_idx == [0, 1, 2, 3, 4, 6]
@@ -333,21 +333,21 @@ def test_record_client_softdelete_missing(snowflake_client: PortalClient, storag
 
 def test_record_socket_softdelete_none(storage_socket: SQLAlchemySocket):
     # The client may short-circuit with empty lists, so we should also test the socket separately
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     meta = storage_socket.records.delete([], soft_delete=True)
     assert meta.success is True
     assert meta.n_deleted == 0
 
 
 def test_record_client_softdelete_none(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     meta = snowflake_client.delete_records([], soft_delete=True)
     assert meta.success is True
     assert meta.n_deleted == 0
 
 
 def test_record_client_harddelete_1(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    all_id = populate_db(storage_socket)
+    all_id = populate_records_status(storage_socket)
 
     # only deleted can't be deleted
     meta = snowflake_client.delete_records(all_id, soft_delete=False)
@@ -361,7 +361,7 @@ def test_record_client_harddelete_1(snowflake_client: PortalClient, storage_sock
 
 def test_record_client_harddelete_2(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
     # Delete only some records
-    all_id = populate_db(storage_socket)
+    all_id = populate_records_status(storage_socket)
 
     # only deleted can't be deleted
     meta = snowflake_client.delete_records([all_id[0], all_id[4]], soft_delete=False)
@@ -381,21 +381,21 @@ def test_record_client_harddelete_2(snowflake_client: PortalClient, storage_sock
 
 def test_record_socket_harddelete_none(storage_socket: SQLAlchemySocket):
     # The client may short-circuit with empty lists, so we should also test the socket separately
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     meta = storage_socket.records.delete([], soft_delete=False)
     assert meta.success is True
     assert meta.deleted_idx == []
 
 
 def test_record_client_harddelete_none(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     meta = snowflake_client.delete_records([], soft_delete=False)
     assert meta.success is True
     assert meta.deleted_idx == []
 
 
 def test_record_client_harddelete_missing(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    all_id = populate_db(storage_socket)
+    all_id = populate_records_status(storage_socket)
     meta = snowflake_client.delete_records(all_id + [99999], soft_delete=False)
     assert meta.success is False
     assert meta.deleted_idx == [0, 1, 2, 3, 4, 5, 6]
@@ -405,7 +405,7 @@ def test_record_client_harddelete_missing(snowflake_client: PortalClient, storag
 
 def test_record_client_revert_chain(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
     # Tests undelete, uninvalidate, uncancel
-    all_id = populate_db(storage_socket)
+    all_id = populate_records_status(storage_socket)
 
     # cancel, invalidate, then delete all
     meta = snowflake_client.cancel_records(all_id)
@@ -512,7 +512,7 @@ def test_record_client_revert_chain(snowflake_client: PortalClient, storage_sock
 
 
 def test_record_socket_undelete_none(storage_socket: SQLAlchemySocket):
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     meta = storage_socket.records.undelete([])
     assert meta.success is True
     assert meta.updated_idx == []
@@ -520,7 +520,7 @@ def test_record_socket_undelete_none(storage_socket: SQLAlchemySocket):
 
 
 def test_record_client_undelete_none(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     meta = snowflake_client.undelete_records([])
     assert meta.success is True
     assert meta.updated_idx == []
@@ -528,7 +528,7 @@ def test_record_client_undelete_none(snowflake_client: PortalClient, storage_soc
 
 
 def test_record_client_undelete_missing(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     meta = snowflake_client.undelete_records([99999])
     assert meta.success is False
     assert meta.updated_idx == []
@@ -537,7 +537,7 @@ def test_record_client_undelete_missing(snowflake_client: PortalClient, storage_
 
 
 def test_record_socket_uncancel_none(storage_socket: SQLAlchemySocket):
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     meta = storage_socket.records.uncancel([])
     assert meta.success is True
     assert meta.updated_idx == []
@@ -545,7 +545,7 @@ def test_record_socket_uncancel_none(storage_socket: SQLAlchemySocket):
 
 
 def test_record_client_uncancel_none(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     meta = snowflake_client.uncancel_records([])
     assert meta.success is True
     assert meta.updated_idx == []
@@ -553,7 +553,7 @@ def test_record_client_uncancel_none(snowflake_client: PortalClient, storage_soc
 
 
 def test_record_client_uncancel_missing(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     meta = snowflake_client.uncancel_records([99999])
     assert meta.success is False
     assert meta.updated_idx == []
@@ -562,7 +562,7 @@ def test_record_client_uncancel_missing(snowflake_client: PortalClient, storage_
 
 
 def test_record_socket_uninvalidate_none(storage_socket: SQLAlchemySocket):
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     meta = storage_socket.records.uninvalidate([])
     assert meta.success is True
     assert meta.updated_idx == []
@@ -570,7 +570,7 @@ def test_record_socket_uninvalidate_none(storage_socket: SQLAlchemySocket):
 
 
 def test_record_client_uninvalidate_none(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     meta = snowflake_client.uninvalidate_records([])
     assert meta.success is True
     assert meta.updated_idx == []
@@ -578,7 +578,7 @@ def test_record_client_uninvalidate_none(snowflake_client: PortalClient, storage
 
 
 def test_record_client_uninvalidate_missing(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    populate_db(storage_socket)
+    populate_records_status(storage_socket)
     meta = snowflake_client.uninvalidate_records([99999])
     assert meta.success is False
     assert meta.updated_idx == []

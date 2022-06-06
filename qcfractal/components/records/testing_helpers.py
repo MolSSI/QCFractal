@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
 
 
-def populate_db(storage_socket: SQLAlchemySocket):
+def populate_records_status(storage_socket: SQLAlchemySocket):
     """
     Populates the db with tasks in all statuses
     """
@@ -95,11 +95,3 @@ def populate_db(storage_socket: SQLAlchemySocket):
     assert rec[6]["status"] == RecordStatusEnum.invalid
 
     return all_id
-
-
-def test_record_socket_get_proj(storage_socket: SQLAlchemySocket):
-    all_id = populate_db(storage_socket)
-
-    r = storage_socket.records.get(all_id, include={"id", "status"})
-    assert all_id == [x["id"] for x in r]
-    assert all(set(x.keys()) == {"id", "status", "record_type"} for x in r)
