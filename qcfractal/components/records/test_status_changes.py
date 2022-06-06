@@ -8,6 +8,7 @@ from qcfractaltesting import submit_record_data
 from qcportal import PortalClient
 from qcportal.managers import ManagerName
 from qcportal.records import RecordStatusEnum
+from qcfractal.components.records.optimization.testing_helpers import run_test_data as run_opt_test_data
 
 
 def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket):
@@ -590,12 +591,7 @@ def test_record_client_delete_children(
     snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, opt_file: str
 ):
     # Deleting with deleting children
-    id1, result_data_1 = submit_record_data(storage_socket, opt_file)
-
-    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, 1)
-    assert len(tasks) == 1
-    rmeta = storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: result_data_1})
-    assert rmeta.n_accepted == 1
+    id1 = run_opt_test_data(storage_socket, activated_manager_name, opt_file)
 
     rec = storage_socket.records.optimization.get([id1], include=["trajectory"])
     child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
@@ -625,12 +621,7 @@ def test_record_client_delete_nochildren(
     snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, opt_file: str
 ):
     # Deleting without deleting children
-    id1, result_data_1 = submit_record_data(storage_socket, opt_file)
-
-    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, 1)
-    assert len(tasks) == 1
-    rmeta = storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: result_data_1})
-    assert rmeta.n_accepted == 1
+    id1 = run_opt_test_data(storage_socket, activated_manager_name, opt_file)
 
     rec = storage_socket.records.optimization.get([id1], include=["trajectory"])
     child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
@@ -660,12 +651,7 @@ def test_record_client_undelete_children(
     snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, opt_file: str
 ):
     # Deleting with deleting children, then undeleting
-    id1, result_data_1 = submit_record_data(storage_socket, opt_file)
-
-    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, 1)
-    assert len(tasks) == 1
-    rmeta = storage_socket.tasks.update_finished(activated_manager_name.fullname, {tasks[0]["id"]: result_data_1})
-    assert rmeta.n_accepted == 1
+    id1 = run_opt_test_data(storage_socket, activated_manager_name, opt_file)
 
     rec = storage_socket.records.optimization.get([id1], include=["trajectory"])
     child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
