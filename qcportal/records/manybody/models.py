@@ -124,6 +124,10 @@ class ManybodyRecord(BaseRecord):
         return self.raw_data.initial_molecule
 
     @property
+    def initial_molecule_id(self) -> int:
+        return self.raw_data.initial_molecule_id
+
+    @property
     def specification(self) -> ManybodySpecification:
         return self.raw_data.specification
 

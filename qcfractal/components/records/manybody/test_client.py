@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractaltesting import load_molecule_data, load_record_data
+from qcfractaltesting import load_molecule_data
 from qcportal.records import PriorityEnum
 from qcportal.records.manybody import ManybodySpecification, ManybodyKeywords
 from qcportal.records.singlepoint import QCSpecification
@@ -15,7 +15,11 @@ if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
 
-from .test_sockets import _test_specs, compare_manybody_specs
+from qcfractal.components.records.manybody.testing_helpers import (
+    compare_manybody_specs,
+    test_specs,
+    submit_test_data,
+)
 
 
 @pytest.mark.parametrize("tag", ["*", "tag99"])
@@ -39,7 +43,7 @@ def test_manybody_client_tag_priority(snowflake_client: PortalClient, tag: str, 
     assert rec[0].raw_data.service.priority == priority
 
 
-@pytest.mark.parametrize("spec", _test_specs)
+@pytest.mark.parametrize("spec", test_specs)
 def test_manybody_client_add_get(snowflake_client: PortalClient, spec: ManybodySpecification):
     water2 = load_molecule_data("water_dimer_minima")
     water4 = load_molecule_data("water_stacked")
@@ -76,7 +80,7 @@ def test_manybody_client_add_get(snowflake_client: PortalClient, spec: ManybodyS
 
 
 def test_manybody_client_add_existing_molecule(snowflake_client: PortalClient):
-    spec = _test_specs[0]
+    spec = test_specs[0]
 
     mol1 = load_molecule_data("water_dimer_minima")
     mol2 = load_molecule_data("water_stacked")
@@ -110,56 +114,48 @@ def test_manybody_client_add_existing_molecule(snowflake_client: PortalClient):
 
 
 def test_manybody_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    input_spec_1, molecule_1, result_data_1 = load_record_data("mb_none_he4_psi4_mp2")
-    input_spec_2, molecule_2, result_data_2 = load_record_data("mb_cp_he4_psi4_mp2")
+    id_1, _ = submit_test_data(storage_socket, "mb_none_he4_psi4_mp2")
+    id_2, _ = submit_test_data(storage_socket, "mb_cp_he4_psi4_mp2")
 
-    meta_1, id_1 = storage_socket.records.manybody.add(
-        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
-    )
-    meta_2, id_2 = storage_socket.records.manybody.add(
-        [molecule_2], input_spec_2, tag="*", priority=PriorityEnum.normal
-    )
-    assert meta_1.success and meta_2.success
+    all_mbs = snowflake_client.get_manybodys([id_1, id_2])
+    mol_ids = [x.initial_molecule_id for x in all_mbs]
 
-    meta, mb = snowflake_client.query_manybodys(program=["manybody"])
-    assert meta.n_found == 2
+    query_res = snowflake_client.query_manybodys(program=["manybody"])
+    assert query_res.current_meta.n_found == 2
 
-    meta, mb = snowflake_client.query_manybodys(program=["nothing"])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_manybodys(program=["nothing"])
+    assert query_res.current_meta.n_found == 0
 
-    _, init_mol_id = storage_socket.molecules.add([molecule_1, molecule_2])
+    query_res = snowflake_client.query_manybodys(initial_molecule_id=[9999])
+    assert query_res.current_meta.n_found == 0
 
-    meta, mb = snowflake_client.query_manybodys(initial_molecule_id=[9999])
-    assert meta.n_found == 0
-
-    meta, mb = snowflake_client.query_manybodys(initial_molecule_id=[init_mol_id[0], 9999])
-    assert meta.n_found == 2
+    query_res = snowflake_client.query_manybodys(initial_molecule_id=[mol_ids[0], 9999])
+    assert query_res.current_meta.n_found == 2
 
     # query for basis
-    meta, mb = snowflake_client.query_manybodys(qc_basis=["DEF2-tzvp"])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_manybodys(qc_basis=["DEF2-tzvp"])
+    assert query_res.current_meta.n_found == 0
 
-    meta, mb = snowflake_client.query_manybodys(qc_basis=["auG-cC-pVDZ"])
-    assert meta.n_found == 2
+    query_res = snowflake_client.query_manybodys(qc_basis=["auG-cC-pVDZ"])
+    assert query_res.current_meta.n_found == 2
 
-    meta, mb = snowflake_client.query_manybodys(qc_basis=[None])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_manybodys(qc_basis=[None])
+    assert query_res.current_meta.n_found == 0
 
-    meta, mb = snowflake_client.query_manybodys(qc_basis=[""])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_manybodys(qc_basis=[""])
+    assert query_res.current_meta.n_found == 0
 
     # query for method
-    meta, mb = snowflake_client.query_manybodys(qc_method=["hf"])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_manybodys(qc_method=["hf"])
+    assert query_res.current_meta.n_found == 0
 
-    meta, mb = snowflake_client.query_manybodys(qc_method=["mp2"])
-    assert meta.n_found == 2
+    query_res = snowflake_client.query_manybodys(qc_method=["mp2"])
+    assert query_res.current_meta.n_found == 2
 
     # Query by default returns everything
-    meta, mb = snowflake_client.query_manybodys()
-    assert meta.n_found == 2
+    query_res = snowflake_client.query_manybodys()
+    assert query_res.current_meta.n_found == 2
 
     # Query by default (with a limit)
-    meta, mb = snowflake_client.query_manybodys(limit=1)
-    assert meta.n_found == 2
-    assert len(mb) == 1
+    query_res = snowflake_client.query_manybodys(limit=1)
+    assert query_res.current_meta.n_found == 2

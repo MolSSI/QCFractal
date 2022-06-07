@@ -5,8 +5,9 @@ from typing import TYPE_CHECKING
 import pytest
 from qcelemental.models import FailedOperation, ComputeError
 
+from qcfractal.components.records.gridoptimization.testing_helpers import submit_test_data as submit_go_test_data
+from qcfractal.components.records.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
 from qcfractal.testing_helpers import run_service_constropt
-from qcfractaltesting import submit_record_data
 from qcportal.managers import ManagerName
 from qcportal.records import RecordStatusEnum, PriorityEnum
 
@@ -23,6 +24,13 @@ test_files = [
 ]
 
 
+def _submit_test_data(storage_socket, name: str, tag="*", priority=PriorityEnum.normal):
+    if name.startswith("go"):
+        return submit_go_test_data(storage_socket, name, tag, priority)
+    else:
+        return submit_td_test_data(storage_socket, name, tag, priority)
+
+
 @pytest.mark.parametrize("procedure_file", test_files)
 def test_record_client_reset_running_service(
     snowflake_client: PortalClient,
@@ -30,7 +38,7 @@ def test_record_client_reset_running_service(
     activated_manager_name: ManagerName,
     procedure_file: str,
 ):
-    svc_id, result_data = submit_record_data(storage_socket, procedure_file)
+    svc_id, result_data = _submit_test_data(storage_socket, procedure_file)
 
     finished, n_optimizations = run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 1)
     while not finished:
@@ -60,7 +68,7 @@ def test_record_client_reset_error_service(
     activated_manager_name: ManagerName,
     procedure_file: str,
 ):
-    svc_id, result_data = submit_record_data(storage_socket, procedure_file)
+    svc_id, result_data = _submit_test_data(storage_socket, procedure_file)
 
     # create an alternative result dict where everything has errored
     failed_op = FailedOperation(
@@ -112,7 +120,7 @@ def test_record_client_cancel_waiting_service(
     activated_manager_name: ManagerName,
     procedure_file: str,
 ):
-    svc_id, result_data = submit_record_data(storage_socket, procedure_file, "test_tag", PriorityEnum.low)
+    svc_id, result_data = _submit_test_data(storage_socket, procedure_file, "test_tag", PriorityEnum.low)
 
     snowflake_client.cancel_records([svc_id])
 
@@ -145,7 +153,7 @@ def test_record_client_cancel_waiting_service_child(
     activated_manager_name: ManagerName,
     procedure_file: str,
 ):
-    svc_id, result_data = submit_record_data(storage_socket, procedure_file)
+    svc_id, result_data = _submit_test_data(storage_socket, procedure_file)
     run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 1)
 
     # Cancel a child
@@ -174,7 +182,7 @@ def test_record_client_cancel_running_service(
     activated_manager_name: ManagerName,
     procedure_file: str,
 ):
-    svc_id, result_data = submit_record_data(storage_socket, procedure_file)
+    svc_id, result_data = _submit_test_data(storage_socket, procedure_file)
 
     # Get it running
     finished, n_optimizations = run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 1)
@@ -220,7 +228,7 @@ def test_record_client_cancel_error_service(
     activated_manager_name: ManagerName,
     procedure_file: str,
 ):
-    svc_id, result_data = submit_record_data(storage_socket, procedure_file)
+    svc_id, result_data = _submit_test_data(storage_socket, procedure_file)
 
     # create an alternative result dict where everything has errored
     failed_op = FailedOperation(
@@ -284,7 +292,7 @@ def test_record_client_invalidate_completed_service(
     activated_manager_name: ManagerName,
     procedure_file: str,
 ):
-    svc_id, result_data = submit_record_data(storage_socket, procedure_file)
+    svc_id, result_data = _submit_test_data(storage_socket, procedure_file)
 
     # Run it straight
     finished, n_optimizations = run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 200)
@@ -343,7 +351,7 @@ def test_record_client_softdelete_service(
     delete_children: bool,
 ):
 
-    svc_id, result_data = submit_record_data(storage_socket, procedure_file)
+    svc_id, result_data = _submit_test_data(storage_socket, procedure_file)
 
     def check_children_deleted():
         ch_ids = get_children_ids(storage_socket, [svc_id])
@@ -476,7 +484,7 @@ def test_record_client_softdelete_service_child(
     delete_children: bool,
 ):
 
-    svc_id, result_data = submit_record_data(storage_socket, procedure_file)
+    svc_id, result_data = _submit_test_data(storage_socket, procedure_file)
 
     run_service_constropt(storage_socket, activated_manager_name, svc_id, result_data, 3)
     rec = storage_socket.records.get([svc_id])
@@ -513,7 +521,7 @@ def test_record_client_harddelete_service(
     delete_children: bool,
 ):
 
-    svc_id, result_data = submit_record_data(storage_socket, procedure_file)
+    svc_id, result_data = _submit_test_data(storage_socket, procedure_file)
 
     if status == RecordStatusEnum.waiting:
         ch_ids = get_children_ids(storage_socket, [svc_id])

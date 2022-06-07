@@ -1,18 +1,82 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Tuple, Optional, Dict
+from typing import TYPE_CHECKING, Tuple, Optional, Dict, Union, Any
 
 import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult
+from qcelemental.models.procedures import OptimizationProtocols
 
 from qcfractal.testing_helpers import run_service_constropt
 from qcfractaltesting.helpers import read_record_data
 from qcportal.records import PriorityEnum, RecordStatusEnum
-from qcportal.records.gridoptimization import GridoptimizationSpecification
+from qcportal.records.gridoptimization import GridoptimizationSpecification, GridoptimizationKeywords
+from qcportal.records.optimization import OptimizationSpecification
+from qcportal.records.singlepoint import SinglepointProtocols, QCSpecification
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+
+
+def compare_gridoptimization_specs(
+    input_spec: Union[GridoptimizationSpecification, Dict[str, Any]],
+    output_spec: Union[GridoptimizationSpecification, Dict[str, Any]],
+) -> bool:
+    if isinstance(input_spec, dict):
+        input_spec = GridoptimizationSpecification(**input_spec)
+    if isinstance(output_spec, dict):
+        output_spec = GridoptimizationSpecification(**output_spec)
+
+    return input_spec == output_spec
+
+
+test_specs = [
+    GridoptimizationSpecification(
+        program="gridoptimization",
+        keywords=GridoptimizationKeywords(
+            preoptimization=False,
+            scans=[
+                {"type": "distance", "indices": [1, 2], "steps": [-0.1, 0.0], "step_type": "relative"},
+                {"type": "dihedral", "indices": [0, 1, 2, 3], "steps": [-90, 0], "step_type": "absolute"},
+            ],
+        ),
+        optimization_specification=OptimizationSpecification(
+            program="optprog1",
+            keywords={"k": "value"},
+            protocols=OptimizationProtocols(),
+            qc_specification=QCSpecification(
+                program="prog2",
+                driver="deferred",
+                method="b3lyp",
+                basis="6-31g",
+                keywords={"k2": "values2"},
+                protocols=SinglepointProtocols(wavefunction="all"),
+            ),
+        ),
+    ),
+    GridoptimizationSpecification(
+        program="gridoptimization",
+        keywords=GridoptimizationKeywords(
+            preoptimization=True,
+            scans=[
+                {"type": "dihedral", "indices": [3, 2, 1, 0], "steps": [-90, -45, 0, 45, 90], "step_type": "absolute"},
+            ],
+        ),
+        optimization_specification=OptimizationSpecification(
+            program="optprog1",
+            keywords={"k": "value"},
+            protocols=OptimizationProtocols(),
+            qc_specification=QCSpecification(
+                program="prog2",
+                driver="deferred",
+                method="b3lyp",
+                basis="6-31g",
+                keywords={"k2": "values2"},
+                protocols=SinglepointProtocols(wavefunction="all", stdout=False),
+            ),
+        ),
+    ),
+]
 
 
 def load_test_data(name: str) -> Tuple[GridoptimizationSpecification, Molecule, Dict[str, OptimizationResult]]:

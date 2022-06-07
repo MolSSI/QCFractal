@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Tuple, Optional, Dict, List, Union
+from typing import TYPE_CHECKING, Tuple, Optional, Dict, List, Union, Any
 
 import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicResult, OptimizationResult
@@ -8,11 +8,46 @@ from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicRe
 from qcfractal.testing_helpers import run_service_simple
 from qcfractaltesting.helpers import read_record_data
 from qcportal.records import PriorityEnum, RecordStatusEnum
-from qcportal.records.reaction import ReactionSpecification
+from qcportal.records.reaction import ReactionSpecification, ReactionKeywords
+from qcportal.records.singlepoint import SinglepointProtocols, QCSpecification
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+
+test_specs = [
+    ReactionSpecification(
+        program="reaction",
+        singlepoint_specification=QCSpecification(
+            program="prog1",
+            driver="energy",
+            method="b3lyp",
+            basis="6-31G*",
+            keywords={"k": "value"},
+            protocols=SinglepointProtocols(wavefunction="all"),
+        ),
+        keywords=ReactionKeywords(),
+    ),
+    ReactionSpecification(
+        program="reaction",
+        singlepoint_specification=QCSpecification(
+            program="Prog2", driver="energy", method="Hf", basis="def2-TZVP", keywords={"k": "v"}
+        ),
+        keywords=ReactionKeywords(),
+    ),
+]
+
+
+def compare_reaction_specs(
+    input_spec: Union[ReactionSpecification, Dict[str, Any]],
+    output_spec: Union[ReactionSpecification, Dict[str, Any]],
+) -> bool:
+    if isinstance(input_spec, dict):
+        input_spec = ReactionSpecification(**input_spec)
+    if isinstance(output_spec, dict):
+        output_spec = ReactionSpecification(**output_spec)
+
+    return input_spec == output_spec
 
 
 def load_test_data(

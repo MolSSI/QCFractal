@@ -5,56 +5,21 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcfractal.components.records.reaction.testing_helpers import compare_reaction_specs, test_specs, load_test_data
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service_simple
-from qcfractaltesting import load_molecule_data, load_record_data
+from qcfractaltesting import load_molecule_data
 from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
-from qcportal.records.reaction import ReactionSpecification, ReactionQueryFilters, ReactionKeywords
+from qcportal.records.reaction import ReactionSpecification, ReactionKeywords
 from qcportal.records.singlepoint import SinglepointProtocols, QCSpecification
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
-    from typing import Union, Dict, Any
 
 
-def compare_reaction_specs(
-    input_spec: Union[ReactionSpecification, Dict[str, Any]],
-    output_spec: Union[ReactionSpecification, Dict[str, Any]],
-) -> bool:
-    if isinstance(input_spec, dict):
-        input_spec = ReactionSpecification(**input_spec)
-    if isinstance(output_spec, dict):
-        output_spec = ReactionSpecification(**output_spec)
-
-    return input_spec == output_spec
-
-
-_test_specs = [
-    ReactionSpecification(
-        program="reaction",
-        singlepoint_specification=QCSpecification(
-            program="prog1",
-            driver="energy",
-            method="b3lyp",
-            basis="6-31G*",
-            keywords={"k": "value"},
-            protocols=SinglepointProtocols(wavefunction="all"),
-        ),
-        keywords=ReactionKeywords(),
-    ),
-    ReactionSpecification(
-        program="reaction",
-        singlepoint_specification=QCSpecification(
-            program="Prog2", driver="energy", method="Hf", basis="def2-TZVP", keywords={"k": "v"}
-        ),
-        keywords=ReactionKeywords(),
-    ),
-]
-
-
-@pytest.mark.parametrize("spec", _test_specs)
+@pytest.mark.parametrize("spec", test_specs)
 def test_reaction_socket_add_get(storage_socket: SQLAlchemySocket, spec: ReactionSpecification):
     hooh = load_molecule_data("peroxide2")
     ne4 = load_molecule_data("neon_tetramer")
@@ -100,7 +65,7 @@ def test_reaction_socket_add_get(storage_socket: SQLAlchemySocket, spec: Reactio
 
 
 def test_reaction_socket_add_existing_molecule(storage_socket: SQLAlchemySocket):
-    spec = _test_specs[0]
+    spec = test_specs[0]
 
     mol1 = load_molecule_data("go_H3NS")
     mol2 = load_molecule_data("peroxide2")
@@ -158,64 +123,6 @@ def test_reaction_socket_add_same_1(storage_socket: SQLAlchemySocket):
     assert id1 == id2
 
 
-def test_reaction_socket_query(storage_socket: SQLAlchemySocket):
-    input_spec_1, molecule_1, result_data_1 = load_record_data("rxn_H2O_psi4_b3lyp_sp")
-    input_spec_2, molecule_2, result_data_2 = load_record_data("rxn_H2_psi4_b3lyp_sp")
-
-    meta_1, id_1 = storage_socket.records.reaction.add(
-        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
-    )
-    meta_2, id_2 = storage_socket.records.reaction.add(
-        [molecule_2], input_spec_2, tag="*", priority=PriorityEnum.normal
-    )
-    assert meta_1.success and meta_2.success
-
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(qc_program=["psi4"]))
-    assert meta.n_found == 2
-
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(qc_program=["nothing"]))
-    assert meta.n_found == 0
-
-    mol_H = load_molecule_data("rxn_H")
-    mol_H2 = load_molecule_data("rxn_H2")
-    _, init_mol_id = storage_socket.molecules.add([mol_H, mol_H2])
-
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(molecule_id=[init_mol_id[0], 9999]))
-    assert meta.n_found == 1
-
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(molecule_id=[init_mol_id[1], 9999]))
-    assert meta.n_found == 2
-
-    # query for basis
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(qc_basis=["DEF2-tzvp"]))
-    assert meta.n_found == 2
-
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(qc_basis=["sTO-3g"]))
-    assert meta.n_found == 0
-
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(qc_basis=[None]))
-    assert meta.n_found == 0
-
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(qc_basis=[""]))
-    assert meta.n_found == 0
-
-    # query for qc_method
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(qc_method=["hf"]))
-    assert meta.n_found == 0
-
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(qc_method=["b3lyP"]))
-    assert meta.n_found == 2
-
-    # Query by default returns everything
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters())
-    assert meta.n_found == 2
-
-    # Query by default (with a limit)
-    meta, rxn = storage_socket.records.reaction.query(ReactionQueryFilters(limit=1))
-    assert meta.n_found == 2
-    assert len(rxn) == 1
-
-
 @pytest.mark.parametrize(
     "test_data_name",
     [
@@ -228,7 +135,7 @@ def test_reaction_socket_query(storage_socket: SQLAlchemySocket):
 def test_reaction_socket_run(
     storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, test_data_name: str
 ):
-    input_spec_1, molecules_1, result_data_1 = load_record_data(test_data_name)
+    input_spec_1, molecules_1, result_data_1 = load_test_data(test_data_name)
 
     meta_1, id_1 = storage_socket.records.reaction.add(
         [molecules_1], input_spec_1, tag="test_tag", priority=PriorityEnum.low

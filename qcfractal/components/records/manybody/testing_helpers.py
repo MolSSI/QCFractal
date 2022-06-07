@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Tuple, Optional, Dict
+from typing import TYPE_CHECKING, Tuple, Optional, Dict, Union, Any
 
 import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicResult
@@ -8,11 +8,62 @@ from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicRe
 from qcfractal.testing_helpers import run_service_simple
 from qcfractaltesting.helpers import read_record_data
 from qcportal.records import PriorityEnum, RecordStatusEnum
-from qcportal.records.manybody import ManybodySpecification
+from qcportal.records.manybody import ManybodySpecification, ManybodyKeywords
+from qcportal.records.singlepoint import SinglepointProtocols, QCSpecification
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+
+
+test_specs = [
+    ManybodySpecification(
+        program="manybody",
+        keywords=ManybodyKeywords(max_nbody=None, bsse_correction="none"),
+        singlepoint_specification=QCSpecification(
+            program="prog1",
+            driver="energy",
+            method="b3lyp",
+            basis="6-31G*",
+            keywords={"k": "value"},
+            protocols=SinglepointProtocols(wavefunction="all"),
+        ),
+    ),
+    ManybodySpecification(
+        keywords=ManybodyKeywords(max_nbody=1, bsse_correction="none"),
+        program="manybody",
+        singlepoint_specification=QCSpecification(
+            program="Prog2",
+            driver="energy",
+            method="Hf",
+            basis="def2-tzVP",
+            keywords={"k": "value"},
+        ),
+    ),
+    ManybodySpecification(
+        keywords=ManybodyKeywords(max_nbody=1, bsse_correction="none"),
+        program="manybody",
+        singlepoint_specification=QCSpecification(
+            program="Prog3",
+            driver="properties",
+            method="Hf",
+            basis="sto-3g",
+            keywords={"k": "v"},
+        ),
+    ),
+]
+
+
+def compare_manybody_specs(
+    input_spec: Union[ManybodySpecification, Dict[str, Any]],
+    output_spec: Union[ManybodySpecification, Dict[str, Any]],
+) -> bool:
+    if isinstance(input_spec, dict):
+        input_spec = ManybodySpecification(**input_spec)
+    if isinstance(output_spec, dict):
+        output_spec = ManybodySpecification(**output_spec)
+
+    return input_spec == output_spec
 
 
 def load_test_data(name: str) -> Tuple[ManybodySpecification, Molecule, Dict[str, AtomicResult]]:

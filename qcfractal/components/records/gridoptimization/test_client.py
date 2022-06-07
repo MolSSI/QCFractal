@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractaltesting import load_molecule_data, load_record_data
+from qcfractaltesting import load_molecule_data
 from qcportal.records import PriorityEnum
 from qcportal.records.gridoptimization import (
     GridoptimizationKeywords,
@@ -21,7 +21,11 @@ if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
 
-from .test_sockets import _test_specs, compare_gridoptimization_specs
+from qcfractal.components.records.gridoptimization.testing_helpers import (
+    compare_gridoptimization_specs,
+    test_specs,
+    submit_test_data,
+)
 
 
 @pytest.mark.parametrize("tag", ["*", "tag99"])
@@ -50,7 +54,7 @@ def test_gridoptimization_client_tag_priority(snowflake_client: PortalClient, ta
     assert rec[0].raw_data.service.priority == priority
 
 
-@pytest.mark.parametrize("spec", _test_specs)
+@pytest.mark.parametrize("spec", test_specs)
 def test_gridoptimization_client_add_get(snowflake_client: PortalClient, spec: GridoptimizationSpecification):
     hooh = load_molecule_data("peroxide2")
     h3ns = load_molecule_data("go_H3NS")
@@ -87,7 +91,7 @@ def test_gridoptimization_client_add_get(snowflake_client: PortalClient, spec: G
 
 
 def test_gridoptimization_client_add_existing_molecule(snowflake_client: PortalClient):
-    spec = _test_specs[0]
+    spec = test_specs[0]
 
     mol1 = load_molecule_data("go_H3NS")
     mol2 = load_molecule_data("peroxide2")
@@ -120,62 +124,49 @@ def test_gridoptimization_client_add_existing_molecule(snowflake_client: PortalC
 
 
 def test_gridoptimization_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    input_spec_1, molecule_1, result_data_1 = load_record_data("go_H2O2_psi4_b3lyp")
-    input_spec_2, molecule_2, result_data_2 = load_record_data("go_H2O2_psi4_pbe")
-    input_spec_3, molecule_3, result_data_3 = load_record_data("go_C4H4N2OS_psi4_b3lyp-d3bj")
-    input_spec_4, molecule_4, result_data_4 = load_record_data("go_H3NS_psi4_pbe")
+    id_1, _ = submit_test_data(storage_socket, "go_H2O2_psi4_b3lyp")
+    id_2, _ = submit_test_data(storage_socket, "go_H2O2_psi4_pbe")
+    id_3, _ = submit_test_data(storage_socket, "go_C4H4N2OS_psi4_b3lyp-d3bj")
+    id_4, _ = submit_test_data(storage_socket, "go_H3NS_psi4_pbe")
 
-    meta_1, id_1 = storage_socket.records.gridoptimization.add(
-        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
-    )
-    meta_2, id_2 = storage_socket.records.gridoptimization.add(
-        [molecule_2], input_spec_2, tag="*", priority=PriorityEnum.normal
-    )
-    meta_3, id_3 = storage_socket.records.gridoptimization.add(
-        [molecule_3], input_spec_3, tag="*", priority=PriorityEnum.normal
-    )
-    meta_4, id_4 = storage_socket.records.gridoptimization.add(
-        [molecule_4], input_spec_4, tag="*", priority=PriorityEnum.normal
-    )
-    assert meta_1.success and meta_2.success and meta_3.success and meta_4.success
+    all_gos = snowflake_client.get_gridoptimizations([id_1, id_2, id_3, id_4])
+    mol_ids = [x.initial_molecule_id for x in all_gos]
 
-    meta, td = snowflake_client.query_gridoptimizations(qc_program=["psi4"])
-    assert meta.n_found == 4
+    query_res = snowflake_client.query_gridoptimizations(qc_program=["psi4"])
+    assert query_res.current_meta.n_found == 4
 
-    meta, td = snowflake_client.query_gridoptimizations(qc_program=["nothing"])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_gridoptimizations(qc_program=["nothing"])
+    assert query_res.current_meta.n_found == 0
 
-    _, init_mol_id = storage_socket.molecules.add([molecule_1, molecule_2, molecule_3, molecule_4])
-    meta, td = snowflake_client.query_gridoptimizations(initial_molecule_id=[init_mol_id[0], 9999])
-    assert meta.n_found == 2
+    query_res = snowflake_client.query_gridoptimizations(initial_molecule_id=[mol_ids[0], 9999])
+    assert query_res.current_meta.n_found == 2
 
     # query for optimization program
-    meta, td = snowflake_client.query_gridoptimizations(optimization_program=["geometric"])
-    assert meta.n_found == 4
+    query_res = snowflake_client.query_gridoptimizations(optimization_program=["geometric"])
+    assert query_res.current_meta.n_found == 4
 
     # query for optimization program
-    meta, td = snowflake_client.query_gridoptimizations(optimization_program=["geometric123"])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_gridoptimizations(optimization_program=["geometric123"])
+    assert query_res.current_meta.n_found == 0
 
     # query for basis
-    meta, td = snowflake_client.query_gridoptimizations(qc_basis=["sTO-3g"])
-    assert meta.n_found == 3
+    query_res = snowflake_client.query_gridoptimizations(qc_basis=["sTO-3g"])
+    assert query_res.current_meta.n_found == 3
 
-    meta, td = snowflake_client.query_gridoptimizations(qc_basis=[None])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_gridoptimizations(qc_basis=[None])
+    assert query_res.current_meta.n_found == 0
 
-    meta, td = snowflake_client.query_gridoptimizations(qc_basis=[""])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_gridoptimizations(qc_basis=[""])
+    assert query_res.current_meta.n_found == 0
 
     # query for method
-    meta, td = snowflake_client.query_gridoptimizations(qc_method=["b3lyP"])
-    assert meta.n_found == 1
+    query_res = snowflake_client.query_gridoptimizations(qc_method=["b3lyP"])
+    assert query_res.current_meta.n_found == 1
 
     # Query by default returns everything
-    meta, td = snowflake_client.query_gridoptimizations()
-    assert meta.n_found == 4
+    query_res = snowflake_client.query_gridoptimizations()
+    assert query_res.current_meta.n_found == 4
 
     # Query by default (with a limit)
-    meta, td = snowflake_client.query_gridoptimizations(limit=1)
-    assert meta.n_found == 4
-    assert len(td) == 1
+    query_res = snowflake_client.query_gridoptimizations(limit=1)
+    assert query_res.current_meta.n_found == 4

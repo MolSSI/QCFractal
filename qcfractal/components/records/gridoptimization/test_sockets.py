@@ -5,15 +5,19 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcfractal.components.records.gridoptimization.testing_helpers import (
+    compare_gridoptimization_specs,
+    test_specs,
+    load_test_data,
+)
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service_constropt
-from qcfractaltesting import load_molecule_data, load_record_data
+from qcfractaltesting import load_molecule_data
 from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.gridoptimization import (
     GridoptimizationSpecification,
     GridoptimizationKeywords,
-    GridoptimizationQueryFilters,
 )
 from qcportal.records.optimization import (
     OptimizationSpecification,
@@ -27,71 +31,9 @@ from qcportal.records.singlepoint import (
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
-    from typing import Dict, Any, Union
 
 
-def compare_gridoptimization_specs(
-    input_spec: Union[GridoptimizationSpecification, Dict[str, Any]],
-    output_spec: Union[GridoptimizationSpecification, Dict[str, Any]],
-) -> bool:
-    if isinstance(input_spec, dict):
-        input_spec = GridoptimizationSpecification(**input_spec)
-    if isinstance(output_spec, dict):
-        output_spec = GridoptimizationSpecification(**output_spec)
-
-    return input_spec == output_spec
-
-
-_test_specs = [
-    GridoptimizationSpecification(
-        program="gridoptimization",
-        keywords=GridoptimizationKeywords(
-            preoptimization=False,
-            scans=[
-                {"type": "distance", "indices": [1, 2], "steps": [-0.1, 0.0], "step_type": "relative"},
-                {"type": "dihedral", "indices": [0, 1, 2, 3], "steps": [-90, 0], "step_type": "absolute"},
-            ],
-        ),
-        optimization_specification=OptimizationSpecification(
-            program="optprog1",
-            keywords={"k": "value"},
-            protocols=OptimizationProtocols(),
-            qc_specification=QCSpecification(
-                program="prog2",
-                driver="deferred",
-                method="b3lyp",
-                basis="6-31g",
-                keywords={"k2": "values2"},
-                protocols=SinglepointProtocols(wavefunction="all"),
-            ),
-        ),
-    ),
-    GridoptimizationSpecification(
-        program="gridoptimization",
-        keywords=GridoptimizationKeywords(
-            preoptimization=True,
-            scans=[
-                {"type": "dihedral", "indices": [3, 2, 1, 0], "steps": [-90, -45, 0, 45, 90], "step_type": "absolute"},
-            ],
-        ),
-        optimization_specification=OptimizationSpecification(
-            program="optprog1",
-            keywords={"k": "value"},
-            protocols=OptimizationProtocols(),
-            qc_specification=QCSpecification(
-                program="prog2",
-                driver="deferred",
-                method="b3lyp",
-                basis="6-31g",
-                keywords={"k2": "values2"},
-                protocols=SinglepointProtocols(wavefunction="all", stdout=False),
-            ),
-        ),
-    ),
-]
-
-
-@pytest.mark.parametrize("spec", _test_specs)
+@pytest.mark.parametrize("spec", test_specs)
 def test_gridoptimization_socket_add_get(storage_socket: SQLAlchemySocket, spec: GridoptimizationSpecification):
     hooh = load_molecule_data("peroxide2")
     h3ns = load_molecule_data("go_H3NS")
@@ -122,7 +64,7 @@ def test_gridoptimization_socket_add_get(storage_socket: SQLAlchemySocket, spec:
 
 
 def test_gridoptimization_socket_add_existing_molecule(storage_socket: SQLAlchemySocket):
-    spec = _test_specs[0]
+    spec = test_specs[0]
 
     mol1 = load_molecule_data("go_H3NS")
     mol2 = load_molecule_data("peroxide2")
@@ -245,74 +187,6 @@ def test_gridoptimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
     assert id1 == id2
 
 
-def test_gridoptimization_socket_query(storage_socket: SQLAlchemySocket):
-    input_spec_1, molecule_1, result_data_1 = load_record_data("go_H2O2_psi4_b3lyp")
-    input_spec_2, molecule_2, result_data_2 = load_record_data("go_H2O2_psi4_pbe")
-    input_spec_3, molecule_3, result_data_3 = load_record_data("go_C4H4N2OS_psi4_b3lyp-d3bj")
-    input_spec_4, molecule_4, result_data_4 = load_record_data("go_H3NS_psi4_pbe")
-
-    meta_1, id_1 = storage_socket.records.gridoptimization.add(
-        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
-    )
-    meta_2, id_2 = storage_socket.records.gridoptimization.add(
-        [molecule_2], input_spec_2, tag="*", priority=PriorityEnum.normal
-    )
-    meta_3, id_3 = storage_socket.records.gridoptimization.add(
-        [molecule_3], input_spec_3, tag="*", priority=PriorityEnum.normal
-    )
-    meta_4, id_4 = storage_socket.records.gridoptimization.add(
-        [molecule_4], input_spec_4, tag="*", priority=PriorityEnum.normal
-    )
-    assert meta_1.success and meta_2.success and meta_3.success and meta_4.success
-
-    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryFilters(qc_program=["psi4"]))
-    assert meta.n_found == 4
-
-    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryFilters(qc_program=["nothing"]))
-    assert meta.n_found == 0
-
-    _, init_mol_id = storage_socket.molecules.add([molecule_1, molecule_2, molecule_3, molecule_4])
-    meta, td = storage_socket.records.gridoptimization.query(
-        GridoptimizationQueryFilters(initial_molecule_id=[init_mol_id[0], 9999])
-    )
-    assert meta.n_found == 2
-
-    # query for optimization program
-    meta, td = storage_socket.records.gridoptimization.query(
-        GridoptimizationQueryFilters(optimization_program=["geometric"])
-    )
-    assert meta.n_found == 4
-
-    # query for optimization program
-    meta, td = storage_socket.records.gridoptimization.query(
-        GridoptimizationQueryFilters(optimization_program=["geometric123"])
-    )
-    assert meta.n_found == 0
-
-    # query for basis
-    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryFilters(qc_basis=["sTO-3g"]))
-    assert meta.n_found == 3
-
-    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryFilters(qc_basis=[None]))
-    assert meta.n_found == 0
-
-    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryFilters(qc_basis=[""]))
-    assert meta.n_found == 0
-
-    # query for method
-    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryFilters(qc_method=["b3lyP"]))
-    assert meta.n_found == 1
-
-    # Query by default returns everything
-    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryFilters())
-    assert meta.n_found == 4
-
-    # Query by default (with a limit)
-    meta, td = storage_socket.records.gridoptimization.query(GridoptimizationQueryFilters(limit=1))
-    assert meta.n_found == 4
-    assert len(td) == 1
-
-
 @pytest.mark.parametrize(
     "test_data_name",
     [
@@ -338,7 +212,7 @@ def test_gridoptimization_socket_query(storage_socket: SQLAlchemySocket):
 def test_gridoptimization_socket_run(
     storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, test_data_name: str
 ):
-    input_spec_1, molecules_1, result_data_1 = load_record_data(test_data_name)
+    input_spec_1, molecules_1, result_data_1 = load_test_data(test_data_name)
 
     meta_1, id_1 = storage_socket.records.gridoptimization.add(
         [molecules_1], input_spec_1, tag="test_tag", priority=PriorityEnum.low

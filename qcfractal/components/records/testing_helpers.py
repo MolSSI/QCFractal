@@ -7,8 +7,9 @@ from typing import TYPE_CHECKING
 
 from qcelemental.models import FailedOperation, ComputeError
 
+from qcfractal.components.records.optimization.testing_helpers import load_test_data as load_opt_test_data
+from qcfractal.components.records.singlepoint.testing_helpers import load_test_data as load_sp_test_data
 from qcfractal.testing_helpers import mname1
-from qcfractaltesting import load_record_data
 from qcportal.records import PriorityEnum, RecordStatusEnum
 
 if TYPE_CHECKING:
@@ -29,13 +30,13 @@ def populate_records_status(storage_socket: SQLAlchemySocket):
         tags=["tag1", "tag2", "tag3", "tag6"],
     )
 
-    input_spec_0, molecule_0, result_data_0 = load_record_data("psi4_methane_opt_sometraj")
-    input_spec_1, molecule_1, result_data_1 = load_record_data("psi4_water_gradient")
-    input_spec_2, molecule_2, result_data_2 = load_record_data("psi4_water_hessian")
-    input_spec_3, molecule_3, result_data_3 = load_record_data("psi4_benzene_opt")
-    input_spec_4, molecule_4, result_data_4 = load_record_data("rdkit_water_energy")
-    input_spec_5, molecule_5, result_data_5 = load_record_data("psi4_benzene_energy_2")
-    input_spec_6, molecule_6, result_data_6 = load_record_data("psi4_water_energy")
+    input_spec_0, molecule_0, result_data_0 = load_opt_test_data("psi4_methane_opt_sometraj")
+    input_spec_1, molecule_1, result_data_1 = load_sp_test_data("psi4_water_gradient")
+    input_spec_2, molecule_2, result_data_2 = load_sp_test_data("psi4_water_hessian")
+    input_spec_3, molecule_3, result_data_3 = load_opt_test_data("psi4_benzene_opt")
+    input_spec_4, molecule_4, result_data_4 = load_sp_test_data("rdkit_water_energy")
+    input_spec_5, molecule_5, result_data_5 = load_sp_test_data("psi4_benzene_energy_2")
+    input_spec_6, molecule_6, result_data_6 = load_sp_test_data("psi4_water_energy")
 
     meta, id_0 = storage_socket.records.optimization.add([molecule_0], input_spec_0, "tag0", PriorityEnum.normal)
     meta, id_1 = storage_socket.records.singlepoint.add([molecule_1], input_spec_1, "tag1", PriorityEnum.high)

@@ -1,18 +1,83 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Tuple, Optional, Dict, List
+from typing import TYPE_CHECKING, Tuple, Optional, Dict, List, Union, Any
 
 import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult
+from qcelemental.models.procedures import OptimizationProtocols
 
 from qcfractal.testing_helpers import run_service_constropt
 from qcfractaltesting.helpers import read_record_data
 from qcportal.records import PriorityEnum, RecordStatusEnum
-from qcportal.records.torsiondrive import TorsiondriveSpecification
+from qcportal.records.optimization import OptimizationSpecification
+from qcportal.records.singlepoint import SinglepointProtocols, QCSpecification
+from qcportal.records.torsiondrive import TorsiondriveSpecification, TorsiondriveKeywords
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+
+
+test_specs = [
+    TorsiondriveSpecification(
+        program="torsiondrive",
+        keywords=TorsiondriveKeywords(
+            dihedrals=[(1, 2, 3, 4)],
+            grid_spacing=[15],
+            dihedral_ranges=None,
+            energy_decrease_thresh=None,
+            energy_upper_limit=0.05,
+        ),
+        optimization_specification=OptimizationSpecification(
+            program="optprog1",
+            keywords={"k": "value"},
+            protocols=OptimizationProtocols(),
+            qc_specification=QCSpecification(
+                program="prog2",
+                driver="deferred",
+                method="b3lyp",
+                basis="6-31g",
+                keywords={"k2": "values2"},
+                protocols=SinglepointProtocols(wavefunction="all"),
+            ),
+        ),
+    ),
+    TorsiondriveSpecification(
+        program="torsiondrive",
+        keywords=TorsiondriveKeywords(
+            dihedrals=[(7, 2, 9, 4), (5, 11, 3, 10)],
+            grid_spacing=[30, 45],
+            dihedral_ranges=[[-90, 90], [0, 180]],
+            energy_decrease_thresh=1.0,
+            energy_upper_limit=0.05,
+        ),
+        optimization_specification=OptimizationSpecification(
+            program="optprog1",
+            keywords={"k": "value"},
+            protocols=OptimizationProtocols(),
+            qc_specification=QCSpecification(
+                program="prog2",
+                driver="deferred",
+                method="b3lyp",
+                basis="6-31g",
+                keywords={"k2": "values2"},
+                protocols=SinglepointProtocols(wavefunction="all", stdout=False),
+            ),
+        ),
+    ),
+]
+
+
+def compare_torsiondrive_specs(
+    input_spec: Union[TorsiondriveSpecification, Dict[str, Any]],
+    output_spec: Union[TorsiondriveSpecification, Dict[str, Any]],
+) -> bool:
+    if isinstance(input_spec, dict):
+        input_spec = TorsiondriveSpecification(**input_spec)
+    if isinstance(output_spec, dict):
+        output_spec = TorsiondriveSpecification(**output_spec)
+
+    return input_spec == output_spec
 
 
 def load_test_data(name: str) -> Tuple[TorsiondriveSpecification, List[Molecule], Dict[str, OptimizationResult]]:

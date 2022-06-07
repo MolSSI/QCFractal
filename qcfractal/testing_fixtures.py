@@ -13,7 +13,6 @@ from qcfractal.postgres_harness import TemporaryPostgres
 from qcfractal.testing_helpers import TestingSnowflake
 from qcfractaltesting import valid_encodings, geoip_path
 
-
 #######################################
 # Database and storage socket fixtures
 #######################################
@@ -197,7 +196,16 @@ def activated_manager_name(storage_socket: SQLAlchemySocket) -> ManagerName:
         manager_version="v2.0",
         qcengine_version="v1.0",
         username="bill",
-        programs={"psi4": None, "qchem": None, "geometric": None},
+        programs={
+            "psi4": None,
+            "qchem": None,
+            "geometric": None,
+            "rdkit": None,
+            "prog1": None,
+            "prog2": None,
+            "prog3": None,
+            "prog4": None,
+        },
         tags=["*"],
     )
 

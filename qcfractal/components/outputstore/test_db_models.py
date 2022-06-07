@@ -6,10 +6,10 @@ import pytest
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.records.db_models import RecordComputeHistoryORM
-from qcfractaltesting import submit_record_data
+from qcfractal.components.records.singlepoint.testing_helpers import submit_test_data
 from qcportal.compression import CompressionEnum
 from qcportal.outputstore import OutputTypeEnum, OutputStore
-from qcportal.records import RecordStatusEnum, PriorityEnum
+from qcportal.records import RecordStatusEnum
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -24,7 +24,7 @@ def existing_history_id(storage_socket):
     with an existing calculation
     """
 
-    record_id, _ = submit_record_data(storage_socket, "psi4_benzene_energy_1")
+    record_id, _ = submit_test_data(storage_socket, "psi4_benzene_energy_1")
 
     hist = RecordComputeHistoryORM(
         record_id=record_id,

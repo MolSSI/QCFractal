@@ -6,21 +6,22 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractaltesting import load_molecule_data, load_record_data
+from qcfractaltesting import load_molecule_data
 from qcportal.records import PriorityEnum
 from qcportal.records.reaction import ReactionSpecification
+from .testing_helpers import submit_test_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
 
-from .test_sockets import compare_reaction_specs, _test_specs
+from qcfractal.components.records.reaction.testing_helpers import compare_reaction_specs, test_specs
 
 
 @pytest.mark.parametrize("tag", ["*", "tag99"])
 @pytest.mark.parametrize("priority", list(PriorityEnum))
 def test_reaction_client_tag_priority(snowflake_client: PortalClient, tag: str, priority: PriorityEnum):
-    spec = _test_specs[0]
+    spec = test_specs[0]
 
     hooh = load_molecule_data("peroxide2")
     ne4 = load_molecule_data("neon_tetramer")
@@ -41,7 +42,7 @@ def test_reaction_client_tag_priority(snowflake_client: PortalClient, tag: str, 
     assert rec[0].raw_data.service.priority == priority
 
 
-@pytest.mark.parametrize("spec", _test_specs)
+@pytest.mark.parametrize("spec", test_specs)
 def test_reaction_client_add_get(snowflake_client: PortalClient, spec: ReactionSpecification):
     hooh = load_molecule_data("peroxide2")
     ne4 = load_molecule_data("neon_tetramer")
@@ -91,7 +92,7 @@ def test_reaction_client_add_get(snowflake_client: PortalClient, spec: ReactionS
 
 
 def test_reaction_client_add_existing_molecule(snowflake_client: PortalClient):
-    spec = _test_specs[0]
+    spec = test_specs[0]
 
     hooh = load_molecule_data("peroxide2")
     ne4 = load_molecule_data("neon_tetramer")
@@ -128,58 +129,49 @@ def test_reaction_client_add_existing_molecule(snowflake_client: PortalClient):
 
 
 def test_reaction_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    input_spec_1, molecule_1, result_data_1 = load_record_data("rxn_H2O_psi4_b3lyp_sp")
-    input_spec_2, molecule_2, result_data_2 = load_record_data("rxn_H2_psi4_b3lyp_sp")
+    id_1, _ = submit_test_data(storage_socket, "rxn_H2O_psi4_b3lyp_sp")
+    id_2, _ = submit_test_data(storage_socket, "rxn_H2_psi4_b3lyp_sp")
 
-    meta_1, id_1 = storage_socket.records.reaction.add(
-        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
-    )
-    meta_2, id_2 = storage_socket.records.reaction.add(
-        [molecule_2], input_spec_2, tag="*", priority=PriorityEnum.normal
-    )
-    assert meta_1.success and meta_2.success
+    query_res = snowflake_client.query_reactions(qc_program=["psi4"])
+    assert query_res.current_meta.n_found == 2
 
-    meta, rxn = snowflake_client.query_reactions(qc_program=["psi4"])
-    assert meta.n_found == 2
-
-    meta, rxn = snowflake_client.query_reactions(qc_program=["nothing"])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_reactions(qc_program=["nothing"])
+    assert query_res.current_meta.n_found == 0
 
     mol_H = load_molecule_data("rxn_H")
     mol_H2 = load_molecule_data("rxn_H2")
     _, init_mol_id = storage_socket.molecules.add([mol_H, mol_H2])
 
-    meta, rxn = snowflake_client.query_reactions(molecule_id=[init_mol_id[0], 9999])
-    assert meta.n_found == 1
+    query_res = snowflake_client.query_reactions(molecule_id=[init_mol_id[0], 9999])
+    assert query_res.current_meta.n_found == 1
 
-    meta, rxn = snowflake_client.query_reactions(molecule_id=[init_mol_id[1], 9999])
-    assert meta.n_found == 2
+    query_res = snowflake_client.query_reactions(molecule_id=[init_mol_id[1], 9999])
+    assert query_res.current_meta.n_found == 2
 
     # query for basis
-    meta, rxn = snowflake_client.query_reactions(qc_basis=["def2-TZvp"])
-    assert meta.n_found == 2
+    query_res = snowflake_client.query_reactions(qc_basis=["def2-TZvp"])
+    assert query_res.current_meta.n_found == 2
 
-    meta, rxn = snowflake_client.query_reactions(qc_basis=["sTO-3g"])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_reactions(qc_basis=["sTO-3g"])
+    assert query_res.current_meta.n_found == 0
 
-    meta, rxn = snowflake_client.query_reactions(qc_basis=[None])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_reactions(qc_basis=[None])
+    assert query_res.current_meta.n_found == 0
 
-    meta, rxn = snowflake_client.query_reactions(qc_basis=[""])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_reactions(qc_basis=[""])
+    assert query_res.current_meta.n_found == 0
 
     # query for qc_method
-    meta, rxn = snowflake_client.query_reactions(qc_method=["hf"])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_reactions(qc_method=["hf"])
+    assert query_res.current_meta.n_found == 0
 
-    meta, rxn = snowflake_client.query_reactions(qc_method=["b3lyP"])
-    assert meta.n_found == 2
+    query_res = snowflake_client.query_reactions(qc_method=["b3lyP"])
+    assert query_res.current_meta.n_found == 2
 
     # Query by default returns everything
-    meta, rxn = snowflake_client.query_reactions()
-    assert meta.n_found == 2
+    query_res = snowflake_client.query_reactions()
+    assert query_res.current_meta.n_found == 2
 
     # Query by default (with a limit)
-    meta, rxn = snowflake_client.query_reactions(limit=1)
-    assert meta.n_found == 2
-    assert len(rxn) == 1
+    query_res = snowflake_client.query_reactions(limit=1)
+    assert query_res.current_meta.n_found == 2

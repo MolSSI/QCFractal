@@ -5,12 +5,13 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcfractal.components.records.manybody.testing_helpers import compare_manybody_specs, test_specs, load_test_data
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service_simple
-from qcfractaltesting import load_molecule_data, load_record_data
+from qcfractaltesting import load_molecule_data
 from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
-from qcportal.records.manybody import ManybodySpecification, ManybodyQueryFilters
+from qcportal.records.manybody import ManybodySpecification
 from qcportal.records.manybody.models import ManybodyKeywords
 from qcportal.records.singlepoint import (
     SinglepointProtocols,
@@ -20,60 +21,9 @@ from qcportal.records.singlepoint import (
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
-    from typing import Union, Dict, Any
 
 
-def compare_manybody_specs(
-    input_spec: Union[ManybodySpecification, Dict[str, Any]],
-    output_spec: Union[ManybodySpecification, Dict[str, Any]],
-) -> bool:
-    if isinstance(input_spec, dict):
-        input_spec = ManybodySpecification(**input_spec)
-    if isinstance(output_spec, dict):
-        output_spec = ManybodySpecification(**output_spec)
-
-    return input_spec == output_spec
-
-
-_test_specs = [
-    ManybodySpecification(
-        program="manybody",
-        keywords=ManybodyKeywords(max_nbody=None, bsse_correction="none"),
-        singlepoint_specification=QCSpecification(
-            program="prog1",
-            driver="energy",
-            method="b3lyp",
-            basis="6-31G*",
-            keywords={"k": "value"},
-            protocols=SinglepointProtocols(wavefunction="all"),
-        ),
-    ),
-    ManybodySpecification(
-        keywords=ManybodyKeywords(max_nbody=1, bsse_correction="none"),
-        program="manybody",
-        singlepoint_specification=QCSpecification(
-            program="Prog2",
-            driver="energy",
-            method="Hf",
-            basis="def2-tzVP",
-            keywords={"k": "value"},
-        ),
-    ),
-    ManybodySpecification(
-        keywords=ManybodyKeywords(max_nbody=1, bsse_correction="none"),
-        program="manybody",
-        singlepoint_specification=QCSpecification(
-            program="Prog3",
-            driver="properties",
-            method="Hf",
-            basis="sto-3g",
-            keywords={"k": "v"},
-        ),
-    ),
-]
-
-
-@pytest.mark.parametrize("spec", _test_specs[:1])
+@pytest.mark.parametrize("spec", test_specs[:1])
 def test_manybody_socket_add_get(storage_socket: SQLAlchemySocket, spec: ManybodySpecification):
     water2 = load_molecule_data("water_dimer_minima")
     water4 = load_molecule_data("water_stacked")
@@ -105,7 +55,7 @@ def test_manybody_socket_add_get(storage_socket: SQLAlchemySocket, spec: Manybod
 
 
 def test_manybody_socket_add_existing_molecule(storage_socket: SQLAlchemySocket):
-    spec = _test_specs[0]
+    spec = test_specs[0]
 
     mol1 = load_molecule_data("water_dimer_minima")
     mol2 = load_molecule_data("water_stacked")
@@ -156,62 +106,6 @@ def test_manybody_socket_add_same_1(storage_socket: SQLAlchemySocket):
     assert id1[1] == id2[0]
 
 
-def test_manybody_socket_query(storage_socket: SQLAlchemySocket):
-    input_spec_1, molecule_1, result_data_1 = load_record_data("mb_none_he4_psi4_mp2")
-    input_spec_2, molecule_2, result_data_2 = load_record_data("mb_cp_he4_psi4_mp2")
-
-    meta_1, id_1 = storage_socket.records.manybody.add(
-        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
-    )
-    meta_2, id_2 = storage_socket.records.manybody.add(
-        [molecule_2], input_spec_2, tag="*", priority=PriorityEnum.normal
-    )
-    assert meta_1.success and meta_2.success
-
-    meta, mb = storage_socket.records.manybody.query(ManybodyQueryFilters(program=["manybody"]))
-    assert meta.n_found == 2
-
-    meta, mb = storage_socket.records.manybody.query(ManybodyQueryFilters(program=["nothing"]))
-    assert meta.n_found == 0
-
-    _, init_mol_id = storage_socket.molecules.add([molecule_1, molecule_2])
-
-    meta, mb = storage_socket.records.manybody.query(ManybodyQueryFilters(initial_molecule_id=[9999]))
-    assert meta.n_found == 0
-
-    meta, mb = storage_socket.records.manybody.query(ManybodyQueryFilters(initial_molecule_id=[init_mol_id[0], 9999]))
-    assert meta.n_found == 2
-
-    # query for basis
-    meta, mb = storage_socket.records.manybody.query(ManybodyQueryFilters(qc_basis=["DEF2-tzvp"]))
-    assert meta.n_found == 0
-
-    meta, mb = storage_socket.records.manybody.query(ManybodyQueryFilters(qc_basis=["auG-cC-pVDZ"]))
-    assert meta.n_found == 2
-
-    meta, mb = storage_socket.records.manybody.query(ManybodyQueryFilters(qc_basis=[None]))
-    assert meta.n_found == 0
-
-    meta, mb = storage_socket.records.manybody.query(ManybodyQueryFilters(qc_basis=[""]))
-    assert meta.n_found == 0
-
-    # query for method
-    meta, mb = storage_socket.records.manybody.query(ManybodyQueryFilters(qc_method=["hf"]))
-    assert meta.n_found == 0
-
-    meta, mb = storage_socket.records.manybody.query(ManybodyQueryFilters(qc_method=["mp2"]))
-    assert meta.n_found == 2
-
-    # Query by default returns everything
-    meta, mb = storage_socket.records.manybody.query(ManybodyQueryFilters())
-    assert meta.n_found == 2
-
-    # Query by default (with a limit)
-    meta, mb = storage_socket.records.manybody.query(ManybodyQueryFilters(limit=1))
-    assert meta.n_found == 2
-    assert len(mb) == 1
-
-
 @pytest.mark.parametrize(
     "test_data_name",
     [
@@ -222,7 +116,7 @@ def test_manybody_socket_query(storage_socket: SQLAlchemySocket):
 def test_manybody_socket_run(
     storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, test_data_name: str
 ):
-    input_spec_1, molecules_1, result_data_1 = load_record_data(test_data_name)
+    input_spec_1, molecules_1, result_data_1 = load_test_data(test_data_name)
 
     meta_1, id_1 = storage_socket.records.manybody.add(
         [molecules_1], input_spec_1, tag="test_tag", priority=PriorityEnum.low

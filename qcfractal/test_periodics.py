@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractaltesting.helpers import submit_record_data
+from qcfractal.components.records.gridoptimization.testing_helpers import submit_test_data as submit_go_test_data
+from qcfractal.components.records.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
 from qcportal.managers import ManagerName, ManagerStatusEnum
 from qcportal.records import RecordStatusEnum
 from qcportal.serverinfo import ServerStatsQueryFilters
@@ -66,7 +67,7 @@ def test_periodics_manager_heartbeats(snowflake: TestingSnowflake, storage_socke
 
 def test_periodics_service_iteration(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
 
-    id_1, _ = submit_record_data(storage_socket, "td_H2O2_psi4_b3lyp")
+    id_1, _ = submit_td_test_data(storage_socket, "td_H2O2_psi4_b3lyp")
 
     service_freq = snowflake._qcf_config.service_frequency
 
@@ -78,7 +79,7 @@ def test_periodics_service_iteration(snowflake: TestingSnowflake, storage_socket
     time.sleep(1.0)
 
     # added after startup
-    id_2, _ = submit_record_data(storage_socket, "go_H2O2_psi4_blyp")
+    id_2, _ = submit_go_test_data(storage_socket, "go_H2O2_psi4_blyp")
 
     # The first services iterated at startup
     rec = storage_socket.records.get([id_1, id_2])

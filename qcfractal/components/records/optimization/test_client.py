@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.components.records.optimization.db_models import OptimizationRecordORM
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractaltesting import load_molecule_data, load_record_data
+from qcfractaltesting import load_molecule_data
+from qcportal.managers import ManagerName
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.optimization import (
     OptimizationSpecification,
@@ -18,7 +18,12 @@ if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
 
-from .test_sockets import _test_specs, compare_optimization_specs
+from qcfractal.components.records.optimization.testing_helpers import (
+    compare_optimization_specs,
+    test_specs,
+    submit_test_data,
+    run_test_data,
+)
 
 
 @pytest.mark.parametrize("tag", ["*", "tag99"])
@@ -37,7 +42,7 @@ def test_optimization_client_tag_priority(snowflake_client: PortalClient, tag: s
     assert rec[0].raw_data.task.priority == priority
 
 
-@pytest.mark.parametrize("spec", _test_specs)
+@pytest.mark.parametrize("spec", test_specs)
 def test_optimization_client_add_get(snowflake_client: PortalClient, spec: OptimizationSpecification):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
@@ -89,7 +94,7 @@ def test_optimization_client_add_get(snowflake_client: PortalClient, spec: Optim
 
 
 def test_optimization_client_add_existing_molecule(snowflake_client: PortalClient):
-    spec = _test_specs[0]
+    spec = test_specs[0]
 
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
@@ -115,97 +120,96 @@ def test_optimization_client_add_existing_molecule(snowflake_client: PortalClien
     assert recs[2].raw_data.initial_molecule_id == mol_ids[0]
 
 
-def test_optimization_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    input_spec_1, molecule_1, result_data_1 = load_record_data("psi4_fluoroethane_opt_notraj")
-    input_spec_2, molecule_2, result_data_2 = load_record_data("psi4_benzene_opt")
-    input_spec_3, molecule_3, result_data_3 = load_record_data("psi4_methane_opt_sometraj")
-
-    meta1, id1 = storage_socket.records.optimization.add(
-        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
-    )
-    meta2, id2 = storage_socket.records.optimization.add(
-        [molecule_2], input_spec_2, tag="*", priority=PriorityEnum.normal
-    )
-    meta3, id3 = storage_socket.records.optimization.add(
-        [molecule_3], input_spec_3, tag="*", priority=PriorityEnum.normal
-    )
-
-    recs = snowflake_client.get_optimizations(id1 + id2 + id3)
-
-    # query for molecule
-    meta, opt = snowflake_client.query_optimizations(initial_molecule_id=[recs[1].raw_data.initial_molecule_id])
-    assert meta.n_found == 1
-    assert opt[0].raw_data.id == id2[0]
-
-    # query for program
-    meta, opt = snowflake_client.query_optimizations(program=["psi4"])
-    assert meta.n_found == 0
-
-    # query for program
-    meta, opt = snowflake_client.query_optimizations(program=["geometric"])
-    assert meta.n_found == 3
-
-    meta, opt = snowflake_client.query_optimizations(qc_program=["psi4"])
-    assert meta.n_found == 3
-
-    # query for basis
-    meta, opt = snowflake_client.query_optimizations(qc_basis=["sTO-3g"])
-    assert meta.n_found == 0
-
-    meta, opt = snowflake_client.query_optimizations(qc_basis=[None])
-    assert meta.n_found == 0
-
-    meta, opt = snowflake_client.query_optimizations(qc_basis=[""])
-    assert meta.n_found == 0
-
-    # query for method
-    meta, opt = snowflake_client.query_optimizations(qc_method=["b3lyP"])
-    assert meta.n_found == 3
-
-    # Some empty queries
-    meta, opt = snowflake_client.query_optimizations(program=["madeupprog"])
-    assert meta.n_found == 0
-
-    # Query by default returns everything
-    meta, opt = snowflake_client.query_optimizations()
-    assert meta.n_found == 3
-
-    # Query by default (with a limit)
-    meta, opt = snowflake_client.query_optimizations(limit=1)
-    assert meta.n_found == 3
-    assert len(opt) == 1
-
-
 @pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_fluoroethane_opt_notraj"])
-def test_optimization_client_delete_1(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, opt_file: str):
-    # Deleting with deleting children
-    input_spec_1, molecule_1, result_data_1 = load_record_data(opt_file)
-    meta1, id1 = storage_socket.records.optimization.add(
-        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
-    )
+def test_optimization_client_delete(
+    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, opt_file: str
+):
+    opt_id = run_test_data(storage_socket, activated_manager_name, opt_file)
 
-    with storage_socket.session_scope() as session:
-        rec_orm = session.query(OptimizationRecordORM).where(OptimizationRecordORM.id == id1[0]).one()
-        storage_socket.records.update_completed_task(session, rec_orm, result_data_1, None)
-
-    rec = storage_socket.records.optimization.get(id1, include=["trajectory"])
+    rec = storage_socket.records.optimization.get([opt_id], include=["trajectory"])
     child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
 
-    meta = snowflake_client.delete_records(id1, soft_delete=True, delete_children=True)
+    meta = snowflake_client.delete_records(opt_id, soft_delete=True, delete_children=True)
     assert meta.success
     assert meta.deleted_idx == [0]
     assert meta.n_children_deleted == len(child_ids)
 
-    child_recs = storage_socket.records.get(child_ids)
-    assert all(x["status"] == RecordStatusEnum.deleted for x in child_recs)
+    child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
+    assert all(x.status == RecordStatusEnum.deleted for x in child_recs)
 
-    meta = snowflake_client.delete_records(id1, soft_delete=False, delete_children=True)
+    meta = snowflake_client.delete_records(opt_id, soft_delete=False, delete_children=True)
     assert meta.success
     assert meta.deleted_idx == [0]
     assert meta.n_children_deleted == len(child_ids)
 
-    recs = storage_socket.records.get(id1, missing_ok=True)
-    assert recs == [None]
+    recs = snowflake_client.get_optimizations(opt_id, missing_ok=True)
+    assert recs is None
 
-    child_recs = storage_socket.records.get(child_ids, missing_ok=True)
+    child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
     assert all(x is None for x in child_recs)
+
+
+@pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_methane_opt_sometraj"])
+def test_optimization_client_delete_traj_inuse(
+    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, opt_file: str
+):
+    opt_id = run_test_data(storage_socket, activated_manager_name, opt_file)
+
+    rec = storage_socket.records.optimization.get([opt_id], include=["trajectory"])
+    child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
+
+    meta = snowflake_client.delete_records(child_ids[0], soft_delete=False)
+    assert meta.success is False
+    assert meta.error_idx == [0]
+
+    ch_rec = snowflake_client.get_records(child_ids[0])
+    assert ch_rec is not None
+
+
+def test_optimization_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+    id_1, _ = submit_test_data(storage_socket, "psi4_fluoroethane_opt_notraj")
+    id_2, _ = submit_test_data(storage_socket, "psi4_benzene_opt")
+    id_3, _ = submit_test_data(storage_socket, "psi4_methane_opt_sometraj")
+
+    recs = snowflake_client.get_optimizations([id_1, id_2, id_3])
+
+    # query for molecule
+    query_res = snowflake_client.query_optimizations(initial_molecule_id=[recs[1].raw_data.initial_molecule_id])
+    assert query_res.current_meta.n_found == 1
+
+    # query for program
+    query_res = snowflake_client.query_optimizations(program=["psi4"])
+    assert query_res.current_meta.n_found == 0
+
+    # query for program
+    query_res = snowflake_client.query_optimizations(program=["geometric"])
+    assert query_res.current_meta.n_found == 3
+
+    query_res = snowflake_client.query_optimizations(qc_program=["psi4"])
+    assert query_res.current_meta.n_found == 3
+
+    # query for basis
+    query_res = snowflake_client.query_optimizations(qc_basis=["sTO-3g"])
+    assert query_res.current_meta.n_found == 0
+
+    query_res = snowflake_client.query_optimizations(qc_basis=[None])
+    assert query_res.current_meta.n_found == 0
+
+    query_res = snowflake_client.query_optimizations(qc_basis=[""])
+    assert query_res.current_meta.n_found == 0
+
+    # query for method
+    query_res = snowflake_client.query_optimizations(qc_method=["b3lyP"])
+    assert query_res.current_meta.n_found == 3
+
+    # Some empty queries
+    query_res = snowflake_client.query_optimizations(program=["madeupprog"])
+    assert query_res.current_meta.n_found == 0
+
+    # Query by default returns everything
+    query_res = snowflake_client.query_optimizations()
+    assert query_res.current_meta.n_found == 3
+
+    # Query by default (with a limit)
+    query_res = snowflake_client.query_optimizations(limit=1)
+    assert query_res.current_meta.n_found == 3

@@ -5,9 +5,14 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcfractal.components.records.torsiondrive.testing_helpers import (
+    compare_torsiondrive_specs,
+    test_specs,
+    load_test_data,
+)
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service_constropt
-from qcfractaltesting import load_molecule_data, load_record_data
+from qcfractaltesting import load_molecule_data
 from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.optimization import (
@@ -21,78 +26,14 @@ from qcportal.records.singlepoint import (
 from qcportal.records.torsiondrive import (
     TorsiondriveSpecification,
     TorsiondriveKeywords,
-    TorsiondriveQueryFilters,
 )
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
-    from typing import Dict, Any, Union
 
 
-def compare_torsiondrive_specs(
-    input_spec: Union[TorsiondriveSpecification, Dict[str, Any]],
-    output_spec: Union[TorsiondriveSpecification, Dict[str, Any]],
-) -> bool:
-    if isinstance(input_spec, dict):
-        input_spec = TorsiondriveSpecification(**input_spec)
-    if isinstance(output_spec, dict):
-        output_spec = TorsiondriveSpecification(**output_spec)
-
-    return input_spec == output_spec
-
-
-_test_specs = [
-    TorsiondriveSpecification(
-        program="torsiondrive",
-        keywords=TorsiondriveKeywords(
-            dihedrals=[(1, 2, 3, 4)],
-            grid_spacing=[15],
-            dihedral_ranges=None,
-            energy_decrease_thresh=None,
-            energy_upper_limit=0.05,
-        ),
-        optimization_specification=OptimizationSpecification(
-            program="optprog1",
-            keywords={"k": "value"},
-            protocols=OptimizationProtocols(),
-            qc_specification=QCSpecification(
-                program="prog2",
-                driver="deferred",
-                method="b3lyp",
-                basis="6-31g",
-                keywords={"k2": "values2"},
-                protocols=SinglepointProtocols(wavefunction="all"),
-            ),
-        ),
-    ),
-    TorsiondriveSpecification(
-        program="torsiondrive",
-        keywords=TorsiondriveKeywords(
-            dihedrals=[(7, 2, 9, 4), (5, 11, 3, 10)],
-            grid_spacing=[30, 45],
-            dihedral_ranges=[[-90, 90], [0, 180]],
-            energy_decrease_thresh=1.0,
-            energy_upper_limit=0.05,
-        ),
-        optimization_specification=OptimizationSpecification(
-            program="optprog1",
-            keywords={"k": "value"},
-            protocols=OptimizationProtocols(),
-            qc_specification=QCSpecification(
-                program="prog2",
-                driver="deferred",
-                method="b3lyp",
-                basis="6-31g",
-                keywords={"k2": "values2"},
-                protocols=SinglepointProtocols(wavefunction="all", stdout=False),
-            ),
-        ),
-    ),
-]
-
-
-@pytest.mark.parametrize("spec", _test_specs)
+@pytest.mark.parametrize("spec", test_specs)
 def test_torsiondrive_socket_add_get(storage_socket: SQLAlchemySocket, spec: TorsiondriveSpecification):
     hooh = load_molecule_data("peroxide2")
     td_mol_1 = load_molecule_data("td_C9H11NO2_1")
@@ -133,7 +74,7 @@ def test_torsiondrive_socket_add_get(storage_socket: SQLAlchemySocket, spec: Tor
 
 
 def test_torsiondrive_socket_add_existing_molecule(storage_socket: SQLAlchemySocket):
-    spec = _test_specs[0]
+    spec = test_specs[0]
 
     mol1 = load_molecule_data("td_C9H11NO2_1")
     mol2 = load_molecule_data("td_C9H11NO2_2")
@@ -359,72 +300,6 @@ def test_torsiondrive_socket_add_different_1(storage_socket: SQLAlchemySocket):
     assert id1[0] == id2[2]
 
 
-def test_torsiondrive_socket_query(storage_socket: SQLAlchemySocket):
-    input_spec_1, molecules_1, result_data_1 = load_record_data("td_H2O2_psi4_b3lyp")
-    input_spec_2, molecules_2, result_data_2 = load_record_data("td_H2O2_psi4_pbe")
-    input_spec_3, molecules_3, result_data_3 = load_record_data("td_C9H11NO2_psi4_b3lyp-d3bj")
-    input_spec_4, molecules_4, result_data_4 = load_record_data("td_H2O2_psi4_bp86")
-
-    meta_1, id_1 = storage_socket.records.torsiondrive.add(
-        [molecules_1], input_spec_1, tag="*", priority=PriorityEnum.normal, as_service=True
-    )
-    meta_2, id_2 = storage_socket.records.torsiondrive.add(
-        [molecules_2], input_spec_2, tag="*", priority=PriorityEnum.normal, as_service=True
-    )
-    meta_3, id_3 = storage_socket.records.torsiondrive.add(
-        [molecules_3], input_spec_3, tag="*", priority=PriorityEnum.normal, as_service=True
-    )
-    meta_4, id_4 = storage_socket.records.torsiondrive.add(
-        [molecules_4], input_spec_4, tag="*", priority=PriorityEnum.normal, as_service=True
-    )
-    assert meta_1.success and meta_2.success and meta_3.success and meta_4.success
-
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryFilters(qc_program=["psi4"]))
-    assert meta.n_found == 4
-
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryFilters(qc_program=["nothing"]))
-    assert meta.n_found == 0
-
-    _, init_mol_id = storage_socket.molecules.add(molecules_1 + molecules_2 + molecules_3 + molecules_4)
-    meta, td = storage_socket.records.torsiondrive.query(
-        TorsiondriveQueryFilters(initial_molecule_id=[init_mol_id[0], 9999])
-    )
-    assert meta.n_found == 3
-
-    # query for optimization program
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryFilters(optimization_program=["geometric"]))
-    assert meta.n_found == 4
-
-    # query for optimization program
-    meta, td = storage_socket.records.torsiondrive.query(
-        TorsiondriveQueryFilters(optimization_program=["geometric123"])
-    )
-    assert meta.n_found == 0
-
-    # query for basis
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryFilters(qc_basis=["sTO-3g"]))
-    assert meta.n_found == 3
-
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryFilters(qc_basis=[None]))
-    assert meta.n_found == 0
-
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryFilters(qc_basis=[""]))
-    assert meta.n_found == 0
-
-    # query for method
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryFilters(qc_method=["b3lyP"]))
-    assert meta.n_found == 1
-
-    # Query by default returns everything
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryFilters())
-    assert meta.n_found == 4
-
-    # Query by default (with a limit)
-    meta, td = storage_socket.records.torsiondrive.query(TorsiondriveQueryFilters(limit=1))
-    assert meta.n_found == 4
-    assert len(td) == 1
-
-
 @pytest.mark.parametrize(
     "test_data_name",
     [
@@ -442,7 +317,7 @@ def test_torsiondrive_socket_query(storage_socket: SQLAlchemySocket):
 def test_torsiondrive_socket_run(
     storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, test_data_name: str
 ):
-    input_spec_1, molecules_1, result_data_1 = load_record_data(test_data_name)
+    input_spec_1, molecules_1, result_data_1 = load_test_data(test_data_name)
 
     meta_1, id_1 = storage_socket.records.torsiondrive.add(
         [molecules_1], input_spec_1, tag="test_tag", priority=PriorityEnum.low, as_service=True

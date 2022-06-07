@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Tuple, Optional
+from typing import TYPE_CHECKING, Tuple, Optional, Union, Dict, Any
 
 import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult
@@ -8,10 +8,62 @@ from qcelemental.models import Molecule, FailedOperation, ComputeError, Optimiza
 from qcfractaltesting.helpers import read_record_data
 from qcportal.records import PriorityEnum, RecordStatusEnum
 from qcportal.records.optimization import OptimizationSpecification
+from qcportal.records.singlepoint import QCSpecification, SinglepointProtocols
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+
+
+test_specs = [
+    OptimizationSpecification(
+        program="optprog1",
+        keywords={},
+        protocols={"trajectory": "initial_and_final"},
+        qc_specification=QCSpecification(
+            program="prog1",
+            driver="deferred",
+            method="b3lyp",
+            basis="6-31G*",
+            keywords={"k": "value"},
+            protocols=SinglepointProtocols(wavefunction="all"),
+        ),
+    ),
+    OptimizationSpecification(
+        program="optprog2",
+        keywords={"k": "v"},
+        protocols={"trajectory": "none"},
+        qc_specification=QCSpecification(
+            program="Prog2",
+            driver="deferred",
+            method="Hf",
+            basis="def2-TZVP",
+            keywords={"k": "v"},
+        ),
+    ),
+    OptimizationSpecification(
+        program="optPRog3",
+        keywords={"k2": "v2"},
+        qc_specification=QCSpecification(
+            program="Prog3",
+            driver="deferred",
+            method="pbe0",
+            basis="",
+            keywords={"o": 1, "v": 2.123},
+            protocols=SinglepointProtocols(stdout=False, wavefunction="orbitals_and_eigenvalues"),
+        ),
+    ),
+    OptimizationSpecification(
+        program="OPTPROG4",
+        qc_specification=QCSpecification(
+            program="ProG4",
+            driver="deferred",
+            method="pbe",
+            basis=None,
+            protocols=SinglepointProtocols(stdout=False, wavefunction="return_results"),
+        ),
+    ),
+]
 
 
 def load_test_data(name: str) -> Tuple[OptimizationSpecification, Molecule, OptimizationResult]:
@@ -67,3 +119,15 @@ def run_test_data(
     assert record["status"] == end_status
 
     return record_id
+
+
+def compare_optimization_specs(
+    input_spec: Union[OptimizationSpecification, Dict[str, Any]],
+    output_spec: Union[OptimizationSpecification, Dict[str, Any]],
+) -> bool:
+    if isinstance(input_spec, dict):
+        input_spec = OptimizationSpecification(**input_spec)
+    if isinstance(output_spec, dict):
+        output_spec = OptimizationSpecification(**output_spec)
+
+    return input_spec == output_spec

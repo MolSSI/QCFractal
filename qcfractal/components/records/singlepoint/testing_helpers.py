@@ -1,17 +1,50 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Tuple, Optional
+from typing import TYPE_CHECKING, Tuple, Optional, Union, Dict, Any
 
 import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicResult
 
 from qcfractaltesting.helpers import read_record_data
 from qcportal.records import PriorityEnum, RecordStatusEnum
-from qcportal.records.singlepoint import QCSpecification
+from qcportal.records.singlepoint import SinglepointProtocols, QCSpecification, SinglepointDriver
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal.managers import ManagerName
+
+test_specs = [
+    QCSpecification(
+        program="prog1",
+        driver=SinglepointDriver.energy,
+        method="b3lyp",
+        basis="6-31G*",
+        keywords={"k": "value"},
+        protocols=SinglepointProtocols(wavefunction="all"),
+    ),
+    QCSpecification(
+        program="Prog2",
+        driver=SinglepointDriver.gradient,
+        method="Hf",
+        basis="def2-TZVP",
+        keywords={"k": "v"},
+    ),
+    QCSpecification(
+        program="Prog3",
+        driver=SinglepointDriver.hessian,
+        method="pbe0",
+        basis="",
+        keywords={"o": 1, "v": 2.123},
+        protocols=SinglepointProtocols(stdout=False, wavefunction="orbitals_and_eigenvalues"),
+    ),
+    QCSpecification(
+        program="ProG4",
+        driver=SinglepointDriver.hessian,
+        method="pbe",
+        basis=None,
+        protocols=SinglepointProtocols(stdout=False, wavefunction="return_results"),
+    ),
+]
 
 
 def load_test_data(name: str) -> Tuple[QCSpecification, Molecule, AtomicResult]:
@@ -67,3 +100,15 @@ def run_test_data(
     assert record["status"] == end_status
 
     return record_id
+
+
+def compare_singlepoint_specs(
+    input_spec: Union[QCSpecification, Dict[str, Any]],
+    output_spec: Union[QCSpecification, Dict[str, Any]],
+) -> bool:
+    if isinstance(input_spec, dict):
+        input_spec = QCSpecification(**input_spec)
+    if isinstance(output_spec, dict):
+        output_spec = QCSpecification(**output_spec)
+
+    return input_spec == output_spec

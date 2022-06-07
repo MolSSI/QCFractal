@@ -3,15 +3,15 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
+from qcfractal.components.records.torsiondrive.testing_helpers import load_test_data
 from qcportal.records import RecordStatusEnum
-from . import load_record_data
 
 if TYPE_CHECKING:
     from qcportal import PortalClient
 
 
 def test_torsiondrive_full_1(fulltest_client: PortalClient):
-    input_data, molecules, _ = load_record_data("td_H2O2_psi4_pbe")
+    input_data, molecules, _ = load_test_data("td_H2O2_psi4_pbe")
     meta, ids = fulltest_client.add_torsiondrives(
         initial_molecules=[molecules],
         program="torsiondrive",

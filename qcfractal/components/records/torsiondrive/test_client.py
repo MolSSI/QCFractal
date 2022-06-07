@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractaltesting import load_molecule_data, load_record_data
+from qcfractaltesting import load_molecule_data
 from qcportal.records import PriorityEnum
 from qcportal.records.optimization import (
     OptimizationSpecification,
@@ -21,7 +21,11 @@ if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
 
-from .test_sockets import _test_specs, compare_torsiondrive_specs
+from qcfractal.components.records.torsiondrive.testing_helpers import (
+    compare_torsiondrive_specs,
+    test_specs,
+    submit_test_data,
+)
 
 
 @pytest.mark.parametrize("tag", ["*", "tag99"])
@@ -44,7 +48,7 @@ def test_torsiondrive_client_tag_priority_as_service(snowflake_client: PortalCli
     assert rec[0].raw_data.service.priority == priority
 
 
-@pytest.mark.parametrize("spec", _test_specs)
+@pytest.mark.parametrize("spec", test_specs)
 def test_torsiondrive_client_add_get(snowflake_client: PortalClient, spec: TorsiondriveSpecification):
     hooh = load_molecule_data("peroxide2")
     td_mol_1 = load_molecule_data("td_C9H11NO2_1")
@@ -89,7 +93,7 @@ def test_torsiondrive_client_add_get(snowflake_client: PortalClient, spec: Torsi
 
 
 def test_torsiondrive_client_add_existing_molecule(snowflake_client: PortalClient):
-    spec = _test_specs[0]
+    spec = test_specs[0]
 
     mol1 = load_molecule_data("td_C9H11NO2_1")
     mol2 = load_molecule_data("td_C9H11NO2_2")
@@ -121,62 +125,49 @@ def test_torsiondrive_client_add_existing_molecule(snowflake_client: PortalClien
 
 
 def test_torsiondrive_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    input_spec_1, molecules_1, result_data_1 = load_record_data("td_H2O2_psi4_b3lyp")
-    input_spec_2, molecules_2, result_data_2 = load_record_data("td_H2O2_psi4_pbe")
-    input_spec_3, molecules_3, result_data_3 = load_record_data("td_C9H11NO2_psi4_b3lyp-d3bj")
-    input_spec_4, molecules_4, result_data_4 = load_record_data("td_H2O2_psi4_bp86")
+    id_1, _ = submit_test_data(storage_socket, "td_H2O2_psi4_b3lyp")
+    id_2, _ = submit_test_data(storage_socket, "td_H2O2_psi4_pbe")
+    id_3, _ = submit_test_data(storage_socket, "td_C9H11NO2_psi4_b3lyp-d3bj")
+    id_4, _ = submit_test_data(storage_socket, "td_H2O2_psi4_bp86")
 
-    meta_1, id_1 = storage_socket.records.torsiondrive.add(
-        [molecules_1], input_spec_1, tag="*", priority=PriorityEnum.normal, as_service=True
-    )
-    meta_2, id_2 = storage_socket.records.torsiondrive.add(
-        [molecules_2], input_spec_2, tag="*", priority=PriorityEnum.normal, as_service=True
-    )
-    meta_3, id_3 = storage_socket.records.torsiondrive.add(
-        [molecules_3], input_spec_3, tag="*", priority=PriorityEnum.normal, as_service=True
-    )
-    meta_4, id_4 = storage_socket.records.torsiondrive.add(
-        [molecules_4], input_spec_4, tag="*", priority=PriorityEnum.normal, as_service=True
-    )
-    assert meta_1.success and meta_2.success and meta_3.success and meta_4.success
+    all_tds = snowflake_client.get_torsiondrives([id_1, id_2, id_3, id_4], include=["initial_molecules"])
+    mol_ids = [x.initial_molecules[0].id for x in all_tds]
 
-    meta, td = snowflake_client.query_torsiondrives(qc_program=["psi4"])
-    assert meta.n_found == 4
+    query_res = snowflake_client.query_torsiondrives(qc_program=["psi4"])
+    assert query_res.current_meta.n_found == 4
 
-    meta, td = snowflake_client.query_torsiondrives(qc_program=["nothing"])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_torsiondrives(qc_program=["nothing"])
+    assert query_res.current_meta.n_found == 0
 
-    _, init_mol_id = storage_socket.molecules.add(molecules_1 + molecules_2 + molecules_3 + molecules_4)
-    meta, td = snowflake_client.query_torsiondrives(initial_molecule_id=[init_mol_id[0], 9999])
-    assert meta.n_found == 3
+    query_res = snowflake_client.query_torsiondrives(initial_molecule_id=[mol_ids[0], 9999])
+    assert query_res.current_meta.n_found == 3
 
     # query for optimization program
-    meta, td = snowflake_client.query_torsiondrives(optimization_program=["geometric"])
-    assert meta.n_found == 4
+    query_res = snowflake_client.query_torsiondrives(optimization_program=["geometric"])
+    assert query_res.current_meta.n_found == 4
 
     # query for optimization program
-    meta, td = snowflake_client.query_torsiondrives(optimization_program=["geometric123"])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_torsiondrives(optimization_program=["geometric123"])
+    assert query_res.current_meta.n_found == 0
 
     # query for basis
-    meta, td = snowflake_client.query_torsiondrives(qc_basis=["sTO-3g"])
-    assert meta.n_found == 3
+    query_res = snowflake_client.query_torsiondrives(qc_basis=["sTO-3g"])
+    assert query_res.current_meta.n_found == 3
 
-    meta, td = snowflake_client.query_torsiondrives(qc_basis=[None])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_torsiondrives(qc_basis=[None])
+    assert query_res.current_meta.n_found == 0
 
-    meta, td = snowflake_client.query_torsiondrives(qc_basis=[""])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_torsiondrives(qc_basis=[""])
+    assert query_res.current_meta.n_found == 0
 
     # query for method
-    meta, td = snowflake_client.query_torsiondrives(qc_method=["b3lyP"])
-    assert meta.n_found == 1
+    query_res = snowflake_client.query_torsiondrives(qc_method=["b3lyP"])
+    assert query_res.current_meta.n_found == 1
 
     # Query by default returns everything
-    meta, td = snowflake_client.query_torsiondrives()
-    assert meta.n_found == 4
+    query_res = snowflake_client.query_torsiondrives()
+    assert query_res.current_meta.n_found == 4
 
     # Query by default (with a limit)
-    meta, td = snowflake_client.query_torsiondrives(limit=1)
-    assert meta.n_found == 4
-    assert len(td) == 1
+    query_res = snowflake_client.query_torsiondrives(limit=1)
+    assert query_res.current_meta.n_found == 4

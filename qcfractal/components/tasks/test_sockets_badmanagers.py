@@ -7,8 +7,9 @@ from datetime import datetime
 
 import pytest
 
+from qcfractal.components.records.singlepoint.testing_helpers import load_test_data, submit_test_data
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractaltesting import load_record_data, submit_record_data, caplog_handler_at_level
+from qcfractaltesting import caplog_handler_at_level
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerName
 from qcportal.records import RecordStatusEnum
@@ -55,7 +56,7 @@ def test_task_socket_return_manager_noexist(storage_socket: SQLAlchemySocket):
         tags=["tag1"],
     )
 
-    record_id, result_data = submit_record_data(storage_socket, "psi4_benzene_energy_1", "tag1")
+    record_id, result_data = submit_test_data(storage_socket, "psi4_benzene_energy_1", "tag1")
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 
@@ -86,7 +87,7 @@ def test_task_socket_return_manager_inactive(storage_socket: SQLAlchemySocket):
         tags=["tag1"],
     )
 
-    record_id, result_data = submit_record_data(storage_socket, "psi4_benzene_energy_1", "tag1")
+    record_id, result_data = submit_test_data(storage_socket, "psi4_benzene_energy_1", "tag1")
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 
     storage_socket.managers.deactivate([mname1.fullname])
@@ -121,7 +122,7 @@ def test_task_socket_return_wrongmanager(storage_socket: SQLAlchemySocket):
         tags=["tag1"],
     )
 
-    record_id, result_data = submit_record_data(storage_socket, "psi4_benzene_energy_1", "tag1")
+    record_id, result_data = submit_test_data(storage_socket, "psi4_benzene_energy_1", "tag1")
 
     # Manager 1 claims tasks
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
@@ -157,7 +158,7 @@ def test_task_socket_return_manager_badid(
 ):
     # Manager returns data for a record that doesn't exist
 
-    _, _, result_data = load_record_data("psi4_benzene_energy_1")
+    _, _, result_data = load_test_data("psi4_benzene_energy_1")
 
     # Should be logged
     with caplog_handler_at_level(caplog, logging.WARNING):
@@ -189,7 +190,7 @@ def test_task_socket_return_manager_badstatus_1(storage_socket: SQLAlchemySocket
         tags=["tag1"],
     )
 
-    record_id, result_data = submit_record_data(storage_socket, "psi4_benzene_energy_1", "tag1")
+    record_id, result_data = submit_test_data(storage_socket, "psi4_benzene_energy_1", "tag1")
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 
@@ -234,7 +235,7 @@ def test_task_socket_return_manager_badstatus_2(storage_socket: SQLAlchemySocket
         tags=["tag1"],
     )
 
-    record_id, result_data = submit_record_data(storage_socket, "psi4_benzene_energy_1", "tag1")
+    record_id, result_data = submit_test_data(storage_socket, "psi4_benzene_energy_1", "tag1")
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 
@@ -285,7 +286,7 @@ def test_task_socket_return_manager_badstatus_3(storage_socket: SQLAlchemySocket
         tags=["tag1"],
     )
 
-    record_id, result_data = submit_record_data(storage_socket, "psi4_benzene_energy_1", "tag1")
+    record_id, result_data = submit_test_data(storage_socket, "psi4_benzene_energy_1", "tag1")
 
     tasks = storage_socket.tasks.claim_tasks(mname1.fullname)
 

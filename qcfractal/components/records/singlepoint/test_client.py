@@ -5,19 +5,24 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractaltesting import load_molecule_data, load_record_data
+from qcfractaltesting import load_molecule_data
+from qcportal.managers import ManagerName
 from qcportal.records import PriorityEnum
 from qcportal.records.singlepoint import (
     QCSpecification,
     SinglepointDriver,
 )
-from .test_sockets import _test_specs
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
 
-from .test_sockets import compare_singlepoint_specs
+from qcfractal.components.records.singlepoint.testing_helpers import (
+    submit_test_data,
+    run_test_data,
+    compare_singlepoint_specs,
+    test_specs,
+)
 
 
 @pytest.mark.parametrize("tag", ["*", "tag99"])
@@ -32,7 +37,7 @@ def test_singlepoint_client_tag_priority(snowflake_client: PortalClient, tag: st
     assert rec[0].raw_data.task.priority == priority
 
 
-@pytest.mark.parametrize("spec", _test_specs)
+@pytest.mark.parametrize("spec", test_specs)
 def test_singlepoint_client_add_get(snowflake_client: PortalClient, spec: QCSpecification):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
@@ -72,7 +77,7 @@ def test_singlepoint_client_add_get(snowflake_client: PortalClient, spec: QCSpec
 
 
 def test_singlepoint_client_add_existing_molecule(snowflake_client: PortalClient):
-    spec = _test_specs[0]
+    spec = test_specs[0]
 
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
@@ -103,65 +108,70 @@ def test_singlepoint_client_add_existing_molecule(snowflake_client: PortalClient
     assert recs[2].raw_data.molecule == ne4
 
 
+def test_singlepoint_client_delete(
+    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
+):
+    sp_id = run_test_data(storage_socket, activated_manager_name, "psi4_peroxide_energy_wfn")
+
+    # deleting with children is ok (even though we don't have children)
+    meta = snowflake_client.delete_records(sp_id, soft_delete=True, delete_children=True)
+    assert meta.success
+    assert meta.deleted_idx == [0]
+
+    meta = snowflake_client.delete_records(sp_id, soft_delete=False, delete_children=True)
+    assert meta.success
+    assert meta.deleted_idx == [0]
+
+    recs = snowflake_client.get_singlepoints(sp_id, missing_ok=True)
+    assert recs is None
+
+
 def test_singlepoint_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    input_spec_1, molecule_1, result_data_1 = load_record_data("psi4_benzene_energy_1")
-    input_spec_2, molecule_2, result_data_2 = load_record_data("psi4_peroxide_energy_wfn")
-    input_spec_3, molecule_3, result_data_3 = load_record_data("rdkit_water_energy")
+    id_1, _ = submit_test_data(storage_socket, "psi4_benzene_energy_1")
+    id_2, _ = submit_test_data(storage_socket, "psi4_peroxide_energy_wfn")
+    id_3, _ = submit_test_data(storage_socket, "rdkit_water_energy")
 
-    meta1, id1 = storage_socket.records.singlepoint.add(
-        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
-    )
-    meta2, id2 = storage_socket.records.singlepoint.add(
-        [molecule_2], input_spec_2, tag="*", priority=PriorityEnum.normal
-    )
-    meta3, id3 = storage_socket.records.singlepoint.add(
-        [molecule_3], input_spec_3, tag="*", priority=PriorityEnum.normal
-    )
-
-    recs = storage_socket.records.singlepoint.get(id1 + id2 + id3)
+    recs = storage_socket.records.singlepoint.get([id_1, id_2, id_3])
 
     # query for molecule
-    meta, sp = snowflake_client.query_singlepoints(molecule_id=[recs[1]["molecule_id"]])
-    assert meta.n_found == 1
-    assert sp[0].raw_data.id == id2[0]
+    query_res = snowflake_client.query_singlepoints(molecule_id=[recs[1]["molecule_id"]])
+    assert query_res.current_meta.n_found == 1
 
     # query for program
-    meta, sp = snowflake_client.query_singlepoints(program="psi4")
-    assert meta.n_found == 2
+    query_res = snowflake_client.query_singlepoints(program="psi4")
+    assert query_res.current_meta.n_found == 2
 
     # query for basis
-    meta, sp = snowflake_client.query_singlepoints(basis="sTO-3g")
-    assert meta.n_found == 1
+    query_res = snowflake_client.query_singlepoints(basis="sTO-3g")
+    assert query_res.current_meta.n_found == 1
 
-    meta, sp = snowflake_client.query_singlepoints(basis=[None])
-    assert meta.n_found == 1
-    assert sp[0].raw_data.id == id3[0]
+    query_res = snowflake_client.query_singlepoints(basis=[None])
+    assert query_res.current_meta.n_found == 1
 
-    meta, sp = snowflake_client.query_singlepoints(basis="")
-    assert meta.n_found == 1
-    assert sp[0].raw_data.id == id3[0]
+    query_res = snowflake_client.query_singlepoints(basis="")
+    assert query_res.current_meta.n_found == 1
 
     # query for method
-    meta, sp = snowflake_client.query_singlepoints(method=["b3lyP"])
-    assert meta.n_found == 2
+    query_res = snowflake_client.query_singlepoints(method=["b3lyP"])
+    assert query_res.current_meta.n_found == 2
 
     # driver
-    meta, sp = snowflake_client.query_singlepoints(driver=[SinglepointDriver.energy])
-    assert meta.n_found == 3
+    query_res = snowflake_client.query_singlepoints(driver=[SinglepointDriver.energy])
+    assert query_res.current_meta.n_found == 3
 
     # Some empty queries
-    meta, sp = snowflake_client.query_singlepoints(driver=[SinglepointDriver.properties])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_singlepoints(driver=[SinglepointDriver.properties])
+    assert query_res.current_meta.n_found == 0
 
     # Some empty queries
-    meta, sp = snowflake_client.query_singlepoints(basis=["madeupbasis"])
-    assert meta.n_found == 0
+    query_res = snowflake_client.query_singlepoints(basis=["madeupbasis"])
+    assert query_res.current_meta.n_found == 0
 
     # Query by default returns everything
-    meta, sp = snowflake_client.query_singlepoints()
-    assert meta.n_found == 3
+    query_res = snowflake_client.query_singlepoints()
+    assert query_res.current_meta.n_found == 3
 
     # Query by default (with a limit)
-    meta, sp = snowflake_client.query_singlepoints(limit=1)
-    assert meta.n_found == 3
-    assert len(sp) == 1
+    query_res = snowflake_client.query_singlepoints(limit=1)
+    assert query_res.current_meta.n_found == 3
+    assert len(list(query_res)) == 1

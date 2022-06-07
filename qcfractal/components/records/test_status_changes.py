@@ -2,10 +2,13 @@ from datetime import datetime
 
 import pytest
 
-from qcfractal.components.records.optimization.testing_helpers import run_test_data as run_opt_test_data
+from qcfractal.components.records.optimization.testing_helpers import (
+    run_test_data as run_opt_test_data,
+    submit_test_data as submit_opt_test_data,
+)
+from qcfractal.components.records.singlepoint.testing_helpers import submit_test_data as submit_sp_test_data
 from qcfractal.components.records.testing_helpers import populate_records_status
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractaltesting import submit_record_data
 from qcportal import PortalClient
 from qcportal.managers import ManagerName
 from qcportal.records import RecordStatusEnum
@@ -32,12 +35,12 @@ def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket):
         tags=["tag2"],
     )
 
-    id_1, result_data_1 = submit_record_data(storage_socket, "psi4_water_energy", "tag1")
-    id_2, result_data_2 = submit_record_data(storage_socket, "psi4_water_gradient", "tag2")
-    id_3, result_data_3 = submit_record_data(storage_socket, "psi4_water_hessian", "tag1")
-    id_4, result_data_4 = submit_record_data(storage_socket, "psi4_benzene_opt", "tag2")
-    id_5, result_data_5 = submit_record_data(storage_socket, "psi4_benzene_energy_1", "tag1")
-    id_6, result_data_6 = submit_record_data(storage_socket, "psi4_benzene_energy_2", "tag1")
+    id_1, result_data_1 = submit_sp_test_data(storage_socket, "psi4_water_energy", "tag1")
+    id_2, result_data_2 = submit_sp_test_data(storage_socket, "psi4_water_gradient", "tag2")
+    id_3, result_data_3 = submit_sp_test_data(storage_socket, "psi4_water_hessian", "tag1")
+    id_4, result_data_4 = submit_opt_test_data(storage_socket, "psi4_benzene_opt", "tag2")
+    id_5, result_data_5 = submit_sp_test_data(storage_socket, "psi4_benzene_energy_1", "tag1")
+    id_6, result_data_6 = submit_sp_test_data(storage_socket, "psi4_benzene_energy_2", "tag1")
     all_id = [id_1, id_2, id_3, id_4, id_5, id_6]
 
     tasks_1 = storage_socket.tasks.claim_tasks(mname1.fullname)

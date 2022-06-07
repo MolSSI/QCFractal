@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import ValidationError
 
-from qcfractaltesting import submit_record_data
+from qcfractal.components.records.singlepoint.testing_helpers import submit_test_data
 from qcportal import PortalRequestError
 from qcportal.managers import ManagerName, ManagerStatusEnum
 
@@ -152,7 +152,7 @@ def test_manager_mclient_activate_duplicate(snowflake: TestingSnowflake):
 def test_manager_mclient_deactivate(snowflake: TestingSnowflake):
     client = snowflake.client()
 
-    id1, _ = submit_record_data(snowflake.get_storage_socket(), "psi4_benzene_energy_1", "tag1")
+    id1, _ = submit_test_data(snowflake.get_storage_socket(), "psi4_benzene_energy_1", "tag1")
 
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
 

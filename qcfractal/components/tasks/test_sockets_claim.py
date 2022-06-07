@@ -5,20 +5,21 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from qcfractaltesting import load_record_data
+from qcfractal.components.records.optimization.testing_helpers import load_test_data as load_opt_test_data
+from qcfractal.components.records.singlepoint.testing_helpers import load_test_data as load_sp_test_data
 from qcportal.managers import ManagerName
 from qcportal.records import PriorityEnum
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
 
-input_spec_1, molecule_1, result_data_1 = load_record_data("psi4_water_energy")
-input_spec_2, molecule_2, result_data_2 = load_record_data("psi4_water_gradient")
-input_spec_3, molecule_3, result_data_3 = load_record_data("psi4_water_hessian")
-input_spec_4, molecule_4, result_data_4 = load_record_data("psi4_benzene_opt")
-input_spec_5, molecule_5, result_data_5 = load_record_data("psi4_benzene_energy_1")
-input_spec_6, molecule_6, result_data_6 = load_record_data("psi4_benzene_energy_2")
-input_spec_7, molecule_7, result_data_7 = load_record_data("rdkit_benzene_energy")
+input_spec_1, molecule_1, result_data_1 = load_sp_test_data("psi4_water_energy")
+input_spec_2, molecule_2, result_data_2 = load_sp_test_data("psi4_water_gradient")
+input_spec_3, molecule_3, result_data_3 = load_sp_test_data("psi4_water_hessian")
+input_spec_4, molecule_4, result_data_4 = load_opt_test_data("psi4_benzene_opt")
+input_spec_5, molecule_5, result_data_5 = load_sp_test_data("psi4_benzene_energy_1")
+input_spec_6, molecule_6, result_data_6 = load_sp_test_data("psi4_benzene_energy_2")
+input_spec_7, molecule_7, result_data_7 = load_sp_test_data("rdkit_benzene_energy")
 
 
 def test_task_socket_claim_mixed(storage_socket: SQLAlchemySocket):

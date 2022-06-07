@@ -10,7 +10,7 @@ from sqlalchemy.orm import contains_eager
 
 from qcfractal import __version__ as qcfractal_version
 from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM
-from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM, SinglepointRecordORM
+from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM
 from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
@@ -430,7 +430,7 @@ class ReactionRecordSocket(BaseRecordSocket):
 
         return self.root_socket.records.query_base(
             stmt=stmt,
-            orm_type=SinglepointRecordORM,
+            orm_type=ReactionRecordORM,
             query_data=query_data,
             session=session,
         )

@@ -4,8 +4,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcfractal.components.records.singlepoint.testing_helpers import submit_test_data
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
-from qcfractaltesting import submit_record_data, load_wavefunction_data
+from qcfractaltesting import load_wavefunction_data
 from qcportal.wavefunctions import WavefunctionProperties
 
 if TYPE_CHECKING:
@@ -21,7 +22,7 @@ def existing_record_id(storage_socket):
     with an existing calculation
     """
 
-    record_id, _ = submit_record_data(storage_socket, "psi4_benzene_energy_1")
+    record_id, _ = submit_test_data(storage_socket, "psi4_benzene_energy_1")
 
     yield record_id
 
