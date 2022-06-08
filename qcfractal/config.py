@@ -10,8 +10,7 @@ import urllib.parse
 from typing import Optional, Dict, Any
 
 import yaml
-from pydantic import Field, validator, root_validator, ValidationError
-from qcelemental.models import AutodocBaseSettings
+from pydantic import BaseSettings, Field, validator, root_validator, ValidationError
 
 
 def update_nested_dict(d, u):
@@ -28,7 +27,7 @@ class ConfigCommon:
     extra = "forbid"
 
 
-class ConfigBase(AutodocBaseSettings):
+class ConfigBase(BaseSettings):
 
     _type_map = {"string": str, "integer": int, "float": float, "boolean": bool}
 
