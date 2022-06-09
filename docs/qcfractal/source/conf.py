@@ -58,12 +58,18 @@ extensions = [
     'sphinx.ext.extlinks',
     'sphinx_automodapi.automodapi',
     'sphinx_automodapi.automodsumm',
-    'nbsphinx'
+    'nbsphinx',
+    "sphinxcontrib.autodoc_pydantic",
 ]
 
 napoleon_google_docstring = False
 napoleon_use_param = False
 napoleon_use_ivar = True
+
+autodoc_typehints = "description"
+autodoc_pydantic_model_hide_paramlist = True
+autodoc_pydantic_model_show_config_summary = False
+autodoc_pydantic_field_swap_name_and_alias = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -220,13 +226,13 @@ extlinks = {
 # -- Keywords for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {
-                       # 'python': ('https://docs.python.org/3.7', None),
-                       # 'numpy': ('https://docs.scipy.org/doc/numpy/', None),
-                       # 'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
-                       # 'matplotlib': ('https://matplotlib.org/', None),
-                       'qcelemental': ('https://qcelemental.readthedocs.io/en/latest/', None),
-                       'qcengine': ('https://qcengine.readthedocs.io/en/latest/', None),
+intersphinx_mapping = {'python': ('https://docs.python.org/3.10', None),
+                       "numpy": ("https://numpy.org/doc/stable/", None),
+                       'scipy': ('https://docs.scipy.org/doc/scipy/', None),
+                       'matplotlib': ('https://matplotlib.org/stable/', None),
+                       "qcelemental": ("http://docs.qcarchive.molssi.org/projects/QCElemental/en/latest/", None),
+                       "qcengine": ("http://docs.qcarchive.molssi.org/projects/QCEngine/en/latest/", None),
+                       "qcportal": ("http://docs.qcarchive.molssi.org/projects/QCPortal/en/latest/", None),
                       }
 
 # -- Keywords for todo extension ----------------------------------------------

@@ -5,29 +5,35 @@ API
 The complete set of object models and relations implemented by QCPortal. Every class shown here is its own model
 and the attributes shown are valid kwargs and values which can be fed into the construction.
 
+from other projects
 
-.. autoclass:: qcportal.models.KeywordSet
+* :py:class:`qcelemental.models.Molecule`
 
-.. autoclass:: qcportal.models.Molecule
+.. autopydantic_model:: qcportal.models.KeywordSet
 
-.. autoclass:: qcportal.models.OptimizationRecord
+.. already in qcel .. autopydantic_model:: qcportal.models.Molecule
+
+.. autopydantic_model:: qcportal.models.OptimizationRecord
+   :members:
+   :noindex:
+
+.. autopydantic_model:: qcportal.models.QCSpecification
+
+.. autopydantic_model:: qcportal.models.GridOptimizationInput
+
+.. autopydantic_model:: qcportal.models.GridOptimizationRecord
    :members:
 
-.. autoclass:: qcportal.models.QCSpecification
+.. autopydantic_model:: qcportal.models.OptimizationSpecification
 
-.. autoclass:: qcportal.models.GridOptimizationInput
+.. already in qcel but not exported
+.. autopydantic_model:: qcportal.models.OptimizationProtocols
 
-.. autoclass:: qcportal.models.GridOptimizationRecord
-   :members:
+.. already in qcel but not exported
+.. autopydantic_model:: qcportal.models.ResultProtocols
 
-.. autoclass:: qcportal.models.OptimizationSpecification
+.. autopydantic_model:: qcportal.models.TorsionDriveInput
 
-.. autoclass:: qcportal.models.OptimizationProtocols
+.. autopydantic_model:: qcportal.models.TorsionDriveRecord
 
-.. autoclass:: qcportal.models.ResultProtocols
-
-.. autoclass:: qcportal.models.TorsionDriveInput
-
-.. autoclass:: qcportal.models.TorsionDriveRecord
-
-.. autoclass:: qcportal.models.WavefunctionProtocols
+.. does not exist in qcel .. autoclass:: qcportal.models.WavefunctionProtocols

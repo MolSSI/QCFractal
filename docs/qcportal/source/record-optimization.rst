@@ -14,5 +14,5 @@ The ``Record`` of a geometry optimization.
 Attributes
 ----------
 
-.. autoclass:: qcportal.models.OptimizationRecord
+.. autopydantic_model:: qcportal.models.OptimizationRecord
     :members:

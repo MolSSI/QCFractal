@@ -8,9 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 import yaml
-from pydantic import Field, validator
-
-from .interface.models import AutodocBaseSettings
+from pydantic import BaseSettings, Field, validator
 
 
 def _str2bool(v):
@@ -30,7 +28,7 @@ class SettingsCommonConfig:
     extra = "forbid"
 
 
-class ConfigSettings(AutodocBaseSettings):
+class ConfigSettings(BaseSettings):
 
     _type_map = {"string": str, "integer": int, "float": float, "boolean": _str2bool}
 

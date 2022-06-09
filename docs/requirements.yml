@@ -10,6 +10,7 @@ dependencies:
     - nbsphinx
     - ipython
     - qcfractal-core
+    - autodoc-pydantic
 
-    - pip:
-      - git+git://github.com/MolSSI/qcarchive-sphinx-theme#egg=qcarchive_sphinx_theme
+    #- pip:
+    #  - git+git://github.com/MolSSI/qcarchive-sphinx-theme#egg=qcarchive_sphinx_theme

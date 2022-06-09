@@ -38,23 +38,23 @@ Config File Complete Options
 
 The valid top-level YAML headers are the parameters of the ``FractalConfig`` class.
 
-.. autoclass:: qcfractal.config.FractalConfig
+.. autopydantic_model:: qcfractal.config.FractalConfig
    :members:
 
 ``database``
 ************
 
-.. autoclass:: qcfractal.config.DatabaseSettings
+.. autopydantic_model:: qcfractal.config.DatabaseSettings
    :members:
 
 ``fractal``
 ***********
 
-.. autoclass:: qcfractal.config.FractalServerSettings
+.. autopydantic_model:: qcfractal.config.FractalServerSettings
    :members:
 
 ``view``
 ********
 
-.. autoclass:: qcfractal.config.ViewSettings
+.. autopydantic_model:: qcfractal.config.ViewSettings
    :members:

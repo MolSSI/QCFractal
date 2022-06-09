@@ -4,7 +4,6 @@ Either pull in QCEl models or local models
 
 from . import rest_models
 from .common_models import (
-    AutodocBaseSettings,
     Citation,
     KeywordSet,
     CompressionEnum,

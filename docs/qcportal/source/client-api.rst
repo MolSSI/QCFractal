@@ -79,3 +79,9 @@ Function Definitions
 .. autofunction:: add_service
 
 .. autofunction:: query_services
+
+API
+---
+
+.. autoclass:: qcportal.FractalClient
+

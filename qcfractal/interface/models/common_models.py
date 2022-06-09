@@ -12,7 +12,7 @@ from enum import Enum
 from typing import Any, Dict, Optional, Union
 
 from pydantic import Field, validator
-from qcelemental.models import AutodocBaseSettings, Molecule, ProtoModel, Provenance
+from qcelemental.models import Molecule, ProtoModel, Provenance
 from qcelemental.models.procedures import OptimizationProtocols
 from qcelemental.models.results import ResultProtocols
 
@@ -227,7 +227,7 @@ class QCSpecification(ProtoModel):
         description="The Id of the :class:`KeywordSet` registered in the database to run this calculation with. This "
         "Id must exist in the database.",
     )
-    protocols: Optional[ResultProtocols] = Field(ResultProtocols(), description=str(ResultProtocols.__base_doc__))
+    protocols: Optional[ResultProtocols] = Field(ResultProtocols(), description=str(ResultProtocols.__doc__))
     program: str = Field(
         ...,
         description="The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs"
@@ -269,7 +269,7 @@ class OptimizationSpecification(ProtoModel):
         ":class:`KeywordSet`. ",
     )
     protocols: Optional[OptimizationProtocols] = Field(
-        OptimizationProtocols(), description=str(OptimizationProtocols.__base_doc__)
+        OptimizationProtocols(), description=str(OptimizationProtocols.__doc__)
     )
 
     def dict(self, *args, **kwargs):

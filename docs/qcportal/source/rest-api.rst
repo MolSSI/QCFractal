@@ -14,33 +14,33 @@ Responses (like Metadata), but occur many times in the normal calls.
 KV Store
 --------
 
-.. autoclass:: qcportal.models.rest_models.KVStoreGETBody
+.. autopydantic_model:: qcportal.models.rest_models.KVStoreGETBody
 
-.. autoclass:: qcportal.models.rest_models.KVStoreGETResponse
+.. autopydantic_model:: qcportal.models.rest_models.KVStoreGETResponse
 
 --------
 Molecule
 --------
 
-.. autoclass:: qcportal.models.rest_models.MoleculeGETBody
+.. autopydantic_model:: qcportal.models.rest_models.MoleculeGETBody
 
-.. autoclass:: qcportal.models.rest_models.MoleculeGETResponse
+.. autopydantic_model:: qcportal.models.rest_models.MoleculeGETResponse
 
-.. autoclass:: qcportal.models.rest_models.MoleculePOSTBody
+.. autopydantic_model:: qcportal.models.rest_models.MoleculePOSTBody
 
-.. autoclass:: qcportal.models.rest_models.MoleculePOSTResponse
+.. autopydantic_model:: qcportal.models.rest_models.MoleculePOSTResponse
 
 --------
 Keywords
 --------
 
-.. autoclass:: qcportal.models.rest_models.KeywordGETBody
+.. autopydantic_model:: qcportal.models.rest_models.KeywordGETBody
 
-.. autoclass:: qcportal.models.rest_models.KeywordGETResponse
+.. autopydantic_model:: qcportal.models.rest_models.KeywordGETResponse
 
-.. autoclass:: qcportal.models.rest_models.KeywordPOSTBody
+.. autopydantic_model:: qcportal.models.rest_models.KeywordPOSTBody
 
-.. autoclass:: qcportal.models.rest_models.KeywordPOSTResponse
+.. autopydantic_model:: qcportal.models.rest_models.KeywordPOSTResponse
 
 -----------
 Collections
@@ -48,11 +48,11 @@ Collections
 
 .. autoclass:: qcportal.models.rest_models.CollectionGETBody
 
-.. autoclass:: qcportal.models.rest_models.CollectionGETResponse
+.. autopydantic_model:: qcportal.models.rest_models.CollectionGETResponse
 
 .. autoclass:: qcportal.models.rest_models.CollectionPOSTBody
 
-.. autoclass:: qcportal.models.rest_models.CollectionPOSTResponse
+.. autopydantic_model:: qcportal.models.rest_models.CollectionPOSTResponse
 
 ------
 Result
@@ -60,7 +60,7 @@ Result
 
 .. autoclass:: qcportal.models.rest_models.ResultGETBody
 
-.. autoclass:: qcportal.models.rest_models.ResultGETResponse
+.. autopydantic_model:: qcportal.models.rest_models.ResultGETResponse
 
 ----------
 Procedures
@@ -68,7 +68,7 @@ Procedures
 
 .. autoclass:: qcportal.models.rest_models.ProcedureGETBody
 
-.. autoclass:: qcportal.models.rest_models.ProcedureGETResponse
+.. autopydantic_model:: qcportal.models.rest_models.ProcedureGETResponse
 
 ----------
 Task Queue
@@ -76,15 +76,15 @@ Task Queue
 
 .. autoclass:: qcportal.models.rest_models.TaskQueueGETBody
 
-.. autoclass:: qcportal.models.rest_models.TaskQueueGETResponse
+.. autopydantic_model:: qcportal.models.rest_models.TaskQueueGETResponse
 
 .. autoclass:: qcportal.models.rest_models.TaskQueuePOSTBody
 
-.. autoclass:: qcportal.models.rest_models.TaskQueuePOSTResponse
+.. autopydantic_model:: qcportal.models.rest_models.TaskQueuePOSTResponse
 
 .. autoclass:: qcportal.models.rest_models.TaskQueuePUTBody
 
-.. autoclass:: qcportal.models.rest_models.TaskQueuePUTResponse
+.. autopydantic_model:: qcportal.models.rest_models.TaskQueuePUTResponse
 
 -------------
 Service Queue
@@ -92,31 +92,31 @@ Service Queue
 
 .. autoclass:: qcportal.models.rest_models.ServiceQueueGETBody
 
-.. autoclass:: qcportal.models.rest_models.ServiceQueueGETResponse
+.. autopydantic_model:: qcportal.models.rest_models.ServiceQueueGETResponse
 
 .. autoclass:: qcportal.models.rest_models.ServiceQueuePOSTBody
 
-.. autoclass:: qcportal.models.rest_models.ServiceQueuePOSTResponse
+.. autopydantic_model:: qcportal.models.rest_models.ServiceQueuePOSTResponse
 
 .. autoclass:: qcportal.models.rest_models.ServiceQueuePUTBody
 
-.. autoclass:: qcportal.models.rest_models.ServiceQueuePUTResponse
+.. autopydantic_model:: qcportal.models.rest_models.ServiceQueuePUTResponse
 
 -------------
 Queue Manager
 -------------
 
-.. autoclass:: qcportal.models.rest_models.QueueManagerGETBody
+.. autopydantic_model:: qcportal.models.rest_models.QueueManagerGETBody
 
-.. autoclass:: qcportal.models.rest_models.QueueManagerGETResponse
+.. autopydantic_model:: qcportal.models.rest_models.QueueManagerGETResponse
 
-.. autoclass:: qcportal.models.rest_models.QueueManagerPOSTBody
+.. autopydantic_model:: qcportal.models.rest_models.QueueManagerPOSTBody
 
-.. autoclass:: qcportal.models.rest_models.QueueManagerPOSTResponse
+.. autopydantic_model:: qcportal.models.rest_models.QueueManagerPOSTResponse
 
-.. autoclass:: qcportal.models.rest_models.QueueManagerPUTBody
+.. autopydantic_model:: qcportal.models.rest_models.QueueManagerPUTBody
 
-.. autoclass:: qcportal.models.rest_models.QueueManagerPUTResponse
+.. autopydantic_model:: qcportal.models.rest_models.QueueManagerPUTResponse
 
 ----------------------
 Common REST Components
@@ -125,16 +125,16 @@ Common REST Components
 These are NOT complete Body or Responses to the REST API, but common fragments which
 make up things like the Metadata or the Data fields.
 
-.. autoclass:: qcportal.models.rest_models.EmptyMeta
+.. autopydantic_model:: qcportal.models.rest_models.EmptyMeta
 
-.. autoclass:: qcportal.models.rest_models.ResponseMeta
+.. autopydantic_model:: qcportal.models.rest_models.ResponseMeta
 
-.. autoclass:: qcportal.models.rest_models.ResponseGETMeta
+.. autopydantic_model:: qcportal.models.rest_models.ResponseGETMeta
 
-.. autoclass:: qcportal.models.rest_models.ResponsePOSTMeta
+.. autopydantic_model:: qcportal.models.rest_models.ResponsePOSTMeta
 
-.. autoclass:: qcportal.models.rest_models.QueryMeta
+.. autopydantic_model:: qcportal.models.rest_models.QueryMeta
 
-.. autoclass:: qcportal.models.rest_models.QueryMetaProjection
+.. does not exist in qcf .. autoclass:: qcportal.models.rest_models.QueryMetaProjection
 
-.. autoclass:: qcportal.models.rest_models.QueueManagerMeta
+.. autopydantic_model:: qcportal.models.rest_models.QueueManagerMeta

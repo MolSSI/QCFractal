@@ -21,13 +21,13 @@ Each section below here is summarized the same way, showing all the options for 
 `pydantic <https://pydantic-docs.helpmanual.io/>`_ API which the YAML is fed into in a one-to-one match of options.
 
 
-.. autoclass:: qcfractal.cli.qcfractal_manager.ManagerSettings
+.. autopydantic_model:: qcfractal.cli.qcfractal_manager.ManagerSettings
 
 
 common
 ------
 
-.. autoclass:: qcfractal.cli.qcfractal_manager.CommonManagerSettings
+.. autopydantic_model:: qcfractal.cli.qcfractal_manager.CommonManagerSettings
 
 
 .. _managers_server:
@@ -35,40 +35,40 @@ common
 server
 ------
 
-.. autoclass:: qcfractal.cli.qcfractal_manager.FractalServerSettings
+.. autopydantic_model:: qcfractal.cli.qcfractal_manager.FractalServerSettings
 
 
 manager
 -------
 
-.. autoclass:: qcfractal.cli.qcfractal_manager.QueueManagerSettings
+.. autopydantic_model:: qcfractal.cli.qcfractal_manager.QueueManagerSettings
 
 
 cluster
 -------
 
-.. autoclass:: qcfractal.cli.qcfractal_manager.ClusterSettings
+.. autopydantic_model:: qcfractal.cli.qcfractal_manager.ClusterSettings
 
 
 dask
 ----
 
-.. autoclass:: qcfractal.cli.qcfractal_manager.DaskQueueSettings
+.. autopydantic_model:: qcfractal.cli.qcfractal_manager.DaskQueueSettings
 
 
 parsl
 -----
 
-.. autoclass:: qcfractal.cli.qcfractal_manager.ParslQueueSettings
+.. autopydantic_model:: qcfractal.cli.qcfractal_manager.ParslQueueSettings
 
 
 executor
 ++++++++
 
-.. autoclass:: qcfractal.cli.qcfractal_manager.ParslExecutorSettings
+.. autopydantic_model:: qcfractal.cli.qcfractal_manager.ParslExecutorSettings
 
 
 provider
 ++++++++
 
-.. autoclass:: qcfractal.cli.qcfractal_manager.ParslProviderSettings
+.. autopydantic_model:: qcfractal.cli.qcfractal_manager.ParslProviderSettings

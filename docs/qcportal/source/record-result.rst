@@ -15,6 +15,6 @@ which can correspond to an energy, gradient, Hessian, or property computation.
 Attributes
 ----------
 
-.. autoclass:: qcportal.models.ResultRecord
+.. autopydantic_model:: qcportal.models.ResultRecord
 
 
