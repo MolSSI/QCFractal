@@ -2377,44 +2377,25 @@ class PortalClient(PortalClientBase):
         record_ids: Union[int, Sequence[int]],
         missing_ok: bool = False,
         *,
-        include_task: bool = False,
-        include_service: bool = False,
-        include_outputs: bool = False,
-        include_comments: bool = False,
-        include_initial_chain: bool = False,
-        include_singlepoints: bool = False,
+        include: Optional[Iterable[str]] = None,
     ) -> Union[Optional[NEBRecord], List[Optional[NEBRecord]]]:
 
         is_single = not isinstance(record_ids, Sequence)
+
         record_ids = make_list(record_ids)
         if not record_ids:
             return []
 
+        if len(record_ids) > self.api_limits["get_records"]:
+            raise RuntimeError(
+                f"Cannot get {len(record_ids)} records - over the limit of {self.api_limits['get_records']}"
+            )
+
         body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
-        include = set()
-
-        # We must add '*' so that all the default fields are included
-        if include_task:
-            include |= {"*", "task"}
-        if include_service:
-            include |= {"*", "service"}
-        if include_outputs:
-            include |= {"*", "compute_history.*", "compute_history.outputs"}
-        if include_comments:
-            include |= {"*", "comments"}
-        if include_initial_chain:
-            include |= {"*", "initial_chain"}
-        if include_singlepoints:
-            include |= {"*", "singlepoints.*", "singlepoints.singlepoint_record"}
-
         if include:
-            body_data["include"] = include
+            body_data["include"] = SinglepointRecord.transform_includes(include)
 
-        if len(body_data["ids"]) > self.api_limits["get_records"]:
-            raise RuntimeError(
-                f"Cannot get {len(body_data['ids'])} records - over the limit of {self.api_limits['get_records']}"
-            )
 
         record_data = self._auto_request(
             "post",

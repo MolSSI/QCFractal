@@ -1,10 +1,10 @@
-from typing import List, Optional, Tuple, Union, Dict
+from typing import List, Optional, Tuple, Union, Dict, Set, Iterable
 
 import pydantic
 from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
 from typing_extensions import Literal
 
-from .. import BaseRecord, RecordAddBodyBase, RecordQueryFilters
+from ..models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from ..singlepoint.models import QCSpecification, SinglepointRecord, SinglepointDriver, SinglepointProtocols
 from ...base_models import ProjURLParameters
 from ...molecules import Molecule
@@ -62,10 +62,10 @@ class NEBSinglepoint(BaseModel):
         extra = Extra.forbid
 
     singlepoint_id: int
-    iteration: int
+    chain_iteration: int
     position: int
 
-    gradients: Optional[List[float]] = None
+    #gradients: Optional[List[float]] = None
     singlepoint_record: Optional[SinglepointRecord._DataModel]
 
 
@@ -112,6 +112,19 @@ class NEBRecord(BaseRecord):
     raw_data: _DataModel
 
     singlepoint_cache: Optional[Dict[str, SinglepointRecord]] = None
+    @staticmethod
+    def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
+        if includes is None:
+            return None
+
+        ret = BaseRecord.transform_includes(includes)
+
+        if "initial_chain" in includes:
+            ret.add("initial_chain")
+        if "singlepoints" in includes:
+            ret |= {"singlepoints.*", "singlepoints.singlepoint_record"}
+
+        return ret
 
     def _fetch_initial_chain(self):
         self.raw_data.initial_chain = self.client._auto_request(
@@ -158,7 +171,22 @@ class NEBRecord(BaseRecord):
 
         ret = {}
         for sp in self.raw_data.singlepoints:
-            ret.setdefault(sp.key, list())
-            ret[sp.key].append(self.client.recordmodel_from_datamodel([sp.singlepoint_record])[0])
+            ret.setdefault(sp.chain_iteration, list())
+            ret[sp.chain_iteration].append(sp.singlepoint_record.properties)
         self.singlepoint_cache = ret
         return ret
+
+    @property
+    def final_ts(self):
+        url_params = {}
+        r = self.client._auto_request(
+            "get",
+            f"v1/records/neb/{self.raw_data.id}/final_ts",
+            None,
+            ProjURLParameters,
+            Molecule,
+            None,
+            url_params,
+        )
+
+        return r

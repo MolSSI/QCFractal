@@ -6,7 +6,3 @@ from .models import (
     ReactionRecord,
     ReactionQueryFilters,
 )
-
-
-class ReactionSpecification:
-    pass

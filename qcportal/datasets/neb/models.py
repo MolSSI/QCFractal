@@ -1,39 +1,36 @@
-from typing import Dict, Any, Union, Optional, List, Iterable
+from typing import Dict, Any, Union, Optional, List, Iterable, Set
 
 from pydantic import BaseModel
 from typing_extensions import Literal
 
-from qcportal.base_models import RestModelBase
 from qcportal.molecules import Molecule
 from qcportal.records.singlepoint import QCSpecification
 from qcportal.records.neb import (
     NEBRecord,
     NEBKeywords,
+    NEBSpecification,
 )
 from qcportal.utils import make_list
 from .. import BaseDataset
-from ...records import PriorityEnum
-
 
 class NEBDatasetNewEntry(BaseModel):
     name: str
     comment: Optional[str] = None
-    initial_molecules: List[Union[Molecule, int]]
+    initial_chain: List[Union[Molecule, int]]
     neb_keywords: NEBKeywords
     additional_keywords: Dict[str, Any] = {}
     attributes: Dict[str, Any] = {}
 
 
 class NEBDatasetEntry(NEBDatasetNewEntry):
-    initial_molecule_ids: List[int]
-    initial_molecules: Optional[List[Molecule]] = None
+    initial_chain_ids: List[int]
+    initial_chain: Optional[List[Molecule]] = None
 
 
 # NEB dataset specifications are just qc specifications
-# The neb keywords are stored in the entries ^^
 class NEBDatasetSpecification(BaseModel):
     name: str
-    specification: NEBSpecification
+    specification: QCSpecification
     description: Optional[str] = None
 
 
@@ -62,6 +59,16 @@ class NEBDataset(BaseDataset):
     _specification_type = NEBDatasetSpecification
     _record_item_type = NEBDatasetRecordItem
     _record_type = NEBRecord
+
+    @staticmethod
+    def transform_entry_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
+        if includes is None:
+            return None
+
+        ret = BaseDataset.transform_entry_includes(includes)
+
+        ret |= {"initial_chain", "initial_chain.molecule"} #TODO: Not sure what I am doing here..
+        return ret
 
     def add_specification(self, name: str, specification: NEBSpecification, description: Optional[str] = None):
 
@@ -94,20 +101,3 @@ class NEBDataset(BaseDataset):
 
         new_names = [x.name for x in entries]
         self._post_add_entries(new_names)
-
-
-#######################
-# Web API models
-#######################
-
-
-class NEBDatasetAddBody(RestModelBase):
-    name: str
-    description: Optional[str] = None
-    tagline: Optional[str] = None
-    tags: Optional[Dict[str, Any]] = None
-    group: Optional[str] = None
-    provenance: Optional[Dict[str, Any]]
-    visibility: bool = True
-    default_tag: Optional[str] = None
-    default_priority: PriorityEnum = PriorityEnum.normal

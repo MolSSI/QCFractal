@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import contextlib
+import io
 import json
 import logging
 import numpy as np
@@ -10,7 +12,7 @@ import geometric
 import sqlalchemy.orm.attributes
 import tabulate
 from pydantic import BaseModel
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
 from sqlalchemy.orm import contains_eager
 
@@ -26,7 +28,6 @@ from qcportal.records import PriorityEnum, RecordStatusEnum
 from qcportal.records.singlepoint import QCSpecification
 from qcportal.records.optimization import OptimizationSpecification
 from qcportal.records.neb import (
-    NEBKeywords,
     NEBSpecification,
     NEBQueryFilters,
 )
@@ -37,9 +38,7 @@ from .db_models import (
     NEBInitialchainORM,
     NEBRecordORM,
 )
-
-    
-
+from ...molecules.db_models import MoleculeORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -107,12 +106,7 @@ class NEBRecordSocket(BaseRecordSocket):
         output += tabulate.tabulate(table_rows, headers=["keywords", "value"])
         output += "\n\n"
 
-        #keywords = NEBKeywords(neb_orm.specification.keywords)
-        initial_chain: List[Dict[str, Any]] = [x.molecule.model_dict() for x in neb_orm.initial_chain]
-
-        #picking_images = np.array([int(round(i)) for i in np.linspace(0,len(initial_chain)-1,images)])
-        #picked_molecules = np.array([Molecule(**mol_dict) for mol_dict in initial_chain])[picking_images]
-
+        initial_chain: List[Dict[str, Any]] = [x.model_dict() for x in neb_orm.initial_chain]
         output += f"{spec.keywords.dict()['images']} images will be used to guess a transition state structure.\n"
         output += f"Molecular formula = {Molecule(**initial_chain[0]).get_molecular_formula()}\n"
         molecule_template = Molecule(**initial_chain[0]).dict(encoding="json")
@@ -162,7 +156,7 @@ class NEBRecordSocket(BaseRecordSocket):
 
         output = ''
         if service_state.iteration==0:
-            initial_chain: List[Dict[str, Any]] = [x.molecule.model_dict() for x in neb_orm.initial_chain]
+            initial_chain: List[Dict[str, Any]] = [x.model_dict() for x in neb_orm.initial_chain]
             initial_molecules = [Molecule(**M) for M in initial_chain]
             if not service_state.optimized:
                 output += "\nFirst, optimizing the end points"
@@ -189,8 +183,14 @@ class NEBRecordSocket(BaseRecordSocket):
                 energies.append(sp_record.properties["return_energy"])
                 gradients.append(sp_record.properties["return_gradient"])
 
-            newcoords, prev = geometric.neb.nextchain(service_state.elems, geometries, gradients, energies, params, service_state.prev)
+            neb_stdout = io.StringIO()
+            logging.captureWarnings(True)
+            with contextlib.redirect_stdout(neb_stdout):
+                newcoords, prev = geometric.neb.nextchain(service_state.elems, geometries, gradients, energies, params, service_state.prev)
+            output += "\n" + neb_stdout.getvalue()
+            logging.captureWarnings(False)
             service_state.prev = prev
+
             if newcoords is not None:
                 next_chain = [Molecule(**molecule_template, geometry=geometry) for geometry in newcoords]
                 self.submit_singlepoints(session, service_state, service_orm, next_chain)
@@ -199,9 +199,7 @@ class NEBRecordSocket(BaseRecordSocket):
                 output += "\nNEB calculation is completed with %i iterations" %service_state.iteration
                 finished = True
             service_state.iteration += 1
-
         stdout_orm = neb_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
-
         stdout_orm.append(output)
         service_orm.service_state = service_state.dict()
         sqlalchemy.orm.attributes.flag_modified(service_orm, "service_state")
@@ -256,8 +254,7 @@ class NEBRecordSocket(BaseRecordSocket):
         service_orm.dependencies = []
 
         # Create a singlepoint input based on the multiple geometries
-        qc_spec = neb_orm.specification.singlepoint_specification.model_dict()#.to_model(QCSpecification)
-        #qc_spec = QCSpecification(**qc_spec).dict()
+        qc_spec = neb_orm.specification.singlepoint_specification.model_dict()
         meta, sp_ids = self.root_socket.records.singlepoint.add(
             chain,
             QCSpecification(**qc_spec),
@@ -406,7 +403,7 @@ class NEBRecordSocket(BaseRecordSocket):
                     NEBRecordORM.specification_id,
                     array_agg(
                         aggregate_order_by(
-                            NEBInitialchainORM.molecule_id, NEBInitialchainORM.position.asc(),
+                            NEBInitialchainORM.position, NEBInitialchainORM.position.asc(),
                         )
                     ).label("molecule_ids"),
                 )
@@ -422,7 +419,7 @@ class NEBRecordSocket(BaseRecordSocket):
                 # does this exist?
                 stmt = select(init_mol_cte.c.id)
                 stmt = stmt.where(init_mol_cte.c.specification_id == neb_spec_id)
-                stmt = stmt.where(init_mol_cte.c.molecule_ids == mol_ids)
+                stmt = stmt.where(init_mol_cte.c.molecule_ids)
                 existing = session.execute(stmt).scalars().first()
 
                 if not existing:
@@ -521,7 +518,6 @@ class NEBRecordSocket(BaseRecordSocket):
 
                 init_molecule_ids.append(molecule_ids)
 
-
             return self.add_internal(init_molecule_ids, spec_id, tag, priority, session=session)
 
     def get_final_ts(
@@ -531,13 +527,14 @@ class NEBRecordSocket(BaseRecordSocket):
         exclude: Optional[Sequence[str]] = None,
         *,
         session: Optional[Session] = None,
-    ) -> Dict[str, Dict[str, Any]]:
+    ) -> Dict[str, Any]:
 
-        query_sps = get_query_proj_options(SinglepointRecordORM, include, exclude)
+        query_mol = get_query_proj_options(MoleculeORM, include, exclude)
 
-        stmt = (select(NEBSinglepointsORM)
-                .options(*query_sps)
+        stmt = (select(MoleculeORM)
+                .options(*query_mol)
                 .join(SinglepointRecordORM)
+                .join(NEBSinglepointsORM)
                 .where(NEBSinglepointsORM.neb_id == neb_id)
                 .order_by(NEBSinglepointsORM.chain_iteration.desc(), SinglepointRecordORM.properties["return_energy"].cast(TEXT).cast(DOUBLE_PRECISION).desc())
                 .limit(1)
@@ -546,5 +543,5 @@ class NEBRecordSocket(BaseRecordSocket):
         with self.root_socket.optional_session(session, True) as session:
             r = session.execute(stmt).scalar_one_or_none()
             if r is None:
-                raise MissingDataError("No TS found")
+                raise MissingDataError("Final transition state can't be found")
             return r.model_dict()
