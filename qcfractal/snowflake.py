@@ -8,7 +8,8 @@ import sys
 import tempfile
 import time
 import uuid
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
+from multiprocessing import Pool
 from typing import Optional, Union
 
 from tornado.ioloop import IOLoop
@@ -18,6 +19,7 @@ from .postgres_harness import TemporaryPostgres
 from .server import FractalServer
 from .storage_sockets import storage_socket_factory
 from .port_util import find_port, is_port_open
+from .cli.qcfractal_manager import _initialize_signals_process_pool
 
 
 def _background_process(args, **kwargs):
@@ -65,7 +67,7 @@ class FractalSnowflake(FractalServer):
         Parameters
         ----------
         max_workers : Optional[int], optional
-            The maximum number of ProcessPoolExecutor to spin up.
+            The maximum number of multiprocessing.Pool processes to spin up.
         storage_uri : Optional[str], optional
             A database URI to connect to, otherwise builds a default instance in a
             temporary directory
@@ -101,7 +103,7 @@ class FractalSnowflake(FractalServer):
         # Boot workers if needed
         self.queue_socket = None
         if max_workers:
-            self.queue_socket = ProcessPoolExecutor(max_workers=max_workers)
+            self.queue_socket = Pool(processes=max_workers, initializer=_initialize_signals_process_pool)
 
         # Add the loop to a background thread and init the server
         self.aioloop = asyncio.new_event_loop()
@@ -192,7 +194,8 @@ class FractalSnowflake(FractalServer):
             self._storage = None
 
         if self.queue_socket is not None:
-            self.queue_socket.shutdown(wait=False)
+            self.queue_socket.terminate()
+            self.queue_socket.join()
             self.queue_socket = None
 
         # Closed down

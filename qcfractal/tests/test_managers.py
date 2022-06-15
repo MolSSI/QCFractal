@@ -7,13 +7,14 @@ import datetime
 import logging
 import re
 import time
-from concurrent.futures import ProcessPoolExecutor
+from multiprocessing import Pool
 
 import pytest
 
 import qcfractal.interface as ptl
 from qcfractal import FractalServer, queue, testing
 from qcfractal.testing import reset_server_database, test_server
+from qcfractal.cli.qcfractal_manager import _initialize_signals_process_pool
 
 CLIENT_USERNAME = "test_compute_adapter"
 
@@ -38,7 +39,7 @@ def compute_adapter_fixture(test_server):
 
     client = ptl.FractalClient(test_server, username=CLIENT_USERNAME)
 
-    with ProcessPoolExecutor(max_workers=2) as adapter:
+    with Pool(processes=2, initializer=_initialize_signals_process_pool) as adapter:
 
         yield client, test_server, adapter
 
@@ -327,7 +328,7 @@ def test_manager_max_tasks_limiter(compute_adapter_fixture):
 
 def test_queue_manager_testing():
 
-    with ProcessPoolExecutor(max_workers=2) as adapter:
+    with Pool(processes=2, initializer=_initialize_signals_process_pool) as adapter:
         manager = queue.QueueManager(None, adapter)
 
         assert manager.test()

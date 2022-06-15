@@ -1,6 +1,13 @@
 Exploring the Datasets
 ======================
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Example
+   :hidden:
+
+   collection-dataset-example.ipynb
+
 The :class:`Dataset <qcportal.collections.Dataset>` collection represents a table whose rows correspond to
 :class:`Molecules <qcportal.models.Molecule>` and whose columns correspond to properties.
 Columns may either result from QCFractal-based calculations or be contributed from outside sources.

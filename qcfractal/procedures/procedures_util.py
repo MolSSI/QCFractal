@@ -118,6 +118,9 @@ def parse_single_tasks(storage, results, qc_spec):
             assert v["extras"]["_qcfractal_tags"]["program"] == qc_spec.program
             del v["extras"]["_qcfractal_tags"]
 
+        # Remove native_files (not supported right now)
+        v.pop("native_files", None)
+
         del v["schema_name"]
         del v["schema_version"]
 

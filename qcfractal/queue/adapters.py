@@ -35,7 +35,7 @@ def build_queue_adapter(workflow_client, logger=None, **kwargs) -> "BaseAdapter"
     if adapter_type == "parsl.config.Config":
         adapter = ParslAdapter(workflow_client, logger=logger, **kwargs)
 
-    elif adapter_type == "concurrent.futures.process.ProcessPoolExecutor":
+    elif adapter_type == "multiprocessing.pool.Pool":
         adapter = ExecutorAdapter(workflow_client, logger=logger, **kwargs)
 
     elif adapter_type == "distributed.client.Client":

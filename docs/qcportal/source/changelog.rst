@@ -15,6 +15,15 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.15.8 / 2022-02-04
+-------------------
+
+Some minor additions/fixes, mostly to to qcportal and the user interface
+
+- (:pr:`704`) Eliminate issues when retrieving datasets with duplicate records
+- (:pr:`704`) Make saving optional when calling Dataset.compute
+
+
 0.15.7 / 2021-10-13
 -------------------
 
