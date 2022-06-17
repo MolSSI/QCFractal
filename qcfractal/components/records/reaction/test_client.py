@@ -7,15 +7,16 @@ import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractaltesting import load_molecule_data
-from qcportal.records import PriorityEnum
+from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.reaction import ReactionSpecification
 from .testing_helpers import submit_test_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
+    from qcportal.managers import ManagerName
 
-from qcfractal.components.records.reaction.testing_helpers import compare_reaction_specs, test_specs
+from qcfractal.components.records.reaction.testing_helpers import compare_reaction_specs, test_specs, run_test_data
 
 
 @pytest.mark.parametrize("tag", ["*", "tag99"])
@@ -126,6 +127,94 @@ def test_reaction_client_add_existing_molecule(snowflake_client: PortalClient):
     rec_mols_1 = set(x.molecule.id for x in recs[0].raw_data.components)
 
     assert mol_ids[0] in rec_mols_1
+
+
+def test_reaction_client_delete(
+    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
+):
+
+    rxn_id = run_test_data(storage_socket, activated_manager_name, "rxn_H2O_psi4_mp2_optsp")
+
+    rec = storage_socket.records.reaction.get(
+        [rxn_id], include=["components.*", "components.optimization_record.trajectory"]
+    )
+    child_ids = [x["optimization_id"] for x in rec[0]["components"] if x["optimization_id"] is not None]
+    child_ids += [x["singlepoint_id"] for x in rec[0]["components"] if x["singlepoint_id"] is not None]
+
+    n_children = len(child_ids) + sum(len(x["optimization_record"]["trajectory"]) for x in rec[0]["components"])
+
+    meta = snowflake_client.delete_records(rxn_id, soft_delete=True, delete_children=False)
+    assert meta.success
+    assert meta.deleted_idx == [0]
+    assert meta.n_children_deleted == 0
+
+    child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
+    assert all(x.status == RecordStatusEnum.complete for x in child_recs)
+
+    snowflake_client.undelete_records(rxn_id)
+
+    meta = snowflake_client.delete_records(rxn_id, soft_delete=True, delete_children=True)
+    assert meta.success
+    assert meta.deleted_idx == [0]
+    assert meta.n_children_deleted == n_children
+
+    child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
+    assert all(x.status == RecordStatusEnum.deleted for x in child_recs)
+
+    meta = snowflake_client.delete_records(rxn_id, soft_delete=False, delete_children=True)
+    assert meta.success
+    assert meta.deleted_idx == [0]
+    assert meta.n_children_deleted == n_children
+
+    recs = snowflake_client.get_reactions(rxn_id, missing_ok=True)
+    assert recs is None
+
+    child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
+    assert all(x is None for x in child_recs)
+
+    # DB should be pretty empty now
+    query_res = snowflake_client.query_records()
+    assert query_res.current_meta.n_found == 0
+
+
+def test_reaction_client_harddelete_nochildren(
+    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
+):
+
+    rxn_id = run_test_data(storage_socket, activated_manager_name, "rxn_H2O_psi4_mp2_optsp")
+
+    rec = storage_socket.records.reaction.get([rxn_id], include=["components"])
+    child_ids = [x["optimization_id"] for x in rec[0]["components"] if x["optimization_id"] is not None]
+    child_ids += [x["singlepoint_id"] for x in rec[0]["components"] if x["singlepoint_id"] is not None]
+
+    meta = snowflake_client.delete_records(rxn_id, soft_delete=False, delete_children=False)
+    assert meta.success
+    assert meta.deleted_idx == [0]
+    assert meta.n_children_deleted == 0
+
+    recs = snowflake_client.get_reactions(rxn_id, missing_ok=True)
+    assert recs is None
+
+    child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
+    assert all(x is not None for x in child_recs)
+
+
+def test_reaction_client_delete_opt_inuse(
+    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
+):
+
+    rxn_id = run_test_data(storage_socket, activated_manager_name, "rxn_H2O_psi4_mp2_optsp")
+
+    rec = storage_socket.records.reaction.get([rxn_id], include=["components"])
+    child_ids = [x["optimization_id"] for x in rec[0]["components"] if x["optimization_id"] is not None]
+    child_ids += [x["singlepoint_id"] for x in rec[0]["components"] if x["singlepoint_id"] is not None]
+
+    meta = snowflake_client.delete_records(child_ids[0], soft_delete=False)
+    assert meta.success is False
+    assert meta.error_idx == [0]
+
+    ch_rec = snowflake_client.get_records(child_ids[0])
+    assert ch_rec is not None
 
 
 def test_reaction_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
