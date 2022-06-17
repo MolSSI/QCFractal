@@ -192,21 +192,7 @@ def test_gridoptimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
     [
         "go_C4H4N2OS_psi4_b3lyp-d3bj",
         "go_H2O2_psi4_b3lyp-d3bj",
-        "go_H2O2_psi4_b3lyp",
-        "go_H2O2_psi4_blyp",
-        "go_H2O2_psi4_bp86",
-        "go_H2O2_psi4_hf",
-        "go_H2O2_psi4_pbe0-d3bj",
-        "go_H2O2_psi4_pbe0",
-        "go_H2O2_psi4_pbe",
-        "go_H3NS_psi4_b3lyp-d3bj",
-        "go_H3NS_psi4_b3lyp",
         "go_H3NS_psi4_blyp",
-        "go_H3NS_psi4_bp86",
-        "go_H3NS_psi4_hf",
-        "go_H3NS_psi4_pbe0-d3bj",
-        "go_H3NS_psi4_pbe0",
-        "go_H3NS_psi4_pbe",
     ],
 )
 def test_gridoptimization_socket_run(
