@@ -221,7 +221,7 @@ class FractalSnowflake:
 
         Returns
         -------
-        str
+        :
             Address/URI of the rest interface (ie, 'http://127.0.0.1:1234')
         """
 
@@ -237,17 +237,17 @@ class FractalSnowflake:
 
         Parameters
         ----------
-        ids: Optional[Sequence[int]]
+        ids
             Result/Procedure IDs to wait for. If not specified, all currently incomplete tasks
             will be waited for.
 
-        timeout: float
+        timeout
             Maximum time to wait for a single result.
 
 
         Returns
         -------
-        bool
+        :
             True if all the results were received, False if timeout has elapsed without receiving a completed computation
         """
         logger = logging.getLogger(__name__)
@@ -259,8 +259,8 @@ class FractalSnowflake:
 
         if ids is None:
             c = self.client()
-            _, proc = c.query_records(status=[RecordStatusEnum.waiting, RecordStatusEnum.running])
-            ids = [x.id for x in proc]
+            query_iter = c.query_records(status=[RecordStatusEnum.waiting, RecordStatusEnum.running])
+            ids = [x.id for x in query_iter]
 
         # Remove any we have already marked as completed
         remaining_ids = set(ids) - self._all_completed
