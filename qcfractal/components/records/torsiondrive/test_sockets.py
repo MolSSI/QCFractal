@@ -305,12 +305,6 @@ def test_torsiondrive_socket_add_different_1(storage_socket: SQLAlchemySocket):
     [
         "td_C9H11NO2_psi4_b3lyp-d3bj",
         "td_H2O2_psi4_b3lyp-d3bj",
-        "td_H2O2_psi4_b3lyp",
-        "td_H2O2_psi4_blyp",
-        "td_H2O2_psi4_bp86",
-        "td_H2O2_psi4_hf",
-        "td_H2O2_psi4_pbe0-d3bj",
-        "td_H2O2_psi4_pbe0",
         "td_H2O2_psi4_pbe",
     ],
 )

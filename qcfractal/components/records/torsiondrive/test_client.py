@@ -7,7 +7,7 @@ import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractaltesting import load_molecule_data
-from qcportal.records import PriorityEnum
+from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.optimization import (
     OptimizationSpecification,
 )
@@ -20,11 +20,13 @@ from qcportal.records.torsiondrive import (
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
+    from qcportal.managers import ManagerName
 
 from qcfractal.components.records.torsiondrive.testing_helpers import (
     compare_torsiondrive_specs,
     test_specs,
     submit_test_data,
+    run_test_data,
 )
 
 
@@ -122,6 +124,87 @@ def test_torsiondrive_client_add_existing_molecule(snowflake_client: PortalClien
     rec_mols = {x.id for x in recs[0].raw_data.initial_molecules}
     _, mol_ids_2 = snowflake_client.add_molecules([mol1])
     assert rec_mols == set(mol_ids + mol_ids_2)
+
+
+def test_torsiondrive_client_delete(
+    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
+):
+
+    td_id = run_test_data(storage_socket, activated_manager_name, "td_H2O2_psi4_b3lyp")
+
+    rec = storage_socket.records.torsiondrive.get([td_id], include=["optimizations"])
+    child_ids = [x["optimization_id"] for x in rec[0]["optimizations"]]
+
+    meta = snowflake_client.delete_records(td_id, soft_delete=True, delete_children=False)
+    assert meta.success
+    assert meta.deleted_idx == [0]
+    assert meta.n_children_deleted == 0
+
+    child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
+    assert all(x.status == RecordStatusEnum.complete for x in child_recs)
+
+    snowflake_client.undelete_records(td_id)
+
+    meta = snowflake_client.delete_records(td_id, soft_delete=True, delete_children=True)
+    assert meta.success
+    assert meta.deleted_idx == [0]
+    assert meta.n_children_deleted == len(child_ids)
+
+    child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
+    assert all(x.status == RecordStatusEnum.deleted for x in child_recs)
+
+    meta = snowflake_client.delete_records(td_id, soft_delete=False, delete_children=True)
+    assert meta.success
+    assert meta.deleted_idx == [0]
+    assert meta.n_children_deleted == len(child_ids)
+
+    recs = snowflake_client.get_torsiondrives(td_id, missing_ok=True)
+    assert recs is None
+
+    child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
+    assert all(x is None for x in child_recs)
+
+    # DB should be pretty empty now
+    query_res = snowflake_client.query_records()
+    assert query_res.current_meta.n_found == 0
+
+
+def test_torsiondrive_client_harddelete_nochildren(
+    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
+):
+
+    td_id = run_test_data(storage_socket, activated_manager_name, "td_H2O2_psi4_b3lyp")
+
+    rec = storage_socket.records.torsiondrive.get([td_id], include=["optimizations"])
+    child_ids = [x["optimization_id"] for x in rec[0]["optimizations"]]
+
+    meta = snowflake_client.delete_records(td_id, soft_delete=False, delete_children=False)
+    assert meta.success
+    assert meta.deleted_idx == [0]
+    assert meta.n_children_deleted == 0
+
+    recs = snowflake_client.get_torsiondrives(td_id, missing_ok=True)
+    assert recs is None
+
+    child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
+    assert all(x is not None for x in child_recs)
+
+
+def test_torsiondrive_client_delete_opt_inuse(
+    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
+):
+
+    td_id = run_test_data(storage_socket, activated_manager_name, "td_H2O2_psi4_b3lyp")
+
+    rec = storage_socket.records.torsiondrive.get([td_id], include=["optimizations"])
+    child_ids = [x["optimization_id"] for x in rec[0]["optimizations"]]
+
+    meta = snowflake_client.delete_records(child_ids[0], soft_delete=False)
+    assert meta.success is False
+    assert meta.error_idx == [0]
+
+    ch_rec = snowflake_client.get_records(child_ids[0])
+    assert ch_rec is not None
 
 
 def test_torsiondrive_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
