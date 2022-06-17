@@ -8,27 +8,15 @@ import pytest
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractaltesting import load_molecule_data
 from qcportal.records import RecordStatusEnum, PriorityEnum
-from qcportal.records.gridoptimization import (
-    GridoptimizationKeywords,
-    GridoptimizationSpecification,
-)
-from qcportal.records.optimization import (
-    OptimizationSpecification,
-)
+from qcportal.records.gridoptimization import GridoptimizationKeywords, GridoptimizationSpecification
+from qcportal.records.optimization import OptimizationSpecification
 from qcportal.records.singlepoint import QCSpecification
+from .testing_helpers import compare_gridoptimization_specs, test_specs, submit_test_data, run_test_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
     from qcportal.managers import ManagerName
-
-
-from qcfractal.components.records.gridoptimization.testing_helpers import (
-    compare_gridoptimization_specs,
-    test_specs,
-    submit_test_data,
-    run_test_data,
-)
 
 
 @pytest.mark.parametrize("tag", ["*", "tag99"])

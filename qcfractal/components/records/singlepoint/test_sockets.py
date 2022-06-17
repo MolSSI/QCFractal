@@ -6,8 +6,6 @@ from typing import TYPE_CHECKING
 import pytest
 from qcelemental.models.results import AtomicResultProperties
 
-from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM
-from qcfractal.components.records.singlepoint.testing_helpers import test_specs
 from qcfractal.components.wavefunctions.test_db_models import assert_wfn_equal
 from qcfractaltesting import load_molecule_data
 from qcportal.compression import decompress_string
@@ -15,13 +13,10 @@ from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
-from qcportal.records.singlepoint import (
-    QCSpecification,
-    SinglepointDriver,
-    SinglepointProtocols,
-)
+from qcportal.records.singlepoint import QCSpecification, SinglepointDriver, SinglepointProtocols
 from qcportal.wavefunctions.models import WavefunctionProperties
-from .testing_helpers import load_test_data
+from .db_models import SinglepointRecordORM
+from .testing_helpers import test_specs, load_test_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

@@ -1,17 +1,7 @@
 from qcfractal.db_socket import SQLAlchemySocket
-from qcportal.records.gridoptimization import (
-    GridoptimizationSpecification,
-    GridoptimizationKeywords,
-)
-from qcportal.records.optimization import (
-    OptimizationSpecification,
-    OptimizationProtocols,
-)
-from qcportal.records.singlepoint import (
-    QCSpecification,
-    SinglepointDriver,
-    SinglepointProtocols,
-)
+from qcportal.records.gridoptimization import GridoptimizationSpecification, GridoptimizationKeywords
+from qcportal.records.optimization import OptimizationSpecification, OptimizationProtocols
+from qcportal.records.singlepoint import QCSpecification, SinglepointDriver, SinglepointProtocols
 
 
 def test_gridoptimization_socket_basic_specification(storage_socket: SQLAlchemySocket):

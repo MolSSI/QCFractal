@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.components.records.manybody.testing_helpers import compare_manybody_specs, test_specs, load_test_data
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service_simple
 from qcfractaltesting import load_molecule_data
@@ -13,10 +12,8 @@ from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.manybody import ManybodySpecification
 from qcportal.records.manybody.models import ManybodyKeywords
-from qcportal.records.singlepoint import (
-    SinglepointProtocols,
-    QCSpecification,
-)
+from qcportal.records.singlepoint import SinglepointProtocols, QCSpecification
+from .testing_helpers import compare_manybody_specs, test_specs, load_test_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -52,29 +49,6 @@ def test_manybody_socket_add_get(storage_socket: SQLAlchemySocket, spec: Manybod
 
     assert recs[0]["initial_molecule"]["identifiers"]["molecule_hash"] == water2.get_hash()
     assert recs[1]["initial_molecule"]["identifiers"]["molecule_hash"] == water4.get_hash()
-
-
-def test_manybody_socket_add_existing_molecule(storage_socket: SQLAlchemySocket):
-    spec = test_specs[0]
-
-    mol1 = load_molecule_data("water_dimer_minima")
-    mol2 = load_molecule_data("water_stacked")
-
-    # Add a molecule separately
-    _, mol_ids = storage_socket.molecules.add([mol2])
-
-    # Now add records
-    meta, id = storage_socket.records.manybody.add([mol1, mol2, mol1], spec, tag="*", priority=PriorityEnum.normal)
-    assert meta.success
-    assert meta.n_inserted == 2
-    assert meta.n_existing == 1
-
-    recs = storage_socket.records.manybody.get(id, include=["initial_molecule"])
-    assert len(recs) == 3
-
-    assert recs[1]["initial_molecule"]["id"] == mol_ids[0]
-    assert recs[0]["initial_molecule"]["identifiers"]["molecule_hash"] == mol1.get_hash()
-    assert recs[1]["initial_molecule"]["identifiers"]["molecule_hash"] == mol2.get_hash()
 
 
 def test_manybody_socket_add_same_1(storage_socket: SQLAlchemySocket):

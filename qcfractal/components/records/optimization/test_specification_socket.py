@@ -1,13 +1,6 @@
 from qcfractal.db_socket import SQLAlchemySocket
-from qcportal.records.optimization import (
-    OptimizationSpecification,
-    OptimizationProtocols,
-)
-from qcportal.records.singlepoint import (
-    QCSpecification,
-    SinglepointDriver,
-    SinglepointProtocols,
-)
+from qcportal.records.optimization import OptimizationSpecification, OptimizationProtocols
+from qcportal.records.singlepoint import QCSpecification, SinglepointDriver, SinglepointProtocols
 
 
 def test_optimizationrecord_socket_basic_specification(storage_socket: SQLAlchemySocket):

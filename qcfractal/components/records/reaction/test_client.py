@@ -9,14 +9,12 @@ from qcfractal.db_socket import SQLAlchemySocket
 from qcfractaltesting import load_molecule_data
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.reaction import ReactionSpecification
-from .testing_helpers import submit_test_data
+from .testing_helpers import compare_reaction_specs, test_specs, run_test_data, submit_test_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
     from qcportal.managers import ManagerName
-
-from qcfractal.components.records.reaction.testing_helpers import compare_reaction_specs, test_specs, run_test_data
 
 
 @pytest.mark.parametrize("tag", ["*", "tag99"])

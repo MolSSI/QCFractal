@@ -1,9 +1,5 @@
 from qcfractal.db_socket import SQLAlchemySocket
-from qcportal.records.singlepoint import (
-    QCSpecification,
-    SinglepointDriver,
-    SinglepointProtocols,
-)
+from qcportal.records.singlepoint import QCSpecification, SinglepointDriver, SinglepointProtocols
 
 
 def test_singlepoint_socket_basic_specification(storage_socket: SQLAlchemySocket):

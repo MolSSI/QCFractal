@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.components.records.reaction.testing_helpers import compare_reaction_specs, test_specs, load_test_data
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service_simple
 from qcfractaltesting import load_molecule_data
@@ -13,6 +12,7 @@ from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.reaction import ReactionSpecification, ReactionKeywords
 from qcportal.records.singlepoint import SinglepointProtocols, QCSpecification
+from .testing_helpers import compare_reaction_specs, test_specs, load_test_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -62,33 +62,6 @@ def test_reaction_socket_add_get(storage_socket: SQLAlchemySocket, spec: Reactio
     expected_coef = {hooh.get_hash(): 3.0, water.get_hash(): 4.0}
     db_coef = {x["molecule"]["identifiers"]["molecule_hash"]: x["coefficient"] for x in recs[1]["components"]}
     assert expected_coef == db_coef
-
-
-def test_reaction_socket_add_existing_molecule(storage_socket: SQLAlchemySocket):
-    spec = test_specs[0]
-
-    mol1 = load_molecule_data("go_H3NS")
-    mol2 = load_molecule_data("peroxide2")
-    mol3 = load_molecule_data("water_dimer_minima")
-
-    # Add a molecule separately
-    _, mol_ids = storage_socket.molecules.add([mol2])
-
-    # Now add records
-    meta, id = storage_socket.records.reaction.add(
-        [[(1.0, mol1), (2.0, mol2)], [(2.0, mol_ids[0]), (3.0, mol3)]], spec, tag="*", priority=PriorityEnum.normal
-    )
-    assert meta.success
-    assert meta.n_inserted == 2
-
-    recs = storage_socket.records.reaction.get(id, include=["components"])
-    assert len(recs) == 2
-
-    mol_ids_0 = set(x["molecule_id"] for x in recs[0]["components"])
-    mol_ids_1 = set(x["molecule_id"] for x in recs[1]["components"])
-
-    assert mol_ids[0] in mol_ids_0
-    assert mol_ids[0] in mol_ids_1
 
 
 def test_reaction_socket_add_same_1(storage_socket: SQLAlchemySocket):

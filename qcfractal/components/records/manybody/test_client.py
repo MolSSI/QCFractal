@@ -10,18 +10,12 @@ from qcfractaltesting import load_molecule_data
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.manybody import ManybodySpecification, ManybodyKeywords
 from qcportal.records.singlepoint import QCSpecification
+from .testing_helpers import compare_manybody_specs, test_specs, submit_test_data, run_test_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
     from qcportal.managers import ManagerName
-
-from qcfractal.components.records.manybody.testing_helpers import (
-    compare_manybody_specs,
-    test_specs,
-    submit_test_data,
-    run_test_data,
-)
 
 
 @pytest.mark.parametrize("tag", ["*", "tag99"])

@@ -8,26 +8,15 @@ import pytest
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractaltesting import load_molecule_data
 from qcportal.records import RecordStatusEnum, PriorityEnum
-from qcportal.records.optimization import (
-    OptimizationSpecification,
-)
+from qcportal.records.optimization import OptimizationSpecification
 from qcportal.records.singlepoint import QCSpecification
-from qcportal.records.torsiondrive import (
-    TorsiondriveKeywords,
-    TorsiondriveSpecification,
-)
+from qcportal.records.torsiondrive import TorsiondriveKeywords, TorsiondriveSpecification
+from .testing_helpers import compare_torsiondrive_specs, test_specs, submit_test_data, run_test_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
     from qcportal.managers import ManagerName
-
-from qcfractal.components.records.torsiondrive.testing_helpers import (
-    compare_torsiondrive_specs,
-    test_specs,
-    submit_test_data,
-    run_test_data,
-)
 
 
 @pytest.mark.parametrize("tag", ["*", "tag99"])

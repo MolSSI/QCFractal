@@ -5,28 +5,15 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.components.records.torsiondrive.testing_helpers import (
-    compare_torsiondrive_specs,
-    test_specs,
-    load_test_data,
-)
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service_constropt
 from qcfractaltesting import load_molecule_data
 from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
-from qcportal.records.optimization import (
-    OptimizationSpecification,
-    OptimizationProtocols,
-)
-from qcportal.records.singlepoint import (
-    QCSpecification,
-    SinglepointProtocols,
-)
-from qcportal.records.torsiondrive import (
-    TorsiondriveSpecification,
-    TorsiondriveKeywords,
-)
+from qcportal.records.optimization import OptimizationSpecification, OptimizationProtocols
+from qcportal.records.singlepoint import QCSpecification, SinglepointProtocols
+from qcportal.records.torsiondrive import TorsiondriveSpecification, TorsiondriveKeywords
+from .testing_helpers import compare_torsiondrive_specs, test_specs, load_test_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -71,32 +58,6 @@ def test_torsiondrive_socket_add_get(storage_socket: SQLAlchemySocket, spec: Tor
     hash1 = recs[1]["initial_molecules"][0]["identifiers"]["molecule_hash"]
     hash2 = recs[1]["initial_molecules"][1]["identifiers"]["molecule_hash"]
     assert {hash1, hash2} == {td_mol_1.get_hash(), td_mol_2.get_hash()}
-
-
-def test_torsiondrive_socket_add_existing_molecule(storage_socket: SQLAlchemySocket):
-    spec = test_specs[0]
-
-    mol1 = load_molecule_data("td_C9H11NO2_1")
-    mol2 = load_molecule_data("td_C9H11NO2_2")
-
-    # Add a molecule separately
-    _, mol_ids = storage_socket.molecules.add([mol2])
-
-    # Now add records
-    meta, id = storage_socket.records.torsiondrive.add(
-        [[mol1, mol2], [mol2, mol1]], spec, tag="*", priority=PriorityEnum.normal, as_service=True
-    )
-    assert meta.success
-    assert meta.n_inserted == 1
-    assert meta.n_existing == 1
-
-    recs = storage_socket.records.torsiondrive.get(id, include=["initial_molecules"])
-    assert len(recs) == 2
-    assert recs[0]["id"] == recs[1]["id"]
-
-    rec_mols = {x["id"] for x in recs[0]["initial_molecules"]}
-    _, mol_ids_2 = storage_socket.molecules.add([mol1])
-    assert rec_mols == set(mol_ids + mol_ids_2)
 
 
 def test_torsiondrive_socket_add_same_1(storage_socket: SQLAlchemySocket):

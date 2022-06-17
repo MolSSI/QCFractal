@@ -8,21 +8,12 @@ import pytest
 from qcfractaltesting import load_molecule_data
 from qcportal.managers import ManagerName
 from qcportal.records import PriorityEnum
-from qcportal.records.singlepoint import (
-    QCSpecification,
-    SinglepointDriver,
-)
+from qcportal.records.singlepoint import QCSpecification, SinglepointDriver
+from .testing_helpers import submit_test_data, run_test_data, compare_singlepoint_specs, test_specs
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
-
-from qcfractal.components.records.singlepoint.testing_helpers import (
-    submit_test_data,
-    run_test_data,
-    compare_singlepoint_specs,
-    test_specs,
-)
 
 
 @pytest.mark.parametrize("tag", ["*", "tag99"])
