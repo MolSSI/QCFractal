@@ -120,7 +120,7 @@ def test_optimization_client_add_existing_molecule(snowflake_client: PortalClien
     assert recs[2].raw_data.initial_molecule_id == mol_ids[0]
 
 
-@pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_fluoroethane_opt_notraj"])
+@pytest.mark.parametrize("opt_file", ["opt_psi4_benzene", "opt_psi4_fluoroethane_notraj"])
 def test_optimization_client_delete(
     snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, opt_file: str
 ):
@@ -167,7 +167,7 @@ def test_optimization_client_delete(
 def test_optimization_client_harddelete_nochildren(
     snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
 ):
-    opt_id = run_test_data(storage_socket, activated_manager_name, "psi4_benzene_opt")
+    opt_id = run_test_data(storage_socket, activated_manager_name, "opt_psi4_benzene")
 
     rec = storage_socket.records.optimization.get([opt_id], include=["trajectory"])
     child_ids = [x["singlepoint_id"] for x in rec[0]["trajectory"]]
@@ -184,7 +184,7 @@ def test_optimization_client_harddelete_nochildren(
     assert all(x is not None for x in child_recs)
 
 
-@pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_methane_opt_sometraj"])
+@pytest.mark.parametrize("opt_file", ["opt_psi4_benzene", "opt_psi4_methane_sometraj"])
 def test_optimization_client_delete_traj_inuse(
     snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, opt_file: str
 ):
@@ -202,9 +202,9 @@ def test_optimization_client_delete_traj_inuse(
 
 
 def test_optimization_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    id_1, _ = submit_test_data(storage_socket, "psi4_fluoroethane_opt_notraj")
-    id_2, _ = submit_test_data(storage_socket, "psi4_benzene_opt")
-    id_3, _ = submit_test_data(storage_socket, "psi4_methane_opt_sometraj")
+    id_1, _ = submit_test_data(storage_socket, "opt_psi4_fluoroethane_notraj")
+    id_2, _ = submit_test_data(storage_socket, "opt_psi4_benzene")
+    id_3, _ = submit_test_data(storage_socket, "opt_psi4_methane_sometraj")
 
     recs = snowflake_client.get_optimizations([id_1, id_2, id_3])
 

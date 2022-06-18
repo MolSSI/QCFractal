@@ -19,8 +19,8 @@ if TYPE_CHECKING:
 
 
 def test_task_socket_fullworkflow_success(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName):
-    id1, result_data1 = submit_test_data(storage_socket, "psi4_benzene_energy_1", "tag1", PriorityEnum.normal)
-    id2, result_data2 = submit_test_data(storage_socket, "psi4_fluoroethane_wfn", "tag1", PriorityEnum.normal)
+    id1, result_data1 = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1", PriorityEnum.normal)
+    id2, result_data2 = submit_test_data(storage_socket, "sp_psi4_fluoroethane_wfn", "tag1", PriorityEnum.normal)
 
     time_1 = datetime.utcnow()
 
@@ -82,8 +82,8 @@ def test_task_socket_fullworkflow_success(storage_socket: SQLAlchemySocket, acti
 
 
 def test_task_socket_fullworkflow_error(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName):
-    id1, _ = submit_test_data(storage_socket, "psi4_benzene_energy_1")
-    id2, _ = submit_test_data(storage_socket, "psi4_fluoroethane_wfn")
+    id1, _ = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1")
+    id2, _ = submit_test_data(storage_socket, "sp_psi4_fluoroethane_wfn")
 
     time_1 = datetime.utcnow()
 
@@ -131,7 +131,7 @@ def test_task_socket_fullworkflow_error(storage_socket: SQLAlchemySocket, activa
 
 
 def test_task_socket_fullworkflow_error_retry(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName):
-    input_spec1, molecule1, result_data1 = load_test_data("psi4_benzene_energy_1")
+    input_spec1, molecule1, result_data1 = load_test_data("sp_psi4_benzene_energy_1")
 
     meta1, id1 = storage_socket.records.singlepoint.add([molecule1], input_spec1, "tag1", PriorityEnum.normal)
 
@@ -198,7 +198,7 @@ def test_task_socket_fullworkflow_error_autoreset(
     storage_socket.qcf_config.auto_reset.unknown_error = 1
     storage_socket.qcf_config.auto_reset.random_error = 2
 
-    input_spec1, molecule1, result_data1 = load_test_data("psi4_benzene_energy_1")
+    input_spec1, molecule1, result_data1 = load_test_data("sp_psi4_benzene_energy_1")
 
     meta1, id1 = storage_socket.records.singlepoint.add([molecule1], input_spec1, "tag1", PriorityEnum.normal)
 
@@ -233,7 +233,7 @@ def test_task_socket_fullworkflow_error_autoreset(
 
 
 def test_task_socket_compressed_outputs_success(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName):
-    input_spec1, molecule1, result_data1 = load_test_data("psi4_benzene_energy_1")
+    input_spec1, molecule1, result_data1 = load_test_data("sp_psi4_benzene_energy_1")
     meta1, id1 = storage_socket.records.singlepoint.add([molecule1], input_spec1, "tag1", PriorityEnum.normal)
     tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname)
 

@@ -152,7 +152,7 @@ def test_manager_mclient_activate_duplicate(snowflake: TestingSnowflake):
 def test_manager_mclient_deactivate(snowflake: TestingSnowflake):
     client = snowflake.client()
 
-    id1, _ = submit_test_data(snowflake.get_storage_socket(), "psi4_benzene_energy_1", "tag1")
+    id1, _ = submit_test_data(snowflake.get_storage_socket(), "sp_psi4_benzene_energy_1", "tag1")
 
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
 

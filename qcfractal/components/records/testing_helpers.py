@@ -30,13 +30,13 @@ def populate_records_status(storage_socket: SQLAlchemySocket):
         tags=["tag1", "tag2", "tag3", "tag6"],
     )
 
-    input_spec_0, molecule_0, result_data_0 = load_opt_test_data("psi4_methane_opt_sometraj")
-    input_spec_1, molecule_1, result_data_1 = load_sp_test_data("psi4_water_gradient")
-    input_spec_2, molecule_2, result_data_2 = load_sp_test_data("psi4_water_hessian")
-    input_spec_3, molecule_3, result_data_3 = load_opt_test_data("psi4_benzene_opt")
-    input_spec_4, molecule_4, result_data_4 = load_sp_test_data("rdkit_water_energy")
-    input_spec_5, molecule_5, result_data_5 = load_sp_test_data("psi4_benzene_energy_2")
-    input_spec_6, molecule_6, result_data_6 = load_sp_test_data("psi4_water_energy")
+    input_spec_0, molecule_0, result_data_0 = load_opt_test_data("opt_psi4_methane_sometraj")
+    input_spec_1, molecule_1, result_data_1 = load_sp_test_data("sp_psi4_water_gradient")
+    input_spec_2, molecule_2, result_data_2 = load_sp_test_data("sp_psi4_water_hessian")
+    input_spec_3, molecule_3, result_data_3 = load_opt_test_data("opt_psi4_benzene")
+    input_spec_4, molecule_4, result_data_4 = load_sp_test_data("sp_rdkit_water_energy")
+    input_spec_5, molecule_5, result_data_5 = load_sp_test_data("sp_psi4_benzene_energy_2")
+    input_spec_6, molecule_6, result_data_6 = load_sp_test_data("sp_psi4_water_energy")
 
     meta, id_0 = storage_socket.records.optimization.add([molecule_0], input_spec_0, "tag0", PriorityEnum.normal)
     meta, id_1 = storage_socket.records.singlepoint.add([molecule_1], input_spec_1, "tag1", PriorityEnum.high)

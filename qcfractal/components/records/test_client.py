@@ -32,8 +32,8 @@ if TYPE_CHECKING:
 def test_record_client_get(
     storage_socket: SQLAlchemySocket, snowflake_client: PortalClient, activated_manager_name: ManagerName
 ):
-    id1 = run_sp_test_data(storage_socket, activated_manager_name, "psi4_benzene_energy_1")
-    id2, _ = submit_opt_test_data(storage_socket, "psi4_benzene_opt")
+    id1 = run_sp_test_data(storage_socket, activated_manager_name, "sp_psi4_benzene_energy_1")
+    id2, _ = submit_opt_test_data(storage_socket, "opt_psi4_benzene")
     all_id = [id1, id2]
 
     r = snowflake_client.get_records(all_id)
@@ -54,8 +54,8 @@ def test_record_client_get(
 
 def test_record_client_get_missing(storage_socket: SQLAlchemySocket, snowflake_client: PortalClient):
 
-    id1, _ = submit_sp_test_data(storage_socket, "psi4_benzene_energy_1")
-    id2, _ = submit_opt_test_data(storage_socket, "psi4_benzene_opt")
+    id1, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_1")
+    id2, _ = submit_opt_test_data(storage_socket, "opt_psi4_benzene")
 
     all_id = [id1, id2]
 
@@ -69,8 +69,8 @@ def test_record_client_get_missing(storage_socket: SQLAlchemySocket, snowflake_c
 
 
 def test_record_client_get_empty(storage_socket: SQLAlchemySocket, snowflake_client: PortalClient):
-    submit_sp_test_data(storage_socket, "psi4_benzene_energy_1")
-    submit_opt_test_data(storage_socket, "psi4_benzene_opt")
+    submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_1")
+    submit_opt_test_data(storage_socket, "opt_psi4_benzene")
 
     r = snowflake_client.get_records([])
     assert r == []
@@ -80,7 +80,7 @@ def test_record_client_query_parents_children(
     snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
 ):
 
-    id1 = run_opt_test_data(storage_socket, activated_manager_name, "psi4_benzene_opt")
+    id1 = run_opt_test_data(storage_socket, activated_manager_name, "opt_psi4_benzene")
 
     opt_rec = snowflake_client.get_optimizations(id1, include=["trajectory"])
     assert opt_rec.status == RecordStatusEnum.complete
@@ -101,10 +101,10 @@ def test_record_client_query_parents_children(
 def test_record_client_add_comment(secure_snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
-    id1, _ = submit_sp_test_data(storage_socket, "psi4_benzene_energy_1")
-    id2, _ = submit_sp_test_data(storage_socket, "psi4_benzene_energy_2")
-    id3, _ = submit_sp_test_data(storage_socket, "psi4_benzene_energy_3")
-    id4, _ = submit_opt_test_data(storage_socket, "psi4_benzene_opt")
+    id1, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_1")
+    id2, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_2")
+    id3, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_3")
+    id4, _ = submit_opt_test_data(storage_socket, "opt_psi4_benzene")
     all_id = [id1, id2, id3, id4]
 
     # comments not retrieved by default
@@ -151,10 +151,10 @@ def test_record_client_add_comment(secure_snowflake: TestingSnowflake, storage_s
 
 
 def test_record_client_add_comment_nouser(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    id1, _ = submit_sp_test_data(storage_socket, "psi4_benzene_energy_1")
-    id2, _ = submit_sp_test_data(storage_socket, "psi4_benzene_energy_2")
-    id3, _ = submit_sp_test_data(storage_socket, "psi4_benzene_energy_3")
-    id4, _ = submit_opt_test_data(storage_socket, "psi4_benzene_opt")
+    id1, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_1")
+    id2, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_2")
+    id3, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_3")
+    id4, _ = submit_opt_test_data(storage_socket, "opt_psi4_benzene")
     all_id = [id1, id2, id3, id4]
 
     time_0 = datetime.utcnow()
@@ -178,7 +178,7 @@ def test_record_client_add_comment_nouser(snowflake_client: PortalClient, storag
 
 
 def test_record_client_add_comment_badid(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    id1, _ = submit_sp_test_data(storage_socket, "psi4_benzene_energy_1")
+    id1, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_1")
 
     meta = snowflake_client.add_comment([id1, 9999], comment="test")
     assert not meta.success

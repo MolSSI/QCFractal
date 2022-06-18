@@ -24,7 +24,7 @@ def existing_history_id(storage_socket):
     with an existing calculation
     """
 
-    record_id, _ = submit_test_data(storage_socket, "psi4_benzene_energy_1")
+    record_id, _ = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1")
 
     hist = RecordComputeHistoryORM(
         record_id=record_id,

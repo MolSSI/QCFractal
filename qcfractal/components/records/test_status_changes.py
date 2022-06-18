@@ -35,12 +35,12 @@ def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket):
         tags=["tag2"],
     )
 
-    id_1, result_data_1 = submit_sp_test_data(storage_socket, "psi4_water_energy", "tag1")
-    id_2, result_data_2 = submit_sp_test_data(storage_socket, "psi4_water_gradient", "tag2")
-    id_3, result_data_3 = submit_sp_test_data(storage_socket, "psi4_water_hessian", "tag1")
-    id_4, result_data_4 = submit_opt_test_data(storage_socket, "psi4_benzene_opt", "tag2")
-    id_5, result_data_5 = submit_sp_test_data(storage_socket, "psi4_benzene_energy_1", "tag1")
-    id_6, result_data_6 = submit_sp_test_data(storage_socket, "psi4_benzene_energy_2", "tag1")
+    id_1, result_data_1 = submit_sp_test_data(storage_socket, "sp_psi4_water_energy", "tag1")
+    id_2, result_data_2 = submit_sp_test_data(storage_socket, "sp_psi4_water_gradient", "tag2")
+    id_3, result_data_3 = submit_sp_test_data(storage_socket, "sp_psi4_water_hessian", "tag1")
+    id_4, result_data_4 = submit_opt_test_data(storage_socket, "opt_psi4_benzene", "tag2")
+    id_5, result_data_5 = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_1", "tag1")
+    id_6, result_data_6 = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_2", "tag1")
     all_id = [id_1, id_2, id_3, id_4, id_5, id_6]
 
     tasks_1 = storage_socket.tasks.claim_tasks(mname1.fullname)
@@ -589,7 +589,7 @@ def test_record_client_uninvalidate_missing(snowflake_client: PortalClient, stor
     assert meta.error_idx == [0]
 
 
-@pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_fluoroethane_opt_notraj"])
+@pytest.mark.parametrize("opt_file", ["opt_psi4_benzene", "opt_psi4_fluoroethane_notraj"])
 def test_record_client_delete_children(
     snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, opt_file: str
 ):
@@ -619,7 +619,7 @@ def test_record_client_delete_children(
     assert all(x is None for x in child_recs)
 
 
-@pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_fluoroethane_opt_notraj"])
+@pytest.mark.parametrize("opt_file", ["opt_psi4_benzene", "opt_psi4_fluoroethane_notraj"])
 def test_record_client_delete_nochildren(
     snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, opt_file: str
 ):
@@ -649,7 +649,7 @@ def test_record_client_delete_nochildren(
     assert all(x["status"] == RecordStatusEnum.complete for x in child_recs)
 
 
-@pytest.mark.parametrize("opt_file", ["psi4_benzene_opt", "psi4_fluoroethane_opt_notraj"])
+@pytest.mark.parametrize("opt_file", ["opt_psi4_benzene", "opt_psi4_fluoroethane_notraj"])
 def test_record_client_undelete_children(
     snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, opt_file: str
 ):

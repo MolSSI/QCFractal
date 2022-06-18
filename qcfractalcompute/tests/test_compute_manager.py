@@ -171,13 +171,13 @@ def test_manager_claim_inactive(snowflake: TestingSnowflake, storage_socket: SQL
 
 def populate_db(storage_socket: SQLAlchemySocket):
     # explicitly load enough so we have to do chunking on the return
-    id_0, result_data_0 = submit_opt_test_data(storage_socket, "psi4_methane_opt_sometraj", "tag0", PriorityEnum.normal)
-    id_1, result_data_1 = submit_sp_test_data(storage_socket, "psi4_water_gradient", "tag1", PriorityEnum.high)
-    id_2, result_data_2 = submit_sp_test_data(storage_socket, "psi4_water_hessian", "tag2", PriorityEnum.high)
-    id_3, result_data_3 = submit_sp_test_data(storage_socket, "psi4_peroxide_energy_wfn", "tag3", PriorityEnum.high)
-    id_4, result_data_4 = submit_sp_test_data(storage_socket, "rdkit_water_energy", "tag4", PriorityEnum.normal)
-    id_5, result_data_5 = submit_sp_test_data(storage_socket, "psi4_benzene_energy_2", "tag5", PriorityEnum.normal)
-    id_6, result_data_6 = submit_sp_test_data(storage_socket, "psi4_water_energy", "tag6", PriorityEnum.normal)
+    id_0, result_data_0 = submit_opt_test_data(storage_socket, "opt_psi4_methane_sometraj", "tag0", PriorityEnum.normal)
+    id_1, result_data_1 = submit_sp_test_data(storage_socket, "sp_psi4_water_gradient", "tag1", PriorityEnum.high)
+    id_2, result_data_2 = submit_sp_test_data(storage_socket, "sp_psi4_water_hessian", "tag2", PriorityEnum.high)
+    id_3, result_data_3 = submit_sp_test_data(storage_socket, "sp_psi4_peroxide_energy_wfn", "tag3", PriorityEnum.high)
+    id_4, result_data_4 = submit_sp_test_data(storage_socket, "sp_rdkit_water_energy", "tag4", PriorityEnum.normal)
+    id_5, result_data_5 = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_2", "tag5", PriorityEnum.normal)
+    id_6, result_data_6 = submit_sp_test_data(storage_socket, "sp_psi4_water_energy", "tag6", PriorityEnum.normal)
     all_id = [id_0, id_1, id_2, id_3, id_4, id_5, id_6]
 
     result_data = {
