@@ -1,5 +1,9 @@
+from __future__ import annotations
+
 import json
 from typing import Dict, Any, Tuple
+
+from qcelemental.models import Molecule
 
 from qcfractal import FractalSnowflake
 from qcfractal.db_socket import SQLAlchemySocket
@@ -321,3 +325,16 @@ def run_service_simple(
         n_records += len(manager_ret)
 
     return r == 0, n_records
+
+
+def compare_validate_molecule(m1: Molecule, m2: Molecule) -> bool:
+    """
+    Validates, and then compares molecules
+
+    Molecules get validated when added to the server, so if we are comparing
+    molecules, we often need to validate the input as well.
+    """
+
+    m1_v = Molecule(**m1.dict(), validate=True)
+    m2_v = Molecule(**m2.dict(), validate=True)
+    return m1_v == m2_v

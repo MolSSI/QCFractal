@@ -76,7 +76,7 @@ class OptimizationRecord(BaseRecord):
         if "final_molecule" in includes:
             ret.add("final_molecule")
         if "trajectory" in includes:
-            ret.add("trajectory")
+            ret |= {"trajectory.*", "trajectory.singlepoint_record"}
 
         return ret
 
@@ -101,10 +101,6 @@ class OptimizationRecord(BaseRecord):
             None,
             url_params,
         )
-
-    @property
-    def specification_id(self) -> int:
-        return self.raw_data.specification_id
 
     @property
     def specification(self) -> OptimizationSpecification:

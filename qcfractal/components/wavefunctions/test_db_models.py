@@ -28,29 +28,7 @@ def existing_record_id(storage_socket):
 
 
 def assert_wfn_equal(wfn1: WavefunctionProperties, wfn2: WavefunctionProperties):
-    assert wfn1.restricted == wfn2.restricted
-    assert wfn1.basis == wfn2.basis
-
-    # These are just strings
-    ret_fields = WavefunctionProperties._return_results_names
-
-    # These are all other fields (numpy arrays)
-    np_fields = WavefunctionProperties.__fields__.keys() - ["basis", "restricted"] - ret_fields
-
-    for f in ret_fields:
-        v1 = getattr(wfn1, f)
-        v2 = getattr(wfn2, f)
-        assert v1 == v2
-
-    for f in np_fields:
-        v1 = getattr(wfn1, f)
-        v2 = getattr(wfn2, f)
-
-        if v1 is None or v2 is None:
-            assert v1 is None
-            assert v2 is None
-        else:
-            assert (v1 == v2).all()
+    return wfn1.dict(encoding="json") == wfn2.dict(encoding="json")
 
 
 @pytest.mark.parametrize("wfn_data", ["psi4_peroxide", "psi4_fluoroethane"])

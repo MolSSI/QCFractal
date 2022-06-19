@@ -11,12 +11,12 @@ from qcfractal.components.records.singlepoint.testing_helpers import (
     submit_test_data as submit_sp_test_data,
 )
 from qcfractal.components.records.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
-from qcportal.managers import ManagerName
 from qcportal.records import RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:
     from qcportal import PortalClient
     from qcfractal.db_socket import SQLAlchemySocket
+    from qcportal.managers import ManagerName
 
 
 all_includes = ["task", "service", "outputs", "comments"]
@@ -40,6 +40,10 @@ def test_baserecord_model_common(
     time_2 = datetime.utcnow()
 
     record = snowflake_client.get_records(rec_id, include=includes)
+
+    if includes is not None:
+        record.client = None
+        assert record.offline
 
     assert record.id == rec_id
     assert record.is_service is False
