@@ -692,6 +692,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         query_opts = get_query_proj_options(OptimizationRecordORM, include, exclude)
 
         # Select rows with matching minimum energies
+        # We order by the optimization id desc to handle the case where multiple records with same final energy
+        # Then, the dictionary comprehension at the end last of that energy (lowest id)
         stmt = (
             select(TorsiondriveOptimizationORM.key, OptimizationRecordORM)
             .options(*query_opts)
@@ -700,8 +702,11 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             .where(TorsiondriveOptimizationORM.torsiondrive_id == torsiondrive_id)
             .where(TorsiondriveOptimizationORM.key == energy_cte.c.key)
             .where(OptimizationRecordORM.energies[-1].cast(TEXT).cast(DOUBLE_PRECISION) == energy_cte.c.min_energy)
+            .order_by(OptimizationRecordORM.id.desc())
         )
 
         with self.root_socket.optional_session(session, True) as session:
             r = session.execute(stmt).all()  # List of key: OptimizationRecordORM
+
+            # If multiple records with the same energy are returned, then this will choose the last
             return {x: y.model_dict() for x, y in r}
