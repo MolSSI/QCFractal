@@ -144,6 +144,8 @@ class TorsiondriveRecord(BaseRecord):
         return ret
 
     def _fetch_initial_molecules(self):
+        self._assert_online()
+
         self.raw_data.initial_molecules = self.client._auto_request(
             "get",
             f"v1/records/torsiondrive/{self.raw_data.id}/initial_molecules",
@@ -155,6 +157,8 @@ class TorsiondriveRecord(BaseRecord):
         )
 
     def _fetch_optimizations(self):
+        self._assert_online()
+
         url_params = {"include": ["*", "optimization_record"]}
 
         self.raw_data.optimizations = self.client._auto_request(
@@ -170,6 +174,8 @@ class TorsiondriveRecord(BaseRecord):
         self._make_caches()
 
     def _fetch_minimum_optimizations(self):
+        self._assert_online()
+
         url_params = {}
 
         r = self.client._auto_request(

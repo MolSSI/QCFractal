@@ -217,6 +217,10 @@ class BaseRecord(BaseModel):
 
         return ret
 
+    def _assert_online(self):
+        if self.offline:
+            raise RuntimeError("Record is not connected to a client")
+
     def _fetch_compute_history(self, include_outputs: bool = False):
         url_params = {}
 
@@ -234,6 +238,8 @@ class BaseRecord(BaseModel):
         )
 
     def _fetch_task(self):
+        self._assert_online()
+
         if self.raw_data.is_service:
             return
 
@@ -248,6 +254,8 @@ class BaseRecord(BaseModel):
         )
 
     def _fetch_service(self):
+        self._assert_online()
+
         if not self.raw_data.is_service:
             return
 
@@ -262,6 +270,8 @@ class BaseRecord(BaseModel):
         )
 
     def _fetch_comments(self):
+        self._assert_online()
+
         self.raw_data.comments = self.client._auto_request(
             "get",
             f"v1/records/{self.raw_data.id}/comments",
@@ -273,6 +283,8 @@ class BaseRecord(BaseModel):
         )
 
     def _fetch_native_files(self):
+        self._assert_online()
+
         self.raw_data.native_files = self.client._auto_request(
             "get",
             f"v1/records/{self.raw_data.id}/native_files",

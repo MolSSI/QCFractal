@@ -80,9 +80,12 @@ class SinglepointRecord(BaseRecord):
         return ret
 
     def _fetch_molecule(self):
+        self._assert_online()
         self.raw_data.molecule = self.client.get_molecules([self.raw_data.molecule_id])[0]
 
     def _fetch_wavefunction(self):
+        self._assert_online()
+
         self.raw_data.wavefunction = self.client._auto_request(
             "get",
             f"v1/records/singlepoint/{self.raw_data.id}/wavefunction",

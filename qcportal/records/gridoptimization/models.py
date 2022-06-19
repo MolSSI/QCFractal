@@ -146,11 +146,22 @@ class GridoptimizationRecord(BaseRecord):
         starting_molecule: Optional[Molecule] = None
         optimizations: Optional[List[GridoptimizationOptimization]] = None
 
+        optimization_cache: Optional[Dict[str, OptimizationRecord]] = None
+
     # This is needed for disambiguation by pydantic
     record_type: Literal["gridoptimization"] = "gridoptimization"
     raw_data: _DataModel
 
-    optimization_cache: Optional[Dict[str, OptimizationRecord]] = None
+    def _make_caches(self):
+        if self.raw_data.optimizations is None:
+            return
+
+        if self.raw_data.optimization_cache is None:
+            # convert the raw optimization data to a dictionary of key -> OptimizationRecord
+            self.raw_data.optimization_cache = {
+                x.key: OptimizationRecord.from_datamodel(x.optimization_record, self.client)
+                for x in self.raw_data.optimizations
+            }
 
     @staticmethod
     def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
@@ -170,12 +181,16 @@ class GridoptimizationRecord(BaseRecord):
         return ret
 
     def _fetch_initial_molecule(self):
+        self._assert_online()
         self.raw_data.initial_molecule = self.client.get_molecules([self.raw_data.initial_molecule_id])[0]
 
     def _fetch_starting_molecule(self):
+        self._assert_online()
         self.raw_data.starting_molecule = self.client.get_molecules([self.raw_data.starting_molecule_id])[0]
 
     def _fetch_optimizations(self):
+        self._assert_online()
+
         url_params = {"include": ["*", "optimization_record"]}
 
         self.raw_data.optimizations = self.client._auto_request(
@@ -187,6 +202,8 @@ class GridoptimizationRecord(BaseRecord):
             None,
             url_params,
         )
+
+        self._make_caches()
 
     @property
     def specification(self) -> GridoptimizationSpecification:
@@ -218,15 +235,9 @@ class GridoptimizationRecord(BaseRecord):
 
     @property
     def optimizations(self) -> Dict[str, OptimizationRecord]:
-        if self.optimization_cache is not None:
-            return self.optimization_cache
+        self._make_caches()
 
         if self.raw_data.optimizations is None:
             self._fetch_optimizations()
 
-        ret = {}
-        for opt in self.raw_data.optimizations:
-            ret[opt.key] = OptimizationRecord.from_datamodel(opt.optimization_record, self.client)
-
-        self.optimization_cache = ret
-        return ret
+        return self.raw_data.optimization_cache

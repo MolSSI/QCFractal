@@ -81,15 +81,19 @@ class OptimizationRecord(BaseRecord):
         return ret
 
     def _fetch_initial_molecule(self):
+        self._assert_online()
         self.raw_data.initial_molecule = self.client.get_molecules([self.raw_data.initial_molecule_id])[0]
 
     def _fetch_final_molecule(self):
+        self._assert_online()
         if self.raw_data.final_molecule_id is not None:
             self.raw_data.final_molecule = self.client.get_molecules([self.raw_data.final_molecule_id])[0]
         else:
             self.raw_data.final_molecule = None
 
     def _fetch_trajectory(self):
+        self._assert_online()
+
         url_params = {"include": ["*", "singlepoint_record"]}
 
         self.raw_data.trajectory = self.client._auto_request(
