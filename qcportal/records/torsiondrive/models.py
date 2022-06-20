@@ -100,33 +100,12 @@ class TorsiondriveRecord(BaseRecord):
         optimizations: Optional[List[TorsiondriveOptimization]] = None
 
         # These hold actual optimization records
-        optimization_cache: Optional[Dict[str, List[OptimizationRecord]]] = None
-        minimum_optimization_cache: Optional[Dict[str, OptimizationRecord]] = None
+        optimizations_cache: Optional[Dict[str, List[OptimizationRecord]]] = None
+        minimum_optimizations_cache: Optional[Dict[str, OptimizationRecord]] = None
 
     # This is needed for disambiguation by pydantic
     record_type: Literal["torsiondrive"] = "torsiondrive"
     raw_data: _DataModel
-
-    def _make_caches(self):
-        if self.raw_data.optimizations is None:
-            return
-
-        if self.raw_data.optimization_cache is None:
-            # convert the raw optimization data to a dictionary of key -> List[OptimizationRecord]
-            opt_map = {}
-            for opt in self.raw_data.optimizations:
-                opt_map.setdefault(opt.key, list())
-                opt_map[opt.key].append(OptimizationRecord.from_datamodel(opt.optimization_record, self.client))
-
-            self.raw_data.optimization_cache = opt_map
-
-        # find the minimum optimizations for each key
-        if self.raw_data.minimum_optimization_cache is None:
-
-            # chooses the lowest id if there are records with the same energy
-            self.raw_data.minimum_optimization_cache = {
-                k: min(v, key=lambda x: (x.energies[-1], x.id)) for k, v in self.raw_data.optimization_cache.items()
-            }
 
     @staticmethod
     def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
@@ -142,6 +121,27 @@ class TorsiondriveRecord(BaseRecord):
             ret |= {"optimizations.*", "optimizations.optimization_record"}
 
         return ret
+
+    def _make_caches(self):
+        if self.raw_data.optimizations is None:
+            return
+
+        if self.raw_data.optimizations_cache is None:
+            # convert the raw optimization data to a dictionary of key -> List[OptimizationRecord]
+            opt_map = {}
+            for opt in self.raw_data.optimizations:
+                opt_map.setdefault(opt.key, list())
+                opt_map[opt.key].append(OptimizationRecord.from_datamodel(opt.optimization_record, self.client))
+
+            self.raw_data.optimizations_cache = opt_map
+
+        # find the minimum optimizations for each key
+        if self.raw_data.minimum_optimizations_cache is None:
+
+            # chooses the lowest id if there are records with the same energy
+            self.raw_data.minimum_optimizations_cache = {
+                k: min(v, key=lambda x: (x.energies[-1], x.id)) for k, v in self.raw_data.optimizations_cache.items()
+            }
 
     def _fetch_initial_molecules(self):
         self._assert_online()
@@ -188,7 +188,7 @@ class TorsiondriveRecord(BaseRecord):
             url_params,
         )
 
-        self.raw_data.minimum_optimization_cache = {
+        self.raw_data.minimum_optimizations_cache = {
             k: OptimizationRecord.from_datamodel(v, self.client) for k, v in r.items()
         }
 
@@ -206,16 +206,16 @@ class TorsiondriveRecord(BaseRecord):
     def optimizations(self) -> Dict[str, List[OptimizationRecord]]:
         self._make_caches()
 
-        if self.raw_data.optimization_cache is None:
+        if self.raw_data.optimizations_cache is None:
             self._fetch_optimizations()
 
-        return self.raw_data.optimization_cache
+        return self.raw_data.optimizations_cache
 
     @property
     def minimum_optimizations(self) -> Dict[str, OptimizationRecord]:
         self._make_caches()
 
-        if self.raw_data.minimum_optimization_cache is None:
+        if self.raw_data.minimum_optimizations_cache is None:
             self._fetch_minimum_optimizations()
 
-        return self.raw_data.minimum_optimization_cache
+        return self.raw_data.minimum_optimizations_cache

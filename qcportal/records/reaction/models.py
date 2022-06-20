@@ -54,7 +54,7 @@ class ReactionQueryFilters(RecordQueryFilters):
     molecule_id: Optional[List[int]] = None
 
 
-class ReactionComponent(BaseModel):
+class ReactionComponent_(BaseModel):
     class Config:
         extra = Extra.forbid
 
@@ -68,6 +68,11 @@ class ReactionComponent(BaseModel):
     optimization_record: Optional[OptimizationRecord._DataModel]
 
 
+class ReactionComponent(ReactionComponent_):
+    singlepoint_record: Optional[SinglepointRecord]
+    optimization_record: Optional[OptimizationRecord]
+
+
 class ReactionRecord(BaseRecord):
     class _DataModel(BaseRecord._DataModel):
         record_type: Literal["reaction"] = "reaction"
@@ -75,7 +80,8 @@ class ReactionRecord(BaseRecord):
 
         total_energy: Optional[float]
 
-        components: Optional[List[ReactionComponent]] = None
+        components: Optional[List[ReactionComponent_]] = None
+        components_cache: Optional[List[ReactionComponent]] = None
 
     # This is needed for disambiguation by pydantic
     record_type: Literal["reaction"] = "reaction"
@@ -90,11 +96,36 @@ class ReactionRecord(BaseRecord):
         ret = BaseRecord.transform_includes(includes)
 
         if "components" in includes:
-            ret |= {"*", "components.*", "components.molecule", "components.singlepoint", "components.optimization"}
+            ret |= {
+                "components.*",
+                "components.molecule",
+                "components.singlepoint_record",
+                "components.optimization_record",
+            }
 
         return ret
 
+    def _make_caches(self):
+        if self.raw_data.components is None:
+            return
+
+        if self.raw_data.components_cache is None:
+            self.raw_data.components_cache = []
+
+            for com in self.raw_data.components:
+                update = {}
+                if com.singlepoint_record is not None:
+                    sp = SinglepointRecord.from_datamodel(com.singlepoint_record, self.client)
+                    update["singlepoint_record"] = sp
+                if com.singlepoint_record is not None:
+                    opt = OptimizationRecord.from_datamodel(com.optimization_record, self.client)
+                    update["optimization_record"] = opt
+
+                com2 = ReactionComponent(**com.dict(exclude={"singlepoint_record", "optimization_record"}), **update)
+                self.raw_data.components_cache.append(com2)
+
     def _fetch_components(self):
+        self._assert_online()
         url_params = {"include": ["*", "singlepoint_record", "optimization_record"]}
 
         self.raw_data.components = self.client._auto_request(
@@ -102,10 +133,12 @@ class ReactionRecord(BaseRecord):
             f"v1/records/reaction/{self.raw_data.id}/components",
             None,
             ProjURLParameters,
-            List[ReactionComponent],
+            List[ReactionComponent_],
             None,
             url_params,
         )
+
+        self._make_caches()
 
     @property
     def specification(self) -> ReactionSpecification:
@@ -113,10 +146,12 @@ class ReactionRecord(BaseRecord):
 
     @property
     def components(self) -> List[ReactionComponent]:
-        if self.raw_data.components is None:
+        self._make_caches()
+
+        if self.raw_data.components_cache is None:
             self._fetch_components()
 
-        return self.raw_data.components
+        return self.raw_data.components_cache
 
     @property
     def total_energy(self) -> Optional[float]:

@@ -81,6 +81,7 @@ class ManybodyRecord(BaseRecord):
         initial_molecule: Optional[Molecule] = None
 
         clusters: Optional[List[ManybodyCluster_]] = None
+        clusters_cache: Optional[List[ManybodyCluster]] = None
 
     # This is needed for disambiguation by pydantic
     record_type: Literal["manybody"] = "manybody"
@@ -97,14 +98,28 @@ class ManybodyRecord(BaseRecord):
         if "initial_molecule" in includes:
             ret.add("initial_molecule")
         if "clusters" in includes:
-            ret.add("clusters")
+            ret |= {"clusters.*", "clusters.singlepoint_record"}
 
         return ret
 
+    def _make_caches(self):
+        if self.raw_data.clusters is None:
+            return
+
+        if self.raw_data.clusters_cache is None:
+            self.raw_data.clusters_cache = []
+
+            for mbc in self.raw_data.clusters:
+                sp = SinglepointRecord.from_datamodel(mbc.singlepoint_record, self.client)
+                mbc2 = ManybodyCluster(**mbc.dict(exclude={"singlepoint_record"}), singlepoint_record=sp)
+                self.raw_data.clusters_cache.append(mbc2)
+
     def _fetch_initial_molecule(self):
+        self._assert_online()
         self.raw_data.initial_molecule = self.client.get_molecules([self.raw_data.initial_molecule_id])[0]
 
     def _fetch_clusters(self):
+        self._assert_online()
         url_params = {"include": ["*", "molecule", "singlepoint_record"]}
 
         self.raw_data.clusters = self.client._auto_request(
@@ -116,6 +131,8 @@ class ManybodyRecord(BaseRecord):
             None,
             url_params,
         )
+
+        self._make_caches()
 
     @property
     def initial_molecule(self) -> Molecule:
@@ -132,23 +149,14 @@ class ManybodyRecord(BaseRecord):
         return self.raw_data.specification
 
     @property
-    def results(self):
+    def results(self) -> Optional[Dict[str, Any]]:
         return self.raw_data.results
 
     @property
     def clusters(self) -> List[ManybodyCluster]:
-        if self.raw_data.clusters is None:
+        self._make_caches()
+
+        if self.raw_data.clusters_cache is None:
             self._fetch_clusters()
 
-        if self.raw_data.clusters is None:
-            return []
-
-        ret = []
-        for x in self.raw_data.clusters:
-            sp = None
-            if x.singlepoint_record is not None:
-                sp = SinglepointRecord.from_datamodel(x.singlepoint_record, self.client)
-
-            ret.append(ManybodyCluster(**x.dict(exclude={"singlepoint_record"}), singlepoint_record=sp))
-
-        return ret
+        return self.raw_data.clusters_cache
