@@ -381,7 +381,7 @@ class PostgresHarness:
         assert self.config.own
 
         # Startup the server
-        self._logger.info("Starting the database")
+        self._logger.info("Starting the PostgreSQL instance")
 
         # We should be in charge of this postgres process. If something is running, then that is a problem
         if is_port_inuse(self.config.host, self.config.port):
@@ -391,7 +391,7 @@ class PostgresHarness:
         else:
             retcode, stdout, stderr = self.pg_ctl(["start"])
 
-            err_msg = f"Error starting database. Did you remember to initialize it (qcfractal-server init)?\noutput:\n{stdout}\nstderr:\n{stderr}"
+            err_msg = f"Error starting PostgreSQL. Did you remember to initialize it (qcfractal-server init)?\noutput:\n{stdout}\nstderr:\n{stderr}"
 
             if retcode != 0:
                 raise RuntimeError(err_msg)
@@ -433,6 +433,10 @@ class PostgresHarness:
             err_msg = f"Error stopping the postgres instance:\noutput:\n{stdout}\nstderr:\n{stderr}"
             raise RuntimeError(err_msg)
 
+    def postgres_initialized(self):
+        psql_conf_file = os.path.join(self.config.data_directory, "postgresql.conf")
+        return os.path.exists(psql_conf_file)
+
     def initialize_postgres(self) -> None:
         """Initializes a postgresql instance and starts it
 
@@ -452,7 +456,6 @@ class PostgresHarness:
             raise RuntimeError(f"A config already exists at {psql_conf_file}. Database has been initialized already?")
 
         initdb_path = self._get_tool("initdb")
-        createdb_path = self._get_tool("createdb")
 
         retcode, stdout, stderr = self._run_subprocess([initdb_path, "-D", self.config.data_directory])
 
@@ -478,17 +481,8 @@ class PostgresHarness:
 
         psql_conf_path.write_text(psql_conf)
 
-        # Start the database. It needs to be running for createdb
+        # Start the postgres instance
         self.start()
-
-        # Create the user and database
-        self._logger.info(f"Building database user information & creating QCFractal database")
-
-        retcode, stdout, stderr = self._run_subprocess([createdb_path, "-h", "localhost", "-p", str(self.config.port)])
-        if retcode != 0:
-            err_msg = f"Error running createdb:\noutput:\n{stdout}\nstderr:\n{stderr}"
-            raise RuntimeError(err_msg)
-
         self._logger.info("Postgresql instance successfully initialized and started")
 
     def backup_database(self, filepath: str) -> None:
@@ -536,6 +530,9 @@ class PostgresHarness:
 
         cmds = [
             self._get_tool("pg_restore"),
+            "-e",
+            "-x",
+            "-O",
             f"--host={self.config.host}",
             f"--port={self.config.port}",
             f"--dbname={self.config.database_name}",

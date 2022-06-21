@@ -7,27 +7,14 @@ import json
 import lzma
 import os
 import signal
-import subprocess
 import sys
 import time
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Dict, List, Union, Tuple, Optional
 
-import pydantic
-from qcelemental.models import Molecule, FailedOperation, OptimizationResult, AtomicResult
+from qcelemental.models import Molecule
 from qcelemental.models.results import WavefunctionProperties
 
-from qcportal.records import PriorityEnum
-from qcportal.records.gridoptimization import GridoptimizationSpecification
-from qcportal.records.manybody import ManybodySpecification
-from qcportal.records.optimization import OptimizationSpecification
-from qcportal.records.reaction import ReactionSpecification
-from qcportal.records.singlepoint import QCSpecification
-from qcportal.records.torsiondrive import TorsiondriveSpecification
 from qcportal.serialization import _json_decode
-
-if TYPE_CHECKING:
-    from qcfractal.db_socket import SQLAlchemySocket
 
 # Valid client encodings
 valid_encodings = ["application/json", "application/msgpack"]
@@ -36,6 +23,9 @@ valid_encodings = ["application/json", "application/msgpack"]
 _my_path = os.path.dirname(os.path.abspath(__file__))
 
 geoip_path = os.path.join(_my_path, "MaxMind-DB", "test-data", "GeoIP2-City-Test.mmdb")
+
+testconfig_path = os.path.join(_my_path, "config_files")
+migrationdata_path = os.path.join(_my_path, "migration_data")
 
 test_users = {
     "admin_user": {
@@ -196,78 +186,3 @@ def terminate_process(proc):
         # Kill (SIGKILL)
         finally:
             proc.kill()
-
-
-@contextmanager
-def popen(args):
-    """
-    Opens a background task.
-    """
-    args = list(args)
-
-    # Bin prefix
-    if sys.platform.startswith("win"):
-        bin_prefix = os.path.join(sys.prefix, "Scripts")
-    else:
-        bin_prefix = os.path.join(sys.prefix, "bin")
-
-    # First argument is the executable name
-    # We are testing executable scripts found in the bin directory
-    args[0] = os.path.join(bin_prefix, args[0])
-
-    # Add coverage testing
-    coverage_dir = os.path.join(bin_prefix, "coverage")
-    if not os.path.exists(coverage_dir):
-        print("Could not find Python coverage, skipping cov.")
-    else:
-        src_dir = os.path.dirname(os.path.abspath(__file__))
-        # --source is the path to the QCFractal source
-        # --parallel-mode means every process gets its own file (useful because we do multiple processes)
-        coverage_flags = [coverage_dir, "run", "--parallel-mode", "--source=" + src_dir]
-        args = coverage_flags + args
-
-    kwargs = {}
-    if sys.platform.startswith("win"):
-        # Allow using CTRL_C_EVENT / CTRL_BREAK_EVENT
-        kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
-
-    kwargs["stdout"] = subprocess.PIPE
-    kwargs["stderr"] = subprocess.PIPE
-    proc = subprocess.Popen(args, **kwargs)
-    try:
-        yield proc
-    except Exception:
-        raise
-    finally:
-        try:
-            terminate_process(proc)
-        finally:
-            output, error = proc.communicate()
-            print("-" * 80)
-            print("|| Process command: {}".format(" ".join(args)))
-            print("|| Process stdout: \n{}".format(output.decode()))
-            print("-" * 80)
-            print()
-            if error:
-                print("\n|| Process stderr: \n{}".format(error.decode()))
-                print("-" * 80)
-
-
-def run_process(args, interrupt_after=15):
-    """
-    Runs a process in the background until complete.
-
-    Returns True if exit code zero.
-    """
-
-    with popen(args) as proc:
-        try:
-            proc.wait(timeout=interrupt_after)
-        except subprocess.TimeoutExpired:
-            pass
-        finally:
-            terminate_process(proc)
-
-        retcode = proc.poll()
-
-    return retcode == 0

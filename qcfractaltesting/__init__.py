@@ -1,5 +1,7 @@
 from .helpers import (
     geoip_path,
+    testconfig_path,
+    migrationdata_path,
     test_users,
     valid_encodings,
     load_ip_test_data,

@@ -1,0 +1,14 @@
+name: QCFractal Test Server
+allow_unauthenticated_read: true
+enable_security: false
+loglevel: DEBUG
+database:
+  own: true
+  port: 9987
+  database_name: qcfractal_default
+  logfile: qcfractal_postgres.log
+api:
+  secret_key: THISISASECRETKEY 
+  jwt_secret_key: THISISASECRETKEY
+  port: 7900
+  keepalive: 90

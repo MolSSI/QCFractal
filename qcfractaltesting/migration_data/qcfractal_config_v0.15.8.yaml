@@ -1,0 +1,28 @@
+base_folder: .
+database:
+  database_name: qcfractal_default
+  directory: null
+  host: localhost
+  logfile: qcfractal_postgres.log
+  own: true
+  password: null
+  port: 5444
+  username: null
+fractal:
+  allow_read: true
+  compress_response: true
+  cprofile: null
+  geo_file_path: null
+  heartbeat_frequency: 1800
+  log_apis: false
+  logfile: qcfractal_server.log
+  loglevel: info
+  max_active_services: 20
+  name: QCFractal Server
+  port: 7777
+  query_limit: 1000
+  security: null
+  service_frequency: 60
+view:
+  directory: null
+  enable: true
