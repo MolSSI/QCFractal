@@ -7,7 +7,7 @@ from .models import (
     DatasetFetchRecordsBody,
     DatasetSubmitBody,
     DatasetDeleteStrBody,
-    DatasetDeleteRecordsBody,
+    DatasetRemoveRecordsBody,
     DatasetRecordModifyBody,
     DatasetRecordRevertBody,
     DatasetModifyMetadata,

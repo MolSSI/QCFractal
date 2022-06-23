@@ -13,7 +13,7 @@ from qcportal.datasets import (
     DatasetSubmitBody,
     DatasetDeleteStrBody,
     DatasetRecordModifyBody,
-    DatasetDeleteRecordsBody,
+    DatasetRemoveRecordsBody,
     DatasetRecordRevertBody,
     DatasetModifyMetadata,
     DatasetQueryRecords,
@@ -97,6 +97,16 @@ def add_dataset_v1(dataset_type: str, body_data: DatasetAddBody):
 #########################
 # Getting info
 #########################
+@main.route("/v1/datasets/<int:dataset_id>", methods=["GET"])
+@wrap_route("READ")
+def get_dataset_general_v1(dataset_id: int, url_params: ProjURLParameters):
+    return storage_socket.datasets.get(
+        dataset_id,
+        url_params.include,
+        url_params.exclude,
+    )
+
+
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>", methods=["GET"])
 @wrap_route("READ")
 def get_dataset_v1(dataset_type: str, dataset_id: int, url_params: ProjURLParameters):
@@ -238,9 +248,9 @@ def fetch_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Data
 
 @main.route("/v1/datasets/<string:dataset_type>/<int:dataset_id>/records/bulkDelete", methods=["POST"])
 @wrap_route("DELETE")
-def delete_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetDeleteRecordsBody):
+def remove_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRemoveRecordsBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
-    return ds_socket.delete_records(
+    return ds_socket.remove_records(
         dataset_id,
         entry_names=body_data.entry_names,
         specification_names=body_data.specification_names,

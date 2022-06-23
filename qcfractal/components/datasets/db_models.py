@@ -22,9 +22,9 @@ class BaseDatasetORM(BaseORM):
     lname = Column(String(100), nullable=False)
     name = Column(String(100), nullable=False)
 
-    tags = Column(JSON)
-    tagline = Column(String)
-    description = Column(String)
+    tags = Column(JSON, nullable=False)
+    tagline = Column(String, nullable=False)
+    description = Column(String, nullable=False)
 
     group = Column(String(100), nullable=False)
     visibility = Column(Boolean, nullable=False)
@@ -32,12 +32,12 @@ class BaseDatasetORM(BaseORM):
     default_tag = Column(String, nullable=False)
     default_priority = Column(Integer, nullable=False)
 
-    provenance = Column(JSON)
+    provenance = Column(JSON, nullable=False)
 
     # metadata is reserved in sqlalchemy
     meta = Column("metadata", JSON, nullable=False)
 
-    extras = Column(JSON)
+    extras = Column(JSON, nullable=False)
 
     contributed_values = relationship(
         "ContributedValuesORM", collection_class=attribute_mapped_collection("name"), cascade="all, delete-orphan"

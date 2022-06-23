@@ -7,6 +7,7 @@ import pandas as pd
 import pydantic
 from pydantic import BaseModel, Extra, validator
 from qcelemental.models.types import Array
+from qcportal.metadata_models import UpdateMetadata, InsertMetadata, DeleteMetadata
 
 from qcportal.base_models import RestModelBase, validate_list_to_single
 from qcportal.records import AllRecordTypes, PriorityEnum, RecordStatusEnum, record_from_datamodel
@@ -61,18 +62,18 @@ class BaseDataset(BaseModel):
         id: int
         dataset_type: str
         name: str
-        description: Optional[str]
-        tagline: Optional[str]
-        tags: Optional[List[str]]
-        group: Optional[str]
+        description: str
+        tagline: str
+        tags: List[str]
+        group: str
         visibility: bool
-        provenance: Optional[Dict[str, Any]]
+        provenance: Dict[str, Any]
 
         default_tag: str
         default_priority: PriorityEnum
 
-        metadata: Optional[Dict[str, Any]] = None
-        extras: Optional[Dict[str, Any]] = None
+        metadata: Dict[str, Any]
+        extras: Dict[str, Any]
 
         ########################################
         # Info about entries, specs, and records
@@ -321,7 +322,7 @@ class BaseDataset(BaseModel):
             None,
         )
 
-    def rename_specification(self, old_name: str, new_name: str) -> None:
+    def rename_specification(self, old_name: str, new_name: str) -> UpdateMetadata:
         self.assert_online()
 
         name_map = {old_name: new_name}
@@ -341,17 +342,17 @@ class BaseDataset(BaseModel):
         # Renames the specifications in the record map
         self.raw_data.record_map = {(e, name_map.get(s, s)): r for (e, s), r in self.raw_data.record_map.items()}
 
-    def delete_specification(self, name: str, delete_records: bool = False) -> None:
+    def delete_specification(self, name: str, delete_records: bool = False) -> DeleteMetadata:
         self.assert_online()
 
         body_data = DatasetDeleteStrBody(names=[name], delete_records=delete_records)
 
-        self.client._auto_request(
+        ret = self.client._auto_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/specifications/bulkDelete",
             DatasetDeleteStrBody,
             None,
-            None,
+            DeleteMetadata,
             body_data,
             None,
         )
@@ -359,6 +360,8 @@ class BaseDataset(BaseModel):
         # Delete locally-cached stuff
         self.raw_data.specifications.pop(name, None)
         self.raw_data.record_map = {(e, s): r for (e, s), r in self.raw_data.record_map.items() if s != name}
+
+        return ret
 
     ###################################
     # Entries
@@ -554,8 +557,8 @@ class BaseDataset(BaseModel):
 
         return self.raw_data.entry_names
 
-    def rename_entries(self, name_map: Dict[str, str]) -> None:
-        self.client._auto_request(
+    def rename_entries(self, name_map: Dict[str, str]):
+        ret = self.client._auto_request(
             "patch",
             f"v1/datasets/{self.dataset_type}/{self.id}/entries",
             Dict[str, str],
@@ -573,7 +576,7 @@ class BaseDataset(BaseModel):
         # Renames the entries in the record map
         self.raw_data.record_map = {(name_map.get(e, e), s): r for (e, s), r in self.raw_data.record_map.items()}
 
-    def delete_entries(self, names: Union[str, Iterable[str]], delete_records: bool = False):
+    def delete_entries(self, names: Union[str, Iterable[str]], delete_records: bool = False) -> DeleteMetadata:
         self.assert_online()
 
         names = make_list(names)
@@ -885,7 +888,7 @@ class BaseDataset(BaseModel):
     ):
         self.assert_online()
 
-        body_data = DatasetDeleteRecordsBody(
+        body_data = DatasetRemoveRecordsBody(
             entry_names=make_list(entry_names),
             specification_names=make_list(specification_names),
             delete_records=delete_records,
@@ -894,7 +897,7 @@ class BaseDataset(BaseModel):
         ret = self.client._auto_request(
             "post",
             f"v1/datasets/{self.dataset_type}/{self.id}/records/bulkDelete",
-            DatasetDeleteRecordsBody,
+            DatasetRemoveRecordsBody,
             None,
             None,
             body_data,
@@ -1141,23 +1144,23 @@ class BaseDataset(BaseModel):
 
 class DatasetAddBody(RestModelBase):
     name: str
-    description: Optional[str] = None
-    tagline: Optional[str] = None
-    tags: Optional[Dict[str, Any]] = None
-    group: Optional[str] = None
-    provenance: Optional[Dict[str, Any]]
-    visibility: bool = True
-    default_tag: Optional[str] = None
-    default_priority: PriorityEnum = PriorityEnum.normal
-    metadata: Optional[Dict[str, Any]] = None
+    description: str
+    tagline: str
+    tags: List[str]
+    group: str
+    provenance: Dict[str, Any]
+    visibility: bool
+    default_tag: str
+    default_priority: PriorityEnum
+    metadata: Dict[str, Any]
 
 
 class DatasetModifyMetadata(RestModelBase):
     name: str
-    description: Optional[str]
-    tags: Optional[List[str]]
-    tagline: Optional[str]
-    group: Optional[str]
+    description: str
+    tags: List[str]
+    tagline: str
+    group: str
     visibility: bool
     provenance: Optional[Dict[str, Any]]
     metadata: Optional[Dict[str, Any]]
@@ -1184,7 +1187,7 @@ class DatasetDeleteStrBody(RestModelBase):
     delete_records: bool = False
 
 
-class DatasetDeleteRecordsBody(RestModelBase):
+class DatasetRemoveRecordsBody(RestModelBase):
     entry_names: List[str]
     specification_names: List[str]
     delete_records: bool = False

@@ -4,7 +4,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select, delete, func, union
-from sqlalchemy.orm import load_only, lazyload, joinedload, selectinload
+from sqlalchemy.orm import load_only, lazyload, joinedload, selectinload, with_polymorphic
 
 from qcfractal.components.datasets.db_models import BaseDatasetORM, ContributedValuesORM
 from qcfractal.components.records.db_models import BaseRecordORM
@@ -13,11 +13,11 @@ from qcfractal.db_socket.helpers import (
     get_query_proj_options,
 )
 from qcportal.exceptions import AlreadyExistsError, MissingDataError
+from qcportal.metadata_models import InsertMetadata, DeleteMetadata, UpdateMetadata
 from qcportal.records import RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from qcportal.metadata_models import InsertMetadata
     from qcportal.datasets.models import DatasetModifyMetadata
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.db_socket.base_orm import BaseORM
@@ -25,6 +25,12 @@ if TYPE_CHECKING:
 
 
 class BaseDatasetSocket:
+    """
+    Base class for all dataset sockets
+
+    Since all datasets have very similar structure, much of the work can be handled
+    in this base class, as long as this class knows the various ORM types.
+    """
 
     # Must be overridden by the derived classes
     dataset_orm = None
@@ -55,6 +61,11 @@ class BaseDatasetSocket:
         raise NotImplementedError("_create_entries must be overridden by the derived class")
 
     def get_records_select(self):
+        """
+        Create a statement that selects the dataset id, entry_name, specification_name, and record_id
+        from a dataset (with appropriate labels).
+        """
+
         # Use the common stuff here, but this function can be overridden
 
         stmt = select(
@@ -80,11 +91,37 @@ class BaseDatasetSocket:
 
     def get_tag_priority(
         self, dataset_id: int, tag: Optional[str], priority: Optional[str], *, session: Optional[Session] = None
-    ):
+    ) -> Tuple[str, PriorityEnum]:
+        """
+        Obtains the tag and priority a new record should be computed with
+
+        This takes into account the tag and priority passed in, as well as the dataset's default
+        and priority.
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        tag
+            Specified tag to use. If None, then the default tag will be used instead
+        priority
+            Specified priority to use. If None, then the default priority will be used instead
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            The tag and priority to use
+        """
+
         if tag is None or priority is None:
             default_tag, default_priority = self.get_default_tag_priority(dataset_id, session=session)
             if tag is None:
                 tag = default_tag
+            else:
+                tag = tag.lower()
             if priority is None:
                 priority = default_priority
         return tag, priority
@@ -92,6 +129,17 @@ class BaseDatasetSocket:
     def get_default_tag_priority(
         self, dataset_id: int, *, session: Optional[Session] = None
     ) -> Tuple[str, PriorityEnum]:
+        """
+        Obtain a dataset's default tag and priority
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
 
         stmt = select(BaseDatasetORM.default_tag, BaseDatasetORM.default_priority)
         stmt = stmt.where(BaseDatasetORM.id == dataset_id)
@@ -111,6 +159,29 @@ class BaseDatasetSocket:
         *,
         session: Optional[Session] = None,
     ) -> Optional[Dict[str, Any]]:
+        """
+        Obtain a dataset from the database
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        include
+            Which fields of the result to return. Default is to return all fields.
+        exclude
+            Remove these fields from the return. Default is to return all fields.
+        missing_ok
+           If set to True, None will be returned if the dataset does not exist. Otherwise,
+           an exception is raised.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Dataset information as a dictionary
+        """
 
         with self.root_socket.optional_session(session) as session:
             return get_general(
@@ -118,6 +189,22 @@ class BaseDatasetSocket:
             )[0]
 
     def status(self, dataset_id: int, *, session: Optional[Session] = None) -> Dict[str, Dict[RecordStatusEnum, int]]:
+        """
+        Compute the status of a dataset
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Dictionary with specifications as the keys, and record status/counts as values.
+        """
 
         stmt = select(self.record_item_orm.specification_name, BaseRecordORM.status, func.count(BaseRecordORM.id))
         stmt = stmt.join(self.record_item_orm, BaseRecordORM.id == self.record_item_orm.record_id)
@@ -136,6 +223,24 @@ class BaseDatasetSocket:
     def detailed_status(
         self, dataset_id: int, *, session: Optional[Session] = None
     ) -> List[Tuple[str, str, RecordStatusEnum]]:
+        """
+        Compute the detailed status of a dataset
+
+        This breaks down the status into entry/specification pairs.
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            List of tuple (entry name, specification name, status)
+        """
 
         stmt = select(self.record_item_orm.entry_name, self.record_item_orm.specification_name, BaseRecordORM.status)
         stmt = stmt.join(self.record_item_orm, BaseRecordORM.id == self.record_item_orm.record_id)
@@ -148,22 +253,28 @@ class BaseDatasetSocket:
     def add(
         self,
         name: str,
-        description: Optional[str] = None,
-        tagline: Optional[str] = None,
-        tags: Optional[Dict[str, Any]] = None,
-        group: Optional[str] = None,
-        provenance: Optional[Dict[str, Any]] = None,
-        visibility: bool = True,
-        default_tag: Optional[str] = None,
-        default_priority: PriorityEnum = PriorityEnum.normal,
-        metadata: Optional[Dict[str, Any]] = None,
+        description: str,
+        tagline: str,
+        tags: List[str],
+        group: str,
+        provenance: Dict[str, Any],
+        visibility: bool,
+        default_tag: str,
+        default_priority: PriorityEnum,
+        metadata: Dict[str, Any],
         *,
         session: Optional[Session] = None,
     ) -> int:
+        """
+        Create a new dataset in the database
 
-        # TODO - nullable group?
-        if group is None:
-            group = "default"
+        If a dataset already exists with the same name and type, an exception is raised
+
+        Returns
+        -------
+        :
+            ID of the new dataset
+        """
 
         ds_orm = self.dataset_orm(
             dataset_type=self.dataset_type,
@@ -175,9 +286,10 @@ class BaseDatasetSocket:
             group=group,
             provenance=provenance,
             visibility=visibility,
-            default_tag=default_tag,
+            default_tag=default_tag.lower(),
             default_priority=default_priority,
             meta=metadata,
+            extras={},
         )
 
         with self.root_socket.optional_session(session) as session:
@@ -196,6 +308,22 @@ class BaseDatasetSocket:
     def update_metadata(
         self, dataset_id: int, new_metadata: DatasetModifyMetadata, *, session: Optional[Session] = None
     ):
+        """
+        Updates the metadata of the dataset
+
+        This will overwrite the existing metadata. An exception is raised on any error
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        new_metadata
+            New metadata to store
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
+
         with self.root_socket.optional_session(session) as session:
             stmt = select(self.dataset_orm).options(lazyload("*")).with_for_update()
             ds = session.execute(stmt).scalar_one_or_none()
@@ -218,10 +346,32 @@ class BaseDatasetSocket:
     def add_specifications(
         self,
         dataset_id: int,
-        new_specifications: Iterable[Any],  # we don't know the type here
+        new_specifications: Sequence[Any],  # we don't know the type here
         *,
         session: Optional[Session] = None,
-    ):
+    ) -> InsertMetadata:
+        """
+        Adds specifications to a dataset in the database
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        new_specifications
+            Specifications to add
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion
+        """
+
+        existing_idx: List[int] = []
+        inserted_idx: List[int] = []
+        errors: List[Tuple[int, str]] = []
 
         with self.root_socket.optional_session(session) as session:
             stmt = select(self.specification_orm.name)
@@ -229,23 +379,71 @@ class BaseDatasetSocket:
 
             existing_specs = session.execute(stmt).scalars().all()
 
-            for ds_spec in new_specifications:
+            for idx, ds_spec in enumerate(new_specifications):
                 if ds_spec.name in existing_specs:
-                    raise AlreadyExistsError(f"Specification '{ds_spec.name}' already exists for this dataset")
+                    existing_idx.append(idx)
 
                 # call the derived class function for adding a specification
                 meta, spec_id = self._add_specification(session, ds_spec.specification)
 
                 if not meta.success:
-                    raise RuntimeError(
-                        f"Unable to add {self.dataset_type} specification: " + meta.error_string,
-                    )
+                    err_str = f"Unable to add {self.dataset_type} specification: " + meta.error_string
+                    errors.append((idx, err_str))
+                    continue
 
                 ds_spec_orm = self.specification_orm(
                     dataset_id=dataset_id, name=ds_spec.name, description=ds_spec.description, specification_id=spec_id
                 )
 
                 session.add(ds_spec_orm)
+                inserted_idx.append(idx)
+
+        return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx)
+
+    def fetch_specifications(
+        self,
+        dataset_id: int,
+        include: Optional[Iterable[str]] = None,
+        exclude: Optional[Iterable[str]] = None,
+        *,
+        session: Optional[Session] = None,
+    ) -> Dict[str, Any]:
+        """
+        Get specifications for a dataset from the database
+
+        It's expected there aren't too many specifications, so this always fetches them all.
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        include
+            Which fields of the result to return. Default is to return all fields.
+        exclude
+            Remove these fields from the return. Default is to return all fields.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Specifications as a dictionary, with the key being the name and the value being
+            the specification (as a dictionary)
+        """
+
+        stmt = select(self.specification_orm)
+        stmt = stmt.where(self.specification_orm.dataset_id == dataset_id)
+        stmt = stmt.options(joinedload(self.specification_orm.specification))
+
+        if include or exclude:
+            query_opts = get_query_proj_options(self.entry_orm, include, exclude)
+            stmt = stmt.options(*query_opts)
+
+        with self.root_socket.optional_session(session, True) as session:
+            entries = session.execute(stmt).scalars().all()
+
+        return {x.name: x.model_dict() for x in entries}
 
     def delete_specifications(
         self,
@@ -254,7 +452,30 @@ class BaseDatasetSocket:
         delete_records: bool = False,
         *,
         session: Optional[Session] = None,
-    ) -> int:
+    ) -> DeleteMetadata:
+        """
+        Deletes specifications from a dataset
+
+        Specifications which do not exist for the dataset will be silently ignored
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        specification_names
+            Names of the specifications to delete
+        delete_records
+            If True, also (hard) delete all records associated with this specification
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the deletion. If delete_records is True, then n_children_deleted will
+            contain the number of records deleted.
+        """
 
         with self.root_socket.optional_session(session) as session:
             if delete_records:
@@ -268,17 +489,41 @@ class BaseDatasetSocket:
             stmt = delete(self.specification_orm)
             stmt = stmt.where(self.specification_orm.dataset_id == dataset_id)
             stmt = stmt.where(self.specification_orm.name.in_(specification_names))
-            r = session.execute(stmt)
+            session.execute(stmt)
             session.flush()
 
+            n_children_deleted = 0
             if delete_records:
-                self.root_socket.records.delete(record_ids, soft_delete=False, delete_children=True, session=session)
+                rec_meta = self.root_socket.records.delete(
+                    record_ids, soft_delete=False, delete_children=True, session=session
+                )
+                n_children_deleted = rec_meta.n_deleted
 
-            return r.rowcount
+            return DeleteMetadata(
+                deleted_idx=list(range(len(specification_names))), n_children_deleted=n_children_deleted
+            )
 
     def rename_specifications(
         self, dataset_id: int, specification_name_map: Dict[str, str], *, session: Optional[Session] = None
     ):
+        """
+        Renames specifications
+
+        The specification_name_map maps the old name to the new name (ie, `specification_name_map[old_name] = new_name`).
+        If any of the new names exist, an exception is raised and no renaming takes place.
+        If a specification does not exist under the old name, then that renaming is silently ignored.
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        specification_name_map
+            Mapping of old name to new name
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
+
         stmt = select(self.specification_orm)
         stmt = stmt.where(self.specification_orm.dataset_id == dataset_id)
         stmt = stmt.where(self.specification_orm.name.in_(specification_name_map.keys()))
@@ -301,7 +546,27 @@ class BaseDatasetSocket:
             for spec in specs:
                 spec.name = specification_name_map[spec.name]
 
-    def add_entries(self, dataset_id: int, new_entries: Sequence[Any], *, session: Optional[Session] = None):
+    def add_entries(
+        self, dataset_id: int, new_entries: Sequence[Any], *, session: Optional[Session] = None
+    ) -> InsertMetadata:
+        """
+        Adds entries to a dataset in the database
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        new_entries
+            Entries to add
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion
+        """
 
         with self.root_socket.optional_session(session) as session:
             # Create orm for all entries (in derived class)
@@ -312,10 +577,18 @@ class BaseDatasetSocket:
             stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
             existing_entries = session.execute(stmt).scalars().all()
 
-            for entry in entry_orm:
+            inserted_idx: List[int] = []
+            existing_idx: List[int] = []
+
+            for idx, entry in enumerate(entry_orm):
                 # Only add if the entry does not exist
-                if entry.name not in existing_entries:
+                if entry.name in existing_entries:
+                    existing_idx.append(idx)
+                else:
                     session.add(entry)
+                    inserted_idx.append(idx)
+
+        return InsertMetadata(inserted_idx=inserted_idx, existing_idx=existing_idx)
 
     def fetch_entry_names(
         self,
@@ -323,6 +596,22 @@ class BaseDatasetSocket:
         *,
         session: Optional[Session] = None,
     ) -> List[str]:
+        """
+        Obtain all entry names for a dataset
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            All entry names as a list
+        """
         stmt = select(self.entry_orm.name)
         stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
 
@@ -340,6 +629,33 @@ class BaseDatasetSocket:
         *,
         session: Optional[Session] = None,
     ) -> Dict[str, Any]:
+        """
+        Obtain full entries for a dataset from the database
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        entry_names
+            Names of the entries to fetch. If None, fetch all
+        include
+            Which fields of the result to return. Default is to return all fields.
+        exclude
+            Remove these fields from the return. Default is to return all fields.
+        missing_ok
+           If set to True, None will be returned if the dataset does not exist. Otherwise,
+           an exception is raised.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Entries as a dictionary, with the key being the name and the value being
+            the entry (as a dictionary)
+        """
+
         stmt = select(self.entry_orm)
         stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
 
@@ -362,35 +678,37 @@ class BaseDatasetSocket:
 
         return {x.name: x.model_dict() for x in entries}
 
-    def fetch_specifications(
-        self,
-        dataset_id: int,
-        include: Optional[Iterable[str]] = None,
-        exclude: Optional[Iterable[str]] = None,
-        *,
-        session: Optional[Session] = None,
-    ) -> Dict[str, Any]:
-        stmt = select(self.specification_orm)
-        stmt = stmt.where(self.specification_orm.dataset_id == dataset_id)
-        stmt = stmt.options(joinedload(self.specification_orm.specification))
-
-        if include or exclude:
-            query_opts = get_query_proj_options(self.entry_orm, include, exclude)
-            stmt = stmt.options(*query_opts)
-
-        with self.root_socket.optional_session(session, True) as session:
-            entries = session.execute(stmt).scalars().all()
-
-        return {x.name: x.model_dict() for x in entries}
-
     def delete_entries(
         self,
         dataset_id: int,
-        entry_names: Iterable[str],
+        entry_names: Sequence[str],
         delete_records: bool = False,
         *,
         session: Optional[Session] = None,
-    ) -> int:
+    ) -> DeleteMetadata:
+        """
+        Deletes entries from a dataset
+
+        Entries which do not exist for the dataset will be silently ignored
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        entry_names
+            Names of the entries to delete
+        delete_records
+            If True, also (hard) delete all records associated with this specification
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the deletion. If delete_records is True, then n_children_deleted will
+            contain the number of records deleted.
+        """
 
         with self.root_socket.optional_session(session) as session:
             if delete_records:
@@ -404,15 +722,37 @@ class BaseDatasetSocket:
             stmt = delete(self.entry_orm)
             stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
             stmt = stmt.where(self.entry_orm.name.in_(entry_names))
-            r = session.execute(stmt)
+            session.execute(stmt)
             session.flush()
 
+            n_children_deleted = 0
             if delete_records:
-                self.root_socket.records.delete(record_ids, soft_delete=False, delete_children=True, session=session)
+                rec_meta = self.root_socket.records.delete(
+                    record_ids, soft_delete=False, delete_children=True, session=session
+                )
+                n_children_deleted = rec_meta.n_deleted
 
-            return r.rowcount
+            return DeleteMetadata(deleted_idx=list(range(len(entry_names))), n_children_deleted=n_children_deleted)
 
     def rename_entries(self, dataset_id: int, entry_name_map: Dict[str, str], *, session: Optional[Session] = None):
+        """
+        Renames entries for a dataset
+
+        The entry_name_map maps the old name to the new name (ie, `entry_name_map[old_name] = new_name`).
+        If any of the new names exist, an exception is raised and no renaming takes place.
+        If an entry does not exist under the old name, then that renaming is silently ignored.
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        entry_name_map
+            Mapping of old name to new name
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
+
         stmt = select(self.entry_orm)
         stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
         stmt = stmt.where(self.entry_orm.name.in_(entry_name_map.keys()))
@@ -445,6 +785,34 @@ class BaseDatasetSocket:
         *,
         session: Optional[Session] = None,
     ) -> List[Dict[str, Any]]:
+        """
+        Obtain records for a dataset from the database
+
+        The returned list is in an indeterminant order
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        entry_names
+            Fetch records belonging to these entries. If None, fetch records belonging to any entry.
+        specification_names
+            Fetch records belonging to these specifications. If None, fetch records belonging to any specification.
+        status
+            Fetch records whose status is in the given list (or other iterable) of statuses
+        include
+            Which fields of the result to return. Default is to return all fields.
+        exclude
+            Remove these fields from the return. Default is to return all fields.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Entries matching the given criteria
+        """
 
         stmt = select(self.record_item_orm)
         stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
@@ -468,7 +836,7 @@ class BaseDatasetSocket:
 
         return [x.model_dict() for x in records]
 
-    def delete_record_items(
+    def remove_records(
         self,
         dataset_id: int,
         entry_names: Sequence[str],
@@ -477,6 +845,25 @@ class BaseDatasetSocket:
         *,
         session: Optional[Session] = None,
     ):
+        """
+        Removes a record from this dataset, optionally deleting the record
+
+        This does not delete entries or specifications.
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        entry_names
+            Delete records belonging to these entries
+        specification_names
+            Delete records belonging to these specifications
+        delete_records
+            If True, actually delete the records (rather than simply un-associating them from this dataset)
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
 
         with self.root_socket.optional_session(session) as session:
             if delete_records:
@@ -503,6 +890,19 @@ class BaseDatasetSocket:
         *,
         session: Optional[Session] = None,
     ):
+        """
+        Deletes an entire dataset from the database
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        delete_records
+            If true, delete all the individual records as well
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
 
         with self.root_socket.optional_session(session) as session:
             if delete_records:
@@ -528,6 +928,30 @@ class BaseDatasetSocket:
         *,
         session: Optional[Session] = None,
     ):
+        """
+        Submit computations for this dataset
+
+        If any specification or entry name does not exist, an exception is raised and
+        no submission takes place
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        entry_names
+            Submit records belonging to these entries. If None, submit for all entries
+        specification_names
+            Submit records belonging to these specifications. If None, submit for all specifications
+        tag
+            Computational tag for new records. If None, use the dataset's default. Existing records
+            will not be modified.
+        priority
+            Priority for new records. If None, use the dataset's default. Existing records
+            will not be modified.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
 
         with self.root_socket.optional_session(session) as session:
             tag, priority = self.get_tag_priority(dataset_id, tag, priority, session=session)
@@ -596,6 +1020,31 @@ class BaseDatasetSocket:
         status: Optional[Iterable[RecordStatusEnum]] = None,
         for_update: bool = False,
     ) -> List[int]:
+        """
+        Lookup the record IDs for a dataset
+
+        The returned IDs are in an indeterminant order
+
+        Parameters
+        ----------
+        session
+            An existing SQLAlchemy session to use
+        dataset_id
+            ID of a dataset
+        entry_names
+            Find records belonging to these entries. If None, look up all entries
+        specification_names
+            Find records belonging to these specifications. If None, look up all specifications
+        status
+            Look up records whose status is in the given list (or other iterable) of statuses
+        for_update
+            If True, select the records with row-level locking (postgres FOR UPDATE)
+
+        Returns
+        -------
+        :
+            List of record IDs
+        """
         stmt = select(self.record_item_orm.record_id)
         stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
 
@@ -626,7 +1075,39 @@ class BaseDatasetSocket:
         comment: Optional[str] = None,
         *,
         session: Optional[Session] = None,
-    ):
+    ) -> UpdateMetadata:
+        """
+        Modify records belonging to a dataset
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        username
+            Username of the user modifying these records
+        entry_names
+            Modify records belonging to these entries. If None, modify records belonging to any entry.
+        specification_names
+            Modify records belonging to these specifications. If None, modify records belonging to any specification.
+        username
+            Username of the user modifying the records
+        status
+            New status for the records. Only certain status transitions will be allowed.
+        priority
+            New priority for these records
+        tag
+            New tag for these records
+        comment
+            Adds a new comment to these records
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the modification/update.
+        """
 
         with self.root_socket.optional_session(session) as session:
 
@@ -638,27 +1119,51 @@ class BaseDatasetSocket:
                 for_update=True,
             )
 
-            self.root_socket.records.modify_generic(
+            return self.root_socket.records.modify_generic(
                 record_ids, username, status=status, priority=priority, tag=tag, comment=comment, session=session
             )
 
     def revert_records(
         self,
         dataset_id: int,
+        revert_status: RecordStatusEnum,
         entry_names: Optional[Iterable[str]] = None,
         specification_names: Optional[List[str]] = None,
-        revert_status: Optional[RecordStatusEnum] = None,
         *,
         session: Optional[Session] = None,
-    ):
+    ) -> UpdateMetadata:
+        """
+        Reverts the status of dataset records to their previous status
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        revert_status
+            Revert records of this status. For example, if `revert_status` is `deleted`, then it will be undeleted
+        entry_names
+            Modify records belonging to these entries. If None, modify records belonging to any entry.
+        specification_names
+            Modify records belonging to these specifications. If None, modify records belonging to any specification.
+
+        Returns
+        -------
+        :
+            Metadata about the modification/update
+
+        """
 
         with self.root_socket.optional_session(session) as session:
             record_ids = self._lookup_record_ids(session, dataset_id, entry_names, specification_names, for_update=True)
 
-            self.root_socket.records.revert_generic(record_ids, revert_status)
+            return self.root_socket.records.revert_generic(record_ids, revert_status)
 
 
 class DatasetSocket:
+    """
+    Root socket for all dataset sockets
+    """
+
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
@@ -696,12 +1201,62 @@ class DatasetSocket:
         self._record_cte = union(*selects).cte()
 
     def get_socket(self, dataset_type: str) -> BaseDatasetSocket:
+        """
+        Get the socket for a specific kind of dataset type
+        """
+
         handler = self._handler_map.get(dataset_type, None)
         if handler is None:
             raise MissingDataError(f"Cannot find handler for type {dataset_type}")
         return handler
 
+    def get(
+        self,
+        dataset_id: int,
+        include: Optional[Sequence[str]] = None,
+        exclude: Optional[Sequence[str]] = None,
+        missing_ok: bool = False,
+        *,
+        session: Optional[Session] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Obtain a dataset with the specified ID
+
+        Parameters
+        ----------
+        dataset_id
+            ID of a dataset
+        include
+            Which fields of the result to return. Default is to return all fields.
+        exclude
+            Remove these fields from the return. Default is to return all fields.
+        missing_ok
+           If set to True, None will be returned if the dataset does not exist. Otherwise,
+           an exception is raised.
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Dataset information as a dictionary
+        """
+
+        # If all columns are included, then we can load
+        # the data from derived classes as well.
+        if (include is None or "*" in include) and not exclude:
+            wp = with_polymorphic(BaseDatasetORM, "*")
+        else:
+            wp = BaseRecordORM
+
+        with self.root_socket.optional_session(session, True) as session:
+            return get_general(session, wp, wp.id, [dataset_id], include, exclude, missing_ok)[0]
+
     def lookup_type(self, dataset_id: int, *, session: Optional[Session] = None) -> str:
+        """
+        Look up the type of dataset given its ID
+        """
 
         stmt = select(BaseDatasetORM.dataset_type)
         stmt = stmt.where(BaseDatasetORM.id == dataset_id)
@@ -717,6 +1272,9 @@ class DatasetSocket:
     def lookup_id(
         self, dataset_type: str, dataset_name: str, missing_ok: bool = False, *, session: Optional[Session] = None
     ) -> Optional[int]:
+        """
+        Look up a dataset ID given its dataset type and name
+        """
 
         stmt = select(BaseDatasetORM.id)
         stmt = stmt.where(BaseDatasetORM.lname == dataset_name.lower())
@@ -729,7 +1287,11 @@ class DatasetSocket:
                 raise MissingDataError(f"Could not find {dataset_type} dataset with name '{dataset_name}'")
             return ds_id
 
-    def list(self, *, session: Optional[Session] = None):
+    def list(self, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
+        """
+        Get a list of datasets in the database
+        """
+
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(BaseDatasetORM.id, BaseDatasetORM.dataset_type, BaseDatasetORM.name)
             r = session.execute(stmt).all()
@@ -743,6 +1305,12 @@ class DatasetSocket:
         *,
         session: Optional[Session] = None,
     ):
+        """
+        Query which datasets the specified records belong to
+
+        This returns a dictionary containing the dataset id, type, and name, as well as
+        the entry and specification names that the record belongs to
+        """
 
         stmt = select(
             self._record_cte.c.record_id,
@@ -773,6 +1341,10 @@ class DatasetSocket:
             ]
 
     def get_contributed_values(self, dataset_id: int, *, session: Optional[Session] = None) -> List[Dict[str, Any]]:
+        """
+        Get the contributed values for a dataset
+        """
+
         stmt = select(ContributedValuesORM)
         stmt = stmt.where(ContributedValuesORM.dataset_id == dataset_id)
 
