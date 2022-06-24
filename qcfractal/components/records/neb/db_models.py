@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, Optional, Iterable, Any
 
-from sqlalchemy import Column, Integer, ForeignKey, String, UniqueConstraint, Index
+from sqlalchemy import Column, Integer, ForeignKey, String, UniqueConstraint, Index, Boolean
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.orm import relationship, column_property
@@ -20,6 +20,7 @@ class NEBOptimiationsORM(BaseORM):
     neb_id = Column(Integer, ForeignKey("neb_record.id", ondelete="cascade"), primary_key=True)
     optimization_id = Column(Integer, ForeignKey(OptimizationRecordORM.id), primary_key=True)
     position = Column(Integer, primary_key=True)
+    ts = Column(Boolean, primary_key=True)
     optimization_record = relationship(OptimizationRecordORM)
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:

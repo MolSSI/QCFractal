@@ -38,6 +38,7 @@ from .db_models import (
     NEBInitialchainORM,
     NEBRecordORM,
 )
+from ..optimization.db_models import OptimizationRecordORM
 from ...molecules.db_models import MoleculeORM
 
 if TYPE_CHECKING:
@@ -64,6 +65,8 @@ class NEBServiceState(BaseModel):
 
     prev = {}
     optimized: bool
+    tsoptimize: bool
+    converged: bool
     iteration: int
     elems: list
     molecule_template: str
@@ -96,10 +99,13 @@ class NEBRecordSocket(BaseRecordSocket):
     ):
 
         neb_orm: NEBRecordORM = service_orm.record
-
         output = "\n\nCreated NEB calculation\n"
         spec: NEBSpecification = neb_orm.specification.to_model(NEBSpecification)
-        table_rows = sorted(spec.keywords.dict().items())
+        keywords = spec.keywords.dict()
+        opt_ts = False
+        if keywords['optimize_ts']:
+            opt_ts = True
+        table_rows = sorted(keywords.items())
         output += tabulate.tabulate(table_rows, headers=["keywords", "value"])
         output += "\n\n"
         table_rows = sorted(spec.singlepoint_specification.dict().items())
@@ -107,7 +113,7 @@ class NEBRecordSocket(BaseRecordSocket):
         output += "\n\n"
 
         initial_chain: List[Dict[str, Any]] = [x.model_dict() for x in neb_orm.initial_chain]
-        output += f"{spec.keywords.dict()['images']} images will be used to guess a transition state structure.\n"
+        output += f"{keywords['images']} images will be used to guess a transition state structure.\n"
         output += f"Molecular formula = {Molecule(**initial_chain[0]).get_molecular_formula()}\n"
         molecule_template = Molecule(**initial_chain[0]).dict(encoding="json")
 
@@ -126,6 +132,8 @@ class NEBRecordSocket(BaseRecordSocket):
             iteration = 0,
             elems = elems,
             optimized = False,
+            tsoptimize = opt_ts,
+            converged=False,
             molecule_template=molecule_template_str,
             old_chain=[],
         )
@@ -171,34 +179,64 @@ class NEBRecordSocket(BaseRecordSocket):
                 service_state.iteration += 1
                 finished = False
         else:
-            complete_tasks = sorted(service_orm.dependencies, key=lambda x: x.extras["position"])
-            geometries = []
-            energies = []
-            gradients = []
-            for task in complete_tasks:
-                # This is an ORM for singlepoint calculations
-                sp_record = task.record
-                mol_data = self.root_socket.molecules.get(molecule_id=[sp_record.molecule_id], include=["geometry"], session=session)
-                geometries.append(mol_data[0]["geometry"])
-                energies.append(sp_record.properties["return_energy"])
-                gradients.append(sp_record.properties["return_gradient"])
+            if not service_state.converged:
+                complete_tasks = sorted(service_orm.dependencies, key=lambda x: x.extras["position"])
+                geometries = []
+                energies = []
+                gradients = []
+                for task in complete_tasks:
+                    # This is an ORM for singlepoint calculations
+                    sp_record = task.record
+                    mol_data = self.root_socket.molecules.get(molecule_id=[sp_record.molecule_id], include=["geometry"], session=session)
+                    geometries.append(mol_data[0]["geometry"])
+                    energies.append(sp_record.properties["return_energy"])
+                    gradients.append(sp_record.properties["return_gradient"])
 
-            neb_stdout = io.StringIO()
-            logging.captureWarnings(True)
-            with contextlib.redirect_stdout(neb_stdout):
-                newcoords, prev = geometric.neb.nextchain(service_state.elems, geometries, gradients, energies, params, service_state.prev)
-            output += "\n" + neb_stdout.getvalue()
-            logging.captureWarnings(False)
-            service_state.prev = prev
+                neb_stdout = io.StringIO()
+                logging.captureWarnings(True)
+                with contextlib.redirect_stdout(neb_stdout):
+                    newcoords, prev = geometric.neb.nextchain(service_state.elems, geometries, gradients, energies, params, service_state.prev)
+                output += "\n" + neb_stdout.getvalue()
+                logging.captureWarnings(False)
+                service_state.prev = prev
+                service_state.iteration += 1
+            else:
+                newcoords = None
 
             if newcoords is not None:
                 next_chain = [Molecule(**molecule_template, geometry=geometry) for geometry in newcoords]
                 self.submit_singlepoints(session, service_state, service_orm, next_chain)
                 finished = False
             else:
-                output += "\nNEB calculation is completed with %i iterations" %service_state.iteration
-                finished = True
-            service_state.iteration += 1
+                if service_state.converged:
+                    if service_state.tsoptimize:
+                        output += "\nOptimizing the guessed transition state structure to locate a first-order saddle point."
+
+                        stmt = (select(MoleculeORM)
+                                .join(SinglepointRecordORM)
+                                .join(NEBSinglepointsORM)
+                                .where(NEBSinglepointsORM.neb_id == neb_orm.id)
+                                .order_by(NEBSinglepointsORM.chain_iteration.desc(),
+                                          SinglepointRecordORM.properties["return_energy"].cast(TEXT).cast(
+                                              DOUBLE_PRECISION).desc())
+                                .limit(1)
+                                )
+
+                        with self.root_socket.optional_session(session, True) as session:
+                            TS_mol = session.execute(stmt).scalar_one_or_none()
+                            if TS_mol is None:
+                                raise MissingDataError(
+                                    "MoleculeORM of a guessed transition state from NEB can't be found.")
+                        self.submit_optimizations(session, service_orm, [Molecule(**TS_mol.model_dict())])
+                        service_state.tsoptimize = False
+                        finished = False
+                    else:
+                        output += "\nNEB calculation is completed with %i iterations" % service_state.iteration
+                        finished = True
+                else:
+                    service_state.converged=True
+                    finished = False
+
         stdout_orm = neb_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
         stdout_orm.append(output)
         service_orm.service_state = service_state.dict()
@@ -215,13 +253,22 @@ class NEBRecordSocket(BaseRecordSocket):
         neb_orm: NEBRecordORM = service_orm.record
         # delete all existing entries in the dependency list
         service_orm.dependencies = []
-
+        service_state = NEBServiceState(**service_orm.service_state)
         qc_spec = neb_orm.specification.singlepoint_specification.model_dict()
-        opt_spec = OptimizationSpecification(
-            program="geometric",
-            qc_specification=QCSpecification(**qc_spec),
-        )
+        if service_state.tsoptimize and service_state.converged:
+            opt_spec = OptimizationSpecification(
+                program="geometric",
+                qc_specification=QCSpecification(**qc_spec),
+                keywords={'transition':True},
+            )
+            ts = True
+        else:
+            opt_spec = OptimizationSpecification(
+                program="geometric",
+                qc_specification=QCSpecification(**qc_spec),
+            )
 
+            ts = False
         meta, opt_ids = self.root_socket.records.optimization.add(
             molecules,
             opt_spec,
@@ -236,8 +283,9 @@ class NEBRecordSocket(BaseRecordSocket):
             opt_history = NEBOptimiationsORM(
                 neb_id=service_orm.record_id,
                 optimization_id=opt_id,
-                position=pos)
-
+                position=pos,
+                ts=ts,
+            )
             service_orm.dependencies.append(svc_dep)
             neb_orm.optimizations.append(opt_history)
 
@@ -403,7 +451,7 @@ class NEBRecordSocket(BaseRecordSocket):
                     NEBRecordORM.specification_id,
                     array_agg(
                         aggregate_order_by(
-                            NEBInitialchainORM.position, NEBInitialchainORM.position.asc(),
+                            NEBInitialchainORM.molecule_id, NEBInitialchainORM.position.asc(),
                         )
                     ).label("molecule_ids"),
                 )
@@ -419,7 +467,7 @@ class NEBRecordSocket(BaseRecordSocket):
                 # does this exist?
                 stmt = select(init_mol_cte.c.id)
                 stmt = stmt.where(init_mol_cte.c.specification_id == neb_spec_id)
-                stmt = stmt.where(init_mol_cte.c.molecule_ids)
+                stmt = stmt.where(init_mol_cte.c.molecule_ids == mol_ids)
                 existing = session.execute(stmt).scalars().first()
 
                 if not existing:
@@ -520,7 +568,7 @@ class NEBRecordSocket(BaseRecordSocket):
 
             return self.add_internal(init_molecule_ids, spec_id, tag, priority, session=session)
 
-    def get_final_ts(
+    def get_neb_result(
         self,
         neb_id: int,
         include: Optional[Sequence[str]] = None,
@@ -543,5 +591,34 @@ class NEBRecordSocket(BaseRecordSocket):
         with self.root_socket.optional_session(session, True) as session:
             r = session.execute(stmt).scalar_one_or_none()
             if r is None:
-                raise MissingDataError("Final transition state can't be found")
+                raise MissingDataError("A guessed transition state from the NEB can't be found")
             return r.model_dict()
+
+    #def get_final_ts(
+    #    self,
+    #    neb_id: int,
+    #    include: Optional[Sequence[str]] = None,
+    #    exclude: Optional[Sequence[str]] = None,
+    #    *,
+    #    session: Optional[Session] = None,
+
+    #) -> Dict[str, Any]:
+
+    #    query_rec = get_query_proj_options(OptimizationRecordORM, include, exclude)
+
+    #    stmt = (select(OptimizationRecordORM)
+    #    .options(*query_rec)
+    #    .join(NEBOptimiationsORM)
+    #    .where(NEBOptimiationsORM.neb_id == neb_id)
+    #    .order_by(NEBOptimiationsORM.optimization_id.desc())
+    #    #.where(NEBOptimiationsORM.ts == 1)
+    #    .limit(1)
+    #    )
+
+    #    with self.root_socket.optional_session(session, True) as session:
+    #        r = session.execute(stmt).scalar_one_or_none()
+    #        if r is None:
+    #            raise MissingDataError("The final optimized transition state from the NEB can't be found")
+    #        print(r.model_dict())
+    #        return r.model_dict()
+            #return {x: y.model_dict() for x, y in r}
