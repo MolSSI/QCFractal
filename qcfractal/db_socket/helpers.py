@@ -591,7 +591,6 @@ def delete_general(
         return DeleteMetadata()
 
     deleted_idx: List[int] = []
-    missing_idx: List[int] = []
     errors: List[Tuple[int, str]] = []
 
     # Do one at a time to catch errors
