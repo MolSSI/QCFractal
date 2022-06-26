@@ -584,7 +584,7 @@ class PortalClient(PortalClientBase):
         missing_ok: bool = False,
         *,
         include: Optional[Iterable[str]] = None,
-    ) -> Union[List[BaseRecord], Optional[BaseRecord]]:
+    ) -> Union[List[Optional[BaseRecord]], Optional[BaseRecord]]:
         """
         Obtain records of all types with specified IDs
 

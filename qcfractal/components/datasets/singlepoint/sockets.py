@@ -93,7 +93,7 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
                 session=session,
             )
 
-            for entry, oid in zip(normal_entries, sp_ids):
+            for entry, oid in zip(new_normal_entries, sp_ids):
                 rec = SinglepointDatasetRecordItemORM(
                     dataset_id=dataset_id, entry_name=entry.name, specification_name=spec.name, record_id=oid
                 )
@@ -112,7 +112,7 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
                 new_spec["keywords"].update(entry.additional_keywords)
 
                 meta, sp_ids = self.root_socket.records.singlepoint.add(
-                    molecule=[entry.molecule_id],
+                    molecules=[entry.molecule_id],
                     qc_spec=QCSpecification(**new_spec),
                     tag=tag,
                     priority=priority,

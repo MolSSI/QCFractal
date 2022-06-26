@@ -75,3 +75,13 @@ def test_dataset_client_delete_empty(snowflake_client: PortalClient):
 
     with pytest.raises(PortalRequestError, match=r"Could not find all"):
         snowflake_client.get_dataset_by_id(ds_id)
+
+
+def test_dataset_client_query_dataset_records_1(snowflake_client: PortalClient):
+    # Query which datasets contain a record
+    raise RuntimeError("TODO")
+
+
+def test_dataset_client_query_dataset_records_2(snowflake_client: PortalClient):
+    # Query records that belong to a dataset
+    raise RuntimeError("TODO")

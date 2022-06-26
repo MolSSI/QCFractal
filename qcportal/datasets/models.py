@@ -7,9 +7,9 @@ import pandas as pd
 import pydantic
 from pydantic import BaseModel, Extra, validator
 from qcelemental.models.types import Array
-from qcportal.metadata_models import UpdateMetadata, InsertMetadata, DeleteMetadata
 
 from qcportal.base_models import RestModelBase, validate_list_to_single
+from qcportal.metadata_models import UpdateMetadata, DeleteMetadata
 from qcportal.records import AllRecordTypes, PriorityEnum, RecordStatusEnum, record_from_datamodel
 from qcportal.utils import make_list
 
@@ -147,21 +147,23 @@ class BaseDataset(BaseModel):
         # Ignoring the function argument for now... Just get all specs
         self.fetch_specifications()
 
-    def _update_metadata(self):
-        new_body = DatasetModifyMetadata(
-            name=self.raw_data.name,
-            description=self.raw_data.description,
-            tagline=self.raw_data.tagline,
-            tags=self.raw_data.tags,
-            group=self.raw_data.group,
-            visibility=self.raw_data.visibility,
-            provenance=self.raw_data.provenance,
-            default_tag=self.raw_data.default_tag,
-            default_priority=self.raw_data.default_priority,
-            metadata=self.metadata,
-        )
-
+    def _update_metadata(self, **kwargs):
         self.assert_online()
+
+        new_body = {
+            "name": self.raw_data.name,
+            "description": self.raw_data.description,
+            "tagline": self.raw_data.tagline,
+            "tags": self.raw_data.tags,
+            "group": self.raw_data.group,
+            "visibility": self.raw_data.visibility,
+            "provenance": self.raw_data.provenance,
+            "default_tag": self.raw_data.default_tag,
+            "default_priority": self.raw_data.default_priority,
+            "metadata": self.raw_data.metadata,
+        }
+
+        new_body.update(**kwargs)
 
         self.client._auto_request(
             "patch",
@@ -172,6 +174,8 @@ class BaseDataset(BaseModel):
             new_body,
             None,
         )
+
+        self.raw_data = self.raw_data.copy(update=new_body)
 
     def submit(
         self,
@@ -242,56 +246,70 @@ class BaseDataset(BaseModel):
         return self.raw_data.name
 
     def set_name(self, new_name: str):
-        old_name = self.raw_data.name
-        self.raw_data.name = new_name
-        try:
-            self._update_metadata()
-        except:
-            self.raw_data.name = old_name
-            raise
+        self._update_metadata(name=new_name)
 
     @property
     def description(self) -> str:
         return self.raw_data.description
 
-    def set_description(self, new_description: Optional[str]):
-        self.assert_online()
-
-        old_description = self.raw_data.description
-        self.raw_data.description = new_description
-        try:
-            self._update_metadata()
-        except:
-            self.raw_data.old_description = old_description
-            raise
+    def set_description(self, new_description: str):
+        self._update_metadata(description=new_description)
 
     @property
-    def group(self) -> Optional[str]:
+    def visibility(self) -> bool:
+        return self.raw_data.visibility
+
+    def set_visibility(self, new_visibility: bool):
+        self._update_metadata(visibility=new_visibility)
+
+    @property
+    def group(self) -> str:
         return self.raw_data.group
 
+    def set_group(self, new_group: str):
+        self._update_metadata(group=new_group)
+
     @property
-    def tags(self) -> Optional[List[str]]:
+    def tags(self) -> List[str]:
         return self.raw_data.tags
 
+    def set_tags(self, new_tags: List[str]):
+        self._update_metadata(tags=new_tags)
+
     @property
-    def tagline(self) -> Optional[str]:
+    def tagline(self) -> str:
         return self.raw_data.tagline
 
-    @property
-    def provenance(self) -> Optional[Dict[str, Any]]:
-        return self.raw_data.provenance
+    def set_tagline(self, new_tagline: str):
+        self._update_metadata(tagline=new_tagline)
 
     @property
-    def metadata(self) -> Optional[Dict[str, Any]]:
+    def provenance(self) -> Dict[str, Any]:
+        return self.raw_data.provenance
+
+    def set_provenance(self, new_provenance: Dict[str, Any]):
+        self._update_metadata(provenance=new_provenance)
+
+    @property
+    def metadata(self) -> Dict[str, Any]:
         return self.raw_data.metadata
+
+    def set_metadata(self, new_metadata: Dict[str, Any]):
+        self._update_metadata(metadata=new_metadata)
 
     @property
     def default_tag(self) -> Optional[str]:
         return self.raw_data.default_tag
 
+    def set_default_tag(self, new_default_tag: str):
+        self._update_metadata(default_tag=new_default_tag)
+
     @property
     def default_priority(self) -> PriorityEnum:
         return self.raw_data.default_priority
+
+    def set_default_priority(self, new_default_priority: PriorityEnum):
+        self._update_metadata(default_priority=new_default_priority)
 
     @property
     def specifications(self) -> Optional[Dict[str, Any]]:
@@ -587,7 +605,7 @@ class BaseDataset(BaseModel):
             f"v1/datasets/{self.dataset_type}/{self.id}/entries/bulkDelete",
             DatasetDeleteStrBody,
             None,
-            None,
+            DeleteMetadata,
             body_data,
             None,
         )
@@ -880,12 +898,12 @@ class BaseDataset(BaseModel):
                     if status is None or rec.status in status:
                         yield entry_name, spec_name, rec
 
-    def delete_records(
+    def remove_records(
         self,
         entry_names: Optional[Union[str, Iterable[str]]] = None,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
         delete_records: bool = False,
-    ):
+    ) -> DeleteMetadata:
         self.assert_online()
 
         body_data = DatasetRemoveRecordsBody(
@@ -904,6 +922,13 @@ class BaseDataset(BaseModel):
             None,
         )
 
+        # Delete locally-cached stuff
+        self.raw_data.record_map = {
+            (e, s): r
+            for (e, s), r in self.raw_data.record_map.items()
+            if e not in entry_names and s not in specification_names
+        }
+
         return ret
 
     def modify_records(
@@ -911,7 +936,7 @@ class BaseDataset(BaseModel):
         entry_names: Optional[Union[str, Iterable[str]]] = None,
         specification_names: Optional[Union[str, Iterable[str]]] = None,
         new_tag: Optional[str] = None,
-        new_priority: Optional[str] = None,
+        new_priority: Optional[PriorityEnum] = None,
         new_comment: Optional[str] = None,
         *,
         refetch_records: bool = False,

@@ -283,7 +283,10 @@ def modify_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Dat
 def revert_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRecordRevertBody):
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.revert_records(
-        dataset_id, body_data.entry_names, body_data.specification_names, body_data.revert_status
+        dataset_id,
+        body_data.revert_status,
+        body_data.entry_names,
+        body_data.specification_names,
     )
 
 

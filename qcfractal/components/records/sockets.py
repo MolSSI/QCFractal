@@ -1358,16 +1358,16 @@ class RecordSocket:
         with self.root_socket.optional_session(session) as session:
             if status is not None:
                 if status == RecordStatusEnum.waiting:
-                    return self.root_socket.records.reset(record_ids=record_ids, session=session)
+                    ret = self.root_socket.records.reset(record_ids=record_ids, session=session)
                 if status == RecordStatusEnum.cancelled:
-                    return self.root_socket.records.cancel(record_ids=record_ids, session=session)
+                    ret = self.root_socket.records.cancel(record_ids=record_ids, session=session)
                 if status == RecordStatusEnum.invalid:
-                    return self.root_socket.records.invalidate(record_ids=record_ids, session=session)
+                    ret = self.root_socket.records.invalidate(record_ids=record_ids, session=session)
 
                 # ignore all other statuses
 
             if tag is not None or priority is not None:
-                return self.root_socket.records.modify(
+                ret = self.root_socket.records.modify(
                     record_ids,
                     new_tag=tag,
                     new_priority=priority,
@@ -1375,12 +1375,14 @@ class RecordSocket:
                 )
 
             if comment:
-                return self.root_socket.records.add_comment(
+                ret = self.root_socket.records.add_comment(
                     record_ids=record_ids,
                     username=username,
                     comment=comment,
                     session=session,
                 )
+
+            return ret
 
         return UpdateMetadata()
 

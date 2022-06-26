@@ -325,20 +325,34 @@ class BaseDatasetSocket:
         """
 
         with self.root_socket.optional_session(session) as session:
-            stmt = select(self.dataset_orm).options(lazyload("*")).with_for_update()
+            stmt = select(self.dataset_orm).where(self.dataset_orm.id == dataset_id)
+            stmt = stmt.options(lazyload("*")).with_for_update()
             ds = session.execute(stmt).scalar_one_or_none()
 
             if ds is None:
                 raise MissingDataError(f"Could not find dataset with type={self.dataset_type} and {dataset_id}")
 
-            ds.name = new_metadata.name
-            ds.lname = new_metadata.name.lower()
+            if ds.name != new_metadata.name:
+                stmt2 = select(self.dataset_orm.id)
+                stmt2 = stmt2.where(self.dataset_orm.dataset_type == self.dataset_type)
+                stmt2 = stmt2.where(self.dataset_orm.lname == new_metadata.name.lower())
+                existing = session.execute(stmt2).scalar_one_or_none()
+
+                if existing:
+                    raise AlreadyExistsError(f"{self.dataset_type} dataset named '{new_metadata.name}' already exists")
+
+                ds.name = new_metadata.name
+                ds.lname = new_metadata.name.lower()
+
             ds.description = new_metadata.description
             ds.tagline = new_metadata.tagline
             ds.tags = new_metadata.tags
             ds.group = new_metadata.group
             ds.visibility = new_metadata.visibility
             ds.provenance = new_metadata.provenance
+
+            # "metadata" is reserved. The field is 'metadata' but accessed via 'meta'
+            ds.meta = new_metadata.metadata
 
             ds.default_tag = new_metadata.default_tag
             ds.default_priority = new_metadata.default_priority
@@ -382,6 +396,7 @@ class BaseDatasetSocket:
             for idx, ds_spec in enumerate(new_specifications):
                 if ds_spec.name in existing_specs:
                     existing_idx.append(idx)
+                    continue
 
                 # call the derived class function for adding a specification
                 meta, spec_id = self._add_specification(session, ds_spec.specification)
@@ -489,7 +504,8 @@ class BaseDatasetSocket:
             stmt = delete(self.specification_orm)
             stmt = stmt.where(self.specification_orm.dataset_id == dataset_id)
             stmt = stmt.where(self.specification_orm.name.in_(specification_names))
-            session.execute(stmt)
+            stmt = stmt.returning(self.specification_orm.name)
+            deleted_entries = session.execute(stmt).scalars().all()
             session.flush()
 
             n_children_deleted = 0
@@ -499,9 +515,13 @@ class BaseDatasetSocket:
                 )
                 n_children_deleted = rec_meta.n_deleted
 
-            return DeleteMetadata(
-                deleted_idx=list(range(len(specification_names))), n_children_deleted=n_children_deleted
-            )
+            deleted_idx = [idx for idx, name in enumerate(specification_names) if name in deleted_entries]
+            errors = [
+                (idx, "specification does not exist")
+                for idx, name in enumerate(specification_names)
+                if name not in deleted_entries
+            ]
+            return DeleteMetadata(deleted_idx=deleted_idx, errors=errors, n_children_deleted=n_children_deleted)
 
     def rename_specifications(
         self, dataset_id: int, specification_name_map: Dict[str, str], *, session: Optional[Session] = None
@@ -722,7 +742,8 @@ class BaseDatasetSocket:
             stmt = delete(self.entry_orm)
             stmt = stmt.where(self.entry_orm.dataset_id == dataset_id)
             stmt = stmt.where(self.entry_orm.name.in_(entry_names))
-            session.execute(stmt)
+            stmt = stmt.returning(self.entry_orm.name)
+            deleted_entries = session.execute(stmt).scalars().all()
             session.flush()
 
             n_children_deleted = 0
@@ -732,7 +753,11 @@ class BaseDatasetSocket:
                 )
                 n_children_deleted = rec_meta.n_deleted
 
-            return DeleteMetadata(deleted_idx=list(range(len(entry_names))), n_children_deleted=n_children_deleted)
+            deleted_idx = [idx for idx, name in enumerate(entry_names) if name in deleted_entries]
+            errors = [
+                (idx, "entry does not exist") for idx, name in enumerate(entry_names) if name not in deleted_entries
+            ]
+            return DeleteMetadata(deleted_idx=deleted_idx, errors=errors, n_children_deleted=n_children_deleted)
 
     def rename_entries(self, dataset_id: int, entry_name_map: Dict[str, str], *, session: Optional[Session] = None):
         """
