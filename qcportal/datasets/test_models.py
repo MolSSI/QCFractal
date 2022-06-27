@@ -4,11 +4,14 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcfractal.components.records.singlepoint.testing_helpers import load_test_data, run_test_data
 from qcportal import PortalRequestError
-from qcportal.records import PriorityEnum
+from qcportal.datasets.singlepoint import SinglepointDatasetNewEntry, SinglepointDataset
+from qcportal.records import PriorityEnum, RecordStatusEnum
 
 if TYPE_CHECKING:
     from qcportal import PortalClient
+    from qcportal.managers import ManagerName
 
 
 def test_dataset_model_basic(snowflake_client: PortalClient):
@@ -109,6 +112,19 @@ def test_dataset_model_metadata(snowflake_client: PortalClient):
     assert snowflake_client.get_dataset_by_id(ds_id).default_priority == PriorityEnum.high
 
 
-def test_dataset_model_status_empty(snowflake_client: PortalClient):
-    ds = snowflake_client.add_dataset("optimization", "Test dataset")
+def test_dataset_model_status(storage_socket, snowflake_client: PortalClient, activated_manager_name: ManagerName):
+    ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
     assert ds.status() == {}
+
+    input_spec, molecule, _ = load_test_data("sp_psi4_peroxide_energy_wfn")
+    run_test_data(storage_socket, activated_manager_name, "sp_psi4_peroxide_energy_wfn")
+
+    # Add this as a part of the dataset
+    ds.add_specification("spec_1", input_spec)
+    ds.add_entries(SinglepointDatasetNewEntry(name="test_molecule", molecule=molecule))
+    ds.add_entries(
+        SinglepointDatasetNewEntry(name="test_molecule_2", molecule=molecule, additional_keywords={"maxiter": 999})
+    )
+    ds.submit()
+
+    assert ds.status() == {"spec_1": {RecordStatusEnum.complete: 1, RecordStatusEnum.waiting: 1}}
