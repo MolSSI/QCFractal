@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, Dict, Any, List, Iterable, Type, Tuple, Union, Callable, Set
+from typing import Optional, Dict, Any, List, Iterable, Type, Tuple, Union, Callable
 
 import pandas as pd
 import pydantic
@@ -108,19 +108,6 @@ class BaseDataset(BaseModel):
         """
 
         return cls(client=client, raw_data=raw_data, dataset_type=raw_data.dataset_type)
-
-    @staticmethod
-    def transform_entry_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
-        """
-        Transforms user-friendly includes into includes used by the web API
-        """
-
-        if includes is None:
-            return None
-
-        ret: Set[str] = {"*"}
-
-        return ret
 
     def _post_add_entries(self, entry_names) -> None:
         """
@@ -406,7 +393,6 @@ class BaseDataset(BaseModel):
     def _internal_fetch_entries(
         self,
         entry_names: Iterable[str],
-        api_include: Optional[Iterable[str]],
     ) -> None:
         """
         Fetches entry information from the remote server, storing it internally
@@ -428,7 +414,7 @@ class BaseDataset(BaseModel):
         if not entry_names:
             return
 
-        body_data = DatasetFetchEntryBody(names=entry_names, include=api_include)
+        body_data = DatasetFetchEntryBody(names=entry_names)
 
         fetched_entries = self.client._auto_request(
             "post",
@@ -445,7 +431,6 @@ class BaseDataset(BaseModel):
     def fetch_entries(
         self,
         entry_names: Optional[Union[str, Iterable[str]]] = None,
-        include: Optional[Iterable[str]] = None,
         force_refetch: bool = False,
     ) -> None:
         """
@@ -467,8 +452,6 @@ class BaseDataset(BaseModel):
         if self.offline:
             return
 
-        api_include = self.transform_entry_includes(include)
-
         # Reload entry names if we are forcing refetching
         if force_refetch:
             self.fetch_entry_names()
@@ -488,12 +471,11 @@ class BaseDataset(BaseModel):
 
         for start_idx in range(0, n_entries, fetch_limit):
             entries_batch = entry_names[start_idx : start_idx + fetch_limit]
-            self._internal_fetch_entries(entries_batch, api_include)
+            self._internal_fetch_entries(entries_batch)
 
     def get_entry(
         self,
         entry_name: str,
-        include: Optional[Iterable[str]] = None,
         force_refetch: bool = False,
     ) -> Optional[Any]:
         """
@@ -502,13 +484,12 @@ class BaseDataset(BaseModel):
         The entry will be automatically fetched from the remote server if needed.
         """
 
-        self.fetch_entries(entry_name, include=include, force_refetch=force_refetch)
+        self.fetch_entries(entry_name, force_refetch=force_refetch)
         return self.raw_data.entries.get(entry_name, None)
 
     def iterate_entries(
         self,
         entry_names: Optional[Union[str, Iterable[str]]] = None,
-        include: Optional[Iterable[str]] = None,
         force_refetch: bool = False,
     ):
         """
@@ -520,8 +501,6 @@ class BaseDataset(BaseModel):
         ----------
         entry_names
             Names of entries to iterate over. If None, iterate over all entries
-        include
-            Additional fields/data to include when fetching the entry
         force_refetch
             If true, fetch data from the server even if it already exists locally
         """
@@ -530,8 +509,6 @@ class BaseDataset(BaseModel):
         # We duplicate a little bit of fetch_entries here, since
         # we want to yield in the middle
         #########################################################
-
-        api_include = self.transform_entry_includes(include)
 
         # Reload entry names if we are forcing refetching
         if force_refetch:
@@ -559,7 +536,7 @@ class BaseDataset(BaseModel):
             else:
                 names_tofetch = [x for x in names_batch if x not in self.raw_data.entries]
 
-            self._internal_fetch_entries(names_tofetch, api_include)
+            self._internal_fetch_entries(names_tofetch)
 
             # Loop over the whole batch (not just what we fetched)
             for entry_name in names_batch:

@@ -65,22 +65,6 @@ class TorsiondriveDataset(BaseDataset):
     _record_item_type = TorsiondriveDatasetRecordItem
     _record_type = TorsiondriveRecord
 
-    @staticmethod
-    def transform_entry_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
-        """
-        Transforms user-friendly includes into includes used by the web API
-        """
-
-        if includes is None:
-            return None
-
-        ret = BaseDataset.transform_entry_includes(includes)
-
-        if "initial_molecules" in includes:
-            ret |= {"initial_molecules", "initial_molecules.molecule"}
-
-        return ret
-
     def add_specification(self, name: str, specification: OptimizationSpecification, description: Optional[str] = None):
 
         payload = TorsiondriveDatasetSpecification(name=name, specification=specification, description=description)

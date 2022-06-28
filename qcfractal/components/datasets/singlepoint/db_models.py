@@ -31,7 +31,7 @@ class SinglepointDatasetEntryORM(BaseORM):
 
     local_results = Column(JSON)
 
-    molecule = relationship(MoleculeORM)
+    molecule = relationship(MoleculeORM, lazy="joined")
 
     __table_args__ = (
         Index("ix_singlepoint_dataset_entry_dataset_id", "dataset_id"),

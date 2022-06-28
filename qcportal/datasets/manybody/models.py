@@ -53,22 +53,6 @@ class ManybodyDataset(BaseDataset):
     _record_item_type = ManybodyDatasetRecordItem
     _record_type = ManybodyRecord
 
-    @staticmethod
-    def transform_entry_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
-        """
-        Transforms user-friendly includes into includes used by the web API
-        """
-
-        if includes is None:
-            return None
-
-        ret = BaseDataset.transform_entry_includes(includes)
-
-        if "initial_molecule" in includes:
-            ret.add("initial_molecule")
-
-        return ret
-
     def add_specification(self, name: str, specification: ManybodySpecification, description: Optional[str] = None):
         initial_molecules: Optional[List[Molecule]]
 

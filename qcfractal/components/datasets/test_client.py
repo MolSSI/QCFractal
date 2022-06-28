@@ -82,15 +82,16 @@ def test_dataset_client_delete_empty(snowflake_client: PortalClient):
         snowflake_client.get_dataset_by_id(ds_id)
 
 
-def test_dataset_client_query_dataset_records(storage_socket: SQLAlchemySocket, snowflake_client: PortalClient,
-                                              activated_manager_name: ManagerName):
+def test_dataset_client_query_dataset_records(
+    storage_socket: SQLAlchemySocket, snowflake_client: PortalClient, activated_manager_name: ManagerName
+):
     ds: SinglepointDataset = snowflake_client.add_dataset("singlepoint", "Test dataset")
     assert ds.status() == {}
 
     input_spec, molecule, _ = load_test_data("sp_psi4_peroxide_energy_wfn")
     run_test_data(storage_socket, activated_manager_name, "sp_psi4_peroxide_energy_wfn")
 
-    molecule_2 = Molecule(symbols=['b'], geometry=[0, 0, 0])
+    molecule_2 = Molecule(symbols=["b"], geometry=[0, 0, 0])
 
     # Add this as a part of the dataset
     ds.add_specification("spec_1", input_spec)
@@ -99,8 +100,8 @@ def test_dataset_client_query_dataset_records(storage_socket: SQLAlchemySocket, 
     ds.submit()
 
     # Query records belonging to a dataset
-    rec_id_2 = ds.get_record('test_molecule_2', 'spec_1').id
-    mol_id_2 = ds.get_entry('test_molecule_2', include=['molecule']).molecule.id
+    rec_id_2 = ds.get_record("test_molecule_2", "spec_1").id
+    mol_id_2 = ds.get_entry("test_molecule_2", include=["molecule"]).molecule.id
 
     query_res = snowflake_client.query_singlepoints(dataset_id=ds.id)
     assert query_res.current_meta.n_found == 2
@@ -109,19 +110,16 @@ def test_dataset_client_query_dataset_records(storage_socket: SQLAlchemySocket, 
     assert query_res.current_meta.n_found == 1
     assert list(query_res)[0].id == rec_id_2
 
-    query_res = snowflake_client.query_singlepoints(dataset_id=ds.id+1, molecule_id=mol_id_2)
+    query_res = snowflake_client.query_singlepoints(dataset_id=ds.id + 1, molecule_id=mol_id_2)
     assert query_res.current_meta.n_found == 0
 
     # Query which dataset contains a record
     rec_info = snowflake_client.query_dataset_records([rec_id_2])
     assert len(rec_info) == 1
-    assert rec_info[0]['dataset_id'] == 1
-    assert rec_info[0]['entry_name'] == 'test_molecule_2'
+    assert rec_info[0]["dataset_id"] == 1
+    assert rec_info[0]["entry_name"] == "test_molecule_2"
 
     # Query which dataset contains a record
-    ds.remove_records(entry_names='test_molecule_2', specification_names='spec_1', delete_records=True)
+    ds.remove_records(entry_names="test_molecule_2", specification_names="spec_1", delete_records=True)
     rec_info = snowflake_client.query_dataset_records([rec_id_2])
     assert len(rec_info) == 0
-
-
-
