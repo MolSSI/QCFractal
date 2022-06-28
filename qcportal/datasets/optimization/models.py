@@ -1,8 +1,9 @@
-from typing import Dict, Any, Union, Optional, List, Iterable, Tuple, Set
+from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
 
 from pydantic import BaseModel
 from typing_extensions import Literal
 
+from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 from qcportal.records.optimization import OptimizationRecord, OptimizationSpecification
 from qcportal.utils import make_list
@@ -58,30 +59,33 @@ class OptimizationDataset(BaseDataset):
 
         payload = OptimizationDatasetSpecification(name=name, specification=specification, description=description)
 
-        self.client._auto_request(
+        ret = self.client._auto_request(
             "post",
             f"v1/datasets/optimization/{self.id}/specifications",
             List[OptimizationDatasetSpecification],
             None,
-            None,
+            InsertMetadata,
             [payload],
             None,
         )
 
         self._post_add_specification(name)
+        return ret
 
     def add_entries(self, entries: Union[OptimizationDatasetNewEntry, Iterable[OptimizationDatasetNewEntry]]):
 
         entries = make_list(entries)
-        self.client._auto_request(
+
+        ret = self.client._auto_request(
             "post",
             f"v1/datasets/optimization/{self.id}/entries/bulkCreate",
             List[OptimizationDatasetNewEntry],
             None,
-            None,
+            InsertMetadata,
             entries,
             None,
         )
 
         new_names = [x.name for x in entries]
         self._post_add_entries(new_names)
+        return ret

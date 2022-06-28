@@ -27,7 +27,7 @@ class OptimizationDatasetEntryORM(BaseORM):
     additional_keywords = Column(JSONB, nullable=False)
     attributes = Column(JSONB, nullable=False)
 
-    initial_molecule = relationship(MoleculeORM)
+    initial_molecule = relationship(MoleculeORM, lazy="joined")
 
     __table_args__ = (
         Index("ix_optimization_dataset_entry_dataset_id", "dataset_id"),

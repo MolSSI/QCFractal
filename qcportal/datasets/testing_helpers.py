@@ -138,6 +138,7 @@ def run_dataset_model_add_get_spec(
     assert ds.specifications["spec_1"].description is None
 
     assert ds.specifications["spec_2"].name == "spec_2"
+
     assert ds.specifications["spec_2"].specification == test_specs[1]
     assert ds.specifications["spec_2"].description == "a description"
 
@@ -241,7 +242,7 @@ def run_dataset_model_remove_record(snowflake_client, ds, test_entries, test_spe
     assert rec_ids[none_idx] == to_delete_id
 
 
-def run_dataset_model_submit(ds, test_entries, test_spec):
+def run_dataset_model_submit(ds, test_entries, test_spec, record_entry_compare):
 
     # test_entries[2] should have additional keywords
     assert test_entries[2].additional_keywords
@@ -255,7 +256,8 @@ def run_dataset_model_submit(ds, test_entries, test_spec):
     rec = all_records[0][2]
     assert rec.status == RecordStatusEnum.waiting
     assert rec.specification == test_spec
-    assert rec.molecule == test_entries[0].molecule
+
+    record_entry_compare(rec, test_entries[0])
 
     # Used default tag/priority
     assert rec.task.tag == "default_tag"
@@ -265,7 +267,7 @@ def run_dataset_model_submit(ds, test_entries, test_spec):
     ds.add_entries(test_entries[2])
     ds.submit()
     rec = ds.get_record(test_entries[2].name, "spec_1")
-    assert rec.molecule == test_entries[2].molecule
+    record_entry_compare(rec, test_entries[2])
 
     expected_kw = test_spec.keywords.copy()
     expected_kw.update(test_entries[2].additional_keywords)
