@@ -27,7 +27,7 @@ class ManybodyDatasetEntryORM(BaseORM):
     additional_keywords = Column(JSONB, nullable=False)
     attributes = Column(JSONB, nullable=False)
 
-    initial_molecule = relationship(MoleculeORM)
+    initial_molecule = relationship(MoleculeORM, lazy="joined")
 
     __table_args__ = (
         Index("ix_manybody_dataset_entry_dataset_id", "dataset_id"),
@@ -37,7 +37,7 @@ class ManybodyDatasetEntryORM(BaseORM):
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id")
+        exclude = self.append_exclude(exclude, "dataset_id", "initial_molecule_id")
         return BaseORM.model_dict(self, exclude)
 
 

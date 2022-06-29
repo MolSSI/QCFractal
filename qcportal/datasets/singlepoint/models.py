@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, Optional, List, Iterable, Tuple, Set
+from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
 
 from pydantic import BaseModel
 from typing_extensions import Literal
@@ -19,7 +19,6 @@ class SinglepointDatasetNewEntry(BaseModel):
 
 
 class SinglepointDatasetEntry(SinglepointDatasetNewEntry):
-    molecule_id: int
     molecule: Molecule
     local_results: Optional[Dict[str, Any]] = None
 
@@ -57,7 +56,9 @@ class SinglepointDataset(BaseDataset):
     _record_item_type = SinglepointDatasetRecordItem
     _record_type = SinglepointRecord
 
-    def add_specification(self, name: str, specification: QCSpecification, description: Optional[str] = None):
+    def add_specification(
+        self, name: str, specification: QCSpecification, description: Optional[str] = None
+    ) -> InsertMetadata:
 
         payload = SinglepointDatasetSpecification(name=name, specification=specification, description=description)
 

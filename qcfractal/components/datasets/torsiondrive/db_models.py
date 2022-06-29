@@ -27,8 +27,6 @@ class TorsiondriveDatasetMoleculeORM(BaseORM):
     entry_name = Column(String, primary_key=True)
     molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), primary_key=True)
 
-    molecule = relationship(MoleculeORM)
-
     __table_args__ = (
         Index("ix_torsiondrive_dataset_molecule_dataset_id", "dataset_id"),
         Index("ix_torsiondrive_dataset_molecule_entry_name", "entry_name"),
@@ -43,7 +41,7 @@ class TorsiondriveDatasetMoleculeORM(BaseORM):
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id", "entry_name")
+        exclude = self.append_exclude(exclude, "dataset_id", "molecule_id", "entry_name")
         return BaseORM.model_dict(self, exclude)
 
 
@@ -59,14 +57,20 @@ class TorsiondriveDatasetEntryORM(BaseORM):
     additional_keywords = Column(JSONB, nullable=False)
     attributes = Column(JSONB, nullable=False)
 
+    # Mark as deferred. We generally don't want to load it
     initial_molecule_ids = column_property(
         select(array_agg(TorsiondriveDatasetMoleculeORM.molecule_id))
         .where(TorsiondriveDatasetMoleculeORM.dataset_id == dataset_id)
         .where(TorsiondriveDatasetMoleculeORM.entry_name == name)
-        .scalar_subquery()
+        .scalar_subquery(),
+        deferred=True,
     )
 
-    initial_molecules = relationship(TorsiondriveDatasetMoleculeORM)
+    initial_molecules = relationship(
+        MoleculeORM, secondary=TorsiondriveDatasetMoleculeORM.__tablename__, lazy="selectin", viewonly=True
+    )
+
+    initial_molecules_assoc = relationship(TorsiondriveDatasetMoleculeORM)
 
     __table_args__ = (
         Index("ix_torsiondrive_dataset_entry_dataset_id", "dataset_id"),
@@ -75,7 +79,8 @@ class TorsiondriveDatasetEntryORM(BaseORM):
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id")
+        exclude = self.append_exclude(exclude, "dataset_id", "initial_molecules_assoc")
+        assert "initial_molecule_ids" not in BaseORM.model_dict(self, exclude)
         return BaseORM.model_dict(self, exclude)
 
 

@@ -1,8 +1,9 @@
-from typing import Dict, Any, Union, Optional, List, Iterable, Tuple, Set
+from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
 
 from pydantic import BaseModel
 from typing_extensions import Literal
 
+from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 from qcportal.records.optimization import OptimizationSpecification
 from qcportal.records.torsiondrive import (
@@ -22,14 +23,8 @@ class TorsiondriveDatasetNewEntry(BaseModel):
     attributes: Dict[str, Any] = {}
 
 
-class TorsiondriveDatasetMolecule(BaseModel):
-    molecule_id: str
-    molecule: Optional[Molecule]
-
-
 class TorsiondriveDatasetEntry(TorsiondriveDatasetNewEntry):
-    initial_molecule_ids: List[int]
-    initial_molecules: Optional[List[TorsiondriveDatasetMolecule]] = None
+    initial_molecules: List[Molecule]
 
 
 # Torsiondrive dataset specifications are just optimization specifications
@@ -65,34 +60,40 @@ class TorsiondriveDataset(BaseDataset):
     _record_item_type = TorsiondriveDatasetRecordItem
     _record_type = TorsiondriveRecord
 
-    def add_specification(self, name: str, specification: OptimizationSpecification, description: Optional[str] = None):
+    def add_specification(
+        self, name: str, specification: OptimizationSpecification, description: Optional[str] = None
+    ) -> InsertMetadata:
 
         payload = TorsiondriveDatasetSpecification(name=name, specification=specification, description=description)
 
-        self.client._auto_request(
+        ret = self.client._auto_request(
             "post",
             f"v1/datasets/torsiondrive/{self.id}/specifications",
             List[TorsiondriveDatasetSpecification],
             None,
-            None,
+            InsertMetadata,
             [payload],
             None,
         )
 
         self._post_add_specification(name)
+        return ret
 
-    def add_entries(self, entries: Union[TorsiondriveDatasetNewEntry, Iterable[TorsiondriveDatasetNewEntry]]):
+    def add_entries(
+        self, entries: Union[TorsiondriveDatasetNewEntry, Iterable[TorsiondriveDatasetNewEntry]]
+    ) -> InsertMetadata:
 
         entries = make_list(entries)
-        self.client._auto_request(
+        ret = self.client._auto_request(
             "post",
             f"v1/datasets/torsiondrive/{self.id}/entries/bulkCreate",
             List[TorsiondriveDatasetNewEntry],
             None,
-            None,
+            InsertMetadata,
             entries,
             None,
         )
 
         new_names = [x.name for x in entries]
         self._post_add_entries(new_names)
+        return ret

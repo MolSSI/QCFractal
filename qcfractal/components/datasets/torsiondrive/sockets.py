@@ -62,7 +62,7 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
                 torsiondrive_keywords=entry.torsiondrive_keywords.dict(),
                 additional_keywords=entry.additional_keywords,
                 attributes=entry.attributes,
-                molecules=new_ent_mols,
+                initial_molecules_assoc=new_ent_mols,
             )
 
             all_entries.append(new_ent)

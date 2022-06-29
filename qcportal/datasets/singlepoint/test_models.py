@@ -2,20 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import qcportal.datasets.testing_helpers as ds_helpers
 from qcportal.datasets.singlepoint.models import SinglepointDatasetNewEntry
-from qcportal.datasets.testing_helpers import (
-    run_dataset_model_add_get_entry,
-    run_dataset_model_add_entry_duplicate,
-    run_dataset_model_delete_entry,
-    run_dataset_model_add_get_spec,
-    run_dataset_model_add_spec_duplicate,
-    run_dataset_model_delete_spec,
-    run_dataset_model_remove_record,
-    run_dataset_model_submit,
-    run_dataset_model_submit_missing,
-    run_dataset_model_iterate_updated,
-    run_dataset_model_modify_records,
-)
 from qcportal.molecules import Molecule
 from qcportal.records import PriorityEnum
 from qcportal.records.singlepoint.models import QCSpecification, SinglepointProtocols
@@ -55,62 +43,63 @@ def entry_extra_compare(ent1, ent2):
     assert ent1.molecule == ent2.molecule
 
 
-def record_entry_compare(rec, ent):
+def record_compare(rec, ent, spec):
     assert rec.molecule == ent.molecule
+    assert rec.specification == spec
 
 
 def test_singlepoint_dataset_model_add_get_entry(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("singlepoint", "Test dataset")
-    run_dataset_model_add_get_entry(snowflake_client, ds, test_entries, entry_extra_compare)
+    ds_helpers.run_dataset_model_add_get_entry(snowflake_client, ds, test_entries, entry_extra_compare)
 
 
 def test_singlepoint_dataset_model_add_entry_duplicate(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("singlepoint", "Test dataset")
-    run_dataset_model_add_entry_duplicate(snowflake_client, ds, test_entries, entry_extra_compare)
+    ds_helpers.run_dataset_model_add_entry_duplicate(snowflake_client, ds, test_entries, entry_extra_compare)
 
 
 def test_singlepoint_dataset_model_delete_entry(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("singlepoint", "Test dataset")
-    run_dataset_model_delete_entry(snowflake_client, ds, test_entries, test_specs)
+    ds_helpers.run_dataset_model_delete_entry(snowflake_client, ds, test_entries, test_specs)
 
 
 def test_singlepoint_dataset_model_add_get_spec(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("singlepoint", "Test dataset")
-    run_dataset_model_add_get_spec(snowflake_client, ds, test_specs)
+    ds_helpers.run_dataset_model_add_get_spec(snowflake_client, ds, test_specs)
 
 
 def test_singlepoint_dataset_model_add_spec_duplicate(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("singlepoint", "Test dataset")
-    run_dataset_model_add_spec_duplicate(snowflake_client, ds, test_specs)
+    ds_helpers.run_dataset_model_add_spec_duplicate(snowflake_client, ds, test_specs)
 
 
 def test_singlepoint_dataset_model_delete_spec(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("singlepoint", "Test dataset")
-    run_dataset_model_delete_spec(snowflake_client, ds, test_entries, test_specs)
+    ds_helpers.run_dataset_model_delete_spec(snowflake_client, ds, test_entries, test_specs)
 
 
 def test_singlepoint_dataset_model_remove_record(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("singlepoint", "Test dataset")
-    run_dataset_model_remove_record(snowflake_client, ds, test_entries, test_specs)
+    ds_helpers.run_dataset_model_remove_record(snowflake_client, ds, test_entries, test_specs)
 
 
 def test_singlepoint_dataset_model_submit(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset(
         "singlepoint", "Test dataset", default_tag="default_tag", default_priority=PriorityEnum.low
     )
-    run_dataset_model_submit(ds, test_entries, test_specs[0], record_entry_compare)
+    ds_helpers.run_dataset_model_submit(ds, test_entries, test_specs[0], record_compare)
 
 
 def test_singlepoint_dataset_model_submit_missing(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("singlepoint", "Test dataset")
-    run_dataset_model_submit_missing(ds)
+    ds_helpers.run_dataset_model_submit_missing(ds)
 
 
 def test_singlepoint_dataset_model_iterate_updated(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("singlepoint", "Test dataset")
-    run_dataset_model_iterate_updated(ds, test_entries, test_specs[0])
+    ds_helpers.run_dataset_model_iterate_updated(ds, test_entries, test_specs[0])
 
 
 def test_singlepoint_dataset_model_modify_records(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset("singlepoint", "Test dataset")
-    run_dataset_model_modify_records(ds, test_entries, test_specs[0])
+    ds_helpers.run_dataset_model_modify_records(ds, test_entries, test_specs[0])

@@ -101,7 +101,7 @@ def test_dataset_client_query_dataset_records(
 
     # Query records belonging to a dataset
     rec_id_2 = ds.get_record("test_molecule_2", "spec_1").id
-    mol_id_2 = ds.get_entry("test_molecule_2", include=["molecule"]).molecule.id
+    mol_id_2 = ds.get_entry("test_molecule_2").molecule.id
 
     query_res = snowflake_client.query_singlepoints(dataset_id=ds.id)
     assert query_res.current_meta.n_found == 2

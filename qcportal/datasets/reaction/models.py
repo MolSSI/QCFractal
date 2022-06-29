@@ -1,8 +1,9 @@
-from typing import Dict, Any, Union, Optional, List, Iterable, Tuple, Set
+from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
 
 from pydantic import BaseModel
 from typing_extensions import Literal
 
+from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 from qcportal.records.reaction import ReactionRecord, ReactionSpecification
 from qcportal.utils import make_list
@@ -18,10 +19,8 @@ class ReactionDatasetNewEntry(BaseModel):
 
 
 class ReactionDatasetEntryStoichiometry(BaseModel):
-    molecule_id: int
     coefficient: float
-
-    molecule: Optional[Molecule] = None
+    molecule: Molecule
 
 
 class ReactionDatasetEntry(BaseModel):
@@ -65,34 +64,38 @@ class ReactionDataset(BaseDataset):
     _record_item_type = ReactionDatasetRecordItem
     _record_type = ReactionRecord
 
-    def add_specification(self, name: str, specification: ReactionSpecification, description: Optional[str] = None):
+    def add_specification(
+        self, name: str, specification: ReactionSpecification, description: Optional[str] = None
+    ) -> InsertMetadata:
 
         payload = ReactionDatasetSpecification(name=name, specification=specification, description=description)
 
-        self.client._auto_request(
+        ret = self.client._auto_request(
             "post",
             f"v1/datasets/reaction/{self.id}/specifications",
             List[ReactionDatasetSpecification],
             None,
-            None,
+            InsertMetadata,
             [payload],
             None,
         )
 
         self._post_add_specification(name)
+        return ret
 
-    def add_entries(self, entries: Union[ReactionDatasetEntry, Iterable[ReactionDatasetNewEntry]]):
+    def add_entries(self, entries: Union[ReactionDatasetEntry, Iterable[ReactionDatasetNewEntry]]) -> InsertMetadata:
 
         entries = make_list(entries)
-        self.client._auto_request(
+        ret = self.client._auto_request(
             "post",
             f"v1/datasets/reaction/{self.id}/entries/bulkCreate",
             List[ReactionDatasetNewEntry],
             None,
-            None,
+            InsertMetadata,
             make_list(entries),
             None,
         )
 
         new_names = [x.name for x in entries]
         self._post_add_entries(new_names)
+        return ret

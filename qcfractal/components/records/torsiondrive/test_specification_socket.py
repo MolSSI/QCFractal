@@ -332,3 +332,81 @@ def test_torsiondrive_socket_add_specification_diff_3(storage_socket: SQLAlchemy
     assert meta.inserted_idx == [0]
     assert meta.existing_idx == []
     assert id != id2
+
+
+def test_torsiondrive_socket_add_specification_diff_4(storage_socket: SQLAlchemySocket):
+    #  grid spacing
+    spec1 = TorsiondriveSpecification(
+        program="torsiondrive",
+        keywords=TorsiondriveKeywords(
+            dihedrals=[(8, 11, 15, 13)],
+            grid_spacing=[15],
+            dihedral_ranges=None,
+            energy_decrease_thresh=None,
+            energy_upper_limit=0.05,
+        ),
+        optimization_specification=common_opt_spec,
+    )
+
+    spec2 = TorsiondriveSpecification(
+        program="torsiondrive",
+        keywords=TorsiondriveKeywords(
+            dihedrals=[(8, 11, 15, 13)],
+            grid_spacing=[15],
+            dihedral_ranges=None,
+            energy_decrease_thresh=0.1,
+            energy_upper_limit=0.05,
+        ),
+        optimization_specification=common_opt_spec,
+    )
+
+    meta, id = storage_socket.records.torsiondrive.add_specification(spec1)
+    assert meta.success
+    assert meta.inserted_idx == [0]
+    assert meta.existing_idx == []
+    assert id is not None
+
+    meta, id2 = storage_socket.records.torsiondrive.add_specification(spec2)
+    assert meta.success
+    assert meta.inserted_idx == [0]
+    assert meta.existing_idx == []
+    assert id != id2
+
+
+def test_torsiondrive_socket_add_specification_diff_5(storage_socket: SQLAlchemySocket):
+    #  grid spacing
+    spec1 = TorsiondriveSpecification(
+        program="torsiondrive",
+        keywords=TorsiondriveKeywords(
+            dihedrals=[(8, 11, 15, 13)],
+            grid_spacing=[15],
+            dihedral_ranges=None,
+            energy_decrease_thresh=0.2,
+            energy_upper_limit=0.05,
+        ),
+        optimization_specification=common_opt_spec,
+    )
+
+    spec2 = TorsiondriveSpecification(
+        program="torsiondrive",
+        keywords=TorsiondriveKeywords(
+            dihedrals=[(8, 11, 15, 13)],
+            grid_spacing=[15],
+            dihedral_ranges=None,
+            energy_decrease_thresh=0.1,
+            energy_upper_limit=0.05,
+        ),
+        optimization_specification=common_opt_spec,
+    )
+
+    meta, id = storage_socket.records.torsiondrive.add_specification(spec1)
+    assert meta.success
+    assert meta.inserted_idx == [0]
+    assert meta.existing_idx == []
+    assert id is not None
+
+    meta, id2 = storage_socket.records.torsiondrive.add_specification(spec2)
+    assert meta.success
+    assert meta.inserted_idx == [0]
+    assert meta.existing_idx == []
+    assert id != id2
