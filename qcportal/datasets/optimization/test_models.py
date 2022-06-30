@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import qcportal.datasets.testing_helpers as ds_helpers
-from qcportal.datasets.optimization.models import OptimizationDatasetNewEntry
+from qcportal.datasets.optimization import OptimizationDatasetNewEntry
 from qcportal.molecules import Molecule
 from qcportal.records import PriorityEnum
 from qcportal.records.optimization.models import OptimizationSpecification, OptimizationProtocols

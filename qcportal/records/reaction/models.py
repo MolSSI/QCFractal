@@ -14,10 +14,14 @@ from ...molecules import Molecule
 
 
 class ReactionKeywords(BaseModel):
+    # NOTE: If we add keywords, update the dataset additional_keywords tests and add extra = Extra.forbid.
+    # The current setup is needed for those tests (to allow for testing additional_keywords)
+    # is needed
     class Config:
-        extra = Extra.forbid
+        pass
+        # extra = Extra.forbid
 
-    max_running: Optional[int] = None
+    pass
 
 
 class ReactionSpecification(BaseModel):
@@ -63,7 +67,7 @@ class ReactionComponent_(BaseModel):
     singlepoint_id: Optional[int]
     optimization_id: Optional[int]
 
-    molecule: Optional[Molecule]
+    molecule: Molecule
     singlepoint_record: Optional[SinglepointRecord._DataModel]
     optimization_record: Optional[OptimizationRecord._DataModel]
 
@@ -126,7 +130,7 @@ class ReactionRecord(BaseRecord):
 
     def _fetch_components(self):
         self._assert_online()
-        url_params = {"include": ["*", "singlepoint_record", "optimization_record"]}
+        url_params = {"include": ["*", "singlepoint_record", "optimization_record", "molecule"]}
 
         self.raw_data.components = self.client._auto_request(
             "get",

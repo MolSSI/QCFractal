@@ -22,7 +22,7 @@ class ManybodyKeywords(BaseModel):
     class Config:
         extra = Extra.forbid
 
-    max_nbody: Optional[int]
+    max_nbody: Optional[int] = None
     bsse_correction: BSSECorrectionEnum
 
     @validator("max_nbody")

@@ -272,13 +272,21 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare):
     rec = ds.get_record(test_entries[2].name, "spec_1")
 
     expected_spec = test_spec.copy(deep=True)
-    expected_spec.keywords.update(test_entries[2].additional_keywords)
+
+    if isinstance(expected_spec.keywords, dict):
+        expected_spec.keywords.update(test_entries[2].additional_keywords)
+    else:
+        new_kw = expected_spec.keywords.dict()
+        new_kw.update(test_entries[2].additional_keywords)
+        expected_spec.keywords = new_kw
+
     record_compare(rec, test_entries[2], expected_spec)
 
     # Additional submission stuff
     ds.add_entries(test_entries[1])
     ds.submit(tag="new_tag", priority=PriorityEnum.high)
     rec = ds.get_record(test_entries[1].name, "spec_1")
+
     if rec.is_service:
         assert rec.service.tag == "new_tag"
         assert rec.service.priority == PriorityEnum.high

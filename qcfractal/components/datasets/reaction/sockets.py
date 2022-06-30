@@ -51,13 +51,13 @@ class ReactionDatasetSocket(BaseDatasetSocket):
         all_entries = []
         for entry in new_entries:
             # stoichiometries = list of tuples
-            molecules = [x[1] for x in entry.stoichiometry]
+            molecules = [x[1] for x in entry.stoichiometries]
 
             meta, mol_ids = self.root_socket.molecules.add_mixed(molecules, session=session)
 
             new_stoich_orm = []
 
-            for coeff, mid in zip(entry.stoichiometry, mol_ids):
+            for coeff, mid in zip(entry.stoichiometries, mol_ids):
                 new_stoich_orm.append(
                     ReactionDatasetStoichiometryORM(
                         coefficient=coeff[0],
@@ -69,7 +69,7 @@ class ReactionDatasetSocket(BaseDatasetSocket):
                 dataset_id=dataset_id,
                 name=entry.name,
                 comment=entry.comment,
-                stoichiometry=new_stoich_orm,
+                stoichiometries=new_stoich_orm,
                 additional_keywords=entry.additional_keywords,
                 attributes=entry.attributes,
             )
@@ -95,7 +95,7 @@ class ReactionDatasetSocket(BaseDatasetSocket):
         # Normal entries - just let it rip
         for spec in spec_orm:
             new_normal_entries = [x for x in normal_entries if (x.name, spec.name) not in existing_records]
-            stoichiometries = [[(x.coefficient, x.molecule_id) for x in y.stoichiometry] for y in normal_entries]
+            stoichiometries = [[(x.coefficient, x.molecule_id) for x in y.stoichiometries] for y in new_normal_entries]
 
             meta, rxn_ids = self.root_socket.records.reaction.add_internal(
                 stoichiometries=stoichiometries,
@@ -123,8 +123,9 @@ class ReactionDatasetSocket(BaseDatasetSocket):
 
                 new_spec = copy.deepcopy(spec_input_dict)
                 new_spec["keywords"].update(entry.additional_keywords)
+                print("NEW SPEC", new_spec)
 
-                stoichiometry = [(x.coefficient, x.molecule_id) for x in entry.stoichiometry]
+                stoichiometry = [(x.coefficient, x.molecule_id) for x in entry.stoichiometries]
 
                 meta, rxn_ids = self.root_socket.records.reaction.add(
                     stoichiometries=[stoichiometry],

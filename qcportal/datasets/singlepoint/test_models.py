@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import qcportal.datasets.testing_helpers as ds_helpers
-from qcportal.datasets.singlepoint.models import SinglepointDatasetNewEntry
+from qcportal.datasets.singlepoint import SinglepointDatasetNewEntry
 from qcportal.molecules import Molecule
 from qcportal.records import PriorityEnum
 from qcportal.records.singlepoint.models import QCSpecification, SinglepointProtocols

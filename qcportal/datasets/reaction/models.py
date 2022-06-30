@@ -13,7 +13,7 @@ from ..models import BaseDataset
 class ReactionDatasetNewEntry(BaseModel):
     name: str
     comment: Optional[str] = None
-    stoichiometry: List[Tuple[float, Union[int, Molecule]]]
+    stoichiometries: List[Tuple[float, Union[int, Molecule]]]
     additional_keywords: Dict[str, Any] = {}
     attributes: Dict[str, Any] = {}
 
@@ -26,7 +26,7 @@ class ReactionDatasetEntryStoichiometry(BaseModel):
 class ReactionDatasetEntry(BaseModel):
     name: str
     comment: Optional[str] = None
-    stoichiometry: List[ReactionDatasetEntryStoichiometry]
+    stoichiometries: List[ReactionDatasetEntryStoichiometry]
     additional_keywords: Optional[Dict[str, Any]] = {}
     attributes: Optional[Dict[str, Any]] = {}
 

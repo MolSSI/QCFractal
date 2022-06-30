@@ -8,7 +8,7 @@ from qcportal.records.singlepoint import SinglepointProtocols, QCSpecification
 def test_reaction_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
     spec1 = ReactionSpecification(
         program="reaction",
-        keywords=ReactionKeywords(max_running=5),
+        keywords=ReactionKeywords(),
         singlepoint_specification=QCSpecification(
             program="prog1",
             driver="energy",
@@ -116,7 +116,7 @@ def test_reaction_socket_add_specification_same_2(storage_socket: SQLAlchemySock
 
     spec1 = ReactionSpecification(
         program="reaction",
-        keywords=ReactionKeywords(max_running=None),
+        keywords=ReactionKeywords(),
         singlepoint_specification=QCSpecification(
             program="prog1",
             driver="energy",
@@ -333,71 +333,6 @@ def test_reaction_socket_add_specification_diff_2(storage_socket: SQLAlchemySock
                 program="prog1",
                 driver="energy",
                 method="hf",
-                basis="sto-3g",
-                keywords={"k": "value"},
-                protocols=SinglepointProtocols(),
-            ),
-            keywords={},
-        ),
-    )
-
-    meta, id = storage_socket.records.reaction.add_specification(spec1)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-    assert id is not None
-
-    meta, id2 = storage_socket.records.reaction.add_specification(spec2)
-    assert meta.success
-    assert meta.inserted_idx == [0]
-    assert meta.existing_idx == []
-
-
-def test_reaction_socket_add_specification_diff_3(storage_socket: SQLAlchemySocket):
-    # Different reaction keywords
-
-    spec1 = ReactionSpecification(
-        program="reaction",
-        keywords=ReactionKeywords(max_running=10),
-        singlepoint_specification=QCSpecification(
-            program="prog1",
-            driver="energy",
-            method="b3lyp",
-            basis="6-31G*",
-            keywords={"k": "value"},
-            protocols=SinglepointProtocols(wavefunction="all"),
-        ),
-        optimization_specification=OptimizationSpecification(
-            program="geometric",
-            qc_specification=QCSpecification(
-                program="prog1",
-                driver="energy",
-                method="b3lyp",
-                basis="sto-3g",
-                keywords={"k": "value"},
-                protocols=SinglepointProtocols(),
-            ),
-            keywords={},
-        ),
-    )
-
-    spec2 = ReactionSpecification(
-        program="reaction",
-        keywords=ReactionKeywords(),
-        singlepoint_specification=QCSpecification(
-            program="prog1",
-            driver="energy",
-            method="b3lyp",
-            basis="6-31G*",
-            keywords={"k": "value"},
-            protocols=SinglepointProtocols(wavefunction="all"),
-        ),
-        optimization_specification=OptimizationSpecification(
-            program="geometric",
-            qc_specification=QCSpecification(
-                program="prog1",
-                driver="energy",
-                method="b3lyp",
                 basis="sto-3g",
                 keywords={"k": "value"},
                 protocols=SinglepointProtocols(),
