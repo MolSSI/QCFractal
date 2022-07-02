@@ -238,6 +238,8 @@ class PostgresHarness:
         """
 
         # if own = True, we are responsible for starting the db instance
+        # But don't start it if it is already alive. It may have been started
+        # elsewhere.
         if not self.is_alive(False):
             if self.config.own:
                 self.start()

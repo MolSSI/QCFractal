@@ -82,8 +82,9 @@ class DatabaseConfig(ConfigBase):
         description="If True, QCFractal will control the database instance. If False, you must start and manage the database yourself",
     )
 
-    data_directory: str = Field(
-        None, description="Location to place the database if own == True. Default is [base_folder]/database"
+    data_directory: Optional[str] = Field(
+        None,
+        description="Location to place the database if own == True. Default is [base_folder]/database if we own the databse",
     )
     logfile: str = Field(
         None,
@@ -106,12 +107,15 @@ class DatabaseConfig(ConfigBase):
 
     @validator("data_directory")
     def _check_data_directory(cls, v, values):
-        if v is None:
+        if v is None and values["own"] is False:
+            return None
+        elif v is None and values["own"] is True:
             ret = os.path.join(values["base_folder"], "postgres")
         else:
             ret = v
 
         ret = os.path.expanduser(ret)
+
         return ret
 
     @validator("logfile")
@@ -210,7 +214,7 @@ class WebAPIConfig(ConfigBase):
     keepalive: int = Field(5, description="Time (in seconds) to wait for requests from a Keep-Alive connection")
 
     class Config(ConfigCommon):
-        env_prefix = "QCF_FLASK_"
+        env_prefix = "QCF_API_"
 
 
 class FractalConfig(ConfigBase):
@@ -355,8 +359,6 @@ def convert_old_configuration(old_config):
 def read_configuration(file_paths: list[str], extra_config: Optional[Dict[str, Any]] = None) -> FractalConfig:
     """
     Reads QCFractal configuration from YAML files
-
-    This
     """
     logger = logging.getLogger(__name__)
     config_data: Dict[str, Any] = {}
@@ -380,7 +382,8 @@ def read_configuration(file_paths: list[str], extra_config: Optional[Dict[str, A
     # convert relative paths to full, absolute paths
     base_dir = os.path.abspath(base_dir)
 
-    config_data["base_folder"] = base_dir
+    if config_data.get("base_folder") is None:
+        config_data["base_folder"] = base_dir
 
     # Handle an old configuration
     if "fractal" in config_data:

@@ -14,7 +14,7 @@ import sys
 import textwrap
 import time
 import traceback
-from typing import Tuple
+from typing import TYPE_CHECKING
 
 import tabulate
 import yaml
@@ -27,6 +27,10 @@ from .db_socket.socket import SQLAlchemySocket
 from .periodics import PeriodicsProcess
 from .postgres_harness import PostgresHarness
 from .process_runner import ProcessRunner
+
+if TYPE_CHECKING:
+    from typing import Tuple
+    from logging import Logger
 
 
 class EndProcess(RuntimeError):
@@ -114,10 +118,6 @@ def parse_args() -> argparse.Namespace:
     """
 
     # Common help strings
-    base_folder_help = (
-        "The base directory to use as the default for some options (logs, views, etc). Default is the "
-        "location of the config file. "
-    )
     config_file_help = "Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
     verbose_help = "Output more details about the startup of qcfractal-server commands"
 
@@ -126,18 +126,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--version", action="version", version=f"{qcfractal.__version__}")
     parser.add_argument("--verbose", action="store_true", help=verbose_help)
 
-    config_location = parser.add_mutually_exclusive_group()
-    config_location.add_argument("--base-folder", help=base_folder_help)
-    config_location.add_argument("--config", help=config_file_help)
+    parser.add_argument("--config", help=config_file_help)
 
     # Common arguments. These are added to the subcommands
     # They are similar to the global options above, but with SUPPRESS as the default
     base_parser = argparse.ArgumentParser(add_help=False)
     base_parser.add_argument("--verbose", action="store_true", default=argparse.SUPPRESS, help=verbose_help)
-
-    config_location = base_parser.add_mutually_exclusive_group()
-    config_location.add_argument("--base-folder", default=argparse.SUPPRESS, help=base_folder_help)
-    config_location.add_argument("--config", default=argparse.SUPPRESS, help=config_file_help)
+    base_parser.add_argument("--config", default=argparse.SUPPRESS, help=config_file_help)
 
     # Now start the real subcommands
     subparsers = parser.add_subparsers(dest="command")
@@ -161,7 +156,7 @@ def parse_args() -> argparse.Namespace:
     fractal_args.add_argument("--port", **WebAPIConfig.help_info("port"))
     fractal_args.add_argument("--host", **WebAPIConfig.help_info("host"))
     fractal_args.add_argument("--num-workers", **WebAPIConfig.help_info("num_workers"))
-    fractal_args.add_argument("--logfile", **FractalConfig.help_info("loglevel"))
+    fractal_args.add_argument("--logfile", **FractalConfig.help_info("logfile"))
     fractal_args.add_argument("--loglevel", **FractalConfig.help_info("loglevel"))
     fractal_args.add_argument("--enable-security", **FractalConfig.help_info("enable_security"))
 
@@ -170,6 +165,28 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="[ADVANCED] Disable periodic tasks (service updates and manager cleanup)",
     )
+
+    #####################################
+    # start-periodics subcommand
+    #####################################
+    start_per = subparsers.add_parser(
+        "start-periodics", help="Starts a QCFractal server instance.", parents=[base_parser]
+    )
+
+    # Allow some config settings to be altered via the command line
+    periodics_args = start_per.add_argument_group("Server Settings")
+    periodics_args.add_argument("--logfile", **FractalConfig.help_info("logfile"))
+    periodics_args.add_argument("--loglevel", **FractalConfig.help_info("loglevel"))
+
+    #####################################
+    # start-api subcommand
+    #####################################
+    start_api = subparsers.add_parser("start-api", help="Starts a QCFractal server instance.", parents=[base_parser])
+
+    # Allow some config settings to be altered via the command line
+    api_args = start_api.add_argument_group("Server Settings")
+    api_args.add_argument("--logfile", **FractalConfig.help_info("logfile"))
+    api_args.add_argument("--loglevel", **FractalConfig.help_info("loglevel"))
 
     #####################################
     # upgrade-db subcommand
@@ -323,10 +340,8 @@ def server_info(category: str, qcf_config: FractalConfig) -> None:
         print(" ".join(alembic_commands))
 
 
-def server_start(config):
-    logger = logging.getLogger(__name__)
-    logger.info("*** Starting a QCFractal server ***")
-    logger.info(f"QCFractal server base directory: {config.base_folder}")
+def setup_logging(config, logger: Logger):
+    logger.info(f"QCFractal server base folder: {config.base_folder}")
 
     # Initialize the global logging infrastructure
     stdout_logging = True
@@ -347,11 +362,20 @@ def server_start(config):
     logging.getLogger().handlers = [log_handler]
     logging.getLogger().setLevel(config.loglevel)
 
+    return stdout_logging
+
+
+def server_start(config):
+    logger = logging.getLogger(__name__)
+    logger.info("*** Starting a QCFractal server ***")
+
+    stdout_logging = setup_logging(config, logger)
+
     # Logger for the rest of this function
     logger = logging.getLogger(__name__)
 
     # Ensure that the database is alive, optionally starting it
-    pg_harness, _ = start_database(config)
+    start_database(config)
 
     # Start up the gunicorn and periodics
     gunicorn = GunicornProcess(config)
@@ -404,6 +428,46 @@ def server_start(config):
     periodics_proc.stop()
 
     sys.exit(exitcode)
+
+
+def server_start_periodics(config):
+    from qcfractal.periodics import FractalPeriodics
+
+    logger = logging.getLogger(__name__)
+    logger.info("*** Starting a QCFractal server periodics ***")
+
+    setup_logging(config, logger)
+
+    # Logger for the rest of this function
+    # logger = logging.getLogger(__name__)
+
+    # Ensure that the database is alive. This also handles checking stuff,
+    # even if we don't own the db (which we shouldn't)
+    start_database(config)
+
+    # Now just run the periodics directly
+    periodics = FractalPeriodics(config)
+    periodics.start()
+
+
+def server_start_api(config):
+    from qcfractal.app.gunicorn_app import FractalGunicornApp
+
+    logger = logging.getLogger(__name__)
+    logger.info("*** Starting a QCFractal API server periodics ***")
+
+    setup_logging(config, logger)
+
+    # Logger for the rest of this function
+    # logger = logging.getLogger(__name__)
+
+    # Ensure that the database is alive. This also handles checking stuff,
+    # even if we don't own the db (which we shouldn't)
+    start_database(config)
+
+    # Now just run the gunicorn process
+    api = FractalGunicornApp(config)
+    api.run()
 
 
 def server_upgrade_db(config):
@@ -775,15 +839,21 @@ def main():
         if args.enable_security is not None:
             cmd_config["enable_security"] = args.enable_security
 
-    # If base_folder is specified, replace with config=base_folder/qcfractal_config.yaml
-    if args.base_folder is not None:
-        # Mutual exclusion is handled by argparse
-        assert args.config is None
-        config_path = os.path.join(args.base_folder, "qcfractal_config.yaml")
+    if args.command in ["start-periodics", "start-api"]:
+        if args.logfile is not None:
+            cmd_config["logfile"] = args.logfile
+        if args.loglevel is not None:
+            cmd_config["loglevel"] = args.loglevel
 
-    elif args.config is not None:
+    # Check for the config path on the command line. The command line
+    # always overrides environment variables
+    if args.config is not None:
         config_path = args.config
     else:
+        config_path = os.getenv("QCF_CONFIG_PATH")
+
+    # Not specified on command line or environment variable. Use default
+    if config_path is None:
         config_path = os.path.expanduser(os.path.join("~", ".qca", "qcfractal", "qcfractal_config.yaml"))
         logger.info(f"Using default configuration path {config_path}")
 
@@ -805,6 +875,10 @@ def main():
         server_init(qcf_config)
     elif args.command == "start":
         server_start(qcf_config)
+    elif args.command == "start-periodics":
+        server_start_periodics(qcf_config)
+    elif args.command == "start-api":
+        server_start_api(qcf_config)
     elif args.command == "upgrade-db":
         server_upgrade_db(qcf_config)
     elif args.command == "user":
