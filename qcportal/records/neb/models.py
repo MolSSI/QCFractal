@@ -24,8 +24,8 @@ class NEBKeywords(BaseModel):
     )
  
     spring_constant: float = Field(
-        0.1,
-        description="Spring constant in eV/Ang^2.",
+        1.0,
+        description="Spring constant in kcal/mol/Ang^2.",
     )
 
     energy_weighted: bool = Field(
@@ -36,6 +36,17 @@ class NEBKeywords(BaseModel):
     optimize_ts: bool = Field(
         False,
         description="Setting it equal to true will perform a transition sate optimization starting with the guessed transition state structure from the NEB calculation result."
+    )
+
+    coordinate_system: str = Field(
+        'tric',
+        description='Coordinate system for optimizations:\n'
+                          '"tric" for Translation-Rotation Internal Coordinates (default)\n'
+                          '"cart" = Cartesian coordinate system\n'
+                          '"prim" = Primitive (a.k.a redundant internal coordinates)\n '
+                          '"dlc" = Delocalized Internal Coordinates,\n'
+                          '"hdlc" = Hybrid Delocalized Internal Coordinates\n'
+                          '"tric-p" for primitive Translation-Rotation Internal Coordinates (no delocalization)\n '
     )
 
     @root_validator
@@ -242,7 +253,7 @@ class NEBRecord(BaseRecord):
         return r
 
     @property
-    def ts_optimization(self) -> OptimizationRecord:
+    def ts_optimization(self) -> Optional[dict[str, OptimizationRecord]]:
         self._make_caches()
 
         if self.raw_data.optimizations_cache is None:

@@ -144,10 +144,10 @@ class ServiceSocket:
                     service_orm.record.modified_on = datetime.utcnow()
                 except Exception as err:
                     session.rollback()
-
+                    import traceback
                     error = {
                         "error_type": "service_iteration_error",
-                        "error_message": "Error iterating service: " + str(err),
+                        "error_message": "Error iterating service: " + str(err) + '\n' + traceback.format_exc()
                     }
 
                     self.root_socket.records.update_failed_service(session, service_orm.record, error)

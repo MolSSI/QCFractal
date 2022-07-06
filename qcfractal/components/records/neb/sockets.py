@@ -63,15 +63,15 @@ class NEBServiceState(BaseModel):
     # These are stored as JSON (ie, dict encoded into a string)
     # This makes for faster loads and makes them somewhat tamper-proof
 
-    prev = {}
+    nebinfo: dict
+    keywords: dict
     optimized: bool
     tsoptimize: bool
     converged: bool
     iteration: int
-    elems: list
     molecule_template: str
 
-    
+
 
 
 class NEBRecordSocket(BaseRecordSocket):
@@ -102,9 +102,6 @@ class NEBRecordSocket(BaseRecordSocket):
         output = "\n\nCreated NEB calculation\n"
         spec: NEBSpecification = neb_orm.specification.to_model(NEBSpecification)
         keywords = spec.keywords.dict()
-        opt_ts = False
-        if keywords['optimize_ts']:
-            opt_ts = True
         table_rows = sorted(keywords.items())
         output += tabulate.tabulate(table_rows, headers=["keywords", "value"])
         output += "\n\n"
@@ -113,15 +110,14 @@ class NEBRecordSocket(BaseRecordSocket):
         output += "\n\n"
 
         initial_chain: List[Dict[str, Any]] = [x.model_dict() for x in neb_orm.initial_chain]
-        output += f"{keywords['images']} images will be used to guess a transition state structure.\n"
+        output += f"{keywords.get('images', 11)} images will be used to guess a transition state structure.\n"
         output += f"Molecular formula = {Molecule(**initial_chain[0]).get_molecular_formula()}\n"
         molecule_template = Molecule(**initial_chain[0]).dict(encoding="json")
 
         molecule_template.pop("geometry", None)
         molecule_template.pop("identifiers", None)
         molecule_template.pop("id", None)
-
-        elems = molecule_template["symbols"]
+        #elems = molecule_template.get("symbols")
 
         stdout_orm = neb_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
         stdout_orm.append(output)
@@ -129,13 +125,16 @@ class NEBRecordSocket(BaseRecordSocket):
         molecule_template_str = json.dumps(molecule_template)
 
         service_state = NEBServiceState(
-            iteration = 0,
-            elems = elems,
-            optimized = False,
-            tsoptimize = opt_ts,
+            nebinfo={'elems': molecule_template.get("symbols"),
+                  'charge': molecule_template.get("molecular_charge", 0),
+                  'mult': molecule_template.get("molecular_multiplicity", 1)
+                  },
+            iteration=0,
+            keywords=keywords,
+            optimized=False,
+            tsoptimize=keywords.get('optimize_ts'),
             converged=False,
             molecule_template=molecule_template_str,
-            old_chain=[],
         )
 
         service_orm.service_state = service_state.dict()
@@ -160,8 +159,8 @@ class NEBRecordSocket(BaseRecordSocket):
         service_state = NEBServiceState(**service_orm.service_state)
         molecule_template = json.loads(service_state.molecule_template)
 
-        params['iteration'] = service_state.iteration
 
+        params['iteration'] = service_state.iteration
         output = ''
         if service_state.iteration==0:
             initial_chain: List[Dict[str, Any]] = [x.model_dict() for x in neb_orm.initial_chain]
@@ -191,18 +190,23 @@ class NEBRecordSocket(BaseRecordSocket):
                     geometries.append(mol_data[0]["geometry"])
                     energies.append(sp_record.properties["return_energy"])
                     gradients.append(sp_record.properties["return_gradient"])
-
+                service_state.nebinfo['geometry']=geometries
+                service_state.nebinfo['energies']=energies
+                service_state.nebinfo['gradients']=gradients
+                service_state.nebinfo['params']=params
                 neb_stdout = io.StringIO()
                 logging.captureWarnings(True)
                 with contextlib.redirect_stdout(neb_stdout):
-                    newcoords, prev = geometric.neb.nextchain(service_state.elems, geometries, gradients, energies, params, service_state.prev)
+                    if service_state.iteration == 1:
+                        newcoords, prev = geometric.neb.prepare(service_state.nebinfo)
+                    else:
+                        newcoords, prev = geometric.neb.nextchain(service_state.nebinfo)
                 output += "\n" + neb_stdout.getvalue()
                 logging.captureWarnings(False)
-                service_state.prev = prev
+                service_state.nebinfo = prev
                 service_state.iteration += 1
             else:
                 newcoords = None
-
             if newcoords is not None:
                 next_chain = [Molecule(**molecule_template, geometry=geometry) for geometry in newcoords]
                 self.submit_singlepoints(session, service_state, service_orm, next_chain)
@@ -259,13 +263,15 @@ class NEBRecordSocket(BaseRecordSocket):
             opt_spec = OptimizationSpecification(
                 program="geometric",
                 qc_specification=QCSpecification(**qc_spec),
-                keywords={'transition':True},
+                keywords={'transition':True,
+                          'coordsys': service_state.keywords['coordinate_system']},
             )
             ts = True
         else:
             opt_spec = OptimizationSpecification(
                 program="geometric",
                 qc_specification=QCSpecification(**qc_spec),
+                keywords={'coordsys': service_state.keywords['coordinate_system']}
             )
 
             ts = False
