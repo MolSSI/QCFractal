@@ -117,6 +117,7 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install -e ./qcportal
+          pip install pytest
 
       - name: Conda info for the QCPortal client
         shell: bash -l {0}
