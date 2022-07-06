@@ -1,0 +1,26 @@
+name: qcarchive
+channels:
+  - defaults
+  - conda-forge
+
+dependencies:
+  - pip
+
+  # QCFractal dependencies
+  # NOTES:
+  #     msgpack-python in conda is msgpack in pypi (due to a rename around v0.5)
+  - numpy
+  - msgpack-python
+  - requests
+  - pyyaml
+  - pydantic
+
+  - qcelemental
+  - tabulate
+
+  - tqdm
+  - pandas
+
+  # Only need for python 3.7, but no harm in always including it
+  - typing-extensions
+

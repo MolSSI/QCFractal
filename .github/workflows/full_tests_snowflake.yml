@@ -35,7 +35,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: qcarchive-all
-          environment-file: qcfractaltesting/conda-envs/fulltest_snowflake.yaml
+          environment-file: conda-envs/snowflake_example.yaml
           auto-activate-base: false
 
       - name: Conda info

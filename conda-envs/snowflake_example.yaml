@@ -1,12 +1,13 @@
 name: qcarchive
 channels:
-  - conda-forge
   - defaults
+  - psi4/label/dev
+  - conda-forge
 
 dependencies:
   - pip
 
-  # Core dependencies
+  # QCFractal dependencies
   # NOTES:
   #     msgpack-python in conda is msgpack in pypi (due to a rename around v0.5)
   #     flask-jwt-extended in conda is flask_jwt_extended in pypi
@@ -17,35 +18,27 @@ dependencies:
   - gunicorn
   - requests
   - pyyaml
-  - pydantic>=1.8
-  - pyarrow
+  - pydantic
   - bcrypt
-  - cryptography
+
+  - qcelemental
+  - qcengine
+  - torsiondrive
+  - tabulate
 
   # Storage dependencies
   - sqlalchemy >=1.4
-  - conda-forge::alembic
+  - alembic
   - psycopg2
 
   # QCPortal dependencies
   - tqdm
-  - plotly
   - pandas
-  - h5py
 
-  # QCArchive depends
-  - qcengine >=0.20
-  - qcelemental >=0.23
+  # Only need for python 3.7, but no harm in always including it
+  - typing-extensions
 
-  # Test depends
-  - pytest
-  - pytest-cov
-  - codecov
-  - mypy
-
-#   Environment specific includes
+  # Specific codes below
+  - geometric
+  - psi4
   - rdkit
-
-  # Not available on conda
-  - pip:
-    - fireworks

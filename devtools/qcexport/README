@@ -1,9 +1,0 @@
-WARNING
-THIS CODE IS VERY EXPERIMENTAL
-
-This code allows for exporting pieces of a larger database into another
-(empty) database. For now, its only use is to create small subsets of the
-production database to help with development and testing.
-
-Some of this code could eventually be migrated into qcfractal proper, and
-form the basis for the export side of importing/exporting data between servers.

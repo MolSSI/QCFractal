@@ -1,7 +1,6 @@
 name: qcarchive
 channels:
   - defaults
-  - psi4/label/dev
   - conda-forge
 
 dependencies:
@@ -20,27 +19,20 @@ dependencies:
   - pyyaml
   - pydantic
   - bcrypt
-  - cryptography
+
+  - qcelemental
+  - qcengine
+  - torsiondrive
+  - tabulate
 
   # Storage dependencies
   - sqlalchemy >=1.4
-  - conda-forge::alembic
+  - alembic
   - psycopg2
 
   # QCPortal dependencies
   - tqdm
-  - plotly
   - pandas
-  - tabulate
+
+  # Only need for python 3.7, but no harm in always including it
   - typing-extensions
-
-  # QCArchive depends
-  - qcengine >=0.21
-  - qcelemental >=0.24
-  - torsiondrive
-
-  # Worker
-  - qcengine
-  - geometric
-  - psi4
-  - rdkit
