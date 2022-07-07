@@ -594,10 +594,10 @@ def server_user(args: argparse.Namespace, config: FractalConfig):
 
         for u in user_list:
             u_obj = UserInfo(**u)
-            table_rows.append((u_obj.username, u_obj.auth_type, u_obj.role, u_obj.enabled, u_obj.fullname))
+            table_rows.append((u_obj.username, u_obj.role, u_obj.auth_type, u_obj.enabled, u_obj.fullname))
 
         print()
-        table_str = tabulate.tabulate(table_rows, headers=["username", "auth", "role", "enabled", "fullname"])
+        table_str = tabulate.tabulate(table_rows, headers=["username", "role", "auth type", "enabled", "fullname"])
         print(table_str)
         print()
 
