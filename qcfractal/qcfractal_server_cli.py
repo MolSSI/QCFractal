@@ -22,7 +22,7 @@ import yaml
 import qcfractal
 from qcportal.permissions import RoleInfo, UserInfo
 from .app.gunicorn_app import GunicornProcess
-from .config import read_configuration, FractalConfig, WebAPIConfig
+from .config import read_configuration, write_initial_configuration, FractalConfig, WebAPIConfig
 from .db_socket.socket import SQLAlchemySocket
 from .periodics import PeriodicsProcess
 from .postgres_harness import PostgresHarness
@@ -95,9 +95,9 @@ def start_database(config: FractalConfig) -> Tuple[PostgresHarness, SQLAlchemySo
     # If not, make sure it is started
     pg_harness.ensure_alive()
 
-    # make sure DB is created
-    # If it exists, no changes are made
-    pg_harness.create_database()
+    # Checks that the database exists
+    if not pg_harness.is_alive():
+        raise RuntimeError(f"Database at {config.database.safe_uri} does not exist?")
 
     # Start up a socket. The main thing is to see if it can connect, and also
     # to check if the database needs to be upgraded
@@ -138,11 +138,22 @@ def parse_args() -> argparse.Namespace:
     subparsers = parser.add_subparsers(dest="command")
 
     #####################################
-    # init subcommand
+    # init-config subcommand
+    #####################################
+    init_config = subparsers.add_parser(
+        "init-config",
+        help="Creates an initial configuration for a server",
+        parents=[base_parser],
+    )
+
+    init_config.add_argument("--full", action="store_true", help="Create an example config will all fields")
+
+    #####################################
+    # init-db subcommand
     #####################################
     subparsers.add_parser(
-        "init",
-        help="Initializes a QCFractal server and database information from a given configuration.",
+        "init-db",
+        help="Initializes a QCFractal server and database information from a given configuration",
         parents=[base_parser],
     )
 
@@ -152,15 +163,14 @@ def parse_args() -> argparse.Namespace:
     start = subparsers.add_parser("start", help="Starts a QCFractal server instance.", parents=[base_parser])
 
     # Allow some config settings to be altered via the command line
-    fractal_args = start.add_argument_group("Server Settings")
-    fractal_args.add_argument("--port", **WebAPIConfig.help_info("port"))
-    fractal_args.add_argument("--host", **WebAPIConfig.help_info("host"))
-    fractal_args.add_argument("--num-workers", **WebAPIConfig.help_info("num_workers"))
-    fractal_args.add_argument("--logfile", **FractalConfig.help_info("logfile"))
-    fractal_args.add_argument("--loglevel", **FractalConfig.help_info("loglevel"))
-    fractal_args.add_argument("--enable-security", **FractalConfig.help_info("enable_security"))
+    start.add_argument("--port", **WebAPIConfig.help_info("port"))
+    start.add_argument("--host", **WebAPIConfig.help_info("host"))
+    start.add_argument("--num-workers", **WebAPIConfig.help_info("num_workers"))
+    start.add_argument("--logfile", **FractalConfig.help_info("logfile"))
+    start.add_argument("--loglevel", **FractalConfig.help_info("loglevel"))
+    start.add_argument("--enable-security", **FractalConfig.help_info("enable_security"))
 
-    fractal_args.add_argument(
+    start.add_argument(
         "--disable-periodics",
         action="store_true",
         help="[ADVANCED] Disable periodic tasks (service updates and manager cleanup)",
@@ -174,9 +184,8 @@ def parse_args() -> argparse.Namespace:
     )
 
     # Allow some config settings to be altered via the command line
-    periodics_args = start_per.add_argument_group("Server Settings")
-    periodics_args.add_argument("--logfile", **FractalConfig.help_info("logfile"))
-    periodics_args.add_argument("--loglevel", **FractalConfig.help_info("loglevel"))
+    start_per.add_argument("--logfile", **FractalConfig.help_info("logfile"))
+    start_per.add_argument("--loglevel", **FractalConfig.help_info("loglevel"))
 
     #####################################
     # start-api subcommand
@@ -184,9 +193,8 @@ def parse_args() -> argparse.Namespace:
     start_api = subparsers.add_parser("start-api", help="Starts a QCFractal server instance.", parents=[base_parser])
 
     # Allow some config settings to be altered via the command line
-    api_args = start_api.add_argument_group("Server Settings")
-    api_args.add_argument("--logfile", **FractalConfig.help_info("logfile"))
-    api_args.add_argument("--loglevel", **FractalConfig.help_info("loglevel"))
+    start_api.add_argument("--logfile", **FractalConfig.help_info("logfile"))
+    start_api.add_argument("--loglevel", **FractalConfig.help_info("loglevel"))
 
     #####################################
     # upgrade-db subcommand
@@ -312,9 +320,19 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-def server_init(config: FractalConfig):
+def server_init_config(config_path: str, full_config: bool):
+    write_initial_configuration(config_path, full_config)
+
+    print("*** Creating initial QCFractal configuration ***")
+    print(f"Configuration path: {config_path}")
+    print("NOTE: secret keys have been randomly generated. You likely won't need to change those")
+    print(" !!! You will likely need/want to change some settings before")
+    print("     initializing the database or starting the server !!!")
+
+
+def server_init_db(config: FractalConfig):
     logger = logging.getLogger(__name__)
-    logger.info("*** Initializing QCFractal from configuration ***")
+    logger.info("*** Initializing QCFractal database from configuration ***")
 
     pg_harness = PostgresHarness(config.database)
     atexit.register(pg_harness.shutdown)
@@ -325,6 +343,8 @@ def server_init(config: FractalConfig):
 
     if config.database.own:
         pg_harness.initialize_postgres()
+
+    pg_harness.create_database(create_tables=True)
 
     logger.info("QCFractal PostgreSQL instance is initialized")
 
@@ -485,6 +505,7 @@ def server_upgrade_db(config):
     # If not, make sure it is started
     pg_harness.ensure_alive()
 
+    # Checks that the database exists
     if not pg_harness.is_alive():
         raise RuntimeError(f"Database at {config.database.safe_uri} does not exist for upgrading?")
 
@@ -857,8 +878,18 @@ def main():
         config_path = os.path.expanduser(os.path.join("~", ".qca", "qcfractal", "qcfractal_config.yaml"))
         logger.info(f"Using default configuration path {config_path}")
 
-    # Shortcut here for upgrading the configuration
-    # This prevent s actually reading the configuration with the newest code
+    config_path = os.path.abspath(config_path)
+
+    ###############################################################
+    # Shortcuts here for initializing/upgrading the configuration
+    # We don't want to read old configs with new code, or the
+    #    config doesn't exist yet
+    ###############################################################
+
+    if args.command == "init-config":
+        server_init_config(config_path, args.full)
+        exit(0)
+
     if args.command == "upgrade-config":
         server_upgrade_config(config_path)
         exit(0)
@@ -871,8 +902,8 @@ def main():
 
     if args.command == "info":
         server_info(args.category, qcf_config)
-    elif args.command == "init":
-        server_init(qcf_config)
+    elif args.command == "init-db":
+        server_init_db(qcf_config)
     elif args.command == "start":
         server_start(qcf_config)
     elif args.command == "start-periodics":

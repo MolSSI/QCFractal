@@ -83,9 +83,8 @@ def cli_runner_core(postgres_server, tmp_config, request):
 @pytest.fixture(scope="function")
 def cli_runner(cli_runner_core):
 
-    # Creates the postgres instance and what not (if needed)
-    if cli_runner_core.own_db:
-        cli_runner_core(["init"])
+    # Creates the postgres instance (if needed) and tables
+    cli_runner_core(["init-db"])
 
     yield cli_runner_core
 
@@ -105,12 +104,37 @@ def test_cli_info_alembic(cli_runner_core):
     assert "alembic -c" in output
 
 
+@pytest.mark.parametrize("full", [True, False])
+def test_cli_init_config(cli_runner_core, full: bool):
+
+    # Remove the old config
+    os.remove(cli_runner_core.config_path)
+
+    cmd = ["init-config"]
+    if full:
+        cmd.append("--full")
+
+    output = cli_runner_core(cmd)
+    assert "Creating initial QCFractal configuration" in output
+
+    # Tests reading the config
+    output = cli_runner_core(["info", "config"])
+    assert "name: QCFractal Server" in output
+
+    with open(cli_runner_core.config_path, "r") as f:
+        config_text = f.read()
+
+    if full:
+        assert "hide_internal_errors" in config_text
+    else:
+        assert "hide_internal_errors" not in config_text
+
+
 def test_cli_init(cli_runner_core):
 
-    # Do this even if we don't own it. Should be safe
-    output = cli_runner_core(["init"])
+    output = cli_runner_core(["init-db"])
 
-    assert "Initializing QCFractal from configuration" in output
+    assert "Initializing QCFractal database from configuration" in output
 
     if cli_runner_core.own_db is True:
         assert "Success. You can now start the database server using" in output
@@ -250,40 +274,24 @@ def test_cli_restore_noinit(cli_runner_core):
         assert "Postgresql instance successfully initialized and started" not in output
 
 
-def test_cli_restore_init(cli_runner):
-    # Restore where the db does not exist, but postgres has been initialized
-    migdata_path = os.path.join(migrationdata_path, "empty_v0.15.8.sql_dump")
-    output = cli_runner(["restore", migdata_path])
-    assert "Restore complete!" in output
-
-    if cli_runner.own_db:
-        assert "Started a postgres instance for uri" in output
-    else:
-        assert "Started a postgres instance for uri" not in output
-
-
-def test_cli_backup_restore(cli_runner, tmp_path_factory):
+def test_cli_backup_restore(cli_runner_core, tmp_path_factory):
     migdata_path = os.path.join(migrationdata_path, "empty_v0.15.8.sql_dump")
 
-    cli_runner(["restore", migdata_path])
-    cli_runner(["upgrade-db"])
+    cli_runner_core(["restore", migdata_path])
+    cli_runner_core(["upgrade-db"])
 
     backup_path = os.path.join(tmp_path_factory.mktemp("db_bak"), "backup_file.sqlback")
 
-    output = cli_runner(["backup", backup_path])
+    output = cli_runner_core(["backup", backup_path])
     assert os.path.isfile(backup_path)
     assert "Backup complete!" in output
 
-    output = cli_runner(["restore", backup_path], stdin="REMOVEALLDATA qcfractal_default")
+    output = cli_runner_core(["restore", backup_path], stdin="REMOVEALLDATA qcfractal_default")
     assert "Restore complete!" in output
 
 
 def test_cli_restore_existing(cli_runner):
     # Restore where the db already exists
-    migdata_path = os.path.join(migrationdata_path, "empty_v0.15.8.sql_dump")
-    output = cli_runner(["restore", migdata_path])
-    assert "Restore complete!" in output
-
     migdata_path = os.path.join(migrationdata_path, "empty_v0.15.8.sql_dump")
     output = cli_runner(["restore", migdata_path], stdin="REMOVEALLDATA qcfractal_default")
     assert "Restore complete!" in output
@@ -293,18 +301,18 @@ def test_cli_restore_existing(cli_runner):
     assert "does not match. Aborting" in output
 
 
-def test_cli_upgrade(cli_runner):
+def test_cli_upgrade(cli_runner_core):
     migdata_path = os.path.join(migrationdata_path, "empty_v0.15.8.sql_dump")
 
-    output = cli_runner(["restore", migdata_path])
+    output = cli_runner_core(["restore", migdata_path], stdin="REMOVEALLDATA qcfractal_default")
     assert "Restore complete!" in output
 
-    output = cli_runner(["upgrade-db"])
+    output = cli_runner_core(["upgrade-db"])
 
     # One of the migrations that should be there
     assert "Running upgrade c1a0b0ee712e -> b9b7b6926b8b" in output
 
-    if cli_runner.own_db is True:
+    if cli_runner_core.own_db is True:
         assert "PostgreSQL successfully stopped" in output
 
 
@@ -315,11 +323,6 @@ def test_cli_upgrade_noinit(cli_runner_core):
         assert "has not been initialized" in output
     else:
         assert "does not exist for upgrading" in output
-
-
-def test_cli_upgrade_noexist(cli_runner):
-    output = cli_runner(["upgrade-db"], fail_expected=True)
-    assert "does not exist for upgrading" in output
 
 
 def test_cli_upgrade_config(tmp_path_factory):

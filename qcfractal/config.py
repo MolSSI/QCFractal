@@ -5,6 +5,7 @@ The global qcfractal config file specification.
 from __future__ import annotations
 
 import logging
+import secrets
 import os
 import urllib.parse
 from typing import Optional, Dict, Any
@@ -390,3 +391,32 @@ def read_configuration(file_paths: list[str], extra_config: Optional[Dict[str, A
         raise RuntimeError("Found an old configuration. Please migrate with qcfractal-server upgrade-config")
 
     return FractalConfig(**config_data)
+
+
+def write_initial_configuration(file_path: str, full_config: bool = True):
+    base_folder = os.path.dirname(file_path)
+    default_config = FractalConfig(base_folder=base_folder)
+
+    # Generate two secret keys for flask/jwt
+    default_config.api.secret_key = secrets.token_urlsafe(32)
+    default_config.api.jwt_secret_key = secrets.token_urlsafe(32)
+
+    include = None
+    if not full_config:
+        include = {
+            "name": True,
+            "enable_security": True,
+            "log_access": True,
+            "allow_unauthenticated_read": True,
+            "logfile": True,
+            "loglevel": True,
+            "service_frequency": True,
+            "statistics_frequency": True,
+            "max_active_services": True,
+            "heartbeat_frequency": True,
+            "database": {"own", "host", "port", "database_name", "base_folder"},
+            "api": {"secret_key", "jwt_secret_key", "host", "port"},
+        }
+
+    with open(file_path, "x") as f:
+        yaml.dump(default_config.dict(include=include), f, sort_keys=False)
