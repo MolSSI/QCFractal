@@ -194,9 +194,9 @@ def activated_manager_name(storage_socket: SQLAlchemySocket) -> ManagerName:
     storage_socket.managers.activate(
         name_data=mname,
         manager_version="v2.0",
-        qcengine_version="v1.0",
         username="bill",
         programs={
+            "qcengine": None,
             "psi4": None,
             "qchem": None,
             "geometric": None,

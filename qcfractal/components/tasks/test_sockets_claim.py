@@ -30,33 +30,29 @@ def test_task_socket_claim_mixed(storage_socket: SQLAlchemySocket):
     storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
-        qcengine_version="v1.0",
         username="bill",
-        programs={"psi4": None, "geometric": "v3.0"},
+        programs={"qcengine": None, "psi4": None, "geometric": "v3.0"},
         tags=["tag1"],
     )
     storage_socket.managers.activate(
         name_data=mname2,
         manager_version="v2.0",
-        qcengine_version="v1.0",
         username="bill",
-        programs={"psi4": None, "geometric": "v3.0"},
+        programs={"qcengine": None, "psi4": None, "geometric": "v3.0"},
         tags=["*"],
     )
     storage_socket.managers.activate(
         name_data=mname3,
         manager_version="v2.0",
-        qcengine_version="v1.0",
         username="bill",
-        programs={"psi4": None, "geometric": "v3.0"},
+        programs={"qcengine": None, "psi4": None, "geometric": "v3.0"},
         tags=["tag3", "tag1"],
     )
     storage_socket.managers.activate(
         name_data=mname4,
         manager_version="v2.0",
-        qcengine_version="v1.0",
         username="bill",
-        programs={"psi4": None, "geometric": "v3.0", "rdkit": "v1.0"},
+        programs={"qcengine": None, "psi4": None, "geometric": "v3.0", "rdkit": "v1.0"},
         tags=["tag3", "*"],
     )
 
@@ -122,9 +118,8 @@ def test_task_socket_claim_priority(storage_socket: SQLAlchemySocket):
     storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
-        qcengine_version="v1.0",
         username="bill",
-        programs={"Psi4": None, "geometric": "v3.0"},
+        programs={"qcengine": None, "Psi4": None, "geometric": "v3.0"},
         tags=["tag1"],
     )
 
@@ -158,9 +153,8 @@ def test_task_socket_claim_tag(storage_socket: SQLAlchemySocket):
     storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
-        qcengine_version="v1.0",
         username="bill",
-        programs={"psi4": None, "geometric": "v3.0"},
+        programs={"qcengine": None, "psi4": None, "geometric": "v3.0"},
         tags=["tag3", "tag1"],
     )
 
@@ -189,9 +183,8 @@ def test_task_socket_claim_tag_wildcard(storage_socket: SQLAlchemySocket):
     storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
-        qcengine_version="v1.0",
         username="bill",
-        programs={"psi4": None, "geometric": "v3.0"},
+        programs={"qcengine": None, "psi4": None, "geometric": "v3.0"},
         tags=["TAG3", "*"],
     )
 
@@ -222,9 +215,8 @@ def test_task_socket_claim_program(storage_socket: SQLAlchemySocket):
     storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
-        qcengine_version="v1.0",
         username="bill",
-        programs={"psi4": None, "geometric": "v3.0"},
+        programs={"qcengine": None, "psi4": None, "geometric": "v3.0"},
         tags=["*"],
     )
 

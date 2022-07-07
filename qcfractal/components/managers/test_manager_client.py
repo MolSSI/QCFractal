@@ -26,16 +26,14 @@ def test_manager_mclient_activate(snowflake: TestingSnowflake):
     time_0 = datetime.utcnow()
     mclient1.activate(
         manager_version="v2.0",
-        qcengine_version="v1.0",
-        programs={"program1": "v3.0"},
+        programs={"qcengine": None, "program1": "v3.0"},
         tags=["tag1", "tag2"],
     )
 
     time_1 = datetime.utcnow()
     mclient2.activate(
         manager_version="v2.0",
-        qcengine_version="v1.0",
-        programs={"program1": "v3.0"},
+        programs={"qcengine": None, "program1": "v3.0"},
         tags=["tag1"],
     )
     time_2 = datetime.utcnow()
@@ -75,8 +73,7 @@ def test_manager_mclient_activate_normalize(snowflake: TestingSnowflake):
 
     mclient1.activate(
         manager_version="v2.0",
-        qcengine_version="v1.0",
-        programs={"program1": "v3.0", "PROgRam2": "v4.0"},
+        programs={"qcengine": None, "program1": "v3.0", "PROgRam2": "v4.0"},
         tags=["tag1", "taG3", "tAg2", "TAG3", "TAG1"],
     )
 
@@ -93,16 +90,14 @@ def test_manager_mclient_activate_notags(snowflake: TestingSnowflake):
     with pytest.raises(ValidationError, match=r"field contains no non-zero-length tags") as err:
         mclient1.activate(
             manager_version="v2.0",
-            qcengine_version="v1.0",
-            programs={"program1": "v3.0"},
+            programs={"qcengine": None, "program1": "v3.0"},
             tags=[],
         )
 
     with pytest.raises(ValidationError, match=r"field contains no non-zero-length tags") as err:
         mclient1.activate(
             manager_version="v2.0",
-            qcengine_version="v1.0",
-            programs={"program1": "v3.0"},
+            programs={"qcengine": None, "program1": "v3.0"},
             tags=[""],
         )
 
@@ -115,16 +110,16 @@ def test_manager_mclient_activate_noprogs(snowflake: TestingSnowflake):
     with pytest.raises(ValidationError, match=r"field contains no non-zero-length programs") as err:
         mclient1.activate(
             manager_version="v2.0",
-            qcengine_version="v1.0",
-            programs={},
+            programs={
+                "qcengine": None,
+            },
             tags=["tag1"],
         )
 
     with pytest.raises(ValidationError, match=r"field contains no non-zero-length programs") as err:
         mclient1.activate(
             manager_version="v2.0",
-            qcengine_version="v1.0",
-            programs={"": None},
+            programs={"qcengine": None, "": None},
             tags=["tag1"],
         )
 
@@ -135,16 +130,14 @@ def test_manager_mclient_activate_duplicate(snowflake: TestingSnowflake):
     mclient1 = snowflake.manager_client(mname1)
     mclient1.activate(
         manager_version="v2.0",
-        qcengine_version="v1.0",
-        programs={"program1": "v3.0"},
+        programs={"qcengine": None, "program1": "v3.0"},
         tags=["tag1"],
     )
 
     with pytest.raises(PortalRequestError, match=r"already exists") as err:
         mclient1.activate(
             manager_version="v2.0",
-            qcengine_version="v1.0",
-            programs={"program1": "v3.0"},
+            programs={"qcengine": None, "program1": "v3.0"},
             tags=["tag1"],
         )
 
@@ -164,15 +157,13 @@ def test_manager_mclient_deactivate(snowflake: TestingSnowflake):
 
     mclient1.activate(
         manager_version="v2.0",
-        qcengine_version="v1.0",
-        programs={"psi4": "v3.0"},
+        programs={"qcengine": None, "psi4": "v3.0"},
         tags=["tag1", "tag2"],
     )
 
     mclient2.activate(
         manager_version="v2.0",
-        qcengine_version="v1.0",
-        programs={"psi4": "v3.0"},
+        programs={"qcengine": None, "psi4": "v3.0"},
         tags=["tag1"],
     )
 
@@ -210,8 +201,7 @@ def test_manager_mclient_deactivate_deactivated(snowflake: TestingSnowflake):
     time_0 = datetime.utcnow()
     mclient1.activate(
         manager_version="v2.0",
-        qcengine_version="v1.0",
-        programs={"program1": "v3.0"},
+        programs={"qcengine": None, "program1": "v3.0"},
         tags=["tag1", "tag2"],
     )
 
@@ -233,8 +223,7 @@ def test_manager_mclient_heartbeat(snowflake: TestingSnowflake):
     time_0 = datetime.utcnow()
     mclient1.activate(
         manager_version="v2.0",
-        qcengine_version="v1.0",
-        programs={"program1": "v3.0"},
+        programs={"qcengine": None, "program1": "v3.0"},
         tags=["tag1", "tag2"],
     )
 
@@ -314,8 +303,7 @@ def test_manager_mclient_heartbeat_deactivated(snowflake: TestingSnowflake):
 
     mclient1.activate(
         manager_version="v2.0",
-        qcengine_version="v1.0",
-        programs={"program1": "v3.0"},
+        programs={"qcengine": None, "program1": "v3.0"},
         tags=["tag1", "tag2"],
     )
 

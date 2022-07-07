@@ -81,7 +81,6 @@ class ComputeManagerORM(BaseORM):
     created_on = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     modified_on = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
 
-    qcengine_version = Column(String, nullable=False)
     manager_version = Column(String, nullable=False)
     programs = Column(JSON, nullable=False)
 

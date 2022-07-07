@@ -246,16 +246,22 @@ class ComputeManager:
         # key = number of retries. value = dict of (task_id, result)
         self._deferred_tasks: Dict[int, Dict[int, AllResultTypes]] = defaultdict(dict)
 
-        # QCEngine data
-        self.available_programs = qcng.list_available_programs()
-        self.available_procedures = qcng.list_available_procedures()
+        # All available programs
+        # Add qcengine, with the version
+        self.all_program_info = {'qcengine': qcng.__version__}
 
+        # What do we get from qcengine
+        qcng_programs = qcng.list_available_programs()
+        qcng_procedures = qcng.list_available_procedures()
+
+        # QCFractal treats procedures and programs as being the same
         # TODO - get version information
-        self.all_program_info = {x: None for x in self.available_programs | self.available_procedures}
+        self.all_program_info.update({x: None for x in qcng_programs})
+        self.all_program_info.update({x: None for x in qcng_procedures})
 
         # Display a warning if there are non-node-parallel programs and >1 node_per_task
         if self.nodes_per_task > 1:
-            for name in self.available_programs:
+            for name in qcng_programs:
                 program = qcng.get_program(name)
                 if not program.node_parallel:
                     self.logger.warning(
@@ -283,8 +289,8 @@ class ComputeManager:
             self.logger.info("        Task Nodes:     {}".format(self.nodes_per_task))
             self.logger.info("        Cores per Rank: {}".format(self.cores_per_rank))
             self.logger.info("        Scratch Dir:    {}".format(self.scratch_directory))
-            self.logger.info("        Programs:       {}".format(self.available_programs))
-            self.logger.info("        Procedures:     {}\n".format(self.available_procedures))
+            self.logger.info("        Programs:       {}".format(qcng_programs))
+            self.logger.info("        Procedures:     {}\n".format(qcng_procedures))
 
         # Pull server info
         self.server_info = self.client.get_server_information()
@@ -292,7 +298,7 @@ class ComputeManager:
         self.server_version = self.server_info["version"]
         self.heartbeat_frequency = self.server_info["manager_heartbeat_frequency"]
 
-        self.client.activate(__version__, qcng.__version__, self.all_program_info, tags=self.queue_tag)
+        self.client.activate(__version__, self.all_program_info, tags=self.queue_tag)
 
         if self.verbose:
             self.logger.info("    Connected:")

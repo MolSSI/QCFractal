@@ -25,16 +25,14 @@ def test_manager_client_get(snowflake: TestingSnowflake):
     time_0 = datetime.utcnow()
     mclient1.activate(
         manager_version="v2.0",
-        qcengine_version="v1.0",
-        programs={"qcprog": None, "qcprog2": "v3.0"},
+        programs={"qcengine": None, "qcprog": None, "qcprog2": "v3.0"},
         tags=["tag1", "tag2"],
     )
 
     time_1 = datetime.utcnow()
     mclient2.activate(
         manager_version="v2.0",
-        qcengine_version="v1.0",
-        programs={"qcprog": None, "qcprog2": "v3.0"},
+        programs={"qcengine": None, "qcprog": None, "qcprog2": "v3.0"},
         tags=["tag1"],
     )
     time_2 = datetime.utcnow()

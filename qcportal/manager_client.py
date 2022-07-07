@@ -57,7 +57,6 @@ class ManagerClient(PortalClientBase):
     def activate(
         self,
         manager_version: str,
-        qcengine_version: str,
         programs: Dict[str, Any],
         tags: List[str],
     ) -> None:
@@ -66,14 +65,13 @@ class ManagerClient(PortalClientBase):
         If an error occurs, an exception is raised.
         """
 
-        manager_info = {
-            "name_data": self.manager_name_data,
-            "manager_version": manager_version,
-            "qcengine_version": qcengine_version,
-            "username": self.username,
-            "programs": programs,
-            "tags": tags,
-        }
+        manager_info = ManagerActivationBody(
+            name_data=self.manager_name_data,
+            manager_version=manager_version,
+            username=self.username,
+            programs=programs,
+            tags=tags,
+        )
 
         return self._auto_request(
             "post",

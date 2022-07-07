@@ -41,9 +41,10 @@ def test_optimization_socket_task_spec(storage_socket: SQLAlchemySocket, spec: O
     storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
-        qcengine_version="v1.0",
         username="bill",
         programs={
+            "qcengine": None,
+            "qcengine": None,
             "optprog1": None,
             "optprog2": None,
             "optprog3": None,
@@ -251,9 +252,9 @@ def test_optimization_socket_run(storage_socket: SQLAlchemySocket):
     storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
-        qcengine_version="v1.0",
         username="bill",
         programs={
+            "qcengine": None,
             "geometric": None,
             "psi4": None,
         },

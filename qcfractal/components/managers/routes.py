@@ -18,7 +18,6 @@ def activate_manager_v1(body_data: ManagerActivationBody):
     return storage_socket.managers.activate(
         name_data=body_data.name_data,
         manager_version=body_data.manager_version,
-        qcengine_version=body_data.qcengine_version,
         username=body_data.username,
         programs=body_data.programs,
         tags=body_data.tags,

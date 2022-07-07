@@ -53,7 +53,6 @@ class ManagerSocket:
         self,
         name_data: ManagerName,
         manager_version: str,
-        qcengine_version: str,
         username: Optional[str],
         programs: Dict[str, Optional[str]],
         tags: List[str],
@@ -83,7 +82,6 @@ class ManagerSocket:
             tags=tags,
             status=ManagerStatusEnum.active,
             manager_version=manager_version,
-            qcengine_version=qcengine_version,
             programs=programs,
         )
 

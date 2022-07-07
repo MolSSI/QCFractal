@@ -24,9 +24,8 @@ def populate_records_status(storage_socket: SQLAlchemySocket):
     storage_socket.managers.activate(
         name_data=mname1,
         manager_version="v2.0",
-        qcengine_version="v1.0",
         username="bill",
-        programs={"psi4": None, "qchem": "v3.0", "rdkit": None, "geometric": None},
+        programs={"qcengine": None, "psi4": None, "qchem": "v3.0", "rdkit": None, "geometric": None},
         tags=["tag1", "tag2", "tag3", "tag6"],
     )
 
