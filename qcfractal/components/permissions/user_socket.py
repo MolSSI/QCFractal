@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import select
 
 from qcportal.exceptions import AuthenticationFailure, UserManagementError
-from qcportal.permissions import UserInfo, is_valid_password, is_valid_username
+from qcportal.permissions import UserInfo, is_valid_password, is_valid_username, AuthTypeEnum
 from .db_models import UserORM
 
 if TYPE_CHECKING:
@@ -181,6 +181,27 @@ class UserSocket:
         self._logger.info(f"User {user_info.username} added")
         return password
 
+    def _verify_local_password(self, user: UserORM, password: str):
+        """
+        Verifies a given username and password against the local db
+
+        Raises exception if the password does not match or there is another problem
+        """
+
+        is_valid_password(password)
+
+        try:
+            pwcheck = bcrypt.checkpw(password.encode("UTF-8"), user.password)
+        except Exception as e:
+            self._logger.error(f"Password check failure for user {user.username}, error: {str(e)}")
+            self._logger.error(
+                f"Error likely caused by encryption salt mismatch, potentially fixed by creating a new password for user {user.username}."
+            )
+            raise UserManagementError("Password decryption failure, please contact your system administrator.")
+
+        if pwcheck is False:
+            raise AuthenticationFailure("Incorrect username or password")
+
     def verify(self, username: str, password: str, *, session: Optional[Session] = None) -> Dict[str, Any]:
         """
         Verifies a given username and password, returning the users permissions.
@@ -203,7 +224,6 @@ class UserSocket:
             The role and permissions available to that user.
         """
 
-        is_valid_password(password)
         is_valid_username(username)
 
         with self.root_socket.optional_session(session, True) as session:
@@ -216,17 +236,12 @@ class UserSocket:
             if not user.enabled:
                 raise AuthenticationFailure(f"User {username} is disabled.")
 
-            try:
-                pwcheck = bcrypt.checkpw(password.encode("UTF-8"), user.password)
-            except Exception as e:
-                self._logger.error(f"Password check failure for user {username}, error: {str(e)}")
-                self._logger.error(
-                    f"Error likely caused by encryption salt mismatch, potentially fixed by creating a new password for user {username}."
-                )
-                raise UserManagementError("Password decryption failure, please contact your system administrator.")
-
-            if pwcheck is False:
-                raise AuthenticationFailure("Incorrect username or password")
+            # what's next depends on how the user is authenticated
+            if user.auth_type == AuthTypeEnum.password:
+                self._verify_local_password(user=user, password=password)
+            else:
+                self._logger.error(f"Unknown auth type: {user.auth_type}. This is a developer error")
+                raise UserManagementError(f"Unknown authentication type stored in the database: {user.auth_type}")
 
             return user.role_obj.permissions
 

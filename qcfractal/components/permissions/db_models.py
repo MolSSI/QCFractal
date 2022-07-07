@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, ForeignKey, String, LargeBinary, Boolean, JSON, UniqueConstraint
+from sqlalchemy import Column, Integer, ForeignKey, String, LargeBinary, Boolean, JSON, UniqueConstraint, Enum
 from sqlalchemy.orm import relationship
 
 from qcfractal.db_socket import BaseORM
+from qcportal.permissions import AuthTypeEnum
 
 if TYPE_CHECKING:
     from typing import Optional, Iterable, Dict, Any
@@ -21,6 +22,8 @@ class UserORM(BaseORM):
     id = Column(Integer, primary_key=True)
     role_id = Column(Integer, ForeignKey("role.id"), nullable=False)
     role_obj = relationship("RoleORM")
+
+    auth_type = Column(Enum(AuthTypeEnum), nullable=False)
 
     username = Column(String, nullable=False)
     password = Column(LargeBinary, nullable=False)

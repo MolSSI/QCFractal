@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from enum import Enum
 from typing import Optional, Union, List
 
 from pydantic import BaseModel, Field, validator, constr, Extra
 
 from ..exceptions import InvalidPasswordError, InvalidUsernameError, InvalidRolenameError
+
+
+class AuthTypeEnum(str, Enum):
+    password = "password"
 
 
 def is_valid_password(password: str) -> None:
@@ -111,6 +116,9 @@ class UserInfo(BaseModel):
 
     # id may be None when used for initial creation
     id: Optional[int] = Field(None, allow_mutation=False, description="The id of the user")
+    auth_type: AuthTypeEnum = Field(
+        AuthTypeEnum.password, allow_mutation=False, description="Type of authentication the user uses"
+    )
     username: str = Field(..., allow_mutation=False, description="The username of this user")
     role: str = Field(..., description="The role this user belongs to")
     enabled: bool = Field(..., description="Whether this user is enabled or not")

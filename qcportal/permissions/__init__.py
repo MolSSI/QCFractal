@@ -1,4 +1,5 @@
 from .models import (
+    AuthTypeEnum,
     UserInfo,
     RoleInfo,
     PermissionsPolicy,
