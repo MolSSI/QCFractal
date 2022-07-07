@@ -79,7 +79,7 @@ def test_manager_mclient_activate_normalize(snowflake: TestingSnowflake):
 
     manager = client.get_managers(mname1.fullname)
     assert manager.tags == ["tag1", "tag3", "tag2"]
-    assert manager.programs == {"program1": "v3.0", "program2": "v4.0"}
+    assert manager.programs == {"qcengine": None, "program1": "v3.0", "program2": "v4.0"}
 
 
 def test_manager_mclient_activate_notags(snowflake: TestingSnowflake):
@@ -110,16 +110,14 @@ def test_manager_mclient_activate_noprogs(snowflake: TestingSnowflake):
     with pytest.raises(ValidationError, match=r"field contains no non-zero-length programs") as err:
         mclient1.activate(
             manager_version="v2.0",
-            programs={
-                "qcengine": None,
-            },
+            programs={},
             tags=["tag1"],
         )
 
     with pytest.raises(ValidationError, match=r"field contains no non-zero-length programs") as err:
         mclient1.activate(
             manager_version="v2.0",
-            programs={"qcengine": None, "": None},
+            programs={"": None},
             tags=["tag1"],
         )
 
