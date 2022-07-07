@@ -75,7 +75,7 @@ jobs:
         run: |
           mkdir server; cd server
           cp ../qcfractal/qcfractaltesting/config_files/gha_fractal_server.yaml ./
-          qcfractal-server --config=gha_fractal_server.yaml init
+          qcfractal-server --config=gha_fractal_server.yaml init-db
           qcfractal-server --config=gha_fractal_server.yaml start &
 
       - name: Configure conda for QCFractalCompute worker
