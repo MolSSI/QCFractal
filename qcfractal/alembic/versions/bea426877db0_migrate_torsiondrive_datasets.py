@@ -236,9 +236,20 @@ def upgrade():
             sa.text(
                 """
                    INSERT INTO torsiondrive_dataset_entry (dataset_id, name, torsiondrive_keywords, additional_keywords, attributes)
-                   SELECT :col_id, j.key, (j.value->>'td_keywords')::jsonb, (j.value->>'additional_keywords')::jsonb, (j.value->>'attributes')::jsonb
+                   SELECT :col_id, j.key, (j.value->>'td_keywords')::jsonb, (j.value->'td_keywords'->'additional_keywords')::jsonb, (j.value->>'attributes')::jsonb
                    FROM collection, json_each(extra->'records') AS j
                    WHERE collection.id = :col_id
+                """
+            ),
+            col_id=col["id"],
+        )
+
+        conn.execute(
+            sa.text(
+                """
+                   UPDATE torsiondrive_dataset_entry
+                   SET torsiondrive_keywords = torsiondrive_keywords - 'additional_keywords'
+                   WHERE torsiondrive_dataset_entry.dataset_id = :col_id
                 """
             ),
             col_id=col["id"],
