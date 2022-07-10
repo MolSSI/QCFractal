@@ -135,7 +135,7 @@ def upgrade():
     op.execute(
         sa.text(
             r"""UPDATE torsiondrive_procedure
-                SET optimization_spec = optimization_spec || jsonb_build_object('keywords', keywords->'additional_keywords')
+                SET optimization_spec = optimization_spec || jsonb_build_object('keywords', (keywords->'additional_keywords') || (optimization_spec->'keywords'))
                 WHERE keywords ? 'additional_keywords'"""
         )
     )
