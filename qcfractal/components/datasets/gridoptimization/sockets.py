@@ -9,7 +9,6 @@ from qcfractal.components.records.gridoptimization.db_models import Gridoptimiza
 from qcportal.datasets.gridoptimization import GridoptimizationDatasetNewEntry
 from qcportal.records import PriorityEnum
 from qcportal.records.gridoptimization import GridoptimizationSpecification
-from qcportal.records.optimization import OptimizationSpecification
 from .db_models import (
     GridoptimizationDatasetORM,
     GridoptimizationDatasetSpecificationORM,
@@ -42,9 +41,9 @@ class GridoptimizationDatasetSocket(BaseDatasetSocket):
         self._logger = logging.getLogger(__name__)
 
     def _add_specification(
-        self, session: Session, specification: OptimizationSpecification
+        self, session: Session, specification: GridoptimizationSpecification
     ) -> Tuple[InsertMetadata, Optional[int]]:
-        return self.root_socket.records.optimization.add_specification(specification, session=session)
+        return self.root_socket.records.gridoptimization.add_specification(specification, session=session)
 
     def _create_entries(
         self, session: Session, dataset_id: int, new_entries: Sequence[GridoptimizationDatasetNewEntry]
@@ -58,8 +57,8 @@ class GridoptimizationDatasetSocket(BaseDatasetSocket):
                 dataset_id=dataset_id,
                 name=entry.name,
                 comment=entry.comment,
-                gridoptimization_keywords=entry.gridoptimization_keywords.dict(),
                 additional_keywords=entry.additional_keywords,
+                additional_optimization_keywords=entry.additional_optimization_keywords,
                 attributes=entry.attributes,
                 initial_molecule_id=mol_ids[0],
             )
@@ -79,19 +78,20 @@ class GridoptimizationDatasetSocket(BaseDatasetSocket):
         priority: PriorityEnum,
     ):
         for spec in spec_orm:
-            # The spec for a gridoptimization dataset is an optimization specification
-            opt_spec_obj = spec.specification.to_model(OptimizationSpecification)
-            opt_spec_input_dict = opt_spec_obj.dict()
+            goopt_spec_obj = spec.specification.to_model(GridoptimizationSpecification)
+            goopt_spec_input_dict = goopt_spec_obj.dict()
 
             for entry in entry_orm:
                 if (entry.name, spec.name) in existing_records:
                     continue
 
-                new_opt_spec = copy.deepcopy(opt_spec_input_dict)
-                new_opt_spec["keywords"].update(entry.additional_keywords)
+                new_go_spec = copy.deepcopy(goopt_spec_input_dict)
+                new_go_spec["keywords"].update(entry.additional_keywords)
+                new_go_spec["optimization_specification"]["keywords"].update(entry.additional_optimization_keywords)
 
                 go_spec = GridoptimizationSpecification(
-                    optimization_specification=new_opt_spec, keywords=entry.gridoptimization_keywords
+                    optimization_specification=new_go_spec["optimization_specification"],
+                    keywords=new_go_spec["keywords"],
                 )
 
                 meta, gridopt_ids = self.root_socket.records.gridoptimization.add(

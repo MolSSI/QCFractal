@@ -7,9 +7,8 @@ from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
 from qcportal.records.gridoptimization import (
     GridoptimizationRecord,
-    GridoptimizationKeywords,
+    GridoptimizationSpecification,
 )
-from qcportal.records.optimization import OptimizationSpecification
 from qcportal.utils import make_list
 from ..models import BaseDataset
 
@@ -18,8 +17,8 @@ class GridoptimizationDatasetNewEntry(BaseModel):
     name: str
     comment: Optional[str] = None
     initial_molecule: Union[Molecule, int]
-    gridoptimization_keywords: GridoptimizationKeywords
     additional_keywords: Dict[str, Any] = {}
+    additional_optimization_keywords: Dict[str, Any] = {}
     attributes: Dict[str, Any] = {}
 
 
@@ -31,7 +30,7 @@ class GridoptimizationDatasetEntry(GridoptimizationDatasetNewEntry):
 # The gridoptimization keywords are stored in the entries ^^
 class GridoptimizationDatasetSpecification(BaseModel):
     name: str
-    specification: OptimizationSpecification
+    specification: GridoptimizationSpecification
     description: Optional[str] = None
 
 
@@ -61,7 +60,7 @@ class GridoptimizationDataset(BaseDataset):
     _record_type = GridoptimizationRecord
 
     def add_specification(
-        self, name: str, specification: OptimizationSpecification, description: Optional[str] = None
+        self, name: str, specification: GridoptimizationSpecification, description: Optional[str] = None
     ) -> InsertMetadata:
 
         payload = GridoptimizationDatasetSpecification(name=name, specification=specification, description=description)

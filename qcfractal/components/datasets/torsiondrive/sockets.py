@@ -8,7 +8,6 @@ from qcfractal.components.datasets.sockets import BaseDatasetSocket
 from qcfractal.components.records.torsiondrive.db_models import TorsiondriveRecordORM
 from qcportal.datasets.torsiondrive import TorsiondriveDatasetNewEntry
 from qcportal.records import PriorityEnum
-from qcportal.records.optimization import OptimizationSpecification
 from qcportal.records.torsiondrive import TorsiondriveSpecification
 from .db_models import (
     TorsiondriveDatasetORM,
@@ -43,9 +42,9 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
         self._logger = logging.getLogger(__name__)
 
     def _add_specification(
-        self, session: Session, specification: OptimizationSpecification
+        self, session: Session, specification: TorsiondriveSpecification
     ) -> Tuple[InsertMetadata, Optional[int]]:
-        return self.root_socket.records.optimization.add_specification(specification, session=session)
+        return self.root_socket.records.torsiondrive.add_specification(specification, session=session)
 
     def _create_entries(self, session: Session, dataset_id: int, new_entries: Sequence[TorsiondriveDatasetNewEntry]):
 
@@ -59,8 +58,8 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
                 dataset_id=dataset_id,
                 name=entry.name,
                 comment=entry.comment,
-                torsiondrive_keywords=entry.torsiondrive_keywords.dict(),
                 additional_keywords=entry.additional_keywords,
+                additional_optimization_keywords=entry.additional_optimization_keywords,
                 attributes=entry.attributes,
                 initial_molecules_assoc=new_ent_mols,
             )
@@ -80,19 +79,20 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
         priority: PriorityEnum,
     ):
         for spec in spec_orm:
-            # The spec for a torsiondrive dataset is an optimization specification
-            opt_spec_obj = spec.specification.to_model(OptimizationSpecification)
-            opt_spec_input_dict = opt_spec_obj.dict()
+            td_spec_obj = spec.specification.to_model(TorsiondriveSpecification)
+            td_spec_input_dict = td_spec_obj.dict()
 
             for entry in entry_orm:
                 if (entry.name, spec.name) in existing_records:
                     continue
 
-                new_opt_spec = copy.deepcopy(opt_spec_input_dict)
-                new_opt_spec["keywords"].update(entry.additional_keywords)
+                new_td_spec = copy.deepcopy(td_spec_input_dict)
+                new_td_spec["keywords"].update(entry.additional_keywords)
+                new_td_spec["optimization_specification"]["keywords"].update(entry.additional_optimization_keywords)
 
                 td_spec = TorsiondriveSpecification(
-                    optimization_specification=new_opt_spec, keywords=entry.torsiondrive_keywords
+                    optimization_specification=new_td_spec["optimization_specification"],
+                    keywords=new_td_spec["keywords"],
                 )
 
                 meta, td_ids = self.root_socket.records.torsiondrive.add(

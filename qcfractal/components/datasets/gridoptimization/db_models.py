@@ -8,8 +8,10 @@ from sqlalchemy.orm import relationship
 
 from qcfractal.components.datasets.db_models import BaseDatasetORM
 from qcfractal.components.molecules.db_models import MoleculeORM
-from qcfractal.components.records.gridoptimization.db_models import GridoptimizationRecordORM
-from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM
+from qcfractal.components.records.gridoptimization.db_models import (
+    GridoptimizationRecordORM,
+    GridoptimizationSpecificationORM,
+)
 from qcfractal.db_socket import BaseORM
 
 if TYPE_CHECKING:
@@ -25,8 +27,8 @@ class GridoptimizationDatasetEntryORM(BaseORM):
     comment = Column(String)
 
     initial_molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), nullable=False)
-    gridoptimization_keywords = Column(JSONB, nullable=False)
     additional_keywords = Column(JSONB, nullable=False)
+    additional_optimization_keywords = Column(JSONB, nullable=False)
     attributes = Column(JSONB, nullable=False)
 
     initial_molecule = relationship(MoleculeORM, lazy="joined")
@@ -39,7 +41,7 @@ class GridoptimizationDatasetEntryORM(BaseORM):
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id", "molecule_id")
+        exclude = self.append_exclude(exclude, "dataset_id", "initial_molecule_id")
         return BaseORM.model_dict(self, exclude)
 
 
@@ -49,9 +51,9 @@ class GridoptimizationDatasetSpecificationORM(BaseORM):
     dataset_id = Column(Integer, ForeignKey("gridoptimization_dataset.id", ondelete="cascade"), primary_key=True)
     name = Column(String, primary_key=True)
     description = Column(String, nullable=True)
-    specification_id = Column(Integer, ForeignKey(OptimizationSpecificationORM.id), nullable=False)
+    specification_id = Column(Integer, ForeignKey(GridoptimizationSpecificationORM.id), nullable=False)
 
-    specification = relationship(OptimizationSpecificationORM)
+    specification = relationship(GridoptimizationSpecificationORM)
 
     __table_args__ = (
         Index("ix_gridoptimization_dataset_specification_dataset_id", "dataset_id"),

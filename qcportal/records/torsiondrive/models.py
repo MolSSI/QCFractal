@@ -16,12 +16,12 @@ class TorsiondriveKeywords(BaseModel):
     """
 
     dihedrals: List[Tuple[int, int, int, int]] = Field(
-        ...,
+        [],
         description="The list of dihedrals to select for the TorsionDrive operation. Each entry is a tuple of integers "
         "of for particle indices.",
     )
     grid_spacing: List[int] = Field(
-        ...,
+        [],
         description="List of grid spacing for dihedral scan in degrees. Multiple values will be mapped to each "
         "dihedral angle.",
     )

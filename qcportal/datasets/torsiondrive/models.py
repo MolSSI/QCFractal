@@ -5,11 +5,7 @@ from typing_extensions import Literal
 
 from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
-from qcportal.records.optimization import OptimizationSpecification
-from qcportal.records.torsiondrive import (
-    TorsiondriveRecord,
-    TorsiondriveKeywords,
-)
+from qcportal.records.torsiondrive import TorsiondriveRecord, TorsiondriveSpecification
 from qcportal.utils import make_list
 from ..models import BaseDataset
 
@@ -18,8 +14,8 @@ class TorsiondriveDatasetNewEntry(BaseModel):
     name: str
     comment: Optional[str] = None
     initial_molecules: List[Union[Molecule, int]]
-    torsiondrive_keywords: TorsiondriveKeywords
     additional_keywords: Dict[str, Any] = {}
+    additional_optimization_keywords: Dict[str, Any] = {}
     attributes: Dict[str, Any] = {}
 
 
@@ -31,7 +27,7 @@ class TorsiondriveDatasetEntry(TorsiondriveDatasetNewEntry):
 # The torsiondrive keywords are stored in the entries ^^
 class TorsiondriveDatasetSpecification(BaseModel):
     name: str
-    specification: OptimizationSpecification
+    specification: TorsiondriveSpecification
     description: Optional[str] = None
 
 
@@ -61,7 +57,7 @@ class TorsiondriveDataset(BaseDataset):
     _record_type = TorsiondriveRecord
 
     def add_specification(
-        self, name: str, specification: OptimizationSpecification, description: Optional[str] = None
+        self, name: str, specification: TorsiondriveSpecification, description: Optional[str] = None
     ) -> InsertMetadata:
 
         payload = TorsiondriveDatasetSpecification(name=name, specification=specification, description=description)

@@ -8,8 +8,7 @@ from sqlalchemy.orm import relationship, column_property
 
 from qcfractal.components.datasets.db_models import BaseDatasetORM
 from qcfractal.components.molecules.db_models import MoleculeORM
-from qcfractal.components.records.optimization.db_models import OptimizationSpecificationORM
-from qcfractal.components.records.torsiondrive.db_models import TorsiondriveRecordORM
+from qcfractal.components.records.torsiondrive.db_models import TorsiondriveRecordORM, TorsiondriveSpecificationORM
 from qcfractal.db_socket import BaseORM
 
 if TYPE_CHECKING:
@@ -39,11 +38,6 @@ class TorsiondriveDatasetMoleculeORM(BaseORM):
         ),
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id", "molecule_id", "entry_name")
-        return BaseORM.model_dict(self, exclude)
-
 
 class TorsiondriveDatasetEntryORM(BaseORM):
     __tablename__ = "torsiondrive_dataset_entry"
@@ -53,8 +47,8 @@ class TorsiondriveDatasetEntryORM(BaseORM):
     name = Column(String, primary_key=True)
     comment = Column(String)
 
-    torsiondrive_keywords = Column(JSONB, nullable=False)
     additional_keywords = Column(JSONB, nullable=False)
+    additional_optimization_keywords = Column(JSONB, nullable=False)
     attributes = Column(JSONB, nullable=False)
 
     # Mark as deferred. We generally don't want to load it
@@ -90,9 +84,9 @@ class TorsiondriveDatasetSpecificationORM(BaseORM):
     dataset_id = Column(Integer, ForeignKey("torsiondrive_dataset.id", ondelete="cascade"), primary_key=True)
     name = Column(String, primary_key=True)
     description = Column(String, nullable=True)
-    specification_id = Column(Integer, ForeignKey(OptimizationSpecificationORM.id), nullable=False)
+    specification_id = Column(Integer, ForeignKey(TorsiondriveSpecificationORM.id), nullable=False)
 
-    specification = relationship(OptimizationSpecificationORM)
+    specification = relationship(TorsiondriveSpecificationORM)
 
     __table_args__ = (
         Index("ix_torsiondrive_dataset_specification_dataset_id", "dataset_id"),

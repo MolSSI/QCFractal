@@ -41,11 +41,15 @@ test_specs = [
 
 def entry_extra_compare(ent1, ent2):
     assert ent1.molecule == ent2.molecule
+    assert ent1.additional_keywords == ent2.additional_keywords
 
 
 def record_compare(rec, ent, spec):
     assert rec.molecule == ent.molecule
-    assert rec.specification == spec
+
+    merged_spec = spec.dict()
+    merged_spec["keywords"].update(ent.additional_keywords)
+    assert rec.specification == QCSpecification(**merged_spec)
 
 
 def test_singlepoint_dataset_model_add_get_entry(snowflake_client: PortalClient):

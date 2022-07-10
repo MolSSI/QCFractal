@@ -83,7 +83,7 @@ class GridoptimizationKeywords(BaseModel):
     """
 
     scans: List[ScanDimension] = Field(
-        ..., description="The dimensions to scan along (along with their options) for the Gridoptimization."
+        [], description="The dimensions to scan along (along with their options) for the Gridoptimization."
     )
     preoptimization: bool = Field(
         True,

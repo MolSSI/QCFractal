@@ -58,11 +58,15 @@ test_specs = [
 
 def entry_extra_compare(ent1, ent2):
     assert ent1.initial_molecule == ent2.initial_molecule
+    assert ent1.additional_keywords == ent2.additional_keywords
 
 
 def record_compare(rec, ent, spec):
     assert rec.initial_molecule == ent.initial_molecule
-    assert rec.specification == spec
+
+    merged_spec = spec.dict()
+    merged_spec["keywords"].update(ent.additional_keywords)
+    assert rec.specification == OptimizationSpecification(**merged_spec)
 
 
 def test_optimization_dataset_model_add_get_entry(snowflake_client: PortalClient):

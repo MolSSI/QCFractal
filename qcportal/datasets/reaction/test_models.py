@@ -77,6 +77,7 @@ test_specs = [
 def entry_extra_compare(ent1, ent2):
     stoich_tmp = [(x.coefficient, x.molecule) for x in ent1.stoichiometries]
     assert sorted(stoich_tmp) == sorted(ent2.stoichiometries)
+    assert ent1.additional_keywords == ent2.additional_keywords
 
 
 def record_compare(rec, ent, spec):
@@ -84,8 +85,9 @@ def record_compare(rec, ent, spec):
     stoich_2 = set((x[0], x[1].get_hash()) for x in ent.stoichiometries)
     assert stoich_1 == stoich_2
 
-    # TODO - ignores keywords (because there aren't any!)
-    assert rec.specification.dict(exclude={"keywords"}) == spec.dict(exclude={"keywords"})
+    merged_spec = spec.dict()
+    merged_spec["keywords"].update(ent.additional_keywords)
+    assert rec.specification == ReactionSpecification(**merged_spec)
 
 
 def test_reaction_dataset_model_add_get_entry(snowflake_client: PortalClient):

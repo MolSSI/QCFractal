@@ -36,7 +36,6 @@ def run_dataset_model_add_get_entry(snowflake_client, ds, test_entries, entry_ex
         assert test_ent.name == ent.name
         assert test_ent.comment == ent.comment
         assert test_ent.attributes == ent.attributes
-        assert test_ent.additional_keywords == ent.additional_keywords
 
         # Compare molecules or other stuff
         entry_extra_compare(test_ent, ent)
@@ -270,17 +269,7 @@ def run_dataset_model_submit(ds, test_entries, test_spec, record_compare):
     ds.add_entries(test_entries[2])
     ds.submit()
     rec = ds.get_record(test_entries[2].name, "spec_1")
-
-    expected_spec = test_spec.copy(deep=True)
-
-    if isinstance(expected_spec.keywords, dict):
-        expected_spec.keywords.update(test_entries[2].additional_keywords)
-    else:
-        new_kw = expected_spec.keywords.dict()
-        new_kw.update(test_entries[2].additional_keywords)
-        expected_spec.keywords = new_kw
-
-    record_compare(rec, test_entries[2], expected_spec)
+    record_compare(rec, test_entries[2], test_spec)
 
     # Additional submission stuff
     ds.add_entries(test_entries[1])
