@@ -15,11 +15,13 @@ mol_size = 20
 
 COUNTER = 0
 
+
 def build_unique_mol():
     global COUNTER
     mol = qcel.models.Molecule(symbols=["He", "He"], geometry=np.random.rand(2, 3) + COUNTER, validated=True)
     COUNTER += 1
     return mol
+
 
 if run_tests:
     print("Running tests...\n")

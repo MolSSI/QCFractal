@@ -14,7 +14,7 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  - python
+  - pip
 
   # Core dependencies
   - msgpack-python >=0.6.1
@@ -39,7 +39,7 @@ dependencies:
   - h5py
   - pandas
   - plotly >=4.0.0
-  - pyarrow >=0.13.0
+  - pyarrow >=0.15.0
   - tqdm
 
   # Test depends
@@ -48,7 +48,7 @@ dependencies:
   - pytest-cov
   - requests-mock
 """
-qca_ecosystem_template = ["qcengine >=0.11.0", "qcelemental >=0.13.1"]
+qca_ecosystem_template = ["qcengine >=0.17.0", "qcelemental >=0.17.0"]
 
 pip_depends_template = []
 
@@ -102,26 +102,39 @@ environs = [
         "filename": "base.yaml",
     },
     {
-
-        # Tools to test out all available adapters, ipy is for Parsl
-        "filename":
-        "adapters.yaml",
-        "dependencies":
-        ["rdkit", "dask", "distributed", "dask-jobqueue >=0.5.0", "ipyparallel", "ipykernel", "parsl >=0.9.0"],
-        "pip_dependencies": ["fireworks"]
+        # Tools to test out dask adapter
+        "filename": "adapter_dask.yaml",
+        "dependencies": ["rdkit", "dask", "distributed", "dask-jobqueue >=0.5.0"],
     },
     {
-
+        # Tools to test out parsl adapter
+        "filename": "adapter_parsl.yaml",
+        "dependencies": ["rdkit", "ipyparallel", "ipykernel", "parsl >=0.9.0"],
+    },
+    {
+        # Tools to test out fireworks adapter
+        "filename": "adapter_fireworks.yaml",
+        "pip_dependencies": ["fireworks"],
+    },
+    {
         # Tests for the OpenFF toolchain (geometric and torsiondrive)
         "filename": "openff.yaml",
-        "channels": ["psi4"],
-        "dependencies": ["psi4>=1.3", "rdkit", "geometric >=0.9.3", "torsiondrive", "dftd3"],
+        "channels": ["psi4/label/dev", "omnia"],
+        "dependencies": [
+            "psi4>1.4a2.dev700,<1.4a2",
+            "rdkit",
+            "geometric >=0.9.3",
+            "torsiondrive",
+            "dftd3",
+            "openforcefield >=0.7.1",
+            "openforcefields >=1.2.0",
+            "openmm >=7.4.2",
+            "openmmforcefields >=0.8.0",
+        ],
     },
     {
-
         # Tests for the current development heads
-        "filename":
-        "dev_head.yaml",
+        "filename": "dev_head.yaml",
         "dependencies": ["rdkit"],
         "qca_ecosystem": [],
         "pip_dependencies": [
@@ -129,8 +142,8 @@ environs = [
             "git+git://github.com/MolSSI/QCElemental#egg=qcelemental",
             "git+git://github.com/leeping/geomeTRIC#egg=geometric",
             "git+git://github.com/lpwgroup/torsiondrive.git#egg=torsiondrive",
-        ]  # yapf: disable
-    }
+        ],  # yapf: disable
+    },
 ]
 
 for envdata in environs:

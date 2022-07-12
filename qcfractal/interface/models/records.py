@@ -88,9 +88,6 @@ class RecordBase(ProtoModel, abc.ABC):
     )
 
     # Compute status
-    task_id: Optional[ObjectId] = Field(  # TODO: not used in SQL
-        None, description="Id of the compute task tracked by Fractal in its TaskTable."
-    )
     manager_name: Optional[str] = Field(None, description="Name of the Queue Manager which generated this record.")
     status: RecordStatusEnum = Field(RecordStatusEnum.incomplete, description=str(RecordStatusEnum.__doc__))
     modified_on: datetime.datetime = Field(None, description="Last time the data this record points to was modified.")
@@ -204,7 +201,14 @@ class RecordBase(ProtoModel, abc.ABC):
             return None
 
         if field_name not in self.cache:
-            self.cache[field_name] = self.client.query_kvstore([oid])[oid]
+            # Decompress here, rather than later
+            # that way, it is decompressed in the cache
+            kv = self.client.query_kvstore([oid])[oid]
+
+            if field_name == "error":
+                self.cache[field_name] = kv.get_json()
+            else:
+                self.cache[field_name] = kv.get_string()
 
         return self.cache[field_name]
 
@@ -271,7 +275,9 @@ class ResultRecord(RecordBase):
         description="The Id of the :class:`KeywordSet` which was passed into the quantum chemistry program that "
         "performed this calculation.",
     )
-    protocols: qcel.models.results.ResultProtocols = Field(qcel.models.results.ResultProtocols(), description="")
+    protocols: Optional[qcel.models.results.ResultProtocols] = Field(
+        qcel.models.results.ResultProtocols(), description=""
+    )
 
     # Output data
     return_result: Union[float, qcel.models.types.Array[float], Dict[str, Any]] = Field(
@@ -292,8 +298,7 @@ class ResultRecord(RecordBase):
 
     @validator("method")
     def check_method(cls, v):
-        """Methods should have a lower string to match the database.
-        """
+        """Methods should have a lower string to match the database."""
         return v.lower()
 
     @validator("basis")
@@ -351,68 +356,6 @@ class ResultRecord(RecordBase):
         else:
             return ret
 
-    ## QCSchema constructors
-
-    def build_schema_input(
-        self, molecule: "Molecule", keywords: Optional["KeywordSet"] = None, checks: bool = True
-    ) -> "ResultInput":
-        """
-        Creates a OptimizationInput schema.
-        """
-
-        if checks:
-            assert self.molecule == molecule.id
-            if self.keywords:
-                assert self.keywords == keywords.id
-
-        model = {"method": self.method}
-        if self.basis:
-            model["basis"] = self.basis
-
-        if not self.keywords:
-            keywords = {}
-        else:
-            keywords = keywords.values
-
-        if not self.protocols:
-            protocols = {}
-        else:
-            protocols = self.protocols
-
-        model = qcel.models.ResultInput(
-            id=self.id,
-            driver=self.driver.name,
-            model=model,
-            molecule=molecule,
-            keywords=keywords,
-            extras=self.extras,
-            protocols=protocols,
-        )
-        return model
-
-    def _consume_output(self, data: Dict[str, Any], checks: bool = True):
-        assert self.method == data["model"]["method"]
-        values = self.__dict__
-
-        # Result specific
-        values["extras"] = data["extras"]
-        values["extras"].pop("_qcfractal_tags", None)
-        values["return_result"] = data["return_result"]
-        values["properties"] = data["properties"]
-
-        # Wavefunction data
-        values["wavefunction"] = data.get("wavefunction", None)
-        values["wavefunction_data_id"] = data.get("wavefunction_data_id", None)
-
-        # Standard blocks
-        values["provenance"] = data["provenance"]
-        values["error"] = data["error"]
-        values["stdout"] = data["stdout"]
-        values["stderr"] = data["stderr"]
-        values["status"] = "COMPLETE"
-
-    ## QCSchema constructors
-
     def get_molecule(self) -> "Molecule":
         """
         Pulls the Result's Molecule from the connected database.
@@ -460,7 +403,7 @@ class OptimizationRecord(RecordBase):
         description="The keyword options which were passed into the Optimization program. "
         "Note: These are a dictionary and not a :class:`KeywordSet` object.",
     )
-    protocols: qcel.models.procedures.OptimizationProtocols = Field(
+    protocols: Optional[qcel.models.procedures.OptimizationProtocols] = Field(
         qcel.models.procedures.OptimizationProtocols(), description=""
     )
 
@@ -486,34 +429,6 @@ class OptimizationRecord(RecordBase):
         if v is not None:
             v = recursive_normalizer(v)
         return v
-
-    ## QCSchema constructors
-
-    def build_schema_input(
-        self, initial_molecule: "Molecule", qc_keywords: Optional["KeywordSet"] = None, checks: bool = True
-    ) -> "OptimizationInput":
-        """
-        Creates a OptimizationInput schema.
-        """
-
-        if checks:
-            assert self.initial_molecule == initial_molecule.id
-            if self.qc_spec.keywords:
-                assert self.qc_spec.keywords == qc_keywords.id
-
-        qcinput_spec = self.qc_spec.form_schema_object(keywords=qc_keywords, checks=checks)
-        qcinput_spec.pop("program", None)
-
-        model = qcel.models.OptimizationInput(
-            id=self.id,
-            initial_molecule=initial_molecule,
-            keywords=self.keywords,
-            extras=self.extras,
-            hash_index=self.hash_index,
-            input_specification=qcinput_spec,
-            protocols=self.protocols,
-        )
-        return model
 
     ## Standard function
 

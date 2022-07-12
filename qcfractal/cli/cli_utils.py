@@ -13,8 +13,7 @@ import yaml
 
 
 def import_module(module, package=None):
-    """Protected import of a module
-    """
+    """Protected import of a module"""
     try:
         ret = importlib.import_module(module, package=package)
     except ModuleNotFoundError:
@@ -25,8 +24,7 @@ def import_module(module, package=None):
 
 
 def read_config_file(fname):
-    """Reads a JSON or YAML file.
-    """
+    """Reads a JSON or YAML file."""
     if fname.endswith(".yaml") or fname.endswith(".yml"):
         try:
             rfunc = partial(yaml.load, Loader=yaml.FullLoader)

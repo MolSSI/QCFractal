@@ -29,8 +29,7 @@ def create_unique_result():
 
     mol = build_unique_mol()
     ret = storage.add_molecules([mol])["data"]
-    result = ResultRecord(version='1', driver='energy', program='games', molecule=ret[0],
-                          method='test', basis='6-31g')
+    result = ResultRecord(version="1", driver="energy", program="games", molecule=ret[0], method="test", basis="6-31g")
 
     return result
 
@@ -69,11 +68,10 @@ if run_tests:
     assert ret1[0] == ret2[0]
     assert ret1[1] == ret2[1]
     assert ret1[2] == ret2[2]
-    
+
 print("Running timings for add and update...\n")
 for trial in mol_trials:
     results = [create_unique_result() for x in range(trial)]
-
 
     t = time.time()
     ret = storage.add_results(results)["data"]
@@ -82,7 +80,7 @@ for trial in mol_trials:
     time_per_mol = ttime / trial
 
     print(f"add   : {trial:6d} {ttime:9.3f} {time_per_mol:6.3f}")
-    
+
     for r, rid in zip(results, ret):
         r.__dict__["id"] = rid
 
@@ -94,4 +92,3 @@ for trial in mol_trials:
 
     print(f"update: {trial:6d} {ttime:9.3f} {time_per_mol:6.3f}")
     print()
-

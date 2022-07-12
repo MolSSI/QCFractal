@@ -2,8 +2,10 @@
 Wraps geometric procedures
 """
 
+import io
 import copy
 import json
+import contextlib
 from typing import Any, Dict, List
 
 import numpy as np
@@ -57,8 +59,11 @@ class TorsionDriveService(BaseService):
         from torsiondrive import td_api
 
         # Build the record
+        # TODO: This removes the task_id which may exist on old records, but does not exist
+        # in newer TorsionDriveRecords.
+        # If a proper migration is ever done,
         output = TorsionDriveRecord(
-            **service_input.dict(exclude={"initial_molecule"}),
+            **service_input.dict(exclude={"initial_molecule", "task_id"}),
             initial_molecule=[x.id for x in service_input.initial_molecule],
             provenance={
                 "creator": "torsiondrive",
@@ -79,15 +84,21 @@ class TorsionDriveService(BaseService):
         meta["molecule_template"] = json.dumps(molecule_template)
 
         # Initiate torsiondrive meta
-        meta["torsiondrive_state"] = td_api.create_initial_state(
-            dihedrals=output.keywords.dihedrals,
-            grid_spacing=output.keywords.grid_spacing,
-            elements=molecule_template["symbols"],
-            init_coords=[x.geometry for x in service_input.initial_molecule],
-            dihedral_ranges=output.keywords.dihedral_ranges,
-            energy_decrease_thresh=output.keywords.energy_decrease_thresh,
-            energy_upper_limit=output.keywords.energy_upper_limit,
-        )
+        # The torsiondrive package uses print, so capture that using
+        # contextlib
+        td_stdout = io.StringIO()
+        with contextlib.redirect_stdout(td_stdout):
+            meta["torsiondrive_state"] = td_api.create_initial_state(
+                dihedrals=output.keywords.dihedrals,
+                grid_spacing=output.keywords.grid_spacing,
+                elements=molecule_template["symbols"],
+                init_coords=[x.geometry for x in service_input.initial_molecule],
+                dihedral_ranges=output.keywords.dihedral_ranges,
+                energy_decrease_thresh=output.keywords.energy_decrease_thresh,
+                energy_upper_limit=output.keywords.energy_upper_limit,
+            )
+
+        meta["stdout"] = td_stdout.getvalue()
 
         # Build dihedral template
         dihedral_template = []
@@ -102,6 +113,11 @@ class TorsionDriveService(BaseService):
             "meta": {"procedure": "optimization", "qc_spec": output.qc_spec.dict(), "tag": meta.pop("tag", None)}
         }
         opt_template["meta"].update(output.optimization_spec.dict())
+
+        # allows for injection of e.g. additional constraints for
+        # optimizations created by torsiondrive service
+        opt_template["meta"]["keywords"].update(service_input.keywords.additional_keywords)
+
         meta["optimization_template"] = json.dumps(opt_template)
 
         # Move around geometric data
@@ -135,16 +151,25 @@ class TorsionDriveService(BaseService):
                 ret = complete_tasks[task_id]
 
                 # Lookup molecules
-                mol_keys = self.storage_socket.get_molecules(id=[ret["initial_molecule"], ret["final_molecule"]])[
-                    "data"
-                ]
+                initial_id = ret["initial_molecule"]
+                final_id = ret["final_molecule"]
 
-                task_results[key].append((mol_keys[0].geometry, mol_keys[1].geometry, ret["energies"][-1]))
+                mol_ids = [initial_id, final_id]
+                mol_data = self.storage_socket.get_molecules(id=mol_ids)["data"]
+                mol_map = {x.id: x.geometry for x in mol_data}
 
-        td_api.update_state(self.torsiondrive_state, task_results)
+                task_results[key].append((mol_map[initial_id], mol_map[final_id], ret["energies"][-1]))
 
-        # Create new tasks from the current state
-        next_tasks = td_api.next_jobs_from_state(self.torsiondrive_state, verbose=True)
+        # The torsiondrive package uses print, so capture that using
+        # contextlib
+        td_stdout = io.StringIO()
+        with contextlib.redirect_stdout(td_stdout):
+            td_api.update_state(self.torsiondrive_state, task_results)
+
+            # Create new tasks from the current state
+            next_tasks = td_api.next_jobs_from_state(self.torsiondrive_state, verbose=True)
+
+        self.stdout += "\n" + td_stdout.getvalue()
 
         # All done
         if len(next_tasks) == 0:
@@ -205,7 +230,7 @@ class TorsionDriveService(BaseService):
 
     def update_output(self):
         """
-        Finishes adding data to the TorsionDriveRecord object
+        Adds data to the TorsionDriveRecord object
         """
         _check_td()
         from torsiondrive import td_api
@@ -229,4 +254,5 @@ class TorsionDriveService(BaseService):
                 "optimization_history": history,
             }
         )
+
         return True

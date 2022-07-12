@@ -7,13 +7,14 @@ import datetime
 import logging
 import re
 import time
-from concurrent.futures import ProcessPoolExecutor
+from multiprocessing import Pool
 
 import pytest
 
 import qcfractal.interface as ptl
 from qcfractal import FractalServer, queue, testing
 from qcfractal.testing import reset_server_database, test_server
+from qcfractal.cli.qcfractal_manager import _initialize_signals_process_pool
 
 CLIENT_USERNAME = "test_compute_adapter"
 
@@ -38,7 +39,7 @@ def compute_adapter_fixture(test_server):
 
     client = ptl.FractalClient(test_server, username=CLIENT_USERNAME)
 
-    with ProcessPoolExecutor(max_workers=2) as adapter:
+    with Pool(processes=2, initializer=_initialize_signals_process_pool) as adapter:
 
         yield client, test_server, adapter
 
@@ -67,7 +68,7 @@ def test_queue_manager_single_tags(compute_adapter_fixture):
     assert len(ret) == 1
 
     # Check the logs to make sure
-    managers = server.storage.get_managers()["data"]
+    managers = client.query_managers()
     assert len(managers) == 2
 
     test_results = {"stuff": 0, "other": 1}
@@ -110,9 +111,10 @@ def test_queue_manager_multiple_tags(compute_adapter_fixture):
     }
     for result in ret:
         assert result.status == ref_status[result.id]
-
     manager.await_results()
     ret = client.query_results(tasks)
+    for result in ret:
+        print(f"here you go: {(result.id, result.status)}")
     ref_status = {
         tasks[0]: "COMPLETE",
         tasks[1]: "COMPLETE",
@@ -197,8 +199,7 @@ def test_queue_manager_log_statistics(compute_adapter_fixture, caplog):
 
 @testing.using_rdkit
 def test_queue_manager_shutdown(compute_adapter_fixture):
-    """Tests to ensure tasks are returned to queue when the manager shuts down
-    """
+    """Tests to ensure tasks are returned to queue when the manager shuts down"""
     client, server, adapter = compute_adapter_fixture
     reset_server_database(server)
 
@@ -283,8 +284,7 @@ def test_queue_manager_server_delay(compute_adapter_fixture):
 
 
 def test_queue_manager_heartbeat(compute_adapter_fixture):
-    """Tests to ensure tasks are returned to queue when the manager shuts down
-    """
+    """Tests to ensure tasks are returned to queue when the manager shuts down"""
 
     client, server, adapter = compute_adapter_fixture
 
@@ -328,7 +328,7 @@ def test_manager_max_tasks_limiter(compute_adapter_fixture):
 
 def test_queue_manager_testing():
 
-    with ProcessPoolExecutor(max_workers=2) as adapter:
+    with Pool(processes=2, initializer=_initialize_signals_process_pool) as adapter:
         manager = queue.QueueManager(None, adapter)
 
         assert manager.test()

@@ -32,11 +32,11 @@ def initialize_service(storage_socket, logger, service_input, tag=None, priority
         A logger for use by the service
     service_input
         The service to be initialized.
-	tag : Optional
+    tag : Optional
         Optional tag to user with the service. Defaults to None
     priority :
         The priority of the service.
-		
+
     Returns
     -------
     Service

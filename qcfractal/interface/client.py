@@ -12,6 +12,7 @@ from pydantic import ValidationError
 
 from .collections import collection_factory, collections_name_map
 from .models import build_procedure
+from .models.task_models import PriorityEnum
 from .models.rest_models import rest_model
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -158,7 +159,7 @@ class FractalClient(object):
                 )
             client_version = _version_list(__version__)[:2]
             if not server_version_min_client <= client_version <= server_version_max_client:
-                client_ver_str = ".".join([str(i) for i in server_version_min_client])
+                client_ver_str = ".".join([str(i) for i in client_version])
                 server_version_min_str = ".".join([str(i) for i in server_version_min_client])
                 server_version_max_str = ".".join([str(i) for i in server_version_max_client])
                 raise IOError(
@@ -1017,6 +1018,8 @@ class FractalClient(object):
         operation: str,
         base_result: "QueryObjectId",
         id: Optional["QueryObjectId"] = None,
+        new_tag: Optional[str] = None,
+        new_priority: Optional[int] = None,
         full_return: bool = False,
     ) -> int:
         """Summary
@@ -1026,6 +1029,8 @@ class FractalClient(object):
         operation : str
             The operation to perform on the selected tasks. Valid operations are:
              - `restart` - Restarts a task by moving its status from 'ERROR' to 'WAITING'
+             - `regenerate` - Regenerates a missing task
+             - `modify` - Modify a tasks tag or priority
         base_result : QueryObjectId
             The id of the result that the task is associated with.
         id : QueryObjectId, optional
@@ -1040,12 +1045,19 @@ class FractalClient(object):
             The number of modified tasks.
         """
         operation = operation.lower()
-        valid_ops = {"restart"}
+        valid_ops = {"restart", "regenerate", "modify"}
 
         if operation not in valid_ops:
             raise ValueError(f"Operation '{operation}' is not available, valid operations are: {valid_ops}")
 
-        payload = {"meta": {"operation": operation}, "data": {"id": id, "base_result": base_result}}
+        # make sure priority is valid
+        if new_priority is not None:
+            new_priority = PriorityEnum(new_priority).value
+
+        payload = {
+            "meta": {"operation": operation},
+            "data": {"id": id, "base_result": base_result, "new_tag": new_tag, "new_priority": new_priority},
+        }
 
         return self._automodel_request("task_queue", "put", payload, full_return=full_return)
 
@@ -1156,6 +1168,40 @@ class FractalClient(object):
         payload = {"meta": {"operation": operation}, "data": {"id": id, "procedure_id": procedure_id}}
 
         return self._automodel_request("service_queue", "put", payload, full_return=full_return)
+
+    def query_managers(
+        self,
+        name: Optional["QueryStr"] = None,
+        status: Optional["QueryStr"] = "ACTIVE",
+        limit: Optional[int] = None,
+        skip: int = 0,
+        full_return: bool = False,
+    ) -> Dict[str, Any]:
+        """Obtains information about compute managers attached to this Fractal instance
+
+        Parameters
+        ----------
+        name : QueryStr, optional
+            Queries the managers name.
+        status : QueryStr, optional
+            Queries the manager's ``status`` field. Default is to search for only ACTIVE managers
+        limit : Optional[int], optional
+            The maximum number of managers to query
+        skip : int, optional
+            The number of managers to skip in the query, used during pagination
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        List[Dict[str, Any]]
+            A dictionary of each match that contains all the information for each manager
+        """
+        payload = {
+            "meta": {"limit": limit, "skip": skip},
+            "data": {"name": name, "status": status},
+        }
+        return self._automodel_request("manager", "get", payload, full_return=full_return)
 
     # -------------------------------------------------------------------------
     # ------------------   Advanced Queries -----------------------------------

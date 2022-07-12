@@ -10,6 +10,15 @@ from qcelemental.models import FailedOperation
 from .base_adapter import BaseAdapter
 
 
+def _get_result(result):
+    try:
+        return result.get()
+    except Exception as e:
+        msg = "Caught Executor Error:\n" + traceback.format_exc()
+        ret = FailedOperation(**{"success": False, "error": {"error_type": e.__class__.__name__, "error_message": msg}})
+        return ret
+
+
 def _get_future(future):
     try:
         return future.result()
@@ -20,29 +29,28 @@ def _get_future(future):
 
 
 class ExecutorAdapter(BaseAdapter):
-    """A Queue Adapter for Python Executors
-    """
+    """A Queue Adapter for Python Executors"""
 
     def __repr__(self):
 
         return "<ExecutorAdapter client=<{} max_workers={}>>".format(
-            self.client.__class__.__name__, self.client._max_workers
+            self.client.__class__.__name__, self.count_active_task_slots()
         )
 
     def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Hashable, Any]:
         func = self.get_function(task_spec["spec"]["function"])
-        task = self.client.submit(func, *task_spec["spec"]["args"], **task_spec["spec"]["kwargs"])
+        task = self.client.apply_async(func, task_spec["spec"]["args"], task_spec["spec"]["kwargs"])
         return task_spec["id"], task
 
     def count_active_task_slots(self) -> int:
-        return self.client._max_workers
+        return len(self.client._pool)
 
     def acquire_complete(self) -> Dict[str, Any]:
         ret = {}
         del_keys = []
-        for key, future in self.queue.items():
-            if future.done():
-                ret[key] = _get_future(future)
+        for key, result in self.queue.items():
+            if result.ready():
+                ret[key] = _get_result(result)
                 del_keys.append(key)
 
         for key in del_keys:
@@ -51,23 +59,19 @@ class ExecutorAdapter(BaseAdapter):
         return ret
 
     def await_results(self) -> bool:
-        from concurrent.futures import wait
-
-        wait(list(self.queue.values()))
+        for result in self.queue.values():
+            result.wait()
 
         return True
 
     def close(self) -> bool:
-        for future in self.queue.values():
-            future.cancel()
-
-        self.client.shutdown()
+        self.client.terminate()
+        self.client.join()
         return True
 
 
-class DaskAdapter(ExecutorAdapter):
-    """A Queue Adapter for Dask
-    """
+class DaskAdapter(BaseAdapter):
+    """A Queue Adapter for Dask"""
 
     def __repr__(self):
 
@@ -89,6 +93,19 @@ class DaskAdapter(ExecutorAdapter):
             return self.client.cluster._count_active_workers()
         else:
             return len(self.client.cluster.scheduler.workers)
+
+    def acquire_complete(self) -> Dict[str, Any]:
+        ret = {}
+        del_keys = []
+        for key, future in self.queue.items():
+            if future.done():
+                ret[key] = _get_future(future)
+                del_keys.append(key)
+
+        for key in del_keys:
+            del self.queue[key]
+
+        return ret
 
     def await_results(self) -> bool:
         from dask.distributed import wait

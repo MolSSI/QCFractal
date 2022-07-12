@@ -10,6 +10,7 @@ import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional, Union
+from qcelemental.models import ComputeError
 
 import tornado.ioloop
 import tornado.log
@@ -18,7 +19,7 @@ import tornado.web
 
 from .extras import get_information
 from .interface import FractalClient
-from .queue import QueueManager, QueueManagerHandler, ServiceQueueHandler, TaskQueueHandler
+from .queue import QueueManager, QueueManagerHandler, ServiceQueueHandler, TaskQueueHandler, ComputeManagerHandler
 from .services import construct_service
 from .storage_sockets import ViewHandler, storage_socket_factory
 from .storage_sockets.api_logger import API_AccessLogger
@@ -33,8 +34,6 @@ from .web_handlers import (
     ResultHandler,
     WavefunctionStoreHandler,
 )
-
-myFormatter = logging.Formatter("[%(asctime)s] %(message)s", datefmt="%m/%d/%Y %I:%M:%S %p")
 
 
 def _build_ssl():
@@ -109,6 +108,7 @@ class FractalServer:
         view_path: Optional[str] = None,
         # Log options
         logfile_prefix: str = None,
+        loglevel: str = "info",
         log_apis: bool = False,
         geo_file_path: str = None,
         # Queue options
@@ -148,6 +148,8 @@ class FractalServer:
             The maximum number of entries a query will return.
         logfile_prefix : str, optional
             The logfile to use for logging.
+        loglevel : str, optional
+            The level of logging to output
         queue_socket : BaseAdapter, optional
             An optional Adapter to provide for server to have limited local compute.
             Should only be used for testing and interactive sessions.
@@ -177,6 +179,7 @@ class FractalServer:
 
         tornado.log.enable_pretty_logging()
         self.logger = logging.getLogger("tornado.application")
+        self.logger.setLevel(loglevel.upper())
 
         # Create API Access logger class if enables
         if log_apis:
@@ -271,8 +274,8 @@ class FractalServer:
             "heartbeat_frequency": self.heartbeat_frequency,
             "version": get_information("version"),
             "query_limit": self.storage.get_limit(1.0e9),
-            "client_lower_version_limit": "0.12.1",  # Must be XX.YY.ZZ
-            "client_upper_version_limit": "0.13.99",  # Must be XX.YY.ZZ
+            "client_lower_version_limit": "0.14.0",  # Must be XX.YY.ZZ
+            "client_upper_version_limit": "0.15.99",  # Must be XX.YY.ZZ
         }
         self.update_public_information()
 
@@ -291,6 +294,7 @@ class FractalServer:
             (r"/task_queue", TaskQueueHandler, self.objects),
             (r"/service_queue", ServiceQueueHandler, self.objects),
             (r"/queue_manager", QueueManagerHandler, self.objects),
+            (r"/manager", ComputeManagerHandler, self.objects),
         ]
 
         # Build the app
@@ -298,7 +302,9 @@ class FractalServer:
         self.app = tornado.web.Application(endpoints, **app_settings)
         self.endpoints = set([v[0].replace("/", "", 1) for v in endpoints])
 
-        self.http_server = tornado.httpserver.HTTPServer(self.app, ssl_options=ssl_ctx)
+        self.http_server = tornado.httpserver.HTTPServer(
+            self.app, ssl_options=ssl_ctx, max_buffer_size=250 * 1048576, max_body_size=250 * 1048576
+        )
 
         self.http_server.listen(self.port)
 
@@ -494,8 +500,7 @@ class FractalServer:
     ## Updates
 
     def update_services(self) -> int:
-        """Runs through all active services and examines their current status.
-        """
+        """Runs through all active services and examines their current status."""
 
         # Grab current services
         current_services = self.storage.get_services(status="RUNNING")["data"]
@@ -515,6 +520,12 @@ class FractalServer:
         completed_services = []
         for data in current_services:
 
+            # TODO HACK: remove task_id from 'output'. This is contained in services
+            # created in previous versions. Doing this now, but should do a db migration
+            # at some point
+            if "output" in data:
+                data["output"].pop("task_id", None)
+
             # Attempt to iteration and get message
             try:
                 service = construct_service(self.storage, self.logger, data)
@@ -523,7 +534,7 @@ class FractalServer:
                 error_message = "FractalServer Service Build and Iterate Error:\n{}".format(traceback.format_exc())
                 self.logger.error(error_message)
                 service.status = "ERROR"
-                service.error = {"error_type": "iteration_error", "error_message": error_message}
+                service.error = ComputeError(error_type="iteration_error", error_message=error_message)
                 finished = False
 
             self.storage.update_services([service])
@@ -540,6 +551,8 @@ class FractalServer:
 
         if len(completed_services):
             self.logger.info(f"Completed {len(completed_services)} services.")
+
+        self.logger.debug(f"Done updating services.")
 
         # Add new procedures and services
         self.storage.services_completed(completed_services)

@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, List, NoReturn, Optional,
 
 import numpy as np
 import pandas as pd
+import h5py
 from qcelemental.util.serialization import deserialize, serialize
 
 from ..models import Molecule, ObjectId
@@ -19,7 +20,6 @@ from .dataset import Dataset, MoleculeEntry
 from .reaction_dataset import ReactionDataset, ReactionEntry
 
 if TYPE_CHECKING:  # pragma: no cover
-    import h5py
     from .. import FractalClient
     from ..models.rest_models import CollectionSubresourceGETResponseMeta
 
@@ -155,7 +155,6 @@ class HDF5View(DatasetView):
         queries: List[Dict[str, Union[str, bool]]]
             List of queries. Fields actually used are native, name, driver
         """
-        import h5py
 
         units = {}
         entries = self.get_index(subset)
@@ -215,8 +214,10 @@ class HDF5View(DatasetView):
             with self._read_file() as f:
                 entry_group = f["entry"]
                 self._index = pd.DataFrame({"index": entry_group["entry"][()]})
+                self._index["index"] = self._index["index"].str.decode("utf-8")
                 self._index["_h5idx"] = range(len(self._index))
                 self._index.set_index("index", inplace=True)
+
         if subset is None:
             return self._index.reset_index()
         else:
@@ -234,7 +235,15 @@ class HDF5View(DatasetView):
                     raise ValueError(
                         f"Unknown entry class ({entry_group.attrs['model']}) while " f"reading HDF5 entries."
                     )
+
                 self._entries = pd.DataFrame({field: entry_group[field][()] for field in fields})
+
+                # HDF5 stores these as byte arrays. But we use strings in pandas...
+                self._entries["name"] = self._entries["name"].str.decode("utf-8")
+
+                if entry_group.attrs["model"] == "ReactionEntry":
+                    self._entries["stoichiometry"] = self._entries["stoichiometry"].str.decode("utf-8")
+
                 self._entries.set_index("name", inplace=True)
         if subset is None:
             return self._entries.reset_index()
@@ -242,8 +251,6 @@ class HDF5View(DatasetView):
             return self._entries.loc[subset].reset_index()
 
     def write(self, ds: Dataset):
-        import h5py
-
         # For data checksums
         dataset_kwargs = {"chunks": True, "fletcher32": True}
         ds.get_entries(force=True)
@@ -271,6 +278,10 @@ class HDF5View(DatasetView):
         def _write_dataset(dataset, column, entry_dset):
             assert column.shape[1] == 1
             for i, name in enumerate(entry_dset):
+
+                if isinstance(name, bytes):
+                    name = name.decode("utf-8")
+
                 element = column.loc[name][0]
                 if not h5py.check_dtype(vlen=dataset.dtype):
                     dataset[i] = element
@@ -427,7 +438,7 @@ class HDF5View(DatasetView):
         self._entries = None
 
     def hash(self) -> str:
-        """ Returns the Blake2b hash of the view """
+        """Returns the Blake2b hash of the view"""
         b2b = hashlib.blake2b()
         with open(self._path, "rb") as f:
             for chunk in iter(lambda: f.read(8192), b""):
@@ -436,21 +447,17 @@ class HDF5View(DatasetView):
 
     @staticmethod
     def _normalize_hdf5_name(name: str) -> str:
-        """ Handles names with / in them, which is disallowed in HDF5 """
+        """Handles names with / in them, which is disallowed in HDF5"""
         if ":" in name:
             raise ValueError("':' not allowed in names")
         return name.replace("/", ":")
 
     @contextmanager
     def _read_file(self) -> Iterator["h5py.File"]:
-        import h5py
-
         yield h5py.File(self._path, "r")
 
     @contextmanager
     def _write_file(self) -> Iterator["h5py.File"]:
-        import h5py
-
         yield h5py.File(self._path, "w")
 
     # Methods for serializing to strings for storage in HDF5 metadata fields ("attrs")

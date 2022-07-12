@@ -24,8 +24,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import text
 
 from qcfractal.interface.models.task_models import ManagerStatusEnum, PriorityEnum, TaskStatusEnum
+from qcfractal.interface.models.common_models import CompressionEnum
 from qcfractal.storage_sockets.models.sql_base import Base, MsgpackExt
 
 
@@ -33,9 +35,9 @@ class AccessLogORM(Base):
     __tablename__ = "access_log"
 
     id = Column(Integer, primary_key=True)
-    access_date = Column(DateTime, default=datetime.datetime.utcnow)
+    access_date = Column(DateTime, default=datetime.datetime.utcnow, index=True)
     access_method = Column(String, nullable=False)
-    access_type = Column(String, nullable=False)
+    access_type = Column(String, nullable=False, index=True)
 
     # Note: no performance difference between varchar and text in postgres
     # will mostly have a serialized JSON, but not stored as JSON for speed
@@ -53,8 +55,6 @@ class AccessLogORM(Base):
     ip_long = Column(String)
     postal_code = Column(String)
     subdivision = Column(String)
-
-    __table_args__ = (Index("access_type", "access_date"),)
 
 
 class ServerStatsLogORM(Base):
@@ -93,32 +93,28 @@ class VersionsORM(Base):
 
 
 class KVStoreORM(Base):
-    """TODO: rename to """
+    """TODO: rename to"""
 
     __tablename__ = "kv_store"
 
     id = Column(Integer, primary_key=True)
-    value = Column(JSON, nullable=False)
-
-
-# class ErrorORM(Base):
-#     __tablename__ = "error"
-#
-#     id = Column(Integer, primary_key=True)
-#     value = Column(JSON, nullable=False)
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    compression = Column(Enum(CompressionEnum), nullable=True)
+    compression_level = Column(Integer, nullable=True)
+    value = Column(JSON, nullable=True)
+    data = Column(LargeBinary, nullable=True)
 
 
 class MoleculeORM(Base):
     """
-        The molecule DB collection is managed by pymongo, so far
+    The molecule DB collection is managed by pymongo, so far
     """
 
     __tablename__ = "molecule"
 
     id = Column(Integer, primary_key=True)
     molecular_formula = Column(String)
+
+    # TODO - hash can be stored more efficiently (ie, byte array)
     molecule_hash = Column(String)
 
     # Required data
@@ -156,27 +152,7 @@ class MoleculeORM(Base):
     provenance = Column(JSON)
     extras = Column(JSON)
 
-    # def __str__(self):
-    #     return str(self.id)
-
-    __table_args__ = (
-        Index("ix_molecule_hash", "molecule_hash", unique=False),  # dafault index is B-tree
-        # TODO: no index on molecule_formula
-    )
-
-    # meta = {
-    #
-    #     'indexes': [
-    #         {
-    #             'fields': ('molecule_hash', ),
-    #             'unique': False
-    #         },  # should almost be unique
-    #         {
-    #             'fields': ('molecular_formula', ),
-    #             'unique': False
-    #         }
-    #     ]
-    # }
+    __table_args__ = (Index("ix_molecule_hash", "molecule_hash", unique=False),)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -184,7 +160,7 @@ class MoleculeORM(Base):
 
 class KeywordsORM(Base):
     """
-        KeywordsORM are unique for a specific program and name
+    KeywordsORM are unique for a specific program and name
     """
 
     __tablename__ = "keywords"
@@ -207,8 +183,8 @@ class KeywordsORM(Base):
 class TaskQueueORM(Base):
     """A queue of tasks corresponding to a procedure
 
-       Notes: don't sort query results without having the index sorted
-              will impact the performance
+    Notes: don't sort query results without having the index sorted
+           will impact the performance
     """
 
     __tablename__ = "task_queue"
@@ -225,12 +201,12 @@ class TaskQueueORM(Base):
     status = Column(Enum(TaskStatusEnum), default=TaskStatusEnum.waiting)
     priority = Column(Integer, default=int(PriorityEnum.NORMAL))
     manager = Column(String, ForeignKey("queue_manager.name", ondelete="SET NULL"), default=None)
-    error = Column(String)  # TODO: tobe removed - should be in results
 
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
     modified_on = Column(DateTime, default=datetime.datetime.utcnow)
 
     # TODO: for back-compatibility with mongo, tobe removed
+    # (requries modifying pydantic model)
     @hybrid_property
     def base_result(self):
         return self.base_result_id
@@ -247,12 +223,12 @@ class TaskQueueORM(Base):
     # explicit sort will have to process all the data to identify the first n
     # rows, but if there is an index matching the ORDER BY, the first n rows
     # can be retrieved directly, without scanning the remainder at all.
-
     __table_args__ = (
         Index("ix_task_queue_created_on", "created_on"),
         Index("ix_task_queue_keys", "status", "program", "procedure", "tag"),
         Index("ix_task_queue_manager", "manager"),
         Index("ix_task_queue_base_result_id", "base_result_id"),
+        Index("ix_task_waiting_sort", text("priority desc,  created_on")),
     )
 
 
@@ -324,8 +300,7 @@ class QueueManagerLogORM(Base):
 
 
 class QueueManagerORM(Base):
-    """
-    """
+    """ """
 
     __tablename__ = "queue_manager"
 

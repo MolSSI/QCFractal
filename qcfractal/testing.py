@@ -85,8 +85,6 @@ def _plugin_import(plug):
         return True
 
 
-_import_message = "Not detecting module {}. Install package if necessary and add to envvar PYTHONPATH"
-
 _adapter_testing = ["pool", "dask", "fireworks", "parsl"]
 
 # Figure out what is imported
@@ -164,8 +162,7 @@ def find_open_port():
 
 @contextmanager
 def preserve_cwd():
-    """Always returns to CWD on exit
-    """
+    """Always returns to CWD on exit"""
     cwd = os.getcwd()
     try:
         yield cwd
@@ -366,8 +363,7 @@ def postgres_server():
 
 
 def reset_server_database(server):
-    """Resets the server database for testing.
-    """
+    """Resets the server database for testing."""
     if "QCFRACTAL_RESET_TESTING_DB" in os.environ:
         server.storage._clear_db(server.storage._project_name)
 
@@ -404,9 +400,10 @@ def build_adapter_clients(mtype, storage_name="test_qcfractal_compute_server"):
 
     # Basic boot and loop information
     if mtype == "pool":
-        from concurrent.futures import ProcessPoolExecutor
+        from multiprocessing import Pool, set_start_method
+        from .cli.qcfractal_manager import _initialize_signals_process_pool
 
-        adapter_client = ProcessPoolExecutor(max_workers=2)
+        adapter_client = Pool(processes=2, initializer=_initialize_signals_process_pool)
 
     elif mtype == "dask":
         dd = pytest.importorskip("dask.distributed")
@@ -562,7 +559,7 @@ def live_fractal_or_skip():
 
 
 def df_compare(df1, df2, sort=False):
-    """ checks equality even when columns contain numpy arrays, which .equals and == struggle with """
+    """checks equality even when columns contain numpy arrays, which .equals and == struggle with"""
     if sort:
         if isinstance(df1, pd.DataFrame):
             df1 = df1.reindex(sorted(df1.columns), axis=1)

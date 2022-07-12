@@ -1,5 +1,5 @@
 # QCFractal
-[![Build Status](https://travis-ci.org/MolSSI/QCFractal.svg?branch=master)](https://travis-ci.org/MolSSI/QCFractal)
+[![Continuous Integration](https://github.com/MolSSI/QCFractal/workflows/Continuous%20Integration/badge.svg)](https://github.com/MolSSI/QCFractal/actions?query=workflow%3A%22Continuous+Integration%22)
 [![codecov](https://codecov.io/gh/MolSSI/QCFractal/branch/master/graph/badge.svg)](https://codecov.io/gh/MolSSI/QCFractal)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/MolSSI/QCFractal.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/MolSSI/QCFractal/context:python)
 [![Documentation Status](https://readthedocs.org/projects/qcfractal/badge/?version=latest)](https://qcfractal.readthedocs.io/en/latest/?badge=latest)

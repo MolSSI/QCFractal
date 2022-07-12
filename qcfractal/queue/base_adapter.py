@@ -10,8 +10,7 @@ from typing import Any, Callable, Dict, Hashable, List, Optional, Tuple
 
 
 class BaseAdapter(abc.ABC):
-    """A BaseAdapter for wrapping compute engines
-    """
+    """A BaseAdapter for wrapping compute engines"""
 
     def __init__(
         self,
@@ -31,7 +30,7 @@ class BaseAdapter(abc.ABC):
         ----------
         client : object
             A object wrapper for different distributed workflow types. The following input types are valid
-             - Python Processes: "concurrent.futures.process.ProcessPoolExecutor"
+             - Python Processes: "multiprocessing.Pool"
              - Dask Distributed: "distributed.Client"
              - Fireworks: "fireworks.LaunchPad"
              - Parsl: "parsl.config.Config"

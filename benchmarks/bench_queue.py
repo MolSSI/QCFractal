@@ -12,15 +12,16 @@ import datetime
 
 reset_db = False
 
-db_name = 'bench_qc_mongoengine'
+db_name = "bench_qc_mongoengine"
 db_client = db.connect(db_name)
 if reset_db:
     db_client.drop_database(db_name)
 
-#mongoengine_socket = MongoengineSocket("mongodb://localhost", db_name)
+# mongoengine_socket = MongoengineSocket("mongodb://localhost", db_name)
 
 n_tasks = 10000
 n_query = 200
+
 
 class Task(db.DynamicDocument):
 
@@ -42,20 +43,16 @@ class Task(db.DynamicDocument):
         return super(Task, self).save(*args, **kwargs)
 
     meta = {
-        'collection': 'task_queue',
-        'indexes': [
-            'created_on',
-            'status',
-            'priority',
-            'tag',
-            'program',
-            'procedure',
-            {
-                'fields': ("program", "procedure"),
-                'unique': False
-            },
-
-        ]
+        "collection": "task_queue",
+        "indexes": [
+            "created_on",
+            "status",
+            "priority",
+            "tag",
+            "program",
+            "procedure",
+            {"fields": ("program", "procedure"), "unique": False},
+        ],
     }
 
 
@@ -76,13 +73,13 @@ def insert_task(n_tasks):
         for c in combos:
             Task(spec={}, tag=c[0], program=c[1], procedure=c[2], status=c[3], priority=c[4]).save()
 
-    #for x in range(n_tasks):
+    # for x in range(n_tasks):
 
     return nloops * len(combos)
 
 
 def get_queue():
-    found = TaskQueueORM.objects(**query).limit(limit).order_by('created_on')
+    found = TaskQueueORM.objects(**query).limit(limit).order_by("created_on")
 
 
 def bench():
@@ -92,18 +89,19 @@ def bench():
         tstart = time()
         ninsert = insert_task(n_tasks)
         dtime = (time() - tstart) * 1000  # msec
-        print('{} Task inserted in an avg {:0.3f} ms / doc'.format(ninsert, dtime/ninsert))
+        print("{} Task inserted in an avg {:0.3f} ms / doc".format(ninsert, dtime / ninsert))
 
     tstart = time()
-    query = {"procedure__in": ["proc0"], "program__in": ["prog0"]} 
-    nquery = Task.objects(**query).limit(n_query).order_by('created_on', '-priority')
+    query = {"procedure__in": ["proc0"], "program__in": ["prog0"]}
+    nquery = Task.objects(**query).limit(n_query).order_by("created_on", "-priority")
     cnt = nquery.to_json()
     print(len(cnt))
     nquery = nquery.count()
-    
+
     dtime = (time() - tstart) * 1000  # msec
-    print('{} Task queried in an avg {:0.3f} ms / doc'.format(nquery, dtime/nquery))
+    print("{} Task queried in an avg {:0.3f} ms / doc".format(nquery, dtime / nquery))
     print("Total time {}".format(dtime))
+
 
 if __name__ == "__main__":
     bench()

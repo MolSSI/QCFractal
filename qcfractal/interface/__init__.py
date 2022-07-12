@@ -10,7 +10,8 @@ from .models import Molecule
 
 # We are running inside QCPortal repo
 try:
-    from . import _version
+    # The _version file exists only in the QCPortal package
+    from . import _version  # lgtm [py/import-own-module]
 
     versions = _version.get_versions()
     __version__ = versions["version"]

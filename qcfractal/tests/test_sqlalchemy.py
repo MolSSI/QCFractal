@@ -73,26 +73,61 @@ def kw_fixtures(storage_socket):
     assert r == 1
 
 
-def test_logs(storage_socket, session):
+@pytest.mark.parametrize("compression", ptl.models.CompressionEnum)
+@pytest.mark.parametrize("compression_level", [None, 1, 5])
+def test_kvstore(session, compression, compression_level):
 
     assert session.query(KVStoreORM).count() == 0
 
-    log = KVStoreORM(value="New log")
+    input_str = "This is some input " * 10
+    kv = ptl.models.KVStore.compress(input_str, compression, compression_level)
+    log = KVStoreORM(**kv.dict())
     session.add(log)
     session.commit()
 
-    assert session.query(KVStoreORM).count() == 1
+    q = session.query(KVStoreORM).one()
+
+    # TODO - remove the exclude once all data is migrated in DB
+    # (there will be no "value" in the ORM anymore
+    kv2 = ptl.models.KVStore(**q.to_dict(exclude=["value"]))
+    assert kv2.get_string() == input_str
+    assert kv2.compression is compression
+
+    session_delete_all(session, KVStoreORM)
+
+
+def test_old_kvstore(storage_socket, session):
+    """
+    Tests retrieving old data from KVStore
+    TODO: Remove once entire migration is complete
+    """
+
+    assert session.query(KVStoreORM).count() == 0
+
+    input_str = "This is some input " * 10
+
+    # Manually create the ORM, setting only the 'value' member
+    # (This replicates what an existing database would have)
+    log = KVStoreORM(value=input_str)
+    session.add(log)
+    session.commit()
+
+    # Now query through the interface
+    q = storage_socket.get_kvstore([log.id])["data"][str(log.id)]
+    assert q.data.decode() == input_str
+    assert q.compression is ptl.models.CompressionEnum.none
+    assert q.compression_level == 0
 
     session_delete_all(session, KVStoreORM)
 
 
 def test_molecule_sql(storage_socket, session):
     """
-        Test the use of the ME class MoleculeORM
+    Test the use of the ME class MoleculeORM
 
-        Note:
-            creation of a MoleculeORM using ME is not implemented yet
-            Should create a MoleculeORM using: mongoengine_socket.add_molecules
+    Note:
+        creation of a MoleculeORM using ME is not implemented yet
+        Should create a MoleculeORM using: mongoengine_socket.add_molecules
     """
 
     num_mol_in_db = session.query(MoleculeORM).count()
@@ -141,12 +176,18 @@ def test_services(storage_socket, session):
 
     assert session.query(OptimizationProcedureORM).count() == 0
 
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    ret = storage_socket.add_molecules([water])
+    assert ret["meta"]["success"] is True
+    assert ret["meta"]["n_inserted"] == 1
+
     proc_data = {
-        "initial_molecule": None,
+        "initial_molecule": ret["data"][0],
         "keywords": None,
         "program": "p7",
         "qc_spec": {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"},
         "status": "COMPLETE",
+        "protocols": {},
     }
 
     service_data = {
@@ -156,8 +197,8 @@ def test_services(storage_socket, session):
         "optimization_program": "gaussian",
         # extra fields
         "torsiondrive_state": {},
-        "dihedral_template": "1",
-        "optimization_template": "2",
+        "dihedral_template": "1",  # Not realistic?
+        "optimization_template": "2",  # Not realistic?
         "molecule_template": "",
         "logger": None,
         "storage_socket": storage_socket,
@@ -187,7 +228,7 @@ def test_services(storage_socket, session):
 
 def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
     """
-        Handling results throught the ME classes
+    Handling results throught the ME classes
     """
 
     assert session.query(ResultORM).count() == 0
@@ -196,6 +237,7 @@ def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
     assert len(kw_fixtures) == 1
 
     page1 = {
+        "procedure": "single",
         "molecule": molecules_H4O2[0],
         "method": "m1",
         "basis": "b1",
@@ -203,9 +245,11 @@ def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
         "program": "p1",
         "driver": "energy",
         "status": "COMPLETE",
+        "protocols": {},
     }
 
     page2 = {
+        "procedure": "single",
         "molecule": molecules_H4O2[1],
         "method": "m2",
         "basis": "b1",
@@ -213,6 +257,7 @@ def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
         "program": "p1",
         "driver": "energy",
         "status": "COMPLETE",
+        "protocols": {},
     }
 
     result = ResultORM(**page1)
@@ -238,21 +283,24 @@ def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
 
 def test_optimization_procedure(storage_socket, session, molecules_H4O2):
     """
-        Optimization procedure
+    Optimization procedure
     """
 
     assert session.query(OptimizationProcedureORM).count() == 0
     # assert Keywords.objects().count() == 0
 
     data1 = {
+        "procedure": "optimization",
         "initial_molecule": molecules_H4O2[0],
         "keywords": None,
         "program": "p7",
         "qc_spec": {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"},
         "status": "COMPLETE",
+        "protocols": {},
     }
 
     result1 = {
+        "procedure": "single",
         "molecule": molecules_H4O2[0],
         "method": "m1",
         "basis": "b1",
@@ -260,6 +308,7 @@ def test_optimization_procedure(storage_socket, session, molecules_H4O2):
         "program": "p1",
         "driver": "energy",
         "status": "COMPLETE",
+        "protocols": {},
     }
 
     procedure = OptimizationProcedureORM(**data1)
@@ -288,21 +337,22 @@ def test_optimization_procedure(storage_socket, session, molecules_H4O2):
 
 def test_torsiondrive_procedure(storage_socket, session):
     """
-        Torsiondrive procedure
+    Torsiondrive procedure
     """
 
     assert session.query(TorsionDriveProcedureORM).count() == 0
-    # assert Keywords.objects().count() == 0
 
-    # molecules = MoleculeORM.objects(molecular_formula='H4O2')
-    # assert molecules.count() == 2
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    ret = storage_socket.add_molecules([water])
+    assert ret["meta"]["success"] is True
+    assert ret["meta"]["n_inserted"] == 1
 
     data1 = {
-        # "molecule": molecules[0],
         "keywords": None,
         "program": "p9",
         "qc_spec": {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"},
         "status": "COMPLETE",
+        "protocols": {},
     }
 
     torj_proc = TorsionDriveProcedureORM(**data1)
@@ -311,6 +361,7 @@ def test_torsiondrive_procedure(storage_socket, session):
 
     # Add optimization_history
 
+    data1["initial_molecule"] = ret["data"][0]
     opt_proc = OptimizationProcedureORM(**data1)
     opt_proc2 = OptimizationProcedureORM(**data1)
     session.add_all([opt_proc, opt_proc2])
@@ -326,25 +377,27 @@ def test_torsiondrive_procedure(storage_socket, session):
 
     # clean up
     session_delete_all(session, OptimizationProcedureORM)
-    session_delete_all(session, TorsionDriveProcedureORM)
+    # session_delete_all(session, TorsionDriveProcedureORM)
 
 
 def test_add_task_queue(storage_socket, session, molecules_H4O2):
     """
-        Simple test of adding a task using the SQL classes
-        in QCFractal, tasks should be added using storage_socket
+    Simple test of adding a task using the SQL classes
+    in QCFractal, tasks should be added using storage_socket
     """
 
     assert session.query(TaskQueueORM).count() == 0
     # TaskQueueORM.objects().delete()
 
     page1 = {
+        "procedure": "single",
         "molecule": molecules_H4O2[0],
         "method": "m1",
         "basis": "b1",
         "keywords": None,
         "program": "p1",
         "driver": "energy",
+        "protocols": {},
     }
     # add a task that reference results
     result = ResultORM(**page1)
@@ -369,18 +422,20 @@ def test_add_task_queue(storage_socket, session, molecules_H4O2):
 
 def test_results_pagination(storage_socket, session, molecules_H4O2, kw_fixtures):
     """
-        Test results pagination
+    Test results pagination
     """
 
     assert session.query(ResultORM).count() == 0
 
     result_template = {
+        "procedure": "single",
         "molecule": molecules_H4O2[0],
         "method": "m1",
         "basis": "b1",
         "keywords": kw_fixtures[0],
         "program": "p1",
         "driver": "energy",
+        "protocols": {},
     }
 
     # Save ~ 1 msec/doc in ME, 0.5 msec/doc in SQL

@@ -597,7 +597,7 @@ class BaseProcedureDataset(Collection):
             df = self.df[specs].apply(lambda col: col.apply(get_status))
 
             if status:
-                df = df[(df == status.upper()).all(axis=1)]
+                df = df[(df == status.upper())]
 
             if collapse:
                 return df.apply(lambda x: x.value_counts())

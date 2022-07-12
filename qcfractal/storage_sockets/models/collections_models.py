@@ -16,10 +16,10 @@ class json_build_object(GenericFunction):
 
 class CollectionORM(Base):
     """
-        A base collection class of precomuted workflows such as datasets, ..
+    A base collection class of precomuted workflows such as datasets, ..
 
-        This is a dynamic document, so it will accept any number of
-        extra fields (expandable and uncontrolled schema)
+    This is a dynamic document, so it will accept any number of
+    extra fields (expandable and uncontrolled schema)
     """
 
     __tablename__ = "collection"
@@ -63,7 +63,7 @@ class CollectionORM(Base):
 
 class DatasetMixin:
     """
-        Mixin class for common Dataset attributes.
+    Mixin class for common Dataset attributes.
     """
 
     default_benchmark = Column(String)
@@ -80,7 +80,7 @@ class DatasetMixin:
 
 class ContributedValuesORM(Base):
     """One group of a contibuted values per dataset
-    Each dataset can have multiple rows in this table """
+    Each dataset can have multiple rows in this table"""
 
     __tablename__ = "contributed_values"
 
@@ -118,7 +118,7 @@ class DatasetEntryORM(Base):
 
 class DatasetORM(CollectionORM, DatasetMixin):
     """
-        The Dataset class for homogeneous computations on many molecules.
+    The Dataset class for homogeneous computations on many molecules.
     """
 
     __tablename__ = "dataset"
@@ -230,7 +230,7 @@ class ReactionDatasetEntryORM(Base):
 
 class ReactionDatasetORM(CollectionORM, DatasetMixin):
     """
-        Reaction Dataset
+    Reaction Dataset
     """
 
     __tablename__ = "reaction_dataset"

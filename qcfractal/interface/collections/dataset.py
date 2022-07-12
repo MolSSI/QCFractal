@@ -189,7 +189,7 @@ class Dataset(Collection):
             try:
                 file_length = int(r.headers.get("content-length"))
                 pbar = tqdm(total=file_length, initial=0, unit="B", unit_scale=True)
-            except:
+            except Exception:
                 warnings.warn("Failed to create download progress bar", RuntimeWarning)
 
         with open(local_path, "wb") as fd:
@@ -700,7 +700,12 @@ class Dataset(Collection):
         DataFrame
             A DataFrame of the queried parameters
         """
-        au_units = {"energy": "hartree", "gradient": "hartree/bohr", "hessian": "hartree/bohr**2","properties":"hartree"}
+        au_units = {
+            "energy": "hartree",
+            "gradient": "hartree/bohr",
+            "hessian": "hartree/bohr**2",
+            "properties": "hartree",
+        }
 
         # So that datasets with no records do not require a default program and default keywords
         if len(self.list_records()) == 0:
@@ -1032,6 +1037,7 @@ class Dataset(Collection):
                 keywords_alias = self.data.default_keywords[program]
                 keywords = self.data.alias_keywords[program][keywords_alias]
         else:
+            keywords = keywords.lower()
             if (program not in self.data.alias_keywords) or (keywords not in self.data.alias_keywords[program]):
                 raise KeyError("KeywordSet alias '{}' not found for program '{}'.".format(keywords, program))
 
@@ -1102,6 +1108,7 @@ class Dataset(Collection):
         include: Optional[List[str]] = None,
         merge: bool = False,
         raise_on_plan: Union[str, bool] = False,
+        status: Optional[List[str]] = None,
     ) -> "pd.Series":
         """
         Runs a query based on an indexer which is index : molecule_id
@@ -1118,6 +1125,8 @@ class Dataset(Collection):
             Sum compound queries together, useful for mixing results
         raise_on_plan : Union[str, bool], optional
             Raises a KeyError is True or string if a multi-stage plan is detected.
+        status : List[str]
+            Include only records with these statuses. By default, obtain all records
 
         Returns
         -------
@@ -1151,7 +1160,7 @@ class Dataset(Collection):
             records: List[ResultRecord] = []
             for i in range(0, len(molecules), self.client.query_limit):
                 query_set["molecule"] = molecules[i : i + self.client.query_limit]
-                records.extend(self.client.query_results(**query_set))
+                records.extend(self.client.query_results(**query_set, status=status))
 
             if include is None:
                 records = [{"molecule": x.molecule, "record": x} for x in records]
@@ -1181,7 +1190,7 @@ class Dataset(Collection):
             raise KeyError("Query matched 0 records.")
 
         if merge:
-            retdf = ret[0]
+            retdf = ret[0][~ret[0].index.duplicated(keep="first")]
             for df in ret[1:]:
                 retdf += df
             return retdf
@@ -1194,6 +1203,7 @@ class Dataset(Collection):
         molecules: Union[List[str], pd.Series],
         tag: Optional[str] = None,
         priority: Optional[str] = None,
+        protocols: Optional[Dict[str, Any]] = None,
     ) -> ComputeResponse:
         """
         Internal compute function
@@ -1219,7 +1229,9 @@ class Dataset(Collection):
 
             for i in range(0, len(umols), self.client.query_limit):
                 chunk_mols = umols[i : i + self.client.query_limit]
-                ret = self.client.add_compute(**compute_set, molecule=chunk_mols, tag=tag, priority=priority)
+                ret = self.client.add_compute(
+                    **compute_set, molecule=chunk_mols, tag=tag, priority=priority, protocols=protocols
+                )
 
                 ids.extend(ret.ids)
                 submitted.extend(ret.submitted)
@@ -1288,7 +1300,7 @@ class Dataset(Collection):
         self.data.__dict__["default_benchmark"] = benchmark
         return True
 
-    def set_default_driver(self,driver: str) -> bool:
+    def set_default_driver(self, driver: str) -> bool:
         """
         Sets the default driver value.
 
@@ -1324,7 +1336,7 @@ class Dataset(Collection):
             self.data.alias_keywords[program] = {}
 
         if alias in self.data.alias_keywords[program]:
-            raise KeyError("Alias '{}' already set for program {}.".format(alias, keyword.program))
+            raise KeyError("Alias '{}' already set for program {}.".format(alias, program))
 
         self._new_keywords[(program, alias)] = keyword
 
@@ -1346,7 +1358,12 @@ class Dataset(Collection):
             prog_default_kw = self.data.default_keywords.get(program, None)
             for kwalias, kwid in kwaliases.items():
                 data.append(
-                    {"program": program, "keywords": kwalias, "id": kwid, "default": prog_default_kw == kwalias,}
+                    {
+                        "program": program,
+                        "keywords": kwalias,
+                        "id": kwid,
+                        "default": prog_default_kw == kwalias,
+                    }
                 )
         return pd.DataFrame(data).set_index("program")
 
@@ -1568,6 +1585,7 @@ class Dataset(Collection):
         include: Optional[List[str]] = None,
         subset: Optional[Union[str, Set[str]]] = None,
         merge: bool = False,
+        status: Optional[List[str]] = None,
     ) -> Union[pd.DataFrame, "ResultRecord"]:
         """
         Queries full ResultRecord objects from the database.
@@ -1589,6 +1607,8 @@ class Dataset(Collection):
         merge : bool
             Merge multiple results into one (as in the case of DFT-D3).
             This only works when include=['return_results'], as in get_values.
+        status : List[str]
+            Include only records with these statuses. By default, obtain all records
 
         Returns
         -------
@@ -1600,7 +1620,7 @@ class Dataset(Collection):
             raise KeyError(f"Requested query ({name}) did not match a known record.")
 
         indexer = self._molecule_indexer(subset=subset, force=True)
-        df = self._get_records(indexer, history, include=include, merge=merge)
+        df = self._get_records(indexer, history, include=include, merge=merge, status=status)
 
         if not merge and len(df) == 1:
             df = df[0]
@@ -1636,8 +1656,11 @@ class Dataset(Collection):
         *,
         keywords: Optional[str] = None,
         program: Optional[str] = None,
+        subset: Optional[Set[str]] = None,
         tag: Optional[str] = None,
         priority: Optional[str] = None,
+        protocols: Optional[Dict[str, Any]] = None,
+        save: Optional[bool] = True,
     ) -> ComputeResponse:
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
@@ -1656,6 +1679,13 @@ class Dataset(Collection):
             The queue tag to use when submitting compute requests.
         priority : Optional[str], optional
             The priority of the jobs low, medium, or high.
+        protocols: Optional[Dict[str, Any]], optional
+            Protocols for store more or less data per field. Current valid
+            protocols: {'wavefunction'}
+        subset : Set[str], optional
+            Computes only a subset of the dataset.
+        save : bool, optional
+            If `True`, save the whole collection after calling compute
 
         Returns
         -------
@@ -1668,10 +1698,15 @@ class Dataset(Collection):
         self.get_entries(force=True)
         compute_keys = {"program": program, "method": method, "basis": basis, "keywords": keywords}
 
-        molecule_idx = [e.molecule_id for e in self.data.records]
+        if subset:
+            molecule_idx = set(subset)
+        else:
+            molecule_idx = [e.molecule_id for e in self.data.records]
 
-        ret = self._compute(compute_keys, molecule_idx, tag, priority)
-        self.save()
+        ret = self._compute(compute_keys, molecule_idx, tag, priority, protocols)
+
+        if save:
+            self.save()
 
         return ret
 

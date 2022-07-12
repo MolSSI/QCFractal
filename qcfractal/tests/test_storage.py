@@ -758,7 +758,9 @@ def test_storage_queue_roundtrip(storage_results, status):
     queue_id2 = storage_results.queue_get_next("test_manager2", ["p1"], ["p1"], limit=1)[0].id
 
     if status == "ERROR":
-        r = storage_results.queue_mark_error([(queue_id, "Error msg"), (queue_id2, "Error msg2")])
+        err1 = {"error_type": "test_error", "error_message": "Error msg"}
+        err2 = {"error_type": "test_error", "error_message": "Error msg2"}
+        r = storage_results.queue_mark_error([(queue_id, err1), (queue_id2, err2)])
     elif status == "COMPLETE":
         r = storage_results.queue_mark_complete([queue_id2, queue_id])
         # Check queue is empty
@@ -775,6 +777,12 @@ def test_storage_queue_roundtrip(storage_results, status):
     res = storage_results.get_results(id=results[0]["id"])["data"][0]
     assert res["status"] == status
     assert res["manager_name"] == "test_manager"
+    if status == "ERROR":
+        err_id = res["error"]
+        err = storage_results.get_kvstore(err_id)
+        js = err["data"][err_id].get_json()
+        assert js["error_message"] == "Error msg"
+        assert js["error_type"] == "test_error"
 
 
 def test_queue_submit_many_order(storage_results):
@@ -1083,7 +1091,7 @@ def test_project_name(storage_socket):
 
 def test_results_pagination(storage_socket):
     """
-        Test results pagination
+    Test results pagination
     """
 
     # results = storage_socket.get_results()['data']
@@ -1154,7 +1162,7 @@ def test_results_pagination(storage_socket):
 
 def test_procedure_pagination(storage_socket):
     """
-        Test procedure pagination
+    Test procedure pagination
     """
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
@@ -1193,7 +1201,7 @@ def test_procedure_pagination(storage_socket):
 
 def test_mol_pagination(storage_socket):
     """
-        Test Molecule pagination
+    Test Molecule pagination
     """
 
     assert len(storage_socket.get_molecules()["data"]) == 0
@@ -1230,7 +1238,7 @@ def test_mol_pagination(storage_socket):
 
 def test_mol_formula(storage_socket):
     """
-        Test Molecule pagination
+    Test Molecule pagination
     """
 
     assert len(storage_socket.get_molecules()["data"]) == 0
@@ -1266,7 +1274,7 @@ def test_mol_formula(storage_socket):
 
 def test_reset_task_blocks(storage_socket):
     """
-        Ensures queue_reset_status must have some search variables so that it does not reset everything.
+    Ensures queue_reset_status must have some search variables so that it does not reset everything.
     """
 
     with pytest.raises(ValueError):
