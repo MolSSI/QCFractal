@@ -4,6 +4,8 @@ import contextlib
 import io
 import json
 import logging
+import time
+
 import numpy as np
 from typing import TYPE_CHECKING
 
@@ -145,7 +147,6 @@ class NEBRecordSocket(BaseRecordSocket):
         session: Session,
         service_orm: ServiceQueueORM,
     ) -> bool:
-
         neb_orm: NEBRecordORM = service_orm.record
         # Always update with the current provenance
         neb_orm.compute_history[-1].provenance = {
@@ -204,12 +205,12 @@ class NEBRecordSocket(BaseRecordSocket):
                 output += "\n" + neb_stdout.getvalue()
                 logging.captureWarnings(False)
                 service_state.nebinfo = prev
-                service_state.iteration += 1
             else:
                 newcoords = None
             if newcoords is not None:
                 next_chain = [Molecule(**molecule_template, geometry=geometry) for geometry in newcoords]
                 self.submit_singlepoints(session, service_state, service_orm, next_chain)
+                service_state.iteration += 1
                 finished = False
             else:
                 if service_state.converged:
@@ -556,12 +557,17 @@ class NEBRecordSocket(BaseRecordSocket):
                 if len(init_chain) < images:
                     return(
                         InsertMetadata(
-                            error_description="Aborted - number of images for NEB can not exceed the number of input frames:" + mol_meta.error_string
+                            error_description="Aborted - number of images for NEB can not exceed the number of input frames:" + spec_meta.error_string
                         ),
                         [],
                     )
                 selected_chain = np.array(init_chain)[np.array([int(round(i)) for i in np.linspace(0, len(init_chain)-1 ,images)])]
-                mol_meta, molecule_ids = self.root_socket.molecules.add_mixed(selected_chain, session=session)
+                neb_stdout = io.StringIO()
+                logging.captureWarnings(True)
+                with contextlib.redirect_stdout(neb_stdout):
+                    aligned_chain = geometric.neb.arrange(selected_chain)
+                logging.captureWarnings(False)
+                mol_meta, molecule_ids = self.root_socket.molecules.add_mixed(aligned_chain, session=session)
                 if not mol_meta.success:
                     return (
                         InsertMetadata(
@@ -599,32 +605,3 @@ class NEBRecordSocket(BaseRecordSocket):
             if r is None:
                 raise MissingDataError("A guessed transition state from the NEB can't be found")
             return r.model_dict()
-
-    #def get_final_ts(
-    #    self,
-    #    neb_id: int,
-    #    include: Optional[Sequence[str]] = None,
-    #    exclude: Optional[Sequence[str]] = None,
-    #    *,
-    #    session: Optional[Session] = None,
-
-    #) -> Dict[str, Any]:
-
-    #    query_rec = get_query_proj_options(OptimizationRecordORM, include, exclude)
-
-    #    stmt = (select(OptimizationRecordORM)
-    #    .options(*query_rec)
-    #    .join(NEBOptimiationsORM)
-    #    .where(NEBOptimiationsORM.neb_id == neb_id)
-    #    .order_by(NEBOptimiationsORM.optimization_id.desc())
-    #    #.where(NEBOptimiationsORM.ts == 1)
-    #    .limit(1)
-    #    )
-
-    #    with self.root_socket.optional_session(session, True) as session:
-    #        r = session.execute(stmt).scalar_one_or_none()
-    #        if r is None:
-    #            raise MissingDataError("The final optimized transition state from the NEB can't be found")
-    #        print(r.model_dict())
-    #        return r.model_dict()
-            #return {x: y.model_dict() for x, y in r}

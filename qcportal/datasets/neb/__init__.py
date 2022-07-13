@@ -1,7 +1,6 @@
 from .models import (
-    NEBdriveDataset,
-    NEBdriveDatasetNewEntry,
-    NEBdriveDatasetSpecification,
-    NEBdriveDatasetEntry,
-    NEBdriveDatasetAddBody,
+    NEBDataset,
+    NEBDatasetNewEntry,
+    NEBDatasetSpecification,
+    NEBDatasetEntry,
 )

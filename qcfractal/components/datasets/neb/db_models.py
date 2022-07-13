@@ -6,19 +6,18 @@ from sqlalchemy import select, Column, Integer, ForeignKey, String, ForeignKeyCo
 from sqlalchemy.dialects.postgresql import JSONB, array_agg
 from sqlalchemy.orm import relationship, column_property
 
-from qcfractal.components.datasets.db_models import CollectionORM
+from qcfractal.components.datasets.db_models import BaseDatasetORM
 from qcfractal.components.molecules.db_models import MoleculeORM
-from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM
-from qcfractal.components.records.neb.db_models import NEBRecordORM
+from qcfractal.components.records.neb.db_models import NEBRecordORM, NEBSpecificationORM
 from qcfractal.db_socket import BaseORM
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Optional, Iterable
 
 
-class NEBDatasetMoleculeORM(BaseORM):
+class NEBDatasetInitialChainORM(BaseORM):
     """
-    Association table neb -> initial molecules
+    Association table neb -> initial chain
     """
 
     __tablename__ = "neb_dataset_molecule"
@@ -26,8 +25,9 @@ class NEBDatasetMoleculeORM(BaseORM):
     dataset_id = Column(Integer, primary_key=True)
     entry_name = Column(String, primary_key=True)
     molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), primary_key=True)
+    position = Column(Integer, primary_key=True)
 
-    molecule = relationship(MoleculeORM)
+    #molecule = relationship(MoleculeORM)
 
     __table_args__ = (
         Index("ix_neb_dataset_molecule_dataset_id", "dataset_id"),
@@ -43,7 +43,7 @@ class NEBDatasetMoleculeORM(BaseORM):
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "dataset_id")
+        exclude = self.append_exclude(exclude, "dataset_id", "molecule_id", "entry_name", "position")
         return BaseORM.model_dict(self, exclude)
 
 
@@ -55,18 +55,24 @@ class NEBDatasetEntryORM(BaseORM):
     name = Column(String, primary_key=True)
     comment = Column(String)
 
-    neb_keywords = Column(JSONB, nullable=False)
+    #neb_keywords = Column(JSONB, nullable=False)
     additional_keywords = Column(JSONB, nullable=False)
     attributes = Column(JSONB, nullable=False)
 
-    initial_molecule_ids = column_property(
-        select(array_agg(NEBDatasetMoleculeORM.molecule_id))
-        .where(NEBDatasetMoleculeORM.dataset_id == dataset_id)
-        .where(NEBDatasetMoleculeORM.entry_name == name)
-        .scalar_subquery()
-    )
+    #initial_molecule_ids = column_property(
+    #    select(array_agg(NEBDatasetInitialChainORM.molecule_id))
+    #    .where(NEBDatasetInitialChainORM.dataset_id == dataset_id)
+    #    .where(NEBDatasetInitialChainORM.entry_name == name)
+    #    .scalar_subquery()
+    #)
 
-    molecules = relationship(NEBDatasetMoleculeORM)
+    initial_chain = relationship(
+        MoleculeORM,
+        secondary = NEBDatasetInitialChainORM.__table__,
+        order_by=NEBDatasetInitialChainORM.__table__.c.position,
+        viewonly=True,)
+
+    initial_chain_assoc = relationship(NEBDatasetInitialChainORM)
 
     __table_args__ = (
         Index("ix_neb_dataset_entry_dataset_id", "dataset_id"),
@@ -85,9 +91,9 @@ class NEBDatasetSpecificationORM(BaseORM):
     dataset_id = Column(Integer, ForeignKey("neb_dataset.id", ondelete="cascade"), primary_key=True)
     name = Column(String, primary_key=True)
     description = Column(String, nullable=True)
-    specification_id = Column(Integer, ForeignKey(QCSpecificationORM.id), nullable=False)
+    specification_id = Column(Integer, ForeignKey(NEBSpecificationORM.id), nullable=False)
 
-    specification = relationship(QCSpecificationORM)
+    specification = relationship(NEBSpecificationORM)
 
     __table_args__ = (
         Index("ix_neb_dataset_specification_dataset_id", "dataset_id"),
@@ -136,10 +142,10 @@ class NEBDatasetRecordItemORM(BaseORM):
         return BaseORM.model_dict(self, exclude)
 
 
-class NEBDatasetORM(CollectionORM):
+class NEBDatasetORM(BaseDatasetORM):
     __tablename__ = "neb_dataset"
 
-    id = Column(Integer, ForeignKey(CollectionORM.id, ondelete="cascade"), primary_key=True)
+    id = Column(Integer, ForeignKey(BaseDatasetORM.id, ondelete="cascade"), primary_key=True)
 
     __mapper_args__ = {
         "polymorphic_identity": "neb",

@@ -1199,6 +1199,7 @@ class DatasetSocket:
         from .gridoptimization.sockets import GridoptimizationDatasetSocket
         from .manybody.sockets import ManybodyDatasetSocket
         from .reaction.sockets import ReactionDatasetSocket
+        from .neb.sockets import NEBDatasetSocket
 
         self.singlepoint = SinglepointDatasetSocket(root_socket)
         self.optimization = OptimizationDatasetSocket(root_socket)
@@ -1206,6 +1207,7 @@ class DatasetSocket:
         self.gridoptimization = GridoptimizationDatasetSocket(root_socket)
         self.manybody = ManybodyDatasetSocket(root_socket)
         self.reaction = ReactionDatasetSocket(root_socket)
+        self.neb = NEBDatasetSocket(root_socket)
 
         self._handler_map: Dict[str, BaseDatasetSocket] = {
             self.singlepoint.dataset_type: self.singlepoint,
@@ -1214,6 +1216,7 @@ class DatasetSocket:
             self.gridoptimization.dataset_type: self.gridoptimization,
             self.manybody.dataset_type: self.manybody,
             self.reaction.dataset_type: self.reaction,
+            self.neb.dataset_type: self.neb,
         }
 
         # Get the SQL 'select' statements from the handlers

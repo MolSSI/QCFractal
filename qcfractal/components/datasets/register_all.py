@@ -8,3 +8,4 @@ from .optimization import db_models, routes
 from .torsiondrive import db_models, routes
 from .gridoptimization import db_models, routes
 from .manybody import db_models, routes
+from .neb import db_models, routes

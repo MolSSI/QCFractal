@@ -9,6 +9,7 @@ from .torsiondrive.models import TorsiondriveDataset
 from .gridoptimization import GridoptimizationDataset
 from .manybody import ManybodyDataset
 from .reaction import ReactionDataset
+from .neb import NEBDataset
 
 AllDatasetTypes = Union[
     SinglepointDataset,
@@ -17,6 +18,7 @@ AllDatasetTypes = Union[
     GridoptimizationDataset,
     ManybodyDataset,
     ReactionDataset,
+    NEBDataset,
 ]
 AllDatasetDataModelTypes = Union[
     SinglepointDataset._DataModel,
@@ -25,6 +27,7 @@ AllDatasetDataModelTypes = Union[
     GridoptimizationDataset._DataModel,
     ManybodyDataset._DataModel,
     ReactionDataset._DataModel,
+    NEBDataset._DataModel,
 ]
 
 
