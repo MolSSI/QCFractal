@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from typing import Dict, Any, Optional, Iterable
 
 
-class NEBDatasetInitialChainORM(BaseORM):
+class NEBDatasetInitialMoleculeORM(BaseORM):
     """
     Association table neb -> initial chain
     """
@@ -68,11 +68,11 @@ class NEBDatasetEntryORM(BaseORM):
 
     initial_chain = relationship(
         MoleculeORM,
-        secondary = NEBDatasetInitialChainORM.__table__,
-        order_by=NEBDatasetInitialChainORM.__table__.c.position,
+        secondary = NEBDatasetInitialMoleculeORM.__table__,
+        order_by=NEBDatasetInitialMoleculeORM.__table__.c.position,
         viewonly=True,)
 
-    initial_chain_assoc = relationship(NEBDatasetInitialChainORM)
+    initial_chain_assoc = relationship(NEBDatasetInitialMoleculeORM)
 
     __table_args__ = (
         Index("ix_neb_dataset_entry_dataset_id", "dataset_id"),

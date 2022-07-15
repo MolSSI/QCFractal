@@ -161,11 +161,11 @@ class NEBRecord(BaseRecord):
             for opt in self.raw_data.optimizations:
                 opt_rec =OptimizationRecord.from_datamodel(opt.optimization_record, self.client)
                 if opt.ts:
-                    opt_map['transition'] = opt_rec#OptimizationRecord.from_datamodel(opt.optimization_record, self.client)
+                    opt_map['transition'] = opt_rec
                 elif opt.position == 0:
-                    opt_map['initial'] = opt_rec#OptimizationRecord.from_datamodel(opt.optimization_record, self.client)
+                    opt_map['initial'] = opt_rec
                 else:
-                    opt_map['final'] = opt_rec#OptimizationRecord.from_datamodel(opt.optimization_record, self.client)
+                    opt_map['final'] = opt_rec
 
             self.raw_data.optimizations_cache = opt_map
 
