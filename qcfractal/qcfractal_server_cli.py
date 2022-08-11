@@ -360,6 +360,7 @@ def server_info(category: str, config: FractalConfig) -> None:
         print("-" * 80)
         print("Python executable: ", sys.executable)
         print("QCFractal version: ", qcfractal.__version__)
+        print("QCFractal alembic revision: ", pg_harness.get_alembic_version())
 
         if config.database.own:
             print("pg_ctl path: ", pg_harness._get_tool("pg_ctl"))

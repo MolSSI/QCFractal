@@ -308,15 +308,26 @@ class PostgresHarness:
         return self._run_subprocess(all_cmds)
 
     def get_postgres_version(self) -> str:
-        # First we connect to the 'postgres' database
-        # The database specified in the config may not exist yet
         pg_uri = replace_db_in_uri(self.config.uri, "postgres")
         conn = self.connect(pg_uri)
-        conn.autocommit = True
 
         cursor = conn.cursor()
 
         cursor.execute(f"SELECT version()")
+        ver = cursor.fetchone()[0]
+        cursor.close()
+
+        return ver
+
+    def get_alembic_version(self) -> str:
+        # First we connect to the 'postgres' database
+        # The database specified in the config may not exist yet
+        pg_uri = replace_db_in_uri(self.config.uri, self.config.database_name)
+        conn = self.connect(pg_uri)
+
+        cursor = conn.cursor()
+
+        cursor.execute(f"SELECT version_num from alembic_version")
         ver = cursor.fetchone()[0]
         cursor.close()
 
