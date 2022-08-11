@@ -349,14 +349,30 @@ def server_init_db(config: FractalConfig):
     logger.info("QCFractal PostgreSQL instance is initialized")
 
 
-def server_info(category: str, qcf_config: FractalConfig) -> None:
+def server_info(category: str, config: FractalConfig) -> None:
     # Just use raw printing here, rather than going through logging
     if category == "config":
+        pg_harness = PostgresHarness(config.database)
+        atexit.register(pg_harness.shutdown)
+        pg_harness.ensure_alive()
+
+        print()
+        print("-" * 80)
+        print("Python executable: ", sys.executable)
+        print("QCFractal version: ", qcfractal.__version__)
+
+        if config.database.own:
+            print("pg_ctl path: ", pg_harness._get_tool("pg_ctl"))
+
+        print("PostgreSQL server version: ", pg_harness.get_postgres_version())
+        print("-" * 80)
+        print()
+        print()
         print("Displaying QCFractal configuration below")
-        print(dump_config(qcf_config))
+        print(dump_config(config))
     elif category == "alembic":
         print(f"Displaying QCFractal Alembic CLI configuration:\n")
-        alembic_commands = SQLAlchemySocket.alembic_commands(qcf_config.database)
+        alembic_commands = SQLAlchemySocket.alembic_commands(config.database)
         print(" ".join(alembic_commands))
 
 

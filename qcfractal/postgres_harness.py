@@ -307,6 +307,21 @@ class PostgresHarness:
         all_cmds.extend(cmds)
         return self._run_subprocess(all_cmds)
 
+    def get_postgres_version(self) -> str:
+        # First we connect to the 'postgres' database
+        # The database specified in the config may not exist yet
+        pg_uri = replace_db_in_uri(self.config.uri, "postgres")
+        conn = self.connect(pg_uri)
+        conn.autocommit = True
+
+        cursor = conn.cursor()
+
+        cursor.execute(f"SELECT version()")
+        ver = cursor.fetchone()[0]
+        cursor.close()
+
+        return ver
+
     def create_database(self, create_tables: bool = True):
         """Creates a new qcarchive database (and tables) given in the configuration.
 
