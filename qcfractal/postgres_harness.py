@@ -452,6 +452,10 @@ class PostgresHarness:
 
         self._logger.info("Initializing the Postgresql database")
 
+        # Is the specified port open? Stop early if in use
+        if is_port_inuse(self.config.host, self.config.port):
+            raise RuntimeError("Port is already in use. Specify another port for the database")
+
         psql_conf_file = os.path.join(self.config.data_directory, "postgresql.conf")
 
         if os.path.exists(psql_conf_file):
