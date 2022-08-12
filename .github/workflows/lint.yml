@@ -34,4 +34,3 @@ jobs:
     - name: Lint
       shell: bash
       run: black --check qcfractal qcportal qcfractalcompute qcfractaltesting
-
