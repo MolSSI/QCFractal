@@ -213,7 +213,7 @@ def parse_args() -> argparse.Namespace:
         "info", help="Manage users and permissions on a QCFractal server instance.", parents=[base_parser]
     )
     info.add_argument(
-        "category", nargs="?", default="config", choices=["config", "alembic"], help="The config category to show."
+        "category", nargs="?", default="server", choices=["server", "alembic"], help="The type of info to show"
     )
 
     #####################################
@@ -351,7 +351,7 @@ def server_init_db(config: FractalConfig):
 
 def server_info(category: str, config: FractalConfig) -> None:
     # Just use raw printing here, rather than going through logging
-    if category == "config":
+    if category == "server":
         pg_harness = PostgresHarness(config.database)
         atexit.register(pg_harness.shutdown)
         pg_harness.ensure_alive()

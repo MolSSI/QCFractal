@@ -93,8 +93,8 @@ def test_cli_help():
     subprocess.check_output(["qcfractal-server", "--help"])
 
 
-def test_cli_info_config(cli_runner_core):
-    output = cli_runner_core(["info", "config"])
+def test_cli_info_config(cli_runner):
+    output = cli_runner(["info", "server"])
     assert "THISISASECRETKEY" in output
     assert "QCFractal Test Server" in output
 
@@ -117,8 +117,11 @@ def test_cli_init_config(cli_runner_core, full: bool):
     output = cli_runner_core(cmd)
     assert "Creating initial QCFractal configuration" in output
 
+    # Initialize the db. Needed for the config command
+    cli_runner_core(["init-db"])
+
     # Tests reading the config
-    output = cli_runner_core(["info", "config"])
+    output = cli_runner_core(["info", "server"])
     assert "name: QCFractal Server" in output
 
     with open(cli_runner_core.config_path, "r") as f:

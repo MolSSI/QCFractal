@@ -414,7 +414,7 @@ class PostgresHarness:
         # We should be in charge of this postgres process. If something is running, then that is a problem
         if is_port_inuse(self.config.host, self.config.port):
             raise RuntimeError(
-                f"A process is already running on 'port:{self.config.port}` that is not associated with this QCFractal instance's database"
+                f"A process is already running on port {self.config.port} that is not associated with this QCFractal instance's database"
             )
         else:
             retcode, stdout, stderr = self.pg_ctl(["start"])

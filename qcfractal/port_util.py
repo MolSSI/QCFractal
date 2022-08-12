@@ -3,16 +3,23 @@ Utility functions for handling network ports
 """
 
 import socket
+from typing import Optional
 
 
-def find_open_port() -> int:
+def find_open_port(starting_port: Optional[int] = None) -> int:
     """
     Finds an open port that we can bind to
     """
 
-    sock = socket.socket()
-    sock.bind(("localhost", 0))
-    _, port = sock.getsockname()
+    if starting_port is None:
+        sock = socket.socket()
+        sock.bind(("localhost", 0))
+        _, port = sock.getsockname()
+    else:
+        port = starting_port
+        while is_port_inuse("127.0.0.1", port):
+            port += 1
+
     return port
 
 

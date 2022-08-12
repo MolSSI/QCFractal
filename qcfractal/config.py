@@ -5,13 +5,15 @@ The global qcfractal config file specification.
 from __future__ import annotations
 
 import logging
-import secrets
 import os
+import secrets
 import urllib.parse
 from typing import Optional, Dict, Any
 
 import yaml
 from pydantic import BaseSettings, Field, validator, root_validator, ValidationError
+
+from qcfractal.port_util import find_open_port
 
 
 def update_nested_dict(d, u):
@@ -400,6 +402,9 @@ def write_initial_configuration(file_path: str, full_config: bool = True):
     # Generate two secret keys for flask/jwt
     default_config.api.secret_key = secrets.token_urlsafe(32)
     default_config.api.jwt_secret_key = secrets.token_urlsafe(32)
+
+    default_config.database.port = find_open_port(5432)
+    default_config.api.port = find_open_port(7777)
 
     include = None
     if not full_config:
