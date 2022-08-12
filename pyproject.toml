@@ -11,7 +11,7 @@ authors = [
 description = "A distributed compute and database platform for quantum chemistry."
 readme = "README.md"
 license = { file="LICENSE" }
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Development Status :: 4 - Beta",
@@ -67,8 +67,8 @@ lint = [
 
 
 [project.urls]
-"Homepage" = "https://github.com/MolSSI/QCFractal.git"
-"Bug Tracker" = "https://github.com/MolSSI/QCFractal.git/issues"
+"Homepage" = "https://github.com/MolSSI/QCFractal"
+"Bug Tracker" = "https://github.com/MolSSI/QCFractal/issues"
 
 [tool.setuptools]
 packages = ["qcfractal", "qcportal", "qcfractalcompute", "qcfractaltesting"]
@@ -90,15 +90,9 @@ default-tag = "0.0.99" # useful for CI/shallow clones
 
 [tool.black]
 line-length = 120
-target-version = ['py37']
 
 [tool.pytest.ini_options]
 markers = ["slow"]
-filterwarnings = [
-    "ignore::RuntimeWarning:importlib",
-    "ignore::DeprecationWarning",
-    "ignore::UserWarning:qcfractal"
-]
 
 # We have a class that begins with Test, but is not a test itself
 python_classes = ["!TestingSnowflake"]
