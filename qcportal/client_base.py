@@ -122,7 +122,7 @@ class PortalClientBase:
             )
 
     @classmethod
-    def from_file(cls, config_path: Optional[str] = None):
+    def from_file(cls, config_path: Optional[str] = None, section: Optional[str] = None):
         """Creates a new client given information in a file. If no path is passed in, the
         current working directory and ~.qca/ are searched for "qcportal_config.yaml"
 
@@ -158,6 +158,11 @@ class PortalClientBase:
 
         with open(config_path, "r") as handle:
             data = yaml.load(handle, Loader=yaml.SafeLoader)
+
+        if section is not None:
+            data = data.get(section)
+            if data is None:
+                raise RuntimeError(f"Section '{section}' does not exist in the configuration file")
 
         if "address" not in data:
             raise KeyError("Config file must at least contain an address field.")
