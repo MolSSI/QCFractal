@@ -57,7 +57,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: qcarchive-server
-          environment-file: qcfractal/conda-envs/qcfractal_server.yaml
+          environment-file: qcfractal/qcfractaltesting/conda-envs/fulltest_server.yaml
           auto-activate-base: false
 
       - name: Install QCFractal
@@ -83,7 +83,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: qcarchive-worker
-          environment-file: qcfractal/conda-envs/worker_pool_example.yaml
+          environment-file: qcfractal/qcfractaltesting/conda-envs/fulltest_worker_pool.yaml
           auto-activate-base: false
 
       - name: Install QCFractalCompute
@@ -109,7 +109,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: qcarchive-portal
-          environment-file: qcfractal/conda-envs/qcportal.yaml
+          environment-file: qcfractal/qcfractaltesting/conda-envs/fulltest_qcportal.yaml
           auto-activate-base: false
 
       - name: Install QCPortal
