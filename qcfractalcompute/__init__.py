@@ -1,15 +1,15 @@
 """
-Initializer for the queue_handler folder
+Compute worker and manager for QCArchive/QCFractal
 """
 
-# We are running inside QCFractalCompute repo
-# The _version file exists only in the QCFractalCompute package
-from ._version import get_versions
+from importlib.metadata import version, PackageNotFoundError
 
-versions = get_versions()
-__version__ = versions["version"]
-__git_revision__ = versions["full-revisionid"]
-del get_versions, versions
+try:
+    __version__ = version("qcfractalcompute")
+except PackageNotFoundError:
+    # Part of larger "qcfractal" install
+    __version__ = version("qcfractal")
+
 
 from .adapters import build_queue_adapter
 from .managers import ComputeManager

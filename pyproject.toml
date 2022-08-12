@@ -1,3 +1,107 @@
+[build-system]
+requires = ["setuptools>=61.0", "versioningit"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qcfractal"
+dynamic = ["version"]
+authors = [
+  { name="Benjamin Pritchard", email="qcarchive@molssi.org" },
+]
+description = "A distributed compute and database platform for quantum chemistry."
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+]
+dependencies = [
+    "numpy",
+    "msgpack",
+    "flask",
+    "flask_jwt_extended",
+    "gunicorn",
+    "pyyaml",
+    "pydantic",
+    "bcrypt",
+    "qcelemental",
+    "qcengine",
+    "torsiondrive",
+    "tabulate",
+    "requests",
+
+    # QCPortal dependencies
+    "tqdm",
+    "pandas",
+
+    # Storage dependencies
+    "sqlalchemy >=1.4",
+    "alembic",
+    "psycopg2",
+
+    # Only need for python 3.7, but no harm in always including it
+    "typing-extensions",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+    "codecov",
+    "geoip2"
+]
+geoip = [
+    "geoip2"
+]
+docs = [
+    "sphinx",
+    "sphinx-automodapi",
+    "sphinx_rtd_theme",
+    "nbsphinx",
+    "ipython"
+]
+lint = [
+    "black"
+]
+
+
+[project.urls]
+"Homepage" = "https://github.com/MolSSI/QCFractal.git"
+"Bug Tracker" = "https://github.com/MolSSI/QCFractal.git/issues"
+
+[tool.setuptools]
+packages = ["qcfractal", "qcportal", "qcfractalcompute", "qcfractaltesting"]
+
+[project.scripts]
+qcfractal-server = "qcfractal.qcfractal_server_cli:main"
+qcfractal-manager = "qcfractalcompute.qcfractal_manager_cli:main"
+
+[project.entry-points.pytest11]
+qcfractal_fixtures = "qcfractal.testing_fixtures"
+
+[tool.versioningit]
+distance = "{base_version}+{distance}.{vcs}{rev}"
+dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
+distance-dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
+
 [tool.black]
 line-length = 120
 target-version = ['py37']
+
+[tool.pytest.ini_options]
+markers = ["slow"]
+filterwarnings = [
+    "ignore::RuntimeWarning:importlib",
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning:qcfractal"
+]
+
+# We have a class that begins with Test, but is not a test itself
+python_classes = ["!TestingSnowflake"]
+
+[tool.coverage.run]
+omit = ["*/tests/*", "qcfractal/alembic/*"]

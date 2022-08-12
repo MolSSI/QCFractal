@@ -1,15 +1,14 @@
 """
-Client class for QCArchive/QCFractal
+Client for QCArchive/QCFractal
 """
 
-# We are running inside QCPortal repo
-# The _version file exists only in the QCPortal package
-from ._version import get_versions
+from importlib.metadata import version, PackageNotFoundError
 
-versions = get_versions()
-__version__ = versions["version"]
-__git_revision__ = versions["full-revisionid"]
-del get_versions, versions
+try:
+    __version__ = version("qcportal")
+except PackageNotFoundError:
+    # Part of larger "qcfractal" install
+    __version__ = version("qcfractal")
 
 # Add imports here
 from .client import PortalClient
