@@ -33,6 +33,3 @@ dependencies:
   # QCPortal dependencies
   - tqdm
   - pandas
-
-  # Only need for python 3.7, but no harm in always including it
-  - typing-extensions
