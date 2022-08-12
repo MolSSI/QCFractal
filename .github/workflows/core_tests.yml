@@ -39,7 +39,7 @@ jobs:
       - name: Install QCFractal package
         shell: bash -l {0}
         run: |
-          pip install -e .[geoip,tests]
+          pip install -e .[geoip,test]
 
       - name: Run tests
         shell: bash -l {0}
