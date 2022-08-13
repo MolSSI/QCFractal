@@ -81,9 +81,6 @@ qcfractal-manager = "qcfractalcompute.qcfractal_manager_cli:main"
 qcfractal_fixtures = "qcfractal.testing_fixtures"
 
 [tool.versioningit]
-distance = "{base_version}+{distance}.{vcs}{rev}"
-dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
-distance-dirty = "{base_version}+{distance}.{vcs}{rev}.dirty"
 
 [tool.versioningit.vcs]
 default-tag = "0.0.99" # useful for CI/shallow clones
