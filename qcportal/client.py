@@ -88,7 +88,7 @@ from .records.torsiondrive import (
     TorsiondriveQueryFilters,
 )
 
-from . records.neb import (
+from .records.neb import (
     NEBKeywords,
     NEBAddBody,
     NEBQueryFilters,
@@ -2396,7 +2396,6 @@ class PortalClient(PortalClientBase):
         if include:
             body_data["include"] = SinglepointRecord.transform_includes(include)
 
-
         record_data = self._auto_request(
             "post",
             "v1/records/neb/bulkGet",
@@ -2499,7 +2498,6 @@ class PortalClient(PortalClientBase):
         )
 
         return meta, records_from_datamodels(record_data, self)
-
 
     ##############################################################
     # Managers

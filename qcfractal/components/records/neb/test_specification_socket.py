@@ -5,11 +5,7 @@ from qcportal.records.singlepoint import (
     SinglepointDriver,
     SinglepointProtocols,
 )
-from qcportal.records.neb import (
-    NEBSpecification,
-    NEBKeywords,
-    NEBInitialchain
-)
+from qcportal.records.neb import NEBSpecification, NEBKeywords, NEBInitialchain
 
 
 def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):
@@ -28,7 +24,7 @@ def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):
             keywords={"k1": "values1"},
             driver="gradient",
             protocols=SinglepointProtocols(wavefunction="all"),
-            ),
+        ),
     )
 
     spec2 = NEBSpecification(
@@ -45,7 +41,7 @@ def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):
             keywords={"k1": "values1"},
             driver=SinglepointDriver.gradient,
             protocols=SinglepointProtocols(wavefunction="all"),
-            ),
+        ),
     )
 
     spec3 = NEBSpecification(
@@ -61,7 +57,7 @@ def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):
             keywords={"k1": "values1"},
             driver=SinglepointDriver.gradient,
             protocols=SinglepointProtocols(wavefunction="all"),
-            ),
+        ),
     )
 
     meta1, id1 = storage_socket.records.neb.add_specification(spec1)
@@ -79,22 +75,20 @@ def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):
 
 
 common_sp_spec = QCSpecification(
-            program="psi4",
-            method="CCSD(T)",
-            basis="def2-tzvp",
-            keywords={"k1": "values1"},
-            driver=SinglepointDriver.gradient,
-            protocols=SinglepointProtocols(wavefunction="all"),
-            )
-
+    program="psi4",
+    method="CCSD(T)",
+    basis="def2-tzvp",
+    keywords={"k1": "values1"},
+    driver=SinglepointDriver.gradient,
+    protocols=SinglepointProtocols(wavefunction="all"),
+)
 
 
 def test_neb_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
 
     spec1 = NEBSpecification(
         program="geometric",
-        keywords=NEBKeywords(
-        ),
+        keywords=NEBKeywords(),
         qc_specification=common_sp_spec,
     )
 
@@ -173,7 +167,7 @@ def test_neb_socket_add_specification_same_2(storage_socket: SQLAlchemySocket):
             keywords={"k1": "values1"},
             driver=SinglepointDriver.gradient,
             protocols=SinglepointProtocols(wavefunction="all"),
-            ),
+        ),
     )
     meta, id = storage_socket.records.neb.add_specification(spec1)
     assert meta.success
@@ -209,7 +203,7 @@ def test_neb_socket_add_specification_diff_1(storage_socket: SQLAlchemySocket):
         ),
         qc_specification=common_sp_spec,
     )
- 
+
     meta, id = storage_socket.records.neb.add_specification(spec1)
     assert meta.success
     assert meta.inserted_idx == [0]
@@ -221,6 +215,7 @@ def test_neb_socket_add_specification_diff_1(storage_socket: SQLAlchemySocket):
     assert meta.inserted_idx == [0]
     assert meta.existing_idx == []
     assert id != id2
+
 
 def test_neb_socket_add_specification_diff_2(storage_socket: SQLAlchemySocket):
     #  changing spring constant
@@ -243,7 +238,7 @@ def test_neb_socket_add_specification_diff_2(storage_socket: SQLAlchemySocket):
         ),
         qc_specification=common_sp_spec,
     )
- 
+
     meta, id = storage_socket.records.neb.add_specification(spec1)
     assert meta.success
     assert meta.inserted_idx == [0]
@@ -276,8 +271,7 @@ def test_neb_socket_add_specification_diff_3(storage_socket: SQLAlchemySocket):
             energy_weighted=False,
         ),
         qc_specification=common_sp_spec,
-    
-    ) 
+    )
     meta, id = storage_socket.records.neb.add_specification(spec1)
     assert meta.success
     assert meta.inserted_idx == [0]
@@ -289,4 +283,3 @@ def test_neb_socket_add_specification_diff_3(storage_socket: SQLAlchemySocket):
     assert meta.inserted_idx == [0]
     assert meta.existing_idx == []
     assert id != id2
-

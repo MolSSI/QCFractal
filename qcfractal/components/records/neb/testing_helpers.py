@@ -31,8 +31,8 @@ test_specs = [
             method="b3lyp",
             basis="6-31g",
             protocols=SinglepointProtocols(wavefunction="all"),
-            ),
         ),
+    ),
     NEBSpecification(
         program="geometric",
         keywords=NEBKeywords(
@@ -47,8 +47,8 @@ test_specs = [
             method="CCSD(T)",
             basis="def2-tzvp",
             protocols=SinglepointProtocols(wavefunction="all"),
-            ),
         ),
+    ),
 ]
 
 

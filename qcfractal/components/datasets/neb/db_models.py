@@ -27,7 +27,7 @@ class NEBDatasetInitialMoleculeORM(BaseORM):
     molecule_id = Column(Integer, ForeignKey(MoleculeORM.id), primary_key=True)
     position = Column(Integer, primary_key=True)
 
-    #molecule = relationship(MoleculeORM)
+    # molecule = relationship(MoleculeORM)
 
     __table_args__ = (
         Index("ix_neb_dataset_molecule_dataset_id", "dataset_id"),
@@ -55,22 +55,23 @@ class NEBDatasetEntryORM(BaseORM):
     name = Column(String, primary_key=True)
     comment = Column(String)
 
-    #neb_keywords = Column(JSONB, nullable=False)
+    # neb_keywords = Column(JSONB, nullable=False)
     additional_keywords = Column(JSONB, nullable=False)
     attributes = Column(JSONB, nullable=False)
 
-    #initial_molecule_ids = column_property(
+    # initial_molecule_ids = column_property(
     #    select(array_agg(NEBDatasetInitialChainORM.molecule_id))
     #    .where(NEBDatasetInitialChainORM.dataset_id == dataset_id)
     #    .where(NEBDatasetInitialChainORM.entry_name == name)
     #    .scalar_subquery()
-    #)
+    # )
 
     initial_chain = relationship(
         MoleculeORM,
-        secondary = NEBDatasetInitialMoleculeORM.__table__,
+        secondary=NEBDatasetInitialMoleculeORM.__table__,
         order_by=NEBDatasetInitialMoleculeORM.__table__.c.position,
-        viewonly=True,)
+        viewonly=True,
+    )
 
     initial_chain_assoc = relationship(NEBDatasetInitialMoleculeORM)
 
@@ -131,9 +132,7 @@ class NEBDatasetRecordItemORM(BaseORM):
             onupdate="cascade",
         ),
         Index("ix_neb_dataset_record_record_id", "record_id"),
-        UniqueConstraint(
-            "dataset_id", "entry_name", "specification_name", name="ux_neb_dataset_record_unique"
-        ),
+        UniqueConstraint("dataset_id", "entry_name", "specification_name", name="ux_neb_dataset_record_unique"),
     )
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:

@@ -13,6 +13,7 @@ from qcfractal.components.records.singlepoint.db_models import QCSpecificationOR
 from qcfractal.components.records.optimization.db_models import OptimizationRecordORM
 from qcfractal.db_socket import BaseORM
 
+
 class NEBOptimiationsORM(BaseORM):
 
     __tablename__ = "neb_optimizations"
@@ -27,6 +28,7 @@ class NEBOptimiationsORM(BaseORM):
         exclude = self.append_exclude(exclude, "neb_id")
         return BaseORM.model_dict(self, exclude)
 
+
 class NEBSinglepointsORM(BaseORM):
 
     __tablename__ = "neb_singlepoints"
@@ -37,23 +39,24 @@ class NEBSinglepointsORM(BaseORM):
     position = Column(Integer, primary_key=True)
     singlepoint_record = relationship(SinglepointRecordORM)
 
-    def model_dict(self, exclude: Optional[Iterable[str]]=None) -> Dict[str, Any]:
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         exclude = self.append_exclude(exclude, "neb_id")
         return BaseORM.model_dict(self, exclude)
-  
 
-class NEBInitialchainORM(BaseORM):   
-    
-    __tablename__="neb_initialchain"
+
+class NEBInitialchainORM(BaseORM):
+
+    __tablename__ = "neb_initialchain"
 
     neb_id = Column(Integer, ForeignKey("neb_record.id", ondelete="cascade"), primary_key=True)
     molecule_id = Column(Integer, ForeignKey(MoleculeORM.id, ondelete="cascade"), primary_key=True)
     position = Column(Integer, primary_key=True)
 
-    def model_dict(self, exclude: Optional[Iterable[str]]=None) -> Dict[str, Any]:
-       exclude = self.append_exclude(exclude, "neb_id")
-       return BaseORM.model_dict(self, exclude)   
- 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        exclude = self.append_exclude(exclude, "neb_id")
+        return BaseORM.model_dict(self, exclude)
+
+
 class NEBSpecificationORM(BaseORM):
 
     __tablename__ = "neb_specification"
@@ -80,10 +83,9 @@ class NEBSpecificationORM(BaseORM):
         # Enforce lowercase on some fields
     )
 
-    def model_dict(self, exclude: Optional[Iterable[str]]=None) -> Dict[str, Any]:
-      exclude = self.append_exclude(exclude, "id", "singlepoint_specification_id")
-      return BaseORM.model_dict(self, exclude)   
-   
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        exclude = self.append_exclude(exclude, "id", "singlepoint_specification_id")
+        return BaseORM.model_dict(self, exclude)
 
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:
@@ -118,17 +120,17 @@ class NEBRecordORM(BaseRecordORM):
         NEBOptimiationsORM,
         order_by=NEBOptimiationsORM.position,
         collection_class=ordering_list("position"),
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
     )
 
     __mapper_args__ = {
         "polymorphic_identity": "neb",
     }
 
-    def model_dict(self, exclude: Optional[Iterable[str]]=None) -> Dict[str, Any]:
-      exclude = self.append_exclude(exclude, "specification_id")
-      return BaseORM.model_dict(self, exclude)   
- 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        exclude = self.append_exclude(exclude, "specification_id")
+        return BaseORM.model_dict(self, exclude)
+
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:
         return self.specification.required_programs

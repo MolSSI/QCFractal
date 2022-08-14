@@ -22,7 +22,7 @@ class NEBKeywords(BaseModel):
         description="Number of images that will be used to locate a rough transition state structure.",
         gt=5,
     )
- 
+
     spring_constant: float = Field(
         1.0,
         description="Spring constant in kcal/mol/Ang^2.",
@@ -35,18 +35,18 @@ class NEBKeywords(BaseModel):
 
     optimize_ts: bool = Field(
         False,
-        description="Setting it equal to true will perform a transition sate optimization starting with the guessed transition state structure from the NEB calculation result."
+        description="Setting it equal to true will perform a transition sate optimization starting with the guessed transition state structure from the NEB calculation result.",
     )
 
     coordinate_system: str = Field(
-        'tric',
-        description='Coordinate system for optimizations:\n'
-                          '"tric" for Translation-Rotation Internal Coordinates (default)\n'
-                          '"cart" = Cartesian coordinate system\n'
-                          '"prim" = Primitive (a.k.a redundant internal coordinates)\n '
-                          '"dlc" = Delocalized Internal Coordinates,\n'
-                          '"hdlc" = Hybrid Delocalized Internal Coordinates\n'
-                          '"tric-p" for primitive Translation-Rotation Internal Coordinates (no delocalization)\n '
+        "tric",
+        description="Coordinate system for optimizations:\n"
+        '"tric" for Translation-Rotation Internal Coordinates (default)\n'
+        '"cart" = Cartesian coordinate system\n'
+        '"prim" = Primitive (a.k.a redundant internal coordinates)\n '
+        '"dlc" = Delocalized Internal Coordinates,\n'
+        '"hdlc" = Hybrid Delocalized Internal Coordinates\n'
+        '"tric-p" for primitive Translation-Rotation Internal Coordinates (no delocalization)\n ',
     )
 
     @root_validator
@@ -66,10 +66,11 @@ class NEBSpecification(BaseModel):
     def force_qcspec(cls, v):
         if isinstance(v, QCSpecification):
             v = v.dict()
- 
+
         v["driver"] = SinglepointDriver.gradient
         v["protocols"] = SinglepointProtocols()
         return v
+
 
 class NEBOptimization(BaseModel):
     class config:
@@ -97,7 +98,7 @@ class NEBInitialchain(BaseModel):
     position: int
 
     molecule: Optional[Molecule]
-    
+
 
 class NEBAddBody(RecordAddBodyBase):
     specification: NEBSpecification
@@ -124,7 +125,7 @@ class NEBQueryFilters(RecordQueryFilters):
 
 class NEBRecord(BaseRecord):
     class _DataModel(BaseRecord._DataModel):
-        record_type: Literal["neb"] = 'neb'
+        record_type: Literal["neb"] = "neb"
         specification: NEBSpecification
         initial_chain: Optional[List[Molecule]] = None
         singlepoints: Optional[List[NEBSinglepoint]] = None
@@ -133,7 +134,7 @@ class NEBRecord(BaseRecord):
         optimizations_cache: Optional[Dict[str, OptimizationRecord]] = None
 
     # This is needed for disambiguation by pydantic
-    record_type: Literal["neb"] = 'neb'
+    record_type: Literal["neb"] = "neb"
     raw_data: _DataModel
     singlepoint_cache: Optional[Dict[str, SinglepointRecord]] = None
 
@@ -159,13 +160,13 @@ class NEBRecord(BaseRecord):
             # convert the raw optimization data to a dictionary of key -> List[OptimizationRecord]
             opt_map = {}
             for opt in self.raw_data.optimizations:
-                opt_rec =OptimizationRecord.from_datamodel(opt.optimization_record, self.client)
+                opt_rec = OptimizationRecord.from_datamodel(opt.optimization_record, self.client)
                 if opt.ts:
-                    opt_map['transition'] = opt_rec
+                    opt_map["transition"] = opt_rec
                 elif opt.position == 0:
-                    opt_map['initial'] = opt_rec
+                    opt_map["initial"] = opt_rec
                 else:
-                    opt_map['final'] = opt_rec
+                    opt_map["final"] = opt_rec
 
             self.raw_data.optimizations_cache = opt_map
 
@@ -209,7 +210,6 @@ class NEBRecord(BaseRecord):
             None,
             url_params,
         )
-
 
     @property
     def specification(self) -> NEBSpecification:
@@ -259,4 +259,4 @@ class NEBRecord(BaseRecord):
         if self.raw_data.optimizations_cache is None:
             self._fetch_optimizations()
 
-        return self.raw_data.optimizations_cache.get('transition', None)
+        return self.raw_data.optimizations_cache.get("transition", None)

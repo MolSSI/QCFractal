@@ -61,7 +61,6 @@ class NEBServiceState(BaseModel):
         allow_mutation = True
         validate_assignment = True
 
-
     # These are stored as JSON (ie, dict encoded into a string)
     # This makes for faster loads and makes them somewhat tamper-proof
 
@@ -72,8 +71,6 @@ class NEBServiceState(BaseModel):
     converged: bool
     iteration: int
     molecule_template: str
-
-
 
 
 class NEBRecordSocket(BaseRecordSocket):
@@ -119,7 +116,7 @@ class NEBRecordSocket(BaseRecordSocket):
         molecule_template.pop("geometry", None)
         molecule_template.pop("identifiers", None)
         molecule_template.pop("id", None)
-        #elems = molecule_template.get("symbols")
+        # elems = molecule_template.get("symbols")
 
         stdout_orm = neb_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
         stdout_orm.append(output)
@@ -127,14 +124,15 @@ class NEBRecordSocket(BaseRecordSocket):
         molecule_template_str = json.dumps(molecule_template)
 
         service_state = NEBServiceState(
-            nebinfo={'elems': molecule_template.get("symbols"),
-                  'charge': molecule_template.get("molecular_charge", 0),
-                  'mult': molecule_template.get("molecular_multiplicity", 1)
-                  },
+            nebinfo={
+                "elems": molecule_template.get("symbols"),
+                "charge": molecule_template.get("molecular_charge", 0),
+                "mult": molecule_template.get("molecular_multiplicity", 1),
+            },
             iteration=0,
             keywords=keywords,
             optimized=False,
-            tsoptimize=keywords.get('optimize_ts'),
+            tsoptimize=keywords.get("optimize_ts"),
             converged=False,
             molecule_template=molecule_template_str,
         )
@@ -160,10 +158,9 @@ class NEBRecordSocket(BaseRecordSocket):
         service_state = NEBServiceState(**service_orm.service_state)
         molecule_template = json.loads(service_state.molecule_template)
 
-
-        params['iteration'] = service_state.iteration
-        output = ''
-        if service_state.iteration==0:
+        params["iteration"] = service_state.iteration
+        output = ""
+        if service_state.iteration == 0:
             initial_chain: List[Dict[str, Any]] = [x.model_dict() for x in neb_orm.initial_chain]
             initial_molecules = [Molecule(**M) for M in initial_chain]
             if not service_state.optimized:
@@ -187,14 +184,16 @@ class NEBRecordSocket(BaseRecordSocket):
                 for task in complete_tasks:
                     # This is an ORM for singlepoint calculations
                     sp_record = task.record
-                    mol_data = self.root_socket.molecules.get(molecule_id=[sp_record.molecule_id], include=["geometry"], session=session)
+                    mol_data = self.root_socket.molecules.get(
+                        molecule_id=[sp_record.molecule_id], include=["geometry"], session=session
+                    )
                     geometries.append(mol_data[0]["geometry"])
                     energies.append(sp_record.properties["return_energy"])
                     gradients.append(sp_record.properties["return_gradient"])
-                service_state.nebinfo['geometry']=geometries
-                service_state.nebinfo['energies']=energies
-                service_state.nebinfo['gradients']=gradients
-                service_state.nebinfo['params']=params
+                service_state.nebinfo["geometry"] = geometries
+                service_state.nebinfo["energies"] = energies
+                service_state.nebinfo["gradients"] = gradients
+                service_state.nebinfo["params"] = params
                 neb_stdout = io.StringIO()
                 logging.captureWarnings(True)
                 with contextlib.redirect_stdout(neb_stdout):
@@ -215,23 +214,31 @@ class NEBRecordSocket(BaseRecordSocket):
             else:
                 if service_state.converged:
                     if service_state.tsoptimize:
-                        output += "\nOptimizing the guessed transition state structure to locate a first-order saddle point."
+                        output += (
+                            "\nOptimizing the guessed transition state structure to locate a first-order saddle point."
+                        )
 
-                        stmt = (select(MoleculeORM)
-                                .join(SinglepointRecordORM)
-                                .join(NEBSinglepointsORM)
-                                .where(NEBSinglepointsORM.neb_id == neb_orm.id)
-                                .order_by(NEBSinglepointsORM.chain_iteration.desc(),
-                                          SinglepointRecordORM.properties["return_energy"].cast(TEXT).cast(
-                                              DOUBLE_PRECISION).desc())
-                                .limit(1)
-                                )
+                        stmt = (
+                            select(MoleculeORM)
+                            .join(SinglepointRecordORM)
+                            .join(NEBSinglepointsORM)
+                            .where(NEBSinglepointsORM.neb_id == neb_orm.id)
+                            .order_by(
+                                NEBSinglepointsORM.chain_iteration.desc(),
+                                SinglepointRecordORM.properties["return_energy"]
+                                .cast(TEXT)
+                                .cast(DOUBLE_PRECISION)
+                                .desc(),
+                            )
+                            .limit(1)
+                        )
 
                         with self.root_socket.optional_session(session, True) as session:
                             TS_mol = session.execute(stmt).scalar_one_or_none()
                             if TS_mol is None:
                                 raise MissingDataError(
-                                    "MoleculeORM of a guessed transition state from NEB can't be found.")
+                                    "MoleculeORM of a guessed transition state from NEB can't be found."
+                                )
                         self.submit_optimizations(session, service_orm, [Molecule(**TS_mol.model_dict())])
                         service_state.tsoptimize = False
                         finished = False
@@ -239,7 +246,7 @@ class NEBRecordSocket(BaseRecordSocket):
                         output += "\nNEB calculation is completed with %i iterations" % service_state.iteration
                         finished = True
                 else:
-                    service_state.converged=True
+                    service_state.converged = True
                     finished = False
 
         stdout_orm = neb_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
@@ -264,15 +271,14 @@ class NEBRecordSocket(BaseRecordSocket):
             opt_spec = OptimizationSpecification(
                 program="geometric",
                 qc_specification=QCSpecification(**qc_spec),
-                keywords={'transition':True,
-                          'coordsys': service_state.keywords['coordinate_system']},
+                keywords={"transition": True, "coordsys": service_state.keywords["coordinate_system"]},
             )
             ts = True
         else:
             opt_spec = OptimizationSpecification(
                 program="geometric",
                 qc_specification=QCSpecification(**qc_spec),
-                keywords={'coordsys': service_state.keywords['coordinate_system']}
+                keywords={"coordsys": service_state.keywords["coordinate_system"]},
             )
 
             ts = False
@@ -284,9 +290,7 @@ class NEBRecordSocket(BaseRecordSocket):
             session=session,
         )
         for pos, opt_id in enumerate(opt_ids):
-            svc_dep = ServiceDependencyORM(
-                record_id=opt_id,
-                extras={"position": pos})
+            svc_dep = ServiceDependencyORM(record_id=opt_id, extras={"position": pos})
             opt_history = NEBOptimiationsORM(
                 neb_id=service_orm.record_id,
                 optimization_id=opt_id,
@@ -319,7 +323,7 @@ class NEBRecordSocket(BaseRecordSocket):
         )
 
         if not meta.success:
-                raise RuntimeError("Error adding singlepoints - likely a developer error: " + meta.error_string)
+            raise RuntimeError("Error adding singlepoints - likely a developer error: " + meta.error_string)
 
         for pos, sp_id in enumerate(sp_ids):
 
@@ -331,14 +335,14 @@ class NEBRecordSocket(BaseRecordSocket):
                 neb_id=service_orm.record_id,
                 singlepoint_id=sp_id,
                 chain_iteration=service_state.iteration,
-                position= pos,
+                position=pos,
             )
-            
+
             service_orm.dependencies.append(svc_dep)
             neb_orm.singlepoints.append(sp_history)
 
     def add_specification(
-            self, neb_spec: NEBSpecification, *, session: Optional[Session] = None
+        self, neb_spec: NEBSpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, Optional[int]]:
 
         neb_kw_dict = neb_spec.keywords.dict(exclude_defaults=True)
@@ -358,13 +362,13 @@ class NEBRecordSocket(BaseRecordSocket):
 
             stmt = (
                 insert(NEBSpecificationORM)
-                    .values(
+                .values(
                     program=neb_spec.program,
                     keywords=neb_kw_dict,
                     singlepoint_specification_id=sp_spec_id,
                 )
-                    .on_conflict_do_nothing()
-                    .returning(NEBSpecificationORM.id)
+                .on_conflict_do_nothing()
+                .returning(NEBSpecificationORM.id)
             )
 
             r = session.execute(stmt).scalar_one_or_none()
@@ -383,17 +387,16 @@ class NEBRecordSocket(BaseRecordSocket):
                 return InsertMetadata(existing_idx=[0]), r
 
     def query(
-            self,
-            query_data: NEBQueryFilters,
-            *,
-            session: Optional[Session] = None,
+        self,
+        query_data: NEBQueryFilters,
+        *,
+        session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[NEBRecordDict]]:
 
         and_query = []
         need_spspec_join = False
         need_nebspec_join = False
         need_initchain_join = False
-
 
         if query_data.qc_program is not None:
             and_query.append(QCSpecificationORM.program.in_(query_data.qc_program))
@@ -405,7 +408,7 @@ class NEBRecordSocket(BaseRecordSocket):
             and_query.append(QCSpecificationORM.basis.in_(query_data.qc_basis))
             need_spspec_join = True
         if query_data.neb_program is not None:
-            and_query.append('geometric')
+            and_query.append("geometric")
             need_qcspec_join = True
         if query_data.initial_chain_id is not None:
             and_query.append(NEBInitialchainORM.neb_id.in_(query_data.initial_chain_id))
@@ -436,6 +439,7 @@ class NEBRecordSocket(BaseRecordSocket):
             query_data=query_data,
             session=session,
         )
+
     def add_internal(
         self,
         initial_chain_ids: Sequence[Iterable[int]],
@@ -458,7 +462,8 @@ class NEBRecordSocket(BaseRecordSocket):
                     NEBRecordORM.specification_id,
                     array_agg(
                         aggregate_order_by(
-                            NEBInitialchainORM.molecule_id, NEBInitialchainORM.position.asc(),
+                            NEBInitialchainORM.molecule_id,
+                            NEBInitialchainORM.position.asc(),
                         )
                     ).label("molecule_ids"),
                 )
@@ -555,13 +560,16 @@ class NEBRecordSocket(BaseRecordSocket):
             init_molecule_ids = []
             for init_chain in initial_chains:
                 if len(init_chain) < images:
-                    return(
+                    return (
                         InsertMetadata(
-                            error_description="Aborted - number of images for NEB can not exceed the number of input frames:" + spec_meta.error_string
+                            error_description="Aborted - number of images for NEB can not exceed the number of input frames:"
+                            + spec_meta.error_string
                         ),
                         [],
                     )
-                selected_chain = np.array(init_chain)[np.array([int(round(i)) for i in np.linspace(0, len(init_chain)-1 ,images)])]
+                selected_chain = np.array(init_chain)[
+                    np.array([int(round(i)) for i in np.linspace(0, len(init_chain) - 1, images)])
+                ]
                 neb_stdout = io.StringIO()
                 logging.captureWarnings(True)
                 with contextlib.redirect_stdout(neb_stdout):
@@ -591,14 +599,18 @@ class NEBRecordSocket(BaseRecordSocket):
 
         query_mol = get_query_proj_options(MoleculeORM, include, exclude)
 
-        stmt = (select(MoleculeORM)
-                .options(*query_mol)
-                .join(SinglepointRecordORM)
-                .join(NEBSinglepointsORM)
-                .where(NEBSinglepointsORM.neb_id == neb_id)
-                .order_by(NEBSinglepointsORM.chain_iteration.desc(), SinglepointRecordORM.properties["return_energy"].cast(TEXT).cast(DOUBLE_PRECISION).desc())
-                .limit(1)
-                )
+        stmt = (
+            select(MoleculeORM)
+            .options(*query_mol)
+            .join(SinglepointRecordORM)
+            .join(NEBSinglepointsORM)
+            .where(NEBSinglepointsORM.neb_id == neb_id)
+            .order_by(
+                NEBSinglepointsORM.chain_iteration.desc(),
+                SinglepointRecordORM.properties["return_energy"].cast(TEXT).cast(DOUBLE_PRECISION).desc(),
+            )
+            .limit(1)
+        )
 
         with self.root_socket.optional_session(session, True) as session:
             r = session.execute(stmt).scalar_one_or_none()

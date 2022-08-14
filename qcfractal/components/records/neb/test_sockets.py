@@ -36,13 +36,11 @@ if TYPE_CHECKING:
 
 @pytest.mark.parametrize("spec", test_specs)
 def test_neb_socket_add_get(storage_socket: SQLAlchemySocket, spec: NEBSpecification):
-    chain1 = [load_molecule_data("neb/neb_NCH_%i" %i) for i in range(43)]
-    chain2 = [load_molecule_data("neb/neb_C3H2N_%i" %i) for i in range(60)]
+    chain1 = [load_molecule_data("neb/neb_NCH_%i" % i) for i in range(43)]
+    chain2 = [load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(60)]
 
     time_0 = datetime.utcnow()
-    meta, id = storage_socket.records.neb.add(
-        [chain1, chain2], spec, tag="tag1", priority=PriorityEnum.low
-    )
+    meta, id = storage_socket.records.neb.add([chain1, chain2], spec, tag="tag1", priority=PriorityEnum.low)
     time_1 = datetime.utcnow()
     assert meta.success
 
@@ -66,8 +64,6 @@ def test_neb_socket_add_get(storage_socket: SQLAlchemySocket, spec: NEBSpecifica
     assert len(recs[1]["initial_chain"]) == spec.keywords.images
 
 
-
-
 def test_neb_socket_add_same_chains_diff_order(storage_socket: SQLAlchemySocket):
     # Flipping the order of molecules in a chain generates different initial chain.
     spec = test_specs[0]
@@ -76,9 +72,7 @@ def test_neb_socket_add_same_chains_diff_order(storage_socket: SQLAlchemySocket)
     chain2 = chain1[::-1]
 
     # Now add records
-    meta, id = storage_socket.records.neb.add(
-        [chain1, chain2], spec, tag="*", priority=PriorityEnum.normal
-    )
+    meta, id = storage_socket.records.neb.add([chain1, chain2], spec, tag="*", priority=PriorityEnum.normal)
     assert meta.success
     assert meta.n_inserted == 2
     assert meta.n_existing == 0
@@ -86,7 +80,6 @@ def test_neb_socket_add_same_chains_diff_order(storage_socket: SQLAlchemySocket)
     recs = storage_socket.records.neb.get(id, include=["initial_chain"])
     assert len(recs) == 2
     assert recs[0]["id"] != recs[1]["id"]
-
 
 
 def test_neb_socket_add_same_1(storage_socket: SQLAlchemySocket):
@@ -104,23 +97,20 @@ def test_neb_socket_add_same_1(storage_socket: SQLAlchemySocket):
             method="CCSD(T)",
             basis="def2-tzvp",
             protocols=SinglepointProtocols(wavefunction="all"),
-            ),
+        ),
     )
-    chain1 = [load_molecule_data("neb/neb_NCH_%i" %i) for i in range(43)]
+    chain1 = [load_molecule_data("neb/neb_NCH_%i" % i) for i in range(43)]
 
-    meta, id1 = storage_socket.records.neb.add(
-        [chain1], spec, tag="*", priority=PriorityEnum.normal
-    )
+    meta, id1 = storage_socket.records.neb.add([chain1], spec, tag="*", priority=PriorityEnum.normal)
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
-    meta, id2 = storage_socket.records.neb.add(
-        [chain1], spec, tag="*", priority=PriorityEnum.normal
-    )
+    meta, id2 = storage_socket.records.neb.add([chain1], spec, tag="*", priority=PriorityEnum.normal)
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
     assert meta.existing_idx == [0]
     assert id1 == id2
+
 
 def test_neb_socket_add_same_2(storage_socket: SQLAlchemySocket):
     # some modifications to the input specification
@@ -138,7 +128,7 @@ def test_neb_socket_add_same_2(storage_socket: SQLAlchemySocket):
             method="CCSD(T)",
             basis="def2-tzvp",
             protocols=SinglepointProtocols(wavefunction="all"),
-            ),
+        ),
     )
 
     spec2 = NEBSpecification(
@@ -155,20 +145,16 @@ def test_neb_socket_add_same_2(storage_socket: SQLAlchemySocket):
             method="ccsd(T)",
             basis="def2-tzvp",
             protocols=SinglepointProtocols(wavefunction="all", stdout=True),
-            ),
+        ),
     )
 
-    chain1 = [load_molecule_data("neb/neb_NCH_%i" %i) for i in range(43)]
+    chain1 = [load_molecule_data("neb/neb_NCH_%i" % i) for i in range(43)]
 
-    meta, id1 = storage_socket.records.neb.add(
-        [chain1], spec1, tag="*", priority=PriorityEnum.normal
-    )
+    meta, id1 = storage_socket.records.neb.add([chain1], spec1, tag="*", priority=PriorityEnum.normal)
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
-    meta, id2 = storage_socket.records.neb.add(
-        [chain1, chain1, chain1], spec2, tag="*", priority=PriorityEnum.normal
-    )
+    meta, id2 = storage_socket.records.neb.add([chain1, chain1, chain1], spec2, tag="*", priority=PriorityEnum.normal)
     assert meta.n_inserted == 0
     assert meta.n_existing == 3
     assert meta.existing_idx == [0, 1, 2]
@@ -191,13 +177,11 @@ def test_neb_socket_add_different_1(storage_socket: SQLAlchemySocket):
             method="CCSD(T)",
             basis="def2-tzvp",
             protocols=SinglepointProtocols(wavefunction="all"),
-            ),
+        ),
     )
-    chain1 = [load_molecule_data("neb/neb_NCH_%i" %i) for i in range(43)]
-    chain2 = [load_molecule_data("neb/neb_C3H2N_%i" %i) for i in range(60)]
-    meta, id1 = storage_socket.records.neb.add(
-        [chain1, chain2], spec, tag="*", priority=PriorityEnum.normal
-    )
+    chain1 = [load_molecule_data("neb/neb_NCH_%i" % i) for i in range(43)]
+    chain2 = [load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(60)]
+    meta, id1 = storage_socket.records.neb.add([chain1, chain2], spec, tag="*", priority=PriorityEnum.normal)
     assert meta.n_inserted == 2
     assert meta.inserted_idx == [0, 1]
 
@@ -226,8 +210,7 @@ def test_neb_socket_add_different_1(storage_socket: SQLAlchemySocket):
         "neb_C3H2N_psi4_pbe",
     ],
 )
-def test_neb_socket_run(
-        storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, test_data_name: str):
+def test_neb_socket_run(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, test_data_name: str):
     input_spec_1, molecules_1, result_data_1 = load_test_data(test_data_name)
 
     meta_1, id_1 = storage_socket.records.neb.add(
@@ -262,4 +245,6 @@ def test_neb_socket_run(
     assert "Job Finished" in out.as_string
 
     assert len(rec[0]["qcs"]) == n_qcs
+
+
 #

@@ -14,9 +14,7 @@ from qcportal.utils import calculate_limit
 def add_neb_records_v1(body_data: NEBAddBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.add_records
     if len(body_data.initial_chains) > limit:
-        raise LimitExceededError(
-            f"Cannot add {len(body_data.initial_chains)} neb records - limit is {limit}"
-        )
+        raise LimitExceededError(f"Cannot add {len(body_data.initial_chains)} neb records - limit is {limit}")
 
     return storage_socket.records.neb.add(
         initial_chains=body_data.initial_chains,

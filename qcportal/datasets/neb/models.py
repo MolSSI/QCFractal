@@ -24,7 +24,7 @@ class NEBDatasetNewEntry(BaseModel):
 
 
 class NEBDatasetEntry(NEBDatasetNewEntry):
-    #initial_chain_ids: List[int]
+    # initial_chain_ids: List[int]
     initial_chain: List[Molecule]
 
 
@@ -60,8 +60,8 @@ class NEBDataset(BaseDataset):
     _record_item_type = NEBDatasetRecordItem
     _record_type = NEBRecord
 
-    #@staticmethod
-    #def transform_entry_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
+    # @staticmethod
+    # def transform_entry_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
     #    if includes is None:
     #        return None
 
@@ -72,7 +72,7 @@ class NEBDataset(BaseDataset):
 
     def add_specification(
         self, name: str, specification: NEBSpecification, description: Optional[str] = None
-    )-> InsertMetadata:
+    ) -> InsertMetadata:
 
         payload = NEBDatasetSpecification(name=name, specification=specification, description=description)
 
@@ -89,9 +89,7 @@ class NEBDataset(BaseDataset):
         self._post_add_specification(name)
         return ret
 
-    def add_entries(
-        self, entries: Union[NEBDatasetNewEntry, Iterable[NEBDatasetNewEntry]]
-    ) -> InsertMetadata:
+    def add_entries(self, entries: Union[NEBDatasetNewEntry, Iterable[NEBDatasetNewEntry]]) -> InsertMetadata:
 
         entries = make_list(entries)
         ret = self.client._auto_request(
