@@ -17,7 +17,7 @@ def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):
             spring_constant=1.0,
             energy_weighted=False,
         ),
-        qc_specification=QCSpecification(
+        singlepoint_specification=QCSpecification(
             program="psi4",
             method="b3lyp",
             basis="6-31g",
@@ -34,7 +34,7 @@ def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):
             spring_constant=1.0,
             energy_weighted=False,
         ),
-        qc_specification=QCSpecification(
+        singlepoint_specification=QCSpecification(
             program="psi4",
             method="CCSD(T)",
             basis="6-31g**",
@@ -50,7 +50,7 @@ def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):
             spring_constant=1.0,
             energy_weighted=False,
         ),
-        qc_specification=QCSpecification(
+        singlepoint_specification=QCSpecification(
             program="psi4",
             method="CCSD(T)",
             basis="def2-tzvp",
@@ -89,7 +89,7 @@ def test_neb_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
     spec1 = NEBSpecification(
         program="geometric",
         keywords=NEBKeywords(),
-        qc_specification=common_sp_spec,
+        singlepoint_specification=common_sp_spec,
     )
 
     meta, id = storage_socket.records.neb.add_specification(spec1)
@@ -115,7 +115,7 @@ def test_neb_socket_add_specification_same_1(storage_socket: SQLAlchemySocket):
             spring_constant=1.0,
             energy_weighted=False,
         ),
-        qc_specification=common_sp_spec,
+        singlepoint_specification=common_sp_spec,
     )
 
     # model handling defaults
@@ -125,7 +125,7 @@ def test_neb_socket_add_specification_same_1(storage_socket: SQLAlchemySocket):
             images=21,
             spring_constant=1.0,
         ),
-        qc_specification=common_sp_spec,
+        singlepoint_specification=common_sp_spec,
     )
 
     meta, id = storage_socket.records.neb.add_specification(spec1)
@@ -150,7 +150,7 @@ def test_neb_socket_add_specification_same_2(storage_socket: SQLAlchemySocket):
             spring_constant=1.0,
             energy_weighted=False,
         ),
-        qc_specification=common_sp_spec,
+        singlepoint_specification=common_sp_spec,
     )
     # model handling defaults
     spec2 = NEBSpecification(
@@ -160,7 +160,7 @@ def test_neb_socket_add_specification_same_2(storage_socket: SQLAlchemySocket):
             spring_constant=1.0,
             energy_weighted=False,
         ),
-        qc_specification=QCSpecification(
+        singlepoint_specification=QCSpecification(
             program="psi4",
             method="CCSD(T)",
             basis="def2-tzvp",
@@ -191,7 +191,7 @@ def test_neb_socket_add_specification_diff_1(storage_socket: SQLAlchemySocket):
             spring_constant=1.0,
             energy_weighted=True,
         ),
-        qc_specification=common_sp_spec,
+        singlepoint_specification=common_sp_spec,
     )
 
     spec2 = NEBSpecification(
@@ -201,7 +201,7 @@ def test_neb_socket_add_specification_diff_1(storage_socket: SQLAlchemySocket):
             spring_constant=1.5,
             energy_weighted=False,
         ),
-        qc_specification=common_sp_spec,
+        singlepoint_specification=common_sp_spec,
     )
 
     meta, id = storage_socket.records.neb.add_specification(spec1)
@@ -226,7 +226,7 @@ def test_neb_socket_add_specification_diff_2(storage_socket: SQLAlchemySocket):
             spring_constant=1.0,
             energy_weighted=False,
         ),
-        qc_specification=common_sp_spec,
+        singlepoint_specification=common_sp_spec,
     )
 
     spec2 = NEBSpecification(
@@ -236,7 +236,7 @@ def test_neb_socket_add_specification_diff_2(storage_socket: SQLAlchemySocket):
             spring_constant=1.5,
             energy_weighted=False,
         ),
-        qc_specification=common_sp_spec,
+        singlepoint_specification=common_sp_spec,
     )
 
     meta, id = storage_socket.records.neb.add_specification(spec1)
@@ -261,7 +261,7 @@ def test_neb_socket_add_specification_diff_3(storage_socket: SQLAlchemySocket):
             spring_constant=1.5,
             energy_weighted=False,
         ),
-        qc_specification=common_sp_spec,
+        singlepoint_specification=common_sp_spec,
     )
     spec2 = NEBSpecification(
         program="geometric",
@@ -270,7 +270,7 @@ def test_neb_socket_add_specification_diff_3(storage_socket: SQLAlchemySocket):
             spring_constant=1.5,
             energy_weighted=False,
         ),
-        qc_specification=common_sp_spec,
+        singlepoint_specification=common_sp_spec,
     )
     meta, id = storage_socket.records.neb.add_specification(spec1)
     assert meta.success
