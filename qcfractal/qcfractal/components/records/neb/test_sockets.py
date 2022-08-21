@@ -196,12 +196,12 @@ def test_neb_socket_add_different_1(storage_socket: SQLAlchemySocket):
     assert id1[1] == id2[1]
 
 
-#@pytest.mark.parametrize(
+# @pytest.mark.parametrize(
 #    "test_data_name",
 #    [
 #    ],
-#)
-#def test_neb_socket_run(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, test_data_name: str):
+# )
+# def test_neb_socket_run(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, test_data_name: str):
 #    input_spec_1, molecules_1, result_data_1 = load_test_data(test_data_name)
 #
 #    meta_1, id_1 = storage_socket.records.neb.add(

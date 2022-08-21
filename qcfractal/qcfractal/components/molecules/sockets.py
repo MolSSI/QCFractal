@@ -258,12 +258,12 @@ class MoleculeSocket:
                 or_query = []
                 for v in i_values:
                     or_query.append(MoleculeORM.identifiers.contains({i_name: v}))
-                and_query.append(or_(*or_query))
+                and_query.append(or_(True, *or_query))
 
         proj_options = get_query_proj_options(MoleculeORM, query_data.include, query_data.exclude)
 
         with self.root_socket.optional_session(session, True) as session:
-            stmt = select(MoleculeORM).where(and_(*and_query))
+            stmt = select(MoleculeORM).where(and_(True, *and_query))
             stmt = stmt.options(*proj_options)
 
             if query_data.include_metadata:

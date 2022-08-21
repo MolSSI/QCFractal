@@ -264,7 +264,7 @@ class ServerInfoSocket:
             and_query.append(AccessLogORM.access_date >= query_data.after)
 
         with self.root_socket.optional_session(session, True) as session:
-            stmt = select(AccessLogORM).where(and_(*and_query)).order_by(AccessLogORM.access_date.desc())
+            stmt = select(AccessLogORM).where(and_(True, *and_query)).order_by(AccessLogORM.access_date.desc())
             stmt = stmt.options(*proj_options)
 
             if query_data.include_metadata:
@@ -350,7 +350,7 @@ class ServerInfoSocket:
                 func.max(AccessLogORM.response_bytes),
             )
 
-            stmt = stmt.where(and_(*and_query)).group_by(
+            stmt = stmt.where(and_(True, *and_query)).group_by(
                 AccessLogORM.access_type, AccessLogORM.access_method, "group_col"
             )
 
@@ -418,7 +418,11 @@ class ServerInfoSocket:
             and_query.append(InternalErrorLogORM.error_date >= query_data.after)
 
         with self.root_socket.optional_session(session, True) as session:
-            stmt = select(InternalErrorLogORM).where(and_(*and_query)).order_by(InternalErrorLogORM.error_date.desc())
+            stmt = (
+                select(InternalErrorLogORM)
+                .where(and_(True, *and_query))
+                .order_by(InternalErrorLogORM.error_date.desc())
+            )
 
             if query_data.include_metadata:
                 n_found = get_count(session, stmt)
@@ -471,7 +475,7 @@ class ServerInfoSocket:
             and_query.append(ServerStatsLogORM.timestamp >= query_data.after)
 
         with self.root_socket.optional_session(session, True) as session:
-            stmt = select(ServerStatsLogORM).filter(and_(*and_query)).order_by(ServerStatsLogORM.timestamp.desc())
+            stmt = select(ServerStatsLogORM).filter(and_(True, *and_query)).order_by(ServerStatsLogORM.timestamp.desc())
 
             if query_data.include_metadata:
                 n_found = get_count(session, stmt)

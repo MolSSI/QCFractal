@@ -177,7 +177,7 @@ class ManagerSocket:
 
         stmt = (
             update(ComputeManagerORM)
-            .where(and_(ComputeManagerORM.status == ManagerStatusEnum.active, and_(*query_and)))
+            .where(and_(ComputeManagerORM.status == ManagerStatusEnum.active, and_(True, *query_and)))
             .values(status=ManagerStatusEnum.inactive, modified_on=now)
             .returning(ComputeManagerORM.name)
         )
@@ -280,7 +280,7 @@ class ManagerSocket:
             and_query.append(ComputeManagerORM.modified_on > query_data.modified_after)
 
         with self.root_socket.optional_session(session, True) as session:
-            stmt = select(ComputeManagerORM).filter(and_(*and_query))
+            stmt = select(ComputeManagerORM).filter(and_(True, *and_query))
             stmt = stmt.options(*proj_options)
 
             if query_data.include_metadata:

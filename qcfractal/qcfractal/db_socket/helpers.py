@@ -49,7 +49,7 @@ def get_count(session, stmt):
     This should be used before any limit/offset options are incorporated into the query
     """
 
-    return session.scalar(select(func.count()).select_from(stmt))
+    return session.scalar(select(func.count()).select_from(stmt.subquery()))
 
 
 @lru_cache(maxsize=10)
@@ -243,7 +243,7 @@ def form_query_filter(cols: Sequence[InstrumentedAttribute], values: Sequence[Tu
         for v in values:
             query_parts.append(and_(x == y for x, y in zip(cols, v)))
 
-        return or_(*query_parts)
+        return or_(True, *query_parts)
 
     else:
         return tuple_(*cols).in_(values)
@@ -598,7 +598,7 @@ def delete_general(
     for idx, search_value in enumerate(search_values):
         try:
             q = [x == y for x, y in zip(search_cols, search_value)]
-            n_deleted = session.query(orm_type).filter(and_(*q)).delete()
+            n_deleted = session.query(orm_type).filter(and_(True, *q)).delete()
             if n_deleted == 0:
                 errors.append((idx, "Entry is missing"))
             else:

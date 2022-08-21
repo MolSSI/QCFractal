@@ -248,7 +248,7 @@ class ComputeManager:
 
         # All available programs
         # Add qcengine, with the version
-        self.all_program_info = {'qcengine': qcng.__version__}
+        self.all_program_info = {"qcengine": qcng.__version__}
 
         # What do we get from qcengine
         qcng_programs = qcng.list_available_programs()
