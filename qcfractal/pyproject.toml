@@ -37,7 +37,7 @@ dependencies = [
 
     # Services
     "torsiondrive",
-    "geometric",
+    "geometric @ git+https://github.com/hjnpark/geomeTRIC@neb",
 ]
 
 

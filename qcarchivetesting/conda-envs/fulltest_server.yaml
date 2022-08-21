@@ -32,8 +32,12 @@ dependencies:
 
   # Services
   - torsiondrive
-  - geometric
 
   # QCPortal dependencies
   - tqdm
   - pandas
+
+  # Geometric service
+  - pip:
+    - scipy
+    - "geometric @ git+https://github.com/hjnpark/geomeTRIC@neb"

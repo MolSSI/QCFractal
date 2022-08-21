@@ -24,6 +24,10 @@ dependencies:
   - pandas
 
   # Specific codes below
-  - geometric
   - psi4
   - rdkit
+
+  # Geometric service
+  - pip:
+    - scipy
+    - "geometric @ git+https://github.com/hjnpark/geomeTRIC@neb"
