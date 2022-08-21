@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=61.0", "versioningit"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "qcfractal"
+dynamic = ["version"]
+authors = [
+  { name="Benjamin Pritchard", email="qcarchive@molssi.org" },
+]
+description = "A distributed compute and database platform for quantum chemistry."
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+]
+dependencies = [
+    "qcportal",
+    "flask",
+    "flask_jwt_extended",
+    "gunicorn",
+    "bcrypt",
+
+    # Storage dependencies
+    "sqlalchemy >=1.4",
+    "alembic",
+    "psycopg2",
+
+    # For access logging
+    "geoip2"
+]
+
+
+[project.urls]
+"Homepage" = "https://github.com/MolSSI/QCFractal"
+"Bug Tracker" = "https://github.com/MolSSI/QCFractal/issues"
+
+
+[project.scripts]
+qcfractal-server = "qcfractal.qcfractal_server_cli:main"
+
+
+[project.entry-points.pytest11]
+qcfractal_fixtures = "qcfractal.testing_fixtures"
+
+
+[tool.black]
+line-length = 120
+
+
+[tool.versioningit]
+
+
+[tool.versioningit.vcs]
+default-tag = "0.0.99" # useful for CI/shallow clones
+
+
+[tool.pytest.ini_options]
+markers = ["slow"]
+
+# We have a class that begins with Test, but is not a test itself
+python_classes = ["!TestingSnowflake"]
+
+
+[tool.coverage.run]
+omit = ["qcfractal/alembic/*"]

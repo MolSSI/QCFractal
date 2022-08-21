@@ -2,8 +2,9 @@
 requires = ["setuptools>=61.0", "versioningit"]
 build-backend = "setuptools.build_meta"
 
+
 [project]
-name = "qcfractal"
+name = "qcfractalcompute"
 dynamic = ["version"]
 authors = [
   { name="Benjamin Pritchard", email="qcarchive@molssi.org" },
@@ -20,47 +21,12 @@ classifiers = [
     "Operating System :: MacOS",
 ]
 dependencies = [
-    "numpy",
-    "msgpack",
-    "flask",
-    "flask_jwt_extended",
-    "gunicorn",
-    "pyyaml",
-    "pydantic",
-    "bcrypt",
-    "qcelemental",
+    "qcportal",
     "qcengine",
-    "torsiondrive",
-    "tabulate",
-    "requests",
-
-    # QCPortal dependencies
-    "tqdm",
-    "pandas",
-
-    # Storage dependencies
-    "sqlalchemy >=1.4",
-    "alembic",
-    "psycopg2",
 ]
+
 
 [project.optional-dependencies]
-test = [
-    "pytest",
-    "pytest-cov",
-    "codecov",
-    "geoip2"
-]
-geoip = [
-    "geoip2"
-]
-docs = [
-    "sphinx",
-    "sphinx-automodapi",
-    "sphinx_rtd_theme",
-    "nbsphinx",
-    "ipython"
-]
 lint = [
     "black"
 ]
@@ -70,29 +36,21 @@ lint = [
 "Homepage" = "https://github.com/MolSSI/QCFractal"
 "Bug Tracker" = "https://github.com/MolSSI/QCFractal/issues"
 
-[tool.setuptools]
-packages = ["qcfractal", "qcportal", "qcfractalcompute", "qcfractaltesting"]
 
 [project.scripts]
-qcfractal-server = "qcfractal.qcfractal_server_cli:main"
 qcfractal-manager = "qcfractalcompute.qcfractal_manager_cli:main"
 
-[project.entry-points.pytest11]
-qcfractal_fixtures = "qcfractal.testing_fixtures"
-
-[tool.versioningit]
-
-[tool.versioningit.vcs]
-default-tag = "0.0.99" # useful for CI/shallow clones
 
 [tool.black]
 line-length = 120
 
+
+[tool.versioningit]
+
+
+[tool.versioningit.vcs]
+default-tag = "0.0.99" # useful for CI/shallow clones
+
+
 [tool.pytest.ini_options]
 markers = ["slow"]
-
-# We have a class that begins with Test, but is not a test itself
-python_classes = ["!TestingSnowflake"]
-
-[tool.coverage.run]
-omit = ["*/tests/*", "qcfractal/alembic/*"]
