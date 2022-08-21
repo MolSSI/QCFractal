@@ -21,7 +21,7 @@ classifiers = [
     "Operating System :: MacOS",
 ]
 dependencies = [
-    "qcportal",
+    "qcfractalcompute", # Includes qcportal and related deps
     "flask",
     "flask_jwt_extended",
     "gunicorn",
@@ -33,7 +33,11 @@ dependencies = [
     "psycopg2",
 
     # For access logging
-    "geoip2"
+    "geoip2",
+
+    # Services
+    "torsiondrive",
+    "geometric",
 ]
 
 

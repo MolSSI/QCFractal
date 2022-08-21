@@ -196,55 +196,43 @@ def test_neb_socket_add_different_1(storage_socket: SQLAlchemySocket):
     assert id1[1] == id2[1]
 
 
-@pytest.mark.parametrize(
-    "test_data_name",
-    [
-        "neb_NCH_psi4_b3lyp-d3bj",
-        "neb_C3H2N_psi4_b3lyp-d3bj",
-        "neb_C3H2N_psi4_b3lyp",
-        "neb_C3H2N_psi4_blyp",
-        "neb_C3H2N_psi4_bp86",
-        "neb_C3H2N_psi4_hf",
-        "neb_C3H2N_psi4_pbe0-d3bj",
-        "neb_C3H2N_psi4_pbe0",
-        "neb_C3H2N_psi4_pbe",
-    ],
-)
-def test_neb_socket_run(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, test_data_name: str):
-    input_spec_1, molecules_1, result_data_1 = load_test_data(test_data_name)
-
-    meta_1, id_1 = storage_socket.records.neb.add(
-        [molecules_1], input_spec_1, tag="test_tag", priority=PriorityEnum.low, as_service=True
-    )
-    assert meta_1.success
-
-    time_0 = datetime.utcnow()
-    finished, n_qcs = run_service_constropt(id_1[0], result_data_1, storage_socket, 200)
-    time_1 = datetime.utcnow()
-
-    rec = storage_socket.records.neb.get(
-        id_1,
-        include=[
-            "*",
-            "compute_history.*",
-            "compute_history.outputs",
-            "qcs.*",
-            "qcs.qc_record",
-            "service",
-        ],
-    )
-
-    assert rec[0]["status"] == RecordStatusEnum.complete
-    assert time_0 < rec[0]["modified_on"] < time_1
-    assert len(rec[0]["compute_history"]) == 1
-    assert len(rec[0]["compute_history"][-1]["outputs"]) == 1
-    assert rec[0]["compute_history"][-1]["status"] == RecordStatusEnum.complete
-    assert time_0 < rec[0]["compute_history"][-1]["modified_on"] < time_1
-    assert rec[0]["service"] is None
-    out = OutputStore(**rec[0]["compute_history"][-1]["outputs"]["snebout"])
-    assert "Job Finished" in out.as_string
-
-    assert len(rec[0]["qcs"]) == n_qcs
-
-
+#@pytest.mark.parametrize(
+#    "test_data_name",
+#    [
+#    ],
+#)
+#def test_neb_socket_run(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, test_data_name: str):
+#    input_spec_1, molecules_1, result_data_1 = load_test_data(test_data_name)
 #
+#    meta_1, id_1 = storage_socket.records.neb.add(
+#        [molecules_1], input_spec_1, tag="test_tag", priority=PriorityEnum.low, as_service=True
+#    )
+#    assert meta_1.success
+#
+#    time_0 = datetime.utcnow()
+#    finished, n_qcs = run_service_constropt(id_1[0], result_data_1, storage_socket, 200)
+#    time_1 = datetime.utcnow()
+#
+#    rec = storage_socket.records.neb.get(
+#        id_1,
+#        include=[
+#            "*",
+#            "compute_history.*",
+#            "compute_history.outputs",
+#            "qcs.*",
+#            "qcs.qc_record",
+#            "service",
+#        ],
+#    )
+#
+#    assert rec[0]["status"] == RecordStatusEnum.complete
+#    assert time_0 < rec[0]["modified_on"] < time_1
+#    assert len(rec[0]["compute_history"]) == 1
+#    assert len(rec[0]["compute_history"][-1]["outputs"]) == 1
+#    assert rec[0]["compute_history"][-1]["status"] == RecordStatusEnum.complete
+#    assert time_0 < rec[0]["compute_history"][-1]["modified_on"] < time_1
+#    assert rec[0]["service"] is None
+#    out = OutputStore(**rec[0]["compute_history"][-1]["outputs"]["snebout"])
+#    assert "Job Finished" in out.as_string
+#
+#    assert len(rec[0]["qcs"]) == n_qcs

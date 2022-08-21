@@ -253,7 +253,7 @@ class NEBRecord(BaseRecord):
         return r
 
     @property
-    def ts_optimization(self) -> Optional[dict[str, OptimizationRecord]]:
+    def ts_optimization(self) -> Optional[Dict[str, OptimizationRecord]]:
         self._make_caches()
 
         if self.raw_data.optimizations_cache is None:

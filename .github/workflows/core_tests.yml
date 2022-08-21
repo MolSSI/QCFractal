@@ -27,19 +27,19 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Clone the QCFractal repository
+      - name: Clone the QCArchive repository
         uses: actions/checkout@v3
 
       - name: Clone MaxMind test db repository
         uses: actions/checkout@v3
         with:
           repository: maxmind/MaxMind-DB
-          path: qcfractaltesting/MaxMind-DB
+          path: qcfractaltesting/qcfractaltesting/MaxMind-DB
 
-      - name: Install QCFractal package
+      - name: Install All QCArchive packages
         shell: bash -l {0}
         run: |
-          pip install -e .[geoip,test]
+          pip install -e qcportal/ -e qcfractalcompute/ -e qcfractal/ -e qcfractaltesting/
 
       - name: Run tests
         shell: bash -l {0}

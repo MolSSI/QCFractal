@@ -23,19 +23,22 @@ dependencies:
 
   - qcelemental
   - qcengine
-  - torsiondrive
   - tabulate
 
   # Storage dependencies
+  - postgresql
   - sqlalchemy >=1.4
   - alembic
   - psycopg2
+
+  # Services
+  - torsiondrive
+  - geometric
 
   # QCPortal dependencies
   - tqdm
   - pandas
 
   # Specific codes below
-  - geometric
   - psi4
   - rdkit
