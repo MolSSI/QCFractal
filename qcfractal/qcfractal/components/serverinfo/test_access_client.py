@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractaltesting import valid_encodings
+from qcarchivetesting import valid_encodings
 from ...testing_helpers import TestingSnowflake
 
 if TYPE_CHECKING:

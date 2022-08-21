@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractaltesting import load_molecule_data
+from qcarchivetesting import load_molecule_data
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.reaction import ReactionSpecification
 from .testing_helpers import compare_reaction_specs, test_specs, run_test_data, submit_test_data

@@ -6,7 +6,7 @@ import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicResult
 
 from qcfractal.testing_helpers import run_service_constropt
-from qcfractaltesting.helpers import read_record_data
+from qcarchivetesting.helpers import read_record_data
 from qcportal.records import PriorityEnum, RecordStatusEnum
 from qcportal.records.singlepoint import SinglepointProtocols, QCSpecification, SinglepointDriver
 from qcportal.records.neb import NEBSpecification, NEBKeywords

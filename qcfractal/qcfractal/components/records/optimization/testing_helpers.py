@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Tuple, Optional, Union, Dict, Any
 import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult
 
-from qcfractaltesting.helpers import read_record_data
+from qcarchivetesting.helpers import read_record_data
 from qcportal.records import PriorityEnum, RecordStatusEnum
 from qcportal.records.optimization import OptimizationSpecification
 from qcportal.records.singlepoint import QCSpecification, SinglepointProtocols

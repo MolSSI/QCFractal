@@ -34,12 +34,12 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: maxmind/MaxMind-DB
-          path: qcfractaltesting/qcfractaltesting/MaxMind-DB
+          path: qcarchivetesting/qcarchivetesting/MaxMind-DB
 
       - name: Install All QCArchive packages
         shell: bash -l {0}
         run: |
-          pip install -e qcportal/ -e qcfractalcompute/ -e qcfractal/ -e qcfractaltesting/
+          pip install -e qcportal/ -e qcfractalcompute/ -e qcfractal/ -e qcarchivetesting/
 
       - name: Run tests
         shell: bash -l {0}

@@ -3,7 +3,7 @@ from __future__ import annotations
 import ipaddress
 from typing import TYPE_CHECKING
 
-from qcfractaltesting import load_ip_test_data
+from qcarchivetesting import load_ip_test_data
 from qcportal.serverinfo.models import AccessLogQueryFilters
 
 if TYPE_CHECKING:

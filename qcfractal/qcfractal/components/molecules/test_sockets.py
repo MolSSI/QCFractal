@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from qcfractaltesting import load_molecule_data
+from qcarchivetesting import load_molecule_data
 from qcportal.molecules import Molecule, MoleculeQueryFilters
 
 if TYPE_CHECKING:

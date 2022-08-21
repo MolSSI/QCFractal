@@ -32,7 +32,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: qcarchive-all
-          environment-file: qcfractaltesting/conda-envs/fulltest_snowflake.yaml
+          environment-file: qcarchivetesting/conda-envs/fulltest_snowflake.yaml
           auto-activate-base: false
 
       - name: Conda info
@@ -43,12 +43,12 @@ jobs:
       - name: Install All QCArchive packages
         shell: bash -l {0}
         run: |
-          pip install -e qcportal/ -e qcfractalcompute/ -e qcfractal/ -e qcfractaltesting/
+          pip install -e qcportal/ -e qcfractalcompute/ -e qcfractal/ -e qcarchivetesting/
 
       - name: Run Tests
         shell: bash -l {0}
         run: |
-          pytest -v --fractal-uri="snowflake" --log-file-level=DEBUG --log-file="qcfractal_snowflake.log" qcfractaltesting
+          pytest -v --fractal-uri="snowflake" --log-file-level=DEBUG --log-file="qcfractal_snowflake.log" qcarchivetesting
 
       - name: 'Save logs/artifacts'
         if: always()

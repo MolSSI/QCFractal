@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractaltesting import load_molecule_data
+from qcarchivetesting import load_molecule_data
 from qcportal.managers import ManagerName
 from qcportal.records import PriorityEnum
 from qcportal.records.singlepoint import QCSpecification, SinglepointDriver

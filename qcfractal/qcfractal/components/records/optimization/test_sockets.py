@@ -7,7 +7,7 @@ import pytest
 
 from qcfractal.components.records.optimization.testing_helpers import test_specs, load_test_data
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractaltesting import load_molecule_data
+from qcarchivetesting import load_molecule_data
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputStore

@@ -105,4 +105,4 @@ runinfo/
 .DS_Store
 
 .mypy_cache
-qcfractaltesting/qcfractaltesting/MaxMind-DB
+qcarchivetesting/qcarchivetesting/MaxMind-DB

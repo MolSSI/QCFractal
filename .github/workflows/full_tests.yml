@@ -38,7 +38,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: qcarchive-server
-          environment-file: qcarchive/qcfractaltesting/conda-envs/fulltest_server.yaml
+          environment-file: qcarchive/qcarchivetesting/conda-envs/fulltest_server.yaml
           auto-activate-base: false
 
       - name: Install QCFractal
@@ -55,7 +55,7 @@ jobs:
         shell: bash -l {0}
         run: |
           mkdir server; cd server
-          cp ../qcarchive/qcfractaltesting/qcfractaltesting/config_files/gha_fractal_server.yaml ./
+          cp ../qcarchive/qcarchivetesting/qcarchivetesting/config_files/gha_fractal_server.yaml ./
           qcfractal-server --config=gha_fractal_server.yaml init-db
           qcfractal-server --config=gha_fractal_server.yaml start &
 
@@ -68,7 +68,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: qcarchive-worker
-          environment-file: qcarchive/qcfractaltesting/conda-envs/fulltest_worker_pool.yaml
+          environment-file: qcarchive/qcarchivetesting/conda-envs/fulltest_worker_pool.yaml
           auto-activate-base: false
 
       - name: Install QCFractalCompute
@@ -85,7 +85,7 @@ jobs:
         shell: bash -l {0}
         run: |
           mkdir compute; cd compute
-          cp ../qcarchive/qcfractaltesting/qcfractaltesting/config_files/gha_fractal_compute_pool.yaml ./
+          cp ../qcarchive/qcarchivetesting/qcarchivetesting/config_files/gha_fractal_compute_pool.yaml ./
           qcfractal-manager --config=gha_fractal_compute_pool.yaml &
 
 
@@ -97,7 +97,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           activate-environment: qcarchive-portal
-          environment-file: qcarchive/qcfractaltesting/conda-envs/fulltest_qcportal.yaml
+          environment-file: qcarchive/qcarchivetesting/conda-envs/fulltest_qcportal.yaml
           auto-activate-base: false
 
       - name: Install QCPortal
@@ -119,7 +119,7 @@ jobs:
         shell: bash -l {0}
         run: |
           cd qcarchive
-          pytest -v --fractal-uri="http://127.0.0.1:7900" qcfractaltesting
+          pytest -v --fractal-uri="http://127.0.0.1:7900" qcarchivetesting
 
       - name: Stop server & worker
         shell: bash -l {0}

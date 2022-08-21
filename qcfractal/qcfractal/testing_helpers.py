@@ -7,7 +7,7 @@ from qcelemental.models import Molecule
 
 from qcfractal import FractalSnowflake
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractaltesting import geoip_path, test_users
+from qcarchivetesting import geoip_path, test_users
 from qcportal import PortalClient, ManagerClient
 from qcportal.managers import ManagerName
 from qcportal.permissions import UserInfo

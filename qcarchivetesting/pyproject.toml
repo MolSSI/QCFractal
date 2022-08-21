@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 
 [project]
-name = "qcfractaltesting"
+name = "qcarchivetesting"
 dynamic = ["version"]
 authors = [
   { name="Benjamin Pritchard", email="qcarchive@molssi.org" },

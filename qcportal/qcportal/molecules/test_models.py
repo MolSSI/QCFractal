@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 import qcelemental as qcel
 
-from qcfractaltesting import load_molecule_data
+from qcarchivetesting import load_molecule_data
 from .models import Molecule
 
 

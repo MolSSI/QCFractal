@@ -1,6 +1,6 @@
 import pytest
 
-from qcfractaltesting import test_users
+from qcarchivetesting import test_users
 from qcportal import PortalRequestError
 from qcportal.exceptions import InvalidRolenameError
 from qcportal.permissions import RoleInfo, PermissionsPolicy

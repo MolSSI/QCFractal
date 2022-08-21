@@ -19,7 +19,7 @@ from qcfractal.components.records.singlepoint.testing_helpers import (
 from qcfractal.components.records.testing_helpers import populate_records_status
 from qcfractal.components.records.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
 from qcfractal.testing_helpers import TestingSnowflake
-from qcfractaltesting import test_users
+from qcarchivetesting import test_users
 from qcportal import PortalRequestError
 from qcportal.managers import ManagerName
 from qcportal.records import PriorityEnum, RecordStatusEnum

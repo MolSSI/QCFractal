@@ -17,7 +17,7 @@ from qcfractal.components.records.neb.testing_helpers import (
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service_constropt
-from qcfractaltesting import load_molecule_data
+from qcarchivetesting import load_molecule_data
 from qcportal.outputstore import OutputStore
 from qcportal.records import RecordStatusEnum, PriorityEnum
 from qcportal.records.singlepoint import (

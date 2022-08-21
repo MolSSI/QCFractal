@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractaltesting import load_molecule_data
+from qcarchivetesting import load_molecule_data
 from qcportal import PortalRequestError
 from qcportal.molecules import Molecule, MoleculeIdentifiers
 

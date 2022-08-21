@@ -9,7 +9,7 @@ import pytest
 
 from qcfractal.components.records.singlepoint.testing_helpers import load_test_data, submit_test_data
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractaltesting import caplog_handler_at_level
+from qcarchivetesting import caplog_handler_at_level
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerName
 from qcportal.records import RecordStatusEnum
