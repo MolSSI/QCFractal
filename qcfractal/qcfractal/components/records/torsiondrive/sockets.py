@@ -36,20 +36,13 @@ from .db_models import (
 )
 
 # Torsiondrive package is optional
-__td_spec = find_spec("torsiondrive")
+_td_spec = find_spec("torsiondrive")
 
-if __td_spec is not None:
+if _td_spec is not None:
     __td_api_spec = find_spec("torsiondrive.td_api")
 
-    torsiondrive = __td_spec.loader.load_module()
+    torsiondrive = _td_spec.loader.load_module()
     td_api = __td_api_spec.loader.load_module()
-
-
-def _check_td():
-    if __td_spec is None:
-        raise ModuleNotFoundError(
-            "Unable to find the torsiondrive package, which must be installed to use the torsion drive service"
-        )
 
 
 if TYPE_CHECKING:
@@ -87,6 +80,9 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)
         self._logger = logging.getLogger(__name__)
+
+    def available(self) -> bool:
+        return _td_spec is not None
 
     @staticmethod
     def get_children_select() -> List[Any]:

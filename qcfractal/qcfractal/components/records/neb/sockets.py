@@ -4,17 +4,14 @@ import contextlib
 import io
 import json
 import logging
-import time
-
-import numpy as np
+from importlib.util import find_spec
 from typing import TYPE_CHECKING
 
-
-import geometric
+import numpy as np
 import sqlalchemy.orm.attributes
 import tabulate
 from pydantic import BaseModel
-from sqlalchemy import select, func, or_
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
 from sqlalchemy.orm import contains_eager
 
@@ -27,12 +24,12 @@ from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputTypeEnum
 from qcportal.records import PriorityEnum, RecordStatusEnum
-from qcportal.records.singlepoint import QCSpecification
-from qcportal.records.optimization import OptimizationSpecification
 from qcportal.records.neb import (
     NEBSpecification,
     NEBQueryFilters,
 )
+from qcportal.records.optimization import OptimizationSpecification
+from qcportal.records.singlepoint import QCSpecification
 from .db_models import (
     NEBOptimiationsORM,
     NEBSpecificationORM,
@@ -40,8 +37,13 @@ from .db_models import (
     NEBInitialchainORM,
     NEBRecordORM,
 )
-from ..optimization.db_models import OptimizationRecordORM
 from ...molecules.db_models import MoleculeORM
+
+# geometric package is optional
+_geo_spec = find_spec("geometric")
+
+if _geo_spec is not None:
+    geometric = _geo_spec.loader.load_module()
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -82,6 +84,9 @@ class NEBRecordSocket(BaseRecordSocket):
     def __init__(self, root_socket: SQLAlchemySocket):
         BaseRecordSocket.__init__(self, root_socket)
         self._logger = logging.getLogger(__name__)
+
+    def available(self) -> bool:
+        return _geo_spec is not None
 
     @staticmethod
     def get_children_select() -> List[Any]:

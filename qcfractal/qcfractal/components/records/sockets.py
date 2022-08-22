@@ -230,6 +230,17 @@ class BaseRecordSocket:
         """
         raise NotImplementedError(f"iterate_service not implemented for {type(self)}! This is a developer error")
 
+    def available(self) -> bool:
+        """
+        Returns True if this is not a service, or if it is a service and available for iteration
+
+        A service may not be available for iteration if the proper packages aren't installed
+        on the server.
+        """
+
+        # By default, return True. Should be overridden by services
+        return True
+
 
 class RecordSocket:
     """
@@ -684,7 +695,15 @@ class RecordSocket:
             raise RuntimeError("Cannot initialize a record that is not a service")
 
         record_type = service_orm.record.record_type
-        return self._handler_map[record_type].initialize_service(session, service_orm)
+        service_socket = self._handler_map[record_type]
+
+        if not service_socket.available():
+            self._logger.warning(
+                f"Cannot initialize service id={service_orm.id} - socket is not available."
+                "Are the correct packages installed?"
+            )
+        else:
+            service_socket.initialize_service(session, service_orm)
 
     def iterate_service(self, session: Session, service_orm: ServiceQueueORM) -> bool:
         """
@@ -700,7 +719,17 @@ class RecordSocket:
             raise RuntimeError("Cannot iterate a record that is not a service")
 
         record_type = service_orm.record.record_type
-        return self._handler_map[record_type].iterate_service(session, service_orm)
+        service_socket = self._handler_map[record_type]
+
+        if not service_socket.available():
+            self._logger.warning(
+                f"Cannot iterate service id={service_orm.id} - socket is not available."
+                "Are the correct packages installed?"
+            )
+            return False
+
+        else:
+            return service_socket.iterate_service(session, service_orm)
 
     def update_failed_service(self, session, record_orm: BaseRecordORM, error_info: Dict[str, Any]):
         """

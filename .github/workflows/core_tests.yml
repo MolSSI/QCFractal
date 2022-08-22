@@ -41,6 +41,12 @@ jobs:
         run: |
           pip install -e qcportal/ -e qcfractalcompute/ -e qcfractal/ -e qcarchivetesting/
 
+      - name: Install service dependencies
+        shell: bash -l {0}
+        run: |
+          pip install torsiondrive
+          pip install scipy git+https://github.com/hjnpark/geomeTRIC@neb
+
       - name: Run tests
         shell: bash -l {0}
         run: |
