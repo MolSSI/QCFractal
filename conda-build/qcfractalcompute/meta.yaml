@@ -1,0 +1,41 @@
+{% set name = "qcfractalcompute" %}
+{% set version = "0.50a13" %}
+
+package:
+  name: {{ name }}
+  version: {{ version }}
+
+source:
+  git_url: git@github.com:MolSSI/QCFractal.git
+  git_tag: v{{ version }}
+
+
+build:
+  number: 0
+  noarch: python
+  script: {{ PYTHON }} -m pip install --no-deps -vv qcfractalcompute/
+
+requirements:
+  host:
+    - python >=3.8
+
+  run:
+    - qcportal ={{ version }}
+    - qcengine
+
+test:
+  imports:
+    - qcfractalcompute
+  commands:
+    - qcfractal-manager --help
+
+about:
+  home: https://github.com/MolSSI/{{ name }}
+  dev_url: https://github.com/MolSSI/{{ name }}
+  doc_url: https://qcfractal.readthedocs.io/en/latest/
+  doc_source_url: https://github.com/MolSSI/{{ name }}/blob/master/docs/source/index.rst
+  license: BSD-3-Clause
+  license_url: https://opensource.org/licenses/BSD-3-Clause
+  license_file: LICENSE
+  license_family: BSD
+  summary: Distributed worker package for QCArchive

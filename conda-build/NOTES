@@ -1,0 +1,11 @@
+
+conda-build -c conda-forge --output-folder builds qcportal/
+anaconda upload builds/noarch/qcportal-0.50a13-py_0.tar.bz2 --user qcarchive --label next
+
+
+conda-build -c conda-forge -c qcarchive/label/next --output-folder builds qcfractalcompute/
+anaconda upload builds/noarch/qcfractalcompute-0.50a13-py_0.tar.bz2 --user qcarchive --label next
+
+conda-build -c conda-forge -c qcarchive/label/next --output-folder builds qcfractal/
+anaconda upload builds/noarch/qcfractal-0.50a13-py_0.tar.bz2 --user qcarchive --label next
+

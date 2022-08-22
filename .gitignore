@@ -106,3 +106,4 @@ runinfo/
 
 .mypy_cache
 qcarchivetesting/qcarchivetesting/MaxMind-DB
+conda-build/builds
