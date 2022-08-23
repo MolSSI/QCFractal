@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import contextlib
+import importlib
 import io
 import json
 import logging
-from importlib.util import find_spec
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -40,10 +40,11 @@ from .db_models import (
 from ...molecules.db_models import MoleculeORM
 
 # geometric package is optional
-_geo_spec = find_spec("geometric")
+_geo_spec = importlib.util.find_spec("geometric")
 
 if _geo_spec is not None:
-    geometric = _geo_spec.loader.load_module()
+    geometric = importlib.util.module_from_spec(_geo_spec)
+    _geo_spec.loader.exec_module(geometric)
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session

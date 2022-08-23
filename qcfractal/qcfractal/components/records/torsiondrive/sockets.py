@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import contextlib
 import copy
+import importlib
 import io
 import json
 import logging
-from importlib.util import find_spec
 from typing import TYPE_CHECKING
 
 import sqlalchemy.orm.attributes
@@ -35,14 +35,19 @@ from .db_models import (
     TorsiondriveRecordORM,
 )
 
+import torsiondrive
+
 # Torsiondrive package is optional
-_td_spec = find_spec("torsiondrive")
+_td_spec = importlib.util.find_spec("torsiondrive")
 
 if _td_spec is not None:
-    __td_api_spec = find_spec("torsiondrive.td_api")
+    _td_api_spec = importlib.util.find_spec("torsiondrive.td_api")
 
-    torsiondrive = _td_spec.loader.load_module()
-    td_api = __td_api_spec.loader.load_module()
+    torsiondrive = importlib.util.module_from_spec(_td_spec)
+    td_api = importlib.util.module_from_spec(_td_api_spec)
+
+    _td_spec.loader.exec_module(torsiondrive)
+    _td_api_spec.loader.exec_module(td_api)
 
 
 if TYPE_CHECKING:
