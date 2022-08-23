@@ -3,7 +3,7 @@ from flask import current_app, g
 from qcfractal.app import main, wrap_route, prefix_projection, storage_socket
 from qcportal.base_models import ProjURLParameters, CommonBulkGetBody
 from qcportal.exceptions import LimitExceededError
-from qcportal.records import (
+from qcportal.record_models import (
     RecordModifyBody,
     RecordQueryFilters,
     RecordDeleteBody,

@@ -18,8 +18,8 @@ from qcfractal.db_socket.helpers import insert_general
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputTypeEnum
-from qcportal.records import PriorityEnum, RecordStatusEnum
-from qcportal.records.manybody import (
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.manybody import (
     BSSECorrectionEnum,
     ManybodyKeywords,
     ManybodySpecification,

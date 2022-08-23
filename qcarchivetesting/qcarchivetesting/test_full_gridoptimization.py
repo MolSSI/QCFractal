@@ -4,7 +4,7 @@ import time
 from typing import TYPE_CHECKING
 
 from qcportal.molecules import Molecule
-from qcportal.records import RecordStatusEnum
+from qcportal.record_models import RecordStatusEnum
 
 if TYPE_CHECKING:
     from qcportal import PortalClient

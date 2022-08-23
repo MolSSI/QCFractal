@@ -9,10 +9,10 @@ from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service_simple
 from qcarchivetesting import load_molecule_data
 from qcportal.outputstore import OutputStore
-from qcportal.records import RecordStatusEnum, PriorityEnum
-from qcportal.records.manybody import ManybodySpecification
-from qcportal.records.manybody.models import ManybodyKeywords
-from qcportal.records.singlepoint import SinglepointProtocols, QCSpecification
+from qcportal.record_models import RecordStatusEnum, PriorityEnum
+from qcportal.manybody import ManybodySpecification
+from qcportal.manybody import ManybodyKeywords
+from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 from .testing_helpers import compare_manybody_specs, test_specs, load_test_data
 
 if TYPE_CHECKING:

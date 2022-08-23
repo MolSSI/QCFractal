@@ -12,27 +12,22 @@ import pytest
 from qcfractal.components.records.neb.testing_helpers import (
     compare_neb_specs,
     test_specs,
-    load_test_data,
 )
 
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.testing_helpers import run_service_constropt
 from qcarchivetesting import load_molecule_data
-from qcportal.outputstore import OutputStore
-from qcportal.records import RecordStatusEnum, PriorityEnum
-from qcportal.records.singlepoint import (
+from qcportal.record_models import RecordStatusEnum, PriorityEnum
+from qcportal.singlepoint import (
     QCSpecification,
     SinglepointProtocols,
 )
-from qcportal.records.neb import (
+from qcportal.neb import (
     NEBSpecification,
     NEBKeywords,
 )
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
-    from qcportal.managers import ManagerName
-
 
 pytestmark = pytest.mark.xfail
 

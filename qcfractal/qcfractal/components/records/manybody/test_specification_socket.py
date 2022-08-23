@@ -1,7 +1,7 @@
 from qcfractal.db_socket import SQLAlchemySocket
-from qcportal.records.manybody import ManybodySpecification
-from qcportal.records.manybody.models import ManybodyKeywords
-from qcportal.records.singlepoint import SinglepointProtocols, QCSpecification
+from qcportal.manybody import ManybodySpecification
+from qcportal.manybody import ManybodyKeywords
+from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 
 
 def test_manybody_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):

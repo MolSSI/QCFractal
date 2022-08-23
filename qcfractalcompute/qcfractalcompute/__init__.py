@@ -2,14 +2,9 @@
 Compute worker and manager for QCArchive/QCFractal
 """
 
-from importlib.metadata import version, PackageNotFoundError
+from importlib.metadata import version
 
-try:
-    __version__ = version("qcfractalcompute")
-except PackageNotFoundError:
-    # Part of larger "qcfractal" install
-    __version__ = version("qcfractal")
-
+__version__ = version("qcfractalcompute")
 
 from .adapters import build_queue_adapter
 from .managers import ComputeManager

@@ -2,7 +2,7 @@ from typing import List
 
 from qcfractal.app import main, storage_socket
 from qcfractal.app.routes import wrap_route
-from qcportal.datasets.gridoptimization import (
+from qcportal.gridoptimization import (
     GridoptimizationDatasetSpecification,
     GridoptimizationDatasetNewEntry,
 )

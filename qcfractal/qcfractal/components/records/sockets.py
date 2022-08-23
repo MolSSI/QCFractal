@@ -22,7 +22,7 @@ from qcportal.compression import CompressionEnum
 from qcportal.exceptions import UserReportableError, MissingDataError
 from qcportal.metadata_models import DeleteMetadata, QueryMetadata, UpdateMetadata
 from qcportal.outputstore import OutputStore, OutputTypeEnum
-from qcportal.records import PriorityEnum, RecordStatusEnum
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from .db_models import RecordComputeHistoryORM, BaseRecordORM, RecordInfoBackupORM, RecordCommentORM
 
 if TYPE_CHECKING:
@@ -30,7 +30,8 @@ if TYPE_CHECKING:
     from sqlalchemy.sql import Select
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.db_socket.base_orm import BaseORM
-    from qcportal.records import AllResultTypes, RecordQueryFilters
+    from qcportal.all_results import AllResultTypes
+    from qcportal.record_models import RecordQueryFilters
     from typing import List, Dict, Tuple, Optional, Sequence, Any, Iterable, Type
 
 

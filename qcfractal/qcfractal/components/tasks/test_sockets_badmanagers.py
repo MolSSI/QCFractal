@@ -12,7 +12,7 @@ from qcfractal.db_socket import SQLAlchemySocket
 from qcarchivetesting import caplog_handler_at_level
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerName
-from qcportal.records import RecordStatusEnum
+from qcportal.record_models import RecordStatusEnum
 
 
 def test_task_socket_claim_manager_noexist(storage_socket: SQLAlchemySocket):

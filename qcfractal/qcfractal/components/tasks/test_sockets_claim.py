@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from qcfractal.components.records.optimization.testing_helpers import load_test_data as load_opt_test_data
 from qcfractal.components.records.singlepoint.testing_helpers import load_test_data as load_sp_test_data
 from qcportal.managers import ManagerName
-from qcportal.records import PriorityEnum
+from qcportal.record_models import PriorityEnum
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

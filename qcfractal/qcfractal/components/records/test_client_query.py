@@ -6,7 +6,7 @@ from qcfractal.components.records.testing_helpers import populate_records_status
 from qcfractal.testing_helpers import TestingSnowflake
 from qcportal import PortalClient
 from qcportal.molecules import Molecule
-from qcportal.records import RecordStatusEnum
+from qcportal.record_models import RecordStatusEnum
 
 
 @pytest.fixture(scope="module")

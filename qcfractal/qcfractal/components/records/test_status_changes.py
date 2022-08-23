@@ -11,7 +11,7 @@ from qcfractal.components.records.testing_helpers import populate_records_status
 from qcfractal.db_socket import SQLAlchemySocket
 from qcportal import PortalClient
 from qcportal.managers import ManagerName
-from qcportal.records import RecordStatusEnum
+from qcportal.record_models import RecordStatusEnum
 
 
 def test_record_socket_reset_assigned_manager(storage_socket: SQLAlchemySocket):

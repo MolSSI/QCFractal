@@ -27,7 +27,7 @@ from qcportal import ManagerClient
 from qcportal.utils import make_list
 from qcportal.managers import ManagerName
 from qcportal.metadata_models import TaskReturnMetadata
-from qcportal.records import AllResultTypes
+from qcportal.all_results import AllResultTypes
 from requests.exceptions import Timeout
 
 

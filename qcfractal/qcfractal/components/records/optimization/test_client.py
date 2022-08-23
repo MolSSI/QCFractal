@@ -7,11 +7,11 @@ import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcarchivetesting import load_molecule_data
-from qcportal.records import RecordStatusEnum, PriorityEnum
-from qcportal.records.optimization import (
+from qcportal.record_models import RecordStatusEnum, PriorityEnum
+from qcportal.optimization import (
     OptimizationSpecification,
 )
-from qcportal.records.singlepoint import QCSpecification
+from qcportal.singlepoint import QCSpecification
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

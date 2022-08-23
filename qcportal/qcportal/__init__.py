@@ -2,13 +2,9 @@
 Client for QCArchive/QCFractal
 """
 
-from importlib.metadata import version, PackageNotFoundError
+from importlib.metadata import version
 
-try:
-    __version__ = version("qcportal")
-except PackageNotFoundError:
-    # Part of larger "qcfractal" install
-    __version__ = version("qcfractal")
+__version__ = version("qcportal")
 
 # Add imports here
 from .client import PortalClient

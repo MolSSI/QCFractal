@@ -9,7 +9,7 @@ from qcfractal.components.records.db_models import RecordComputeHistoryORM
 from qcfractal.components.records.singlepoint.testing_helpers import submit_test_data
 from qcportal.compression import CompressionEnum
 from qcportal.outputstore import OutputTypeEnum, OutputStore
-from qcportal.records import RecordStatusEnum
+from qcportal.record_models import RecordStatusEnum
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

@@ -1,5 +1,6 @@
 from typing import Optional, List, Dict, Any
 
+from .all_results import AllResultTypes
 from .client_base import PortalClientBase
 from .managers import (
     ManagerName,
@@ -8,7 +9,6 @@ from .managers import (
     ManagerStatusEnum,
 )
 from .metadata_models import TaskReturnMetadata
-from .records import AllResultTypes
 from .tasks import TaskClaimBody, TaskReturnBody
 
 

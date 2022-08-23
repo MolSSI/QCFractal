@@ -6,9 +6,9 @@ from typing import TYPE_CHECKING
 
 from qcfractal.components.datasets.sockets import BaseDatasetSocket
 from qcfractal.components.records.gridoptimization.db_models import GridoptimizationRecordORM
-from qcportal.datasets.gridoptimization import GridoptimizationDatasetNewEntry
-from qcportal.records import PriorityEnum
-from qcportal.records.gridoptimization import GridoptimizationSpecification
+from qcportal.gridoptimization import GridoptimizationDatasetNewEntry
+from qcportal.record_models import PriorityEnum
+from qcportal.gridoptimization import GridoptimizationSpecification
 from .db_models import (
     GridoptimizationDatasetORM,
     GridoptimizationDatasetSpecificationORM,

@@ -5,7 +5,7 @@ from flask import current_app, g
 from qcfractal.app import main, storage_socket
 from qcfractal.app.routes import wrap_route
 from qcportal.base_models import ProjURLParameters
-from qcportal.datasets import (
+from qcportal.dataset_models import (
     DatasetAddBody,
     DatasetQueryModel,
     DatasetFetchRecordsBody,

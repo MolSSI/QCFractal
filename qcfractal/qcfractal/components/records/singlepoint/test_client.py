@@ -7,8 +7,8 @@ import pytest
 
 from qcarchivetesting import load_molecule_data
 from qcportal.managers import ManagerName
-from qcportal.records import PriorityEnum
-from qcportal.records.singlepoint import QCSpecification, SinglepointDriver
+from qcportal.record_models import PriorityEnum
+from qcportal.singlepoint import QCSpecification, SinglepointDriver
 from .testing_helpers import submit_test_data, run_test_data, compare_singlepoint_specs, test_specs
 
 if TYPE_CHECKING:

@@ -15,7 +15,7 @@ from qcfractal.db_socket.helpers import (
 )
 from qcportal.compression import CompressionEnum
 from qcportal.outputstore import OutputStore, OutputTypeEnum
-from qcportal.records.models import RecordStatusEnum
+from qcportal.record_models import RecordStatusEnum
 from .db_models import ServiceQueueORM, ServiceDependencyORM
 
 if TYPE_CHECKING:

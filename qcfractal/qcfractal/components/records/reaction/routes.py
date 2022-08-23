@@ -3,7 +3,7 @@ from flask import current_app
 from qcfractal.app import main, wrap_route, prefix_projection, storage_socket
 from qcportal.base_models import ProjURLParameters
 from qcportal.exceptions import LimitExceededError
-from qcportal.records.reaction import ReactionAddBody, ReactionQueryFilters
+from qcportal.reaction import ReactionAddBody, ReactionQueryFilters
 from qcportal.utils import calculate_limit
 
 

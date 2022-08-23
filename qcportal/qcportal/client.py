@@ -14,17 +14,61 @@ from typing import (
     Iterable,
 )
 
+from qcportal.gridoptimization import (
+    GridoptimizationKeywords,
+    GridoptimizationAddBody,
+    GridoptimizationRecord,
+    GridoptimizationQueryFilters,
+)
+from qcportal.manybody import (
+    ManybodyKeywords,
+    ManybodyRecord,
+    ManybodyAddBody,
+    ManybodyQueryFilters,
+)
+from qcportal.neb import (
+    NEBKeywords,
+    NEBAddBody,
+    NEBQueryFilters,
+    NEBRecord,
+)
+from qcportal.optimization import (
+    OptimizationProtocols,
+    OptimizationRecord,
+    OptimizationQueryFilters,
+    OptimizationSpecification,
+    OptimizationAddBody,
+)
+from qcportal.reaction import (
+    ReactionAddBody,
+    ReactionRecord,
+    ReactionKeywords,
+    ReactionQueryFilters,
+)
+from qcportal.singlepoint import (
+    QCSpecification,
+    SinglepointRecord,
+    SinglepointAddBody,
+    SinglepointQueryFilters,
+    SinglepointDriver,
+    SinglepointProtocols,
+)
+from qcportal.torsiondrive import (
+    TorsiondriveKeywords,
+    TorsiondriveAddBody,
+    TorsiondriveRecord,
+    TorsiondriveQueryFilters,
+)
 from .base_models import CommonBulkGetNamesBody, CommonBulkGetBody, ProjURLParameters
 from .cache import PortalCache
 from .client_base import PortalClientBase
-from .datasets import (
-    dataset_from_datamodel,
+from .dataset_models import (
     BaseDataset,
-    AllDatasetDataModelTypes,
     DatasetQueryModel,
     DatasetQueryRecords,
     DatasetDeleteParams,
     DatasetAddBody,
+    dataset_from_datamodel,
 )
 from .managers import ManagerQueryFilters, ManagerQueryIterator, ComputeManager
 from .metadata_models import QueryMetadata, UpdateMetadata, InsertMetadata, DeleteMetadata
@@ -36,65 +80,17 @@ from .permissions import (
     is_valid_password,
     is_valid_rolename,
 )
-from .records import (
-    records_from_datamodels,
+from .record_models import (
     RecordStatusEnum,
     PriorityEnum,
     RecordQueryFilters,
     RecordModifyBody,
     RecordDeleteBody,
     RecordRevertBody,
-    AllRecordDataModelTypes,
     BaseRecord,
     RecordQueryIterator,
+    records_from_datamodels,
 )
-from .records.gridoptimization import (
-    GridoptimizationKeywords,
-    GridoptimizationAddBody,
-    GridoptimizationRecord,
-    GridoptimizationQueryFilters,
-)
-from .records.manybody import (
-    ManybodyKeywords,
-    ManybodyRecord,
-    ManybodyAddBody,
-    ManybodyQueryFilters,
-)
-from .records.optimization import (
-    OptimizationProtocols,
-    OptimizationRecord,
-    OptimizationQueryFilters,
-    OptimizationSpecification,
-    OptimizationAddBody,
-)
-from .records.reaction import (
-    ReactionAddBody,
-    ReactionRecord,
-    ReactionKeywords,
-    ReactionQueryFilters,
-)
-from .records.singlepoint import (
-    QCSpecification,
-    SinglepointRecord,
-    SinglepointAddBody,
-    SinglepointQueryFilters,
-    SinglepointDriver,
-    SinglepointProtocols,
-)
-from .records.torsiondrive import (
-    TorsiondriveKeywords,
-    TorsiondriveAddBody,
-    TorsiondriveRecord,
-    TorsiondriveQueryFilters,
-)
-
-from .records.neb import (
-    NEBKeywords,
-    NEBAddBody,
-    NEBQueryFilters,
-    NEBRecord,
-)
-
 from .serverinfo import (
     AccessLogQueryFilters,
     AccessLogSummaryFilters,
@@ -281,7 +277,7 @@ class PortalClient(PortalClientBase):
             f"v1/datasets/query",
             DatasetQueryModel,
             None,
-            AllDatasetDataModelTypes,
+            Dict[str, Any],
             payload,
             None,
         )
@@ -316,7 +312,7 @@ class PortalClient(PortalClientBase):
             f"v1/datasets/{dataset_id}",
             None,
             None,
-            AllDatasetDataModelTypes,
+            Dict[str, Any],
             None,
             None,
         )
@@ -641,7 +637,7 @@ class PortalClient(PortalClientBase):
             "v1/records/bulkGet",
             CommonBulkGetBody,
             None,
-            List[Optional[AllRecordDataModelTypes]],
+            List[Optional[Dict[str, Any]]],
             body_data,
             None,
         )
@@ -1028,7 +1024,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        records = records_from_datamodels(record_data, self)
+        records = [SinglepointRecord.from_datamodel(r, self) if r is not None else None for r in record_data]
 
         if is_single:
             return records[0]
@@ -1264,7 +1260,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        records = records_from_datamodels(record_data, self)
+        records = [OptimizationRecord.from_datamodel(r, self) if r is not None else None for r in record_data]
 
         if is_single:
             return records[0]
@@ -1500,7 +1496,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        records = records_from_datamodels(record_data, self)
+        records = [TorsiondriveRecord.from_datamodel(r, self) if r is not None else None for r in record_data]
 
         if is_single:
             return records[0]
@@ -1736,7 +1732,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        records = records_from_datamodels(record_data, self)
+        records = [GridoptimizationRecord.from_datamodel(r, self) if r is not None else None for r in record_data]
 
         if is_single:
             return records[0]
@@ -1980,7 +1976,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        records = records_from_datamodels(record_data, self)
+        records = [ReactionRecord.from_datamodel(r, self) if r is not None else None for r in record_data]
 
         if is_single:
             return records[0]
@@ -2225,7 +2221,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        records = records_from_datamodels(record_data, self)
+        records = [ManybodyRecord.from_datamodel(r, self) if r is not None else None for r in record_data]
 
         if is_single:
             return records[0]
@@ -2406,7 +2402,7 @@ class PortalClient(PortalClientBase):
             None,
         )
 
-        records = records_from_datamodels(record_data, self)
+        records = [NEBRecord.from_datamodel(r, self) if r is not None else None for r in record_data]
 
         if is_single:
             return records[0]
@@ -2440,14 +2436,10 @@ class PortalClient(PortalClientBase):
         include_comments: bool = False,
         include_initial_chain: bool = False,
         include_singlepoints: bool = False,
-    ) -> Tuple[QueryMetadata, List[NEBRecord]]:
+    ) -> RecordQueryIterator:
         """Queries neb records from the server."""
 
-        if limit is not None and limit > self.api_limits["get_records"]:
-            warnings.warn(f"Specified limit of {limit} is over the server limit. Server limit will be used")
-            limit = min(limit, self.api_limits["get_records"])
-
-        query_data = {
+        filter_dict = {
             "record_id": make_list(record_id),
             "manager_name": make_list(manager_name),
             "status": make_list(status),
@@ -2485,19 +2477,11 @@ class PortalClient(PortalClientBase):
             include |= {"*", "singlepoints.*", "singlepoints.singlepoint_record"}
 
         if include:
-            query_data["include"] = include
+            filter_dict["include"] = include
 
-        meta, record_data = self._auto_request(
-            "post",
-            "v1/records/neb/query",
-            NEBQueryFilters,
-            None,
-            Tuple[QueryMetadata, List[NEBRecord._DataModel]],
-            query_data,
-            None,
-        )
+        filter_data = NEBQueryFilters(**filter_dict)
 
-        return meta, records_from_datamodels(record_data, self)
+        return RecordQueryIterator(self, filter_data, "neb")
 
     ##############################################################
     # Managers

@@ -12,7 +12,7 @@ from qcfractal.components.records.singlepoint.testing_helpers import load_test_d
 from qcportal.compression import CompressionEnum
 from qcportal.managers import ManagerName
 from qcportal.outputstore import OutputTypeEnum, OutputStore
-from qcportal.records import PriorityEnum, RecordStatusEnum
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

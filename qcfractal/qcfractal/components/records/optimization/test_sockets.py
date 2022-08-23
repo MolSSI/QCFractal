@@ -11,11 +11,11 @@ from qcarchivetesting import load_molecule_data
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputStore
-from qcportal.records import RecordStatusEnum, PriorityEnum
-from qcportal.records.optimization import (
+from qcportal.record_models import RecordStatusEnum, PriorityEnum
+from qcportal.optimization import (
     OptimizationSpecification,
 )
-from qcportal.records.singlepoint import (
+from qcportal.singlepoint import (
     QCSpecification,
     SinglepointDriver,
     SinglepointProtocols,

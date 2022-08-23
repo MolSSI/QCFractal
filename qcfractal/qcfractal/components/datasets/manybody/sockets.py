@@ -6,9 +6,8 @@ from typing import TYPE_CHECKING
 
 from qcfractal.components.datasets.sockets import BaseDatasetSocket
 from qcfractal.components.records.manybody.db_models import ManybodyRecordORM
-from qcportal.datasets.manybody import ManybodyDatasetNewEntry
-from qcportal.records import PriorityEnum
-from qcportal.records.manybody import ManybodySpecification
+from qcportal.manybody import ManybodyDatasetNewEntry, ManybodySpecification
+from qcportal.record_models import PriorityEnum
 from .db_models import (
     ManybodyDatasetORM,
     ManybodyDatasetSpecificationORM,

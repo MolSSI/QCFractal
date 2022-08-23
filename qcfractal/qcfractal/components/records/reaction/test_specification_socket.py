@@ -1,8 +1,8 @@
 from qcfractal.db_socket import SQLAlchemySocket
-from qcportal.records.optimization import OptimizationSpecification
-from qcportal.records.reaction import ReactionSpecification
-from qcportal.records.reaction.models import ReactionKeywords
-from qcportal.records.singlepoint import SinglepointProtocols, QCSpecification
+from qcportal.optimization import OptimizationSpecification
+from qcportal.reaction import ReactionSpecification
+from qcportal.reaction import ReactionKeywords
+from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 
 
 def test_reaction_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):

@@ -2,7 +2,7 @@ from typing import List
 
 from qcfractal.app import main, storage_socket
 from qcfractal.app.routes import wrap_route
-from qcportal.datasets.manybody import (
+from qcportal.manybody import (
     ManybodyDatasetSpecification,
     ManybodyDatasetNewEntry,
 )

@@ -23,13 +23,13 @@ from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputTypeEnum
-from qcportal.records import PriorityEnum, RecordStatusEnum
-from qcportal.records.neb import (
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.neb import (
     NEBSpecification,
     NEBQueryFilters,
 )
-from qcportal.records.optimization import OptimizationSpecification
-from qcportal.records.singlepoint import QCSpecification
+from qcportal.optimization import OptimizationSpecification
+from qcportal.singlepoint import QCSpecification
 from .db_models import (
     NEBOptimiationsORM,
     NEBSpecificationORM,

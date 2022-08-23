@@ -11,7 +11,7 @@ from qcfractal.config import FractalConfig
 from qcfractal.process_runner import ProcessBase, ProcessRunner
 from qcfractalcompute.managers import ComputeManager
 from qcportal.managers import ManagerStatusEnum, ManagerQueryFilters
-from qcportal.records import PriorityEnum, RecordStatusEnum
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
 
 # For testing only! We just make all available programs/procedures the same as all of them
 qcng.list_available_programs = qcng.list_all_programs
@@ -19,7 +19,7 @@ qcng.list_available_procedures = qcng.list_all_procedures
 
 if TYPE_CHECKING:
     from typing import Dict
-    from qcportal.records import AllResultTypes
+    from qcportal.all_results import AllResultTypes
     from qcfractal.testing_helpers import TestingSnowflake, SQLAlchemySocket
 
 

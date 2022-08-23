@@ -5,7 +5,7 @@ from qcfractal.app.helpers import prefix_projection
 from qcfractal.app.routes import wrap_route
 from qcportal.base_models import ProjURLParameters
 from qcportal.exceptions import LimitExceededError
-from qcportal.records.neb import NEBAddBody, NEBQueryFilters
+from qcportal.neb import NEBAddBody, NEBQueryFilters
 from qcportal.utils import calculate_limit
 
 

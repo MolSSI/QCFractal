@@ -6,8 +6,8 @@ import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicResult
 
 from qcarchivetesting.helpers import read_record_data
-from qcportal.records import PriorityEnum, RecordStatusEnum
-from qcportal.records.singlepoint import SinglepointProtocols, QCSpecification, SinglepointDriver
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.singlepoint import SinglepointProtocols, QCSpecification, SinglepointDriver
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

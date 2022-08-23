@@ -7,10 +7,10 @@ import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcarchivetesting import load_molecule_data
-from qcportal.records import RecordStatusEnum, PriorityEnum
-from qcportal.records.optimization import OptimizationSpecification
-from qcportal.records.singlepoint import QCSpecification
-from qcportal.records.torsiondrive import TorsiondriveKeywords, TorsiondriveSpecification
+from qcportal.record_models import RecordStatusEnum, PriorityEnum
+from qcportal.optimization import OptimizationSpecification
+from qcportal.singlepoint import QCSpecification
+from qcportal.torsiondrive import TorsiondriveKeywords, TorsiondriveSpecification
 from .testing_helpers import compare_torsiondrive_specs, test_specs, submit_test_data, run_test_data
 
 if TYPE_CHECKING:

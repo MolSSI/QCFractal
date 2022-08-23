@@ -16,8 +16,8 @@ from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDepe
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputTypeEnum
-from qcportal.records import PriorityEnum, RecordStatusEnum
-from qcportal.records.reaction import (
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.reaction import (
     ReactionSpecification,
     ReactionQueryFilters,
 )

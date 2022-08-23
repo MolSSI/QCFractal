@@ -22,9 +22,9 @@ from qcfractal.db_socket.helpers import get_query_proj_options
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputTypeEnum
-from qcportal.records import PriorityEnum, RecordStatusEnum
-from qcportal.records.optimization import OptimizationSpecification
-from qcportal.records.torsiondrive import (
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.optimization import OptimizationSpecification
+from qcportal.torsiondrive import (
     TorsiondriveSpecification,
     TorsiondriveQueryFilters,
 )

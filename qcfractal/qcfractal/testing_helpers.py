@@ -11,7 +11,7 @@ from qcarchivetesting import geoip_path, test_users
 from qcportal import PortalClient, ManagerClient
 from qcportal.managers import ManagerName
 from qcportal.permissions import UserInfo
-from qcportal.records import RecordStatusEnum
+from qcportal.record_models import RecordStatusEnum
 from qcportal.utils import recursive_normalizer
 
 mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")

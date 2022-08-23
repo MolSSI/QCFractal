@@ -22,7 +22,7 @@ from qcfractal.testing_helpers import TestingSnowflake
 from qcarchivetesting import test_users
 from qcportal import PortalRequestError
 from qcportal.managers import ManagerName
-from qcportal.records import PriorityEnum, RecordStatusEnum
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

@@ -7,8 +7,8 @@ import pytest
 
 from qcfractal.db_socket import SQLAlchemySocket
 from qcarchivetesting import load_molecule_data
-from qcportal.records import RecordStatusEnum, PriorityEnum
-from qcportal.records.reaction import ReactionSpecification
+from qcportal.record_models import RecordStatusEnum, PriorityEnum
+from qcportal.reaction import ReactionSpecification
 from .testing_helpers import compare_reaction_specs, test_specs, run_test_data, submit_test_data
 
 if TYPE_CHECKING:

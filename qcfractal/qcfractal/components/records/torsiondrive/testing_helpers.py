@@ -8,10 +8,10 @@ from qcelemental.models.procedures import OptimizationProtocols
 
 from qcfractal.testing_helpers import run_service_constropt
 from qcarchivetesting.helpers import read_record_data
-from qcportal.records import PriorityEnum, RecordStatusEnum
-from qcportal.records.optimization import OptimizationSpecification
-from qcportal.records.singlepoint import SinglepointProtocols, QCSpecification
-from qcportal.records.torsiondrive import TorsiondriveSpecification, TorsiondriveKeywords
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.optimization import OptimizationSpecification
+from qcportal.singlepoint import SinglepointProtocols, QCSpecification
+from qcportal.torsiondrive import TorsiondriveSpecification, TorsiondriveKeywords
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

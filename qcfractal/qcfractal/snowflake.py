@@ -15,7 +15,7 @@ import requests
 
 from qcfractalcompute import ComputeManager, _initialize_signals_process_pool
 from qcportal import PortalClient
-from qcportal.records import RecordStatusEnum
+from qcportal.record_models import RecordStatusEnum
 from .app.flask_app import FlaskProcess
 from .config import FractalConfig, DatabaseConfig, update_nested_dict
 from .periodics import PeriodicsProcess

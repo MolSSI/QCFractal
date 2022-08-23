@@ -9,7 +9,7 @@ from qcfractal.components.records.gridoptimization.testing_helpers import submit
 from qcfractal.components.records.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
 from qcfractal.testing_helpers import run_service_constropt
 from qcportal.managers import ManagerName
-from qcportal.records import RecordStatusEnum, PriorityEnum
+from qcportal.record_models import RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

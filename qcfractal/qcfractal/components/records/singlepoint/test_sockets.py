@@ -12,8 +12,8 @@ from qcportal.compression import decompress_string
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputStore
-from qcportal.records import RecordStatusEnum, PriorityEnum
-from qcportal.records.singlepoint import QCSpecification, SinglepointDriver, SinglepointProtocols
+from qcportal.record_models import RecordStatusEnum, PriorityEnum
+from qcportal.singlepoint import QCSpecification, SinglepointDriver, SinglepointProtocols
 from qcportal.wavefunctions.models import WavefunctionProperties
 from .db_models import SinglepointRecordORM
 from .testing_helpers import test_specs, load_test_data

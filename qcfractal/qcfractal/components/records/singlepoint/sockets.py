@@ -13,8 +13,8 @@ from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
 from qcfractal.db_socket.helpers import insert_general
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
-from qcportal.records import PriorityEnum, RecordStatusEnum
-from qcportal.records.singlepoint import (
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.singlepoint import (
     QCSpecification,
     WavefunctionProperties,
     SinglepointQueryFilters,

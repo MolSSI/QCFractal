@@ -15,7 +15,7 @@ from qcfractal.components.records.db_models import BaseRecordORM
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerStatusEnum
 from qcportal.metadata_models import TaskReturnMetadata
-from qcportal.records import RecordStatusEnum
+from qcportal.record_models import RecordStatusEnum
 from qcportal.utils import calculate_limit
 from .db_models import TaskQueueORM
 from .reset_logic import should_reset
@@ -23,7 +23,7 @@ from .reset_logic import should_reset
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from qcportal.records import AllResultTypes
+    from qcportal.all_results import AllResultTypes
     from typing import List, Dict, Tuple, Optional, Any
 
 

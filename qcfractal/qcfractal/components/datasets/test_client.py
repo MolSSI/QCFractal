@@ -6,9 +6,9 @@ import pytest
 
 from qcfractal.components.records.singlepoint.testing_helpers import load_test_data, run_test_data
 from qcportal import PortalRequestError
-from qcportal.datasets.singlepoint import SinglepointDatasetNewEntry, SinglepointDataset
+from qcportal.singlepoint import SinglepointDatasetNewEntry, SinglepointDataset
 from qcportal.molecules import Molecule
-from qcportal.records import PriorityEnum
+from qcportal.record_models import PriorityEnum
 
 if TYPE_CHECKING:
     from qcportal import PortalClient

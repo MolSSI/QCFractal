@@ -14,11 +14,11 @@ from qcfractal.db_socket.helpers import (
 )
 from qcportal.exceptions import AlreadyExistsError, MissingDataError
 from qcportal.metadata_models import InsertMetadata, DeleteMetadata, UpdateMetadata
-from qcportal.records import RecordStatusEnum, PriorityEnum
+from qcportal.record_models import RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
-    from qcportal.datasets.models import DatasetModifyMetadata
+    from qcportal.dataset_models import DatasetModifyMetadata
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.db_socket.base_orm import BaseORM
     from typing import Dict, Any, Optional, Sequence, Iterable, Tuple, List

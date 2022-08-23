@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcportal.records import PriorityEnum
+from qcportal.record_models import PriorityEnum
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

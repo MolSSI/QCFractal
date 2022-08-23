@@ -11,7 +11,7 @@ from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service_constropt
 from qcportal.managers import ManagerName
 from qcportal.outputstore import OutputStore, OutputTypeEnum
-from qcportal.records import RecordStatusEnum, PriorityEnum
+from qcportal.record_models import RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

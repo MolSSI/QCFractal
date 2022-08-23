@@ -13,7 +13,7 @@ from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.db_socket import BaseORM, MsgpackExt
 from qcportal.compression import CompressionEnum
 from qcportal.outputstore import OutputTypeEnum, OutputStore
-from qcportal.records import RecordStatusEnum
+from qcportal.record_models import RecordStatusEnum
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Optional, Iterable

@@ -11,7 +11,7 @@ from qcfractal.components.records.db_models import BaseRecordORM
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
 from qcfractal.db_socket.base_orm import BaseORM
 from qcfractal.db_socket.column_types import MsgpackExt
-from qcportal.records.singlepoint import SinglepointDriver
+from qcportal.singlepoint import SinglepointDriver
 
 if TYPE_CHECKING:
     from typing import Dict, Any, Optional, Iterable

@@ -10,7 +10,7 @@ from qcelemental.models import FailedOperation, ComputeError
 from qcfractal.components.records.optimization.testing_helpers import load_test_data as load_opt_test_data
 from qcfractal.components.records.singlepoint.testing_helpers import load_test_data as load_sp_test_data
 from qcfractal.testing_helpers import mname1
-from qcportal.records import PriorityEnum, RecordStatusEnum
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

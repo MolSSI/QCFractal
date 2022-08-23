@@ -2,7 +2,7 @@ from flask import current_app
 
 from qcfractal.app import main, wrap_route, storage_socket
 from qcportal.exceptions import LimitExceededError
-from qcportal.records.singlepoint import SinglepointAddBody, SinglepointQueryFilters
+from qcportal.singlepoint import SinglepointAddBody, SinglepointQueryFilters
 from qcportal.utils import calculate_limit
 
 

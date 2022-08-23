@@ -7,9 +7,9 @@ from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicRe
 
 from qcfractal.testing_helpers import run_service_simple
 from qcarchivetesting.helpers import read_record_data
-from qcportal.records import PriorityEnum, RecordStatusEnum
-from qcportal.records.reaction import ReactionSpecification, ReactionKeywords
-from qcportal.records.singlepoint import SinglepointProtocols, QCSpecification
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcportal.reaction import ReactionSpecification, ReactionKeywords
+from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
