@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import ValidationError
 
-from qcfractal.components.records.singlepoint.testing_helpers import submit_test_data
+from qcfractal.components.singlepoint.testing_helpers import submit_test_data
 from qcportal import PortalRequestError
 from qcportal.managers import ManagerName, ManagerStatusEnum
 

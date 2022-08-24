@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, Index, Uni
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
-from qcfractal.components.records.db_models import BaseRecordORM
+from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.db_socket import BaseORM, PlainMsgpackExt
 
 

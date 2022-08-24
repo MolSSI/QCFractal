@@ -72,21 +72,21 @@ class SQLAlchemySocket:
                     "attempting to check out in pid %s" % (connection_record.info["pid"], pid)
                 )
 
-        # Check ito see if the db is up to date
+        # Check to see if the db is up-to-date
         self.check_db_revision()
 
         self.Session = sessionmaker(bind=self.engine, future=True)
 
         # Create/initialize the subsockets
-        from ..components.molecules.sockets import MoleculeSocket
+        from ..components.molecules.socket import MoleculeSocket
         from ..components.permissions.user_socket import UserSocket
         from ..components.permissions.role_socket import RoleSocket
-        from ..components.serverinfo.sockets import ServerInfoSocket
-        from ..components.managers.sockets import ManagerSocket
-        from ..components.records.sockets import RecordSocket
-        from ..components.tasks.sockets import TaskSocket
-        from ..components.services.sockets import ServiceSocket
-        from ..components.datasets.sockets import DatasetSocket
+        from ..components.serverinfo.socket import ServerInfoSocket
+        from ..components.managers.socket import ManagerSocket
+        from ..components.tasks.socket import TaskSocket
+        from ..components.services.socket import ServiceSocket
+        from ..components.record_socket import RecordSocket
+        from ..components.dataset_socket import DatasetSocket
 
         self.serverinfo = ServerInfoSocket(self)
         self.molecules = MoleculeSocket(self)

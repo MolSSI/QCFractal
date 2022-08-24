@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional, List
 
 import pytest
 
-from qcfractal.components.records.manybody.testing_helpers import run_test_data, load_test_data
+from qcfractal.components.manybody.testing_helpers import run_test_data, load_test_data
 from qcportal.record_models import RecordStatusEnum
 
 if TYPE_CHECKING:

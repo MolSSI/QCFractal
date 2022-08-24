@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.components.records.singlepoint.testing_helpers import load_test_data, run_test_data
+from qcfractal.components.singlepoint.testing_helpers import load_test_data, run_test_data
 from qcportal import PortalRequestError
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import SinglepointDatasetNewEntry, SinglepointDataset

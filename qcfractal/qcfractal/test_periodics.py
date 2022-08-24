@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.components.records.gridoptimization.testing_helpers import submit_test_data as submit_go_test_data
-from qcfractal.components.records.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
+from qcfractal.components.gridoptimization.testing_helpers import submit_test_data as submit_go_test_data
+from qcfractal.components.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
 from qcportal.managers import ManagerName, ManagerStatusEnum
 from qcportal.record_models import RecordStatusEnum
 from qcportal.serverinfo import ServerStatsQueryFilters

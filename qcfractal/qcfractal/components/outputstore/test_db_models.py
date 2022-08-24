@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
-from qcfractal.components.records.db_models import RecordComputeHistoryORM
-from qcfractal.components.records.singlepoint.testing_helpers import submit_test_data
+from qcfractal.components.record_db_models import RecordComputeHistoryORM
+from qcfractal.components.singlepoint.testing_helpers import submit_test_data
 from qcportal.compression import CompressionEnum
 from qcportal.outputstore import OutputTypeEnum, OutputStore
 from qcportal.record_models import RecordStatusEnum

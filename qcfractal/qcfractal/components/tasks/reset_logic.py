@@ -1,6 +1,6 @@
 import logging
 
-from qcfractal.components.records.db_models import BaseRecordORM
+from qcfractal.components.record_db_models import BaseRecordORM
 from qcfractal.config import AutoResetConfig
 from qcportal.outputstore import OutputStore
 

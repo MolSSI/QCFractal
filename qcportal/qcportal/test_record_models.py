@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING, Optional, List
 
 import pytest
 
-from qcfractal.components.records.singlepoint.testing_helpers import (
+from qcfractal.components.singlepoint.testing_helpers import (
     run_test_data as run_sp_test_data,
     load_test_data as load_sp_test_data,
     submit_test_data as submit_sp_test_data,
 )
-from qcfractal.components.records.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
+from qcfractal.components.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:

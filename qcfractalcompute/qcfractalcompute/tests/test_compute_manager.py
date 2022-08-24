@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 
 import qcengine as qcng
 
-from qcfractal.components.records.optimization.testing_helpers import submit_test_data as submit_opt_test_data
-from qcfractal.components.records.singlepoint.testing_helpers import submit_test_data as submit_sp_test_data
+from qcfractal.components.optimization.testing_helpers import submit_test_data as submit_opt_test_data
+from qcfractal.components.singlepoint.testing_helpers import submit_test_data as submit_sp_test_data
 from qcfractal.config import FractalConfig
 from qcfractal.process_runner import ProcessBase, ProcessRunner
 from qcfractalcompute.managers import ComputeManager

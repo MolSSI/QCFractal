@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional, List
 
 import pytest
 
-from qcfractal.components.records.optimization.testing_helpers import run_test_data, load_test_data
+from qcfractal.components.optimization.testing_helpers import run_test_data, load_test_data
 from qcfractal.testing_helpers import compare_validate_molecule
 from qcportal.record_models import RecordStatusEnum
 
