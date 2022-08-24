@@ -6,11 +6,11 @@ import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult
 from qcelemental.models.procedures import OptimizationProtocols
 
-from qcfractal.testing_helpers import run_service_constropt
 from qcarchivetesting.helpers import read_record_data
-from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcfractal.testing_helpers import run_service_constropt
 from qcportal.gridoptimization import GridoptimizationSpecification, GridoptimizationKeywords
 from qcportal.optimization import OptimizationSpecification
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 
 if TYPE_CHECKING:

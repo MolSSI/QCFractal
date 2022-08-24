@@ -6,9 +6,8 @@ from typing import TYPE_CHECKING
 
 from qcfractal.components.datasets.sockets import BaseDatasetSocket
 from qcfractal.components.records.singlepoint.db_models import SinglepointRecordORM
-from qcportal.singlepoint import SinglepointDatasetNewEntry
 from qcportal.record_models import PriorityEnum
-from qcportal.singlepoint import QCSpecification
+from qcportal.singlepoint import SinglepointDatasetNewEntry, QCSpecification
 from .db_models import (
     SinglepointDatasetORM,
     SinglepointDatasetSpecificationORM,

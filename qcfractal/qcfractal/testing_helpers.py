@@ -5,9 +5,9 @@ from typing import Dict, Any, Tuple
 
 from qcelemental.models import Molecule
 
+from qcarchivetesting import geoip_path, test_users
 from qcfractal import FractalSnowflake
 from qcfractal.db_socket import SQLAlchemySocket
-from qcarchivetesting import geoip_path, test_users
 from qcportal import PortalClient, ManagerClient
 from qcportal.managers import ManagerName
 from qcportal.permissions import UserInfo

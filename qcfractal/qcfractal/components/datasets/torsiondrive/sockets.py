@@ -6,9 +6,8 @@ from typing import TYPE_CHECKING
 
 from qcfractal.components.datasets.sockets import BaseDatasetSocket
 from qcfractal.components.records.torsiondrive.db_models import TorsiondriveRecordORM
-from qcportal.torsiondrive import TorsiondriveDatasetNewEntry
 from qcportal.record_models import PriorityEnum
-from qcportal.torsiondrive import TorsiondriveSpecification
+from qcportal.torsiondrive import TorsiondriveDatasetNewEntry, TorsiondriveSpecification
 from .db_models import (
     TorsiondriveDatasetORM,
     TorsiondriveDatasetSpecificationORM,

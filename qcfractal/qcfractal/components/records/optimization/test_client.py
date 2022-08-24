@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.db_socket import SQLAlchemySocket
 from qcarchivetesting import load_molecule_data
-from qcportal.record_models import RecordStatusEnum, PriorityEnum
+from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.optimization import (
     OptimizationSpecification,
 )
+from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
 
 if TYPE_CHECKING:

@@ -17,11 +17,11 @@ from qcfractal.components.records.sockets import BaseRecordSocket
 from qcfractal.db_socket.helpers import insert_general
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
-from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.optimization import (
     OptimizationSpecification,
     OptimizationQueryFilters,
 )
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import (
     SinglepointDriver,
 )

@@ -1,7 +1,6 @@
 from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.optimization import OptimizationSpecification
-from qcportal.reaction import ReactionSpecification
-from qcportal.reaction import ReactionKeywords
+from qcportal.reaction import ReactionSpecification, ReactionKeywords
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 
 

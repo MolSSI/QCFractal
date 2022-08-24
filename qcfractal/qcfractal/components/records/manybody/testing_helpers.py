@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING, Tuple, Optional, Dict, Union, Any
 import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicResult
 
-from qcfractal.testing_helpers import run_service_simple
 from qcarchivetesting.helpers import read_record_data
-from qcportal.record_models import PriorityEnum, RecordStatusEnum
+from qcfractal.testing_helpers import run_service_simple
 from qcportal.manybody import ManybodySpecification, ManybodyKeywords
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 
 if TYPE_CHECKING:

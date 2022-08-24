@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.db_socket import SQLAlchemySocket
 from qcarchivetesting import load_molecule_data
-from qcportal.record_models import RecordStatusEnum, PriorityEnum
+from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.reaction import ReactionSpecification
+from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from .testing_helpers import compare_reaction_specs, test_specs, run_test_data, submit_test_data
 
 if TYPE_CHECKING:

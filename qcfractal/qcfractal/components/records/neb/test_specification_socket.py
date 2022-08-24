@@ -1,11 +1,10 @@
 from qcfractal.db_socket import SQLAlchemySocket
-
+from qcportal.neb import NEBSpecification, NEBKeywords
 from qcportal.singlepoint import (
     QCSpecification,
     SinglepointDriver,
     SinglepointProtocols,
 )
-from qcportal.neb import NEBSpecification, NEBKeywords
 
 
 def test_neb_socket_basic_specification(storage_socket: SQLAlchemySocket):

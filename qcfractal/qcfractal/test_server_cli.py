@@ -7,8 +7,8 @@ from typing import List, Optional
 import pytest
 import yaml
 
-from qcfractal.config import read_configuration
 from qcarchivetesting import testconfig_path, migrationdata_path
+from qcfractal.config import read_configuration
 
 config_file = os.path.join(testconfig_path, "qcf_basic.yaml")
 old_config_file = os.path.join(migrationdata_path, "qcfractal_config_v0.15.8.yaml")

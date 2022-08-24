@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 import pytest
 from qcelemental.models.results import AtomicResultProperties
 
-from qcfractal.components.wavefunctions.test_db_models import assert_wfn_equal
 from qcarchivetesting import load_molecule_data
+from qcfractal.components.wavefunctions.test_db_models import assert_wfn_equal
 from qcportal.compression import decompress_string
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule

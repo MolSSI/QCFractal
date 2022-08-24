@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcarchivetesting import load_wavefunction_data
 from qcfractal.components.records.singlepoint.testing_helpers import submit_test_data
 from qcfractal.components.wavefunctions.db_models import WavefunctionStoreORM
-from qcarchivetesting import load_wavefunction_data
 from qcportal.wavefunctions import WavefunctionProperties
 
 if TYPE_CHECKING:

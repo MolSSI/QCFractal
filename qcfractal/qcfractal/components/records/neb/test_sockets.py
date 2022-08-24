@@ -9,21 +9,20 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcarchivetesting import load_molecule_data
 from qcfractal.components.records.neb.testing_helpers import (
     compare_neb_specs,
     test_specs,
 )
-
 from qcfractal.db_socket import SQLAlchemySocket
-from qcarchivetesting import load_molecule_data
+from qcportal.neb import (
+    NEBSpecification,
+    NEBKeywords,
+)
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import (
     QCSpecification,
     SinglepointProtocols,
-)
-from qcportal.neb import (
-    NEBSpecification,
-    NEBKeywords,
 )
 
 if TYPE_CHECKING:

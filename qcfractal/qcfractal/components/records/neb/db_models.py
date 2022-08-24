@@ -5,12 +5,12 @@ from typing import Dict, Optional, Iterable, Any
 from sqlalchemy import Column, Integer, ForeignKey, String, UniqueConstraint, Index, Boolean
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.orderinglist import ordering_list
-from sqlalchemy.orm import relationship, column_property
+from sqlalchemy.orm import relationship
 
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.records.db_models import BaseRecordORM
-from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM, SinglepointRecordORM
 from qcfractal.components.records.optimization.db_models import OptimizationRecordORM
+from qcfractal.components.records.singlepoint.db_models import QCSpecificationORM, SinglepointRecordORM
 from qcfractal.db_socket import BaseORM
 
 

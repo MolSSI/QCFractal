@@ -22,13 +22,13 @@ from qcfractal.db_socket.helpers import get_query_proj_options
 from qcportal.exceptions import MissingDataError
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
-from qcportal.outputstore import OutputTypeEnum
-from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.neb import (
     NEBSpecification,
     NEBQueryFilters,
 )
 from qcportal.optimization import OptimizationSpecification
+from qcportal.outputstore import OutputTypeEnum
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import QCSpecification
 from .db_models import (
     NEBOptimiationsORM,

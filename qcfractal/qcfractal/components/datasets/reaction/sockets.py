@@ -6,9 +6,8 @@ from typing import TYPE_CHECKING
 
 from qcfractal.components.datasets.sockets import BaseDatasetSocket
 from qcfractal.components.records.reaction.db_models import ReactionRecordORM
-from qcportal.reaction import ReactionDatasetNewEntry
+from qcportal.reaction import ReactionDatasetNewEntry, ReactionSpecification
 from qcportal.record_models import PriorityEnum
-from qcportal.reaction import ReactionSpecification
 from .db_models import (
     ReactionDatasetORM,
     ReactionDatasetSpecificationORM,

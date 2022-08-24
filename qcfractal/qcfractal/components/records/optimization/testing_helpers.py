@@ -6,8 +6,8 @@ import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, OptimizationResult
 
 from qcarchivetesting.helpers import read_record_data
-from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.optimization import OptimizationSpecification
+from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import QCSpecification, SinglepointProtocols
 
 if TYPE_CHECKING:

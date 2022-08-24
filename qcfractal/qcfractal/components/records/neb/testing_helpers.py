@@ -5,11 +5,11 @@ from typing import TYPE_CHECKING, Tuple, Optional, Dict, List, Union, Any
 import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicResult
 
-from qcfractal.testing_helpers import run_service_constropt
 from qcarchivetesting.helpers import read_record_data
+from qcfractal.testing_helpers import run_service_constropt
+from qcportal.neb import NEBSpecification, NEBKeywords
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
-from qcportal.neb import NEBSpecification, NEBKeywords
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket

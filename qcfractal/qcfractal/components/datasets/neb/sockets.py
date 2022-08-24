@@ -7,9 +7,8 @@ from typing import TYPE_CHECKING
 from qcfractal.components.datasets.sockets import BaseDatasetSocket
 from qcfractal.components.records.neb.db_models import NEBRecordORM
 from qcportal.molecules import Molecule
-from qcportal.neb import NEBDatasetNewEntry
+from qcportal.neb import NEBDatasetNewEntry, NEBSpecification
 from qcportal.record_models import PriorityEnum
-from qcportal.neb import NEBSpecification
 from .db_models import (
     NEBDatasetORM,
     NEBDatasetSpecificationORM,

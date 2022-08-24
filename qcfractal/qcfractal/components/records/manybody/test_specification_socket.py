@@ -1,6 +1,5 @@
 from qcfractal.db_socket import SQLAlchemySocket
-from qcportal.manybody import ManybodySpecification
-from qcportal.manybody import ManybodyKeywords
+from qcportal.manybody import ManybodySpecification, ManybodyKeywords
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 
 

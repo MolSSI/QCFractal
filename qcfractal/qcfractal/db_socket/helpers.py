@@ -5,8 +5,8 @@ from functools import lru_cache
 from typing import TYPE_CHECKING
 
 from sqlalchemy import tuple_, and_, or_, func, select, inspect
-from sqlalchemy.orm import load_only, selectinload, lazyload
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import load_only, selectinload, lazyload
 
 from qcfractal.db_socket import BaseORM
 from qcportal.exceptions import MissingDataError, UserReportableError

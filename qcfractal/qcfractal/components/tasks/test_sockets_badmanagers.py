@@ -7,9 +7,9 @@ from datetime import datetime
 
 import pytest
 
+from qcarchivetesting import caplog_handler_at_level
 from qcfractal.components.records.singlepoint.testing_helpers import load_test_data, submit_test_data
 from qcfractal.db_socket import SQLAlchemySocket
-from qcarchivetesting import caplog_handler_at_level
 from qcportal.exceptions import ComputeManagerError
 from qcportal.managers import ManagerName
 from qcportal.record_models import RecordStatusEnum

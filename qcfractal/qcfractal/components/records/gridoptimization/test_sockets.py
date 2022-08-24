@@ -5,13 +5,13 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcarchivetesting import load_molecule_data
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service_constropt
-from qcarchivetesting import load_molecule_data
-from qcportal.outputstore import OutputStore
-from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.gridoptimization import GridoptimizationSpecification, GridoptimizationKeywords
 from qcportal.optimization import OptimizationSpecification, OptimizationProtocols
+from qcportal.outputstore import OutputStore
+from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification, SinglepointProtocols
 from .testing_helpers import compare_gridoptimization_specs, test_specs, load_test_data
 

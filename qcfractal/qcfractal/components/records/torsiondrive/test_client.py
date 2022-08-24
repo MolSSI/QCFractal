@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.db_socket import SQLAlchemySocket
 from qcarchivetesting import load_molecule_data
-from qcportal.record_models import RecordStatusEnum, PriorityEnum
+from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.optimization import OptimizationSpecification
+from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification
 from qcportal.torsiondrive import TorsiondriveKeywords, TorsiondriveSpecification
 from .testing_helpers import compare_torsiondrive_specs, test_specs, submit_test_data, run_test_data

@@ -9,6 +9,7 @@ import logging
 from typing import TYPE_CHECKING
 
 import sqlalchemy.orm.attributes
+import torsiondrive
 from pydantic import BaseModel
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
@@ -21,9 +22,9 @@ from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDepe
 from qcfractal.db_socket.helpers import get_query_proj_options
 from qcportal.metadata_models import InsertMetadata, QueryMetadata
 from qcportal.molecules import Molecule
+from qcportal.optimization import OptimizationSpecification
 from qcportal.outputstore import OutputTypeEnum
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
-from qcportal.optimization import OptimizationSpecification
 from qcportal.torsiondrive import (
     TorsiondriveSpecification,
     TorsiondriveQueryFilters,
@@ -34,8 +35,6 @@ from .db_models import (
     TorsiondriveOptimizationORM,
     TorsiondriveRecordORM,
 )
-
-import torsiondrive
 
 # Torsiondrive package is optional
 _td_spec = importlib.util.find_spec("torsiondrive")

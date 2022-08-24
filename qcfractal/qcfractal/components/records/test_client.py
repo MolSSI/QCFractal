@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcarchivetesting import test_users
 from qcfractal.components.records.optimization.testing_helpers import (
     run_test_data as run_opt_test_data,
     submit_test_data as submit_opt_test_data,
@@ -19,7 +20,6 @@ from qcfractal.components.records.singlepoint.testing_helpers import (
 from qcfractal.components.records.testing_helpers import populate_records_status
 from qcfractal.components.records.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
 from qcfractal.testing_helpers import TestingSnowflake
-from qcarchivetesting import test_users
 from qcportal import PortalRequestError
 from qcportal.managers import ManagerName
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
