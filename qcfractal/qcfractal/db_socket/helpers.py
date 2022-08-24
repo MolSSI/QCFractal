@@ -243,7 +243,7 @@ def form_query_filter(cols: Sequence[InstrumentedAttribute], values: Sequence[Tu
         for v in values:
             query_parts.append(and_(x == y for x, y in zip(cols, v)))
 
-        return or_(True, *query_parts)
+        return or_(False, *query_parts)
 
     else:
         return tuple_(*cols).in_(values)

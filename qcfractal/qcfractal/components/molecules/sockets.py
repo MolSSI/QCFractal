@@ -258,7 +258,7 @@ class MoleculeSocket:
                 or_query = []
                 for v in i_values:
                     or_query.append(MoleculeORM.identifiers.contains({i_name: v}))
-                and_query.append(or_(True, *or_query))
+                and_query.append(or_(False, *or_query))
 
         proj_options = get_query_proj_options(MoleculeORM, query_data.include, query_data.exclude)
 
