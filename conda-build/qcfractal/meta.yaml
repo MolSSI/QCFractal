@@ -25,10 +25,12 @@ requirements:
     - gunicorn
     - bcrypt
 
+    # Storage dependencies
     - sqlalchemy >=1.4
     - alembic
     - psycopg2
 
+    # For access logging
     - geoip2
 
 test:

@@ -26,12 +26,6 @@ dependencies = [
 ]
 
 
-[project.optional-dependencies]
-lint = [
-    "black"
-]
-
-
 [project.urls]
 "Homepage" = "https://github.com/MolSSI/QCFractal"
 "Bug Tracker" = "https://github.com/MolSSI/QCFractal/issues"
