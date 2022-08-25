@@ -98,9 +98,6 @@ class SQLAlchemySocket:
         self.users = UserSocket(self)
         self.roles = RoleSocket(self)
 
-        # check version compatibility
-        self.logger.info(f"Software versions info in database:")
-
     def __str__(self) -> str:
         return f"<SQLAlchemySocket: address='{self.uri}`>"
 
