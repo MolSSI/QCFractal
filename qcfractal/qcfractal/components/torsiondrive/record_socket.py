@@ -9,7 +9,6 @@ import logging
 from typing import TYPE_CHECKING
 
 import sqlalchemy.orm.attributes
-import torsiondrive
 from pydantic import BaseModel
 from sqlalchemy import select, func
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
