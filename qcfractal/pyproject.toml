@@ -49,6 +49,9 @@ qcfractal-server = "qcfractal.qcfractal_server_cli:main"
 [project.entry-points.pytest11]
 qcfractal_fixtures = "qcfractal.testing_fixtures"
 
+[tool.setuptools.package-data]
+qcfractal = ["alembic.ini", "alembic/script.py.mako"]
+
 
 [tool.black]
 line-length = 120

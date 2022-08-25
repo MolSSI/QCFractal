@@ -21,7 +21,7 @@ requirements:
   run:
     - qcfractalcompute ={{ version }}
     - flask
-    - flask_jwt_extended
+    - flask-jwt-extended
     - gunicorn
     - bcrypt
 
