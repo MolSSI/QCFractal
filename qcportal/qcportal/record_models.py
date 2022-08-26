@@ -138,7 +138,6 @@ class TaskRecord(BaseModel):
 
 
 class ServiceDependency(BaseModel):
-    id: int
     service_id: int
     record_id: int
     extras: Dict[str, Any]
@@ -285,14 +284,16 @@ class BaseRecord(BaseModel):
         if not self.raw_data.is_service:
             return
 
+        url_params = {"include": ["*", "dependencies"]}
+
         self.raw_data.service = self.client._auto_request(
             "get",
             f"v1/records/{self.raw_data.id}/service",
             None,
-            None,
+            ProjURLParameters,
             Optional[ServiceRecord],
             None,
-            None,
+            url_params,
         )
 
     def _fetch_comments(self):

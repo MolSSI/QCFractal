@@ -133,6 +133,7 @@ def test_baserecord_model_service(
     record = snowflake_client.get_records(rec_id, include=includes)
 
     assert record.is_service is True
+    assert record.service.dependencies is not None
     assert record.manager_name is None
     assert record.service.tag == "test_tag_123"
     assert record.service.priority == PriorityEnum.low

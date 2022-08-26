@@ -261,7 +261,7 @@ def test_record_client_modify_service(snowflake_client: PortalClient, storage_so
     assert meta.n_updated == 1
     assert meta.n_children_updated > 0
 
-    rec = snowflake_client.get_records(svc_id, include=["service"])
+    rec = snowflake_client.get_records(svc_id)
     assert rec.service.tag == "new_tag"
     assert rec.service.priority == PriorityEnum.low
 

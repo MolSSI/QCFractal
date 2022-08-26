@@ -1,6 +1,18 @@
-import datetime
+from __future__ import annotations
 
-from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, Index, UniqueConstraint, CheckConstraint
+import datetime
+from typing import Optional, Iterable, Dict, Any
+
+from sqlalchemy import (
+    Column,
+    Integer,
+    ForeignKey,
+    String,
+    DateTime,
+    Index,
+    UniqueConstraint,
+    CheckConstraint,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
@@ -29,6 +41,11 @@ class ServiceDependencyORM(BaseORM):
     # We make extras part of the unique constraint because rarely the same dependency will be
     # submitted but with different extras (position, etc)
     __table_args__ = (UniqueConstraint("service_id", "record_id", "extras", name="ux_service_dependency"),)
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "id")
+        return BaseORM.model_dict(self, exclude)
 
 
 class ServiceQueueORM(BaseORM):
