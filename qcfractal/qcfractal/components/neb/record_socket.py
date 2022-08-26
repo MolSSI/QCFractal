@@ -32,7 +32,7 @@ from qcportal.outputstore import OutputTypeEnum
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import QCSpecification
 from .record_db_models import (
-    NEBOptimiationsORM,
+    NEBOptimizationsORM,
     NEBSpecificationORM,
     NEBSinglepointsORM,
     NEBInitialchainORM,
@@ -72,6 +72,7 @@ class NEBServiceState(BaseModel):
     optimized: bool
     tsoptimize: bool
     converged: bool
+    align: bool
     iteration: int
     molecule_template: str
 
@@ -122,7 +123,6 @@ class NEBRecordSocket(BaseRecordSocket):
         molecule_template.pop("geometry", None)
         molecule_template.pop("identifiers", None)
         molecule_template.pop("id", None)
-        # elems = molecule_template.get("symbols")
 
         stdout_orm = neb_orm.compute_history[-1].get_output(OutputTypeEnum.stdout)
         stdout_orm.append(output)
@@ -137,9 +137,10 @@ class NEBRecordSocket(BaseRecordSocket):
             },
             iteration=0,
             keywords=keywords,
-            optimized=False,
+            optimized=keywords.get("optimize_endpoints"),
             tsoptimize=keywords.get("optimize_ts"),
             converged=False,
+            align=keywords.get("align_chain"),
             molecule_template=molecule_template_str,
         )
 
@@ -169,16 +170,23 @@ class NEBRecordSocket(BaseRecordSocket):
         if service_state.iteration == 0:
             initial_chain: List[Dict[str, Any]] = [x.model_dict() for x in neb_orm.initial_chain]
             initial_molecules = [Molecule(**M) for M in initial_chain]
-            if not service_state.optimized:
+            if service_state.optimized:
                 output += "\nFirst, optimizing the end points"
                 self.submit_optimizations(session, service_orm, [initial_molecules[0], initial_molecules[-1]])
-                service_state.optimized = True
+                service_state.optimized = False
                 finished = False
             else:
                 complete_opts = sorted(service_orm.dependencies, key=lambda x: x.extras["position"])
-                initial_molecules[0] = Molecule(**complete_opts[0].record.final_molecule.model_dict())
-                initial_molecules[-1] = Molecule(**complete_opts[-1].record.final_molecule.model_dict())
-                self.submit_singlepoints(session, service_state, service_orm, initial_molecules)
+                if len(complete_opts) != 0:
+                    initial_molecules[0] = Molecule(**complete_opts[0].record.final_molecule.model_dict())
+                    initial_molecules[-1] = Molecule(**complete_opts[-1].record.final_molecule.model_dict())
+                neb_stdout = io.StringIO()
+                logging.captureWarnings(True)
+                with contextlib.redirect_stdout(neb_stdout):
+                    aligned_chain = geometric.neb.arrange(initial_molecules, service_state.align)
+                logging.captureWarnings(False)
+                output += "\n" + neb_stdout.getvalue()
+                self.submit_singlepoints(session, service_state, service_orm, aligned_chain)
                 service_state.iteration += 1
                 finished = False
         else:
@@ -188,7 +196,6 @@ class NEBRecordSocket(BaseRecordSocket):
                 energies = []
                 gradients = []
                 for task in complete_tasks:
-                    # This is an ORM for singlepoint calculations
                     sp_record = task.record
                     mol_data = self.root_socket.molecules.get(
                         molecule_id=[sp_record.molecule_id], include=["geometry"], session=session
@@ -297,7 +304,7 @@ class NEBRecordSocket(BaseRecordSocket):
         )
         for pos, opt_id in enumerate(opt_ids):
             svc_dep = ServiceDependencyORM(record_id=opt_id, extras={"position": pos})
-            opt_history = NEBOptimiationsORM(
+            opt_history = NEBOptimizationsORM(
                 neb_id=service_orm.record_id,
                 optimization_id=opt_id,
                 position=pos,
@@ -576,12 +583,8 @@ class NEBRecordSocket(BaseRecordSocket):
                 selected_chain = np.array(init_chain)[
                     np.array([int(round(i)) for i in np.linspace(0, len(init_chain) - 1, images)])
                 ]
-                neb_stdout = io.StringIO()
-                logging.captureWarnings(True)
-                with contextlib.redirect_stdout(neb_stdout):
-                    aligned_chain = geometric.neb.arrange(selected_chain)
-                logging.captureWarnings(False)
-                mol_meta, molecule_ids = self.root_socket.molecules.add_mixed(aligned_chain, session=session)
+
+                mol_meta, molecule_ids = self.root_socket.molecules.add_mixed(selected_chain, session=session)
                 if not mol_meta.success:
                     return (
                         InsertMetadata(
@@ -621,5 +624,5 @@ class NEBRecordSocket(BaseRecordSocket):
         with self.root_socket.optional_session(session, True) as session:
             r = session.execute(stmt).scalar_one_or_none()
             if r is None:
-                raise MissingDataError("A guessed transition state from the NEB can't be found")
+                raise MissingDataError("The final guessed transition state can't be found")
             return r.model_dict()

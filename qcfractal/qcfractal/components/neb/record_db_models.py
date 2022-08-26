@@ -14,7 +14,7 @@ from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcfractal.db_socket import BaseORM
 
 
-class NEBOptimiationsORM(BaseORM):
+class NEBOptimizationsORM(BaseORM):
 
     __tablename__ = "neb_optimizations"
 
@@ -117,8 +117,8 @@ class NEBRecordORM(BaseRecordORM):
     )
 
     optimizations = relationship(
-        NEBOptimiationsORM,
-        order_by=NEBOptimiationsORM.position,
+        NEBOptimizationsORM,
+        order_by=NEBOptimizationsORM.position,
         collection_class=ordering_list("position"),
         cascade="all, delete-orphan",
     )

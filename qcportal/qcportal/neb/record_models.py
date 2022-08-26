@@ -28,14 +28,40 @@ class NEBKeywords(BaseModel):
         description="Spring constant in kcal/mol/Ang^2.",
     )
 
-    energy_weighted: bool = Field(
-        False,
-        description="Energy weighted NEB method varies the spring constant based on image's energy.",
+    spring_type: int = Field(
+        0,
+        description="0: Nudged Elastic Band (parallel spring force + perpendicular gradients)\n"
+        "1: Hybrid Elastic Band (full spring force + perpendicular gradients)\n"
+        "2: Plain Elastic Band (full spring force + full gradients)\n",
+    )
+
+    maximum_force: float = Field(
+        0.05,
+        description="Convergence criteria. Converge when maximum RMS-gradient (ev/Ang) of the chain fall below maximum_force.",
+    )
+
+    average_force: float = Field(
+        0.025,
+        description="Convergence criteria. Converge when average RMS-gradient (ev/Ang) of the chain fall below average_force.",
+    )
+
+    maximum_cycle: int = Field(200, description="Maximum iteration number for NEB calculation.")
+
+    energy_weighted: int = Field(
+        None,
+        description="Provide an integer value to vary the spring constant based on images' energy (range: spring_constant/energy_weighted - spring_constant).",
     )
 
     optimize_ts: bool = Field(
         False,
         description="Setting it equal to true will perform a transition sate optimization starting with the guessed transition state structure from the NEB calculation result.",
+    )
+
+    align_chain: bool = Field(False, description="Aligning the initial chain before optimization.")
+
+    optimize_endpoints: bool = Field(
+        False,
+        description="Setting it equal to True will optimize two end points of the initial chain before starting NEB.",
     )
 
     coordinate_system: str = Field(
