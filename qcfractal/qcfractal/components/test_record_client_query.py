@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+
 import pytest
 
 from qcfractal.components.testing_helpers import populate_records_status
@@ -44,6 +46,11 @@ def queryable_records_client(module_temporary_database):
                             assert meta.success
                             all_ids.extend(ids)
 
+            # prevents spurious test errors. On fast machines,
+            # records can be created too close together
+            # (we test at this boundary)
+            time.sleep(0.05)
+
         assert len(all_ids) == 320
         yield client
 
@@ -61,25 +68,25 @@ def test_record_client_query(queryable_records_client: PortalClient):
     # Created/modified before/after
     sorted_records = sorted(all_records, key=lambda x: x.created_on)
     query_res = queryable_records_client.query_records(
-        record_type="singlepoint", created_before=sorted_records[73].created_on
+        record_type="singlepoint", created_before=sorted_records[164].created_on
     )
-    assert query_res.current_meta.n_found == 74
+    assert query_res.current_meta.n_found == 165
 
     query_res = queryable_records_client.query_records(
-        record_type="singlepoint", created_after=sorted_records[73].created_on
+        record_type="singlepoint", created_after=sorted_records[165].created_on
     )
-    assert query_res.current_meta.n_found == 252
+    assert query_res.current_meta.n_found == 160
 
     sorted_records = sorted(all_records, key=lambda x: x.modified_on)
     query_res = queryable_records_client.query_records(
-        record_type="singlepoint", modified_before=sorted_records[73].created_on
+        record_type="singlepoint", modified_before=sorted_records[165].created_on
     )
-    assert query_res.current_meta.n_found == 73
+    assert query_res.current_meta.n_found == 165
 
     query_res = queryable_records_client.query_records(
-        record_type="singlepoint", modified_after=sorted_records[73].created_on
+        record_type="singlepoint", modified_after=sorted_records[165].created_on
     )
-    assert query_res.current_meta.n_found == 252
+    assert query_res.current_meta.n_found == 160
 
     # find the manager used to compute these
     manager_res = queryable_records_client.query_managers()
