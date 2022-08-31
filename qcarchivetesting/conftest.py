@@ -28,7 +28,7 @@ def fulltest_client(pytestconfig):
     uri = pytestconfig.getoption("--fractal-uri")
 
     if uri == "snowflake":
-        from qcfractal import FractalSnowflake
+        from qcfractal.snowflake import FractalSnowflake
 
         s = FractalSnowflake()
         yield s.client()

@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 import tabulate
 import yaml
 
-import qcfractal
+from qcfractal import __version__
 from qcportal.permissions import RoleInfo, UserInfo
 from .app.gunicorn_app import GunicornProcess
 from .config import read_configuration, write_initial_configuration, FractalConfig, WebAPIConfig
@@ -123,7 +123,7 @@ def parse_args() -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(description="A CLI for managing & running a QCFractal server.")
 
-    parser.add_argument("--version", action="version", version=f"{qcfractal.__version__}")
+    parser.add_argument("--version", action="version", version=f"{__version__}")
     parser.add_argument("--verbose", action="store_true", help=verbose_help)
 
     parser.add_argument("--config", help=config_file_help)
@@ -359,7 +359,7 @@ def server_info(category: str, config: FractalConfig) -> None:
         print()
         print("-" * 80)
         print("Python executable: ", sys.executable)
-        print("QCFractal version: ", qcfractal.__version__)
+        print("QCFractal version: ", __version__)
         print("QCFractal alembic revision: ", pg_harness.get_alembic_version())
 
         if config.database.own:
