@@ -1,13 +1,14 @@
 from flask import current_app
 
-from qcfractal.app import main, wrap_route, prefix_projection, storage_socket
+from qcfractal.api import wrap_route
+from qcfractal.flask_app import api, prefix_projection, storage_socket
 from qcportal.base_models import ProjURLParameters
 from qcportal.exceptions import LimitExceededError
 from qcportal.gridoptimization import GridoptimizationAddBody, GridoptimizationQueryFilters
 from qcportal.utils import calculate_limit
 
 
-@main.route("/v1/records/gridoptimization/bulkCreate", methods=["POST"])
+@api.route("/v1/records/gridoptimization/bulkCreate", methods=["POST"])
 @wrap_route("WRITE")
 def add_gridoptimization_records_v1(body_data: GridoptimizationAddBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.add_records
@@ -24,7 +25,7 @@ def add_gridoptimization_records_v1(body_data: GridoptimizationAddBody):
     )
 
 
-@main.route("/v1/records/gridoptimization/<int:record_id>/optimizations", methods=["GET"])
+@api.route("/v1/records/gridoptimization/<int:record_id>/optimizations", methods=["GET"])
 @wrap_route("READ")
 def get_gridoptimization_optimizations_v1(record_id: int, url_params: ProjURLParameters):
     # adjust the includes/excludes to refer to the optimizations
@@ -33,7 +34,7 @@ def get_gridoptimization_optimizations_v1(record_id: int, url_params: ProjURLPar
     return rec[0]["optimizations"]
 
 
-@main.route("/v1/records/gridoptimization/query", methods=["POST"])
+@api.route("/v1/records/gridoptimization/query", methods=["POST"])
 @wrap_route("READ")
 def query_gridoptimization_v1(body_data: GridoptimizationQueryFilters):
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records

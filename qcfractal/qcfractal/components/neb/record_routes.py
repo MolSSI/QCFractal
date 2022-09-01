@@ -1,15 +1,15 @@
 from flask import current_app
 
-from qcfractal.app import main, storage_socket
-from qcfractal.app.helpers import prefix_projection
-from qcfractal.app.routes import wrap_route
+from qcfractal.api import wrap_route
+from qcfractal.flask_app import api, storage_socket
+from qcfractal.flask_app.helpers import prefix_projection
 from qcportal.base_models import ProjURLParameters
 from qcportal.exceptions import LimitExceededError
 from qcportal.neb import NEBAddBody, NEBQueryFilters
 from qcportal.utils import calculate_limit
 
 
-@main.route("/v1/records/neb/bulkCreate", methods=["POST"])
+@api.route("/v1/records/neb/bulkCreate", methods=["POST"])
 @wrap_route("WRITE")
 def add_neb_records_v1(body_data: NEBAddBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.add_records
@@ -24,7 +24,7 @@ def add_neb_records_v1(body_data: NEBAddBody):
     )
 
 
-@main.route("/v1/records/neb/<int:record_id>/singlepoints", methods=["GET"])
+@api.route("/v1/records/neb/<int:record_id>/singlepoints", methods=["GET"])
 @wrap_route("READ")
 def get_neb_singlepoints_v1(record_id: int, *, url_params: ProjURLParameters):
     # adjust the includes/excludes to refer to the singlepoints
@@ -33,13 +33,13 @@ def get_neb_singlepoints_v1(record_id: int, *, url_params: ProjURLParameters):
     return rec[0]["singlepoints"]
 
 
-@main.route("/v1/records/neb/<int:record_id>/neb_result", methods=["GET"])
+@api.route("/v1/records/neb/<int:record_id>/neb_result", methods=["GET"])
 @wrap_route("READ")
 def get_neb_result_v1(record_id: int, url_params: ProjURLParameters):
     return storage_socket.records.neb.get_neb_result(record_id, url_params.include, url_params.exclude)
 
 
-@main.route("/v1/records/neb/<int:record_id>/optimizations", methods=["GET"])
+@api.route("/v1/records/neb/<int:record_id>/optimizations", methods=["GET"])
 @wrap_route("READ")
 def get_neb_optimizations_v1(record_id: int, url_params: ProjURLParameters):
     # adjust the includes/excludes to refer to the optimizations
@@ -48,14 +48,14 @@ def get_neb_optimizations_v1(record_id: int, url_params: ProjURLParameters):
     return rec[0]["optimizations"]
 
 
-@main.route("/v1/records/neb/<int:record_id>/initial_chain", methods=["GET"])
+@api.route("/v1/records/neb/<int:record_id>/initial_chain", methods=["GET"])
 @wrap_route("READ")
 def get_neb_initial_chain_v1(record_id: int):
     rec = storage_socket.records.neb.get([record_id], include=["initial_chain"])
     return rec[0]["initial_chain"]
 
 
-@main.route("/v1/records/neb/query", methods=["POST"])
+@api.route("/v1/records/neb/query", methods=["POST"])
 @wrap_route("READ")
 def query_neb_v1(body_data: NEBQueryFilters):
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records

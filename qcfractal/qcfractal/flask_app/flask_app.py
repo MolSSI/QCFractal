@@ -30,7 +30,9 @@ storage_socket = _FlaskSQLAlchemySocket()
 
 jwt = JWTManager()
 
-main = Blueprint("main", __name__)
+api = Blueprint("main", __name__)
+auth = Blueprint("auth", __name__)
+dashboard = Blueprint("dashboard", __name__)
 
 
 def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
@@ -58,12 +60,18 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = qcfractal_config.api.jwt_access_token_expires
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = qcfractal_config.api.jwt_refresh_token_expires
 
+    # Registers the various error and before/after request handlers
+    importlib.import_module("qcfractal.flask_app.handlers")
+
     # Register all the routes in the other files.
     # Must be done before registering the blueprint
+    importlib.import_module("qcfractal.auth.routes")
     importlib.import_module("qcfractal.components.register_all")
-    importlib.import_module("qcfractal.app.routes")
+    importlib.import_module("qcfractal.dashboard.routes")
 
-    app.register_blueprint(main)
+    app.register_blueprint(api)
+    app.register_blueprint(auth)
+    app.register_blueprint(dashboard)
 
     return app
 

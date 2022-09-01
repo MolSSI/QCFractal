@@ -1,6 +1,7 @@
 from flask import current_app, g
 
-from qcfractal.app import main, wrap_route, prefix_projection, storage_socket
+from qcfractal.api import wrap_route
+from qcfractal.flask_app import api, prefix_projection, storage_socket
 from qcportal.base_models import ProjURLParameters, CommonBulkGetBody
 from qcportal.exceptions import LimitExceededError
 from qcportal.record_models import (
@@ -11,13 +12,13 @@ from qcportal.record_models import (
 )
 
 
-@main.route("/v1/records/<int:record_id>", methods=["GET"])
+@api.route("/v1/records/<int:record_id>", methods=["GET"])
 @wrap_route("READ")
 def get_records_v1(record_id: int, url_params: ProjURLParameters):
     return storage_socket.records.get([record_id], url_params.include, url_params.exclude)
 
 
-@main.route("/v1/records/bulkGet", methods=["POST"])
+@api.route("/v1/records/bulkGet", methods=["POST"])
 @wrap_route("READ")
 def bulk_get_records_v1(body_data: CommonBulkGetBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
@@ -27,7 +28,7 @@ def bulk_get_records_v1(body_data: CommonBulkGetBody):
     return storage_socket.records.get(body_data.ids, body_data.include, body_data.exclude, body_data.missing_ok)
 
 
-@main.route("/v1/records/<int:record_id>/compute_history", methods=["GET"])
+@api.route("/v1/records/<int:record_id>/compute_history", methods=["GET"])
 @wrap_route("READ")
 def get_record_history_v1(record_id: int, url_params: ProjURLParameters):
     # adjust the includes/excludes to refer to the compute history
@@ -36,7 +37,7 @@ def get_record_history_v1(record_id: int, url_params: ProjURLParameters):
     return rec[0]["compute_history"]
 
 
-@main.route("/v1/records/<int:record_id>/task", methods=["GET"])
+@api.route("/v1/records/<int:record_id>/task", methods=["GET"])
 @wrap_route("READ")
 def get_record_task_v1(record_id: int, url_params: ProjURLParameters):
     ch_includes, ch_excludes = prefix_projection(url_params, "task")
@@ -44,7 +45,7 @@ def get_record_task_v1(record_id: int, url_params: ProjURLParameters):
     return rec[0]["task"]
 
 
-@main.route("/v1/records/<int:record_id>/service", methods=["GET"])
+@api.route("/v1/records/<int:record_id>/service", methods=["GET"])
 @wrap_route("READ")
 def get_record_service_v1(record_id: int, url_params: ProjURLParameters):
     ch_includes, ch_excludes = prefix_projection(url_params, "service")
@@ -52,27 +53,27 @@ def get_record_service_v1(record_id: int, url_params: ProjURLParameters):
     return rec[0]["service"]
 
 
-@main.route("/v1/records/<int:record_id>/comments", methods=["GET"])
+@api.route("/v1/records/<int:record_id>/comments", methods=["GET"])
 @wrap_route("READ")
 def get_record_comments_v1(record_id: int):
     rec = storage_socket.records.get([record_id], include=["comments"])
     return rec[0]["comments"]
 
 
-@main.route("/v1/records/<int:record_id>/native_files", methods=["GET"])
+@api.route("/v1/records/<int:record_id>/native_files", methods=["GET"])
 @wrap_route("READ")
 def get_record_native_files_v1(record_id: int):
     rec = storage_socket.records.get([record_id], include=["native_files"])
     return rec[0]["native_files"]
 
 
-@main.route("/v1/records/<int:record_id>", methods=["DELETE"])
+@api.route("/v1/records/<int:record_id>", methods=["DELETE"])
 @wrap_route("DELETE")
 def delete_records_v1(record_id: int):
     return storage_socket.records.delete([record_id], soft_delete=True, delete_children=True)
 
 
-@main.route("/v1/records/bulkDelete", methods=["POST"])
+@api.route("/v1/records/bulkDelete", methods=["POST"])
 @wrap_route("DELETE")
 def bulk_delete_records_v1(body_data: RecordDeleteBody):
     return storage_socket.records.delete(
@@ -80,13 +81,13 @@ def bulk_delete_records_v1(body_data: RecordDeleteBody):
     )
 
 
-@main.route("/v1/records/revert", methods=["POST"])
+@api.route("/v1/records/revert", methods=["POST"])
 @wrap_route("WRITE")
 def revert_records_v1(body_data: RecordRevertBody):
     return storage_socket.records.revert_generic(body_data.record_ids, body_data.revert_status)
 
 
-@main.route("/v1/records", methods=["PATCH"])
+@api.route("/v1/records", methods=["PATCH"])
 @wrap_route("WRITE")
 def modify_records_v1(body_data: RecordModifyBody):
     username = (g.user if "user" in g else None,)
@@ -95,7 +96,7 @@ def modify_records_v1(body_data: RecordModifyBody):
     )
 
 
-@main.route("/v1/records/query", methods=["POST"])
+@api.route("/v1/records/query", methods=["POST"])
 @wrap_route("READ")
 def query_records_v1(body_data: RecordQueryFilters):
     return storage_socket.records.query(body_data)
@@ -107,14 +108,14 @@ def query_records_v1(body_data: RecordQueryFilters):
 # Note that the inputs are all the same, but the returned dicts
 # are different
 #################################################################
-@main.route("/v1/records/<string:record_type>/<record_id>", methods=["GET"])
+@api.route("/v1/records/<string:record_type>/<record_id>", methods=["GET"])
 @wrap_route("READ")
 def get_general_records_v1(record_type: str, record_id: int, url_params: ProjURLParameters):
     record_socket = storage_socket.records.get_socket(record_type)
     return record_socket.get(record_id, url_params.include, url_params.exclude)
 
 
-@main.route("/v1/records/<string:record_type>/bulkGet", methods=["POST"])
+@api.route("/v1/records/<string:record_type>/bulkGet", methods=["POST"])
 @wrap_route("READ")
 def bulk_get_general_records_v1(record_type: str, body_data: CommonBulkGetBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records

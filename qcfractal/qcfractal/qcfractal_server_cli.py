@@ -21,9 +21,9 @@ import yaml
 
 from qcfractal import __version__
 from qcportal.permissions import RoleInfo, UserInfo
-from .app.gunicorn_app import GunicornProcess
 from .config import read_configuration, write_initial_configuration, FractalConfig, WebAPIConfig
 from .db_socket.socket import SQLAlchemySocket
+from .flask_app.gunicorn_app import GunicornProcess
 from .periodics import PeriodicsProcess
 from .postgres_harness import PostgresHarness
 from .process_runner import ProcessRunner
@@ -488,7 +488,7 @@ def server_start_periodics(config):
 
 
 def server_start_api(config):
-    from qcfractal.app.gunicorn_app import FractalGunicornApp
+    from qcfractal.flask_app.gunicorn_app import FractalGunicornApp
 
     logger = logging.getLogger(__name__)
     logger.info("*** Starting a QCFractal API server periodics ***")

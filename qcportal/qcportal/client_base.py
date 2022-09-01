@@ -199,7 +199,9 @@ class PortalClientBase:
     def _refresh_JWT_token(self) -> None:
 
         ret = self._req_session.post(
-            self.address + "v1/refresh", headers={"Authorization": f"Bearer {self.refresh_token}"}, verify=self._verify
+            self.address + "v1/refresh",
+            headers={"Authorization": f"Bearer {self.refresh_token}"},
+            verify=self._verify,
         )
 
         if ret.status_code == 200:

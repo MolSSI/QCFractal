@@ -1,13 +1,14 @@
 from flask import current_app
 
-from qcfractal.app import main, wrap_route, prefix_projection, storage_socket
+from qcfractal.api import wrap_route
+from qcfractal.flask_app import api, prefix_projection, storage_socket
 from qcportal.base_models import ProjURLParameters
 from qcportal.exceptions import LimitExceededError
 from qcportal.reaction import ReactionAddBody, ReactionQueryFilters
 from qcportal.utils import calculate_limit
 
 
-@main.route("/v1/records/reaction/bulkCreate", methods=["POST"])
+@api.route("/v1/records/reaction/bulkCreate", methods=["POST"])
 @wrap_route("WRITE")
 def add_reaction_records_v1(body_data: ReactionAddBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.add_records
@@ -22,7 +23,7 @@ def add_reaction_records_v1(body_data: ReactionAddBody):
     )
 
 
-@main.route("/v1/records/reaction/<int:record_id>/components", methods=["GET"])
+@api.route("/v1/records/reaction/<int:record_id>/components", methods=["GET"])
 @wrap_route("READ")
 def get_reaction_components_v1(record_id: int, url_params: ProjURLParameters):
     # adjust the includes/excludes to refer to the components
@@ -31,7 +32,7 @@ def get_reaction_components_v1(record_id: int, url_params: ProjURLParameters):
     return rec[0]["components"]
 
 
-@main.route("/v1/records/reaction/query", methods=["POST"])
+@api.route("/v1/records/reaction/query", methods=["POST"])
 @wrap_route("READ")
 def query_reaction_v1(body_data: ReactionQueryFilters):
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records

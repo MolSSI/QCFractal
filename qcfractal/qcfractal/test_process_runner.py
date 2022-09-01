@@ -7,8 +7,8 @@ import time
 
 import pytest
 
-from qcfractal.app.flask_app import FlaskProcess
-from qcfractal.app.gunicorn_app import GunicornProcess
+from qcfractal.flask_app.flask_app import FlaskProcess
+from qcfractal.flask_app.gunicorn_app import GunicornProcess
 from qcfractal.periodics import PeriodicsProcess
 from qcfractal.process_runner import ProcessRunner
 from qcfractal.snowflake import SnowflakeComputeProcess

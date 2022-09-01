@@ -1,13 +1,14 @@
 from flask import current_app
 
-from qcfractal.app import main, wrap_route, prefix_projection, storage_socket
+from qcfractal.api import wrap_route
+from qcfractal.flask_app import api, prefix_projection, storage_socket
 from qcportal.base_models import ProjURLParameters
 from qcportal.exceptions import LimitExceededError
 from qcportal.manybody import ManybodyAddBody, ManybodyQueryFilters
 from qcportal.utils import calculate_limit
 
 
-@main.route("/v1/records/manybody/bulkCreate", methods=["POST"])
+@api.route("/v1/records/manybody/bulkCreate", methods=["POST"])
 @wrap_route("WRITE")
 def add_manybody_records_v1(body_data: ManybodyAddBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.add_records
@@ -22,7 +23,7 @@ def add_manybody_records_v1(body_data: ManybodyAddBody):
     )
 
 
-@main.route("/v1/records/manybody/<int:record_id>/clusters", methods=["GET"])
+@api.route("/v1/records/manybody/<int:record_id>/clusters", methods=["GET"])
 @wrap_route("READ")
 def get_manybody_components_v1(record_id: int, url_params: ProjURLParameters):
     # adjust the includes/excludes to refer to the components
@@ -31,7 +32,7 @@ def get_manybody_components_v1(record_id: int, url_params: ProjURLParameters):
     return rec[0]["clusters"]
 
 
-@main.route("/v1/records/manybody/<int:record_id>/initial_molecules", methods=["GET"])
+@api.route("/v1/records/manybody/<int:record_id>/initial_molecules", methods=["GET"])
 @wrap_route("READ")
 def get_manybody_molecules_v1(record_id: int, url_params: ProjURLParameters):
     # adjust the includes/excludes to refer to the molecules
@@ -40,7 +41,7 @@ def get_manybody_molecules_v1(record_id: int, url_params: ProjURLParameters):
     return rec[0]["initial_molecules"]
 
 
-@main.route("/v1/records/manybody/query", methods=["POST"])
+@api.route("/v1/records/manybody/query", methods=["POST"])
 @wrap_route("READ")
 def query_manybody_v1(body_data: ManybodyQueryFilters):
     max_limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_records
