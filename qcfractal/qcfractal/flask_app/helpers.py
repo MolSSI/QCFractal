@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 
 from flask import request, g, current_app
 from flask_jwt_extended import verify_jwt_in_request, get_jwt, get_jwt_identity
+from flask_jwt_extended.exceptions import NoAuthorizationError
 from werkzeug.exceptions import Forbidden, BadRequest
 
 from qcfractal.auth_v1.policyuniverse import Policy
@@ -91,8 +92,11 @@ def check_role_permissions(app, requested_action: str):
         # don't raise exception if no JWT is found
         verify_jwt_in_request(optional=True)
     else:
-        # read JWT token from request headers
-        verify_jwt_in_request(optional=False)
+        try:
+            # read JWT token from request headers
+            verify_jwt_in_request(optional=False)
+        except NoAuthorizationError as e:
+            raise Forbidden(f"Missing authorization token. Server requires login. Are you logged in?")
 
     try:
         claims = get_jwt()

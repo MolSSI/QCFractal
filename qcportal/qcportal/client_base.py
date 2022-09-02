@@ -39,7 +39,7 @@ class PortalRequestError(Exception):
         self.details = details
 
     def __str__(self):
-        return f"Portal request error: {self.msg} (HTTP status {self.status_code})"
+        return f"{self.msg} (HTTP status {self.status_code})"
 
 
 class PortalClientBase:
