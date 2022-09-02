@@ -178,7 +178,7 @@ class FractalSnowflake:
         # Can't use ping that is part of the client - we haven't instantiated one yet
         host = self._qcf_config.api.host
         port = self._qcf_config.api.port
-        uri = f"http://{host}:{port}/v1/ping"
+        uri = f"http://{host}:{port}/api/v1/ping"
 
         max_iter = 50
         iter = 0

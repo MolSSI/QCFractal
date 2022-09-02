@@ -2,11 +2,10 @@ from functools import wraps
 from typing import Callable
 
 import pydantic
-from flask import jsonify, current_app, request, Response
+from flask import current_app, request, Response
 from werkzeug.exceptions import BadRequest
 
-from qcfractal.auth.helpers import check_permissions
-from qcfractal.flask_app import api
+from qcfractal.flask_app.helpers import check_role_permissions
 from qcportal.serialization import deserialize, serialize
 
 
@@ -46,7 +45,7 @@ def wrap_route(
         def wrapper(*args, **kwargs):
 
             if check_access:
-                check_permissions(current_app, requested_action)
+                check_role_permissions(current_app, requested_action)
 
             ##################################################################
             # If we got here, then the user is allowed access to this endpoint
@@ -104,8 +103,3 @@ def wrap_route(
         return wrapper
 
     return decorate
-
-
-@api.route("/v1/ping", methods=["GET"])
-def ping():
-    return jsonify(success=True)

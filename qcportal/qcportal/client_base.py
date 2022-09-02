@@ -102,8 +102,6 @@ class PortalClientBase:
         if username is not None and password is not None:
             self._get_JWT_token(username, password)
 
-        ### Define all attributes before this line
-
         # Try to connect and pull the server info
         self.server_info = self.get_server_information()
         self.server_name = self.server_info["name"]
@@ -183,7 +181,7 @@ class PortalClientBase:
 
         try:
             ret = self._req_session.post(
-                self.address + "v1/login", json={"username": username, "password": password}, verify=self._verify
+                self.address + "/auth/v1/login", json={"username": username, "password": password}, verify=self._verify
             )
         except requests.exceptions.SSLError:
             raise ConnectionRefusedError(_ssl_error_msg) from None
@@ -199,7 +197,7 @@ class PortalClientBase:
     def _refresh_JWT_token(self) -> None:
 
         ret = self._req_session.post(
-            self.address + "v1/refresh",
+            self.address + "/auth/v1/refresh",
             headers={"Authorization": f"Bearer {self.refresh_token}"},
             verify=self._verify,
         )
@@ -219,7 +217,8 @@ class PortalClientBase:
         retry: Optional[bool] = True,
     ) -> requests.Response:
 
-        addr = self.address + endpoint
+        # Add "api" to the endpoint. QCPortal only deals with the API
+        addr = self.address + "api/" + endpoint
         kwargs = {"data": body, "verify": self._verify, "timeout": self._timeout}
 
         if url_params:
@@ -303,10 +302,10 @@ class PortalClientBase:
         Returns
         -------
         :
-            True if the server is up an responded to the ping. False otherwise
+            True if the server is up and responded to the ping. False otherwise
         """
 
-        uri = f"{self.address}/v1/ping"
+        uri = f"{self.address}/api/v1/ping"
 
         try:
             r = requests.get(uri)

@@ -12,7 +12,7 @@ def test_serverinfo_client_delete_error(storage_socket: SQLAlchemySocket, snowfl
     error_data_1 = {
         "error_text": "This is a test error",
         "user": "admin_user",
-        "request_path": "/v1/molecule",
+        "request_path": "/api/v1/molecule",
         "request_headers": "fake_headers",
         "request_body": "fake body",
     }
@@ -20,7 +20,7 @@ def test_serverinfo_client_delete_error(storage_socket: SQLAlchemySocket, snowfl
     error_data_2 = {
         "error_text": "This is another test error",
         "user": "read_user",
-        "request_path": "/v1/molecule",
+        "request_path": "/api/v1/molecule",
         "request_headers": "fake_headers",
         "request_body": "fake body",
     }

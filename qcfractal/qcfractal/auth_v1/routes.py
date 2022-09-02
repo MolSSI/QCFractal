@@ -1,11 +1,12 @@
 from flask import request, current_app, jsonify
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 
-from qcfractal.flask_app import auth, storage_socket
+from qcfractal.auth_v1.blueprint import auth_v1
+from qcfractal.flask_app import storage_socket
 from qcportal.exceptions import AuthenticationFailure
 
 
-@auth.route("/v1/login", methods=["POST"])
+@auth_v1.route("/login", methods=["POST"])
 def login():
     try:
         if request.is_json:
@@ -42,7 +43,7 @@ def login():
     return jsonify(msg="Login succeeded!", access_token=access_token, refresh_token=refresh_token), 200
 
 
-@auth.route("/v1/refresh", methods=["POST"])
+@auth_v1.route("/refresh", methods=["POST"])
 @jwt_required(refresh=True)
 def refresh():
     username = get_jwt_identity()
@@ -55,7 +56,7 @@ def refresh():
     return jsonify(ret), 200
 
 
-# @auth.route("/v1/fresh-login", methods=["POST"])
+# @auth.route("/fresh-login", methods=["POST"])
 # def fresh_login():
 #    if request.is_json:
 #        username = request.json["username"]

@@ -20,7 +20,7 @@ def queryable_error_client(module_temporary_database):
                         error = {
                             "error_text": f"ERROR_{i}_{endpoint}_{user}",
                             "user": user,
-                            "request_path": f"/v1/endpoint",
+                            "request_path": "/api/v1/endpoint",
                             "request_headers": "fake_headers",
                             "request_body": "fake body",
                         }

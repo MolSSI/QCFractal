@@ -2,21 +2,22 @@ from typing import List
 
 from flask import current_app
 
-from qcfractal.api import wrap_route
-from qcfractal.flask_app import api, storage_socket
+from qcfractal.api_v1.blueprint import api_v1
+from qcfractal.api_v1.helpers import wrap_route
+from qcfractal.flask_app import storage_socket
 from qcportal.base_models import CommonBulkGetBody, ProjURLParameters
 from qcportal.exceptions import LimitExceededError
 from qcportal.molecules import Molecule, MoleculeQueryFilters, MoleculeModifyBody
 from qcportal.utils import calculate_limit
 
 
-@api.route("/v1/molecules/<int:molecule_id>", methods=["GET"])
+@api_v1.route("/molecules/<int:molecule_id>", methods=["GET"])
 @wrap_route("READ")
 def get_molecules_v1(molecule_id: int, url_params: ProjURLParameters):
     return storage_socket.molecules.get([molecule_id], url_params.include, url_params.exclude)[0]
 
 
-@api.route("/v1/molecules/bulkGet", methods=["POST"])
+@api_v1.route("/molecules/bulkGet", methods=["POST"])
 @wrap_route("READ")
 def bulk_get_molecules_v1(body_data: CommonBulkGetBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_molecules
@@ -28,19 +29,19 @@ def bulk_get_molecules_v1(body_data: CommonBulkGetBody):
     )
 
 
-@api.route("/v1/molecules/<int:molecule_id>", methods=["DELETE"])
+@api_v1.route("/molecules/<int:molecule_id>", methods=["DELETE"])
 @wrap_route("DELETE")
 def delete_molecules_v1(molecule_id: int):
     return storage_socket.molecules.delete([molecule_id])
 
 
-@api.route("/v1/molecules/bulkDelete", methods=["POST"])
+@api_v1.route("/molecules/bulkDelete", methods=["POST"])
 @wrap_route("DELETE")
 def bulk_delete_molecules_v1(body_data: List[int]):
     return storage_socket.molecules.delete(body_data)
 
 
-@api.route("/v1/molecules/<int:molecule_id>", methods=["PATCH"])
+@api_v1.route("/molecules/<int:molecule_id>", methods=["PATCH"])
 @wrap_route("WRITE")
 def modify_molecules_v1(molecule_id: int, body_data: MoleculeModifyBody):
     return storage_socket.molecules.modify(
@@ -52,7 +53,7 @@ def modify_molecules_v1(molecule_id: int, body_data: MoleculeModifyBody):
     )
 
 
-@api.route("/v1/molecules/bulkCreate", methods=["POST"])
+@api_v1.route("/molecules/bulkCreate", methods=["POST"])
 @wrap_route("WRITE")
 def add_molecules_v1(body_data: List[Molecule]):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.add_molecules
@@ -62,7 +63,7 @@ def add_molecules_v1(body_data: List[Molecule]):
     return storage_socket.molecules.add(body_data)
 
 
-@api.route("/v1/molecules/query", methods=["POST"])
+@api_v1.route("/molecules/query", methods=["POST"])
 @wrap_route("READ")
 def query_molecules_v1(body_data: MoleculeQueryFilters):
 

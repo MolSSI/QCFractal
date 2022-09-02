@@ -1,7 +1,8 @@
 from flask import current_app
 
-from qcfractal.api import wrap_route
-from qcfractal.flask_app import api, storage_socket
+from qcfractal.api_v1.blueprint import api_v1
+from qcfractal.api_v1.helpers import wrap_route
+from qcfractal.flask_app import storage_socket
 from qcportal.base_models import CommonBulkGetNamesBody
 from qcportal.exceptions import LimitExceededError
 from qcportal.managers import (
@@ -13,7 +14,7 @@ from qcportal.managers import (
 from qcportal.utils import calculate_limit
 
 
-@api.route("/v1/managers", methods=["POST"])
+@api_v1.route("/managers", methods=["POST"])
 @wrap_route("WRITE")
 def activate_manager_v1(body_data: ManagerActivationBody):
     return storage_socket.managers.activate(
@@ -25,7 +26,7 @@ def activate_manager_v1(body_data: ManagerActivationBody):
     )
 
 
-@api.route("/v1/managers/<string:name>", methods=["PATCH"])
+@api_v1.route("/managers/<string:name>", methods=["PATCH"])
 @wrap_route("WRITE")
 def update_manager_v1(name: str, body_data: ManagerUpdateBody):
     # This endpoint is used for heartbeats and deactivation
@@ -45,13 +46,13 @@ def update_manager_v1(name: str, body_data: ManagerUpdateBody):
         storage_socket.managers.deactivate([name])
 
 
-@api.route("/v1/managers/<string:name>", methods=["GET"])
+@api_v1.route("/managers/<string:name>", methods=["GET"])
 @wrap_route("READ")
 def get_managers_v1(name: str):
     return storage_socket.managers.get([name])[0]
 
 
-@api.route("/v1/managers/bulkGet", methods=["POST"])
+@api_v1.route("/managers/bulkGet", methods=["POST"])
 @wrap_route("READ")
 def bulk_get_managers_v1(body_data: CommonBulkGetNamesBody):
     limit = current_app.config["QCFRACTAL_CONFIG"].api_limits.get_managers
@@ -61,7 +62,7 @@ def bulk_get_managers_v1(body_data: CommonBulkGetNamesBody):
     return storage_socket.managers.get(body_data.names, body_data.include, body_data.exclude, body_data.missing_ok)
 
 
-@api.route("/v1/managers/query", methods=["POST"])
+@api_v1.route("/managers/query", methods=["POST"])
 @wrap_route("READ")
 def query_managers_v1(body_data: ManagerQueryFilters):
 

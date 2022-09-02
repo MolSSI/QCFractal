@@ -24,17 +24,17 @@ def test_serverinfo_client_access_logged(snowflake_client: PortalClient):
     assert query_res.current_meta.n_found == 4
     accesses = list(query_res)
 
-    assert accesses[3].access_type == "v1/information"
-    assert accesses[3].full_uri == "/v1/information"
+    assert accesses[3].access_type == "/api/v1/information"
+    assert accesses[3].full_uri == "/api/v1/information"
 
-    assert accesses[2].access_type == "v1/access_logs"
-    assert accesses[2].full_uri == "/v1/access_logs/query"
+    assert accesses[2].access_type == "/api/v1/access_logs"
+    assert accesses[2].full_uri == "/api/v1/access_logs/query"
 
-    assert accesses[1].access_type == "v1/molecules"
-    assert accesses[1].full_uri == "/v1/molecules/query"
+    assert accesses[1].access_type == "/api/v1/molecules"
+    assert accesses[1].full_uri == "/api/v1/molecules/query"
 
-    assert accesses[0].access_type == "v1/molecules"
-    assert accesses[0].full_uri == "/v1/molecules/bulkGet"
+    assert accesses[0].access_type == "/api/v1/molecules"
+    assert accesses[0].full_uri == "/api/v1/molecules/bulkGet"
 
     assert accesses[0].response_bytes > 0
     assert accesses[1].response_bytes > 0

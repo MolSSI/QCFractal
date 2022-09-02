@@ -6,12 +6,15 @@ import multiprocessing
 import sys
 from typing import TYPE_CHECKING
 
-from flask import Flask, Blueprint
+from flask import Flask
 from flask_jwt_extended import JWTManager
 
 from qcfractal.db_socket.socket import SQLAlchemySocket
 from qcfractal.process_runner import ProcessBase
 from .config import config
+from ..api_v1.blueprint import api_v1
+from ..auth_v1.blueprint import auth_v1
+from ..dashboard_v1.blueprint import dashboard_v1
 
 if TYPE_CHECKING:
     from ..config import FractalConfig
@@ -29,10 +32,6 @@ class _FlaskSQLAlchemySocket(SQLAlchemySocket):
 storage_socket = _FlaskSQLAlchemySocket()
 
 jwt = JWTManager()
-
-api = Blueprint("main", __name__)
-auth = Blueprint("auth", __name__)
-dashboard = Blueprint("dashboard", __name__)
 
 
 def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
@@ -65,13 +64,13 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
 
     # Register all the routes in the other files.
     # Must be done before registering the blueprint
-    importlib.import_module("qcfractal.auth.routes")
+    importlib.import_module("qcfractal.auth_v1.routes")
+    importlib.import_module("qcfractal.dashboard_v1.routes")
     importlib.import_module("qcfractal.components.register_all")
-    importlib.import_module("qcfractal.dashboard.routes")
 
-    app.register_blueprint(api)
-    app.register_blueprint(auth)
-    app.register_blueprint(dashboard)
+    app.register_blueprint(api_v1)
+    app.register_blueprint(auth_v1)
+    app.register_blueprint(dashboard_v1)
 
     return app
 
