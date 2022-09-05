@@ -15,6 +15,7 @@ dependencies:
   - requests
   - pyyaml
   - pydantic
+  - zstandard
   - qcelemental
   - qcengine
   - tabulate

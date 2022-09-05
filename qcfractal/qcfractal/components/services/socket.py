@@ -215,8 +215,8 @@ class ServiceSocket:
                             stdout = OutputStore.compress(
                                 OutputTypeEnum.stdout,
                                 f"Starting service: {service_orm.record.record_type} at {now}",
-                                CompressionEnum.lzma,
-                                1,
+                                CompressionEnum.zstd,
+                                6,
                             )
                             hist.outputs[OutputTypeEnum.stdout] = OutputStoreORM.from_model(stdout)
 

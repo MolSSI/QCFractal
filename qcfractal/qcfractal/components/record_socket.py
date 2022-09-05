@@ -64,15 +64,15 @@ def create_compute_history_entry(
         # This shouldn't happen, but if they aren't compressed, check for uncompressed
         if result.stdout is not None:
             logger.warning(f"Found uncompressed stdout for record id {result.id}")
-            stdout = OutputStore.compress(OutputTypeEnum.stdout, result.stdout, CompressionEnum.lzma, 1)
+            stdout = OutputStore.compress(OutputTypeEnum.stdout, result.stdout, CompressionEnum.zstd)
             all_outputs.append(stdout)
         if result.stderr is not None:
             logger.warning(f"Found uncompressed stderr for record id {result.id}")
-            stderr = OutputStore.compress(OutputTypeEnum.stderr, result.stderr, CompressionEnum.lzma, 1)
+            stderr = OutputStore.compress(OutputTypeEnum.stderr, result.stderr, CompressionEnum.zstd)
             all_outputs.append(stderr)
         if result.error is not None:
             logger.warning(f"Found uncompressed error for record id {result.id}")
-            error = OutputStore.compress(OutputTypeEnum.error, result.error.dict(), CompressionEnum.lzma, 1)
+            error = OutputStore.compress(OutputTypeEnum.error, result.error.dict(), CompressionEnum.zstd)
             all_outputs.append(error)
 
     history_orm.outputs = {x.output_type: OutputStoreORM.from_model(x) for x in all_outputs}
@@ -655,7 +655,7 @@ class RecordSocket:
         if error is None:
             error = _default_error
 
-        error_obj = OutputStore.compress(OutputTypeEnum.error, error.dict(), CompressionEnum.lzma, 1)
+        error_obj = OutputStore.compress(OutputTypeEnum.error, error.dict(), CompressionEnum.zstd)
         all_outputs = [error_obj]
 
         # Get the rest of the outputs
@@ -666,10 +666,10 @@ class RecordSocket:
             stderr = failed_result.input_data.get("stderr", None)
 
             if stdout is not None:
-                stdout_obj = OutputStore.compress(OutputTypeEnum.stdout, stdout, CompressionEnum.lzma, 1)
+                stdout_obj = OutputStore.compress(OutputTypeEnum.stdout, stdout, CompressionEnum.zstd)
                 all_outputs.append(stdout_obj)
             if stderr is not None:
-                stderr_obj = OutputStore.compress(OutputTypeEnum.stderr, stderr, CompressionEnum.lzma, 1)
+                stderr_obj = OutputStore.compress(OutputTypeEnum.stderr, stderr, CompressionEnum.zstd)
                 all_outputs.append(stderr_obj)
 
         # Build the history orm
@@ -738,7 +738,7 @@ class RecordSocket:
         """
         record_orm.status = RecordStatusEnum.error
 
-        error_obj = OutputStore.compress(OutputTypeEnum.error, error_info, CompressionEnum.lzma, 1)
+        error_obj = OutputStore.compress(OutputTypeEnum.error, error_info, CompressionEnum.zstd)
         error_orm = OutputStoreORM.from_model(error_obj)
         record_orm.compute_history[-1].status = RecordStatusEnum.error
 

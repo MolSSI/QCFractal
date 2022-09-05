@@ -25,6 +25,7 @@ requirements:
     - requests
     - pyyaml
     - pydantic
+    - zstandard
 
     - qcelemental
     - tabulate

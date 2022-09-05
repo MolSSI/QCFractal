@@ -145,8 +145,8 @@ def test_outputs_models_append(
         stored_orm = session.query(OutputStoreORM).where(OutputStoreORM.id == out_id).one()
         out_model = stored_orm.to_model(OutputStore)
 
-    # Didn't change compression
-    assert out_model.compression == compression
+    # Changes compression to zstd
+    assert out_model.compression == CompressionEnum.zstd
     assert out_model.output_type == output_type
 
     assert out_model.as_string == input_str + "Appended string"

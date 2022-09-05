@@ -239,7 +239,7 @@ def test_task_socket_compressed_outputs_success(storage_socket: SQLAlchemySocket
 
     # Compress the outputs
     assert result_data1.stdout
-    compressed_output = OutputStore.compress(OutputTypeEnum.stdout, result_data1.stdout, CompressionEnum.lzma, 5)
+    compressed_output = OutputStore.compress(OutputTypeEnum.stdout, result_data1.stdout, CompressionEnum.zstd, 5)
     if result_data1.extras is None:
         result_data1.__dict__["extras"] = {}
     result_data1.extras["_qcfractal_compressed_outputs"] = [compressed_output.dict()]

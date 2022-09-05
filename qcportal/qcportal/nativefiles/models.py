@@ -16,7 +16,7 @@ class NativeFile(BaseModel):
         extra = Extra.forbid
 
     name: str = Field(..., description="Name of the file")
-    compression: CompressionEnum = Field(..., description="Compression method (such as gzip)")
+    compression: CompressionEnum = Field(..., description="Compression method (such as lzma)")
     compression_level: int = Field(..., description="Level of compression (typically 0-9)")
     is_text: bool = Field(..., description="True if this is a plain text file. False if binary")
     uncompressed_size: int = Field(..., description="The uncompressed size of the file")

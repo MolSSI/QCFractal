@@ -115,7 +115,7 @@ class RecordComputeHistoryORM(BaseORM):
         if output_type in self.outputs:
             return self.outputs[output_type]
 
-        new_output = OutputStore.compress(output_type, "", CompressionEnum.lzma, 1)
+        new_output = OutputStore.compress(output_type, "", CompressionEnum.zstd)
         new_output_orm = OutputStoreORM.from_model(new_output)
         self.outputs[output_type] = new_output_orm
         return new_output_orm

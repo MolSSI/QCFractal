@@ -27,7 +27,7 @@ class OutputStore(BaseModel):
         extra = Extra.forbid
 
     output_type: OutputTypeEnum = Field(..., description="The type of output this is (stdout, error, etc)")
-    compression: CompressionEnum = Field(CompressionEnum.none, description="Compression method (such as gzip)")
+    compression: CompressionEnum = Field(CompressionEnum.none, description="Compression method (such as lzma)")
     compression_level: int = Field(0, description="Level of compression (typically 0-9)")
     data: bytes = Field(..., description="Compressed raw data of output/errors, etc")
 

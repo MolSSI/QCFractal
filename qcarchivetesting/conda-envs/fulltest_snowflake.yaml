@@ -19,6 +19,7 @@ dependencies:
   - requests
   - pyyaml
   - pydantic
+  - zstandard
   - bcrypt
 
   - qcelemental

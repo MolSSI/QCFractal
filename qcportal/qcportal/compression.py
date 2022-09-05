@@ -1,33 +1,28 @@
 from __future__ import annotations
 
-import bz2
-import gzip
 import json
 import lzma
 from enum import Enum
 from typing import Optional, Union, Dict, Tuple, Any
 
+import zstandard
+
 
 class CompressionEnum(str, Enum):
     """
-    How data is compressed (compression method only, ie gzip, bzip2)
+    How data is compressed (compression method only, ie lzma, zstd)
     """
 
     none = "none"
-    gzip = "gzip"
-    bzip2 = "bzip2"
     lzma = "lzma"
+    zstd = "zstd"
 
 
 def get_compressed_ext(compression_type: str) -> str:
     if compression_type == CompressionEnum.none:
         return ""
-    elif compression_type == CompressionEnum.gzip:
-        return ".gz"
-    elif compression_type == CompressionEnum.bzip2:
-        return ".bz2"
-    elif compression_type == CompressionEnum.lzma:
-        return ".xz"
+    elif compression_type == CompressionEnum.zstd:
+        return ".zstd"
     else:
         # Shouldn't ever happen, unless we change CompressionEnum but not the rest of this function
         raise TypeError(f"Unknown compression type: {compression_type}")
@@ -59,18 +54,6 @@ def compress(
     if compression_type is CompressionEnum.none:
         compression_level = 0
 
-    # gzip compression
-    elif compression_type is CompressionEnum.gzip:
-        if compression_level is None:
-            compression_level = 6
-        data = gzip.compress(data, compresslevel=compression_level)
-
-    # bzip2 compression
-    elif compression_type is CompressionEnum.bzip2:
-        if compression_level is None:
-            compression_level = 6
-        data = bz2.compress(data, compresslevel=compression_level)
-
     # LZMA compression
     # By default, use level = 1 for larger data (>15MB or so)
     elif compression_type is CompressionEnum.lzma:
@@ -80,6 +63,16 @@ def compress(
             else:
                 compression_level = 6
         data = lzma.compress(data, preset=compression_level)
+
+    # ZStandard compression
+    # By default, use level = 6 for larger data (>15MB or so)
+    elif compression_type is CompressionEnum.zstd:
+        if compression_level is None:
+            if len(data) > 15 * 1048576:
+                compression_level = 6
+            else:
+                compression_level = 16
+        data = zstandard.compress(data, level=compression_level)
     else:
         # Shouldn't ever happen, unless we change CompressionEnum but not the rest of this function
         raise TypeError(f"Unknown compression type: {compression_type}")
@@ -93,12 +86,10 @@ def decompress_bytes(compressed_data: bytes, compression_type: CompressionEnum) 
     """
     if compression_type == CompressionEnum.none:
         return compressed_data
-    elif compression_type == CompressionEnum.gzip:
-        return gzip.decompress(compressed_data)
-    elif compression_type == CompressionEnum.bzip2:
-        return bz2.decompress(compressed_data)
     elif compression_type == CompressionEnum.lzma:
         return lzma.decompress(compressed_data)
+    elif compression_type == CompressionEnum.zstd:
+        return zstandard.decompress(compressed_data)
     else:
         # Shouldn't ever happen, unless we change CompressionEnum but not the rest of this function
         raise TypeError(f"Unknown compression type: {compression_type}")

@@ -26,17 +26,17 @@ def _compress_common(
     update = {}
 
     if stdout is not None:
-        new_stdout = OutputStore.compress(OutputTypeEnum.stdout, stdout, CompressionEnum.lzma, 6)
+        new_stdout = OutputStore.compress(OutputTypeEnum.stdout, stdout, CompressionEnum.zstd)
         compressed_outputs.append(new_stdout)
         update["stdout"] = None
 
     if stderr is not None:
-        new_stderr = OutputStore.compress(OutputTypeEnum.stderr, stderr, CompressionEnum.lzma, 6)
+        new_stderr = OutputStore.compress(OutputTypeEnum.stderr, stderr, CompressionEnum.zstd)
         compressed_outputs.append(new_stderr)
         update["stderr"] = None
 
     if error is not None:
-        new_error = OutputStore.compress(OutputTypeEnum.error, error.dict(), CompressionEnum.lzma, 6)
+        new_error = OutputStore.compress(OutputTypeEnum.error, error.dict(), CompressionEnum.zstd)
         compressed_outputs.append(new_error)
         update["error"] = None
 
@@ -59,7 +59,7 @@ def _compress_native_files(
 
     compressed_nf = {}
     for name, data in result.native_files.items():
-        nf = NativeFile.compress(name, data, CompressionEnum.lzma, 6)
+        nf = NativeFile.compress(name, data, CompressionEnum.zstd)
 
         compressed_nf[name] = nf
 
