@@ -222,6 +222,10 @@ class RoleSocket:
             is used, it will be flushed (but not committed) before returning from this function.
         """
 
+        # Cannot delete admin role
+        if rolename == "admin":
+            raise UserManagementError("Cannot delete the admin role")
+
         try:
             with self.root_socket.optional_session(session) as session:
                 role = self._get_internal(session, rolename)

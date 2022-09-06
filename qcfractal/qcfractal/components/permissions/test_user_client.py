@@ -363,6 +363,9 @@ def test_user_client_no_modify(secure_snowflake_allow_read: TestingSnowflake):
     with pytest.raises(PortalRequestError, match=r"Forbidden"):
         client.modify_user(uinfo)
 
+    with pytest.raises(PortalRequestError, match=r"not logged in"):
+        client.change_user_password()
+
 
 def test_user_client_no_login_disabled(secure_snowflake: TestingSnowflake):
     """
@@ -379,5 +382,5 @@ def test_user_client_no_login_disabled(secure_snowflake: TestingSnowflake):
     client.modify_user(uinfo)
 
     # Fails now
-    with pytest.raises(PortalRequestError, match=r"read_user is disabled"):
+    with pytest.raises(AuthenticationFailure, match=r"read_user is disabled"):
         secure_snowflake.client("read_user", test_users["read_user"]["pw"])

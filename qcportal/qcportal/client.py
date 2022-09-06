@@ -3008,7 +3008,8 @@ class PortalClient(PortalClientBase):
         if username is None:
             username = self.username
 
-        is_valid_username(username)
+        if username is not None:
+            is_valid_username(username)
 
         if new_password is not None:
             is_valid_password(new_password)

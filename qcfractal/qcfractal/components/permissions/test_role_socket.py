@@ -125,7 +125,7 @@ def test_role_socket_nonexist(storage_socket: SQLAlchemySocket):
         storage_socket.roles.delete("doesntexist")
 
 
-def test_role_socket_modify_admin(storage_socket: SQLAlchemySocket):
+def test_role_socket_no_modify_admin(storage_socket: SQLAlchemySocket):
     # The admin role should not be modifiable
     mod_role = RoleInfo(
         rolename="admin",
@@ -139,6 +139,13 @@ def test_role_socket_modify_admin(storage_socket: SQLAlchemySocket):
 
     with pytest.raises(UserManagementError, match=r"Cannot modify the admin role"):
         storage_socket.roles.modify(mod_role)
+
+
+def test_role_socket_no_delete_admin(storage_socket: SQLAlchemySocket):
+    # The admin role should not be deleteable
+
+    with pytest.raises(UserManagementError, match=r"Cannot delete the admin role"):
+        storage_socket.roles.delete("admin")
 
 
 def test_role_socket_modify(storage_socket: SQLAlchemySocket):
