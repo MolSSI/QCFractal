@@ -127,3 +127,31 @@ def test_role_client_modify(secure_snowflake: TestingSnowflake):
     rinfo3 = client.get_role("read")
     assert rinfo2 == rinfo
     assert rinfo3 == rinfo
+
+
+def test_role_client_secure_endpoints_disabled(snowflake_client):
+    """
+    Some secure endpoints are disabled when security is disabled
+    """
+
+    rinfo = RoleInfo(
+        rolename="test_role",
+        permissions={
+            "Statement": [{"Effect": "Allow", "Action": "READ", "Resource": ["/api/v1/user", "/api/v1/role"]}]
+        },
+    )
+
+    with pytest.raises(PortalRequestError, match=r"not available if security is not enabled"):
+        snowflake_client.add_role(rinfo)
+
+    with pytest.raises(PortalRequestError, match=r"not available if security is not enabled"):
+        snowflake_client.delete_role("test_role")
+
+    with pytest.raises(PortalRequestError, match=r"not available if security is not enabled"):
+        snowflake_client.get_role("test_role")
+
+    with pytest.raises(PortalRequestError, match=r"not available if security is not enabled"):
+        snowflake_client.list_roles()
+
+    with pytest.raises(PortalRequestError, match=r"not available if security is not enabled"):
+        snowflake_client.modify_role(rinfo)

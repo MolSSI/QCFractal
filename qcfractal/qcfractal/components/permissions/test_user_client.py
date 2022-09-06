@@ -267,21 +267,6 @@ def test_user_client_modify_me(secure_snowflake: TestingSnowflake):
     assert uinfo2.enabled is True  # unchanged
 
 
-def test_user_client_no_modify_me(secure_snowflake_allow_read: TestingSnowflake):
-    """
-    Cannot modify user if not logged in
-    """
-    client = secure_snowflake_allow_read.client()
-
-    with pytest.raises(RuntimeError, match=r"not logged in"):
-        client.get_user()
-
-    uinfo = UserInfo(username="read_user", role="read", fullname="New Full Name", enabled=True)
-
-    with pytest.raises(PortalRequestError, match=r"Forbidden"):
-        client.modify_user(uinfo)
-
-
 def test_user_client_change_my_password(secure_snowflake: TestingSnowflake):
 
     # First, make sure read user is denied
@@ -311,6 +296,39 @@ def test_user_client_reset_my_password(secure_snowflake: TestingSnowflake):
     secure_snowflake.client("read_user", new_pw)
 
 
+def test_user_client_secure_endpoints_disabled(snowflake_client):
+    """
+    Some secure endpoints are disabled when security is disabled
+    """
+
+    uinfo = UserInfo(
+        username="george",
+        role="compute",
+        enabled=True,
+        fullname="Test user",
+        email="george@example.com",
+        organization="My Org",
+    )
+
+    with pytest.raises(PortalRequestError, match=r"not available if security is not enabled"):
+        snowflake_client.add_user(uinfo)
+
+    with pytest.raises(PortalRequestError, match=r"not available if security is not enabled"):
+        snowflake_client.delete_user("george")
+
+    with pytest.raises(PortalRequestError, match=r"not available if security is not enabled"):
+        snowflake_client.get_user("george")
+
+    with pytest.raises(PortalRequestError, match=r"not available if security is not enabled"):
+        snowflake_client.change_user_password("george")
+
+    with pytest.raises(PortalRequestError, match=r"not available if security is not enabled"):
+        snowflake_client.list_users()
+
+    with pytest.raises(PortalRequestError, match=r"not available if security is not enabled"):
+        snowflake_client.modify_user(uinfo)
+
+
 #########################################################################
 # Test some security issues
 #
@@ -329,3 +347,37 @@ def test_user_no_update_via_me(secure_snowflake: TestingSnowflake):
 
     with pytest.raises(PortalRequestError, match=r"Trying to update own user"):
         client._auto_request("put", "v1/me", UserInfo, None, UserInfo, uinfo, None)
+
+
+def test_user_client_no_modify(secure_snowflake_allow_read: TestingSnowflake):
+    """
+    Cannot modify user if not logged in
+    """
+    client = secure_snowflake_allow_read.client()
+
+    with pytest.raises(RuntimeError, match=r"not logged in"):
+        client.get_user()
+
+    uinfo = UserInfo(username="read_user", role="read", fullname="New Full Name", enabled=True)
+
+    with pytest.raises(PortalRequestError, match=r"Forbidden"):
+        client.modify_user(uinfo)
+
+
+def test_user_client_no_login_disabled(secure_snowflake: TestingSnowflake):
+    """
+    Cannot login if disabled
+    """
+
+    # Should be ok
+    secure_snowflake.client("read_user", test_users["read_user"]["pw"])
+
+    # Disable the user
+    client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
+    uinfo = client.get_user("read_user")
+    uinfo.enabled = False
+    client.modify_user(uinfo)
+
+    # Fails now
+    with pytest.raises(PortalRequestError, match=r"read_user is disabled"):
+        secure_snowflake.client("read_user", test_users["read_user"]["pw"])
