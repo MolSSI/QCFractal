@@ -309,7 +309,7 @@ class BaseDataset(BaseModel):
         self._update_metadata(metadata=new_metadata)
 
     @property
-    def default_tag(self) -> Optional[str]:
+    def default_tag(self) -> str:
         return self.raw_data.default_tag
 
     def set_default_tag(self, new_default_tag: str):
@@ -323,7 +323,7 @@ class BaseDataset(BaseModel):
         self._update_metadata(default_priority=new_default_priority)
 
     @property
-    def specifications(self) -> Optional[Dict[str, Any]]:
+    def specifications(self) -> Dict[str, Any]:
         if not self.raw_data.specifications:
             self.fetch_specifications()
 
@@ -351,7 +351,7 @@ class BaseDataset(BaseModel):
             None,
         )
 
-    def rename_specification(self, old_name: str, new_name: str) -> UpdateMetadata:
+    def rename_specification(self, old_name: str, new_name: str):
         self.assert_online()
 
         name_map = {old_name: new_name}

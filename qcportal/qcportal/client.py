@@ -424,9 +424,6 @@ class PortalClient(PortalClientBase):
         else:
             return mols
 
-    # TODO: we would like more fields to be queryable via the REST API for mols
-    #       e.g. symbols/elements. Unless these are indexed might not be performant.
-    # TODO: what was paginate: bool = False for?
     def query_molecules(
         self,
         molecule_hash: Optional[Union[str, Iterable[str]]] = None,
@@ -2536,7 +2533,7 @@ class PortalClient(PortalClientBase):
 
     def query_managers(
         self,
-        manager_ids: Optional[Union[int, Iterable[int]]] = None,
+        manager_id: Optional[Union[int, Iterable[int]]] = None,
         name: Optional[Union[str, Iterable[str]]] = None,
         cluster: Optional[Union[str, Iterable[str]]] = None,
         hostname: Optional[Union[str, Iterable[str]]] = None,
@@ -2552,7 +2549,7 @@ class PortalClient(PortalClientBase):
 
         Parameters
         ----------
-        manager_ids
+        manager_id
             ID assigned to the manager (this is not the UUID. This should be used very rarely).
         name
             Queries managers whose name is in the given list
@@ -2576,7 +2573,7 @@ class PortalClient(PortalClientBase):
         """
 
         filter_dict = {
-            "manager_id": make_list(manager_ids),
+            "manager_id": make_list(manager_id),
             "name": make_list(name),
             "cluster": make_list(cluster),
             "hostname": make_list(hostname),
