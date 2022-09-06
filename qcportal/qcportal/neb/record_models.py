@@ -78,6 +78,15 @@ class NEBKeywords(BaseModel):
         '"tric-p" for primitive Translation-Rotation Internal Coordinates (no delocalization)\n ',
     )
 
+    epsilon: float = Field(
+        1e-5,
+        description="Small eigenvalue threshold for resetting Hessian."
+    )
+
+    hessian_reset: bool = Field(
+        True,
+        description="Reset Hessian when eigenvalues are under epsilon. If it is set to False, it will skip updating the hessian.")
+
     @root_validator
     def normalize(cls, values):
         return recursive_normalizer(values)
