@@ -36,7 +36,9 @@ def test_role_client_add(secure_snowflake: TestingSnowflake):
 
     rinfo = RoleInfo(
         rolename="test_role",
-        permissions={"Statement": [{"Effect": "Allow", "Action": "GET", "Resource": ["user", "role"]}]},
+        permissions={
+            "Statement": [{"Effect": "Allow", "Action": "READ", "Resource": ["/api/v1/user", "/api/v1/role"]}]
+        },
     )
 
     client.add_role(rinfo)
@@ -49,7 +51,10 @@ def test_role_client_add_existing(secure_snowflake: TestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     rinfo = RoleInfo(
-        rolename="read", permissions={"Statement": [{"Effect": "Allow", "Action": "GET", "Resource": ["user", "role"]}]}
+        rolename="read",
+        permissions={
+            "Statement": [{"Effect": "Allow", "Action": "READ", "Resource": ["/api/v1/user", "/api/v1/role"]}]
+        },
     )
 
     with pytest.raises(PortalRequestError, match=r"already exists"):
@@ -92,7 +97,9 @@ def test_role_client_delete(secure_snowflake: TestingSnowflake):
 
     rinfo = RoleInfo(
         rolename="test_role",
-        permissions={"Statement": [{"Effect": "Allow", "Action": "GET", "Resource": ["user", "role"]}]},
+        permissions={
+            "Statement": [{"Effect": "Allow", "Action": "READ", "Resource": ["/api/v1/user", "/api/v1/role"]}]
+        },
     )
 
     client.add_role(rinfo)
@@ -110,7 +117,9 @@ def test_role_client_modify(secure_snowflake: TestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
     rinfo = client.get_role("read")
 
-    rinfo.permissions.Statement.append({"Effect": "Allow", "Action": "PUT", "Resource": ["user", "role"]})
+    rinfo.permissions.Statement.append(
+        {"Effect": "Allow", "Action": "WRITE", "Resource": ["/api/v1/user", "/api/v1/role"]}
+    )
 
     rinfo2 = client.modify_role(rinfo)
 

@@ -90,9 +90,6 @@ module_temporary_database = pytest.fixture(_temporary_database, scope="module")
 def storage_socket(temporary_database):
     """
     A fixture for temporary database and storage socket
-
-    This should not be used with other fixtures, but used for unit testing
-    the storage socket.
     """
 
     # Create a configuration. Since this is mostly just for a storage socket,
