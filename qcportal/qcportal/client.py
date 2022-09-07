@@ -103,10 +103,9 @@ from .serverinfo import (
     ServerStatsQueryIterator,
     DeleteBeforeDateBody,
 )
-from .utils import make_list, make_str
+from .utils import make_list
 
 
-# TODO : built-in query limit chunking, progress bars, fs caching and invalidation
 class PortalClient(PortalClientBase):
     def __init__(
         self,
@@ -178,69 +177,66 @@ class PortalClient(PortalClientBase):
         else:
             return None
 
-    def _get_with_cache(self, func, id, missing_ok, entity_type, include=None):
-        str_id = make_str(id)
-        ids = make_list(str_id)
+    # TODO - reimplement
+    # def _get_with_cache(self, func, id, missing_ok, entity_type, include=None):
+    #    str_id = make_str(id)
+    #    ids = make_list(str_id)
 
-        # pass through the cache first
-        # remove any ids that were found in cache
-        # if `include` filters passed, don't use cache, just query DB, as it's often faster
-        # for a few fields
-        if include is None:
-            cached = self._cache.get(ids, entity_type=entity_type)
-        else:
-            cached = {}
+    #    # pass through the cache first
+    #    # remove any ids that were found in cache
+    #    # if `include` filters passed, don't use cache, just query DB, as it's often faster
+    #    # for a few fields
+    #    if include is None:
+    #        cached = self._cache.get(ids, entity_type=entity_type)
+    #    else:
+    #        cached = {}
 
-        for i in cached:
-            ids.remove(i)
+    #    for i in cached:
+    #        ids.remove(i)
 
-        # if all ids found in cache, no need to go further
-        if len(ids) == 0:
-            if isinstance(id, list):
-                return [cached[i] for i in str_id]
-            else:
-                return cached[str_id]
+    #    # if all ids found in cache, no need to go further
+    #    if len(ids) == 0:
+    #        if isinstance(id, list):
+    #            return [cached[i] for i in str_id]
+    #        else:
+    #            return cached[str_id]
 
-        # molecule getting does *not* support "include"
-        if include is None:
-            payload = {
-                "data": {"ids": ids},
-            }
-        else:
-            if "ids" not in include:
-                include.append("ids")
+    #    # molecule getting does *not* support "include"
+    #    if include is None:
+    #        payload = {
+    #            "data": {"ids": ids},
+    #        }
+    #    else:
+    #        if "ids" not in include:
+    #            include.append("ids")
 
-            payload = {
-                "meta": {"includes": include},
-                "data": {"ids": ids},
-            }
+    #        payload = {
+    #            "meta": {"includes": include},
+    #            "data": {"ids": ids},
+    #        }
 
-        results, to_cache = func(payload)
+    #    results, to_cache = func(payload)
 
-        # we only cache if no field filtering was done
-        if include is None:
-            self._cache.put(to_cache, entity_type=entity_type)
+    #    # we only cache if no field filtering was done
+    #    if include is None:
+    #        self._cache.put(to_cache, entity_type=entity_type)
 
-        # combine cached records with queried results
-        results.update(cached)
+    #    # combine cached records with queried results
+    #    results.update(cached)
 
-        # check that we have results for all ids asked for
-        missing = set(make_list(str_id)) - set(results.keys())
+    #    # check that we have results for all ids asked for
+    #    missing = set(make_list(str_id)) - set(results.keys())
 
-        if missing and not missing_ok:
-            raise KeyError(f"No objects found for `id`: {missing}")
+    #    if missing and not missing_ok:
+    #        raise KeyError(f"No objects found for `id`: {missing}")
 
-        # order the results by input id list
-        if isinstance(id, list):
-            ordered = [results.get(i, None) for i in str_id]
-        else:
-            ordered = results.get(str_id, None)
+    #    # order the results by input id list
+    #    if isinstance(id, list):
+    #        ordered = [results.get(i, None) for i in str_id]
+    #    else:
+    #        ordered = results.get(str_id, None)
 
-        return ordered
-
-    # TODO - needed?
-    def _query_cache(self):
-        pass
+    #    return ordered
 
     def get_server_information(self) -> Dict[str, Any]:
         """Request general information about the server
