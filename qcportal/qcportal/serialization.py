@@ -75,7 +75,7 @@ def deserialize(data: Union[bytes, str], content_type: str):
         raise RuntimeError(f"Unknown content type for deserialization: {content_type}")
 
 
-def serialize(data, content_type: str):
+def serialize(data, content_type: str) -> str:
     if content_type.startswith("application/"):
         content_type = content_type[12:]
 
