@@ -232,7 +232,6 @@ class ComputeManager:
             max_concurrent_tasks=self.max_tasks,
             cores_per_task=(cores_per_task or 0),
             memory_per_task=(memory_per_task or 0),
-            update_frequency=update_frequency,
         )
 
         self.int_sleep = InterruptableSleep()
