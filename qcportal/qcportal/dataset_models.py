@@ -9,7 +9,7 @@ from pydantic import BaseModel, Extra, validator
 from qcelemental.models.types import Array
 
 from qcportal.base_models import RestModelBase, validate_list_to_single
-from qcportal.metadata_models import UpdateMetadata, DeleteMetadata
+from qcportal.metadata_models import DeleteMetadata
 from qcportal.record_models import PriorityEnum, RecordStatusEnum, record_from_datamodel
 from qcportal.utils import make_list
 
@@ -87,6 +87,9 @@ class BaseDataset(BaseModel):
 
         # Values computed outside QCA
         contributed_values: Optional[Dict[str, ContributedValues]] = None
+
+    class Config:
+        extra = Extra.forbid
 
     client: Any
     raw_data: _DataModel  # Meant to be overridden by derived classes

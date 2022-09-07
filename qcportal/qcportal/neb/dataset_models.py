@@ -1,6 +1,6 @@
 from typing import Dict, Any, Union, Optional, List, Iterable
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Extra
 from typing_extensions import Literal
 
 from qcportal.dataset_models import BaseDataset
@@ -14,6 +14,9 @@ from qcportal.utils import make_list
 
 
 class NEBDatasetNewEntry(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     name: str
     comment: Optional[str] = None
     initial_chain: List[Union[Molecule, int]]
@@ -28,12 +31,18 @@ class NEBDatasetEntry(NEBDatasetNewEntry):
 
 # NEB dataset specifications are just qc specifications
 class NEBDatasetSpecification(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     name: str
     specification: NEBSpecification
     description: Optional[str] = None
 
 
 class NEBDatasetRecordItem(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     entry_name: str
     specification_name: str
     record_id: int

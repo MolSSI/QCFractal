@@ -138,12 +138,18 @@ class TaskRecord(BaseModel):
 
 
 class ServiceDependency(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     service_id: int
     record_id: int
     extras: Dict[str, Any]
 
 
 class ServiceRecord(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     id: int
     record_id: int
 
@@ -241,6 +247,9 @@ class BaseRecord(BaseModel):
             ret.add("comments")
 
         return ret
+
+    def __str__(self) -> str:
+        return f"<{self.__class__.__name__} id={self.id} status={self.status}>"
 
     def _assert_online(self):
         if self.offline:

@@ -12,8 +12,11 @@ from ..optimization.record_models import OptimizationSpecification, Optimization
 
 class TorsiondriveKeywords(BaseModel):
     """
-    TorsionDriveRecord options
+    Options for torsiondrive calculations
     """
+
+    class Config:
+        extra = Extra.forbid
 
     dihedrals: List[Tuple[int, int, int, int]] = Field(
         [],

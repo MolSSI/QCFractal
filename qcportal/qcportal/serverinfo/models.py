@@ -104,8 +104,6 @@ class AccessLogSummary(BaseModel):
 
     entries: Dict[str, List[AccessLogSummaryEntry]]
 
-    # TODO - lots of stuff here about analysis, plotting, etc
-
 
 class ErrorLogQueryFilters(QueryModelBase):
     error_id: Optional[List[int]] = None

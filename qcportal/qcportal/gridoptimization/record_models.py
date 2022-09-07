@@ -37,6 +37,9 @@ class ScanDimension(BaseModel):
     A full description of a dimension to scan over.
     """
 
+    class Config:
+        extra = Extra.forbid
+
     type: ScanTypeEnum = Field(..., description=str(ScanTypeEnum.__doc__))
     indices: List[int] = Field(
         ...,
@@ -81,6 +84,9 @@ class GridoptimizationKeywords(BaseModel):
     """
     Keywords for grid optimizations
     """
+
+    class Config:
+        extra = Extra.forbid
 
     scans: List[ScanDimension] = Field(
         [], description="The dimensions to scan along (along with their options) for the Gridoptimization."

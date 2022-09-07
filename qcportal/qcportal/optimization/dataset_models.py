@@ -1,6 +1,6 @@
 from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Extra
 from typing_extensions import Literal
 
 from qcportal.dataset_models import BaseDataset
@@ -11,6 +11,9 @@ from qcportal.utils import make_list
 
 
 class OptimizationDatasetNewEntry(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     name: str
     comment: Optional[str] = None
     initial_molecule: Union[Molecule, int]
@@ -23,12 +26,18 @@ class OptimizationDatasetEntry(OptimizationDatasetNewEntry):
 
 
 class OptimizationDatasetSpecification(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     name: str
     specification: OptimizationSpecification
     description: Optional[str] = None
 
 
 class OptimizationDatasetRecordItem(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     entry_name: str
     specification_name: str
     record_id: int

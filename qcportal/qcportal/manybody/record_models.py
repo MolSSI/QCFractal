@@ -33,6 +33,9 @@ class ManybodyKeywords(BaseModel):
 
 
 class ManybodySpecification(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     program: constr(to_lower=True) = "manybody"
     singlepoint_specification: QCSpecification
     keywords: ManybodyKeywords

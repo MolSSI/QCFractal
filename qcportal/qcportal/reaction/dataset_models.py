@@ -1,6 +1,6 @@
 from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Extra
 from typing_extensions import Literal
 
 from qcportal.dataset_models import BaseDataset
@@ -11,6 +11,9 @@ from qcportal.utils import make_list
 
 
 class ReactionDatasetNewEntry(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     name: str
     comment: Optional[str] = None
     stoichiometries: List[Tuple[float, Union[int, Molecule]]]
@@ -24,6 +27,9 @@ class ReactionDatasetEntryStoichiometry(BaseModel):
 
 
 class ReactionDatasetEntry(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     name: str
     comment: Optional[str] = None
     stoichiometries: List[ReactionDatasetEntryStoichiometry]
@@ -32,12 +38,18 @@ class ReactionDatasetEntry(BaseModel):
 
 
 class ReactionDatasetSpecification(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     name: str
     specification: ReactionSpecification
     description: Optional[str] = None
 
 
 class ReactionDatasetRecordItem(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     entry_name: str
     specification_name: str
     record_id: int

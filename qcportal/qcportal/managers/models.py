@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional, Dict, Any, List, Iterable, Set, Tuple
 
-from pydantic import BaseModel, Field, constr, validator
+from pydantic import BaseModel, Field, constr, validator, Extra
 
 from qcportal.base_models import RestModelBase, QueryProjModelBase
 from ..base_models import QueryIteratorBase
@@ -36,6 +36,9 @@ class ManagerStatusEnum(str, Enum):
 
 
 class ManagerName(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     cluster: str
     hostname: str
     uuid: str
@@ -49,6 +52,9 @@ class ManagerName(BaseModel):
 
 
 class ComputeManagerLogEntry(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     id: int
     manager_id: int
 
@@ -67,6 +73,9 @@ class ComputeManagerLogEntry(BaseModel):
 
 
 class ComputeManager(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     id: int = Field(...)
     name: str = Field(...)
     cluster: str = Field(...)

@@ -56,3 +56,8 @@ class RoleORM(BaseORM):
     permissions = Column(JSON, nullable=False)
 
     __table_args__ = (UniqueConstraint("rolename", name="ux_role_rolename"),)
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "id")
+        return BaseORM.model_dict(self, exclude)

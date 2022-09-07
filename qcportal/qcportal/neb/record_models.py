@@ -17,6 +17,9 @@ class NEBKeywords(BaseModel):
     NEBRecord options
     """
 
+    class Config:
+        extra = Extra.forbid
+
     images: int = Field(
         11,
         description="Number of images that will be used to locate a rough transition state structure.",
@@ -119,6 +122,9 @@ class NEBSinglepoint(BaseModel):
 
 
 class NEBInitialchain(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     id: int
     molecule_id: int
     position: int

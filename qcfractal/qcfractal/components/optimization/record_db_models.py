@@ -34,7 +34,7 @@ class OptimizationTrajectoryORM(BaseORM):
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "optimization_id")
+        exclude = self.append_exclude(exclude, "optimization_id", "position")
         return BaseORM.model_dict(self, exclude)
 
 

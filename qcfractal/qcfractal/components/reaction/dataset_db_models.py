@@ -62,6 +62,11 @@ class ReactionDatasetEntryORM(BaseORM):
         Index("ix_reaction_dataset_entry_name", "name"),
     )
 
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "dataset_id")
+        return BaseORM.model_dict(self, exclude)
+
 
 class ReactionDatasetSpecificationORM(BaseORM):
     __tablename__ = "reaction_dataset_specification"
@@ -78,6 +83,11 @@ class ReactionDatasetSpecificationORM(BaseORM):
         Index("ix_reaction_dataset_specification_name", "name"),
         Index("ix_reaction_dataset_specification_specification_id", "specification_id"),
     )
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "dataset_id", "specification_id")
+        return BaseORM.model_dict(self, exclude)
 
 
 class ReactionDatasetRecordItemORM(BaseORM):
@@ -106,6 +116,11 @@ class ReactionDatasetRecordItemORM(BaseORM):
         Index("ix_reaction_dataset_record_record_id", "record_id"),
         UniqueConstraint("dataset_id", "entry_name", "specification_name", name="ux_reaction_dataset_record_unique"),
     )
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # Remove fields not present in the model
+        exclude = self.append_exclude(exclude, "dataset_id")
+        return BaseORM.model_dict(self, exclude)
 
 
 class ReactionDatasetORM(BaseDatasetORM):

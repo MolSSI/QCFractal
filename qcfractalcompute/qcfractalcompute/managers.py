@@ -13,7 +13,7 @@ from collections import defaultdict
 from typing import Dict, List, Optional, Union
 
 import qcengine as qcng
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, Extra
 from qcelemental.models import Molecule, FailedOperation
 
 from qcportal.serialization import serialize, deserialize
@@ -72,6 +72,9 @@ class QueueStatistics(BaseModel):
     """
     Queue Manager Job statistics
     """
+
+    class Config(BaseModel.Config):
+        extra = Extra.forbid
 
     # Dynamic quantities
     total_successful_tasks: int = 0

@@ -1,6 +1,6 @@
 from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Extra
 from typing_extensions import Literal
 
 from qcportal.dataset_models import BaseDataset
@@ -11,6 +11,9 @@ from qcportal.utils import make_list
 
 
 class TorsiondriveDatasetNewEntry(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     name: str
     comment: Optional[str] = None
     initial_molecules: List[Union[Molecule, int]]
@@ -26,12 +29,18 @@ class TorsiondriveDatasetEntry(TorsiondriveDatasetNewEntry):
 # Torsiondrive dataset specifications are just optimization specifications
 # The torsiondrive keywords are stored in the entries ^^
 class TorsiondriveDatasetSpecification(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     name: str
     specification: TorsiondriveSpecification
     description: Optional[str] = None
 
 
 class TorsiondriveDatasetRecordItem(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     entry_name: str
     specification_name: str
     record_id: int

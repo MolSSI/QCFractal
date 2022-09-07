@@ -39,6 +39,9 @@ class OptimizationSpecification(BaseModel):
 
 
 class OptimizationTrajectory(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     singlepoint_id: int
     singlepoint_record: Optional[SinglepointRecord._DataModel]
 

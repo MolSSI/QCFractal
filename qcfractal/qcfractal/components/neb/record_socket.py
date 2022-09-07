@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import sqlalchemy.orm.attributes
 import tabulate
-from pydantic import BaseModel
+from pydantic import BaseModel, Extra
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
 from sqlalchemy.orm import contains_eager
@@ -61,6 +61,7 @@ class NEBServiceState(BaseModel):
     """
 
     class Config(BaseModel.Config):
+        extra = Extra.forbid
         allow_mutation = True
         validate_assignment = True
 

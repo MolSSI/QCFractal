@@ -1,6 +1,6 @@
 from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Extra
 from typing_extensions import Literal
 
 from qcportal.dataset_models import BaseDataset
@@ -14,6 +14,9 @@ from qcportal.utils import make_list
 
 
 class GridoptimizationDatasetNewEntry(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     name: str
     comment: Optional[str] = None
     initial_molecule: Union[Molecule, int]
@@ -26,15 +29,19 @@ class GridoptimizationDatasetEntry(GridoptimizationDatasetNewEntry):
     initial_molecule: Molecule
 
 
-# Gridoptimization dataset specifications are just optimization specifications
-# The gridoptimization keywords are stored in the entries ^^
 class GridoptimizationDatasetSpecification(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     name: str
     specification: GridoptimizationSpecification
     description: Optional[str] = None
 
 
 class GridoptimizationDatasetRecordItem(BaseModel):
+    class Config:
+        extra = Extra.forbid
+
     entry_name: str
     specification_name: str
     record_id: int

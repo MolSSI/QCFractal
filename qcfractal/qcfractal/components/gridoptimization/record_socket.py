@@ -7,7 +7,7 @@ from typing import List, Dict, Tuple, Optional, Sequence, Any, Union, Set, TYPE_
 
 import numpy as np
 import sqlalchemy.orm.attributes
-from pydantic import BaseModel, parse_obj_as
+from pydantic import BaseModel, Extra, parse_obj_as
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import contains_eager
@@ -163,6 +163,7 @@ class GridoptimizationServiceState(BaseModel):
     """
 
     class Config(BaseModel.Config):
+        extra = Extra.forbid
         allow_mutation = True
         validate_assignment = True
 

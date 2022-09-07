@@ -83,6 +83,9 @@ class PermissionsPolicy(BaseModel):
     Permissions assigned to a role
     """
 
+    class Config:
+        extra = Extra.forbid
+
     Statement: List[PolicyStatement] = Field(..., description="Permission statements")
 
 
@@ -90,6 +93,9 @@ class RoleInfo(BaseModel):
     """
     Information about a role
     """
+
+    class Config:
+        extra = Extra.forbid
 
     rolename: str = Field(..., description="The name of the role")
     permissions: PermissionsPolicy = Field(..., description="The permissions associated with this role")
