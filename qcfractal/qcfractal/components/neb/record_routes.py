@@ -27,7 +27,7 @@ def add_neb_records_v1(body_data: NEBAddBody):
 
 @api_v1.route("/records/neb/<int:record_id>/singlepoints", methods=["GET"])
 @wrap_route("READ")
-def get_neb_singlepoints_v1(record_id: int, *, url_params: ProjURLParameters):
+def get_neb_singlepoints_v1(record_id: int, url_params: ProjURLParameters):
     # adjust the includes/excludes to refer to the singlepoints
     ch_includes, ch_excludes = prefix_projection(url_params, "singlepoints")
     rec = storage_socket.records.neb.get([record_id], include=ch_includes, exclude=ch_excludes)
