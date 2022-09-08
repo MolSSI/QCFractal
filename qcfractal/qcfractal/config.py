@@ -25,6 +25,23 @@ def update_nested_dict(d, u):
     return d
 
 
+def _make_abs_path(path: Optional[str], base_folder: str, default_filename: Optional[str]) -> Optional[str]:
+    # No path specified, no default
+    if path is None and default_filename is None:
+        return None
+
+    # Path isn't specified, but default is given
+    if path is None:
+        path = default_filename
+
+    path = os.path.expanduser(path)
+    if os.path.isabs(path):
+        return path
+    else:
+        path = os.path.join(base_folder, path)
+        return os.path.abspath(path)
+
+
 class ConfigCommon:
     case_sensitive = False
     extra = "forbid"
@@ -110,26 +127,14 @@ class DatabaseConfig(ConfigBase):
 
     @validator("data_directory")
     def _check_data_directory(cls, v, values):
-        if v is None and values["own"] is False:
-            return None
-        elif v is None and values["own"] is True:
-            ret = os.path.join(values["base_folder"], "postgres")
+        if values["own"] is True:
+            return _make_abs_path(v, values["base_folder"], "postgres")
         else:
-            ret = v
-
-        ret = os.path.expanduser(ret)
-
-        return ret
+            return None
 
     @validator("logfile")
     def _check_logfile(cls, v, values):
-        if v is None:
-            ret = os.path.join(values["base_folder"], "qcfractal_database.log")
-        else:
-            ret = v
-
-        ret = os.path.expanduser(ret)
-        return ret
+        return _make_abs_path(v, values["base_folder"], "qcfractal_database.log")
 
     @property
     def uri(self):
@@ -296,13 +301,11 @@ class FractalConfig(ConfigBase):
 
     @validator("geo_file_path")
     def _check_geo_file_path(cls, v, values):
-        if v is None:
-            ret = os.path.join(values["base_folder"], "GeoLite2-City.mmdb")
-        else:
-            ret = v
+        return _make_abs_path(v, values["base_folder"], "GeoLite2-City.mmdb")
 
-        ret = os.path.expanduser(ret)
-        return ret
+    @validator("logfile")
+    def _check_logfile_path(cls, v, values):
+        return _make_abs_path(v, values["base_folder"], None)
 
     @validator("loglevel")
     def _check_loglevel(cls, v):
