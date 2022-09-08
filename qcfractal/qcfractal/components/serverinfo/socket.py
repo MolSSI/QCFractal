@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 from sqlalchemy import and_, func, text, select, delete
@@ -22,7 +22,7 @@ from qcportal.serverinfo import (
     ErrorLogQueryFilters,
     ServerStatsQueryFilters,
 )
-from .db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM
+from .db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM, MessageOfTheDayORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -41,6 +41,9 @@ class ServerInfoSocket:
 
         # Set up access logging
         self._access_log_enabled = root_socket.qcf_config.log_access
+
+        # MOTD contents
+        self._load_motd()
 
         self._geoip2_reader = None
 
@@ -88,6 +91,41 @@ class ServerInfoSocket:
             pass
 
         return out
+
+    def _load_motd(self, *, session: Optional[Session] = None):
+        stmt = select(MessageOfTheDayORM).order_by(MessageOfTheDayORM.id)
+        with self.root_socket.optional_session(session, True) as session:
+            motd_orm = session.execute(stmt).scalar_one_or_none()
+            if motd_orm is None:
+                self._motd = ""
+            else:
+                self._motd = motd_orm.motd
+
+        self._motd_time = datetime.utcnow()
+
+    def set_motd(self, new_motd: str, *, session: Optional[Session] = None):
+        stmt = select(MessageOfTheDayORM).order_by(MessageOfTheDayORM.id)
+        with self.root_socket.optional_session(session) as session:
+            motd_orm = session.execute(stmt).scalar_one_or_none()
+            if motd_orm is None:
+                motd_orm = MessageOfTheDayORM(motd=new_motd)
+                session.add(motd_orm)
+            else:
+                motd_orm.motd = new_motd
+
+        self._motd = new_motd
+        self._motd_time = datetime.utcnow()
+
+    def get_motd(self, *, session: Optional[Session] = None):
+        # If file is updated, reload it
+        # Only load every 10 seconds though
+        now = datetime.utcnow()
+        checktime = self._motd_time + timedelta(seconds=10)
+
+        if now > checktime:
+            self._load_motd(session=session)
+
+        return self._motd
 
     def save_access(self, log_data: Dict[str, Any], *, session: Optional[Session] = None) -> None:
         """

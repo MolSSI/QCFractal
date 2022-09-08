@@ -28,9 +28,22 @@ def get_information():
         "api_limits": qcf_cfg.api_limits.dict(),
         "client_version_lower_limit": client_version_lower_limit,
         "client_version_upper_limit": client_version_upper_limit,
+        "motd": storage_socket.serverinfo.get_motd(),
     }
 
     return public_info
+
+
+@api_v1.route("/motd", methods=["GET"])
+@wrap_route("READ")
+def get_motd():
+    return storage_socket.serverinfo.get_motd()
+
+
+@api_v1.route("/motd", methods=["PUT"])
+@wrap_route("WRITE")
+def set_motd(body_data: str):
+    return storage_socket.serverinfo.set_motd(body_data)
 
 
 @api_v1.route("/access_logs/query", methods=["POST"])

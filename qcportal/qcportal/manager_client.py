@@ -20,6 +20,7 @@ class ManagerClient(PortalClientBase):
         username: Optional[str] = None,
         password: Optional[str] = None,
         verify: bool = True,
+        show_motd: bool = False,
     ) -> None:
         """Initializes a ManagerClient
 
@@ -37,9 +38,13 @@ class ManagerClient(PortalClientBase):
             Verifies the SSL connection with a third party server. This may be False if a
             FractalServer was not provided a SSL certificate and defaults back to self-signed
             SSL keys.
+        show_motd
+            If a Message-of-the-Day is available, display it
         """
 
-        PortalClientBase.__init__(self, address=address, username=username, password=password, verify=verify)
+        PortalClientBase.__init__(
+            self, address=address, username=username, password=password, verify=verify, show_motd=show_motd
+        )
 
         self.manager_name_data = name_data
 

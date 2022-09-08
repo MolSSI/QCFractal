@@ -101,3 +101,14 @@ class ServerStatsLogORM(BaseORM):
     db_table_information = Column(JSON)
 
     __table_args__ = (Index("ix_server_stats_log_timestamp", "timestamp"),)
+
+
+class MessageOfTheDayORM(BaseORM):
+    """
+    Table for storing the Message-of-the-Day
+    """
+
+    __tablename__ = "motd"
+
+    id = Column(Integer, primary_key=True)
+    motd = Column(String, nullable=False)

@@ -49,6 +49,7 @@ class PortalClientBase:
         username: Optional[str] = None,
         password: Optional[str] = None,
         verify: bool = True,
+        show_motd: bool = True,
     ) -> None:
         """Initializes a PortalClient instance from an address and verification information.
 
@@ -64,6 +65,8 @@ class PortalClientBase:
             Verifies the SSL connection with a third party server. This may be False if a
             FractalServer was not provided a SSL certificate and defaults back to self-signed
             SSL keys.
+        show_motd
+            If a Message-of-the-Day is available, display it
         """
 
         if not address.startswith("http://") and not address.startswith("https://"):
@@ -118,6 +121,14 @@ class PortalClientBase:
                 f"client versions of [{str(client_version_lower_limit)}, {str(client_version_upper_limit)}]."
                 f"You may need to upgrade or downgrade"
             )
+
+        motd = self.server_info.get("motd", "")
+        if show_motd and motd:
+            print("*" * 10 + "- Message-of-the-Day from the server -" + "*" * 10)
+            print()
+            print(motd)
+            print()
+            print("*" * 14 + "- End of Message-of-the-Day -" + "*" * 15)
 
     @classmethod
     def from_file(cls, config_path: Optional[str] = None, section: Optional[str] = None):

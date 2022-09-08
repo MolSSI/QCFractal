@@ -113,6 +113,7 @@ class PortalClient(PortalClientBase):
         username: Optional[str] = None,
         password: Optional[str] = None,
         verify: bool = True,
+        show_motd: bool = True,
         cache: Optional[Union[str, Path]] = None,
         max_memcache_size: Optional[int] = 1000000,
     ) -> None:
@@ -130,6 +131,8 @@ class PortalClient(PortalClientBase):
             Verifies the SSL connection with a third party server. This may be False if a
             FractalServer was not provided a SSL certificate and defaults back to self-signed
             SSL keys.
+        show_motd
+            If a Message-of-the-Day is available, display it
         cache
             Path to directory to use for cache.
             If None, only in-memory caching used.
@@ -139,7 +142,7 @@ class PortalClient(PortalClientBase):
             at the cost of higher memory usage.
         """
 
-        PortalClientBase.__init__(self, address, username, password, verify)
+        PortalClientBase.__init__(self, address, username, password, verify, show_motd)
         self._cache = PortalCache(self, cachedir=cache, max_memcache_size=max_memcache_size)
 
     def __repr__(self) -> str:
@@ -249,6 +252,23 @@ class PortalClient(PortalClientBase):
 
         # Request the info, and store here for later use
         return self._auto_request("get", "v1/information", None, None, Dict[str, Any], None, None)
+
+    #################################################
+    # Message-of-the-Day (MOTD)
+    #################################################
+    def get_motd(self) -> str:
+        """
+        Gets the Message-of-the-Day (MOTD) from the server
+        """
+
+        return self._auto_request("get", "v1/motd", None, None, str, None, None)
+
+    def set_motd(self, new_motd: str) -> str:
+        """
+        Sets the Message-of-the-Day (MOTD) on the server
+        """
+
+        return self._auto_request("put", "v1/motd", str, None, None, new_motd, None)
 
     ##############################################################
     # Datasets
