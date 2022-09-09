@@ -11,7 +11,6 @@ from qcportal.serialization import deserialize, serialize
 
 def wrap_route(
     requested_action,
-    check_access: bool = True,
 ) -> Callable:
     """
     Decorator that wraps a Flask route function, providing useful functionality
@@ -36,16 +35,13 @@ def wrap_route(
     ----------
     requested_action
         The overall type of action that this route handles (read, write, etc)
-    check_access
-        If True, check to make sure the user has permission to access this route
     """
 
     def decorate(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
 
-            if check_access:
-                assert_role_permissions(requested_action)
+            assert_role_permissions(requested_action)
 
             ##################################################################
             # If we got here, then the user is allowed access to this endpoint
