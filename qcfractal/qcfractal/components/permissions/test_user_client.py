@@ -349,14 +349,18 @@ def test_user_no_update_via_me(secure_snowflake: TestingSnowflake):
         client._auto_request("put", "v1/me", UserInfo, None, UserInfo, uinfo, None)
 
 
-def test_user_client_no_modify(secure_snowflake_allow_read: TestingSnowflake):
+def test_user_client_no_me(secure_snowflake_allow_read: TestingSnowflake):
     """
-    Cannot modify user if not logged in
+    Cannot get/modify user if not logged in
     """
     client = secure_snowflake_allow_read.client()
 
     with pytest.raises(RuntimeError, match=r"not logged in"):
         client.get_user()
+
+    # through the raw api
+    with pytest.raises(PortalRequestError, match=r"not logged in"):
+        client._auto_request("get", "v1/me", None, None, UserInfo, None, None)
 
     uinfo = UserInfo(username="read_user", role="read", fullname="New Full Name", enabled=True)
 

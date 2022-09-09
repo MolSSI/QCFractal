@@ -1,9 +1,23 @@
+from typing import List, Tuple
+
 from flask import request, current_app, jsonify
-from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import (
+    create_access_token,
+    create_refresh_token,
+    jwt_required,
+    verify_jwt_in_request,
+    get_jwt,
+    get_jwt_identity,
+)
 
 from qcfractal.auth_v1.blueprint import auth_v1
+from qcfractal.auth_v1.policyuniverse import Policy
 from qcfractal.flask_app import storage_socket
+from qcfractal.flask_app.helpers import get_unauth_read_permissions, get_all_endpoints
 from qcportal.exceptions import AuthenticationFailure
+
+# Endpoints not accessible if security is disabled
+_protected_endpoints = {"users", "roles", "me"}
 
 
 @auth_v1.route("/login", methods=["POST"])
@@ -54,6 +68,47 @@ def refresh():
         )
     }
     return jsonify(ret), 200
+
+
+@auth_v1.route("/allowed", methods=["GET"])
+def get_allowed_actions():
+    # Read in config parameters
+    security_enabled: bool = current_app.config["QCFRACTAL_CONFIG"].enable_security
+    allow_unauthenticated_read: bool = current_app.config["QCFRACTAL_CONFIG"].allow_unauthenticated_read
+
+    all_endpoints = get_all_endpoints()
+    all_actions = {"READ", "WRITE", "DELETE"}
+
+    allowed: List[Tuple[str, str]] = []
+
+    # JWT is optional
+    verify_jwt_in_request(optional=True)
+
+    # if no auth required, always allowed, except for protected endpoints
+    if security_enabled is False:
+        for endpoint in all_endpoints:
+            endpoint_last = endpoint.split("/")[-1]
+            if endpoint_last in _protected_endpoints:
+                continue
+            allowed.extend((endpoint, x) for x in all_actions)
+    else:
+        read_permissions = get_unauth_read_permissions()
+        read_policy = Policy(read_permissions)
+
+        identity = get_jwt_identity()  # may be None
+        claims = get_jwt()
+        permissions = claims.get("permissions", {})
+        policy = Policy(permissions)
+
+        for endpoint in all_endpoints:
+            for action in all_actions:
+                context = {"Principal": identity, "Action": action, "Resource": endpoint}
+                if policy.evaluate(context):
+                    allowed.append((endpoint, action))
+                elif allow_unauthenticated_read and read_policy.evaluate(context) and not endpoint.endswith("/me"):
+                    allowed.append((endpoint, action))
+
+    return jsonify(allowed), 200
 
 
 # @auth.route("/fresh-login", methods=["POST"])

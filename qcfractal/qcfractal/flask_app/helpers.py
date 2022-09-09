@@ -11,12 +11,39 @@ from werkzeug.exceptions import Forbidden, BadRequest
 from qcfractal.auth_v1.policyuniverse import Policy
 from qcfractal.flask_app import storage_socket
 
-_read_permissions: Dict[str, Dict[str, List[Dict[str, str]]]] = {}
-
-
 if TYPE_CHECKING:
-    from typing import List, Optional, Tuple
+    from typing import List, Optional, Tuple, Set
     from qcportal.base_models import ProjURLParameters
+
+_unauth_read_permissions: Dict[str, Dict[str, List[Dict[str, str]]]] = {}
+_all_endpoints: Set[str] = set()
+
+
+def get_unauth_read_permissions():
+    global _unauth_read_permissions
+
+    if not _unauth_read_permissions:
+        _unauth_read_permissions = storage_socket.roles.get("read")["permissions"]
+    return _unauth_read_permissions
+
+
+def get_all_endpoints() -> Set[str]:
+    """
+    Get a list of all endpoints on the server
+
+    These endpoints are the first three parts of the resource (ie,
+    /api/v1/molecules, not /api/v1/molecules/bulkGet)
+    """
+    global _all_endpoints
+
+    if not _all_endpoints:
+        for url in current_app.url_map.iter_rules():
+            endpoint = get_url_major_component(url.rule)
+            # Don't add "static"
+            if not endpoint.startswith("/static"):
+                _all_endpoints.add(endpoint)
+
+    return _all_endpoints
 
 
 def get_url_major_component(url: str):
@@ -26,7 +53,7 @@ def get_url_major_component(url: str):
     For example, /api/v1/molecule/a/b/c -> /api/v1/molecule
     """
 
-    components = urlparse(request.url).path.split("/")
+    components = urlparse(url).path.split("/")
     resource = "/".join(components[:4])
 
     # Force leading slash, but only one
@@ -62,7 +89,7 @@ def prefix_projection(proj_params: ProjURLParameters, prefix: str) -> Tuple[Opti
     return ch_includes, ch_excludes
 
 
-def check_role_permissions(app, requested_action: str):
+def assert_role_permissions(requested_action: str):
     """
     Check for access to the URL given permissions in the JWT token in the request headers
 
@@ -75,17 +102,14 @@ def check_role_permissions(app, requested_action: str):
     requested_action = requested_action.upper()
 
     # Read in config parameters
-    security_enabled: bool = app.config["QCFRACTAL_CONFIG"].enable_security
-    allow_unauthenticated_read: bool = app.config["QCFRACTAL_CONFIG"].allow_unauthenticated_read
+    security_enabled: bool = current_app.config["QCFRACTAL_CONFIG"].enable_security
+    allow_unauthenticated_read: bool = current_app.config["QCFRACTAL_CONFIG"].allow_unauthenticated_read
 
     # if no auth required, always allowed
     if security_enabled is False:
         return
 
-    # load read permissions from DB if not already loaded
-    global _read_permissions
-    if not _read_permissions:
-        _read_permissions = storage_socket.roles.get("read")["permissions"]
+    read_permissions = get_unauth_read_permissions()
 
     # Check for the JWT in the header
     if allow_unauthenticated_read:
@@ -114,7 +138,7 @@ def check_role_permissions(app, requested_action: str):
             if not allow_unauthenticated_read:
                 raise Forbidden(f"User {identity} is not authorized to access '{resource}'")
 
-            if not Policy(_read_permissions).evaluate(context):
+            if not Policy(read_permissions).evaluate(context):
                 raise Forbidden(f"User {identity} is not authorized to access '{resource}'")
 
         # Store the user in the global app/request context

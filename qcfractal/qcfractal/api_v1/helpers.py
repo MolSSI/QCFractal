@@ -2,10 +2,10 @@ from functools import wraps
 from typing import Callable
 
 import pydantic
-from flask import current_app, request, Response
+from flask import request, Response
 from werkzeug.exceptions import BadRequest
 
-from qcfractal.flask_app.helpers import check_role_permissions
+from qcfractal.flask_app.helpers import assert_role_permissions
 from qcportal.serialization import deserialize, serialize
 
 
@@ -45,7 +45,7 @@ def wrap_route(
         def wrapper(*args, **kwargs):
 
             if check_access:
-                check_role_permissions(current_app, requested_action)
+                assert_role_permissions(requested_action)
 
             ##################################################################
             # If we got here, then the user is allowed access to this endpoint
