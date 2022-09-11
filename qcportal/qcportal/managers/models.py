@@ -165,7 +165,7 @@ class ManagerQueryIterator(QueryIteratorBase):
         api_limit = client.api_limits["get_managers"] // 4
         QueryIteratorBase.__init__(self, client, query_filters, api_limit)
 
-    def _request(self) -> Tuple[Optional[QueryMetadata], List[ManagerQueryFilters]]:
+    def _request(self) -> Tuple[Optional[QueryMetadata], List[ComputeManager]]:
         return self.client._auto_request(
             "post",
             "v1/managers/query",

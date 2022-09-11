@@ -2600,7 +2600,7 @@ class PortalClient(PortalClientBase):
         }
 
         if include:
-            filter_dict["include"] = ["*", "log"]
+            filter_dict["include"] = ComputeManager.transform_includes(include)
 
         filter_data = ManagerQueryFilters(**filter_dict)
         return ManagerQueryIterator(self, filter_data)
