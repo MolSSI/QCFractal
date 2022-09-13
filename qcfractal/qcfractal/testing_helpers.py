@@ -18,15 +18,32 @@ mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-
 mname2 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="2234-5678-1234-5678")
 
 
+class DummyJobStatus:
+    """
+    Functor for updating progress and cancelling internal jobs
+
+    This is a dummy version used for testing
+    """
+
+    def __init__(self):
+        pass
+
+    def update_progress(self, progress: int):
+        pass
+
+    def cancelled(self) -> bool:
+        return False
+
+
 class TestingSnowflake(FractalSnowflake):
     """
     A snowflake class used for testing
 
     This mostly behaves like FractalSnowflake, but
-    allows for some extra features such as manual handling of periodics
+    allows for some extra features such as manual handling of internal jobs
     and creating storage sockets from an instance.
 
-    By default, the periodics and worker subprocesses are not started.
+    By default, the job runner and worker subprocesses are not started.
     """
 
     def __init__(
@@ -128,19 +145,19 @@ class TestingSnowflake(FractalSnowflake):
             self._flask_proc.stop()
             self._flask_started.clear()
 
-    def start_periodics(self) -> None:
+    def start_job_runner(self) -> None:
         """
-        Starts the periodics subprocess
+        Starts the job runner subprocess
         """
-        if not self._periodics_proc.is_alive():
-            self._periodics_proc.start()
+        if not self._job_runner_proc.is_alive():
+            self._job_runner_proc.start()
 
-    def stop_periodics(self) -> None:
+    def stop_job_runner(self) -> None:
         """
-        Stops the periodics subprocess
+        Stops the job_runner subprocess
         """
-        if self._periodics_proc.is_alive():
-            self._periodics_proc.stop()
+        if self._job_runner_proc.is_alive():
+            self._job_runner_proc.stop()
 
     def client(self, username=None, password=None) -> PortalClient:
         """
@@ -211,7 +228,8 @@ def run_service_constropt(
     r = 1
 
     while n_iterations < max_iterations:
-        r = storage_socket.services.iterate_services()
+        with storage_socket.session_scope() as session:
+            r = storage_socket.services.iterate_services(session, DummyJobStatus())
 
         if r == 0:
             break
@@ -279,7 +297,8 @@ def run_service_simple(
     r = 1
 
     while n_iterations < max_iterations:
-        r = storage_socket.services.iterate_services()
+        with storage_socket.session_scope() as session:
+            r = storage_socket.services.iterate_services(session, DummyJobStatus())
 
         if r == 0:
             break

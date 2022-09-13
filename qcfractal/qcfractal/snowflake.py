@@ -18,7 +18,7 @@ from qcportal import PortalClient
 from qcportal.record_models import RecordStatusEnum
 from .config import FractalConfig, DatabaseConfig, update_nested_dict
 from .flask_app.flask_app import FlaskProcess
-from .periodics import PeriodicsProcess
+from .job_runner import FractalJobRunnerProcess
 from .port_util import find_open_port
 from .postgres_harness import TemporaryPostgres
 from .process_runner import ProcessBase, ProcessRunner
@@ -135,12 +135,12 @@ class FractalSnowflake:
         self._flask_started = multiprocessing.Event()
         flask = FlaskProcess(self._qcf_config, self._finished_queue, self._flask_started)
 
-        periodics = PeriodicsProcess(self._qcf_config, self._finished_queue)
+        job_runner = FractalJobRunnerProcess(self._qcf_config)
 
         # Don't auto start here. we will handle it later
         self._flask_proc = ProcessRunner("snowflake_flask", flask, False)
 
-        self._periodics_proc = ProcessRunner("snowflake_periodics", periodics, False)
+        self._job_runner_proc = ProcessRunner("snowflake_job_runner", job_runner, False)
 
         compute = SnowflakeComputeProcess(self._qcf_config, self._compute_workers)
         self._compute_proc = ProcessRunner("snowflake_compute", compute, False)
@@ -148,10 +148,12 @@ class FractalSnowflake:
         if start:
             self.start()
 
-        self._finalizer = weakref.finalize(self, self._stop, self._compute_proc, self._flask_proc, self._periodics_proc)
+        self._finalizer = weakref.finalize(
+            self, self._stop, self._compute_proc, self._flask_proc, self._job_runner_proc
+        )
 
     @classmethod
-    def _stop(cls, compute_proc, flask_proc, periodics_proc):
+    def _stop(cls, compute_proc, flask_proc, job_runner_proc):
         ####################################################################################
         # This is written as a class method so that it can be called by a weakref finalizer
         ####################################################################################
@@ -160,7 +162,7 @@ class FractalSnowflake:
         # First the compute, since it will communicate its demise to the api server
         # Flask must be last. It was started first and owns the db
         compute_proc.stop()
-        periodics_proc.stop()
+        job_runner_proc.stop()
         flask_proc.stop()
 
     def wait_for_flask(self):
@@ -197,7 +199,7 @@ class FractalSnowflake:
         Stops the server
         """
 
-        self._stop(self._compute_proc, self._flask_proc, self._periodics_proc)
+        self._stop(self._compute_proc, self._flask_proc, self._job_runner_proc)
         self._flask_started.clear()
 
     def start(self):
@@ -210,8 +212,8 @@ class FractalSnowflake:
 
         self.wait_for_flask()
 
-        if not self._periodics_proc.is_alive():
-            self._periodics_proc.start()
+        if not self._job_runner_proc.is_alive():
+            self._job_runner_proc.start()
         if self._compute_workers > 0 and not self._compute_proc.is_alive():
             self._compute_proc.start()
 

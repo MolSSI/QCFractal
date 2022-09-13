@@ -19,7 +19,7 @@ from qcfractal.components.singlepoint.testing_helpers import (
 )
 from qcfractal.components.testing_helpers import populate_records_status
 from qcfractal.components.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
-from qcfractal.testing_helpers import TestingSnowflake
+from qcfractal.testing_helpers import TestingSnowflake, DummyJobStatus
 from qcportal import PortalRequestError
 from qcportal.managers import ManagerName
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
@@ -249,7 +249,8 @@ def test_record_client_modify_service(snowflake_client: PortalClient, storage_so
 
     svc_id, _ = submit_td_test_data(storage_socket, "td_H2O2_psi4_hf", "test_tag", PriorityEnum.high)
 
-    storage_socket.services.iterate_services()
+    with storage_socket.session_scope() as session:
+        storage_socket.services.iterate_services(session, DummyJobStatus())
 
     rec = storage_socket.records.get([svc_id], include=["*", "service", "service.dependencies.record.task"])
     tasks = [x["record"]["task"] for x in rec[0]["service"]["dependencies"]]

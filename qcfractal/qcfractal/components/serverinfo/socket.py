@@ -27,6 +27,7 @@ from .db_models import AccessLogORM, InternalErrorLogORM, ServerStatsLogORM, Mes
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
+    from qcfractal.components.internal_jobs.status import JobStatus
     from typing import Dict, Any, List, Optional, Tuple
 
 
@@ -38,6 +39,7 @@ class ServerInfoSocket:
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
+        self._server_stats_frequency = root_socket.qcf_config.statistics_frequency
 
         # Set up access logging
         self._access_log_enabled = root_socket.qcf_config.log_access
@@ -69,6 +71,34 @@ class ServerInfoSocket:
                         f"https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz\n"
                         f"Then, set the geo_file_path in qcfractal_config.yaml in your base_folder."
                     )
+
+        # Delay this. Don't do it right at startup
+        self.add_internal_job(self._server_stats_frequency)
+
+    def add_internal_job(self, delay: float, *, session: Optional[Session] = None):
+        """
+        Adds an internal job to update the server statistics
+
+        Parameters
+        ----------
+        delay
+            Schedule for this many seconds in the future
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
+        with self.root_socket.optional_session(session) as session:
+            x = self.root_socket.internal_jobs.add(
+                "update_server_stats",
+                datetime.utcnow() + timedelta(seconds=delay),
+                "serverinfo.update_server_stats",
+                {},
+                user=None,
+                unique_name=True,
+                after_function="serverinfo.add_internal_job",
+                after_function_kwargs={"delay": self._server_stats_frequency},
+                session=session,
+            )
 
     def _get_geoip2_data(self, ip_address: str) -> Dict[str, Any]:
         """
@@ -171,7 +201,7 @@ class ServerInfoSocket:
             session.flush()
             return log.id
 
-    def update_server_stats(self, *, session: Optional[Session] = None):
+    def update_server_stats(self, session: Session, job_status: JobStatus) -> None:
         """
         Obtains some statistics about the server and stores them in the database
 

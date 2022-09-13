@@ -11,6 +11,7 @@ from .serverinfo import db_models, routes
 from .managers import db_models, routes
 from .tasks import db_models, routes
 from .services import db_models
+from .internal_jobs import db_models, routes
 
 from . import record_db_models, dataset_db_models, dataset_routes, record_routes
 from .singlepoint import record_db_models, dataset_db_models, dataset_routes, record_routes

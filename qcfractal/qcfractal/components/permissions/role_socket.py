@@ -45,6 +45,7 @@ default_roles: Dict[str, Any] = {
                     "/api/v1/server_errors",
                     "/api/v1/access_logs",
                     "/api/v1/tasks",
+                    "/api/v1/internal_jobs",
                 ],
             },
         ]
@@ -78,6 +79,7 @@ default_roles: Dict[str, Any] = {
                     "/api/v1/server_errors",
                     "/api/v1/access_logs",
                     "/api/v1/tasks",
+                    "/api/v1/internal_jobs",
                 ],
             },
             {

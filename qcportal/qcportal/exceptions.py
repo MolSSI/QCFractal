@@ -51,5 +51,9 @@ class LimitExceededError(UserReportableError):
     pass
 
 
+class InvalidUpdateError(UserReportableError):
+    pass
+
+
 class ComputeManagerError(UserReportableError):
     pass

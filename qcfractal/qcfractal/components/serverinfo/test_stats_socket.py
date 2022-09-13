@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from qcfractal.testing_helpers import DummyJobStatus
 from qcportal.serverinfo import ServerStatsQueryFilters
 
 if TYPE_CHECKING:
@@ -18,7 +19,8 @@ def test_serverinfo_socket_update_stats(storage_socket: SQLAlchemySocket):
     time_0 = datetime.utcnow()
 
     # Force saving the stats
-    storage_socket.serverinfo.update_server_stats()
+    with storage_socket.session_scope() as session:
+        storage_socket.serverinfo.update_server_stats(session=session, job_status=DummyJobStatus())
 
     time_1 = datetime.utcnow()
 
@@ -34,7 +36,8 @@ def test_serverinfo_socket_update_stats(storage_socket: SQLAlchemySocket):
     time_0 = datetime.utcnow()
 
     # Force saving the stats again
-    storage_socket.serverinfo.update_server_stats()
+    with storage_socket.session_scope() as session:
+        storage_socket.serverinfo.update_server_stats(session=session, job_status=DummyJobStatus())
 
     # Should get the latest now
     meta, stats2 = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
@@ -48,7 +51,8 @@ def test_serverinfo_socket_update_stats(storage_socket: SQLAlchemySocket):
     assert stats2[1]["timestamp"] < time_0
 
     # one more update
-    storage_socket.serverinfo.update_server_stats()
+    with storage_socket.session_scope() as session:
+        storage_socket.serverinfo.update_server_stats(session=session, job_status=DummyJobStatus())
 
     meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters(before=datetime.utcnow()))
     assert meta.n_found == 3

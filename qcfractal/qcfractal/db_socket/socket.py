@@ -78,6 +78,7 @@ class SQLAlchemySocket:
         self.Session = sessionmaker(bind=self.engine, future=True)
 
         # Create/initialize the subsockets
+        from ..components.internal_jobs.socket import InternalJobSocket
         from ..components.molecules.socket import MoleculeSocket
         from ..components.permissions.user_socket import UserSocket
         from ..components.permissions.role_socket import RoleSocket
@@ -88,6 +89,10 @@ class SQLAlchemySocket:
         from ..components.record_socket import RecordSocket
         from ..components.dataset_socket import DatasetSocket
 
+        # Internal job socket goes first - others may depend on this
+        self.internal_jobs = InternalJobSocket(self)
+
+        # Then the rest
         self.serverinfo = ServerInfoSocket(self)
         self.molecules = MoleculeSocket(self)
         self.datasets = DatasetSocket(self)
@@ -221,6 +226,13 @@ class SQLAlchemySocket:
 
         if heads[0] != current_rev:
             raise RuntimeError("Database needs migration. Please run `qcfractal-server upgrade` (after backing up!)")
+
+    def get_connection(self):
+        """
+        Retrieve a raw connection object from the database engine
+        """
+
+        return self.engine.raw_connection()
 
     @contextmanager
     def session_scope(self, read_only: bool = False):

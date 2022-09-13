@@ -24,9 +24,9 @@ def test_periodics_server_stats(snowflake: TestingSnowflake, storage_socket: SQL
     meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert meta.n_found == 0
 
-    sleep_time = snowflake._qcf_config.statistics_frequency
+    sleep_time = snowflake._qcf_config.statistics_frequency + 0.2
 
-    snowflake.start_periodics()
+    snowflake.start_job_runner()
 
     for i in range(5):
         time_0 = datetime.utcnow()
@@ -52,7 +52,7 @@ def test_periodics_manager_heartbeats(snowflake: TestingSnowflake, storage_socke
         tags=["tag1"],
     )
 
-    snowflake.start_periodics()
+    snowflake.start_job_runner()
 
     for i in range(max_missed + 1):
         time.sleep(heartbeat)
@@ -73,7 +73,7 @@ def test_periodics_service_iteration(snowflake: TestingSnowflake, storage_socket
     rec = storage_socket.records.get([id_1])
     assert rec[0]["status"] == RecordStatusEnum.waiting
 
-    snowflake.start_periodics()
+    snowflake.start_job_runner()
 
     time.sleep(1.0)
 

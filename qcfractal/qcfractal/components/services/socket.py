@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 from sqlalchemy import select, or_
@@ -21,6 +21,7 @@ from .db_models import ServiceQueueORM, ServiceDependencyORM
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
+    from qcfractal.components.internal_jobs.status import JobStatus
     from typing import Optional
 
 
@@ -33,6 +34,35 @@ class ServiceSocket:
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
         self._max_active_services = root_socket.qcf_config.max_active_services
+        self._service_frequency = root_socket.qcf_config.service_frequency
+
+        # Add the initial job for iterating the service
+        self.add_internal_job(0.0)
+
+    def add_internal_job(self, delay: float, *, session: Optional[Session] = None):
+        """
+        Adds an internal job to check/update the services
+
+        Parameters
+        ----------
+        delay
+            Schedule for this many seconds in the future
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
+        with self.root_socket.optional_session(session) as session:
+            self.root_socket.internal_jobs.add(
+                "iterate_services",
+                datetime.utcnow() + timedelta(seconds=delay),
+                "services.iterate_services",
+                {},
+                user=None,
+                unique_name=True,
+                after_function="services.add_internal_job",
+                after_function_kwargs={"delay": self._service_frequency},
+                session=session,
+            )
 
     def mark_service_complete(self, session: Session, service_orm: ServiceQueueORM):
         # If the service has successfully completed, delete the entry from the Service Queue
@@ -46,7 +76,7 @@ class ServiceSocket:
         session.commit()
         self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.complete)
 
-    def iterate_services(self, *, session: Optional[Session] = None) -> int:
+    def iterate_services(self, session: Session, job_status: JobStatus) -> int:
         """
         Check for services that have their dependencies finished, and iterate or mark them as errored
 
@@ -62,12 +92,14 @@ class ServiceSocket:
         Parameters
         ----------
         session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed (but not committed) before returning from this function.
+            An existing SQLAlchemy session to use.
+        job_status
+            An object that reports the current job status and which we can use to update progress
 
         Returns
         -------
-
+        :
+            Number of services currently running after this function is done
         """
 
         self._logger.info("Iterating on services")

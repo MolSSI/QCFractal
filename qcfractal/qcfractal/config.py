@@ -189,6 +189,7 @@ class APILimitConfig(ConfigBase):
     get_server_stats: int = Field(25, description="Number of server statistics records to return")
     get_access_logs: int = Field(1000, description="Number of access log records to return")
     get_error_logs: int = Field(100, description="Number of error log records to return")
+    get_internal_jobs: int = Field(1000, description="Number of internal jobs to return")
 
     class Config(ConfigCommon):
         env_prefix = "QCF_APILIMIT_"
@@ -280,6 +281,11 @@ class FractalConfig(ConfigBase):
     geo_file_path: Optional[str] = Field(
         None,
         description="Geoip2 cites file path (.mmdb) for geolocating IP addresses. Defaults to [base_folder]/GeoLite2-City.mmdb. If this file is not available, geo-ip lookup will not be enabled",
+    )
+
+    # Internal jobs
+    internal_job_processes: int = Field(
+        1, description="Number of processes for processing internal jobs and async requests"
     )
 
     # Other settings blocks

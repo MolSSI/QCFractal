@@ -24,7 +24,7 @@ from qcportal.permissions import RoleInfo, UserInfo
 from .config import read_configuration, write_initial_configuration, FractalConfig, WebAPIConfig
 from .db_socket.socket import SQLAlchemySocket
 from .flask_app.gunicorn_app import GunicornProcess
-from .periodics import PeriodicsProcess
+from .job_runner import FractalJobRunnerProcess
 from .postgres_harness import PostgresHarness
 from .process_runner import ProcessRunner
 
@@ -101,7 +101,7 @@ def start_database(config: FractalConfig) -> Tuple[PostgresHarness, SQLAlchemySo
 
     # Start up a socket. The main thing is to see if it can connect, and also
     # to check if the database needs to be upgraded
-    # We then no longer need the socket (gunicorn and periodics will use their own
+    # We then no longer need the socket (gunicorn and job runner will use their own
     # in their subprocesses)
     return pg_harness, SQLAlchemySocket(config)
 
@@ -171,16 +171,16 @@ def parse_args() -> argparse.Namespace:
     start.add_argument("--enable-security", **FractalConfig.help_info("enable_security"))
 
     start.add_argument(
-        "--disable-periodics",
+        "--disable-job-runner",
         action="store_true",
-        help="[ADVANCED] Disable periodic tasks (service updates and manager cleanup)",
+        help="[ADVANCED] Disable the internal job runner (service updates and manager cleanup)",
     )
 
     #####################################
-    # start-periodics subcommand
+    # start-job-runner subcommand
     #####################################
     start_per = subparsers.add_parser(
-        "start-periodics", help="Starts a QCFractal server instance.", parents=[base_parser]
+        "start-job-runner", help="Starts a QCFractal server instance.", parents=[base_parser]
     )
 
     # Allow some config settings to be altered via the command line
@@ -414,11 +414,11 @@ def server_start(config):
     # Ensure that the database is alive, optionally starting it
     start_database(config)
 
-    # Start up the gunicorn and periodics
+    # Start up the gunicorn and job runner
     gunicorn = GunicornProcess(config)
-    periodics = PeriodicsProcess(config)
+    job_runner = FractalJobRunnerProcess(config)
     gunicorn_proc = ProcessRunner("gunicorn", gunicorn)
-    periodics_proc = ProcessRunner("periodics", periodics)
+    job_runner_proc = ProcessRunner("job_runner", job_runner)
 
     def _cleanup(sig, frame):
         signame = signal.Signals(sig).name
@@ -434,7 +434,7 @@ def server_start(config):
             time.sleep(15)
             if not gunicorn_proc.is_alive():
                 raise RuntimeError("Gunicorn process died! Check the logs")
-            if not periodics_proc.is_alive():
+            if not job_runner_proc.is_alive():
                 raise RuntimeError("Periodics process died! Check the logs")
     except EndProcess as e:
         if not stdout_logging:
@@ -462,16 +462,16 @@ def server_start(config):
         exitcode = 1
 
     gunicorn_proc.stop()
-    periodics_proc.stop()
+    job_runner_proc.stop()
 
     sys.exit(exitcode)
 
 
-def server_start_periodics(config):
-    from qcfractal.periodics import FractalPeriodics
+def server_start_job_runner(config):
+    from qcfractal.job_runner import FractalJobRunner
 
     logger = logging.getLogger(__name__)
-    logger.info("*** Starting a QCFractal server periodics ***")
+    logger.info("*** Starting a QCFractal server job runner ***")
 
     setup_logging(config, logger)
 
@@ -482,16 +482,16 @@ def server_start_periodics(config):
     # even if we don't own the db (which we shouldn't)
     start_database(config)
 
-    # Now just run the periodics directly
-    periodics = FractalPeriodics(config)
-    periodics.start()
+    # Now just run the job runner directly
+    job_runner = FractalJobRunner(config)
+    job_runner.start()
 
 
 def server_start_api(config):
     from qcfractal.flask_app.gunicorn_app import FractalGunicornApp
 
     logger = logging.getLogger(__name__)
-    logger.info("*** Starting a QCFractal API server periodics ***")
+    logger.info("*** Starting a QCFractal API server ***")
 
     setup_logging(config, logger)
 
@@ -878,7 +878,7 @@ def main():
         if args.enable_security is not None:
             cmd_config["enable_security"] = args.enable_security
 
-    if args.command in ["start-periodics", "start-api"]:
+    if args.command in ["start-job-runner", "start-api"]:
         if args.logfile is not None:
             cmd_config["logfile"] = args.logfile
         if args.loglevel is not None:
@@ -924,8 +924,8 @@ def main():
         server_init_db(qcf_config)
     elif args.command == "start":
         server_start(qcf_config)
-    elif args.command == "start-periodics":
-        server_start_periodics(qcf_config)
+    elif args.command == "start-job-runner":
+        server_start_job_runner(qcf_config)
     elif args.command == "start-api":
         server_start_api(qcf_config)
     elif args.command == "upgrade-db":

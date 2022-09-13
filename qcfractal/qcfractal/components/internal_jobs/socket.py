@@ -1,0 +1,419 @@
+from __future__ import annotations
+
+import logging
+import select as io_select
+import uuid
+from datetime import datetime, timedelta
+from operator import attrgetter
+from socket import gethostname
+from typing import TYPE_CHECKING
+
+import psycopg2
+from sqlalchemy import select, delete, update, and_, or_
+from sqlalchemy.dialects.postgresql import insert
+
+from qcfractal.db_socket.helpers import get_query_proj_options, get_count
+from qcportal.exceptions import MissingDataError
+from qcportal.internal_jobs.models import InternalJobStatusEnum, InternalJobQueryFilters
+from qcportal.metadata_models import QueryMetadata
+from .db_models import InternalJobORM
+from .status import JobStatus
+
+if TYPE_CHECKING:
+    from qcfractal.db_socket.socket import SQLAlchemySocket
+    from typing import Optional, Dict, Any
+    from sqlalchemy.orm.session import Session
+    from qcfractal.db_socket.socket import SQLAlchemySocket
+    from typing import Dict, Optional, Any, Tuple, List
+
+_default_error = {"error_type": "not_supplied", "error_message": "No error message found on task."}
+
+
+class InternalJobSocket:
+    def __init__(self, root_socket: SQLAlchemySocket):
+        self.root_socket = root_socket
+        self._logger = logging.getLogger(__name__)
+
+        self._nproc = root_socket.qcf_config.internal_job_processes
+        self._enabled = self._nproc > 0
+        self._uuid = str(uuid.uuid4())
+        self._hostname = gethostname()
+
+        # How often to update progress (in seconds)
+        # Hardcoded for now
+        self._update_frequency = 5
+
+    def add(
+        self,
+        name: str,
+        scheduled_date: datetime,
+        function: str,
+        kwargs: Dict[str, Any],
+        user: Optional[str],
+        unique_name: bool = False,
+        after_function: Optional[str] = None,
+        after_function_kwargs: Optional[Dict[str, Any]] = None,
+        *,
+        session: Optional[Session] = None,
+    ) -> int:
+        """
+        Adds a new job to the internal job queue
+
+        Parameters
+        ----------
+        name
+            Descriptive name of the job
+        scheduled_date
+            When the job should be run. If the server is not running when this time elapses, it will
+            run when it comes back up.
+        function
+            The function to run, as a string. Should be a member of the sqlalchemy socket.
+            Example: `services.iterate_services`
+        kwargs
+            Arguments to pass to the function
+        user
+            The user making creating this job
+        unique_name
+            If true, do not add if a job with that name already exists in the job queue.
+        after_function
+            When this job is done, call this function
+        after_function_kwargs
+            Arguments to use when calling `after_function`
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            A unique ID representing this job in the queue
+        """
+
+        with self.root_socket.optional_session(session) as session:
+            job_id = None
+            if unique_name:
+                stmt = insert(InternalJobORM)
+                stmt = stmt.values(
+                    name=name,
+                    unique_name=name,
+                    scheduled_date=scheduled_date,
+                    function=function,
+                    kwargs=kwargs,
+                    after_function=after_function,
+                    after_function_kwargs=after_function_kwargs,
+                    status=InternalJobStatusEnum.waiting,
+                    user=user,
+                )
+                stmt = stmt.on_conflict_do_nothing()
+                stmt = stmt.returning(InternalJobORM.id)
+                job_id = session.execute(stmt).scalar_one_or_none()
+
+                if job_id is None:
+                    # Nothing was returned, meaning nothing was inserted
+                    self._logger.debug(f"UUID={self._uuid} job with name {name} already found. Not adding")
+                    stmt = select(InternalJobORM.id).where(InternalJobORM.unique_name == name)
+                    job_id = session.execute(stmt).scalar_one_or_none()
+
+            if job_id is None:
+                job_orm = InternalJobORM(
+                    name=name,
+                    scheduled_date=scheduled_date,
+                    function=function,
+                    kwargs=kwargs,
+                    status=InternalJobStatusEnum.waiting,
+                    user=user,
+                )
+                if unique_name:
+                    job_orm.unique_name = name
+
+                session.add(job_orm)
+                session.flush()
+
+                # NOTIFY is not sent until COMMIT (according to postgresql docs)
+                session.execute("NOTIFY check_internal_jobs;")
+                job_id = job_orm.id
+
+        return job_id
+
+    def get(self, job_id: int, *, session: Optional[Session] = None) -> Dict[str, Any]:
+        """
+        Obtain all the information about a job
+
+        An exception is raised if a job with the given ID doesn't exist
+
+        Parameters
+        ----------
+        job_id
+            ID representing the job
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Information about the job (as a dictionary)
+        """
+        stmt = select(InternalJobORM).where(InternalJobORM.id == job_id)
+        with self.root_socket.optional_session(session) as session:
+            job_orm = session.execute(stmt).scalar_one_or_none()
+            if job_orm is None:
+                raise MissingDataError(f"Internal job with id={job_id} not found")
+
+            return job_orm.model_dict()
+
+    def query(
+        self, query_data: InternalJobQueryFilters, *, session: Optional[Session] = None
+    ) -> Tuple[QueryMetadata, List[Dict[str, Any]]]:
+
+        """
+        General query of internal jobs in the database
+
+        All search criteria are merged via 'and'. Therefore, records will only
+        be found that match all the criteria.
+
+        Parameters
+        ----------
+        query_data
+            Fields/filters to query for
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of job info (as dictionaries) that were
+            found in the database.
+        """
+
+        proj_options = get_query_proj_options(InternalJobORM, query_data.include, query_data.exclude)
+
+        and_query = []
+        if query_data.job_id is not None:
+            and_query.append(InternalJobORM.id.in_(query_data.job_id))
+        if query_data.name is not None:
+            and_query.append(InternalJobORM.name.in_(query_data.name))
+        if query_data.hostname is not None:
+            and_query.append(InternalJobORM.hostname.in_(query_data.hostname))
+        if query_data.status is not None:
+            and_query.append(InternalJobORM.status.in_(query_data.status))
+        if query_data.modified_before is not None:
+            and_query.append(InternalJobORM.modified_on < query_data.modified_before)
+        if query_data.modified_after is not None:
+            and_query.append(InternalJobORM.modified_on > query_data.modified_after)
+        if query_data.added_before is not None:
+            and_query.append(InternalJobORM.added_on < query_data.added_before)
+        if query_data.added_after is not None:
+            and_query.append(InternalJobORM.added_on > query_data.added_after)
+
+        with self.root_socket.optional_session(session, True) as session:
+            stmt = select(InternalJobORM).filter(and_(True, *and_query))
+            stmt = stmt.options(*proj_options)
+
+            if query_data.include_metadata:
+                n_found = get_count(session, stmt)
+
+            if query_data.cursor is not None:
+                stmt = stmt.where(InternalJobORM.id < query_data.cursor)
+
+            stmt = stmt.order_by(InternalJobORM.id.desc())
+            stmt = stmt.limit(query_data.limit)
+
+            results = session.execute(stmt).scalars().all()
+            result_dicts = [x.model_dict() for x in results]
+
+        if query_data.include_metadata:
+            meta = QueryMetadata(n_found=n_found)
+        else:
+            meta = None
+
+        return meta, result_dicts
+
+    def delete(self, job_id: int, *, session: Optional[Session] = None):
+        """
+        Delete a job from the job queue
+
+        Parameters
+        ----------
+        job_id
+            ID representing the job
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
+
+        stmt = delete(InternalJobORM).where(InternalJobORM.id == job_id)
+        with self.root_socket.optional_session(session) as session:
+            session.execute(stmt)
+
+    def cancel(self, job_id: int, *, session: Optional[Session] = None):
+        """
+        Cancels a job in the job queue
+
+        Parameters
+        ----------
+        job_id
+            ID representing the job
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
+
+        cancellable = [InternalJobStatusEnum.waiting, InternalJobStatusEnum.running]
+        stmt = update(InternalJobORM)
+        stmt = stmt.where(InternalJobORM.id == job_id)
+        stmt = stmt.where(InternalJobORM.status.in_(cancellable))
+        stmt = stmt.values(status=InternalJobStatusEnum.cancelled)
+
+        with self.root_socket.optional_session(session) as session:
+            session.execute(stmt)
+
+    def _run_single(self, session: Session, job_orm: InternalJobORM, job_status: JobStatus):
+        """
+        Runs a single job
+        """
+
+        job_orm.started_date = datetime.utcnow()
+        job_orm.runner_hostname = self._hostname
+        job_orm.runner_uuid = self._uuid
+        job_orm.status = InternalJobStatusEnum.running
+        session.commit()
+
+        try:
+            func_attr = attrgetter(job_orm.function)
+
+            # Function must be part of the sockets
+            func = func_attr(self.root_socket)
+            result = func(**job_orm.kwargs, job_status=job_status, session=session)
+
+            # Mark complete, unless this was cancelled
+            if not job_status.cancelled():
+                job_orm.status = InternalJobStatusEnum.complete
+                job_orm.progress = 100
+
+        except Exception as e:
+            result = str(e)
+            job_orm.status = InternalJobStatusEnum.error
+
+        if not job_status.deleted():
+            job_orm.ended_date = datetime.utcnow()
+            job_orm.last_updated = job_orm.ended_date
+            job_orm.result = result
+
+            # Clear the unique name so we can add another one if needed
+            job_orm.unique_name = None
+            session.commit()
+
+            # Run the function specified to be run after
+            if job_orm.status == InternalJobStatusEnum.complete and job_orm.after_function is not None:
+                after_func_attr = attrgetter(job_orm.after_function)
+                after_func = after_func_attr(self.root_socket)
+                after_func(**job_orm.after_function_kwargs, session=session)
+                session.commit()
+
+    def _wait_for_job(self, session: Session, conn, end_event):
+        """
+        Blocks until a job is possibly available to run
+        """
+
+        next_job_stmt = select(InternalJobORM.scheduled_date)
+        next_job_stmt = next_job_stmt.where(InternalJobORM.status == InternalJobStatusEnum.waiting)
+        next_job_stmt = next_job_stmt.order_by(InternalJobORM.scheduled_date.asc())
+        next_job_stmt = next_job_stmt.limit(1)
+
+        while True:
+            # Find the next available job, and find out if we have to sleep until then
+            next_job_time = session.execute(next_job_stmt).scalar_one_or_none()
+            if next_job_time is None:
+                # Wait for 5 minute by default
+                total_to_wait = 10.0
+            else:
+                total_to_wait = (next_job_time - datetime.utcnow()).total_seconds() + 0.1
+
+            # If this is <= 0, we don't have to wait
+            if total_to_wait <= 0.0:
+                return
+
+            self._logger.debug(f"UUID={self._uuid} going to wait for {total_to_wait} seconds")
+
+            # This will end either if we have waited long enough, or there
+            # is a notification from postgres (this connection has run LISTEN)
+            total_waited = 0.0
+            while total_waited < total_to_wait:
+                to_wait = max(0.0, min(total_to_wait - total_waited, 15.0))
+                if to_wait <= 0.0:
+                    break
+
+                if io_select.select([conn], [], [], to_wait) != ([], [], []):
+                    # We got a notification
+                    conn.poll()
+                    conn.notifies.clear()
+
+                    # Go back to the outer loop
+                    break
+                else:
+                    # Select timed out. Check for event (we should shut down)
+                    if end_event.is_set():
+                        return
+                    total_waited += to_wait
+
+    def run_loop(self, end_event):
+        """
+        Runs in an infinite loop, checking for jobs and running them
+        """
+
+        # Two sessions - one for the object, and one for the job status object
+        session_main = self.root_socket.Session()
+        session_status = self.root_socket.Session()
+
+        # Set up the listener for postgres. This will be notified when something is
+        # added to the internal job queue
+        conn = self.root_socket.get_connection()
+        conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+        cursor = conn.cursor()
+        cursor.execute("LISTEN check_internal_jobs;")
+
+        # Prepare a statement for finding jobs
+        stmt = select(InternalJobORM)
+        stmt = stmt.order_by(InternalJobORM.scheduled_date.asc())
+        stmt = stmt.limit(1)
+        stmt = stmt.with_for_update(skip_locked=True)
+
+        while True:
+            self._logger.debug(f"UUID={self._uuid} checking for jobs")
+
+            # Pick up anything waiting, or anything that hasn't been updated in a while (12 update periods)
+            now = datetime.utcnow()
+            dead = now - timedelta(seconds=(self._update_frequency * 12))
+            cond1 = and_(InternalJobORM.status == InternalJobStatusEnum.waiting, InternalJobORM.scheduled_date <= now)
+            cond2 = and_(InternalJobORM.status == InternalJobStatusEnum.running, InternalJobORM.last_updated < dead)
+
+            stmt_now = stmt.where(or_(cond1, cond2))
+            job_orm = session_main.execute(stmt_now).scalar_one_or_none()
+
+            # If no job was found, wait for one
+            if job_orm is None:
+                self._logger.debug(f"UUID={self._uuid} no jobs found")
+                self._wait_for_job(session_main, conn, end_event)
+
+                if end_event.is_set():
+                    self._logger.info(f"UUID={self._uuid} shutting down")
+                    break
+                else:
+                    continue
+
+            if end_event.is_set():
+                self._logger.info(f"UUID={self._uuid} shutting down")
+                break
+
+            self._logger.info(f"UUID={self._uuid} running job {job_orm.name} (id={job_orm.id})")
+
+            job_status = JobStatus(job_orm.id, self._uuid, session_status, self._update_frequency, end_event)
+            self._run_single(session_main, job_orm, job_status=job_status)
+
+            # Stop the updating thread and cleanup
+            job_status.stop()
+
+            if end_event.is_set():
+                self._logger.info(f"UUID={self._uuid} shutting down")

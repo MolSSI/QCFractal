@@ -9,11 +9,11 @@ import pytest
 
 from qcfractal.flask_app.flask_app import FlaskProcess
 from qcfractal.flask_app.gunicorn_app import GunicornProcess
-from qcfractal.periodics import PeriodicsProcess
+from qcfractal.job_runner import FractalJobRunnerProcess
 from qcfractal.process_runner import ProcessRunner
 from qcfractal.snowflake import SnowflakeComputeProcess
 
-_test_base_classes = [PeriodicsProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess]
+_test_base_classes = [FractalJobRunnerProcess, FlaskProcess, GunicornProcess, SnowflakeComputeProcess]
 
 pytestmark = pytest.mark.slow
 

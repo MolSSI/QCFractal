@@ -3,6 +3,8 @@ from __future__ import annotations, annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from qcfractal.testing_helpers import DummyJobStatus
+
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
     from qcportal import PortalClient
@@ -10,9 +12,12 @@ if TYPE_CHECKING:
 
 def test_serverinfo_client_delete_stats(storage_socket: SQLAlchemySocket, snowflake_client: PortalClient):
     time_0 = datetime.utcnow()
-    storage_socket.serverinfo.update_server_stats()
+    with storage_socket.session_scope() as session:
+        storage_socket.serverinfo.update_server_stats(session=session, job_status=DummyJobStatus())
     time_12 = datetime.utcnow()
-    storage_socket.serverinfo.update_server_stats()
+
+    with storage_socket.session_scope() as session:
+        storage_socket.serverinfo.update_server_stats(session=session, job_status=DummyJobStatus())
 
     query_res = snowflake_client.query_server_stats()
     stats = list(query_res)

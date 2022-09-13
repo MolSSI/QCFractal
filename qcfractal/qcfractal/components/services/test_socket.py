@@ -8,7 +8,7 @@ from qcelemental.models import FailedOperation
 from qcfractal.components.gridoptimization.testing_helpers import submit_test_data as submit_go_test_data
 from qcfractal.components.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.testing_helpers import run_service_constropt
+from qcfractal.testing_helpers import run_service_constropt, DummyJobStatus
 from qcportal.managers import ManagerName
 from qcportal.outputstore import OutputStore, OutputTypeEnum
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
@@ -55,7 +55,8 @@ def test_service_socket_iterate_order(storage_socket: SQLAlchemySocket):
     id_1, _ = submit_td_test_data(storage_socket, "td_H2O2_psi4_b3lyp", "*", PriorityEnum.normal)
     id_2, _ = submit_go_test_data(storage_socket, "go_H3NS_psi4_pbe", "*", PriorityEnum.high)
 
-    storage_socket.services.iterate_services()
+    with storage_socket.session_scope() as session:
+        storage_socket.services.iterate_services(session, DummyJobStatus())
 
     recs = storage_socket.records.get([id_1, id_2])
     assert recs[0]["status"] == RecordStatusEnum.waiting

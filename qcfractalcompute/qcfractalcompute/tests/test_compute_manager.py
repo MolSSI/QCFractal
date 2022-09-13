@@ -63,7 +63,7 @@ class ComputeProcess(ProcessBase):
 
 def test_manager_keepalive(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
 
-    snowflake.start_periodics()
+    snowflake.start_job_runner()
 
     compute = ComputeProcess(snowflake._qcf_config, {})
     compute_proc = ProcessRunner("test_compute", compute)
@@ -148,7 +148,7 @@ def test_manager_tag_multi(snowflake: TestingSnowflake, storage_socket: SQLAlche
 
 
 def test_manager_claim_inactive(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
-    snowflake.start_periodics()
+    snowflake.start_job_runner()
 
     compute = ComputeProcess(snowflake._qcf_config, {})
     compute_proc = ProcessRunner("test_compute", compute)

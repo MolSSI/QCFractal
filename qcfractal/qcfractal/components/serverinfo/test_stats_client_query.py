@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from qcfractal.testing_helpers import TestingSnowflake
+from qcfractal.testing_helpers import TestingSnowflake, DummyJobStatus
 
 
 @pytest.fixture(scope="module")
@@ -16,7 +16,7 @@ def queryable_stats_client(module_temporary_database):
         storage_socket = server.get_storage_socket()
         with storage_socket.session_scope() as session:
             for i in range(100):
-                storage_socket.serverinfo.update_server_stats(session=session)
+                storage_socket.serverinfo.update_server_stats(session=session, job_status=DummyJobStatus())
 
         yield server.client()
 

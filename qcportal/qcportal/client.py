@@ -70,6 +70,7 @@ from .dataset_models import (
     DatasetAddBody,
     dataset_from_datamodel,
 )
+from .internal_jobs import InternalJob, InternalJobQueryFilters, InternalJobQueryIterator, InternalJobStatusEnum
 from .managers import ManagerQueryFilters, ManagerQueryIterator, ComputeManager
 from .metadata_models import QueryMetadata, UpdateMetadata, InsertMetadata, DeleteMetadata
 from .molecules import Molecule, MoleculeIdentifiers, MoleculeModifyBody, MoleculeQueryIterator, MoleculeQueryFilters
@@ -2779,6 +2780,88 @@ class PortalClient(PortalClientBase):
         return self._auto_request(
             "post", "v1/server_errors/bulkDelete", DeleteBeforeDateBody, None, int, body_data, None
         )
+
+    def get_internal_job(self, job_id: int) -> InternalJob:
+        """
+        Gets information about an internal job on the server
+        """
+
+        return self._auto_request("get", f"v1/internal_jobs/{job_id}", None, None, InternalJob, None, None)
+
+    def query_internal_jobs(
+        self,
+        job_id: Optional[int] = None,
+        name: Optional[Union[str, Iterable[str]]] = None,
+        hostname: Optional[Union[str, Iterable[str]]] = None,
+        status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
+        modified_before: Optional[datetime] = None,
+        modified_after: Optional[datetime] = None,
+        added_before: Optional[datetime] = None,
+        added_after: Optional[datetime] = None,
+        limit: Optional[int] = None,
+    ) -> InternalJobQueryIterator:
+        """
+        Queries the internal job queue on the server
+
+        Parameters
+        ----------
+        job_id
+            ID assigned to the job
+        name
+            Queries jobs whose name is in the given list
+        hostname
+            Queries jobs that were run/are running on a given host
+        status
+            Queries jobs whose status is in the given list
+        modified_before
+            Query for jobs last modified before a certain time
+        modified_after
+            Query for jobs last modified after a certain time
+        added_before
+            Query for jobs last added before a certain time
+        added_after
+            Query for jobs last added after a certain time
+        limit
+            The maximum number of jobs to return. Note that the server limit is always obeyed.
+
+        Returns
+        -------
+        :
+            An iterator that can be used to retrieve the results of the query
+        """
+
+        filter_dict = {
+            "job_id": make_list(job_id),
+            "name": make_list(name),
+            "hostname": make_list(hostname),
+            "status": make_list(status),
+            "modified_before": modified_before,
+            "modified_after": modified_after,
+            "added_before": added_before,
+            "added_after": added_after,
+            "limit": limit,
+        }
+
+        filter_data = InternalJobQueryFilters(**filter_dict)
+        return InternalJobQueryIterator(self, filter_data)
+
+    def cancel_internal_job(self, job_id: int):
+        """
+        Cancels (to the best of our ability) an internal job
+        """
+
+        return self._auto_request(
+            "put",
+            f"v1/internal_jobs/{job_id}/status",
+            InternalJobStatusEnum,
+            None,
+            None,
+            InternalJobStatusEnum.cancelled,
+            None,
+        )
+
+    def delete_internal_job(self, job_id: int):
+        return self._auto_request("delete", f"v1/internal_jobs/{job_id}", None, None, None, None, None)
 
     def query_access_summary(
         self,

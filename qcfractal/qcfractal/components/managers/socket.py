@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 from sqlalchemy import and_, update, select
@@ -16,6 +16,7 @@ from .db_models import ComputeManagerLogORM, ComputeManagerORM
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
+    from qcfractal.components.internal_jobs.status import JobStatus
     from typing import List, Iterable, Optional, Sequence, Sequence, Dict, Any, Tuple
 
 
@@ -27,6 +28,37 @@ class ManagerSocket:
     def __init__(self, root_socket: SQLAlchemySocket):
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
+
+        self._manager_heartbeat_frequency = root_socket.qcf_config.heartbeat_frequency
+        self._manager_max_missed_heartbeats = root_socket.qcf_config.heartbeat_max_missed
+
+        # Add the initial job for checking on managers
+        self.add_internal_job(0.0)
+
+    def add_internal_job(self, delay: float, *, session: Optional[Session] = None):
+        """
+        Adds an internal job to check for dead managers
+
+        Parameters
+        ----------
+        delay
+            Schedule for this many seconds in the future
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+        """
+        with self.root_socket.optional_session(session) as session:
+            self.root_socket.internal_jobs.add(
+                "check_manager_heartbeats",
+                datetime.utcnow() + timedelta(seconds=delay),
+                "managers.check_manager_heartbeats",
+                {},
+                user=None,
+                unique_name=True,
+                after_function="managers.add_internal_job",
+                after_function_kwargs={"delay": self._manager_heartbeat_frequency},
+                session=session,
+            )
 
     @staticmethod
     def save_snapshot(orm: ComputeManagerORM):
@@ -301,3 +333,27 @@ class ManagerSocket:
             meta = None
 
         return meta, result_dicts
+
+    def check_manager_heartbeats(self, session: Session, job_status: JobStatus) -> None:
+        """
+        Checks for manager heartbeats
+
+        If a manager has not been heard from in a while, it is set to inactivate and its tasks
+        reset to a waiting state. The amount of time to wait for a manager is controlled by the config
+        options manager_max_missed_heartbeats and manager_heartbeat_frequency.
+
+        Parameters
+        ----------
+        session
+            An existing SQLAlchemy session to use.
+        job_status
+            An object that reports the current job status and which we can use to update progress
+        """
+        self._logger.debug("Checking manager heartbeats")
+        manager_window = self._manager_max_missed_heartbeats * self._manager_heartbeat_frequency
+        dt = datetime.utcnow() - timedelta(seconds=manager_window)
+
+        dead_managers = self.deactivate(modified_before=dt, reason="missing heartbeat", session=session)
+
+        if dead_managers:
+            self._logger.info(f"Deactivated {len(dead_managers)} managers due to missing heartbeats")
