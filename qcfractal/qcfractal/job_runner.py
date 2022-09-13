@@ -25,7 +25,7 @@ class FractalJobRunner:
     QCFractal requires some jobs to be run periodically or otherwise in the background. This class will run these jobs.
     """
 
-    def __init__(self, qcf_config: FractalConfig, end_event: multiprocessing.Event):
+    def __init__(self, qcf_config: FractalConfig, end_event):
         """
         Parameters
         ----------
@@ -44,7 +44,7 @@ class FractalJobRunner:
         This function will block until interrupted
         """
 
-        self.storage_socket.internal_jobs.run_loop(self._end_event)
+        self.storage_socket.internal_jobs.run_processes(self._end_event)
 
 
 class FractalJobRunnerProcess(ProcessBase):

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import multiprocessing
 import select as io_select
 import uuid
 from datetime import datetime, timedelta
@@ -36,7 +37,6 @@ class InternalJobSocket:
 
         self._nproc = root_socket.qcf_config.internal_job_processes
         self._enabled = self._nproc > 0
-        self._uuid = str(uuid.uuid4())
         self._hostname = gethostname()
 
         # How often to update progress (in seconds)
@@ -110,7 +110,7 @@ class InternalJobSocket:
 
                 if job_id is None:
                     # Nothing was returned, meaning nothing was inserted
-                    self._logger.debug(f"UUID={self._uuid} job with name {name} already found. Not adding")
+                    self._logger.debug(f"Job with name {name} already found. Not adding")
                     stmt = select(InternalJobORM.id).where(InternalJobORM.unique_name == name)
                     job_id = session.execute(stmt).scalar_one_or_none()
 
@@ -194,18 +194,22 @@ class InternalJobSocket:
             and_query.append(InternalJobORM.id.in_(query_data.job_id))
         if query_data.name is not None:
             and_query.append(InternalJobORM.name.in_(query_data.name))
-        if query_data.hostname is not None:
-            and_query.append(InternalJobORM.hostname.in_(query_data.hostname))
+        if query_data.runner_hostname is not None:
+            and_query.append(InternalJobORM.runner_hostname.in_(query_data.runner_hostname))
         if query_data.status is not None:
             and_query.append(InternalJobORM.status.in_(query_data.status))
-        if query_data.modified_before is not None:
-            and_query.append(InternalJobORM.modified_on < query_data.modified_before)
-        if query_data.modified_after is not None:
-            and_query.append(InternalJobORM.modified_on > query_data.modified_after)
+        if query_data.last_updated_before is not None:
+            and_query.append(InternalJobORM.last_updated < query_data.last_updated_before)
+        if query_data.last_updated_after is not None:
+            and_query.append(InternalJobORM.last_updated > query_data.last_updated_after)
         if query_data.added_before is not None:
-            and_query.append(InternalJobORM.added_on < query_data.added_before)
+            and_query.append(InternalJobORM.added_date < query_data.added_before)
         if query_data.added_after is not None:
-            and_query.append(InternalJobORM.added_on > query_data.added_after)
+            and_query.append(InternalJobORM.added_date > query_data.added_after)
+        if query_data.scheduled_before is not None:
+            and_query.append(InternalJobORM.scheduled_date < query_data.scheduled_before)
+        if query_data.scheduled_after is not None:
+            and_query.append(InternalJobORM.scheduled_date > query_data.scheduled_after)
 
         with self.root_socket.optional_session(session, True) as session:
             stmt = select(InternalJobORM).filter(and_(True, *and_query))
@@ -276,7 +280,7 @@ class InternalJobSocket:
 
         job_orm.started_date = datetime.utcnow()
         job_orm.runner_hostname = self._hostname
-        job_orm.runner_uuid = self._uuid
+        job_orm.runner_uuid = job_status._runner_uuid
         job_orm.status = InternalJobStatusEnum.running
         session.commit()
 
@@ -303,16 +307,20 @@ class InternalJobSocket:
 
             # Clear the unique name so we can add another one if needed
             job_orm.unique_name = None
-            session.commit()
+
+            # Flush but don't commit. This will prevent marking the task as finished
+            # before the after_func has been run, but allow new ones to be added
+            # with unique_name = True
+            session.flush()
 
             # Run the function specified to be run after
             if job_orm.status == InternalJobStatusEnum.complete and job_orm.after_function is not None:
                 after_func_attr = attrgetter(job_orm.after_function)
                 after_func = after_func_attr(self.root_socket)
                 after_func(**job_orm.after_function_kwargs, session=session)
-                session.commit()
+            session.commit()
 
-    def _wait_for_job(self, session: Session, conn, end_event):
+    def _wait_for_job(self, session: Session, runner_uuid: str, conn, end_event):
         """
         Blocks until a job is possibly available to run
         """
@@ -326,22 +334,22 @@ class InternalJobSocket:
             # Find the next available job, and find out if we have to sleep until then
             next_job_time = session.execute(next_job_stmt).scalar_one_or_none()
             if next_job_time is None:
-                # Wait for 5 minute by default
-                total_to_wait = 10.0
+                # Wait for 2 minutes by default
+                total_to_wait = 120.0
             else:
-                total_to_wait = (next_job_time - datetime.utcnow()).total_seconds() + 0.1
+                total_to_wait = (next_job_time - datetime.utcnow()).total_seconds() + 0.01
 
             # If this is <= 0, we don't have to wait
             if total_to_wait <= 0.0:
                 return
 
-            self._logger.debug(f"UUID={self._uuid} going to wait for {total_to_wait} seconds")
+            self._logger.debug(f"UUID={runner_uuid} going to wait for {total_to_wait} seconds")
 
             # This will end either if we have waited long enough, or there
             # is a notification from postgres (this connection has run LISTEN)
             total_waited = 0.0
             while total_waited < total_to_wait:
-                to_wait = max(0.0, min(total_to_wait - total_waited, 15.0))
+                to_wait = min(total_to_wait - total_waited, 5.0)
                 if to_wait <= 0.0:
                     break
 
@@ -358,10 +366,22 @@ class InternalJobSocket:
                         return
                     total_waited += to_wait
 
-    def run_loop(self, end_event):
+    def _run_loop(self, end_event):
         """
         Runs in an infinite loop, checking for jobs and running them
+
+        Parameters
+        ----------
+        end_event
+            An event (threading.Event, multiprocessing.Event) that, when set, will
+            stop this loop
         """
+
+        # Clean up engine connections after a fork
+        self.root_socket.post_fork_cleanup()
+
+        # give this loop a unique uuid
+        runner_uuid = str(uuid.uuid4())
 
         # Two sessions - one for the object, and one for the job status object
         session_main = self.root_socket.Session()
@@ -381,7 +401,7 @@ class InternalJobSocket:
         stmt = stmt.with_for_update(skip_locked=True)
 
         while True:
-            self._logger.debug(f"UUID={self._uuid} checking for jobs")
+            self._logger.debug(f"UUID={runner_uuid} checking for jobs")
 
             # Pick up anything waiting, or anything that hasn't been updated in a while (12 update periods)
             now = datetime.utcnow()
@@ -394,26 +414,46 @@ class InternalJobSocket:
 
             # If no job was found, wait for one
             if job_orm is None:
-                self._logger.debug(f"UUID={self._uuid} no jobs found")
-                self._wait_for_job(session_main, conn, end_event)
+                self._logger.debug(f"UUID={runner_uuid} no jobs found")
+                self._wait_for_job(session_main, runner_uuid, conn, end_event)
 
                 if end_event.is_set():
-                    self._logger.info(f"UUID={self._uuid} shutting down")
+                    self._logger.info(f"UUID={runner_uuid} shutting down")
                     break
                 else:
                     continue
 
             if end_event.is_set():
-                self._logger.info(f"UUID={self._uuid} shutting down")
+                self._logger.info(f"UUID={runner_uuid} shutting down")
                 break
 
-            self._logger.info(f"UUID={self._uuid} running job {job_orm.name} (id={job_orm.id})")
+            self._logger.info(f"UUID={runner_uuid} running job {job_orm.name} (id={job_orm.id})")
 
-            job_status = JobStatus(job_orm.id, self._uuid, session_status, self._update_frequency, end_event)
+            job_status = JobStatus(job_orm.id, runner_uuid, session_status, self._update_frequency, end_event)
             self._run_single(session_main, job_orm, job_status=job_status)
 
             # Stop the updating thread and cleanup
             job_status.stop()
 
             if end_event.is_set():
-                self._logger.info(f"UUID={self._uuid} shutting down")
+                self._logger.info(f"UUID={runner_uuid} shutting down")
+
+    def run_processes(self, end_event):
+        """
+        Run multiple processes for handling the internal job queue
+
+        Parameters
+        ----------
+        end_event
+            An event (threading.Event, multiprocessing.Event) that, when set, will
+            stop all the processes
+        """
+
+        procs = []
+        for _ in range(self._nproc):
+            p = multiprocessing.Process(target=self._run_loop, args=(end_event,))
+            p.start()
+            procs.append(p)
+
+        for p in procs:
+            p.join()

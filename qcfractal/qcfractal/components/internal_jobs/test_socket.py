@@ -68,22 +68,28 @@ def test_internal_jobs_socket_run(storage_socket: SQLAlchemySocket):
     # Faster updates for testing
     storage_socket.internal_jobs._update_frequency = 1
 
+    time_0 = datetime.utcnow()
     end_event = threading.Event()
-    th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
+    th = threading.Thread(target=storage_socket.internal_jobs._run_loop, args=(end_event,))
     th.start()
     time.sleep(3)
+    time_1 = datetime.utcnow()
 
     try:
         job_1 = storage_socket.internal_jobs.get(id_1)
         assert job_1["status"] == InternalJobStatusEnum.running
         assert job_1["progress"] > 10
+        assert time_0 < job_1["last_updated"] < time_1
 
         time.sleep(8)
+        time_2 = datetime.utcnow()
 
         job_1 = storage_socket.internal_jobs.get(id_1)
         assert job_1["status"] == InternalJobStatusEnum.complete
         assert job_1["progress"] == 100
         assert job_1["result"] == "Internal job finished"
+        assert time_1 < job_1["ended_date"] < time_2
+        assert time_1 < job_1["last_updated"] < time_2
 
     finally:
         end_event.set()
@@ -99,7 +105,7 @@ def test_internal_jobs_socket_recover(storage_socket: SQLAlchemySocket):
     storage_socket.internal_jobs._update_frequency = 1
 
     end_event = threading.Event()
-    th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
+    th = threading.Thread(target=storage_socket.internal_jobs._run_loop, args=(end_event,))
     th.start()
     time.sleep(3)
 
@@ -119,7 +125,7 @@ def test_internal_jobs_socket_recover(storage_socket: SQLAlchemySocket):
     # Job is now running but orphaned. Should be picked up next time
     time.sleep(15)
     end_event = threading.Event()
-    th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
+    th = threading.Thread(target=storage_socket.internal_jobs._run_loop, args=(end_event,))
     th.start()
     time.sleep(15)
 

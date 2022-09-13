@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import socket
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 import pytest
@@ -55,7 +56,7 @@ def test_internal_jobs_client_cancel_running(snowflake_client: PortalClient, sto
     storage_socket.internal_jobs._update_frequency = 1
 
     end_event = threading.Event()
-    th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
+    th = threading.Thread(target=storage_socket.internal_jobs._run_loop, args=(end_event,))
     th.start()
     time.sleep(4)
 
@@ -97,7 +98,7 @@ def test_internal_jobs_client_delete_running(snowflake_client: PortalClient, sto
     storage_socket.internal_jobs._update_frequency = 1
 
     end_event = threading.Event()
-    th = threading.Thread(target=storage_socket.internal_jobs.run_loop, args=(end_event,))
+    th = threading.Thread(target=storage_socket.internal_jobs._run_loop, args=(end_event,))
     th.start()
     time.sleep(4)
 
@@ -115,3 +116,102 @@ def test_internal_jobs_client_delete_running(snowflake_client: PortalClient, sto
     finally:
         end_event.set()
         th.join()
+
+
+def test_internal_jobs_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+
+    time_0 = datetime.utcnow()
+    id_1 = storage_socket.internal_jobs.add(
+        "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 1}, None, unique_name=False
+    )
+    time_1 = datetime.utcnow()
+
+    # Faster updates for testing
+    storage_socket.internal_jobs._update_frequency = 1
+
+    end_event = threading.Event()
+    th = threading.Thread(target=storage_socket.internal_jobs._run_loop, args=(end_event,))
+    th.start()
+    time.sleep(4)
+    time_2 = datetime.utcnow()
+
+    try:
+        job_1 = snowflake_client.get_internal_job(id_1)
+        assert job_1.status == InternalJobStatusEnum.complete
+
+    finally:
+        end_event.set()
+        th.join()
+
+    # Add one that will be waiting
+    id_2 = storage_socket.internal_jobs.add(
+        "dummy_job", datetime.utcnow(), "internal_jobs.dummy_job", {"iterations": 1}, None, unique_name=False
+    )
+
+    time_3 = datetime.utcnow()
+
+    # Now do some queries
+    result = snowflake_client.query_internal_jobs(job_id=id_1)
+    r = list(result)
+    assert result.current_meta.n_found == 1
+    assert len(r) == 1
+    assert r[0].id == id_1
+
+    result = snowflake_client.query_internal_jobs(name="dummy_job", status=["complete"])
+    r = list(result)
+    assert result.current_meta.n_found == 1
+    assert len(r) == 1
+    assert r[0].id == id_1
+
+    result = snowflake_client.query_internal_jobs(name="dummy_job", status="waiting")
+    r = list(result)
+    assert result.current_meta.n_found == 1
+    assert len(r) == 1
+    assert r[0].id == id_2
+
+    result = snowflake_client.query_internal_jobs(name="dummy_job", added_after=time_0)
+    r = list(result)
+    assert result.current_meta.n_found == 2
+    assert len(r) == 2
+    assert {r[0].id, r[1].id} == {id_1, id_2}
+
+    result = snowflake_client.query_internal_jobs(name="dummy_job", added_after=time_1, added_before=time_3)
+    r = list(result)
+    assert result.current_meta.n_found == 1
+    assert len(r) == 1
+    assert r[0].id == id_2
+
+    result = snowflake_client.query_internal_jobs(name="dummy_job", last_updated_after=time_2)
+    r = list(result)
+    assert result.current_meta.n_found == 0
+    assert len(r) == 0
+
+    result = snowflake_client.query_internal_jobs(name="dummy_job", last_updated_before=time_2)
+    r = list(result)
+    assert result.current_meta.n_found == 1
+    assert len(r) == 1
+    assert r[0].id == id_1
+
+    result = snowflake_client.query_internal_jobs(runner_hostname=socket.gethostname())
+    assert result.current_meta.n_found >= 2
+
+    # Empty query - all
+    # This should be at least two - other services were probably added by the socket
+    result = snowflake_client.query_internal_jobs()
+    assert result.current_meta.n_found >= 2
+
+    # Should also have a bunch
+    result = snowflake_client.query_internal_jobs(scheduled_before=datetime.utcnow())
+    assert result.current_meta.n_found >= 2
+
+    # nothing scheduled 10 days from now
+    result = snowflake_client.query_internal_jobs(scheduled_after=datetime.utcnow() + timedelta(days=10))
+    assert result.current_meta.n_found == 0
+
+    # Some queries for non-existent stuff
+    result = snowflake_client.query_internal_jobs(name="abcd")
+    assert result.current_meta.n_found == 0
+
+    # Some queries for non-existent stuff
+    result = snowflake_client.query_internal_jobs(status="error")
+    assert result.current_meta.n_found == 0

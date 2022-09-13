@@ -16,10 +16,10 @@ class JobStatus:
     Functor for updating progress and cancelling internal jobs
     """
 
-    def __init__(self, job_id: int, uuid: str, session: Session, update_frequency: int, end_event):
+    def __init__(self, job_id: int, runner_uuid: str, session: Session, update_frequency: int, end_event):
         self._update_frequency = update_frequency
         self._job_id = job_id
-        self._uuid = uuid
+        self._runner_uuid = runner_uuid
         self._stmt = (
             update(InternalJobORM)
             .where(InternalJobORM.id == self._job_id)
@@ -56,7 +56,7 @@ class JobStatus:
             elif ret[0] != InternalJobStatusEnum.running:
                 # Job was cancelled or something
                 self._cancelled = True
-            elif ret[1] != self._uuid:
+            elif ret[1] != self._runner_uuid:
                 # Job was stolen from us?
                 self._cancelled = True
 

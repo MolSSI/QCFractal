@@ -435,7 +435,7 @@ def server_start(config):
             if not gunicorn_proc.is_alive():
                 raise RuntimeError("Gunicorn process died! Check the logs")
             if not job_runner_proc.is_alive():
-                raise RuntimeError("Periodics process died! Check the logs")
+                raise RuntimeError("Job runner died! Check the logs")
     except EndProcess as e:
         if not stdout_logging:
             # Start logging to the screen again

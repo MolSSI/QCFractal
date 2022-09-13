@@ -2790,14 +2790,16 @@ class PortalClient(PortalClientBase):
 
     def query_internal_jobs(
         self,
-        job_id: Optional[int] = None,
+        job_id: Optional[int, Iterable[int]] = None,
         name: Optional[Union[str, Iterable[str]]] = None,
-        hostname: Optional[Union[str, Iterable[str]]] = None,
-        status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
-        modified_before: Optional[datetime] = None,
-        modified_after: Optional[datetime] = None,
+        runner_hostname: Optional[Union[str, Iterable[str]]] = None,
+        status: Optional[Union[InternalJobStatusEnum, Iterable[InternalJobStatusEnum]]] = None,
+        last_updated_before: Optional[datetime] = None,
+        last_updated_after: Optional[datetime] = None,
         added_before: Optional[datetime] = None,
         added_after: Optional[datetime] = None,
+        scheduled_before: Optional[datetime] = None,
+        scheduled_after: Optional[datetime] = None,
         limit: Optional[int] = None,
     ) -> InternalJobQueryIterator:
         """
@@ -2809,18 +2811,22 @@ class PortalClient(PortalClientBase):
             ID assigned to the job
         name
             Queries jobs whose name is in the given list
-        hostname
+        runner_hostname
             Queries jobs that were run/are running on a given host
         status
             Queries jobs whose status is in the given list
-        modified_before
-            Query for jobs last modified before a certain time
-        modified_after
-            Query for jobs last modified after a certain time
+        last_updated_before
+            Query for jobs last updated before a certain time
+        last_updated_after
+            Query for jobs last updated after a certain time
         added_before
-            Query for jobs last added before a certain time
+            Query for jobs added before a certain time
         added_after
-            Query for jobs last added after a certain time
+            Query for jobs added after a certain time
+        scheduled_before
+            Query for jobs scheduled to run before a certain time
+        scheduled_after
+            Query for jobs scheduled to run after a certain time
         limit
             The maximum number of jobs to return. Note that the server limit is always obeyed.
 
@@ -2833,12 +2839,14 @@ class PortalClient(PortalClientBase):
         filter_dict = {
             "job_id": make_list(job_id),
             "name": make_list(name),
-            "hostname": make_list(hostname),
+            "runner_hostname": make_list(runner_hostname),
             "status": make_list(status),
-            "modified_before": modified_before,
-            "modified_after": modified_after,
+            "last_updated_before": last_updated_before,
+            "last_updated_after": last_updated_after,
             "added_before": added_before,
             "added_after": added_after,
+            "scheduled_before": scheduled_before,
+            "scheduled_after": scheduled_after,
             "limit": limit,
         }
 

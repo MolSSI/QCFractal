@@ -31,7 +31,7 @@ def post_fork_cleanup(server, worker):
     https://docs.sqlalchemy.org/en/14/core/pooling.html#using-connection-pools-with-multiprocessing-or-os-fork
     """
 
-    storage_socket.engine.dispose()
+    storage_socket.post_fork_cleanup()
 
 
 class FractalGunicornLogger(GLogger):

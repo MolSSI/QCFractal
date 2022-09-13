@@ -106,6 +106,19 @@ class SQLAlchemySocket:
     def __str__(self) -> str:
         return f"<SQLAlchemySocket: address='{self.uri}`>"
 
+    def post_fork_cleanup(self):
+        """
+        Do some cleanup after forking inside gunicorn
+
+        We use synchronous workers, which are spawned via fork(). Howver,
+        this would cause multiple processes to share the same db connections.
+        We must dispose of them (from the global storage_socket object).
+
+        https://docs.sqlalchemy.org/en/14/core/pooling.html#using-connection-pools-with-multiprocessing-or-os-fork
+        """
+
+        self.engine.dispose()
+
     @staticmethod
     def alembic_commands(db_config: DatabaseConfig) -> List[str]:
         """

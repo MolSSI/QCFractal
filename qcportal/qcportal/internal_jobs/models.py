@@ -64,12 +64,14 @@ class InternalJob(BaseModel):
 class InternalJobQueryFilters(QueryProjModelBase):
     job_id: Optional[List[int]] = None
     name: Optional[List[str]] = None
-    hostname: Optional[List[str]] = None
+    runner_hostname: Optional[List[str]] = None
     status: Optional[List[InternalJobStatusEnum]] = None
-    modified_before: Optional[datetime] = None
-    modified_after: Optional[datetime] = None
+    last_updated_before: Optional[datetime] = None
+    last_updated_after: Optional[datetime] = None
     added_before: Optional[datetime] = None
     added_after: Optional[datetime] = None
+    scheduled_before: Optional[datetime] = None
+    scheduled_after: Optional[datetime] = None
 
 
 class InternalJobQueryIterator(QueryIteratorBase):
