@@ -1,18 +1,17 @@
 {% set name = "qcfractal" %}
-{% set version = "0.50a13" %}
+{% set version = environ.get('GIT_DESCRIBE_TAG', '').lstrip('v') %}
 
 package:
   name: {{ name }}
   version: {{ version }}
 
 source:
-  git_url: git@github.com:MolSSI/QCFractal.git
-  git_tag: v{{ version }}
+  path: ../../
 
 build:
   number: 0
   noarch: python
-  script: {{ PYTHON }} -m pip install --no-deps -vv qcfractal/
+  script: {{ PYTHON }} -m pip install --no-deps -vv ./qcfractal
 
 requirements:
   host:
