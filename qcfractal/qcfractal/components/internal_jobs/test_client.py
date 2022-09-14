@@ -30,7 +30,38 @@ def dummmy_internal_job(self, iterations: int, session, job_status):
     return "Internal job finished"
 
 
+# And another one for errors
+def dummmy_internal_job_error(self, session, job_status):
+    raise RuntimeError("Expected error")
+
+
 setattr(InternalJobSocket, "dummy_job", dummmy_internal_job)
+setattr(InternalJobSocket, "dummy_job_error", dummmy_internal_job_error)
+
+
+def test_internal_jobs_client_error(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
+    id_1 = storage_socket.internal_jobs.add(
+        "dummy_job_error", datetime.utcnow(), "internal_jobs.dummy_job_error", {}, None, unique_name=False
+    )
+
+    # Faster updates for testing
+    storage_socket.internal_jobs._update_frequency = 1
+
+    time_0 = datetime.utcnow()
+    end_event = threading.Event()
+    th = threading.Thread(target=storage_socket.internal_jobs._run_loop, args=(end_event,))
+    th.start()
+    time.sleep(3)
+    time_1 = datetime.utcnow()
+    end_event.set()
+    th.join()
+
+    job_1 = snowflake_client.get_internal_job(id_1)
+    assert job_1.status == InternalJobStatusEnum.error
+    assert job_1.progress < 100
+    assert time_0 < job_1.ended_date < time_1
+    assert time_0 < job_1.last_updated < time_1
+    assert job_1.result == "Expected error"
 
 
 def test_internal_jobs_client_cancel_waiting(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
