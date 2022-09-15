@@ -9,6 +9,7 @@ import os
 import secrets
 import urllib.parse
 from typing import Optional, Dict, Any
+from pydantic.env_settings import SettingsSourceCallable
 
 import yaml
 from pydantic import BaseSettings, Field, validator, root_validator, ValidationError
@@ -45,6 +46,17 @@ def _make_abs_path(path: Optional[str], base_folder: str, default_filename: Opti
 class ConfigCommon:
     case_sensitive = False
     extra = "forbid"
+
+    # Forces environment variables to take precedent over values
+    # passed to init (which usually come from a file)
+    @classmethod
+    def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            file_secret_settings: SettingsSourceCallable,
+    ) -> tuple[SettingsSourceCallable, ...]:
+        return env_settings, init_settings, file_secret_settings
 
 
 class ConfigBase(BaseSettings):
