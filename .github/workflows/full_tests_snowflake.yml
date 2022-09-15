@@ -50,11 +50,11 @@ jobs:
         run: |
           pytest -v --fractal-uri="snowflake" --log-file-level=DEBUG --log-file="qcfractal_snowflake.log" qcarchivetesting
 
-      - name: 'Save logs/artifacts'
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: qcfractal_testing_artifacts_${{ matrix.python-version }}
-          path: |
-            qcfractal_snowflake.log
-          retention-days: 7
+      #- name: 'Save logs/artifacts'
+      #  if: always()
+      #  uses: actions/upload-artifact@v2
+      #  with:
+      #    name: qcfractal_testing_artifacts_${{ matrix.python-version }}
+      #    path: |
+      #      qcfractal_snowflake.log
+      #    retention-days: 7
