@@ -7,6 +7,7 @@ from __future__ import annotations
 import argparse
 import atexit
 import logging
+import multiprocessing
 import os
 import shutil
 import signal
@@ -482,9 +483,20 @@ def server_start_job_runner(config):
     # even if we don't own the db (which we shouldn't)
     start_database(config)
 
+    end_event = multiprocessing.Event()
+
+    def _cleanup(sig, frame):
+        logger.debug("In cleanup of job runner")
+        end_event.set()
+
+    signal.signal(signal.SIGINT, _cleanup)
+    signal.signal(signal.SIGTERM, _cleanup)
+
     # Now just run the job runner directly
-    job_runner = FractalJobRunner(config)
+    job_runner = FractalJobRunner(config, end_event)
     job_runner.start()
+
+    exit(0)
 
 
 def server_start_api(config):
