@@ -6,14 +6,14 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import secrets
 import urllib.parse
 from typing import Optional, Dict, Any
-from pydantic.env_settings import SettingsSourceCallable
 
 import yaml
 from pydantic import BaseSettings, Field, validator, root_validator, ValidationError
-
+from pydantic.env_settings import SettingsSourceCallable
 from qcfractal.port_util import find_open_port
 
 
@@ -97,6 +97,10 @@ class DatabaseConfig(ConfigBase):
         description="The base folder to use as the default for some options (logs, etc). Default is the location of the config file.",
     )
 
+    full_uri: Optional[str] = Field(
+        None, description="Full connection URI. This overrides host,username,password,port, etc"
+    )
+
     host: str = Field(
         "localhost",
         description="The hostname and ip address the database is running on. If own = True, this must be localhost",
@@ -108,6 +112,7 @@ class DatabaseConfig(ConfigBase):
     database_name: str = Field("qcfractal_default", description="The database name to connect to.")
     username: Optional[str] = Field(None, description="The database username to connect with")
     password: Optional[str] = Field(None, description="The database password to connect with")
+    params: Optional[str] = Field(None, description="Extra connection params at the end of the URL string")
 
     own: bool = Field(
         True,
@@ -150,20 +155,34 @@ class DatabaseConfig(ConfigBase):
 
     @property
     def uri(self):
-        # Hostname can be a directory (unix sockets). But we need to escape some stuff
-        host = urllib.parse.quote(self.host, safe="")
-        username = self.username if self.username is not None else ""
-        password = f":{self.password}" if self.password is not None else ""
-        sep = "@" if username != "" or password != "" else ""
-        return f"postgresql://{username}{password}{sep}{host}:{self.port}/{self.database_name}"
+        if self.full_uri is not None:
+            return self.full_uri
+        else:
+            # Hostname can be a directory (unix sockets). But we need to escape some stuff
+            host = urllib.parse.quote(self.host, safe="")
+            username = self.username if self.username is not None else ""
+            password = f":{self.password}" if self.password is not None else ""
+            sep = "@" if username != "" or password != "" else ""
+            params = "" if self.params is None else self.params
+            return f"postgresql://{username}{password}{sep}{host}:{self.port}/{self.database_name}{params}"
 
     @property
     def safe_uri(self):
-        host = urllib.parse.quote(self.host, safe="")
-        username = self.username if self.username is not None else ""
-        password = ":********" if self.password is not None else ""
-        sep = "@" if username != "" or password != "" else ""
-        return f"postgresql://{username}{password}{sep}{host}:{self.port}/{self.database_name}"
+        if self.full_uri is not None:
+            parsed = urllib.parse.urlparse(self.full_uri)
+            if parsed.password is None:
+                return self.full_uri
+
+            new_netloc = re.sub(":.*@", ":********@", parsed.netloc)
+            parsed = parsed._replace(netloc=new_netloc)
+            return parsed.geturl()
+        else:
+            host = urllib.parse.quote(self.host, safe="")
+            username = self.username if self.username is not None else ""
+            password = ":********" if self.password is not None else ""
+            sep = "@" if username != "" or password != "" else ""
+            params = "" if self.params is None else self.params
+            return f"postgresql://{username}{password}{sep}{host}:{self.port}/{self.database_name}{params}"
 
 
 class AutoResetConfig(ConfigBase):
