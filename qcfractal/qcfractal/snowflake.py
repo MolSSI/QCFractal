@@ -4,6 +4,7 @@ import logging
 import logging.handlers
 import multiprocessing
 import os
+import secrets
 import tempfile
 import time
 import weakref
@@ -12,10 +13,10 @@ from queue import Empty  # Just for exception handling
 from typing import TYPE_CHECKING
 
 import requests
+from qcportal.record_models import RecordStatusEnum
 
 from qcfractalcompute import ComputeManager, _initialize_signals_process_pool
 from qcportal import PortalClient
-from qcportal.record_models import RecordStatusEnum
 from .config import FractalConfig, DatabaseConfig, update_nested_dict
 from .flask_app.flask_app import FlaskProcess
 from .job_runner import FractalJobRunnerProcess
@@ -106,7 +107,13 @@ class FractalSnowflake:
         qcf_cfg["base_folder"] = self._tmpdir.name
         qcf_cfg["loglevel"] = logging.getLevelName(loglevel)
         qcf_cfg["database"] = db_config.dict()
-        qcf_cfg["api"] = {"config_name": flask_config, "host": fractal_host, "port": fractal_port}
+        qcf_cfg["api"] = {
+            "config_name": flask_config,
+            "host": fractal_host,
+            "port": fractal_port,
+            "secret_key": secrets.token_urlsafe(32),
+            "jwt_secret_key": secrets.token_urlsafe(32),
+        }
         qcf_cfg["enable_security"] = False
         qcf_cfg["hide_internal_errors"] = False
         qcf_cfg["service_frequency"] = 10

@@ -14,6 +14,7 @@ from typing import Optional, Dict, Any
 import yaml
 from pydantic import BaseSettings, Field, validator, root_validator, ValidationError
 from pydantic.env_settings import SettingsSourceCallable
+
 from qcfractal.port_util import find_open_port
 
 
@@ -241,10 +242,8 @@ class WebAPIConfig(ConfigBase):
     host: str = Field("127.0.0.1", description="The IP address or hostname to bind to")
     port: int = Field(7777, description="The port on which to run the REST interface.")
 
-    secret_key: str = Field("default_key_PLEASE_CHANGE_ME", description="Secret key for flask api. See documentation")
-    jwt_secret_key: str = Field(
-        "default_key_PLEASE_CHANGE_ME", description="Secret key for web tokens. See documentation"
-    )
+    secret_key: str = Field(..., description="Secret key for flask api. See documentation")
+    jwt_secret_key: str = Field(..., description="Secret key for web tokens. See documentation")
     jwt_access_token_expires: int = Field(
         60 * 60 * 24 * 7, description="The time (in seconds) an access token is valid for. Default is 1 week"
     )
@@ -382,6 +381,8 @@ def convert_old_configuration(old_config):
     # Flask server settings
     cfg_dict["api"] = {}
     cfg_dict["api"]["port"] = old_config.fractal.port
+    cfg_dict["api"]["secret_key"] = secrets.token_urlsafe(32)
+    cfg_dict["api"]["jwt_secret_key"] = secrets.token_urlsafe(32)
 
     # Now general fractal settings. Before these were in a
     # separate config class, but now they are in the top level
@@ -437,11 +438,14 @@ def read_configuration(file_paths: list[str], extra_config: Optional[Dict[str, A
 
 def write_initial_configuration(file_path: str, full_config: bool = True):
     base_folder = os.path.dirname(file_path)
-    default_config = FractalConfig(base_folder=base_folder)
 
     # Generate two secret keys for flask/jwt
-    default_config.api.secret_key = secrets.token_urlsafe(32)
-    default_config.api.jwt_secret_key = secrets.token_urlsafe(32)
+    secret_key = secrets.token_urlsafe(32)
+    jwt_secret_key = secrets.token_urlsafe(32)
+
+    default_config = FractalConfig(
+        base_folder=base_folder, api={"secret_key": secret_key, "jwt_secret_key": jwt_secret_key}
+    )
 
     default_config.database.port = find_open_port(5432)
     default_config.api.port = find_open_port(7777)

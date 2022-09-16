@@ -4,10 +4,9 @@ Contains testing infrastructure for QCFractal.
 
 import gc
 import logging
+import secrets
 
 import pytest
-
-from qcarchivetesting import valid_encodings, geoip_path
 from qcfractal.config import FractalConfig
 from qcfractal.db_socket.socket import SQLAlchemySocket
 from qcfractal.postgres_harness import TemporaryPostgres
@@ -17,6 +16,8 @@ from qcfractal.testing_helpers import TestingSnowflake
 # Database and storage socket fixtures
 #######################################
 from qcportal.managers import ManagerName
+
+from qcarchivetesting import valid_encodings, geoip_path
 
 
 @pytest.fixture(scope="session")
@@ -104,6 +105,7 @@ def storage_socket(temporary_database):
     cfg_dict["database"]["pool_size"] = 0
     cfg_dict["log_access"] = True
     cfg_dict["geo_file_path"] = geoip_path
+    cfg_dict["api"] = {"secret_key": secrets.token_urlsafe(32), "jwt_secret_key": secrets.token_urlsafe(32)}
     qcf_config = FractalConfig(**cfg_dict)
 
     socket = SQLAlchemySocket(qcf_config)
