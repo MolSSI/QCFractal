@@ -52,10 +52,10 @@ class ConfigCommon:
     # passed to init (which usually come from a file)
     @classmethod
     def customise_sources(
-            cls,
-            init_settings: SettingsSourceCallable,
-            env_settings: SettingsSourceCallable,
-            file_secret_settings: SettingsSourceCallable,
+        cls,
+        init_settings: SettingsSourceCallable,
+        env_settings: SettingsSourceCallable,
+        file_secret_settings: SettingsSourceCallable,
     ) -> tuple[SettingsSourceCallable, ...]:
         return env_settings, init_settings, file_secret_settings
 
@@ -407,9 +407,6 @@ def read_configuration(file_paths: list[str], extra_config: Optional[Dict[str, A
     logger = logging.getLogger(__name__)
     config_data: Dict[str, Any] = {}
 
-    if len(file_paths) == 0:
-        raise RuntimeError("Cannot read configurations without any file paths!")
-
     # Read all the files, in order
     for path in file_paths:
         with open(path, "r") as yf:
@@ -420,20 +417,35 @@ def read_configuration(file_paths: list[str], extra_config: Optional[Dict[str, A
     if extra_config:
         update_nested_dict(config_data, extra_config)
 
-    # use the location of the last file as the base directory
-    base_dir = os.path.dirname(file_paths[-1])
+    # Find the base folder
+    # 1. If specified in the environment, use that
+    # 2. Use any specified in a config file
+    # 3. Use the path of the last (highest-priority) file given
+    if "QCF_BASE_FOLDER" in os.environ:
+        base_dir = os.getenv("QCF_BASE_FOLDER")
+    elif config_data.get("base_folder") is not None:
+        base_dir = config_data["base_folder"]
+    elif len(file_paths) > 0:
+        # use the location of the last file as the base directory
+        base_dir = os.path.dirname(file_paths[-1])
+    else:
+        raise RuntimeError("Base folder must be specified somehow. Maybe set QCF_BASE_FOLDER in the environment?")
 
-    # convert relative paths to full, absolute paths
-    base_dir = os.path.abspath(base_dir)
-
-    if config_data.get("base_folder") is None:
-        config_data["base_folder"] = base_dir
+    config_data["base_folder"] = os.path.abspath(base_dir)
 
     # Handle an old configuration
     if "fractal" in config_data:
         raise RuntimeError("Found an old configuration. Please migrate with qcfractal-server upgrade-config")
 
-    return FractalConfig(**config_data)
+    # Pydantic will handle reading from environment variables
+    # See if it can assemble a config. If there was a problem, and no
+    # config files specified, mention that
+    try:
+        return FractalConfig(**config_data)
+    except Exception as e:
+        if len(file_paths) == 0:
+            raise RuntimeError(f"Could not assemble a working configuration from environment variables:\n{str(e)}")
+        raise
 
 
 def write_initial_configuration(file_path: str, full_config: bool = True):

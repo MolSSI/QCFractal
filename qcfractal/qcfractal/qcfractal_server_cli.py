@@ -119,7 +119,7 @@ def parse_args() -> argparse.Namespace:
     """
 
     # Common help strings
-    config_file_help = "Path to a QCFractal configuration file. Default is ~/.qca/qcfractal/qcfractal_config.yaml"
+    config_file_help = "Path to a QCFractal configuration file"
     verbose_help = "Output more details about the startup of qcfractal-server commands"
 
     parser = argparse.ArgumentParser(description="A CLI for managing & running a QCFractal server.")
@@ -896,20 +896,6 @@ def main():
         if args.loglevel is not None:
             cmd_config["loglevel"] = args.loglevel
 
-    # Check for the config path on the command line. The command line
-    # always overrides environment variables
-    if args.config is not None:
-        config_path = args.config
-    else:
-        config_path = os.getenv("QCF_CONFIG_PATH")
-
-    # Not specified on command line or environment variable. Use default
-    if config_path is None:
-        config_path = os.path.expanduser(os.path.join("~", ".qca", "qcfractal", "qcfractal_config.yaml"))
-        logger.info(f"Using default configuration path {config_path}")
-
-    config_path = os.path.abspath(config_path)
-
     ###############################################################
     # Shortcuts here for initializing/upgrading the configuration
     # We don't want to read old configs with new code, or the
@@ -917,15 +903,29 @@ def main():
     ###############################################################
 
     if args.command == "init-config":
-        server_init_config(config_path, args.full)
+        if args.config is None:
+            raise RuntimeError("Configuration file path (--config) is required for initialization")
+        server_init_config(args.config, args.full)
         exit(0)
 
     if args.command == "upgrade-config":
-        server_upgrade_config(config_path)
+        if args.config is None:
+            raise RuntimeError("Configuration file path (--config) is required for upgrading configuration")
+        server_upgrade_config(args.config)
         exit(0)
 
+    # Check for the config path on the command line. The command line
+    # always overrides environment variables
+    config_paths = []
+    if args.config is not None:
+        config_paths.append(args.config)
+    elif "QCF_CONFIG_PATH" in os.environ:
+        config_paths.append(os.getenv("QCF_CONFIG_PATH"))
+
+    config_paths = [os.path.abspath(x) for x in config_paths]
+
     # Now read and form the complete configuration
-    qcf_config = read_configuration([config_path], cmd_config)
+    qcf_config = read_configuration(config_paths, cmd_config)
 
     cfg_str = dump_config(qcf_config, 4)
     logger.debug("Assembled the following configuration:\n" + cfg_str)
