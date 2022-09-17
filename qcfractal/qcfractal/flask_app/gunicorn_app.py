@@ -72,6 +72,9 @@ class FractalGunicornApp(gunicorn.app.base.BaseApplication):
             "keepalive": self.qcfractal_config.api.keepalive,
         }
 
+        if self.qcfractal_config.api.extra_gunicorn_options:
+            config.update(**self.qcfractal_config.api.extra_gunicorn_options)
+
         for key, value in config.items():
             self.cfg.set(key.lower(), value)
 

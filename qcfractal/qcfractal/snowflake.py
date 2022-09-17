@@ -13,10 +13,10 @@ from queue import Empty  # Just for exception handling
 from typing import TYPE_CHECKING
 
 import requests
-from qcportal.record_models import RecordStatusEnum
 
 from qcfractalcompute import ComputeManager, _initialize_signals_process_pool
 from qcportal import PortalClient
+from qcportal.record_models import RecordStatusEnum
 from .config import FractalConfig, DatabaseConfig, update_nested_dict
 from .flask_app.flask_app import FlaskProcess
 from .job_runner import FractalJobRunnerProcess
@@ -108,7 +108,6 @@ class FractalSnowflake:
         qcf_cfg["loglevel"] = logging.getLevelName(loglevel)
         qcf_cfg["database"] = db_config.dict()
         qcf_cfg["api"] = {
-            "config_name": flask_config,
             "host": fractal_host,
             "port": fractal_port,
             "secret_key": secrets.token_urlsafe(32),
@@ -119,10 +118,9 @@ class FractalSnowflake:
         qcf_cfg["service_frequency"] = 10
 
         # Add in any options passed to this Snowflake
-        if extra_config is None:
-            extra_config = {}
+        if extra_config is not None:
+            update_nested_dict(qcf_cfg, extra_config)
 
-        update_nested_dict(qcf_cfg, extra_config)
         self._qcf_config = FractalConfig(**qcf_cfg)
         self._compute_workers = compute_workers
 

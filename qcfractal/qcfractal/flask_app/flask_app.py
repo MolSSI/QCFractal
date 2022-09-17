@@ -11,7 +11,6 @@ from flask_jwt_extended import JWTManager
 
 from qcfractal.db_socket.socket import SQLAlchemySocket
 from qcfractal.process_runner import ProcessBase
-from .config import config
 from ..api_v1.blueprint import api_v1
 from ..auth_v1.blueprint import auth_v1
 from ..dashboard_v1.blueprint import dashboard_v1
@@ -35,29 +34,36 @@ jwt = JWTManager()
 
 
 def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
-    config_name = qcfractal_config.api.config_name
-
     app = Flask(__name__)
     app.logger = logging.getLogger("fractal_flask_app")
-    app.logger.info(f"Creating app with config '{config_name}'")
-
-    # Load the defaults for the Flask configuration
-    app.config.from_object(config[config_name])
-
-    config[config_name].init_app(app)
+    app.logger.info(f"Creating flask app")
 
     # Read in and store the qcfractal configuration for later use
     app.config["QCFRACTAL_CONFIG"] = qcfractal_config
 
-    jwt.init_app(app)
+    # Configure the flask app
 
-    # Initialize the database socket, API logger, and view handler
-    storage_socket.init(qcfractal_config)
+    # Some defaults (but can be overridden)
+    # must be set to false to avoid restarting
+    app.config["DEBUG"] = False
+
+    # Never propagate exceptions. This uses the default error pages
+    # which are HTML, but we are using json...
+    app.config["PROPAGATE_EXCEPTIONS"] = False
 
     app.config["SECRET_KEY"] = qcfractal_config.api.secret_key
     app.config["JWT_SECRET_KEY"] = qcfractal_config.api.jwt_secret_key
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = qcfractal_config.api.jwt_access_token_expires
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = qcfractal_config.api.jwt_refresh_token_expires
+
+    # Any additional configuration
+    if qcfractal_config.api.extra_flask_options:
+        app.config.update(**qcfractal_config.api.extra_flask_options)
+
+    jwt.init_app(app)
+
+    # Initialize the database socket, API logger, and view handler
+    storage_socket.init(qcfractal_config)
 
     # Registers the various error and before/after request handlers
     importlib.import_module("qcfractal.flask_app.handlers")

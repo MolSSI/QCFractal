@@ -232,7 +232,6 @@ class WebAPIConfig(ConfigBase):
     Settings for the Web API (api) interface
     """
 
-    config_name: str = Field("production", description="Flask configuration to use (default, debug, production, etc)")
     num_workers: int = Field(1, description="Number of workers to spawn in Gunicorn")
     worker_timeout: int = Field(
         120,
@@ -251,6 +250,13 @@ class WebAPIConfig(ConfigBase):
         60 * 60 * 24 * 30, description="The time (in seconds) a refresh token is valid for. Default is 30 days"
     )
     keepalive: int = Field(5, description="Time (in seconds) to wait for requests from a Keep-Alive connection")
+
+    extra_flask_options: Optional[Dict[str, Any]] = Field(
+        None, description="Any additional options to pass directly to flask"
+    )
+    extra_gunicorn_options: Optional[Dict[str, Any]] = Field(
+        None, description="Any additional options to pass directly to gunicorn"
+    )
 
     class Config(ConfigCommon):
         env_prefix = "QCF_API_"
