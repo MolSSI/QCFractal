@@ -220,8 +220,8 @@ class PostgresHarness:
         try:
             uri = self.config.uri
             if not check_database:
-                # We try to connect to the "postgres" database which should always exist
-                uri = replace_db_in_uri(uri, "postgres")
+                # We try to connect to the "template1" database which should always exist
+                uri = replace_db_in_uri(uri, "template1")
             self.connect(uri)
             return True
         except psycopg2.OperationalError as e:
@@ -308,7 +308,7 @@ class PostgresHarness:
         return self._run_subprocess(all_cmds)
 
     def get_postgres_version(self) -> str:
-        pg_uri = replace_db_in_uri(self.config.uri, "postgres")
+        pg_uri = replace_db_in_uri(self.config.uri, "template1")
         conn = self.connect(pg_uri)
 
         cursor = conn.cursor()
@@ -320,8 +320,6 @@ class PostgresHarness:
         return ver
 
     def get_alembic_version(self) -> str:
-        # First we connect to the 'postgres' database
-        # The database specified in the config may not exist yet
         pg_uri = replace_db_in_uri(self.config.uri, self.config.database_name)
         conn = self.connect(pg_uri)
 
@@ -348,9 +346,9 @@ class PostgresHarness:
             If true, create the tables (schema) as well
         """
 
-        # First we connect to the 'postgres' database
+        # First we connect to the 'template1' database
         # The database specified in the config may not exist yet
-        pg_uri = replace_db_in_uri(self.config.uri, "postgres")
+        pg_uri = replace_db_in_uri(self.config.uri, "template1")
         conn = self.connect(pg_uri)
         conn.autocommit = True
 
@@ -382,9 +380,9 @@ class PostgresHarness:
 
         This will delete all data associated with the database!
         """
-        # First we connect to the 'postgres' database
+        # First we connect to the 'template1' database
         # The database specified in the config may not exist yet
-        pg_uri = replace_db_in_uri(self.config.uri, "postgres")
+        pg_uri = replace_db_in_uri(self.config.uri, "template1")
         conn = self.connect(pg_uri)
         conn.autocommit = True
 
@@ -584,7 +582,7 @@ class PostgresHarness:
         """
 
         sql = f"SELECT pg_database_size('{self.config.database_name}');"
-        size = self.sql_command(sql, "postgres")
+        size = self.sql_command(sql, "template1")
 
         # sql_command returns a list of tuples
         return size[0][0]

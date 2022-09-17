@@ -7,17 +7,13 @@ import logging
 import secrets
 
 import pytest
+
+from qcarchivetesting import valid_encodings, geoip_path
 from qcfractal.config import FractalConfig
 from qcfractal.db_socket.socket import SQLAlchemySocket
 from qcfractal.postgres_harness import TemporaryPostgres
 from qcfractal.testing_helpers import TestingSnowflake
-
-#######################################
-# Database and storage socket fixtures
-#######################################
 from qcportal.managers import ManagerName
-
-from qcarchivetesting import valid_encodings, geoip_path
 
 
 @pytest.fixture(scope="session")
@@ -41,10 +37,12 @@ def postgres_server(tmp_path_factory):
     assert pg_harness.is_alive(False) and not pg_harness.is_alive(True)
 
     # Create the database, and we will use that as a template
-    # We connect to the "postgres" database, so as not to be using the database we want to copy
+    # We connect to the "template1" database, so as not to be using the database we want to copy
     pg_harness.create_database()
     pg_harness.sql_command(
-        f"CREATE DATABASE template_db TEMPLATE {tmp_pg._config.database_name};", database_name="postgres", returns=False
+        f"CREATE DATABASE template_db TEMPLATE {tmp_pg._config.database_name};",
+        database_name="template1",
+        returns=False,
     )
 
     # Delete the database - we will create it from the template later
@@ -69,7 +67,7 @@ def _temporary_database(postgres_server):
     # Create the database from the template
     db_name = postgres_server.config.database_name
     postgres_server.sql_command(
-        f"CREATE DATABASE {db_name} TEMPLATE template_db;", database_name="postgres", returns=False
+        f"CREATE DATABASE {db_name} TEMPLATE template_db;", database_name="template1", returns=False
     )
 
     try:
