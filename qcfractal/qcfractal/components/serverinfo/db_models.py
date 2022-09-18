@@ -40,10 +40,7 @@ class AccessLogORM(BaseORM):
     ip_lat = Column(Float)
     ip_long = Column(Float)
 
-    __table_args__ = (
-        Index("ix_access_log_access_date", "access_date"),
-        Index("ix_access_log_access_type", "access_type"),
-    )
+    __table_args__ = (Index("ix_access_log_access_date", "access_date", postgresql_using="brin"),)
 
 
 class InternalErrorLogORM(BaseORM):
@@ -66,7 +63,7 @@ class InternalErrorLogORM(BaseORM):
     request_headers = Column(String)
     request_body = Column(String)
 
-    __table_args__ = (Index("ix_internal_error_log_error_date", "error_date"),)
+    __table_args__ = (Index("ix_internal_error_log_error_date", "error_date", postgresql_using="brin"),)
 
 
 class ServerStatsLogORM(BaseORM):
@@ -100,7 +97,7 @@ class ServerStatsLogORM(BaseORM):
     db_index_size = Column(BigInteger)
     db_table_information = Column(JSON)
 
-    __table_args__ = (Index("ix_server_stats_log_timestamp", "timestamp"),)
+    __table_args__ = (Index("ix_server_stats_log_timestamp", "timestamp", postgresql_using="brin"),)
 
 
 class MessageOfTheDayORM(BaseORM):

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, Enum, JSON, LargeBinary, ForeignKey, Index, UniqueConstraint
+from sqlalchemy import Column, Integer, Enum, JSON, LargeBinary, ForeignKey, UniqueConstraint
 
 from qcfractal.db_socket import BaseORM
 from qcportal.compression import CompressionEnum
@@ -28,10 +28,7 @@ class OutputStoreORM(BaseORM):
     value = Column(JSON, nullable=True)
     data = Column(LargeBinary, nullable=True)
 
-    __table_args__ = (
-        Index("ix_output_store_history_id", "history_id"),
-        UniqueConstraint("history_id", "output_type", name="ux_output_store_id_type"),
-    )
+    __table_args__ = (UniqueConstraint("history_id", "output_type", name="ux_output_store_id_type"),)
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Fields not in model

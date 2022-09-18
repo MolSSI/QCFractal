@@ -42,9 +42,9 @@ class InternalJobORM(BaseORM):
     unique_name = Column(String, nullable=True)
 
     __table_args__ = (
-        Index("ix_internal_jobs_added_date", "added_date"),
-        Index("ix_internal_jobs_scheduled_date", "scheduled_date"),
-        Index("ix_internal_jobs_last_updated", "last_updated"),
+        Index("ix_internal_jobs_added_date", "added_date", postgresql_using="brin"),
+        Index("ix_internal_jobs_scheduled_date", "scheduled_date", postgresql_using="brin"),
+        Index("ix_internal_jobs_last_updated", "last_updated", postgresql_using="brin"),
         Index("ix_internal_jobs_status", "status"),
         Index("ix_internal_jobs_name", "name"),
         UniqueConstraint("unique_name", name="ux_internal_jobs_unique_name"),

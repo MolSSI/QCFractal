@@ -46,7 +46,7 @@ class ComputeManagerLogORM(BaseORM):
     active_cores = Column(Integer, nullable=False, default=0)
     active_memory = Column(Float, nullable=False, default=0.0)
 
-    __table_args__ = (Index("ix_compute_manager_log_timestamp", "timestamp"),)
+    __table_args__ = (Index("ix_compute_manager_log_timestamp", "timestamp", postgresql_using="brin"),)
 
 
 class ComputeManagerORM(BaseORM):
@@ -88,7 +88,7 @@ class ComputeManagerORM(BaseORM):
 
     __table_args__ = (
         Index("ix_compute_manager_status", "status"),
-        Index("ix_compute_manager_modified_on", "modified_on"),
+        Index("ix_compute_manager_modified_on", "modified_on", postgresql_using="brin"),
         UniqueConstraint("name", name="ux_compute_manager_name"),
         CheckConstraint("programs::text = LOWER(programs::text)", name="ck_compute_manager_programs_lower"),
         CheckConstraint("tags::text = LOWER(tags::text)", name="ck_compute_manager_tags_lower"),

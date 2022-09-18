@@ -83,10 +83,7 @@ class RecordComputeHistoryORM(BaseORM):
         OutputStoreORM, collection_class=attribute_mapped_collection("output_type"), cascade="all, delete-orphan"
     )
 
-    __table_args__ = (
-        Index("ix_record_compute_history_record_id", "record_id"),
-        Index("ix_record_compute_history_manager_name", "manager_name"),
-    )
+    __table_args__ = (Index("ix_record_compute_history_record_id", "record_id"),)
 
     def upsert_output(self, session, new_output_orm: OutputStore) -> None:
         """

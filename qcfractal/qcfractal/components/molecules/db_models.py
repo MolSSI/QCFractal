@@ -59,7 +59,7 @@ class MoleculeORM(BaseORM):
     extras = Column(JSON)
 
     __table_args__ = (
-        Index("ix_molecule_hash", "molecule_hash"),
+        Index("ix_molecule_molecule_hash", "molecule_hash", postgresql_using="hash"),
         Index("ix_molecule_identifiers", "identifiers", postgresql_using="gin"),
     )
 

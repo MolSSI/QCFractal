@@ -44,8 +44,8 @@ class BaseDatasetORM(BaseORM):
     )
 
     __table_args__ = (
-        UniqueConstraint("dataset_type", "lname", name="uix_dataset_type_lname"),
-        Index("ix_dataset_type", "dataset_type"),
+        UniqueConstraint("dataset_type", "lname", name="ux_base_dataset_dataset_type_lname"),
+        Index("ix_base_dataset_dataset_type", "dataset_type"),
     )
 
     __mapper_args__ = {"polymorphic_on": "dataset_type"}
@@ -82,6 +82,8 @@ class ContributedValuesORM(BaseORM):
     doi = Column(String)
 
     comments = Column(String)
+
+    __table_args__ = (Index("ix_contributed_values_dataset_id", "dataset_id"),)
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         exclude = self.append_exclude(exclude, "dataset_id")

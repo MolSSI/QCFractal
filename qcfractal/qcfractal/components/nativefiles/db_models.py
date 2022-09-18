@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, String, Integer, Enum, LargeBinary, ForeignKey, Index, UniqueConstraint, Boolean
+from sqlalchemy import Column, String, Integer, Enum, LargeBinary, ForeignKey, UniqueConstraint, Boolean
 
 from qcfractal.db_socket import BaseORM
 from qcportal.compression import CompressionEnum
@@ -28,10 +28,7 @@ class NativeFileORM(BaseORM):
     uncompressed_size = Column(Integer, nullable=False)
     data = Column(LargeBinary, nullable=False)
 
-    __table_args__ = (
-        Index("ix_native_file_record_id", "record_id"),
-        UniqueConstraint("record_id", "name", name="ux_native_file_record_id_name"),
-    )
+    __table_args__ = (UniqueConstraint("record_id", "name", name="ux_native_file_record_id_name"),)
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Remove fields not present in the model
