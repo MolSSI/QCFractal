@@ -238,7 +238,7 @@ class SQLAlchemySocket:
             raise RuntimeError("Multiple alembic revision heads not supported")
 
         if heads[0] != current_rev:
-            raise RuntimeError("Database needs migration. Please run `qcfractal-server upgrade` (after backing up!)")
+            raise RuntimeError("Database needs migration. Please run `qcfractal-server upgrade-db` (after backing up!)")
 
     def get_connection(self):
         """
