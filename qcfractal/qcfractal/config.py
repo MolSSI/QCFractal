@@ -140,6 +140,11 @@ class DatabaseConfig(ConfigBase):
         description="[ADVANCED] set the size of the connection pool to use in SQLAlchemy. Set to zero to disable pooling",
     )
 
+    existing_db: str = Field(
+        "postgres",
+        description="[ADVANCED] An existing database (not the one you want to use/create). This is used for database management",
+    )
+
     class Config(ConfigCommon):
         env_prefix = "QCF_DB_"
 

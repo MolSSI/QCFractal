@@ -41,7 +41,7 @@ def postgres_server(tmp_path_factory):
     pg_harness.create_database()
     pg_harness.sql_command(
         f"CREATE DATABASE template_db TEMPLATE {tmp_pg._config.database_name};",
-        database_name="template1",
+        database_name=tmp_pg._config.existing_db,
         returns=False,
     )
 
@@ -67,7 +67,9 @@ def _temporary_database(postgres_server):
     # Create the database from the template
     db_name = postgres_server.config.database_name
     postgres_server.sql_command(
-        f"CREATE DATABASE {db_name} TEMPLATE template_db;", database_name="template1", returns=False
+        f"CREATE DATABASE {db_name} TEMPLATE template_db;",
+        database_name=postgres_server.config.existing_db,
+        returns=False,
     )
 
     try:
