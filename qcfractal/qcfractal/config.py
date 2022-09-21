@@ -113,7 +113,7 @@ class DatabaseConfig(ConfigBase):
     database_name: str = Field("qcfractal_default", description="The database name to connect to.")
     username: Optional[str] = Field(None, description="The database username to connect with")
     password: Optional[str] = Field(None, description="The database password to connect with")
-    params: Optional[str] = Field(None, description="Extra connection params at the end of the URL string")
+    query: Optional[str] = Field(None, description="Extra connection query parameters at the end of the URL string")
 
     own: bool = Field(
         True,
@@ -159,6 +159,24 @@ class DatabaseConfig(ConfigBase):
     def _check_logfile(cls, v, values):
         return _make_abs_path(v, values["base_folder"], "qcfractal_database.log")
 
+    @root_validator(pre=True)
+    def _root_validator(cls, values):
+        """
+        If full uri is specified, decompose it into the other fields
+        """
+
+        full_uri = values.get("full_uri")
+        if full_uri:
+            parsed = urllib.parse.urlparse(full_uri)
+            values["host"] = parsed.hostname
+            values["port"] = parsed.port
+            values["username"] = parsed.username
+            values["password"] = parsed.password
+            values["query"] = "?" + parsed.query
+            values["database_name"] = parsed.path.strip("/")
+
+        return values
+
     @property
     def uri(self):
         if self.full_uri is not None:
@@ -169,8 +187,8 @@ class DatabaseConfig(ConfigBase):
             username = self.username if self.username is not None else ""
             password = f":{self.password}" if self.password is not None else ""
             sep = "@" if username != "" or password != "" else ""
-            params = "" if self.params is None else self.params
-            return f"postgresql://{username}{password}{sep}{host}:{self.port}/{self.database_name}{params}"
+            query = "" if self.query is None else self.query
+            return f"postgresql://{username}{password}{sep}{host}:{self.port}/{self.database_name}{query}"
 
     @property
     def safe_uri(self):
@@ -187,8 +205,8 @@ class DatabaseConfig(ConfigBase):
             username = self.username if self.username is not None else ""
             password = ":********" if self.password is not None else ""
             sep = "@" if username != "" or password != "" else ""
-            params = "" if self.params is None else self.params
-            return f"postgresql://{username}{password}{sep}{host}:{self.port}/{self.database_name}{params}"
+            query = "" if self.query is None else self.query
+            return f"postgresql://{username}{password}{sep}{host}:{self.port}/{self.database_name}{query}"
 
 
 class AutoResetConfig(ConfigBase):

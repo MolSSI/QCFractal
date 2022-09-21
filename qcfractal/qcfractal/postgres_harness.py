@@ -320,8 +320,7 @@ class PostgresHarness:
         return ver
 
     def get_alembic_version(self) -> str:
-        pg_uri = replace_db_in_uri(self.config.uri, self.config.database_name)
-        conn = self.connect(pg_uri)
+        conn = self.connect(self.config.uri)
 
         cursor = conn.cursor()
 
