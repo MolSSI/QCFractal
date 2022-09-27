@@ -13,6 +13,7 @@ import psycopg2
 from sqlalchemy import select, delete, update, and_, or_
 from sqlalchemy.dialects.postgresql import insert
 
+from qcfractal.components.auth.db_models import UserIDMapSubquery
 from qcfractal.db_socket.helpers import get_query_proj_options, get_count
 from qcportal.exceptions import MissingDataError
 from qcportal.internal_jobs.models import InternalJobStatusEnum, InternalJobQueryFilters
@@ -49,7 +50,7 @@ class InternalJobSocket:
         scheduled_date: datetime,
         function: str,
         kwargs: Dict[str, Any],
-        user: Optional[str],
+        user_id: Optional[int],
         unique_name: bool = False,
         after_function: Optional[str] = None,
         after_function_kwargs: Optional[Dict[str, Any]] = None,
@@ -71,7 +72,7 @@ class InternalJobSocket:
             Example: `services.iterate_services`
         kwargs
             Arguments to pass to the function
-        user
+        user_id
             The user making creating this job
         unique_name
             If true, do not add if a job with that name already exists in the job queue.
@@ -102,7 +103,7 @@ class InternalJobSocket:
                     after_function=after_function,
                     after_function_kwargs=after_function_kwargs,
                     status=InternalJobStatusEnum.waiting,
-                    user=user,
+                    user_id=user_id,
                 )
                 stmt = stmt.on_conflict_do_nothing()
                 stmt = stmt.returning(InternalJobORM.id)
@@ -121,7 +122,7 @@ class InternalJobSocket:
                     function=function,
                     kwargs=kwargs,
                     status=InternalJobStatusEnum.waiting,
-                    user=user,
+                    user_id=user_id,
                 )
                 if unique_name:
                     job_orm.unique_name = name
@@ -189,6 +190,8 @@ class InternalJobSocket:
 
         proj_options = get_query_proj_options(InternalJobORM, query_data.include, query_data.exclude)
 
+        stmt = select(InternalJobORM)
+
         and_query = []
         if query_data.job_id is not None:
             and_query.append(InternalJobORM.id.in_(query_data.job_id))
@@ -210,9 +213,16 @@ class InternalJobSocket:
             and_query.append(InternalJobORM.scheduled_date < query_data.scheduled_before)
         if query_data.scheduled_after is not None:
             and_query.append(InternalJobORM.scheduled_date > query_data.scheduled_after)
+        if query_data.user:
+            stmt = stmt.join(UserIDMapSubquery)
+
+            int_ids = {x for x in query_data.user if isinstance(x, int) or x.isnumeric()}
+            str_names = set(query_data.user) - int_ids
+
+            and_query.append(or_(UserIDMapSubquery.username.in_(str_names), UserIDMapSubquery.id.in_(int_ids)))
 
         with self.root_socket.optional_session(session, True) as session:
-            stmt = select(InternalJobORM).filter(and_(True, *and_query))
+            stmt = stmt.filter(and_(True, *and_query))
             stmt = stmt.options(*proj_options)
 
             if query_data.include_metadata:

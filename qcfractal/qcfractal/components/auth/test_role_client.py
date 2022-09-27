@@ -2,8 +2,8 @@ import pytest
 
 from qcarchivetesting import test_users
 from qcportal import PortalRequestError
+from qcportal.auth import RoleInfo, PermissionsPolicy
 from qcportal.exceptions import InvalidRolenameError
-from qcportal.permissions import RoleInfo, PermissionsPolicy
 from .role_socket import default_roles
 from .test_role_socket import invalid_rolenames
 from ...testing_helpers import TestingSnowflake
@@ -75,21 +75,21 @@ def test_role_client_use_nonexist(secure_snowflake: TestingSnowflake):
         client.delete_role("no_role")
 
 
-@pytest.mark.parametrize("rolename", invalid_rolenames)
-def test_role_client_use_invalid(secure_snowflake: TestingSnowflake, rolename: str):
+def test_role_client_use_invalid(secure_snowflake: TestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
-    rinfo = client.get_role("read")
-    rinfo.__dict__["rolename"] = rolename  # bypass pydantic validation
+    for rolename in invalid_rolenames:
+        rinfo = client.get_role("read")
+        rinfo.__dict__["rolename"] = rolename  # bypass pydantic validation
 
-    with pytest.raises(InvalidRolenameError):
-        client.get_role(rolename)
-    with pytest.raises(InvalidRolenameError):
-        client.add_role(rinfo)
-    with pytest.raises(InvalidRolenameError):
-        client.modify_role(rinfo)
-    with pytest.raises(InvalidRolenameError):
-        client.delete_role(rolename)
+        with pytest.raises(InvalidRolenameError):
+            client.get_role(rolename)
+        with pytest.raises(InvalidRolenameError):
+            client.add_role(rinfo)
+        with pytest.raises(InvalidRolenameError):
+            client.modify_role(rinfo)
+        with pytest.raises(InvalidRolenameError):
+            client.delete_role(rolename)
 
 
 def test_role_client_delete(secure_snowflake: TestingSnowflake):
@@ -123,7 +123,6 @@ def test_role_client_modify(secure_snowflake: TestingSnowflake):
 
     rinfo2 = client.modify_role(rinfo)
 
-    # update_on_server should have updated the model itself
     rinfo3 = client.get_role("read")
     assert rinfo2 == rinfo
     assert rinfo3 == rinfo

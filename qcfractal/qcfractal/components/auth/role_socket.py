@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import select
 
+from qcportal.auth import RoleInfo, is_valid_rolename
 from qcportal.exceptions import UserManagementError
-from qcportal.permissions import RoleInfo, is_valid_rolename
 from .db_models import RoleORM
 
 if TYPE_CHECKING:
@@ -34,12 +34,11 @@ default_roles: Dict[str, Any] = {
     "read": {
         "Statement": [
             {"Effect": "Allow", "Action": "READ", "Resource": "*"},
-            {"Effect": "Allow", "Action": "WRITE", "Resource": "/api/v1/me"},
+            {"Effect": "Allow", "Action": "WRITE", "Resource": ["/api/v1/users", "/api/v1/me"]},
             {
                 "Effect": "Deny",
                 "Action": "*",
                 "Resource": [
-                    "/api/v1/users",
                     "/api/v1/roles",
                     "/api/v1/managers",
                     "/api/v1/server_errors",
@@ -53,26 +52,25 @@ default_roles: Dict[str, Any] = {
     "monitor": {
         "Statement": [
             {"Effect": "Allow", "Action": "READ", "Resource": "*"},
-            {"Effect": "Allow", "Action": "WRITE", "Resource": "/api/v1/me"},
-            {"Effect": "Deny", "Action": "*", "Resource": ["/api/v1/users", "/api/v1/roles"]},
+            {"Effect": "Allow", "Action": "WRITE", "Resource": "/api/v1/users"},
+            {"Effect": "Deny", "Action": "*", "Resource": ["/api/v1/roles"]},
         ]
     },
     "compute": {
         "Statement": [
             {"Effect": "Allow", "Action": ["READ"], "Resource": "/api/v1/information"},
-            {"Effect": "Allow", "Action": ["READ", "WRITE"], "Resource": "/api/v1/me"},
+            {"Effect": "Allow", "Action": ["READ", "WRITE"], "Resource": "/api/v1/users"},
             {"Effect": "Allow", "Action": "*", "Resource": ["/api/v1/tasks", "/api/v1/managers"]},
         ]
     },
     "submit": {
         "Statement": [
             {"Effect": "Allow", "Action": "READ", "Resource": "*"},
-            {"Effect": "Allow", "Action": "WRITE", "Resource": "/api/v1/me"},
+            {"Effect": "Allow", "Action": "WRITE", "Resource": "/api/v1/users"},
             {
                 "Effect": "Deny",
                 "Action": "*",
                 "Resource": [
-                    "/api/v1/users",
                     "/api/v1/roles",
                     "/api/v1/managers",
                     "/api/v1/server_stats",

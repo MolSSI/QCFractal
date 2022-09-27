@@ -4,6 +4,7 @@ import ipaddress
 from typing import TYPE_CHECKING
 
 from qcarchivetesting import load_ip_test_data
+from qcfractal.testing_helpers import TestingSnowflake
 from qcportal.serverinfo.models import AccessLogQueryFilters
 
 if TYPE_CHECKING:
@@ -47,8 +48,17 @@ def test_serverinfo_socket_geoip(storage_socket: SQLAlchemySocket):
                 assert our_data["ip_long"] == ref_data["location"]["longitude"]
 
 
-def test_serverinfo_socket_save_access(storage_socket: SQLAlchemySocket):
+def test_serverinfo_socket_save_access(secure_snowflake: TestingSnowflake):
+
+    storage_socket = secure_snowflake.get_storage_socket()
+
     ip_data = load_ip_test_data()
+
+    admin_id = storage_socket.users.get("admin_user")["id"]
+    read_id = storage_socket.users.get("read_user")["id"]
+    monitor_id = storage_socket.users.get("monitor_user")["id"]
+
+    userid_map = {admin_id: "admin_user", read_id: "read_user", monitor_id: "monitor_user"}
 
     access1 = {
         "access_type": "v1/molecule",
@@ -56,7 +66,7 @@ def test_serverinfo_socket_save_access(storage_socket: SQLAlchemySocket):
         "ip_address": test_ips[0][0],
         "user_agent": "Fake user agent",
         "request_duration": 0.24,
-        "user": "admin_user",
+        "user_id": admin_id,
         "request_bytes": 123,
         "response_bytes": 18273,
     }
@@ -67,7 +77,7 @@ def test_serverinfo_socket_save_access(storage_socket: SQLAlchemySocket):
         "ip_address": test_ips[1][0],
         "user_agent": "Fake user agent",
         "request_duration": 0.45,
-        "user": "read_user",
+        "user_id": read_id,
         "request_bytes": 456,
         "response_bytes": 12671,
     }
@@ -78,7 +88,7 @@ def test_serverinfo_socket_save_access(storage_socket: SQLAlchemySocket):
         "ip_address": test_ips[2][0],
         "user_agent": "Fake user agent",
         "request_duration": 0.01,
-        "user": "read_user",
+        "user_id": read_id,
         "request_bytes": 789,
         "response_bytes": 1975,
     }
@@ -89,7 +99,7 @@ def test_serverinfo_socket_save_access(storage_socket: SQLAlchemySocket):
         "ip_address": test_ips[3][0],
         "user_agent": "Fake user agent",
         "request_duration": 2.18,
-        "user": "admin_user",
+        "user_id": admin_id,
         "request_bytes": 101112,
         "response_bytes": 10029,
     }
@@ -100,7 +110,7 @@ def test_serverinfo_socket_save_access(storage_socket: SQLAlchemySocket):
         "ip_address": test_ips[4][0],
         "user_agent": "Fake user agent",
         "request_duration": 3.12,
-        "user": "monitor_user",
+        "user_id": monitor_id,
         "request_bytes": 151617,
         "response_bytes": 2719,
     }
@@ -111,7 +121,7 @@ def test_serverinfo_socket_save_access(storage_socket: SQLAlchemySocket):
         "ip_address": test_ips[5][0],
         "user_agent": "Fake user agent",
         "request_duration": 1.28,
-        "user": "read_user",
+        "user_id": read_id,
         "request_bytes": 131415,
         "response_bytes": 718723,
     }
@@ -146,7 +156,7 @@ def test_serverinfo_socket_save_access(storage_socket: SQLAlchemySocket):
 
         assert ac_in["user_agent"] == ac_db["user_agent"]
         assert ac_in["request_duration"] == ac_db["request_duration"]
-        assert ac_in["user"] == ac_db["user"]
+        assert userid_map[ac_in["user_id"]] == ac_db["user"]
         assert ac_in["request_bytes"] == ac_db["request_bytes"]
         assert ac_in["response_bytes"] == ac_db["response_bytes"]
 

@@ -4,6 +4,7 @@ from datetime import datetime
 
 import pytest
 
+from qcarchivetesting import test_users
 from qcfractal.components.serverinfo.test_access_socket import test_ips
 from qcfractal.testing_helpers import TestingSnowflake
 from qcportal import PortalClient
@@ -14,13 +15,18 @@ def queryable_access_client(module_temporary_database):
     db_config = module_temporary_database.config
 
     # Don't log accesses
-    with TestingSnowflake(db_config, encoding="application/json", log_access=False) as server:
-
+    with TestingSnowflake(
+        db_config, encoding="application/json", enable_security=True, create_users=True, log_access=False
+    ) as server:
         # generate a bunch of test data
         storage_socket = server.get_storage_socket()
+
+        admin_uid = storage_socket.users.get("admin_user")["id"]
+        read_uid = storage_socket.users.get("read_user")["id"]
+
         with storage_socket.session_scope() as session:
             for i in range(10):
-                for user in ["admin_user", "read_user"]:
+                for user_id in [admin_uid, read_uid]:
                     for endpoint in ["molecules", "records", "wavefunctions", "managers"]:
                         for method in ["GET", "POST"]:
                             access = {
@@ -29,13 +35,13 @@ def queryable_access_client(module_temporary_database):
                                 "ip_address": test_ips[0][0],
                                 "user_agent": "Fake user agent",
                                 "request_duration": 0.25 * i,
-                                "user": user,
+                                "user_id": user_id,
                                 "request_bytes": 2 * i,
                                 "response_bytes": 4 * i,
                             }
                             storage_socket.serverinfo.save_access(access, session=session)
 
-        yield server.client()
+        yield server.client("admin_user", test_users["admin_user"]["pw"])
 
 
 def test_serverinfo_client_query_access(queryable_access_client: PortalClient):
@@ -49,6 +55,20 @@ def test_serverinfo_client_query_access(queryable_access_client: PortalClient):
     assert query_res.current_meta.n_found == 80
     all_entries = list(query_res)
     assert len(all_entries) == 80
+
+    query_res = queryable_access_client.query_access_log(user="admin_user")
+    assert query_res.current_meta.n_found == 80
+    all_entries = list(query_res)
+    assert len(all_entries) == 80
+
+    read_id = queryable_access_client.get_user("read_user").id
+    query_res = queryable_access_client.query_access_log(user=[read_id, "admin_user"])
+    assert query_res.current_meta.n_found == 160
+    all_entries = list(query_res)
+    assert len(all_entries) == 160
+
+    query_res = queryable_access_client.query_access_log(user=["no_user"])
+    assert query_res.current_meta.n_found == 0
 
     query_res = queryable_access_client.query_access_log(access_type=["v1/molecules"], access_method="get")
     assert query_res.current_meta.n_found == 20

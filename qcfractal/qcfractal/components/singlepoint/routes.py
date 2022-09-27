@@ -1,11 +1,23 @@
-from flask import current_app
+from typing import List
+
+from flask import current_app, g
 
 from qcfractal.api_v1.blueprint import api_v1
 from qcfractal.api_v1.helpers import wrap_route
 from qcfractal.flask_app import storage_socket
 from qcportal.exceptions import LimitExceededError
-from qcportal.singlepoint import SinglepointAddBody, SinglepointQueryFilters
+from qcportal.singlepoint import (
+    SinglepointDatasetSpecification,
+    SinglepointDatasetNewEntry,
+    SinglepointAddBody,
+    SinglepointQueryFilters,
+)
 from qcportal.utils import calculate_limit
+
+
+#####################
+# Record
+#####################
 
 
 @api_v1.route("/records/singlepoint/bulkCreate", methods=["POST"])
@@ -16,7 +28,12 @@ def add_singlepoint_records_v1(body_data: SinglepointAddBody):
         raise LimitExceededError(f"Cannot add {len(body_data.molecules)} singlepoint records - limit is {limit}")
 
     return storage_socket.records.singlepoint.add(
-        molecules=body_data.molecules, qc_spec=body_data.specification, tag=body_data.tag, priority=body_data.priority
+        molecules=body_data.molecules,
+        qc_spec=body_data.specification,
+        tag=body_data.tag,
+        priority=body_data.priority,
+        owner_user=g.username,
+        owner_group=body_data.owner_group,
     )
 
 
@@ -36,3 +53,23 @@ def query_singlepoint_v1(body_data: SinglepointQueryFilters):
     body_data.limit = calculate_limit(max_limit, body_data.limit)
 
     return storage_socket.records.singlepoint.query(body_data)
+
+
+#####################
+# Dataset
+#####################
+
+
+@api_v1.route("/datasets/singlepoint/<int:dataset_id>/specifications", methods=["POST"])
+@wrap_route("WRITE")
+def add_singlepoint_dataset_specifications_v1(dataset_id: int, body_data: List[SinglepointDatasetSpecification]):
+    return storage_socket.datasets.singlepoint.add_specifications(dataset_id, body_data)
+
+
+@api_v1.route("/datasets/singlepoint/<int:dataset_id>/entries/bulkCreate", methods=["POST"])
+@wrap_route("WRITE")
+def add_singlepoint_dataset_entries_v1(dataset_id: int, body_data: List[SinglepointDatasetNewEntry]):
+    return storage_socket.datasets.singlepoint.add_entries(
+        dataset_id,
+        new_entries=body_data,
+    )

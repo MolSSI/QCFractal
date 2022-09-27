@@ -82,7 +82,7 @@ def submit_test_data(
 ) -> Tuple[int, Dict[str, Any]]:
 
     input_spec, chain, result = load_test_data(name)
-    meta, record_ids = storage_socket.records.neb.add([chain], input_spec, tag, priority)
+    meta, record_ids = storage_socket.records.neb.add([chain], input_spec, tag, priority, None, None)
     assert meta.success
     assert len(record_ids) == 1
     assert meta.n_inserted == 1

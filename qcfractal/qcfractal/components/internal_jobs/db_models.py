@@ -3,8 +3,10 @@ from __future__ import annotations
 import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, DateTime, String, JSON, Index, Enum, UniqueConstraint
+from sqlalchemy import Column, Integer, DateTime, String, JSON, Index, Enum, UniqueConstraint, ForeignKey
+from sqlalchemy.orm import relationship
 
+from qcfractal.components.auth.db_models import UserIDMapSubquery, UserORM
 from qcfractal.db_socket import BaseORM
 from qcportal.internal_jobs.models import InternalJobStatusEnum
 
@@ -35,7 +37,14 @@ class InternalJobORM(BaseORM):
     after_function_kwargs = Column(JSON, nullable=True)
 
     result = Column(JSON)
-    user = Column(String)
+    user_id = Column(Integer, ForeignKey(UserORM.id, ondelete="cascade"), nullable=True)
+
+    user = relationship(
+        UserIDMapSubquery,
+        foreign_keys=[user_id],
+        primaryjoin="InternalJobORM.user_id == UserIDMapSubquery.id",
+        lazy="selectin",
+    )
 
     # Nullable column with unique constraint. If a unique_name is specified,
     # it must be unique. null != null always
@@ -47,9 +56,13 @@ class InternalJobORM(BaseORM):
         Index("ix_internal_jobs_last_updated", "last_updated", postgresql_using="brin"),
         Index("ix_internal_jobs_status", "status"),
         Index("ix_internal_jobs_name", "name"),
+        Index("ix_internal_jobs_user_id", "user_id"),
         UniqueConstraint("unique_name", name="ux_internal_jobs_unique_name"),
     )
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        exclude = self.append_exclude(exclude, "unique_name")
-        return BaseORM.model_dict(self, exclude)
+        exclude = self.append_exclude(exclude, "unique_name", "user_id")
+
+        d = BaseORM.model_dict(self, exclude)
+        d["user"] = self.user.username if self.user is not None else None
+        return d

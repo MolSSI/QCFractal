@@ -22,6 +22,7 @@ from qcfractal.components.torsiondrive.testing_helpers import submit_test_data a
 from qcfractal.testing_helpers import TestingSnowflake, DummyJobStatus
 from qcportal import PortalRequestError
 from qcportal.managers import ManagerName
+from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 
 if TYPE_CHECKING:
@@ -272,3 +273,37 @@ def test_record_client_modify_service(snowflake_client: PortalClient, storage_so
         r = snowflake_client.get_records(opt.record_id, include=["task"])
         assert r.task.tag == "new_tag"
         assert r.task.priority == PriorityEnum.low
+
+
+def test_record_client_query_owner(secure_snowflake: TestingSnowflake):
+
+    submit_client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
+    admin_client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
+
+    submit_uid = submit_client.get_user().id
+
+    m = Molecule(
+        symbols=["h"],
+        geometry=[0, 0, 0],
+    )
+
+    _, ids_1 = submit_client.add_singlepoints(m, "prog1", "energy", "b3lyp", "sto-3g", {}, owner_group=None)
+    _, ids_2 = submit_client.add_singlepoints(m, "prog2", "energy", "b3lyp", "sto-3g", {}, owner_group="group1")
+
+    _, ids_3 = admin_client.add_singlepoints(m, "prog3", "energy", "b3lyp", "sto-3g", {}, owner_group=None)
+    _, ids_4 = admin_client.add_singlepoints(m, "prog4", "energy", "b3lyp", "sto-3g", {}, owner_group="group1")
+
+    query_res = admin_client.query_records(owner_user="submit_user")
+    assert query_res.current_meta.n_found == 2
+
+    query_res = admin_client.query_records(owner_user=[submit_uid])
+    assert query_res.current_meta.n_found == 2
+
+    query_res = admin_client.query_records(owner_group="group1")
+    assert query_res.current_meta.n_found == 2
+
+    query_res = admin_client.query_records(owner_user=["admin_user"], owner_group=["group1"])
+    assert query_res.current_meta.n_found == 1
+
+    query_res = admin_client.query_records(owner_user=["admin_user"], owner_group=["missing"])
+    assert query_res.current_meta.n_found == 0

@@ -8,6 +8,7 @@ from qcelemental.models import FailedOperation
 from sqlalchemy import select, union, or_
 from sqlalchemy.orm import joinedload, selectinload, with_polymorphic, aliased
 
+from qcfractal.components.auth.db_models import UserIDMapSubquery, GroupIDMapSubquery
 from qcfractal.components.nativefiles.db_models import NativeFileORM
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDependencyORM
@@ -453,6 +454,22 @@ class RecordSocket:
         if query_data.modified_after is not None:
             and_query.append(orm_type.modified_on >= query_data.modified_after)
 
+        if query_data.owner_user is not None:
+            stmt = stmt.join(UserIDMapSubquery)
+
+            int_ids = {x for x in query_data.owner_user if isinstance(x, int) or x.isnumeric()}
+            str_names = set(query_data.owner_user) - int_ids
+
+            and_query.append(or_(UserIDMapSubquery.username.in_(str_names), UserIDMapSubquery.id.in_(int_ids)))
+
+        if query_data.owner_group is not None:
+            stmt = stmt.join(GroupIDMapSubquery)
+
+            int_ids = {x for x in query_data.owner_group if isinstance(x, int) or x.isnumeric()}
+            str_names = set(query_data.owner_group) - int_ids
+
+            and_query.append(or_(GroupIDMapSubquery.groupname.in_(str_names), GroupIDMapSubquery.id.in_(int_ids)))
+
         if query_data.parent_id is not None:
             # We alias the cte because we might join on it twice
             parent_cte = aliased(self._child_cte)
@@ -783,7 +800,7 @@ class RecordSocket:
         return ids
 
     def add_comment(
-        self, record_ids: Sequence[int], username: Optional[str], comment: str, *, session: Optional[Session] = None
+        self, record_ids: Sequence[int], user_id: Optional[int], comment: str, *, session: Optional[Session] = None
     ) -> UpdateMetadata:
         """
         Adds a comment to records
@@ -794,8 +811,8 @@ class RecordSocket:
         ----------
         record_ids
             Records to add the comment to
-        username
-            The name of the user that is adding the comment
+        user_id
+            The ID of the user that is adding the comment
         comment
             The comment to be attached to the record
         session
@@ -817,7 +834,7 @@ class RecordSocket:
             for rid in existing_ids:
                 comment_orm = RecordCommentORM(
                     record_id=rid,
-                    username=username,
+                    user_id=user_id,
                     comment=comment,
                 )
                 session.add(comment_orm)
@@ -1352,7 +1369,7 @@ class RecordSocket:
     def modify_generic(
         self,
         record_ids: Sequence[int],
-        username: Optional[str],
+        user_id: Optional[int],
         status: Optional[RecordStatusEnum] = None,
         priority: Optional[PriorityEnum] = None,
         tag: Optional[str] = None,
@@ -1369,8 +1386,8 @@ class RecordSocket:
         ----------
         record_ids
             IDs of the records to modify
-        username
-            Username of the user modifying the records
+        user_id
+            ID of the user modifying the records
         status
             New status for the records. Only certain status transitions will be allowed.
         priority
@@ -1415,7 +1432,7 @@ class RecordSocket:
             if comment:
                 ret = self.root_socket.records.add_comment(
                     record_ids=record_ids,
-                    username=username,
+                    user_id=user_id,
                     comment=comment,
                     session=session,
                 )

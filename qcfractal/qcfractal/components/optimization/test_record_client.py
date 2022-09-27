@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import pytest
 
@@ -43,14 +43,17 @@ def test_optimization_client_tag_priority(snowflake_client: PortalClient, tag: s
 
 
 @pytest.mark.parametrize("spec", test_specs)
-def test_optimization_client_add_get(snowflake_client: PortalClient, spec: OptimizationSpecification):
+@pytest.mark.parametrize("owner_group", ["group1", None])
+def test_optimization_client_add_get(
+    submitter_client: PortalClient, spec: OptimizationSpecification, owner_group: Optional[str]
+):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
     ne4 = load_molecule_data("neon_tetramer")
     all_mols = [water, hooh, ne4]
 
     time_0 = datetime.utcnow()
-    meta, id = snowflake_client.add_optimizations(
+    meta, id = submitter_client.add_optimizations(
         initial_molecules=all_mols,
         program=spec.program,
         keywords=spec.keywords,
@@ -58,12 +61,13 @@ def test_optimization_client_add_get(snowflake_client: PortalClient, spec: Optim
         qc_specification=spec.qc_specification,
         tag="tag1",
         priority=PriorityEnum.low,
+        owner_group=owner_group,
     )
 
     time_1 = datetime.utcnow()
     assert meta.success
 
-    recs = snowflake_client.get_optimizations(id, include=["task", "initial_molecule"])
+    recs = submitter_client.get_optimizations(id, include=["task", "initial_molecule"])
 
     assert len(recs) == 3
 
@@ -76,13 +80,16 @@ def test_optimization_client_add_get(snowflake_client: PortalClient, spec: Optim
         assert r.raw_data.task.tag == "tag1"
         assert r.raw_data.task.priority == PriorityEnum.low
 
+        assert r.raw_data.owner_user == submitter_client.username
+        assert r.raw_data.owner_group == owner_group
+
         assert time_0 < r.raw_data.created_on < time_1
         assert time_0 < r.raw_data.modified_on < time_1
         assert time_0 < r.raw_data.task.created_on < time_1
 
-    mol1 = snowflake_client.get_molecules([recs[0].raw_data.initial_molecule_id])[0]
-    mol2 = snowflake_client.get_molecules([recs[1].raw_data.initial_molecule_id])[0]
-    mol3 = snowflake_client.get_molecules([recs[2].raw_data.initial_molecule_id])[0]
+    mol1 = submitter_client.get_molecules([recs[0].raw_data.initial_molecule_id])[0]
+    mol2 = submitter_client.get_molecules([recs[1].raw_data.initial_molecule_id])[0]
+    mol3 = submitter_client.get_molecules([recs[2].raw_data.initial_molecule_id])[0]
     assert mol1.identifiers.molecule_hash == water.get_hash()
     assert recs[0].raw_data.initial_molecule.identifiers.molecule_hash == water.get_hash()
 

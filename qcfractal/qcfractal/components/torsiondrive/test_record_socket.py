@@ -8,6 +8,7 @@ import pytest
 from qcarchivetesting import load_molecule_data
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service_constropt
+from qcportal.auth import UserInfo, GroupInfo
 from qcportal.optimization import OptimizationSpecification, OptimizationProtocols
 from qcportal.outputstore import OutputStore
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
@@ -28,7 +29,13 @@ def test_torsiondrive_socket_add_get(storage_socket: SQLAlchemySocket, spec: Tor
 
     time_0 = datetime.utcnow()
     meta, id = storage_socket.records.torsiondrive.add(
-        [[hooh], [td_mol_1, td_mol_2]], spec, as_service=True, tag="tag1", priority=PriorityEnum.low
+        [[hooh], [td_mol_1, td_mol_2]],
+        spec,
+        True,
+        "tag1",
+        PriorityEnum.low,
+        None,
+        None,
     )
     time_1 = datetime.utcnow()
     assert meta.success
@@ -86,15 +93,11 @@ def test_torsiondrive_socket_add_same_1(storage_socket: SQLAlchemySocket):
     )
 
     hooh = load_molecule_data("peroxide2")
-    meta, id1 = storage_socket.records.torsiondrive.add(
-        [[hooh]], spec, tag="*", priority=PriorityEnum.normal, as_service=True
-    )
+    meta, id1 = storage_socket.records.torsiondrive.add([[hooh]], spec, True, "*", PriorityEnum.normal, None, None)
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
-    meta, id2 = storage_socket.records.torsiondrive.add(
-        [[hooh]], spec, tag="*", priority=PriorityEnum.normal, as_service=True
-    )
+    meta, id2 = storage_socket.records.torsiondrive.add([[hooh]], spec, True, "*", PriorityEnum.normal, None, None)
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
     assert meta.existing_idx == [0]
@@ -131,7 +134,13 @@ def test_torsiondrive_socket_add_same_2(storage_socket: SQLAlchemySocket):
     mol2 = load_molecule_data("td_C9H11NO2_1")
     mol3 = load_molecule_data("td_C9H11NO2_2")
     meta, id1 = storage_socket.records.torsiondrive.add(
-        [[mol1, mol2, mol3]], spec, tag="*", priority=PriorityEnum.normal, as_service=True
+        [[mol1, mol2, mol3]],
+        spec,
+        True,
+        "*",
+        PriorityEnum.normal,
+        None,
+        None,
     )
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
@@ -139,9 +148,11 @@ def test_torsiondrive_socket_add_same_2(storage_socket: SQLAlchemySocket):
     meta, id2 = storage_socket.records.torsiondrive.add(
         [[mol2, mol3, mol1, mol2], [mol3, mol2, mol1, mol1]],
         spec,
-        tag="*",
-        priority=PriorityEnum.normal,
-        as_service=True,
+        True,
+        "*",
+        PriorityEnum.normal,
+        None,
+        None,
     )
     assert meta.n_inserted == 0
     assert meta.n_existing == 2
@@ -202,13 +213,25 @@ def test_torsiondrive_socket_add_same_3(storage_socket: SQLAlchemySocket):
     mol2 = load_molecule_data("td_C9H11NO2_1")
     mol3 = load_molecule_data("td_C9H11NO2_2")
     meta, id1 = storage_socket.records.torsiondrive.add(
-        [[mol1, mol2, mol3]], spec1, tag="*", priority=PriorityEnum.normal, as_service=True
+        [[mol1, mol2, mol3]],
+        spec1,
+        True,
+        "*",
+        PriorityEnum.normal,
+        None,
+        None,
     )
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
     meta, id2 = storage_socket.records.torsiondrive.add(
-        [[mol1, mol2, mol3]], spec2, tag="*", priority=PriorityEnum.normal, as_service=True
+        [[mol1, mol2, mol3]],
+        spec2,
+        True,
+        "*",
+        PriorityEnum.normal,
+        None,
+        None,
     )
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
@@ -246,13 +269,25 @@ def test_torsiondrive_socket_add_different_1(storage_socket: SQLAlchemySocket):
     mol2 = load_molecule_data("td_C9H11NO2_1")
     mol3 = load_molecule_data("td_C9H11NO2_2")
     meta, id1 = storage_socket.records.torsiondrive.add(
-        [[mol1, mol2, mol3]], spec, tag="*", priority=PriorityEnum.normal, as_service=True
+        [[mol1, mol2, mol3]],
+        spec,
+        True,
+        "*",
+        PriorityEnum.normal,
+        None,
+        None,
     )
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
     meta, id2 = storage_socket.records.torsiondrive.add(
-        [[mol1], [mol3, mol2], [mol2, mol3, mol1]], spec, tag="*", priority=PriorityEnum.normal, as_service=True
+        [[mol1], [mol3, mol2], [mol2, mol3, mol1]],
+        spec,
+        True,
+        "*",
+        PriorityEnum.normal,
+        None,
+        None,
     )
     assert meta.n_inserted == 2
     assert meta.n_existing == 1
@@ -274,8 +309,17 @@ def test_torsiondrive_socket_run(
 ):
     input_spec_1, molecules_1, result_data_1 = load_test_data(test_data_name)
 
+    storage_socket.groups.add(GroupInfo(groupname="group1"))
+    storage_socket.users.add(UserInfo(username="submit_user", role="submit", groups=["group1"], enabled=True))
+
     meta_1, id_1 = storage_socket.records.torsiondrive.add(
-        [molecules_1], input_spec_1, tag="test_tag", priority=PriorityEnum.low, as_service=True
+        [molecules_1],
+        input_spec_1,
+        True,
+        "test_tag",
+        PriorityEnum.low,
+        "submit_user",
+        "group1",
     )
     assert meta_1.success
 

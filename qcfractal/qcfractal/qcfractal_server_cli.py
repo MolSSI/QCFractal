@@ -21,7 +21,7 @@ import tabulate
 import yaml
 
 from qcfractal import __version__
-from qcportal.permissions import RoleInfo, UserInfo
+from qcportal.auth import RoleInfo, UserInfo
 from .config import read_configuration, write_initial_configuration, FractalConfig, WebAPIConfig
 from .db_socket.socket import SQLAlchemySocket
 from .flask_app.gunicorn_app import GunicornProcess

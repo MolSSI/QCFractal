@@ -19,11 +19,19 @@ class AuthenticationFailure(UserReportableError):
     pass
 
 
+class AuthorizationFailure(UserReportableError):
+    pass
+
+
 class InvalidUsernameError(UserManagementError):
     pass
 
 
 class InvalidRolenameError(UserManagementError):
+    pass
+
+
+class InvalidGroupnameError(UserManagementError):
     pass
 
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import pytest
 
@@ -29,14 +29,15 @@ def test_singlepoint_client_tag_priority(snowflake_client: PortalClient, tag: st
 
 
 @pytest.mark.parametrize("spec", test_specs)
-def test_singlepoint_client_add_get(snowflake_client: PortalClient, spec: QCSpecification):
+@pytest.mark.parametrize("owner_group", ["group1", None])
+def test_singlepoint_client_add_get(submitter_client: PortalClient, spec: QCSpecification, owner_group: Optional[str]):
     water = load_molecule_data("water_dimer_minima")
     hooh = load_molecule_data("hooh")
     ne4 = load_molecule_data("neon_tetramer")
     all_mols = [water, hooh, ne4]
 
     time_0 = datetime.utcnow()
-    meta, id = snowflake_client.add_singlepoints(
+    meta, id = submitter_client.add_singlepoints(
         all_mols,
         spec.program,
         spec.driver,
@@ -46,10 +47,11 @@ def test_singlepoint_client_add_get(snowflake_client: PortalClient, spec: QCSpec
         spec.protocols,
         "tag1",
         PriorityEnum.high,
+        owner_group,
     )
     time_1 = datetime.utcnow()
 
-    recs = snowflake_client.get_singlepoints(id, include=["task", "molecule"])
+    recs = submitter_client.get_singlepoints(id, include=["task", "molecule"])
 
     for r in recs:
         assert r.record_type == "singlepoint"
@@ -58,6 +60,8 @@ def test_singlepoint_client_add_get(snowflake_client: PortalClient, spec: QCSpec
         assert r.raw_data.task.spec is None
         assert r.raw_data.task.tag == "tag1"
         assert r.raw_data.task.priority == PriorityEnum.high
+        assert r.raw_data.owner_user == submitter_client.username
+        assert r.raw_data.owner_group == owner_group
         assert time_0 < r.raw_data.created_on < time_1
         assert time_0 < r.raw_data.modified_on < time_1
         assert time_0 < r.raw_data.task.created_on < time_1

@@ -1,12 +1,24 @@
-from flask import current_app
+from typing import List
+
+from flask import current_app, g
 
 from qcfractal.api_v1.blueprint import api_v1
 from qcfractal.api_v1.helpers import wrap_route
 from qcfractal.flask_app import prefix_projection, storage_socket
 from qcportal.base_models import ProjURLParameters
 from qcportal.exceptions import LimitExceededError
-from qcportal.torsiondrive import TorsiondriveAddBody, TorsiondriveQueryFilters
+from qcportal.torsiondrive import (
+    TorsiondriveDatasetSpecification,
+    TorsiondriveDatasetNewEntry,
+    TorsiondriveAddBody,
+    TorsiondriveQueryFilters,
+)
 from qcportal.utils import calculate_limit
+
+
+#####################
+# Record
+#####################
 
 
 @api_v1.route("/records/torsiondrive/bulkCreate", methods=["POST"])
@@ -24,6 +36,8 @@ def add_torsiondrive_records_v1(body_data: TorsiondriveAddBody):
         as_service=body_data.as_service,
         tag=body_data.tag,
         priority=body_data.priority,
+        owner_user=g.username,
+        owner_group=body_data.owner_group,
     )
 
 
@@ -59,3 +73,23 @@ def query_torsiondrive_v1(body_data: TorsiondriveQueryFilters):
     body_data.limit = calculate_limit(max_limit, body_data.limit)
 
     return storage_socket.records.torsiondrive.query(body_data)
+
+
+#####################
+# Dataset
+#####################
+
+
+@api_v1.route("/datasets/torsiondrive/<int:dataset_id>/specifications", methods=["POST"])
+@wrap_route("WRITE")
+def add_torsiondrive_dataset_specifications_v1(dataset_id: int, body_data: List[TorsiondriveDatasetSpecification]):
+    return storage_socket.datasets.torsiondrive.add_specifications(dataset_id, body_data)
+
+
+@api_v1.route("/datasets/torsiondrive/<int:dataset_id>/entries/bulkCreate", methods=["POST"])
+@wrap_route("WRITE")
+def add_torsiondrive_dataset_entries_v1(dataset_id: int, body_data: List[TorsiondriveDatasetNewEntry]):
+    return storage_socket.datasets.torsiondrive.add_entries(
+        dataset_id,
+        new_entries=body_data,
+    )

@@ -8,14 +8,14 @@ import bcrypt
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import select
 
+from qcportal.auth import UserInfo, is_valid_password, is_valid_username, AuthTypeEnum
 from qcportal.exceptions import AuthenticationFailure, UserManagementError
-from qcportal.permissions import UserInfo, is_valid_password, is_valid_username, AuthTypeEnum
 from .db_models import UserORM
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
     from qcfractal.db_socket.socket import SQLAlchemySocket
-    from typing import Optional, List, Dict, Any
+    from typing import Optional, List, Dict, Any, Union, Tuple
 
 
 def _generate_password() -> str:
@@ -47,7 +47,7 @@ class UserSocket:
         self.root_socket = root_socket
         self._logger = logging.getLogger(__name__)
 
-    def _get_internal(self, session: Session, username: str) -> UserORM:
+    def _get_internal(self, session: Session, username_or_id: Union[int, str]) -> UserORM:
         """
         Obtain the ORM for a particular user.
 
@@ -57,6 +57,8 @@ class UserSocket:
         ----------
         session
             SQLAlchemy session to use for querying
+        username_or_id
+            The username or user ID
 
         Returns
         -------
@@ -64,12 +66,16 @@ class UserSocket:
             ORM of the specified user
         """
 
-        is_valid_username(username)
-        stmt = select(UserORM).where(UserORM.username == username)
+        if isinstance(username_or_id, int) or username_or_id.isnumeric():
+            stmt = select(UserORM).where(UserORM.id == username_or_id)
+        else:
+            is_valid_username(username_or_id)
+            stmt = select(UserORM).where(UserORM.username == username_or_id)
+
         user = session.execute(stmt).scalar_one_or_none()
 
         if user is None:
-            raise UserManagementError(f"User {username} not found.")
+            raise UserManagementError(f"User {username_or_id} not found.")
 
         return user
 
@@ -89,7 +95,7 @@ class UserSocket:
             all_users = session.execute(stmt).scalars().all()
             return [x.model_dict() for x in all_users]
 
-    def get(self, username: str, *, session: Optional[Session] = None) -> Dict[str, Any]:
+    def get(self, username_or_id: Union[int, str], *, session: Optional[Session] = None) -> Dict[str, Any]:
         """
         Obtains information for a user
 
@@ -97,39 +103,15 @@ class UserSocket:
 
         Parameters
         ----------
-        username
-            The username of the user
+        username_or_id
+            The username or user ID
         session
             An existing SQLAlchemy session to use. If None, one will be created
         """
 
         with self.root_socket.optional_session(session, True) as session:
-            user = self._get_internal(session, username)
+            user = self._get_internal(session, username_or_id)
             return user.model_dict()
-
-    def get_permissions(self, username: str, *, session: Optional[Session] = None) -> Dict[str, Any]:
-        """
-        Obtain the permissions of a user.
-
-        If the user does not exist, an exception is raised
-
-        Parameters
-        ----------
-        username
-            The username of the user
-        session
-            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
-            is used, it will be flushed (but not committed) before returning from this function.
-
-        Returns
-        -------
-        :
-            Dict of user permissions
-        """
-
-        with self.root_socket.optional_session(session, True) as session:
-            user = self._get_internal(session, username)
-            return user.role_obj.permissions
 
     def add(self, user_info: UserInfo, password: Optional[str] = None, *, session: Optional[Session] = None) -> str:
         """
@@ -166,14 +148,15 @@ class UserSocket:
         hashed_pw = _hash_password(password)
 
         # Role is not directly a part of the ORM
-        user_dict = user_info.dict(exclude={"role"})
+        user_dict = user_info.dict(exclude={"role", "groups"})
 
         try:
             with self.root_socket.optional_session(session) as session:
-                # Will raise exception if role does not exist or role name is invalid
+                # Will raise exception if role or group does not exist or name is invalid
                 role = self.root_socket.roles._get_internal(session, user_info.role)
+                groups = [self.root_socket.groups._get_internal(session, g) for g in user_info.groups]
 
-                user = UserORM(**user_dict, role_id=role.id, password=hashed_pw)
+                user = UserORM(**user_dict, role_id=role.id, groups_orm=groups, password=hashed_pw)
                 session.add(user)
         except IntegrityError:
             raise UserManagementError(f"User {user_info.username} already exists")
@@ -202,9 +185,9 @@ class UserSocket:
         if pwcheck is False:
             raise AuthenticationFailure("Incorrect username or password")
 
-    def verify(self, username: str, password: str, *, session: Optional[Session] = None) -> Dict[str, Any]:
+    def verify(self, username: str, password: str, *, session: Optional[Session] = None) -> UserInfo:
         """
-        Verifies a given username and password, returning the users permissions.
+        Verifies a given username and password, returning all info about the user
 
         If the user is not found, or is disabled, or the password is incorrect, an exception is raised.
 
@@ -221,7 +204,7 @@ class UserSocket:
         Returns
         --------
         :
-            The role and permissions available to that user.
+            All information about the user
         """
 
         is_valid_username(username)
@@ -243,7 +226,7 @@ class UserSocket:
                 self._logger.error(f"Unknown auth type: {user.auth_type}. This is a developer error")
                 raise UserManagementError(f"Unknown authentication type stored in the database: {user.auth_type}")
 
-            return user.role_obj.permissions
+            return user.to_model(UserInfo)
 
     def modify(self, user_info: UserInfo, as_admin: bool, *, session: Optional[Session] = None) -> Dict[str, Any]:
         """
@@ -273,7 +256,10 @@ class UserSocket:
         """
 
         with self.root_socket.optional_session(session) as session:
-            user = self._get_internal(session, user_info.username)
+            user = self._get_internal(session, user_info.id)
+
+            if user_info.username != user.username:
+                raise UserManagementError("Cannot change username")
 
             user.fullname = user_info.fullname
             user.organization = user_info.organization
@@ -281,9 +267,11 @@ class UserSocket:
 
             if as_admin is True:
                 role = self.root_socket.roles._get_internal(session, user_info.role)
+                groups = [self.root_socket.groups._get_internal(session, g) for g in user_info.groups]
 
                 user.enabled = user_info.enabled
                 user.role_id = role.id
+                user.groups_orm = groups
 
             session.commit()
 
@@ -291,14 +279,16 @@ class UserSocket:
 
             return self.get(user_info.username, session=session)
 
-    def change_password(self, username: str, password: Optional[str], *, session: Optional[Session] = None) -> str:
+    def change_password(
+        self, username_or_id: Union[int, str], password: Optional[str], *, session: Optional[Session] = None
+    ) -> str:
         """
         Alters a user's password
 
         Parameters
         ----------
-        username
-            The username of the user
+        username_or_id
+            The username or ID of the user
         password
             The user's new password. If the password is empty, an exception is raised. If None, then a
             password will be generated
@@ -319,13 +309,13 @@ class UserSocket:
         is_valid_password(password)
 
         with self.root_socket.optional_session(session) as session:
-            user = self._get_internal(session, username)
+            user = self._get_internal(session, username_or_id)
             user.password = _hash_password(password)
 
-        self._logger.info(f"Password for {username} modified")
+        self._logger.info(f"Password for {username_or_id} modified")
         return password
 
-    def delete(self, username: str, *, session: Optional[Session] = None) -> None:
+    def delete(self, username_or_id: Union[int, str], *, session: Optional[Session] = None) -> None:
         """Removes a user
 
         This will raise an exception if the user doesn't exist or is being referenced elsewhere in the
@@ -333,8 +323,8 @@ class UserSocket:
 
         Parameters
         ----------
-        username
-            The username of the user
+        username_or_id
+            The username or ID of the user
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -342,9 +332,50 @@ class UserSocket:
 
         try:
             with self.root_socket.optional_session(session) as session:
-                user = self._get_internal(session, username)
+                user = self._get_internal(session, username_or_id)
                 session.delete(user)
         except IntegrityError:
             raise UserManagementError("User could not be deleted. Likely it is being referenced somewhere")
 
-        self._logger.info(f"User {username} deleted")
+        self._logger.info(f"User {username_or_id} deleted")
+
+    def get_owner_ids(
+        self,
+        username_or_id: Optional[Union[int, str]],
+        groupname_or_id: Optional[Union[int, str]],
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[Optional[int], Optional[int]]:
+        """
+        Obtain the ID of a user and (optionally) group
+
+        If the user does not belong to the given group, an exception is raised
+
+        If a user is not specified, then (None, None) is returned
+        """
+
+        if username_or_id is None:
+            return None, None
+
+        with self.root_socket.optional_session(session) as session:
+            user = self._get_internal(session, username_or_id)
+
+            if groupname_or_id is None:
+                group_id = None
+            else:
+                if isinstance(groupname_or_id, int):
+                    user_groups = [o.id for o in user.groups_orm]
+
+                    if groupname_or_id in user_groups:
+                        group_id = groupname_or_id
+                    else:
+                        group_id = None
+
+                else:
+                    user_groups = {o.groupname: o.id for o in user.groups_orm}
+                    group_id = user_groups.get(groupname_or_id, None)
+
+                if group_id is None:
+                    raise UserManagementError(f"User {username_or_id} is not part of group {groupname_or_id}")
+
+            return user.id, group_id

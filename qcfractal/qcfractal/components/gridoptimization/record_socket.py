@@ -390,6 +390,8 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                     OptimizationSpecification(**opt_spec2),
                     service_orm.tag,
                     service_orm.priority,
+                    go_orm.owner_user_id,
+                    go_orm.owner_group_id,
                     session=session,
                 )
 
@@ -421,6 +423,8 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                     OptimizationSpecification(**opt_spec2),
                     service_orm.tag,
                     service_orm.priority,
+                    go_orm.owner_user_id,
+                    go_orm.owner_group_id,
                     session=session,
                 )
 
@@ -583,6 +587,8 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         go_spec_id: int,
         tag: str,
         priority: PriorityEnum,
+        owner_user_id: Optional[int],
+        owner_group_id: Optional[int],
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -605,6 +611,10 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
             The tag for the task. This will assist in routing to appropriate compute managers.
         priority
             The priority for the computation
+        owner_user_id
+            ID of the user who owns the record
+        owner_group_id
+            ID of the group with additional permission for these records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -627,6 +637,8 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                     specification_id=go_spec_id,
                     initial_molecule_id=mid,
                     status=RecordStatusEnum.waiting,
+                    owner_user_id=owner_user_id,
+                    owner_group_id=owner_group_id,
                 )
 
                 self.create_service(go_orm, tag, priority)
@@ -647,6 +659,8 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         go_spec: GridoptimizationSpecification,
         tag: str,
         priority: PriorityEnum,
+        owner_user: Optional[Union[int, str]],
+        owner_group: Optional[Union[int, str]],
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -668,6 +682,10 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
             The tag for the task. This will assist in routing to appropriate compute managers.
         priority
             The priority for the computation
+        owner_user
+            Name or ID of the user who owns the record
+        owner_group
+            Group with additional permission for these records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -680,6 +698,8 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         """
 
         with self.root_socket.optional_session(session, False) as session:
+
+            user_id, group_id = self.root_socket.users.get_owner_ids(owner_user, owner_group, session=session)
 
             # First, add the specification
             spec_meta, spec_id = self.add_specification(go_spec, session=session)
@@ -699,4 +719,4 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                     [],
                 )
 
-            return self.add_internal(init_mol_ids, spec_id, tag, priority, session=session)
+            return self.add_internal(init_mol_ids, spec_id, tag, priority, user_id, group_id, session=session)

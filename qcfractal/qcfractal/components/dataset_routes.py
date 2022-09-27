@@ -92,6 +92,8 @@ def add_dataset_v1(dataset_type: str, body_data: DatasetAddBody):
         default_tag=body_data.default_tag,
         default_priority=body_data.default_priority,
         metadata=body_data.metadata,
+        owner_user=g.username,
+        owner_group=body_data.owner_group,
     )
 
 
@@ -156,6 +158,8 @@ def submit_dataset_v1(dataset_type: str, dataset_id: int, body_data: DatasetSubm
         specification_names=body_data.specification_names,
         tag=body_data.tag,
         priority=body_data.priority,
+        owner_user=g.username,
+        owner_group=body_data.owner_group,
     )
 
 
@@ -265,11 +269,10 @@ def remove_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: Dat
 @api_v1.route("/datasets/<string:dataset_type>/<int:dataset_id>/records", methods=["PATCH"])
 @wrap_route("WRITE")
 def modify_dataset_records_v1(dataset_type: str, dataset_id: int, body_data: DatasetRecordModifyBody):
-    username = (g.user if "user" in g else None,)
     ds_socket = storage_socket.datasets.get_socket(dataset_type)
     return ds_socket.modify_records(
         dataset_id,
-        username,
+        g.username,
         body_data.entry_names,
         body_data.specification_names,
         body_data.status,

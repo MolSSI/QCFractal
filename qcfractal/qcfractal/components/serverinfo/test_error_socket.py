@@ -6,14 +6,20 @@ from typing import TYPE_CHECKING
 from qcportal.serverinfo import ErrorLogQueryFilters
 
 if TYPE_CHECKING:
-    from qcfractal.db_socket import SQLAlchemySocket
+    from qcfractal.testing_helpers import TestingSnowflake
 
 
-def test_serverinfo_socket_save_error(storage_socket: SQLAlchemySocket):
+def test_serverinfo_socket_save_error(secure_snowflake: TestingSnowflake):
+
+    storage_socket = secure_snowflake.get_storage_socket()
+    admin_id = storage_socket.users.get("admin_user")["id"]
+    read_id = storage_socket.users.get("read_user")["id"]
+
+    userid_map = {admin_id: "admin_user", read_id: "read_user"}
 
     error_data_1 = {
         "error_text": "This is a test error",
-        "user": "admin_user",
+        "user_id": admin_id,
         "request_path": "/api/v1/molecule",
         "request_headers": "fake_headers",
         "request_body": "fake body",
@@ -21,7 +27,7 @@ def test_serverinfo_socket_save_error(storage_socket: SQLAlchemySocket):
 
     error_data_2 = {
         "error_text": "This is another test error",
-        "user": "read_user",
+        "user_id": read_id,
         "request_path": "/api/v1/molecule",
         "request_headers": "fake_headers",
         "request_body": "fake body",
@@ -43,7 +49,7 @@ def test_serverinfo_socket_save_error(storage_socket: SQLAlchemySocket):
 
     for in_err, db_err in zip(reversed(all_errors), errors):
         assert in_err["error_text"] == db_err["error_text"]
-        assert in_err["user"] == db_err["user"]
+        assert userid_map[in_err["user_id"]] == db_err["user"]
         assert in_err["request_path"] == db_err["request_path"]
         assert in_err["request_headers"] == db_err["request_headers"]
         assert in_err["request_body"] == db_err["request_body"]
@@ -72,5 +78,5 @@ def test_serverinfo_socket_save_error(storage_socket: SQLAlchemySocket):
     assert meta.n_found == 0
 
     # query by user
-    meta, err = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters(username=["read_user"]))
+    meta, err = storage_socket.serverinfo.query_error_log(ErrorLogQueryFilters(user=["read_user"]))
     assert meta.n_found == 1

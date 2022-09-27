@@ -3,6 +3,7 @@ from .helpers import (
     testconfig_path,
     migrationdata_path,
     test_users,
+    test_groups,
     valid_encodings,
     load_ip_test_data,
     load_molecule_data,

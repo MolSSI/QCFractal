@@ -1,30 +1,20 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, List
+from typing import TYPE_CHECKING, List
 from urllib.parse import urlparse
 
 from flask import request, g, current_app
 from flask_jwt_extended import verify_jwt_in_request, get_jwt, get_jwt_identity
-from flask_jwt_extended.exceptions import NoAuthorizationError
-from werkzeug.exceptions import Forbidden, BadRequest
+from werkzeug.exceptions import BadRequest, Forbidden
 
-from qcfractal.auth_v1.policyuniverse import Policy
 from qcfractal.flask_app import storage_socket
+from qcportal.exceptions import AuthorizationFailure
 
 if TYPE_CHECKING:
     from typing import List, Optional, Tuple, Set
     from qcportal.base_models import ProjURLParameters
 
-_unauth_read_permissions: Dict[str, Dict[str, List[Dict[str, str]]]] = {}
 _all_endpoints: Set[str] = set()
-
-
-def get_unauth_read_permissions():
-    global _unauth_read_permissions
-
-    if not _unauth_read_permissions:
-        _unauth_read_permissions = storage_socket.roles.get("read")["permissions"]
-    return _unauth_read_permissions
 
 
 def get_all_endpoints() -> Set[str]:
@@ -98,54 +88,36 @@ def assert_role_permissions(requested_action: str):
        Otherwise, check against the logged-in user permissions from the headers' JWT token
     """
 
-    # uppercase by convention
-    requested_action = requested_action.upper()
-
-    # Read in config parameters
-    security_enabled: bool = current_app.config["QCFRACTAL_CONFIG"].enable_security
-    allow_unauthenticated_read: bool = current_app.config["QCFRACTAL_CONFIG"].allow_unauthenticated_read
-
-    # if no auth required, always allowed
-    if security_enabled is False:
-        return
-
-    read_permissions = get_unauth_read_permissions()
-
     # Check for the JWT in the header
-    if allow_unauthenticated_read:
-        # don't raise exception if no JWT is found
-        verify_jwt_in_request(optional=True)
-    else:
-        try:
-            # read JWT token from request headers
-            verify_jwt_in_request(optional=False)
-        except NoAuthorizationError as e:
-            raise Forbidden(f"Missing authorization token. Server requires login. Are you logged in?")
+    # don't raise exception if no JWT is found
+    verify_jwt_in_request(optional=True)
 
     try:
+        # TODO - some of these may not be None in the future
         claims = get_jwt()
-        permissions = claims.get("permissions", {})
+        user_id = get_jwt_identity()  # may be None
+        username = claims.get("username", None)
+        policies = claims.get("permissions", {})
+        role = claims.get("role", None)
+        groups = claims.get("groups", None)
 
-        identity = get_jwt_identity()  # may be None
+        subject = {"user_id": user_id, "username": username}
 
         # Pull the first part of the URL (ie, /api/v1/molecule/a/b/c -> /api/v1/molecule)
-        resource = get_url_major_component(request.url)
+        resource = {"type": get_url_major_component(request.url)}
 
-        context = {"Principal": identity, "Action": requested_action, "Resource": resource}
-        policy = Policy(permissions)
-        if not policy.evaluate(context):
-            # If that doesn't work, but we allow unauthenticated read, then try that
-            if not allow_unauthenticated_read:
-                raise Forbidden(f"User {identity} is not authorized to access '{resource}'")
-
-            if not Policy(read_permissions).evaluate(context):
-                raise Forbidden(f"User {identity} is not authorized to access '{resource}'")
+        storage_socket.auth.assert_authorized(
+            resource=resource, action=requested_action, subject=subject, context={}, policies=policies
+        )
 
         # Store the user in the global app/request context
-        g.user = identity
+        g.user_id = user_id
+        g.username = username
+        g.role = role
+        g.groups = groups
 
-    except Forbidden:
-        raise
+    except AuthorizationFailure as e:
+        raise Forbidden(str(e))
     except Exception as e:
         current_app.logger.info("Error in evaluating JWT permissions: \n" + str(e))
         raise BadRequest("Error in evaluating JWT permissions")

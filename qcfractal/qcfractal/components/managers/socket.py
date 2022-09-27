@@ -53,7 +53,7 @@ class ManagerSocket:
                 datetime.utcnow() + timedelta(seconds=delay),
                 "managers.check_manager_heartbeats",
                 {},
-                user=None,
+                user_id=None,
                 unique_name=True,
                 after_function="managers.add_internal_job",
                 after_function_kwargs={"delay": self._manager_heartbeat_frequency},

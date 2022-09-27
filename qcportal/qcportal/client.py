@@ -59,6 +59,15 @@ from qcportal.torsiondrive import (
     TorsiondriveRecord,
     TorsiondriveQueryFilters,
 )
+from .auth import (
+    UserInfo,
+    RoleInfo,
+    GroupInfo,
+    is_valid_username,
+    is_valid_password,
+    is_valid_rolename,
+    is_valid_groupname,
+)
 from .base_models import CommonBulkGetNamesBody, CommonBulkGetBody, ProjURLParameters
 from .cache import PortalCache
 from .client_base import PortalClientBase
@@ -74,13 +83,6 @@ from .internal_jobs import InternalJob, InternalJobQueryFilters, InternalJobQuer
 from .managers import ManagerQueryFilters, ManagerQueryIterator, ComputeManager
 from .metadata_models import QueryMetadata, UpdateMetadata, InsertMetadata, DeleteMetadata
 from .molecules import Molecule, MoleculeIdentifiers, MoleculeModifyBody, MoleculeQueryIterator, MoleculeQueryFilters
-from .permissions import (
-    UserInfo,
-    RoleInfo,
-    is_valid_username,
-    is_valid_password,
-    is_valid_rolename,
-)
 from .record_models import (
     RecordStatusEnum,
     PriorityEnum,
@@ -361,6 +363,7 @@ class PortalClient(PortalClientBase):
         default_tag: str = "*",
         default_priority: PriorityEnum = PriorityEnum.normal,
         metadata: Optional[Dict[str, Any]] = None,
+        owner_group: Optional[str] = None,
     ) -> BaseDataset:
 
         if description is None:
@@ -387,6 +390,7 @@ class PortalClient(PortalClientBase):
             default_tag=default_tag,
             default_priority=default_priority,
             metadata=metadata,
+            owner_group=owner_group,
         )
 
         ds_id = self._auto_request("post", f"v1/datasets/{dataset_type}", DatasetAddBody, None, int, payload, None)
@@ -676,6 +680,8 @@ class PortalClient(PortalClientBase):
         created_after: Optional[datetime] = None,
         modified_before: Optional[datetime] = None,
         modified_after: Optional[datetime] = None,
+        owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
+        owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: int = None,
         *,
         include: Optional[Iterable[str]] = None,
@@ -712,6 +718,10 @@ class PortalClient(PortalClientBase):
             Query records that were modified before the given date/time
         modified_after
             Query records that were modified after the given date/time
+        owner_user
+            Query records owned by a user in the given list (usernames or IDs)
+        owner_group
+            Query records owned by a group in the given list (group names or IDS)
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -735,6 +745,8 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
+            "owner_user": make_list(owner_user),
+            "owner_group": make_list(owner_group),
             "limit": limit,
         }
 
@@ -908,6 +920,7 @@ class PortalClient(PortalClientBase):
         protocols: Optional[Union[SinglepointProtocols, Dict[str, Any]]] = None,
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
+        owner_group: Optional[str] = None,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds new singlepoint computations to the server
@@ -937,6 +950,8 @@ class PortalClient(PortalClientBase):
             The tag for the task. This will assist in routing to appropriate compute managers.
         priority
             The priority of the job (high, normal, low). Default is normal.
+        owner_group
+            Group with additional permission for these records
 
         Returns
         -------
@@ -964,6 +979,7 @@ class PortalClient(PortalClientBase):
             },
             "tag": tag,
             "priority": priority,
+            "owner_group": owner_group,
         }
 
         # If these are None, then let the pydantic models handle the defaults
@@ -1061,6 +1077,8 @@ class PortalClient(PortalClientBase):
         method: Optional[Iterable[str]] = None,
         basis: Optional[Iterable[Optional[str]]] = None,
         molecule_id: Optional[Iterable[int]] = None,
+        owner_user: Optional[Union[str, Iterable[str]]] = None,
+        owner_group: Optional[Union[str, Iterable[str]]] = None,
         limit: Optional[int] = None,
         *,
         include: Optional[Iterable[str]] = None,
@@ -1100,6 +1118,10 @@ class PortalClient(PortalClientBase):
             Query records whose basis is in the given list
         molecule_id
             Query records whose molecule (id) is in the given list
+        owner_user
+            Query records owned by a user in the given list
+        owner_user
+            Query records owned by a group in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -1127,6 +1149,8 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
+            "owner_user": make_list(owner_user),
+            "owner_group": make_list(owner_group),
             "limit": limit,
         }
 
@@ -1150,6 +1174,7 @@ class PortalClient(PortalClientBase):
         protocols: Optional[OptimizationProtocols] = None,
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
+        owner_group: Optional[str] = None,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds new geometry optimization calculations to the server
@@ -1175,6 +1200,8 @@ class PortalClient(PortalClientBase):
             The tag for the task. This will assist in routing to appropriate compute managers.
         priority
             The priority of the job (high, normal, low). Default is normal.
+        owner_group
+            Group with additional permission for these records
 
         Returns
         -------
@@ -1200,6 +1227,7 @@ class PortalClient(PortalClientBase):
             },
             "tag": tag,
             "priority": priority,
+            "owner_group": owner_group,
         }
 
         # If these are None, then let the pydantic models handle the defaults
@@ -1299,6 +1327,8 @@ class PortalClient(PortalClientBase):
         qc_basis: Optional[Iterable[Optional[str]]] = None,
         initial_molecule_id: Optional[Iterable[int]] = None,
         final_molecule_id: Optional[Iterable[int]] = None,
+        owner_user: Optional[Union[str, Iterable[str]]] = None,
+        owner_group: Optional[Union[str, Iterable[str]]] = None,
         limit: Optional[int] = None,
         *,
         include: Optional[Iterable[str]] = None,
@@ -1342,6 +1372,10 @@ class PortalClient(PortalClientBase):
             Query records whose initial molecule (id) is in the given list
         final_molecule_id
             Query records whose final molecule (id) is in the given list
+        owner_user
+            Query records owned by a user in the given list
+        owner_user
+            Query records owned by a group in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -1370,6 +1404,8 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
+            "owner_user": make_list(owner_user),
+            "owner_group": make_list(owner_group),
             "limit": limit,
         }
 
@@ -1392,6 +1428,7 @@ class PortalClient(PortalClientBase):
         keywords: Union[TorsiondriveKeywords, Dict[str, Any]],
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
+        owner_group: Optional[str] = None,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds new torsiondrive computations to the server
@@ -1416,6 +1453,8 @@ class PortalClient(PortalClientBase):
             The tag for the task. This will assist in routing to appropriate compute managers.
         priority
             The priority of the job (high, normal, low). Default is normal.
+        owner_group
+            Group with additional permission for these records
 
         Returns
         -------
@@ -1442,6 +1481,7 @@ class PortalClient(PortalClientBase):
             "as_service": True,
             "tag": tag,
             "priority": priority,
+            "owner_group": owner_group,
         }
 
         return self._auto_request(
@@ -1535,6 +1575,8 @@ class PortalClient(PortalClientBase):
         qc_method: Optional[Iterable[str]] = None,
         qc_basis: Optional[Iterable[Optional[str]]] = None,
         initial_molecule_id: Optional[Iterable[int]] = None,
+        owner_user: Optional[Union[str, Iterable[str]]] = None,
+        owner_group: Optional[Union[str, Iterable[str]]] = None,
         limit: Optional[int] = None,
         *,
         include: Optional[Iterable[str]] = None,
@@ -1578,6 +1620,10 @@ class PortalClient(PortalClientBase):
             Query records whose basis is in the given list
         initial_molecule_id
             Query records whose initial molecule (id) is in the given list
+        owner_user
+            Query records owned by a user in the given list
+        owner_user
+            Query records owned by a group in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -1606,6 +1652,8 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
+            "owner_user": make_list(owner_user),
+            "owner_group": make_list(owner_group),
             "limit": limit,
         }
 
@@ -1628,6 +1676,7 @@ class PortalClient(PortalClientBase):
         keywords: Union[GridoptimizationKeywords, Dict[str, Any]],
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
+        owner_group: Optional[str] = None,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds new gridoptimization computations to the server
@@ -1652,6 +1701,8 @@ class PortalClient(PortalClientBase):
             The tag for the task. This will assist in routing to appropriate compute managers.
         priority
             The priority of the job (high, normal, low). Default is normal.
+        owner_group
+            Group with additional permission for these records
 
         Returns
         -------
@@ -1678,6 +1729,7 @@ class PortalClient(PortalClientBase):
             },
             "tag": tag,
             "priority": priority,
+            "owner_group": owner_group,
         }
 
         return self._auto_request(
@@ -1771,6 +1823,8 @@ class PortalClient(PortalClientBase):
         qc_method: Optional[Iterable[str]] = None,
         qc_basis: Optional[Iterable[Optional[str]]] = None,
         initial_molecule_id: Optional[Iterable[int]] = None,
+        owner_user: Optional[Union[str, Iterable[str]]] = None,
+        owner_group: Optional[Union[str, Iterable[str]]] = None,
         limit: Optional[int] = None,
         *,
         include: Optional[Iterable[str]] = None,
@@ -1814,6 +1868,10 @@ class PortalClient(PortalClientBase):
             Query records whose basis is in the given list
         initial_molecule_id
             Query records whose initial molecule (id) is in the given list
+        owner_user
+            Query records owned by a user in the given list
+        owner_user
+            Query records owned by a group in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -1842,6 +1900,8 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
+            "owner_user": make_list(owner_user),
+            "owner_group": make_list(owner_group),
             "limit": limit,
         }
 
@@ -1865,6 +1925,7 @@ class PortalClient(PortalClientBase):
         keywords: ReactionKeywords,
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
+        owner_group: Optional[str] = None,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds new reaction computations to the server
@@ -1896,6 +1957,8 @@ class PortalClient(PortalClientBase):
             The tag for the task. This will assist in routing to appropriate compute managers.
         priority
             The priority of the job (high, normal, low). Default is normal.
+        owner_group
+            Group with additional permission for these records
 
         Returns
         -------
@@ -1922,6 +1985,7 @@ class PortalClient(PortalClientBase):
             },
             "tag": tag,
             "priority": priority,
+            "owner_group": owner_group,
         }
 
         return self._auto_request(
@@ -2015,6 +2079,8 @@ class PortalClient(PortalClientBase):
         qc_basis: Optional[Iterable[Optional[str]]] = None,
         optimization_program: Optional[Iterable[Optional[str]]] = None,
         molecule_id: Optional[Iterable[int]] = None,
+        owner_user: Optional[Union[str, Iterable[str]]] = None,
+        owner_group: Optional[Union[str, Iterable[str]]] = None,
         limit: Optional[int] = None,
         *,
         include: Optional[Iterable[str]] = None,
@@ -2058,6 +2124,10 @@ class PortalClient(PortalClientBase):
             Query records whose optimization program is in the given list
         molecule_id
             Query reactions that contain a molecule (id) is in the given list
+        owner_user
+            Query records owned by a user in the given list
+        owner_user
+            Query records owned by a group in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -2086,6 +2156,8 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
+            "owner_user": make_list(owner_user),
+            "owner_group": make_list(owner_group),
             "limit": limit,
         }
 
@@ -2118,6 +2190,7 @@ class PortalClient(PortalClientBase):
         keywords: ManybodyKeywords,
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
+        owner_group: Optional[str] = None,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds new manybody expansion computations to the server
@@ -2141,6 +2214,8 @@ class PortalClient(PortalClientBase):
             The tag for the task. This will assist in routing to appropriate compute managers.
         priority
             The priority of the job (high, normal, low). Default is normal.
+        owner_group
+            Group with additional permission for these records
 
         Returns
         -------
@@ -2167,6 +2242,7 @@ class PortalClient(PortalClientBase):
             },
             "tag": tag,
             "priority": priority,
+            "owner_group": owner_group,
         }
 
         return self._auto_request(
@@ -2259,6 +2335,8 @@ class PortalClient(PortalClientBase):
         qc_method: Optional[Iterable[str]] = None,
         qc_basis: Optional[Iterable[Optional[str]]] = None,
         initial_molecule_id: Optional[Iterable[int]] = None,
+        owner_user: Optional[Union[str, Iterable[str]]] = None,
+        owner_group: Optional[Union[str, Iterable[str]]] = None,
         limit: Optional[int] = None,
         *,
         include: Optional[Iterable[str]] = None,
@@ -2300,6 +2378,10 @@ class PortalClient(PortalClientBase):
             Query records whose qc basis is in the given list
         initial_molecule_id
             Query manybody calculations that contain an initial molecule (id) is in the given list
+        owner_user
+            Query records owned by a user in the given list
+        owner_user
+            Query records owned by a group in the given list
         limit
             The maximum number of records to return. Note that the server limit is always obeyed.
         include
@@ -2327,6 +2409,8 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
+            "owner_user": make_list(owner_user),
+            "owner_group": make_list(owner_group),
             "limit": limit,
         }
 
@@ -2349,6 +2433,7 @@ class PortalClient(PortalClientBase):
         keywords: Union[NEBKeywords, Dict[str, Any]],
         tag: str = "*",
         priority: PriorityEnum = PriorityEnum.normal,
+        owner_group: Optional[str] = None,
     ) -> Tuple[InsertMetadata, List[int]]:
         """
         Adds neb calculations to the server
@@ -2365,6 +2450,7 @@ class PortalClient(PortalClientBase):
             },
             "tag": tag,
             "priority": priority,
+            "owner_group": owner_group,
         }
 
         if len(body_data["initial_chains"]) > self.api_limits["add_records"]:
@@ -2441,6 +2527,8 @@ class PortalClient(PortalClientBase):
         qc_basis: Optional[Iterable[Optional[str]]] = None,
         initial_chain_id: Optional[Iterable[int]] = None,
         limit: Optional[int] = None,
+        owner_user: Optional[Union[str, Iterable[str]]] = None,
+        owner_group: Optional[Union[str, Iterable[str]]] = None,
         *,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator:
@@ -2462,6 +2550,8 @@ class PortalClient(PortalClientBase):
             "created_after": created_after,
             "modified_before": modified_before,
             "modified_after": modified_after,
+            "owner_user": make_list(owner_user),
+            "owner_group": make_list(owner_group),
             "limit": limit,
         }
 
@@ -2641,6 +2731,7 @@ class PortalClient(PortalClientBase):
         access_method: Optional[Union[str, Iterable[str]]] = None,
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
+        user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
     ) -> AccessLogQueryIterator:
         """
@@ -2658,6 +2749,8 @@ class PortalClient(PortalClientBase):
             Return log entries captured before the specified date/time
         after
             Return log entries captured after the specified date/time
+        user
+            User name or ID associated with the log entry
         limit
             The maximum number of log entries to return. Note that the server limit is always obeyed.
 
@@ -2672,6 +2765,7 @@ class PortalClient(PortalClientBase):
             access_method=make_list(access_method),
             before=before,
             after=after,
+            user=make_list(user),
             limit=limit,
         )
 
@@ -2698,7 +2792,7 @@ class PortalClient(PortalClientBase):
     def query_error_log(
         self,
         error_id: Optional[Union[int, Iterable[int]]] = None,
-        username: Optional[Union[str, Iterable[str]]] = None,
+        user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         before: Optional[datetime] = None,
         after: Optional[datetime] = None,
         limit: Optional[int] = None,
@@ -2712,8 +2806,8 @@ class PortalClient(PortalClientBase):
         ----------
         error_id
             Return error log entries whose id is in the list
-        username
-            Return error log entries whose username is in the list
+        user
+            Return error log entries whose user name or ID is in the list
         before
             Return error log entries captured before the specified date/time
         after
@@ -2729,7 +2823,7 @@ class PortalClient(PortalClientBase):
 
         filter_data = ErrorLogQueryFilters(
             error_id=make_list(error_id),
-            username=make_list(username),
+            user=make_list(user),
             before=before,
             after=after,
             limit=limit,
@@ -2767,6 +2861,7 @@ class PortalClient(PortalClientBase):
         self,
         job_id: Optional[int, Iterable[int]] = None,
         name: Optional[Union[str, Iterable[str]]] = None,
+        user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         runner_hostname: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[InternalJobStatusEnum, Iterable[InternalJobStatusEnum]]] = None,
         last_updated_before: Optional[datetime] = None,
@@ -2786,6 +2881,8 @@ class PortalClient(PortalClientBase):
             ID assigned to the job
         name
             Queries jobs whose name is in the given list
+        user
+            User name or ID associated with the log entry
         runner_hostname
             Queries jobs that were run/are running on a given host
         status
@@ -2816,6 +2913,7 @@ class PortalClient(PortalClientBase):
             "name": make_list(name),
             "runner_hostname": make_list(runner_hostname),
             "status": make_list(status),
+            "user": make_list(user),
             "last_updated_before": last_updated_before,
             "last_updated_after": last_updated_after,
             "added_before": added_before,
@@ -2886,7 +2984,7 @@ class PortalClient(PortalClientBase):
         return AccessLogSummary(entries=entries)
 
     ##############################################################
-    # User & role management
+    # User, group, & role management
     ##############################################################
 
     def list_roles(self) -> List[RoleInfo]:
@@ -2946,6 +3044,47 @@ class PortalClient(PortalClientBase):
         is_valid_rolename(rolename)
         return self._auto_request("delete", f"v1/roles/{rolename}", None, None, None, None, None)
 
+    def list_groups(self) -> List[GroupInfo]:
+        """
+        List all user groups on the server
+        """
+
+        return self._auto_request("get", "v1/groups", None, None, List[GroupInfo], None, None)
+
+    def get_group(self, groupname_or_id: Union[int, str]) -> GroupInfo:
+        """
+        Get information about a group on the server
+        """
+
+        if isinstance(groupname_or_id, str):
+            is_valid_groupname(groupname_or_id)
+
+        return self._auto_request("get", f"v1/groups/{groupname_or_id}", None, None, GroupInfo, None, None)
+
+    def add_group(self, group_info: GroupInfo) -> None:
+        """
+        Adds a group with permissions to the server
+
+        If not successful, an exception is raised.
+        """
+
+        if group_info.id is not None:
+            raise RuntimeError("Cannot add group when group_info contains an id")
+
+        return self._auto_request("post", "v1/groups", GroupInfo, None, None, group_info, None)
+
+    def delete_group(self, groupname_or_id: Union[int, str]):
+        """
+        Deletes a group on the server
+
+        Deleted groups will be removed from all users groups list
+        """
+
+        if isinstance(groupname_or_id, str):
+            is_valid_groupname(groupname_or_id)
+
+        return self._auto_request("delete", f"v1/groups/{groupname_or_id}", None, None, None, None, None)
+
     def list_users(self) -> List[UserInfo]:
         """
         List all user roles on the server
@@ -2953,19 +3092,16 @@ class PortalClient(PortalClientBase):
 
         return self._auto_request("get", "v1/users", None, None, List[UserInfo], None, None)
 
-    def get_user(self, username: Optional[str] = None, as_admin: bool = False) -> UserInfo:
+    def get_user(self, username_or_id: Optional[Union[int, str]] = None) -> UserInfo:
         """
         Get information about a user on the server
 
-        If the username is not supplied, then info about the currently logged-in user is obtained
+        If the username is not supplied, then info about the currently logged-in user is obtained.
 
         Parameters
         ----------
-        username
-            The username to get info about
-        as_admin
-            If True, then fetch the user from the admin user management endpoint. This is the default
-            if requesting a user other than the currently logged-in user
+        username_or_id
+            The username or ID to get info about
 
         Returns
         -------
@@ -2973,31 +3109,16 @@ class PortalClient(PortalClientBase):
             Information about the user
         """
 
-        if username is None:
-            username = self.username
+        if username_or_id is None:
+            username_or_id = self.username
 
-        if username is None:
+        if isinstance(username_or_id, str):
+            is_valid_username(username_or_id)
+
+        if username_or_id is None:
             raise RuntimeError("Cannot get user - not logged in?")
 
-        # Check client side so we can bail early
-        is_valid_username(username)
-
-        if username != self.username:
-            as_admin = True
-
-        if as_admin is False:
-            # For the currently logged-in user, use the "me" endpoint. The other endpoint is
-            # restricted to admins
-            uinfo = self._auto_request("get", f"v1/me", None, None, UserInfo, None, None)
-
-            if uinfo.username != self.username:
-                raise RuntimeError(
-                    f"Inconsistent username - client is {self.username} but logged in as {uinfo.username}"
-                )
-        else:
-            uinfo = self._auto_request("get", f"v1/users/{username}", None, None, UserInfo, None, None)
-
-        return uinfo
+        return self._auto_request("get", f"v1/users/{username_or_id}", None, None, UserInfo, None, None)
 
     def add_user(self, user_info: UserInfo, password: Optional[str] = None) -> str:
         """
@@ -3018,9 +3139,6 @@ class PortalClient(PortalClientBase):
 
         """
 
-        is_valid_username(user_info.username)
-        is_valid_rolename(user_info.role)
-
         if password is not None:
             is_valid_password(password)
 
@@ -3031,24 +3149,19 @@ class PortalClient(PortalClientBase):
             "post", "v1/users", Tuple[UserInfo, Optional[str]], None, str, (user_info, password), None
         )
 
-    def modify_user(self, user_info: UserInfo, as_admin: bool = False) -> UserInfo:
+    def modify_user(self, user_info: UserInfo) -> UserInfo:
         """
         Modifies a user on the server
 
-        The user is determined by the username field of the input UserInfo, although the id
+        The user is determined by the id field of the input UserInfo, although the id
         and username are checked for consistency.
 
         Depending on the current user's permissions, some fields may not be updatable.
-
-
 
         Parameters
         ----------
         user_info
             Updated information for a user
-        as_admin
-            If True, then attempt to modify fields that are only modifiable by an admin (enabled, role).
-            This is the default if requesting a user other than the currently logged-in user.
 
         Returns
         -------
@@ -3056,17 +3169,11 @@ class PortalClient(PortalClientBase):
             The updated user information as it appears on the server
         """
 
-        is_valid_username(user_info.username)
-        is_valid_rolename(user_info.role)
+        return self._auto_request("patch", f"v1/users", UserInfo, None, UserInfo, user_info, None)
 
-        if as_admin or (user_info.username != self.username):
-            url = f"v1/users/{user_info.username}"
-        else:
-            url = "v1/me"
-
-        return self._auto_request("put", url, UserInfo, None, UserInfo, user_info, None)
-
-    def change_user_password(self, username: Optional[str] = None, new_password: Optional[str] = None) -> str:
+    def change_user_password(
+        self, username_or_id: Optional[Union[int, str]] = None, new_password: Optional[str] = None
+    ) -> str:
         """
         Change a users password
 
@@ -3076,8 +3183,8 @@ class PortalClient(PortalClientBase):
 
         Parameters
         ----------
-        username
-            The name of the user whose password to change. If None, then use the currently logged-in user
+        username_or_id
+            The name or ID of the user whose password to change. If None, then use the currently logged-in user
         new_password
             Password to change to. If None, let the server generate one.
 
@@ -3087,30 +3194,28 @@ class PortalClient(PortalClientBase):
             The new password (either the same as the supplied one, or the server generated one
         """
 
-        if username is None:
-            username = self.username
+        if username_or_id is None:
+            username_or_id = self.username
 
-        if username is not None:
-            is_valid_username(username)
+        if username_or_id is None:
+            raise RuntimeError("Cannot change user - not logged in?")
+
+        if not isinstance(username_or_id, int):
+            is_valid_username(username_or_id)
 
         if new_password is not None:
             is_valid_password(new_password)
 
-        if username == self.username:
-            url = "v1/me/password"
-        else:
-            url = f"v1/users/{username}/password"
+        return self._auto_request(
+            "put", f"v1/users/{username_or_id}/password", Optional[str], None, str, new_password, None
+        )
 
-        return self._auto_request("put", url, Optional[str], None, str, new_password, None)
-
-    def delete_user(self, username: str) -> None:
+    def delete_user(self, username_or_id: Union[int, str]) -> None:
         """
         Delete a user from the server
         """
 
-        is_valid_username(username)
+        if not isinstance(username_or_id, int):
+            is_valid_username(username_or_id)
 
-        if username == self.username:
-            raise RuntimeError("Cannot delete your own user!")
-
-        return self._auto_request("delete", f"v1/users/{username}", None, None, None, None, None)
+        return self._auto_request("delete", f"v1/users/{username_or_id}", None, None, None, None, None)

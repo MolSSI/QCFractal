@@ -57,7 +57,7 @@ class ServiceSocket:
                 datetime.utcnow() + timedelta(seconds=delay),
                 "services.iterate_services",
                 {},
-                user=None,
+                user_id=None,
                 unique_name=True,
                 after_function="services.add_internal_job",
                 after_function_kwargs={"delay": self._service_frequency},

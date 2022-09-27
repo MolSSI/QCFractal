@@ -14,8 +14,8 @@ if TYPE_CHECKING:
     from qcportal.managers import ManagerName
 
 
-def test_dataset_model_basic(snowflake_client: PortalClient):
-    ds = snowflake_client.add_dataset(
+def test_dataset_model_basic(submitter_client: PortalClient):
+    ds = submitter_client.add_dataset(
         "optimization",
         "Test dataset",
         "Test Description",
@@ -27,6 +27,7 @@ def test_dataset_model_basic(snowflake_client: PortalClient):
         "def_tag",
         PriorityEnum.low,
         {"meta_key_1": "meta_value_1"},
+        "group1",
     )
 
     assert ds.dataset_type == "optimization"
@@ -39,6 +40,9 @@ def test_dataset_model_basic(snowflake_client: PortalClient):
     assert ds.visibility is True
     assert ds.default_tag == "def_tag"
     assert ds.default_priority == PriorityEnum.low
+
+    assert ds.owner_user == submitter_client.username
+    assert ds.owner_group == "group1"
 
     assert ds.entry_names == []
 

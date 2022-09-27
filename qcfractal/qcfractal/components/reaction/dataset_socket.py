@@ -86,6 +86,8 @@ class ReactionDatasetSocket(BaseDatasetSocket):
         existing_records: Iterable[Tuple[str, str]],
         tag: Optional[str],
         priority: Optional[PriorityEnum],
+        owner_user_id: Optional[int],
+        owner_group_id: Optional[int],
     ):
         # Weed out any with additional keywords
         special_entries = [x for x in entry_orm if x.additional_keywords]
@@ -101,6 +103,8 @@ class ReactionDatasetSocket(BaseDatasetSocket):
                 rxn_spec_id=spec.specification_id,
                 tag=tag,
                 priority=priority,
+                owner_user_id=owner_user_id,
+                owner_group_id=owner_group_id,
                 session=session,
             )
 
@@ -122,7 +126,6 @@ class ReactionDatasetSocket(BaseDatasetSocket):
 
                 new_spec = copy.deepcopy(spec_input_dict)
                 new_spec["keywords"].update(entry.additional_keywords)
-                print("NEW SPEC", new_spec)
 
                 stoichiometry = [(x.coefficient, x.molecule_id) for x in entry.stoichiometries]
 
@@ -131,6 +134,8 @@ class ReactionDatasetSocket(BaseDatasetSocket):
                     rxn_spec=ReactionSpecification(**new_spec),
                     tag=tag,
                     priority=priority,
+                    owner_user=owner_user_id,
+                    owner_group=owner_group_id,
                     session=session,
                 )
 

@@ -8,7 +8,7 @@ import secrets
 
 import pytest
 
-from qcarchivetesting import valid_encodings, geoip_path
+from qcarchivetesting import valid_encodings, geoip_path, test_users
 from qcfractal.config import FractalConfig
 from qcfractal.db_socket.socket import SQLAlchemySocket
 from qcfractal.postgres_harness import TemporaryPostgres
@@ -168,6 +168,12 @@ def secure_snowflake_allow_read(temporary_database, request):
         allow_unauthenticated_read=True,
     ) as server:
         yield server
+
+
+@pytest.fixture(scope="function", params=valid_encodings)
+def submitter_client(secure_snowflake):
+    client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
+    yield client
 
 
 @pytest.fixture(scope="function")

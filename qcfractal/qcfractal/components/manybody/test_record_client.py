@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import pytest
 
@@ -40,23 +40,27 @@ def test_manybody_client_tag_priority(snowflake_client: PortalClient, tag: str, 
 
 
 @pytest.mark.parametrize("spec", test_specs)
-def test_manybody_client_add_get(snowflake_client: PortalClient, spec: ManybodySpecification):
+@pytest.mark.parametrize("owner_group", ["group1", None])
+def test_manybody_client_add_get(
+    submitter_client: PortalClient, spec: ManybodySpecification, owner_group: Optional[str]
+):
     water2 = load_molecule_data("water_dimer_minima")
     water4 = load_molecule_data("water_stacked")
 
     time_0 = datetime.utcnow()
-    meta1, id1 = snowflake_client.add_manybodys(
+    meta1, id1 = submitter_client.add_manybodys(
         [water2, water4],
         spec.program,
         spec.singlepoint_specification,
         spec.keywords,
         tag="tag1",
         priority=PriorityEnum.low,
+        owner_group=owner_group,
     )
     time_1 = datetime.utcnow()
     assert meta1.success
 
-    recs = snowflake_client.get_manybodys(id1, include=["service", "clusters", "initial_molecule"])
+    recs = submitter_client.get_manybodys(id1, include=["service", "clusters", "initial_molecule"])
     assert len(recs) == 2
 
     for r in recs:
@@ -66,6 +70,9 @@ def test_manybody_client_add_get(snowflake_client: PortalClient, spec: ManybodyS
 
         assert r.raw_data.service.tag == "tag1"
         assert r.raw_data.service.priority == PriorityEnum.low
+
+        assert r.raw_data.owner_user == submitter_client.username
+        assert r.raw_data.owner_group == owner_group
 
         assert time_0 < r.raw_data.created_on < time_1
         assert time_0 < r.raw_data.modified_on < time_1

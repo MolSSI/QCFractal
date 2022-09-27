@@ -75,6 +75,8 @@ class GridoptimizationDatasetSocket(BaseDatasetSocket):
         existing_records: Iterable[Tuple[str, str]],
         tag: str,
         priority: PriorityEnum,
+        owner_user_id: Optional[int],
+        owner_group_id: Optional[int],
     ):
         for spec in spec_orm:
             goopt_spec_obj = spec.specification.to_model(GridoptimizationSpecification)
@@ -98,6 +100,8 @@ class GridoptimizationDatasetSocket(BaseDatasetSocket):
                     go_spec=go_spec,
                     tag=tag,
                     priority=priority,
+                    owner_user=owner_user_id,
+                    owner_group=owner_group_id,
                     session=session,
                 )
 

@@ -5,7 +5,7 @@ from typing import Optional, Union, List
 
 from pydantic import BaseModel, Field, validator, constr, Extra
 
-from ..exceptions import InvalidPasswordError, InvalidUsernameError, InvalidRolenameError
+from ..exceptions import InvalidPasswordError, InvalidUsernameError, InvalidRolenameError, InvalidGroupnameError
 
 
 class AuthTypeEnum(str, Enum):
@@ -42,6 +42,24 @@ def is_valid_username(username: str) -> None:
     # Username cannot be all numbers
     if username.isnumeric():
         raise InvalidUsernameError("Username cannot be all numbers")
+
+
+def is_valid_groupname(groupname: str) -> None:
+
+    if len(groupname) == 0:
+        raise InvalidGroupnameError("Groupname is empty")
+
+    # Null character not allowed
+    if "\x00" in groupname:
+        raise InvalidGroupnameError("Groupname contains a NUL character")
+
+    # Spaces are not allowed
+    if " " in groupname:
+        raise InvalidGroupnameError("Groupname contains spaces")
+
+    # Groupname cannot be all numbers
+    if groupname.isnumeric():
+        raise InvalidGroupnameError("Groupname cannot be all numbers")
 
 
 def is_valid_rolename(rolename: str) -> None:
@@ -111,6 +129,29 @@ class RoleInfo(BaseModel):
             raise ValueError(str(e))
 
 
+class GroupInfo(BaseModel):
+    """
+    Information about a group
+    """
+
+    class Config:
+        extra = Extra.forbid
+
+    id: Optional[int] = Field(None, description="ID of the group")
+    groupname: str = Field(..., description="The name of the group")
+    description: str = Field("", description="Text description of the group")
+
+    @validator("groupname", pre=True)
+    def _valid_groupname(cls, v):
+        """Makes sure the groupname is a valid string"""
+
+        try:
+            is_valid_groupname(v)
+            return v
+        except Exception as e:
+            raise ValueError(str(e))
+
+
 class UserInfo(BaseModel):
     """
     Information about a user
@@ -127,6 +168,7 @@ class UserInfo(BaseModel):
     )
     username: str = Field(..., allow_mutation=False, description="The username of this user")
     role: str = Field(..., description="The role this user belongs to")
+    groups: List[str] = Field([], description="Groups this user belongs to")
     enabled: bool = Field(..., description="Whether this user is enabled or not")
     fullname: constr(max_length=128) = Field("", description="The full name or description of the user")
     organization: constr(max_length=128) = Field("", description="The organization the user belongs to")
@@ -148,6 +190,17 @@ class UserInfo(BaseModel):
 
         try:
             is_valid_rolename(v)
+            return v
+        except Exception as e:
+            raise ValueError(str(e))
+
+    @validator("groups")
+    def _valid_groupnames(cls, v):
+        """Makes sure the groupnames are valid strings"""
+
+        try:
+            for x in v:
+                is_valid_groupname(x)
             return v
         except Exception as e:
             raise ValueError(str(e))

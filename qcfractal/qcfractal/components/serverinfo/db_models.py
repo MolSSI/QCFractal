@@ -1,8 +1,13 @@
+from __future__ import annotations
+
 import datetime
+from typing import Optional, Iterable, Dict, Any
 
-from sqlalchemy import Column, Integer, DateTime, String, Float, BigInteger, JSON, Index, CHAR
+from sqlalchemy import Column, Integer, DateTime, String, Float, BigInteger, JSON, Index, CHAR, ForeignKey
 from sqlalchemy.dialects.postgresql import INET
+from sqlalchemy.orm import relationship
 
+from qcfractal.components.auth.db_models import UserORM, UserIDMapSubquery
 from qcfractal.db_socket import BaseORM
 
 
@@ -23,11 +28,14 @@ class AccessLogORM(BaseORM):
     request_bytes = Column(BigInteger)
     response_bytes = Column(BigInteger)
 
-    # Because logging happens every request, we store the user as a string
-    # rather than a foreign key to the user table, which would require
-    # a lookup. This also disconnects the access log from the user table,
-    # allowing for logs to exist after a user is deleted
-    user = Column(String)
+    user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
+
+    user = relationship(
+        UserIDMapSubquery,
+        foreign_keys=[user_id],
+        primaryjoin="AccessLogORM.user_id == UserIDMapSubquery.id",
+        lazy="selectin",
+    )
 
     # user info
     ip_address = Column(INET)
@@ -40,7 +48,18 @@ class AccessLogORM(BaseORM):
     ip_lat = Column(Float)
     ip_long = Column(Float)
 
-    __table_args__ = (Index("ix_access_log_access_date", "access_date", postgresql_using="brin"),)
+    __table_args__ = (
+        Index("ix_access_log_access_date", "access_date", postgresql_using="brin"),
+        Index("ix_access_log_user_id", "user_id"),
+    )
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # strip user/group ids
+        exclude = self.append_exclude(exclude, "user_id")
+
+        d = BaseORM.model_dict(self, exclude)
+        d["user"] = self.user.username if self.user is not None else None
+        return d
 
 
 class InternalErrorLogORM(BaseORM):
@@ -57,13 +76,31 @@ class InternalErrorLogORM(BaseORM):
     error_date = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
     qcfractal_version = Column(String, nullable=False)
     error_text = Column(String)
-    user = Column(String)
+    user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
+
+    user = relationship(
+        UserIDMapSubquery,
+        foreign_keys=[user_id],
+        primaryjoin="InternalErrorLogORM.user_id == UserIDMapSubquery.id",
+        lazy="selectin",
+    )
 
     request_path = Column(String)
     request_headers = Column(String)
     request_body = Column(String)
 
-    __table_args__ = (Index("ix_internal_error_log_error_date", "error_date", postgresql_using="brin"),)
+    __table_args__ = (
+        Index("ix_internal_error_log_error_date", "error_date", postgresql_using="brin"),
+        Index("ix_internal_error_log_user_id", "user_id"),
+    )
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # strip user/group ids
+        exclude = self.append_exclude(exclude, "user_id")
+
+        d = BaseORM.model_dict(self, exclude)
+        d["user"] = self.user.username if self.user is not None else None
+        return d
 
 
 class ServerStatsLogORM(BaseORM):

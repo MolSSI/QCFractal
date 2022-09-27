@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import pytest
 
@@ -46,23 +46,28 @@ def test_gridoptimization_client_tag_priority(snowflake_client: PortalClient, ta
 
 
 @pytest.mark.parametrize("spec", test_specs)
-def test_gridoptimization_client_add_get(snowflake_client: PortalClient, spec: GridoptimizationSpecification):
+@pytest.mark.parametrize("owner_group", ["group1", None])
+def test_gridoptimization_client_add_get(
+    submitter_client: PortalClient, spec: GridoptimizationSpecification, owner_group: Optional[str]
+):
+
     hooh = load_molecule_data("peroxide2")
     h3ns = load_molecule_data("go_H3NS")
 
     time_0 = datetime.utcnow()
-    meta, id = snowflake_client.add_gridoptimizations(
+    meta, id = submitter_client.add_gridoptimizations(
         [hooh, h3ns],
         spec.program,
         spec.optimization_specification,
         spec.keywords,
         tag="tag1",
         priority=PriorityEnum.low,
+        owner_group=owner_group,
     )
     time_1 = datetime.utcnow()
     assert meta.success
 
-    recs = snowflake_client.get_gridoptimizations(id, include=["service", "initial_molecule"])
+    recs = submitter_client.get_gridoptimizations(id, include=["service", "initial_molecule"])
     assert len(recs) == 2
 
     for r in recs:
@@ -72,6 +77,9 @@ def test_gridoptimization_client_add_get(snowflake_client: PortalClient, spec: G
 
         assert r.raw_data.service.tag == "tag1"
         assert r.raw_data.service.priority == PriorityEnum.low
+
+        assert r.raw_data.owner_user == submitter_client.username
+        assert r.raw_data.owner_group == owner_group
 
         assert time_0 < r.raw_data.created_on < time_1
         assert time_0 < r.raw_data.modified_on < time_1

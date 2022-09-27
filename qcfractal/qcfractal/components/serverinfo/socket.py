@@ -5,9 +5,10 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
-from sqlalchemy import and_, func, text, select, delete
+from sqlalchemy import and_, or_, func, text, select, delete
 
 import qcfractal
+from qcfractal.components.auth.db_models import UserIDMapSubquery
 from qcfractal.components.dataset_db_models import BaseDatasetORM
 from qcfractal.components.molecules.db_models import MoleculeORM
 from qcfractal.components.outputstore.db_models import OutputStoreORM
@@ -93,7 +94,7 @@ class ServerInfoSocket:
                 datetime.utcnow() + timedelta(seconds=delay),
                 "serverinfo.update_server_stats",
                 {},
-                user=None,
+                user_id=None,
                 unique_name=True,
                 after_function="serverinfo.add_internal_job",
                 after_function_kwargs={"delay": self._server_stats_frequency},
@@ -318,21 +319,29 @@ class ServerInfoSocket:
 
         proj_options = get_query_proj_options(AccessLogORM, query_data.include, query_data.exclude)
 
+        stmt = select(AccessLogORM)
+
         and_query = []
         if query_data.access_type:
             and_query.append(AccessLogORM.access_type.in_(query_data.access_type))
         if query_data.access_method:
             access_method = [x.upper() for x in query_data.access_method]
             and_query.append(AccessLogORM.access_method.in_(access_method))
-        if query_data.username:
-            and_query.append(AccessLogORM.user.in_(query_data.username))
         if query_data.before:
             and_query.append(AccessLogORM.access_date <= query_data.before)
         if query_data.after:
             and_query.append(AccessLogORM.access_date >= query_data.after)
 
+        if query_data.user:
+            stmt = stmt.join(UserIDMapSubquery)
+
+            int_ids = {x for x in query_data.user if isinstance(x, int) or x.isnumeric()}
+            str_names = set(query_data.user) - int_ids
+
+            and_query.append(or_(UserIDMapSubquery.username.in_(str_names), UserIDMapSubquery.id.in_(int_ids)))
+
         with self.root_socket.optional_session(session, True) as session:
-            stmt = select(AccessLogORM).where(and_(True, *and_query)).order_by(AccessLogORM.access_date.desc())
+            stmt = stmt.where(and_(True, *and_query)).order_by(AccessLogORM.access_date.desc())
             stmt = stmt.options(*proj_options)
 
             if query_data.include_metadata:
@@ -387,7 +396,7 @@ class ServerInfoSocket:
         result_dict = defaultdict(list)
         with self.root_socket.optional_session(session, True) as session:
             if query_data.group_by == "user":
-                group_col = AccessLogORM.user.label("group_col")
+                group_col = UserIDMapSubquery.username.label("group_col")
             elif query_data.group_by == "day":
                 group_col = func.to_char(AccessLogORM.access_date, "YYYY-MM-DD").label("group_col")
             elif query_data.group_by == "hour":
@@ -421,6 +430,9 @@ class ServerInfoSocket:
             stmt = stmt.where(and_(True, *and_query)).group_by(
                 AccessLogORM.access_type, AccessLogORM.access_method, "group_col"
             )
+
+            if query_data.group_by == "user":
+                stmt = stmt.join(UserIDMapSubquery)
 
             results = session.execute(stmt).all()
 
@@ -476,21 +488,24 @@ class ServerInfoSocket:
         """
 
         and_query = []
+        stmt = select(InternalErrorLogORM)
+
         if query_data.error_id:
             and_query.append(InternalErrorLogORM.id.in_(query_data.error_id))
-        if query_data.username:
-            and_query.append(InternalErrorLogORM.user.in_(query_data.username))
         if query_data.before:
             and_query.append(InternalErrorLogORM.error_date <= query_data.before)
         if query_data.after:
             and_query.append(InternalErrorLogORM.error_date >= query_data.after)
+        if query_data.user:
+            stmt = stmt.join(UserIDMapSubquery)
+
+            int_ids = {x for x in query_data.user if isinstance(x, int) or x.isnumeric()}
+            str_names = set(query_data.user) - int_ids
+
+            and_query.append(or_(UserIDMapSubquery.username.in_(str_names), UserIDMapSubquery.id.in_(int_ids)))
 
         with self.root_socket.optional_session(session, True) as session:
-            stmt = (
-                select(InternalErrorLogORM)
-                .where(and_(True, *and_query))
-                .order_by(InternalErrorLogORM.error_date.desc())
-            )
+            stmt = stmt.where(and_(True, *and_query)).order_by(InternalErrorLogORM.error_date.desc())
 
             if query_data.include_metadata:
                 n_found = get_count(session, stmt)

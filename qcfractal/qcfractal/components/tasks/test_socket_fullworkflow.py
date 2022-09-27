@@ -133,7 +133,9 @@ def test_task_socket_fullworkflow_error(storage_socket: SQLAlchemySocket, activa
 def test_task_socket_fullworkflow_error_retry(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName):
     input_spec1, molecule1, result_data1 = load_test_data("sp_psi4_benzene_energy_1")
 
-    meta1, id1 = storage_socket.records.singlepoint.add([molecule1], input_spec1, "tag1", PriorityEnum.normal)
+    meta1, id1 = storage_socket.records.singlepoint.add(
+        [molecule1], input_spec1, "tag1", PriorityEnum.normal, None, None
+    )
 
     fop = FailedOperation(error=ComputeError(error_type="test_error", error_message="this is a test error"))
 
@@ -200,7 +202,9 @@ def test_task_socket_fullworkflow_error_autoreset(
 
     input_spec1, molecule1, result_data1 = load_test_data("sp_psi4_benzene_energy_1")
 
-    meta1, id1 = storage_socket.records.singlepoint.add([molecule1], input_spec1, "tag1", PriorityEnum.normal)
+    meta1, id1 = storage_socket.records.singlepoint.add(
+        [molecule1], input_spec1, "tag1", PriorityEnum.normal, None, None
+    )
 
     fop_u = FailedOperation(error=ComputeError(error_type="unknown_error", error_message="this is a test error"))
     fop_r = FailedOperation(error=ComputeError(error_type="random_error", error_message="this is a test error"))
@@ -234,7 +238,9 @@ def test_task_socket_fullworkflow_error_autoreset(
 
 def test_task_socket_compressed_outputs_success(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName):
     input_spec1, molecule1, result_data1 = load_test_data("sp_psi4_benzene_energy_1")
-    meta1, id1 = storage_socket.records.singlepoint.add([molecule1], input_spec1, "tag1", PriorityEnum.normal)
+    meta1, id1 = storage_socket.records.singlepoint.add(
+        [molecule1], input_spec1, "tag1", PriorityEnum.normal, None, None
+    )
     tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname)
 
     # Compress the outputs

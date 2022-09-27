@@ -78,7 +78,7 @@ def test_neb_client_add_get(snowflake_client: PortalClient, spec: NEBSpecificati
         assert time_0 < r.raw_data.modified_on < time_1
         assert time_0 < r.raw_data.service.created_on < time_1
 
-    assert len(recs[0].initial_chain) == 11 # default image number
+    assert len(recs[0].initial_chain) == 11  # default image number
     assert len(recs[1].initial_chain) == 11
 
     assert recs[0].initial_chain[0].get_hash() == chain1[0].get_hash()
@@ -86,7 +86,6 @@ def test_neb_client_add_get(snowflake_client: PortalClient, spec: NEBSpecificati
     hash1 = recs[0].initial_chain[0].get_hash()
     hash2 = recs[1].initial_chain[-1].get_hash()
     assert {hash1, hash2} == {chain1[0].get_hash(), chain2[-1].get_hash()}
-
 
 
 def test_neb_client_add_existing_chain(snowflake_client: PortalClient):
@@ -112,7 +111,7 @@ def test_neb_client_add_existing_chain(snowflake_client: PortalClient):
     assert recs[0].initial_chain[0].id == mol_ids[0]
 
 
-#TODO: run_test_data is not working for neb. Probably bad procedure json files..
+# TODO: run_test_data is not working for neb. Probably bad procedure json files..
 def test_neb_client_delete(
     snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
 ):
@@ -154,6 +153,7 @@ def test_neb_client_delete(
     # DB should be pretty empty now
     query_res = snowflake_client.query_records()
     assert query_res.current_meta.n_found == 0
+
 
 def test_torsiondrive_client_harddelete_nochildren(
     snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName

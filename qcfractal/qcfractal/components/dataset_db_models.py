@@ -2,10 +2,21 @@ from __future__ import annotations
 
 from typing import Optional, Iterable, Dict, Any
 
-from sqlalchemy import Column, Integer, String, JSON, Boolean, Index, ForeignKey, UniqueConstraint
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    JSON,
+    Boolean,
+    Index,
+    ForeignKey,
+    ForeignKeyConstraint,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
+from qcfractal.components.auth.db_models import UserIDMapSubquery, GroupIDMapSubquery, UserORM, GroupORM
 from qcfractal.db_socket import BaseORM, MsgpackExt
 
 
@@ -29,6 +40,24 @@ class BaseDatasetORM(BaseORM):
     group = Column(String(100), nullable=False)
     visibility = Column(Boolean, nullable=False)
 
+    # Ownership of this dataset
+    owner_user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
+    owner_group_id = Column(Integer, ForeignKey(GroupORM.id), nullable=True)
+
+    owner_user = relationship(
+        UserIDMapSubquery,
+        foreign_keys=[owner_user_id],
+        primaryjoin="BaseDatasetORM.owner_user_id == UserIDMapSubquery.id",
+        lazy="selectin",
+    )
+
+    owner_group = relationship(
+        GroupIDMapSubquery,
+        foreign_keys=[owner_group_id],
+        primaryjoin="BaseDatasetORM.owner_group_id == GroupIDMapSubquery.id",
+        lazy="selectin",
+    )
+
     default_tag = Column(String, nullable=False)
     default_priority = Column(Integer, nullable=False)
 
@@ -46,19 +75,29 @@ class BaseDatasetORM(BaseORM):
     __table_args__ = (
         UniqueConstraint("dataset_type", "lname", name="ux_base_dataset_dataset_type_lname"),
         Index("ix_base_dataset_dataset_type", "dataset_type"),
+        Index("ix_base_dataset_owner_user_id", "owner_user_id"),
+        Index("ix_base_dataset_owner_group_id", "owner_group_id"),
+        ForeignKeyConstraint(
+            ["owner_user_id", "owner_group_id"],
+            ["user_groups.user_id", "user_groups.group_id"],
+        ),
     )
 
     __mapper_args__ = {"polymorphic_on": "dataset_type"}
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # lname is only for the server
-        exclude = self.append_exclude(exclude, "lname")
+        # strip user/group ids
+        exclude = self.append_exclude(exclude, "lname", "owner_user_id", "owner_group_id")
 
         d = BaseORM.model_dict(self, exclude)
 
         # meta -> metadata
         if "meta" in d:
             d["metadata"] = d.pop("meta")
+
+        d["owner_user"] = self.owner_user.username if self.owner_user is not None else None
+        d["owner_group"] = self.owner_group.groupname if self.owner_group is not None else None
 
         return d
 

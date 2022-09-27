@@ -1,5 +1,3 @@
-from typing import List, Tuple
-
 from flask import request, current_app, jsonify
 from flask_jwt_extended import (
     create_access_token,
@@ -11,13 +9,9 @@ from flask_jwt_extended import (
 )
 
 from qcfractal.auth_v1.blueprint import auth_v1
-from qcfractal.auth_v1.policyuniverse import Policy
 from qcfractal.flask_app import storage_socket
-from qcfractal.flask_app.helpers import get_unauth_read_permissions, get_all_endpoints
+from qcfractal.flask_app.helpers import get_all_endpoints
 from qcportal.exceptions import AuthenticationFailure
-
-# Endpoints not accessible if security is disabled
-_protected_endpoints = {"users", "roles", "me"}
 
 
 @auth_v1.route("/login", methods=["POST"])
@@ -44,14 +38,23 @@ def login():
     # Also raises AuthenticationFailure if the user is invalid or the password is incorrect
     # This should be handled properly by the flask errorhandlers
     try:
-        permissions = storage_socket.users.verify(username, password)
+        user_info = storage_socket.auth.authenticate(username, password)
+        role = storage_socket.roles.get(user_info.role)
     except AuthenticationFailure as e:
         current_app.logger.info(f"Authentication failed for user {username}: {str(e)}")
         raise
 
-    access_token = create_access_token(identity=username, additional_claims={"permissions": permissions})
-    # expires_delta=datetime.timedelta(days=3))
-    refresh_token = create_refresh_token(identity=username)
+    access_token = create_access_token(
+        identity=user_info.id,
+        additional_claims={
+            "username": user_info.username,
+            "role": user_info.role,
+            "groups": user_info.groups,
+            "permissions": role["permissions"],
+        },
+    )
+
+    refresh_token = create_refresh_token(identity=user_info.id)
 
     current_app.logger.info(f"Successful login for user {username}")
     return jsonify(msg="Login succeeded!", access_token=access_token, refresh_token=refresh_token), 200
@@ -60,53 +63,41 @@ def login():
 @auth_v1.route("/refresh", methods=["POST"])
 @jwt_required(refresh=True)
 def refresh():
-    username = get_jwt_identity()
-    role, permissions = storage_socket.users.get_permissions(username)
-    ret = {
-        "access_token": create_access_token(
-            identity=username, additional_claims={"role": role, "permissions": permissions}
-        )
-    }
+    user_id = get_jwt_identity()
+
+    user_info = storage_socket.users.get(user_id)
+    role = storage_socket.roles.get(user_info["role"])
+
+    access_token = create_access_token(
+        identity=user_info["id"],
+        additional_claims={
+            "username": user_info["username"],
+            "role": user_info["role"],
+            "groups": user_info["groups"],
+            "permissions": role["permissions"],
+        },
+    )
+    ret = {"access_token": access_token}
     return jsonify(ret), 200
 
 
 @auth_v1.route("/allowed", methods=["GET"])
 def get_allowed_actions():
-    # Read in config parameters
-    security_enabled: bool = current_app.config["QCFRACTAL_CONFIG"].enable_security
-    allow_unauthenticated_read: bool = current_app.config["QCFRACTAL_CONFIG"].allow_unauthenticated_read
-
     all_endpoints = get_all_endpoints()
     all_actions = {"READ", "WRITE", "DELETE"}
-
-    allowed: List[Tuple[str, str]] = []
 
     # JWT is optional
     verify_jwt_in_request(optional=True)
 
-    # if no auth required, always allowed, except for protected endpoints
-    if security_enabled is False:
-        for endpoint in all_endpoints:
-            endpoint_last = endpoint.split("/")[-1]
-            if endpoint_last in _protected_endpoints:
-                continue
-            allowed.extend((endpoint, x) for x in all_actions)
-    else:
-        read_permissions = get_unauth_read_permissions()
-        read_policy = Policy(read_permissions)
+    username = get_jwt_identity()
+    claims = get_jwt()
+    policies = claims.get("permissions", ())
 
-        identity = get_jwt_identity()  # may be None
-        claims = get_jwt()
-        permissions = claims.get("permissions", {})
-        policy = Policy(permissions)
+    subject = {"username": username}
 
-        for endpoint in all_endpoints:
-            for action in all_actions:
-                context = {"Principal": identity, "Action": action, "Resource": endpoint}
-                if policy.evaluate(context):
-                    allowed.append((endpoint, action))
-                elif allow_unauthenticated_read and read_policy.evaluate(context) and not endpoint.endswith("/me"):
-                    allowed.append((endpoint, action))
+    allowed = storage_socket.auth.allowed_actions(
+        subject=subject, resources=all_endpoints, actions=all_actions, policies=policies
+    )
 
     return jsonify(allowed), 200
 

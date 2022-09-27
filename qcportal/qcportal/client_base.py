@@ -216,7 +216,7 @@ class PortalClientBase:
         if ret.status_code == 200:
             self._req_session.headers.update({"Authorization": f'Bearer {ret.json()["access_token"]}'})
         else:  # shouldn't happen unless user is blacklisted
-            raise ConnectionRefusedError("Unable to refresh JWT authorization token! " "This is a server issue!!")
+            raise ConnectionRefusedError("Unable to refresh JWT authorization token! This is a server issue!!")
 
     def _request(
         self,

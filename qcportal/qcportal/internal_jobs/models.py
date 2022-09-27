@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Optional, Dict, Any, List, Tuple, Union
 
 from pydantic import BaseModel, Extra
 
@@ -64,6 +64,7 @@ class InternalJob(BaseModel):
 class InternalJobQueryFilters(QueryProjModelBase):
     job_id: Optional[List[int]] = None
     name: Optional[List[str]] = None
+    user: Optional[List[Union[int, str]]] = None
     runner_hostname: Optional[List[str]] = None
     status: Optional[List[InternalJobStatusEnum]] = None
     last_updated_before: Optional[datetime] = None

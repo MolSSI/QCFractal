@@ -70,7 +70,7 @@ def submit_test_data(
 ) -> Tuple[int, Dict[str, Union[AtomicResult, OptimizationResult]]]:
 
     input_spec, stoich, result = load_test_data(name)
-    meta, record_ids = storage_socket.records.reaction.add([stoich], input_spec, tag, priority)
+    meta, record_ids = storage_socket.records.reaction.add([stoich], input_spec, tag, priority, None, None)
     assert meta.success
     assert len(record_ids) == 1
     assert meta.n_inserted == 1

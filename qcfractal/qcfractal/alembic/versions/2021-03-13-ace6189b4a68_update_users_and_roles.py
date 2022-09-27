@@ -5,13 +5,15 @@ Revises: 038ffd952a00
 Create Date: 2021-03-13 15:53:00.374469
 
 """
-from alembic import op
+import logging
+
 import sqlalchemy as sa
-from sqlalchemy.sql import table, column
+from alembic import op
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm.session import Session
-from qcfractal.components.permissions.role_socket import default_roles
-import logging
+from sqlalchemy.sql import table, column
+
+from qcfractal.components.auth.role_socket import default_roles
 
 # revision identifiers, used by Alembic.
 revision = "ace6189b4a68"

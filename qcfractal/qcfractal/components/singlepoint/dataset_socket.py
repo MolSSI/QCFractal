@@ -73,6 +73,8 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
         existing_records: Iterable[Tuple[str, str]],
         tag: Optional[str],
         priority: Optional[PriorityEnum],
+        owner_user_id: Optional[int],
+        owner_group_id: Optional[int],
     ):
 
         # Weed out any with additional keywords
@@ -89,6 +91,8 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
                 qc_spec_id=spec.specification_id,
                 tag=tag,
                 priority=priority,
+                owner_user_id=owner_user_id,
+                owner_group_id=owner_group_id,
                 session=session,
             )
 
@@ -115,6 +119,8 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
                     qc_spec=QCSpecification(**new_spec),
                     tag=tag,
                     priority=priority,
+                    owner_user=owner_user_id,
+                    owner_group=owner_group_id,
                     session=session,
                 )
 

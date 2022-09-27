@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import pytest
 
@@ -40,24 +40,28 @@ def test_torsiondrive_client_tag_priority_as_service(snowflake_client: PortalCli
 
 
 @pytest.mark.parametrize("spec", test_specs)
-def test_torsiondrive_client_add_get(snowflake_client: PortalClient, spec: TorsiondriveSpecification):
+@pytest.mark.parametrize("owner_group", ["group1", None])
+def test_torsiondrive_client_add_get(
+    submitter_client: PortalClient, spec: TorsiondriveSpecification, owner_group: Optional[str]
+):
     hooh = load_molecule_data("peroxide2")
     td_mol_1 = load_molecule_data("td_C9H11NO2_1")
     td_mol_2 = load_molecule_data("td_C9H11NO2_2")
 
     time_0 = datetime.utcnow()
-    meta, id = snowflake_client.add_torsiondrives(
+    meta, id = submitter_client.add_torsiondrives(
         [[hooh], [td_mol_1, td_mol_2]],
         "torsiondrive",
         keywords=spec.keywords,
         optimization_specification=spec.optimization_specification,
         tag="tag1",
         priority=PriorityEnum.low,
+        owner_group=owner_group,
     )
     time_1 = datetime.utcnow()
     assert meta.success
 
-    recs = snowflake_client.get_torsiondrives(id, include=["service", "initial_molecules"])
+    recs = submitter_client.get_torsiondrives(id, include=["service", "initial_molecules"])
     assert len(recs) == 2
 
     for r in recs:
@@ -67,6 +71,9 @@ def test_torsiondrive_client_add_get(snowflake_client: PortalClient, spec: Torsi
 
         assert r.raw_data.service.tag == "tag1"
         assert r.raw_data.service.priority == PriorityEnum.low
+
+        assert r.raw_data.owner_user == submitter_client.username
+        assert r.raw_data.owner_group == owner_group
 
         assert time_0 < r.raw_data.created_on < time_1
         assert time_0 < r.raw_data.modified_on < time_1

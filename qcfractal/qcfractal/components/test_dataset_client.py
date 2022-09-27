@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import pytest
 
@@ -19,9 +19,10 @@ if TYPE_CHECKING:
 @pytest.mark.parametrize(
     "dataset_type", ["singlepoint", "optimization", "torsiondrive", "gridoptimization", "manybody", "reaction"]
 )
-def test_dataset_client_add_get(snowflake_client: PortalClient, dataset_type: str):
+@pytest.mark.parametrize("owner_group", ["group1", None])
+def test_dataset_client_add_get(submitter_client: PortalClient, dataset_type: str, owner_group: Optional[str]):
 
-    ds = snowflake_client.add_dataset(
+    ds = submitter_client.add_dataset(
         dataset_type,
         "Test dataset",
         "Test Description",
@@ -33,6 +34,7 @@ def test_dataset_client_add_get(snowflake_client: PortalClient, dataset_type: st
         "def_tag",
         PriorityEnum.low,
         {"meta_key_1": "meta_value_1"},
+        owner_group=owner_group,
     )
 
     assert ds.raw_data.dataset_type == dataset_type
@@ -47,8 +49,11 @@ def test_dataset_client_add_get(snowflake_client: PortalClient, dataset_type: st
     assert ds.raw_data.default_priority == PriorityEnum.low
     assert ds.raw_data.metadata == {"meta_key_1": "meta_value_1"}
 
+    assert ds.raw_data.owner_user == submitter_client.username
+    assert ds.raw_data.owner_group == owner_group
+
     # case insensitive
-    ds2 = snowflake_client.get_dataset(dataset_type, "test DATASET")
+    ds2 = submitter_client.get_dataset(dataset_type, "test DATASET")
     assert ds2.raw_data == ds.raw_data
 
 

@@ -32,7 +32,7 @@ def test_singlepoint_socket_task_spec(
     all_mols = [water, hooh, ne4]
 
     time_0 = datetime.utcnow()
-    meta, id = storage_socket.records.singlepoint.add(all_mols, spec, tag="tag1", priority=PriorityEnum.low)
+    meta, id = storage_socket.records.singlepoint.add(all_mols, spec, "tag1", PriorityEnum.low, None, None)
     time_1 = datetime.utcnow()
     assert meta.success
 
@@ -70,11 +70,11 @@ def test_singlepoint_socket_add_same_1(storage_socket: SQLAlchemySocket):
     )
 
     water = load_molecule_data("water_dimer_minima")
-    meta, id1 = storage_socket.records.singlepoint.add([water], spec, tag="*", priority=PriorityEnum.normal)
+    meta, id1 = storage_socket.records.singlepoint.add([water], spec, "*", PriorityEnum.normal, None, None)
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
-    meta, id2 = storage_socket.records.singlepoint.add([water], spec, tag="*", priority=PriorityEnum.normal)
+    meta, id2 = storage_socket.records.singlepoint.add([water], spec, "*", PriorityEnum.normal, None, None)
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
     assert meta.existing_idx == [0]
@@ -102,11 +102,11 @@ def test_singlepoint_socket_add_same_2(storage_socket: SQLAlchemySocket):
     )
 
     water = load_molecule_data("water_dimer_minima")
-    meta, id1 = storage_socket.records.singlepoint.add([water], spec1, tag="*", priority=PriorityEnum.normal)
+    meta, id1 = storage_socket.records.singlepoint.add([water], spec1, "*", PriorityEnum.normal, None, None)
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
-    meta, id2 = storage_socket.records.singlepoint.add([water], spec2, tag="*", priority=PriorityEnum.normal)
+    meta, id2 = storage_socket.records.singlepoint.add([water], spec2, "*", PriorityEnum.normal, None, None)
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
     assert meta.existing_idx == [0]
@@ -132,11 +132,11 @@ def test_singlepoint_socket_add_same_3(storage_socket: SQLAlchemySocket):
     )
 
     water = load_molecule_data("water_dimer_minima")
-    meta, id1 = storage_socket.records.singlepoint.add([water], spec1, tag="*", priority=PriorityEnum.normal)
+    meta, id1 = storage_socket.records.singlepoint.add([water], spec1, "*", PriorityEnum.normal, None, None)
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
-    meta, id2 = storage_socket.records.singlepoint.add([water], spec2, tag="*", priority=PriorityEnum.normal)
+    meta, id2 = storage_socket.records.singlepoint.add([water], spec2, "*", PriorityEnum.normal, None, None)
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
     assert meta.existing_idx == [0]
@@ -160,11 +160,11 @@ def test_singlepoint_socket_add_same_4(storage_socket: SQLAlchemySocket):
     )
 
     water = load_molecule_data("water_dimer_minima")
-    meta, id1 = storage_socket.records.singlepoint.add([water], spec1, tag="*", priority=PriorityEnum.normal)
+    meta, id1 = storage_socket.records.singlepoint.add([water], spec1, "*", PriorityEnum.normal, None, None)
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
-    meta, id2 = storage_socket.records.singlepoint.add([water], spec2, tag="*", priority=PriorityEnum.normal)
+    meta, id2 = storage_socket.records.singlepoint.add([water], spec2, "*", PriorityEnum.normal, None, None)
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
     assert meta.existing_idx == [0]
@@ -182,11 +182,11 @@ def test_singlepoint_socket_add_same_5(storage_socket: SQLAlchemySocket):
 
     spec2 = QCSpecification(program="prog1", driver=SinglepointDriver.energy, method="b3lyp", basis="", keywords=kw)
 
-    meta, id1 = storage_socket.records.singlepoint.add([water], spec1, tag="*", priority=PriorityEnum.normal)
+    meta, id1 = storage_socket.records.singlepoint.add([water], spec1, "*", PriorityEnum.normal, None, None)
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
-    meta, id2 = storage_socket.records.singlepoint.add(mol_ids, spec2, tag="*", priority=PriorityEnum.normal)
+    meta, id2 = storage_socket.records.singlepoint.add(mol_ids, spec2, "*", PriorityEnum.normal, None, None)
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
     assert meta.existing_idx == [0]
@@ -200,16 +200,16 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket, activated_mana
     input_spec_4, molecule_4, result_data_4 = load_test_data("sp_psi4_h2_b3lyp_nativefiles")
 
     meta1, id1 = storage_socket.records.singlepoint.add(
-        [molecule_1], input_spec_1, tag="*", priority=PriorityEnum.normal
+        [molecule_1], input_spec_1, "*", PriorityEnum.normal, None, None
     )
     meta2, id2 = storage_socket.records.singlepoint.add(
-        [molecule_2], input_spec_2, tag="*", priority=PriorityEnum.normal
+        [molecule_2], input_spec_2, "*", PriorityEnum.normal, None, None
     )
     meta3, id3 = storage_socket.records.singlepoint.add(
-        [molecule_3], input_spec_3, tag="*", priority=PriorityEnum.normal
+        [molecule_3], input_spec_3, "*", PriorityEnum.normal, None, None
     )
     meta4, id4 = storage_socket.records.singlepoint.add(
-        [molecule_4], input_spec_4, tag="*", priority=PriorityEnum.normal
+        [molecule_4], input_spec_4, "*", PriorityEnum.normal, None, None
     )
 
     result_map = {id1[0]: result_data_1, id2[0]: result_data_2, id3[0]: result_data_3, id4[0]: result_data_4}
@@ -299,7 +299,7 @@ def test_singlepoint_socket_insert(storage_socket: SQLAlchemySocket):
     input_spec_2, molecule_2, result_data_2 = load_test_data("sp_psi4_peroxide_energy_wfn")
 
     meta2, id2 = storage_socket.records.singlepoint.add(
-        [molecule_2], input_spec_2, tag="*", priority=PriorityEnum.normal
+        [molecule_2], input_spec_2, "*", PriorityEnum.normal, None, None
     )
 
     # Typical workflow

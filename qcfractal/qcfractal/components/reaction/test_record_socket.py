@@ -8,6 +8,7 @@ import pytest
 from qcarchivetesting import load_molecule_data
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service_simple
+from qcportal.auth import UserInfo, GroupInfo
 from qcportal.outputstore import OutputStore
 from qcportal.reaction import ReactionSpecification, ReactionKeywords
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
@@ -27,7 +28,12 @@ def test_reaction_socket_add_get(storage_socket: SQLAlchemySocket, spec: Reactio
 
     time_0 = datetime.utcnow()
     meta, id = storage_socket.records.reaction.add(
-        [[(1.0, hooh), (2.0, ne4)], [(3.0, hooh), (4.0, water)]], spec, tag="tag1", priority=PriorityEnum.low
+        [[(1.0, hooh), (2.0, ne4)], [(3.0, hooh), (4.0, water)]],
+        spec,
+        "tag1",
+        PriorityEnum.low,
+        None,
+        None,
     )
     time_1 = datetime.utcnow()
     assert meta.success
@@ -82,13 +88,23 @@ def test_reaction_socket_add_same_1(storage_socket: SQLAlchemySocket):
     water = load_molecule_data("water_dimer_minima")
 
     meta, id1 = storage_socket.records.reaction.add(
-        [[(2.0, water), (3.0, hooh)]], spec, tag="*", priority=PriorityEnum.normal
+        [[(2.0, water), (3.0, hooh)]],
+        spec,
+        "*",
+        PriorityEnum.normal,
+        None,
+        None,
     )
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
     meta, id2 = storage_socket.records.reaction.add(
-        [[(3.0, hooh), (2.0, water)]], spec, tag="*", priority=PriorityEnum.normal
+        [[(3.0, hooh), (2.0, water)]],
+        spec,
+        "*",
+        PriorityEnum.normal,
+        None,
+        None,
     )
     assert meta.n_inserted == 0
     assert meta.n_existing == 1
@@ -110,8 +126,11 @@ def test_reaction_socket_run(
 ):
     input_spec_1, molecules_1, result_data_1 = load_test_data(test_data_name)
 
+    storage_socket.groups.add(GroupInfo(groupname="group1"))
+    storage_socket.users.add(UserInfo(username="submit_user", role="submit", groups=["group1"], enabled=True))
+
     meta_1, id_1 = storage_socket.records.reaction.add(
-        [molecules_1], input_spec_1, tag="test_tag", priority=PriorityEnum.low
+        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, "submit_user", "group1"
     )
     assert meta_1.success
 

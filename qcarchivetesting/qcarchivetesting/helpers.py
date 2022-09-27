@@ -27,11 +27,13 @@ geoip_path = os.path.join(_my_path, "MaxMind-DB", "test-data", "GeoIP2-City-Test
 testconfig_path = os.path.join(_my_path, "config_files")
 migrationdata_path = os.path.join(_my_path, "migration_data")
 
+test_groups = ['group1', 'group2', 'group3']
 test_users = {
     "admin_user": {
         "pw": "something123",
         "info": {
             "role": "admin",
+            "groups": ["group1", "group2"],
             "fullname": "Mrs. Admin User",
             "organization": "QCF Testing",
             "email": "admin@example.com",
@@ -41,6 +43,7 @@ test_users = {
         "pw": "something123",
         "info": {
             "role": "read",
+            "groups": ["group2"],
             "fullname": "Mr. Read User",
             "organization": "QCF Testing",
             "email": "read@example.com",
@@ -50,6 +53,7 @@ test_users = {
         "pw": "something123",
         "info": {
             "role": "monitor",
+            "groups": ["group1"],
             "fullname": "Mr. Monitor User",
             "organization": "QCF Testing",
             "email": "monitor@example.com",
@@ -59,6 +63,7 @@ test_users = {
         "pw": "something123",
         "info": {
             "role": "compute",
+            "groups": [],
             "fullname": "Mr. Compute User",
             "organization": "QCF Testing",
             "email": "compute@example.com",
@@ -68,6 +73,7 @@ test_users = {
         "pw": "something123",
         "info": {
             "role": "submit",
+            "groups": ["group1"],
             "fullname": "Mrs. Submit User",
             "organization": "QCF Testing",
             "email": "submit@example.com",

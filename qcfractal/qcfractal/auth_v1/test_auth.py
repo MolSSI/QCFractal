@@ -3,8 +3,8 @@ import pytest
 from qcarchivetesting import valid_encodings, test_users
 from qcfractal.testing_helpers import TestingSnowflake, mname1
 from qcportal import PortalRequestError
+from qcportal.auth import RoleInfo, UserInfo
 from qcportal.molecules import Molecule
-from qcportal.permissions import RoleInfo, UserInfo
 
 
 @pytest.fixture(scope="function", params=valid_encodings)

@@ -76,6 +76,8 @@ class NEBDatasetSocket(BaseDatasetSocket):
         existing_records: Iterable[Tuple[str, str]],
         tag: str,
         priority: PriorityEnum,
+        owner_user_id: Optional[int],
+        owner_group_id: Optional[int],
     ):
         for spec in spec_orm:
             neb_spec_obj = spec.specification.to_model(NEBSpecification)
@@ -93,6 +95,8 @@ class NEBDatasetSocket(BaseDatasetSocket):
                     neb_spec=NEBSpecification(**new_neb_spec),
                     tag=tag,
                     priority=priority,
+                    owner_user=owner_user_id,
+                    owner_group=owner_group_id,
                     session=session,
                 )
 

@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional, List, Tuple, Dict, Any
+from typing import Optional, List, Tuple, Dict, Any, Union
 
 from pydantic import BaseModel, Extra, validator, IPvAnyAddress, constr
 
@@ -29,7 +29,7 @@ class DeleteBeforeDateBody(RestModelBase):
 class AccessLogQueryFilters(QueryProjModelBase):
     access_type: Optional[List[constr(to_lower=True)]] = None
     access_method: Optional[List[constr(to_lower=True)]] = None
-    username: Optional[List[str]] = None
+    user: Optional[List[Union[int, str]]] = None
     before: Optional[datetime] = None
     after: Optional[datetime] = None
 
@@ -107,7 +107,7 @@ class AccessLogSummary(BaseModel):
 
 class ErrorLogQueryFilters(QueryModelBase):
     error_id: Optional[List[int]] = None
-    username: Optional[List[str]] = None
+    user: Optional[List[Union[int, str]]] = None
     before: Optional[datetime] = None
     after: Optional[datetime] = None
 

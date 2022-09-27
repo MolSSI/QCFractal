@@ -139,7 +139,13 @@ class ReactionRecordSocket(BaseRecordSocket):
             opt_spec_id = rxn_orm.specification.optimization_specification_id
 
             meta, opt_ids = self.root_socket.records.optimization.add_internal(
-                opt_mols_to_compute, opt_spec_id, service_orm.tag, service_orm.priority, session=session
+                opt_mols_to_compute,
+                opt_spec_id,
+                service_orm.tag,
+                service_orm.priority,
+                rxn_orm.owner_user_id,
+                rxn_orm.owner_group_id,
+                session=session,
             )
 
             for mol_id, opt_id in zip(opt_mols_to_compute, opt_ids):
@@ -169,7 +175,13 @@ class ReactionRecordSocket(BaseRecordSocket):
 
             qc_spec_id = rxn_orm.specification.singlepoint_specification_id
             meta, sp_ids = self.root_socket.records.singlepoint.add_internal(
-                real_mols_to_compute, qc_spec_id, service_orm.tag, service_orm.priority, session=session
+                real_mols_to_compute,
+                qc_spec_id,
+                service_orm.tag,
+                service_orm.priority,
+                rxn_orm.owner_user_id,
+                rxn_orm.owner_group_id,
+                session=session,
             )
 
             # Note the mapping back to the original molecule id (not the optimized one)
@@ -441,6 +453,8 @@ class ReactionRecordSocket(BaseRecordSocket):
         rxn_spec_id: int,
         tag: str,
         priority: PriorityEnum,
+        owner_user_id: Optional[int],
+        owner_group_id: Optional[int],
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -463,6 +477,10 @@ class ReactionRecordSocket(BaseRecordSocket):
             The tag for the task. This will assist in routing to appropriate compute managers.
         priority
             The priority for the computation
+        owner_user_id
+            ID of the user who owns the record
+        owner_group_id
+            ID of the group with additional permission for these records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -524,6 +542,8 @@ class ReactionRecordSocket(BaseRecordSocket):
                         specification_id=rxn_spec_id,
                         components=component_orm,
                         status=RecordStatusEnum.waiting,
+                        owner_user_id=owner_user_id,
+                        owner_group_id=owner_group_id,
                     )
 
                     self.create_service(rxn_orm, tag, priority)
@@ -546,6 +566,8 @@ class ReactionRecordSocket(BaseRecordSocket):
         rxn_spec: ReactionSpecification,
         tag: str,
         priority: PriorityEnum,
+        owner_user: Optional[Union[int, str]],
+        owner_group: Optional[Union[int, str]],
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -565,6 +587,10 @@ class ReactionRecordSocket(BaseRecordSocket):
             The tag for the task. This will assist in routing to appropriate compute managers.
         priority
             The priority for the computation
+        owner_user
+            Name or ID of the user who owns the record
+        owner_group
+            Group with additional permission for these records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -577,6 +603,8 @@ class ReactionRecordSocket(BaseRecordSocket):
         """
 
         with self.root_socket.optional_session(session, False) as session:
+
+            user_id, group_id = self.root_socket.users.get_owner_ids(owner_user, owner_group, session=session)
 
             # First, add the specification
             spec_meta, spec_id = self.add_specification(rxn_spec, session=session)
@@ -604,4 +632,4 @@ class ReactionRecordSocket(BaseRecordSocket):
 
                 new_mol.append([(x[0], y) for x, y in zip(single_stoic, mol_ids)])
 
-            return self.add_internal(new_mol, spec_id, tag, priority, session=session)
+            return self.add_internal(new_mol, spec_id, tag, priority, user_id, group_id, session=session)

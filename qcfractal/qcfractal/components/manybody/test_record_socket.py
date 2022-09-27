@@ -8,6 +8,7 @@ import pytest
 from qcarchivetesting import load_molecule_data
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.testing_helpers import run_service_simple
+from qcportal.auth import UserInfo, GroupInfo
 from qcportal.manybody import ManybodySpecification, ManybodyKeywords
 from qcportal.outputstore import OutputStore
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
@@ -25,7 +26,7 @@ def test_manybody_socket_add_get(storage_socket: SQLAlchemySocket, spec: Manybod
     water4 = load_molecule_data("water_stacked")
 
     time_0 = datetime.utcnow()
-    meta, id = storage_socket.records.manybody.add([water2, water4], spec, tag="tag1", priority=PriorityEnum.low)
+    meta, id = storage_socket.records.manybody.add([water2, water4], spec, "tag1", PriorityEnum.low, None, None)
     time_1 = datetime.utcnow()
     assert meta.success
 
@@ -67,11 +68,11 @@ def test_manybody_socket_add_same_1(storage_socket: SQLAlchemySocket):
     water2 = load_molecule_data("water_dimer_minima")
     water4 = load_molecule_data("water_stacked")
 
-    meta, id1 = storage_socket.records.manybody.add([water2, water4], spec, tag="*", priority=PriorityEnum.normal)
+    meta, id1 = storage_socket.records.manybody.add([water2, water4], spec, "*", PriorityEnum.normal, None, None)
     assert meta.n_inserted == 2
     assert meta.inserted_idx == [0, 1]
 
-    meta, id2 = storage_socket.records.manybody.add([water4, water2], spec, tag="*", priority=PriorityEnum.normal)
+    meta, id2 = storage_socket.records.manybody.add([water4, water2], spec, "*", PriorityEnum.normal, None, None)
     assert meta.n_inserted == 0
     assert meta.n_existing == 2
     assert meta.existing_idx == [0, 1]
@@ -91,8 +92,11 @@ def test_manybody_socket_run(
 ):
     input_spec_1, molecules_1, result_data_1 = load_test_data(test_data_name)
 
+    storage_socket.groups.add(GroupInfo(groupname="group1"))
+    storage_socket.users.add(UserInfo(username="submit_user", role="submit", groups=["group1"], enabled=True))
+
     meta_1, id_1 = storage_socket.records.manybody.add(
-        [molecules_1], input_spec_1, tag="test_tag", priority=PriorityEnum.low
+        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, "submit_user", "group1"
     )
     assert meta_1.success
 

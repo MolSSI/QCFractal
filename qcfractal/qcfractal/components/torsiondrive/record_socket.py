@@ -295,6 +295,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 OptimizationSpecification(**opt_spec2),
                 service_orm.tag,
                 service_orm.priority,
+                td_orm.owner_user_id,
+                td_orm.owner_group_id,
                 session=session,
             )
 
@@ -478,6 +480,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         as_service: bool,
         tag: str,
         priority: PriorityEnum,
+        owner_user_id: Optional[int],
+        owner_group_id: Optional[int],
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -500,6 +504,10 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             The tag for the task. This will assist in routing to appropriate compute managers.
         priority
             The priority for the computation
+        owner_user_id
+            ID of the user who owns the record
+        owner_group_id
+            ID of the group with additional permission for these records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -559,6 +567,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                         is_service=as_service,
                         specification_id=td_spec_id,
                         status=RecordStatusEnum.waiting,
+                        owner_user_id=owner_user_id,
+                        owner_group_id=owner_group_id,
                     )
 
                     self.create_service(td_orm, tag, priority)
@@ -588,6 +598,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         as_service: bool,
         tag: str,
         priority: PriorityEnum,
+        owner_user: Optional[str],
+        owner_group: Optional[str],
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -609,6 +621,10 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             The tag for the task. This will assist in routing to appropriate compute managers.
         priority
             The priority for the computation
+        owner_user
+            Name of the user who owns the record
+        owner_group
+            Group with additional permission for these records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -621,6 +637,8 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         """
 
         with self.root_socket.optional_session(session, False) as session:
+
+            user_id, group_id = self.root_socket.users.get_owner_ids(owner_user, owner_group, session=session)
 
             # First, add the specification
             spec_meta, spec_id = self.add_specification(td_spec, session=session)
@@ -646,7 +664,9 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
 
                 init_mol_ids.append(mol_ids)
 
-            return self.add_internal(init_mol_ids, spec_id, as_service, tag, priority, session=session)
+            return self.add_internal(
+                init_mol_ids, spec_id, as_service, tag, priority, user_id, group_id, session=session
+            )
 
     def get_minimum_optimizations(
         self,

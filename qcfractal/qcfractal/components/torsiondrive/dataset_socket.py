@@ -76,6 +76,8 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
         existing_records: Iterable[Tuple[str, str]],
         tag: str,
         priority: PriorityEnum,
+        owner_user_id: Optional[int],
+        owner_group_id: Optional[int],
     ):
         for spec in spec_orm:
             td_spec_obj = spec.specification.to_model(TorsiondriveSpecification)
@@ -100,6 +102,8 @@ class TorsiondriveDatasetSocket(BaseDatasetSocket):
                     as_service=True,
                     tag=tag,
                     priority=priority,
+                    owner_user=owner_user_id,
+                    owner_group=owner_group_id,
                     session=session,
                 )
 

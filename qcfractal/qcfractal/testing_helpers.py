@@ -5,12 +5,12 @@ from typing import Dict, Any, Tuple
 
 from qcelemental.models import Molecule
 
-from qcarchivetesting import geoip_path, test_users
+from qcarchivetesting import geoip_path, test_users, test_groups
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.snowflake import FractalSnowflake
 from qcportal import PortalClient, ManagerClient
+from qcportal.auth import UserInfo, GroupInfo
 from qcportal.managers import ManagerName
-from qcportal.permissions import UserInfo
 from qcportal.record_models import RecordStatusEnum
 from qcportal.utils import recursive_normalizer
 
@@ -115,6 +115,10 @@ class TestingSnowflake(FractalSnowflake):
     def create_users(self):
         # Get a storage socket and add the roles/users/passwords
         storage = self.get_storage_socket()
+
+        for g in test_groups:
+            storage.groups.add(GroupInfo(groupname=g))
+
         for k, v in test_users.items():
             uinfo = UserInfo(username=k, enabled=True, **v["info"])
             storage.users.add(uinfo, password=v["pw"])
@@ -219,6 +223,9 @@ def run_service_constropt(
     rec = storage_socket.records.get([record_id], include=["*", "service"])
     assert rec[0]["status"] in [RecordStatusEnum.waiting, RecordStatusEnum.running]
 
+    owner_user = rec[0]["owner_user"]
+    owner_group = rec[0]["owner_group"]
+
     tag = rec[0]["service"]["tag"]
     priority = rec[0]["service"]["priority"]
 
@@ -247,6 +254,8 @@ def run_service_constropt(
         # The C8H6 test has this "feature"
         opt_ids = set(x["record_id"] for x in manager_tasks)
         opt_recs = storage_socket.records.optimization.get(opt_ids, include=["*", "initial_molecule", "task"])
+        assert all(x["owner_user"] == owner_user for x in opt_recs)
+        assert all(x["owner_group"] == owner_group for x in opt_recs)
         assert all(x["task"]["priority"] == priority for x in opt_recs)
         assert all(x["task"]["tag"] == tag for x in opt_recs)
 
@@ -288,6 +297,9 @@ def run_service_simple(
     rec = storage_socket.records.get([record_id], include=["*", "service"])
     assert rec[0]["status"] in [RecordStatusEnum.waiting, RecordStatusEnum.running]
 
+    owner_user = rec[0]["owner_user"]
+    owner_group = rec[0]["owner_group"]
+
     tag = rec[0]["service"]["tag"]
     priority = rec[0]["service"]["priority"]
 
@@ -315,7 +327,9 @@ def run_service_simple(
         # Sometimes a task may be duplicated in the service dependencies.
         # The C8H6 test has this "feature"
         ids = set(x["record_id"] for x in manager_tasks)
-        recs = storage_socket.records.get(ids, include=["id", "record_type", "task"])
+        recs = storage_socket.records.get(ids, include=["id", "owner_user", "owner_group", "record_type", "task"])
+        assert all(x["owner_user"] == owner_user for x in recs)
+        assert all(x["owner_group"] == owner_group for x in recs)
         assert all(x["task"]["priority"] == priority for x in recs)
         assert all(x["task"]["tag"] == tag for x in recs)
 

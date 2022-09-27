@@ -5,36 +5,52 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcarchivetesting import valid_encodings
+from qcarchivetesting import valid_encodings, test_users
 from ...testing_helpers import TestingSnowflake
 
 if TYPE_CHECKING:
     from qcportal import PortalClient
 
 
-def test_serverinfo_client_access_logged(snowflake_client: PortalClient):
-    snowflake_client.query_access_log()
-    snowflake_client.query_molecules(molecular_formula=["C"])
+def test_serverinfo_client_access_logged(secure_snowflake_allow_read: TestingSnowflake):
 
-    snowflake_client.get_molecules([123], missing_ok=True)
+    client = secure_snowflake_allow_read.client("admin_user", test_users["admin_user"]["pw"])
+    read_client = secure_snowflake_allow_read.client()
 
-    # This will return 4, because the query to /information was done in constructing the client
-    query_res = snowflake_client.query_access_log()
+    client.query_access_log()
+    client.query_molecules(molecular_formula=["C"])
+
+    read_client.get_molecules([123], missing_ok=True)
+
+    # This will return 6, because the requests to /login and /information was done in constructing the clients
+    query_res = client.query_access_log()
     assert query_res.current_meta.success
-    assert query_res.current_meta.n_found == 4
+    assert query_res.current_meta.n_found == 6
     accesses = list(query_res)
+
+    assert accesses[5].access_type == "/auth/v1/login"
+    assert accesses[5].full_uri == "/auth/v1/login"
+    assert accesses[5].user is None
+
+    assert accesses[4].access_type == "/api/v1/information"
+    assert accesses[4].full_uri == "/api/v1/information"
+    assert accesses[4].user == "admin_user"
 
     assert accesses[3].access_type == "/api/v1/information"
     assert accesses[3].full_uri == "/api/v1/information"
+    assert accesses[3].user is None
 
     assert accesses[2].access_type == "/api/v1/access_logs"
     assert accesses[2].full_uri == "/api/v1/access_logs/query"
+    assert accesses[2].user == "admin_user"
 
     assert accesses[1].access_type == "/api/v1/molecules"
     assert accesses[1].full_uri == "/api/v1/molecules/query"
+    assert accesses[1].user == "admin_user"
 
     assert accesses[0].access_type == "/api/v1/molecules"
     assert accesses[0].full_uri == "/api/v1/molecules/bulkGet"
+    assert accesses[0].user is None
 
     assert accesses[0].response_bytes > 0
     assert accesses[1].response_bytes > 0

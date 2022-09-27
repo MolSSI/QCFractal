@@ -45,7 +45,9 @@ def after_request_func(response: Response):
 
         log["access_type"] = access_type
         log["access_method"] = access_method
-        log["full_uri"] = request.path
+
+        # Replace null in URI (since a malevolent user can do that)
+        log["full_uri"] = request.path.replace("\0", "\\0")
 
         # get the real IP address behind a proxy or ngnix
         real_ip = request.headers.get("X-Real-IP", None)
@@ -63,7 +65,7 @@ def after_request_func(response: Response):
 
         log["request_bytes"] = g.request_bytes
         log["request_duration"] = request_duration
-        log["user"] = g.user if "user" in g else None
+        log["user_id"] = g.get("user_id", None)
 
         # response.response is a list of bytes or str
         response_bytes = sum(len(x) for x in response.response)
@@ -89,10 +91,9 @@ def handle_internal_error(error):
 
     tb = traceback.format_exc()
 
-    user = g.user if "user" in g else None
     error_log = {
         "error_text": tb,
-        "user": user,
+        "user_id": g.get("user_id", None),
         "request_path": request.full_path,
         "request_headers": str(headers),
         "request_body": str(request.data)[:8192],

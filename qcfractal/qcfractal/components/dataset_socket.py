@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from qcportal.dataset_models import DatasetModifyMetadata
     from qcfractal.db_socket.socket import SQLAlchemySocket
     from qcfractal.db_socket.base_orm import BaseORM
-    from typing import Dict, Any, Optional, Sequence, Iterable, Tuple, List
+    from typing import Dict, Any, Optional, Sequence, Iterable, Tuple, List, Union
 
 
 class BaseDatasetSocket:
@@ -86,16 +86,25 @@ class BaseDatasetSocket:
         existing_records: Iterable[Tuple[str, str]],
         tag: str,
         priority: PriorityEnum,
+        owner_user_id: Optional[int],
+        owner_group_id: Optional[int],
     ):
         raise NotImplementedError("_submit must be overridden by the derived class")
 
-    def get_tag_priority(
-        self, dataset_id: int, tag: Optional[str], priority: Optional[str], *, session: Optional[Session] = None
-    ) -> Tuple[str, PriorityEnum]:
+    def get_submit_info(
+        self,
+        dataset_id: int,
+        tag: Optional[str],
+        priority: Optional[str],
+        owner_user: Optional[Union[int, str]],
+        owner_group: Optional[Union[int, str]],
+        *,
+        session: Optional[Session] = None,
+    ) -> Tuple[str, PriorityEnum, int, int]:
         """
-        Obtains the tag and priority a new record should be computed with
+        Obtains the tag, priority, and group a new record should be computed with
 
-        This takes into account the tag and priority passed in, as well as the dataset's default
+        This takes into account the fields passed in, as well as the dataset's default
         and priority.
 
         Parameters
@@ -106,6 +115,8 @@ class BaseDatasetSocket:
             Specified tag to use. If None, then the default tag will be used instead
         priority
             Specified priority to use. If None, then the default priority will be used instead
+        owner_group
+            Specified owner_group to use. If None, then the datasets owner_group will be used instead
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -113,24 +124,32 @@ class BaseDatasetSocket:
         Returns
         -------
         :
-            The tag and priority to use
+            The tag, priority, owner id, and group id
         """
 
-        if tag is None or priority is None:
-            default_tag, default_priority = self.get_default_tag_priority(dataset_id, session=session)
+        with self.root_socket.optional_session(session, True) as session:
+            default_tag, default_priority, default_group_id = self.get_submit_defaults(dataset_id, session=session)
+
             if tag is None:
                 tag = default_tag
             else:
                 tag = tag.lower()
+
             if priority is None:
                 priority = default_priority
-        return tag, priority
 
-    def get_default_tag_priority(
+            if owner_group is None:
+                owner_group = default_group_id
+
+            user_id, group_id = self.root_socket.users.get_owner_ids(owner_user, owner_group, session=session)
+
+        return tag, priority, user_id, group_id
+
+    def get_submit_defaults(
         self, dataset_id: int, *, session: Optional[Session] = None
-    ) -> Tuple[str, PriorityEnum]:
+    ) -> Tuple[str, PriorityEnum, int]:
         """
-        Obtain a dataset's default tag and priority
+        Obtain a dataset's default submission information
 
         Parameters
         ----------
@@ -141,13 +160,13 @@ class BaseDatasetSocket:
             is used, it will be flushed (but not committed) before returning from this function.
         """
 
-        stmt = select(BaseDatasetORM.default_tag, BaseDatasetORM.default_priority)
+        stmt = select(BaseDatasetORM.default_tag, BaseDatasetORM.default_priority, BaseDatasetORM.owner_group_id)
         stmt = stmt.where(BaseDatasetORM.id == dataset_id)
 
         with self.root_socket.optional_session(session, True) as session:
             r = session.execute(stmt).one_or_none()
             if r is None:
-                raise MissingDataError(f"Cannot get default tag & priority - dataset id {dataset_id} does not exist")
+                raise MissingDataError(f"Cannot get default submission info - dataset id {dataset_id} does not exist")
             return tuple(r)
 
     def get(
@@ -262,6 +281,8 @@ class BaseDatasetSocket:
         default_tag: str,
         default_priority: PriorityEnum,
         metadata: Dict[str, Any],
+        owner_user: Optional[Union[int, str]],
+        owner_group: Optional[Union[int, str]],
         *,
         session: Optional[Session] = None,
     ) -> int:
@@ -300,6 +321,10 @@ class BaseDatasetSocket:
 
             if existing is not None:
                 raise AlreadyExistsError(f"Dataset with type='{self.dataset_type}' and name='{name}' already exists")
+
+            user_id, group_id = self.root_socket.users.get_owner_ids(owner_user, owner_group)
+            ds_orm.owner_user_id = user_id
+            ds_orm.owner_group_id = group_id
 
             session.add(ds_orm)
             session.commit()
@@ -858,8 +883,7 @@ class BaseDatasetSocket:
 
         with self.root_socket.optional_session(session, True) as session:
             records = session.execute(stmt).scalars().all()
-
-        return [x.model_dict() for x in records]
+            return [x.model_dict() for x in records]
 
     def remove_records(
         self,
@@ -950,6 +974,8 @@ class BaseDatasetSocket:
         specification_names: Optional[Iterable[str]],
         tag: Optional[str],
         priority: Optional[PriorityEnum],
+        owner_user: Optional[Union[int, str]],
+        owner_group: Optional[Union[int, str]],
         *,
         session: Optional[Session] = None,
     ):
@@ -973,13 +999,17 @@ class BaseDatasetSocket:
         priority
             Priority for new records. If None, use the dataset's default. Existing records
             will not be modified.
+        owner_group
+            Group with additional permission for these records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
         """
 
         with self.root_socket.optional_session(session) as session:
-            tag, priority = self.get_tag_priority(dataset_id, tag, priority, session=session)
+            tag, priority, owner_user_id, owner_group_id = self.get_submit_info(
+                dataset_id, tag, priority, owner_user, owner_group, session=session
+            )
 
             ################################
             # Get specification details
@@ -1031,7 +1061,9 @@ class BaseDatasetSocket:
             existing_record_orm = session.execute(stmt).scalars().all()
             existing_records = [(x.entry_name, x.specification_name) for x in existing_record_orm]
 
-            return self._submit(session, dataset_id, entries, ds_specs, existing_records, tag, priority)
+            return self._submit(
+                session, dataset_id, entries, ds_specs, existing_records, tag, priority, owner_user_id, owner_group_id
+            )
 
     #######################
     # Record modification

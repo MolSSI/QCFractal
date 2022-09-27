@@ -258,8 +258,10 @@ class NEBRecordSocket(BaseRecordSocket):
                                 "Hessian will be calculated and passed to geomeTRIC."
                             )
 
-                            self.submit_singlepoints(session, service_state, service_orm, [Molecule(**TS_mol.model_dict())])
-                            service_state.tshessian=[1]
+                            self.submit_singlepoints(
+                                session, service_state, service_orm, [Molecule(**TS_mol.model_dict())]
+                            )
+                            service_state.tshessian = [1]
                         else:
                             complete_sp = sorted(service_orm.dependencies)[0]
                             service_orm.service_state["tshessian"] = complete_sp.record.properties["return_hessian"]
@@ -295,7 +297,11 @@ class NEBRecordSocket(BaseRecordSocket):
             opt_spec = OptimizationSpecification(
                 program="geometric",
                 qc_specification=QCSpecification(**qc_spec),
-                keywords={"transition": True, "coordsys": service_state.keywords["coordinate_system"], "hessian":service_state.tshessian},
+                keywords={
+                    "transition": True,
+                    "coordsys": service_state.keywords["coordinate_system"],
+                    "hessian": service_state.tshessian,
+                },
             )
             ts = True
         else:
@@ -311,6 +317,8 @@ class NEBRecordSocket(BaseRecordSocket):
             opt_spec,
             service_orm.tag,
             service_orm.priority,
+            neb_orm.owner_user_id,
+            neb_orm.owner_group_id,
             session=session,
         )
         for pos, opt_id in enumerate(opt_ids):
@@ -346,6 +354,8 @@ class NEBRecordSocket(BaseRecordSocket):
             QCSpecification(**qc_spec),
             service_orm.tag,
             service_orm.priority,
+            neb_orm.owner_user_id,
+            neb_orm.owner_group_id,
             session=session,
         )
 
@@ -461,14 +471,10 @@ class NEBRecordSocket(BaseRecordSocket):
         stmt = select(NEBRecordORM)
 
         if need_spspec_join:
-            stmt = stmt.join(NEBRecordORM.specification).options(
-                contains_eager(NEBRecordORM.specification)
-            )
+            stmt = stmt.join(NEBRecordORM.specification).options(contains_eager(NEBRecordORM.specification))
 
             stmt = stmt.join(NEBSpecificationORM.singlepoint_specification).options(
-                contains_eager(
-                    NEBRecordORM.specification, NEBSpecificationORM.singlepoint_specification
-                )
+                contains_eager(NEBRecordORM.specification, NEBSpecificationORM.singlepoint_specification)
             )
 
         if need_initchain_join:
@@ -492,6 +498,8 @@ class NEBRecordSocket(BaseRecordSocket):
         neb_spec_id: int,
         tag: str,
         priority: PriorityEnum,
+        owner_user_id: Optional[int],
+        owner_group_id: Optional[int],
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -514,6 +522,10 @@ class NEBRecordSocket(BaseRecordSocket):
             The tag for the task. This will assist in routing to appropriate compute managers.
         priority
             The priority for the computation
+        owner_user_id
+            ID of the user who owns the record
+        owner_group_id
+            ID of the group with additional permission for these records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -562,6 +574,8 @@ class NEBRecordSocket(BaseRecordSocket):
                         is_service=True,
                         specification_id=neb_spec_id,
                         status=RecordStatusEnum.waiting,
+                        owner_user_id=owner_user_id,
+                        owner_group_id=owner_group_id,
                     )
 
                     self.create_service(neb_orm, tag, priority)
@@ -591,6 +605,8 @@ class NEBRecordSocket(BaseRecordSocket):
         neb_spec: NEBSpecification,
         tag: str,
         priority: PriorityEnum,
+        owner_user: Optional[Union[int, str]],
+        owner_group: Optional[Union[int, str]],
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -608,6 +624,14 @@ class NEBRecordSocket(BaseRecordSocket):
             Molecules to compute using the specification
         neb_spec
             Specification for the NEB calculations
+        tag
+            The tag for the task. This will assist in routing to appropriate compute managers.
+        priority
+            The priority for the computation
+        owner_user
+            Name or ID of the user who owns the record
+        owner_group
+            Group with additional permission for these records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed before returning from this function.
@@ -620,6 +644,8 @@ class NEBRecordSocket(BaseRecordSocket):
         """
         images = neb_spec.keywords.images
         with self.root_socket.optional_session(session, False) as session:
+
+            user_id, group_id = self.root_socket.users.get_owner_ids(owner_user, owner_group, session=session)
 
             # First, add the specification
             spec_meta, spec_id = self.add_specification(neb_spec, session=session)
@@ -657,7 +683,7 @@ class NEBRecordSocket(BaseRecordSocket):
 
                 init_molecule_ids.append(molecule_ids)
 
-            return self.add_internal(init_molecule_ids, spec_id, tag, priority, session=session)
+            return self.add_internal(init_molecule_ids, spec_id, tag, priority, user_id, group_id, session=session)
 
     def get_neb_result(
         self,

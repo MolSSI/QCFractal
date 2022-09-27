@@ -91,11 +91,8 @@ def test_neb_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
     spec1 = NEBSpecification(
         program="geometric",
         keywords=NEBKeywords(
-            images=11,
-            spring_constant=1.0,
-            optimize_ts=True,
-            align_chain=False,
-            optimize_endpoints=True),
+            images=11, spring_constant=1.0, optimize_ts=True, align_chain=False, optimize_endpoints=True
+        ),
         singlepoint_specification=common_sp_spec,
     )
 
@@ -115,11 +112,8 @@ def test_neb_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
     spec1 = NEBSpecification(
         program="geometric",
         keywords=NEBKeywords(
-            images=11,
-            spring_constant=2.0,
-            optimize_ts=True,
-            align_chain=False,
-            optimize_endpoints=True),
+            images=11, spring_constant=2.0, optimize_ts=True, align_chain=False, optimize_endpoints=True
+        ),
         singlepoint_specification=common_sp_spec,
     )
 
@@ -128,6 +122,7 @@ def test_neb_socket_add_specification_same_0(storage_socket: SQLAlchemySocket):
     assert meta.inserted_idx == [0]
     assert meta.existing_idx == []
     assert id3 != id
+
 
 def test_neb_socket_add_specification_same_1(storage_socket: SQLAlchemySocket):
 
@@ -167,8 +162,7 @@ def test_neb_socket_add_specification_same_2(storage_socket: SQLAlchemySocket):
     # Test keywords defaults
     spec1 = NEBSpecification(
         program="geometric",
-        keywords=NEBKeywords(
-        ),
+        keywords=NEBKeywords(),
         singlepoint_specification=common_sp_spec,
     )
 
@@ -189,6 +183,7 @@ def test_neb_socket_add_specification_same_2(storage_socket: SQLAlchemySocket):
     assert meta.inserted_idx == []
     assert meta.existing_idx == [0]
     assert id == id2
+
 
 def test_neb_socket_add_specification_same_3(storage_socket: SQLAlchemySocket):
     # Test protocol defaults
@@ -234,6 +229,7 @@ def test_neb_socket_add_specification_same_3(storage_socket: SQLAlchemySocket):
     assert meta.existing_idx == [0]
     assert id == id2
 
+
 def test_neb_socket_add_specification_same_4(storage_socket: SQLAlchemySocket):
     # Test protocol defaults
 
@@ -277,6 +273,7 @@ def test_neb_socket_add_specification_same_4(storage_socket: SQLAlchemySocket):
     assert meta.inserted_idx == []
     assert meta.existing_idx == [0]
     assert id == id2
+
 
 def test_neb_socket_add_specification_diff_1(storage_socket: SQLAlchemySocket):
     spec1 = NEBSpecification(
@@ -348,6 +345,7 @@ def test_neb_socket_add_specification_diff_2(storage_socket: SQLAlchemySocket):
     assert meta.inserted_idx == [0]
     assert meta.existing_idx == []
     assert id != id2
+
 
 def test_neb_socket_add_specification_diff_3(storage_socket: SQLAlchemySocket):
     spec1 = NEBSpecification(

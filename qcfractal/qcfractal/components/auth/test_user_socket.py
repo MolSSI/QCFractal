@@ -4,25 +4,29 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from qcportal.auth.models import UserInfo, GroupInfo, is_valid_password
 from qcportal.exceptions import (
     UserManagementError,
     AuthenticationFailure,
     InvalidPasswordError,
     InvalidUsernameError,
 )
-from qcportal.permissions.models import UserInfo, is_valid_password
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
 
-invalid_usernames = ["\x00", "ab\x00cd", "1234", "a user", ""]
+invalid_usernames = ["\x00", "ab\x00cd", "a user", ""]
 invalid_passwords = ["\x00", "abcd\x00efgh", "abcd", "1", ""]
 
 
 def test_user_socket_add_get(storage_socket: SQLAlchemySocket):
+    storage_socket.groups.add(GroupInfo(groupname="group1"))
+    storage_socket.groups.add(GroupInfo(groupname="group2"))
+
     uinfo = UserInfo(
         username="george",
         role="read",
+        groups=["group1", "group2"],
         enabled=True,
         fullname="Test user",
         email="george@example.com",
@@ -37,6 +41,11 @@ def test_user_socket_add_get(storage_socket: SQLAlchemySocket):
     assert "password" not in uinfo2
     uinfo2.pop("id")
     assert UserInfo(**uinfo2) == uinfo
+
+    # Get by id
+    uinfo2 = storage_socket.users.get("george")
+    uinfo3 = storage_socket.users.get(uinfo2["id"])
+    assert uinfo2 == uinfo3
 
 
 def test_user_socket_add_duplicate(storage_socket: SQLAlchemySocket):
@@ -93,22 +102,37 @@ def test_user_socket_list(storage_socket: SQLAlchemySocket):
 
 
 def test_user_socket_delete(storage_socket: SQLAlchemySocket):
-    uinfo = UserInfo(
+    uinfo1 = UserInfo(
         username="george",
         role="read",
         enabled=True,
     )
-    storage_socket.users.add(uinfo)
+    uinfo2 = UserInfo(
+        username="bill",
+        role="read",
+        enabled=True,
+    )
+    storage_socket.users.add(uinfo1)
+    storage_socket.users.add(uinfo2)
+
+    uid1 = storage_socket.users.get("george")["id"]
+    uid2 = storage_socket.users.get("bill")["id"]
 
     # Raises exception on error
     storage_socket.users.delete("george")
+    storage_socket.users.delete(uid2)
 
     with pytest.raises(UserManagementError, match=r"User.*not found"):
         storage_socket.users.get("george")
+    with pytest.raises(UserManagementError, match=r"User.*not found"):
+        storage_socket.users.get(uid1)
+    with pytest.raises(UserManagementError, match=r"User.*not found"):
+        storage_socket.users.get("bill")
+    with pytest.raises(UserManagementError, match=r"User.*not found"):
+        storage_socket.users.get(uid2)
 
 
-@pytest.mark.parametrize("username", ["geoff", "George", "george_"])
-def test_user_socket_use_unknown_user(storage_socket: SQLAlchemySocket, username):
+def test_user_socket_use_unknown_user(storage_socket: SQLAlchemySocket):
     uinfo = UserInfo(
         username="george",
         role="read",
@@ -117,78 +141,59 @@ def test_user_socket_use_unknown_user(storage_socket: SQLAlchemySocket, username
     storage_socket.users.add(uinfo)
 
     with pytest.raises(UserManagementError, match=r"User.*not found"):
-        storage_socket.users.get(username)
-
-    with pytest.raises(UserManagementError, match=r"User.*not found"):
-        storage_socket.users.get_permissions(username)
+        storage_socket.users.get("geoff")
 
     with pytest.raises(AuthenticationFailure, match=r"Incorrect username or password"):
-        storage_socket.users.verify(username, "a password")
+        storage_socket.users.verify("geoff", "a password")
 
     with pytest.raises(UserManagementError, match=r"User.*not found"):
-        uinfo = UserInfo(username=username, role="read", enabled=True)
+        uinfo = UserInfo(id=1234, username="geoff", role="read", enabled=True)
         storage_socket.users.modify(uinfo, False)
 
     with pytest.raises(UserManagementError, match=r"User.*not found"):
-        storage_socket.users.change_password(username, "a password")
+        storage_socket.users.change_password("geoff", "a password")
 
     with pytest.raises(UserManagementError, match=r"User.*not found"):
-        storage_socket.users.change_password(username, None)
+        storage_socket.users.change_password("geoff", None)
 
     with pytest.raises(UserManagementError, match=r"User.*not found"):
-        storage_socket.users.delete(username)
+        storage_socket.users.delete("geoff")
 
 
-@pytest.mark.parametrize("password", ["simple", "ABC 1234", "ÃØ©þꝎꟇ"])
-@pytest.mark.parametrize("guess", ["Simple", "ABC%1234", "ÃØ©þꝎB"])
-def test_user_socket_verify_password(storage_socket: SQLAlchemySocket, password: str, guess: str):
+def test_user_socket_verify_password(storage_socket: SQLAlchemySocket):
+    for idx, password in enumerate(["simple", "ABC 1234", "ÃØ©þꝎꟇ"]):
+        username = f"george_{idx}"
+        uinfo = UserInfo(
+            username=username,
+            role="read",
+            enabled=True,
+        )
+
+        add_pw = storage_socket.users.add(uinfo, password=password)
+        assert add_pw == password
+        storage_socket.users.verify(username, add_pw)
+
+        for guess in ["Simple", "ABC%1234", "ÃØ©þꝎB"]:
+            with pytest.raises(AuthenticationFailure):
+                storage_socket.users.verify(username, guess)
+
+
+def test_user_socket_verify_user_disabled(storage_socket: SQLAlchemySocket):
     uinfo = UserInfo(
         username="george",
         role="read",
         enabled=True,
     )
 
-    add_pw = storage_socket.users.add(uinfo, password=password)
-    assert add_pw == password
-    storage_socket.users.verify("george", add_pw)
-
-    with pytest.raises(AuthenticationFailure):
-        storage_socket.users.verify("george", guess)
-
-
-@pytest.mark.parametrize("username", ["simple", "ABC1234", "ÃØ©þꝎꟇ"])
-@pytest.mark.parametrize("guess", ["Simple", "simple!", "ABC%1234", "ÃØ©þꝎB"])
-def test_user_socket_verify_user(storage_socket: SQLAlchemySocket, username: str, guess: str):
-    uinfo = UserInfo(
-        username=username,
-        role="read",
-        enabled=True,
-    )
-
     gen_pw = storage_socket.users.add(uinfo)
-    storage_socket.users.verify(username, gen_pw)
+
+    uinfo2 = storage_socket.users.verify("george", gen_pw)
+
+    uinfo2.enabled = False
+    storage_socket.users.modify(uinfo2, as_admin=True)
 
     with pytest.raises(AuthenticationFailure):
-        storage_socket.users.verify(guess, gen_pw)
-
-
-@pytest.mark.parametrize("username", ["simple", "ABC1234", "ÃØ©þꝎꟇ"])
-@pytest.mark.parametrize("guess", ["Simple", "simple!", "ABC%1234", "ÃØ©þꝎB"])
-def test_user_socket_verify_user_disabled(storage_socket: SQLAlchemySocket, username: str, guess: str):
-    uinfo = UserInfo(
-        username=username,
-        role="read",
-        enabled=True,
-    )
-
-    gen_pw = storage_socket.users.add(uinfo)
-    storage_socket.users.verify(username, gen_pw)
-
-    uinfo.enabled = False
-    storage_socket.users.modify(uinfo, as_admin=True)
-
-    with pytest.raises(AuthenticationFailure):
-        storage_socket.users.verify(guess, gen_pw)
+        storage_socket.users.verify("george", gen_pw)
 
 
 def test_user_socket_change_password(storage_socket: SQLAlchemySocket):
@@ -234,6 +239,28 @@ def test_user_socket_password_generation(storage_socket: SQLAlchemySocket):
 
 
 @pytest.mark.parametrize("as_admin", [True, False])
+def test_user_socket_no_modify_username(storage_socket: SQLAlchemySocket, as_admin: bool):
+
+    uinfo = UserInfo(
+        username="george",
+        role="read",
+        enabled=False,
+        fullname="Test user",
+        email="george@example.com",
+        organization="My Org",
+    )
+    storage_socket.users.add(uinfo)
+    uid = storage_socket.users.get("george")["id"]
+
+    uinfo2 = UserInfo(
+        id=uid, username="george2", role="admin", fullname="Test user 2", email="test@example.com", enabled=True
+    )
+
+    with pytest.raises(UserManagementError, match=r"Cannot change"):
+        uinfo3 = storage_socket.users.modify(uinfo2, as_admin=as_admin)
+
+
+@pytest.mark.parametrize("as_admin", [True, False])
 def test_user_socket_modify(storage_socket: SQLAlchemySocket, as_admin: bool):
     # If as_admin == True for user.modify(), then all fields can be modified
     # Otherwise, some fields will always stay the same (enabled, role)
@@ -272,85 +299,56 @@ def test_user_socket_modify(storage_socket: SQLAlchemySocket, as_admin: bool):
         assert uinfo3["organization"] == uinfo2.organization
 
 
-@pytest.mark.parametrize("role", ["admin", "read", "monitor", "compute"])
-def test_user_socket_permissions(storage_socket, role):
+def test_user_socket_use_invalid_username(storage_socket: SQLAlchemySocket):
+    for username in invalid_usernames:
+        # Normally, UserInfo prevents bad usernames. But the socket also checks, as a last resort
+        # So we have to bypass the UserInfo check with construct()
+        uinfo = UserInfo.construct(
+            username=username,
+            role="read",
+            enabled=True,
+        )
 
-    uinfo = UserInfo(
-        username="george",
-        role=role,
-        enabled=True,
-        fullname="Test user",
-        email="george@example.com",
-        organization="My Org",
-    )
-    gen_pw = storage_socket.users.add(uinfo)
+        with pytest.raises(InvalidUsernameError):
+            storage_socket.users.add(uinfo, "password123")
 
-    user_perms = storage_socket.users.get_permissions("george")
+        with pytest.raises(InvalidUsernameError):
+            storage_socket.users.get(username)
 
-    # Also can get permissions from user.verify
-    assert user_perms == storage_socket.users.verify("george", gen_pw)
+        with pytest.raises(InvalidUsernameError):
+            storage_socket.users.verify(username, "a_password")
 
-    # Now get the permissions from the role socket
-    role_dict = storage_socket.roles.get(role)
-    assert role_dict["permissions"] == user_perms
+        with pytest.raises(InvalidUsernameError):
+            storage_socket.users.change_password(username, "a_password")
 
+        with pytest.raises(InvalidUsernameError):
+            storage_socket.users.change_password(username, None)
 
-@pytest.mark.parametrize("username", invalid_usernames)
-def test_user_socket_use_invalid_username(storage_socket: SQLAlchemySocket, username: str):
-    # TESTING INVALID USERNAMES #
-
-    # Normally, UserInfo prevents bad usernames. But the socket also checks, as a last resort
-    # So we have to bypass the UserInfo check with construct()
-    uinfo = UserInfo.construct(
-        username=username,
-        role="read",
-        enabled=True,
-    )
-
-    with pytest.raises(InvalidUsernameError):
-        storage_socket.users.add(uinfo, "password123")
-
-    with pytest.raises(InvalidUsernameError):
-        storage_socket.users.get(username)
-
-    with pytest.raises(InvalidUsernameError):
-        storage_socket.users.get_permissions(username)
-
-    with pytest.raises(InvalidUsernameError):
-        storage_socket.users.verify(username, "a_password")
-
-    with pytest.raises(InvalidUsernameError):
-        uinfo = UserInfo.construct(username=username, role="a_role", enabled=True)
-        storage_socket.users.modify(uinfo, False)
-
-    with pytest.raises(InvalidUsernameError):
-        storage_socket.users.change_password(username, "a_password")
-
-    with pytest.raises(InvalidUsernameError):
-        storage_socket.users.change_password(username, None)
-
-    with pytest.raises(InvalidUsernameError):
-        storage_socket.users.delete(username)
+        with pytest.raises(InvalidUsernameError):
+            storage_socket.users.delete(username)
 
 
-@pytest.mark.parametrize("password", invalid_passwords)
-def test_user_socket_use_invalid_password(storage_socket: SQLAlchemySocket, password: str):
-    # TESTING INVALID PASSWORDS #
+def test_user_socket_use_invalid_password(storage_socket: SQLAlchemySocket):
+    for idx, password in enumerate(invalid_passwords):
+        username = f"george_{idx}"
 
-    uinfo = UserInfo.construct(
-        username="george",
-        role="read",
-        enabled=True,
-    )
+        uinfo = UserInfo.construct(
+            username=username,
+            role="read",
+            enabled=True,
+        )
+        with pytest.raises(InvalidPasswordError):
+            storage_socket.users.add(uinfo, password)
 
-    with pytest.raises(InvalidPasswordError):
-        storage_socket.users.add(uinfo, password)
+        #  Add for real now
+        storage_socket.users.add(uinfo, "good_password")
+        uid = storage_socket.users.get(username)["id"]
 
-    #  Add for real now
-    storage_socket.users.add(uinfo, "good_password")
+        with pytest.raises(InvalidPasswordError):
+            storage_socket.users.change_password(username, password)
 
-    with pytest.raises(InvalidPasswordError):
-        storage_socket.users.change_password("george", password)
+        with pytest.raises(InvalidPasswordError):
+            storage_socket.users.change_password(uid, password)
 
-    with pytest.raises(InvalidPasswordError):
-        storage_socket.users.verify("george", password)
+        with pytest.raises(InvalidPasswordError):
+            storage_socket.users.verify(username, password)

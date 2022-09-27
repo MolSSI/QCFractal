@@ -180,6 +180,9 @@ class BaseRecord(BaseModel):
         created_on: datetime
         modified_on: datetime
 
+        owner_user: Optional[str]
+        owner_group: Optional[str]
+
         compute_history: List[ComputeHistory]
 
         task: Optional[TaskRecord] = None
@@ -382,6 +385,14 @@ class BaseRecord(BaseModel):
         return self.raw_data.modified_on
 
     @property
+    def owner_user(self) -> str:
+        return self.raw_data.owner_user
+
+    @property
+    def owner_group(self) -> str:
+        return self.raw_data.owner_group
+
+    @property
     def compute_history(self) -> List[ComputeHistory]:
         return self.raw_data.compute_history
 
@@ -428,6 +439,7 @@ ServiceDependency.update_forward_refs()
 class RecordAddBodyBase(RestModelBase):
     tag: constr(to_lower=True)
     priority: PriorityEnum
+    owner_group: Optional[str]
 
 
 class RecordModifyBody(RestModelBase):
@@ -461,6 +473,8 @@ class RecordQueryFilters(QueryProjModelBase):
     created_after: Optional[datetime] = None
     modified_before: Optional[datetime] = None
     modified_after: Optional[datetime] = None
+    owner_user: Optional[List[Union[int, str]]] = None
+    owner_group: Optional[List[Union[int, str]]] = None
 
 
 class RecordQueryIterator(QueryIteratorBase):

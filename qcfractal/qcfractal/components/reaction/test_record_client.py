@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 import pytest
 
@@ -42,13 +42,16 @@ def test_reaction_client_tag_priority(snowflake_client: PortalClient, tag: str, 
 
 
 @pytest.mark.parametrize("spec", test_specs)
-def test_reaction_client_add_get(snowflake_client: PortalClient, spec: ReactionSpecification):
+@pytest.mark.parametrize("owner_group", ["group1", None])
+def test_reaction_client_add_get(
+    submitter_client: PortalClient, spec: ReactionSpecification, owner_group: Optional[str]
+):
     hooh = load_molecule_data("peroxide2")
     ne4 = load_molecule_data("neon_tetramer")
     water = load_molecule_data("water_dimer_minima")
 
     time_0 = datetime.utcnow()
-    meta1, id1 = snowflake_client.add_reactions(
+    meta1, id1 = submitter_client.add_reactions(
         [[(1.0, hooh), (2.0, ne4)], [(3.0, hooh), (4.0, water)]],
         spec.program,
         spec.singlepoint_specification,
@@ -56,11 +59,12 @@ def test_reaction_client_add_get(snowflake_client: PortalClient, spec: ReactionS
         spec.keywords,
         tag="tag1",
         priority=PriorityEnum.low,
+        owner_group=owner_group,
     )
     time_1 = datetime.utcnow()
     assert meta1.success
 
-    recs = snowflake_client.get_reactions(id1, include=["service", "components"])
+    recs = submitter_client.get_reactions(id1, include=["service", "components"])
     assert len(recs) == 2
 
     for r in recs:
@@ -70,6 +74,9 @@ def test_reaction_client_add_get(snowflake_client: PortalClient, spec: ReactionS
 
         assert r.raw_data.service.tag == "tag1"
         assert r.raw_data.service.priority == PriorityEnum.low
+
+        assert r.raw_data.owner_user == submitter_client.username
+        assert r.raw_data.owner_group == owner_group
 
         assert time_0 < r.raw_data.created_on < time_1
         assert time_0 < r.raw_data.modified_on < time_1

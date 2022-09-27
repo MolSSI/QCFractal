@@ -73,6 +73,9 @@ class BaseDataset(BaseModel):
         default_tag: str
         default_priority: PriorityEnum
 
+        owner_user: Optional[str]
+        owner_group: Optional[str]
+
         metadata: Dict[str, Any]
         extras: Dict[str, Any]
 
@@ -299,6 +302,14 @@ class BaseDataset(BaseModel):
 
     def set_group(self, new_group: str):
         self._update_metadata(group=new_group)
+
+    @property
+    def owner_user(self) -> Optional[str]:
+        return self.raw_data.owner_user
+
+    @property
+    def owner_group(self) -> Optional[str]:
+        return self.raw_data.owner_group
 
     @property
     def tags(self) -> List[str]:
@@ -1257,6 +1268,7 @@ class DatasetAddBody(RestModelBase):
     default_tag: str
     default_priority: PriorityEnum
     metadata: Dict[str, Any]
+    owner_group: Optional[str]
 
 
 class DatasetModifyMetadata(RestModelBase):
@@ -1317,6 +1329,7 @@ class DatasetSubmitBody(RestModelBase):
     specification_names: Optional[List[str]] = None
     tag: Optional[str] = None
     priority: Optional[PriorityEnum] = None
+    owner_group: Optional[str] = None
 
 
 class DatasetRecordModifyBody(RestModelBase):

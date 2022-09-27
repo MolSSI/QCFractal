@@ -1,3 +1,5 @@
+from typing import List
+
 from flask import current_app
 
 from qcfractal.api_v1.blueprint import api_v1
@@ -6,8 +8,13 @@ from qcfractal.flask_app import storage_socket
 from qcfractal.flask_app.helpers import prefix_projection
 from qcportal.base_models import ProjURLParameters
 from qcportal.exceptions import LimitExceededError
-from qcportal.neb import NEBAddBody, NEBQueryFilters
+from qcportal.neb import NEBDatasetSpecification, NEBDatasetNewEntry, NEBAddBody, NEBQueryFilters
 from qcportal.utils import calculate_limit
+
+
+#####################
+# Record
+#####################
 
 
 @api_v1.route("/records/neb/bulkCreate", methods=["POST"])
@@ -22,6 +29,8 @@ def add_neb_records_v1(body_data: NEBAddBody):
         neb_spec=body_data.specification,
         tag=body_data.tag,
         priority=body_data.priority,
+        owner_user=g.username,
+        owner_group=body_data.owner_group,
     )
 
 
@@ -63,3 +72,23 @@ def query_neb_v1(body_data: NEBQueryFilters):
     body_data.limit = calculate_limit(max_limit, body_data.limit)
 
     return storage_socket.records.neb.query(body_data)
+
+
+#####################
+# Dataset
+#####################
+
+
+@api_v1.route("/datasets/neb/<int:dataset_id>/specifications", methods=["POST"])
+@wrap_route("WRITE")
+def add_neb_dataset_specifications_v1(dataset_id: int, body_data: List[NEBDatasetSpecification]):
+    return storage_socket.datasets.neb.add_specifications(dataset_id, body_data)
+
+
+@api_v1.route("/datasets/neb/<int:dataset_id>/entries/bulkCreate", methods=["POST"])
+@wrap_route("WRITE")
+def add_neb_dataset_entries_v1(dataset_id: int, body_data: List[NEBDatasetNewEntry]):
+    return storage_socket.datasets.neb.add_entries(
+        dataset_id,
+        new_entries=body_data,
+    )

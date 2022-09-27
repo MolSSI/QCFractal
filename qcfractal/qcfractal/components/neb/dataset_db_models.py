@@ -58,12 +58,12 @@ class NEBDatasetEntryORM(BaseORM):
     additional_keywords = Column(JSONB, nullable=False)
     attributes = Column(JSONB, nullable=False)
 
-    #initial_molecule_ids = column_property(
+    # initial_molecule_ids = column_property(
     #   select(array_agg(NEBDatasetInitialMoleculeORM.molecule_id))
     #   .where(NEBDatasetInitialMoleculeORM.dataset_id == dataset_id)
     #   .where(NEBDatasetInitialMoleculeORM.entry_name == name)
     #   .scalar_subquery()
-    #)
+    # )
 
     initial_chain = relationship(
         MoleculeORM,

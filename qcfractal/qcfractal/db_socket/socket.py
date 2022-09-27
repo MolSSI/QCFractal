@@ -80,8 +80,10 @@ class SQLAlchemySocket:
         # Create/initialize the subsockets
         from ..components.internal_jobs.socket import InternalJobSocket
         from ..components.molecules.socket import MoleculeSocket
-        from ..components.permissions.user_socket import UserSocket
-        from ..components.permissions.role_socket import RoleSocket
+        from ..components.auth.user_socket import UserSocket
+        from ..components.auth.group_socket import GroupSocket
+        from ..components.auth.role_socket import RoleSocket
+        from ..components.auth.auth_socket import AuthSocket
         from ..components.serverinfo.socket import ServerInfoSocket
         from ..components.managers.socket import ManagerSocket
         from ..components.tasks.socket import TaskSocket
@@ -101,7 +103,9 @@ class SQLAlchemySocket:
         self.services = ServiceSocket(self)
         self.managers = ManagerSocket(self)
         self.users = UserSocket(self)
+        self.groups = GroupSocket(self)
         self.roles = RoleSocket(self)
+        self.auth = AuthSocket(self)
 
     def __str__(self) -> str:
         return f"<SQLAlchemySocket: address='{self.uri}`>"
@@ -180,8 +184,8 @@ class SQLAlchemySocket:
         session = sessionmaker(bind=engine)()
 
         from qcfractal.db_socket.base_orm import BaseORM
-        from qcfractal.components.permissions.db_models import RoleORM
-        from qcfractal.components.permissions.role_socket import default_roles
+        from qcfractal.components.auth.db_models import RoleORM
+        from qcfractal.components.auth.role_socket import default_roles
 
         try:
             BaseORM.metadata.create_all(engine)

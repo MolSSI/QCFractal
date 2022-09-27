@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from qcfractal.components.permissions.role_socket import default_roles
+from qcfractal.components.auth.role_socket import default_roles
+from qcportal.auth import RoleInfo, UserInfo
 from qcportal.exceptions import UserManagementError, InvalidRolenameError
-from qcportal.permissions import RoleInfo, UserInfo
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -197,24 +197,25 @@ def test_role_socket_reset(storage_socket: SQLAlchemySocket):
         assert rinfo["permissions"] == default_roles[rolename]
 
 
-@pytest.mark.parametrize("rolename", invalid_rolenames)
-def test_role_socket_use_invalid_rolename(storage_socket: SQLAlchemySocket, rolename: str):
+def test_role_socket_use_invalid_rolename(storage_socket: SQLAlchemySocket):
     # Normally, RoleInfo prevents bad rolenames. But the socket also checks, as a last resort
     # So we have to bypass the RoleInfo check with construct()
-    new_role = RoleInfo.construct(
-        rolename=rolename,
-        permissions={
-            "Statement": [
-                {"Effect": "Allow", "Action": "GET", "Resource": "something"},
-            ]
-        },
-    )
 
-    with pytest.raises(InvalidRolenameError):
-        storage_socket.roles.add(new_role)
+    for rolename in invalid_rolenames:
+        new_role = RoleInfo.construct(
+            rolename=rolename,
+            permissions={
+                "Statement": [
+                    {"Effect": "Allow", "Action": "GET", "Resource": "something"},
+                ]
+            },
+        )
 
-    with pytest.raises(InvalidRolenameError):
-        storage_socket.roles.get(rolename)
+        with pytest.raises(InvalidRolenameError):
+            storage_socket.roles.add(new_role)
 
-    with pytest.raises(InvalidRolenameError):
-        storage_socket.roles.modify(new_role)
+        with pytest.raises(InvalidRolenameError):
+            storage_socket.roles.get(rolename)
+
+        with pytest.raises(InvalidRolenameError):
+            storage_socket.roles.modify(new_role)

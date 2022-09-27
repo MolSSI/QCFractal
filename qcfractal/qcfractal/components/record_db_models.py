@@ -3,10 +3,22 @@ from __future__ import annotations
 import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, String, Integer, ForeignKey, Enum, DateTime, JSON, Index, Boolean
+from sqlalchemy import (
+    Column,
+    String,
+    Integer,
+    ForeignKey,
+    ForeignKeyConstraint,
+    Enum,
+    DateTime,
+    JSON,
+    Index,
+    Boolean,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
+from qcfractal.components.auth.db_models import UserORM, GroupORM, UserIDMapSubquery, GroupIDMapSubquery
 from qcfractal.components.managers.db_models import ComputeManagerORM
 from qcfractal.components.nativefiles.db_models import NativeFileORM
 from qcfractal.components.outputstore.db_models import OutputStoreORM
@@ -29,10 +41,24 @@ class RecordCommentORM(BaseORM):
     id = Column(Integer, primary_key=True)
     record_id = Column(Integer, ForeignKey("base_record.id", ondelete="cascade"), nullable=False)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
-    username = Column(String)  # not a foreign key - leaves username if user is deleted
     comment = Column(String, nullable=False)
 
+    user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
+    user = relationship(
+        UserIDMapSubquery,
+        foreign_keys=[user_id],
+        primaryjoin="RecordCommentORM.user_id == UserIDMapSubquery.id",
+        lazy="selectin",
+    )
+
     __table_args__ = (Index("ix_record_comment_record_id", "record_id"),)
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        exclude = self.append_exclude(exclude, "user_id", "user")
+
+        d = BaseORM.model_dict(self, exclude)
+        d["username"] = self.user.username if self.user is not None else None
+        return d
 
 
 class RecordInfoBackupORM(BaseORM):
@@ -145,6 +171,24 @@ class BaseRecordORM(BaseORM):
     created_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
     modified_on = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
 
+    # Ownership of this record
+    owner_user_id = Column(Integer, ForeignKey(UserORM.id), nullable=True)
+    owner_group_id = Column(Integer, ForeignKey(GroupORM.id), nullable=True)
+
+    owner_user = relationship(
+        UserIDMapSubquery,
+        foreign_keys=[owner_user_id],
+        primaryjoin="BaseRecordORM.owner_user_id == UserIDMapSubquery.id",
+        lazy="selectin",
+    )
+
+    owner_group = relationship(
+        GroupIDMapSubquery,
+        foreign_keys=[owner_group_id],
+        primaryjoin="BaseRecordORM.owner_group_id == GroupIDMapSubquery.id",
+        lazy="selectin",
+    )
+
     # Full compute history
     compute_history = relationship(
         RecordComputeHistoryORM, lazy="selectin", order_by=RecordComputeHistoryORM.modified_on.asc()
@@ -174,9 +218,24 @@ class BaseRecordORM(BaseORM):
         Index("ix_base_record_status", "status"),
         Index("ix_base_record_record_type", "record_type"),
         Index("ix_base_record_manager_name", "manager_name"),
+        Index("ix_base_record_owner_user_id", "owner_user_id"),
+        Index("ix_base_record_owner_group_id", "owner_group_id"),
+        ForeignKeyConstraint(
+            ["owner_user_id", "owner_group_id"],
+            ["user_groups.user_id", "user_groups.group_id"],
+        ),
     )
 
     __mapper_args__ = {"polymorphic_on": "record_type"}
+
+    def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
+        # strip user/group ids
+        exclude = self.append_exclude(exclude, "lname", "owner_user_id", "owner_group_id")
+
+        d = BaseORM.model_dict(self, exclude)
+        d["owner_user"] = self.owner_user.username if self.owner_user is not None else None
+        d["owner_group"] = self.owner_group.groupname if self.owner_group is not None else None
+        return d
 
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:

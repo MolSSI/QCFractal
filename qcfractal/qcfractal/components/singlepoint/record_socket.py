@@ -272,6 +272,8 @@ class SinglepointRecordSocket(BaseRecordSocket):
         qc_spec_id: int,
         tag: str,
         priority: PriorityEnum,
+        owner_user_id: Optional[int],
+        owner_group_id: Optional[int],
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -294,6 +296,10 @@ class SinglepointRecordSocket(BaseRecordSocket):
             The tag for the task. This will assist in routing to appropriate compute managers.
         priority
             The priority for the computation
+        owner_user_id
+            ID of the user who owns the record
+        owner_group_id
+            ID of the group with additional permission for these records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -322,6 +328,8 @@ class SinglepointRecordSocket(BaseRecordSocket):
                     specification_id=qc_spec_id,
                     molecule_id=mid,
                     status=RecordStatusEnum.waiting,
+                    owner_user_id=owner_user_id,
+                    owner_group_id=owner_group_id,
                 )
 
                 self.create_task(sp_orm, tag, priority)
@@ -341,6 +349,8 @@ class SinglepointRecordSocket(BaseRecordSocket):
         qc_spec: QCSpecification,
         tag: str,
         priority: PriorityEnum,
+        owner_user: Optional[Union[int, str]],
+        owner_group: Optional[Union[int, str]],
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
@@ -360,6 +370,10 @@ class SinglepointRecordSocket(BaseRecordSocket):
             The tag for the task. This will assist in routing to appropriate compute managers.
         priority
             The priority for the computation
+        owner_user
+            Name or ID of the user who owns the record
+        owner_group
+            Group with additional permission for these records
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed (but not committed) before returning from this function.
@@ -372,6 +386,8 @@ class SinglepointRecordSocket(BaseRecordSocket):
         """
 
         with self.root_socket.optional_session(session, False) as session:
+
+            user_id, group_id = self.root_socket.users.get_owner_ids(owner_user, owner_group, session=session)
 
             # First, add the specification
             spec_meta, spec_id = self.add_specification(qc_spec, session=session)
@@ -391,4 +407,4 @@ class SinglepointRecordSocket(BaseRecordSocket):
                     [],
                 )
 
-            return self.add_internal(mol_ids, spec_id, tag, priority, session=session)
+            return self.add_internal(mol_ids, spec_id, tag, priority, user_id, group_id, session=session)
