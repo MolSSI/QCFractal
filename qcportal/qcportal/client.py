@@ -2436,20 +2436,13 @@ class PortalClient(PortalClientBase):
         modified_before: Optional[datetime] = None,
         modified_after: Optional[datetime] = None,
         program: Optional[Iterable[str]] = None,
-        neb_program: Optional[Iterable[str]] = None,
         qc_program: Optional[Iterable[str]] = None,
         qc_method: Optional[Iterable[str]] = None,
         qc_basis: Optional[Iterable[Optional[str]]] = None,
         initial_chain_id: Optional[Iterable[int]] = None,
         limit: Optional[int] = None,
-        skip: int = 0,
         *,
-        include_task: bool = False,
-        include_service: bool = False,
-        include_outputs: bool = False,
-        include_comments: bool = False,
-        include_initial_chain: bool = False,
-        include_singlepoints: bool = False,
+        include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator:
         """Queries neb records from the server."""
 
@@ -2461,7 +2454,6 @@ class PortalClient(PortalClientBase):
             "parent_id": make_list(parent_id),
             "child_id": make_list(child_id),
             "program": make_list(program),
-            "neb_program": make_list(neb_program),
             "qc_program": make_list(qc_program),
             "qc_method": make_list(qc_method),
             "qc_basis": make_list(qc_basis),
@@ -2471,24 +2463,7 @@ class PortalClient(PortalClientBase):
             "modified_before": modified_before,
             "modified_after": modified_after,
             "limit": limit,
-            "skip": skip,
         }
-
-        include = set()
-
-        # We must add '*' so that all the default fields are included
-        if include_task:
-            include |= {"*", "task"}
-        if include_service:
-            include |= {"*", "service"}
-        if include_outputs:
-            include |= {"*", "compute_history.*", "compute_history.outputs"}
-        if include_comments:
-            include |= {"*", "comments"}
-        if include_initial_chain:
-            include |= {"*", "initial_chain"}
-        if include_singlepoints:
-            include |= {"*", "singlepoints.*", "singlepoints.singlepoint_record"}
 
         if include:
             filter_dict["include"] = include

@@ -6,10 +6,10 @@ import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicResult
 
 from qcarchivetesting.helpers import read_record_data
-from qcfractal.testing_helpers import run_service_constropt
+from qcfractal.testing_helpers import run_service_simple
 from qcportal.neb import NEBSpecification, NEBKeywords
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
-from qcportal.singlepoint import SinglepointProtocols, QCSpecification
+from qcportal.singlepoint import SinglepointProtocols, QCSpecification, SinglepointRecord
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -22,7 +22,7 @@ test_specs = [
         keywords=NEBKeywords(
             images=11,
             spring_constant=0.1,
-            energy_weighted=False,
+            energy_weighted=5,
         ),
         singlepoint_specification=QCSpecification(
             program="psi4",
@@ -36,9 +36,9 @@ test_specs = [
     NEBSpecification(
         program="geometric",
         keywords=NEBKeywords(
-            images=21,
+            images=11,
             spring_constant=0.5,
-            energy_weighted=True,
+            energy_weighted=10,
         ),
         singlepoint_specification=QCSpecification(
             program="psi4",
@@ -64,13 +64,13 @@ def compare_neb_specs(
     return input_spec == output_spec
 
 
-def load_test_data(name: str) -> Tuple[NEBSpecification, List[Molecule], Dict[str, AtomicResult]]:
+def load_test_data(name: str) -> Tuple[NEBSpecification, List[Molecule], Dict[str, List[SinglepointRecord]]]:
     test_data = read_record_data(name)
 
     return (
         pydantic.parse_obj_as(NEBSpecification, test_data["specification"]),
-        pydantic.parse_obj_as(List[Molecule], test_data["molecule"]),
-        pydantic.parse_obj_as(Dict[str, AtomicResult], test_data["result"]),
+        pydantic.parse_obj_as(List[Molecule], test_data["initial_chain"]),
+        pydantic.parse_obj_as(Dict[str, List[SinglepointRecord]], test_data["result"]),
     )
 
 
@@ -79,10 +79,10 @@ def submit_test_data(
     name: str,
     tag: Optional[str] = "*",
     priority: PriorityEnum = PriorityEnum.normal,
-) -> Tuple[int, Dict[str, AtomicResult]]:
+) -> Tuple[int, Dict[str, Any]]:
 
-    input_spec, molecules, result = load_test_data(name)
-    meta, record_ids = storage_socket.records.neb.add([molecules], input_spec, True, tag, priority)
+    input_spec, chain, result = load_test_data(name)
+    meta, record_ids = storage_socket.records.neb.add([chain], input_spec, tag, priority)
     assert meta.success
     assert len(record_ids) == 1
     assert meta.n_inserted == 1
@@ -107,9 +107,9 @@ def run_test_data(
         failed_op = FailedOperation(
             error=ComputeError(error_type="test_error", error_message="this is just a test error"),
         )
-        result = {x: failed_op for x in result}
+    #    singlepoints = {x: failed_op for x in singlepoints}
 
-    finished, n_optimizations = run_service_constropt(storage_socket, manager_name, record_id, result, 200)
+    finished, n_sp_iterations = run_service_simple(storage_socket, manager_name, record_id, result, 200)
     assert finished
 
     record = storage_socket.records.get([record_id], include=["status"])[0]

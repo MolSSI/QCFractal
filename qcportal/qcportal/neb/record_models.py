@@ -48,7 +48,7 @@ class NEBKeywords(BaseModel):
         description="Convergence criteria. Converge when average RMS-gradient (ev/Ang) of the chain fall below average_force.",
     )
 
-    maximum_cycle: int = Field(200, description="Maximum iteration number for NEB calculation.")
+    maximum_cycle: int = Field(100, description="Maximum iteration number for NEB calculation.")
 
     energy_weighted: int = Field(
         None,
@@ -85,7 +85,7 @@ class NEBKeywords(BaseModel):
 
     hessian_reset: bool = Field(
         True,
-        description="Reset Hessian when eigenvalues are under epsilon. If it is set to False, it will skip updating the hessian.")
+        description="Reset Hessian when eigenvalues are below the epsilon. If it is set to False, it will skip updating the hessian.")
 
     @root_validator
     def normalize(cls, values):
@@ -99,15 +99,6 @@ class NEBSpecification(BaseModel):
     program: constr(to_lower=True) = "geometric"
     singlepoint_specification: QCSpecification
     keywords: NEBKeywords
-
-    @pydantic.validator("singlepoint_specification", pre=True)
-    def force_qcspec(cls, v):
-        if isinstance(v, QCSpecification):
-            v = v.dict()
-
-        v["driver"] = SinglepointDriver.gradient
-        v["protocols"] = SinglepointProtocols()
-        return v
 
 
 class NEBOptimization(BaseModel):
@@ -130,15 +121,15 @@ class NEBSinglepoint(BaseModel):
     singlepoint_record: Optional[SinglepointRecord._DataModel]
 
 
-class NEBInitialchain(BaseModel):
-    class Config:
-        extra = Extra.forbid
-
-    id: int
-    molecule_id: int
-    position: int
-
-    molecule: Optional[Molecule]
+#class NEBInitialchain(BaseModel):
+#    class Config:
+#        extra = Extra.forbid
+#
+#    id: int
+#    molecule_id: int
+#    position: int
+#
+#    molecule: Optional[Molecule]
 
 
 class NEBAddBody(RecordAddBodyBase):
@@ -147,8 +138,7 @@ class NEBAddBody(RecordAddBodyBase):
 
 
 class NEBQueryFilters(RecordQueryFilters):
-    program: Optional[List[str]] = None
-    neb_program: Optional[List[str]]
+    program: Optional[List[str]] = "geometric"
     qc_program: Optional[List[constr(to_lower=True)]] = None
     qc_method: Optional[List[constr(to_lower=True)]] = None
     qc_basis: Optional[List[Optional[constr(to_lower=True)]]] = None
@@ -168,14 +158,13 @@ class NEBRecord(BaseRecord):
     class _DataModel(BaseRecord._DataModel):
         record_type: Literal["neb"] = "neb"
         specification: NEBSpecification
-        initial_chain: Optional[List[Molecule]] = None
-        singlepoints: Optional[List[NEBSinglepoint]] = None
-        optimizations: Optional[List[NEBOptimization]] = None
-
-        optimizations_cache: Optional[Dict[str, OptimizationRecord]] = None
+        initial_chain: Optional[List[Molecule]]
+        singlepoints: Optional[List[NEBSinglepoint]]
+        optimizations: Optional[List[NEBOptimization]]
+        optimizations_cache: Optional[Dict[str, OptimizationRecord]]
 
     raw_data: _DataModel
-    singlepoint_cache: Optional[Dict[str, SinglepointRecord]] = None
+    singlepoint_cache: Optional[Dict[str, SinglepointRecord]]
 
     @staticmethod
     def transform_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
@@ -196,7 +185,7 @@ class NEBRecord(BaseRecord):
             return
 
         if self.raw_data.optimizations_cache is None:
-            # convert the raw optimization data to a dictionary of key -> List[OptimizationRecord]
+            # convert the raw optimization data to a dictionary of key -> Dict[str, OptimizationRecord]
             opt_map = {}
             for opt in self.raw_data.optimizations:
                 opt_rec = OptimizationRecord.from_datamodel(opt.optimization_record, self.client)
@@ -265,10 +254,10 @@ class NEBRecord(BaseRecord):
         if self.singlepoint_cache is not None:
             return self.singlepoint_cache
 
-        # convert the raw singlepoint data to a dictionary of key -> SinglepointRecord
         if self.raw_data.singlepoints is None:
             self._fetch_singlepoints()
 
+        # convert the raw singlepoint data to a dictionary of key List[SinglepointRecord]-> Dict[str, List[SinglepointRecord]]
         ret = {}
         for sp in self.raw_data.singlepoints:
             ret.setdefault(sp.chain_iteration, list())
@@ -292,7 +281,16 @@ class NEBRecord(BaseRecord):
         return r
 
     @property
-    def ts_optimization(self) -> Optional[Dict[str, OptimizationRecord]]:
+    def optimizations(self) -> Optional[Dict[str, OptimizationRecord]]:
+        self._make_caches()
+
+        if self.raw_data.optimizations_cache is None:
+            self._fetch_optimizations()
+
+        return self.raw_data.optimizations_cache
+
+    @property
+    def ts_optimization(self) -> Optional[OptimizationRecord]:
         self._make_caches()
 
         if self.raw_data.optimizations_cache is None:

@@ -19,17 +19,17 @@ class NEBDatasetNewEntry(BaseModel):
 
     name: str
     comment: Optional[str] = None
-    initial_chain: List[Union[Molecule, int]]
+    initial_chain: List[Union[int, Molecule]]
     additional_keywords: Dict[str, Any] = {}
+    additional_singlepoint_keywords: Dict[str, Any] = {}
     attributes: Dict[str, Any] = {}
 
 
 class NEBDatasetEntry(NEBDatasetNewEntry):
-    # initial_chain_ids: List[int]
     initial_chain: List[Molecule]
 
 
-# NEB dataset specifications are just qc specifications
+# NEB dataset specification
 class NEBDatasetSpecification(BaseModel):
     class Config:
         extra = Extra.forbid
@@ -64,16 +64,6 @@ class NEBDataset(BaseDataset):
     _specification_type = NEBDatasetSpecification
     _record_item_type = NEBDatasetRecordItem
     _record_type = NEBRecord
-
-    # @staticmethod
-    # def transform_entry_includes(includes: Optional[Iterable[str]]) -> Optional[Set[str]]:
-    #    if includes is None:
-    #        return None
-
-    #    ret = BaseDataset.transform_entry_includes(includes)
-
-    #    ret |= {"initial_chain", "initial_chain.molecule"}
-    #    return ret
 
     def add_specification(
         self, name: str, specification: NEBSpecification, description: Optional[str] = None

@@ -59,7 +59,6 @@ class NEBDatasetSocket(BaseDatasetSocket):
                 dataset_id=dataset_id,
                 name=entry.name,
                 comment=entry.comment,
-                # neb_keywords=entry.neb_keywords.dict(),
                 additional_keywords=entry.additional_keywords,
                 attributes=entry.attributes,
                 initial_chain_assoc=new_ent_chain,
@@ -89,8 +88,6 @@ class NEBDatasetSocket(BaseDatasetSocket):
                 new_neb_spec = copy.deepcopy(neb_spec_input_dict)
                 new_neb_spec["keywords"].update(entry.additional_keywords)
                 initial_chain = [x.to_model(Molecule) for x in entry.initial_chain]
-                # initial_chain = [Molecule(**mol) for mol in initial_chain_orm]
-                # initial_chain = [Molecule(**x.model_dict()) for x in entry.initial_chain]
                 meta, neb_ids = self.root_socket.records.neb.add(
                     initial_chains=[initial_chain],
                     neb_spec=NEBSpecification(**new_neb_spec),

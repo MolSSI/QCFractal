@@ -76,6 +76,7 @@ class NEBServiceState(BaseModel):
     align: bool
     iteration: int
     molecule_template: str
+    tshessian: list
 
 
 class NEBRecordSocket(BaseRecordSocket):
@@ -129,7 +130,6 @@ class NEBRecordSocket(BaseRecordSocket):
         stdout_orm.append(output)
 
         molecule_template_str = json.dumps(molecule_template)
-
         service_state = NEBServiceState(
             nebinfo={
                 "elems": molecule_template.get("symbols"),
@@ -142,6 +142,7 @@ class NEBRecordSocket(BaseRecordSocket):
             tsoptimize=keywords.get("optimize_ts"),
             converged=False,
             align=keywords.get("align_chain"),
+            tshessian=[],
             molecule_template=molecule_template_str,
         )
 
@@ -253,8 +254,15 @@ class NEBRecordSocket(BaseRecordSocket):
                                 raise MissingDataError(
                                     "MoleculeORM of a guessed transition state from NEB can't be found."
                                 )
-                        self.submit_optimizations(session, service_orm, [Molecule(**TS_mol.model_dict())])
-                        service_state.tsoptimize = False
+
+                        if len(service_state.tshessian) == 0:
+                            self.submit_singlepoints(session, service_state, service_orm, [Molecule(**TS_mol.model_dict())])
+                            service_state.tshessian=[1]
+                        else:
+                            complete_sp = sorted(service_orm.dependencies)[0]
+                            service_orm.service_state["tshessian"] = complete_sp.record.properties["return_hessian"]
+                            self.submit_optimizations(session, service_orm, [Molecule(**TS_mol.model_dict())])
+                            service_state.tsoptimize = False
                         finished = False
                     else:
                         output += "\nNEB calculation is completed with %i iterations" % service_state.iteration
@@ -285,7 +293,7 @@ class NEBRecordSocket(BaseRecordSocket):
             opt_spec = OptimizationSpecification(
                 program="geometric",
                 qc_specification=QCSpecification(**qc_spec),
-                keywords={"transition": True, "coordsys": service_state.keywords["coordinate_system"]},
+                keywords={"transition": True, "coordsys": service_state.keywords["coordinate_system"], "hessian":service_state.tshessian},
             )
             ts = True
         else:
@@ -294,8 +302,8 @@ class NEBRecordSocket(BaseRecordSocket):
                 qc_specification=QCSpecification(**qc_spec),
                 keywords={"coordsys": service_state.keywords["coordinate_system"]},
             )
-
             ts = False
+
         meta, opt_ids = self.root_socket.records.optimization.add(
             molecules,
             opt_spec,
@@ -328,6 +336,9 @@ class NEBRecordSocket(BaseRecordSocket):
 
         # Create a singlepoint input based on the multiple geometries
         qc_spec = neb_orm.specification.singlepoint_specification.model_dict()
+        if service_state.converged and service_state.tsoptimize and len(service_state.tshessian) == 0:
+            qc_spec["driver"] = "hessian"
+
         meta, sp_ids = self.root_socket.records.singlepoint.add(
             chain,
             QCSpecification(**qc_spec),
@@ -406,11 +417,28 @@ class NEBRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> Tuple[QueryMetadata, List[NEBRecordDict]]:
+        """
+        Query neb records
+
+        Parameters
+        ----------
+        query_data
+            Fields/filters to query for
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the results of the query, and a list of records (as dictionaries)
+            that were found in the database.
+        """
 
         and_query = []
         need_spspec_join = False
-        need_nebspec_join = False
         need_initchain_join = False
+        need_nebspec_join = False
 
         if query_data.qc_program is not None:
             and_query.append(QCSpecificationORM.program.in_(query_data.qc_program))
@@ -421,9 +449,9 @@ class NEBRecordSocket(BaseRecordSocket):
         if query_data.qc_basis is not None:
             and_query.append(QCSpecificationORM.basis.in_(query_data.qc_basis))
             need_spspec_join = True
-        if query_data.neb_program is not None:
-            and_query.append("geometric")
-            need_qcspec_join = True
+        if query_data.program is not None:
+            and_query.append(NEBSpecificationORM.program.in_(query_data.program))
+            need_nebspec_join = True
         if query_data.initial_chain_id is not None:
             and_query.append(NEBInitialchainORM.neb_id.in_(query_data.initial_chain_id))
             need_initchain_join = True
@@ -431,11 +459,13 @@ class NEBRecordSocket(BaseRecordSocket):
         stmt = select(NEBRecordORM)
 
         if need_spspec_join:
-            stmt = stmt.join(QCSpecificationORM.singlepoint_specification).options(
+            stmt = stmt.join(NEBRecordORM.specification).options(
+                contains_eager(NEBRecordORM.specification)
+            )
+
+            stmt = stmt.join(NEBSpecificationORM.singlepoint_specification).options(
                 contains_eager(
-                    NEBRecordORM.specification,
-                    NEBSpecificationORM.singlepoint_specification,
-                    QCSpecificationORM.singlepoint_specification,
+                    NEBRecordORM.specification, NEBSpecificationORM.singlepoint_specification
                 )
             )
 
@@ -463,6 +493,35 @@ class NEBRecordSocket(BaseRecordSocket):
         *,
         session: Optional[Session] = None,
     ) -> Tuple[InsertMetadata, List[Optional[int]]]:
+        """
+        Internal function for adding new NEB calculations
+
+        This function expects that the chains and specifications are already added to the
+        database and that the ids are known.
+
+        This checks if the calculations already exist in the database. If so, it returns
+        the existing id, otherwise it will insert it and return the new id.
+
+        Parameters
+        ----------
+        initial_chain_ids
+            IDs of the chains to optimize. One record will be added per chain.
+        neb_spec_id
+            ID of the specification
+        tag
+            The tag for the task. This will assist in routing to appropriate compute managers.
+        priority
+            The priority for the computation
+        session
+            An existing SQLAlchemy session to use. If None, one will be created. If an existing session
+            is used, it will be flushed (but not committed) before returning from this function.
+
+        Returns
+        -------
+        :
+            Metadata about the insertion, and a list of record ids. The ids will be in the
+            order of the input chains
+        """
         tag = tag.lower()
 
         with self.root_socket.optional_session(session, False) as session:
@@ -539,14 +598,14 @@ class NEBRecordSocket(BaseRecordSocket):
         This checks if the calculations already exist in the database. If so, it returns
         the existing id, otherwise it will insert it and return the new id.
 
-        If session is specified, changes are not committed to to the database, but the session is flushed.
+        If session is specified, changes are not committed to the database, but the session is flushed.
 
         Parameters
         ----------
         initial_chains
             Molecules to compute using the specification
         neb_spec
-            Specification for the calculations
+            Specification for the NEB calculations
         session
             An existing SQLAlchemy session to use. If None, one will be created. If an existing session
             is used, it will be flushed before returning from this function.

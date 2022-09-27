@@ -8,7 +8,6 @@ from .record_models import (
     NEBKeywords,
     NEBSpecification,
     NEBSinglepoint,
-    NEBInitialchain,
     NEBAddBody,
     NEBQueryFilters,
     NEBRecord,

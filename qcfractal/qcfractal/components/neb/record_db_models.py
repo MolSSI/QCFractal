@@ -46,7 +46,7 @@ class NEBSinglepointsORM(BaseORM):
 
 class NEBInitialchainORM(BaseORM):
 
-    __tablename__ = "neb_initialchain"
+    __tablename__ = "neb_initial_chain"
 
     neb_id = Column(Integer, ForeignKey("neb_record.id", ondelete="cascade"), primary_key=True)
     molecule_id = Column(Integer, ForeignKey(MoleculeORM.id, ondelete="cascade"), primary_key=True)

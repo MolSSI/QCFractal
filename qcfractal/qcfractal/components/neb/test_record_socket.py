@@ -74,7 +74,7 @@ def test_neb_socket_add_same_chains_diff_order(storage_socket: SQLAlchemySocket)
     assert meta.n_inserted == 2
     assert meta.n_existing == 0
 
-    recs = storage_socket.records.neb.get(id, include=["initial_chain"])
+    recs = storage_socket.records.neb.get(id, include=["initial_chains"])
     assert len(recs) == 2
     assert recs[0]["id"] != recs[1]["id"]
 
@@ -85,7 +85,8 @@ def test_neb_socket_add_same_1(storage_socket: SQLAlchemySocket):
         keywords=NEBKeywords(
             images=11,
             spring_constant=0.1,
-            energy_weighted=False,
+            energy_weighted=20,
+            spring_type=0,
         ),
         singlepoint_specification=QCSpecification(
             program="psi4",
@@ -116,7 +117,8 @@ def test_neb_socket_add_same_2(storage_socket: SQLAlchemySocket):
         keywords=NEBKeywords(
             images=11,
             spring_constant=0.1,
-            energy_weighted=False,
+            energy_weighted=20,
+            spring_type=1,
         ),
         singlepoint_specification=QCSpecification(
             program="psi4",
@@ -133,7 +135,8 @@ def test_neb_socket_add_same_2(storage_socket: SQLAlchemySocket):
         keywords=NEBKeywords(
             images=11,
             spring_constant=0.1,
-            energy_weighted=False,
+            energy_weighted=20,
+            spring_type=1,
         ),
         singlepoint_specification=QCSpecification(
             program="PSI4",
@@ -165,7 +168,8 @@ def test_neb_socket_add_different_1(storage_socket: SQLAlchemySocket):
         keywords=NEBKeywords(
             images=11,
             spring_constant=0.1,
-            energy_weighted=False,
+            energy_weighted=20,
+            spring_type=0,
         ),
         singlepoint_specification=QCSpecification(
             program="psi4",
@@ -191,45 +195,3 @@ def test_neb_socket_add_different_1(storage_socket: SQLAlchemySocket):
     assert meta.inserted_idx == [2]
     assert id1[0] == id2[0]
     assert id1[1] == id2[1]
-
-
-# @pytest.mark.parametrize(
-#    "test_data_name",
-#    [
-#    ],
-# )
-# def test_neb_socket_run(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, test_data_name: str):
-#    input_spec_1, molecules_1, result_data_1 = load_test_data(test_data_name)
-#
-#    meta_1, id_1 = storage_socket.records.neb.add(
-#        [molecules_1], input_spec_1, tag="test_tag", priority=PriorityEnum.low, as_service=True
-#    )
-#    assert meta_1.success
-#
-#    time_0 = datetime.utcnow()
-#    finished, n_qcs = run_service_constropt(id_1[0], result_data_1, storage_socket, 200)
-#    time_1 = datetime.utcnow()
-#
-#    rec = storage_socket.records.neb.get(
-#        id_1,
-#        include=[
-#            "*",
-#            "compute_history.*",
-#            "compute_history.outputs",
-#            "qcs.*",
-#            "qcs.qc_record",
-#            "service",
-#        ],
-#    )
-#
-#    assert rec[0]["status"] == RecordStatusEnum.complete
-#    assert time_0 < rec[0]["modified_on"] < time_1
-#    assert len(rec[0]["compute_history"]) == 1
-#    assert len(rec[0]["compute_history"][-1]["outputs"]) == 1
-#    assert rec[0]["compute_history"][-1]["status"] == RecordStatusEnum.complete
-#    assert time_0 < rec[0]["compute_history"][-1]["modified_on"] < time_1
-#    assert rec[0]["service"] is None
-#    out = OutputStore(**rec[0]["compute_history"][-1]["outputs"]["snebout"])
-#    assert "Job Finished" in out.as_string
-#
-#    assert len(rec[0]["qcs"]) == n_qcs
