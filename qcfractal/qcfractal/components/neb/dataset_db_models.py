@@ -55,16 +55,15 @@ class NEBDatasetEntryORM(BaseORM):
     name = Column(String, primary_key=True)
     comment = Column(String)
 
-    # neb_keywords = Column(JSONB, nullable=False)
     additional_keywords = Column(JSONB, nullable=False)
     attributes = Column(JSONB, nullable=False)
 
-    # initial_molecule_ids = column_property(
-    #    select(array_agg(NEBDatasetInitialChainORM.molecule_id))
-    #    .where(NEBDatasetInitialChainORM.dataset_id == dataset_id)
-    #    .where(NEBDatasetInitialChainORM.entry_name == name)
-    #    .scalar_subquery()
-    # )
+    #initial_molecule_ids = column_property(
+    #   select(array_agg(NEBDatasetInitialMoleculeORM.molecule_id))
+    #   .where(NEBDatasetInitialMoleculeORM.dataset_id == dataset_id)
+    #   .where(NEBDatasetInitialMoleculeORM.entry_name == name)
+    #   .scalar_subquery()
+    #)
 
     initial_chain = relationship(
         MoleculeORM,

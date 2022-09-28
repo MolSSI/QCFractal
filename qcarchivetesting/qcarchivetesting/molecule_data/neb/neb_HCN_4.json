@@ -1,0 +1,37 @@
+{
+    "schema_name": "qcschema_molecule",
+    "schema_version": 2,
+    "validated": true,
+    "symbols": [
+        "C",
+        "N",
+        "H"
+    ],
+    "geometry": [
+        [
+            -0.0473169,
+            -1.22244095,
+            0.0
+        ],
+        [
+            -1.30147179,
+            0.63744787,
+            0.0
+        ],
+        [
+            1.34878868,
+            0.58499308,
+            0.0
+        ]
+    ],
+    "name": "CHN",
+    "molecular_charge": 0.0,
+    "molecular_multiplicity": 1,
+    "fix_com": false,
+    "fix_orientation": false,
+    "provenance": {
+        "creator": "QCElemental",
+        "version": "v0.25.0",
+        "routine": "qcelemental.molparse.from_schema"
+    }
+}

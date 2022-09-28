@@ -1,1 +1,55 @@
-{"schema_name": "qcschema_molecule", "schema_version": 2, "validated": true, "symbols": ["C", "C", "H", "H", "C", "N"], "geometry": [-0.47606198, -2.54419335, -2.40177466, -1.19414161, -0.65089109, -1.35522032, -1.90558536, 1.03007742, -0.46442496, 0.40661543, -4.29405839, -2.96503846, 1.13097115, 2.59799692, 2.78255065, 2.03820237, 3.8610685, 4.40390776], "name": "C3H2N", "molecular_charge": 0.0, "molecular_multiplicity": 2, "fix_com": false, "fix_orientation": false, "provenance": {"creator": "QCElemental", "version": "v0.23.0", "routine": "qcelemental.molparse.from_schema"}}
+{
+    "schema_name": "qcschema_molecule",
+    "schema_version": 2,
+    "validated": true,
+    "symbols": [
+        "C",
+        "C",
+        "H",
+        "H",
+        "C",
+        "N"
+    ],
+    "geometry": [
+        [
+            -0.20803991,
+            -1.6760857,
+            -2.23169771
+        ],
+        [
+            -0.88338343,
+            -0.44072287,
+            -0.04618636
+        ],
+        [
+            -2.79346865,
+            -0.78821922,
+            0.71369646
+        ],
+        [
+            1.76906792,
+            -1.16424548,
+            -2.80353914
+        ],
+        [
+            0.49939169,
+            1.32294942,
+            1.53781709
+        ],
+        [
+            1.61643237,
+            2.74632385,
+            2.82990969
+        ]
+    ],
+    "name": "C3H2N",
+    "molecular_charge": 0.0,
+    "molecular_multiplicity": 2,
+    "fix_com": false,
+    "fix_orientation": false,
+    "provenance": {
+        "creator": "QCElemental",
+        "version": "v0.25.0",
+        "routine": "qcelemental.molparse.from_schema"
+    }
+}

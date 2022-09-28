@@ -243,7 +243,7 @@ def test_neb_socket_add_specification_same_4(storage_socket: SQLAlchemySocket):
         basis="def2-tzvp",
         keywords={"k1": "values1"},
         driver=SinglepointDriver.gradient,
-        protocols=SinglepointProtocols(wavefunction="all"),
+        protocols=SinglepointProtocols(),
     )
 
     sp_spec_2 = QCSpecification(
@@ -296,6 +296,80 @@ def test_neb_socket_add_specification_diff_1(storage_socket: SQLAlchemySocket):
             images=21,
             spring_constant=1.5,
             energy_weighted=5,
+        ),
+        singlepoint_specification=common_sp_spec,
+    )
+
+    meta, id = storage_socket.records.neb.add_specification(spec1)
+    assert meta.success
+    assert meta.inserted_idx == [0]
+    assert meta.existing_idx == []
+    assert id is not None
+
+    meta, id2 = storage_socket.records.neb.add_specification(spec2)
+    assert meta.success
+    assert meta.inserted_idx == [0]
+    assert meta.existing_idx == []
+    assert id != id2
+
+
+def test_neb_socket_add_specification_diff_2(storage_socket: SQLAlchemySocket):
+    spec1 = NEBSpecification(
+        program="geometric",
+        keywords=NEBKeywords(
+            images=21,
+            spring_constant=1.5,
+            energy_weighted=5,
+            optimize_endpoints=False,
+            spring_type=0,
+        ),
+        singlepoint_specification=common_sp_spec,
+    )
+
+    spec2 = NEBSpecification(
+        program="geometric",
+        keywords=NEBKeywords(
+            images=21,
+            spring_constant=1.5,
+            energy_weighted=5,
+            optimize_endpoints=True,
+        ),
+        singlepoint_specification=common_sp_spec,
+    )
+
+    meta, id = storage_socket.records.neb.add_specification(spec1)
+    assert meta.success
+    assert meta.inserted_idx == [0]
+    assert meta.existing_idx == []
+    assert id is not None
+
+    meta, id2 = storage_socket.records.neb.add_specification(spec2)
+    assert meta.success
+    assert meta.inserted_idx == [0]
+    assert meta.existing_idx == []
+    assert id != id2
+
+def test_neb_socket_add_specification_diff_3(storage_socket: SQLAlchemySocket):
+    spec1 = NEBSpecification(
+        program="geometric",
+        keywords=NEBKeywords(
+            images=21,
+            spring_constant=1.5,
+            energy_weighted=5,
+            optimize_endpoints=True,
+            hessian_reset=False,
+            spring_type=0,
+        ),
+        singlepoint_specification=common_sp_spec,
+    )
+
+    spec2 = NEBSpecification(
+        program="geometric",
+        keywords=NEBKeywords(
+            images=21,
+            spring_constant=1.5,
+            energy_weighted=5,
+            optimize_endpoints=True,
         ),
         singlepoint_specification=common_sp_spec,
     )

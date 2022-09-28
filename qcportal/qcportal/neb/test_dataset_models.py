@@ -13,12 +13,19 @@ if TYPE_CHECKING:
 
 test_entries = [
     NEBDatasetNewEntry(
-        name="chain1",
-        initial_chain=[load_molecule_data("neb/neb_NCH_%i" % i) for i in range(43)]
+        name="HCN",
+        initial_chain=[load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)],
+        #additional_keywords={'kw1': 123},
         ),
     NEBDatasetNewEntry(
-        name="chain2",
-        initial_chain=[load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(60)]
+        name="C3H2N",
+        initial_chain=[load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(21)],
+        #additional_keywords={'kw2': 456},
+        ),
+    NEBDatasetNewEntry(
+        name="C4H3N2",
+        initial_chain=[load_molecule_data("neb/neb_C4H3N2_%i" % i) for i in range(21)],
+        #additional_keywords={'kw3': 789},
     ),
 ]
 
@@ -157,7 +164,7 @@ def test_neb_dataset_model_remove_record(snowflake_client: PortalClient):
 
 def test_neb_dataset_model_submit(snowflake_client: PortalClient):
     ds = snowflake_client.add_dataset(
-        "torsiondrive", "Test dataset", default_tag="default_tag", default_priority=PriorityEnum.low
+        "neb", "Test dataset", default_tag="default_tag", default_priority=PriorityEnum.low
     )
     ds_helpers.run_dataset_model_submit(ds, test_entries, test_specs[0], record_compare)
 

@@ -33,8 +33,9 @@ pytestmark = pytest.mark.xfail
 
 @pytest.mark.parametrize("spec", test_specs)
 def test_neb_socket_add_get(storage_socket: SQLAlchemySocket, spec: NEBSpecification):
-    chain1 = [load_molecule_data("neb/neb_NCH_%i" % i) for i in range(43)]
-    chain2 = [load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(60)]
+
+    chain1 = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
+    chain2 = [load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(21)]
 
     time_0 = datetime.utcnow()
     meta, id = storage_socket.records.neb.add([chain1, chain2], spec, tag="tag1", priority=PriorityEnum.low)
@@ -64,8 +65,7 @@ def test_neb_socket_add_get(storage_socket: SQLAlchemySocket, spec: NEBSpecifica
 def test_neb_socket_add_same_chains_diff_order(storage_socket: SQLAlchemySocket):
     # Flipping the order of molecules in a chain generates different initial chain.
     spec = test_specs[0]
-
-    chain1 = [load_molecule_data("neb/neb_NCH_%i" % i) for i in range(43)]
+    chain1 = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
     chain2 = chain1[::-1]
 
     # Now add records
@@ -97,7 +97,7 @@ def test_neb_socket_add_same_1(storage_socket: SQLAlchemySocket):
             protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
-    chain1 = [load_molecule_data("neb/neb_NCH_%i" % i) for i in range(43)]
+    chain1 = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
 
     meta, id1 = storage_socket.records.neb.add([chain1], spec, tag="*", priority=PriorityEnum.normal)
     assert meta.n_inserted == 1
@@ -148,7 +148,7 @@ def test_neb_socket_add_same_2(storage_socket: SQLAlchemySocket):
         ),
     )
 
-    chain1 = [load_molecule_data("neb/neb_NCH_%i" % i) for i in range(43)]
+    chain1 = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
 
     meta, id1 = storage_socket.records.neb.add([chain1], spec1, tag="*", priority=PriorityEnum.normal)
     assert meta.n_inserted == 1
@@ -180,8 +180,8 @@ def test_neb_socket_add_different_1(storage_socket: SQLAlchemySocket):
             protocols=SinglepointProtocols(wavefunction="all"),
         ),
     )
-    chain1 = [load_molecule_data("neb/neb_NCH_%i" % i) for i in range(43)]
-    chain2 = [load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(60)]
+    chain1 = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
+    chain2 = [load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(21)]
     meta, id1 = storage_socket.records.neb.add([chain1, chain2], spec, tag="*", priority=PriorityEnum.normal)
     assert meta.n_inserted == 2
     assert meta.inserted_idx == [0, 1]

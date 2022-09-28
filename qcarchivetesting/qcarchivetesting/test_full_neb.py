@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from qcportal import PortalClient
 
 def test_neb_full_1(fulltest_client: PortalClient):
-    chain = [load_molecule_data("neb/neb_NCH_%i" % i) for i in range(43)]
+    chain = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
     neb_keywords = NEBKeywords(
         images=11,
         spring_constant=1,

@@ -30,7 +30,7 @@ from qcfractal.components.neb.testing_helpers import (
 @pytest.mark.parametrize("tag", ["*", "tag99"])
 @pytest.mark.parametrize("priority", list(PriorityEnum))
 def test_neb_client_tag_priority(snowflake_client: PortalClient, tag: str, priority: PriorityEnum):
-    chain = [load_molecule_data("neb/neb_NCH_%i" % i) for i in range(43)]
+    chain = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
     meta1, id1 = snowflake_client.add_nebs(
         [chain],
         "geometric",
@@ -46,8 +46,8 @@ def test_neb_client_tag_priority(snowflake_client: PortalClient, tag: str, prior
 
 @pytest.mark.parametrize("spec", test_specs)
 def test_neb_client_add_get(snowflake_client: PortalClient, spec: NEBSpecification):
-    chain1 = [load_molecule_data("neb/neb_NCH_%i" % i) for i in range(43)]
-    chain2 = [load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(60)]
+    chain1 = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
+    chain2 = [load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(21)]
 
     time_0 = datetime.utcnow()
     meta, id = snowflake_client.add_nebs(
@@ -91,9 +91,8 @@ def test_neb_client_add_get(snowflake_client: PortalClient, spec: NEBSpecificati
 
 def test_neb_client_add_existing_chain(snowflake_client: PortalClient):
     spec = test_specs[0]
-
-    chain1 = [load_molecule_data("neb/neb_NCH_%i" % i) for i in range(43)]
-    chain2 = [load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(60)]
+    chain1 = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
+    chain2 = [load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(21)]
 
     # Add a chain separately
     _, mol_ids = snowflake_client.add_molecules(chain1)

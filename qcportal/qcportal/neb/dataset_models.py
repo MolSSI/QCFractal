@@ -1,4 +1,4 @@
-from typing import Dict, Any, Union, Optional, List, Iterable
+from typing import Dict, Any, Union, Optional, List, Iterable, Tuple
 
 from pydantic import BaseModel, Extra
 from typing_extensions import Literal
@@ -53,9 +53,9 @@ class NEBDataset(BaseDataset):
     class _DataModel(BaseDataset._DataModel):
         dataset_type: Literal["neb"] = "neb"
 
-        specifications: Optional[Dict[str, NEBDatasetSpecification]] = {}
-        entries: Optional[Dict[str, NEBDatasetEntry]] = {}
-        record_map: Optional[List[NEBRecord]] = {}
+        specifications: Dict[str, NEBDatasetSpecification] = {}
+        entries: Dict[str, NEBDatasetEntry] = {}
+        record_map: Dict[Tuple[str, str], NEBRecord] = {}
 
     raw_data: _DataModel
 

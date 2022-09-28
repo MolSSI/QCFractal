@@ -216,6 +216,8 @@ class NEBRecord(BaseRecord):
         self._make_caches()
 
     def _fetch_initial_chain(self):
+        self._assert_online()
+
         self.raw_data.initial_chain = self.client._auto_request(
             "get",
             f"v1/records/neb/{self.raw_data.id}/initial_chain",
@@ -227,6 +229,8 @@ class NEBRecord(BaseRecord):
         )
 
     def _fetch_singlepoints(self):
+        self._assert_online()
+
         url_params = {"include": ["*", "singlepoint_record"]}
 
         self.raw_data.singlepoints = self.client._auto_request(

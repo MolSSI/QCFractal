@@ -74,7 +74,7 @@ class NEBDatasetSocket(BaseDatasetSocket):
         entry_orm: Iterable[NEBDatasetEntryORM],
         spec_orm: Iterable[NEBDatasetSpecificationORM],
         existing_records: Iterable[Tuple[str, str]],
-        tag: Optional[str],
+        tag: str,
         priority: PriorityEnum,
     ):
         for spec in spec_orm:
