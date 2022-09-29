@@ -344,7 +344,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
             Metadata about the insertion, and the id of the specification.
         """
 
-        td_kw_dict = td_spec.keywords.dict(exclude_defaults=True)
+        td_kw_dict = td_spec.keywords.dict()
 
         with self.root_socket.optional_session(session, False) as session:
             # Add the optimization specification

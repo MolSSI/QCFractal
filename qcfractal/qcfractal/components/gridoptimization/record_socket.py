@@ -463,7 +463,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
             Metadata about the insertion, and the id of the specification.
         """
 
-        go_kw_dict = go_spec.keywords.dict(exclude_defaults=True)
+        go_kw_dict = go_spec.keywords.dict()
 
         with self.root_socket.optional_session(session, False) as session:
             # Add the optimization specification

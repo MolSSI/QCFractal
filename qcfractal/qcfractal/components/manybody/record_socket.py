@@ -410,7 +410,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
                     None,
                 )
 
-            kw_dict = mb_spec.keywords.dict(exclude_defaults=True)
+            kw_dict = mb_spec.keywords.dict()
 
             stmt = (
                 insert(ManybodySpecificationORM)

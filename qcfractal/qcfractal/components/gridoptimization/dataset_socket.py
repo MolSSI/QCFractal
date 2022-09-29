@@ -101,7 +101,7 @@ class GridoptimizationDatasetSocket(BaseDatasetSocket):
                     session=session,
                 )
 
-                if meta.n_inserted == 1:
+                if meta.success:
                     rec = GridoptimizationDatasetRecordItemORM(
                         dataset_id=dataset_id,
                         entry_name=entry.name,

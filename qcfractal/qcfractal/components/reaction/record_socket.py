@@ -323,7 +323,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                         None,
                     )
 
-            kw_dict = rxn_spec.keywords.dict(exclude_defaults=True)
+            kw_dict = rxn_spec.keywords.dict()
 
             # Query first, due to behavior of NULL in postgres
             stmt = select(ReactionSpecificationORM.id).filter_by(

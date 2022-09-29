@@ -359,7 +359,7 @@ class NEBRecordSocket(BaseRecordSocket):
         self, neb_spec: NEBSpecification, *, session: Optional[Session] = None
     ) -> Tuple[InsertMetadata, Optional[int]]:
 
-        neb_kw_dict = neb_spec.keywords.dict(exclude_defaults=True)
+        neb_kw_dict = neb_spec.keywords.dict()
 
         with self.root_socket.optional_session(session, False) as session:
             # Add the singlepoint specification

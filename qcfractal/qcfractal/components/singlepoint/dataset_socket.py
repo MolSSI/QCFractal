@@ -118,7 +118,7 @@ class SinglepointDatasetSocket(BaseDatasetSocket):
                     session=session,
                 )
 
-                if meta.n_inserted == 1:
+                if meta.success:
                     rec = SinglepointDatasetRecordItemORM(
                         dataset_id=dataset_id,
                         entry_name=entry.name,

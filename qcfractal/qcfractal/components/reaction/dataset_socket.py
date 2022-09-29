@@ -134,7 +134,7 @@ class ReactionDatasetSocket(BaseDatasetSocket):
                     session=session,
                 )
 
-                if meta.n_inserted == 1:
+                if meta.success:
                     rec = ReactionDatasetRecordItemORM(
                         dataset_id=dataset_id,
                         entry_name=entry.name,

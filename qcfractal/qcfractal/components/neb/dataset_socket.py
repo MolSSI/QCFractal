@@ -99,7 +99,7 @@ class NEBDatasetSocket(BaseDatasetSocket):
                     session=session,
                 )
 
-                if meta.n_inserted == 1:
+                if meta.success:
                     rec = NEBDatasetRecordItemORM(
                         dataset_id=dataset_id,
                         entry_name=entry.name,
