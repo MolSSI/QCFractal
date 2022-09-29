@@ -1,7 +1,7 @@
 """Add defaults to keywords
 
 Revision ID: 6128f0430433
-Revises: 148fef89c2ec
+Revises: 77baa72171b9
 Create Date: 2022-09-29 10:23:54.435874
 
 """
@@ -10,7 +10,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "6128f0430433"
-down_revision = "148fef89c2ec"
+down_revision = "77baa72171b9"
 branch_labels = None
 depends_on = None
 
