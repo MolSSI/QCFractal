@@ -64,7 +64,6 @@ class FractalSnowflake:
         compute_workers: int = 2,
         enable_watching: bool = True,
         database_config: Optional[DatabaseConfig] = None,
-        flask_config: str = "snowflake",
         extra_config: Optional[Dict[str, Any]] = None,
     ):
         """A temporary, self-contained server

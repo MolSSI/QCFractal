@@ -102,7 +102,6 @@ class TestingSnowflake(FractalSnowflake):
             compute_workers=0,
             enable_watching=True,
             database_config=database_config,
-            flask_config="testing",
             extra_config=extra_config,
         )
 
