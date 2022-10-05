@@ -8,7 +8,7 @@ from qcportal.base_models import ProjURLParameters
 from qcportal.molecules import Molecule
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from qcportal.utils import recursive_normalizer
-from ..optimization import OptimizationRecord
+from ..optimization.record_models import OptimizationRecord
 from ..singlepoint.record_models import QCSpecification, SinglepointRecord, SinglepointDriver, SinglepointProtocols
 
 
@@ -177,6 +177,8 @@ class NEBRecord(BaseRecord):
             ret.add("initial_chain")
         if "singlepoints" in includes:
             ret |= {"singlepoints.*", "singlepoints.singlepoint_record"}
+        if "optimizations" in includes:
+            ret |= {"optimizations.*", "optimizations.optimization_record"}
 
         return ret
 

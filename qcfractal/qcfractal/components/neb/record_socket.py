@@ -229,9 +229,6 @@ class NEBRecordSocket(BaseRecordSocket):
             else:
                 if service_state.converged:
                     if service_state.tsoptimize:
-                        output += (
-                            "\nOptimizing the guessed transition state structure to locate a first-order saddle point."
-                        )
 
                         stmt = (
                             select(MoleculeORM)
@@ -256,6 +253,11 @@ class NEBRecordSocket(BaseRecordSocket):
                                 )
 
                         if len(service_state.tshessian) == 0:
+                            output += (
+                                "\nOptimizing the guessed transition state structure to locate a first-order saddle point.\n"
+                                "Hessian will be calculated and passed to geomeTRIC."
+                            )
+
                             self.submit_singlepoints(session, service_state, service_orm, [Molecule(**TS_mol.model_dict())])
                             service_state.tshessian=[1]
                         else:

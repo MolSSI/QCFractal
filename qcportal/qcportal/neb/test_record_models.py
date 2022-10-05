@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from qcportal.managers import ManagerName
 
 
-all_includes = ["initial_chain", "singlepoints"]
+all_includes = ["initial_chain", "singlepoints", "optimizations"]
 
 
 @pytest.mark.parametrize("includes", [None, all_includes])
