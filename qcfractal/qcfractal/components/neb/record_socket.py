@@ -470,9 +470,10 @@ class NEBRecordSocket(BaseRecordSocket):
 
         stmt = select(NEBRecordORM)
 
-        if need_spspec_join:
+        if need_nebspec_join or need_spspec_join:
             stmt = stmt.join(NEBRecordORM.specification).options(contains_eager(NEBRecordORM.specification))
 
+        if need_spspec_join:
             stmt = stmt.join(NEBSpecificationORM.singlepoint_specification).options(
                 contains_eager(NEBRecordORM.specification, NEBSpecificationORM.singlepoint_specification)
             )

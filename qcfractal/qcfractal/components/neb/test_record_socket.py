@@ -28,8 +28,6 @@ from qcportal.singlepoint import (
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
 
-pytestmark = pytest.mark.xfail
-
 
 @pytest.mark.parametrize("spec", test_specs)
 def test_neb_socket_add_get(storage_socket: SQLAlchemySocket, spec: NEBSpecification):
@@ -150,7 +148,7 @@ def test_neb_socket_add_same_2(storage_socket: SQLAlchemySocket):
 
     chain1 = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
 
-    meta, id1 = storage_socket.records.neb.add([chain1], spec1, tag="*", priority=PriorityEnum.normal)
+    meta, id1 = storage_socket.records.neb.add([chain1], spec1, "*", PriorityEnum.normal, None, None)
     assert meta.n_inserted == 1
     assert meta.inserted_idx == [0]
 
@@ -182,7 +180,7 @@ def test_neb_socket_add_different_1(storage_socket: SQLAlchemySocket):
     )
     chain1 = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
     chain2 = [load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(21)]
-    meta, id1 = storage_socket.records.neb.add([chain1, chain2], spec, tag="*", priority=PriorityEnum.normal)
+    meta, id1 = storage_socket.records.neb.add([chain1, chain2], spec, "*", PriorityEnum.normal, None, None)
     assert meta.n_inserted == 2
     assert meta.inserted_idx == [0, 1]
 

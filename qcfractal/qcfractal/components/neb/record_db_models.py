@@ -129,7 +129,7 @@ class NEBRecordORM(BaseRecordORM):
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         exclude = self.append_exclude(exclude, "specification_id")
-        return BaseORM.model_dict(self, exclude)
+        return BaseRecordORM.model_dict(self, exclude)
 
     @property
     def required_programs(self) -> Dict[str, Optional[str]]:
