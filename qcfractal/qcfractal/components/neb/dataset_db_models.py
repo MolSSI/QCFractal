@@ -70,7 +70,7 @@ class NEBDatasetEntryORM(BaseORM):
         secondary=NEBDatasetInitialMoleculeORM.__table__,
         order_by=NEBDatasetInitialMoleculeORM.__table__.c.position,
         viewonly=True,
-        lazy="selectin"
+        lazy="selectin",
     )
 
     initial_chain_assoc = relationship(NEBDatasetInitialMoleculeORM)

@@ -50,4 +50,3 @@ def test_neb_record_model(
 
     sps_2 = record.optimizations
     assert sum(len(o) for o in sps_2.values()) == len(results)
-

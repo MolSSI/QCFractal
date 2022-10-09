@@ -78,14 +78,12 @@ class NEBKeywords(BaseModel):
         '"tric-p" for primitive Translation-Rotation Internal Coordinates (no delocalization)\n ',
     )
 
-    epsilon: float = Field(
-        1e-5,
-        description="Small eigenvalue threshold for resetting Hessian."
-    )
+    epsilon: float = Field(1e-5, description="Small eigenvalue threshold for resetting Hessian.")
 
     hessian_reset: bool = Field(
         True,
-        description="Reset Hessian when eigenvalues are below the epsilon. If it is set to False, it will skip updating the hessian.")
+        description="Reset Hessian when eigenvalues are below the epsilon. If it is set to False, it will skip updating the hessian.",
+    )
 
     @root_validator
     def normalize(cls, values):
@@ -121,7 +119,7 @@ class NEBSinglepoint(BaseModel):
     singlepoint_record: Optional[SinglepointRecord._DataModel]
 
 
-#class NEBInitialchain(BaseModel):
+# class NEBInitialchain(BaseModel):
 #    class Config:
 #        extra = Extra.forbid
 #

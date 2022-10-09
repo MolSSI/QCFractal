@@ -27,7 +27,7 @@ geoip_path = os.path.join(_my_path, "MaxMind-DB", "test-data", "GeoIP2-City-Test
 testconfig_path = os.path.join(_my_path, "config_files")
 migrationdata_path = os.path.join(_my_path, "migration_data")
 
-test_groups = ['group1', 'group2', 'group3']
+test_groups = ["group1", "group2", "group3"]
 test_users = {
     "admin_user": {
         "pw": "something123",

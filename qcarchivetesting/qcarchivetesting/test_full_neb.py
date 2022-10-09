@@ -11,12 +11,13 @@ from qcportal.singlepoint import QCSpecification
 if TYPE_CHECKING:
     from qcportal import PortalClient
 
+
 def test_neb_full_1(fulltest_client: PortalClient):
     chain = [load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)]
     neb_keywords = NEBKeywords(
         images=11,
         spring_constant=1,
-        coordinate_system='tric',
+        coordinate_system="tric",
         energy_weighted=None,
         optimize_endpoints=True,
         maximum_force=0.1,
@@ -29,18 +30,16 @@ def test_neb_full_1(fulltest_client: PortalClient):
     )
 
     sp_spec = QCSpecification(
-                program="psi4",
-                driver="gradient",
-                method="hf",
-                basis="6-31g",
-            keywords={},
-        )
+        program="psi4",
+        driver="gradient",
+        method="hf",
+        basis="6-31g",
+        keywords={},
+    )
 
     meta, ids = fulltest_client.add_nebs(
-        initial_chains=[chain],
-        program='geometric',
-        singlepoint_specification=sp_spec,
-        keywords=neb_keywords)
+        initial_chains=[chain], program="geometric", singlepoint_specification=sp_spec, keywords=neb_keywords
+    )
 
     for i in range(60):
         time.sleep(15)
