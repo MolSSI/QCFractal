@@ -190,8 +190,11 @@ class FractalSnowflake:
         iter = 0
         while True:
             try:
-                requests.get(uri)
+                r = requests.get(uri)
+                if r.status_code != 200:
+                    raise RuntimeError("Error pinging snowflake fractal server: ", r.text)
                 break
+
             except requests.exceptions.ConnectionError:
                 time.sleep(0.05)
                 iter += 1

@@ -70,6 +70,7 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
 
     # Register all the routes in the other files.
     # Must be done before registering the blueprint
+    importlib.import_module("qcfractal.api_v1.routes")
     importlib.import_module("qcfractal.auth_v1.routes")
     importlib.import_module("qcfractal.dashboard_v1.routes")
     importlib.import_module("qcfractal.components.register_all")
