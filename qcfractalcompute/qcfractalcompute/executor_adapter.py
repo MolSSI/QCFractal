@@ -38,7 +38,12 @@ class ExecutorAdapter(BaseAdapter):
         )
 
     def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Hashable, Any]:
+        # Rename local_options -> task_config
+        if "local_options" in task_spec["spec"]["kwargs"]:
+            task_spec["spec"]["kwargs"]["task_config"] = task_spec["spec"]["kwargs"].pop("local_options")
+
         func = self.get_function(task_spec["spec"]["function"])
+
         task = self.client.apply_async(func, task_spec["spec"]["args"], task_spec["spec"]["kwargs"])
         return task_spec["id"], task
 
