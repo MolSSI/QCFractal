@@ -7,13 +7,13 @@ import pytest
 
 from qcarchivetesting import load_molecule_data
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.testing_helpers import run_service_simple
+from qcfractal.testing_helpers import run_service
 from qcportal.auth import UserInfo, GroupInfo
 from qcportal.manybody import ManybodySpecification, ManybodyKeywords
 from qcportal.outputstore import OutputStore
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
-from .testing_helpers import compare_manybody_specs, test_specs, load_test_data
+from .testing_helpers import compare_manybody_specs, test_specs, load_test_data, generate_task_key
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -101,7 +101,9 @@ def test_manybody_socket_run(
     assert meta_1.success
 
     time_0 = datetime.utcnow()
-    finished, n_singlepoints = run_service_simple(storage_socket, activated_manager_name, id_1[0], result_data_1, 100)
+    finished, n_singlepoints = run_service(
+        storage_socket, activated_manager_name, id_1[0], generate_task_key, result_data_1, 100
+    )
     time_1 = datetime.utcnow()
 
     assert finished is True

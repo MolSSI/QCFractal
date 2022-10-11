@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcarchivetesting import load_molecule_data
-from qcfractal.components.optimization.testing_helpers import test_specs, load_test_data
+from qcfractal.components.optimization.testing_helpers import test_specs, load_test_data, run_test_data
 from qcfractal.db_socket import SQLAlchemySocket
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
@@ -231,54 +231,24 @@ def test_optimization_socket_add_same_4(storage_socket: SQLAlchemySocket):
     assert id1 == id2
 
 
-def test_optimization_socket_run(storage_socket: SQLAlchemySocket):
-    input_spec_1, molecule_1, result_data_1 = load_test_data("opt_psi4_fluoroethane_notraj")
-    input_spec_2, molecule_2, result_data_2 = load_test_data("opt_psi4_benzene")
-    input_spec_3, molecule_3, result_data_3 = load_test_data("opt_psi4_methane_sometraj")
+def test_optimization_socket_run(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName):
+    test_names = [
+        "opt_psi4_fluoroethane_notraj",
+        "opt_psi4_benzene",
+        "opt_psi4_methane_sometraj",
+    ]
 
-    meta1, id1 = storage_socket.records.optimization.add(
-        [molecule_1], input_spec_1, "*", PriorityEnum.normal, None, None
-    )
-    meta2, id2 = storage_socket.records.optimization.add(
-        [molecule_2], input_spec_2, "*", PriorityEnum.normal, None, None
-    )
-    meta3, id3 = storage_socket.records.optimization.add(
-        [molecule_3], input_spec_3, "*", PriorityEnum.normal, None, None
-    )
+    all_results = []
+    all_id = []
 
-    result_map = {id1[0]: result_data_1, id2[0]: result_data_2, id3[0]: result_data_3}
+    for test_name in test_names:
+        _, _, result_data = load_test_data(test_name)
+        record_id = run_test_data(storage_socket, activated_manager_name, test_name)
+        all_results.append(result_data)
+        all_id.append(record_id)
 
-    mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
-    storage_socket.managers.activate(
-        name_data=mname1,
-        manager_version="v2.0",
-        username="bill",
-        programs={
-            "qcengine": None,
-            "geometric": None,
-            "psi4": None,
-        },
-        tags=["*"],
-    )
-
-    tasks = storage_socket.tasks.claim_tasks(mname1.fullname, limit=100)
-    assert len(tasks) == 3
-
-    time_0 = datetime.utcnow()
-    rmeta = storage_socket.tasks.update_finished(
-        mname1.fullname,
-        {
-            tasks[0]["id"]: result_map[tasks[0]["record_id"]],
-            tasks[1]["id"]: result_map[tasks[1]["record_id"]],
-            tasks[2]["id"]: result_map[tasks[2]["record_id"]],
-        },
-    )
-    time_1 = datetime.utcnow()
-    assert rmeta.n_accepted == 3
-
-    all_results = [result_data_1, result_data_2, result_data_3]
     recs = storage_socket.records.optimization.get(
-        id1 + id2 + id3,
+        all_id,
         include=[
             "*",
             "compute_history.*",
@@ -302,12 +272,9 @@ def test_optimization_socket_run(storage_socket: SQLAlchemySocket):
         assert record["specification"]["qc_specification"]["method"] == result.input_specification.model.method
         assert record["specification"]["qc_specification"]["basis"] == result.input_specification.model.basis
         assert record["specification"]["qc_specification"]["keywords"] == result.input_specification.keywords
-        assert record["created_on"] < time_0
-        assert time_0 < record["modified_on"] < time_1
 
         assert len(record["compute_history"]) == 1
         assert record["compute_history"][0]["status"] == RecordStatusEnum.complete
-        assert time_0 < record["compute_history"][0]["modified_on"] < time_1
         assert record["compute_history"][0]["provenance"] == result.provenance
 
         outs = record["compute_history"][0]["outputs"]

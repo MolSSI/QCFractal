@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING, Tuple, Optional, Dict, List, Union, Any
 
 import pydantic
@@ -7,11 +8,12 @@ from qcelemental.models import Molecule, FailedOperation, ComputeError, Optimiza
 from qcelemental.models.procedures import OptimizationProtocols
 
 from qcarchivetesting.helpers import read_record_data
-from qcfractal.testing_helpers import run_service_constropt
+from qcfractal.testing_helpers import run_service
 from qcportal.optimization import OptimizationSpecification
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
 from qcportal.torsiondrive import TorsiondriveSpecification, TorsiondriveKeywords
+from qcportal.utils import recursive_normalizer
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -80,6 +82,19 @@ def compare_torsiondrive_specs(
     return input_spec == output_spec
 
 
+def generate_task_key(record):
+    # record is an optimization
+    mol_hash = record["initial_molecule"]["identifiers"]["molecule_hash"]
+    constraints = record["specification"]["keywords"].get("constraints", None)
+
+    # Lookups may depend on floating point values
+    constraints = recursive_normalizer(constraints)
+
+    # This is the key in the dictionary of optimization results
+    constraints_str = json.dumps(constraints, sort_keys=True)
+    return mol_hash + "|" + constraints_str
+
+
 def load_test_data(name: str) -> Tuple[TorsiondriveSpecification, List[Molecule], Dict[str, OptimizationResult]]:
     test_data = read_record_data(name)
 
@@ -125,7 +140,7 @@ def run_test_data(
         )
         result = {x: failed_op for x in result}
 
-    finished, n_optimizations = run_service_constropt(storage_socket, manager_name, record_id, result, 200)
+    finished, n_optimizations = run_service(storage_socket, manager_name, record_id, generate_task_key, result, 200)
     assert finished
 
     record = storage_socket.records.get([record_id], include=["status"])[0]

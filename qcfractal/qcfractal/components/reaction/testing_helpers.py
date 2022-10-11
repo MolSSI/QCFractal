@@ -6,7 +6,7 @@ import pydantic
 from qcelemental.models import Molecule, FailedOperation, ComputeError, AtomicResult, OptimizationResult
 
 from qcarchivetesting.helpers import read_record_data
-from qcfractal.testing_helpers import run_service_simple
+from qcfractal.testing_helpers import run_service
 from qcportal.reaction import ReactionSpecification, ReactionKeywords
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.singlepoint import SinglepointProtocols, QCSpecification
@@ -48,6 +48,17 @@ def compare_reaction_specs(
         output_spec = ReactionSpecification(**output_spec)
 
     return input_spec == output_spec
+
+
+def generate_task_key(record):
+    record_type = record["record_type"]
+
+    if record_type == "optimization":
+        mol_hash = record["initial_molecule"]["identifiers"]["molecule_hash"]
+    else:
+        mol_hash = record["molecule"]["identifiers"]["molecule_hash"]
+
+    return record_type + "|" + mol_hash
 
 
 def load_test_data(
@@ -97,7 +108,7 @@ def run_test_data(
         )
         result = {x: failed_op for x in result}
 
-    finished, n_optimizations = run_service_simple(storage_socket, manager_name, record_id, result, 200)
+    finished, n_optimizations = run_service(storage_socket, manager_name, record_id, generate_task_key, result, 200)
     assert finished
 
     record = storage_socket.records.get([record_id], include=["status"])[0]

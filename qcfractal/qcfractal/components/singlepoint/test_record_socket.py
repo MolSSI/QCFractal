@@ -16,7 +16,7 @@ from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import QCSpecification, SinglepointDriver, SinglepointProtocols
 from qcportal.wavefunctions.models import WavefunctionProperties
 from .record_db_models import SinglepointRecordORM
-from .testing_helpers import test_specs, load_test_data
+from .testing_helpers import test_specs, load_test_data, run_test_data
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
@@ -194,45 +194,25 @@ def test_singlepoint_socket_add_same_5(storage_socket: SQLAlchemySocket):
 
 
 def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName):
-    input_spec_1, molecule_1, result_data_1 = load_test_data("sp_psi4_benzene_energy_1")
-    input_spec_2, molecule_2, result_data_2 = load_test_data("sp_psi4_peroxide_energy_wfn")
-    input_spec_3, molecule_3, result_data_3 = load_test_data("sp_rdkit_water_energy")
-    input_spec_4, molecule_4, result_data_4 = load_test_data("sp_psi4_h2_b3lyp_nativefiles")
 
-    meta1, id1 = storage_socket.records.singlepoint.add(
-        [molecule_1], input_spec_1, "*", PriorityEnum.normal, None, None
-    )
-    meta2, id2 = storage_socket.records.singlepoint.add(
-        [molecule_2], input_spec_2, "*", PriorityEnum.normal, None, None
-    )
-    meta3, id3 = storage_socket.records.singlepoint.add(
-        [molecule_3], input_spec_3, "*", PriorityEnum.normal, None, None
-    )
-    meta4, id4 = storage_socket.records.singlepoint.add(
-        [molecule_4], input_spec_4, "*", PriorityEnum.normal, None, None
-    )
+    test_names = [
+        "sp_psi4_benzene_energy_1",
+        "sp_psi4_peroxide_energy_wfn",
+        "sp_rdkit_water_energy",
+        "sp_psi4_h2_b3lyp_nativefiles",
+    ]
 
-    result_map = {id1[0]: result_data_1, id2[0]: result_data_2, id3[0]: result_data_3, id4[0]: result_data_4}
+    all_results = []
+    all_id = []
 
-    tasks = storage_socket.tasks.claim_tasks(activated_manager_name.fullname, limit=100)
-    assert len(tasks) == 4
+    for test_name in test_names:
+        _, _, result_data = load_test_data(test_name)
+        record_id = run_test_data(storage_socket, activated_manager_name, test_name)
+        all_results.append(result_data)
+        all_id.append(record_id)
 
-    time_0 = datetime.utcnow()
-    rmeta = storage_socket.tasks.update_finished(
-        activated_manager_name.fullname,
-        {
-            tasks[0]["id"]: result_map[tasks[0]["record_id"]],
-            tasks[1]["id"]: result_map[tasks[1]["record_id"]],
-            tasks[2]["id"]: result_map[tasks[2]["record_id"]],
-            tasks[3]["id"]: result_map[tasks[3]["record_id"]],
-        },
-    )
-    time_1 = datetime.utcnow()
-    assert rmeta.n_accepted == 4
-
-    all_results = [result_data_1, result_data_2, result_data_3, result_data_4]
     recs = storage_socket.records.singlepoint.get(
-        id1 + id2 + id3 + id4,
+        all_id,
         include=["*", "wavefunction", "compute_history.*", "compute_history.outputs", "native_files"],
     )
 
@@ -244,12 +224,9 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket, activated_mana
         assert record["specification"]["basis"] == result.model.basis
         assert record["specification"]["keywords"] == result.keywords
         assert record["specification"]["protocols"] == result.protocols
-        assert record["created_on"] < time_0
-        assert time_0 < record["modified_on"] < time_1
 
         assert len(record["compute_history"]) == 1
         assert record["compute_history"][0]["status"] == RecordStatusEnum.complete
-        assert time_0 < record["compute_history"][0]["modified_on"] < time_1
         assert record["compute_history"][0]["provenance"] == result.provenance
 
         # Compressed outputs should have been removed

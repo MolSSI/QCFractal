@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING, Tuple, Optional, Union, Dict, Any
 
 import pydantic
@@ -81,7 +82,9 @@ def run_test_data(
     priority: PriorityEnum = PriorityEnum.normal,
     end_status: RecordStatusEnum = RecordStatusEnum.complete,
 ):
+    time_0 = datetime.utcnow()
     record_id, result = submit_test_data(storage_socket, name, tag, priority)
+    time_1 = datetime.utcnow()
 
     record = storage_socket.records.get([record_id])[0]
     assert record["status"] == RecordStatusEnum.waiting
@@ -94,10 +97,17 @@ def run_test_data(
     tasks = storage_socket.tasks.claim_tasks(manager_name.fullname, limit=100)
     assert len(tasks) == 1
     result_dict = {tasks[0]["id"]: result}
-    storage_socket.tasks.update_finished(manager_name.fullname, result_dict)
 
-    record = storage_socket.records.get([record_id], include=["status"])[0]
+    storage_socket.tasks.update_finished(manager_name.fullname, result_dict)
+    time_2 = datetime.utcnow()
+
+    record = storage_socket.records.get(
+        [record_id], include=["status", "modified_on", "created_on", "compute_history.*"]
+    )[0]
     assert record["status"] == end_status
+    assert time_0 < record["created_on"] < time_1
+    assert time_1 < record["modified_on"] < time_2
+    assert time_1 < record["compute_history"][0]["modified_on"] < time_2
 
     return record_id
 

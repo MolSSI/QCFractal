@@ -5,10 +5,15 @@ from typing import TYPE_CHECKING
 
 from qcelemental.models import FailedOperation
 
-from qcfractal.components.gridoptimization.testing_helpers import submit_test_data as submit_go_test_data
-from qcfractal.components.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
+from qcfractal.components.gridoptimization.testing_helpers import (
+    submit_test_data as submit_go_test_data,
+)
+from qcfractal.components.torsiondrive.testing_helpers import (
+    submit_test_data as submit_td_test_data,
+    generate_task_key as generate_td_task_key,
+)
 from qcfractal.db_socket import SQLAlchemySocket
-from qcfractal.testing_helpers import run_service_constropt, DummyJobStatus
+from qcfractal.testing_helpers import run_service, DummyJobStatus
 from qcportal.managers import ManagerName
 from qcportal.outputstore import OutputStore, OutputTypeEnum
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
@@ -27,7 +32,9 @@ def test_service_socket_error(storage_socket: SQLAlchemySocket, activated_manage
     )
 
     time_0 = datetime.utcnow()
-    finished, n_optimizations = run_service_constropt(storage_socket, activated_manager_name, id_1, result_data_1, 20)
+    finished, n_optimizations = run_service(
+        storage_socket, activated_manager_name, id_1, generate_td_task_key, result_data_1, 20
+    )
     time_1 = datetime.utcnow()
 
     assert finished is True
