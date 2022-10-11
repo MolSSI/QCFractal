@@ -3,7 +3,6 @@ Queue backend abstraction manager.
 """
 import json
 import logging
-import os
 import sched
 import socket
 import threading
@@ -16,7 +15,6 @@ import qcengine as qcng
 from pydantic import BaseModel, validator, Extra
 from qcelemental.models import Molecule, FailedOperation
 
-from qcportal.serialization import serialize, deserialize
 from . import __version__
 from .adapters import build_queue_adapter
 from .compress import compress_results
@@ -201,8 +199,6 @@ class ComputeManager:
             password=password,
             verify=verify,
         )
-
-        self.save_results_path = None
 
         self.cores_per_task = cores_per_task
         self.memory_per_task = memory_per_task
@@ -480,18 +476,9 @@ class ComputeManager:
         # Compress the stdout/stderr/error outputs, and native files
         results = compress_results(results)
 
-        # If requested, save the outputs to json
-        if self.save_results_path is not None:
-            if os.path.exists(self.save_results_path):
-                with open(self.save_results_path, "r") as save_file:
-                    data = deserialize(save_file.read(), "json")
-            else:
-                data = {}
-
-            data.update(results)
-
-            with open(self.save_results_path, "w") as save_file:
-                save_file.write(serialize(data, "json"))
+        # Any post-processing tasks
+        # Sometimes used for saving data for later
+        self.postprocess_results(results)
 
         # Stats fetching for running tasks, as close to the time we got the jobs as we can
         last_time = self.statistics.last_update_time
@@ -641,8 +628,26 @@ class ComputeManager:
             self.logger.info("Acquired {} new tasks.".format(len(new_tasks)))
 
             # Add new tasks to queue
+            self.preprocess_new_tasks(new_tasks)
+
             self.queue_adapter.submit_tasks(new_tasks)
             self.active += len(new_tasks)
+
+    def preprocess_new_tasks(self, new_tasks):
+        """
+        Any processing to do to the new tasks
+
+        To be overridden by a derived class. Sometimes used to save the results for testing
+        """
+        pass
+
+    def postprocess_results(self, results):
+        """
+        Any processing to do to the results
+
+        To be overridden by a derived class. Sometimes used to save the results for testing
+        """
+        pass
 
     def test(self, n=1) -> bool:
         """
