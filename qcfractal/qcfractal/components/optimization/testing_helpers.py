@@ -72,7 +72,7 @@ def load_test_data(name: str) -> Tuple[OptimizationSpecification, Molecule, Opti
 
     return (
         pydantic.parse_obj_as(OptimizationSpecification, test_data["specification"]),
-        pydantic.parse_obj_as(Molecule, test_data["molecule"]),
+        pydantic.parse_obj_as(Molecule, test_data["initial_molecule"]),
         pydantic.parse_obj_as(OptimizationResult, test_data["result"]),
     )
 

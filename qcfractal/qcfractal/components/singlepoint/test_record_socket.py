@@ -22,6 +22,12 @@ if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
 
 
+def coalesce(x):
+    if x is None:
+        return ""
+    return x
+
+
 @pytest.mark.parametrize("spec", test_specs)
 def test_singlepoint_socket_task_spec(
     storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, spec: QCSpecification
@@ -221,7 +227,10 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket, activated_mana
         assert record["specification"]["program"] == result.provenance.creator.lower()
         assert record["specification"]["driver"] == result.driver
         assert record["specification"]["method"] == result.model.method
-        assert record["specification"]["basis"] == result.model.basis
+
+        # some task specs still return NULL/None for basis
+        assert coalesce(record["specification"]["basis"]) == coalesce(result.model.basis)
+
         assert record["specification"]["keywords"] == result.keywords
         assert record["specification"]["protocols"] == result.protocols
 
@@ -269,10 +278,8 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket, activated_mana
         # but those are used for errors, which aren't covered here
         for o in outs.values():
             out_obj = OutputStore(**o)
-            ro = getattr(result, o["output_type"], None)
-            if ro is None:
-                co = result.extras["_qcfractal_compressed_outputs"][0]
-                ro = decompress_string(co["data"], co["compression"])
+            co = result.extras["_qcfractal_compressed_outputs"][0]
+            ro = decompress_string(co["data"], co["compression"])
             assert out_obj.as_string == ro
 
 

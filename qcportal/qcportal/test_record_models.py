@@ -11,6 +11,7 @@ from qcfractal.components.singlepoint.testing_helpers import (
     submit_test_data as submit_sp_test_data,
 )
 from qcfractal.components.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
+from qcportal.compression import decompress_string
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 
 if TYPE_CHECKING:
@@ -54,7 +55,10 @@ def test_baserecord_model_common(
     assert time_0 < record.modified_on < time_1
     assert record.modified_on > record.created_on
 
-    assert record.stdout == result.stdout
+    co = result.extras["_qcfractal_compressed_outputs"][0]
+    ro = decompress_string(co["data"], co["compression"])
+    assert record.stdout == ro
+
     assert len(record.comments) == 1
     assert record.comments[0].comment == "This is a comment"
     assert time_1 < record.comments[0].timestamp < time_2
@@ -65,7 +69,7 @@ def test_baserecord_model_common(
     assert time_0 < record.compute_history[0].modified_on < time_1
     assert record.compute_history[0].status == RecordStatusEnum.complete
     assert record.compute_history[0].manager_name == activated_manager_name.fullname
-    assert record.compute_history[0].outputs["stdout"].as_string == result.stdout
+    assert record.compute_history[0].outputs["stdout"].as_string == ro
 
 
 @pytest.mark.parametrize("includes", [None, all_includes])
