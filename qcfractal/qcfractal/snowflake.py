@@ -139,7 +139,7 @@ class FractalSnowflake:
         self._flask_started = multiprocessing.Event()
         flask = FlaskProcess(self._qcf_config, self._finished_queue, self._flask_started)
 
-        job_runner = FractalJobRunnerProcess(self._qcf_config)
+        job_runner = FractalJobRunnerProcess(self._qcf_config, self._finished_queue)
 
         # Don't auto start here. we will handle it later
         self._flask_proc = ProcessRunner("snowflake_flask", flask, False)

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import multiprocessing
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from .db_socket.socket import SQLAlchemySocket
 from .process_runner import ProcessBase
@@ -25,7 +25,12 @@ class FractalJobRunner:
     QCFractal requires some jobs to be run periodically or otherwise in the background. This class will run these jobs.
     """
 
-    def __init__(self, qcf_config: FractalConfig, end_event):
+    def __init__(
+        self,
+        qcf_config: FractalConfig,
+        end_event,
+        finished_queue: Optional[multiprocessing.Queue] = None,
+    ):
         """
         Parameters
         ----------
@@ -34,6 +39,8 @@ class FractalJobRunner:
         """
 
         self.storage_socket = SQLAlchemySocket(qcf_config)
+        self.storage_socket.set_finished_watch(finished_queue)
+
         self.logger = logging.getLogger("qcfractal_internal_jobs")
         self._end_event = end_event
 
@@ -54,10 +61,15 @@ class FractalJobRunnerProcess(ProcessBase):
     This is used with :class:`process_runner.ProcessRunner` to run all periodic tasks in a separate process
     """
 
-    def __init__(self, qcf_config: FractalConfig):
+    def __init__(
+        self,
+        qcf_config: FractalConfig,
+        finished_queue: Optional[multiprocessing.Queue] = None,
+    ):
         ProcessBase.__init__(self)
         self._qcf_config = qcf_config
         self._end_event = multiprocessing.Event()
+        self._finished_queue = finished_queue
 
         # ---------------------------------------------------------------
         # We should not instantiate the FractalJobRunner class here.
@@ -66,7 +78,7 @@ class FractalJobRunnerProcess(ProcessBase):
         # ---------------------------------------------------------------
 
     def setup(self) -> None:
-        self._runner = FractalJobRunner(self._qcf_config, self._end_event)
+        self._runner = FractalJobRunner(self._qcf_config, self._end_event, self._finished_queue)
 
     def run(self) -> None:
         self._runner.start()
