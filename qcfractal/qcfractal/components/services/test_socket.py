@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 
 def test_service_socket_error(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName):
-    id_1, result_data_1 = submit_td_test_data(storage_socket, "td_H2O2_psi4_b3lyp", "test_tag", PriorityEnum.low)
+    id_1, result_data_1 = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", "test_tag", PriorityEnum.low)
 
     # Inject a failed computation
     failed_key = list(result_data_1.keys())[1]
@@ -59,7 +59,7 @@ def test_service_socket_iterate_order(storage_socket: SQLAlchemySocket):
 
     storage_socket.services._max_active_services = 1
 
-    id_1, _ = submit_td_test_data(storage_socket, "td_H2O2_psi4_b3lyp", "*", PriorityEnum.normal)
+    id_1, _ = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", "*", PriorityEnum.normal)
     id_2, _ = submit_go_test_data(storage_socket, "go_H3NS_psi4_pbe", "*", PriorityEnum.high)
 
     with storage_socket.session_scope() as session:

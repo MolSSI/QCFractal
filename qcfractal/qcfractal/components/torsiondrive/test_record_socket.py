@@ -299,8 +299,8 @@ def test_torsiondrive_socket_add_different_1(storage_socket: SQLAlchemySocket):
 @pytest.mark.parametrize(
     "test_data_name",
     [
-        "td_C9H11NO2_psi4_b3lyp-d3bj",
-        "td_H2O2_psi4_b3lyp-d3bj",
+        "td_C9H11NO2_mopac_pm6",
+        "td_H2O2_mopac_pm6",
         "td_H2O2_psi4_pbe",
     ],
 )
@@ -325,7 +325,7 @@ def test_torsiondrive_socket_run(
 
     time_0 = datetime.utcnow()
     finished, n_optimizations = run_service(
-        storage_socket, activated_manager_name, id_1[0], generate_task_key, result_data_1, 200
+        storage_socket, activated_manager_name, id_1[0], generate_task_key, result_data_1, 1000
     )
     time_1 = datetime.utcnow()
 

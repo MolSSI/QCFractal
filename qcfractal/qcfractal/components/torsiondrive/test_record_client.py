@@ -126,7 +126,7 @@ def test_torsiondrive_client_delete(
     snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
 ):
 
-    td_id = run_test_data(storage_socket, activated_manager_name, "td_H2O2_psi4_b3lyp")
+    td_id = run_test_data(storage_socket, activated_manager_name, "td_H2O2_mopac_pm6")
 
     rec = storage_socket.records.torsiondrive.get([td_id], include=["optimizations"])
     child_ids = [x["optimization_id"] for x in rec[0]["optimizations"]]
@@ -169,7 +169,7 @@ def test_torsiondrive_client_harddelete_nochildren(
     snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
 ):
 
-    td_id = run_test_data(storage_socket, activated_manager_name, "td_H2O2_psi4_b3lyp")
+    td_id = run_test_data(storage_socket, activated_manager_name, "td_H2O2_mopac_pm6")
 
     rec = storage_socket.records.torsiondrive.get([td_id], include=["optimizations"])
     child_ids = [x["optimization_id"] for x in rec[0]["optimizations"]]
@@ -190,7 +190,7 @@ def test_torsiondrive_client_delete_opt_inuse(
     snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
 ):
 
-    td_id = run_test_data(storage_socket, activated_manager_name, "td_H2O2_psi4_b3lyp")
+    td_id = run_test_data(storage_socket, activated_manager_name, "td_H2O2_mopac_pm6")
 
     rec = storage_socket.records.torsiondrive.get([td_id], include=["optimizations"])
     child_ids = [x["optimization_id"] for x in rec[0]["optimizations"]]
@@ -204,16 +204,16 @@ def test_torsiondrive_client_delete_opt_inuse(
 
 
 def test_torsiondrive_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    id_1, _ = submit_test_data(storage_socket, "td_H2O2_psi4_b3lyp")
+    id_1, _ = submit_test_data(storage_socket, "td_H2O2_mopac_pm6")
     id_2, _ = submit_test_data(storage_socket, "td_H2O2_psi4_pbe")
-    id_3, _ = submit_test_data(storage_socket, "td_C9H11NO2_psi4_b3lyp-d3bj")
-    id_4, _ = submit_test_data(storage_socket, "td_H2O2_psi4_bp86")
+    id_3, _ = submit_test_data(storage_socket, "td_C9H11NO2_mopac_pm6")
+    id_4, _ = submit_test_data(storage_socket, "td_H2O2_psi4_pbe0")
 
     all_tds = snowflake_client.get_torsiondrives([id_1, id_2, id_3, id_4], include=["initial_molecules"])
     mol_ids = [x.initial_molecules[0].id for x in all_tds]
 
     query_res = snowflake_client.query_torsiondrives(qc_program=["psi4"])
-    assert query_res.current_meta.n_found == 4
+    assert query_res.current_meta.n_found == 2
 
     query_res = snowflake_client.query_torsiondrives(qc_program=["nothing"])
     assert query_res.current_meta.n_found == 0
@@ -231,17 +231,17 @@ def test_torsiondrive_client_query(snowflake_client: PortalClient, storage_socke
 
     # query for basis
     query_res = snowflake_client.query_torsiondrives(qc_basis=["sTO-3g"])
-    assert query_res.current_meta.n_found == 3
+    assert query_res.current_meta.n_found == 2
 
     query_res = snowflake_client.query_torsiondrives(qc_basis=[None])
-    assert query_res.current_meta.n_found == 0
+    assert query_res.current_meta.n_found == 2
 
     query_res = snowflake_client.query_torsiondrives(qc_basis=[""])
-    assert query_res.current_meta.n_found == 0
+    assert query_res.current_meta.n_found == 2
 
     # query for method
-    query_res = snowflake_client.query_torsiondrives(qc_method=["b3lyP"])
-    assert query_res.current_meta.n_found == 1
+    query_res = snowflake_client.query_torsiondrives(qc_method=["pm6"])
+    assert query_res.current_meta.n_found == 2
 
     # Query by default returns everything
     query_res = snowflake_client.query_torsiondrives()

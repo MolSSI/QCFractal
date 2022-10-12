@@ -66,7 +66,7 @@ def test_periodics_manager_heartbeats(snowflake: TestingSnowflake, storage_socke
 
 def test_periodics_service_iteration(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
 
-    id_1, _ = submit_td_test_data(storage_socket, "td_H2O2_psi4_b3lyp")
+    id_1, _ = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6")
 
     service_freq = snowflake._qcf_config.service_frequency
 

@@ -248,7 +248,7 @@ def test_record_client_modify(snowflake_client: PortalClient, storage_socket: SQ
 
 def test_record_client_modify_service(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
 
-    svc_id, _ = submit_td_test_data(storage_socket, "td_H2O2_psi4_hf", "test_tag", PriorityEnum.high)
+    svc_id, _ = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", "test_tag", PriorityEnum.high)
 
     with storage_socket.session_scope() as session:
         storage_socket.services.iterate_services(session, DummyJobStatus())

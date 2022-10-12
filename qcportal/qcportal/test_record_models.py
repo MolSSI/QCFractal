@@ -131,7 +131,7 @@ def test_baserecord_model_service(
 ):
 
     time_0 = datetime.utcnow()
-    rec_id, _ = submit_td_test_data(storage_socket, "td_H2O2_psi4_b3lyp", tag="test_tag_123", priority=PriorityEnum.low)
+    rec_id, _ = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6", tag="test_tag_123", priority=PriorityEnum.low)
     time_1 = datetime.utcnow()
 
     record = snowflake_client.get_records(rec_id, include=includes)

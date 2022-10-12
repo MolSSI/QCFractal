@@ -82,7 +82,7 @@ def compare_torsiondrive_specs(
     return input_spec == output_spec
 
 
-def generate_task_key(record):
+def generate_task_key(record: Dict[str, Any]):
     # record is an optimization
     mol_hash = record["initial_molecule"]["identifiers"]["molecule_hash"]
     constraints = record["specification"]["keywords"].get("constraints", None)
@@ -100,8 +100,8 @@ def load_test_data(name: str) -> Tuple[TorsiondriveSpecification, List[Molecule]
 
     return (
         pydantic.parse_obj_as(TorsiondriveSpecification, test_data["specification"]),
-        pydantic.parse_obj_as(List[Molecule], test_data["molecule"]),
-        pydantic.parse_obj_as(Dict[str, OptimizationResult], test_data["result"]),
+        pydantic.parse_obj_as(List[Molecule], test_data["initial_molecules"]),
+        pydantic.parse_obj_as(Dict[str, OptimizationResult], test_data["results"]),
     )
 
 

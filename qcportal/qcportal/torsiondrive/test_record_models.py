@@ -24,9 +24,9 @@ def test_torsiondriverecord_model(
     includes: Optional[List[str]],
 ):
 
-    input_spec, molecules, results = load_test_data("td_H2O2_psi4_b3lyp")
+    input_spec, molecules, results = load_test_data("td_H2O2_mopac_pm6")
 
-    rec_id = run_test_data(storage_socket, activated_manager_name, "td_H2O2_psi4_b3lyp")
+    rec_id = run_test_data(storage_socket, activated_manager_name, "td_H2O2_mopac_pm6")
     record = snowflake_client.get_torsiondrives(rec_id, include=includes)
 
     if includes is not None:
