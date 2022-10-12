@@ -54,7 +54,7 @@ def create_compute_history_entry(
     history_orm.modified_on = datetime.utcnow()
 
     # Get the compressed outputs if they exist
-    compressed_output = result.extras.get("_qcfractal_compressed_outputs", None)
+    compressed_output = result.extras.pop("_qcfractal_compressed_outputs", None)
 
     if compressed_output is not None:
         all_outputs = [OutputStore(**x) for x in compressed_output]
@@ -87,7 +87,7 @@ def native_files_to_orm(result: AllResultTypes) -> Dict[str, NativeFileORM]:
     """
 
     # Get the compressed outputs if they exist
-    compressed_nf = result.extras.get("_qcfractal_compressed_native_files", None)
+    compressed_nf = result.extras.pop("_qcfractal_compressed_native_files", None)
 
     if compressed_nf is not None:
         return {k: NativeFileORM(**v) for k, v in compressed_nf.items()}

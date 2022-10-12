@@ -252,6 +252,10 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket, activated_mana
         assert time_0 < record["compute_history"][0]["modified_on"] < time_1
         assert record["compute_history"][0]["provenance"] == result.provenance
 
+        # Compressed outputs should have been removed
+        assert '_qcfractal_compressed_outputs' not in record['extras']
+        assert '_qcfractal_compressed_native_files' not in record['extras']
+
         # assert record["return_result"] == result.return_result
         arprop = AtomicResultProperties(**record["properties"])
         assert arprop.nuclear_repulsion_energy == result.properties.nuclear_repulsion_energy
