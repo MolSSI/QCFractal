@@ -26,6 +26,7 @@ from qcportal.singlepoint import (
     SinglepointDriver,
 )
 from .record_db_models import OptimizationSpecificationORM, OptimizationRecordORM, OptimizationTrajectoryORM
+from ..hashing import hash_dict
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -135,6 +136,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
         """
 
         protocols_dict = opt_spec.protocols.dict(exclude_defaults=True)
+        kw_hash = hash_dict(opt_spec.keywords)
 
         with self.root_socket.optional_session(session, False) as session:
             # Add the singlepoint specification
@@ -156,6 +158,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
                 .values(
                     program=opt_spec.program,
                     keywords=opt_spec.keywords,
+                    keywords_hash=kw_hash,
                     qc_specification_id=qc_spec_id,
                     protocols=protocols_dict,
                 )
@@ -171,6 +174,7 @@ class OptimizationRecordSocket(BaseRecordSocket):
                 stmt = select(OptimizationSpecificationORM.id).filter_by(
                     program=opt_spec.program,
                     keywords=opt_spec.keywords,
+                    keywords_hash=kw_hash,
                     qc_specification_id=qc_spec_id,
                     protocols=protocols_dict,
                 )

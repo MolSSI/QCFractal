@@ -253,8 +253,8 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket, activated_mana
         assert record["compute_history"][0]["provenance"] == result.provenance
 
         # Compressed outputs should have been removed
-        assert '_qcfractal_compressed_outputs' not in record['extras']
-        assert '_qcfractal_compressed_native_files' not in record['extras']
+        assert "_qcfractal_compressed_outputs" not in record["extras"]
+        assert "_qcfractal_compressed_native_files" not in record["extras"]
 
         # assert record["return_result"] == result.return_result
         arprop = AtomicResultProperties(**record["properties"])
@@ -302,6 +302,9 @@ def test_singlepoint_socket_run(storage_socket: SQLAlchemySocket, activated_mana
 def test_singlepoint_socket_insert(storage_socket: SQLAlchemySocket):
     input_spec_2, molecule_2, result_data_2 = load_test_data("sp_psi4_peroxide_energy_wfn")
 
+    # Need a full copy of results - they can get mutated
+    result_copy = result_data_2.copy(deep=True)
+
     meta2, id2 = storage_socket.records.singlepoint.add(
         [molecule_2], input_spec_2, "*", PriorityEnum.normal, None, None
     )
@@ -311,9 +314,9 @@ def test_singlepoint_socket_insert(storage_socket: SQLAlchemySocket):
         rec_orm = session.query(SinglepointRecordORM).where(SinglepointRecordORM.id == id2[0]).one()
         storage_socket.records.update_completed_task(session, rec_orm, result_data_2, None)
 
-    # Actually insert the whole thing. This should end up being a duplicate
+    # Actually insert the whole thing
     with storage_socket.session_scope() as session:
-        dup_id = storage_socket.records.insert_complete_record(session, [result_data_2])
+        dup_id = storage_socket.records.insert_complete_record(session, [result_copy])
 
     recs = storage_socket.records.singlepoint.get(
         id2 + dup_id, include=["*", "wavefunction", "compute_history.*", "compute_history.outputs"]

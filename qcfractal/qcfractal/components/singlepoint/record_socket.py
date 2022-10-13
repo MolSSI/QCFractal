@@ -20,6 +20,7 @@ from qcportal.singlepoint import (
     SinglepointQueryFilters,
 )
 from .record_db_models import QCSpecificationORM, SinglepointRecordORM
+from ..hashing import hash_dict
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -175,6 +176,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
                 protocols_dict.pop("error_correction")
 
         basis = "" if qc_spec.basis is None else qc_spec.basis
+        kw_hash = hash_dict(qc_spec.keywords)
 
         with self.root_socket.optional_session(session, False) as session:
             stmt = (
@@ -185,6 +187,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
                     method=qc_spec.method,
                     basis=basis,
                     keywords=qc_spec.keywords,
+                    keywords_hash=kw_hash,
                     protocols=protocols_dict,
                 )
                 .on_conflict_do_nothing()
@@ -202,6 +205,7 @@ class SinglepointRecordSocket(BaseRecordSocket):
                     method=qc_spec.method,
                     basis=basis,
                     keywords=qc_spec.keywords,
+                    keywords_hash=kw_hash,
                     protocols=protocols_dict,
                 )
 

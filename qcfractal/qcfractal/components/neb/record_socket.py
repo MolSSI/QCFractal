@@ -38,6 +38,7 @@ from .record_db_models import (
     NEBInitialchainORM,
     NEBRecordORM,
 )
+from ..hashing import hash_dict
 
 # geometric package is optional
 _geo_spec = importlib.util.find_spec("geometric")
@@ -383,6 +384,7 @@ class NEBRecordSocket(BaseRecordSocket):
     ) -> Tuple[InsertMetadata, Optional[int]]:
 
         neb_kw_dict = neb_spec.keywords.dict()
+        kw_hash = hash_dict(neb_kw_dict)
 
         with self.root_socket.optional_session(session, False) as session:
             # Add the singlepoint specification
@@ -402,6 +404,7 @@ class NEBRecordSocket(BaseRecordSocket):
                 .values(
                     program=neb_spec.program,
                     keywords=neb_kw_dict,
+                    keywords_hash=kw_hash,
                     singlepoint_specification_id=sp_spec_id,
                 )
                 .on_conflict_do_nothing()
@@ -417,6 +420,7 @@ class NEBRecordSocket(BaseRecordSocket):
                 stmt = select(NEBSpecificationORM.id).filter_by(
                     program=neb_spec.program,
                     keywords=neb_kw_dict,
+                    keywords_hash=kw_hash,
                     singlepoint_specification_id=sp_spec_id,
                 )
 

@@ -69,22 +69,22 @@ class NEBSpecificationORM(BaseORM):
     singlepoint_specification = relationship(QCSpecificationORM, lazy="joined", uselist=False)
 
     keywords = Column(JSONB, nullable=False)
+    keywords_hash = Column(String, nullable=False)
 
     __table_args__ = (
         UniqueConstraint(
             "program",
             "singlepoint_specification_id",
-            "keywords",
+            "keywords_hash",
             name="ux_neb_specification_keys",
         ),
         Index("ix_neb_specification_program", "program"),
         Index("ix_neb_specification_singlepoint_specification_id", "singlepoint_specification_id"),
-        Index("ix_neb_specification_keywords", "keywords"),
         # Enforce lowercase on some fields
     )
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
-        exclude = self.append_exclude(exclude, "id", "singlepoint_specification_id")
+        exclude = self.append_exclude(exclude, "id", "keywords_hash", "singlepoint_specification_id")
         return BaseORM.model_dict(self, exclude)
 
     @property

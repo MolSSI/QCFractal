@@ -61,21 +61,22 @@ class ReactionSpecificationORM(BaseORM):
     singlepoint_specification_id = Column(Integer, ForeignKey(QCSpecificationORM.id), nullable=True)
     optimization_specification_id = Column(Integer, ForeignKey(OptimizationSpecificationORM.id), nullable=True)
     keywords = Column(JSONB, nullable=False)
+    keywords_hash = Column(String, nullable=False)
 
     singlepoint_specification = relationship(QCSpecificationORM, lazy="joined")
     optimization_specification = relationship(OptimizationSpecificationORM, lazy="joined")
 
     __table_args__ = (
         UniqueConstraint(
+            "program",
             "singlepoint_specification_id",
             "optimization_specification_id",
-            "keywords",
+            "keywords_hash",
             name="ux_reaction_specification_keys",
         ),
         Index("ix_reaction_specification_program", "program"),
         Index("ix_reaction_specification_singlepoint_specification_id", "singlepoint_specification_id"),
         Index("ix_reaction_specification_optimization_specification_id", "optimization_specification_id"),
-        Index("ix_reaction_specification_keywords", "keywords"),
         CheckConstraint("program = LOWER(program)", name="ck_reaction_specification_program_lower"),
         CheckConstraint(
             "singlepoint_specification_id IS NOT NULL OR optimization_specification_id IS NOT NULL",
@@ -85,7 +86,9 @@ class ReactionSpecificationORM(BaseORM):
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "id", "singlepoint_specification_id", "optimization_specification_id")
+        exclude = self.append_exclude(
+            exclude, "id", "keywords_hash", "singlepoint_specification_id", "optimization_specification_id"
+        )
         return BaseORM.model_dict(self, exclude)
 
 

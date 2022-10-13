@@ -34,6 +34,7 @@ from .record_db_models import (
     GridoptimizationOptimizationORM,
     GridoptimizationRecordORM,
 )
+from ..hashing import hash_dict
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -468,6 +469,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
         """
 
         go_kw_dict = go_spec.keywords.dict()
+        kw_hash = hash_dict(go_kw_dict)
 
         with self.root_socket.optional_session(session, False) as session:
             # Add the optimization specification
@@ -487,6 +489,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                 .values(
                     program=go_spec.program,
                     keywords=go_kw_dict,
+                    keywords_hash=kw_hash,
                     optimization_specification_id=opt_spec_id,
                 )
                 .on_conflict_do_nothing()
@@ -501,6 +504,7 @@ class GridoptimizationRecordSocket(BaseRecordSocket):
                 stmt = select(GridoptimizationSpecificationORM.id).filter_by(
                     program=go_spec.program,
                     keywords=go_kw_dict,
+                    keywords_hash=kw_hash,
                     optimization_specification_id=opt_spec_id,
                 )
 

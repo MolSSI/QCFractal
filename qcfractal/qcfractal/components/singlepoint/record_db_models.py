@@ -31,19 +31,18 @@ class QCSpecificationORM(BaseORM):
     method = Column(String(100), nullable=False)
     basis = Column(String(100), nullable=False)
     keywords = Column(JSONB, nullable=False)
+    keywords_hash = Column(String, nullable=False)
 
     protocols = Column(JSONB, nullable=False)
 
     __table_args__ = (
         UniqueConstraint(
-            "program", "driver", "method", "basis", "keywords", "protocols", name="ux_qc_specification_keys"
+            "program", "driver", "method", "basis", "keywords_hash", "protocols", name="ux_qc_specification_keys"
         ),
         Index("ix_qc_specification_program", "program"),
         Index("ix_qc_specification_driver", "driver"),
         Index("ix_qc_specification_method", "method"),
         Index("ix_qc_specification_basis", "basis"),
-        Index("ix_qc_specification_keywords", "keywords"),
-        Index("ix_qc_specification_protocols", "protocols"),
         # Enforce lowercase on some fields
         # This does not actually change the text to lowercase, but will fail to insert anything not lowercase
         # WARNING - these are not autodetected by alembic
@@ -54,7 +53,7 @@ class QCSpecificationORM(BaseORM):
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "id")
+        exclude = self.append_exclude(exclude, "id", "keywords_hash")
         return BaseORM.model_dict(self, exclude)
 
     @property

@@ -67,24 +67,25 @@ class ManybodySpecificationORM(BaseORM):
     program = Column(String, nullable=False)
     singlepoint_specification_id = Column(Integer, ForeignKey(QCSpecificationORM.id), nullable=False)
     keywords = Column(JSONB, nullable=False)
+    keywords_hash = Column(String, nullable=False)
 
     singlepoint_specification = relationship(QCSpecificationORM, lazy="joined")
 
     __table_args__ = (
         UniqueConstraint(
+            "program",
             "singlepoint_specification_id",
-            "keywords",
+            "keywords_hash",
             name="ux_manybody_specification_keys",
         ),
         Index("ix_manybody_specification_program", "program"),
         Index("ix_manybody_specification_singlepoint_specification_id", "singlepoint_specification_id"),
-        Index("ix_manybody_specification_keywords", "keywords"),
         CheckConstraint("program = LOWER(program)", name="ck_manybody_specification_program_lower"),
     )
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "id", "singlepoint_specification_id")
+        exclude = self.append_exclude(exclude, "id", "keywords_hash", "singlepoint_specification_id")
         return BaseORM.model_dict(self, exclude)
 
     @property

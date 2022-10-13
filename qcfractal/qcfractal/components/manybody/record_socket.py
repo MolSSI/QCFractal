@@ -26,6 +26,7 @@ from qcportal.molecules import Molecule
 from qcportal.outputstore import OutputTypeEnum
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from .record_db_models import ManybodyClusterORM, ManybodyRecordORM, ManybodySpecificationORM
+from ..hashing import hash_dict
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -403,6 +404,9 @@ class ManybodyRecordSocket(BaseRecordSocket):
             Metadata about the insertion, and the id of the specification.
         """
 
+        kw_dict = mb_spec.keywords.dict()
+        kw_hash = hash_dict(kw_dict)
+
         with self.root_socket.optional_session(session) as session:
             meta, sp_spec_id = self.root_socket.records.singlepoint.add_specification(
                 qc_spec=mb_spec.singlepoint_specification, session=session
@@ -416,14 +420,13 @@ class ManybodyRecordSocket(BaseRecordSocket):
                     None,
                 )
 
-            kw_dict = mb_spec.keywords.dict()
-
             stmt = (
                 insert(ManybodySpecificationORM)
                 .values(
                     program=mb_spec.program,
                     singlepoint_specification_id=sp_spec_id,
                     keywords=kw_dict,
+                    keywords_hash=kw_hash,
                 )
                 .on_conflict_do_nothing()
                 .returning(ManybodySpecificationORM.id)
@@ -438,6 +441,7 @@ class ManybodyRecordSocket(BaseRecordSocket):
                     program=mb_spec.program,
                     singlepoint_specification_id=sp_spec_id,
                     keywords=kw_dict,
+                    keywords_hash=kw_hash,
                 )
 
                 r = session.execute(stmt).scalar_one()

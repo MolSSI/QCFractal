@@ -37,6 +37,7 @@ from .record_db_models import (
     TorsiondriveOptimizationORM,
     TorsiondriveRecordORM,
 )
+from ..hashing import hash_dict
 
 # Torsiondrive package is optional
 _td_spec = importlib.util.find_spec("torsiondrive")
@@ -347,6 +348,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         """
 
         td_kw_dict = td_spec.keywords.dict()
+        kw_hash = hash_dict(td_kw_dict)
 
         with self.root_socket.optional_session(session, False) as session:
             # Add the optimization specification
@@ -366,6 +368,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 .values(
                     program=td_spec.program,
                     keywords=td_kw_dict,
+                    keywords_hash=kw_hash,
                     optimization_specification_id=opt_spec_id,
                 )
                 .on_conflict_do_nothing()
@@ -380,6 +383,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 stmt = select(TorsiondriveSpecificationORM.id).filter_by(
                     program=td_spec.program,
                     keywords=td_kw_dict,
+                    keywords_hash=kw_hash,
                     optimization_specification_id=opt_spec_id,
                 )
 

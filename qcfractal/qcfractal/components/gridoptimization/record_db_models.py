@@ -58,17 +58,17 @@ class GridoptimizationSpecificationORM(BaseORM):
     optimization_specification = relationship(OptimizationSpecificationORM, lazy="joined")
 
     keywords = Column(JSONB, nullable=False)
+    keywords_hash = Column(String, nullable=False)
 
     __table_args__ = (
         UniqueConstraint(
             "program",
             "optimization_specification_id",
-            "keywords",
+            "keywords_hash",
             name="ux_gridoptimization_specification_keys",
         ),
         Index("ix_gridoptimization_specification_program", "program"),
         Index("ix_gridoptimization_specification_optimization_specification_id", "optimization_specification_id"),
-        Index("ix_gridoptimization_specification_keywords", "keywords"),
         # Enforce lowercase on some fields
         # This does not actually change the text to lowercase, but will fail to insert anything not lowercase
         # WARNING - these are not autodetected by alembic
@@ -77,7 +77,7 @@ class GridoptimizationSpecificationORM(BaseORM):
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # Remove fields not present in the model
-        exclude = self.append_exclude(exclude, "id", "optimization_specification_id")
+        exclude = self.append_exclude(exclude, "id", "keywords_hash", "optimization_specification_id")
         return BaseORM.model_dict(self, exclude)
 
     @property

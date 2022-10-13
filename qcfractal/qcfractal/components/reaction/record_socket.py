@@ -22,6 +22,7 @@ from qcportal.reaction import (
 )
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from .record_db_models import ReactionComponentORM, ReactionSpecificationORM, ReactionRecordORM
+from ..hashing import hash_dict
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.session import Session
@@ -305,6 +306,10 @@ class ReactionRecordSocket(BaseRecordSocket):
         :
             Metadata about the insertion, and the id of the specification.
         """
+
+        kw_dict = rxn_spec.keywords.dict()
+        kw_hash = hash_dict(kw_dict)
+
         with self.root_socket.optional_session(session) as session:
             qc_spec_id = None
             opt_spec_id = None
@@ -335,12 +340,11 @@ class ReactionRecordSocket(BaseRecordSocket):
                         None,
                     )
 
-            kw_dict = rxn_spec.keywords.dict()
-
             # Query first, due to behavior of NULL in postgres
             stmt = select(ReactionSpecificationORM.id).filter_by(
                 program=rxn_spec.program,
                 keywords=kw_dict,
+                keywords_hash=kw_hash,
             )
 
             if qc_spec_id is not None:
@@ -364,6 +368,7 @@ class ReactionRecordSocket(BaseRecordSocket):
                         singlepoint_specification_id=qc_spec_id,
                         optimization_specification_id=opt_spec_id,
                         keywords=kw_dict,
+                        keywords_hash=kw_hash,
                     )
                     .returning(ReactionSpecificationORM.id)
                 )

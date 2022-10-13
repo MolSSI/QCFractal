@@ -160,6 +160,16 @@ def load_ip_test_data():
     return ret
 
 
+def load_hash_test_data():
+    """
+    Loads data for testing dictionary hashing
+    """
+
+    file_path = os.path.join(_my_path, "hash_data", "dict_hash_test_data.json.xz")
+    with lzma.open(file_path, "rt") as f:
+        return json.load(f)
+
+
 @contextmanager
 def caplog_handler_at_level(caplog_fixture, level, logger=None):
     """
