@@ -206,14 +206,14 @@ def test_gridoptimization_client_delete_opt_inuse(
 def test_gridoptimization_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
     id_1, _ = submit_test_data(storage_socket, "go_H2O2_psi4_b3lyp")
     id_2, _ = submit_test_data(storage_socket, "go_H2O2_psi4_pbe")
-    id_3, _ = submit_test_data(storage_socket, "go_C4H4N2OS_psi4_b3lyp-d3bj")
+    id_3, _ = submit_test_data(storage_socket, "go_C4H4N2OS_mopac_pm6")
     id_4, _ = submit_test_data(storage_socket, "go_H3NS_psi4_pbe")
 
     all_gos = snowflake_client.get_gridoptimizations([id_1, id_2, id_3, id_4])
     mol_ids = [x.initial_molecule_id for x in all_gos]
 
     query_res = snowflake_client.query_gridoptimizations(qc_program=["psi4"])
-    assert query_res.current_meta.n_found == 4
+    assert query_res.current_meta.n_found == 3
 
     query_res = snowflake_client.query_gridoptimizations(qc_program=["nothing"])
     assert query_res.current_meta.n_found == 0
@@ -234,10 +234,10 @@ def test_gridoptimization_client_query(snowflake_client: PortalClient, storage_s
     assert query_res.current_meta.n_found == 3
 
     query_res = snowflake_client.query_gridoptimizations(qc_basis=[None])
-    assert query_res.current_meta.n_found == 0
+    assert query_res.current_meta.n_found == 1
 
     query_res = snowflake_client.query_gridoptimizations(qc_basis=[""])
-    assert query_res.current_meta.n_found == 0
+    assert query_res.current_meta.n_found == 1
 
     # query for method
     query_res = snowflake_client.query_gridoptimizations(qc_method=["b3lyP"])

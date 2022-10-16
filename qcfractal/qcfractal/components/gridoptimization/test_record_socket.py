@@ -151,9 +151,9 @@ def test_gridoptimization_socket_add_same_2(storage_socket: SQLAlchemySocket):
 @pytest.mark.parametrize(
     "test_data_name",
     [
-        "go_C4H4N2OS_psi4_b3lyp-d3bj",
-        "go_H2O2_psi4_b3lyp-d3bj",
-        "go_H3NS_psi4_blyp",
+        "go_C4H4N2OS_mopac_pm6",
+        "go_H2O2_psi4_b3lyp",
+        "go_H3NS_psi4_pbe",
     ],
 )
 def test_gridoptimization_socket_run(

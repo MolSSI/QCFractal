@@ -99,8 +99,8 @@ def load_test_data(name: str) -> Tuple[GridoptimizationSpecification, Molecule, 
 
     return (
         pydantic.parse_obj_as(GridoptimizationSpecification, test_data["specification"]),
-        pydantic.parse_obj_as(Molecule, test_data["molecule"]),
-        pydantic.parse_obj_as(Dict[str, OptimizationResult], test_data["result"]),
+        pydantic.parse_obj_as(Molecule, test_data["initial_molecule"]),
+        pydantic.parse_obj_as(Dict[str, OptimizationResult], test_data["results"]),
     )
 
 

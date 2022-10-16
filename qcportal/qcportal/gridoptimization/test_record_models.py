@@ -25,9 +25,9 @@ def test_gridoptimizationrecord_model(
     includes: Optional[List[str]],
 ):
 
-    input_spec, molecule, results = load_test_data("go_H3NS_psi4_b3lyp-d3bj")
+    input_spec, molecule, results = load_test_data("go_H3NS_psi4_pbe")
 
-    rec_id = run_test_data(storage_socket, activated_manager_name, "go_H3NS_psi4_b3lyp-d3bj")
+    rec_id = run_test_data(storage_socket, activated_manager_name, "go_H3NS_psi4_pbe")
     record = snowflake_client.get_gridoptimizations(rec_id, include=includes)
 
     if includes is not None:
