@@ -285,7 +285,7 @@ class FractalSnowflake:
             try:
                 finished_id, status = self._finished_queue.get(True, timeout)
             except Empty:
-                logger.warning(f"No tasks finished in {timeout} seconds")
+                logger.debug(f"Not all tasks finished in {timeout} seconds")
                 return False
 
             logger.debug(f"Task finished: id={finished_id}, status={status}")
