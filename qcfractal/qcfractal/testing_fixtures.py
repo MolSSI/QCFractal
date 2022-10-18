@@ -206,6 +206,7 @@ def activated_manager_name(storage_socket: SQLAlchemySocket) -> ManagerName:
             "qchem": None,
             "geometric": None,
             "rdkit": None,
+            "mopac": None,
             "prog1": None,
             "prog2": None,
             "prog3": None,
