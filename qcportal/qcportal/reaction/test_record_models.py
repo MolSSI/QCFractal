@@ -24,7 +24,7 @@ def test_reactionrecord_model(
     includes: Optional[List[str]],
 ):
 
-    input_spec, molecule, results = load_test_data("rxn_H2O_psi4_mp2_optsp")
+    input_spec, stoichiometry, results = load_test_data("rxn_H2O_psi4_mp2_optsp")
 
     rec_id = run_test_data(storage_socket, activated_manager_name, "rxn_H2O_psi4_mp2_optsp")
     record = snowflake_client.get_reactions(rec_id, include=includes)

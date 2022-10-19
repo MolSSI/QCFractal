@@ -124,13 +124,13 @@ def test_reaction_socket_add_same_1(storage_socket: SQLAlchemySocket):
 def test_reaction_socket_run(
     storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, test_data_name: str
 ):
-    input_spec_1, molecules_1, result_data_1 = load_test_data(test_data_name)
+    input_spec_1, stoich_1, result_data_1 = load_test_data(test_data_name)
 
     storage_socket.groups.add(GroupInfo(groupname="group1"))
     storage_socket.users.add(UserInfo(username="submit_user", role="submit", groups=["group1"], enabled=True))
 
     meta_1, id_1 = storage_socket.records.reaction.add(
-        [molecules_1], input_spec_1, "test_tag", PriorityEnum.low, "submit_user", "group1"
+        [stoich_1], input_spec_1, "test_tag", PriorityEnum.low, "submit_user", "group1"
     )
     assert meta_1.success
 

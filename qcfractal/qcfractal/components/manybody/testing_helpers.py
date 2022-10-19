@@ -78,7 +78,7 @@ def load_test_data(name: str) -> Tuple[ManybodySpecification, Molecule, Dict[str
     return (
         pydantic.parse_obj_as(ManybodySpecification, test_data["specification"]),
         pydantic.parse_obj_as(Molecule, test_data["molecule"]),
-        pydantic.parse_obj_as(Dict[str, AtomicResult], test_data["result"]),
+        pydantic.parse_obj_as(Dict[str, AtomicResult], test_data["results"]),
     )
 
 

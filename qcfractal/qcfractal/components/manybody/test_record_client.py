@@ -220,7 +220,10 @@ def test_manybody_client_query(snowflake_client: PortalClient, storage_socket: S
     query_res = snowflake_client.query_manybodys(qc_basis=["DEF2-tzvp"])
     assert query_res.current_meta.n_found == 0
 
-    query_res = snowflake_client.query_manybodys(qc_basis=["auG-cC-pVDZ"])
+    query_res = snowflake_client.query_manybodys(qc_basis=["6-31g*"])
+    assert query_res.current_meta.n_found == 0
+
+    query_res = snowflake_client.query_manybodys(qc_basis=["6-31g"])
     assert query_res.current_meta.n_found == 2
 
     query_res = snowflake_client.query_manybodys(qc_basis=[None])

@@ -68,8 +68,8 @@ def load_test_data(
 
     return (
         pydantic.parse_obj_as(ReactionSpecification, test_data["specification"]),
-        pydantic.parse_obj_as(List[Tuple[float, Molecule]], test_data["molecule"]),
-        pydantic.parse_obj_as(Dict[str, Union[AtomicResult, OptimizationResult]], test_data["result"]),
+        pydantic.parse_obj_as(List[Tuple[float, Molecule]], test_data["stoichiometry"]),
+        pydantic.parse_obj_as(Dict[str, Union[AtomicResult, OptimizationResult]], test_data["results"]),
     )
 
 
