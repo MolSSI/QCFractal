@@ -116,24 +116,42 @@ def test_neb_client_add_existing_chain(snowflake_client: PortalClient):
     assert recs[0].initial_chain[0].id == mol_ids[0]
 
 
-# TODO: run_test_data is not working for neb. Probably bad procedure json files..
-@pytest.mark.xfail
 def test_neb_client_delete(
     snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
 ):
 
-    neb_id = run_test_data(storage_socket, activated_manager_name, "neb_HCN_psi4_b3lyp")
+    neb_id = run_test_data(storage_socket, activated_manager_name, "neb_HCN_psi4_pbe_opt2")
 
-    rec = storage_socket.records.neb.get([neb_id], include=["singlepoints"])
-    child_ids = [x["singlepoint_id"] for x in rec[0]["singlepoints"][-1]]
+    rec = storage_socket.records.neb.get(
+        [neb_id],
+        include=[
+            "singlepoints",
+            "optimizations.*",
+            "optimizations.optimization_record.*",
+            "optimizations.optimization_record.trajectory",
+        ],
+    )
+
+    # Children are singlepoints, optimizations, and the trajectory of the optimizations (also singlepoints)
+    child_ids = [x["singlepoint_id"] for x in rec[0]["singlepoints"]]
+    opt_ids = [x["optimization_id"] for x in rec[0]["optimizations"]]
+    child_ids.extend(opt_ids)
+
+    for opt in rec[0]["optimizations"]:
+        traj_ids = [x["singlepoint_id"] for x in opt["optimization_record"]["trajectory"]]
+        child_ids.extend(traj_ids)
+
+    # Some duplicates here
+    child_ids = list(set(child_ids))
 
     meta = snowflake_client.delete_records(neb_id, soft_delete=True, delete_children=False)
     assert meta.success
     assert meta.deleted_idx == [0]
     assert meta.n_children_deleted == 0
 
-    child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
-    assert all(x.status == RecordStatusEnum.complete for x in child_recs)
+    for cid in child_ids:
+        child_rec = snowflake_client.get_records(cid, missing_ok=True)
+        assert child_rec.status == RecordStatusEnum.complete
 
     snowflake_client.undelete_records(neb_id)
 
@@ -142,33 +160,34 @@ def test_neb_client_delete(
     assert meta.deleted_idx == [0]
     assert meta.n_children_deleted == len(child_ids)
 
-    child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
-    assert all(x.status == RecordStatusEnum.deleted for x in child_recs)
+    for cid in child_ids:
+        child_rec = snowflake_client.get_records(cid, missing_ok=True)
+        assert child_rec.status == RecordStatusEnum.deleted
 
     meta = snowflake_client.delete_records(neb_id, soft_delete=False, delete_children=True)
     assert meta.success
     assert meta.deleted_idx == [0]
     assert meta.n_children_deleted == len(child_ids)
 
-    recs = snowflake_client.get_torsiondrives(neb_id, missing_ok=True)
+    recs = snowflake_client.get_nebs(neb_id, missing_ok=True)
     assert recs is None
 
-    child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
-    assert all(x is None for x in child_recs)
+    for cid in child_ids:
+        child_rec = snowflake_client.get_records(cid, missing_ok=True)
+        assert child_rec is None
 
     # DB should be pretty empty now
     query_res = snowflake_client.query_records()
     assert query_res.current_meta.n_found == 0
 
 
-@pytest.mark.xfail
 def test_neb_client_harddelete_nochildren(
     snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
 ):
 
-    neb_id = run_test_data(storage_socket, activated_manager_name, "neb_HCN_psi4_b3lyp")
+    neb_id = run_test_data(storage_socket, activated_manager_name, "neb_HCN_psi4_pbe_opt2")
 
-    rec = storage_socket.records.torsiondrive.get([neb_id], include=["singlepoints"])
+    rec = storage_socket.records.neb.get([neb_id], include=["singlepoints"])
     child_ids = [x["singlepoint_id"] for x in rec[0]["singlepoints"]]
 
     meta = snowflake_client.delete_records(neb_id, soft_delete=False, delete_children=False)
@@ -176,19 +195,16 @@ def test_neb_client_harddelete_nochildren(
     assert meta.deleted_idx == [0]
     assert meta.n_children_deleted == 0
 
-    recs = snowflake_client.get_torsiondrives(neb_id, missing_ok=True)
-    assert recs is None
-
-    child_recs = snowflake_client.get_records(child_ids, missing_ok=True)
-    assert all(x is not None for x in child_recs)
+    for cid in child_ids:
+        child_rec = snowflake_client.get_records(cid, missing_ok=True)
+        assert child_rec is not None
 
 
-@pytest.mark.xfail
 def test_neb_client_delete_opt_inuse(
     snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
 ):
 
-    neb_id = run_test_data(storage_socket, activated_manager_name, "neb_HCN_psi4_b3lyp")
+    neb_id = run_test_data(storage_socket, activated_manager_name, "neb_HCN_psi4_pbe_opt2")
 
     rec = storage_socket.records.neb.get([neb_id], include=["singlepoints"])
     child_ids = [x["singlepoint_id"] for x in rec[0]["singlepoints"]]
@@ -202,15 +218,14 @@ def test_neb_client_delete_opt_inuse(
 
 
 def test_neb_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    id_1, _ = submit_test_data(storage_socket, "neb_HCN_psi4_b3lyp")
-    id_2, _ = submit_test_data(storage_socket, "neb_HCN_psi4_pbe")
-    id_3, _ = submit_test_data(storage_socket, "neb_HCN_psi4_hf")
-    id_4, _ = submit_test_data(storage_socket, "neb_HCN_psi4_bp86")
+    id_1, _ = submit_test_data(storage_socket, "neb_HCN_psi4_pbe")
+    id_2, _ = submit_test_data(storage_socket, "neb_HCN_psi4_pbe0_opt1")
+    id_3, _ = submit_test_data(storage_socket, "neb_HCN_psi4_pbe_opt2")
+    id_4, _ = submit_test_data(storage_socket, "neb_HCN_psi4_b3lyp_opt3")
 
     all_records = snowflake_client.get_nebs([id_1, id_2, id_3, id_4], include=["initial_chain"])
     # mol_ids of just first chain (11 images, the other three have 7 images).
     neb_ids = [x.id for x in all_records]
-    print(neb_ids)
 
     query_res = snowflake_client.query_nebs(qc_program=["psi4"])
     assert query_res.current_meta.n_found == 4
@@ -218,8 +233,8 @@ def test_neb_client_query(snowflake_client: PortalClient, storage_socket: SQLAlc
     query_res = snowflake_client.query_nebs(qc_program=["nothing"])
     assert query_res.current_meta.n_found == 0
 
-    query_res = snowflake_client.query_nebs(initial_chain_id=[neb_ids[0], 9999])
-    assert query_res.current_meta.n_found == 11
+    # query_res = snowflake_client.query_nebs(initial_chain_id=[neb_ids[0], 9999])
+    # assert query_res.current_meta.n_found == 11
 
     query_res = snowflake_client.query_nebs(program=["geometric"])
     assert query_res.current_meta.n_found == 4
@@ -228,7 +243,7 @@ def test_neb_client_query(snowflake_client: PortalClient, storage_socket: SQLAlc
     assert query_res.current_meta.n_found == 0
 
     query_res = snowflake_client.query_nebs(qc_basis=["6-31g"])
-    assert query_res.current_meta.n_found == 4
+    assert query_res.current_meta.n_found == 1
 
     query_res = snowflake_client.query_nebs(qc_basis=[None])
     assert query_res.current_meta.n_found == 0

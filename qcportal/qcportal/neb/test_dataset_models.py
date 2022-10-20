@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING
 
 import qcportal.dataset_testing_helpers as ds_helpers
 from qcarchivetesting import load_molecule_data
+from qcportal.neb import NEBDatasetNewEntry, NEBKeywords, NEBSpecification
 from qcportal.record_models import PriorityEnum
 from qcportal.singlepoint.record_models import QCSpecification
-from qcportal.neb import NEBDatasetNewEntry, NEBKeywords, NEBSpecification
 
 if TYPE_CHECKING:
     from qcportal import PortalClient
@@ -15,17 +15,16 @@ test_entries = [
     NEBDatasetNewEntry(
         name="HCN",
         initial_chain=[load_molecule_data("neb/neb_HCN_%i" % i) for i in range(11)],
-        # additional_keywords={'kw1': 123},
     ),
     NEBDatasetNewEntry(
         name="C3H2N",
         initial_chain=[load_molecule_data("neb/neb_C3H2N_%i" % i) for i in range(21)],
-        # additional_keywords={'kw2': 456},
     ),
     NEBDatasetNewEntry(
         name="C4H3N2",
         initial_chain=[load_molecule_data("neb/neb_C4H3N2_%i" % i) for i in range(21)],
-        # additional_keywords={'kw3': 789},
+        additional_keywords={"maximum_force": 1.01},
+        additional_singlepoint_keywords={"maxiter": 123},
     ),
 ]
 
@@ -33,7 +32,7 @@ test_specs = [
     NEBSpecification(
         program="geometric",
         keywords=NEBKeywords(
-            images=11,
+            images=7,
             spring_constant=1,
             coordinate_system="tric",
             energy_weighted=None,
@@ -48,7 +47,7 @@ test_specs = [
         ),
         singlepoint_specification=QCSpecification(
             program="psi4",
-            driver="gradient",
+            driver="deferred",
             method="hf",
             basis="6-31g",
             keywords={"qc_kw_1": 123, "qc_kw_2": "a string"},
@@ -57,7 +56,7 @@ test_specs = [
     NEBSpecification(
         program="geometric",
         keywords=NEBKeywords(
-            images=21,
+            images=7,
             spring_constant=5,
             coordinate_system="tric",
             energy_weighted=None,
@@ -72,7 +71,7 @@ test_specs = [
         ),
         singlepoint_specification=QCSpecification(
             program="psi4",
-            driver="gradient",
+            driver="deferred",
             method="b3lyp",
             basis="6-31g",
             keywords={"qc_kw_1": 456, "qc_kw_2": "a string"},
@@ -81,7 +80,7 @@ test_specs = [
     NEBSpecification(
         program="geometric",
         keywords=NEBKeywords(
-            images=7,
+            images=9,
             spring_constant=10,
             coordinate_system="tric",
             energy_weighted=None,
@@ -96,7 +95,7 @@ test_specs = [
         ),
         singlepoint_specification=QCSpecification(
             program="psi4",
-            driver="gradient",
+            driver="deferred",
             method="hf",
             basis="6-31g*",
             keywords={"qc_kw_1": 789, "qc_kw_2": "a string"},
@@ -115,9 +114,9 @@ def entry_extra_compare(ent1, ent2):
 
 
 def record_compare(rec, ent, spec):
-    assert sorted(rec.initial_chain, key=lambda x: x.get_hash()) == sorted(
-        ent.initial_chain, key=lambda x: x.get_hash()
-    )
+
+    # Initial chain on the record may only be a subset
+    assert set(x.get_hash() for x in rec.initial_chain) <= set(x.get_hash() for x in ent.initial_chain)
 
     # Merge optimization keywords
     merged_spec = spec.dict()

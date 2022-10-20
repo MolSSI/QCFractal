@@ -1,7 +1,3 @@
-"""
-Tests the neb record socket
-"""
-
 from __future__ import annotations
 
 from datetime import datetime
@@ -10,23 +6,24 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcarchivetesting import load_molecule_data
-from qcfractal.components.neb.testing_helpers import (
-    compare_neb_specs,
-    test_specs,
-)
 from qcfractal.db_socket import SQLAlchemySocket
+from qcfractal.testing_helpers import run_service
+from qcportal.auth import UserInfo, GroupInfo
 from qcportal.neb import (
     NEBSpecification,
     NEBKeywords,
 )
+from qcportal.outputstore import OutputStore
 from qcportal.record_models import RecordStatusEnum, PriorityEnum
 from qcportal.singlepoint import (
     QCSpecification,
     SinglepointProtocols,
 )
+from .testing_helpers import compare_neb_specs, test_specs, load_test_data, generate_task_key
 
 if TYPE_CHECKING:
     from qcfractal.db_socket import SQLAlchemySocket
+    from qcportal.managers import ManagerName
 
 
 @pytest.mark.parametrize("spec", test_specs)
@@ -193,3 +190,59 @@ def test_neb_socket_add_different_1(storage_socket: SQLAlchemySocket):
     assert meta.inserted_idx == [2]
     assert id1[0] == id2[0]
     assert id1[1] == id2[1]
+
+
+@pytest.mark.parametrize(
+    "test_data_name",
+    [
+        "neb_HCN_psi4_pbe",
+        "neb_HCN_psi4_pbe0_opt1",
+        "neb_HCN_psi4_pbe_opt2",
+        "neb_HCN_psi4_b3lyp_opt3",
+    ],
+)
+def test_neb_socket_run(storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName, test_data_name: str):
+    input_spec_1, initial_chain_1, result_data_1 = load_test_data(test_data_name)
+
+    storage_socket.groups.add(GroupInfo(groupname="group1"))
+    storage_socket.users.add(UserInfo(username="submit_user", role="submit", groups=["group1"], enabled=True))
+
+    meta_1, id_1 = storage_socket.records.neb.add(
+        [initial_chain_1],
+        input_spec_1,
+        "test_tag",
+        PriorityEnum.low,
+        "submit_user",
+        "group1",
+    )
+    assert meta_1.success
+
+    time_0 = datetime.utcnow()
+    finished, n_spopt = run_service(
+        storage_socket, activated_manager_name, id_1[0], generate_task_key, result_data_1, 100
+    )
+    time_1 = datetime.utcnow()
+
+    rec = storage_socket.records.neb.get(
+        id_1,
+        include=[
+            "*",
+            "compute_history.*",
+            "compute_history.outputs",
+            "optimizations.*",
+            "optimizations.optimization_record",
+            "singlepoints.*",
+            "singlepoints.singlepoint_record",
+            "service",
+        ],
+    )
+
+    assert rec[0]["status"] == RecordStatusEnum.complete
+    assert time_0 < rec[0]["modified_on"] < time_1
+    assert len(rec[0]["compute_history"]) == 1
+    assert len(rec[0]["compute_history"][-1]["outputs"]) == 1
+    assert rec[0]["compute_history"][-1]["status"] == RecordStatusEnum.complete
+    assert time_0 < rec[0]["compute_history"][-1]["modified_on"] < time_1
+    assert rec[0]["service"] is None
+    out = OutputStore(**rec[0]["compute_history"][-1]["outputs"]["stdout"])
+    assert "== Optimization Converged" in out.as_string

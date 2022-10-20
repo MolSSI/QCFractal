@@ -1,6 +1,5 @@
 from typing import List, Optional, Union, Dict, Set, Iterable
 
-import pydantic
 from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
 from typing_extensions import Literal
 
@@ -9,7 +8,7 @@ from qcportal.molecules import Molecule
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from qcportal.utils import recursive_normalizer
 from ..optimization.record_models import OptimizationRecord
-from ..singlepoint.record_models import QCSpecification, SinglepointRecord, SinglepointDriver, SinglepointProtocols
+from ..singlepoint.record_models import QCSpecification, SinglepointRecord
 
 
 class NEBKeywords(BaseModel):
@@ -50,7 +49,7 @@ class NEBKeywords(BaseModel):
 
     maximum_cycle: int = Field(100, description="Maximum iteration number for NEB calculation.")
 
-    energy_weighted: int = Field(
+    energy_weighted: Optional[int] = Field(
         None,
         description="Provide an integer value to vary the spring constant based on images' energy (range: spring_constant/energy_weighted - spring_constant).",
     )
@@ -254,15 +253,15 @@ class NEBRecord(BaseRecord):
         return self.raw_data.initial_chain
 
     @property
-    def singlepoints(self) -> Dict[str, SinglepointRecord]:
+    def singlepoints(self) -> Dict[int, List[SinglepointRecord]]:
         if self.singlepoint_cache is not None:
             return self.singlepoint_cache
 
         if self.raw_data.singlepoints is None:
             self._fetch_singlepoints()
 
-        # convert the raw singlepoint data to a dictionary of key List[SinglepointRecord]-> Dict[str, List[SinglepointRecord]]
         ret = {}
+        # Singlepoints should be in order of (iteration, position)
         for sp in self.raw_data.singlepoints:
             ret.setdefault(sp.chain_iteration, list())
             ret[sp.chain_iteration].append(SinglepointRecord.from_datamodel(sp.singlepoint_record, self.client))

@@ -11,7 +11,7 @@ import numpy as np
 import sqlalchemy.orm.attributes
 import tabulate
 from pydantic import BaseModel, Extra
-from sqlalchemy import select
+from sqlalchemy import select, union
 from sqlalchemy.dialects.postgresql import insert, array_agg, aggregate_order_by, DOUBLE_PRECISION, TEXT
 from sqlalchemy.orm import contains_eager
 
@@ -95,9 +95,15 @@ class NEBRecordSocket(BaseRecordSocket):
 
     @staticmethod
     def get_children_select() -> List[Any]:
-        stmt = select(
-            NEBSinglepointsORM.neb_id.label("parent_id"),
-            NEBSinglepointsORM.singlepoint_id.label("child_id"),
+        stmt = union(
+            select(
+                NEBSinglepointsORM.neb_id.label("parent_id"),
+                NEBSinglepointsORM.singlepoint_id.label("child_id"),
+            ),
+            select(
+                NEBOptimizationsORM.neb_id.label("parent_id"),
+                NEBOptimizationsORM.optimization_id.label("child_id"),
+            ),
         )
         return [stmt]
 
@@ -347,6 +353,8 @@ class NEBRecordSocket(BaseRecordSocket):
 
         # Create a singlepoint input based on the multiple geometries
         qc_spec = neb_orm.specification.singlepoint_specification.model_dict()
+        qc_spec["driver"] = "gradient"
+
         if service_state.converged and service_state.tsoptimize and len(service_state.tshessian) == 0:
             qc_spec["driver"] = "hessian"
 

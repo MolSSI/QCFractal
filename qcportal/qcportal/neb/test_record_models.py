@@ -24,9 +24,9 @@ def test_neb_record_model(
     includes: Optional[List[str]],
 ):
 
-    input_spec, molecules, results = load_test_data("neb_HCN_psi4_b3lyp")
+    input_spec, molecules, results = load_test_data("neb_HCN_psi4_pbe_opt2")
 
-    rec_id = run_test_data(storage_socket, activated_manager_name, "neb_HCN_psi4_b3lyp")
+    rec_id = run_test_data(storage_socket, activated_manager_name, "neb_HCN_psi4_pbe_opt2")
     record = snowflake_client.get_nebs(rec_id, include=includes)
 
     if includes is not None:
@@ -40,13 +40,19 @@ def test_neb_record_model(
     assert record.specification == input_spec
 
     assert len(molecules) == len(record.initial_chain)
-    assert molecules[0] == record.initial_chain[0]
+    for x, y in zip(molecules, record.initial_chain):
+        assert x == y
 
-    sps_1 = record.singlepoints
-    assert sum(len(o) for o in sps_1.values()) == len(results)
+    assert len(record.singlepoints) > 0
 
-    # Get minimum opts first
-    record = snowflake_client.get_nebs(rec_id, include=includes)
+    # last one is a hessian calculation?
+    all_sps = list(record.singlepoints.values())
+    for sps in all_sps[:-1]:
+        assert len(sps) == len(molecules)
 
-    sps_2 = record.optimizations
-    assert sum(len(o) for o in sps_2.values()) == len(results)
+    assert len(all_sps[-1]) == 1
+    assert all_sps[-1][0].specification.driver == "hessian"
+
+    assert "initial" in record.optimizations
+    assert "final" in record.optimizations
+    assert "transition" in record.optimizations

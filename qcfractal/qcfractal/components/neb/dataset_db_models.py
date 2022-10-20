@@ -56,6 +56,7 @@ class NEBDatasetEntryORM(BaseORM):
     comment = Column(String)
 
     additional_keywords = Column(JSONB, nullable=False)
+    additional_singlepoint_keywords = Column(JSONB, nullable=False)
     attributes = Column(JSONB, nullable=False)
 
     # initial_molecule_ids = column_property(

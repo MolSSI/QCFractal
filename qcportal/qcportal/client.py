@@ -2490,7 +2490,7 @@ class PortalClient(PortalClientBase):
         body_data = {"ids": record_ids, "missing_ok": missing_ok}
 
         if include:
-            body_data["include"] = SinglepointRecord.transform_includes(include)
+            body_data["include"] = NEBRecord.transform_includes(include)
 
         record_data = self._auto_request(
             "post",
