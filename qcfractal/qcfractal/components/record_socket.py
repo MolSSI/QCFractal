@@ -1142,12 +1142,10 @@ class RecordSocket:
             )
 
         with self.root_socket.optional_session(session) as session:
-            all_id = set(record_ids)
             children_ids = []
 
             if delete_children:
                 children_ids = self.get_children_ids(session, record_ids)
-                all_id.update(children_ids)
 
             del_id_1 = [(x,) for x in record_ids]
             del_id_2 = [(x,) for x in children_ids]
