@@ -245,4 +245,5 @@ def test_neb_socket_run(storage_socket: SQLAlchemySocket, activated_manager_name
     assert time_0 < rec[0]["compute_history"][-1]["modified_on"] < time_1
     assert rec[0]["service"] is None
     out = OutputStore(**rec[0]["compute_history"][-1]["outputs"]["stdout"])
-    assert "== Optimization Converged" in out.as_string
+    print(out.as_string)
+    assert "NEB calculation is completed" in out.as_string
