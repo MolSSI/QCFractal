@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select, or_
 from sqlalchemy.dialects.postgresql import array_agg
-from sqlalchemy.orm import contains_eager, make_transient, aliased
+from sqlalchemy.orm import contains_eager, make_transient, aliased, defer
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.record_db_models import BaseRecordORM, RecordComputeHistoryORM
@@ -103,7 +103,10 @@ class ServiceSocket:
         """
 
         self._logger.info("Iterating on services")
+
+        #
         # A CTE that contains just service id and all the statuses as an array
+        #
 
         # We alias BaseRecord so we can join twice to it
         # once for aggregating the status of the dependencies
@@ -121,168 +124,181 @@ class ServiceSocket:
             .cte()
         )
 
-        with self.root_socket.optional_session(session) as session:
+        #########################
+        # First, errored services
+        #########################
 
-            # Services where a task has errored
-            # Find only those that all tasks are completed or errored, but only those
-            # with at least one error
-            stmt = (
-                select(ServiceQueueORM)
-                .join(status_cte, status_cte.c.service_id == ServiceQueueORM.id)
-                .join(ServiceQueueORM.record)
-                .where(status_cte.c.task_statuses.contained_by(["complete", "error"]))
-                .where(status_cte.c.task_statuses.contains(["error"]))
+        # Find only those that all tasks are completed or errored, but only those
+        # with at least one error
+        stmt = (
+            select(ServiceQueueORM)
+            .options(defer("service_state"))  # could be large, but is not needed
+            .join(status_cte, status_cte.c.service_id == ServiceQueueORM.id)
+            .join(ServiceQueueORM.record)
+            .where(status_cte.c.task_statuses.contained_by(["complete", "error"]))
+            .where(status_cte.c.task_statuses.contains(["error"]))
+        )
+
+        err_services = session.execute(stmt).scalars().all()
+
+        if len(err_services) > 0:
+            self._logger.info(f"Found {len(err_services)} running services with task failures")
+
+        for service_orm in err_services:
+            error = {
+                "error_type": "service_iteration_error",
+                "error_message": "Some task(s) did not complete successfully",
+            }
+
+            self._logger.info(
+                f"Record {service_orm.record_id} (service {service_orm.id}) has task failures. Marking as errored"
             )
 
-            err_services = session.execute(stmt).scalars().all()
+            self.root_socket.records.update_failed_service(session, service_orm.record, error)
+            session.commit()
 
-            # Services whose tasks this iteration are all successfully completed
-            stmt = (
-                select(ServiceQueueORM)
-                .join(status_cte, status_cte.c.service_id == ServiceQueueORM.id)
-                .join(ServiceQueueORM.record)
-                .where(or_(status_cte.c.task_statuses.contained_by(["complete"]), status_cte.c.task_statuses == []))
-            )
-            completed_services = session.execute(stmt).scalars().all()
+            self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.error)
 
-            if len(err_services) > 0:
-                self._logger.info(f"Found {len(err_services)} running services with task failures")
-            if len(completed_services) > 0:
-                self._logger.info(f"Found {len(completed_services)} running services with completed tasks")
+        ###########################
+        # Now successful services
+        ###########################
 
-            # Services with an errored task
-            for service_orm in err_services:
+        # Services whose tasks this iteration are all successfully completed
+        # Service is ready for the next iteration
+        stmt = (
+            select(ServiceQueueORM)
+            .join(status_cte, status_cte.c.service_id == ServiceQueueORM.id)
+            .join(ServiceQueueORM.record)
+            .where(or_(status_cte.c.task_statuses.contained_by(["complete"]), status_cte.c.task_statuses == []))
+        )
+
+        # Go one by one, committing after each one
+        stmt = stmt.limit(1)
+
+        while True:
+            service_orm = session.execute(stmt).scalar_one_or_none()
+
+            if service_orm is None:
+                break
+
+            try:
+                self._logger.debug(
+                    f"Record {service_orm.record_id} (service {service_orm.id}) has all tasks completed. Iterating..."
+                )
+                completed = self.root_socket.records.iterate_service(session, service_orm)
+                service_orm.record.modified_on = datetime.utcnow()
+            except Exception as err:
+                session.rollback()
+                import traceback
+
                 error = {
                     "error_type": "service_iteration_error",
-                    "error_message": "Some task(s) did not complete successfully",
+                    "error_message": "Error iterating service: " + str(err) + "\n" + traceback.format_exc(),
                 }
-
-                self._logger.info(
-                    f"Record {service_orm.record_id} (service {service_orm.id}) has task failures. Marking as errored"
-                )
 
                 self.root_socket.records.update_failed_service(session, service_orm.record, error)
                 session.commit()
-
                 self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.error)
+                continue
 
-            # Completed, successful service dependencies. Service is ready for the next iteration
-            for service_orm in completed_services:
+            if completed:
+                # Will commit inside this function
+                self.mark_service_complete(session, service_orm)
+            else:
+                # Commit the changes
+                session.commit()
+
+        #
+        # Should we start more services?
+        #
+        stmt = select(BaseRecordORM).where(
+            BaseRecordORM.status == RecordStatusEnum.running, BaseRecordORM.is_service.is_(True)
+        )
+        running_count = get_count(session, stmt)
+
+        self._logger.info(f"After iteration, now {running_count} running services. Max is {self._max_active_services}")
+
+        new_service_count = self._max_active_services - running_count
+
+        if new_service_count > 0:
+            stmt = (
+                select(ServiceQueueORM)
+                .join(ServiceQueueORM.record)
+                .options(contains_eager(ServiceQueueORM.record))
+                .filter(BaseRecordORM.status == RecordStatusEnum.waiting)
+                .order_by(ServiceQueueORM.priority.desc(), ServiceQueueORM.created_on)
+                .limit(new_service_count)
+            )
+
+            new_services = session.execute(stmt).scalars().all()
+
+            running_count += len(new_services)
+
+            if len(new_services) > 0:
+                self._logger.info(f"Attempting to start {len(new_services)} services")
+
+            for service_orm in new_services:
+
+                now = datetime.utcnow()
+                service_orm.record.modified_on = now
+                service_orm.record.status = RecordStatusEnum.running
+
+                # Has this service been started before? ie, the service was restarted or something
+                fresh_start = len(service_orm.dependencies) == 0 and (
+                    service_orm.service_state == {} or service_orm.service_state is None
+                )
+
+                existing_history = service_orm.record.compute_history
+                if len(existing_history) == 0 or existing_history[-1].status != RecordStatusEnum.running:
+
+                    # Add a compute history entry. The iterate functions expect that at least one
+                    # history entry exists
+                    # But only add if this wasn't a restart of a running service
+
+                    hist = RecordComputeHistoryORM()
+                    hist.status = RecordStatusEnum.running
+                    hist.modified_on = now
+
+                    if len(existing_history) == 0:
+                        stdout = OutputStore.compress(
+                            OutputTypeEnum.stdout,
+                            f"Starting service: {service_orm.record.record_type} at {now}",
+                            CompressionEnum.zstd,
+                            6,
+                        )
+                        hist.outputs[OutputTypeEnum.stdout] = OutputStoreORM.from_model(stdout)
+
+                    else:  # this was a restart of a not-running (ie, errored) service
+                        stdout_orm = service_orm.record.compute_history[-1].get_output(OutputTypeEnum.stdout)
+                        make_transient(stdout_orm)
+                        stdout_orm.id = None
+                        stdout_orm.history_id = None
+                        stdout_orm.append(f"\nRestarting service: {service_orm.record.record_type} at {now}")
+                        hist.outputs[OutputTypeEnum.stdout] = stdout_orm
+
+                    service_orm.record.compute_history.append(hist)
+
+                session.commit()
+
                 try:
-                    self._logger.debug(
-                        f"Record {service_orm.record_id} (service {service_orm.id}) has all tasks completed. Iterating..."
-                    )
-                    completed = self.root_socket.records.iterate_service(session, service_orm)
-                    service_orm.record.modified_on = datetime.utcnow()
+                    if fresh_start:
+                        self.root_socket.records.initialize_service(session, service_orm)
+                        completed = self.root_socket.records.iterate_service(session, service_orm)
+
+                        # Completed on first iteration? Possible if everything was already computed
+                        if completed:
+                            self.mark_service_complete(session, service_orm)
+
                 except Exception as err:
                     session.rollback()
-                    import traceback
 
                     error = {
-                        "error_type": "service_iteration_error",
-                        "error_message": "Error iterating service: " + str(err) + "\n" + traceback.format_exc(),
+                        "error_type": "service_initialization_error",
+                        "error_message": "Error in initialization/iteration of service: " + str(err),
                     }
 
                     self.root_socket.records.update_failed_service(session, service_orm.record, error)
                     session.commit()
                     self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.error)
-                    continue
-
-                if completed:
-                    self.mark_service_complete(session, service_orm)
-
-            # Should we start more?
-            stmt = select(BaseRecordORM).where(
-                BaseRecordORM.status == RecordStatusEnum.running, BaseRecordORM.is_service.is_(True)
-            )
-
-            running_count = get_count(session, stmt)
-
-            self._logger.info(
-                f"After iteration, now {running_count} running services. Max is {self._max_active_services}"
-            )
-
-            new_service_count = self._max_active_services - running_count
-
-            if new_service_count > 0:
-                stmt = (
-                    select(ServiceQueueORM)
-                    .join(ServiceQueueORM.record)
-                    .options(contains_eager(ServiceQueueORM.record))
-                    .filter(BaseRecordORM.status == RecordStatusEnum.waiting)
-                    .order_by(ServiceQueueORM.priority.desc(), ServiceQueueORM.created_on)
-                    .limit(new_service_count)
-                )
-
-                new_services = session.execute(stmt).scalars().all()
-
-                running_count += len(new_services)
-
-                if len(new_services) > 0:
-                    self._logger.info(f"Attempting to start {len(new_services)} services")
-
-                for service_orm in new_services:
-
-                    now = datetime.utcnow()
-                    service_orm.record.modified_on = now
-                    service_orm.record.status = RecordStatusEnum.running
-
-                    # Has this service been started before? ie, the service was restarted or something
-                    fresh_start = len(service_orm.dependencies) == 0 and (
-                        service_orm.service_state == {} or service_orm.service_state is None
-                    )
-
-                    existing_history = service_orm.record.compute_history
-                    if len(existing_history) == 0 or existing_history[-1].status != RecordStatusEnum.running:
-
-                        # Add a compute history entry. The iterate functions expect that at least one
-                        # history entry exists
-                        # But only add if this wasn't a restart of a running service
-
-                        hist = RecordComputeHistoryORM()
-                        hist.status = RecordStatusEnum.running
-                        hist.modified_on = now
-
-                        if len(existing_history) == 0:
-                            stdout = OutputStore.compress(
-                                OutputTypeEnum.stdout,
-                                f"Starting service: {service_orm.record.record_type} at {now}",
-                                CompressionEnum.zstd,
-                                6,
-                            )
-                            hist.outputs[OutputTypeEnum.stdout] = OutputStoreORM.from_model(stdout)
-
-                        else:  # this was a restart of a not-running (ie, errored) service
-                            stdout_orm = service_orm.record.compute_history[-1].get_output(OutputTypeEnum.stdout)
-                            make_transient(stdout_orm)
-                            stdout_orm.id = None
-                            stdout_orm.history_id = None
-                            stdout_orm.append(f"\nRestarting service: {service_orm.record.record_type} at {now}")
-                            hist.outputs[OutputTypeEnum.stdout] = stdout_orm
-
-                        service_orm.record.compute_history.append(hist)
-
-                    session.commit()
-
-                    try:
-                        if fresh_start:
-                            self.root_socket.records.initialize_service(session, service_orm)
-                            completed = self.root_socket.records.iterate_service(session, service_orm)
-
-                            # Completed on first iteration? Possible if everything was already computed
-                            if completed:
-                                self.mark_service_complete(session, service_orm)
-
-                    except Exception as err:
-                        session.rollback()
-
-                        error = {
-                            "error_type": "service_initialization_error",
-                            "error_message": "Error in initialization/iteration of service: " + str(err),
-                        }
-
-                        self.root_socket.records.update_failed_service(session, service_orm.record, error)
-                        session.commit()
-                        self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.error)
 
         return running_count
