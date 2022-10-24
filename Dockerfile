@@ -16,12 +16,10 @@ WORKDIR /home/qcfuser
 COPY ./ qca_src
 
 RUN python -m pip install --upgrade pip
-RUN pip install ./qca_src/qcportal ./qca_src/qcfractalcompute ./qca_src/qcfractal torsiondrive
+RUN pip install ./qca_src/qcportal ./qca_src/qcfractalcompute ./qca_src/qcfractal[services]
 
 RUN rm -Rf qca_src
 
 COPY docker/entrypoint.sh /usr/local/bin
-
-#COPY docker/GeoLite2-City.mmdb /qcf_base
 
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]

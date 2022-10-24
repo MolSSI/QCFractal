@@ -37,6 +37,13 @@ dependencies = [
 ]
 
 
+[project.optional-dependencies]
+services = [
+    "torsiondrive",
+    "geometric @ git+https://github.com/hjnpark/geomeTRIC@neb"
+]
+
+
 [project.urls]
 "Homepage" = "https://github.com/MolSSI/QCFractal"
 "Bug Tracker" = "https://github.com/MolSSI/QCFractal/issues"
