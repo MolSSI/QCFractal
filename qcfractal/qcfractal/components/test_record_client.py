@@ -255,6 +255,7 @@ def test_record_client_modify_service(snowflake_client: PortalClient, storage_so
 
     rec = storage_socket.records.get([svc_id], include=["*", "service", "service.dependencies.record.task"])
     tasks = [x["record"]["task"] for x in rec[0]["service"]["dependencies"]]
+    assert len(tasks) > 0
     assert all(x["tag"] == "test_tag" for x in tasks)
     assert all(x["priority"] == PriorityEnum.high for x in tasks)
 

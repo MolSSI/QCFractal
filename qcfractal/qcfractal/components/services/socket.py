@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import traceback
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
@@ -76,23 +77,81 @@ class ServiceSocket:
         session.commit()
         self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.complete)
 
+    def _iterate_service(self, session: Session, job_status: JobStatus, service_id: int) -> bool:
+        """
+        Iterate a single service given its service id
+
+        Parameters
+        -----------
+        session
+            An existing SQLAlchemy session to use. This session will be committed at the end of this function
+        job_status
+            An object that reports the current job status and which we can use to update progress
+        service_id
+            ID of the service to iterate (not the record ID)
+
+        Returns
+        -------
+        :
+            True if the service has completely finished, false if there are still more iterations
+        """
+
+        stmt = select(ServiceQueueORM).join(ServiceQueueORM.record).where(ServiceQueueORM.id == service_id)
+
+        service_orm = session.execute(stmt).scalar_one_or_none()
+
+        if service_orm is None:
+            self._logger.warning(f"Service {service_id} does not exist anymore!")
+            return True
+
+        # Call record-dependent iterate service
+        # If that function returns 0, indicating that the service has successfully completed
+        # Handle cleanup if there is an error
+        try:
+            self._logger.debug(
+                f"Record {service_orm.record_id} (service {service_orm.id}) has all tasks completed. Iterating..."
+            )
+            completed = self.root_socket.records.iterate_service(session, service_orm)
+            service_orm.record.modified_on = datetime.utcnow()
+        except Exception as err:
+            session.rollback()
+
+            error = {
+                "error_type": "service_iteration_error",
+                "error_message": "Error iterating service: " + str(err) + "\n" + traceback.format_exc(),
+            }
+
+            print(error["error_message"])
+            self.root_socket.records.update_failed_service(session, service_orm.record, error)
+            session.commit()
+            self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.error)
+
+            return True
+
+        if completed:
+            # Will commit inside this function
+            self.mark_service_complete(session, service_orm)
+            return True
+        else:
+            # Commit the changes
+            session.commit()
+            return False
+
     def iterate_services(self, session: Session, job_status: JobStatus) -> int:
         """
-        Check for services that have their dependencies finished, and iterate or mark them as errored
+        Check for services that have their dependencies finished, and then either queue them for iteration
+        or mark them as errored
 
         This function will search for services that have all their dependencies finished. If any of the
-        dependencies is errored, it will mark the service as errored. Otherwise, it will call the
-        record-dependent iterate_service function.
-
-        If that function returns 0, indicating that the service has successfully completed, this function
-        will then handle the cleanup.
+        dependencies is errored, it will mark the service as errored. Otherwise, it will submit a job
+        to the internal job queue to iterate the service.
 
         After that, this function will start new services if needed.
 
         Parameters
         ----------
         session
-            An existing SQLAlchemy session to use.
+            An existing SQLAlchemy session to use. This session will be periodically committed
         job_status
             An object that reports the current job status and which we can use to update progress
 
@@ -164,49 +223,30 @@ class ServiceSocket:
         ###########################
 
         # Services whose tasks this iteration are all successfully completed
-        # Service is ready for the next iteration
+        # Service is ready for the next iteration. We only need the ID
         stmt = (
-            select(ServiceQueueORM)
+            select(ServiceQueueORM.id)
             .join(status_cte, status_cte.c.service_id == ServiceQueueORM.id)
-            .join(ServiceQueueORM.record)
             .where(or_(status_cte.c.task_statuses.contained_by(["complete"]), status_cte.c.task_statuses == []))
         )
 
-        # Go one by one, committing after each one
-        stmt = stmt.limit(1)
+        service_ids = session.execute(stmt).scalars().all()
 
-        while True:
-            service_orm = session.execute(stmt).scalar_one_or_none()
+        # Add an internal job for each completed service, calling the internal function
+        for service_id in service_ids:
+            jobname = f"iterate_service_{service_id}"
+            job_id = self.root_socket.internal_jobs.add(
+                name=jobname,
+                scheduled_date=datetime.utcnow(),
+                unique_name=jobname,
+                function="services._iterate_service",
+                kwargs={"service_id": service_id},
+                user_id=None,
+                session=session,
+            )
+            self._logger.debug(f"Added internal job {job_id} for {jobname}")
 
-            if service_orm is None:
-                break
-
-            try:
-                self._logger.debug(
-                    f"Record {service_orm.record_id} (service {service_orm.id}) has all tasks completed. Iterating..."
-                )
-                completed = self.root_socket.records.iterate_service(session, service_orm)
-                service_orm.record.modified_on = datetime.utcnow()
-            except Exception as err:
-                session.rollback()
-                import traceback
-
-                error = {
-                    "error_type": "service_iteration_error",
-                    "error_message": "Error iterating service: " + str(err) + "\n" + traceback.format_exc(),
-                }
-
-                self.root_socket.records.update_failed_service(session, service_orm.record, error)
-                session.commit()
-                self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.error)
-                continue
-
-            if completed:
-                # Will commit inside this function
-                self.mark_service_complete(session, service_orm)
-            else:
-                # Commit the changes
-                session.commit()
+        session.commit()
 
         #
         # Should we start more services?

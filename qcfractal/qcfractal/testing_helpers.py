@@ -3,8 +3,10 @@ from __future__ import annotations
 from typing import Dict, Any, Tuple, Callable
 
 from qcelemental.models import Molecule
+from sqlalchemy import select
 
 from qcarchivetesting import geoip_path, test_users, test_groups
+from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.snowflake import FractalSnowflake
 from qcportal import PortalClient, ManagerClient
@@ -24,12 +26,16 @@ class DummyJobStatus:
     """
 
     def __init__(self):
+        self._runner_uuid = "1234-5678-9101-1213"
         pass
 
     def update_progress(self, progress: int):
         pass
 
     def cancelled(self) -> bool:
+        return False
+
+    def deleted(self) -> bool:
         return False
 
 
@@ -227,17 +233,36 @@ def run_service(
 
     tag = rec[0]["service"]["tag"]
     priority = rec[0]["service"]["priority"]
+    service_id = rec[0]["service"]["id"]
 
     n_records = 0
     n_iterations = 0
-    r = 1
+    finished = False
 
     while n_iterations < max_iterations:
         with storage_socket.session_scope() as session:
-            r = storage_socket.services.iterate_services(session, DummyJobStatus())
+            n_services = storage_socket.services.iterate_services(session, DummyJobStatus())
 
-        if r == 0:
-            break
+            # iterate_services will handle errors
+            if n_services == 0:
+                finished = True
+                break
+
+            # Kinda hacky...
+            # Run any internal jobs that iterate_services added
+            jobname = f"iterate_service_{service_id}"
+            stmt = select(InternalJobORM).where(InternalJobORM.unique_name == jobname)
+            job_orm = session.execute(stmt).scalar_one_or_none()
+
+            if job_orm is not None:
+                storage_socket.internal_jobs._run_single(session, job_orm, DummyJobStatus())
+                # The function that iterates a service returns True if it is finished
+                if job_orm.result is True:
+                    rec = storage_socket.records.get([record_id], include=["status", "service.*"])
+                    assert rec[0]["status"] == RecordStatusEnum.complete
+                    assert rec[0]["service"] is None
+                    finished = True
+                    break
 
         n_iterations += 1
 
@@ -280,7 +305,7 @@ def run_service(
         assert rmeta.n_accepted == len(manager_tasks)
         n_records += len(manager_ret)
 
-    return r == 0, n_records
+    return finished, n_records
 
 
 def compare_validate_molecule(m1: Molecule, m2: Molecule) -> bool:
