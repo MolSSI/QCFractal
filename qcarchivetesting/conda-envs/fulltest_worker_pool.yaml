@@ -32,3 +32,6 @@ dependencies:
   - pip:
     - scipy
     - "geometric @ git+https://github.com/hjnpark/geomeTRIC@neb"
+
+  #TODO: TEMPORARY WORKAROUND
+  - pint==0.19
