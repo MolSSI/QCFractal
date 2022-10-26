@@ -590,7 +590,11 @@ class ComputeManager:
                 # Efficiency calculated as:
                 # sum_task(task_wall_time * nthread / task)
                 # -------------------------------------------------------------
-                if self.statistics.total_task_walltime == 0 or self.statistics.maximum_possible_walltime == 0:
+                if (
+                    self.statistics.total_task_walltime == 0
+                    or self.statistics.maximum_possible_walltime == 0
+                    or self.statistics.maximum_possible_walltime == 0
+                ):
                     efficiency_of_running = "(N/A yet)"
                     efficiency_of_potential = "(N/A yet)"
                     efficiency_format = na_format
