@@ -181,7 +181,7 @@ def parse_args() -> argparse.Namespace:
     # start-job-runner subcommand
     #####################################
     start_per = subparsers.add_parser(
-        "start-job-runner", help="Starts a QCFractal server instance.", parents=[base_parser]
+        "start-job-runner", help="Starts a QCFractal server job-runner", parents=[base_parser]
     )
 
     # Allow some config settings to be altered via the command line
