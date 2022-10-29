@@ -15,11 +15,11 @@ class TorsiondriveDatasetNewEntry(BaseModel):
         extra = Extra.forbid
 
     name: str
-    comment: Optional[str] = None
     initial_molecules: List[Union[Molecule, int]]
     additional_keywords: Dict[str, Any] = {}
     additional_optimization_keywords: Dict[str, Any] = {}
     attributes: Dict[str, Any] = {}
+    comment: Optional[str] = None
 
 
 class TorsiondriveDatasetEntry(TorsiondriveDatasetNewEntry):
@@ -100,3 +100,24 @@ class TorsiondriveDataset(BaseDataset):
         new_names = [x.name for x in entries]
         self._post_add_entries(new_names)
         return ret
+
+    def add_entry(
+        self,
+        name: str,
+        initial_molecules: List[Union[Molecule, int]],
+        additional_keywords: Optional[Dict[str, Any]] = None,
+        additional_optimization_keywords: Optional[Dict[str, Any]] = None,
+        attributes: Optional[Dict[str, Any]] = None,
+        comment: Optional[str] = None,
+    ):
+
+        ent = TorsiondriveDatasetNewEntry(
+            name=name,
+            initial_molecules=initial_molecules,
+            additional_keywords=additional_keywords,
+            additional_optimization_keywords=additional_optimization_keywords,
+            attributes=attributes,
+            comment=comment,
+        )
+
+        return self.add_entries(ent)

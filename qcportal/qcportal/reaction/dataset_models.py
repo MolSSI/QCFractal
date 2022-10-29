@@ -15,10 +15,10 @@ class ReactionDatasetNewEntry(BaseModel):
         extra = Extra.forbid
 
     name: str
-    comment: Optional[str] = None
     stoichiometries: List[Tuple[float, Union[int, Molecule]]]
     additional_keywords: Dict[str, Any] = {}
     attributes: Dict[str, Any] = {}
+    comment: Optional[str] = None
 
 
 class ReactionDatasetEntryStoichiometry(BaseModel):
@@ -109,3 +109,22 @@ class ReactionDataset(BaseDataset):
         new_names = [x.name for x in entries]
         self._post_add_entries(new_names)
         return ret
+
+    def add_entry(
+        self,
+        name: str,
+        stoichiometries: List[Tuple[float, Union[int, Molecule]]],
+        additional_keywords: Optional[Dict[str, Any]] = None,
+        attributes: Optional[Dict[str, Any]] = None,
+        comment: Optional[str] = None,
+    ):
+
+        ent = ReactionDatasetNewEntry(
+            name=name,
+            stoichiometries=stoichiometries,
+            additional_keywords=additional_keywords,
+            attributes=attributes,
+            comment=comment,
+        )
+
+        return self.add_entries(ent)

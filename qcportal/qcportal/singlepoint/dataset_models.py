@@ -6,7 +6,10 @@ from typing_extensions import Literal
 from qcportal.dataset_models import BaseDataset
 from qcportal.metadata_models import InsertMetadata
 from qcportal.molecules import Molecule
-from qcportal.singlepoint.record_models import SinglepointRecord, QCSpecification
+from qcportal.singlepoint.record_models import (
+    SinglepointRecord,
+    QCSpecification,
+)
 from qcportal.utils import make_list
 
 
@@ -15,10 +18,10 @@ class SinglepointDatasetNewEntry(BaseModel):
         extra = Extra.forbid
 
     name: str
-    comment: Optional[str] = None
     molecule: Union[Molecule, int]
     additional_keywords: Dict[str, Any] = {}
     attributes: Dict[str, Any] = {}
+    comment: Optional[str] = None
 
 
 class SinglepointDatasetEntry(SinglepointDatasetNewEntry):
@@ -101,3 +104,24 @@ class SinglepointDataset(BaseDataset):
         self._post_add_entries(new_names)
 
         return ret
+
+    def add_entry(
+        self,
+        name: str,
+        molecule: Union[Molecule, int],
+        additional_keywords: Optional[Dict[str, Any]] = None,
+        attributes: Optional[Dict[str, Any]] = None,
+        comment: Optional[str] = None,
+    ):
+
+        additional_keywords = {} if additional_keywords is None else additional_keywords
+        attributes = {} if attributes is None else attributes
+
+        ent = SinglepointDatasetNewEntry(
+            name=name,
+            molecule=molecule,
+            additional_keywords=additional_keywords,
+            attributes=attributes,
+            comment=comment,
+        )
+        return self.add_entries(ent)

@@ -15,10 +15,10 @@ class ManybodyDatasetNewEntry(BaseModel):
         extra = Extra.forbid
 
     name: str
-    comment: Optional[str] = None
     initial_molecule: Union[Molecule, int]
     additional_keywords: Dict[str, Any] = {}
     attributes: Dict[str, Any] = {}
+    comment: Optional[str] = None
 
 
 class ManybodyDatasetEntry(ManybodyDatasetNewEntry):
@@ -93,3 +93,22 @@ class ManybodyDataset(BaseDataset):
         new_names = [x.name for x in entries]
         self._post_add_entries(new_names)
         return ret
+
+    def add_entry(
+        self,
+        name: str,
+        initial_molecule: Union[int, Molecule],
+        additional_keywords: Optional[Dict[str, Any]] = None,
+        attributes: Optional[Dict[str, Any]] = None,
+        comment: Optional[str] = None,
+    ):
+
+        ent = ManybodyDatasetNewEntry(
+            name=name,
+            initial_molecule=initial_molecule,
+            additional_keywords=additional_keywords,
+            attributes=attributes,
+            comment=comment,
+        )
+
+        return self.add_entries(ent)

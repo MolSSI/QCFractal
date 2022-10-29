@@ -8,7 +8,7 @@ from qcfractal.components.singlepoint.testing_helpers import load_test_data, run
 from qcportal import PortalRequestError
 from qcportal.molecules import Molecule
 from qcportal.record_models import PriorityEnum
-from qcportal.singlepoint import SinglepointDatasetNewEntry, SinglepointDataset
+from qcportal.singlepoint import SinglepointDataset
 
 if TYPE_CHECKING:
     from qcportal import PortalClient
@@ -100,8 +100,8 @@ def test_dataset_client_query_dataset_records(
 
     # Add this as a part of the dataset
     ds.add_specification("spec_1", input_spec)
-    ds.add_entries(SinglepointDatasetNewEntry(name="test_molecule", molecule=molecule))
-    ds.add_entries(SinglepointDatasetNewEntry(name="test_molecule_2", molecule=molecule_2))
+    ds.add_entry(name="test_molecule", molecule=molecule)
+    ds.add_entry(name="test_molecule_2", molecule=molecule_2)
     ds.submit()
 
     # Query records belonging to a dataset
