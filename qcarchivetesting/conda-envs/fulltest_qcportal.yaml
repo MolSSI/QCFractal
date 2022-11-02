@@ -21,6 +21,3 @@ dependencies:
 
   - tqdm
   - pandas
-
-  #TODO: TEMPORARY WORKAROUND
-  - pint==0.19

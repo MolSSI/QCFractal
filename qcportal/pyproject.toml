@@ -31,7 +31,6 @@ dependencies = [
     "tabulate",
     "tqdm",
     "pandas",
-    "pint==0.19",
 ]
 
 
