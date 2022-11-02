@@ -46,4 +46,5 @@ def test_gridoptimizationrecord_model(
     assert record.starting_grid == [0]
 
     opts = record.optimizations
-    assert len(opts) == len(results)
+    opt_add = 1 if record.preoptimization is not None else 0
+    assert len(opts) + opt_add == len(results)

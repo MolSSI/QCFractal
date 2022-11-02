@@ -5,6 +5,8 @@ from .dataset_models import (
     GridoptimizationDatasetEntry,
 )
 from .record_models import (
+    serialize_key,
+    deserialize_key,
     ScanDimension,
     ScanTypeEnum,
     StepTypeEnum,

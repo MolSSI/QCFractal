@@ -19,6 +19,8 @@ from qcfractal.components.services.db_models import ServiceQueueORM, ServiceDepe
 from qcfractal.components.singlepoint.record_db_models import QCSpecificationORM
 from qcfractal.db_socket.helpers import insert_general
 from qcportal.gridoptimization import (
+    serialize_key,
+    deserialize_key,
     ScanDimension,
     StepTypeEnum,
     GridoptimizationSpecification,
@@ -81,43 +83,6 @@ def expand_ndimensional_grid(
                 connections.append((seed, new))
 
     return connections
-
-
-def serialize_key(key: Union[str, Sequence[int]]) -> str:
-    """
-    Serializes the key used to map to optimization calculations
-
-    A string `key` is used for preoptimization
-
-    Parameters
-    ----------
-    key
-        A string or sequence of integers denoting the position in the grid
-
-    Returns
-    -------
-    :
-        A string representation of the key
-    """
-
-    if isinstance(key, str):
-        return key
-    else:
-        return json.dumps(key)
-
-
-def deserialize_key(key: str) -> Union[str, Tuple[int, ...]]:
-    """
-    Deserializes the key used to map to optimization calculations
-
-    This turns the key back into a form usable for creating constraints
-    """
-
-    r = json.loads(key)
-    if isinstance(r, str):
-        return r
-    else:
-        return tuple(r)
 
 
 def calculate_starting_grid(scans_dict: Sequence[Dict[str, Any]], molecule: Molecule) -> List[int]:

@@ -5,6 +5,8 @@ from .dataset_models import (
     TorsiondriveDatasetEntry,
 )
 from .record_models import (
+    serialize_key,
+    deserialize_key,
     TorsiondriveKeywords,
     TorsiondriveSpecification,
     TorsiondriveAddBody,

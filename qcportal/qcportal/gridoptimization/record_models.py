@@ -1,5 +1,6 @@
+import json
 from enum import Enum
-from typing import List, Union, Optional, Dict, Set, Iterable
+from typing import List, Union, Optional, Dict, Set, Iterable, Tuple, Sequence
 
 from pydantic import BaseModel, Extra, Field, constr, validator
 from typing_extensions import Literal
@@ -9,6 +10,46 @@ from qcportal.molecules import Molecule
 from qcportal.optimization.record_models import OptimizationSpecification, OptimizationRecord
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from qcportal.utils import recursive_normalizer
+
+
+def serialize_key(key: Union[str, Sequence[int]]) -> str:
+    """
+    Serializes the key used to map to optimization calculations
+
+    A string `key` is used for preoptimization
+
+    Parameters
+    ----------
+    key
+        A string or sequence of integers denoting the position in the grid
+
+    Returns
+    -------
+    :
+        A string representation of the key
+    """
+
+    if key == "preoptimization":
+        return key
+
+    if isinstance(key, str):
+        return key
+    else:
+        return json.dumps(key)
+
+
+def deserialize_key(key: str) -> Union[str, Tuple[int, ...]]:
+    """
+    Deserializes the key used to map to optimization calculations
+
+    This turns the key back into a form usable for creating constraints
+    """
+
+    if key == "preoptimization":
+        return key
+
+    r = json.loads(key)
+    return tuple(r)
 
 
 class ScanTypeEnum(str, Enum):
@@ -238,10 +279,21 @@ class GridoptimizationRecord(BaseRecord):
         return self.raw_data.initial_molecule
 
     @property
-    def optimizations(self) -> Dict[str, OptimizationRecord]:
+    def optimizations(self) -> Dict[Tuple[int, ...], OptimizationRecord]:
         self._make_caches()
-
         if self.raw_data.optimizations_cache is None:
             self._fetch_optimizations()
 
-        return self.raw_data.optimizations_cache
+        return {deserialize_key(k): v for k, v in self.raw_data.optimizations_cache.items() if k != "preoptimization"}
+
+    @property
+    def preoptimization(self) -> Optional[OptimizationRecord]:
+        self._make_caches()
+        if self.raw_data.optimizations_cache is None:
+            self._fetch_optimizations()
+
+        return self.raw_data.optimizations_cache.get("preoptimization", None)
+
+    @property
+    def final_energies(self) -> Dict[Tuple[int, ...], float]:
+        return {k: v.energies[-1] for k, v in self.optimizations.items() if v.energies}

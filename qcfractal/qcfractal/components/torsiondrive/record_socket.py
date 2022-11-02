@@ -28,6 +28,7 @@ from qcportal.optimization import OptimizationSpecification
 from qcportal.outputstore import OutputTypeEnum
 from qcportal.record_models import PriorityEnum, RecordStatusEnum
 from qcportal.torsiondrive import (
+    serialize_key,
     TorsiondriveSpecification,
     TorsiondriveQueryFilters,
 )
@@ -219,7 +220,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
         else:
             # check that what we have is consistent with what the torsiondrive package reports
             lowest_energies = td_api.collect_lowest_energies(service_state.torsiondrive_state)
-            lowest_energies = {json.dumps(x): y for x, y in lowest_energies.items()}
+            lowest_energies = {serialize_key(x): y for x, y in lowest_energies.items()}
 
             our_energies = {x.key: [] for x in td_orm.optimizations}
             for x in td_orm.optimizations:
@@ -305,7 +306,7 @@ class TorsiondriveRecordSocket(BaseRecordSocket):
                 raise RuntimeError("Error adding optimizations - likely a developer error: " + meta.error_string)
 
             # ids will be in the same order as the molecules (and the geometries from td)
-            opt_key = json.dumps(grid_id)
+            opt_key = serialize_key(grid_id)
             for position, opt_id in enumerate(opt_ids):
                 svc_dep = ServiceDependencyORM(
                     record_id=opt_id,

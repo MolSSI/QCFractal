@@ -1,4 +1,5 @@
-from typing import List, Optional, Tuple, Union, Dict, Set, Iterable
+import json
+from typing import List, Optional, Tuple, Union, Dict, Set, Iterable, Sequence
 
 from pydantic import BaseModel, Field, Extra, root_validator, constr, validator
 from typing_extensions import Literal
@@ -8,6 +9,35 @@ from qcportal.molecules import Molecule
 from qcportal.record_models import BaseRecord, RecordAddBodyBase, RecordQueryFilters
 from qcportal.utils import recursive_normalizer
 from ..optimization.record_models import OptimizationSpecification, OptimizationRecord
+
+
+def serialize_key(key: Union[str, Sequence[int]]) -> str:
+    """
+    Serializes the key used to map to optimization calculations
+
+    Parameters
+    ----------
+    key
+        A string or sequence of integers denoting the position in the grid
+
+    Returns
+    -------
+    :
+        A string representation of the key
+    """
+
+    return json.dumps(key)
+
+
+def deserialize_key(key: str) -> Union[str, Tuple[int, ...]]:
+    """
+    Deserializes the key used to map to optimization calculations
+
+    This turns the key back into a form usable for creating constraints
+    """
+
+    r = json.loads(key)
+    return tuple(r)
 
 
 class TorsiondriveKeywords(BaseModel):
@@ -206,17 +236,19 @@ class TorsiondriveRecord(BaseRecord):
     @property
     def optimizations(self) -> Dict[str, List[OptimizationRecord]]:
         self._make_caches()
-
         if self.raw_data.optimizations_cache is None:
             self._fetch_optimizations()
 
-        return self.raw_data.optimizations_cache
+        return {deserialize_key(k): v for k, v in self.raw_data.optimizations_cache.items()}
 
     @property
-    def minimum_optimizations(self) -> Dict[str, OptimizationRecord]:
+    def minimum_optimizations(self) -> Dict[Tuple[float, ...], OptimizationRecord]:
         self._make_caches()
-
         if self.raw_data.minimum_optimizations_cache is None:
             self._fetch_minimum_optimizations()
 
-        return self.raw_data.minimum_optimizations_cache
+        return {deserialize_key(k): v for k, v in self.raw_data.minimum_optimizations_cache.items()}
+
+    @property
+    def final_energies(self) -> Dict[Tuple[float, ...], float]:
+        return {k: v.energies[-1] for k, v in self.minimum_optimizations.items() if v.energies}
