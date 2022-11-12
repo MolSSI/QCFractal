@@ -48,5 +48,5 @@ def test_optimizationrecord_model(
     traj = record.trajectory
     assert len(traj) == len(result.trajectory)
 
-    traj_energy = [x.properties.return_energy for x in traj]
+    traj_energy = [x.properties["return_energy"] for x in traj]
     assert traj_energy == record.energies

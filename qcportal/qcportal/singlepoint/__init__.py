@@ -9,7 +9,6 @@ from .record_models import (
     QCSpecification,
     SinglepointDriver,
     SinglepointProtocols,
-    SinglepointProperties,
     SinglepointRecord,
     WavefunctionProperties,
     SinglepointAddBody,

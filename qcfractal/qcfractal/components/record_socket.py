@@ -631,6 +631,11 @@ class RecordSocket:
         if record_orm.is_service:
             raise RuntimeError("Cannot update completed task with a service")
 
+        # For slow migration
+        # This is for handling edge cases w.r.t. restarts
+        record_orm.new_properties = None
+        record_orm.new_extras = None
+
         handler = self._handler_map[record_orm.record_type]
 
         # Update record-specific fields

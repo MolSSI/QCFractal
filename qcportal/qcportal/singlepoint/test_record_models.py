@@ -72,6 +72,11 @@ def test_singlepointrecord_model(
     assert record.record_type == "singlepoint"
     assert record.specification == input_spec
 
-    assert record.return_result == result.return_result
-    assert record.properties.dict(encoding="json") == result.properties.dict(encoding="json")
+    result_dict = result.dict(
+        include={"return_result": True, "extras": {"qcvars"}, "properties": True}, encoding="json"
+    )
+    assert record.return_result == result_dict["return_result"]
+
+    all_properties = result_dict["properties"]
+    assert record.properties == all_properties
     assert record.wavefunction.dict(encoding="json") == result.wavefunction.dict(encoding="json")

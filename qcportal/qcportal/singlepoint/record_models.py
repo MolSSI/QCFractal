@@ -5,7 +5,6 @@ from pydantic import BaseModel, Field, constr, validator, Extra
 from qcelemental.models import Molecule
 from qcelemental.models.results import (
     AtomicResultProtocols as SinglepointProtocols,
-    AtomicResultProperties as SinglepointProperties,
     WavefunctionProperties,
 )
 from typing_extensions import Literal
@@ -57,7 +56,7 @@ class SinglepointRecord(BaseRecord):
         molecule_id: int
         molecule: Optional[Molecule]
         return_result: Any
-        properties: Optional[SinglepointProperties]
+        properties: Optional[Dict[str, Any]]
         wavefunction: Optional[WavefunctionProperties] = None
 
     raw_data: _DataModel
@@ -113,7 +112,7 @@ class SinglepointRecord(BaseRecord):
         return self.raw_data.return_result
 
     @property
-    def properties(self) -> SinglepointProperties:
+    def properties(self) -> Optional[Dict[str, Any]]:
         return self.raw_data.properties
 
     @property

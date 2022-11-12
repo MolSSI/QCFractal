@@ -15,6 +15,7 @@ from sqlalchemy import (
     Index,
     Boolean,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
@@ -163,6 +164,9 @@ class BaseRecordORM(BaseORM):
     # Extra fields
     extras = Column(MsgpackExt)
 
+    # Temporary - for slow migration
+    new_extras = Column(JSONB)
+
     # Compute status
     # (Denormalized from compute history table for faster lookup during manager claiming/returning)
     status = Column(Enum(RecordStatusEnum), nullable=False)
@@ -209,6 +213,9 @@ class BaseRecordORM(BaseORM):
         cascade="all, delete-orphan",
     )
 
+    # For slow migration
+    new_properties = Column(JSONB)
+
     # Native files returned from the computation
     native_files = relationship(
         NativeFileORM, collection_class=attribute_mapped_collection("name"), cascade="all, delete-orphan"
@@ -230,11 +237,20 @@ class BaseRecordORM(BaseORM):
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
         # strip user/group ids
-        exclude = self.append_exclude(exclude, "lname", "owner_user_id", "owner_group_id")
+        exclude = self.append_exclude(exclude, "owner_user_id", "owner_group_id")
 
         d = BaseORM.model_dict(self, exclude)
+
+        new_extras = d.pop("new_extras", None)
+        new_properties = d.pop("new_properties", None)
+
+        if new_extras:
+            d["extras"] = new_extras
+            d["properties"] = new_properties
+
         d["owner_user"] = self.owner_user.username if self.owner_user is not None else None
         d["owner_group"] = self.owner_group.groupname if self.owner_group is not None else None
+
         return d
 
     @property

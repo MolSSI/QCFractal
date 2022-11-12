@@ -71,6 +71,18 @@ def test_singlepoint_client_add_get(submitter_client: PortalClient, spec: QCSpec
     assert recs[2].raw_data.molecule == ne4
 
 
+def test_singlepoint_client_properties(
+    snowflake_client: PortalClient, storage_socket: SQLAlchemySocket, activated_manager_name: ManagerName
+):
+    sp_id = run_test_data(storage_socket, activated_manager_name, "sp_psi4_peroxide_energy_wfn")
+
+    rec = snowflake_client.get_singlepoints(sp_id)
+
+    assert len(rec.properties) > 0
+    assert rec.properties["calcinfo_nbasis"] == rec.properties["calcinfo_nmo"] == 12
+    assert rec.properties["calcinfo_nbasis"] == rec.properties["calcinfo_nmo"] == 12
+
+
 def test_singlepoint_client_add_existing_molecule(snowflake_client: PortalClient):
     spec = test_specs[0]
 
