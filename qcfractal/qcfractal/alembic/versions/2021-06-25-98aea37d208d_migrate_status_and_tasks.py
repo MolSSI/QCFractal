@@ -1,18 +1,19 @@
 """migrate_status_and_tasks
 
 Revision ID: 98aea37d208d
-Revises: 88182596f844
+Revises: 4257f1814d0d
 Create Date: 2021-06-25 09:34:07.378008
 
 """
-from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.sql import func, column
+from alembic import op
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.orm.session import Session
+from sqlalchemy.sql import func, column
 
 # revision identifiers, used by Alembic.
 revision = "98aea37d208d"
-down_revision = "88182596f844"
+down_revision = "4257f1814d0d"
 branch_labels = None
 depends_on = None
 
@@ -21,29 +22,29 @@ def upgrade():
     # Queue manager
     op.drop_column("queue_manager", "procedures")
 
-    # Migrate base_result status to new enum, taking into account task_queue and service_queue statuses
-    old_enum = sa.Enum("incomplete", "complete", "running", "error", name="recordstatusenum")
-    new_enum = sa.Enum(
-        "complete", "waiting", "running", "error", "cancelled", "invalid", "deleted", name="recordstatusenum"
-    )
+    # We are going to cheat to make this faster
+    # First, we remove all 'incomplete' by replacing with the task/service status
+    # Then, we rename 'incomplete' to 'invalid', which is a new value.
+    # I tried doing creating a new type and then doing an in-place ALTER COLUMN,
+    # but took way too long and rewrote the whole table (?)
 
-    # For the temporary, we only need to add "waiting" and "cancelled", then migrate incomplete records with
-    # task status of 'waiting' to 'waiting' (and running -> running)
-    tmp_enum = sa.Enum("incomplete", "complete", "running", "error", "waiting", "cancelled", name="_statustmp")
-
-    # Alter the existing base_result table to use the temporary enum and then drop the old one
-    tmp_enum.create(op.get_bind(), checkfirst=False)
-    op.execute("ALTER TABLE base_result ALTER COLUMN status TYPE _statustmp USING status::text::_statustmp")
-    old_enum.drop(op.get_bind(), checkfirst=False)
-
-    # Now migrate the status in base result to reflect any status in the task/service queues
+    # Migrate the status in base result to reflect any status in the task/service queues
     # The only thing to really change is 'incomplete' base_result rows. Change those to be the status
     # of the task/service)
     op.execute(
-        "UPDATE base_result SET status = task_queue.status::text::_statustmp FROM task_queue WHERE base_result.id = task_queue.base_result_id AND base_result.status = 'incomplete'"
+        """UPDATE base_result
+           SET status = task_queue.status::text::recordstatusenum
+           FROM task_queue
+           WHERE base_result.id = task_queue.base_result_id
+           AND base_result.status = 'incomplete'"""
     )
+
     op.execute(
-        "UPDATE base_result SET status = service_queue.status::text::_statustmp FROM service_queue WHERE base_result.id = service_queue.procedure_id AND base_result.status = 'incomplete'"
+        """UPDATE base_result
+           SET status = service_queue.status::text::recordstatusenum
+           FROM service_queue
+           WHERE base_result.id = service_queue.procedure_id
+           AND base_result.status = 'incomplete'"""
     )
 
     # Delete all tasks/services for completed records
@@ -70,7 +71,7 @@ def upgrade():
     op.execute(
         """
                UPDATE base_result
-               SET status='cancelled'
+               SET status = 'cancelled'
                WHERE id IN (
                    SELECT base_result.id FROM base_result
                    LEFT OUTER JOIN task_queue ON task_queue.base_result_id = base_result.id
@@ -84,7 +85,7 @@ def upgrade():
     op.execute(
         """
                UPDATE base_result
-               SET status='cancelled'
+               SET status = 'cancelled'
                WHERE id IN (
                    SELECT base_result.id FROM base_result
                    LEFT OUTER JOIN service_queue ON service_queue.procedure_id = base_result.id
@@ -99,7 +100,7 @@ def upgrade():
     op.execute(
         """
                UPDATE base_result
-               SET status='waiting'
+               SET status = 'waiting'
                WHERE id IN (
                    SELECT base_result.id FROM base_result
                    LEFT OUTER JOIN queue_manager ON base_result.manager_name = queue_manager.name
@@ -110,10 +111,13 @@ def upgrade():
                """
     )
 
-    # Now alter base_result to the new status enum, now that all the incompletes are removed
-    new_enum.create(op.get_bind(), checkfirst=False)
-    op.execute("ALTER TABLE base_result ALTER COLUMN status TYPE recordstatusenum USING status::text::recordstatusenum")
-    tmp_enum.drop(op.get_bind(), checkfirst=False)
+    # There should be no more incompletes. Check
+    session = Session(op.get_bind())
+    r = session.execute("""SELECT id FROM base_result WHERE status = 'incomplete'""").scalars().first()
+    assert r is None
+
+    # Now rename 'incomplete' to 'invalid'
+    op.execute("ALTER TYPE recordstatusenum RENAME VALUE 'incomplete' TO 'invalid'")
 
     # Now do the required_programs column of the task_queue
     # Form this from the program and procedure columns

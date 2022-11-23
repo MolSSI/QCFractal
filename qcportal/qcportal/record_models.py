@@ -53,12 +53,14 @@ class RecordStatusEnum(str, Enum):
     The state of a record object. The states which are available are a finite set.
     """
 
+    # This ordering shouldn't change in the near future, as it conflicts
+    # a bit with some migration testing
     complete = "complete"
-    waiting = "waiting"
+    invalid = "invalid"
     running = "running"
     error = "error"
+    waiting = "waiting"
     cancelled = "cancelled"
-    invalid = "invalid"
     deleted = "deleted"
 
     @classmethod
