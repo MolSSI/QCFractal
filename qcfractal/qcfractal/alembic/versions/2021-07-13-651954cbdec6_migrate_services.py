@@ -144,7 +144,7 @@ def upgrade():
         # Handle outputs and errors
         stdout = service.extra.get("stdout")
         if stdout:
-            stdout_id = session.execute(kvstore_table.insert().values({"value": stdout}).returning(sa.text("id")))
+            stdout_id = session.execute(kvstore_table.insert().values({"value": stdout}).returning(sa.column("id")))
             stdout_id = list(stdout_id)
             assert len(stdout_id) == 1 and len(stdout_id[0]) == 1
             stmt = (
@@ -156,7 +156,7 @@ def upgrade():
 
         error = service.extra.get("error")
         if error:
-            error_id = session.execute(kvstore_table.insert().values({"value": error}).returning(sa.text("id")))
+            error_id = session.execute(kvstore_table.insert().values({"value": error}).returning(sa.column("id")))
             error_id = list(error_id)
             assert len(error_id) == 1 and len(error_id[0]) == 1
             stmt = (
