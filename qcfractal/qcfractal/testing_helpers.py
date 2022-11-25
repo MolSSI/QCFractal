@@ -70,7 +70,9 @@ class TestingSnowflake(FractalSnowflake):
         # Have a short token expiration (in case enable_security is True)
         extra_config = {}
 
-        api_config = {"jwt_access_token_expires": 1}  # expire tokens in 1 second
+        # expire tokens in 5 seconds
+        # Too short and this interferes with some other tests
+        api_config = {"jwt_access_token_expires": 5}
 
         # Smaller api limits (so we can test chunking)
         api_limits = {
