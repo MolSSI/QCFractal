@@ -21,12 +21,18 @@ def upgrade():
     new_enum = sa.Enum("none", "lzma", "zstd", name="compressionenum")
     new_enum.create(op.get_bind(), checkfirst=True)
 
-    op.execute(
-        "ALTER TABLE output_store ALTER COLUMN compression TYPE compressionenum USING compression::text::compressionenum"
-    )
-    op.execute(
-        "ALTER TABLE native_file ALTER COLUMN compression TYPE compressionenum USING compression::text::compressionenum"
-    )
+    op.add_column("output_store", sa.Column("new_compression", new_enum))
+    op.add_column("native_file", sa.Column("new_compression", new_enum))
+
+    op.execute("UPDATE output_store SET new_compression = compression::text::compressionenum")
+    op.execute("UPDATE native_file SET new_compression = compression::text::compressionenum")
+
+    op.drop_column("output_store", "compression")
+    op.alter_column("output_store", "new_compression", new_column_name="compression")
+
+    op.drop_column("native_file", "compression")
+    op.alter_column("native_file", "new_compression", new_column_name="compression", nullable=False)
+
     op.execute("DROP TYPE compressionenum_old")
 
     # ### end Alembic commands ###
