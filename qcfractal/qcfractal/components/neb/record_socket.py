@@ -252,12 +252,9 @@ class NEBRecordSocket(BaseRecordSocket):
                             .limit(1)
                         )
 
-                        with self.root_socket.optional_session(session, True) as session:
-                            TS_mol = session.execute(stmt).scalar_one_or_none()
-                            if TS_mol is None:
-                                raise MissingDataError(
-                                    "MoleculeORM of a guessed transition state from NEB can't be found."
-                                )
+                        TS_mol = session.execute(stmt).scalar_one_or_none()
+                        if TS_mol is None:
+                            raise MissingDataError("MoleculeORM of a guessed transition state from NEB can't be found.")
 
                         if len(service_state.tshessian) == 0:
                             output += (
