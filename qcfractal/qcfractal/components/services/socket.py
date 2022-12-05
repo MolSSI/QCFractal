@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select, or_
 from sqlalchemy.dialects.postgresql import array_agg
-from sqlalchemy.orm import contains_eager, make_transient, aliased, defer
+from sqlalchemy.orm import contains_eager, make_transient, aliased, defer, selectinload, joinedload
 
 from qcfractal.components.outputstore.db_models import OutputStoreORM
 from qcfractal.components.record_db_models import BaseRecordORM, RecordComputeHistoryORM
@@ -96,13 +96,27 @@ class ServiceSocket:
             True if the service has completely finished, false if there are still more iterations
         """
 
-        stmt = select(ServiceQueueORM).join(ServiceQueueORM.record).where(ServiceQueueORM.id == service_id)
+        stmt = select(ServiceQueueORM)
+        stmt = stmt.options(selectinload(ServiceQueueORM.record))
+        stmt = stmt.options(selectinload(ServiceQueueORM.dependencies))
+        stmt = stmt.where(ServiceQueueORM.id == service_id)
+        stmt = stmt.with_for_update()
 
         service_orm = session.execute(stmt).scalar_one_or_none()
 
         if service_orm is None:
             self._logger.warning(f"Service {service_id} does not exist anymore!")
             return True
+
+        # All tasks successfully completed?
+        # Since this is done asynchronously, then something could have happened
+        # between the creation of the internal job and this function call (invalidated, etc)
+        all_status = {x.record.status for x in service_orm.dependencies}
+        print(all_status)
+        if all_status != {RecordStatusEnum.complete} and all_status != set():
+            self._logger.info(
+                f"Record {service_orm.record_id} (service {service_orm.id}) does NOT have all tasks completed. Ignoring..."
+            )
 
         # Call record-dependent iterate service
         # If that function returns 0, indicating that the service has successfully completed
@@ -192,8 +206,8 @@ class ServiceSocket:
         stmt = (
             select(ServiceQueueORM)
             .options(defer("service_state"))  # could be large, but is not needed
+            .options(joinedload(ServiceQueueORM.record))
             .join(status_cte, status_cte.c.service_id == ServiceQueueORM.id)
-            .join(ServiceQueueORM.record)
             .where(status_cte.c.task_statuses.contained_by(["complete", "error"]))
             .where(status_cte.c.task_statuses.contains(["error"]))
         )
