@@ -252,13 +252,13 @@ class ServiceSocket:
             job_id = self.root_socket.internal_jobs.add(
                 name=jobname,
                 scheduled_date=datetime.utcnow(),
-                unique_name=jobname,
+                unique_name=True,
                 function="services._iterate_service",
                 kwargs={"service_id": service_id},
                 user_id=None,
                 session=session,
             )
-            self._logger.debug(f"Added internal job {job_id} for {jobname}")
+            self._logger.debug(f"Internal job {job_id} for {jobname} queued")
 
         session.commit()
 

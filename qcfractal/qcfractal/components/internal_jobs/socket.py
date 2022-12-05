@@ -91,7 +91,6 @@ class InternalJobSocket:
         """
 
         with self.root_socket.optional_session(session) as session:
-            job_id = None
             if unique_name:
                 stmt = insert(InternalJobORM)
                 stmt = stmt.values(
@@ -115,7 +114,23 @@ class InternalJobSocket:
                     stmt = select(InternalJobORM.id).where(InternalJobORM.unique_name == name)
                     job_id = session.execute(stmt).scalar_one_or_none()
 
-            if job_id is None:
+                if job_id is None:
+                    # Should be very rare (time-of-check to time-of-use condition: was deleted
+                    # after checking for existence but before getting ID)
+                    self._logger.debug(f"Handling job {name} time-of-check to time-of-use condition")
+                    self.add(
+                        name=name,
+                        scheduled_date=scheduled_date,
+                        function=function,
+                        kwargs=kwargs,
+                        user_id=user_id,
+                        unique_name=unique_name,
+                        after_function=after_function,
+                        after_function_kwargs=after_function_kwargs,
+                        session=session,
+                    )
+
+            else:
                 job_orm = InternalJobORM(
                     name=name,
                     scheduled_date=scheduled_date,
@@ -292,6 +307,8 @@ class InternalJobSocket:
         job_orm.runner_hostname = self._hostname
         job_orm.runner_uuid = job_status._runner_uuid
         job_orm.status = InternalJobStatusEnum.running
+
+        # Releases the row-level lock (from the with_for_update() in the original query)
         session.commit()
 
         try:
@@ -411,6 +428,10 @@ class InternalJobSocket:
         stmt = stmt.with_for_update(skip_locked=True)
 
         while True:
+            if end_event.is_set():
+                self._logger.info(f"UUID={runner_uuid} shutting down")
+                break
+
             self._logger.debug(f"UUID={runner_uuid} checking for jobs")
 
             # Pick up anything waiting, or anything that hasn't been updated in a while (12 update periods)
@@ -444,9 +465,6 @@ class InternalJobSocket:
 
             # Stop the updating thread and cleanup
             job_status.stop()
-
-            if end_event.is_set():
-                self._logger.info(f"UUID={runner_uuid} shutting down")
 
     def run_processes(self, end_event):
         """
