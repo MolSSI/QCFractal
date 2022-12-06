@@ -112,7 +112,6 @@ class ServiceSocket:
         # Since this is done asynchronously, then something could have happened
         # between the creation of the internal job and this function call (invalidated, etc)
         all_status = {x.record.status for x in service_orm.dependencies}
-        print(all_status)
         if all_status != {RecordStatusEnum.complete} and all_status != set():
             self._logger.info(
                 f"Record {service_orm.record_id} (service {service_orm.id}) does NOT have all tasks completed. Ignoring..."
@@ -135,7 +134,6 @@ class ServiceSocket:
                 "error_message": "Error iterating service: " + str(err) + "\n" + traceback.format_exc(),
             }
 
-            print(error["error_message"])
             self.root_socket.records.update_failed_service(session, service_orm.record, error)
             session.commit()
             self.root_socket.notify_finished_watch(service_orm.record_id, RecordStatusEnum.error)
