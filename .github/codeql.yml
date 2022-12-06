@@ -1,0 +1,5 @@
+query-filters:
+  - exclude:
+      id: py/not-named-self
+  - exclude:
+      id: py/missing-call-to-init
