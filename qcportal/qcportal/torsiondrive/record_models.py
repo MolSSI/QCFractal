@@ -175,7 +175,8 @@ class TorsiondriveRecord(BaseRecord):
             for k, v in self.raw_data.optimizations_cache.items():
                 # Remove any optimizations without energies
                 v2 = [x for x in v if x.energies]
-                self.raw_data.minimum_optimizations_cache[k] = min(v2, key=lambda x: (x.energies[-1], x.id))
+                if v2:
+                    self.raw_data.minimum_optimizations_cache[k] = min(v2, key=lambda x: (x.energies[-1], x.id))
 
     def _fetch_initial_molecules(self):
         self._assert_online()
