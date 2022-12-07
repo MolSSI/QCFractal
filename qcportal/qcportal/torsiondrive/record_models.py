@@ -170,9 +170,12 @@ class TorsiondriveRecord(BaseRecord):
         if self.raw_data.minimum_optimizations_cache is None:
 
             # chooses the lowest id if there are records with the same energy
-            self.raw_data.minimum_optimizations_cache = {
-                k: min(v, key=lambda x: (x.energies[-1], x.id)) for k, v in self.raw_data.optimizations_cache.items()
-            }
+            self.raw_data.minimum_optimizations_cache = {}
+
+            for k, v in self.raw_data.optimizations_cache.items():
+                # Remove any optimizations without energies
+                v2 = [x for x in v if x.energies]
+                self.raw_data.minimum_optimizations_cache[k] = min(v2, key=lambda x: (x.energies[-1], x.id))
 
     def _fetch_initial_molecules(self):
         self._assert_online()
