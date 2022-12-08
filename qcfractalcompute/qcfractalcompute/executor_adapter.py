@@ -64,7 +64,7 @@ class ExecutorAdapter(BaseAdapter):
         return ret
 
     def await_results(self) -> bool:
-        for result in self.queue.values():
+        for result in list(self.queue.values()):
             result.wait()
 
         return True
