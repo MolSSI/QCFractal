@@ -41,7 +41,10 @@ dependencies:
 
   # Specific codes below
   - psi4
-  - rdkit
+
+  # Pins for https://github.com/conda-forge/rdkit-feedstock/issues/111
+  - rdkit==2022.03.5
+  - boost-cpp==1.74.0
 
   # Geometric service
   - pip:
