@@ -72,7 +72,7 @@ def test_internal_jobs_socket_run(storage_socket: SQLAlchemySocket):
     end_event = threading.Event()
     th = threading.Thread(target=storage_socket.internal_jobs._run_loop, args=(end_event,))
     th.start()
-    time.sleep(3)
+    time.sleep(6)
     time_1 = datetime.utcnow()
 
     try:
