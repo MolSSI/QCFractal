@@ -22,7 +22,7 @@ requirements:
 
 test:
   imports:
-    - qcarchivetesting.load_molecule_data
+    - qcarchivetesting.helpers
 
 about:
   home: https://github.com/MolSSI/{{ name }}
