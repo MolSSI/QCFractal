@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, String, JSON, Float, Index, CHAR, Boolean
+from sqlalchemy import Column, Integer, String, JSON, Float, Index, CHAR, Boolean, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 
 from qcfractal.db_socket.base_orm import BaseORM
@@ -59,8 +59,8 @@ class MoleculeORM(BaseORM):
     extras = Column(JSON)
 
     __table_args__ = (
-        Index("ix_molecule_molecule_hash", "molecule_hash", postgresql_using="hash"),
         Index("ix_molecule_identifiers", "identifiers", postgresql_using="gin"),
+        UniqueConstraint("molecule_hash", name="ux_molecule_molecule_hash"),
     )
 
     def model_dict(self, exclude: Optional[Iterable[str]] = None) -> Dict[str, Any]:
