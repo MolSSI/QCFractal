@@ -3,9 +3,9 @@ BUILDDIR      = /tmp/qca_conda_build
 CFUSER        = qcarchive
 CFLABEL       = next
 
-.PHONY: qcfractal qcportal qcfractalcompute clean all
+.PHONY: qcfractal qcportal qcfractalcompute qcarchivetesting clean all
 
-all: qcfractal qcfractalcompute qcportal
+all: qcfractal qcfractalcompute qcportal qcarchivetesting
 
 clean:
 	rm -Rf $(BUILDDIR)
@@ -18,6 +18,9 @@ qcfractalcompute: qcportal
 
 qcfractal: qcfractalcompute
 	conda-build -c conda-forge --output-folder $(BUILDDIR) qcfractal/
+
+qcarchivetesting: qcfractal
+	conda-build -c conda-forge --output-folder $(BUILDDIR) qcarchivetesting/
 
 upload: 
 	anaconda upload $(BUILDDIR)/noarch/qc*-py_0.tar.bz2 --user $(CFUSER) --label $(CFLABEL)
