@@ -43,10 +43,3 @@ line-length = 120
 
 [tool.versioningit.vcs]
 default-tag = "0.0.99" # useful for CI/shallow clones
-
-
-[tool.pytest.ini_options]
-markers = ["slow"]
-
-# We have a class that begins with Test, but is not a test itself
-python_classes = ["!TestingSnowflake"]
