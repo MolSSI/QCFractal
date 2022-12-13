@@ -960,8 +960,8 @@ class BaseDatasetSocket:
                 stmt = stmt.where(self.record_item_orm.dataset_id == dataset_id)
                 record_ids = session.execute(stmt).scalars().all()
 
-            stmt = delete(self.dataset_orm)
-            stmt = stmt.where(self.dataset_orm.id == dataset_id)
+            stmt = delete(BaseDatasetORM)
+            stmt = stmt.where(BaseDatasetORM.id == dataset_id)
             session.execute(stmt)
 
             if delete_records:
