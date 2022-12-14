@@ -4,7 +4,7 @@ import ipaddress
 from typing import TYPE_CHECKING
 
 from qcarchivetesting import load_ip_test_data
-from qcfractal.testing_helpers import TestingSnowflake
+from qcfractal.testing_helpers import QCATestingSnowflake
 from qcportal.serverinfo.models import AccessLogQueryFilters
 
 if TYPE_CHECKING:
@@ -48,7 +48,7 @@ def test_serverinfo_socket_geoip(storage_socket: SQLAlchemySocket):
                 assert our_data["ip_long"] == ref_data["location"]["longitude"]
 
 
-def test_serverinfo_socket_save_access(secure_snowflake: TestingSnowflake):
+def test_serverinfo_socket_save_access(secure_snowflake: QCATestingSnowflake):
 
     storage_socket = secure_snowflake.get_storage_socket()
 

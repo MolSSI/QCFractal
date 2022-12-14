@@ -11,7 +11,7 @@ import pytest
 from qcfractal.config import FractalConfig
 from qcfractal.db_socket.socket import SQLAlchemySocket
 from qcfractal.postgres_harness import TemporaryPostgres
-from qcfractal.testing_helpers import TestingSnowflake
+from qcfractal.testing_helpers import QCATestingSnowflake
 from qcportal.managers import ManagerName
 from .helpers import valid_encodings, geoip_path, test_users
 
@@ -119,7 +119,7 @@ def stopped_snowflake(temporary_database, request):
     """
 
     db_config = temporary_database.config
-    with TestingSnowflake(db_config, encoding=request.param, start_flask=False) as server:
+    with QCATestingSnowflake(db_config, encoding=request.param, start_flask=False) as server:
         yield server
 
 
@@ -140,7 +140,7 @@ def secure_snowflake(temporary_database, request):
     """
 
     db_config = temporary_database.config
-    with TestingSnowflake(
+    with QCATestingSnowflake(
         db_config,
         encoding=request.param,
         start_flask=True,
@@ -159,7 +159,7 @@ def secure_snowflake_allow_read(temporary_database, request):
     """
 
     db_config = temporary_database.config
-    with TestingSnowflake(
+    with QCATestingSnowflake(
         db_config,
         encoding=request.param,
         start_flask=True,

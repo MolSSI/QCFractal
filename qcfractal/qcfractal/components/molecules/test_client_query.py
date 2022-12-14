@@ -3,14 +3,14 @@ from __future__ import annotations
 import pytest
 from qcelemental.models import Molecule
 
-from qcfractal.testing_helpers import TestingSnowflake
+from qcfractal.testing_helpers import QCATestingSnowflake
 from qcportal import PortalClient
 
 
 @pytest.fixture(scope="module")
 def queryable_molecules_client(module_temporary_database):
     db_config = module_temporary_database.config
-    with TestingSnowflake(db_config, encoding="application/json") as server:
+    with QCATestingSnowflake(db_config, encoding="application/json") as server:
         client = server.client()
 
         elements1 = ["h", "he", "li", "be", "b", "c", "n", "o", "f", "ne"]

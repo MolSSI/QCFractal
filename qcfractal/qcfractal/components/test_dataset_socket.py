@@ -7,7 +7,7 @@ import pytest
 from qcportal.record_models import PriorityEnum
 
 if TYPE_CHECKING:
-    from qcfractal.testing_helpers import TestingSnowflake
+    from qcfractal.testing_helpers import QCATestingSnowflake
 
 
 @pytest.mark.parametrize(
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     ],
 )
 def test_dataset_socket_submit_defaults(
-    secure_snowflake: TestingSnowflake,
+    secure_snowflake: QCATestingSnowflake,
     default_tag: str,
     default_priority: PriorityEnum,
     default_user: Optional[str],

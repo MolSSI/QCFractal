@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING
 from qcportal.serverinfo import ErrorLogQueryFilters
 
 if TYPE_CHECKING:
-    from qcfractal.testing_helpers import TestingSnowflake
+    from qcfractal.testing_helpers import QCATestingSnowflake
 
 
-def test_serverinfo_socket_save_error(secure_snowflake: TestingSnowflake):
+def test_serverinfo_socket_save_error(secure_snowflake: QCATestingSnowflake):
 
     storage_socket = secure_snowflake.get_storage_socket()
     admin_id = storage_socket.users.get("admin_user")["id"]

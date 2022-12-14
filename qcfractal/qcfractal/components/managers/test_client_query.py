@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from qcfractal.testing_helpers import TestingSnowflake
+from qcfractal.testing_helpers import QCATestingSnowflake
 from qcportal import PortalClient
 from qcportal.managers import ManagerName
 
@@ -10,7 +10,7 @@ from qcportal.managers import ManagerName
 @pytest.fixture(scope="module")
 def queryable_managers_client(module_temporary_database):
     db_config = module_temporary_database.config
-    with TestingSnowflake(db_config, encoding="application/json") as server:
+    with QCATestingSnowflake(db_config, encoding="application/json") as server:
 
         for cluster_i in range(4):
             for host_i in range(10):

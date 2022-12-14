@@ -6,7 +6,7 @@ import pytest
 
 from qcarchivetesting import test_users
 from qcfractal.components.serverinfo.test_access_socket import test_ips
-from qcfractal.testing_helpers import TestingSnowflake
+from qcfractal.testing_helpers import QCATestingSnowflake
 from qcportal import PortalClient
 
 
@@ -15,7 +15,7 @@ def queryable_access_client(module_temporary_database):
     db_config = module_temporary_database.config
 
     # Don't log accesses
-    with TestingSnowflake(
+    with QCATestingSnowflake(
         db_config, encoding="application/json", enable_security=True, create_users=True, log_access=False
     ) as server:
         # generate a bunch of test data

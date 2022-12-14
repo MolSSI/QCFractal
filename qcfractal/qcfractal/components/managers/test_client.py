@@ -4,12 +4,12 @@ from datetime import datetime
 
 import pytest
 
-from qcfractal.testing_helpers import TestingSnowflake
+from qcfractal.testing_helpers import QCATestingSnowflake
 from qcportal import PortalRequestError
 from qcportal.managers import ManagerName, ManagerStatusEnum
 
 
-def test_manager_client_get(snowflake: TestingSnowflake):
+def test_manager_client_get(snowflake: QCATestingSnowflake):
     time_0 = datetime.utcnow()
 
     mname1 = ManagerName(cluster="test_cluster", hostname="a_host", uuid="1234-5678-1234-5678")
@@ -72,7 +72,7 @@ def test_manager_client_get(snowflake: TestingSnowflake):
     assert manager.log is not None
 
 
-def test_manager_client_get_nonexist(snowflake: TestingSnowflake, activated_manager_name: ManagerName):
+def test_manager_client_get_nonexist(snowflake: QCATestingSnowflake, activated_manager_name: ManagerName):
     client = snowflake.client()
     manager = client.get_managers(["noname", activated_manager_name.fullname], missing_ok=True)
     assert manager[0] is None
@@ -82,7 +82,7 @@ def test_manager_client_get_nonexist(snowflake: TestingSnowflake, activated_mana
         client.get_managers(["noname", activated_manager_name.fullname], missing_ok=False)
 
 
-def test_manager_client_get_empty(snowflake: TestingSnowflake, activated_manager_name: ManagerName):
+def test_manager_client_get_empty(snowflake: QCATestingSnowflake, activated_manager_name: ManagerName):
     # include activated_manager_name so that there is something in the db
     client = snowflake.client()
     manager = client.get_managers([], missing_ok=True)

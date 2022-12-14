@@ -19,7 +19,7 @@ from qcfractal.components.singlepoint.testing_helpers import (
 )
 from qcfractal.components.testing_helpers import populate_records_status
 from qcfractal.components.torsiondrive.testing_helpers import submit_test_data as submit_td_test_data
-from qcfractal.testing_helpers import TestingSnowflake, DummyJobStatus
+from qcfractal.testing_helpers import QCATestingSnowflake, DummyJobStatus
 from qcportal import PortalRequestError
 from qcportal.managers import ManagerName
 from qcportal.molecules import Molecule
@@ -99,7 +99,7 @@ def test_record_client_query_parents_children(
     assert list(query_res)[0].id == opt_rec.id
 
 
-def test_record_client_add_comment(secure_snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
+def test_record_client_add_comment(secure_snowflake: QCATestingSnowflake, storage_socket: SQLAlchemySocket):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     id1, _ = submit_sp_test_data(storage_socket, "sp_psi4_benzene_energy_1")
@@ -276,7 +276,7 @@ def test_record_client_modify_service(snowflake_client: PortalClient, storage_so
         assert r.task.priority == PriorityEnum.low
 
 
-def test_record_client_query_owner(secure_snowflake: TestingSnowflake):
+def test_record_client_query_owner(secure_snowflake: QCATestingSnowflake):
 
     submit_client = secure_snowflake.client("submit_user", test_users["submit_user"]["pw"])
     admin_client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])

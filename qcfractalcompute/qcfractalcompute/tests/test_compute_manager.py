@@ -20,7 +20,7 @@ qcng.list_available_procedures = qcng.list_all_procedures
 if TYPE_CHECKING:
     from typing import Dict
     from qcportal.all_results import AllResultTypes
-    from qcfractal.testing_helpers import TestingSnowflake, SQLAlchemySocket
+    from qcfractal.testing_helpers import QCATestingSnowflake, SQLAlchemySocket
 
 
 class MockTestingExecutor:
@@ -61,7 +61,7 @@ class ComputeProcess(ProcessBase):
         self._queue_manager.stop()
 
 
-def test_manager_keepalive(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
+def test_manager_keepalive(snowflake: QCATestingSnowflake, storage_socket: SQLAlchemySocket):
 
     snowflake.start_job_runner()
 
@@ -90,7 +90,7 @@ def test_manager_keepalive(snowflake: TestingSnowflake, storage_socket: SQLAlche
     assert m[0]["status"] == ManagerStatusEnum.inactive
 
 
-def test_manager_tag_none(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
+def test_manager_tag_none(snowflake: QCATestingSnowflake, storage_socket: SQLAlchemySocket):
 
     worker = MockTestingExecutor(result_data={})
     manager = ComputeManager(
@@ -109,7 +109,7 @@ def test_manager_tag_none(snowflake: TestingSnowflake, storage_socket: SQLAlchem
     assert managers[0]["tags"] == ["*"]
 
 
-def test_manager_tag_single(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
+def test_manager_tag_single(snowflake: QCATestingSnowflake, storage_socket: SQLAlchemySocket):
 
     worker = MockTestingExecutor(result_data={})
     manager = ComputeManager(
@@ -128,7 +128,7 @@ def test_manager_tag_single(snowflake: TestingSnowflake, storage_socket: SQLAlch
     assert managers[0]["tags"] == ["test_tag"]
 
 
-def test_manager_tag_multi(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
+def test_manager_tag_multi(snowflake: QCATestingSnowflake, storage_socket: SQLAlchemySocket):
 
     worker = MockTestingExecutor(result_data={})
     manager = ComputeManager(
@@ -147,7 +147,7 @@ def test_manager_tag_multi(snowflake: TestingSnowflake, storage_socket: SQLAlche
     assert managers[0]["tags"] == ["test_tag_1", "test_tag_2", "*"]
 
 
-def test_manager_claim_inactive(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
+def test_manager_claim_inactive(snowflake: QCATestingSnowflake, storage_socket: SQLAlchemySocket):
     snowflake.start_job_runner()
 
     compute = ComputeProcess(snowflake._qcf_config, {})
@@ -193,7 +193,7 @@ def populate_db(storage_socket: SQLAlchemySocket):
     return all_id, result_data
 
 
-def test_manager_claim_return(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
+def test_manager_claim_return(snowflake: QCATestingSnowflake, storage_socket: SQLAlchemySocket):
     all_id, result_data = populate_db(storage_socket)
 
     compute = ComputeProcess(snowflake._qcf_config, result_data)
@@ -209,7 +209,7 @@ def test_manager_claim_return(snowflake: TestingSnowflake, storage_socket: SQLAl
     assert r is True
 
 
-def test_manager_deferred_return(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
+def test_manager_deferred_return(snowflake: QCATestingSnowflake, storage_socket: SQLAlchemySocket):
     all_id, result_data = populate_db(storage_socket)
 
     # Don't use a compute process so we can update, etc, manually
@@ -256,7 +256,7 @@ def test_manager_deferred_return(snowflake: TestingSnowflake, storage_socket: SQ
     assert all(x["manager_name"] == manager.name for x in recs)
 
 
-def test_manager_deferred_drop(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
+def test_manager_deferred_drop(snowflake: QCATestingSnowflake, storage_socket: SQLAlchemySocket):
     all_id, result_data = populate_db(storage_socket)
 
     # Don't use a compute process so we can update, etc, manually

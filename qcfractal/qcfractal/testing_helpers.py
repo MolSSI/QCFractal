@@ -39,7 +39,7 @@ class DummyJobStatus:
         return False
 
 
-class TestingSnowflake(FractalSnowflake):
+class QCATestingSnowflake(FractalSnowflake):
     """
     A snowflake class used for testing
 

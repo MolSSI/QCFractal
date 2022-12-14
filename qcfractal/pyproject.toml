@@ -70,7 +70,7 @@ default-tag = "0.0.99" # useful for CI/shallow clones
 
 [tool.pytest.ini_options]
 markers = ["slow"]
-python_classes = ["!TestingSnowflake"]
+
 
 [tool.coverage.run]
 omit = ["qcfractal/alembic/*"]

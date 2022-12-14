@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from qcfractal.testing_helpers import TestingSnowflake, DummyJobStatus
+from qcfractal.testing_helpers import QCATestingSnowflake, DummyJobStatus
 
 
 @pytest.fixture(scope="module")
@@ -10,7 +10,7 @@ def queryable_stats_client(module_temporary_database):
     db_config = module_temporary_database.config
 
     # Don't log accesses
-    with TestingSnowflake(db_config, encoding="application/json", log_access=False) as server:
+    with QCATestingSnowflake(db_config, encoding="application/json", log_access=False) as server:
 
         # generate a bunch of test data
         storage_socket = server.get_storage_socket()

@@ -38,10 +38,6 @@ dependencies = [
 qcfractal_fixtures = "qcarchivetesting.testing_fixtures"
 
 
-[tool.pytest.ini_options]
-python_classes = ["!TestingSnowflake"]
-
-
 [tool.black]
 line-length = 120
 

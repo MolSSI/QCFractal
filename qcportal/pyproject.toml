@@ -39,10 +39,6 @@ dependencies = [
 "Bug Tracker" = "https://github.com/MolSSI/QCFractal/issues"
 
 
-[tool.pytest.ini_options]
-python_classes = ["!TestingSnowflake"]
-
-
 [tool.black]
 line-length = 120
 

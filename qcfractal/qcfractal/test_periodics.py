@@ -13,13 +13,13 @@ from qcportal.record_models import RecordStatusEnum
 from qcportal.serverinfo import ServerStatsQueryFilters
 
 if TYPE_CHECKING:
-    from qcfractal.testing_helpers import TestingSnowflake, SQLAlchemySocket
+    from qcfractal.testing_helpers import QCATestingSnowflake, SQLAlchemySocket
 
 
 pytestmark = pytest.mark.slow
 
 
-def test_periodics_server_stats(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
+def test_periodics_server_stats(snowflake: QCATestingSnowflake, storage_socket: SQLAlchemySocket):
 
     meta, stats = storage_socket.serverinfo.query_server_stats(ServerStatsQueryFilters())
     assert meta.n_found == 0
@@ -38,7 +38,7 @@ def test_periodics_server_stats(snowflake: TestingSnowflake, storage_socket: SQL
         assert time_0 < stats[0]["timestamp"] < time_1
 
 
-def test_periodics_manager_heartbeats(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
+def test_periodics_manager_heartbeats(snowflake: QCATestingSnowflake, storage_socket: SQLAlchemySocket):
 
     heartbeat = snowflake._qcf_config.heartbeat_frequency
     max_missed = snowflake._qcf_config.heartbeat_max_missed
@@ -64,7 +64,7 @@ def test_periodics_manager_heartbeats(snowflake: TestingSnowflake, storage_socke
             assert manager[0]["status"] == ManagerStatusEnum.inactive
 
 
-def test_periodics_service_iteration(snowflake: TestingSnowflake, storage_socket: SQLAlchemySocket):
+def test_periodics_service_iteration(snowflake: QCATestingSnowflake, storage_socket: SQLAlchemySocket):
 
     id_1, _ = submit_td_test_data(storage_socket, "td_H2O2_mopac_pm6")
 

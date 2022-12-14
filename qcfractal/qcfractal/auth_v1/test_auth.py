@@ -1,7 +1,7 @@
 import pytest
 
 from qcarchivetesting import valid_encodings, test_users
-from qcfractal.testing_helpers import TestingSnowflake, mname1
+from qcfractal.testing_helpers import QCATestingSnowflake, mname1
 from qcportal import PortalRequestError
 from qcportal.auth import RoleInfo, UserInfo
 from qcportal.molecules import Molecule
@@ -14,7 +14,7 @@ def authtest_snowflake(temporary_database, request):
     """
 
     db_config = temporary_database.config
-    with TestingSnowflake(
+    with QCATestingSnowflake(
         db_config,
         encoding=request.param,
         start_flask=True,

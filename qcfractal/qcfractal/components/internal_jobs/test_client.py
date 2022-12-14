@@ -10,7 +10,7 @@ import pytest
 
 from qcarchivetesting import test_users
 from qcfractal.components.internal_jobs.socket import InternalJobSocket
-from qcfractal.testing_helpers import TestingSnowflake
+from qcfractal.testing_helpers import QCATestingSnowflake
 from qcportal import PortalRequestError
 from qcportal.internal_jobs import InternalJobStatusEnum
 
@@ -151,7 +151,7 @@ def test_internal_jobs_client_delete_running(snowflake_client: PortalClient, sto
         th.join()
 
 
-def test_internal_jobs_client_query(secure_snowflake: TestingSnowflake):
+def test_internal_jobs_client_query(secure_snowflake: QCATestingSnowflake):
 
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
     storage_socket = secure_snowflake.get_storage_socket()

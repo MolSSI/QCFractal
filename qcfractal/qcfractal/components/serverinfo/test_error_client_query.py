@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from qcarchivetesting import test_users
-from qcfractal.testing_helpers import TestingSnowflake
+from qcfractal.testing_helpers import QCATestingSnowflake
 from qcportal import PortalClient
 
 
@@ -11,7 +11,7 @@ from qcportal import PortalClient
 def queryable_error_client(module_temporary_database):
     db_config = module_temporary_database.config
 
-    with TestingSnowflake(
+    with QCATestingSnowflake(
         db_config, encoding="application/json", create_users=True, enable_security=True, log_access=False
     ) as server:
 

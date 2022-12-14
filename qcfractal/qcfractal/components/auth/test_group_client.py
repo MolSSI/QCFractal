@@ -7,10 +7,10 @@ from qcportal.exceptions import (
     InvalidGroupnameError,
 )
 from .test_group_socket import invalid_groupnames
-from ...testing_helpers import TestingSnowflake
+from ...testing_helpers import QCATestingSnowflake
 
 
-def test_group_client_list(secure_snowflake: TestingSnowflake):
+def test_group_client_list(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
     groups = client.list_groups()
 
@@ -20,7 +20,7 @@ def test_group_client_list(secure_snowflake: TestingSnowflake):
         assert g.groupname in test_groups
 
 
-def test_group_client_get(secure_snowflake: TestingSnowflake):
+def test_group_client_get(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     for groupname in test_groups:
@@ -31,7 +31,7 @@ def test_group_client_get(secure_snowflake: TestingSnowflake):
         assert g == g2
 
 
-def test_group_client_add(secure_snowflake: TestingSnowflake):
+def test_group_client_add(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     client.add_group(GroupInfo(groupname="a_group", description="A description"))
@@ -41,7 +41,7 @@ def test_group_client_add(secure_snowflake: TestingSnowflake):
     assert g.description == "A description"
 
 
-def test_group_client_add_with_id(secure_snowflake: TestingSnowflake):
+def test_group_client_add_with_id(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     with pytest.raises(RuntimeError, match=r"Cannot add group.*contains an id"):
@@ -49,7 +49,7 @@ def test_group_client_add_with_id(secure_snowflake: TestingSnowflake):
         client.add_group(ginfo)
 
 
-def test_group_client_add_existing(secure_snowflake: TestingSnowflake):
+def test_group_client_add_existing(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     with pytest.raises(PortalRequestError, match=r"already exists"):
@@ -57,7 +57,7 @@ def test_group_client_add_existing(secure_snowflake: TestingSnowflake):
         client.add_group(ginfo)
 
 
-def test_group_client_use_nonexist(secure_snowflake: TestingSnowflake):
+def test_group_client_use_nonexist(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     with pytest.raises(PortalRequestError, match=r"Group.*does not exist"):
@@ -70,7 +70,7 @@ def test_group_client_use_nonexist(secure_snowflake: TestingSnowflake):
         client.delete_group(1234)
 
 
-def test_group_client_use_invalid_groupname(secure_snowflake: TestingSnowflake):
+def test_group_client_use_invalid_groupname(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     for groupname in invalid_groupnames:
@@ -80,7 +80,7 @@ def test_group_client_use_invalid_groupname(secure_snowflake: TestingSnowflake):
             client.delete_group(groupname)
 
 
-def test_group_client_delete(secure_snowflake: TestingSnowflake):
+def test_group_client_delete(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     user = client.get_user("admin_user")

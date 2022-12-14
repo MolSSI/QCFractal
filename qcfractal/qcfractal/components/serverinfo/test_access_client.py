@@ -6,13 +6,13 @@ from typing import TYPE_CHECKING
 import pytest
 
 from qcarchivetesting import valid_encodings, test_users
-from ...testing_helpers import TestingSnowflake
+from ...testing_helpers import QCATestingSnowflake
 
 if TYPE_CHECKING:
     from qcportal import PortalClient
 
 
-def test_serverinfo_client_access_logged(secure_snowflake_allow_read: TestingSnowflake):
+def test_serverinfo_client_access_logged(secure_snowflake_allow_read: QCATestingSnowflake):
 
     client = secure_snowflake_allow_read.client("admin_user", test_users["admin_user"]["pw"])
     read_client = secure_snowflake_allow_read.client()
@@ -66,7 +66,7 @@ def test_serverinfo_client_access_logged(secure_snowflake_allow_read: TestingSno
 def test_serverinfo_client_access_not_logged(temporary_database, encoding: str):
 
     db_config = temporary_database.config
-    with TestingSnowflake(db_config, encoding=encoding, log_access=False) as server:
+    with QCATestingSnowflake(db_config, encoding=encoding, log_access=False) as server:
         client = server.client()
         client.query_access_log()
         client.query_molecules(molecular_formula=["C"])

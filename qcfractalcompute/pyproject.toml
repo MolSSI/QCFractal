@@ -31,10 +31,6 @@ dependencies = [
 "Bug Tracker" = "https://github.com/MolSSI/QCFractal/issues"
 
 
-[tool.pytest.ini_options]
-python_classes = ["!TestingSnowflake"]
-
-
 [project.scripts]
 qcfractal-manager = "qcfractalcompute.qcfractal_manager_cli:main"
 

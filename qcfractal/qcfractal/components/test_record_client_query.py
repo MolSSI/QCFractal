@@ -5,7 +5,7 @@ import time
 import pytest
 
 from qcfractal.components.testing_helpers import populate_records_status
-from qcfractal.testing_helpers import TestingSnowflake
+from qcfractal.testing_helpers import QCATestingSnowflake
 from qcportal import PortalClient
 from qcportal.molecules import Molecule
 from qcportal.record_models import RecordStatusEnum
@@ -14,7 +14,7 @@ from qcportal.record_models import RecordStatusEnum
 @pytest.fixture(scope="module")
 def queryable_records_client(module_temporary_database):
     db_config = module_temporary_database.config
-    with TestingSnowflake(db_config, encoding="application/json") as server:
+    with QCATestingSnowflake(db_config, encoding="application/json") as server:
 
         # First populate all the statuses
         populate_records_status(server.get_storage_socket())

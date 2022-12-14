@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING
 from qcarchivetesting import test_users
 
 if TYPE_CHECKING:
-    from qcfractal.testing_helpers import TestingSnowflake
+    from qcfractal.testing_helpers import QCATestingSnowflake
 
 
-def test_serverinfo_client_delete_error(secure_snowflake: TestingSnowflake):
+def test_serverinfo_client_delete_error(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
     storage_socket = secure_snowflake.get_storage_socket()
 

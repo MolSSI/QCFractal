@@ -13,10 +13,10 @@ from qcportal.exceptions import (
 from .test_group_socket import invalid_groupnames
 from .test_role_socket import invalid_rolenames
 from .test_user_socket import invalid_usernames, invalid_passwords
-from ...testing_helpers import TestingSnowflake
+from ...testing_helpers import QCATestingSnowflake
 
 
-def test_user_client_list(secure_snowflake: TestingSnowflake):
+def test_user_client_list(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
     users = client.list_users()
 
@@ -32,7 +32,7 @@ def test_user_client_list(secure_snowflake: TestingSnowflake):
         assert u.email == tu["email"]
 
 
-def test_user_client_get(secure_snowflake: TestingSnowflake):
+def test_user_client_get(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     for username, uinfo in test_users.items():
@@ -45,7 +45,7 @@ def test_user_client_get(secure_snowflake: TestingSnowflake):
         assert u2 == u
 
 
-def test_user_client_get_me(secure_snowflake: TestingSnowflake):
+def test_user_client_get_me(secure_snowflake: QCATestingSnowflake):
     for username, uinfo in test_users.items():
         client = secure_snowflake.client(username, uinfo["pw"])
         me = client.get_user()
@@ -54,7 +54,7 @@ def test_user_client_get_me(secure_snowflake: TestingSnowflake):
         assert me.role == uinfo["info"]["role"]
 
 
-def test_user_client_add(secure_snowflake: TestingSnowflake):
+def test_user_client_add(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     uinfo = UserInfo(
@@ -71,7 +71,7 @@ def test_user_client_add(secure_snowflake: TestingSnowflake):
     secure_snowflake.client("george", pw)
 
 
-def test_user_client_add_existing(secure_snowflake: TestingSnowflake):
+def test_user_client_add_existing(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     uinfo = UserInfo(
@@ -87,7 +87,7 @@ def test_user_client_add_existing(secure_snowflake: TestingSnowflake):
         client.add_user(uinfo)
 
 
-def test_user_client_add_badrole(secure_snowflake: TestingSnowflake):
+def test_user_client_add_badrole(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     uinfo = UserInfo(
@@ -103,7 +103,7 @@ def test_user_client_add_badrole(secure_snowflake: TestingSnowflake):
         client.add_user(uinfo)
 
 
-def test_user_client_add_badgroup(secure_snowflake: TestingSnowflake):
+def test_user_client_add_badgroup(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     uinfo = UserInfo(
@@ -117,7 +117,7 @@ def test_user_client_add_badgroup(secure_snowflake: TestingSnowflake):
         client.add_user(uinfo)
 
 
-def test_user_client_use_nonexist(secure_snowflake: TestingSnowflake):
+def test_user_client_use_nonexist(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     uinfo = client.get_user()
@@ -133,7 +133,7 @@ def test_user_client_use_nonexist(secure_snowflake: TestingSnowflake):
         client.delete_user("no_user")
 
 
-def test_user_client_use_invalid_username(secure_snowflake: TestingSnowflake):
+def test_user_client_use_invalid_username(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     for username in invalid_usernames:
@@ -153,7 +153,7 @@ def test_user_client_use_invalid_username(secure_snowflake: TestingSnowflake):
             client.delete_user(username)
 
 
-def test_user_client_use_invalid_rolename(secure_snowflake: TestingSnowflake):
+def test_user_client_use_invalid_rolename(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     for rolename in invalid_rolenames:
@@ -167,7 +167,7 @@ def test_user_client_use_invalid_rolename(secure_snowflake: TestingSnowflake):
             client.modify_user(uinfo)
 
 
-def test_user_client_use_invalid_groupname(secure_snowflake: TestingSnowflake):
+def test_user_client_use_invalid_groupname(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     for groupname in invalid_groupnames:
@@ -181,7 +181,7 @@ def test_user_client_use_invalid_groupname(secure_snowflake: TestingSnowflake):
             client.modify_user(uinfo)
 
 
-def test_user_client_use_invalid_password(secure_snowflake: TestingSnowflake):
+def test_user_client_use_invalid_password(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     for password in invalid_passwords:
@@ -194,7 +194,7 @@ def test_user_client_use_invalid_password(secure_snowflake: TestingSnowflake):
             client.change_user_password(None, password)
 
 
-def test_user_client_delete(secure_snowflake: TestingSnowflake):
+def test_user_client_delete(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     client.delete_user("read_user")
@@ -203,14 +203,14 @@ def test_user_client_delete(secure_snowflake: TestingSnowflake):
         client.get_user("read_user")
 
 
-def test_user_client_delete_self(secure_snowflake: TestingSnowflake):
+def test_user_client_delete_self(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
 
     with pytest.raises(PortalRequestError, match=r"Cannot delete your own user"):
         client.delete_user("admin_user")
 
 
-def test_user_client_modify(secure_snowflake: TestingSnowflake):
+def test_user_client_modify(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
     uinfo = client.get_user("read_user")
 
@@ -235,7 +235,7 @@ def test_user_client_modify(secure_snowflake: TestingSnowflake):
     assert uinfo3.groups == ["group3"]
 
 
-def test_user_client_modify_self(secure_snowflake: TestingSnowflake):
+def test_user_client_modify_self(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("read_user", test_users["read_user"]["pw"])
     uinfo = client.get_user("read_user")
 
@@ -262,7 +262,7 @@ def test_user_client_modify_self(secure_snowflake: TestingSnowflake):
     assert uinfo3.groups == ["group2"]
 
 
-def test_user_client_modify_badrole(secure_snowflake: TestingSnowflake):
+def test_user_client_modify_badrole(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
     uinfo = client.get_user("read_user")
 
@@ -276,7 +276,7 @@ def test_user_client_modify_badrole(secure_snowflake: TestingSnowflake):
         client.modify_user(uinfo)
 
 
-def test_user_client_modify_badgroup(secure_snowflake: TestingSnowflake):
+def test_user_client_modify_badgroup(secure_snowflake: QCATestingSnowflake):
     client = secure_snowflake.client("admin_user", test_users["admin_user"]["pw"])
     uinfo = client.get_user("read_user")
 
@@ -290,7 +290,7 @@ def test_user_client_modify_badgroup(secure_snowflake: TestingSnowflake):
         client.modify_user(uinfo)
 
 
-def test_user_client_change_password(secure_snowflake: TestingSnowflake):
+def test_user_client_change_password(secure_snowflake: QCATestingSnowflake):
 
     # First, make sure read user is denied
     with pytest.raises(AuthenticationFailure):
@@ -307,7 +307,7 @@ def test_user_client_change_password(secure_snowflake: TestingSnowflake):
     secure_snowflake.client("read_user", "a_new_password1234")
 
 
-def test_user_client_change_password_self(secure_snowflake: TestingSnowflake):
+def test_user_client_change_password_self(secure_snowflake: QCATestingSnowflake):
 
     client = secure_snowflake.client("read_user", test_users["read_user"]["pw"])
 
@@ -362,7 +362,7 @@ def test_user_client_secure_endpoints_disabled(snowflake_client):
         snowflake_client.modify_user(uinfo)
 
 
-def test_user_client_no_other(secure_snowflake: TestingSnowflake):
+def test_user_client_no_other(secure_snowflake: QCATestingSnowflake):
     #
     # a non-admin user cannot access/modify other users
     #
@@ -404,7 +404,7 @@ def test_user_client_no_other(secure_snowflake: TestingSnowflake):
         client._auto_request("put", f"v1/users/read_user/password", Optional[str], None, str, None, None)
 
 
-def test_user_client_no_anonymous(secure_snowflake_allow_read: TestingSnowflake):
+def test_user_client_no_anonymous(secure_snowflake_allow_read: QCATestingSnowflake):
     client = secure_snowflake_allow_read.client()
 
     with pytest.raises(PortalRequestError, match=r"Login is required"):
