@@ -51,3 +51,7 @@ line-length = 120
 
 [tool.versioningit.vcs]
 default-tag = "0.0.99" # useful for CI/shallow clones
+
+[tool.setuptools.package-data]
+qcarchivetesting = ["*_data/**", "config_files/**"]
+
