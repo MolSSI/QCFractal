@@ -39,6 +39,10 @@ dependencies = [
 "Bug Tracker" = "https://github.com/MolSSI/QCFractal/issues"
 
 
+[tool.pytest.ini_options]
+python_classes = ["!TestingSnowflake"]
+
+
 [tool.black]
 line-length = 120
 
@@ -48,7 +52,3 @@ line-length = 120
 
 [tool.versioningit.vcs]
 default-tag = "0.0.99" # useful for CI/shallow clones
-
-
-[tool.pytest.ini_options]
-markers = ["slow"]

@@ -80,11 +80,14 @@ def test_dataset_client_delete_empty(snowflake_client: PortalClient):
 
     snowflake_client.delete_dataset(ds_id, False)
 
-    with pytest.raises(PortalRequestError, match=r"Could not find all"):
+    with pytest.raises(PortalRequestError, match=r"Could not find singlepoint dataset with name"):
         snowflake_client.get_dataset("singlepoint", "Test dataset")
 
-    with pytest.raises(PortalRequestError, match=r"Could not find all"):
+    with pytest.raises(PortalRequestError, match=r"Could not find dataset with id"):
         snowflake_client.get_dataset_by_id(ds_id)
+
+    all_ds = snowflake_client.list_datasets()
+    len(all_ds) == 0
 
 
 def test_dataset_client_query_dataset_records(

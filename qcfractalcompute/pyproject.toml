@@ -31,6 +31,10 @@ dependencies = [
 "Bug Tracker" = "https://github.com/MolSSI/QCFractal/issues"
 
 
+[tool.pytest.ini_options]
+python_classes = ["!TestingSnowflake"]
+
+
 [project.scripts]
 qcfractal-manager = "qcfractalcompute.qcfractal_manager_cli:main"
 
@@ -44,7 +48,3 @@ line-length = 120
 
 [tool.versioningit.vcs]
 default-tag = "0.0.99" # useful for CI/shallow clones
-
-
-[tool.pytest.ini_options]
-markers = ["slow"]

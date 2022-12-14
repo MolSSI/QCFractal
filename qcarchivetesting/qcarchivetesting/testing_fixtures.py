@@ -8,12 +8,12 @@ import secrets
 
 import pytest
 
-from qcarchivetesting import valid_encodings, geoip_path, test_users
 from qcfractal.config import FractalConfig
 from qcfractal.db_socket.socket import SQLAlchemySocket
 from qcfractal.postgres_harness import TemporaryPostgres
 from qcfractal.testing_helpers import TestingSnowflake
 from qcportal.managers import ManagerName
+from .helpers import valid_encodings, geoip_path, test_users
 
 
 @pytest.fixture(scope="session")
