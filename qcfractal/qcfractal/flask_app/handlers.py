@@ -5,9 +5,9 @@ from typing import Dict, Any
 from flask import g, request, current_app, jsonify, Response
 from werkzeug.exceptions import InternalServerError, HTTPException
 
-from qcfractal.api_v1.blueprint import api_v1
 from qcfractal.flask_app import storage_socket, get_url_major_component
 from qcportal.exceptions import UserReportableError, AuthenticationFailure, ComputeManagerError
+from .home import home_blueprint
 
 
 #####################################################################
@@ -18,7 +18,7 @@ from qcportal.exceptions import UserReportableError, AuthenticationFailure, Comp
 #####################################################################
 
 
-@api_v1.before_app_request
+@home_blueprint.before_app_request
 def before_request_func():
     # Store timing information in the request/app context
     # g here refers to flask.g
@@ -30,7 +30,7 @@ def before_request_func():
         g.request_bytes = 0
 
 
-@api_v1.after_app_request
+@home_blueprint.after_app_request
 def after_request_func(response: Response):
     #################################################################
     # NOTE: Do not touch response.response! It may mess up streaming
@@ -84,7 +84,7 @@ def after_request_func(response: Response):
     return response
 
 
-@api_v1.app_errorhandler(InternalServerError)
+@home_blueprint.app_errorhandler(InternalServerError)
 def handle_internal_error(error):
     # For otherwise unhandled errors
     # Do not report the details to the user. Instead, log it,
@@ -117,26 +117,26 @@ def handle_internal_error(error):
         return jsonify(msg=tb), error.code
 
 
-@api_v1.app_errorhandler(HTTPException)
+@home_blueprint.app_errorhandler(HTTPException)
 def handle_http_exception(error):
     # This handles many errors, such as NotFound, Unauthorized, etc
     # These are all reportable to the user
     return jsonify(msg=str(error)), error.code
 
 
-@api_v1.app_errorhandler(UserReportableError)
+@home_blueprint.app_errorhandler(UserReportableError)
 def handle_userreport_error(error):
     # This handles any errors that are reportable to the user
     return jsonify(msg=str(error)), 400
 
 
-@api_v1.app_errorhandler(AuthenticationFailure)
+@home_blueprint.app_errorhandler(AuthenticationFailure)
 def handle_auth_error(error):
     # This handles Authentication errors (invalid user, password, etc)
     return jsonify(msg=str(error)), 401
 
 
-@api_v1.app_errorhandler(ComputeManagerError)
+@home_blueprint.app_errorhandler(ComputeManagerError)
 def handle_compute_manager_error(error: ComputeManagerError):
     # Handle compute manager errors
     return jsonify(msg=str(error)), 400

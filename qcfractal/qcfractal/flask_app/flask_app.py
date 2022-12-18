@@ -14,6 +14,7 @@ from qcfractal.process_runner import ProcessBase
 from ..api_v1.blueprint import api_v1
 from ..auth_v1.blueprint import auth_v1
 from ..dashboard_v1.blueprint import dashboard_v1
+from .home import home_blueprint
 
 if TYPE_CHECKING:
     from ..config import FractalConfig
@@ -75,6 +76,7 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     importlib.import_module("qcfractal.dashboard_v1.routes")
     importlib.import_module("qcfractal.components.register_all")
 
+    app.register_blueprint(home_blueprint)
     app.register_blueprint(api_v1)
     app.register_blueprint(auth_v1)
     app.register_blueprint(dashboard_v1)

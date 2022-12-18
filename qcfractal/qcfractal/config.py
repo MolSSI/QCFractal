@@ -347,6 +347,10 @@ class FractalConfig(ConfigBase):
         1, description="Number of processes for processing internal jobs and async requests"
     )
 
+    # Homepage settings
+    homepage_redirect_url: Optional[str] = Field(None, description="Redirect to this URL when going to the root path")
+    homepage_directory: Optional[str] = Field(None, description="Use this directory to serve the homepage")
+
     # Other settings blocks
     database: DatabaseConfig = Field(..., description="Configuration of the settings for the database")
     api: WebAPIConfig = Field(..., description="Configuration of the REST interface")
@@ -367,6 +371,10 @@ class FractalConfig(ConfigBase):
     @validator("geo_file_path")
     def _check_geo_file_path(cls, v, values):
         return _make_abs_path(v, values["base_folder"], "GeoLite2-City.mmdb")
+
+    @validator("homepage_directory")
+    def _check_hompepage_directory_path(cls, v, values):
+        return _make_abs_path(v, values["base_folder"], None)
 
     @validator("logfile")
     def _check_logfile_path(cls, v, values):
