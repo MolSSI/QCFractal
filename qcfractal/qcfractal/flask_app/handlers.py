@@ -32,8 +32,14 @@ def before_request_func():
 
 @api_v1.after_app_request
 def after_request_func(response: Response):
+    #################################################################
+    # NOTE: Do not touch response.response! It may mess up streaming
+    #       responses and result in no content being sent
+    #################################################################
+
     # Determine the time the request took
     # g here refers to flask.g
+
     request_duration = time.time() - g.request_start
 
     log_access = current_app.config["QCFRACTAL_CONFIG"].log_access
@@ -67,8 +73,7 @@ def after_request_func(response: Response):
         log["request_duration"] = request_duration
         log["user_id"] = g.get("user_id", None)
 
-        # response.response is a list of bytes or str
-        response_bytes = sum(len(x) for x in response.response)
+        response_bytes = response.content_length
         log["response_bytes"] = response_bytes
 
         storage_socket.serverinfo.save_access(log)
