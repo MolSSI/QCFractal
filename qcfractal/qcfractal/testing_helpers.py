@@ -9,6 +9,7 @@ from qcarchivetesting import geoip_path, test_users, test_groups
 from qcfractal.components.internal_jobs.db_models import InternalJobORM
 from qcfractal.db_socket import SQLAlchemySocket
 from qcfractal.snowflake import FractalSnowflake
+from qcfractal.config import update_nested_dict
 from qcportal import PortalClient, ManagerClient
 from qcportal.auth import UserInfo, GroupInfo
 from qcportal.managers import ManagerName
@@ -59,16 +60,18 @@ class QCATestingSnowflake(FractalSnowflake):
         enable_security=False,
         allow_unauthenticated_read=False,
         log_access=True,
+        extra_config=None,
     ):
 
         self._encoding = encoding
+
+        qcf_config = {}
 
         # Tighten the service frequency for tests
         # Also disable connection pooling in the storage socket
         # (which can leave db connections open, causing problems when we go to delete
         # the database)
         # Have a short token expiration (in case enable_security is True)
-        extra_config = {}
 
         # expire tokens in 5 seconds
         # Too short and this interferes with some other tests
@@ -87,20 +90,24 @@ class QCATestingSnowflake(FractalSnowflake):
             "get_access_logs": 10,
         }
 
-        extra_config["api"] = api_config
-        extra_config["api_limits"] = api_limits
+        qcf_config["api"] = api_config
+        qcf_config["api_limits"] = api_limits
 
-        extra_config["enable_security"] = enable_security
-        extra_config["allow_unauthenticated_read"] = allow_unauthenticated_read
-        extra_config["service_frequency"] = 5
-        extra_config["loglevel"] = "DEBUG"
-        extra_config["heartbeat_frequency"] = 3
-        extra_config["heartbeat_max_missed"] = 2
-        extra_config["statistics_frequency"] = 3
+        qcf_config["enable_security"] = enable_security
+        qcf_config["allow_unauthenticated_read"] = allow_unauthenticated_read
+        qcf_config["service_frequency"] = 5
+        qcf_config["loglevel"] = "DEBUG"
+        qcf_config["heartbeat_frequency"] = 3
+        qcf_config["heartbeat_max_missed"] = 2
+        qcf_config["statistics_frequency"] = 3
 
-        extra_config["database"] = {"pool_size": 0}
-        extra_config["log_access"] = log_access
-        extra_config["geo_file_path"] = geoip_path
+        qcf_config["database"] = {"pool_size": 0}
+        qcf_config["log_access"] = log_access
+        qcf_config["geo_file_path"] = geoip_path
+
+        # Merge in any other specified config
+        if extra_config:
+            update_nested_dict(qcf_config, extra_config)
 
         FractalSnowflake.__init__(
             self,
@@ -108,7 +115,7 @@ class QCATestingSnowflake(FractalSnowflake):
             compute_workers=0,
             enable_watching=True,
             database_config=database_config,
-            extra_config=extra_config,
+            extra_config=qcf_config,
         )
 
         if create_users:
