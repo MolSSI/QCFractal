@@ -1,0 +1,13 @@
+Computation record basics
+=====================================
+
+Next steps
+----------
+
+See documentation about the individual kinds of records:
+    - :doc:`Singlepoint records <singlepoint>`
+    - :doc:`Optimization records <optimization>`
+    - :doc:`Torsiondrive records <torsiondrive>`
+    - :doc:`Gridoptimization records <gridoptimization>`
+    - :doc:`Manybody records <manybody>`
+    - :doc:`Reaction records <reaction>`

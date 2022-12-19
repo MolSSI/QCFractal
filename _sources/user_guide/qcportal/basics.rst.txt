@@ -1,0 +1,26 @@
+Client basics
+=====================================
+
+:class:`qcportal.client.PortalClient` :meth:`qcportal.client.PortalClient.get_records`
+
+Connecting to a server
+----------------------
+
+
+Connection options
+------------------
+
+
+Storing username/password in a file
+-----------------------------------
+
+
+Next steps
+----------
+
+From here, you probably want to look at:
+
+* :doc:`Add or retrieve records <record_basics>`
+* :doc:`Use datasets <dataset_basics>`
+* :doc:`Administer the server <serveradmin>`
+* :doc:`View the PortalClient API documentation <portalclient_api>`

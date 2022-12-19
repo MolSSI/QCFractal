@@ -1,0 +1,6 @@
+.. portalclient_api:
+
+PortalClient API
+================
+
+.. autoclass:: qcportal.client.PortalClient

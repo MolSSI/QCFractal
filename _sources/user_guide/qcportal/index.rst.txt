@@ -1,0 +1,21 @@
+QCPortal User Guide
+=====================================
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   setup
+   basics
+   molecule
+   record_basics
+   dataset_basics
+   singlepoint
+   optimization
+   torsiondrive
+   gridoptimization
+   reaction
+   manybody
+   serveradmin
+
+   portalclient_api

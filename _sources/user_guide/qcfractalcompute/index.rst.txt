@@ -1,0 +1,8 @@
+QCFractalCompute - Compute Workers
+=====================================
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   setup
