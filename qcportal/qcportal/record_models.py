@@ -336,19 +336,25 @@ class BaseRecord(BaseModel):
             None,
         )
 
-    def _get_output(self, output_type: OutputTypeEnum) -> Optional[Union[str, Dict[str, Any]]]:
+    def _get_last_compute_history(self, include_outputs: bool = False) -> Optional[ComputeHistory]:
         if not self.raw_data.compute_history:
-            self._fetch_compute_history(include_outputs=True)
+            self._fetch_compute_history(include_outputs=include_outputs)
 
         if not self.raw_data.compute_history:
             return None
 
-        last_computation = self.raw_data.compute_history[-1]
-        if last_computation.outputs is None:
-            self._fetch_compute_history(include_outputs=True)
-            last_computation = self.raw_data.compute_history[-1]
+        # If we want outputs but we don't have them
+        if include_outputs and not self.raw_data.compute_history[-1].outputs:
+            self._fetch_compute_history(include_outputs=include_outputs)
 
-        return last_computation.get_output(output_type)
+        return self.raw_data.compute_history[-1]
+
+    def _get_output(self, output_type: OutputTypeEnum) -> Optional[Union[str, Dict[str, Any]]]:
+        last_history = self._get_last_compute_history(include_outputs=True)
+        if last_history is None:
+            return None
+
+        return last_history.get_output(output_type)
 
     @property
     def record_type(self) -> str:
@@ -433,6 +439,13 @@ class BaseRecord(BaseModel):
     @property
     def error(self) -> Optional[Dict[str, Any]]:
         return self._get_output(OutputTypeEnum.error)
+
+    @property
+    def provenance(self):
+        last_history = self._get_last_compute_history(include_outputs=False)
+        if last_history is None:
+            return None
+        return last_history.provenance
 
 
 ServiceDependency.update_forward_refs()

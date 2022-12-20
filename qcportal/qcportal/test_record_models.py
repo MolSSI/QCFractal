@@ -64,6 +64,8 @@ def test_baserecord_model_common(
     assert time_1 < record.comments[0].timestamp < time_2
 
     assert record.manager_name == activated_manager_name.fullname
+    assert record.provenance
+    assert record.provenance.creator
 
     assert len(record.compute_history) == 1
     assert time_0 < record.compute_history[0].modified_on < time_1
