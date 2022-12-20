@@ -1,5 +1,5 @@
-QCFractalCompute - Compute Workers
-=====================================
+QCFractalCompute - Compute Managers and Workers
+===============================================
 
 .. toctree::
    :maxdepth: 2

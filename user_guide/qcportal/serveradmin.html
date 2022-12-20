@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Server administration via the client &#8212; QCArchive 0.50b4.post7+gdcede580 documentation</title>
+    <title>Server administration via the client &#8212; QCArchive 0.50b4.post11+g21de4a9d documentation</title>
   
   
   
@@ -367,6 +367,7 @@
   </p>
   <div class="bd-toc-item navbar-nav">
     <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary of Common Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../snowflake.html">QCFractal Snowflake</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../qcfractal/index.html">QCFractal Server User Guide</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../qcfractal/setup.html">QCFractal Installation and Setup</a></li>
@@ -374,7 +375,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../qcfractal/admin.html">Administration &amp; maintenance</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../qcfractalcompute/index.html">QCFractalCompute - Compute Workers</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../qcfractalcompute/index.html">QCFractalCompute - Compute Managers and Workers</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../qcfractalcompute/setup.html">Compute manager setup</a></li>
 </ul>
 </li>
@@ -425,8 +426,10 @@
             
             <article class="bd-article" role="main">
               
-  <section id="module-qcportal.internal_jobs.models">
-<span id="server-administration-via-the-client"></span><h1>Server administration via the client<a class="headerlink" href="#module-qcportal.internal_jobs.models" title="Permalink to this heading">#</a></h1>
+  <section id="server-administration-via-the-client">
+<h1>Server administration via the client<a class="headerlink" href="#server-administration-via-the-client" title="Permalink to this heading">#</a></h1>
+<section id="module-qcportal.internal_jobs.models">
+<span id="server-administration-api"></span><h2>Server Administration API<a class="headerlink" href="#module-qcportal.internal_jobs.models" title="Permalink to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.internal_jobs.models.InternalJobStatusEnum">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qcportal.internal_jobs.models.</span></span><span class="sig-name descname"><span class="pre">InternalJobStatusEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/internal_jobs/models.html#InternalJobStatusEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.internal_jobs.models.InternalJobStatusEnum" title="Permalink to this definition">#</a></dt>
@@ -1154,6 +1157,7 @@ the new model: you should trust this data</p></li>
 </dd></dl>
 
 </section>
+</section>
 
 
             </article>
@@ -1194,84 +1198,60 @@ the new model: you should trust this data</p></li>
 <nav id="bd-toc-nav" class="page-toc">
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobStatusEnum">
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     InternalJobStatusEnum
-    </span>
-   </code>
+  <a class="reference internal nav-link" href="#module-qcportal.internal_jobs.models">
+   Server Administration API
   </a>
   <ul class="visible nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.complete">
+    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobStatusEnum">
      <code class="docutils literal notranslate">
       <span class="pre">
-       InternalJobStatusEnum.complete
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.waiting">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobStatusEnum.waiting
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.running">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobStatusEnum.running
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.error">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobStatusEnum.error
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.cancelled">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobStatusEnum.cancelled
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob">
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     InternalJob
-    </span>
-   </code>
-  </a>
-  <ul class="visible nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.Config">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.Config
+       InternalJobStatusEnum
       </span>
      </code>
     </a>
     <ul class="nav section-nav flex-column">
      <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.Config.extra">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.complete">
        <code class="docutils literal notranslate">
         <span class="pre">
-         InternalJob.Config.extra
+         InternalJobStatusEnum.complete
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.waiting">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobStatusEnum.waiting
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.running">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobStatusEnum.running
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.error">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobStatusEnum.error
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobStatusEnum.cancelled">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobStatusEnum.cancelled
         </span>
        </code>
       </a>
@@ -1279,399 +1259,291 @@ the new model: you should trust this data</p></li>
     </ul>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.id">
+    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob">
      <code class="docutils literal notranslate">
       <span class="pre">
-       InternalJob.id
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.name">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.name
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.status">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.status
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.added_date">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.added_date
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.scheduled_date">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.scheduled_date
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.started_date">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.started_date
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.last_updated">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.last_updated
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.ended_date">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.ended_date
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.runner_hostname">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.runner_hostname
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.runner_uuid">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.runner_uuid
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.progress">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.progress
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.function">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.function
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.kwargs">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.kwargs
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.after_function">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.after_function
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.after_function_kwargs">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.after_function_kwargs
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.result">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.result
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.user">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.user
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.construct">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.construct()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.copy">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.copy()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.dict">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.dict()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.from_orm">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.from_orm()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.json">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.json()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.parse_file">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.parse_file()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.parse_obj">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.parse_obj()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.parse_raw">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.parse_raw()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.schema">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.schema()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.schema_json">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.schema_json()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.update_forward_refs">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.update_forward_refs()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.validate">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJob.validate()
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters">
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     InternalJobQueryFilters
-    </span>
-   </code>
-  </a>
-  <ul class="visible nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.job_id">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.job_id
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.name">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.name
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.user">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.user
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.runner_hostname">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.runner_hostname
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.status">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.status
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_before">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.last_updated_before
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_after">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.last_updated_after
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.added_before">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.added_before
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.added_after">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.added_after
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_before">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.scheduled_before
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_after">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.scheduled_after
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.Config">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.Config
+       InternalJob
       </span>
      </code>
     </a>
     <ul class="nav section-nav flex-column">
      <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.Config.extra">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.Config">
        <code class="docutils literal notranslate">
         <span class="pre">
-         InternalJobQueryFilters.Config.extra
+         InternalJob.Config
+        </span>
+       </code>
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.Config.extra">
+         <code class="docutils literal notranslate">
+          <span class="pre">
+           InternalJob.Config.extra
+          </span>
+         </code>
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.id">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.id
         </span>
        </code>
       </a>
      </li>
      <li class="toc-h4 nav-item toc-entry">
-      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.Config.validate_assignment">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.name">
        <code class="docutils literal notranslate">
         <span class="pre">
-         InternalJobQueryFilters.Config.validate_assignment
+         InternalJob.name
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.status">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.status
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.added_date">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.added_date
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.scheduled_date">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.scheduled_date
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.started_date">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.started_date
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.last_updated">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.last_updated
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.ended_date">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.ended_date
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.runner_hostname">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.runner_hostname
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.runner_uuid">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.runner_uuid
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.progress">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.progress
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.function">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.function
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.kwargs">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.kwargs
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.after_function">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.after_function
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.after_function_kwargs">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.after_function_kwargs
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.result">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.result
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.user">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.user
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.construct">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.construct()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.copy">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.copy()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.dict">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.dict()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.from_orm">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.from_orm()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.json">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.json()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.parse_file">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.parse_file()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.parse_obj">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.parse_obj()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.parse_raw">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.parse_raw()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.schema">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.schema()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.schema_json">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.schema_json()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.update_forward_refs">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.update_forward_refs()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJob.validate">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJob.validate()
         </span>
        </code>
       </a>
@@ -1679,186 +1551,325 @@ the new model: you should trust this data</p></li>
     </ul>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.construct">
+    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters">
      <code class="docutils literal notranslate">
       <span class="pre">
-       InternalJobQueryFilters.construct()
+       InternalJobQueryFilters
       </span>
      </code>
     </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.job_id">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.job_id
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.name">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.name
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.user">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.user
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.runner_hostname">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.runner_hostname
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.status">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.status
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_before">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.last_updated_before
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.last_updated_after">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.last_updated_after
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.added_before">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.added_before
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.added_after">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.added_after
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_before">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.scheduled_before
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.scheduled_after">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.scheduled_after
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.Config">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.Config
+        </span>
+       </code>
+      </a>
+      <ul class="nav section-nav flex-column">
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.Config.extra">
+         <code class="docutils literal notranslate">
+          <span class="pre">
+           InternalJobQueryFilters.Config.extra
+          </span>
+         </code>
+        </a>
+       </li>
+       <li class="toc-h5 nav-item toc-entry">
+        <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.Config.validate_assignment">
+         <code class="docutils literal notranslate">
+          <span class="pre">
+           InternalJobQueryFilters.Config.validate_assignment
+          </span>
+         </code>
+        </a>
+       </li>
+      </ul>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.construct">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.construct()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.copy">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.copy()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.dict">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.dict()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.from_orm">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.from_orm()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.json">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.json()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.parse_file">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.parse_file()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.parse_obj">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.parse_obj()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.parse_raw">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.parse_raw()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.schema">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.schema()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.schema_json">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.schema_json()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.update_forward_refs">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.update_forward_refs()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.validate">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.validate()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.validate_lists">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.validate_lists()
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.limit">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.limit
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.cursor">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.cursor
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.include_metadata">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.include_metadata
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.include">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.include
+        </span>
+       </code>
+      </a>
+     </li>
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.exclude">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryFilters.exclude
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.copy">
+    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryIterator">
      <code class="docutils literal notranslate">
       <span class="pre">
-       InternalJobQueryFilters.copy()
+       InternalJobQueryIterator
       </span>
      </code>
     </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.dict">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.dict()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.from_orm">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.from_orm()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.json">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.json()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.parse_file">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.parse_file()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.parse_obj">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.parse_obj()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.parse_raw">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.parse_raw()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.schema">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.schema()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.schema_json">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.schema_json()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.update_forward_refs">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.update_forward_refs()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.validate">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.validate()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.validate_lists">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.validate_lists()
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.limit">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.limit
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.cursor">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.cursor
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.include_metadata">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.include_metadata
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.include">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.include
-      </span>
-     </code>
-    </a>
-   </li>
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryFilters.exclude">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryFilters.exclude
-      </span>
-     </code>
-    </a>
-   </li>
-  </ul>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryIterator">
-   <code class="docutils literal notranslate">
-    <span class="pre">
-     InternalJobQueryIterator
-    </span>
-   </code>
-  </a>
-  <ul class="visible nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryIterator.reset">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       InternalJobQueryIterator.reset()
-      </span>
-     </code>
-    </a>
+    <ul class="nav section-nav flex-column">
+     <li class="toc-h4 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#qcportal.internal_jobs.models.InternalJobQueryIterator.reset">
+       <code class="docutils literal notranslate">
+        <span class="pre">
+         InternalJobQueryIterator.reset()
+        </span>
+       </code>
+      </a>
+     </li>
+    </ul>
    </li>
   </ul>
  </li>

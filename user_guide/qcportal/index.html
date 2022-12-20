@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>QCPortal User Guide &#8212; QCArchive 0.50b4.post7+gdcede580 documentation</title>
+    <title>QCPortal User Guide &#8212; QCArchive 0.50b4.post11+g21de4a9d documentation</title>
   
   
   
@@ -367,6 +367,7 @@
   </p>
   <div class="bd-toc-item navbar-nav">
     <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary of Common Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../snowflake.html">QCFractal Snowflake</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../qcfractal/index.html">QCFractal Server User Guide</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../qcfractal/setup.html">QCFractal Installation and Setup</a></li>
@@ -374,7 +375,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../qcfractal/admin.html">Administration &amp; maintenance</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../qcfractalcompute/index.html">QCFractalCompute - Compute Workers</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../qcfractalcompute/index.html">QCFractalCompute - Compute Managers and Workers</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../qcfractalcompute/setup.html">Compute manager setup</a></li>
 </ul>
 </li>
@@ -445,16 +446,16 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="dataset_basics.html">Dataset basics</a></li>
 <li class="toctree-l1"><a class="reference internal" href="singlepoint.html">Singlepoint calculations</a></li>
-<li class="toctree-l1"><a class="reference internal" href="optimization.html">Optimization calculations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optimization.html">Optimization calculations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="optimization.html#api">API</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="torsiondrive.html">Torsiondrive calculations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gridoptimization.html">Gridoptimization calculations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reaction.html">Reaction calculations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="manybody.html">Manybody calculations</a></li>
 <li class="toctree-l1"><a class="reference internal" href="serveradmin.html">Server administration via the client</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="serveradmin.html#qcportal.internal_jobs.models.InternalJobStatusEnum"><code class="docutils literal notranslate"><span class="pre">InternalJobStatusEnum</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="serveradmin.html#qcportal.internal_jobs.models.InternalJob"><code class="docutils literal notranslate"><span class="pre">InternalJob</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="serveradmin.html#qcportal.internal_jobs.models.InternalJobQueryFilters"><code class="docutils literal notranslate"><span class="pre">InternalJobQueryFilters</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="serveradmin.html#qcportal.internal_jobs.models.InternalJobQueryIterator"><code class="docutils literal notranslate"><span class="pre">InternalJobQueryIterator</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="serveradmin.html#module-qcportal.internal_jobs.models">Server Administration API</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="portalclient_api.html">PortalClient API</a><ul>
