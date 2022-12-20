@@ -253,6 +253,10 @@ class SinglepointRecordSocket(BaseRecordSocket):
             need_join = True
         if query_data.molecule_id is not None:
             and_query.append(SinglepointRecordORM.molecule_id.in_(query_data.molecule_id))
+        if query_data.keywords is not None:
+            keywords_hash = [hash_dict(d) for d in query_data.keywords]
+            and_query.append(QCSpecificationORM.keywords_hash.in_(keywords_hash))
+            need_join = True
 
         stmt = select(SinglepointRecordORM)
 

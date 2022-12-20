@@ -134,7 +134,7 @@ def test_singlepoint_client_delete(
 
 
 def test_singlepoint_client_query(snowflake_client: PortalClient, storage_socket: SQLAlchemySocket):
-    id_1, _ = submit_test_data(storage_socket, "sp_psi4_benzene_energy_1")
+    id_1, _ = submit_test_data(storage_socket, "sp_psi4_benzene_energy_2")
     id_2, _ = submit_test_data(storage_socket, "sp_psi4_peroxide_energy_wfn")
     id_3, _ = submit_test_data(storage_socket, "sp_rdkit_water_energy")
 
@@ -165,6 +165,19 @@ def test_singlepoint_client_query(snowflake_client: PortalClient, storage_socket
     # driver
     query_res = snowflake_client.query_singlepoints(driver=[SinglepointDriver.energy])
     assert query_res.current_meta.n_found == 3
+
+    # keywords
+    query_res = snowflake_client.query_singlepoints(keywords={})
+    assert query_res.current_meta.n_found == 2
+
+    query_res = snowflake_client.query_singlepoints(keywords=[{}], program="rdkit")
+    assert query_res.current_meta.n_found == 1
+
+    query_res = snowflake_client.query_singlepoints(keywords={"maxiter": 100})
+    assert query_res.current_meta.n_found == 1
+
+    query_res = snowflake_client.query_singlepoints(keywords={"something": 100})
+    assert query_res.current_meta.n_found == 0
 
     # Some empty queries
     query_res = snowflake_client.query_singlepoints(driver=[SinglepointDriver.properties])

@@ -1076,6 +1076,7 @@ class PortalClient(PortalClientBase):
         driver: Optional[Iterable[SinglepointDriver]] = None,
         method: Optional[Iterable[str]] = None,
         basis: Optional[Iterable[Optional[str]]] = None,
+        keywords: Optional[Iterable[Dict[str, Any]]] = None,
         molecule_id: Optional[Iterable[int]] = None,
         owner_user: Optional[Union[str, Iterable[str]]] = None,
         owner_group: Optional[Union[str, Iterable[str]]] = None,
@@ -1116,6 +1117,8 @@ class PortalClient(PortalClientBase):
             Query records whose method is in the given list
         basis
             Query records whose basis is in the given list
+        keywords
+            Query records with these keywords (exact match)
         molecule_id
             Query records whose molecule (id) is in the given list
         owner_user
@@ -1144,6 +1147,7 @@ class PortalClient(PortalClientBase):
             "driver": make_list(driver),
             "method": make_list(method),
             "basis": make_list(basis),
+            "keywords": make_list(keywords),
             "molecule_id": make_list(molecule_id),
             "created_before": created_before,
             "created_after": created_after,

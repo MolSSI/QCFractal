@@ -133,6 +133,7 @@ class SinglepointQueryFilters(RecordQueryFilters):
     method: Optional[List[constr(to_lower=True)]] = None
     basis: Optional[List[Optional[constr(to_lower=True)]]] = None
     molecule_id: Optional[List[int]] = None
+    keywords: Optional[List[Dict[str, Any]]] = None
 
     @validator("basis")
     def _convert_basis(cls, v):
