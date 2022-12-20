@@ -81,7 +81,7 @@ from .dataset_models import (
 )
 from .internal_jobs import InternalJob, InternalJobQueryFilters, InternalJobQueryIterator, InternalJobStatusEnum
 from .managers import ManagerQueryFilters, ManagerQueryIterator, ComputeManager
-from .metadata_models import QueryMetadata, UpdateMetadata, InsertMetadata, DeleteMetadata
+from .metadata_models import UpdateMetadata, InsertMetadata, DeleteMetadata
 from .molecules import Molecule, MoleculeIdentifiers, MoleculeModifyBody, MoleculeQueryIterator, MoleculeQueryFilters
 from .record_models import (
     RecordStatusEnum,
@@ -132,7 +132,7 @@ class PortalClient(PortalClientBase):
             The password to authenticate with.
         verify
             Verifies the SSL connection with a third party server. This may be False if a
-            FractalServer was not provided a SSL certificate and defaults back to self-signed
+            FractalServer was not provided an SSL certificate and defaults back to self-signed
             SSL keys.
         show_motd
             If a Message-of-the-Day is available, display it
@@ -1063,23 +1063,23 @@ class PortalClient(PortalClientBase):
 
     def query_singlepoints(
         self,
-        record_id: Optional[Iterable[int]] = None,
-        manager_name: Optional[Iterable[str]] = None,
-        status: Optional[Iterable[RecordStatusEnum]] = None,
-        dataset_id: Optional[Iterable[int]] = None,
-        parent_id: Optional[Iterable[int]] = None,
+        record_id: Optional[Union[int, Iterable[int]]] = None,
+        manager_name: Optional[Union[str, Iterable[str]]] = None,
+        status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
+        dataset_id: Optional[Union[int, Iterable[int]]] = None,
+        parent_id: Optional[Union[int, Iterable[int]]] = None,
         created_before: Optional[datetime] = None,
         created_after: Optional[datetime] = None,
         modified_before: Optional[datetime] = None,
         modified_after: Optional[datetime] = None,
-        program: Optional[Iterable[str]] = None,
-        driver: Optional[Iterable[SinglepointDriver]] = None,
-        method: Optional[Iterable[str]] = None,
-        basis: Optional[Iterable[Optional[str]]] = None,
-        keywords: Optional[Iterable[Dict[str, Any]]] = None,
-        molecule_id: Optional[Iterable[int]] = None,
-        owner_user: Optional[Union[str, Iterable[str]]] = None,
-        owner_group: Optional[Union[str, Iterable[str]]] = None,
+        program: Optional[Union[str, Iterable[str]]] = None,
+        driver: Optional[Union[SinglepointDriver, Iterable[SinglepointDriver]]] = None,
+        method: Optional[Union[str, Iterable[str]]] = None,
+        basis: Optional[Union[str, Iterable[Optional[str]]]] = None,
+        keywords: Optional[Union[Dict[str, Any], Iterable[Dict[str, Any]]]] = None,
+        molecule_id: Optional[Union[int, Iterable[int]]] = None,
+        owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
+        owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         *,
         include: Optional[Iterable[str]] = None,
@@ -1315,24 +1315,24 @@ class PortalClient(PortalClientBase):
 
     def query_optimizations(
         self,
-        record_id: Optional[Iterable[int]] = None,
-        manager_name: Optional[Iterable[str]] = None,
-        status: Optional[Iterable[RecordStatusEnum]] = None,
-        dataset_id: Optional[Iterable[int]] = None,
-        parent_id: Optional[Iterable[int]] = None,
-        child_id: Optional[Iterable[int]] = None,
+        record_id: Optional[Union[int, Iterable[int]]] = None,
+        manager_name: Optional[Union[str, Iterable[str]]] = None,
+        status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
+        dataset_id: Optional[Union[int, Iterable[int]]] = None,
+        parent_id: Optional[Union[int, Iterable[int]]] = None,
+        child_id: Optional[Union[int, Iterable[int]]] = None,
         created_before: Optional[datetime] = None,
         created_after: Optional[datetime] = None,
         modified_before: Optional[datetime] = None,
         modified_after: Optional[datetime] = None,
-        program: Optional[Iterable[str]] = None,
-        qc_program: Optional[Iterable[str]] = None,
-        qc_method: Optional[Iterable[str]] = None,
-        qc_basis: Optional[Iterable[Optional[str]]] = None,
-        initial_molecule_id: Optional[Iterable[int]] = None,
-        final_molecule_id: Optional[Iterable[int]] = None,
-        owner_user: Optional[Union[str, Iterable[str]]] = None,
-        owner_group: Optional[Union[str, Iterable[str]]] = None,
+        program: Optional[Union[str, Iterable[str]]] = None,
+        qc_program: Optional[Union[str, Iterable[str]]] = None,
+        qc_method: Optional[Union[str, Iterable[str]]] = None,
+        qc_basis: Optional[Union[str, Iterable[Optional[str]]]] = None,
+        initial_molecule_id: Optional[Union[int, Iterable[int]]] = None,
+        final_molecule_id: Optional[Union[int, Iterable[int]]] = None,
+        owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
+        owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         *,
         include: Optional[Iterable[str]] = None,
@@ -1563,24 +1563,24 @@ class PortalClient(PortalClientBase):
 
     def query_torsiondrives(
         self,
-        record_id: Optional[Iterable[int]] = None,
-        manager_name: Optional[Iterable[str]] = None,
-        status: Optional[Iterable[RecordStatusEnum]] = None,
-        dataset_id: Optional[Iterable[int]] = None,
-        parent_id: Optional[Iterable[int]] = None,
-        child_id: Optional[Iterable[int]] = None,
+        record_id: Optional[Union[int, Iterable[int]]] = None,
+        manager_name: Optional[Union[str, Iterable[str]]] = None,
+        status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
+        dataset_id: Optional[Union[int, Iterable[int]]] = None,
+        parent_id: Optional[Union[int, Iterable[int]]] = None,
+        child_id: Optional[Union[int, Iterable[int]]] = None,
         created_before: Optional[datetime] = None,
         created_after: Optional[datetime] = None,
         modified_before: Optional[datetime] = None,
         modified_after: Optional[datetime] = None,
-        program: Optional[Iterable[str]] = None,
-        optimization_program: Optional[Iterable[str]] = None,
-        qc_program: Optional[Iterable[str]] = None,
-        qc_method: Optional[Iterable[str]] = None,
-        qc_basis: Optional[Iterable[Optional[str]]] = None,
-        initial_molecule_id: Optional[Iterable[int]] = None,
-        owner_user: Optional[Union[str, Iterable[str]]] = None,
-        owner_group: Optional[Union[str, Iterable[str]]] = None,
+        program: Optional[Union[str, Iterable[str]]] = None,
+        optimization_program: Optional[Union[str, Iterable[str]]] = None,
+        qc_program: Optional[Union[str, Iterable[str]]] = None,
+        qc_method: Optional[Union[str, Iterable[str]]] = None,
+        qc_basis: Optional[Union[str, Iterable[str]]] = None,
+        initial_molecule_id: Optional[Union[int, Iterable[int]]] = None,
+        owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
+        owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         *,
         include: Optional[Iterable[str]] = None,
@@ -1811,24 +1811,24 @@ class PortalClient(PortalClientBase):
 
     def query_gridoptimizations(
         self,
-        record_id: Optional[Iterable[int]] = None,
-        manager_name: Optional[Iterable[str]] = None,
-        status: Optional[Iterable[RecordStatusEnum]] = None,
-        dataset_id: Optional[Iterable[int]] = None,
-        parent_id: Optional[Iterable[int]] = None,
-        child_id: Optional[Iterable[int]] = None,
+        record_id: Optional[Union[int, Iterable[int]]] = None,
+        manager_name: Optional[Union[str, Iterable[str]]] = None,
+        status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
+        dataset_id: Optional[Union[int, Iterable[int]]] = None,
+        parent_id: Optional[Union[int, Iterable[int]]] = None,
+        child_id: Optional[Union[int, Iterable[int]]] = None,
         created_before: Optional[datetime] = None,
         created_after: Optional[datetime] = None,
         modified_before: Optional[datetime] = None,
         modified_after: Optional[datetime] = None,
-        program: Optional[Iterable[str]] = None,
-        optimization_program: Optional[Iterable[str]] = None,
-        qc_program: Optional[Iterable[str]] = None,
-        qc_method: Optional[Iterable[str]] = None,
-        qc_basis: Optional[Iterable[Optional[str]]] = None,
-        initial_molecule_id: Optional[Iterable[int]] = None,
-        owner_user: Optional[Union[str, Iterable[str]]] = None,
-        owner_group: Optional[Union[str, Iterable[str]]] = None,
+        program: Optional[Union[str, Iterable[str]]] = None,
+        optimization_program: Optional[Union[str, Iterable[str]]] = None,
+        qc_program: Optional[Union[str, Iterable[str]]] = None,
+        qc_method: Optional[Union[str, Iterable[str]]] = None,
+        qc_basis: Optional[Union[str, Iterable[Optional[str]]]] = None,
+        initial_molecule_id: Optional[Union[int, Iterable[int]]] = None,
+        owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
+        owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         *,
         include: Optional[Iterable[str]] = None,
@@ -2067,24 +2067,24 @@ class PortalClient(PortalClientBase):
 
     def query_reactions(
         self,
-        record_id: Optional[Iterable[int]] = None,
-        manager_name: Optional[Iterable[str]] = None,
-        status: Optional[Iterable[RecordStatusEnum]] = None,
-        dataset_id: Optional[Iterable[int]] = None,
-        parent_id: Optional[Iterable[int]] = None,
-        child_id: Optional[Iterable[int]] = None,
+        record_id: Optional[Union[int, Iterable[int]]] = None,
+        manager_name: Optional[Union[str, Iterable[str]]] = None,
+        status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
+        dataset_id: Optional[Union[int, Iterable[int]]] = None,
+        parent_id: Optional[Union[int, Iterable[int]]] = None,
+        child_id: Optional[Union[int, Iterable[int]]] = None,
         created_before: Optional[datetime] = None,
         created_after: Optional[datetime] = None,
         modified_before: Optional[datetime] = None,
         modified_after: Optional[datetime] = None,
-        program: Optional[Iterable[str]] = None,
-        qc_program: Optional[Iterable[str]] = None,
-        qc_method: Optional[Iterable[str]] = None,
-        qc_basis: Optional[Iterable[Optional[str]]] = None,
+        program: Optional[Union[str, Iterable[str]]] = None,
         optimization_program: Optional[Iterable[Optional[str]]] = None,
-        molecule_id: Optional[Iterable[int]] = None,
-        owner_user: Optional[Union[str, Iterable[str]]] = None,
-        owner_group: Optional[Union[str, Iterable[str]]] = None,
+        qc_program: Optional[Union[str, Iterable[str]]] = None,
+        qc_method: Optional[Union[str, Iterable[str]]] = None,
+        qc_basis: Optional[Union[str, Iterable[str]]] = None,
+        molecule_id: Optional[Union[int, Iterable[int]]] = None,
+        owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
+        owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         *,
         include: Optional[Iterable[str]] = None,
@@ -2118,14 +2118,14 @@ class PortalClient(PortalClientBase):
             Query records that were modified after the given date/time
         program
             Query records whose reaction program is in the given list
+        optimization_program
+            Query records whose optimization program is in the given list
         qc_program
             Query records whose qc program is in the given list
         qc_method
             Query records whose method is in the given list
         qc_basis
             Query records whose basis is in the given list
-        optimization_program
-            Query records whose optimization program is in the given list
         molecule_id
             Query reactions that contain a molecule (id) is in the given list
         owner_user
@@ -2151,10 +2151,10 @@ class PortalClient(PortalClientBase):
             "parent_id": make_list(parent_id),
             "child_id": make_list(child_id),
             "program": make_list(program),
+            "optimization_program": make_list(optimization_program),
             "qc_program": make_list(qc_program),
             "qc_method": make_list(qc_method),
             "qc_basis": make_list(qc_basis),
-            "optimization_program": make_list(optimization_program),
             "molecule_id": make_list(molecule_id),
             "created_before": created_before,
             "created_after": created_after,
@@ -2167,16 +2167,6 @@ class PortalClient(PortalClientBase):
 
         if include:
             filter_dict["include"] = ReactionRecord.transform_includes(include)
-
-        meta, record_data = self._auto_request(
-            "post",
-            "v1/records/reaction/query",
-            ReactionQueryFilters,
-            None,
-            Tuple[QueryMetadata, List[ReactionRecord._DataModel]],
-            filter_dict,
-            None,
-        )
 
         filter_data = ReactionQueryFilters(**filter_dict)
 
@@ -2324,23 +2314,23 @@ class PortalClient(PortalClientBase):
 
     def query_manybodys(
         self,
-        record_id: Optional[Iterable[int]] = None,
-        manager_name: Optional[Iterable[str]] = None,
-        status: Optional[Iterable[RecordStatusEnum]] = None,
-        dataset_id: Optional[Iterable[int]] = None,
-        parent_id: Optional[Iterable[int]] = None,
-        child_id: Optional[Iterable[int]] = None,
+        record_id: Optional[Union[int, Iterable[int]]] = None,
+        manager_name: Optional[Union[str, Iterable[str]]] = None,
+        status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
+        dataset_id: Optional[Union[int, Iterable[int]]] = None,
+        parent_id: Optional[Union[int, Iterable[int]]] = None,
+        child_id: Optional[Union[int, Iterable[int]]] = None,
         created_before: Optional[datetime] = None,
         created_after: Optional[datetime] = None,
         modified_before: Optional[datetime] = None,
         modified_after: Optional[datetime] = None,
-        program: Optional[Iterable[str]] = None,
-        qc_program: Optional[Iterable[str]] = None,
-        qc_method: Optional[Iterable[str]] = None,
-        qc_basis: Optional[Iterable[Optional[str]]] = None,
-        initial_molecule_id: Optional[Iterable[int]] = None,
-        owner_user: Optional[Union[str, Iterable[str]]] = None,
-        owner_group: Optional[Union[str, Iterable[str]]] = None,
+        program: Optional[Union[str, Iterable[str]]] = None,
+        qc_program: Optional[Union[str, Iterable[str]]] = None,
+        qc_method: Optional[Union[str, Iterable[str]]] = None,
+        qc_basis: Optional[Union[str, Iterable[str]]] = None,
+        initial_molecule_id: Optional[Union[int, Iterable[int]]] = None,
+        owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
+        owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
         *,
         include: Optional[Iterable[str]] = None,
@@ -2515,24 +2505,24 @@ class PortalClient(PortalClientBase):
 
     def query_nebs(
         self,
-        record_id: Optional[Iterable[int]] = None,
-        manager_name: Optional[Iterable[str]] = None,
-        status: Optional[Iterable[RecordStatusEnum]] = None,
-        dataset_id: Optional[Iterable[int]] = None,
-        parent_id: Optional[Iterable[int]] = None,
-        child_id: Optional[Iterable[int]] = None,
+        record_id: Optional[Union[int, Iterable[int]]] = None,
+        manager_name: Optional[Union[str, Iterable[str]]] = None,
+        status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
+        dataset_id: Optional[Union[int, Iterable[int]]] = None,
+        parent_id: Optional[Union[int, Iterable[int]]] = None,
+        child_id: Optional[Union[int, Iterable[int]]] = None,
         created_before: Optional[datetime] = None,
         created_after: Optional[datetime] = None,
         modified_before: Optional[datetime] = None,
         modified_after: Optional[datetime] = None,
-        program: Optional[Iterable[str]] = None,
-        qc_program: Optional[Iterable[str]] = None,
-        qc_method: Optional[Iterable[str]] = None,
-        qc_basis: Optional[Iterable[Optional[str]]] = None,
-        initial_chain_id: Optional[Iterable[int]] = None,
+        program: Optional[Union[str, Iterable[str]]] = None,
+        qc_program: Optional[Union[str, Iterable[str]]] = None,
+        qc_method: Optional[Union[str, Iterable[str]]] = None,
+        qc_basis: Optional[Union[str, Iterable[str]]] = None,
+        initial_chain_id: Optional[Union[int, Iterable[int]]] = None,
         limit: Optional[int] = None,
-        owner_user: Optional[Union[str, Iterable[str]]] = None,
-        owner_group: Optional[Union[str, Iterable[str]]] = None,
+        owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
+        owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         *,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator:
@@ -2651,6 +2641,8 @@ class PortalClient(PortalClientBase):
             Query for managers last modified after a certain time
         limit
             The maximum number of managers to return. Note that the server limit is always obeyed.
+        include
+            Additional fields to include in the returned managers
 
         Returns
         -------
