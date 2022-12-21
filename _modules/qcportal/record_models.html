@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.record_models &#8212; QCArchive 0.50b4.post13+ga0253b72 documentation</title>
+    <title>qcportal.record_models &#8212; QCArchive 0.50b4.post13+gbd427563 documentation</title>
   
   
   
@@ -199,19 +199,8 @@
           
           
           
-          <a href="https://github.com/jchen0506/molssi_doc_theme" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fa-brands fa-square-github"></i></span>
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fa-brands fa-square-github"></i></span>
             <label class="sr-only">GitHub</label></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://twitter.com/MolSSI_NSF" title="Twitter" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fa-brands fa-square-twitter"></i></span>
-            <label class="sr-only">Twitter</label></a>
         </li>
       </ul>
       </div>
@@ -335,19 +324,8 @@
           
           
           
-          <a href="https://github.com/jchen0506/molssi_doc_theme" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fa-brands fa-square-github"></i></span>
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fa-brands fa-square-github"></i></span>
             <label class="sr-only">GitHub</label></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://twitter.com/MolSSI_NSF" title="Twitter" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fa-brands fa-square-twitter"></i></span>
-            <label class="sr-only">Twitter</label></a>
         </li>
       </ul>
       </div>
@@ -883,7 +861,7 @@
         <span class="k">return</span> <span class="n">v</span>
 
 
-<span class="k">class</span> <span class="nc">RecordQueryIterator</span><span class="p">(</span><span class="n">QueryIteratorBase</span><span class="p">):</span>
+<div class="viewcode-block" id="RecordQueryIterator"><a class="viewcode-back" href="../../user_guide/qcportal/baserecord_api.html#qcportal.record_models.RecordQueryIterator">[docs]</a><span class="k">class</span> <span class="nc">RecordQueryIterator</span><span class="p">(</span><span class="n">QueryIteratorBase</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">query_filters</span><span class="p">:</span> <span class="n">RecordQueryFilters</span><span class="p">,</span> <span class="n">record_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
         <span class="n">api_limit</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_records&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">record_type</span> <span class="o">=</span> <span class="n">record_type</span>
@@ -912,7 +890,7 @@
                 <span class="kc">None</span><span class="p">,</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">meta</span><span class="p">,</span> <span class="n">records_from_datamodels</span><span class="p">(</span><span class="n">raw_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">meta</span><span class="p">,</span> <span class="n">records_from_datamodels</span><span class="p">(</span><span class="n">raw_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span></div>
 
 
 <span class="k">def</span> <span class="nf">record_from_datamodel</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">BaseRecord</span><span class="o">.</span><span class="n">_DataModel</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">client</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseRecord</span><span class="p">:</span>

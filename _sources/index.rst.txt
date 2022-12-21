@@ -26,7 +26,7 @@ Welcome to QCArchive's documentation!
     .. grid-item-card:: Getting Started
       :margin: 0 3 0 0 
       
-      Learn the basics of using molssi_doc_theme.
+      First steps with using QCArchive
 
       .. button-link:: ./getting_started/index.html
          :color: primary
@@ -48,18 +48,18 @@ Welcome to QCArchive's documentation!
     .. grid-item-card:: API Reference
       :margin: 0 3 0 0
       
-      How to use the API of molssi_doc_theme.
+      Reference for the web API of QCArchive servers
 
       .. button-link:: ./web_api/index.html
          :color: primary
          :expand:
 
-         To the API Reference.
+         To the API Reference
 
     .. grid-item-card::  Developer Guide
       :margin: 0 3 0 0
       
-      How to contribute to molssi_doc_theme
+      How to contribute to QCArdhive
 
       .. button-link:: ./developer_guide/index.html
          :color: primary

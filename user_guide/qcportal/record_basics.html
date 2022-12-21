@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Computation record basics &#8212; QCArchive 0.50b4.post13+ga0253b72 documentation</title>
+    <title>Computation record basics &#8212; QCArchive 0.50b4.post13+gbd427563 documentation</title>
   
   
   
@@ -202,19 +202,8 @@
           
           
           
-          <a href="https://github.com/jchen0506/molssi_doc_theme" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fa-brands fa-square-github"></i></span>
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fa-brands fa-square-github"></i></span>
             <label class="sr-only">GitHub</label></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://twitter.com/MolSSI_NSF" title="Twitter" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fa-brands fa-square-twitter"></i></span>
-            <label class="sr-only">Twitter</label></a>
         </li>
       </ul>
       </div>
@@ -338,19 +327,8 @@
           
           
           
-          <a href="https://github.com/jchen0506/molssi_doc_theme" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fa-brands fa-square-github"></i></span>
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fa-brands fa-square-github"></i></span>
             <label class="sr-only">GitHub</label></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://twitter.com/MolSSI_NSF" title="Twitter" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fa-brands fa-square-twitter"></i></span>
-            <label class="sr-only">Twitter</label></a>
         </li>
       </ul>
       </div>
@@ -470,7 +448,7 @@ calculation features.</p>
 <p>The records returned from query functions are not in any defined order, and the order may be different
 even with repeated calls with the same arguments</p>
 </div>
-<p>Query functions return an <code class="xref py py-class docutils literal notranslate"><span class="pre">iterator</span></code> object.
+<p>Query functions return an <a class="reference internal" href="baserecord_api.html#qcportal.record_models.RecordQueryIterator" title="qcportal.record_models.RecordQueryIterator"><code class="xref py py-class docutils literal notranslate"><span class="pre">iterator</span></code></a> object.
 This iterator handles transparent and efficient fetching from the server in
 batches, especially when many records may be returned by a query:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">record_it</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">query_records</span><span class="p">(</span><span class="n">record_type</span><span class="o">=</span><span class="s1">&#39;singlepoint&#39;</span><span class="p">,</span> <span class="n">created_before</span><span class="o">=</span><span class="s1">&#39;2021-02-01&#39;</span><span class="p">)</span>
