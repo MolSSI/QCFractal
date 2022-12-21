@@ -1,5 +1,3 @@
-.. portalclient_api:
-
 PortalClient API
 ================
 

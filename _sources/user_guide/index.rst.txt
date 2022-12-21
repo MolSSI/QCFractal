@@ -1,4 +1,4 @@
-Getting Started
+QCArchive User Guide
 =====================================
 
 .. toctree::
@@ -7,7 +7,8 @@ Getting Started
    :titlesonly:
 
    glossary
-   snowflake
+   tasks_services
    qcfractal/index
    qcfractalcompute/index
    qcportal/index
+   snowflake
