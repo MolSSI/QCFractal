@@ -4,7 +4,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional, Dict, Any, List, Union, Iterable, Set, Tuple, Sequence
 
-from pydantic import BaseModel, Extra, constr
+from dateutil.parser import parse as date_parser
+from pydantic import BaseModel, Extra, constr, validator
 from qcelemental.models.results import Provenance
 
 from qcportal.base_models import (
@@ -490,6 +491,12 @@ class RecordQueryFilters(QueryProjModelBase):
     modified_after: Optional[datetime] = None
     owner_user: Optional[List[Union[int, str]]] = None
     owner_group: Optional[List[Union[int, str]]] = None
+
+    @validator("created_before", "created_after", "modified_before", "modified_after", pre=True)
+    def parse_dates(cls, v):
+        if isinstance(v, str):
+            return date_parser(v)
+        return v
 
 
 class RecordQueryIterator(QueryIteratorBase):

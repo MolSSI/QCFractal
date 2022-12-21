@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional, List, Tuple, Dict, Any, Union
 
+from dateutil.parser import parse as date_parser
 from pydantic import BaseModel, Extra, validator, IPvAnyAddress, constr
 
 from qcportal.base_models import (
@@ -32,6 +33,12 @@ class AccessLogQueryFilters(QueryProjModelBase):
     user: Optional[List[Union[int, str]]] = None
     before: Optional[datetime] = None
     after: Optional[datetime] = None
+
+    @validator("before", "after", pre=True)
+    def parse_dates(cls, v):
+        if isinstance(v, str):
+            return date_parser(v)
+        return v
 
 
 class AccessLogEntry(BaseModel):
@@ -86,6 +93,12 @@ class AccessLogSummaryFilters(RestModelBase):
     def validate_lists(cls, v):
         return validate_list_to_single(v)
 
+    @validator("before", "after", pre=True)
+    def parse_dates(cls, v):
+        if isinstance(v, str):
+            return date_parser(v)
+        return v
+
 
 class AccessLogSummaryEntry(BaseModel):
     class Config:
@@ -110,6 +123,12 @@ class ErrorLogQueryFilters(QueryModelBase):
     user: Optional[List[Union[int, str]]] = None
     before: Optional[datetime] = None
     after: Optional[datetime] = None
+
+    @validator("before", "after", pre=True)
+    def parse_dates(cls, v):
+        if isinstance(v, str):
+            return date_parser(v)
+        return v
 
 
 class ErrorLogEntry(BaseModel):
@@ -151,6 +170,12 @@ class ServerStatsQueryFilters(QueryModelBase):
     @validator("before", "after", pre=True)
     def validate_lists(cls, v):
         return validate_list_to_single(v)
+
+    @validator("before", "after", pre=True)
+    def parse_dates(cls, v):
+        if isinstance(v, str):
+            return date_parser(v)
+        return v
 
 
 class ServerStatsEntry(BaseModel):

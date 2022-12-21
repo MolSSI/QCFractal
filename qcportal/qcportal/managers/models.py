@@ -4,6 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional, Dict, Any, List, Iterable, Set, Tuple
 
+from dateutil.parser import parse as date_parser
 from pydantic import BaseModel, Field, constr, validator, Extra
 
 from qcportal.base_models import RestModelBase, QueryProjModelBase
@@ -158,6 +159,12 @@ class ManagerQueryFilters(QueryProjModelBase):
     status: Optional[List[ManagerStatusEnum]] = None
     modified_before: Optional[datetime] = None
     modified_after: Optional[datetime] = None
+
+    @validator("modified_before", "modified_after", pre=True)
+    def parse_dates(cls, v):
+        if isinstance(v, str):
+            return date_parser(v)
+        return v
 
 
 class ManagerQueryIterator(QueryIteratorBase):

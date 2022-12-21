@@ -2,7 +2,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional, Dict, Any, List, Tuple, Union
 
-from pydantic import BaseModel, Extra
+from dateutil.parser import parse as date_parser
+from pydantic import BaseModel, Extra, validator
 
 from qcportal.base_models import QueryProjModelBase
 from ..base_models import QueryIteratorBase
@@ -73,6 +74,20 @@ class InternalJobQueryFilters(QueryProjModelBase):
     added_after: Optional[datetime] = None
     scheduled_before: Optional[datetime] = None
     scheduled_after: Optional[datetime] = None
+
+    @validator(
+        "last_updated_before",
+        "last_updated_after",
+        "added_before",
+        "added_after",
+        "scheduled_before",
+        "scheduled_after",
+        pre=True,
+    )
+    def parse_dates(cls, v):
+        if isinstance(v, str):
+            return date_parser(v)
+        return v
 
 
 class InternalJobQueryIterator(QueryIteratorBase):
