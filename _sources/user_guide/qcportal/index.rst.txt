@@ -19,3 +19,4 @@ QCPortal User Guide
    serveradmin
 
    portalclient_api
+   baserecord_api

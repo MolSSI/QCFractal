@@ -1,0 +1,6 @@
+.. baserecord_api:
+
+PortalClient API
+================
+
+.. autoclass:: qcportal.record_models.BaseRecord

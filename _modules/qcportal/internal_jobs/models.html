@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.internal_jobs.models &#8212; QCArchive 0.50b4.post11+g12c3da52 documentation</title>
+    <title>qcportal.internal_jobs.models &#8212; QCArchive 0.50b4.post13+ga0253b72 documentation</title>
   
   
   
@@ -386,7 +386,8 @@
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span>
+<span class="kn">from</span> <span class="nn">dateutil.parser</span> <span class="kn">import</span> <span class="n">parse</span> <span class="k">as</span> <span class="n">date_parser</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Extra</span><span class="p">,</span> <span class="n">validator</span>
 
 <span class="kn">from</span> <span class="nn">qcportal.base_models</span> <span class="kn">import</span> <span class="n">QueryProjModelBase</span>
 <span class="kn">from</span> <span class="nn">..base_models</span> <span class="kn">import</span> <span class="n">QueryIteratorBase</span>
@@ -456,7 +457,21 @@
     <span class="n">added_before</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">added_after</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">scheduled_before</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">scheduled_after</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">scheduled_after</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="InternalJobQueryFilters.parse_dates"><a class="viewcode-back" href="../../../user_guide/qcportal/serveradmin.html#qcportal.internal_jobs.models.InternalJobQueryFilters.parse_dates">[docs]</a>    <span class="nd">@validator</span><span class="p">(</span>
+        <span class="s2">&quot;last_updated_before&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;last_updated_after&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;added_before&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;added_after&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;scheduled_before&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;scheduled_after&quot;</span><span class="p">,</span>
+        <span class="n">pre</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">def</span> <span class="nf">parse_dates</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">date_parser</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">v</span></div></div>
 
 
 <div class="viewcode-block" id="InternalJobQueryIterator"><a class="viewcode-back" href="../../../user_guide/qcportal/serveradmin.html#qcportal.internal_jobs.models.InternalJobQueryIterator">[docs]</a><span class="k">class</span> <span class="nc">InternalJobQueryIterator</span><span class="p">(</span><span class="n">QueryIteratorBase</span><span class="p">):</span>

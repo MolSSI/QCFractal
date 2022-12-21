@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>PortalClient API &#8212; QCArchive 0.50b4.post11+g12c3da52 documentation</title>
+    <title>PortalClient API &#8212; QCArchive 0.50b4.post13+ga0253b72 documentation</title>
   
   
   
@@ -44,7 +44,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/qcportal/portalclient_api';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Web API Reference" href="../../web_api/index.html" />
+    <link rel="next" title="PortalClient API" href="baserecord_api.html" />
     <link rel="prev" title="Server administration via the client" href="serveradmin.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="docsearch:language" content="en">
@@ -384,6 +384,8 @@
 <li class="toctree-l2"><a class="reference internal" href="basics.html">Client basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="molecule.html">Molecules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="record_basics.html">Computation record basics</a></li>
+
+
 <li class="toctree-l2"><a class="reference internal" href="dataset_basics.html">Dataset basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="singlepoint.html">Singlepoint calculations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optimization.html">Optimization calculations</a></li>
@@ -393,6 +395,7 @@
 <li class="toctree-l2"><a class="reference internal" href="manybody.html">Manybody calculations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="serveradmin.html">Server administration via the client</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">PortalClient API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="baserecord_api.html">PortalClient API</a></li>
 </ul>
 </li>
 </ul>
@@ -430,7 +433,7 @@
 <h1>PortalClient API<a class="headerlink" href="#portalclient-api" title="Permalink to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.client.PortalClient">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qcportal.client.</span></span><span class="sig-name descname"><span class="pre">PortalClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'https://api.qcarchive.molssi.org'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_motd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_memcache_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/client.html#PortalClient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PortalClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'https://api.qcarchive.molssi.org'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_motd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_memcache_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/client.html#PortalClient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -718,7 +721,7 @@ a list of records.  If missing_ok was specified, None will be substituted for a 
 that was not found.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Optional</em>[<em>Union</em>[<em>List</em>[<em>Optional</em>[<em>BaseRecord</em>]], <em>BaseRecord</em>]]</p>
+<dd class="field-odd"><p><em>Optional</em>[<em>Union</em>[<em>List</em>[<em>Optional</em>[<a class="reference internal" href="baserecord_api.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a>]], <a class="reference internal" href="baserecord_api.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a>]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -740,10 +743,10 @@ that are common among all records.</p>
 <li><p><strong>dataset_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that are part of a dataset is in the given list</p></li>
 <li><p><strong>parent_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a parent is in the given list</p></li>
 <li><p><strong>child_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a child is in the given list</p></li>
-<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were created before the given date/time</p></li>
-<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were created after the given date/time</p></li>
-<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
-<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
+<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created before the given date/time</p></li>
+<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created after the given date/time</p></li>
+<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
+<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
 <li><p><strong>owner_user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a user in the given list (usernames or IDs)</p></li>
 <li><p><strong>owner_group</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Query records owned by a group in the given list (group names or IDS)</p></li>
 <li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of records to return. Note that the server limit is always obeyed.</p></li>
@@ -974,10 +977,10 @@ that was not found.</p>
 <li><p><strong>status</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>RecordStatusEnum</em><em>, </em><em>Iterable</em><em>[</em><em>RecordStatusEnum</em><em>]</em><em>]</em><em>]</em>) – Query records whose status is in the given list</p></li>
 <li><p><strong>dataset_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that are part of a dataset is in the given list</p></li>
 <li><p><strong>parent_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a parent is in the given list</p></li>
-<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were created before the given date/time</p></li>
-<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were created after the given date/time</p></li>
-<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
-<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
+<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created before the given date/time</p></li>
+<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created after the given date/time</p></li>
+<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
+<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
 <li><p><strong>program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose program is in the given list</p></li>
 <li><p><strong>driver</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>SinglepointDriver</em><em>, </em><em>Iterable</em><em>[</em><em>SinglepointDriver</em><em>]</em><em>]</em><em>]</em>) – Query records whose driver is in the given list</p></li>
 <li><p><strong>method</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose method is in the given list</p></li>
@@ -1069,10 +1072,10 @@ that was not found.</p>
 <li><p><strong>dataset_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that are part of a dataset is in the given list</p></li>
 <li><p><strong>parent_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a parent is in the given list</p></li>
 <li><p><strong>child_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a child (singlepoint calculation) is in the given list</p></li>
-<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were created before the given date/time</p></li>
-<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were created after the given date/time</p></li>
-<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
-<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
+<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created before the given date/time</p></li>
+<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created after the given date/time</p></li>
+<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
+<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
 <li><p><strong>program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose optimization program is in the given list</p></li>
 <li><p><strong>qc_program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose qc program is in the given list</p></li>
 <li><p><strong>qc_method</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose method is in the given list</p></li>
@@ -1164,10 +1167,10 @@ that was not found.</p>
 <li><p><strong>dataset_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that are part of a dataset is in the given list</p></li>
 <li><p><strong>parent_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a parent is in the given list</p></li>
 <li><p><strong>child_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a child (optimization calculation) is in the given list</p></li>
-<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were created before the given date/time</p></li>
-<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were created after the given date/time</p></li>
-<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
-<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
+<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created before the given date/time</p></li>
+<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created after the given date/time</p></li>
+<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
+<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
 <li><p><strong>program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose torsiondrive program is in the given list</p></li>
 <li><p><strong>optimization_program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose optimization program is in the given list</p></li>
 <li><p><strong>qc_program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose qc program is in the given list</p></li>
@@ -1262,10 +1265,10 @@ that was not found.</p>
 <li><p><strong>dataset_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that are part of a dataset is in the given list</p></li>
 <li><p><strong>parent_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a parent is in the given list</p></li>
 <li><p><strong>child_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a child (optimization calculation) is in the given list</p></li>
-<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were created before the given date/time</p></li>
-<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were created after the given date/time</p></li>
-<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
-<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
+<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created before the given date/time</p></li>
+<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created after the given date/time</p></li>
+<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
+<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
 <li><p><strong>program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose gridoptimization program is in the given list</p></li>
 <li><p><strong>optimization_program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose optimization program is in the given list</p></li>
 <li><p><strong>qc_program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose qc program is in the given list</p></li>
@@ -1362,10 +1365,10 @@ that was not found.</p>
 <li><p><strong>dataset_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that are part of a dataset is in the given list</p></li>
 <li><p><strong>parent_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a parent is in the given list</p></li>
 <li><p><strong>child_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a child (optimization calculation) is in the given list</p></li>
-<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were created before the given date/time</p></li>
-<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were created after the given date/time</p></li>
-<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
-<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
+<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created before the given date/time</p></li>
+<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created after the given date/time</p></li>
+<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
+<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
 <li><p><strong>program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose reaction program is in the given list</p></li>
 <li><p><strong>optimization_program</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>Optional</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose optimization program is in the given list</p></li>
 <li><p><strong>qc_program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose qc program is in the given list</p></li>
@@ -1456,10 +1459,10 @@ that was not found.</p>
 <li><p><strong>dataset_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that are part of a dataset is in the given list</p></li>
 <li><p><strong>parent_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a parent is in the given list</p></li>
 <li><p><strong>child_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Query records that have a child (optimization calculation) is in the given list</p></li>
-<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were created before the given date/time</p></li>
-<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were created after the given date/time</p></li>
-<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
-<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
+<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created before the given date/time</p></li>
+<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were created after the given date/time</p></li>
+<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified before the given date/time</p></li>
+<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query records that were modified after the given date/time</p></li>
 <li><p><strong>program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose reaction program is in the given list</p></li>
 <li><p><strong>qc_program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose qc program is in the given list</p></li>
 <li><p><strong>qc_method</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Query records whose qc method is in the given list</p></li>
@@ -1533,10 +1536,10 @@ that was not found.</p>
 <li><p><strong>dataset_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>parent_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>child_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – </p></li>
-<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – </p></li>
-<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – </p></li>
-<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – </p></li>
-<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – </p></li>
+<li><p><strong>created_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>created_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
+<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>qc_program</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
 <li><p><strong>qc_method</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – </p></li>
@@ -1590,8 +1593,8 @@ that was not found.</p>
 <li><p><strong>cluster</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Queries managers whose assigned cluster is in the given list</p></li>
 <li><p><strong>hostname</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Queries managers whose hostname is in the given list</p></li>
 <li><p><strong>status</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>RecordStatusEnum</em><em>, </em><em>Iterable</em><em>[</em><em>RecordStatusEnum</em><em>]</em><em>]</em><em>]</em>) – Queries managers whose status is in the given list</p></li>
-<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query for managers last modified before a certain time</p></li>
-<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query for managers last modified after a certain time</p></li>
+<li><p><strong>modified_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query for managers last modified before a certain time</p></li>
+<li><p><strong>modified_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query for managers last modified after a certain time</p></li>
 <li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of managers to return. Note that the server limit is always obeyed.</p></li>
 <li><p><strong>include</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Additional fields to include in the returned managers</p></li>
 </ul>
@@ -1614,8 +1617,8 @@ as they are not deleted)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Return statistics captured before the specified date/time</p></li>
-<li><p><strong>after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Return statistics captured after the specified date/time</p></li>
+<li><p><strong>before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Return statistics captured before the specified date/time</p></li>
+<li><p><strong>after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Return statistics captured after the specified date/time</p></li>
 <li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of statistics entries to return. Note that the server limit is always obeyed.</p></li>
 </ul>
 </dd>
@@ -1655,8 +1658,8 @@ as they are not deleted)</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>access_type</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Return log entries whose access_type is in the given list</p></li>
 <li><p><strong>access_method</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Return log entries whose access_method is in the given list</p></li>
-<li><p><strong>before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Return log entries captured before the specified date/time</p></li>
-<li><p><strong>after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Return log entries captured after the specified date/time</p></li>
+<li><p><strong>before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Return log entries captured before the specified date/time</p></li>
+<li><p><strong>after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Return log entries captured after the specified date/time</p></li>
 <li><p><strong>user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – User name or ID associated with the log entry</p></li>
 <li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of log entries to return. Note that the server limit is always obeyed.</p></li>
 </ul>
@@ -1697,8 +1700,8 @@ as they are not deleted)</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>error_id</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em><em>]</em>) – Return error log entries whose id is in the list</p></li>
 <li><p><strong>user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – Return error log entries whose user name or ID is in the list</p></li>
-<li><p><strong>before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Return error log entries captured before the specified date/time</p></li>
-<li><p><strong>after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Return error log entries captured after the specified date/time</p></li>
+<li><p><strong>before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Return error log entries captured before the specified date/time</p></li>
+<li><p><strong>after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Return error log entries captured after the specified date/time</p></li>
 <li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of log entries to return. Note that the server limit is always obeyed.</p></li>
 </ul>
 </dd>
@@ -1754,12 +1757,12 @@ as they are not deleted)</p>
 <li><p><strong>user</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>Union</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em><em>]</em><em>]</em>) – User name or ID associated with the log entry</p></li>
 <li><p><strong>runner_hostname</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>]</em>) – Queries jobs that were run/are running on a given host</p></li>
 <li><p><strong>status</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="serveradmin.html#qcportal.internal_jobs.models.InternalJobStatusEnum" title="qcportal.internal_jobs.models.InternalJobStatusEnum"><em>InternalJobStatusEnum</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="serveradmin.html#qcportal.internal_jobs.models.InternalJobStatusEnum" title="qcportal.internal_jobs.models.InternalJobStatusEnum"><em>InternalJobStatusEnum</em></a><em>]</em><em>]</em><em>]</em>) – Queries jobs whose status is in the given list</p></li>
-<li><p><strong>last_updated_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query for jobs last updated before a certain time</p></li>
-<li><p><strong>last_updated_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query for jobs last updated after a certain time</p></li>
-<li><p><strong>added_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query for jobs added before a certain time</p></li>
-<li><p><strong>added_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query for jobs added after a certain time</p></li>
-<li><p><strong>scheduled_before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query for jobs scheduled to run before a certain time</p></li>
-<li><p><strong>scheduled_after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query for jobs scheduled to run after a certain time</p></li>
+<li><p><strong>last_updated_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query for jobs last updated before a certain time</p></li>
+<li><p><strong>last_updated_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query for jobs last updated after a certain time</p></li>
+<li><p><strong>added_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query for jobs added before a certain time</p></li>
+<li><p><strong>added_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query for jobs added after a certain time</p></li>
+<li><p><strong>scheduled_before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query for jobs scheduled to run before a certain time</p></li>
+<li><p><strong>scheduled_after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query for jobs scheduled to run after a certain time</p></li>
 <li><p><strong>limit</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – The maximum number of jobs to return. Note that the server limit is always obeyed.</p></li>
 </ul>
 </dd>
@@ -1803,8 +1806,8 @@ log entries and do it yourself.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>group_by</strong> (<em>str</em>) – How to group the data. Valid options are “user”, “hour”, “day”, “country”, “subdivision”</p></li>
-<li><p><strong>before</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query for log entries with a timestamp before a specific time</p></li>
-<li><p><strong>after</strong> (<em>Optional</em><em>[</em><em>datetime</em><em>]</em>) – Query for log entries with a timestamp after a specific time</p></li>
+<li><p><strong>before</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query for log entries with a timestamp before a specific time</p></li>
+<li><p><strong>after</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>datetime</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Query for log entries with a timestamp after a specific time</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
@@ -2098,10 +2101,10 @@ current working directory and ~.qca/ are searched for “qcportal_config.yaml”
           <p class="prev-next-title">Server administration via the client</p>
       </div>
   </a>
-  <a class='right-next' id="next-link" href="../../web_api/index.html" title="next page">
+  <a class='right-next' id="next-link" href="baserecord_api.html" title="next page">
   <div class="prev-next-info">
       <p class="prev-next-subtitle">next</p>
-      <p class="prev-next-title">Web API Reference</p>
+      <p class="prev-next-title">PortalClient API</p>
   </div>
   <i class="fa-solid fa-angle-right"></i>
   </a>

@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Computation record basics &#8212; QCArchive 0.50b4.post11+g12c3da52 documentation</title>
+    <title>Computation record basics &#8212; QCArchive 0.50b4.post13+ga0253b72 documentation</title>
   
   
   
@@ -384,6 +384,8 @@
 <li class="toctree-l2"><a class="reference internal" href="basics.html">Client basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="molecule.html">Molecules</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Computation record basics</a></li>
+
+
 <li class="toctree-l2"><a class="reference internal" href="dataset_basics.html">Dataset basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="singlepoint.html">Singlepoint calculations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optimization.html">Optimization calculations</a></li>
@@ -393,6 +395,7 @@
 <li class="toctree-l2"><a class="reference internal" href="manybody.html">Manybody calculations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="serveradmin.html">Server administration via the client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="portalclient_api.html">PortalClient API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="baserecord_api.html">PortalClient API</a></li>
 </ul>
 </li>
 </ul>
@@ -428,10 +431,84 @@
               
   <section id="computation-record-basics">
 <h1>Computation record basics<a class="headerlink" href="#computation-record-basics" title="Permalink to this heading">#</a></h1>
+<p>A <em>record</em> is a representation of a single computation that is stored on the server. Records are generally
+not created by hand by the user, but retrieved from the server.</p>
+<p>Records contain an ID that uniquely identifies this record on the server.</p>
+</section>
+<section id="record-retrieval">
+<h1>Record Retrieval<a class="headerlink" href="#record-retrieval" title="Permalink to this heading">#</a></h1>
+<p>Using the <a class="reference internal" href="portalclient_api.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a>, records are retrieved from the server in two ways.
+The first is through <code class="docutils literal notranslate"><span class="pre">get_</span></code> functions,  which is used to retrieve records by their ID.
+These functions (such as <a class="reference internal" href="portalclient_api.html#qcportal.client.PortalClient.get_records" title="qcportal.client.PortalClient.get_records"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_records()</span></code></a> and <a class="reference internal" href="portalclient_api.html#qcportal.client.PortalClient.get_singlepoints" title="qcportal.client.PortalClient.get_singlepoints"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_singlepoints()</span></code></a>)
+take a list or other sequence of IDs, and returns a list of records in the same order as the given IDs:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">records</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">get_records</span><span class="p">([</span><span class="mi">245</span><span class="p">,</span> <span class="mi">827</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">records</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">records</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+<span class="go">245 827</span>
+</pre></div>
+</div>
+<p>If a single ID is specified rather than a list, then just that record is returned (not a list)</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">records</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">245</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">records</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+<span class="go">245</span>
+</pre></div>
+</div>
+<p>If a record is not found, then an exception is raised. This can be suppressed with <code class="docutils literal notranslate"><span class="pre">missing_ok=True</span></code>, in which
+case missing records are returned as <code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">records</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">get_records</span><span class="p">([</span><span class="mi">245</span><span class="p">,</span> <span class="mi">827</span><span class="p">,</span> <span class="mi">9999999</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">records</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+<span class="go">None</span>
+</pre></div>
+</div>
+<section id="querying">
+<h2>Querying<a class="headerlink" href="#querying" title="Permalink to this heading">#</a></h2>
+<p>The second way of retrieving records is by querying the server using <code class="docutils literal notranslate"><span class="pre">query_</span></code> functions
+(<a class="reference internal" href="portalclient_api.html#qcportal.client.PortalClient.query_records" title="qcportal.client.PortalClient.query_records"><code class="xref py py-func docutils literal notranslate"><span class="pre">query_records()</span></code></a>, <a class="reference internal" href="portalclient_api.html#qcportal.client.PortalClient.query_singlepoints" title="qcportal.client.PortalClient.query_singlepoints"><code class="xref py py-func docutils literal notranslate"><span class="pre">query_singlepoints()</span></code></a>, etc).
+These functions have a lot of parameters, allowing you to query based on dates, molecules, and other
+calculation features.</p>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>The records returned from query functions are not in any defined order, and the order may be different
+even with repeated calls with the same arguments</p>
+</div>
+<p>Query functions return an <code class="xref py py-class docutils literal notranslate"><span class="pre">iterator</span></code> object.
+This iterator handles transparent and efficient fetching from the server in
+batches, especially when many records may be returned by a query:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">record_it</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">query_records</span><span class="p">(</span><span class="n">record_type</span><span class="o">=</span><span class="s1">&#39;singlepoint&#39;</span><span class="p">,</span> <span class="n">created_before</span><span class="o">=</span><span class="s1">&#39;2021-02-01&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">record_it</span><span class="p">:</span>
+<span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+<span class="go">114296306</span>
+<span class="go">114296305</span>
+<span class="go">114296304</span>
+<span class="go">  ...</span>
+</pre></div>
+</div>
+<p>Records that are returned must match all query parameters.
+Query functions can take lists or iterables for most parameters as well, in which case records that match
+any within the list will be returned. For example, the following finds errored or complete records
+that were recently modified:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">record_it</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">query_records</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;complete&#39;</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">],</span> <span class="n">modified_after</span><span class="o">=</span><span class="s1">&#39;2022-12-01&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">record_it</span><span class="p">:</span>
+<span class="gp">... </span>   <span class="nb">print</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+<span class="go">81798273</span>
+<span class="go">79692444</span>
+<span class="go">  ...</span>
+</pre></div>
+</div>
+<p>Query functions for different records types (such as <a class="reference internal" href="portalclient_api.html#qcportal.client.PortalClient.query_singlepoints" title="qcportal.client.PortalClient.query_singlepoints"><code class="xref py py-func docutils literal notranslate"><span class="pre">query_singlepoints()</span></code></a>)
+take more parameters that are specific to that computation (such as basis set for singlepoints, initial molecule for
+optimizations, etc).</p>
+</section>
+</section>
+<section id="common-features">
+<h1>Common features<a class="headerlink" href="#common-features" title="Permalink to this heading">#</a></h1>
+<section id="metadata">
+<h2>Metadata<a class="headerlink" href="#metadata" title="Permalink to this heading">#</a></h2>
 <section id="next-steps">
-<h2>Next steps<a class="headerlink" href="#next-steps" title="Permalink to this heading">#</a></h2>
-<dl class="simple">
-<dt>See documentation about the individual kinds of records:</dt><dd><ul class="simple">
+<h3>Next steps<a class="headerlink" href="#next-steps" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>View the <a class="reference internal" href="baserecord_api.html"><span class="doc">basic record API</span></a></p></li>
+<li><p>See documentation about the individual kinds of records</p>
+<ul>
 <li><p><a class="reference internal" href="singlepoint.html"><span class="doc">Singlepoint records</span></a></p></li>
 <li><p><a class="reference internal" href="optimization.html"><span class="doc">Optimization records</span></a></p></li>
 <li><p><a class="reference internal" href="torsiondrive.html"><span class="doc">Torsiondrive records</span></a></p></li>
@@ -439,8 +516,9 @@
 <li><p><a class="reference internal" href="manybody.html"><span class="doc">Manybody records</span></a></p></li>
 <li><p><a class="reference internal" href="reaction.html"><span class="doc">Reaction records</span></a></p></li>
 </ul>
-</dd>
-</dl>
+</li>
+</ul>
+</section>
 </section>
 </section>
 
@@ -482,10 +560,41 @@
 </div>
 <nav id="bd-toc-nav" class="page-toc">
     <ul class="visible nav section-nav flex-column">
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#next-steps">
-   Next steps
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#">
+   Computation record basics
   </a>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#record-retrieval">
+   Record Retrieval
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#querying">
+     Querying
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h1 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#common-features">
+   Common features
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h2 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#metadata">
+     Metadata
+    </a>
+    <ul class="visible nav section-nav flex-column">
+     <li class="toc-h3 nav-item toc-entry">
+      <a class="reference internal nav-link" href="#next-steps">
+       Next steps
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
  </li>
 </ul>
 

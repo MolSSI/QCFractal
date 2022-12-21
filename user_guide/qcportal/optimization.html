@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Optimization calculations &#8212; QCArchive 0.50b4.post11+g12c3da52 documentation</title>
+    <title>Optimization calculations &#8212; QCArchive 0.50b4.post13+ga0253b72 documentation</title>
   
   
   
@@ -384,6 +384,8 @@
 <li class="toctree-l2"><a class="reference internal" href="basics.html">Client basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="molecule.html">Molecules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="record_basics.html">Computation record basics</a></li>
+
+
 <li class="toctree-l2"><a class="reference internal" href="dataset_basics.html">Dataset basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="singlepoint.html">Singlepoint calculations</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Optimization calculations</a></li>
@@ -393,6 +395,7 @@
 <li class="toctree-l2"><a class="reference internal" href="manybody.html">Manybody calculations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="serveradmin.html">Server administration via the client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="portalclient_api.html">PortalClient API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="baserecord_api.html">PortalClient API</a></li>
 </ul>
 </li>
 </ul>
@@ -432,7 +435,7 @@
 <h2>API<a class="headerlink" href="#api" title="Permalink to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.optimization.OptimizationRecord">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qcportal.optimization.</span></span><span class="sig-name descname"><span class="pre">OptimizationRecord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/optimization/record_models.html#OptimizationRecord"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.OptimizationRecord" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OptimizationRecord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/optimization/record_models.html#OptimizationRecord"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.OptimizationRecord" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -607,7 +610,7 @@ the new model: you should trust this data</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>BaseRecord</em></p>
+<dd class="field-even"><p><a class="reference internal" href="baserecord_api.html#qcportal.record_models.BaseRecord" title="qcportal.record_models.BaseRecord"><em>BaseRecord</em></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -856,7 +859,7 @@ the new model: you should trust this data</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.optimization.OptimizationSpecification">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">qcportal.optimization.</span></span><span class="sig-name descname"><span class="pre">OptimizationSpecification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">program</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qc_specification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keywords={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocols=OptimizationProtocols(trajectory=&lt;TrajectoryProtocolEnum.all:</span> <span class="pre">'all'&gt;)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/optimization/record_models.html#OptimizationSpecification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.OptimizationSpecification" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">OptimizationSpecification</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">program</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qc_specification</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keywords={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocols=OptimizationProtocols(trajectory=&lt;TrajectoryProtocolEnum.all:</span> <span class="pre">'all'&gt;)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/optimization/record_models.html#OptimizationSpecification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.optimization.OptimizationSpecification" title="Permalink to this definition">#</a></dt>
 <dd><p>An OptimizationSpecification as stored on the server</p>
 <p>This is the same as the input specification, with a few ids added</p>
 <dl class="field-list simple">

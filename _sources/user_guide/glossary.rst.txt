@@ -28,7 +28,7 @@ specification
 --------------------------
 
 A *specification* details how a computation should be run. For example, an
-:class:`OptimizationSpecification <qcportal.optimization.OptimizationSpecification>` contains
+:class:`~qcportal.optimization.OptimizationSpecification` contains
 information about the program used to run the optimization, which method or basis, and other
 input information.
 
