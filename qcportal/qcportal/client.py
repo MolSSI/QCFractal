@@ -447,6 +447,7 @@ class PortalClient(PortalClientBase):
 
     def query_molecules(
         self,
+        *,
         molecule_hash: Optional[Union[str, Iterable[str]]] = None,
         molecular_formula: Optional[Union[str, Iterable[str]]] = None,
         identifiers: Optional[Dict[str, Union[str, Iterable[str]]]] = None,
@@ -669,6 +670,7 @@ class PortalClient(PortalClientBase):
 
     def query_records(
         self,
+        *,
         record_id: Optional[Union[int, Iterable[int]]] = None,
         record_type: Optional[Union[str, Iterable[str]]] = None,
         manager_name: Optional[Union[str, Iterable[str]]] = None,
@@ -683,7 +685,6 @@ class PortalClient(PortalClientBase):
         owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: int = None,
-        *,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator:
         """
@@ -1063,6 +1064,7 @@ class PortalClient(PortalClientBase):
 
     def query_singlepoints(
         self,
+        *,
         record_id: Optional[Union[int, Iterable[int]]] = None,
         manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
@@ -1081,7 +1083,6 @@ class PortalClient(PortalClientBase):
         owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
-        *,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator:
         """
@@ -1315,6 +1316,7 @@ class PortalClient(PortalClientBase):
 
     def query_optimizations(
         self,
+        *,
         record_id: Optional[Union[int, Iterable[int]]] = None,
         manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
@@ -1334,7 +1336,6 @@ class PortalClient(PortalClientBase):
         owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
-        *,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator:
         """
@@ -1563,6 +1564,7 @@ class PortalClient(PortalClientBase):
 
     def query_torsiondrives(
         self,
+        *,
         record_id: Optional[Union[int, Iterable[int]]] = None,
         manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
@@ -1582,7 +1584,6 @@ class PortalClient(PortalClientBase):
         owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
-        *,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator:
         """
@@ -1811,6 +1812,7 @@ class PortalClient(PortalClientBase):
 
     def query_gridoptimizations(
         self,
+        *,
         record_id: Optional[Union[int, Iterable[int]]] = None,
         manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
@@ -1830,7 +1832,6 @@ class PortalClient(PortalClientBase):
         owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
-        *,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator:
         """
@@ -2067,6 +2068,7 @@ class PortalClient(PortalClientBase):
 
     def query_reactions(
         self,
+        *,
         record_id: Optional[Union[int, Iterable[int]]] = None,
         manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
@@ -2086,7 +2088,6 @@ class PortalClient(PortalClientBase):
         owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
-        *,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator:
         """
@@ -2314,6 +2315,7 @@ class PortalClient(PortalClientBase):
 
     def query_manybodys(
         self,
+        *,
         record_id: Optional[Union[int, Iterable[int]]] = None,
         manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
@@ -2332,7 +2334,6 @@ class PortalClient(PortalClientBase):
         owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         limit: Optional[int] = None,
-        *,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator:
         """
@@ -2505,6 +2506,7 @@ class PortalClient(PortalClientBase):
 
     def query_nebs(
         self,
+        *,
         record_id: Optional[Union[int, Iterable[int]]] = None,
         manager_name: Optional[Union[str, Iterable[str]]] = None,
         status: Optional[Union[RecordStatusEnum, Iterable[RecordStatusEnum]]] = None,
@@ -2523,7 +2525,6 @@ class PortalClient(PortalClientBase):
         limit: Optional[int] = None,
         owner_user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         owner_group: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
-        *,
         include: Optional[Iterable[str]] = None,
     ) -> RecordQueryIterator:
         """Queries neb records from the server."""
@@ -2609,6 +2610,7 @@ class PortalClient(PortalClientBase):
 
     def query_managers(
         self,
+        *,
         manager_id: Optional[Union[int, Iterable[int]]] = None,
         name: Optional[Union[str, Iterable[str]]] = None,
         cluster: Optional[Union[str, Iterable[str]]] = None,
@@ -2617,7 +2619,6 @@ class PortalClient(PortalClientBase):
         modified_before: Optional[Union[datetime, str]] = None,
         modified_after: Optional[Union[datetime, str]] = None,
         limit: Optional[int] = None,
-        *,
         include: Optional[Iterable[str]] = None,
     ) -> ManagerQueryIterator:
         """
@@ -2673,6 +2674,7 @@ class PortalClient(PortalClientBase):
 
     def query_server_stats(
         self,
+        *,
         before: Optional[Union[datetime, str]] = None,
         after: Optional[Union[datetime, str]] = None,
         limit: Optional[int] = None,
@@ -2723,6 +2725,7 @@ class PortalClient(PortalClientBase):
 
     def query_access_log(
         self,
+        *,
         access_type: Optional[Union[str, Iterable[str]]] = None,
         access_method: Optional[Union[str, Iterable[str]]] = None,
         before: Optional[Union[datetime, str]] = None,
@@ -2787,6 +2790,7 @@ class PortalClient(PortalClientBase):
 
     def query_error_log(
         self,
+        *,
         error_id: Optional[Union[int, Iterable[int]]] = None,
         user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
         before: Optional[Union[datetime, str]] = None,
@@ -2855,6 +2859,7 @@ class PortalClient(PortalClientBase):
 
     def query_internal_jobs(
         self,
+        *,
         job_id: Optional[int, Iterable[int]] = None,
         name: Optional[Union[str, Iterable[str]]] = None,
         user: Optional[Union[int, str, Iterable[Union[int, str]]]] = None,
@@ -2942,6 +2947,7 @@ class PortalClient(PortalClientBase):
 
     def query_access_summary(
         self,
+        *,
         group_by: str = "day",
         before: Optional[Union[datetime, str]] = None,
         after: Optional[Union[datetime, str]] = None,
