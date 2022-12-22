@@ -47,31 +47,31 @@ def queryable_access_client(module_temporary_database):
 def test_serverinfo_client_query_access(queryable_access_client: PortalClient):
 
     query_res = queryable_access_client.query_access_log(access_method=["get"])
-    assert query_res.current_meta.n_found == 80
+    assert query_res._current_meta.n_found == 80
     all_entries = list(query_res)
     assert len(all_entries) == 80
 
     query_res = queryable_access_client.query_access_log(access_method=["POST"])
-    assert query_res.current_meta.n_found == 80
+    assert query_res._current_meta.n_found == 80
     all_entries = list(query_res)
     assert len(all_entries) == 80
 
     query_res = queryable_access_client.query_access_log(user="admin_user")
-    assert query_res.current_meta.n_found == 80
+    assert query_res._current_meta.n_found == 80
     all_entries = list(query_res)
     assert len(all_entries) == 80
 
     read_id = queryable_access_client.get_user("read_user").id
     query_res = queryable_access_client.query_access_log(user=[read_id, "admin_user"])
-    assert query_res.current_meta.n_found == 160
+    assert query_res._current_meta.n_found == 160
     all_entries = list(query_res)
     assert len(all_entries) == 160
 
     query_res = queryable_access_client.query_access_log(user=["no_user"])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     query_res = queryable_access_client.query_access_log(access_type=["v1/molecules"], access_method="get")
-    assert query_res.current_meta.n_found == 20
+    assert query_res._current_meta.n_found == 20
     all_entries = list(query_res)
     assert len(all_entries) == 20
 
@@ -94,7 +94,7 @@ def test_serverinfo_client_query_access(queryable_access_client: PortalClient):
 
 def test_serverinfo_client_query_access_empty_iter(queryable_access_client: PortalClient):
     query_res = queryable_access_client.query_access_log()
-    assert len(query_res.current_batch) < queryable_access_client.api_limits["get_access_logs"]
+    assert len(query_res._current_batch) < queryable_access_client.api_limits["get_access_logs"]
 
     all_entries = list(query_res)
     assert len(all_entries) == 160

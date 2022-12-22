@@ -178,7 +178,7 @@ def test_neb_client_delete(
 
     # DB should be pretty empty now
     query_res = snowflake_client.query_records()
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
 
 def test_neb_client_harddelete_nochildren(
@@ -228,37 +228,37 @@ def test_neb_client_query(snowflake_client: PortalClient, storage_socket: SQLAlc
     neb_ids = [x.id for x in all_records]
 
     query_res = snowflake_client.query_nebs(qc_program=["psi4"])
-    assert query_res.current_meta.n_found == 4
+    assert query_res._current_meta.n_found == 4
 
     query_res = snowflake_client.query_nebs(qc_program=["nothing"])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     # query_res = snowflake_client.query_nebs(initial_chain_id=[neb_ids[0], 9999])
-    # assert query_res.current_meta.n_found == 11
+    # assert query_res._current_meta.n_found == 11
 
     query_res = snowflake_client.query_nebs(program=["geometric"])
-    assert query_res.current_meta.n_found == 4
+    assert query_res._current_meta.n_found == 4
 
     query_res = snowflake_client.query_nebs(program=["geometric123"])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     query_res = snowflake_client.query_nebs(qc_basis=["6-31g"])
-    assert query_res.current_meta.n_found == 1
+    assert query_res._current_meta.n_found == 1
 
     query_res = snowflake_client.query_nebs(qc_basis=[None])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     query_res = snowflake_client.query_nebs(qc_basis=[""])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     # query for method
     query_res = snowflake_client.query_nebs(qc_method=["b3lyP"])
-    assert query_res.current_meta.n_found == 1
+    assert query_res._current_meta.n_found == 1
 
     # Query by default returns everything
     query_res = snowflake_client.query_nebs()
-    assert query_res.current_meta.n_found == 4
+    assert query_res._current_meta.n_found == 4
 
     # Query by default (with a limit)
     query_res = snowflake_client.query_nebs(limit=1)
-    assert query_res.current_meta.n_found == 4
+    assert query_res._current_meta.n_found == 4

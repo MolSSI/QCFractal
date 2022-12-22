@@ -179,7 +179,7 @@ def test_reaction_client_delete(
 
     # DB should be pretty empty now
     query_res = snowflake_client.query_records()
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
 
 def test_reaction_client_harddelete_nochildren(
@@ -227,45 +227,45 @@ def test_reaction_client_query(snowflake_client: PortalClient, storage_socket: S
     id_2, _ = submit_test_data(storage_socket, "rxn_H2_psi4_b3lyp_sp")
 
     query_res = snowflake_client.query_reactions(qc_program=["psi4"])
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     query_res = snowflake_client.query_reactions(qc_program=["nothing"])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     mol_H = load_molecule_data("rxn_H")
     mol_H2 = load_molecule_data("rxn_H2")
     _, init_mol_id = storage_socket.molecules.add([mol_H, mol_H2])
 
     query_res = snowflake_client.query_reactions(molecule_id=[init_mol_id[0], 9999])
-    assert query_res.current_meta.n_found == 1
+    assert query_res._current_meta.n_found == 1
 
     query_res = snowflake_client.query_reactions(molecule_id=[init_mol_id[1], 9999])
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     # query for basis
     query_res = snowflake_client.query_reactions(qc_basis=["def2-TZvp"])
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     query_res = snowflake_client.query_reactions(qc_basis=["sTO-3g"])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     query_res = snowflake_client.query_reactions(qc_basis=[None])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     query_res = snowflake_client.query_reactions(qc_basis=[""])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     # query for qc_method
     query_res = snowflake_client.query_reactions(qc_method=["hf"])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     query_res = snowflake_client.query_reactions(qc_method=["b3lyP"])
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     # Query by default returns everything
     query_res = snowflake_client.query_reactions()
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     # Query by default (with a limit)
     query_res = snowflake_client.query_reactions(limit=1)
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2

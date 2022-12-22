@@ -68,18 +68,36 @@ class AccessLogEntry(BaseModel):
 
 
 class AccessLogQueryIterator(QueryIteratorBase):
+    """
+    Iterator for access log queries
+
+    This iterator transparently handles batching and pagination over the results
+    of an access log query
+    """
+
     def __init__(self, client, query_filters: AccessLogQueryFilters):
-        api_limit = client.api_limits["get_access_logs"] // 4
-        QueryIteratorBase.__init__(self, client, query_filters, api_limit)
+        """
+        Construct an iterator
+
+        Parameters
+        ----------
+        client
+            QCPortal client object used to contact/retrieve data from the server
+        query_filters
+            The actual query information to send to the server
+        """
+
+        batch_limit = client.api_limits["get_access_logs"] // 4
+        QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
     def _request(self) -> Tuple[Optional[QueryMetadata], List[AccessLogEntry]]:
-        return self.client._auto_request(
+        return self._client._auto_request(
             "post",
             "v1/access_logs/query",
             AccessLogQueryFilters,
             None,
             Tuple[Optional[QueryMetadata], List[AccessLogEntry]],
-            self.query_filters,
+            self._query_filters,
             None,
         )
 
@@ -147,18 +165,36 @@ class ErrorLogEntry(BaseModel):
 
 
 class ErrorLogQueryIterator(QueryIteratorBase):
+    """
+    Iterator for error log queries
+
+    This iterator transparently handles batching and pagination over the results
+    of an error log query
+    """
+
     def __init__(self, client, query_filters: ErrorLogQueryFilters):
-        api_limit = client.api_limits["get_error_logs"] // 4
-        QueryIteratorBase.__init__(self, client, query_filters, api_limit)
+        """
+        Construct an iterator
+
+        Parameters
+        ----------
+        client
+            QCPortal client object used to contact/retrieve data from the server
+        query_filters
+            The actual query information to send to the server
+        """
+
+        batch_limit = client.api_limits["get_error_logs"] // 4
+        QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
     def _request(self) -> Tuple[Optional[QueryMetadata], List[ErrorLogEntry]]:
-        return self.client._auto_request(
+        return self._client._auto_request(
             "post",
             "v1/server_errors/query",
             ErrorLogQueryFilters,
             None,
             Tuple[Optional[QueryMetadata], List[ErrorLogEntry]],
-            self.query_filters,
+            self._query_filters,
             None,
         )
 
@@ -202,17 +238,35 @@ class ServerStatsEntry(BaseModel):
 
 
 class ServerStatsQueryIterator(QueryIteratorBase):
+    """
+    Iterator for server statistics queries
+
+    This iterator transparently handles batching and pagination over the results
+    of a server statistics query.
+    """
+
     def __init__(self, client, query_filters: ServerStatsQueryFilters):
-        api_limit = client.api_limits["get_server_stats"] // 4
-        QueryIteratorBase.__init__(self, client, query_filters, api_limit)
+        """
+        Construct an iterator
+
+        Parameters
+        ----------
+        client
+            QCPortal client object used to contact/retrieve data from the server
+        query_filters
+            The actual query information to send to the server
+        """
+
+        batch_limit = client.api_limits["get_server_stats"] // 4
+        QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
     def _request(self) -> Tuple[Optional[QueryMetadata], List[ServerStatsEntry]]:
-        return self.client._auto_request(
+        return self._client._auto_request(
             "post",
             "v1/server_stats/query",
             ServerStatsQueryFilters,
             None,
             Tuple[Optional[QueryMetadata], List[ServerStatsEntry]],
-            self.query_filters,
+            self._query_filters,
             None,
         )

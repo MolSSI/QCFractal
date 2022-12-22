@@ -156,7 +156,7 @@ def test_manybody_client_delete(
 
     # DB should be pretty empty now
     query_res = snowflake_client.query_records()
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
 
 def test_manybody_client_harddelete_nochildren(
@@ -205,44 +205,44 @@ def test_manybody_client_query(snowflake_client: PortalClient, storage_socket: S
     mol_ids = [x.initial_molecule_id for x in all_mbs]
 
     query_res = snowflake_client.query_manybodys(program=["manybody"])
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     query_res = snowflake_client.query_manybodys(program=["nothing"])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     query_res = snowflake_client.query_manybodys(initial_molecule_id=[9999])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     query_res = snowflake_client.query_manybodys(initial_molecule_id=[mol_ids[0], 9999])
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     # query for basis
     query_res = snowflake_client.query_manybodys(qc_basis=["DEF2-tzvp"])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     query_res = snowflake_client.query_manybodys(qc_basis=["6-31g*"])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     query_res = snowflake_client.query_manybodys(qc_basis=["6-31g"])
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     query_res = snowflake_client.query_manybodys(qc_basis=[None])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     query_res = snowflake_client.query_manybodys(qc_basis=[""])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     # query for method
     query_res = snowflake_client.query_manybodys(qc_method=["hf"])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     query_res = snowflake_client.query_manybodys(qc_method=["mp2"])
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     # Query by default returns everything
     query_res = snowflake_client.query_manybodys()
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     # Query by default (with a limit)
     query_res = snowflake_client.query_manybodys(limit=1)
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2

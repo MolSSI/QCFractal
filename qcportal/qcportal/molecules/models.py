@@ -22,17 +22,35 @@ class MoleculeModifyBody(RestModelBase):
 
 
 class MoleculeQueryIterator(QueryIteratorBase):
+    """
+    Iterator for molecule queries
+
+    This iterator transparently handles batching and pagination over the results
+    of a molecule query.
+    """
+
     def __init__(self, client, query_filters: MoleculeQueryFilters):
+        """
+        Construct an iterator
+
+        Parameters
+        ----------
+        client
+            QCPortal client object used to contact/retrieve data from the server
+        query_filters
+            The actual query information to send to the server
+        """
+
         api_limit = client.api_limits["get_molecules"] // 4
         QueryIteratorBase.__init__(self, client, query_filters, api_limit)
 
     def _request(self) -> Tuple[Optional[QueryMetadata], List[Molecule]]:
-        return self.client._auto_request(
+        return self._client._auto_request(
             "post",
             "v1/molecules/query",
             MoleculeQueryFilters,
             None,
             Tuple[Optional[QueryMetadata], List[Molecule]],
-            self.query_filters,
+            self._query_filters,
             None,
         )

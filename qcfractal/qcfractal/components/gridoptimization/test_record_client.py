@@ -162,7 +162,7 @@ def test_gridoptimization_client_delete(
 
     # DB should be pretty empty now
     query_res = snowflake_client.query_records()
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
 
 def test_gridoptimization_client_harddelete_nochildren(
@@ -213,40 +213,40 @@ def test_gridoptimization_client_query(snowflake_client: PortalClient, storage_s
     mol_ids = [x.initial_molecule_id for x in all_gos]
 
     query_res = snowflake_client.query_gridoptimizations(qc_program=["psi4"])
-    assert query_res.current_meta.n_found == 3
+    assert query_res._current_meta.n_found == 3
 
     query_res = snowflake_client.query_gridoptimizations(qc_program=["nothing"])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     query_res = snowflake_client.query_gridoptimizations(initial_molecule_id=[mol_ids[0], 9999])
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     # query for optimization program
     query_res = snowflake_client.query_gridoptimizations(optimization_program=["geometric"])
-    assert query_res.current_meta.n_found == 4
+    assert query_res._current_meta.n_found == 4
 
     # query for optimization program
     query_res = snowflake_client.query_gridoptimizations(optimization_program=["geometric123"])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     # query for basis
     query_res = snowflake_client.query_gridoptimizations(qc_basis=["sTO-3g"])
-    assert query_res.current_meta.n_found == 3
+    assert query_res._current_meta.n_found == 3
 
     query_res = snowflake_client.query_gridoptimizations(qc_basis=[None])
-    assert query_res.current_meta.n_found == 1
+    assert query_res._current_meta.n_found == 1
 
     query_res = snowflake_client.query_gridoptimizations(qc_basis=[""])
-    assert query_res.current_meta.n_found == 1
+    assert query_res._current_meta.n_found == 1
 
     # query for method
     query_res = snowflake_client.query_gridoptimizations(qc_method=["b3lyP"])
-    assert query_res.current_meta.n_found == 1
+    assert query_res._current_meta.n_found == 1
 
     # Query by default returns everything
     query_res = snowflake_client.query_gridoptimizations()
-    assert query_res.current_meta.n_found == 4
+    assert query_res._current_meta.n_found == 4
 
     # Query by default (with a limit)
     query_res = snowflake_client.query_gridoptimizations(limit=1)
-    assert query_res.current_meta.n_found == 4
+    assert query_res._current_meta.n_found == 4

@@ -24,8 +24,8 @@ def test_serverinfo_client_access_logged(secure_snowflake_allow_read: QCATesting
 
     # This will return 6, because the requests to /login and /information was done in constructing the clients
     query_res = client.query_access_log()
-    assert query_res.current_meta.success
-    assert query_res.current_meta.n_found == 6
+    assert query_res._current_meta.success
+    assert query_res._current_meta.n_found == 6
     accesses = list(query_res)
 
     assert accesses[5].access_type == "/auth/v1/login"
@@ -75,8 +75,8 @@ def test_serverinfo_client_access_not_logged(temporary_database, encoding: str):
 
         # This will return 0 because logging is disabled
         query_res = client.query_access_log()
-        assert query_res.current_meta.success
-        assert query_res.current_meta.n_found == 0
+        assert query_res._current_meta.success
+        assert query_res._current_meta.n_found == 0
         assert len(list(query_res)) == 0
 
 
@@ -92,7 +92,7 @@ def test_serverinfo_client_access_delete(snowflake_client: PortalClient):
 
     # This will return 4, because the query to /information was done in constructing the client
     query_res = snowflake_client.query_access_log()
-    assert query_res.current_meta.n_found == 4
+    assert query_res._current_meta.n_found == 4
 
     n_deleted = snowflake_client.delete_access_log(time_0)
     assert n_deleted == 1  # deleted our original /information query

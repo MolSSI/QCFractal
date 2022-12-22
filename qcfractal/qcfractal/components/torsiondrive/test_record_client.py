@@ -162,7 +162,7 @@ def test_torsiondrive_client_delete(
 
     # DB should be pretty empty now
     query_res = snowflake_client.query_records()
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
 
 def test_torsiondrive_client_harddelete_nochildren(
@@ -213,40 +213,40 @@ def test_torsiondrive_client_query(snowflake_client: PortalClient, storage_socke
     mol_ids = [x.initial_molecules[0].id for x in all_tds]
 
     query_res = snowflake_client.query_torsiondrives(qc_program=["psi4"])
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     query_res = snowflake_client.query_torsiondrives(qc_program=["nothing"])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     query_res = snowflake_client.query_torsiondrives(initial_molecule_id=[mol_ids[0], 9999])
-    assert query_res.current_meta.n_found == 3
+    assert query_res._current_meta.n_found == 3
 
     # query for optimization program
     query_res = snowflake_client.query_torsiondrives(optimization_program=["geometric"])
-    assert query_res.current_meta.n_found == 4
+    assert query_res._current_meta.n_found == 4
 
     # query for optimization program
     query_res = snowflake_client.query_torsiondrives(optimization_program=["geometric123"])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     # query for basis
     query_res = snowflake_client.query_torsiondrives(qc_basis=["sTO-3g"])
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     query_res = snowflake_client.query_torsiondrives(qc_basis=[None])
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     query_res = snowflake_client.query_torsiondrives(qc_basis=[""])
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     # query for method
     query_res = snowflake_client.query_torsiondrives(qc_method=["pm6"])
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     # Query by default returns everything
     query_res = snowflake_client.query_torsiondrives()
-    assert query_res.current_meta.n_found == 4
+    assert query_res._current_meta.n_found == 4
 
     # Query by default (with a limit)
     query_res = snowflake_client.query_torsiondrives(limit=1)
-    assert query_res.current_meta.n_found == 4
+    assert query_res._current_meta.n_found == 4

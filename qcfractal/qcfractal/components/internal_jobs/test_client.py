@@ -191,77 +191,77 @@ def test_internal_jobs_client_query(secure_snowflake: QCATestingSnowflake):
     # Now do some queries
     result = client.query_internal_jobs(job_id=id_1)
     r = list(result)
-    assert result.current_meta.n_found == 1
+    assert result._current_meta.n_found == 1
     assert len(r) == 1
     assert r[0].id == id_1
 
     result = client.query_internal_jobs(user="read_user")
     r = list(result)
-    assert result.current_meta.n_found == 1
+    assert result._current_meta.n_found == 1
     assert len(r) == 1
     assert r[0].id == id_1
 
     result = client.query_internal_jobs(user=read_id)
     r = list(result)
-    assert result.current_meta.n_found == 1
+    assert result._current_meta.n_found == 1
     assert len(r) == 1
     assert r[0].id == id_1
 
     result = client.query_internal_jobs(name="dummy_job", status=["complete"])
     r = list(result)
-    assert result.current_meta.n_found == 1
+    assert result._current_meta.n_found == 1
     assert len(r) == 1
     assert r[0].id == id_1
 
     result = client.query_internal_jobs(name="dummy_job", status="waiting")
     r = list(result)
-    assert result.current_meta.n_found == 1
+    assert result._current_meta.n_found == 1
     assert len(r) == 1
     assert r[0].id == id_2
 
     result = client.query_internal_jobs(name="dummy_job", added_after=time_0)
     r = list(result)
-    assert result.current_meta.n_found == 2
+    assert result._current_meta.n_found == 2
     assert len(r) == 2
     assert {r[0].id, r[1].id} == {id_1, id_2}
 
     result = client.query_internal_jobs(name="dummy_job", added_after=time_1, added_before=time_3)
     r = list(result)
-    assert result.current_meta.n_found == 1
+    assert result._current_meta.n_found == 1
     assert len(r) == 1
     assert r[0].id == id_2
 
     result = client.query_internal_jobs(name="dummy_job", last_updated_after=time_2)
     r = list(result)
-    assert result.current_meta.n_found == 0
+    assert result._current_meta.n_found == 0
     assert len(r) == 0
 
     result = client.query_internal_jobs(name="dummy_job", last_updated_before=time_2)
     r = list(result)
-    assert result.current_meta.n_found == 1
+    assert result._current_meta.n_found == 1
     assert len(r) == 1
     assert r[0].id == id_1
 
     result = client.query_internal_jobs(runner_hostname=socket.gethostname())
-    assert result.current_meta.n_found >= 2
+    assert result._current_meta.n_found >= 2
 
     # Empty query - all
     # This should be at least two - other services were probably added by the socket
     result = client.query_internal_jobs()
-    assert result.current_meta.n_found >= 2
+    assert result._current_meta.n_found >= 2
 
     # Should also have a bunch
     result = client.query_internal_jobs(scheduled_before=datetime.utcnow())
-    assert result.current_meta.n_found >= 2
+    assert result._current_meta.n_found >= 2
 
     # nothing scheduled 10 days from now
     result = client.query_internal_jobs(scheduled_after=datetime.utcnow() + timedelta(days=10))
-    assert result.current_meta.n_found == 0
+    assert result._current_meta.n_found == 0
 
     # Some queries for non-existent stuff
     result = client.query_internal_jobs(name="abcd")
-    assert result.current_meta.n_found == 0
+    assert result._current_meta.n_found == 0
 
     # Some queries for non-existent stuff
     result = client.query_internal_jobs(status="error")
-    assert result.current_meta.n_found == 0
+    assert result._current_meta.n_found == 0

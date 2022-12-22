@@ -21,8 +21,8 @@ def test_serverinfo_client_delete_stats(storage_socket: SQLAlchemySocket, snowfl
 
     query_res = snowflake_client.query_server_stats()
     stats = list(query_res)
-    assert query_res.current_meta.success
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.success
+    assert query_res._current_meta.n_found == 2
 
     n_deleted = snowflake_client.delete_server_stats(before=time_0)
     assert n_deleted == 0
@@ -31,6 +31,6 @@ def test_serverinfo_client_delete_stats(storage_socket: SQLAlchemySocket, snowfl
     assert n_deleted == 1
 
     query_res = snowflake_client.query_server_stats()
-    assert query_res.current_meta.n_found == 1
+    assert query_res._current_meta.n_found == 1
     stats2 = list(query_res)
     assert stats2[0] == stats[0]

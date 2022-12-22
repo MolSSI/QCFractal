@@ -500,35 +500,55 @@ class RecordQueryFilters(QueryProjModelBase):
 
 
 class RecordQueryIterator(QueryIteratorBase):
+    """
+    Iterator for all types of record queries
+
+    This iterator transparently handles batching and pagination over the results
+    of a record query, and works with all kinds of records.
+    """
+
     def __init__(self, client, query_filters: RecordQueryFilters, record_type: Optional[str]):
-        api_limit = client.api_limits["get_records"] // 4
+        """
+        Construct an iterator
+
+        Parameters
+        ----------
+        client
+            QCPortal client object used to contact/retrieve data from the server
+        query_filters
+            The actual query information to send to the server
+        record_type
+            What type of record we are querying for
+        """
+
+        batch_limit = client.api_limits["get_records"] // 4
         self.record_type = record_type
 
-        QueryIteratorBase.__init__(self, client, query_filters, api_limit)
+        QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
     def _request(self) -> Tuple[Optional[QueryMetadata], List[BaseRecord]]:
         if self.record_type is None:
-            meta, raw_data = self.client._auto_request(
+            meta, raw_data = self._client._auto_request(
                 "post",
                 f"v1/records/query",
-                type(self.query_filters),  # Pass through as is
+                type(self._query_filters),  # Pass through as is
                 None,
                 Tuple[Optional[QueryMetadata], List[Dict[str, Any]]],
-                self.query_filters,
+                self._query_filters,
                 None,
             )
         else:
-            meta, raw_data = self.client._auto_request(
+            meta, raw_data = self._client._auto_request(
                 "post",
                 f"v1/records/{self.record_type}/query",
-                type(self.query_filters),  # Pass through as is
+                type(self._query_filters),  # Pass through as is
                 None,
                 Tuple[Optional[QueryMetadata], List[Dict[str, Any]]],
-                self.query_filters,
+                self._query_filters,
                 None,
             )
 
-        return meta, records_from_datamodels(raw_data, self.client)
+        return meta, records_from_datamodels(raw_data, self._client)
 
 
 def record_from_datamodel(data: Union[BaseRecord._DataModel, Dict[str, Any]], client: Any) -> BaseRecord:

@@ -168,17 +168,35 @@ class ManagerQueryFilters(QueryProjModelBase):
 
 
 class ManagerQueryIterator(QueryIteratorBase):
+    """
+    Iterator for manager queries
+
+    This iterator transparently handles batching and pagination over the results
+    of a manager query
+    """
+
     def __init__(self, client, query_filters: ManagerQueryFilters):
-        api_limit = client.api_limits["get_managers"] // 4
-        QueryIteratorBase.__init__(self, client, query_filters, api_limit)
+        """
+        Construct an iterator
+
+        Parameters
+        ----------
+        client
+            QCPortal client object used to contact/retrieve data from the server
+        query_filters
+            The actual query information to send to the server
+        """
+
+        batch_limit = client.api_limits["get_managers"] // 4
+        QueryIteratorBase.__init__(self, client, query_filters, batch_limit)
 
     def _request(self) -> Tuple[Optional[QueryMetadata], List[ComputeManager]]:
-        return self.client._auto_request(
+        return self._client._auto_request(
             "post",
             "v1/managers/query",
             ManagerQueryFilters,
             None,
             Tuple[Optional[QueryMetadata], List[ComputeManager]],
-            self.query_filters,
+            self._query_filters,
             None,
         )

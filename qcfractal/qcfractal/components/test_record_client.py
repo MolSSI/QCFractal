@@ -95,7 +95,7 @@ def test_record_client_query_parents_children(
 
     # Query for records containing a record as a child
     query_res = snowflake_client.query_records(child_id=traj_id[0])
-    assert query_res.current_meta.n_found == 1
+    assert query_res._current_meta.n_found == 1
     assert list(query_res)[0].id == opt_rec.id
 
 
@@ -295,16 +295,16 @@ def test_record_client_query_owner(secure_snowflake: QCATestingSnowflake):
     _, ids_4 = admin_client.add_singlepoints(m, "prog4", "energy", "b3lyp", "sto-3g", {}, owner_group="group1")
 
     query_res = admin_client.query_records(owner_user="submit_user")
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     query_res = admin_client.query_records(owner_user=[submit_uid])
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     query_res = admin_client.query_records(owner_group="group1")
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     query_res = admin_client.query_records(owner_user=["admin_user"], owner_group=["group1"])
-    assert query_res.current_meta.n_found == 1
+    assert query_res._current_meta.n_found == 1
 
     query_res = admin_client.query_records(owner_user=["admin_user"], owner_group=["missing"])
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0

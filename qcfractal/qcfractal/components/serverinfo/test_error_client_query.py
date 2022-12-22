@@ -67,7 +67,7 @@ def test_serverinfo_client_query_error(queryable_error_client: PortalClient):
 
 def test_serverinfo_client_query_error_empty_iter(queryable_error_client: PortalClient):
     query_res = queryable_error_client.query_error_log()
-    assert len(query_res.current_batch) < queryable_error_client.api_limits["get_error_logs"]
+    assert len(query_res._current_batch) < queryable_error_client.api_limits["get_error_logs"]
 
     all_entries = list(query_res)
     assert len(all_entries) == 160

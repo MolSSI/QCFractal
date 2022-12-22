@@ -112,14 +112,14 @@ def test_dataset_client_query_dataset_records(
     mol_id_2 = ds.get_entry("test_molecule_2").molecule.id
 
     query_res = snowflake_client.query_singlepoints(dataset_id=ds.id)
-    assert query_res.current_meta.n_found == 2
+    assert query_res._current_meta.n_found == 2
 
     query_res = snowflake_client.query_singlepoints(dataset_id=ds.id, molecule_id=mol_id_2)
-    assert query_res.current_meta.n_found == 1
+    assert query_res._current_meta.n_found == 1
     assert list(query_res)[0].id == rec_id_2
 
     query_res = snowflake_client.query_singlepoints(dataset_id=ds.id + 1, molecule_id=mol_id_2)
-    assert query_res.current_meta.n_found == 0
+    assert query_res._current_meta.n_found == 0
 
     # Query which dataset contains a record
     rec_info = snowflake_client.query_dataset_records([rec_id_2])
