@@ -10,6 +10,8 @@ Tasks
 
 Stuff stuff stuff
 
+.. image:: ../graphics/tasks_diagram.svg
+
 
 .. _services:
 

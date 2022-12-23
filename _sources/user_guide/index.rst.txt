@@ -8,7 +8,7 @@ QCArchive User Guide
 
    glossary
    tasks_services
+   qcportal/index
    qcfractal/index
    qcfractalcompute/index
-   qcportal/index
    snowflake

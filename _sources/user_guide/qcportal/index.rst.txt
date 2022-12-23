@@ -6,10 +6,11 @@ QCPortal User Guide
    :caption: Contents:
 
    setup
-   basics
-   molecule
+   connecting
    record_basics
+   submitting
    dataset_basics
+   molecule
    singlepoint
    optimization
    torsiondrive

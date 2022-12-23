@@ -29,10 +29,10 @@ differentiate between different servers.
 
 .. code-block:: yaml
 
-   my_favorite_server:
-     address: http://127.0.0.1:7777
-     username: your_username 
-     password: Secret_Password
+    my_favorite_server:
+      address: http://127.0.0.1:7777
+      username: your_username
+      password: Secret_Password
 
 
 The path to this file and the section name can passed to the :meth:`PortalClient.from_file <qcportal.client.PortalClient.from_file>` function.

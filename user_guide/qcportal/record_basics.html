@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Computation record basics &#8212; QCArchive 0.50b4.post13+g666b05f7 documentation</title>
+    <title>Retrieving records &#8212; QCArchive 0.50b4.post12+g5f3de975 documentation</title>
   
   
   
@@ -44,8 +44,8 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/qcportal/record_basics';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Dataset basics" href="dataset_basics.html" />
-    <link rel="prev" title="Molecules" href="molecule.html" />
+    <link rel="next" title="Submitting computations" href="submitting.html" />
+    <link rel="prev" title="Connecting to a server" href="connecting.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="docsearch:language" content="en">
   </head>
@@ -347,24 +347,14 @@
     <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary of Common Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tasks_services.html">Tasks and Services</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../qcfractal/index.html">QCFractal Server User Guide</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../qcfractal/setup.html">QCFractal Installation and Setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../qcfractal/configuration.html">Server Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../qcfractal/admin.html">Administration &amp; maintenance</a></li>
-</ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../qcfractalcompute/index.html">QCFractalCompute - Compute Managers and Workers</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../qcfractalcompute/setup.html">Compute manager setup</a></li>
-</ul>
-</li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">QCPortal User Guide</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="setup.html">QCPortal Installation and Setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="basics.html">Client basics</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">QCPortal User Guide</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="setup.html">Installation and Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="connecting.html">Connecting to a server</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Retrieving records</a></li>
+
+<li class="toctree-l2"><a class="reference internal" href="submitting.html">Submitting computations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataset_basics.html">Using datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="molecule.html">Molecules</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">Computation record basics</a></li>
-
-
-<li class="toctree-l2"><a class="reference internal" href="dataset_basics.html">Dataset basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="singlepoint.html">Singlepoint calculations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optimization.html">Optimization calculations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="torsiondrive.html">Torsiondrive calculations</a></li>
@@ -374,6 +364,16 @@
 <li class="toctree-l2"><a class="reference internal" href="serveradmin.html">Server administration via the client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="portalclient_api.html">PortalClient API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="baserecord_api.html">Basic Record API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../qcfractal/index.html">QCFractal Server User Guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../qcfractal/setup.html">QCFractal Installation and Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcfractal/configuration.html">Server Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcfractal/admin.html">Administration &amp; maintenance</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../qcfractalcompute/index.html">QCFractalCompute - Compute Managers and Workers</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../qcfractalcompute/setup.html">Compute manager setup</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../snowflake.html">QCFractal Snowflake</a></li>
@@ -408,14 +408,11 @@
             
             <article class="bd-article" role="main">
               
-  <section id="computation-record-basics">
-<h1>Computation record basics<a class="headerlink" href="#computation-record-basics" title="Permalink to this heading">#</a></h1>
+  <section id="retrieving-records">
+<h1>Retrieving records<a class="headerlink" href="#retrieving-records" title="Permalink to this heading">#</a></h1>
 <p>A <em>record</em> is a representation of a single computation that is stored on the server. Records are generally
 not created by hand by the user, but retrieved from the server.</p>
 <p>Records contain an ID that uniquely identifies this record on the server.</p>
-</section>
-<section id="record-retrieval">
-<h1>Record Retrieval<a class="headerlink" href="#record-retrieval" title="Permalink to this heading">#</a></h1>
 <p>Using the <a class="reference internal" href="portalclient_api.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a>, records are retrieved from the server in two ways.
 The first is through <code class="docutils literal notranslate"><span class="pre">get_</span></code> functions,  which is used to retrieve records by their ID.
 These functions (such as <a class="reference internal" href="portalclient_api.html#qcportal.client.PortalClient.get_records" title="qcportal.client.PortalClient.get_records"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_records()</span></code></a> and <a class="reference internal" href="portalclient_api.html#qcportal.client.PortalClient.get_singlepoints" title="qcportal.client.PortalClient.get_singlepoints"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_singlepoints()</span></code></a>)
@@ -446,8 +443,8 @@ These functions have a lot of parameters, allowing you to query based on dates, 
 calculation features.</p>
 <div class="admonition caution">
 <p class="admonition-title">Caution</p>
-<p>The records returned from query functions are not in any defined order, and the order may be different
-even with repeated calls with the same arguments</p>
+<p>Unlike the <code class="docutils literal notranslate"><span class="pre">get_</span></code> functions, the records returned from query functions are not in any defined order,
+and the order may be different even with repeated calls with the same arguments</p>
 </div>
 <p>Query functions return an <a class="reference internal" href="baserecord_api.html#qcportal.record_models.RecordQueryIterator" title="qcportal.record_models.RecordQueryIterator"><code class="xref py py-class docutils literal notranslate"><span class="pre">iterator</span></code></a> object.
 This iterator handles transparent and efficient fetching from the server in
@@ -509,17 +506,17 @@ optimizations, etc).</p>
             <footer class="bd-footer-article">
                 <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-  <a class='left-prev' id="prev-link" href="molecule.html" title="previous page">
+  <a class='left-prev' id="prev-link" href="connecting.html" title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
           <p class="prev-next-subtitle">previous</p>
-          <p class="prev-next-title">Molecules</p>
+          <p class="prev-next-title">Connecting to a server</p>
       </div>
   </a>
-  <a class='right-next' id="next-link" href="dataset_basics.html" title="next page">
+  <a class='right-next' id="next-link" href="submitting.html" title="next page">
   <div class="prev-next-info">
       <p class="prev-next-subtitle">next</p>
-      <p class="prev-next-title">Dataset basics</p>
+      <p class="prev-next-title">Submitting computations</p>
   </div>
   <i class="fa-solid fa-angle-right"></i>
   </a>
@@ -541,12 +538,7 @@ optimizations, etc).</p>
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h1 nav-item toc-entry">
   <a class="reference internal nav-link" href="#">
-   Computation record basics
-  </a>
- </li>
- <li class="toc-h1 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#record-retrieval">
-   Record Retrieval
+   Retrieving records
   </a>
   <ul class="visible nav section-nav flex-column">
    <li class="toc-h2 nav-item toc-entry">

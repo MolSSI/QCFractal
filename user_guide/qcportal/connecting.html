@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Client basics &#8212; QCArchive 0.50b4.post13+g666b05f7 documentation</title>
+    <title>Connecting to a server &#8212; QCArchive 0.50b4.post12+g5f3de975 documentation</title>
   
   
   
@@ -41,11 +41,11 @@
     <script src="../../_static/doctools.js"></script>
     <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/design-tabs.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/qcportal/basics';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/qcportal/connecting';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Molecules" href="molecule.html" />
-    <link rel="prev" title="QCPortal Installation and Setup" href="setup.html" />
+    <link rel="next" title="Retrieving records" href="record_basics.html" />
+    <link rel="prev" title="Installation and Setup" href="setup.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="docsearch:language" content="en">
   </head>
@@ -347,24 +347,14 @@
     <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../glossary.html">Glossary of Common Concepts</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../tasks_services.html">Tasks and Services</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../qcfractal/index.html">QCFractal Server User Guide</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../qcfractal/setup.html">QCFractal Installation and Setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../qcfractal/configuration.html">Server Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../qcfractal/admin.html">Administration &amp; maintenance</a></li>
-</ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../qcfractalcompute/index.html">QCFractalCompute - Compute Managers and Workers</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../qcfractalcompute/setup.html">Compute manager setup</a></li>
-</ul>
-</li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">QCPortal User Guide</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="setup.html">QCPortal Installation and Setup</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">Client basics</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">QCPortal User Guide</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="setup.html">Installation and Setup</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Connecting to a server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="record_basics.html">Retrieving records</a></li>
+
+<li class="toctree-l2"><a class="reference internal" href="submitting.html">Submitting computations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dataset_basics.html">Using datasets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="molecule.html">Molecules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="record_basics.html">Computation record basics</a></li>
-
-
-<li class="toctree-l2"><a class="reference internal" href="dataset_basics.html">Dataset basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="singlepoint.html">Singlepoint calculations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optimization.html">Optimization calculations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="torsiondrive.html">Torsiondrive calculations</a></li>
@@ -374,6 +364,16 @@
 <li class="toctree-l2"><a class="reference internal" href="serveradmin.html">Server administration via the client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="portalclient_api.html">PortalClient API</a></li>
 <li class="toctree-l2"><a class="reference internal" href="baserecord_api.html">Basic Record API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../qcfractal/index.html">QCFractal Server User Guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../qcfractal/setup.html">QCFractal Installation and Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcfractal/configuration.html">Server Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../qcfractal/admin.html">Administration &amp; maintenance</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../qcfractalcompute/index.html">QCFractalCompute - Compute Managers and Workers</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../qcfractalcompute/setup.html">Compute manager setup</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../snowflake.html">QCFractal Snowflake</a></li>
@@ -408,14 +408,36 @@
             
             <article class="bd-article" role="main">
               
-  <section id="client-basics">
-<h1>Client basics<a class="headerlink" href="#client-basics" title="Permalink to this heading">#</a></h1>
-<p><a class="reference internal" href="portalclient_api.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">qcportal.client.PortalClient</span></code></a> <a class="reference internal" href="portalclient_api.html#qcportal.client.PortalClient.get_records" title="qcportal.client.PortalClient.get_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">qcportal.client.PortalClient.get_records()</span></code></a></p>
-<section id="connecting-to-a-server">
-<h2>Connecting to a server<a class="headerlink" href="#connecting-to-a-server" title="Permalink to this heading">#</a></h2>
-</section>
-<section id="connection-options">
-<h2>Connection options<a class="headerlink" href="#connection-options" title="Permalink to this heading">#</a></h2>
+  <section id="connecting-to-a-server">
+<h1>Connecting to a server<a class="headerlink" href="#connecting-to-a-server" title="Permalink to this heading">#</a></h1>
+<p>The central object of QCPortal is the <a class="reference internal" href="portalclient_api.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a> (usually referred to as just <cite>client</cite>).
+This class handles connecting to the server and exposing all the functionality of the server for use in python.</p>
+<section id="id1">
+<h2>Connecting to a server<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h2>
+<p>Connecting to the server is handled by the constructor of the <a class="reference internal" href="portalclient_api.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a> class.</p>
+<p>The first parameter is the address or URI of the server you with to connect to (including <code class="docutils literal notranslate"><span class="pre">http</span></code>/<code class="docutils literal notranslate"><span class="pre">https</span></code>).
+If no address is given, then by default the client will connect to the public, MolSSI-hosted server.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal</span> <span class="kn">import</span> <span class="n">PortalClient</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">server_name</span><span class="p">)</span>
+<span class="go">MolSSI Public QCArchive Server</span>
+</pre></div>
+</div>
+<p>However, you can specify the address of another server. Here we connect to the MolSSI-hosted
+public demonstration server</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal</span> <span class="kn">import</span> <span class="n">PortalClient</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s2">&quot;https://qcademo.molssi.org&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">server_name</span><span class="p">)</span>
+<span class="go">MolSSI QCArchive Demo Server</span>
+</pre></div>
+</div>
+<p>Servers may require a username and password to connect or to perform certain actions;
+these can also be specified in the constructor.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">qcportal</span> <span class="kn">import</span> <span class="n">PortalClient</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">PortalClient</span><span class="p">(</span><span class="s2">&quot;https://my.qcarchive.server&quot;</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="s1">&#39;grad_student_123&#39;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s1">&#39;abc123XYZ&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Other options are available. See  <a class="reference internal" href="portalclient_api.html#qcportal.client.PortalClient" title="qcportal.client.PortalClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClient</span></code></a> for details.</p>
 </section>
 <section id="storing-username-password-in-a-file">
 <h2>Storing username/password in a file<a class="headerlink" href="#storing-username-password-in-a-file" title="Permalink to this heading">#</a></h2>
@@ -444,13 +466,13 @@
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
           <p class="prev-next-subtitle">previous</p>
-          <p class="prev-next-title">QCPortal Installation and Setup</p>
+          <p class="prev-next-title">Installation and Setup</p>
       </div>
   </a>
-  <a class='right-next' id="next-link" href="molecule.html" title="next page">
+  <a class='right-next' id="next-link" href="record_basics.html" title="next page">
   <div class="prev-next-info">
       <p class="prev-next-subtitle">next</p>
-      <p class="prev-next-title">Molecules</p>
+      <p class="prev-next-title">Retrieving records</p>
   </div>
   <i class="fa-solid fa-angle-right"></i>
   </a>
@@ -471,13 +493,8 @@
 <nav id="bd-toc-nav" class="page-toc">
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#connecting-to-a-server">
+  <a class="reference internal nav-link" href="#id1">
    Connecting to a server
-  </a>
- </li>
- <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#connection-options">
-   Connection options
   </a>
  </li>
  <li class="toc-h2 nav-item toc-entry">
@@ -498,7 +515,7 @@
 <div class="toc-item">
   
 <div class="tocsection sourcelink">
-    <a href="../../_sources/user_guide/qcportal/basics.rst.txt">
+    <a href="../../_sources/user_guide/qcportal/connecting.rst.txt">
         <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
 </div>

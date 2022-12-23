@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.internal_jobs.models &#8212; QCArchive 0.50b4.post13+g666b05f7 documentation</title>
+    <title>qcportal.internal_jobs.models &#8212; QCArchive 0.50b4.post12+g5f3de975 documentation</title>
   
   
   
@@ -453,18 +453,36 @@
 
 
 <div class="viewcode-block" id="InternalJobQueryIterator"><a class="viewcode-back" href="../../../user_guide/qcportal/serveradmin.html#qcportal.internal_jobs.models.InternalJobQueryIterator">[docs]</a><span class="k">class</span> <span class="nc">InternalJobQueryIterator</span><span class="p">(</span><span class="n">QueryIteratorBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Iterator for internal job queries</span>
+
+<span class="sd">    This iterator transparently handles batching and pagination over the results</span>
+<span class="sd">    of an internal job query.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">query_filters</span><span class="p">:</span> <span class="n">InternalJobQueryFilters</span><span class="p">):</span>
-        <span class="n">api_limit</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_internal_jobs&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
-        <span class="n">QueryIteratorBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">query_filters</span><span class="p">,</span> <span class="n">api_limit</span><span class="p">)</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct an iterator</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        client</span>
+<span class="sd">            QCPortal client object used to contact/retrieve data from the server</span>
+<span class="sd">        query_filters</span>
+<span class="sd">            The actual query information to send to the server</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">batch_limit</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">api_limits</span><span class="p">[</span><span class="s2">&quot;get_internal_jobs&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">4</span>
+        <span class="n">QueryIteratorBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">query_filters</span><span class="p">,</span> <span class="n">batch_limit</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_request</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">QueryMetadata</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">InternalJob</span><span class="p">]]:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">_auto_request</span><span class="p">(</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="n">_auto_request</span><span class="p">(</span>
             <span class="s2">&quot;post&quot;</span><span class="p">,</span>
             <span class="s2">&quot;v1/internal_jobs/query&quot;</span><span class="p">,</span>
             <span class="n">InternalJobQueryFilters</span><span class="p">,</span>
             <span class="kc">None</span><span class="p">,</span>
             <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">QueryMetadata</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">InternalJob</span><span class="p">]],</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">query_filters</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_query_filters</span><span class="p">,</span>
             <span class="kc">None</span><span class="p">,</span>
         <span class="p">)</span></div>
 </pre></div>

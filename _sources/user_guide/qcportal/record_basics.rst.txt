@@ -1,13 +1,10 @@
-Computation record basics
-=====================================
+Retrieving records
+==================
 
 A *record* is a representation of a single computation that is stored on the server. Records are generally
 not created by hand by the user, but retrieved from the server.
 
 Records contain an ID that uniquely identifies this record on the server.
-
-Record Retrieval
-================
 
 Using the :class:`~qcportal.client.PortalClient`, records are retrieved from the server in two ways.
 The first is through ``get_`` functions,  which is used to retrieve records by their ID.
@@ -42,8 +39,8 @@ calculation features.
 
 .. caution::
 
-   The records returned from query functions are not in any defined order, and the order may be different
-   even with repeated calls with the same arguments
+   Unlike the ``get_`` functions, the records returned from query functions are not in any defined order,
+   and the order may be different even with repeated calls with the same arguments
 
 Query functions return an :class:`iterator <qcportal.record_models.RecordQueryIterator>` object.
 This iterator handles transparent and efficient fetching from the server in
