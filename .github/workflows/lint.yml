@@ -1,14 +1,18 @@
 name: Lint
 
 on: 
-  # Trigger the workflow on push or pull request,
-  # but only for the main branch
   push:
     branches:
       - master
+      - next
+    paths-ignore:
+      - 'docs/**'
   pull_request:
     branches:
       - master
+      - next
+    paths-ignore:
+      - 'docs/**'
 
 jobs:
   build:
@@ -18,10 +22,10 @@ jobs:
         python-version: [3.10]
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
 
     - name: Python Setup
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
 
