@@ -120,8 +120,6 @@ class PortalClient(PortalClientBase):
         password: Optional[str] = None,
         verify: bool = True,
         show_motd: bool = True,
-        cache: Optional[Union[str, Path]] = None,
-        max_memcache_size: Optional[int] = 1000000,
     ) -> None:
         """
         Parameters
@@ -138,17 +136,10 @@ class PortalClient(PortalClientBase):
             SSL keys.
         show_motd
             If a Message-of-the-Day is available, display it
-        cache
-            Path to directory to use for cache.
-            If None, only in-memory caching used.
-        max_memcache_size
-            Number of items to hold in client's memory cache.
-            Increase this value to improve performance for repeated calls,
-            at the cost of higher memory usage.
         """
 
         PortalClientBase.__init__(self, address, username, password, verify, show_motd)
-        self._cache = PortalCache(self, cachedir=cache, max_memcache_size=max_memcache_size)
+        #self._cache = PortalCache(self, cachedir=cache, max_memcache_size=max_memcache_size)
 
     def __repr__(self) -> str:
         """A short representation of the current PortalClient.
@@ -159,7 +150,7 @@ class PortalClient(PortalClientBase):
             The desired representation.
         """
         ret = "PortalClient(server_name='{}', address='{}', username='{}', cache='{}')".format(
-            self.server_name, self.address, self.username, self.cache
+            self.server_name, self.address, self.username
         )
         return ret
 
@@ -171,19 +162,18 @@ class PortalClient(PortalClientBase):
           <li><b>Server:   &nbsp; </b>{self.server_name}</li>
           <li><b>Address:  &nbsp; </b>{self.address}</li>
           <li><b>Username: &nbsp; </b>{self.username}</li>
-          <li><b>Cache: &nbsp; </b>{self.cache}</li>
         </ul>
         """
 
         # postprocess due to raw spacing above
         return "\n".join([substr.strip() for substr in output.split("\n")])
 
-    @property
-    def cache(self):
-        if self._cache.cachedir is not None:
-            return os.path.relpath(self._cache.cachedir)
-        else:
-            return None
+    #@property
+    #def cache(self):
+    #    if self._cache.cachedir is not None:
+    #        return os.path.relpath(self._cache.cachedir)
+    #    else:
+    #        return None
 
     # TODO - reimplement
     # def _get_with_cache(self, func, id, missing_ok, entity_type, include=None):
