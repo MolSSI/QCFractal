@@ -34,7 +34,7 @@ storage_socket = _FlaskSQLAlchemySocket()
 jwt = JWTManager()
 
 
-def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
+def create_qcfractal_flask_app(qcfractal_config: FractalConfig, init_storage: bool = True):
     app = Flask(__name__)
     app.logger = logging.getLogger("fractal_flask_app")
     app.logger.info(f"Creating flask app")
@@ -63,8 +63,9 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
 
     jwt.init_app(app)
 
-    # Initialize the database socket, API logger, and view handler
-    storage_socket.init(qcfractal_config)
+    if init_storage:
+        # Initialize the database socket, API logger, and view handler
+        storage_socket.init(qcfractal_config)
 
     # Registers the various error and before/after request handlers
     importlib.import_module("qcfractal.flask_app.handlers")
@@ -82,6 +83,21 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig):
     app.register_blueprint(dashboard_v1)
 
     return app
+
+
+def create_qcfractal_flask_app_docs():
+    from ..config import FractalConfig
+
+    cfg = {
+        "base_folder": "/tmp",
+        "api": {
+            "secret_key": "abcd",
+            "jwt_secret_key": "abcd",
+        },
+    }
+
+    qcf_cfg = FractalConfig(**cfg)
+    return create_qcfractal_flask_app(qcf_cfg, init_storage=False)
 
 
 class FlaskProcess(ProcessBase):
