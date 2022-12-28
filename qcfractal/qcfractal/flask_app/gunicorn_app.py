@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import gunicorn.app.base
 from gunicorn.glogging import Logger as GLogger
 
-from .flask_app import create_qcfractal_flask_app, storage_socket
+from .flask_app import create_flask_app, storage_socket
 from ..process_runner import ProcessBase
 
 if TYPE_CHECKING:
@@ -49,7 +49,7 @@ class FractalGunicornLogger(GLogger):
 class FractalGunicornApp(gunicorn.app.base.BaseApplication):
     def __init__(self, qcfractal_config: FractalConfig):
         self.qcfractal_config = qcfractal_config
-        self.application = create_qcfractal_flask_app(qcfractal_config)
+        self.application = create_flask_app(qcfractal_config)
 
         super().__init__()
 

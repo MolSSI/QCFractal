@@ -11,10 +11,10 @@ from flask_jwt_extended import JWTManager
 
 from qcfractal.db_socket.socket import SQLAlchemySocket
 from qcfractal.process_runner import ProcessBase
+from .home import home_blueprint
 from ..api_v1.blueprint import api_v1
 from ..auth_v1.blueprint import auth_v1
 from ..dashboard_v1.blueprint import dashboard_v1
-from .home import home_blueprint
 
 if TYPE_CHECKING:
     from ..config import FractalConfig
@@ -34,7 +34,7 @@ storage_socket = _FlaskSQLAlchemySocket()
 jwt = JWTManager()
 
 
-def create_qcfractal_flask_app(qcfractal_config: FractalConfig, init_storage: bool = True):
+def create_flask_app(qcfractal_config: FractalConfig, init_storage: bool = True):
     app = Flask(__name__)
     app.logger = logging.getLogger("fractal_flask_app")
     app.logger.info(f"Creating flask app")
@@ -85,7 +85,7 @@ def create_qcfractal_flask_app(qcfractal_config: FractalConfig, init_storage: bo
     return app
 
 
-def create_qcfractal_flask_app_docs():
+def create_flask_app_dummy():
     from ..config import FractalConfig
 
     cfg = {
@@ -97,7 +97,7 @@ def create_qcfractal_flask_app_docs():
     }
 
     qcf_cfg = FractalConfig(**cfg)
-    return create_qcfractal_flask_app(qcf_cfg, init_storage=False)
+    return create_flask_app(qcf_cfg, init_storage=False)
 
 
 class FlaskProcess(ProcessBase):
@@ -116,7 +116,7 @@ class FlaskProcess(ProcessBase):
         self._running_event = running_event
 
     def setup(self):
-        self._flask_app = create_qcfractal_flask_app(self._qcf_config)
+        self._flask_app = create_flask_app(self._qcf_config)
 
         # Get the global storage socket and set up the queue
         storage_socket.set_finished_watch(self._finished_queue)
