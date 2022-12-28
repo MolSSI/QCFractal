@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.client &#8212; QCArchive 0.50b4.post12+ge1c7819d documentation</title>
+    <title>qcportal.client &#8212; QCArchive 0.50b4.post17+gf2735e17 documentation</title>
   
   
   
@@ -482,8 +482,6 @@
         <span class="n">password</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">verify</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">show_motd</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">max_memcache_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1000000</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Parameters</span>
@@ -500,17 +498,10 @@
 <span class="sd">            SSL keys.</span>
 <span class="sd">        show_motd</span>
 <span class="sd">            If a Message-of-the-Day is available, display it</span>
-<span class="sd">        cache</span>
-<span class="sd">            Path to directory to use for cache.</span>
-<span class="sd">            If None, only in-memory caching used.</span>
-<span class="sd">        max_memcache_size</span>
-<span class="sd">            Number of items to hold in client&#39;s memory cache.</span>
-<span class="sd">            Increase this value to improve performance for repeated calls,</span>
-<span class="sd">            at the cost of higher memory usage.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">PortalClientBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">verify</span><span class="p">,</span> <span class="n">show_motd</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span> <span class="o">=</span> <span class="n">PortalCache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cachedir</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span> <span class="n">max_memcache_size</span><span class="o">=</span><span class="n">max_memcache_size</span><span class="p">)</span>
+        <span class="c1">#self._cache = PortalCache(self, cachedir=cache, max_memcache_size=max_memcache_size)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;A short representation of the current PortalClient.</span>
@@ -521,7 +512,7 @@
 <span class="sd">            The desired representation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="s2">&quot;PortalClient(server_name=&#39;</span><span class="si">{}</span><span class="s2">&#39;, address=&#39;</span><span class="si">{}</span><span class="s2">&#39;, username=&#39;</span><span class="si">{}</span><span class="s2">&#39;, cache=&#39;</span><span class="si">{}</span><span class="s2">&#39;)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">server_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">server_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span>
 
@@ -533,19 +524,18 @@
 <span class="s2">          &lt;li&gt;&lt;b&gt;Server:   &amp;nbsp; &lt;/b&gt;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server_name</span><span class="si">}</span><span class="s2">&lt;/li&gt;</span>
 <span class="s2">          &lt;li&gt;&lt;b&gt;Address:  &amp;nbsp; &lt;/b&gt;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="si">}</span><span class="s2">&lt;/li&gt;</span>
 <span class="s2">          &lt;li&gt;&lt;b&gt;Username: &amp;nbsp; &lt;/b&gt;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">&lt;/li&gt;</span>
-<span class="s2">          &lt;li&gt;&lt;b&gt;Cache: &amp;nbsp; &lt;/b&gt;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="si">}</span><span class="s2">&lt;/li&gt;</span>
 <span class="s2">        &lt;/ul&gt;</span>
 <span class="s2">        &quot;&quot;&quot;</span>
 
         <span class="c1"># postprocess due to raw spacing above</span>
         <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">substr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">substr</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)])</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">cachedir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">relpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">cachedir</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
+    <span class="c1">#@property</span>
+    <span class="c1">#def cache(self):</span>
+    <span class="c1">#    if self._cache.cachedir is not None:</span>
+    <span class="c1">#        return os.path.relpath(self._cache.cachedir)</span>
+    <span class="c1">#    else:</span>
+    <span class="c1">#        return None</span>
 
     <span class="c1"># TODO - reimplement</span>
     <span class="c1"># def _get_with_cache(self, func, id, missing_ok, entity_type, include=None):</span>

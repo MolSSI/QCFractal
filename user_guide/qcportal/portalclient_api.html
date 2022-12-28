@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>PortalClient API &#8212; QCArchive 0.50b4.post12+ge1c7819d documentation</title>
+    <title>PortalClient API &#8212; QCArchive 0.50b4.post17+gf2735e17 documentation</title>
   
   
   
@@ -412,7 +412,7 @@
 <h1>PortalClient API<a class="headerlink" href="#portalclient-api" title="Permalink to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="qcportal.client.PortalClient">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PortalClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'https://api.qcarchive.molssi.org'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_motd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_memcache_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/client.html#PortalClient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PortalClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'https://api.qcarchive.molssi.org'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">username</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_motd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/client.html#PortalClient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">PortalClientBase</span></code></p>
 <p>Main class for interacting with a QCArchive server</p>
 <dl class="field-list simple">
@@ -425,19 +425,9 @@
 FractalServer was not provided an SSL certificate and defaults back to self-signed
 SSL keys.</p></li>
 <li><p><strong>show_motd</strong> (<em>bool</em>) – If a Message-of-the-Day is available, display it</p></li>
-<li><p><strong>cache</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em><em>]</em>) – Path to directory to use for cache.
-If None, only in-memory caching used.</p></li>
-<li><p><strong>max_memcache_size</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Number of items to hold in client’s memory cache.
-Increase this value to improve performance for repeated calls,
-at the cost of higher memory usage.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py property">
-<dt class="sig sig-object py" id="qcportal.client.PortalClient.cache">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cache</span></span><a class="headerlink" href="#qcportal.client.PortalClient.cache" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="qcportal.client.PortalClient.get_server_information">
 <span class="sig-name descname"><span class="pre">get_server_information</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/qcportal/client.html#PortalClient.get_server_information"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#qcportal.client.PortalClient.get_server_information" title="Permalink to this definition">#</a></dt>
@@ -2119,15 +2109,6 @@ current working directory and ~.qca/ are searched for “qcportal_config.yaml”
    </code>
   </a>
   <ul class="visible nav section-nav flex-column">
-   <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#qcportal.client.PortalClient.cache">
-     <code class="docutils literal notranslate">
-      <span class="pre">
-       PortalClient.cache
-      </span>
-     </code>
-    </a>
-   </li>
    <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#qcportal.client.PortalClient.get_server_information">
      <code class="docutils literal notranslate">
