@@ -16,7 +16,8 @@ from qcportal.record_models import (
 @api_v1.route("/records/<int:record_id>", methods=["GET"])
 @wrap_route("READ")
 def get_records_v1(record_id: int, url_params: ProjURLParameters):
-    return storage_socket.records.get([record_id], url_params.include, url_params.exclude)
+    records = storage_socket.records.get([record_id], url_params.include, url_params.exclude)
+    return records[0]
 
 
 @api_v1.route("/records/bulkGet", methods=["POST"])
