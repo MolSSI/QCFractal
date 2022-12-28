@@ -131,12 +131,16 @@ class PortalClientBase:
             print("*" * 14 + "- End of Message-of-the-Day -" + "*" * 15)
 
     @classmethod
-    def from_file(cls, config_path: Optional[str] = None, section: Optional[str] = None):
-        """Creates a new client given information in a file. If no path is passed in, the
-        current working directory and ~.qca/ are searched for "qcportal_config.yaml"
+    def from_file(cls, server_name: Optional[str] = None, config_path: Optional[str] = None):
+        """Creates a new client given information in a file.
+
+        If no path is passed in, the current working directory and finally ~/.qca
+        are searched for "qcportal_config.yaml"
 
         Parameters
         ----------
+        server_name
+            Name/alias of the server in the yaml file
         config_path
             Full path to a configuration file, or a directory containing "qcportal_config.yaml".
         """
@@ -168,10 +172,10 @@ class PortalClientBase:
         with open(config_path, "r") as handle:
             data = yaml.load(handle, Loader=yaml.SafeLoader)
 
-        if section is not None:
-            data = data.get(section)
+        if server_name is not None:
+            data = data.get(server_name)
             if data is None:
-                raise RuntimeError(f"Section '{section}' does not exist in the configuration file")
+                raise RuntimeError(f"Server '{server_name}' does not exist in the configuration file")
 
         if "address" not in data:
             raise KeyError("Config file must at least contain an address field.")
