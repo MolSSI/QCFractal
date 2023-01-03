@@ -647,7 +647,7 @@ def _insert_general_batch(
     query = session.query(*search_cols, *returning)
     query = query.filter(query_filter)
 
-    # TODO - remove eventually. This is needed for duplicate molecules at the moment
+    # Needed in case of duplicates
     query = query.distinct(*search_cols)
 
     query_results = query.all()
