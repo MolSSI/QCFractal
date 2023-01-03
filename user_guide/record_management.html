@@ -1,0 +1,680 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Managing Records &#8212; QCArchive 0.50b4.post20+g6f346eb7 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+<link href="../_static/styles/bootstrap.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/design-tabs.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Using datasets" href="datasets.html" />
+    <link rel="prev" title="Submitting computations" href="record_submission.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="en">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fa-solid fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <img src="../_static/molssi_main_logo.png" class="logo__image only-light" alt="Logo image">
+    <img src="../_static/molssi_main_logo_inverted_white.png" class="logo__image only-dark" alt="Logo image">
+  
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../overview/index.html">
+                        Overview
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="index.html">
+                        User Guide
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../admin_guide/index.html">
+                        Admin Guide
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../web_api/index.html">
+                        Web API
+                      </a>
+                    </li>
+                
+            <div class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    More
+                </button>
+                <div class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../developer_guide/index.html">
+                        Developer Guide
+                      </a>
+                    </li>
+                
+
+                <li class="nav-item">
+                  <a class="nav-link nav-external" href="https://molssi.org">
+                    MolSSI
+                  </a>
+                </li>
+                
+                </div>
+            </div>
+            
+    </ul>
+</nav>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+        <div class="navbar-end-item navbar-persistent--container">
+          
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-toggle="tooltip">
+  <i class="fa-solid fa-magnifying-glass"></i>
+</button>
+        </div>
+      
+      
+      <div class="navbar-end-item">
+        <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fa-brands fa-square-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  
+    <div class="navbar-persistent--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-toggle="tooltip">
+  <i class="fa-solid fa-magnifying-glass"></i>
+</button>
+    </div>
+  
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../overview/index.html">
+                        Overview
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="index.html">
+                        User Guide
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../admin_guide/index.html">
+                        Admin Guide
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../web_api/index.html">
+                        Web API
+                      </a>
+                    </li>
+                
+            <div class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    More
+                </button>
+                <div class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../developer_guide/index.html">
+                        Developer Guide
+                      </a>
+                    </li>
+                
+
+                <li class="nav-item">
+                  <a class="nav-link nav-external" href="https://molssi.org">
+                    MolSSI
+                  </a>
+                </li>
+                
+                </div>
+            </div>
+            
+    </ul>
+</nav>
+      </div>
+      
+      </div>
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fa-brands fa-square-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+  <div class="sidebar-start-items sidebar-primary__section">
+    <div class="sidebar-start-items__item"><nav class="bd-links" id="bd-docs-nav" aria-label="Section navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">
+    Section Navigation
+  </p>
+  <div class="bd-toc-item navbar-nav">
+    <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="client_setup.html">QCPortal Installation &amp; Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connecting_qcportal.html">Connecting to a server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="molecule.html">Molecules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="record_retrieval.html">Retrieving records</a></li>
+<li class="toctree-l1"><a class="reference internal" href="record_submission.html">Submitting computations</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Managing Records</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets.html">Using datasets</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="records/index.html">Computation Types</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="records/base.html">Base Record</a></li>
+
+<li class="toctree-l2"><a class="reference internal" href="records/singlepoint.html">Singlepoint calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/optimization.html">Optimization calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/gridoptimization.html">Gridoptimization calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/torsiondrive.html">Torsiondrive calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/manybody.html">Manybody calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/reaction.html">Reaction calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/neb.html">NEB calculations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="qcportal_reference.html">QCPortal API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="webapi_reference.html">Web API</a></li>
+</ul>
+
+  </div>
+</nav>
+    </div>
+  </div>
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+  
+  <div id="rtd-footer-container"></div>
+
+      </div>
+      <main id="main-content" class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+  <section id="managing-records">
+<h1>Managing Records<a class="headerlink" href="#managing-records" title="Permalink to this heading">#</a></h1>
+<p>Computations are generally meant to be fire-and-forget. That is, they get submitted, after which they get
+run somewhere, and the results stored on the server where they can be queried. When dealing
+with lots of computations, though, there will always be a need for a user to manually manage them
+in some way. This includes restarting, deleting, cancelling, or otherwise modifying records in some way.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>If working with lots of calculations, it is almost always better to use a <a class="reference internal" href="datasets.html"><span class="doc">dataset</span></a>.
+Datasets allow for coordinating large numbers of similar calculations.</p>
+</div>
+<section id="record-statuses">
+<span id="record-status"></span><h2>Record Statuses<a class="headerlink" href="#record-statuses" title="Permalink to this heading">#</a></h2>
+<p>One important property of records is its <a class="reference internal" href="records/base.html#qcportal.record_models.RecordStatusEnum" title="qcportal.record_models.RecordStatusEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">status</span></code></a>, which
+that represents its state in the server. This is accessed by the <a class="reference internal" href="records/base.html#qcportal.record_models.BaseRecord.status" title="qcportal.record_models.BaseRecord.status"><code class="xref py py-attr docutils literal notranslate"><span class="pre">status</span></code></a>
+property on any record.</p>
+<section id="waiting">
+<h3>waiting<a class="headerlink" href="#waiting" title="Permalink to this heading">#</a></h3>
+<p>The record exists but has not be run, and is waiting to be picked up and run by a
+<a class="reference internal" href="../overview/glossary.html#glossary-manager"><span class="std std-ref">compute manager</span></a> (or, for a <a class="reference internal" href="../overview/glossary.html#glossary-service"><span class="std std-ref">service</span></a>,
+waiting for the first iteration to be run by the <a class="reference internal" href="../overview/glossary.html#glossary-internal-job"><span class="std std-ref">internal job</span></a> runner).</p>
+<p>This is the initial status of a newly-created record.</p>
+</section>
+<section id="running">
+<h3>running<a class="headerlink" href="#running" title="Permalink to this heading">#</a></h3>
+<p>The record has been claimed by a <a class="reference internal" href="../overview/glossary.html#glossary-manager"><span class="std std-ref">compute manager</span></a>
+and is either being run or has been queued to be run.</p>
+</section>
+<section id="complete">
+<h3>complete<a class="headerlink" href="#complete" title="Permalink to this heading">#</a></h3>
+<p>The record has been successfully computed.</p>
+<p>After completion, the <a class="reference internal" href="../overview/tasks_services.html"><span class="doc">task or service</span></a> associated with the
+record is no longer needed and has been removed.</p>
+</section>
+<section id="error">
+<h3>error<a class="headerlink" href="#error" title="Permalink to this heading">#</a></h3>
+<p>The record encountered an error while it was being computed.</p>
+<p>Errors can have many different causes. These can include unknown methods or basis sets,
+computations not converging, or random compute node failures on compute clusters.</p>
+<p>The <a class="reference internal" href="records/base.html#qcportal.record_models.BaseRecord.error" title="qcportal.record_models.BaseRecord.error"><code class="xref py py-attr docutils literal notranslate"><span class="pre">error</span></code></a> and possibly the
+<a class="reference internal" href="records/base.html#qcportal.record_models.BaseRecord.stdout" title="qcportal.record_models.BaseRecord.stdout"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stdout</span></code></a>/<a class="reference internal" href="records/base.html#qcportal.record_models.BaseRecord.stderr" title="qcportal.record_models.BaseRecord.stderr"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stderr</span></code></a>
+properties may have more details about the error.</p>
+<p>For services, this can be an error with iterating the service or an error with one
+of its dependency records.</p>
+<p>In general, a compute manager disappearing (due to shutting them down or networking errors)
+does not lead to an error state. In that case, the record will (eventually) be recycled to
+<code class="docutils literal notranslate"><span class="pre">waiting</span></code> again.</p>
+<p>To attempt to run the same record again, use <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.reset_records" title="qcportal.client.PortalClient.reset_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset_records()</span></code></a>.
+The server may also automatically reset errored records - see <a class="reference internal" href="../admin_guide/configuration.html#server-configuration-autoreset-error"><span class="std std-ref">autoreset error</span></a>.</p>
+</section>
+<section id="cancelled">
+<h3>cancelled<a class="headerlink" href="#cancelled" title="Permalink to this heading">#</a></h3>
+<p>The record was waiting or running, but has been cancelled by the user for some reason.
+A cancelled record can be uncancelled again. In the case of a service, the service
+will continue from where it left off.</p>
+<p>Client functions: <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.cancel_records" title="qcportal.client.PortalClient.cancel_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cancel_records()</span></code></a> and
+<a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.uncancel_records" title="qcportal.client.PortalClient.uncancel_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncancel_records()</span></code></a></p>
+</section>
+<section id="deleted">
+<h3>deleted<a class="headerlink" href="#deleted" title="Permalink to this heading">#</a></h3>
+<p>The record has been soft-deleted.</p>
+<p>While a hard-deleted record is completely removed from the database, a user may
+opt to “soft” delete the record. This sets the status to <code class="docutils literal notranslate"><span class="pre">deleted</span></code> to mark that
+the record may be removed in the future.</p>
+<p>Client functions: <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.delete_records" title="qcportal.client.PortalClient.delete_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_records()</span></code></a> and
+<a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.undelete_records" title="qcportal.client.PortalClient.undelete_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">undelete_records()</span></code></a></p>
+</section>
+<section id="invalid">
+<h3>invalid<a class="headerlink" href="#invalid" title="Permalink to this heading">#</a></h3>
+<p>A record that was successfully completed, but after manual (human) review, was discovered to have
+some problem with it (for example, converging to an incorrect state). This state must be manually
+set by a user.</p>
+<p>Typically, such a record should be deleted instead. However, in some cases, it may make sense to
+keep the record around (e.g., for historical or reproducibility purposes), but with this state to signal that the
+computation can not be trusted.</p>
+<p>Client functions: <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.invalidate_records" title="qcportal.client.PortalClient.invalidate_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">invalidate_records()</span></code></a> and
+<a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.uninvalidate_records" title="qcportal.client.PortalClient.uninvalidate_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uninvalidate_records()</span></code></a></p>
+</section>
+</section>
+<section id="modifying-records">
+<h2>Modifying Records<a class="headerlink" href="#modifying-records" title="Permalink to this heading">#</a></h2>
+<section id="resetting-errored-records">
+<h3>Resetting errored records<a class="headerlink" href="#resetting-errored-records" title="Permalink to this heading">#</a></h3>
+<p>todo</p>
+</section>
+<section id="deleting-records">
+<h3>Deleting records<a class="headerlink" href="#deleting-records" title="Permalink to this heading">#</a></h3>
+<p>todo</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>A record that is deleted with <code class="docutils literal notranslate"><span class="pre">soft_delete=False</span></code> is gone permanently, and can not be recovered.</p>
+</div>
+</section>
+<section id="invalidating-and-cancelling-records">
+<h3>Invalidating, and Cancelling records<a class="headerlink" href="#invalidating-and-cancelling-records" title="Permalink to this heading">#</a></h3>
+<p>todo</p>
+</section>
+<section id="adding-comments">
+<h3>Adding comments<a class="headerlink" href="#adding-comments" title="Permalink to this heading">#</a></h3>
+<p>todo</p>
+</section>
+</section>
+</section>
+
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+  <a class='left-prev' id="prev-link" href="record_submission.html" title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+          <p class="prev-next-subtitle">previous</p>
+          <p class="prev-next-title">Submitting computations</p>
+      </div>
+  </a>
+  <a class='right-next' id="next-link" href="datasets.html" title="next page">
+  <div class="prev-next-info">
+      <p class="prev-next-subtitle">next</p>
+      <p class="prev-next-title">Using datasets</p>
+  </div>
+  <i class="fa-solid fa-angle-right"></i>
+  </a>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+<div class="tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+</div>
+<nav id="bd-toc-nav" class="page-toc">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#record-statuses">
+   Record Statuses
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#waiting">
+     waiting
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#running">
+     running
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#complete">
+     complete
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#error">
+     error
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#cancelled">
+     cancelled
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#deleted">
+     deleted
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#invalid">
+     invalid
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#modifying-records">
+   Modifying Records
+  </a>
+  <ul class="visible nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#resetting-errored-records">
+     Resetting errored records
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#deleting-records">
+     Deleting records
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#invalidating-and-cancelling-records">
+     Invalidating, and Cancelling records
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#adding-comments">
+     Adding comments
+    </a>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+</nav>
+</div>
+
+<div class="toc-item">
+  
+<div class="tocsection sourcelink">
+    <a href="../_sources/user_guide/record_management.rst.txt">
+        <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+</div>
+
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2018-2023, The Molecular Sciences Software Institute.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    <p class="theme-version">
+    Built with the
+    <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">
+        PyData Sphinx Theme
+    </a>
+    0.12.0.
+</p>
+  </div>
+  
+  <div class="footer-item">
+    
+<p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
+</p>
+
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>

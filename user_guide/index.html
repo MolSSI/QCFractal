@@ -4,9 +4,9 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>QCArchive User Guide &#8212; QCArchive 0.50b4.post17+gf2735e17 documentation</title>
+    <title>QCArchive User Guide &#8212; QCArchive 0.50b4.post20+g6f346eb7 documentation</title>
   
   
   
@@ -27,6 +27,8 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
     <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
   
@@ -41,11 +43,10 @@
     <script src="../_static/doctools.js"></script>
     <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/design-tabs.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/index';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Glossary of Common Concepts" href="glossary.html" />
-    <link rel="prev" title="QCPortal Quickstart" href="../getting_started/client_setup.html" />
+    <link rel="next" title="QCPortal Installation &amp; Setup" href="client_setup.html" />
+    <link rel="prev" title="QCFractal Snowflake" href="../overview/snowflake.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="docsearch:language" content="en">
   </head>
@@ -120,15 +121,8 @@
     <ul id="navbar-main-elements" class="navbar-nav">
         
                     <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../overview.html">
+                      <a class="nav-link nav-internal" href="../overview/index.html">
                         Overview
-                      </a>
-                    </li>
-                
-
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../getting_started/index.html">
-                        Getting Started
                       </a>
                     </li>
                 
@@ -136,6 +130,13 @@
                     <li class="nav-item current active">
                       <a class="nav-link nav-internal" href="#">
                         User Guide
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../admin_guide/index.html">
+                        Admin Guide
                       </a>
                     </li>
                 
@@ -250,15 +251,8 @@
     <ul id="navbar-main-elements" class="navbar-nav">
         
                     <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../overview.html">
+                      <a class="nav-link nav-internal" href="../overview/index.html">
                         Overview
-                      </a>
-                    </li>
-                
-
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../getting_started/index.html">
-                        Getting Started
                       </a>
                     </li>
                 
@@ -266,6 +260,13 @@
                     <li class="nav-item current active">
                       <a class="nav-link nav-internal" href="#">
                         User Guide
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../admin_guide/index.html">
+                        Admin Guide
                       </a>
                     </li>
                 
@@ -345,38 +346,27 @@
   </p>
   <div class="bd-toc-item navbar-nav">
     <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary of Common Concepts</a></li>
-<li class="toctree-l1"><a class="reference internal" href="tasks_services.html">Tasks and Services</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="qcportal/index.html">QCPortal User Guide</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="qcportal/setup.html">Installation and Setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qcportal/connecting.html">Connecting to a server</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qcportal/record_basics.html">Retrieving records</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client_setup.html">QCPortal Installation &amp; Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connecting_qcportal.html">Connecting to a server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="molecule.html">Molecules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="record_retrieval.html">Retrieving records</a></li>
+<li class="toctree-l1"><a class="reference internal" href="record_submission.html">Submitting computations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="record_management.html">Managing Records</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets.html">Using datasets</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="records/index.html">Computation Types</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="records/base.html">Base Record</a></li>
 
-<li class="toctree-l2"><a class="reference internal" href="qcportal/submitting.html">Submitting computations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qcportal/dataset_basics.html">Using datasets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qcportal/molecule.html">Molecules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qcportal/singlepoint.html">Singlepoint calculations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qcportal/optimization.html">Optimization calculations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qcportal/torsiondrive.html">Torsiondrive calculations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qcportal/gridoptimization.html">Gridoptimization calculations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qcportal/reaction.html">Reaction calculations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qcportal/manybody.html">Manybody calculations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qcportal/serveradmin.html">Server administration via the client</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qcportal/portalclient_api.html">PortalClient API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qcportal/baserecord_api.html">Basic Record API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/singlepoint.html">Singlepoint calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/optimization.html">Optimization calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/gridoptimization.html">Gridoptimization calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/torsiondrive.html">Torsiondrive calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/manybody.html">Manybody calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/reaction.html">Reaction calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/neb.html">NEB calculations</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="qcfractal/index.html">QCFractal Server User Guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="qcfractal/setup.html">QCFractal Installation and Setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qcfractal/configuration.html">Server Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="qcfractal/admin.html">Administration &amp; maintenance</a></li>
-</ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="qcfractalcompute/index.html">QCFractalCompute - Compute Managers and Workers</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="qcfractalcompute/setup.html">Compute manager setup</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="snowflake.html">QCFractal Snowflake</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qcportal_reference.html">QCPortal API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="webapi_reference.html">Web API</a></li>
 </ul>
 
   </div>
@@ -411,6 +401,29 @@
   <section id="qcarchive-user-guide">
 <h1>QCArchive User Guide<a class="headerlink" href="#qcarchive-user-guide" title="Permalink to this heading">#</a></h1>
 <div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="client_setup.html">QCPortal Installation &amp; Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connecting_qcportal.html">Connecting to a server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="molecule.html">Molecules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="record_retrieval.html">Retrieving records</a></li>
+<li class="toctree-l1"><a class="reference internal" href="record_submission.html">Submitting computations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="record_management.html">Managing Records</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datasets.html">Using datasets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="records/index.html">Computation Types</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="records/base.html">Base Record</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/base.html#base-record-api">Base Record API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/singlepoint.html">Singlepoint calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/optimization.html">Optimization calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/gridoptimization.html">Gridoptimization calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/torsiondrive.html">Torsiondrive calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/manybody.html">Manybody calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/reaction.html">Reaction calculations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="records/neb.html">NEB calculations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="qcportal_reference.html">QCPortal API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="webapi_reference.html">Web API</a></li>
+</ul>
 </div>
 </section>
 
@@ -422,17 +435,17 @@
             <footer class="bd-footer-article">
                 <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-  <a class='left-prev' id="prev-link" href="../getting_started/client_setup.html" title="previous page">
+  <a class='left-prev' id="prev-link" href="../overview/snowflake.html" title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
           <p class="prev-next-subtitle">previous</p>
-          <p class="prev-next-title">QCPortal Quickstart</p>
+          <p class="prev-next-title">QCFractal Snowflake</p>
       </div>
   </a>
-  <a class='right-next' id="next-link" href="glossary.html" title="next page">
+  <a class='right-next' id="next-link" href="client_setup.html" title="next page">
   <div class="prev-next-info">
       <p class="prev-next-subtitle">next</p>
-      <p class="prev-next-title">Glossary of Common Concepts</p>
+      <p class="prev-next-title">QCPortal Installation &amp; Setup</p>
   </div>
   <i class="fa-solid fa-angle-right"></i>
   </a>
@@ -481,7 +494,7 @@
     
 <p class="copyright">
 
-    &copy; Copyright 2018-2022, The Molecular Sciences Software Institute.<br>
+    &copy; Copyright 2018-2023, The Molecular Sciences Software Institute.<br>
 
 </p>
 

@@ -1,2 +1,0 @@
-Singlepoint calculations
-=====================================

@@ -1,0 +1,630 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Glossary of Common Concepts &#8212; QCArchive 0.50b4.post20+g6f346eb7 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+<link href="../_static/styles/bootstrap.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=796348d33e8b1d947c94" rel="stylesheet">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2">
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94">
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94">
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/design-tabs.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tasks and Services" href="tasks_services.html" />
+    <link rel="prev" title="QCArchive Overview" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="docsearch:language" content="en">
+  </head>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__primary" id="__primary">
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  
+  <input type="checkbox" class="sidebar-toggle" name="__secondary" id="__secondary">
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+      
+<form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+    </div>
+  </div>
+
+  
+  <nav class="bd-header navbar navbar-expand-lg bd-navbar" id="navbar-main"><div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+      <span class="fa-solid fa-bars"></span>
+  </label>
+  <div id="navbar-start">
+    
+    
+  
+
+
+<a class="navbar-brand logo" href="../index.html">
+
+  
+  
+  
+  
+  
+  
+  
+
+  
+    <img src="../_static/molssi_main_logo.png" class="logo__image only-light" alt="Logo image">
+    <img src="../_static/molssi_main_logo_inverted_white.png" class="logo__image only-dark" alt="Logo image">
+  
+  
+</a>
+    
+  </div>
+
+  
+  <div class="col-lg-9 navbar-header-items">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="index.html">
+                        Overview
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../user_guide/index.html">
+                        User Guide
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../admin_guide/index.html">
+                        Admin Guide
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../web_api/index.html">
+                        Web API
+                      </a>
+                    </li>
+                
+            <div class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    More
+                </button>
+                <div class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../developer_guide/index.html">
+                        Developer Guide
+                      </a>
+                    </li>
+                
+
+                <li class="nav-item">
+                  <a class="nav-link nav-external" href="https://molssi.org">
+                    MolSSI
+                  </a>
+                </li>
+                
+                </div>
+            </div>
+            
+    </ul>
+</nav>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+        <div class="navbar-end-item navbar-persistent--container">
+          
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-toggle="tooltip">
+  <i class="fa-solid fa-magnifying-glass"></i>
+</button>
+        </div>
+      
+      
+      <div class="navbar-end-item">
+        <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fa-brands fa-square-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+
+
+  
+  
+    <div class="navbar-persistent--mobile">
+<button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-toggle="tooltip">
+  <i class="fa-solid fa-magnifying-glass"></i>
+</button>
+    </div>
+  
+
+  
+  <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+  </label>
+  
+
+</div>
+  </nav>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+      
+      <div class="navbar-center-item">
+        <nav class="navbar-nav">
+    <p class="sidebar-header-items__title" role="heading" aria-level="1" aria-label="Site Navigation">
+        Site Navigation
+    </p>
+    <ul id="navbar-main-elements" class="navbar-nav">
+        
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="index.html">
+                        Overview
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../user_guide/index.html">
+                        User Guide
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../admin_guide/index.html">
+                        Admin Guide
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../web_api/index.html">
+                        Web API
+                      </a>
+                    </li>
+                
+            <div class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    More
+                </button>
+                <div class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../developer_guide/index.html">
+                        Developer Guide
+                      </a>
+                    </li>
+                
+
+                <li class="nav-item">
+                  <a class="nav-link nav-external" href="https://molssi.org">
+                    MolSSI
+                  </a>
+                </li>
+                
+                </div>
+            </div>
+            
+    </ul>
+</nav>
+      </div>
+      
+      </div>
+    
+
+    
+    
+    <div class="sidebar-header-items__end">
+      
+      <div class="navbar-end-item">
+        <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+</button>
+      </div>
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/MolSSI/QCFractal" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-toggle="tooltip"><span><i class="fa-brands fa-square-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+    
+  </div>
+
+  
+  <div class="sidebar-start-items sidebar-primary__section">
+    <div class="sidebar-start-items__item"><nav class="bd-links" id="bd-docs-nav" aria-label="Section navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">
+    Section Navigation
+  </p>
+  <div class="bd-toc-item navbar-nav">
+    <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Glossary of Common Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tasks_services.html">Tasks and Services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="internal_jobs.html">Internal Jobs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="snowflake.html">QCFractal Snowflake</a></li>
+</ul>
+
+  </div>
+</nav>
+    </div>
+  </div>
+  
+
+  
+  <div class="sidebar-end-items sidebar-primary__section">
+    <div class="sidebar-end-items__item">
+    </div>
+  </div>
+
+  
+  <div id="rtd-footer-container"></div>
+
+      </div>
+      <main id="main-content" class="bd-main">
+        
+        
+        <div class="bd-content">
+          <div class="bd-article-container">
+            
+            <div class="bd-header-article">
+                
+            </div>
+            
+            
+            <article class="bd-article" role="main">
+              
+  <section id="glossary-of-common-concepts">
+<h1>Glossary of Common Concepts<a class="headerlink" href="#glossary-of-common-concepts" title="Permalink to this heading">#</a></h1>
+<section id="record">
+<span id="glossary-record"></span><h2>record<a class="headerlink" href="#record" title="Permalink to this heading">#</a></h2>
+<p>An object that represents a single computation. Records can be simple (a singlepoint computation), or can
+contain a complex <a class="reference internal" href="#glossary-service"><span class="std std-ref">service</span></a>, which may contain many child records.
+The record stores the input information and, if the record has been successfully computed,
+the results of the computation.</p>
+</section>
+<section id="molecule">
+<span id="glossary-molecule"></span><h2>molecule<a class="headerlink" href="#molecule" title="Permalink to this heading">#</a></h2>
+<p>An object containing symbols and geometry of atoms. It may also contain information such as bonding
+and identifiers. Molecules in this way are defined to be a specific geometry.</p>
+<p>See <a class="reference internal" href="../user_guide/molecule.html"><span class="doc">Molecules</span></a></p>
+</section>
+<section id="specification">
+<span id="glossary-specification"></span><h2>specification<a class="headerlink" href="#specification" title="Permalink to this heading">#</a></h2>
+<p>A <em>specification</em> details how a computation should be run. For example, an
+<a class="reference internal" href="../user_guide/records/optimization.html#qcportal.optimization.OptimizationSpecification" title="qcportal.optimization.OptimizationSpecification"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationSpecification</span></code></a> contains
+information about the program used to run the optimization, which method or basis, and other
+input information.</p>
+<p>A specification applied to an input molecule results in a <a class="reference internal" href="#glossary-record"><span class="std std-ref">record</span></a>.</p>
+</section>
+<section id="task">
+<span id="glossary-task"></span><h2>task<a class="headerlink" href="#task" title="Permalink to this heading">#</a></h2>
+<p>A <em>task</em> is a self-contained object that represents a computation to be run. <em>Tasks</em> are mostly for internal use
+by the server and managers, although they can be retrieved for help in debugging problems.</p>
+<p>Every task is associated with a <a class="reference internal" href="#glossary-record"><span class="std std-ref">record</span></a>, although not every record has a task. Tasks that are
+completed are typically deleted from the server, with the data being copied to the record.
+See <a class="reference internal" href="tasks_services.html"><span class="doc">Tasks and Services</span></a>.</p>
+</section>
+<section id="service">
+<span id="glossary-service"></span><h2>service<a class="headerlink" href="#service" title="Permalink to this heading">#</a></h2>
+<p>A hard-coded workflow that run on the server. The workflow is responsible for creating new
+<a class="reference internal" href="#glossary-record"><span class="std std-ref">records</span></a>, and then iterating when all those records have been successfully
+computed. See <a class="reference internal" href="tasks_services.html"><span class="doc">Tasks and Services</span></a>.</p>
+</section>
+<section id="internal-job">
+<span id="glossary-internal-job"></span><h2>internal job<a class="headerlink" href="#internal-job" title="Permalink to this heading">#</a></h2>
+<p>An <em>internal job</em> is a specific action or piece of work that is to be run
+on the server. This is in contrast to a <a class="reference internal" href="#glossary-task"><span class="std std-ref">task</span></a> which are to be run on
+distributed <a class="reference internal" href="#glossary-manager"><span class="std std-ref">managers</span></a>.</p>
+<p>See <a class="reference internal" href="internal_jobs.html"><span class="doc">Internal Jobs</span></a></p>
+</section>
+<section id="compute-manager">
+<span id="glossary-manager"></span><h2>compute manager<a class="headerlink" href="#compute-manager" title="Permalink to this heading">#</a></h2>
+<p>A <em>compute manager</em> (or just <em>manager</em>) is a process that requests <a class="reference internal" href="#glossary-task"><span class="std std-ref">tasks</span></a> from the
+server and then sends them to be computed. Simple managers may just compute them by itself, although
+for production-level infrastructure these tasks are then queued to be run elsewhere (on an HPC cluster, for example).
+See <a class="reference internal" href="../admin_guide/managers/index.html"><span class="doc">Compute Managers</span></a> in the user guide.</p>
+</section>
+<section id="routing-tag">
+<span id="glossary-tag"></span><h2>routing tag<a class="headerlink" href="#routing-tag" title="Permalink to this heading">#</a></h2>
+<p>A <em>routing tag</em> (or just <em>tag</em>) is a user-specified string to assist in the routing of <a class="reference internal" href="#glossary-task"><span class="std std-ref">tasks</span></a>.
+<a class="reference internal" href="#glossary-manager"><span class="std std-ref">Managers</span></a> can be set up to only requests tasks that are
+assigned a specific tag. This can assist with directing certain tasks to special hardware, for example.
+See <a class="reference internal" href="tasks_services.html#routing-tags"><span class="std std-ref">Routing tags</span></a>.</p>
+</section>
+<section id="dataset">
+<span id="glossary-dataset"></span><h2>dataset<a class="headerlink" href="#dataset" title="Permalink to this heading">#</a></h2>
+<p>A <em>dataset</em> is a collection of similar <a class="reference internal" href="#glossary-record"><span class="std std-ref">records</span></a>.
+A dataset contains <a class="reference internal" href="#glossary-dataset-entry"><span class="std std-ref">entries</span></a> which typically correspond to input
+<a class="reference internal" href="#glossary-molecule"><span class="std std-ref">molecules</span></a>, and <a class="reference internal" href="#glossary-dataset-specification"><span class="std std-ref">specifications</span></a> that
+define how a computation is to be run.</p>
+<p>See <a class="reference internal" href="../user_guide/datasets.html"><span class="doc">Using datasets</span></a></p>
+</section>
+<section id="dataset-entry">
+<span id="glossary-dataset-entry"></span><h2>dataset entry<a class="headerlink" href="#dataset-entry" title="Permalink to this heading">#</a></h2>
+<p>An object that represents a <a class="reference internal" href="#glossary-molecule"><span class="std std-ref">molecule</span></a> or similar input in a dataset.
+The <a class="reference internal" href="#glossary-dataset-specification"><span class="std std-ref">specifications</span></a> of the dataset are then applied to the
+entries.</p>
+<p>See <a class="reference internal" href="../user_guide/datasets.html"><span class="doc">Using datasets</span></a></p>
+</section>
+<section id="dataset-specification">
+<span id="glossary-dataset-specification"></span><h2>dataset specification<a class="headerlink" href="#dataset-specification" title="Permalink to this heading">#</a></h2>
+<p>An object that represents a <a class="reference internal" href="#glossary-specification"><span class="std std-ref">specification</span></a> in a dataset. Typically these are just
+<a class="reference internal" href="#glossary-specification"><span class="std std-ref">specifications</span></a> with an attached name, making it easier to
+organize a dataset.</p>
+<p>Specifications are then applied to <a class="reference internal" href="#glossary-dataset-entry"><span class="std std-ref">entries</span></a> to
+form <a class="reference internal" href="#glossary-record"><span class="std std-ref">records</span></a> that are associated with the dataset.</p>
+<p>See <a class="reference internal" href="../user_guide/datasets.html"><span class="doc">Using datasets</span></a></p>
+</section>
+</section>
+
+
+            </article>
+            
+            
+            
+            <footer class="bd-footer-article">
+                <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+  <a class='left-prev' id="prev-link" href="index.html" title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+          <p class="prev-next-subtitle">previous</p>
+          <p class="prev-next-title">QCArchive Overview</p>
+      </div>
+  </a>
+  <a class='right-next' id="next-link" href="tasks_services.html" title="next page">
+  <div class="prev-next-info">
+      <p class="prev-next-subtitle">next</p>
+      <p class="prev-next-title">Tasks and Services</p>
+  </div>
+  <i class="fa-solid fa-angle-right"></i>
+  </a>
+</div>
+            </footer>
+            
+          </div>
+          
+          
+          
+            <div class="bd-sidebar-secondary bd-toc">
+              
+<div class="toc-item">
+  
+<div class="tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+</div>
+<nav id="bd-toc-nav" class="page-toc">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#record">
+   record
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#molecule">
+   molecule
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#specification">
+   specification
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#task">
+   task
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#service">
+   service
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#internal-job">
+   internal job
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#compute-manager">
+   compute manager
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#routing-tag">
+   routing tag
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#dataset">
+   dataset
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#dataset-entry">
+   dataset entry
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#dataset-specification">
+   dataset specification
+  </a>
+ </li>
+</ul>
+
+</nav>
+</div>
+
+<div class="toc-item">
+  
+<div class="tocsection sourcelink">
+    <a href="../_sources/overview/glossary.rst.txt">
+        <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+</div>
+
+</div>
+
+            </div>
+          
+          
+        </div>
+        <footer class="bd-footer-content">
+          <div class="bd-footer-content__inner">
+            
+          </div>
+        </footer>
+        
+      </main>
+    </div>
+  </div>
+
+  
+    
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=796348d33e8b1d947c94"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=796348d33e8b1d947c94"></script>
+
+  <footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    
+<p class="copyright">
+
+    &copy; Copyright 2018-2023, The Molecular Sciences Software Institute.<br>
+
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    <p class="theme-version">
+    Built with the
+    <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">
+        PyData Sphinx Theme
+    </a>
+    0.12.0.
+</p>
+  </div>
+  
+  <div class="footer-item">
+    
+<p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
+</p>
+
+  </div>
+  
+</div>
+  </footer>
+  </body>
+</html>
