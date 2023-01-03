@@ -113,6 +113,7 @@ class PortalClient(PortalClientBase):
     """
     Main class for interacting with a QCArchive server
     """
+
     def __init__(
         self,
         address: str = "https://api.qcarchive.molssi.org",
@@ -139,7 +140,7 @@ class PortalClient(PortalClientBase):
         """
 
         PortalClientBase.__init__(self, address, username, password, verify, show_motd)
-        #self._cache = PortalCache(self, cachedir=cache, max_memcache_size=max_memcache_size)
+        # self._cache = PortalCache(self, cachedir=cache, max_memcache_size=max_memcache_size)
 
     def __repr__(self) -> str:
         """A short representation of the current PortalClient.
@@ -149,7 +150,7 @@ class PortalClient(PortalClientBase):
         str
             The desired representation.
         """
-        ret = "PortalClient(server_name='{}', address='{}', username='{}', cache='{}')".format(
+        ret = "PortalClient(server_name='{}', address='{}', username='{}')".format(
             self.server_name, self.address, self.username
         )
         return ret
@@ -168,8 +169,8 @@ class PortalClient(PortalClientBase):
         # postprocess due to raw spacing above
         return "\n".join([substr.strip() for substr in output.split("\n")])
 
-    #@property
-    #def cache(self):
+    # @property
+    # def cache(self):
     #    if self._cache.cachedir is not None:
     #        return os.path.relpath(self._cache.cachedir)
     #    else:
