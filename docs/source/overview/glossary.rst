@@ -19,7 +19,7 @@ molecule
 An object containing symbols and geometry of atoms. It may also contain information such as bonding
 and identifiers. Molecules in this way are defined to be a specific geometry.
 
-See :doc:`qcportal/molecule`
+See :doc:`../user_guide/molecule`
 
 
 .. _glossary_specification:
@@ -58,6 +58,19 @@ A hard-coded workflow that run on the server. The workflow is responsible for cr
 computed. See :doc:`tasks_services`.
 
 
+.. _glossary_internal_job:
+
+internal job
+-------------
+
+An *internal job* is a specific action or piece of work that is to be run
+on the server. This is in contrast to a :ref:`glossary_task` which are to be run on
+distributed :ref:`managers <glossary_manager>`.
+
+See :doc:`internal_jobs`
+
+
+
 .. _glossary_manager:
 
 compute manager
@@ -66,7 +79,7 @@ compute manager
 A *compute manager* (or just *manager*) is a process that requests :ref:`tasks <glossary_task>` from the
 server and then sends them to be computed. Simple managers may just compute them by itself, although
 for production-level infrastructure these tasks are then queued to be run elsewhere (on an HPC cluster, for example).
-See :doc:`Compute Managers <qcfractalcompute/index>` in the user guide.
+See :doc:`Compute Managers <../admin_guide/managers/index>` in the user guide.
 
 
 .. _glossary_tag:
@@ -77,6 +90,7 @@ routing tag
 A *routing tag* (or just *tag*) is a user-specified string to assist in the routing of :ref:`tasks <glossary_task>`.
 :ref:`Managers <glossary_manager>` can be set up to only requests tasks that are
 assigned a specific tag. This can assist with directing certain tasks to special hardware, for example.
+See :ref:`routing_tags`.
 
 
 .. _glossary_dataset:
@@ -89,7 +103,7 @@ A dataset contains :ref:`entries <glossary_dataset_entry>` which typically corre
 :ref:`molecules <glossary_molecule>`, and :ref:`specifications <glossary_dataset_specification>` that
 define how a computation is to be run.
 
-See :doc:`qcportal/dataset_basics`
+See :doc:`../user_guide/datasets`
 
 
 .. _glossary_dataset_entry:
@@ -101,7 +115,7 @@ An object that represents a :ref:`glossary_molecule` or similar input in a datas
 The :ref:`specifications <glossary_dataset_specification>` of the dataset are then applied to the
 entries.
 
-See :doc:`qcportal/dataset_basics`
+See :doc:`../user_guide/datasets`
 
 
 .. _glossary_dataset_specification:
@@ -116,4 +130,4 @@ organize a dataset.
 Specifications are then applied to :ref:`entries <glossary_dataset_entry>` to
 form :ref:`records <glossary_record>` that are associated with the dataset.
 
-See :doc:`qcportal/dataset_basics`
+See :doc:`../user_guide/datasets`

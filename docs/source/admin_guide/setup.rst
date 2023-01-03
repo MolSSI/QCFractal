@@ -1,4 +1,4 @@
-QCFractal Quickstart
+QCFractal Installation and Setup 
 =====================================
 
 .. admonition:: Note about PostgreSQL
@@ -83,4 +83,5 @@ To stop a running server, you can use **Ctrl-C**.
 Next steps
 ---------------------
 
-Next, you will probably want to set up an admin user (see :ref:`server_admin_users`) 
+Next, you will probably want to set up an admin user (see :ref:`server_admin_users`)
+

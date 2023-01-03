@@ -1,14 +1,19 @@
 QCArchive User Guide
 =====================================
 
+
+
 .. toctree::
    :maxdepth: 2
-   :hidden:
    :titlesonly:
 
-   glossary
-   tasks_services
-   qcportal/index
-   qcfractal/index
-   qcfractalcompute/index
-   snowflake
+   client_setup
+   connecting_qcportal
+   molecule
+   record_retrieval
+   record_submission
+   record_management
+   datasets
+   records/index
+   qcportal_reference
+   webapi_reference

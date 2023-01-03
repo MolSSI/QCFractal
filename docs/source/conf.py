@@ -44,29 +44,25 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
-#    'nbsphinx',
+    'sphinx_tabs.tabs',
     'sphinx_design',
-#    'sphinx.ext.mathjax',
-#    'sphinx.ext.extlinks',
-#    'sphinx.ext.doctest',
-#    'sphinx.ext.todo',
-#    'sphinx.ext.coverage',
-#    'sphinx.ext.intersphinx',
-#    'sphinx_automodapi.automodapi',
+    'sphinxcontrib.autodoc_pydantic',
 ]
 
 # Some options
-highlight_language = 'python3'
 add_module_names = False
+sphinx_tabs_disable_tab_closing = True
 autoclass_content = "both"
 autodoc_typehints = 'description'
 autodoc_default_options = {
     'members': True,
     'undoc-members': True,
-    'inherited-members': True,
+    'inherited-members': "BaseModel",
     'show-inheritance': True,
     'member-order': 'bysource',
 }
+autodoc_pydantic_model_show_json = False
+autodoc_pydantic_settings_show_json = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates', ]

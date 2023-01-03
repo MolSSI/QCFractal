@@ -7,4 +7,6 @@ QCFractal Server User Guide
 
    setup
    configuration
-   admin
+   cli_admin
+   monitoring
+   managers/index
