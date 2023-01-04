@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Managing Records &#8212; QCArchive 0.50b4.post20+g6f346eb7 documentation</title>
+    <title>Managing Records &#8212; QCArchive 0.50b4.post22+g98d898c3 documentation</title>
   
   
   
@@ -481,23 +481,160 @@ computation can not be trusted.</p>
 <h2>Modifying Records<a class="headerlink" href="#modifying-records" title="Permalink to this heading">#</a></h2>
 <section id="resetting-errored-records">
 <h3>Resetting errored records<a class="headerlink" href="#resetting-errored-records" title="Permalink to this heading">#</a></h3>
-<p>todo</p>
+<p>If a record has a status of <code class="docutils literal notranslate"><span class="pre">error</span></code>, you can manually reset it back to <code class="docutils literal notranslate"><span class="pre">waiting</span></code> so that it will run again.
+This can be useful if you think the error may be spurious or random and that running it again will be successful.
+You can check what the error is with
+the <a class="reference internal" href="records/base.html#qcportal.record_models.BaseRecord.error" title="qcportal.record_models.BaseRecord.error"><code class="xref py py-attr docutils literal notranslate"><span class="pre">error</span></code></a>, <a class="reference internal" href="records/base.html#qcportal.record_models.BaseRecord.stdout" title="qcportal.record_models.BaseRecord.stdout"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stdout</span></code></a>, and
+<a class="reference internal" href="records/base.html#qcportal.record_models.BaseRecord.stderr" title="qcportal.record_models.BaseRecord.stderr"><code class="xref py py-attr docutils literal notranslate"><span class="pre">stderr</span></code></a> properties.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">411</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+<span class="go">RecordStatusEnum.error</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">reset_records</span><span class="p">(</span><span class="mi">411</span><span class="p">)</span> <span class="c1"># can also take a list</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)</span>
+</pre></div>
+</div>
+<p>The metadata is <a class="reference internal" href="record_submission.html#interpret-insert-metadata"><span class="std std-ref">interpreted</span></a> similarly to the metadata returned by <code class="docutils literal notranslate"><span class="pre">add_</span></code> functions.
+In this case, the only record (index 0) had its status updated back to <code class="docutils literal notranslate"><span class="pre">waiting</span></code> and will be picked up/run by a
+manager again.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">411</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+<span class="go">RecordStatusEnum.waiting</span>
+</pre></div>
+</div>
 </section>
 <section id="deleting-records">
 <h3>Deleting records<a class="headerlink" href="#deleting-records" title="Permalink to this heading">#</a></h3>
-<p>todo</p>
+<p>Records can be deleted from the server with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.delete_records" title="qcportal.client.PortalClient.delete_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_records()</span></code></a>.</p>
+<p>There are a couple important arguments to this function. The first is the option to “soft delete”.
+Soft deletion means that the record is marked for deletion, but otherwise remains on the server.
+This operation can be done with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.undelete_records" title="qcportal.client.PortalClient.undelete_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">undelete_records()</span></code></a>.
+If <code class="docutils literal notranslate"><span class="pre">soft_delete=False</span></code> (“hard delete”), then the record is deleted permanently from the server.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>A record cannot be hard-deleted if it is being referenced somewhere (another record or a dataset).</p>
+</div>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">149</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+<span class="go">RecordStatusEnum.complete</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">delete_records</span><span class="p">(</span><span class="mi">149</span><span class="p">,</span> <span class="n">soft_delete</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># can also take a list</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">DeleteMetadata(error_description=None, errors=[], deleted_idx=[0], n_children_deleted=5)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">149</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+<span class="go">RecordStatusEnum.deleted</span>
+</pre></div>
+</div>
+<p>Note that in this example, the child records were also (soft) deleted. This can be controlled with the
+<code class="docutils literal notranslate"><span class="pre">delete_children</span></code> argument to  <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.delete_records" title="qcportal.client.PortalClient.delete_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">delete_records()</span></code></a>.
+In this case, the record was an optimization, meaning that the trajectory records were (soft) deleted.</p>
+<p>We can undo a soft deletion with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.undelete_records" title="qcportal.client.PortalClient.undelete_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">undelete_records()</span></code></a></p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">undelete_records</span><span class="p">(</span><span class="mi">149</span><span class="p">)</span> <span class="c1"># can also take a list</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=5)</span>
+</pre></div>
+</div>
+<p>Hard deletions are permanent and result in the removal of the record from the server</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">delete_records</span><span class="p">([</span><span class="mi">942</span><span class="p">,</span> <span class="mi">943</span><span class="p">],</span> <span class="n">soft_delete</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="c1"># can also take a list</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">DeleteMetadata(error_description=None, errors=[], deleted_idx=[0, 1], n_children_deleted=0)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">942</span><span class="p">,</span> <span class="n">missing_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+<span class="go">None</span>
+</pre></div>
+</div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>A record that is deleted with <code class="docutils literal notranslate"><span class="pre">soft_delete=False</span></code> is gone permanently, and can not be recovered.</p>
+<p>A record that is deleted with <code class="docutils literal notranslate"><span class="pre">soft_delete=False</span></code> is permanently removed and can not be recovered.</p>
 </div>
 </section>
-<section id="invalidating-and-cancelling-records">
-<h3>Invalidating, and Cancelling records<a class="headerlink" href="#invalidating-and-cancelling-records" title="Permalink to this heading">#</a></h3>
-<p>todo</p>
+<section id="cancelling-records">
+<h3>Cancelling records<a class="headerlink" href="#cancelling-records" title="Permalink to this heading">#</a></h3>
+<p>Records that are <code class="docutils literal notranslate"><span class="pre">waiting</span></code> or <code class="docutils literal notranslate"><span class="pre">running</span></code> can be cancelled with
+<a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.cancel_records" title="qcportal.client.PortalClient.cancel_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cancel_records()</span></code></a>. If they were <code class="docutils literal notranslate"><span class="pre">waiting</span></code>, then they will no longer
+be picked up by a compute manager.</p>
+<p>Cancelling can be undone with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.uncancel_records" title="qcportal.client.PortalClient.uncancel_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncancel_records()</span></code></a>. If the record was <code class="docutils literal notranslate"><span class="pre">running</span></code>
+before it was cancelled, with will go back to a <code class="docutils literal notranslate"><span class="pre">waiting</span> <span class="pre">state</span></code>.</p>
+<p>Invalidation can be undone with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.uncancel_records" title="qcportal.client.PortalClient.uncancel_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncancel_records()</span></code></a>.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">411</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+<span class="go">RecordStatusEnum.waiting</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">cancel_records</span><span class="p">(</span><span class="mi">411</span><span class="p">)</span> <span class="c1"># can also take a list</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">411</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+<span class="go">RecordStatusEnum.cancelled</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Cancelling a record will also cancel any parent records (for example, if this record was part of a service).</p>
+</div>
+</section>
+<section id="invalidating-records">
+<h3>Invalidating records<a class="headerlink" href="#invalidating-records" title="Permalink to this heading">#</a></h3>
+<p>A completed record can be marked as invalid with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.invalidate_records" title="qcportal.client.PortalClient.invalidate_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">invalidate_records()</span></code></a>. This signals
+that the record, although “successfully” completed, contains other problems and can not be trusted. Normally,
+the record should be deleted, but in some cases it may be useful to keep the record and mark it as invalid instead.</p>
+<p>Invalidation can be undone with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.uninvalidate_records" title="qcportal.client.PortalClient.uninvalidate_records"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uninvalidate_records()</span></code></a>.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">149</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+<span class="go">RecordStatusEnum.complete</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">invalidate_records</span><span class="p">(</span><span class="mi">149</span><span class="p">)</span> <span class="c1"># can also take a list</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">149</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+<span class="go">RecordStatusEnum.invalid</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Invalidating a record will also cancel any parent records (for example, if this record was part of a service).</p>
+</div>
+</section>
+<section id="changing-tag-and-priority">
+<h3>Changing tag and priority<a class="headerlink" href="#changing-tag-and-priority" title="Permalink to this heading">#</a></h3>
+<p>A record’s tag and priority can be changed if it has not yet been successfully completed (ie, the task or service
+still exists - see <a class="reference internal" href="../overview/tasks_services.html"><span class="doc">Tasks and Services</span></a>).</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">941</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">tag</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">priority</span><span class="p">)</span>
+<span class="go">* PriorityEnum.normal</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">modify_records</span><span class="p">(</span><span class="mi">941</span><span class="p">,</span> <span class="n">new_tag</span><span class="o">=</span><span class="s1">&#39;a_new_tag&#39;</span><span class="p">,</span> <span class="n">new_priority</span><span class="o">=</span><span class="s1">&#39;low&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">941</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">tag</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">task</span><span class="o">.</span><span class="n">priority</span><span class="p">)</span>
+<span class="go">a_new_tag PriorityEnum.low</span>
+</pre></div>
+</div>
 </section>
 <section id="adding-comments">
 <h3>Adding comments<a class="headerlink" href="#adding-comments" title="Permalink to this heading">#</a></h3>
-<p>todo</p>
+<p>Comments can be added to records with <a class="reference internal" href="qcportal_reference.html#qcportal.client.PortalClient.add_comment" title="qcportal.client.PortalClient.add_comment"><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_comment()</span></code></a>. These are then available
+with the <a class="reference internal" href="records/base.html#qcportal.record_models.BaseRecord.comments" title="qcportal.record_models.BaseRecord.comments"><code class="xref py py-attr docutils literal notranslate"><span class="pre">comments</span></code></a> property.</p>
+<p>The server will automatically add the time the comment was added and the name of the user adding the comment.</p>
+<div class="highlight-py3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">meta</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">add_comment</span><span class="p">(</span><span class="mi">149</span><span class="p">,</span> <span class="s1">&#39;Invalid due to convergence to wrong minimum&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">meta</span><span class="p">)</span>
+<span class="go">UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_records</span><span class="p">(</span><span class="mi">149</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">comments</span><span class="p">)</span>
+<span class="go">[RecordComment(id=1, record_id=149, username=&#39;ben&#39;, timestamp=datetime.datetime(2023, 1, 4, 17, 21, 1, 990674),</span>
+<span class="go"> comment=&#39;Invalid due to convergence to wrong minimum&#39;)]</span>
+</pre></div>
+</div>
 </section>
 </section>
 </section>
@@ -598,8 +735,18 @@ computation can not be trusted.</p>
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">
-    <a class="reference internal nav-link" href="#invalidating-and-cancelling-records">
-     Invalidating, and Cancelling records
+    <a class="reference internal nav-link" href="#cancelling-records">
+     Cancelling records
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#invalidating-records">
+     Invalidating records
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#changing-tag-and-priority">
+     Changing tag and priority
     </a>
    </li>
    <li class="toc-h3 nav-item toc-entry">

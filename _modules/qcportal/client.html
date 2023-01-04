@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>qcportal.client &#8212; QCArchive 0.50b4.post20+g6f346eb7 documentation</title>
+    <title>qcportal.client &#8212; QCArchive 0.50b4.post22+g98d898c3 documentation</title>
   
   
   
@@ -478,6 +478,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Main class for interacting with a QCArchive server</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">address</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;https://api.qcarchive.molssi.org&quot;</span><span class="p">,</span>
@@ -504,7 +505,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">PortalClientBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">verify</span><span class="p">,</span> <span class="n">show_motd</span><span class="p">)</span>
-        <span class="c1">#self._cache = PortalCache(self, cachedir=cache, max_memcache_size=max_memcache_size)</span>
+        <span class="c1"># self._cache = PortalCache(self, cachedir=cache, max_memcache_size=max_memcache_size)</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A short representation of the current PortalClient.</span>
@@ -514,7 +515,7 @@
 <span class="sd">        str</span>
 <span class="sd">            The desired representation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="s2">&quot;PortalClient(server_name=&#39;</span><span class="si">{}</span><span class="s2">&#39;, address=&#39;</span><span class="si">{}</span><span class="s2">&#39;, username=&#39;</span><span class="si">{}</span><span class="s2">&#39;, cache=&#39;</span><span class="si">{}</span><span class="s2">&#39;)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="s2">&quot;PortalClient(server_name=&#39;</span><span class="si">{}</span><span class="s2">&#39;, address=&#39;</span><span class="si">{}</span><span class="s2">&#39;, username=&#39;</span><span class="si">{}</span><span class="s2">&#39;)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">server_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span>
@@ -533,8 +534,8 @@
         <span class="c1"># postprocess due to raw spacing above</span>
         <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">substr</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">substr</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)])</span>
 
-    <span class="c1">#@property</span>
-    <span class="c1">#def cache(self):</span>
+    <span class="c1"># @property</span>
+    <span class="c1"># def cache(self):</span>
     <span class="c1">#    if self._cache.cachedir is not None:</span>
     <span class="c1">#        return os.path.relpath(self._cache.cachedir)</span>
     <span class="c1">#    else:</span>
