@@ -49,6 +49,9 @@ if only one record is added.
 The specifics of the ``add_`` functions depends on the type of computation. :doc:`See the documentation
 for different records <records/index>`.
 
+
+.. _interpret_insert_metadata:
+
 Interpreting metadata
 ---------------------
 

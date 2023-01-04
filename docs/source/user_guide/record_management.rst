@@ -109,25 +109,186 @@ Modifying Records
 Resetting errored records
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-todo
+If a record has a status of ``error``, you can manually reset it back to ``waiting`` so that it will run again.
+This can be useful if you think the error may be spurious or random and that running it again will be successful.
+You can check what the error is with
+the :attr:`~qcportal.record_models.BaseRecord.error`, :attr:`~qcportal.record_models.BaseRecord.stdout`, and
+:attr:`~qcportal.record_models.BaseRecord.stderr` properties.
+
+.. code-block:: py3
+
+  >>> r = client.get_records(411)
+  >>> print(r.status)
+  RecordStatusEnum.error
+
+  >>> meta = client.reset_records(411) # can also take a list
+  >>> print(meta)
+  UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)
+
+The metadata is :ref:`interpreted <interpret_insert_metadata>` similarly to the metadata returned by ``add_`` functions.
+In this case, the only record (index 0) had its status updated back to ``waiting`` and will be picked up/run by a
+manager again.
+
+.. code-block:: py3
+
+  >>> r = client.get_records(411)
+  >>> print(r.status)
+  RecordStatusEnum.waiting
+
 
 Deleting records
 ~~~~~~~~~~~~~~~~
 
-todo
+Records can be deleted from the server with :meth:`~qcportal.client.PortalClient.delete_records`.
+
+There are a couple important arguments to this function. The first is the option to "soft delete".
+Soft deletion means that the record is marked for deletion, but otherwise remains on the server.
+This operation can be done with :meth:`~qcportal.client.PortalClient.undelete_records`.
+If ``soft_delete=False`` ("hard delete"), then the record is deleted permanently from the server.
+
+.. important::
+
+  A record cannot be hard-deleted if it is being referenced somewhere (another record or a dataset).
+
+
+.. code-block:: py3
+
+  >>> r = client.get_records(149)
+  >>> print(r.status)
+  RecordStatusEnum.complete
+
+  >>> meta = client.delete_records(149, soft_delete=True) # can also take a list
+  >>> print(meta)
+  DeleteMetadata(error_description=None, errors=[], deleted_idx=[0], n_children_deleted=5)
+
+  >>> r = client.get_records(149)
+  >>> print(r.status)
+  RecordStatusEnum.deleted
+
+Note that in this example, the child records were also (soft) deleted. This can be controlled with the
+``delete_children`` argument to  :meth:`~qcportal.client.PortalClient.delete_records`.
+In this case, the record was an optimization, meaning that the trajectory records were (soft) deleted.
+
+We can undo a soft deletion with :meth:`~qcportal.client.PortalClient.undelete_records`
+
+.. code-block:: py3
+
+  >>> meta = client.undelete_records(149) # can also take a list
+  >>> print(meta)
+  UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=5)
+
+Hard deletions are permanent and result in the removal of the record from the server
+
+.. code-block:: py3
+
+  >>> meta = client.delete_records([942, 943], soft_delete=False) # can also take a list
+  >>> print(meta)
+  DeleteMetadata(error_description=None, errors=[], deleted_idx=[0, 1], n_children_deleted=0)
+
+  >>> r = client.get_records(942, missing_ok=True)
+  >>> print(r)
+  None
 
 .. warning::
 
-  A record that is deleted with ``soft_delete=False`` is gone permanently, and can not be recovered.
+  A record that is deleted with ``soft_delete=False`` is permanently removed and can not be recovered.
 
 
 
-Invalidating, and Cancelling records
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Cancelling records
+~~~~~~~~~~~~~~~~~~
 
-todo
+Records that are ``waiting`` or ``running`` can be cancelled with
+:meth:`~qcportal.client.PortalClient.cancel_records`. If they were ``waiting``, then they will no longer
+be picked up by a compute manager.
+
+Cancelling can be undone with :meth:`~qcportal.client.PortalClient.uncancel_records`. If the record was ``running``
+before it was cancelled, with will go back to a ``waiting state``.
+
+Invalidation can be undone with :meth:`~qcportal.client.PortalClient.uncancel_records`.
+
+.. code-block:: py3
+
+  >>> r = client.get_records(411)
+  >>> print(r.status)
+  RecordStatusEnum.waiting
+
+  >>> meta = client.cancel_records(411) # can also take a list
+  >>> print(meta)
+  UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)
+
+  >>> r = client.get_records(411)
+  >>> print(r.status)
+  RecordStatusEnum.cancelled
+
+.. note::
+
+  Cancelling a record will also cancel any parent records (for example, if this record was part of a service).
+
+Invalidating records
+~~~~~~~~~~~~~~~~~~~~
+
+A completed record can be marked as invalid with :meth:`~qcportal.client.PortalClient.invalidate_records`. This signals
+that the record, although "successfully" completed, contains other problems and can not be trusted. Normally,
+the record should be deleted, but in some cases it may be useful to keep the record and mark it as invalid instead.
+
+Invalidation can be undone with :meth:`~qcportal.client.PortalClient.uninvalidate_records`.
+
+.. code-block:: py3
+
+  >>> r = client.get_records(149)
+  >>> print(r.status)
+  RecordStatusEnum.complete
+
+  >>> meta = client.invalidate_records(149) # can also take a list
+  >>> print(meta)
+  UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)
+
+  >>> r = client.get_records(149)
+  >>> print(r.status)
+  RecordStatusEnum.invalid
+
+.. note::
+
+  Invalidating a record will also cancel any parent records (for example, if this record was part of a service).
+
+
+Changing tag and priority
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A record's tag and priority can be changed if it has not yet been successfully completed (ie, the task or service
+still exists - see :doc:`../overview/tasks_services`).
+
+.. code-block:: py3
+
+  >>> r = client.get_records(941)
+  >>> print(r.task.tag, r.task.priority)
+  * PriorityEnum.normal
+
+  >>> meta = client.modify_records(941, new_tag='a_new_tag', new_priority='low')
+  >>> print(meta)
+  UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)
+
+  >>> r = client.get_records(941)
+  >>> print(r.task.tag, r.task.priority)
+  a_new_tag PriorityEnum.low
+
 
 Adding comments
 ~~~~~~~~~~~~~~~
 
-todo
+Comments can be added to records with :meth:`~qcportal.client.PortalClient.add_comment`. These are then available
+with the :attr:`~qcportal.record_models.BaseRecord.comments` property.
+
+The server will automatically add the time the comment was added and the name of the user adding the comment.
+
+.. code-block:: py3
+
+  >>> meta = client.add_comment(149, 'Invalid due to convergence to wrong minimum')
+  >>> print(meta)
+  UpdateMetadata(error_description=None, errors=[], updated_idx=[0], n_children_updated=0)
+
+  >>> r = client.get_records(149)
+  >>> print(r.comments)
+  [RecordComment(id=1, record_id=149, username='ben', timestamp=datetime.datetime(2023, 1, 4, 17, 21, 1, 990674),
+   comment='Invalid due to convergence to wrong minimum')]
