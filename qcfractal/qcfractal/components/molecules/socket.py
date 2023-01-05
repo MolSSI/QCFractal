@@ -342,18 +342,20 @@ class MoleculeSocket:
             if comment is not None:
                 mol.comment = comment
             if identifiers is not None:
-                id_dict = identifiers.dict()
-                id_dict["molecule_hash"] = mol.identifiers["molecule_hash"]
-                id_dict["molecular_formula"] = mol.identifiers["molecular_formula"]
+                update_dict = {
+                    "molecule_hash": mol.identifiers["molecule_hash"],
+                    "molecular_formula": mol.identifiers["molecular_formula"],
+                }
 
                 # Changing identifiers is a bit sensitive, so validate again
-                identifiers = MoleculeIdentifiers(**id_dict)
+                identifiers = identifiers.copy(update=update_dict)
 
                 if overwrite_identifiers:
                     # Always keep hash & formula
-                    mol.identifiers = identifiers.dict()
+                    mol.identifiers = identifiers.dict(exclude_unset=True, exclude_defaults=True, exclude_none=True)
                 else:
-                    mol.identifiers.update(identifiers.dict())
+                    id_dict = identifiers.dict(exclude_unset=True, exclude_defaults=True)
+                    mol.identifiers.update(id_dict)
 
                     # sqlalchemy cannot track changes in json
                     flag_modified(mol, "identifiers")

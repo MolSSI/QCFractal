@@ -205,9 +205,7 @@ def test_molecules_client_modify(snowflake_client: PortalClient):
         ids[0],
         name="water_dimer",
         comment="This is a comment",
-        identifiers=MoleculeIdentifiers(
-            smiles="madeupsmiles", inchi="madeupinchi", molecule_hash="notahash", molecular_formula="XXXX"
-        ),
+        identifiers=MoleculeIdentifiers(smiles="madeupsmiles", molecule_hash="notahash", molecular_formula="XXXX"),
         overwrite_identifiers=False,
     )
     assert meta.success
@@ -218,7 +216,31 @@ def test_molecules_client_modify(snowflake_client: PortalClient):
     assert mols[0].name == "water_dimer"
     assert mols[0].comment == "This is a comment"
     assert mols[0].identifiers.smiles == "madeupsmiles"
-    assert mols[0].identifiers.inchi == "madeupinchi"
+    assert mols[0].identifiers.inchi is None
+
+    # Hash & formula unchanged
+    assert mols[0].identifiers.molecule_hash == water.get_hash()
+    assert mols[0].identifiers.molecular_formula == water.get_molecular_formula()
+
+    # Update again
+    meta = snowflake_client.modify_molecule(
+        ids[0],
+        name="water_dimer",
+        comment="This is a comment",
+        identifiers=MoleculeIdentifiers(
+            inchi="madeupinchi",
+        ),
+        overwrite_identifiers=False,
+    )
+    assert meta.success
+    assert meta.updated_idx == [0]
+
+    # Updated, but did not overwrite
+    mols = snowflake_client.get_molecules(ids)
+    assert mols[0].name == "water_dimer"
+    assert mols[0].comment == "This is a comment"
+    assert mols[0].identifiers.smiles == "madeupsmiles"
+    assert mols[0].identifiers.inchi == "madeupinchi"  # newly added
 
     # Hash & formula unchanged
     assert mols[0].identifiers.molecule_hash == water.get_hash()
@@ -228,7 +250,7 @@ def test_molecules_client_modify(snowflake_client: PortalClient):
     meta = snowflake_client.modify_molecule(
         ids[0],
         name="water_dimer 2",
-        identifiers=MoleculeIdentifiers(smiles="madeupsmiles2", inchikey="madeupinchikey"),
+        identifiers=MoleculeIdentifiers(inchikey="madeupinchikey"),
         overwrite_identifiers=True,
     )
     assert meta.success
@@ -238,8 +260,8 @@ def test_molecules_client_modify(snowflake_client: PortalClient):
     mols = snowflake_client.get_molecules(ids)
     assert mols[0].name == "water_dimer 2"
     assert mols[0].comment == "This is a comment"
-    assert mols[0].identifiers.smiles == "madeupsmiles2"
-    assert "inchi" not in mols[0].identifiers
+    assert mols[0].identifiers.smiles is None
+    assert mols[0].identifiers.inchi is None
     assert mols[0].identifiers.inchikey == "madeupinchikey"
 
     # Hash & formula unchanged
