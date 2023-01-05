@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any, List, Union, Iterable, Set, Tuple, Sequence
+from typing import Optional, Dict, Any, List, Union, Iterable, Set, Tuple, Sequence, Type
 
 from dateutil.parser import parse as date_parser
 from pydantic import BaseModel, Extra, constr, validator
@@ -201,10 +201,13 @@ class BaseRecord(BaseModel):
         extra = Extra.forbid
 
     client: Any
-    raw_data: _DataModel  # Meant to be overridden by derived classes
+    """ Client connected to the server that this record belongs to """
 
-    # all subclasses
-    _all_subclasses = {}
+    raw_data: _DataModel  # Meant to be overridden by derived classes
+    """ Raw data retrieved from the server. Generally for internal use only """
+
+    # A dictionary of all subclasses (calculation types) to actual class type
+    _all_subclasses: Dict[str, Type[BaseRecord]] = {}
 
     def __init_subclass__(cls):
         """
@@ -219,7 +222,11 @@ class BaseRecord(BaseModel):
         cls._all_subclasses[record_type] = cls
 
     @classmethod
-    def get_subclass(cls, record_type: str):
+    def get_subclass(cls, record_type: str) -> Type[BaseRecord]:
+        """
+        Obtain a subclass of this class given its record_type
+        """
+
         subcls = cls._all_subclasses.get(record_type)
         if subcls is None:
             raise RuntimeError(f"Cannot find subclass for record type {record_type}")
@@ -258,6 +265,7 @@ class BaseRecord(BaseModel):
         return f"<{self.__class__.__name__} id={self.id} status={self.status}>"
 
     def _assert_online(self):
+        """Raises an exception if this record does not have an associated client"""
         if self.offline:
             raise RuntimeError("Record is not connected to a client")
 
