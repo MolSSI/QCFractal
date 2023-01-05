@@ -161,7 +161,7 @@ calculation features.
    Unlike the ``get_`` functions, the records returned from query functions are not in any defined order,
    and the order may be different even with repeated calls with the same arguments
 
-Query functions return an :class:`iterator <qcportal.record_models.RecordQueryIterator>` object.
+Query functions return an :doc:`iterator <query_iterators>` object.
 This iterator handles transparent and efficient fetching from the server in
 batches, especially when many records may be returned by a query
 

@@ -106,7 +106,7 @@ You can also specify a single ID and get a single molecule back
 
 
 You can also query the molecules in the database with :meth:`~qcportal.client.PortalClient.query_molecules`.
-This function returns a :meth:`~qcportal.molecules.models.MoleculeQueryIterator`, which you can then use to
+This function returns an :doc:`iterator <query_iterators>`, which you can then use to
 iterate over the results. The iterator automatically handles returning batches or pages of query results from the
 server.
 

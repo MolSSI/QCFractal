@@ -9,6 +9,8 @@ QCArchive User Guide
 
    client_setup
    connecting_qcportal
+   metadata
+   query_iterators
    molecule
    record_retrieval
    record_submission

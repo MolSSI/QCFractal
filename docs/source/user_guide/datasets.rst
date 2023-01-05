@@ -13,15 +13,15 @@ Below is an example of this analogy, where the records are identified by their I
 For example, record 18263 is an HF/sto-3g computation on water, and
 record 23210 is an MP2/cc-pvdz computation on ethanol.
 
-    +------------------------+-----------+-----------------+-------------+
-    |                        | HF/sto-3g | B3LYP/def2-tzvp | MP2/cc-pvdz |
-    +========================+===========+=================+=============+
-    | **water**              | 18263     | 18277           | 18295       |
-    +------------------------+-----------+-----------------+-------------+
-    | **methane**            | 19722     | 19642           | 19867       |
-    +------------------------+-----------+-----------------+-------------+
-    | **ethanol**            | 20212     | 20931           | 23210       |
-    +------------------------+-----------+-----------------+-------------+
+.. table::
+
+  ==============  ==============  =================  =============
+    Entry           HF/sto-3g      B3LYP/def2-tzvp    MP2/cc-pvdz
+  ==============  ==============  =================  =============
+   **water**          18263        18277              18295
+   **methane**        19722        19642              19867
+   **ethanol**        20212        20931              23210
+  ==============  ==============  =================  =============
 
 Using a dataset allows for control of entire rows and columns of the table, and even
 the entire table itself. As an example, you can add a new specification, and then easily
